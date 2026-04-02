@@ -1,0 +1,2 @@
+let weights: trittensor<256 x 256>;
+return weights;

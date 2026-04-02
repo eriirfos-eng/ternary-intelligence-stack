@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "ternlang-core",
+    "ternlang-codegen",
+    "ternlang-ml",
+    "ternlang-cli",
+    "ternlang-test",
+]
+resolver = "2"

@@ -1,0 +1,29 @@
+# Rust build artifacts
+ternlang-root/target/
+
+# Cargo lock for libraries (keep for binaries/workspace)
+# Cargo.lock intentionally kept
+
+# Editor artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Lock files from LibreOffice/open editors
+.~lock.*
+
+# Secrets / env
+.env
+*.env
