@@ -54,17 +54,17 @@ This is our philosopher's stone. Full resource commitment.
 **This is the commercial differentiator. The AI inference story.**
 
 - [x] **Fix `DimSeparator` bug** in lexer (remove dedicated token, handle as `Ident("x")` in type parser) — 11/11 tests passing
-- [ ] **TCALL/TRET opcodes**: Real function call dispatch with call stack in VM + codegen
-- [ ] **TritTensor VM Operations**:
-    - [ ] `0x10` `TMATMUL` — multiply two tensor refs
-    - [ ] `0x11` `TTRANSPOSE` — transpose tensor
-    - [ ] `0x12` `TIDX` — index into tensor (tensor_ref, row, col → trit)
-    - [ ] `0x13` `TSET` — store trit at tensor index
-    - [ ] `0x14` `TSHAPE` — push tensor dimensions to stack
-    - [ ] `0x15` `TSPARSITY` — compute sparsity ratio
-    - [ ] `0x16` `TSPARSE_MATMUL` — matmul skipping zero-state elements (flagship feature)
-    - [ ] `0x17` `TCOMPRESS` / `0x18` `TUNPACK` — run-length compression
-- [ ] **Implement `@sparseskip`** in codegen → emits `TSPARSE_MATMUL`
+- [x] **TCALL/TRET opcodes**: Real function call dispatch with call stack — DONE
+- [x] **TCALL/TRET opcodes**: Real function call dispatch with call stack — DONE
+- [x] **TritTensor VM Operations** — DONE (14/14 tests passing):
+    - [x] `0x20` `TMATMUL` — multiply two tensor refs
+    - [x] `0x21` `TSPARSE_MATMUL` — matmul skipping zero-state weights (flagship) ⭐
+    - [x] `0x22` `TIDX` — index into tensor (tensor_ref, row, col → trit)
+    - [x] `0x23` `TSET` — store trit at tensor index
+    - [x] `0x24` `TSHAPE` — push tensor dimensions to stack
+    - [x] `0x25` `TSPARSITY` — compute zero-element count
+- [ ] **Implement `@sparseskip`** in codegen → emits `TSPARSE_MATMUL` (wiring AST → opcode)
+- [ ] **`TCOMPRESS` / `TUNPACK`** — run-length compression (next)
 - [ ] **Fill `ternlang-ml`** with real kernels:
     - [ ] `quantize(f32_weights) -> TritTensor`
     - [ ] `forward(input, weights) -> TritTensor`
@@ -119,3 +119,4 @@ This is our philosopher's stone. Full resource commitment.
 |------|---------------|
 | 2026-04-02 | Initial repo setup. Phase 1+2 confirmed complete. Git initialized, pushed to GitHub. Credential store configured. 4 failing tests identified (DimSeparator bug). Phase 3 plan defined. |
 | 2026-04-02 | Fixed DimSeparator/Ident collision in lexer. Fixed betbc test import. 11/11 tests passing. Next: TCALL/TRET function dispatch + tensor VM opcodes. |
+| 2026-04-02 | TCALL/TRET implemented. Tensor opcodes DONE: TMATMUL, TSPARSE_MATMUL, TIDX, TSET, TSHAPE, TSPARSITY. 14/14 tests passing. Next: @sparseskip codegen wiring + ternlang-ml kernels. |
