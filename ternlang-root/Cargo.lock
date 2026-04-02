@@ -237,6 +237,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "ternlang-core",
+ "ternlang-ml",
 ]
 
 [[package]]
