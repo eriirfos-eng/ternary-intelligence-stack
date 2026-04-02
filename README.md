@@ -246,15 +246,6 @@ This project is experimental, research-driven, and open to architectural evoluti
 
 # License
 
-License to be defined.
-
-Recommended:
-
-```text
-MIT
-```
-
-or
 
 ```text
 Apache-2.0
