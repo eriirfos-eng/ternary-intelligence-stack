@@ -108,11 +108,12 @@ This is our philosopher's stone. Full resource commitment.
 
 ---
 
-## 🤖 Phase 5: Actor Model & Distributed Agents
-**Next session starts here.**
-- [ ] **Lexer/Parser/AST**: `agent`, `spawn`, `send`, `await`, `remote`, `nodeid`, `agentref`
-- [ ] **Local Actor Runtime**: actor registry, `TSPAWN`/`TSEND`/`TAWAIT` opcodes, green threads
-- [ ] **Distributed Runtime**: serialize agentref as (nodeid, local_id), TCP transport, later libp2p
+## 🤖 Phase 5: Actor Model & Distributed Agents — PHASE 5.0 COMPLETE ✅
+- [x] **Lexer/Parser/AST**: `agent`, `spawn`, `send`, `await`, `agentref` — all done
+- [x] **Local Actor Runtime**: AgentInstance + mailbox, `TSPAWN`/`TSEND`/`TAWAIT` opcodes, synchronous dispatch
+- [x] **Integration test**: spawn identity-agent, send +1, await → +1 ✓
+- [ ] **Distributed Runtime** (Phase 5.1): serialize agentref as (nodeid, local_id), TCP transport, later libp2p
+- [ ] **`remote`/`nodeid`** keywords for Phase 5.1
 
 ---
 
@@ -149,4 +150,5 @@ This is our philosopher's stone. Full resource commitment.
 | 2026-04-02 | @sparseskip → TSPARSE_MATMUL wired in codegen. ternlang-ml filled: quantize, bitnet_threshold, dense_matmul, sparse_matmul, linear, benchmark. First benchmark: 56% sparsity → 2.3x fewer multiply ops. 23/23 tests passing. |
 | 2026-04-02 | ternlang-mcp LIVE — MCP server (JSON-RPC 2.0, stdio). 6 tools: trit_decide, trit_consensus, trit_eval, ternlang_run, quantize_weights, sparse_benchmark. Any binary agent connecting to this becomes a ternary decision engine. Hidden easter egg: ternlang enlighten. |
 | 2026-04-02 | Phase 4 language completeness: for/while/loop/break/continue/mut/use/::. Match exhaustiveness enforced at parser. 20 core tests + 6 ML tests + 1 codegen tests = 28 total passing. |
-| 2026-04-02 | stdlib source files: std::trit, std::math, std::tensor, std::io, ml::quantize, ml::inference. Struct defs + field access (s.field) + field assignment (s.field=v) + cast() + Type::Named. Dot token in lexer. 25/25 tests passing. Phase 5 (actor model) is next. |
+| 2026-04-02 | stdlib source files: std::trit, std::math, std::tensor, std::io, ml::quantize, ml::inference. Struct defs + field access (s.field) + field assignment (s.field=v) + cast() + Type::Named. Dot token in lexer. 25/25 tests passing. |
+| 2026-04-02 | Phase 5.0 actor model: agent/spawn/send/await/agentref in lexer+AST+parser+semantic+codegen+VM. TSPAWN/TSEND/TAWAIT opcodes. AgentInstance with mailbox. Integration test: spawn echo agent, send +1, await +1. 30/30 tests passing. |
