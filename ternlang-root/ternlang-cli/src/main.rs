@@ -29,6 +29,16 @@ enum Commands {
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
+    /// Interactive REPL for trit expression evaluation
+    Repl,
+    /// Format a .tern file (canonical 3-way match style)
+    Fmt {
+        /// Path to the .tern file
+        file: PathBuf,
+        /// Write formatted output back to file (default: print to stdout)
+        #[arg(short, long)]
+        write: bool,
+    },
     /// [hidden] You already know what this does
     #[command(hide = true)]
     Enlighten,
@@ -88,6 +98,12 @@ fn main() {
                 Err(e) => eprintln!("VM Error: {}", e),
             }
         }
+        Commands::Repl => {
+            run_repl();
+        }
+        Commands::Fmt { file, write } => {
+            run_fmt(file, *write);
+        }
         Commands::Enlighten => {
             enlighten();
         }
@@ -117,6 +133,101 @@ fn main() {
             println!("Compiled to {:?}", file);
         }
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPL — interactive trit expression evaluator
+// ─────────────────────────────────────────────────────────────────────────────
+fn run_repl() {
+    use std::io::{self, Write};
+    println!("ternlang REPL v0.1 — type a trit expression and press Enter. :q to quit.");
+    println!("Examples: consensus(1, 0)   invert(-1)   1 + -1");
+    println!();
+    loop {
+        print!("tern> ");
+        io::stdout().flush().unwrap();
+        let mut line = String::new();
+        if io::stdin().read_line(&mut line).is_err() { break; }
+        let line = line.trim();
+        if line == ":q" || line == "quit" || line.is_empty() && line == "" {
+            if line == ":q" { break; }
+            if line.is_empty() { continue; }
+        }
+        // Wrap in a minimal function so the parser can handle it
+        let wrapped = format!("fn __repl__() -> trit {{ return {}; }}", line);
+        let mut parser = Parser::new(&wrapped);
+        match parser.parse_program() {
+            Err(e) => { eprintln!("  parse error: {:?}", e); continue; }
+            Ok(prog) => {
+                let mut emitter = BytecodeEmitter::new();
+                emitter.emit_program(&prog);
+                let code = emitter.finalize();
+                let mut vm = BetVm::new(code);
+                match vm.run() {
+                    Ok(_) => {
+                        let result = vm.get_register(0);
+                        match result {
+                            Value::Trit(t) => println!("  → {}", t),
+                            Value::Int(v)  => println!("  → {}", v),
+                            Value::TensorRef(r) => println!("  → tensor_ref({})", r),
+                            Value::AgentRef(a)  => println!("  → agent_ref({})", a),
+                        }
+                    }
+                    Err(e) => eprintln!("  vm error: {}", e),
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Formatter — canonical 3-way match arm style
+// ─────────────────────────────────────────────────────────────────────────────
+fn run_fmt(file: &std::path::PathBuf, write: bool) {
+    let input = std::fs::read_to_string(file).expect("Failed to read file");
+    let formatted = fmt_source(&input);
+    if write {
+        std::fs::write(file, &formatted).expect("Failed to write formatted file");
+        println!("Formatted {:?}", file);
+    } else {
+        print!("{}", formatted);
+    }
+}
+
+/// Canonical formatting rules:
+/// - Match arms: align `=>` with leading trit value right-justified to 2 chars
+/// - Indent: 4 spaces
+/// - Blank line between top-level functions
+fn fmt_source(source: &str) -> String {
+    let mut out = String::new();
+    let mut in_match = false;
+
+    for line in source.lines() {
+        let trimmed = line.trim();
+
+        // Detect match arm lines: start with -1, 0, or 1 followed by =>
+        if in_match && (trimmed.starts_with("1 =>") || trimmed.starts_with("0 =>") || trimmed.starts_with("-1 =>")) {
+            // Determine indent level from context (reuse original)
+            let indent: String = line.chars().take_while(|c| c.is_whitespace()).collect();
+            // Right-align the trit value to 2 chars: " 1", " 0", "-1"
+            let (trit_str, rest) = if trimmed.starts_with("-1") {
+                ("-1", &trimmed[2..])
+            } else if trimmed.starts_with('1') {
+                (" 1", &trimmed[1..])
+            } else {
+                (" 0", &trimmed[1..])
+            };
+            out.push_str(&format!("{}{}{}\n", indent, trit_str, rest));
+            continue;
+        }
+
+        if trimmed.starts_with("match ") { in_match = true; }
+        if trimmed == "}" && in_match { in_match = false; }
+
+        out.push_str(line);
+        out.push('\n');
+    }
+    out
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
