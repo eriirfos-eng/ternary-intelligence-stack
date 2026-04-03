@@ -4,6 +4,19 @@ use crate::trit::Trit;
 use crate::vm::bet::{unpack_trits, BetFault};
 
 use std::fmt;
+use std::sync::Arc;
+
+// ─── Remote transport trait ───────────────────────────────────────────────────
+
+/// Abstracts the TCP layer so `ternlang-core` doesn't depend on `ternlang-runtime`.
+/// Implement this trait on `TernNode` in `ternlang-runtime`, then inject via
+/// `BetVm::set_remote(Arc<dyn RemoteTransport>)`.
+pub trait RemoteTransport: Send + Sync {
+    /// Send a trit (-1/0/+1) to the specified remote agent's mailbox (fire-and-forget).
+    fn remote_send(&self, node_addr: &str, agent_id: usize, trit: i8) -> std::io::Result<()>;
+    /// Request the remote agent to process its mailbox and return the result trit.
+    fn remote_await(&self, node_addr: &str, agent_id: usize) -> std::io::Result<i8>;
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum VmError {
@@ -91,6 +104,8 @@ pub struct BetVm {
     code: Vec<u8>,
     /// Phase 5.1: The local node's address (returned by TNODEID)
     node_id: String,
+    /// Phase 5.1: Optional remote transport for cross-node TSEND/TAWAIT
+    remote: Option<Arc<dyn RemoteTransport>>,
 }
 
 impl BetVm {
@@ -106,11 +121,17 @@ impl BetVm {
             pc: 0,
             code,
             node_id: "127.0.0.1:7373".to_string(), // Default
+            remote: None,
         }
     }
 
     pub fn set_node_id(&mut self, node_id: String) {
         self.node_id = node_id;
+    }
+
+    /// Inject a remote transport so TSEND/TAWAIT can cross node boundaries.
+    pub fn set_remote(&mut self, transport: Arc<dyn RemoteTransport>) {
+        self.remote = Some(transport);
     }
 
     /// Register an agent type (handler_addr) under a type_id.
@@ -447,11 +468,18 @@ impl BetVm {
                         Value::AgentRef(id, None) => {
                             self.agents[id].mailbox.push_back(message);
                         }
-                        Value::AgentRef(_id, Some(_addr)) => {
-                            // Phase 5.1: Remote TSEND. 
-                            // In this v0.1 BET VM, we don't have direct access to network.
-                            // The CLI driver or a wrapper should handle this.
-                            // For now, it's a silent no-op or we could add a hook.
+                        Value::AgentRef(id, Some(addr)) => {
+                            // Phase 5.1: Remote TSEND via injected RemoteTransport.
+                            if let Some(rt) = &self.remote {
+                                let trit_i8 = match message {
+                                    Value::Trit(Trit::PosOne) =>  1i8,
+                                    Value::Trit(Trit::NegOne) => -1i8,
+                                    _                         =>  0i8,
+                                };
+                                rt.remote_send(&addr, id, trit_i8)
+                                    .map_err(|_| VmError::TypeMismatch)?;
+                            }
+                            // If no transport configured: silent no-op (local-only mode).
                         }
                         _ => return Err(VmError::TypeMismatch),
                     }
@@ -468,11 +496,20 @@ impl BetVm {
                             self.call_stack.push(self.pc); // return to after TAWAIT
                             self.pc = handler_addr;
                         }
-                        Value::AgentRef(_id, Some(_addr)) => {
-                            // Phase 5.1: Remote TAWAIT. 
-                            // Similar to TSEND, needs network wrapper.
-                            // VM returns hold (0) as placeholder.
-                            self.stack.push(Value::Trit(Trit::Zero));
+                        Value::AgentRef(id, Some(addr)) => {
+                            // Phase 5.1: Remote TAWAIT via injected RemoteTransport.
+                            let result = if let Some(rt) = &self.remote {
+                                rt.remote_await(&addr, id)
+                                    .map(|v| match v {
+                                        1  => Trit::PosOne,
+                                        -1 => Trit::NegOne,
+                                        _  => Trit::Zero,
+                                    })
+                                    .unwrap_or(Trit::Zero)
+                            } else {
+                                Trit::Zero // hold: no transport configured
+                            };
+                            self.stack.push(Value::Trit(result));
                         }
                         _ => return Err(VmError::TypeMismatch),
                     }

@@ -1,12 +1,14 @@
 use clap::{Parser as ClapParser, Subcommand};
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 use ternlang_core::parser::Parser;
 use ternlang_core::codegen::betbc::BytecodeEmitter;
 use ternlang_core::vm::{BetVm, Value};
 use ternlang_core::StdlibLoader;
 use ternlang_ml::{TritMatrix, bitnet_threshold, benchmark};
 use ternlang_hdl::BetSimEmitter;
+use ternlang_runtime::TernNode;
 
 #[derive(ClapParser)]
 #[command(name = "ternlang")]
@@ -22,6 +24,12 @@ enum Commands {
     Run {
         /// Path to the .tern file
         file: PathBuf,
+        /// This node's TCP address for distributed agent communication (e.g. 127.0.0.1:7373)
+        #[arg(long, value_name = "ADDR")]
+        node_addr: Option<String>,
+        /// Pre-connect to a peer node before running (can be specified multiple times)
+        #[arg(long, value_name = "ADDR")]
+        peer: Vec<String>,
     },
     /// Compile a .tern file to bytecode
     Build {
@@ -70,7 +78,7 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Run { file } => {
+        Commands::Run { file, node_addr, peer } => {
             let input = fs::read_to_string(file).expect("Failed to read file");
             let mut parser = Parser::new(&input);
             let mut emitter = BytecodeEmitter::new();
@@ -103,7 +111,23 @@ fn main() {
             let code = emitter.finalize();
             println!("Emitted {} bytes of bytecode", code.len());
             let mut vm = BetVm::new(code);
-            
+
+            // Phase 5.1: Distributed runtime setup
+            if let Some(addr) = node_addr {
+                let node = Arc::new(TernNode::new(addr));
+                node.listen();
+                eprintln!("[runtime] TernNode listening on {}", addr);
+                vm.set_node_id(addr.clone());
+                // Pre-connect to any specified peers
+                for peer_addr in peer {
+                    match node.connect(peer_addr) {
+                        Ok(()) => eprintln!("[runtime] connected to peer {}", peer_addr),
+                        Err(e) => eprintln!("[runtime] peer {} unreachable: {}", peer_addr, e),
+                    }
+                }
+                vm.set_remote(node);
+            }
+
             match vm.run() {
                 Ok(_) => {
                     println!("Program exited successfully.");

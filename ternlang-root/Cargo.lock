@@ -934,6 +934,7 @@ dependencies = [
  "ternlang-core",
  "ternlang-hdl",
  "ternlang-ml",
+ "ternlang-runtime",
 ]
 
 [[package]]

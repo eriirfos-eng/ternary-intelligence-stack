@@ -123,12 +123,12 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 
 ---
 
-## 🤖 Phase 5: Actor Model & Distributed Agents — PHASE 5.0 COMPLETE ✅
+## 🤖 Phase 5: Actor Model & Distributed Agents — PHASE 5.1 COMPLETE ✅
 - [x] **Lexer/Parser/AST**: `agent`, `spawn`, `send`, `await`, `agentref` — all done
 - [x] **Local Actor Runtime**: AgentInstance + mailbox, `TSPAWN`/`TSEND`/`TAWAIT` opcodes, synchronous dispatch
 - [x] **Integration test**: spawn identity-agent, send +1, await → +1 ✓
-- [ ] **Distributed Runtime** (Phase 5.1): serialize agentref as (nodeid, local_id), TCP transport, later libp2p
-- [ ] **`remote`/`nodeid`** keywords for Phase 5.1
+- [x] **Distributed Runtime** (Phase 5.1): `RemoteTransport` trait in core (no circular dep), `TernNode` impl in runtime; TSEND/TAWAIT route over TCP for remote AgentRefs; auto-connect on first use; 4 runtime tests passing
+- [x] **`remote`/`nodeid`** keywords: `--node-addr` + `--peer` CLI flags; `TernNode` injected into VM via `set_remote(Arc<dyn RemoteTransport>)`
 
 ---
 
@@ -194,3 +194,4 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 | 2026-04-03 | Phase 7A: TasmAssembler + OwletParser (ternlang-compat, 29 tests). TCOMPRESS/TUNPACK RLE codec (0x26/0x27). TernaryMLP 2-layer with from_f32/forward/predict, XOR+parity datasets. timed_benchmark: 32²–512², 5-rep median wall-clock. BET sim emitter (Icarus Verilog testbench). Hub README + TERNARY-ECOSYSTEM.md. VSIX packaging. Whitepaper TEX+DOCX published (10 sections, IEEE two-column). Spec files consolidated into main repo. 116 total tests passing. |
 | 2026-04-03 | StdlibLoader: `use std::trit;` works end-to-end. Comment skip in lexer. 3-layer CSC sparse matmul (flat i8 + offset table + Rayon): 86× at 60% sparsity, 122× at 99% sparsity (512² release). Goldilocks sweep confirms 40–60% as optimal zone for medium matrices. Whitepaper updated with full sweep table. 120+ tests passing. |
 | 2026-04-03 | Multi-tenant API key management in ternlang-api: KeyStore (JSON-backed, async RwLock), key generation (tern_<tier>_<uuid24>), revocation, usage counters, admin routes POST/GET/DELETE /admin/keys. `TERNLANG_ADMIN_KEY` + `KEYS_FILE` env vars. Albert-agent integrated as primary TIS agent. 5 VM compile errors fixed (Value::Clone, AgentRef 2-tuple). Build clean across full workspace. |
+| 2026-04-03 | Phase 5.1 COMPLETE: RemoteTransport trait in ternlang-core (no circular dep), TernNode impl in ternlang-runtime; TSEND/TAWAIT route over TCP for remote AgentRefs with auto-connect; `ternlang run --node-addr --peer` CLI flags wire TernNode into VM at startup; 4 runtime tests passing. |
