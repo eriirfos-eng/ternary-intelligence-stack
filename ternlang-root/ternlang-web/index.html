@@ -1,649 +1,542 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ternlang — good night, binary.</title>
-  <meta name="description" content="The balanced ternary intelligence stack. reject · tend · affirm. The API for AI agents that reason under uncertainty." />
-  <meta property="og:title" content="Ternlang — good night, binary." />
-  <meta property="og:description" content="Balanced ternary computing platform. The API for AI agents that refuse to guess." />
-  <meta property="og:url" content="https://ternlang.com" />
+  <title>Ternlang | The Ternary Intelligence Stack</title>
+  <meta name="description" content="The balanced ternary intelligence stack. reject, tend, affirm. The API for AI agents that reason under uncertainty." />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            t_bg: '#05050A',
+            t_bg2: '#0D0D16',
+            t_bg3: '#151522',
+            t_teal: '#00d4aa',
+            t_blue: '#4a9eff',
+            t_red: '#ff5f6d',
+            t_muted: '#7a7d99',
+            t_border: '#232336'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:       #0a0a14;
-      --bg2:      #111120;
-      --bg3:      #1a1a2e;
-      --teal:     #00d4aa;
-      --teal-dim: #00957a;
-      --blue:     #4a9eff;
-      --red:      #ff5f6d;
-      --text:     #dde0f0;
-      --muted:    #7a7d99;
-      --border:   #2a2a40;
-      --font:     'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      --sans:     -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    body { background-color: #05050A; color: #dde0f0; overflow-x: hidden; }
+    
+    /* Subtle grid background */
+    .bg-grid {
+      background-size: 40px 40px;
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     }
 
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      line-height: 1.65;
-      overflow-x: hidden;
+    /* Glassmorphism utilities */
+    .glass {
+      background: rgba(13, 13, 22, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .glass-card {
+      background: linear-gradient(145deg, rgba(21, 21, 34, 0.8) 0%, rgba(13, 13, 22, 0.4) 100%);
+      border: 1px solid var(--t_border);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
     }
 
-    /* ── NAV ─────────────────────────────────────────────────── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 2rem;
-      background: rgba(10,10,20,0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-logo {
-      font-family: var(--font);
-      font-size: 1.1rem;
-      color: var(--teal);
-      text-decoration: none;
-      letter-spacing: 0.05em;
-    }
-    .nav-links { display: flex; gap: 2rem; list-style: none; }
-    .nav-links a {
-      color: var(--muted); text-decoration: none; font-size: 0.9rem;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--teal); }
+    /* Glows */
+    .glow-reject { box-shadow: 0 0 20px rgba(255, 95, 109, 0.15); }
+    .glow-tend { box-shadow: 0 0 20px rgba(0, 212, 170, 0.15); }
+    .glow-affirm { box-shadow: 0 0 20px rgba(74, 158, 255, 0.15); }
 
-    /* ── HERO ────────────────────────────────────────────────── */
-    .hero {
-      min-height: 100vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-      padding: 6rem 2rem 4rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 60% 50% at 50% 30%, rgba(0,212,170,0.07) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 30% at 20% 80%, rgba(74,158,255,0.05) 0%, transparent 60%);
-      pointer-events: none;
-    }
-    .hero-eyebrow {
-      font-family: var(--font);
-      font-size: 0.8rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--teal);
-      margin-bottom: 1.5rem;
-    }
-    .hero-title {
-      font-size: clamp(3rem, 8vw, 6rem);
-      font-weight: 300;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-      margin-bottom: 0.5rem;
-      color: #fff;
-    }
-    .hero-title span { color: var(--teal); font-weight: 700; }
-    .hero-tagline {
-      font-size: clamp(1rem, 2.5vw, 1.4rem);
-      color: var(--muted);
-      margin-bottom: 3rem;
-      font-style: italic;
-    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #05050A; }
+    ::-webkit-scrollbar-thumb { background: #232336; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #7a7d99; }
 
-    /* trit zone diagram */
-    .zone-diagram {
-      font-family: var(--font);
-      font-size: 0.82rem;
-      white-space: pre;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.5rem 2rem;
-      margin: 0 auto 2.5rem;
-      max-width: 640px;
-      overflow-x: auto;
-      text-align: left;
-      line-height: 2;
-    }
-    .z-reject { color: var(--red); }
-    .z-tend   { color: var(--teal); }
-    .z-affirm { color: var(--blue); }
-    .z-dim    { color: var(--muted); }
+    /* Code Syntax */
+    .tok-keyword { color: #4a9eff; }
+    .tok-string { color: #00d4aa; }
+    .tok-number { color: #ff5f6d; }
+    .tok-comment { color: #7a7d99; }
 
-    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-    .btn {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 0.75rem 1.75rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-    .btn-primary {
-      background: var(--teal); color: #0a0a14;
-    }
-    .btn-primary:hover { background: #00f0c0; transform: translateY(-1px); }
-    .btn-secondary {
-      background: transparent; color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
-
-    /* ── SECTION SHARED ──────────────────────────────────────── */
-    section { padding: 5rem 2rem; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .section-label {
-      font-family: var(--font);
-      font-size: 0.75rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--teal);
-      margin-bottom: 0.75rem;
-    }
-    h2 {
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
-      font-weight: 300;
-      letter-spacing: -0.01em;
-      color: #fff;
-      margin-bottom: 1rem;
-    }
-    h2 strong { color: var(--teal); font-weight: 700; }
-    .lead {
-      font-size: 1.1rem;
-      color: var(--muted);
-      max-width: 680px;
-      margin-bottom: 3rem;
-    }
-
-    /* ── TRIT CARDS ──────────────────────────────────────────── */
-    .trit-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 4rem;
-    }
-    .trit-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .trit-card:hover { transform: translateY(-3px); }
-    .trit-card.reject:hover { border-color: var(--red); }
-    .trit-card.tend:hover   { border-color: var(--teal); }
-    .trit-card.affirm:hover { border-color: var(--blue); }
-    .trit-value {
-      font-family: var(--font);
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .reject .trit-value { color: var(--red); }
-    .tend   .trit-value { color: var(--teal); }
-    .affirm .trit-value { color: var(--blue); }
-    .trit-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 0.75rem;
-    }
-    .trit-desc { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
-    .trit-key {
-      display: inline-block;
-      margin-top: 1rem;
-      font-family: var(--font);
-      font-size: 0.75rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: 4px;
-      background: var(--bg3);
-    }
-    .reject .trit-key { color: var(--red); }
-    .tend   .trit-key { color: var(--teal); }
-    .affirm .trit-key { color: var(--blue); }
-
-    /* ── API SECTION ─────────────────────────────────────────── */
-    .api-section { background: var(--bg2); }
-    .api-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      align-items: start;
-    }
-    @media (max-width: 700px) { .api-grid { grid-template-columns: 1fr; } }
-    .api-desc h3 {
-      font-size: 1.3rem; color: #fff; margin-bottom: 0.75rem;
-      font-weight: 600;
-    }
-    .api-desc p { color: var(--muted); margin-bottom: 1rem; font-size: 0.95rem; }
-    .endpoint-list { list-style: none; }
-    .endpoint-list li {
-      display: flex; gap: 0.75rem; align-items: baseline;
-      padding: 0.4rem 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-    .endpoint-list li:last-child { border: none; }
-    .method {
-      font-family: var(--font);
-      font-size: 0.7rem;
-      padding: 0.15rem 0.4rem;
-      border-radius: 3px;
-      background: rgba(0,212,170,0.15);
-      color: var(--teal);
-      flex-shrink: 0;
-    }
-    .method.get { background: rgba(74,158,255,0.15); color: var(--blue); }
-    .ep-path { font-family: var(--font); color: var(--text); }
-    .ep-desc { color: var(--muted); font-size: 0.85rem; }
-
-    pre {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      overflow-x: auto;
-      font-family: var(--font);
-      font-size: 0.82rem;
-      line-height: 1.7;
-    }
-    .c-comment { color: var(--muted); }
-    .c-key     { color: var(--blue); }
-    .c-str     { color: #f9c74f; }
-    .c-num     { color: #f8961e; }
-    .c-teal    { color: var(--teal); }
-    .c-red     { color: var(--red); }
-
-    /* ── TIERS ───────────────────────────────────────────────── */
-    .tier-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
-    }
-    .tier-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .tier-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    }
-    .tier-card.t1::before { background: var(--teal); }
-    .tier-card.t2::before { background: var(--blue); }
-    .tier-card.t3::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
-    .tier-badge {
-      font-family: var(--font);
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
-    }
-    .t1 .tier-badge { color: var(--teal); }
-    .t2 .tier-badge { color: var(--blue); }
-    .t3 .tier-badge { color: var(--muted); }
-    .tier-name { font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 0.5rem; }
-    .tier-license {
-      font-family: var(--font);
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-bottom: 1rem;
-    }
-    .tier-items { list-style: none; }
-    .tier-items li {
-      font-size: 0.88rem;
-      color: var(--muted);
-      padding: 0.3rem 0;
-      padding-left: 1.2rem;
-      position: relative;
-    }
-    .tier-items li::before {
-      content: '→';
-      position: absolute; left: 0;
-      color: var(--teal);
-    }
-    .t2 .tier-items li::before { color: var(--blue); }
-    .t3 .tier-items li::before { color: var(--teal); }
-
-    /* ── STATS BAR ───────────────────────────────────────────── */
-    .stats-bar {
-      background: var(--bg3);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .stats-inner {
-      max-width: 1000px; margin: 0 auto;
-      display: flex; justify-content: space-around;
-      padding: 2rem;
-      flex-wrap: wrap; gap: 1.5rem;
-      text-align: center;
-    }
-    .stat-num {
-      font-family: var(--font);
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--teal);
-      display: block;
-    }
-    .stat-label { font-size: 0.85rem; color: var(--muted); }
-
-    /* ── CTA BAND ────────────────────────────────────────────── */
-    .cta-band {
-      background: linear-gradient(135deg, #0d1a14 0%, #0a0a14 50%, #0d0d1a 100%);
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-    .cta-band h2 { margin-bottom: 0.5rem; }
-    .cta-band .lead { margin: 0 auto 2rem; }
-
-    /* ── FOOTER ──────────────────────────────────────────────── */
-    footer {
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-      padding: 2rem;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    footer a { color: var(--teal); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
-    .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
-
-    /* ── GLOW DIVIDER ────────────────────────────────────────── */
-    .glow-line {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--teal), transparent);
-      opacity: 0.3;
-      margin: 0;
-    }
+    /* Reveal Animation Classes */
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease-out; }
+    .reveal.active { opacity: 1; transform: translateY(0); }
   </style>
 </head>
-<body>
+<body class="antialiased selection:bg-t_teal selection:text-black">
 
-<!-- NAV -->
-<nav>
-  <a class="nav-logo" href="/">ternlang</a>
-  <ul class="nav-links">
-    <li><a href="#api">API</a></li>
-    <li><a href="#tiers">Licensing</a></li>
-    <li><a href="https://github.com/eriirfos-eng/ternary-intelligence-stack">GitHub</a></li>
-    <li><a href="mailto:licensing@ternlang.com">Contact</a></li>
-    <li><a href="#api" class="btn btn-primary" style="padding:0.4rem 1rem;font-size:0.85rem;">Get API Key</a></li>
-  </ul>
-</nav>
+  <!-- Interactive Background Canvas -->
+  <canvas id="ternary-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
+  <div class="fixed inset-0 bg-grid pointer-events-none z-0"></div>
 
-<!-- HERO -->
-<section class="hero">
-  <p class="hero-eyebrow">RFI-IRFOS · Ternary Intelligence Stack</p>
-  <h1 class="hero-title">good night, <span>binary.</span></h1>
-  <p class="hero-tagline">The world has three states. Your AI should too.</p>
-
-  <div class="zone-diagram">
-    <span class="z-dim">    </span><span class="z-reject">reject</span><span class="z-dim">            </span><span class="z-tend">tend</span><span class="z-dim">              </span><span class="z-affirm">affirm</span><br>
-    <span class="z-dim">────────────────</span><span class="z-dim">┼</span><span class="z-dim">────────────────</span><span class="z-dim">┼</span><span class="z-dim">────────────────</span><br>
-    <span class="z-dim">−1.0</span><span class="z-dim">          −0.333</span><span class="z-dim">          +0.333</span><span class="z-dim">           +1.0</span><br>
-    <span class="z-dim">     ← confidence →              ← confidence →</span><br><br>
-    <span class="z-dim">  act:  </span><span class="z-reject">do not proceed</span><span class="z-dim"> · </span><span class="z-tend">not yet — deliberate</span><span class="z-dim"> · </span><span class="z-affirm">proceed</span>
-  </div>
-
-  <div class="hero-cta">
-    <a href="mailto:licensing@ternlang.com?subject=API Key Request" class="btn btn-primary">Get API Access</a>
-    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="btn btn-secondary">View on GitHub</a>
-    <a href="#api" class="btn btn-secondary">Explore the API</a>
-  </div>
-</section>
-
-<div class="glow-line"></div>
-
-<!-- STATS -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div><span class="stat-num">3</span><span class="stat-label">states per trit</span></div>
-    <div><span class="stat-num">51</span><span class="stat-label">BET VM opcodes</span></div>
-    <div><span class="stat-num">122×</span><span class="stat-label">sparse kernel speedup</span></div>
-    <div><span class="stat-num">120+</span><span class="stat-label">tests passing</span></div>
-    <div><span class="stat-num">7</span><span class="stat-label">API tools</span></div>
-  </div>
-</div>
-
-<!-- TRIT CARDS -->
-<section>
-  <div class="container">
-    <p class="section-label">The three states</p>
-    <h2>Not null. Not undecided. <strong>Deliberating.</strong></h2>
-    <p class="lead">Binary forces every decision into YES or NO. Ternary gives AI agents a third option — one that says "I don't have enough signal yet. Keep going."</p>
-    <div class="trit-grid">
-      <div class="trit-card reject">
-        <div class="trit-value">−1</div>
-        <div class="trit-name">reject</div>
-        <div class="trit-desc">Signal is negative and resolvable. Evidence points away from action. Do not proceed — but this is a decision, not an error.</div>
-        <div class="trit-key">conflict · NegOne · signal negative</div>
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 glass border-b border-t_border">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="/" class="font-mono text-lg font-bold text-t_teal tracking-wider hover:text-white transition-colors">ternlang<span class="text-t_muted font-normal">.</span></a>
+      
+      <div class="hidden md:flex gap-8 items-center font-mono text-sm">
+        <a href="#architecture" class="text-t_muted hover:text-t_teal transition-colors">Architecture</a>
+        <a href="#api" class="text-t_muted hover:text-t_teal transition-colors">API</a>
+        <a href="#benchmark" class="text-t_muted hover:text-t_teal transition-colors">Benchmarks</a>
+        <a href="#licensing" class="text-t_muted hover:text-t_teal transition-colors">Licensing</a>
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener noreferrer" class="text-t_muted hover:text-white transition-colors">GitHub</a>
       </div>
-      <div class="trit-card tend">
-        <div class="trit-value"> 0</div>
-        <div class="trit-name">tend</div>
-        <div class="trit-desc">The deliberation zone. Not null. Not indecision. An active instruction: gather more evidence before committing. The most misunderstood trit.</div>
-        <div class="trit-key">hold · Zero · active computation</div>
+
+      <a href="#api" class="hidden md:inline-flex items-center justify-center px-4 py-2 bg-t_teal/10 text-t_teal border border-t_teal/30 rounded font-mono text-sm hover:bg-t_teal hover:text-black transition-all">
+        Get API Key
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <main class="relative z-10 pt-32 pb-20 px-6 min-h-screen flex flex-col justify-center items-center text-center">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-t_teal/10 rounded-full blur-[100px] -z-10 mix-blend-screen animate-pulse-slow"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-t_blue/10 rounded-full blur-[100px] -z-10 mix-blend-screen animate-pulse-slow" style="animation-delay: 2s;"></div>
+
+    <div class="max-w-4xl mx-auto reveal active">
+      <p class="font-mono text-xs md:text-sm text-t_teal tracking-[0.3em] uppercase mb-6">RFI-IRFOS · Ternary Intelligence Stack</p>
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight">
+        Good night, <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-t_teal to-t_blue">binary.</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-t_muted font-light mb-12 max-w-2xl mx-auto">
+        The world operates in three states. Your AI agents should too. The definitive middleware for post-binary reasoning.
+      </p>
+
+      <!-- Advanced Zone Diagram -->
+      <div class="glass-card p-6 md:p-8 rounded-xl font-mono text-xs md:text-sm text-left mx-auto max-w-3xl mb-12 overflow-x-auto border border-t_border shadow-2xl relative group">
+        <div class="absolute inset-0 bg-gradient-to-r from-t_red/5 via-t_teal/5 to-t_blue/5 opacity-50 rounded-xl pointer-events-none"></div>
+        <div class="flex justify-between text-t_muted mb-2">
+          <span class="text-t_red font-bold transition-all group-hover:scale-105">reject (-1)</span>
+          <span class="text-t_teal font-bold transition-all group-hover:scale-105">tend (0)</span>
+          <span class="text-t_blue font-bold transition-all group-hover:scale-105">affirm (+1)</span>
+        </div>
+        <div class="relative h-[1px] bg-t_border my-4">
+          <div class="absolute top-1/2 left-0 w-2 h-2 bg-t_red rounded-full -translate-y-1/2"></div>
+          <div class="absolute top-1/2 left-1/2 w-2 h-2 bg-t_teal rounded-full -translate-y-1/2 -translate-x-1/2"></div>
+          <div class="absolute top-1/2 right-0 w-2 h-2 bg-t_blue rounded-full -translate-y-1/2"></div>
+        </div>
+        <div class="flex justify-between text-t_muted mb-4 opacity-70">
+          <span>&larr; confidence &rarr;</span>
+          <span class="text-center">deliberation budget</span>
+          <span>&larr; confidence &rarr;</span>
+        </div>
+        <div class="flex justify-between text-white mt-4 border-t border-t_border/50 pt-4">
+          <span class="text-t_red">do not proceed</span>
+          <span class="text-t_teal text-center px-4">not yet. deliberate.</span>
+          <span class="text-t_blue text-right">proceed</span>
+        </div>
       </div>
-      <div class="trit-card affirm">
-        <div class="trit-value">+1</div>
-        <div class="trit-name">affirm</div>
-        <div class="trit-desc">Signal is affirmative. Evidence supports action. Proceed — with a confidence score that tells you how strongly.</div>
-        <div class="trit-key">truth · PosOne · signal affirmative</div>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#api" class="px-8 py-3 bg-t_teal text-black font-mono font-bold rounded hover:bg-white transition-all shadow-[0_0_15px_rgba(0,212,170,0.3)]">
+          Explore the API
+        </a>
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener noreferrer" class="px-8 py-3 bg-transparent border border-t_border text-white font-mono hover:border-t_teal hover:text-t_teal transition-all rounded">
+          Read the Source
+        </a>
       </div>
     </div>
+  </main>
+
+  <!-- Stats Bar -->
+  <div class="relative z-10 border-y border-t_border bg-t_bg2/80 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-6 py-8 flex flex-wrap justify-center gap-8 md:gap-16">
+      <div class="text-center reveal"><span class="block font-mono text-3xl font-bold text-t_teal mb-1">3</span><span class="text-xs text-t_muted uppercase tracking-widest">States per trit</span></div>
+      <div class="text-center reveal"><span class="block font-mono text-3xl font-bold text-t_teal mb-1">51</span><span class="text-xs text-t_muted uppercase tracking-widest">BET VM opcodes</span></div>
+      <div class="text-center reveal"><span class="block font-mono text-3xl font-bold text-t_teal mb-1">122x</span><span class="text-xs text-t_muted uppercase tracking-widest">Sparse speedup</span></div>
+      <div class="text-center reveal"><span class="block font-mono text-3xl font-bold text-t_teal mb-1">120</span><span class="text-xs text-t_muted uppercase tracking-widest">Tests passing</span></div>
+      <div class="text-center reveal"><span class="block font-mono text-3xl font-bold text-t_teal mb-1">7</span><span class="text-xs text-t_muted uppercase tracking-widest">API tools</span></div>
+    </div>
   </div>
-</section>
 
-<div class="glow-line"></div>
-
-<!-- API SECTION -->
-<section class="api-section" id="api">
-  <div class="container">
-    <p class="section-label">The API</p>
-    <h2>Any agent. <strong>Ternary reasoning.</strong></h2>
-    <p class="lead">One header. Your AI agent stops guessing and starts deliberating.</p>
-    <div class="api-grid">
-      <div class="api-desc">
-        <h3>Endpoints</h3>
-        <ul class="endpoint-list">
-          <li><span class="method get">GET</span><span class="ep-path">/health</span></li>
-          <li><span class="method">POST</span><span class="ep-path">/api/trit_decide</span></li>
-          <li><span class="method">POST</span><span class="ep-path">/api/trit_vector</span></li>
-          <li><span class="method">POST</span><span class="ep-path">/api/trit_consensus</span></li>
-          <li><span class="method">POST</span><span class="ep-path">/api/quantize_weights</span></li>
-          <li><span class="method">POST</span><span class="ep-path">/api/sparse_benchmark</span></li>
-        </ul>
-        <br>
-        <p>Auth via <code style="font-family:var(--font);color:var(--teal)">X-Ternlang-Key</code> header.<br>
-        Also available as an MCP server — plug into any Claude, GPT, or open agent framework directly.</p>
-        <br>
-        <a href="mailto:licensing@ternlang.com?subject=API Key Request" class="btn btn-primary" style="margin-top:0.5rem">Request API Key →</a>
+  <!-- Architecture / Trit Cards -->
+  <section id="architecture" class="relative z-10 py-24 px-6 bg-t_bg">
+    <div class="max-w-7xl mx-auto">
+      <div class="mb-16 reveal">
+        <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">The Logic</p>
+        <h2 class="text-3xl md:text-5xl font-light text-white mb-6">Not null. Not undecided. <br/><strong class="font-bold text-t_teal">Deliberating.</strong></h2>
+        <p class="text-lg text-t_muted max-w-2xl">Binary forces every calculation into YES or NO. Ternary gives agents the essential third option allowing them to state insufficient signal and trigger deliberate evidence gathering.</p>
       </div>
-      <div>
-<pre><span class="c-comment"># Multi-source evidence → ternary decision</span>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Reject -->
+        <div class="glass-card p-8 rounded-xl border-t-2 border-t-t_red hover:-translate-y-1 transition-transform duration-300 reveal">
+          <div class="font-mono text-4xl text-t_red font-bold mb-4">-1</div>
+          <h3 class="text-xl font-bold text-white mb-3">Reject</h3>
+          <p class="text-t_muted text-sm leading-relaxed mb-6">Signal is negative and resolvable. Evidence definitively points away from action. Do not proceed. This is a computed decision, not a system error.</p>
+          <div class="inline-block bg-t_bg font-mono text-xs text-t_red px-3 py-1 rounded border border-t_red/20">conflict · signal negative</div>
+        </div>
+        
+        <!-- Tend -->
+        <div class="glass-card p-8 rounded-xl border-t-2 border-t-t_teal hover:-translate-y-1 transition-transform duration-300 reveal glow-tend">
+          <div class="font-mono text-4xl text-t_teal font-bold mb-4">0</div>
+          <h3 class="text-xl font-bold text-white mb-3">Tend</h3>
+          <p class="text-t_muted text-sm leading-relaxed mb-6">The deliberation zone. Neither null nor indecision. An active instruction to the VM: gather more contextual evidence before committing weights.</p>
+          <div class="inline-block bg-t_bg font-mono text-xs text-t_teal px-3 py-1 rounded border border-t_teal/20">hold · active computation</div>
+        </div>
+
+        <!-- Affirm -->
+        <div class="glass-card p-8 rounded-xl border-t-2 border-t-t_blue hover:-translate-y-1 transition-transform duration-300 reveal">
+          <div class="font-mono text-4xl text-t_blue font-bold mb-4">+1</div>
+          <h3 class="text-xl font-bold text-white mb-3">Affirm</h3>
+          <p class="text-t_muted text-sm leading-relaxed mb-6">Signal is affirmative. Evidence supports action. Proceed with execution, generating a confidence score that quantifies structural alignment.</p>
+          <div class="inline-block bg-t_bg font-mono text-xs text-t_blue px-3 py-1 rounded border border-t_blue/20">truth · signal affirmative</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive API Section -->
+  <section id="api" class="relative z-10 py-24 px-6 bg-t_bg2 border-y border-t_border">
+    <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <div class="reveal">
+        <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">The Integration</p>
+        <h2 class="text-3xl md:text-5xl font-light text-white mb-6">Any agent. <br/><strong class="font-bold text-t_teal">Ternary reasoning.</strong></h2>
+        <p class="text-lg text-t_muted mb-8">One header upgrade. Your local instances and LLM frameworks stop guessing and begin actual causal mapping.</p>
+        
+        <div class="space-y-2 font-mono text-sm bg-t_bg p-6 rounded-xl border border-t_border mb-8">
+          <div class="flex items-center gap-4 py-2 border-b border-t_border/50"><span class="text-t_blue bg-t_blue/10 px-2 py-0.5 rounded">GET</span><span class="text-white">/health</span></div>
+          <div class="flex items-center gap-4 py-2 border-b border-t_border/50"><span class="text-t_teal bg-t_teal/10 px-2 py-0.5 rounded">POST</span><span class="text-white">/api/trit_decide</span></div>
+          <div class="flex items-center gap-4 py-2 border-b border-t_border/50"><span class="text-t_teal bg-t_teal/10 px-2 py-0.5 rounded">POST</span><span class="text-white">/api/trit_vector</span></div>
+          <div class="flex items-center gap-4 py-2 border-b border-t_border/50"><span class="text-t_teal bg-t_teal/10 px-2 py-0.5 rounded">POST</span><span class="text-white">/api/trit_consensus</span></div>
+          <div class="flex items-center gap-4 py-2"><span class="text-t_teal bg-t_teal/10 px-2 py-0.5 rounded">POST</span><span class="text-white">/api/quantize_weights</span></div>
+        </div>
+
+        <a href="mailto:licensing@ternlang.com?subject=API Key Request" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-mono font-bold rounded hover:bg-t_teal transition-colors">
+          Request API Key <span class="text-xl">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Live Terminal Mockup -->
+      <div class="reveal glass-card rounded-xl overflow-hidden border border-t_border shadow-2xl">
+        <div class="bg-[#1e1e2e] px-4 py-3 flex items-center gap-2 border-b border-[#2a2a3e]">
+          <div class="w-3 h-3 rounded-full bg-t_red"></div>
+          <div class="w-3 h-3 rounded-full bg-t_teal"></div>
+          <div class="w-3 h-3 rounded-full bg-t_blue"></div>
+          <div class="ml-4 font-mono text-xs text-t_muted">bash — curl /api/trit_vector</div>
+          <button id="run-sim-btn" class="ml-auto font-mono text-xs bg-t_teal/20 text-t_teal px-3 py-1 rounded hover:bg-t_teal hover:text-black transition-colors">Run Deliberation</button>
+        </div>
+        <div class="p-6 bg-[#181825] font-mono text-sm overflow-x-auto">
+<pre class="text-gray-300 leading-relaxed"><span class="tok-comment"># Request payload</span>
 curl -X POST https://ternlang.com/api/trit_vector \
-  -H <span class="c-str">"X-Ternlang-Key: your-key"</span> \
-  -H <span class="c-str">"Content-Type: application/json"</span> \
-  -d <span class="c-str">'{
+  -H <span class="tok-string">"X-Ternlang-Key: ••••••••"</span> \
+  -d <span class="tok-string">'{
     "dimensions": [
-      {"label": "sentiment",  "value":  0.75, "weight": 1.5},
-      {"label": "safety",     "value": -0.60, "weight": 3.0},
-      {"label": "relevance",  "value":  0.85, "weight": 1.0}
-    ],
-    "min_confidence": 0.6
+      {"label": "sentiment", "value": 0.75, "weight": 1.5},
+      {"label": "safety",    "value": -0.60, "weight": 3.0}
+    ]
   }'</span>
 
-<span class="c-comment">→ response:</span>
-{
-  <span class="c-key">"aggregate"</span>: {
-    <span class="c-key">"scalar"</span>:        <span class="c-num">0.032</span>,
-    <span class="c-key">"label"</span>:         <span class="c-teal">"tend"</span>,
-    <span class="c-key">"confidence"</span>:    <span class="c-num">0.905</span>,
-    <span class="c-key">"is_actionable"</span>: <span class="c-red">false</span>
+<span class="tok-comment"># Response</span>
+<span id="terminal-output">{
+  <span class="tok-keyword">"aggregate"</span>: {
+    <span class="tok-keyword">"scalar"</span>: <span class="tok-number">0.032</span>,
+    <span class="tok-keyword">"label"</span>: <span class="tok-string">"tend"</span>,
+    <span class="tok-keyword">"confidence"</span>: <span class="tok-number">0.905</span>,
+    <span class="tok-keyword">"is_actionable"</span>: <span class="tok-number">false</span>
   },
-  <span class="c-key">"recommendation"</span>: <span class="c-str">"Tend — safety signal
-    at weight 3.0 prevents action.
-    Gather more evidence."</span>
-}</pre>
+  <span class="tok-keyword">"recommendation"</span>: <span class="tok-string">"safety signal weight overriding. deliberate."</span>
+}</span></pre>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<div class="glow-line"></div>
-
-<!-- BENCHMARK SECTION -->
-<section id="benchmark">
-  <div class="container">
-    <p class="section-label">Measured. Not estimated.</p>
-    <h2>The Goldilocks zone is <strong>40–60% sparsity.</strong></h2>
-    <p class="lead">BitNet b1.58 quantization naturally lands weights in this range. Our kernel was built for exactly this. That alignment is structural — not coincidental.</p>
-
-    <div style="overflow-x:auto;margin:2rem 0">
-      <table style="width:100%;border-collapse:collapse;font-family:var(--font);font-size:0.9rem">
-        <thead>
-          <tr style="border-bottom:1px solid #2a2a3e">
-            <th style="text-align:left;padding:0.6rem 1rem;color:var(--muted)">Sparsity</th>
-            <th style="padding:0.6rem 1rem;color:var(--muted)">32²</th>
-            <th style="padding:0.6rem 1rem;color:var(--muted)">128²</th>
-            <th style="padding:0.6rem 1rem;color:var(--muted)">256²</th>
-            <th style="padding:0.6rem 1rem;color:var(--muted)">512²</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border-bottom:1px solid #1a1a2e">
-            <td style="padding:0.6rem 1rem;color:var(--muted)">25%</td>
-            <td style="padding:0.6rem 1rem;text-align:center">6.3×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">26.4×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">39.3×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">53.1×</td>
-          </tr>
-          <tr style="border-bottom:1px solid #1a1a2e;background:#0f1a18">
-            <td style="padding:0.6rem 1rem;color:var(--teal);font-weight:600">40–60% ★</td>
-            <td style="padding:0.6rem 1rem;text-align:center;color:var(--teal);font-weight:600">6×</td>
-            <td style="padding:0.6rem 1rem;text-align:center;color:var(--teal);font-weight:600">28×</td>
-            <td style="padding:0.6rem 1rem;text-align:center;color:var(--teal);font-weight:600">46×</td>
-            <td style="padding:0.6rem 1rem;text-align:center;color:var(--teal);font-weight:600">86×</td>
-          </tr>
-          <tr style="border-bottom:1px solid #1a1a2e">
-            <td style="padding:0.6rem 1rem;color:var(--muted)">90%</td>
-            <td style="padding:0.6rem 1rem;text-align:center">2.0×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">18.7×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">38.6×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">70.9×</td>
-          </tr>
-          <tr>
-            <td style="padding:0.6rem 1rem;color:var(--muted)">99%</td>
-            <td style="padding:0.6rem 1rem;text-align:center">1.8×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">13.1×</td>
-            <td style="padding:0.6rem 1rem;text-align:center">53.9×</td>
-            <td style="padding:0.6rem 1rem;text-align:center;font-weight:600">122×</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="color:var(--muted);font-size:0.85rem">Release build · Rayon parallel rows · CSC sparse kernel · 3-rep median · single machine · no GPU</p>
-  </div>
-</section>
-
-<div class="glow-line"></div>
-
-<!-- TIERS -->
-<section id="tiers">
-  <div class="container">
-    <p class="section-label">Licensing</p>
-    <h2>Open core. <strong>Protected edge.</strong></h2>
-    <p class="lead">The language belongs to the community. The inference engine and API power the business.</p>
-    <div class="tier-grid">
-      <div class="tier-card t1">
-        <div class="tier-badge">Tier 1</div>
-        <div class="tier-name">Open Core</div>
-        <div class="tier-license">LGPL-3.0-or-later · free forever</div>
-        <ul class="tier-items">
-          <li>ternlang-core (compiler + VM)</li>
-          <li>ternlang-cli</li>
-          <li>ternlang-lsp (language server)</li>
-          <li>ternlang-compat (ecosystem bridges)</li>
-          <li>ternpkg (package manager)</li>
-          <li>spec/ (grammar + language reference)</li>
-        </ul>
+  <!-- Benchmark Section -->
+  <section id="benchmark" class="relative z-10 py-24 px-6 bg-t_bg">
+    <div class="max-w-5xl mx-auto reveal">
+      <div class="text-center mb-16">
+        <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Hardware alignment</p>
+        <h2 class="text-3xl md:text-5xl font-light text-white mb-6">The Goldilocks zone is <strong class="font-bold text-t_teal">40–60% sparsity.</strong></h2>
+        <p class="text-lg text-t_muted max-w-2xl mx-auto">BitNet b1.58 quantization naturally drives matrices into this range. Our custom CSC sparse kernel is engineered to exploit this structural alignment, circumventing brute-force arithmetic.</p>
       </div>
-      <div class="tier-card t2">
-        <div class="tier-badge">Tier 2</div>
-        <div class="tier-name">Restricted</div>
-        <div class="tier-license">BSL 1.1 · free for research · commercial license required</div>
-        <ul class="tier-items">
-          <li>ternlang-ml (sparse inference engine)</li>
-          <li>ternlang-mcp (MCP server)</li>
-          <li>ternlang-hdl (Verilog backend)</li>
-          <li>ternlang-runtime (distributed actors)</li>
-          <li>Auto-converts to Apache-2.0 in 2030</li>
-        </ul>
-      </div>
-      <div class="tier-card t3">
-        <div class="tier-badge">Tier 3</div>
-        <div class="tier-name">API &amp; Enterprise</div>
-        <div class="tier-license">Proprietary · licensing@ternlang.com</div>
-        <ul class="tier-items">
-          <li>Hosted API (ternlang.com/api)</li>
-          <li>Per-call and subscription pricing</li>
-          <li>Enterprise SLA</li>
-          <li>Commercial inference engine license</li>
-          <li>Hardware backend (FPGA targets)</li>
-        </ul>
+
+      <div class="glass-card rounded-xl overflow-hidden border border-t_border">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-sm">
+            <thead class="bg-t_bg3 border-b border-t_border text-t_muted">
+              <tr>
+                <th class="p-6 font-normal">Sparsity</th>
+                <th class="p-6 font-normal text-center">32²</th>
+                <th class="p-6 font-normal text-center">128²</th>
+                <th class="p-6 font-normal text-center">256²</th>
+                <th class="p-6 font-normal text-center">512²</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-t_border text-gray-300">
+              <tr class="hover:bg-white/5 transition-colors">
+                <td class="p-6 text-t_muted">25%</td>
+                <td class="p-6 text-center">6.3x</td>
+                <td class="p-6 text-center">26.4x</td>
+                <td class="p-6 text-center">39.3x</td>
+                <td class="p-6 text-center">53.1x</td>
+              </tr>
+              <tr class="bg-t_teal/5 border-l-2 border-l-t_teal">
+                <td class="p-6 text-t_teal font-bold">40–60% ★</td>
+                <td class="p-6 text-center text-t_teal font-bold">6x</td>
+                <td class="p-6 text-center text-t_teal font-bold">28x</td>
+                <td class="p-6 text-center text-t_teal font-bold">46x</td>
+                <td class="p-6 text-center text-t_teal font-bold">86x</td>
+              </tr>
+              <tr class="hover:bg-white/5 transition-colors">
+                <td class="p-6 text-t_muted">90%</td>
+                <td class="p-6 text-center">2.0x</td>
+                <td class="p-6 text-center">18.7x</td>
+                <td class="p-6 text-center">38.6x</td>
+                <td class="p-6 text-center">70.9x</td>
+              </tr>
+              <tr class="hover:bg-white/5 transition-colors">
+                <td class="p-6 text-t_muted">99%</td>
+                <td class="p-6 text-center">1.8x</td>
+                <td class="p-6 text-center">13.1x</td>
+                <td class="p-6 text-center">53.9x</td>
+                <td class="p-6 text-center font-bold text-white">122x</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-t_bg3 p-4 text-xs font-mono text-t_muted text-center border-t border-t_border">
+          Release build · Rayon parallel rows · CSC sparse kernel · 3-rep median · Local execution
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<div class="glow-line"></div>
+  <!-- Licensing / Tiers -->
+  <section id="licensing" class="relative z-10 py-24 px-6 bg-t_bg2 border-t border-t_border">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Deployment</p>
+        <h2 class="text-3xl md:text-5xl font-light text-white mb-6">Open core. <strong class="font-bold text-white">Protected edge.</strong></h2>
+        <p class="text-lg text-t_muted max-w-2xl mx-auto">The language syntax is public infrastructure. The high-performance inference engine and API logic fund the institute.</p>
+      </div>
 
-<!-- CTA -->
-<section class="cta-band">
-  <div class="container">
-    <p class="section-label">Get started</p>
-    <h2>Your agents deserve a <strong>third opinion.</strong></h2>
-    <p class="lead">Stop forcing binary decisions from ambiguous evidence. The tend zone is the deliberation budget your AI never had.</p>
-    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-      <a href="mailto:licensing@ternlang.com?subject=API Key Request" class="btn btn-primary">Request API Key</a>
-      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="btn btn-secondary">Read the Source</a>
-      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/whitepaper/ternlang-whitepaper.docx" class="btn btn-secondary">Whitepaper</a>
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Tier 1 -->
+        <div class="glass-card p-8 rounded-xl border border-t_border flex flex-col reveal">
+          <div class="font-mono text-xs text-white bg-white/10 self-start px-3 py-1 rounded mb-6">Tier 1</div>
+          <h3 class="text-2xl font-bold text-white mb-2">Open Core</h3>
+          <p class="text-t_muted text-xs font-mono mb-6">LGPL-3.0-or-later</p>
+          <ul class="space-y-4 mb-8 flex-grow">
+            <li class="flex items-start gap-3 text-sm text-gray-300"><span class="text-t_teal mt-0.5">→</span> ternlang-core (compiler + VM)</li>
+            <li class="flex items-start gap-3 text-sm text-gray-300"><span class="text-t_teal mt-0.5">→</span> ternlang-cli & LSP</li>
+            <li class="flex items-start gap-3 text-sm text-gray-300"><span class="text-t_teal mt-0.5">→</span> ternpkg manager</li>
+          </ul>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener noreferrer" class="block text-center w-full py-3 border border-t_border rounded text-white font-mono hover:bg-white/5 transition-colors">Clone Core</a>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="glass-card p-8 rounded-xl border-2 border-t_teal relative flex flex-col transform md:-translate-y-4 shadow-2xl glow-tend reveal" style="transition-delay: 100ms;">
+          <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-t_teal to-t_blue"></div>
+          <div class="font-mono text-xs text-t_bg bg-t_teal font-bold self-start px-3 py-1 rounded mb-6">Tier 2 — Commercial Window</div>
+          <h3 class="text-2xl font-bold text-white mb-2">Restricted</h3>
+          <p class="text-t_muted text-xs font-mono mb-6">BSL 1.1 (Converts 2030)</p>
+          <ul class="space-y-4 mb-8 flex-grow">
+            <li class="flex items-start gap-3 text-sm text-white"><span class="text-t_teal mt-0.5">→</span> ternlang-ml (sparse engine)</li>
+            <li class="flex items-start gap-3 text-sm text-white"><span class="text-t_teal mt-0.5">→</span> Albert local runtime</li>
+            <li class="flex items-start gap-3 text-sm text-white"><span class="text-t_teal mt-0.5">→</span> MCP Server integration</li>
+            <li class="flex items-start gap-3 text-sm text-white"><span class="text-t_teal mt-0.5">→</span> Verilog backend targets</li>
+          </ul>
+          <a href="mailto:licensing@ternlang.com" class="block text-center w-full py-3 bg-t_teal text-black rounded font-mono font-bold hover:bg-white transition-colors">Acquire License</a>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="glass-card p-8 rounded-xl border border-t_border flex flex-col reveal" style="transition-delay: 200ms;">
+          <div class="font-mono text-xs text-t_blue bg-t_blue/10 self-start px-3 py-1 rounded mb-6">Tier 3</div>
+          <h3 class="text-2xl font-bold text-white mb-2">Enterprise</h3>
+          <p class="text-t_muted text-xs font-mono mb-6">Proprietary</p>
+          <ul class="space-y-4 mb-8 flex-grow">
+            <li class="flex items-start gap-3 text-sm text-gray-300"><span class="text-t_blue mt-0.5">→</span> Hosted API access</li>
+            <li class="flex items-start gap-3 text-sm text-gray-300"><span class="text-t_blue mt-0.5">→</span> High-throughput SLA</li>
+            <li class="flex items-start gap-3 text-sm text-gray-300"><span class="text-t_blue mt-0.5">→</span> Custom FPGA implementations</li>
+          </ul>
+          <a href="mailto:licensing@ternlang.com" class="block text-center w-full py-3 border border-t_border rounded text-white font-mono hover:bg-white/5 transition-colors">Contact Sales</a>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-links">
-    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack">GitHub</a>
-    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/wiki/MCP-Integration-Guide.md">MCP Docs</a>
-    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/wiki/Scalar-Temperature.md">Scalar Temperature</a>
-    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/ROADMAP.md">Roadmap</a>
-    <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a>
-  </div>
-  <p>© 2026 RFI-IRFOS (Simeon Kepp) · Built with balanced ternary · <a href="https://ternlang.com">ternlang.com</a></p>
-  <p style="margin-top:0.5rem;font-size:0.75rem;opacity:0.5">
-    ML training restriction applies. See LICENSE-ML-TRAINING.
-  </p>
-</footer>
+  <!-- CTA -->
+  <section class="relative z-10 py-24 px-6 bg-gradient-to-b from-t_bg2 to-black border-t border-t_border text-center">
+    <div class="max-w-3xl mx-auto reveal">
+      <h2 class="text-4xl md:text-6xl font-light text-white mb-8">Force the system to <br/><strong class="font-bold text-t_teal">deliberate.</strong></h2>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="mailto:licensing@ternlang.com" class="px-8 py-4 bg-white text-black font-mono font-bold rounded hover:bg-t_teal transition-all">Request API Key</a>
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/whitepaper/ternlang-whitepaper.docx" target="_blank" rel="noopener noreferrer" class="px-8 py-4 border border-t_border text-white font-mono rounded hover:border-t_teal transition-all">Read Whitepaper</a>
+      </div>
+    </div>
+  </section>
 
+  <!-- Footer -->
+  <footer class="relative z-10 bg-black py-12 px-6 border-t border-t_border text-center">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-wrap justify-center gap-6 font-mono text-sm text-t_muted mb-8">
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener noreferrer" class="hover:text-t_teal transition-colors">GitHub</a>
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/wiki/MCP-Integration-Guide.md" target="_blank" rel="noopener noreferrer" class="hover:text-t_teal transition-colors">MCP Docs</a>
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/wiki/Scalar-Temperature.md" target="_blank" rel="noopener noreferrer" class="hover:text-t_teal transition-colors">Scalar Temp</a>
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/ROADMAP.md" target="_blank" rel="noopener noreferrer" class="hover:text-t_teal transition-colors">Roadmap</a>
+        <a href="mailto:licensing@ternlang.com" class="hover:text-white transition-colors">licensing@ternlang.com</a>
+      </div>
+      <p class="text-t_muted text-sm font-light mb-2">
+        &copy; 2026 RFI-IRFOS &middot; Operated from Graz &middot; Built with balanced ternary
+      </p>
+      <p class="text-xs text-t_muted/50 font-mono mt-4">
+        ML training restriction applies. See LICENSE-ML-TRAINING.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Logic Scripts -->
+  <script>
+    // 1. Scroll Reveal Logic
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // 2. Mock Terminal Logic
+    const runBtn = document.getElementById('run-sim-btn');
+    const output = document.getElementById('terminal-output');
+    
+    const states = [
+      `{\n  <span class="tok-keyword">"status"</span>: <span class="tok-string">"computing..."</span>,\n  <span class="tok-keyword">"layer"</span>: <span class="tok-number">12</span>\n}`,
+      `{\n  <span class="tok-keyword">"aggregate"</span>: {\n    <span class="tok-keyword">"scalar"</span>: <span class="tok-number">-0.81</span>,\n    <span class="tok-keyword">"label"</span>: <span class="tok-string">"reject"</span>\n  }\n}`,
+      `{\n  <span class="tok-keyword">"aggregate"</span>: {\n    <span class="tok-keyword">"scalar"</span>: <span class="tok-number">0.032</span>,\n    <span class="tok-keyword">"label"</span>: <span class="tok-string">"tend"</span>,\n    <span class="tok-keyword">"confidence"</span>: <span class="tok-number">0.905</span>,\n    <span class="tok-keyword">"is_actionable"</span>: <span class="tok-number">false</span>\n  },\n  <span class="tok-keyword">"recommendation"</span>: <span class="tok-string">"safety signal weight overriding. deliberate."</span>\n}`
+    ];
+
+    runBtn.addEventListener('click', () => {
+      runBtn.disabled = true;
+      runBtn.innerText = 'Resolving...';
+      runBtn.classList.remove('bg-t_teal/20', 'text-t_teal');
+      runBtn.classList.add('bg-white', 'text-black');
+      
+      output.innerHTML = states[0];
+      
+      setTimeout(() => { output.innerHTML = states[1]; }, 600);
+      setTimeout(() => { 
+        output.innerHTML = states[2]; 
+        runBtn.disabled = false;
+        runBtn.innerText = 'Run Deliberation';
+        runBtn.classList.remove('bg-white', 'text-black');
+        runBtn.classList.add('bg-t_teal/20', 'text-t_teal');
+      }, 1400);
+    });
+
+    // 3. Ternary Background Canvas Network
+    const canvas = document.getElementById('ternary-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Node class representing data points in the network
+    class Node {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        // Assign ternary state: -1 (red), 0 (teal), 1 (blue)
+        const rand = Math.random();
+        if (rand < 0.33) { this.state = -1; this.color = '#ff5f6d'; }
+        else if (rand < 0.66) { this.state = 0; this.color = '#00d4aa'; }
+        else { this.state = 1; this.color = '#4a9eff'; }
+        this.radius = Math.random() * 2 + 1;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+        
+        // Slight chance to mutate to state 0 (deliberation focus)
+        if (Math.random() < 0.001) {
+          this.state = 0;
+          this.color = '#00d4aa';
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+    }
+
+    const nodes = Array.from({ length: 60 }, () => new Node());
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      
+      // Update nodes
+      nodes.forEach(node => {
+        node.update();
+        node.draw();
+      });
+
+      // Draw connections
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            
+            // If both are state 0, connection is strong teal. Otherwise generic faint line.
+            if (nodes[i].state === 0 && nodes[j].state === 0) {
+              ctx.strokeStyle = `rgba(0, 212, 170, ${1 - dist/150})`;
+              ctx.lineWidth = 1;
+            } else {
+              ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - dist/150) * 0.1})`;
+              ctx.lineWidth = 0.5;
+            }
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+    
+    // Start animation loop
+    animate();
+  </script>
 </body>
 </html>
-
