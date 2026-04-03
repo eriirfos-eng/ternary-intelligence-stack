@@ -99,22 +99,3 @@ streamlit run albert.py
 ```
 
 ---
-
-## Backstory
-
-Simeon (RFI-IRFOS) and the team sat down to port the core architectural patterns to a clean-room Python implementation that fits the **Albert** philosophy.
-
-The result is **Albert-Code**: a bridge between the sophisticated agentic workflows of the future and the fast, local, offline-first reality of today.
-
----
-
-## Community
-
-Join the [**instructkr Discord**](https://instruct.kr/) — the best Korean language model community.
-
-[![Discord](https://img.shields.io/badge/Join%20Discord-instruct.kr-5865F2?logo=discord&style=for-the-badge)](https://instruct.kr/)
-
-## Ownership / Affiliation Disclaimer
-
-- This repository is **not affiliated with, endorsed by, or maintained by Anthropic**.
-- Albert-Code is a sovereign project of RFI-IRFOS.
