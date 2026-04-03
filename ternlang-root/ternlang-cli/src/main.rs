@@ -52,6 +52,15 @@ enum Commands {
         #[arg(short, long)]
         run: bool,
     },
+    /// Emit BET processor Verilog and run Yosys synthesis (Phase 6.1)
+    HdlSynth {
+        /// Output directory for generated Verilog files (default: ./bet_hdl/)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+        /// Run Yosys synthesis if yosys is on PATH
+        #[arg(short, long)]
+        synth: bool,
+    },
     /// [hidden] You already know what this does
     #[command(hide = true)]
     Enlighten,
@@ -120,6 +129,9 @@ fn main() {
         }
         Commands::Sim { file, output, run } => {
             run_sim(file, output.as_deref(), *run);
+        }
+        Commands::HdlSynth { output, synth } => {
+            run_hdl_synth(output.as_deref(), *synth);
         }
         Commands::Enlighten => {
             enlighten();
@@ -306,6 +318,93 @@ fn fmt_source(source: &str) -> String {
         out.push('\n');
     }
     out
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 6.1 — HDL synthesis: emit Verilog + optional Yosys run
+// ─────────────────────────────────────────────────────────────────────────────
+fn run_hdl_synth(output: Option<&std::path::Path>, run_yosys: bool) {
+    use ternlang_hdl::{VerilogEmitter, BetIsaEmitter};
+    use std::process::Command;
+
+    let out_dir = output
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| std::path::PathBuf::from("bet_hdl"));
+    fs::create_dir_all(&out_dir).expect("Failed to create output directory");
+
+    println!("[hdl-synth] Emitting BET processor Verilog → {}/", out_dir.display());
+
+    // ── Primitive modules from VerilogEmitter ────────────────────────────────
+    let primitives: &[(&str, String)] = &[
+        ("trit_neg.v",  VerilogEmitter::trit_neg().render()),
+        ("trit_cons.v", VerilogEmitter::trit_cons().render()),
+        ("trit_mul.v",  VerilogEmitter::trit_mul().render()),
+        ("trit_add.v",  VerilogEmitter::trit_add().render()),
+        ("trit_reg.v",  VerilogEmitter::trit_reg().render()),
+        ("bet_alu.v",   VerilogEmitter::bet_alu().render()),
+        ("sparse_matmul_4x4.v", VerilogEmitter::sparse_matmul(4).render()),
+    ];
+    for (name, src) in primitives {
+        let path = out_dir.join(name);
+        fs::write(&path, src).expect("Failed to write Verilog");
+        println!("  wrote {}", path.display());
+    }
+
+    // ── ISA control path ────────────────────────────────────────────────────
+    let isa = BetIsaEmitter::new();
+    let isa_modules: &[(&str, String)] = &[
+        ("bet_regfile.v",  isa.emit_register_file()),
+        ("bet_pc.v",       isa.emit_program_counter()),
+        ("bet_control.v",  isa.emit_control_unit()),
+        ("bet_processor.v",isa.emit_top()),
+    ];
+    for (name, src) in isa_modules {
+        let path = out_dir.join(name);
+        fs::write(&path, src).expect("Failed to write Verilog");
+        println!("  wrote {}", path.display());
+    }
+
+    // ── Yosys synthesis script ───────────────────────────────────────────────
+    let ys_script = format!(
+        "# Auto-generated Yosys synthesis script\n\
+         # Run: yosys {}/synth_bet.ys\n\
+         read_verilog {0}/trit_neg.v\n\
+         read_verilog {0}/trit_cons.v\n\
+         read_verilog {0}/trit_mul.v\n\
+         read_verilog {0}/trit_add.v\n\
+         read_verilog {0}/trit_reg.v\n\
+         read_verilog {0}/bet_alu.v\n\
+         read_verilog {0}/bet_regfile.v\n\
+         read_verilog {0}/bet_pc.v\n\
+         read_verilog {0}/bet_control.v\n\
+         read_verilog {0}/bet_processor.v\n\
+         hierarchy -check -top bet_processor\n\
+         proc\nopt\ntechmap\nopt\n\
+         stat\n\
+         write_verilog -noattr {0}/synth_out.v\n",
+        out_dir.display()
+    );
+    let ys_path = out_dir.join("synth_bet.ys");
+    fs::write(&ys_path, &ys_script).expect("Failed to write Yosys script");
+    println!("  wrote {}", ys_path.display());
+
+    println!();
+    println!("[hdl-synth] {} Verilog modules emitted.", primitives.len() + isa_modules.len());
+    println!("[hdl-synth] To synthesise:");
+    println!("  sudo apt install yosys   # if not installed");
+    println!("  yosys {}", ys_path.display());
+
+    if run_yosys {
+        match Command::new("yosys").arg(ys_path.to_str().unwrap()).status() {
+            Ok(s) if s.success() => println!("[hdl-synth] Yosys synthesis complete."),
+            Ok(s) => eprintln!("[hdl-synth] Yosys exited with status {}", s),
+            Err(_) => {
+                eprintln!("[hdl-synth] yosys not found on PATH.");
+                eprintln!("  Install: sudo apt install yosys");
+                eprintln!("  Then re-run: ternlang hdl-synth --synth");
+            }
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

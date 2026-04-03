@@ -14,12 +14,12 @@ pub struct StdlibLoader;
 impl StdlibLoader {
     fn source_for(path: &[String]) -> Option<&'static str> {
         match path.join("::").as_str() {
-            "std::trit"     => Some(include_str!("../../stdlib/std/trit.tern")),
-            "std::math"     => Some(include_str!("../../stdlib/std/math.tern")),
-            "std::tensor"   => Some(include_str!("../../stdlib/std/tensor.tern")),
-            "std::io"       => Some(include_str!("../../stdlib/std/io.tern")),
-            "ml::quantize"  => Some(include_str!("../../stdlib/ml/quantize.tern")),
-            "ml::inference" => Some(include_str!("../../stdlib/ml/inference.tern")),
+            "std::trit"     => Some(include_str!("../stdlib/std/trit.tern")),
+            "std::math"     => Some(include_str!("../stdlib/std/math.tern")),
+            "std::tensor"   => Some(include_str!("../stdlib/std/tensor.tern")),
+            "std::io"       => Some(include_str!("../stdlib/std/io.tern")),
+            "ml::quantize"  => Some(include_str!("../stdlib/ml/quantize.tern")),
+            "ml::inference" => Some(include_str!("../stdlib/ml/inference.tern")),
             _               => None,
         }
     }

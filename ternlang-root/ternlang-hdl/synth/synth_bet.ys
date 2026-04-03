@@ -1,0 +1,38 @@
+# Yosys synthesis script for the BET processor
+# Targets generic FPGA (no device-specific cells — use with any toolchain)
+#
+# Usage:
+#   yosys synth_bet.ys
+#
+# For iCE40 (Lattice):
+#   yosys -p "synth_ice40 -top bet_processor" synth_bet.ys
+#
+# For ECP5:
+#   yosys -p "synth_ecp5 -top bet_processor" synth_bet.ys
+#
+# Install: sudo apt install yosys   (or brew install yosys on macOS)
+
+# ── Read all BET Verilog sources ───────────────────────────────────────────────
+read_verilog ../verilog/trit_neg.v
+read_verilog ../verilog/trit_cons.v
+read_verilog ../verilog/trit_mul.v
+read_verilog ../verilog/trit_add.v
+read_verilog ../verilog/trit_reg.v
+read_verilog ../verilog/bet_alu.v
+read_verilog ../verilog/bet_regfile.v
+read_verilog ../verilog/bet_pc.v
+read_verilog ../verilog/bet_control.v
+read_verilog ../verilog/bet_processor.v
+
+# ── Synthesise ─────────────────────────────────────────────────────────────────
+hierarchy -check -top bet_processor
+proc
+opt
+techmap
+opt
+
+# ── Statistics ─────────────────────────────────────────────────────────────────
+stat
+
+# ── Write output ───────────────────────────────────────────────────────────────
+write_verilog -noattr synth_bet_out.v

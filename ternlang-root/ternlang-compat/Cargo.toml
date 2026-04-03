@@ -11,4 +11,4 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-ternlang-core = { path = "../ternlang-core" }
+ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
