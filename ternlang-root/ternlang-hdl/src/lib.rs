@@ -24,6 +24,8 @@
 
 pub mod verilog;
 pub mod isa;
+pub mod sim;
 
 pub use verilog::{VerilogEmitter, VerilogModule};
 pub use isa::BetIsaEmitter;
+pub use sim::BetSimEmitter;

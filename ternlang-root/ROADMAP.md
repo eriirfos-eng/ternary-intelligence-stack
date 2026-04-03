@@ -1,7 +1,7 @@
 # Ternlang Roadmap: Bridging the Ternary Software Deficit
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
 **Current Version:** v0.1 (Foundational)
-**Last Updated:** 2026-04-02
+**Last Updated:** 2026-04-03
 **Repo:** https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-
 **Local:** ~/Desktop/Ternary Intelligence Stack (TIS)/
 
@@ -123,17 +123,17 @@ This is our philosopher's stone. Full resource commitment.
   - Sparse matmul array: parameterised N×N with per-cell zero-skip enable
   - ISA control: bet_regfile (27 reg), bet_pc (16-bit), bet_control (all opcodes), bet_processor (top-level)
   - 11 HDL tests passing
-- [ ] **BET ISA Spec Document**: formal published standard (citable by academics)
-- [ ] **FPGA Simulation**: Verilator/Icarus Verilog wrapper for BET bytecode
+- [x] **BET ISA Spec Document**: `BET-ISA-SPEC.md` — formal ISA spec with encoding tables, stack-effect notation, hardware mapping
+- [ ] **FPGA Simulation** (Phase 6.1): Verilator/Icarus Verilog wrapper for BET bytecode — **NEXT**
 
 ---
 
-## 🛠 Developer Tooling (Parallel Track)
-- [ ] **LSP**: `ternlang-lsp` crate — diagnostics, hover, go-to-definition, autocomplete
-- [ ] **VS Code extension**: syntax highlighting, `.tern` file association, LSP client — **NEXT**
-- [ ] **Formatter**: `ternlang fmt` — canonical style for 3-way match arms
-- [ ] **REPL**: `ternlang repl` — interactive trit expression evaluation
-- [ ] **Package manager (ternpkg)**: `ternlang.toml`, `ternlang install`, GitHub-backed registry
+## 🛠 Developer Tooling — COMPLETE ✅
+- [x] **LSP**: `ternlang-lsp` crate — JSON-RPC 2.0 over stdio, diagnostics, hover, completion (19 snippets)
+- [x] **VS Code extension**: `ternlang-vscode/` — TextMate grammar, .tern file association, LSP client
+- [x] **Formatter**: `ternlang fmt [--write]` — canonical style for 3-way match arms
+- [x] **REPL**: `ternlang repl` — interactive trit expression evaluation via BET VM
+- [x] **Package manager (ternpkg)**: `ternlang.toml`, `ternpkg install [PKG]`, GitHub-backed registry
 
 ---
 
@@ -158,3 +158,4 @@ This is our philosopher's stone. Full resource commitment.
 | 2026-04-02 | Phase 5.0 actor model: agent/spawn/send/await/agentref in lexer+AST+parser+semantic+codegen+VM. TSPAWN/TSEND/TAWAIT opcodes. AgentInstance with mailbox. Integration test: spawn echo agent, send +1, await +1. 30/30 tests passing. |
 | 2026-04-02 | Phase 5.1: ternlang-runtime crate (TCP distributed actors). TernNode with listen/connect/remote_send/remote_await. Wire protocol: newline JSON over TCP. remote/nodeid keywords. spawn remote "addr" syntax. StringLit token. Real function call type resolution in semantic checker. 31 core + 2 runtime tests. |
 | 2026-04-02 | Phase 6.0: ternlang-hdl crate. Verilog primitives: trit_neg/cons/mul/add/reg, bet_alu, sparse_matmul(N). ISA control: bet_regfile/pc/control/processor. All BET opcodes mapped. 52 total tests passing. |
+| 2026-04-03 | BET-ISA-SPEC.md formal spec published. ternlang-lsp: full LSP 3.17 JSON-RPC (hover, completion, diagnostics). ternlang-vscode: TextMate grammar, LSP client extension. ternlang fmt + repl in CLI. ternpkg v0.1: init/install/list/info, GitHub-backed registry. 58 total tests passing. |

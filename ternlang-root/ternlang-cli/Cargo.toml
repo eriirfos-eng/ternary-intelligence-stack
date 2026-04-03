@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 ternlang-core = { path = "../ternlang-core" }
 ternlang-ml   = { path = "../ternlang-ml" }
+ternlang-hdl  = { path = "../ternlang-hdl" }
 clap = { version = "4.4", features = ["derive"] }

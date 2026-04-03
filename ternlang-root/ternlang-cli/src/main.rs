@@ -5,6 +5,7 @@ use ternlang_core::parser::Parser;
 use ternlang_core::codegen::betbc::BytecodeEmitter;
 use ternlang_core::vm::{BetVm, Value};
 use ternlang_ml::{TritMatrix, bitnet_threshold, benchmark};
+use ternlang_hdl::BetSimEmitter;
 
 #[derive(ClapParser)]
 #[command(name = "ternlang")]
@@ -38,6 +39,17 @@ enum Commands {
         /// Write formatted output back to file (default: print to stdout)
         #[arg(short, long)]
         write: bool,
+    },
+    /// Generate an Icarus Verilog FPGA testbench for a .tern file
+    Sim {
+        /// Path to the .tern file
+        file: PathBuf,
+        /// Write testbench to this file (default: <file>.sim.v)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+        /// Run simulation with iverilog+vvp if available
+        #[arg(short, long)]
+        run: bool,
     },
     /// [hidden] You already know what this does
     #[command(hide = true)]
@@ -104,6 +116,9 @@ fn main() {
         Commands::Fmt { file, write } => {
             run_fmt(file, *write);
         }
+        Commands::Sim { file, output, run } => {
+            run_sim(file, output.as_deref(), *run);
+        }
         Commands::Enlighten => {
             enlighten();
         }
@@ -132,6 +147,61 @@ fn main() {
             fs::write(out_path, code).expect("Failed to write bytecode");
             println!("Compiled to {:?}", file);
         }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sim — compile to bytecode and emit Verilog testbench (Phase 6.1)
+// ─────────────────────────────────────────────────────────────────────────────
+fn run_sim(file: &std::path::PathBuf, output: Option<&std::path::Path>, run: bool) {
+    let input = fs::read_to_string(file).expect("Failed to read file");
+    let mut parser = Parser::new(&input);
+    let mut emitter = BytecodeEmitter::new();
+
+    match parser.parse_program() {
+        Ok(prog) => emitter.emit_program(&prog),
+        Err(e) => {
+            eprintln!("Parse error: {:?}", e);
+            return;
+        }
+    }
+
+    let code = emitter.finalize();
+    println!("Compiled: {} bytes of BET bytecode", code.len());
+
+    let sim = BetSimEmitter::new();
+    let tb = sim.emit_testbench(&code);
+
+    let tb_path = output
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| {
+            let mut p = file.clone();
+            p.set_extension("sim.v");
+            p
+        });
+
+    fs::write(&tb_path, &tb).expect("Failed to write testbench");
+    println!("Testbench: {}", tb_path.display());
+
+    if run {
+        if BetSimEmitter::iverilog_available() {
+            let path_str = tb_path.to_string_lossy();
+            match BetSimEmitter::run_iverilog(&path_str) {
+                Ok(output) => {
+                    println!("\n--- Simulation output ---");
+                    print!("{}", output);
+                }
+                Err(e) => eprintln!("Simulation failed: {}", e),
+            }
+        } else {
+            println!("iverilog not found on PATH. To run the simulation:");
+            println!("  sudo apt install iverilog");
+            println!("  iverilog -o bet_sim.vvp {} && vvp bet_sim.vvp", tb_path.display());
+        }
+    } else {
+        println!("\nTo run with Icarus Verilog:");
+        println!("  iverilog -o bet_sim.vvp -g2001 {} && vvp bet_sim.vvp", tb_path.display());
+        println!("  # Open bet_sim.vcd in GTKWave for waveform inspection");
     }
 }
 
