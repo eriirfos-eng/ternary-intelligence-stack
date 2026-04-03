@@ -52,6 +52,10 @@ use ternlang_core::trit::Trit;
 use ternlang_ml::{
     TritScalar, TritEvidenceVec, TEND_BOUNDARY,
     bitnet_threshold, benchmark, dense_matmul, sparse_matmul, TritMatrix,
+    // Phase 8: Ternary AI Reasoning Toolkit
+    DeliberationEngine, CoalitionMember, coalition_vote,
+    GateDimension, action_gate, GateVerdict,
+    scalar_temperature, hallucination_score,
 };
 
 // ─── Key store ───────────────────────────────────────────────────────────────
@@ -583,6 +587,195 @@ async fn sparse_benchmark(Json(body): Json<Value>) -> Response {
     }))).into_response()
 }
 
+// ─── POST /api/trit_deliberate ────────────────────────────────────────────────
+
+async fn trit_deliberate(Json(body): Json<Value>) -> Response {
+    let target_confidence = body["target_confidence"].as_f64().unwrap_or(0.7) as f32;
+    let max_rounds = body["max_rounds"].as_u64().unwrap_or(10) as usize;
+    let alpha = body["alpha"].as_f64().unwrap_or(0.4) as f32;
+
+    let rounds_evidence: Vec<Vec<f32>> = match body["rounds"].as_array() {
+        Some(arr) => arr.iter().map(|round| {
+            round.as_array().map(|signals|
+                signals.iter().map(|v| v.as_f64().unwrap_or(0.0) as f32).collect()
+            ).unwrap_or_default()
+        }).collect(),
+        None => return api_error(StatusCode::BAD_REQUEST,
+            "rounds must be an array of evidence arrays, e.g. [[0.2], [0.8, 0.9]]"),
+    };
+
+    if rounds_evidence.is_empty() {
+        return api_error(StatusCode::BAD_REQUEST, "rounds cannot be empty");
+    }
+
+    let engine = DeliberationEngine::new(target_confidence, max_rounds).with_alpha(alpha);
+    let result = engine.run(rounds_evidence);
+
+    let trace_json: Vec<Value> = result.trace.iter().map(|r| json!({
+        "round":           r.round,
+        "cumulative_mean": (r.cumulative_mean * 1000.0).round() / 1000.0,
+        "trit":            r.scalar.trit_i8(),
+        "label":           r.scalar.label(),
+        "confidence":      (r.scalar.confidence() * 1000.0).round() / 1000.0,
+        "converged":       r.converged,
+    })).collect();
+
+    (StatusCode::OK, Json(json!({
+        "final_trit":       result.final_trit,
+        "final_label":      result.final_label,
+        "final_confidence": (result.final_confidence * 1000.0).round() / 1000.0,
+        "converged":        result.converged,
+        "rounds_used":      result.rounds_used,
+        "convergence_reason": result.convergence_reason,
+        "trace":            trace_json,
+    }))).into_response()
+}
+
+// ─── POST /api/trit_coalition ─────────────────────────────────────────────────
+
+async fn trit_coalition(Json(body): Json<Value>) -> Response {
+    let members_raw = match body["members"].as_array() {
+        Some(arr) => arr,
+        None => return api_error(StatusCode::BAD_REQUEST,
+            "members must be an array of {label, trit, confidence, weight} objects"),
+    };
+
+    if members_raw.is_empty() {
+        return api_error(StatusCode::BAD_REQUEST, "members cannot be empty");
+    }
+
+    let mut members = Vec::new();
+    for (i, m) in members_raw.iter().enumerate() {
+        let label = m["label"].as_str().unwrap_or("agent").to_string();
+        let trit = match m["trit"].as_i64() {
+            Some(v) if v >= -1 && v <= 1 => v as i8,
+            _ => return api_error(StatusCode::BAD_REQUEST,
+                &format!("members[{}].trit must be -1, 0, or 1", i)),
+        };
+        let confidence = m["confidence"].as_f64().unwrap_or(1.0) as f32;
+        let weight = m["weight"].as_f64().unwrap_or(1.0) as f32;
+        members.push(CoalitionMember::new(label, trit, confidence, weight));
+    }
+
+    let result = coalition_vote(&members);
+
+    let breakdown: Vec<Value> = result.breakdown.iter().map(|(label, trit, contribution)| json!({
+        "label":        label,
+        "trit":         trit,
+        "contribution": (contribution * 1000.0).round() / 1000.0,
+    })).collect();
+
+    (StatusCode::OK, Json(json!({
+        "trit":             result.trit,
+        "label":            result.label,
+        "aggregate_score":  (result.aggregate_score * 1000.0).round() / 1000.0,
+        "quorum":           (result.quorum * 1000.0).round() / 1000.0,
+        "dissent_rate":     (result.dissent_rate * 1000.0).round() / 1000.0,
+        "abstain_rate":     (result.abstain_rate * 1000.0).round() / 1000.0,
+        "member_count":     result.member_count,
+        "breakdown":        breakdown,
+    }))).into_response()
+}
+
+// ─── POST /api/trit_gate ──────────────────────────────────────────────────────
+
+async fn trit_gate(Json(body): Json<Value>) -> Response {
+    let dims_raw = match body["dimensions"].as_array() {
+        Some(arr) => arr,
+        None => return api_error(StatusCode::BAD_REQUEST,
+            "dimensions must be an array of {name, evidence, weight, hard_block?} objects"),
+    };
+
+    if dims_raw.is_empty() {
+        return api_error(StatusCode::BAD_REQUEST, "dimensions cannot be empty");
+    }
+
+    let mut dimensions = Vec::new();
+    for (i, d) in dims_raw.iter().enumerate() {
+        let name = d["name"].as_str().unwrap_or("dim").to_string();
+        let evidence = match d["evidence"].as_f64() {
+            Some(v) => v as f32,
+            None => return api_error(StatusCode::BAD_REQUEST,
+                &format!("dimensions[{}].evidence must be a number in [-1, 1]", i)),
+        };
+        let weight = d["weight"].as_f64().unwrap_or(1.0) as f32;
+        let hard_block = d["hard_block"].as_bool().unwrap_or(false);
+        let mut dim = GateDimension::new(name, evidence, weight);
+        if hard_block { dim = dim.hard(); }
+        dimensions.push(dim);
+    }
+
+    let result = action_gate(&dimensions);
+
+    let dim_results: Vec<Value> = result.dim_results.iter().map(|(name, sc, is_hard)| json!({
+        "name":       name,
+        "trit":       sc.trit_i8(),
+        "label":      sc.label(),
+        "confidence": (sc.confidence() * 1000.0).round() / 1000.0,
+        "hard_block": is_hard,
+    })).collect();
+
+    (StatusCode::OK, Json(json!({
+        "verdict":          result.verdict.label(),
+        "aggregate_scalar": (result.aggregate.raw() * 1000.0).round() / 1000.0,
+        "hard_blocked_by":  result.hard_blocked_by,
+        "dimensions":       dim_results,
+        "explanation":      result.explanation,
+    }))).into_response()
+}
+
+// ─── POST /api/scalar_temperature ────────────────────────────────────────────
+
+async fn scalar_temperature_endpoint(Json(body): Json<Value>) -> Response {
+    let evidence: Vec<f32> = match body["evidence"].as_array() {
+        Some(arr) => arr.iter().map(|v| v.as_f64().unwrap_or(0.0) as f32).collect(),
+        None => match body["scalar"].as_f64() {
+            Some(v) => vec![v as f32],
+            None => return api_error(StatusCode::BAD_REQUEST,
+                "provide evidence array or scalar value"),
+        },
+    };
+
+    let mean = evidence.iter().sum::<f32>() / evidence.len().max(1) as f32;
+    let sc = TritScalar::new(mean);
+    let temp = scalar_temperature(&sc);
+
+    (StatusCode::OK, Json(json!({
+        "trit":        temp.trit,
+        "confidence":  (temp.confidence * 1000.0).round() / 1000.0,
+        "temperature": temp.temperature,
+        "reasoning":   temp.reasoning,
+        "prompt_hint": temp.prompt_hint,
+        "usage": "Set your LLM sampling temperature to the 'temperature' field for ternary-aligned generation.",
+    }))).into_response()
+}
+
+// ─── POST /api/hallucination_score ────────────────────────────────────────────
+
+async fn hallucination_score_endpoint(Json(body): Json<Value>) -> Response {
+    let signals: Vec<f32> = match body["signals"].as_array() {
+        Some(arr) => arr.iter().map(|v| v.as_f64().unwrap_or(0.0) as f32).collect(),
+        None => return api_error(StatusCode::BAD_REQUEST,
+            "signals must be an array of numbers in [-1, 1]"),
+    };
+
+    if signals.is_empty() {
+        return api_error(StatusCode::BAD_REQUEST, "signals cannot be empty");
+    }
+
+    let score = hallucination_score(&signals);
+
+    (StatusCode::OK, Json(json!({
+        "trust_trit":   score.trust_trit,
+        "trust_label":  score.trust_label,
+        "mean":         (score.mean * 1000.0).round() / 1000.0,
+        "variance":     (score.variance * 1000.0).round() / 1000.0,
+        "consistency":  (score.consistency * 1000.0).round() / 1000.0,
+        "signal_count": score.signal_count,
+        "explanation":  score.explanation,
+    }))).into_response()
+}
+
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 
 async fn not_found() -> Response {
@@ -626,7 +819,13 @@ async fn main() {
         .route("/api/trit_vector",       post(trit_vector))
         .route("/api/trit_consensus",    post(trit_consensus))
         .route("/api/quantize_weights",  post(quantize_weights))
-        .route("/api/sparse_benchmark",  post(sparse_benchmark))
+        .route("/api/sparse_benchmark",      post(sparse_benchmark))
+        // Phase 8: Ternary AI Reasoning Toolkit
+        .route("/api/trit_deliberate",       post(trit_deliberate))
+        .route("/api/trit_coalition",        post(trit_coalition))
+        .route("/api/trit_gate",             post(trit_gate))
+        .route("/api/scalar_temperature",    post(scalar_temperature_endpoint))
+        .route("/api/hallucination_score",   post(hallucination_score_endpoint))
         // Admin (requires X-Admin-Key)
         .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
         .route("/admin/keys/{key}",      delete(admin_revoke_key))

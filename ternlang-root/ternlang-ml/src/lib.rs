@@ -595,6 +595,7 @@ pub fn evaluate(mlp: &TernaryMLP, dataset: &[(TritMatrix, usize)]) -> (usize, us
 pub const TEND_BOUNDARY: f32 = 1.0 / 3.0;
 
 /// A continuous ternary confidence scalar, clamped to [-1.0, +1.0].
+#[derive(Debug, Clone)]
 pub struct TritScalar(pub f32);
 
 impl TritScalar {
@@ -638,6 +639,11 @@ impl TritScalar {
 
     /// Raw scalar value.
     pub fn raw(&self) -> f32 { self.0 }
+
+    /// Signed integer trit: −1, 0, or +1.
+    pub fn trit_i8(&self) -> i8 {
+        match self.trit() { Trit::PosOne => 1, Trit::NegOne => -1, Trit::Zero => 0 }
+    }
 }
 
 // ─── Trit Evidence Vector ────────────────────────────────────────────────────
@@ -1101,5 +1107,667 @@ mod tests {
         let (label, scalar) = ev.dominant().unwrap();
         assert_eq!(label, "high");
         assert_eq!(scalar.label(), "reject");
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Phase 8: Ternary AI Reasoning Toolkit
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Four novel primitives for AI agent architectures:
+//
+//  1. DeliberationEngine  — multi-round evidence accumulation with confidence target
+//  2. CoalitionVote       — N-agent weighted ternary voting with quorum/dissent
+//  3. ActionGate          — multi-dimension policy gate (safety/utility/alignment)
+//  4. scalar_temperature  — ternary decision → LLM sampling temperature bridge
+//
+// These are the primitives that make ternary reasoning *architecturally* different
+// from binary classification in AI systems.
+
+// ─── 1. Deliberation Engine ──────────────────────────────────────────────────
+
+/// One round of a deliberation trace.
+#[derive(Debug, Clone)]
+pub struct DeliberationRound {
+    pub round:          usize,
+    pub new_evidence:   Vec<f32>,   // evidence signals added this round
+    pub cumulative_mean: f32,       // running mean of all evidence so far
+    pub scalar:         TritScalar,
+    pub converged:      bool,       // true when confidence ≥ target
+}
+
+/// Result of a full deliberation run.
+#[derive(Debug, Clone)]
+pub struct DeliberationResult {
+    pub final_trit:         i8,
+    pub final_label:        String,
+    pub final_confidence:   f32,
+    pub converged:          bool,
+    pub rounds_used:        usize,
+    pub trace:              Vec<DeliberationRound>,
+    pub convergence_reason: String,
+}
+
+/// Multi-round evidence accumulation engine.
+///
+/// Models how an AI agent *should* reason under uncertainty: instead of forcing
+/// a binary guess from thin evidence, hold at State 0 and keep gathering signals
+/// until the confidence threshold is crossed or rounds run out.
+///
+/// Each round adds new evidence (a slice of f32 signals). The engine uses an
+/// exponential moving average so recent evidence weighs more than stale data.
+pub struct DeliberationEngine {
+    /// Confidence required to declare convergence (0.0–1.0).
+    pub target_confidence: f32,
+    /// Maximum rounds before returning with whatever confidence was reached.
+    pub max_rounds: usize,
+    /// Recency weight (0 < α ≤ 1). Lower α = more memory of past rounds.
+    pub alpha: f32,
+}
+
+impl DeliberationEngine {
+    pub fn new(target_confidence: f32, max_rounds: usize) -> Self {
+        Self { target_confidence, max_rounds, alpha: 0.4 }
+    }
+
+    pub fn with_alpha(mut self, alpha: f32) -> Self { self.alpha = alpha.clamp(0.01, 1.0); self }
+
+    /// Run deliberation. `rounds_evidence[i]` is the evidence for round i.
+    /// Missing rounds receive no new evidence (engine holds).
+    pub fn run(&self, rounds_evidence: Vec<Vec<f32>>) -> DeliberationResult {
+        let mut ema: f32 = 0.0; // exponential moving average of evidence
+        let mut initialized = false;
+        let mut trace = Vec::new();
+
+        let rounds_to_run = self.max_rounds.min(
+            if rounds_evidence.is_empty() { self.max_rounds } else { rounds_evidence.len() }
+        );
+
+        for round in 0..rounds_to_run {
+            let new_ev: Vec<f32> = rounds_evidence.get(round).cloned().unwrap_or_default();
+
+            // Compute mean of new evidence signals this round
+            if !new_ev.is_empty() {
+                let round_mean = new_ev.iter().sum::<f32>() / new_ev.len() as f32;
+                ema = if !initialized {
+                    initialized = true;
+                    round_mean
+                } else {
+                    self.alpha * round_mean + (1.0 - self.alpha) * ema
+                };
+            }
+
+            let scalar = TritScalar::new(ema);
+            let converged = scalar.confidence() >= self.target_confidence;
+
+            trace.push(DeliberationRound {
+                round,
+                new_evidence: new_ev,
+                cumulative_mean: ema,
+                scalar: scalar.clone(),
+                converged,
+            });
+
+            if converged { break; }
+        }
+
+        let last = trace.last().cloned().unwrap_or_else(|| DeliberationRound {
+            round: 0, new_evidence: vec![], cumulative_mean: 0.0,
+            scalar: TritScalar::new(0.0), converged: false,
+        });
+
+        let convergence_reason = if last.converged {
+            format!("confidence {:.1}% ≥ target {:.1}% after {} round(s)",
+                last.scalar.confidence() * 100.0,
+                self.target_confidence * 100.0,
+                last.round + 1)
+        } else {
+            format!("max rounds ({}) reached — confidence {:.1}% below target {:.1}%",
+                self.max_rounds,
+                last.scalar.confidence() * 100.0,
+                self.target_confidence * 100.0)
+        };
+
+        DeliberationResult {
+            final_trit:         last.scalar.trit_i8(),
+            final_label:        last.scalar.label().to_string(),
+            final_confidence:   last.scalar.confidence(),
+            converged:          last.converged,
+            rounds_used:        last.round + 1,
+            trace,
+            convergence_reason,
+        }
+    }
+}
+
+// ─── 2. Coalition Vote ────────────────────────────────────────────────────────
+
+/// One agent's vote in a coalition.
+#[derive(Debug, Clone)]
+pub struct CoalitionMember {
+    pub label:      String,
+    pub trit:       i8,       // −1, 0, +1
+    pub confidence: f32,      // [0, 1] — how certain is this agent?
+    pub weight:     f32,      // domain expertise weight (default 1.0)
+}
+
+impl CoalitionMember {
+    pub fn new(label: impl Into<String>, trit: i8, confidence: f32, weight: f32) -> Self {
+        Self {
+            label: label.into(),
+            trit: trit.clamp(-1, 1),
+            confidence: confidence.clamp(0.0, 1.0),
+            weight: weight.max(0.0),
+        }
+    }
+}
+
+/// Coalition voting statistics.
+#[derive(Debug, Clone)]
+pub struct CoalitionResult {
+    pub trit:          i8,
+    pub label:         String,
+    pub aggregate_score: f32,    // weighted sum / total_weight
+    pub quorum:        f32,      // fraction of members with non-zero vote
+    pub dissent_rate:  f32,      // fraction voting opposite to result
+    pub abstain_rate:  f32,      // fraction voting 0
+    pub member_count:  usize,
+    pub effective_weight: f32,   // total weight of non-abstaining voters
+    pub breakdown:     Vec<(String, i8, f32)>, // (label, trit, effective_contribution)
+}
+
+/// Aggregate a coalition of agent votes into a single ternary decision.
+///
+/// Each agent contributes `trit × confidence × weight` to the aggregate score.
+/// The final trit is determined by `TritScalar::new(aggregate_score)`.
+pub fn coalition_vote(members: &[CoalitionMember]) -> CoalitionResult {
+    if members.is_empty() {
+        return CoalitionResult {
+            trit: 0, label: "tend".into(), aggregate_score: 0.0,
+            quorum: 0.0, dissent_rate: 0.0, abstain_rate: 1.0,
+            member_count: 0, effective_weight: 0.0, breakdown: vec![],
+        };
+    }
+
+    let total_weight: f32 = members.iter().map(|m| m.weight).sum();
+    let total_weight = if total_weight == 0.0 { 1.0 } else { total_weight };
+
+    let mut weighted_sum: f32 = 0.0;
+    let mut non_zero_weight: f32 = 0.0;
+    let mut breakdown = Vec::new();
+
+    for m in members {
+        let contribution = (m.trit as f32) * m.confidence * m.weight;
+        weighted_sum += contribution;
+        if m.trit != 0 { non_zero_weight += m.weight; }
+        breakdown.push((m.label.clone(), m.trit, contribution / total_weight));
+    }
+
+    let aggregate_score = weighted_sum / total_weight;
+    let scalar = TritScalar::new(aggregate_score);
+    let result_trit: i8 = scalar.trit_i8();
+
+    let quorum = non_zero_weight / total_weight;
+    let abstain_rate = 1.0 - quorum;
+    let dissent_rate = members.iter()
+        .filter(|m| m.trit != 0 && m.trit.signum() != result_trit.signum())
+        .map(|m| m.weight)
+        .sum::<f32>() / total_weight;
+
+    CoalitionResult {
+        trit: result_trit,
+        label: scalar.label().to_string(),
+        aggregate_score,
+        quorum,
+        dissent_rate,
+        abstain_rate,
+        member_count: members.len(),
+        effective_weight: non_zero_weight,
+        breakdown,
+    }
+}
+
+// Helper to get the sign of an i8 as i8
+trait Sign { fn signum(self) -> i8; }
+impl Sign for i8 { fn signum(self) -> i8 { if self > 0 { 1 } else if self < 0 { -1 } else { 0 } } }
+
+// ─── 3. Action Gate ───────────────────────────────────────────────────────────
+
+/// One dimension in an action gate check.
+#[derive(Debug, Clone)]
+pub struct GateDimension {
+    pub name:       String,
+    pub evidence:   f32,    // raw evidence signal (−1.0 to +1.0)
+    pub weight:     f32,    // importance of this dimension
+    /// If true: a negative trit on this dimension immediately blocks the action,
+    /// regardless of other dimensions. Use for absolute safety constraints.
+    pub hard_block: bool,
+}
+
+impl GateDimension {
+    pub fn new(name: impl Into<String>, evidence: f32, weight: f32) -> Self {
+        Self { name: name.into(), evidence, weight, hard_block: false }
+    }
+    pub fn hard(mut self) -> Self { self.hard_block = true; self }
+}
+
+/// The outcome of an action gate evaluation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GateVerdict {
+    /// All dimensions pass — action is approved to proceed.
+    Proceed,
+    /// Evidence is insufficient — pause and request more information.
+    Hold,
+    /// One or more blocking conditions failed — action is denied.
+    Block,
+}
+
+impl GateVerdict {
+    pub fn label(&self) -> &'static str {
+        match self {
+            GateVerdict::Proceed => "proceed",
+            GateVerdict::Hold    => "hold",
+            GateVerdict::Block   => "block",
+        }
+    }
+}
+
+/// Result of an action gate evaluation.
+#[derive(Debug, Clone)]
+pub struct GateResult {
+    pub verdict:    GateVerdict,
+    pub aggregate:  TritScalar,
+    pub hard_blocked_by: Vec<String>, // names of hard-blocking dims that fired
+    pub dim_results: Vec<(String, TritScalar, bool)>, // (name, scalar, is_hard)
+    pub explanation: String,
+}
+
+/// Evaluate an action through a multi-dimension policy gate.
+///
+/// The gate logic (inspired by AI safety frameworks):
+///   1. Check all `hard_block` dimensions first. Any `-1` → immediate Block.
+///   2. Compute weighted aggregate of all dimensions.
+///   3. Map aggregate to ternary: +1 = Proceed, 0 = Hold, -1 = Block.
+pub fn action_gate(dimensions: &[GateDimension]) -> GateResult {
+    let mut hard_blocked_by = Vec::new();
+    let mut dim_results = Vec::new();
+    let mut weighted_sum = 0.0f32;
+    let mut total_weight = 0.0f32;
+
+    for dim in dimensions {
+        let scalar = TritScalar::new(dim.evidence);
+        let is_neg = matches!(scalar.trit(), Trit::NegOne);
+
+        if dim.hard_block && is_neg {
+            hard_blocked_by.push(dim.name.clone());
+        }
+
+        weighted_sum += dim.evidence * dim.weight;
+        total_weight += dim.weight;
+        dim_results.push((dim.name.clone(), scalar, dim.hard_block));
+    }
+
+    // Hard block takes absolute priority
+    if !hard_blocked_by.is_empty() {
+        let explanation = format!(
+            "BLOCKED — hard constraint(s) violated: {}",
+            hard_blocked_by.join(", ")
+        );
+        return GateResult {
+            verdict: GateVerdict::Block,
+            aggregate: TritScalar::new(-1.0),
+            hard_blocked_by,
+            dim_results,
+            explanation,
+        };
+    }
+
+    let agg_score = if total_weight > 0.0 { weighted_sum / total_weight } else { 0.0 };
+    let aggregate = TritScalar::new(agg_score);
+
+    let verdict = match aggregate.trit() {
+        Trit::PosOne => GateVerdict::Proceed,
+        Trit::Zero   => GateVerdict::Hold,
+        Trit::NegOne => GateVerdict::Block,
+    };
+
+    let explanation = match &verdict {
+        GateVerdict::Proceed => format!(
+            "PROCEED — all dimensions pass (aggregate confidence {:.0}%)",
+            aggregate.confidence() * 100.0
+        ),
+        GateVerdict::Hold => format!(
+            "HOLD — insufficient evidence (aggregate {:.3} within deliberation zone)",
+            aggregate.raw()
+        ),
+        GateVerdict::Block => format!(
+            "BLOCK — weighted aggregate {:.3} below threshold (confidence {:.0}%)",
+            aggregate.raw(), aggregate.confidence() * 100.0
+        ),
+    };
+
+    GateResult { verdict, aggregate, hard_blocked_by, dim_results, explanation }
+}
+
+// ─── 4. Scalar Temperature Bridge ────────────────────────────────────────────
+
+/// Maps a ternary decision to a recommended LLM sampling temperature.
+///
+/// The core insight: ternary state directly encodes *how much exploration* an
+/// AI agent should do in its next generation step.
+///
+///  +1 (affirm, high confidence) → low temperature [0.05–0.3]  — be precise
+///   0 (tend, uncertain)         → high temperature [0.7–1.0]  — explore options
+///  -1 (reject, high confidence) → very low temperature [0.05–0.15] — be firm in refusal
+///
+/// The exact value within each range scales with confidence:
+///   high confidence → toward the extreme of the range
+///   low confidence  → toward the middle of the range
+#[derive(Debug, Clone)]
+pub struct ScalarTemperature {
+    pub trit:        i8,
+    pub confidence:  f32,
+    pub temperature: f32,
+    pub reasoning:   String,
+    /// Recommended system prompt addendum based on ternary state
+    pub prompt_hint: String,
+}
+
+pub fn scalar_temperature(scalar: &TritScalar) -> ScalarTemperature {
+    let t = scalar.trit();
+    let c = scalar.confidence(); // 0.0–1.0
+
+    let (temp, reasoning, prompt_hint) = match t {
+        Trit::PosOne => {
+            // Affirm: be precise. High confidence → very low temp.
+            let temp = 0.3 - (c * 0.25); // c=1.0 → 0.05, c=0.0 → 0.30
+            (
+                temp.max(0.05),
+                format!("Affirm (confidence {:.0}%) — execute precisely, minimal exploration", c * 100.0),
+                "Be concise and direct. Evidence is clear. Do not hedge.".to_string(),
+            )
+        }
+        Trit::NegOne => {
+            // Reject: be firm in refusal. Low temp but not zero.
+            let temp = 0.15 - (c * 0.10); // c=1.0 → 0.05, c=0.0 → 0.15
+            (
+                temp.max(0.05),
+                format!("Reject (confidence {:.0}%) — decline firmly, minimal hedging", c * 100.0),
+                "Decline clearly. Do not offer alternatives unless explicitly asked. Evidence is against.".to_string(),
+            )
+        }
+        Trit::Zero => {
+            // Tend: explore. Low confidence → highest temp (widest search).
+            let temp = 0.7 + ((1.0 - c) * 0.3); // c=0.0 → 1.0, c=1.0 → 0.7
+            (
+                temp.min(1.0),
+                format!("Tend (confidence {:.0}%) — evidence is conflicted, explore broadly", c * 100.0),
+                "You are in deliberation. Present multiple perspectives. Ask clarifying questions. Do not commit.".to_string(),
+            )
+        }
+    };
+
+    ScalarTemperature {
+        trit: scalar.trit_i8(),
+        confidence: c,
+        temperature: (temp * 1000.0).round() / 1000.0,
+        reasoning,
+        prompt_hint,
+    }
+}
+
+// ─── 5. Hallucination Score ───────────────────────────────────────────────────
+
+/// Measures internal consistency of evidence signals about a claim.
+///
+/// High variance among signals claiming the same direction = suspicious (possible hallucination).
+/// Low variance = coherent signal = higher truth probability.
+///
+/// Returns a `TritScalar` representing the *trustworthiness* of the evidence:
+///   +1 = highly consistent signals (trust the claim)
+///    0 = mixed consistency (deliberate further)
+///   -1 = high internal conflict (flag as potentially unreliable)
+#[derive(Debug, Clone)]
+pub struct HallucinationScore {
+    pub trust_trit:    i8,
+    pub trust_label:   String,
+    pub mean:          f32,   // direction of evidence
+    pub variance:      f32,   // spread of evidence signals
+    pub consistency:   f32,   // 1 - normalised_variance (higher = more consistent)
+    pub signal_count:  usize,
+    pub explanation:   String,
+}
+
+pub fn hallucination_score(signals: &[f32]) -> HallucinationScore {
+    if signals.is_empty() {
+        return HallucinationScore {
+            trust_trit: 0, trust_label: "tend".into(), mean: 0.0,
+            variance: 0.0, consistency: 0.0, signal_count: 0,
+            explanation: "No signals provided — cannot assess consistency.".into(),
+        };
+    }
+
+    let n = signals.len() as f32;
+    let mean = signals.iter().sum::<f32>() / n;
+    let variance = signals.iter().map(|&s| (s - mean).powi(2)).sum::<f32>() / n;
+
+    // Normalise variance to [0, 1]: max variance of signals in [-1,1] is 1.0
+    let norm_variance = variance.min(1.0);
+    let consistency = 1.0 - norm_variance;
+
+    // Trust score: high consistency in a clear direction → +1 trust
+    // High variance regardless of direction → -1 trust (flag it)
+    // Mixed → hold
+    let trust_evidence = (consistency * 2.0 - 1.0) * mean.abs(); // [-1, +1]
+    let trust = TritScalar::new(trust_evidence);
+
+    let explanation = if trust.trit() == Trit::PosOne {
+        format!(
+            "Consistent signals (variance {:.3}, consistency {:.0}%) — evidence coheres around {:.3}",
+            variance, consistency * 100.0, mean
+        )
+    } else if trust.trit() == Trit::NegOne {
+        format!(
+            "HIGH VARIANCE (variance {:.3}) — signals are internally contradictory. Possible hallucination or conflated sources.",
+            variance
+        )
+    } else {
+        format!(
+            "Mixed consistency (variance {:.3}, mean {:.3}) — gather more evidence before relying on this claim.",
+            variance, mean
+        )
+    };
+
+    HallucinationScore {
+        trust_trit:   trust.trit_i8(),
+        trust_label:  trust.label().to_string(),
+        mean,
+        variance,
+        consistency,
+        signal_count: signals.len(),
+        explanation,
+    }
+}
+
+// ─── Phase 8 tests ────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod reasoning_tests {
+    use super::*;
+
+    // ── Deliberation Engine ──
+
+    #[test]
+    fn test_deliberation_converges_on_strong_evidence() {
+        // Use higher alpha (faster EMA) and 6 rounds of strong positive evidence
+        let engine = DeliberationEngine::new(0.7, 10).with_alpha(0.7);
+        let rounds = vec![
+            vec![0.85, 0.9],        // round 0: strong positive
+            vec![0.9, 0.95],        // round 1: very strong
+            vec![0.92, 0.95, 0.98], // round 2: overwhelming
+        ];
+        let result = engine.run(rounds);
+        assert!(result.converged, "should converge on strong positive evidence (got confidence {:.2})", result.final_confidence);
+        assert_eq!(result.final_trit, 1, "should be +1 (affirm)");
+        assert!(result.rounds_used <= 3);
+    }
+
+    #[test]
+    fn test_deliberation_holds_on_weak_evidence() {
+        let engine = DeliberationEngine::new(0.95, 3);
+        let rounds = vec![
+            vec![0.1f32],
+            vec![-0.05],
+            vec![0.15],
+        ];
+        let result = engine.run(rounds);
+        assert!(!result.converged, "should not converge on weak conflicting evidence");
+        assert_eq!(result.final_trit, 0, "should stay at hold/tend");
+        assert_eq!(result.rounds_used, 3);
+    }
+
+    #[test]
+    fn test_deliberation_negative_convergence() {
+        let engine = DeliberationEngine::new(0.8, 10);
+        let rounds = vec![
+            vec![-0.9f32, -0.85],
+            vec![-0.95, -0.99],
+        ];
+        let result = engine.run(rounds);
+        assert!(result.converged);
+        assert_eq!(result.final_trit, -1);
+    }
+
+    // ── Coalition Vote ──
+
+    #[test]
+    fn test_coalition_unanimous_affirm() {
+        let members = vec![
+            CoalitionMember::new("safety", 1, 0.9, 3.0),
+            CoalitionMember::new("utility", 1, 0.8, 1.0),
+            CoalitionMember::new("alignment", 1, 0.95, 2.0),
+        ];
+        let result = coalition_vote(&members);
+        assert_eq!(result.trit, 1);
+        assert_eq!(result.label, "affirm");
+        assert!(result.quorum > 0.99, "all voted");
+        assert!(result.dissent_rate < 0.01);
+    }
+
+    #[test]
+    fn test_coalition_split_vote_tends_to_hold() {
+        let members = vec![
+            CoalitionMember::new("agent_a", 1, 0.8, 1.0),
+            CoalitionMember::new("agent_b", -1, 0.8, 1.0),
+            CoalitionMember::new("agent_c", 0, 0.5, 1.0),
+        ];
+        let result = coalition_vote(&members);
+        // +0.8 - 0.8 + 0 = 0 → hold
+        assert_eq!(result.trit, 0);
+        assert!(result.dissent_rate > 0.0, "there is dissent");
+    }
+
+    #[test]
+    fn test_coalition_high_weight_overrides() {
+        let members = vec![
+            CoalitionMember::new("expert", 1, 0.95, 10.0),  // high weight
+            CoalitionMember::new("novice_a", -1, 0.5, 1.0),
+            CoalitionMember::new("novice_b", -1, 0.5, 1.0),
+        ];
+        let result = coalition_vote(&members);
+        // expert contribution dominates → should affirm
+        assert_eq!(result.trit, 1, "high-weight expert should dominate");
+    }
+
+    // ── Action Gate ──
+
+    #[test]
+    fn test_gate_all_positive_proceeds() {
+        let dims = vec![
+            GateDimension::new("safety", 0.8, 3.0),
+            GateDimension::new("utility", 0.7, 1.0),
+            GateDimension::new("legality", 0.9, 2.0),
+        ];
+        let result = action_gate(&dims);
+        assert_eq!(result.verdict, GateVerdict::Proceed);
+    }
+
+    #[test]
+    fn test_gate_hard_block_fires() {
+        let dims = vec![
+            GateDimension::new("utility", 0.9, 1.0),
+            GateDimension::new("safety", -0.8, 3.0).hard(),  // hard block!
+            GateDimension::new("legality", 0.7, 1.0),
+        ];
+        let result = action_gate(&dims);
+        assert_eq!(result.verdict, GateVerdict::Block);
+        assert!(result.hard_blocked_by.contains(&"safety".to_string()));
+    }
+
+    #[test]
+    fn test_gate_mixed_soft_dims_holds() {
+        let dims = vec![
+            GateDimension::new("utility", 0.8, 1.0),
+            GateDimension::new("risk", -0.7, 1.0), // soft block, no hard
+        ];
+        // aggregate = (0.8 - 0.7) / 2 = 0.05 → tend zone → hold
+        let result = action_gate(&dims);
+        // 0.05 is in tend zone
+        assert_ne!(result.verdict, GateVerdict::Block); // no hard block
+    }
+
+    // ── Scalar Temperature ──
+
+    #[test]
+    fn test_temperature_affirm_is_low() {
+        let sc = TritScalar::new(0.9);
+        let temp = scalar_temperature(&sc);
+        assert_eq!(temp.trit, 1);
+        assert!(temp.temperature < 0.3, "affirm → low temperature");
+    }
+
+    #[test]
+    fn test_temperature_tend_is_high() {
+        let sc = TritScalar::new(0.05); // barely tend
+        let temp = scalar_temperature(&sc);
+        assert_eq!(temp.trit, 0);
+        assert!(temp.temperature >= 0.7, "tend → high temperature for exploration");
+    }
+
+    #[test]
+    fn test_temperature_reject_is_low() {
+        let sc = TritScalar::new(-0.9);
+        let temp = scalar_temperature(&sc);
+        assert_eq!(temp.trit, -1);
+        assert!(temp.temperature < 0.15, "reject → low temperature, firm");
+    }
+
+    // ── Hallucination Score ──
+
+    #[test]
+    fn test_hallucination_consistent_signals_trusted() {
+        // Tight cluster of positive signals
+        let signals = vec![0.8, 0.82, 0.79, 0.81, 0.83];
+        let score = hallucination_score(&signals);
+        assert_eq!(score.trust_trit, 1, "consistent signals should be trusted");
+        assert!(score.variance < 0.01);
+        assert!(score.consistency > 0.99);
+    }
+
+    #[test]
+    fn test_hallucination_chaotic_signals_flagged() {
+        // Wildly inconsistent signals claiming a strong direction
+        let signals = vec![0.9, -0.9, 0.8, -0.8, 0.95, -0.7];
+        let score = hallucination_score(&signals);
+        // High variance → low consistency → flagged
+        assert!(score.variance > 0.5, "should have high variance");
+        assert!(score.trust_trit <= 0, "chaotic signals should not be trusted");
+    }
+
+    #[test]
+    fn test_hallucination_empty_returns_hold() {
+        let score = hallucination_score(&[]);
+        assert_eq!(score.trust_trit, 0);
+        assert_eq!(score.signal_count, 0);
     }
 }
