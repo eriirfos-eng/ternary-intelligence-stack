@@ -148,7 +148,9 @@ The kernel and the quantization scheme are structurally aligned.
 | Crate | Tier | Description |
 |-------|------|-------------|
 | `ternlang-core` | Open | Lexer, parser, AST, BET VM, 51 opcodes, 27 registers |
-| `ternlang-ml` | BSL | Sparse matmul, BitNet quantization, TritScalar, TernaryMLP |
+| `ternlang-ml` | BSL | Sparse matmul, BitNet quantization, TritScalar, TernaryMLP, deliberation engine, coalition vote, action gate |
+| `ternlang-moe` | BSL | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, 13 domain experts |
+| `ternlang-api` | BSL | REST API — multi-tenant key management, Phase 8 reasoning endpoints |
 | `ternlang-mcp` | BSL | MCP server — 7 tools including `trit_decide` and `trit_vector` |
 | `ternlang-hdl` | BSL | Verilog-2001 codegen, BET processor, Icarus testbench emitter |
 | `ternlang-runtime` | BSL | Distributed TCP actor runtime |
@@ -157,7 +159,38 @@ The kernel and the quantization scheme are structurally aligned.
 | `ternpkg` | Open | Package manager, GitHub-backed registry |
 | `ternlang-cli` | Open | `run / build / sim / fmt / repl / compat` |
 
-**130+ tests · All passing · v0.1**
+**146+ tests · All passing · v0.1**
+
+---
+
+## MoE-13 Ternary Orchestrator
+
+`ternlang-moe` implements the MoE-13 architecture (DOI: [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a ternary Mixture-of-Experts orchestrator that routes queries through expert pairs, synthesises an emergent field, and returns a ternary decision with a hard safety gate.
+
+```rust
+use ternlang_moe::TernMoeOrchestrator;
+
+let mut orch = TernMoeOrchestrator::with_standard_experts();
+
+// Evidence vector: [syntax, world_knowledge, reasoning, tool_use, persona, safety]
+let evidence = [0.6, 0.7, 0.8, 0.5, 0.4, 0.9];
+let result = orch.orchestrate("Should I proceed?", &evidence);
+
+println!("trit={} conf={:.0}% held={}", result.trit, result.confidence * 100.0, result.held);
+// → trit=1 conf=84% held=false
+println!("{}", result.prompt_hint);
+// → "Affirm with confidence 84%. Emergent field amplifying."
+```
+
+**How it works:**
+
+1. **Dual-key routing** — scores every expert pair by `relevance_a × relevance_b × synergy`. Complementary experts beat redundant ones.
+2. **1+1=3 triad synthesis** — emergent field `Ek = synergy × (vi + vj) / 2`. Two orthogonal experts produce a third signal neither could alone.
+3. **Safety hard gate** — Axis-6 veto fires before any vote. The `AxisMemory` logs every veto permanently for audit.
+4. **Hold state** — low confidence or a split vote yields `trit=0`. The orchestrator invokes a tiebreaker (max 4 active experts) before giving up, just like a human saying *"I'll think about it"*.
+5. **Three-tier memory** — Node (TTL: seconds), Cluster (routing frequency, mode-collapse risk), Axis (persistent priors + veto audit log).
+
+The pool ships with **13 domain experts** from the MoE-13 paper: Syntax, WorldKnowledge, DeductiveReason, InductiveReason, ToolUse, Persona, Safety, FactCheck, CausalReason, AmbiguityRes, MathReason, ContextMem, MetaSafety.
 
 ---
 

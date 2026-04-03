@@ -17,7 +17,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use ternlang_core::{trit::Trit, parser::Parser, codegen::betbc::BytecodeEmitter, vm::BetVm};
 use ternlang_ml::{TritMatrix, TritScalar, TritEvidenceVec, TEND_BOUNDARY,
-                   bitnet_threshold, benchmark, dense_matmul, sparse_matmul};
+                   bitnet_threshold, benchmark, dense_matmul, sparse_matmul,
+                   DeliberationEngine, action_gate, GateDimension, GateVerdict};
+use ternlang_moe::TernMoeOrchestrator;
 
 // ─── JSON-RPC types ──────────────────────────────────────────────────────────
 
@@ -408,6 +410,190 @@ fn tool_sparse_benchmark(params: &Value) -> Result<Value, String> {
     }))
 }
 
+// ─── Tool: moe_orchestrate ───────────────────────────────────────────────────
+//
+// Full MoE-13 ternary orchestration pass.
+// Routes through the 13-expert pool, synthesises triad field, runs safety gate,
+// votes, detects hold, optionally calls tiebreaker. Returns full OrchestrationResult.
+
+fn tool_moe_orchestrate(params: &Value) -> Result<Value, String> {
+    let query = params["query"].as_str().ok_or("query must be a string")?;
+
+    // Parse evidence vector (6 dims: syntax/world_knowledge/reasoning/tool_use/persona/safety)
+    let evidence: Vec<f32> = match params["evidence"].as_array() {
+        Some(arr) => arr.iter()
+            .map(|v| v.as_f64().ok_or("evidence values must be numbers").map(|f| f as f32))
+            .collect::<Result<_, _>>()?,
+        None => vec![0.0f32; 6],
+    };
+
+    let mut orch = TernMoeOrchestrator::with_standard_experts();
+    let result = orch.orchestrate(query, &evidence);
+
+    let trit_label = match result.trit {
+        1  => "affirm",
+        -1 => "reject",
+        _  => "tend",
+    };
+
+    let verdicts: Vec<Value> = result.verdicts.iter().map(|v| json!({
+        "expert_id":   v.expert_id,
+        "expert_name": v.expert_name,
+        "trit":        v.trit,
+        "confidence":  (v.confidence * 1000.0).round() / 1000.0,
+        "reasoning":   v.reasoning,
+    })).collect();
+
+    let pair_info = result.pair.as_ref().map(|p| json!({
+        "expert_a":  p.expert_a,
+        "expert_b":  p.expert_b,
+        "relevance": (p.relevance * 1000.0).round() / 1000.0,
+        "synergy":   (p.synergy  * 1000.0).round() / 1000.0,
+        "combined":  (p.combined * 1000.0).round() / 1000.0,
+    }));
+
+    Ok(json!({
+        "trit":           result.trit,
+        "label":          trit_label,
+        "confidence":     (result.confidence * 1000.0).round() / 1000.0,
+        "held":           result.held,
+        "safety_vetoed":  result.safety_vetoed,
+        "temperature":    (result.temperature * 1000.0).round() / 1000.0,
+        "prompt_hint":    result.prompt_hint,
+        "triad_field":    {
+            "synergy_weight":    (result.triad_field.synergy_weight * 1000.0).round() / 1000.0,
+            "field":             result.triad_field.field.raw,
+            "is_amplifying":     result.triad_field.is_amplifying(),
+        },
+        "routing_pair":   pair_info,
+        "verdicts":       verdicts,
+    }))
+}
+
+// ─── Tool: moe_deliberate ────────────────────────────────────────────────────
+//
+// Run the EMA deliberation engine — converges scalar toward target confidence
+// over multiple rounds. Useful when initial evidence is weak and you want to
+// simulate iterative reasoning (like a human saying "let me think about this").
+
+fn tool_moe_deliberate(params: &Value) -> Result<Value, String> {
+    let initial = params["initial_scalar"]
+        .as_f64().ok_or("initial_scalar must be a number")? as f32;
+    let target  = params["target_confidence"]
+        .as_f64().unwrap_or(0.8) as f32;
+    let alpha   = params["alpha"].as_f64().unwrap_or(0.4) as f32;
+    let max_rounds = params["max_rounds"].as_u64().unwrap_or(10) as usize;
+
+    // Evidence updates — each round can inject new signals
+    let updates: Vec<f32> = match params["evidence_updates"].as_array() {
+        Some(arr) => arr.iter()
+            .map(|v| v.as_f64().unwrap_or(0.0) as f32)
+            .collect(),
+        None => vec![initial; max_rounds], // no updates → converge from initial alone
+    };
+
+    let engine = DeliberationEngine::new(target, max_rounds)
+        .with_alpha(alpha);
+
+    // `run()` takes Vec<Vec<f32>> — each outer entry is one round's signals
+    let rounds_evidence: Vec<Vec<f32>> = updates.iter().map(|&v| vec![v]).collect();
+    let result = engine.run(rounds_evidence);
+
+    let trit_label = match result.final_trit {
+        1  => "affirm",
+        -1 => "reject",
+        _  => "tend",
+    };
+
+    let rounds: Vec<Value> = result.trace.iter().map(|r| json!({
+        "round":      r.round,
+        "scalar":     (r.scalar.raw() * 1000.0).round() / 1000.0,
+        "confidence": (r.scalar.confidence() * 1000.0).round() / 1000.0,
+        "trit":       r.scalar.trit_i8(),
+        "converged":  r.converged,
+    })).collect();
+
+    Ok(json!({
+        "final_confidence": (result.final_confidence * 1000.0).round() / 1000.0,
+        "trit":             result.final_trit,
+        "label":            trit_label,
+        "converged":        result.converged,
+        "rounds_used":      result.rounds_used,
+        "target_confidence": target,
+        "convergence_reason": result.convergence_reason,
+        "rounds":           rounds,
+        "summary": format!(
+            "{} after {} round(s) — confidence {:.0}% (target {:.0}%) — {}",
+            trit_label.to_uppercase(),
+            result.rounds_used,
+            result.final_confidence * 100.0,
+            target * 100.0,
+            if result.converged { "converged" } else { "did not converge (held)" }
+        ),
+    }))
+}
+
+// ─── Tool: trit_action_gate ──────────────────────────────────────────────────
+//
+// Multi-dimensional hard-block safety gate.
+// Any dimension marked hard_block:true with a negative signal VETOES the action.
+// All other dims contribute to the weighted pass/block vote.
+// This is the structural safety layer: it fires before any other reasoning.
+
+fn tool_trit_action_gate(params: &Value) -> Result<Value, String> {
+    let dims_raw = params["dimensions"]
+        .as_array().ok_or("dimensions must be an array")?;
+
+    // GateDimension uses `name` + `evidence` (f32 signal), not label+trit
+    // evidence on [-1,1]: positive = pass signal, negative = block signal
+    let dims: Vec<GateDimension> = dims_raw.iter().map(|d| {
+        let name       = d["label"].as_str().unwrap_or("dim").to_string();
+        // Accept either `trit` (-1/0/1) or `evidence` (-1.0..1.0); trit → float
+        let evidence   = if let Some(t) = d["trit"].as_i64() {
+            t as f32
+        } else {
+            d["evidence"].as_f64().unwrap_or(0.0) as f32
+        };
+        let weight     = d["weight"].as_f64().unwrap_or(1.0) as f32;
+        let hard_block = d["hard_block"].as_bool().unwrap_or(false);
+        let mut dim = GateDimension::new(name, evidence, weight);
+        if hard_block { dim = dim.hard(); }
+        dim
+    }).collect::<Vec<_>>();
+
+    if dims.is_empty() {
+        return Err("dimensions cannot be empty".into());
+    }
+
+    let result = action_gate(&dims);
+
+    let verdict_label = match result.verdict {
+        GateVerdict::Proceed => "proceed",
+        GateVerdict::Block   => "blocked",
+        GateVerdict::Hold    => "hold",
+    };
+
+    let dim_details: Vec<Value> = result.dim_results.iter().map(|(name, scalar, is_hard)| json!({
+        "label":      name,
+        "evidence":   (scalar.raw() * 1000.0).round() / 1000.0,
+        "trit":       scalar.trit_i8(),
+        "hard_block": is_hard,
+        "status": if *is_hard && scalar.trit_i8() < 0 { "VETO" }
+                  else if scalar.trit_i8() > 0 { "pass" }
+                  else if scalar.trit_i8() < 0 { "block" }
+                  else { "hold" },
+    })).collect();
+
+    Ok(json!({
+        "verdict":       verdict_label,
+        "hard_blocked_by": result.hard_blocked_by,
+        "aggregate_scalar": (result.aggregate.raw() * 1000.0).round() / 1000.0,
+        "aggregate_confidence": (result.aggregate.confidence() * 1000.0).round() / 1000.0,
+        "dimensions":    dim_details,
+        "explanation":   result.explanation,
+    }))
+}
+
 // ─── Tool dispatch ───────────────────────────────────────────────────────────
 
 fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
@@ -419,6 +605,9 @@ fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
         "ternlang_run"      => tool_ternlang_run(params),
         "quantize_weights"  => tool_quantize_weights(params),
         "sparse_benchmark"  => tool_sparse_benchmark(params),
+        "moe_orchestrate"   => tool_moe_orchestrate(params),
+        "moe_deliberate"    => tool_moe_deliberate(params),
+        "trit_action_gate"  => tool_trit_action_gate(params),
         _ => Err(format!("unknown tool: {}", name)),
     }
 }
@@ -530,6 +719,80 @@ fn tools_list() -> Value {
                     "weights":   { "type": "array", "items": { "type": "number" }, "description": "Flat row-major float weights. Length must equal rows×cols. Omit for a demo distribution." },
                     "threshold": { "type": "number", "description": "Quantization threshold. Omit to auto-compute." }
                 }
+            }
+        },
+        {
+            "name": "moe_orchestrate",
+            "description": "Full MoE-13 ternary orchestration pass.\n\nRoutes your query through a pool of 13 domain experts (Syntax, WorldKnowledge, DeductiveReason, InductiveReason, ToolUse, Persona, Safety, FactCheck, CausalReason, AmbiguityRes, MathReason, ContextMem, MetaSafety) using dual-key synergistic routing.\n\nThe routing algorithm selects the expert PAIR that maximises both relevance to the query AND complementarity to each other — orthogonal competences produce a stronger emergent field than two similar experts.\n\nThe emergent triad field (1+1=3): Ek = synergy × (vi + vj)/2. Two experts that are good in different dimensions produce a third signal neither could produce alone.\n\nSafety hard gate fires FIRST, before any vote. A negative safety field = immediate reject, logged to audit trail.\n\nHold state: if the vote is split or confidence is low, the orchestrator calls a tiebreaker (up to 4 active experts max) before giving up — modelling the human 'I'll think about it' behaviour.\n\nReturns: trit decision, confidence, held flag, safety_vetoed flag, temperature hint for downstream LLM, prompt_hint, triad field details, and per-expert verdicts.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The question or decision to orchestrate."
+                    },
+                    "evidence": {
+                        "type": "array",
+                        "items": { "type": "number" },
+                        "description": "6-element evidence vector: [syntax, world_knowledge, reasoning, tool_use, persona, safety]. Values on [-1.0, +1.0]. Omit or leave empty for neutral (all zeros)."
+                    }
+                },
+                "required": ["query"]
+            }
+        },
+        {
+            "name": "moe_deliberate",
+            "description": "EMA-based ternary deliberation engine.\n\nModels iterative reasoning: given an initial scalar signal and a series of incoming evidence updates, the engine converges toward a stable ternary decision using exponential moving average. Alpha controls how fast new evidence is weighted vs prior belief.\n\nThis is the 'Wall-E collecting things' mechanism: the agent doesn't have to decide immediately. It accumulates evidence across rounds and commits only when confidence crosses the target threshold.\n\nRound-by-round trace is returned so you can inspect exactly when and why the agent committed or stayed in the tend (hold) zone.\n\nUse cases:\n  - Simulate multi-turn deliberation before acting\n  - Model an agent that keeps gathering context before deciding\n  - Tune alpha and target_confidence to calibrate risk tolerance",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "initial_scalar": {
+                        "type": "number",
+                        "description": "Starting evidence scalar on [-1.0, +1.0]. Positive = leaning affirm, negative = leaning reject, near-zero = maximum uncertainty."
+                    },
+                    "target_confidence": {
+                        "type": "number",
+                        "description": "Confidence threshold to stop deliberating (0.0–1.0). Default 0.8. Agent stays in tend until this is met."
+                    },
+                    "alpha": {
+                        "type": "number",
+                        "description": "EMA smoothing factor (0.0–1.0). High = fast adaptation to new evidence. Low = strong prior. Default 0.4."
+                    },
+                    "max_rounds": {
+                        "type": "integer",
+                        "description": "Maximum deliberation rounds before giving up and returning tend. Default 10."
+                    },
+                    "evidence_updates": {
+                        "type": "array",
+                        "items": { "type": "number" },
+                        "description": "Sequence of incoming evidence scalars, one per round. Omit to replay initial_scalar each round (tests convergence from a single signal)."
+                    }
+                },
+                "required": ["initial_scalar"]
+            }
+        },
+        {
+            "name": "trit_action_gate",
+            "description": "Multi-dimensional ternary action gate with hard-block safety veto.\n\nBefore any AI agent takes an action, pass the relevant decision dimensions through this gate. Any dimension marked hard_block:true with a negative trit (reject) VETOES the action unconditionally, regardless of other dimensions. This implements the 'safety as absolute veto' principle from the MoE-13 architecture.\n\nNon-hard-block dimensions contribute to a weighted vote: positive trits add to pass_weight, negative trits add to block_weight. The gate returns Pass, Blocked, or Hold.\n\nTypical pattern:\n  - Safety check → hard_block: true\n  - Relevance → hard_block: false, weight: 1.0\n  - User consent → hard_block: true\n  - Confidence → hard_block: false, weight: 0.5\n\nThe gate enforces a structural separation: some signals are hard constraints, others are soft preferences. Binary logic collapses these — ternary keeps them distinct.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "dimensions": {
+                        "type": "array",
+                        "description": "Array of gate dimensions. Each: {label, trit (-1/0/1), weight (default 1.0), hard_block (default false)}",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "label":      { "type": "string",  "description": "Name of this decision dimension" },
+                                "trit":       { "type": "integer", "enum": [-1, 0, 1], "description": "-1=block, 0=hold, 1=pass" },
+                                "weight":     { "type": "number",  "description": "Importance weight (default 1.0). Ignored for hard_block dims." },
+                                "hard_block": { "type": "boolean", "description": "If true, a negative trit on this dim VETOES regardless of all other dims." }
+                            },
+                            "required": ["label", "trit"]
+                        }
+                    }
+                },
+                "required": ["dimensions"]
             }
         }
     ]})

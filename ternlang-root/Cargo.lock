@@ -977,6 +977,7 @@ dependencies = [
  "serde_json",
  "ternlang-core",
  "ternlang-ml",
+ "ternlang-moe",
 ]
 
 [[package]]
@@ -985,6 +986,16 @@ version = "0.1.0"
 dependencies = [
  "rayon",
  "ternlang-core",
+]
+
+[[package]]
+name = "ternlang-moe"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ternlang-core",
+ "ternlang-ml",
 ]
 
 [[package]]

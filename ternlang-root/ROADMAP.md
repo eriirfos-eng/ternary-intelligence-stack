@@ -169,6 +169,55 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 
 ---
 
+## 🧠 Phase 8: Ternary AI Reasoning Toolkit — COMPLETE ✅
+**Tools that make any AI agent structurally ternary in its decisions.**
+
+- [x] **`DeliberationEngine`** (`ternlang-ml`): EMA-based iterative deliberation loop — converges scalar toward target confidence via configurable `alpha` and max rounds; returns `DeliberationResult` with `rounds_used`, `converged`, final scalar
+- [x] **`coalition_vote()`** (`ternlang-ml`): weighted trit vote across N agents — `CoalitionResult` includes quorum, dissent, abstain, consensus trit, dominant faction fraction
+- [x] **`action_gate()`** (`ternlang-ml`): multi-dim hard-block gate — `GateDimension` with optional `hard_block`; `GateVerdict::Blocked` fires on any hard-block dim regardless of other dims (safety veto pattern)
+- [x] **`scalar_temperature()`** (`ternlang-ml`): trit state → LLM sampling temperature bridge; affirm+high_conf → low temp (focused), hold → mid (exploratory), reject → very low (cautious)
+- [x] **`hallucination_score()`** (`ternlang-ml`): signal variance → trust trit; high spread = untrusted = -1
+- [x] **`trit_i8()` + `#[derive(Clone)]`** on `TritScalar` — enables serialization and use in API/MoE layers
+- [x] **Phase 8 REST endpoints** (`ternlang-api`): `/api/trit_deliberate`, `/api/trit_coalition`, `/api/trit_gate`, `/api/scalar_temperature`, `/api/hallucination_score`
+- [x] **Multi-tenant key management** (`ternlang-api`): `KeyStore` (JSON-backed, async RwLock), `tern_<tier>_<uuid24>` format, admin CRUD routes, usage counters, revocation
+- [x] 15 reasoning tests in `ternlang-ml`
+
+---
+
+## 🎭 Phase 9: MoE-13 Ternary Orchestrator — COMPLETE ✅
+**The head of a ternary Mixture-of-Experts system. Based on prior RFI-IRFOS research.**
+
+Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVLD: DOI [10.17605/OSF.IO/X96HS](https://doi.org/10.17605/OSF.IO/X96HS)
+
+- [x] **`CompetenceVector`** — 6D space: `[syntax, world_knowledge, reasoning, tool_use, persona, safety]`; cosine similarity, synergy (complementarity metric), dot product, norm
+- [x] **`TernMoeRouter`** — dual-key synergistic routing: score = `rel_a × rel_b × synergy`; selects the expert pair that maximises relevance AND complementarity simultaneously
+- [x] **`TriadField::synthesize()`** — 1+1=3 emergent field: `Ek = synergy × (vi + vj) / 2`; `is_amplifying()` check
+- [x] **`NodeMemory`** — TTL-based volatile store (LRU cap 256, TTL in seconds)
+- [x] **`ClusterMemory`** — routing frequency counters, `mode_collapse_risk()` (fraction dominated by one pair)
+- [x] **`AxisMemory`** — permanent audit log: safety veto log with timestamp + query hash, global priors
+- [x] **`TernMoeOrchestrator::orchestrate()`** — full 9-step pipeline:
+  1. Encode query → 6D evidence vector
+  2. Dual-key route → best expert pair
+  3. Evaluate both experts independently
+  4. Synthesise triad field (1+1=3)
+  5. Safety hard-gate (Axis-6 absolute veto → logs to AxisMemory)
+  6. Weighted trit vote (confidence + synergy amplification)
+  7. Hold detection (trit=0 or conf below threshold)
+  8. Tiebreaker invocation (max 4 active experts, selected by highest reasoning dim)
+  9. Return `OrchestrationResult` + update all three memory tiers
+- [x] **`with_standard_experts()`** — canonical MoE-13 pool: Syntax, WorldKnowledge, DeductiveReason, InductiveReason, ToolUse, Persona, Safety, FactCheck, CausalReason, AmbiguityRes, MathReason, ContextMem, MetaSafety (13 experts)
+- [x] **Temperature bridge** — affirm+high_conf → 0.3, hold → 0.7–0.9, reject → 0.05
+- [x] **`OrchestrationResult`** — trit, confidence, verdicts, triad_field, pair, held, safety_vetoed, temperature, prompt_hint
+- [x] 16 tests: competence vectors, router, triad synthesis, safety veto, hold/tiebreaker, reject, memory (node TTL, cluster mode-collapse, axis veto log), standard pool, full orchestration
+
+**Next for MoE:**
+- [ ] MCP tools: `orchestrator_route`, `trit_action_gate`, `moe_deliberate`
+- [ ] Whitepaper update — add Phase 9 / MoE-13 implementation section
+- [ ] REST endpoints in `ternlang-api` for orchestrator access
+- [ ] Stream `OrchestrationResult` as SSE for live agent deliberation
+
+---
+
 ## ⚖️ Licensing & IP
 - [ ] **Open core**: LGPL v3 (compiler + stdlib) — forces compiler contributions back
 - [ ] **Commercial tier**: proprietary license for `ternlang-ml`, HDL backend, distributed runtime
@@ -196,3 +245,5 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 | 2026-04-03 | Multi-tenant API key management in ternlang-api: KeyStore (JSON-backed, async RwLock), key generation (tern_<tier>_<uuid24>), revocation, usage counters, admin routes POST/GET/DELETE /admin/keys. `TERNLANG_ADMIN_KEY` + `KEYS_FILE` env vars. Albert-agent integrated as primary TIS agent. 5 VM compile errors fixed (Value::Clone, AgentRef 2-tuple). Build clean across full workspace. |
 | 2026-04-03 | Phase 5.1 COMPLETE: RemoteTransport trait in ternlang-core (no circular dep), TernNode impl in ternlang-runtime; TSEND/TAWAIT route over TCP for remote AgentRefs with auto-connect; `ternlang run --node-addr --peer` CLI flags wire TernNode into VM at startup; 4 runtime tests passing. |
 | 2026-04-03 | Phase 6.1 COMPLETE: BetRtlProcessor — cycle-accurate RTL simulator in pure Rust. Mirrors bet_processor.v exactly: TritWire 2-bit encoding, trit_neg/cons/mul/add combinational primitives, BetRegfile (27 regs), BetPc (16-bit), BetAlu, bet_decode control unit. `ternlang sim --rtl [--max-cycles N]` CLI. 12 RTL unit tests + 2 doctests. 93 tests total across core/hdl/runtime. |
+| 2026-04-03 | Phase 8 COMPLETE: Ternary AI Reasoning Toolkit in ternlang-ml — DeliberationEngine (EMA convergence), coalition_vote (quorum/dissent/abstain), action_gate (multi-dim hard-block), scalar_temperature (trit→LLM temp bridge), hallucination_score (variance→trust trit). TritScalar gains trit_i8() + Clone. Phase 8 REST endpoints in ternlang-api (5 endpoints). 15 reasoning tests. |
+| 2026-04-03 | Phase 9 COMPLETE: ternlang-moe crate — MoE-13 ternary orchestrator (DOI 10.17605/OSF.IO/TZ7DC). CompetenceVector (6D), TernMoeRouter (dual-key synergistic routing), TriadField (1+1=3 emergent synthesis), three-tier memory mesh (Node/Cluster/Axis), TernMoeOrchestrator (9-step pipeline), 13-expert standard pool, temperature bridge, safety hard gate with audit log. 16/16 tests passing. 146+ total tests across workspace. |
