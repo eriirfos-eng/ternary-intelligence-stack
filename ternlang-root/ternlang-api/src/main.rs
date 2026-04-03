@@ -29,12 +29,14 @@
 use axum::{
     Router,
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
-    response::{IntoResponse, Response},
+    response::{sse::{Event, Sse}, IntoResponse, Response},
     routing::{delete, get, post},
 };
+use tokio_stream::StreamExt as TokioStreamExt;
+use std::convert::Infallible;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -49,6 +51,7 @@ use tower_http::cors::{Any, CorsLayer};
 use uuid::Uuid;
 
 use ternlang_core::trit::Trit;
+use ternlang_moe::TernMoeOrchestrator;
 use ternlang_ml::{
     TritScalar, TritEvidenceVec, TEND_BOUNDARY,
     bitnet_threshold, benchmark, dense_matmul, sparse_matmul, TritMatrix,
@@ -261,11 +264,18 @@ async fn root(State(state): State<Arc<AppState>>) -> Json<Value> {
         "docs":    "https://ternlang.com/docs/api",
         "auth":    "X-Ternlang-Key header required for /api/* endpoints",
         "endpoints": {
-            "POST /api/trit_decide":      "Scalar ternary decision: evidence[] → reject/tend/affirm + confidence",
-            "POST /api/trit_vector":      "Multi-dimensional evidence: named dimensions + weights → aggregate",
-            "POST /api/trit_consensus":   "consensus(a, b) → ternary result",
-            "POST /api/quantize_weights": "f32[] → ternary weights via BitNet threshold",
-            "POST /api/sparse_benchmark": "Sparse vs dense matmul performance stats",
+            "POST /api/trit_decide":             "Scalar ternary decision: evidence[] → reject/tend/affirm + confidence",
+            "POST /api/trit_vector":             "Multi-dimensional evidence: named dimensions + weights → aggregate",
+            "POST /api/trit_consensus":          "consensus(a, b) → ternary result",
+            "POST /api/quantize_weights":        "f32[] → ternary weights via BitNet threshold",
+            "POST /api/sparse_benchmark":        "Sparse vs dense matmul performance stats",
+            "POST /api/trit_deliberate":         "EMA deliberation engine: multi-round evidence → converged trit",
+            "POST /api/trit_coalition":          "Coalition vote: N agents → quorum/dissent/abstain + consensus",
+            "POST /api/trit_gate":               "Action gate: multi-dim hard-block safety veto",
+            "POST /api/scalar_temperature":      "TritScalar → LLM sampling temperature + prompt hint",
+            "POST /api/hallucination_score":     "Signal variance → trust trit",
+            "GET  /api/stream/moe_orchestrate":  "SSE: MoE-13 orchestration pass streamed event-by-event",
+            "GET  /api/stream/deliberate":       "SSE: EMA deliberation — one event per round, live feed",
         },
         "acquire_key": "https://ternlang.com/#licensing"
     }))
@@ -776,6 +786,284 @@ async fn hallucination_score_endpoint(Json(body): Json<Value>) -> Response {
     }))).into_response()
 }
 
+// ─── GET /api/stream/moe_orchestrate ─────────────────────────────────────────
+//
+// SSE stream of a full MoE-13 orchestration pass, broken into discrete events:
+//
+//   event: routing       — which expert pair was selected and why
+//   event: verdict       — each expert's individual verdict (one event per expert)
+//   event: triad         — the emergent triad field
+//   event: safety        — safety gate result (veto or pass)
+//   event: vote          — weighted vote result
+//   event: tiebreaker    — tiebreaker verdict (if invoked)
+//   event: result        — final OrchestrationResult
+//   event: done          — stream sentinel
+//
+// Query params: query (string), evidence (comma-separated floats, optional)
+// Header: X-Ternlang-Key
+
+#[derive(serde::Deserialize)]
+struct MoeStreamParams {
+    query:    Option<String>,
+    evidence: Option<String>,   // "0.6,0.7,0.8,0.5,0.4,0.9"
+}
+
+async fn stream_moe_orchestrate(
+    Query(params): Query<MoeStreamParams>,
+) -> Sse<impl tokio_stream::Stream<Item = Result<Event, Infallible>>> {
+    let query = params.query.unwrap_or_else(|| "default query".into());
+    let evidence: Vec<f32> = params.evidence
+        .as_deref()
+        .unwrap_or("")
+        .split(',')
+        .filter_map(|s| s.trim().parse::<f32>().ok())
+        .collect();
+
+    // Build all events synchronously (orchestration is CPU-bound, not I/O-bound),
+    // then stream them with inter-event delays so the client sees progressive delivery.
+    let events = build_moe_sse_events(query, evidence);
+
+    let stream = tokio_stream::iter(events)
+        .then(|ev| async move {
+            tokio::time::sleep(tokio::time::Duration::from_millis(80)).await;
+            Ok::<Event, Infallible>(ev)
+        });
+
+    Sse::new(stream).keep_alive(
+        axum::response::sse::KeepAlive::new()
+            .interval(tokio::time::Duration::from_secs(15))
+            .text("keep-alive"),
+    )
+}
+
+fn build_moe_sse_events(query: String, evidence: Vec<f32>) -> Vec<Event> {
+    let mut events = Vec::new();
+    let evidence_ref: &[f32] = &evidence;
+
+    // Run full orchestration
+    let mut orch = TernMoeOrchestrator::with_standard_experts();
+    let result   = orch.orchestrate(&query, evidence_ref);
+
+    // ── event: routing ──────────────────────────────────────────────
+    if let Some(ref pair) = result.pair {
+        let routing_data = json!({
+            "event":     "routing",
+            "expert_a":  pair.expert_a,
+            "expert_b":  pair.expert_b,
+            "relevance": (pair.relevance * 1000.0).round() / 1000.0,
+            "synergy":   (pair.synergy  * 1000.0).round() / 1000.0,
+            "combined":  (pair.combined * 1000.0).round() / 1000.0,
+            "note": format!(
+                "Selected experts {} + {} — relevance {:.2}, synergy {:.2} (complementarity)",
+                pair.expert_a, pair.expert_b, pair.relevance, pair.synergy
+            ),
+        });
+        events.push(
+            Event::default()
+                .event("routing")
+                .data(routing_data.to_string())
+        );
+    }
+
+    // ── event: verdict (one per expert) ─────────────────────────────
+    for verdict in &result.verdicts {
+        let label = match verdict.trit { 1 => "affirm", -1 => "reject", _ => "tend" };
+        let verdict_data = json!({
+            "event":       "verdict",
+            "expert_id":   verdict.expert_id,
+            "expert_name": verdict.expert_name,
+            "trit":        verdict.trit,
+            "label":       label,
+            "confidence":  (verdict.confidence * 1000.0).round() / 1000.0,
+            "reasoning":   verdict.reasoning,
+        });
+        events.push(
+            Event::default()
+                .event("verdict")
+                .data(verdict_data.to_string())
+        );
+    }
+
+    // ── event: triad ─────────────────────────────────────────────────
+    let triad_data = json!({
+        "event":          "triad",
+        "synergy_weight": (result.triad_field.synergy_weight * 1000.0).round() / 1000.0,
+        "field":          result.triad_field.field.raw,
+        "is_amplifying":  result.triad_field.is_amplifying(),
+        "note": if result.triad_field.is_amplifying() {
+            "Emergent field is amplifying — triad synthesis boosting signal."
+        } else {
+            "Emergent field computed — synergy below amplification threshold."
+        },
+    });
+    events.push(Event::default().event("triad").data(triad_data.to_string()));
+
+    // ── event: safety ────────────────────────────────────────────────
+    let safety_data = json!({
+        "event":   "safety",
+        "vetoed":  result.safety_vetoed,
+        "safety_field": result.triad_field.field.raw[5],
+        "status":  if result.safety_vetoed { "VETO — hard block engaged" } else { "pass" },
+    });
+    events.push(Event::default().event("safety").data(safety_data.to_string()));
+
+    if result.safety_vetoed {
+        // Early-terminate: emit result + done
+        let result_data = json!({
+            "event":          "result",
+            "trit":           result.trit,
+            "label":          "reject",
+            "confidence":     1.0,
+            "held":           false,
+            "safety_vetoed":  true,
+            "temperature":    result.temperature,
+            "prompt_hint":    result.prompt_hint,
+        });
+        events.push(Event::default().event("result").data(result_data.to_string()));
+        events.push(Event::default().event("done").data("{}"));
+        return events;
+    }
+
+    // ── event: vote ──────────────────────────────────────────────────
+    let vote_label = match result.trit { 1 => "affirm", -1 => "reject", _ => "tend" };
+    let vote_data = json!({
+        "event":       "vote",
+        "trit":        result.trit,
+        "label":       vote_label,
+        "confidence":  (result.confidence * 1000.0).round() / 1000.0,
+        "held":        result.held,
+        "note": if result.held {
+            "Result held — tiebreaker invoked or confidence below threshold."
+        } else {
+            "Vote resolved."
+        },
+    });
+    events.push(Event::default().event("vote").data(vote_data.to_string()));
+
+    // ── event: tiebreaker (if held and >2 verdicts) ───────────────────
+    if result.verdicts.len() > 2 {
+        if let Some(tb) = result.verdicts.last() {
+            let tb_label = match tb.trit { 1 => "affirm", -1 => "reject", _ => "tend" };
+            let tb_data = json!({
+                "event":       "tiebreaker",
+                "expert_id":   tb.expert_id,
+                "expert_name": tb.expert_name,
+                "trit":        tb.trit,
+                "label":       tb_label,
+                "confidence":  (tb.confidence * 1000.0).round() / 1000.0,
+                "reasoning":   tb.reasoning,
+            });
+            events.push(Event::default().event("tiebreaker").data(tb_data.to_string()));
+        }
+    }
+
+    // ── event: result ─────────────────────────────────────────────────
+    let result_data = json!({
+        "event":         "result",
+        "trit":          result.trit,
+        "label":         vote_label,
+        "confidence":    (result.confidence * 1000.0).round() / 1000.0,
+        "held":          result.held,
+        "safety_vetoed": false,
+        "temperature":   (result.temperature * 1000.0).round() / 1000.0,
+        "prompt_hint":   result.prompt_hint,
+        "verdicts":      result.verdicts.len(),
+    });
+    events.push(Event::default().event("result").data(result_data.to_string()));
+
+    // ── event: done ───────────────────────────────────────────────────
+    events.push(Event::default().event("done").data("{}"));
+
+    events
+}
+
+// ─── GET /api/stream/deliberate ──────────────────────────────────────────────
+//
+// SSE stream of an EMA deliberation session — emits one event per round:
+//
+//   event: round     — { round, scalar, confidence, trit, label, converged }
+//   event: result    — final summary after all rounds
+//   event: done      — stream sentinel
+//
+// Query params:
+//   initial   — starting scalar [-1, 1] (default 0.0)
+//   target    — target confidence [0, 1] (default 0.8)
+//   alpha     — EMA smoothing [0, 1] (default 0.4)
+//   rounds    — comma-separated evidence scalars, one per round
+
+#[derive(serde::Deserialize)]
+struct DeliberateStreamParams {
+    initial: Option<f32>,
+    target:  Option<f32>,
+    alpha:   Option<f32>,
+    rounds:  Option<String>,  // "0.2,0.5,0.7,0.8,0.9"
+}
+
+async fn stream_deliberate(
+    Query(params): Query<DeliberateStreamParams>,
+) -> Sse<impl tokio_stream::Stream<Item = Result<Event, Infallible>>> {
+    let initial = params.initial.unwrap_or(0.0f32).clamp(-1.0, 1.0);
+    let target  = params.target.unwrap_or(0.8f32).clamp(0.0, 1.0);
+    let alpha   = params.alpha.unwrap_or(0.4f32).clamp(0.01, 1.0);
+
+    let round_signals: Vec<f32> = params.rounds
+        .as_deref()
+        .unwrap_or("")
+        .split(',')
+        .filter_map(|s| s.trim().parse::<f32>().ok())
+        .collect();
+
+    let evidence_rounds: Vec<Vec<f32>> = if round_signals.is_empty() {
+        // Default: 10 rounds replaying the initial signal
+        vec![vec![initial]; 10]
+    } else {
+        round_signals.iter().map(|&v| vec![v]).collect()
+    };
+
+    let engine = DeliberationEngine::new(target, evidence_rounds.len()).with_alpha(alpha);
+    let result = engine.run(evidence_rounds);
+
+    let mut events: Vec<Event> = result.trace.iter().map(|r| {
+        let label = match r.scalar.trit_i8() { 1 => "affirm", -1 => "reject", _ => "tend" };
+        let round_data = json!({
+            "event":      "round",
+            "round":      r.round,
+            "scalar":     (r.scalar.raw() * 1000.0).round() / 1000.0,
+            "confidence": (r.scalar.confidence() * 1000.0).round() / 1000.0,
+            "trit":       r.scalar.trit_i8(),
+            "label":      label,
+            "converged":  r.converged,
+        });
+        Event::default().event("round").data(round_data.to_string())
+    }).collect();
+
+    let final_label = match result.final_trit { 1 => "affirm", -1 => "reject", _ => "tend" };
+    let result_data = json!({
+        "event":              "result",
+        "final_trit":         result.final_trit,
+        "final_label":        final_label,
+        "final_confidence":   (result.final_confidence * 1000.0).round() / 1000.0,
+        "converged":          result.converged,
+        "rounds_used":        result.rounds_used,
+        "convergence_reason": result.convergence_reason,
+        "target_confidence":  target,
+    });
+    events.push(Event::default().event("result").data(result_data.to_string()));
+    events.push(Event::default().event("done").data("{}"));
+
+    let stream = tokio_stream::iter(events)
+        .then(|ev| async move {
+            tokio::time::sleep(tokio::time::Duration::from_millis(120)).await;
+            Ok::<Event, Infallible>(ev)
+        });
+
+    Sse::new(stream).keep_alive(
+        axum::response::sse::KeepAlive::new()
+            .interval(tokio::time::Duration::from_secs(15))
+            .text("keep-alive"),
+    )
+}
+
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 
 async fn not_found() -> Response {
@@ -826,6 +1114,9 @@ async fn main() {
         .route("/api/trit_gate",             post(trit_gate))
         .route("/api/scalar_temperature",    post(scalar_temperature_endpoint))
         .route("/api/hallucination_score",   post(hallucination_score_endpoint))
+        // Phase 9: SSE streaming endpoints
+        .route("/api/stream/moe_orchestrate", get(stream_moe_orchestrate))
+        .route("/api/stream/deliberate",      get(stream_deliberate))
         // Admin (requires X-Admin-Key)
         .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
         .route("/admin/keys/{key}",      delete(admin_revoke_key))
