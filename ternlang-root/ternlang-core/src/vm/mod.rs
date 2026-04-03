@@ -54,7 +54,7 @@ pub enum Opcode {
     Thalt = 0x00,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Value {
     Trit(Trit),
     Int(i64),
@@ -96,7 +96,7 @@ pub struct BetVm {
 impl BetVm {
     pub fn new(code: Vec<u8>) -> Self {
         Self {
-            registers: [Value::default(); 27],
+            registers: std::array::from_fn(|_| Value::default()),
             carry_reg: Trit::Zero,
             stack: Vec::new(),
             call_stack: Vec::new(),
@@ -209,11 +209,11 @@ impl BetVm {
                     if (reg as usize) >= self.registers.len() {
                         return Err(VmError::InvalidRegister(reg));
                     }
-                    self.stack.push(self.registers[reg as usize]);
+                    self.stack.push(self.registers[reg as usize].clone());
                 }
                 0x0a => { // Tdup
                     let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
-                    self.stack.push(*val);
+                    self.stack.push(val.clone());
                 }
                 0x0b => { // Tjmp
                     if self.pc + 1 >= self.code.len() { return Err(VmError::PcOutOfBounds(self.pc)); }
@@ -490,7 +490,7 @@ impl BetVm {
     }
 
     pub fn get_register(&self, reg: usize) -> Value {
-        self.registers[reg]
+        self.registers[reg].clone()
     }
 
     pub fn get_tensor(&self, idx: usize) -> Option<&Vec<Trit>> {
@@ -498,7 +498,7 @@ impl BetVm {
     }
 
     pub fn peek_stack(&self) -> Option<Value> {
-        self.stack.last().copied()
+        self.stack.last().cloned()
     }
 }
 

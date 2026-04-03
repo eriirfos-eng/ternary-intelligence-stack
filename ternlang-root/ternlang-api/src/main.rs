@@ -2,34 +2,51 @@
 ///
 /// Powers ternlang.com/api
 ///
-/// Routes:
-///   GET  /                      — API info + available endpoints
-///   GET  /health                — health check (no auth)
-///   POST /api/trit_decide       — scalar ternary decision
-///   POST /api/trit_vector       — multi-dimensional evidence aggregation
-///   POST /api/trit_consensus    — consensus(a, b)
-///   POST /api/quantize_weights  — BitNet f32 → ternary
-///   POST /api/sparse_benchmark  — sparse vs dense matmul stats
+/// Public routes (no auth):
+///   GET  /                        — API info + available endpoints
+///   GET  /health                  — health check
 ///
-/// Auth: X-Ternlang-Key header (set via TERNLANG_API_KEY env var)
-/// CORS: open (for browser playground)
+/// API routes (X-Ternlang-Key header required):
+///   POST /api/trit_decide         — scalar ternary decision
+///   POST /api/trit_vector         — multi-dimensional evidence aggregation
+///   POST /api/trit_consensus      — consensus(a, b)
+///   POST /api/quantize_weights    — BitNet f32 → ternary
+///   POST /api/sparse_benchmark    — sparse vs dense matmul stats
+///
+/// Admin routes (X-Admin-Key header required):
+///   POST   /admin/keys            — generate a new API key
+///   GET    /admin/keys            — list all keys with usage
+///   DELETE /admin/keys/{key}      — revoke a key
+///
+/// Env vars:
+///   TERNLANG_ADMIN_KEY   — admin secret (required in production)
+///   KEYS_FILE            — path to JSON key store (default: ./ternlang_keys.json)
+///   PORT                 — listening port (default: 3731)
 ///
 /// Run:
-///   TERNLANG_API_KEY=your-key cargo run --release --bin ternlang-api
-///   TERNLANG_API_KEY=your-key PORT=8080 cargo run --release --bin ternlang-api
+///   TERNLANG_ADMIN_KEY=secret cargo run --release --bin ternlang-api
 
 use axum::{
     Router,
     Json,
-    extract::State,
+    extract::{Path, State},
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::{delete, get, post},
 };
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::{env, sync::Arc};
+use std::{
+    collections::HashMap,
+    env,
+    path::PathBuf,
+    sync::Arc,
+};
+use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
+use uuid::Uuid;
 
 use ternlang_core::trit::Trit;
 use ternlang_ml::{
@@ -37,12 +54,124 @@ use ternlang_ml::{
     bitnet_threshold, benchmark, dense_matmul, sparse_matmul, TritMatrix,
 };
 
+// ─── Key store ───────────────────────────────────────────────────────────────
+
+/// One API key entry. Raw key string is used as the HashMap key so lookup is O(1).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiKeyEntry {
+    pub key_id:        String,   // "tk_<uuid_short>"
+    pub tier:          u8,       // 1=open, 2=restricted, 3=enterprise
+    pub email:         String,
+    pub note:          String,   // free-form admin note
+    pub created_at:    String,   // ISO 8601
+    pub is_active:     bool,
+    pub request_count: u64,
+}
+
+/// Persistent key store — serialised as JSON to `path`.
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct KeyStoreData {
+    /// Map from raw key string → entry metadata
+    keys: HashMap<String, ApiKeyEntry>,
+}
+
+pub struct KeyStore {
+    data: RwLock<KeyStoreData>,
+    path: PathBuf,
+}
+
+impl KeyStore {
+    /// Load from disk (creates empty file if it doesn't exist).
+    pub async fn load(path: PathBuf) -> Arc<Self> {
+        let data = if path.exists() {
+            let raw = tokio::fs::read_to_string(&path).await.unwrap_or_default();
+            serde_json::from_str::<KeyStoreData>(&raw).unwrap_or_default()
+        } else {
+            KeyStoreData::default()
+        };
+        Arc::new(KeyStore { data: RwLock::new(data), path })
+    }
+
+    /// Persist current state to disk (best-effort; logs on error).
+    async fn save(&self) {
+        let data = self.data.read().await;
+        match serde_json::to_string_pretty(&*data) {
+            Ok(json) => {
+                if let Err(e) = tokio::fs::write(&self.path, json).await {
+                    eprintln!("[key-store] save error: {}", e);
+                }
+            }
+            Err(e) => eprintln!("[key-store] serialise error: {}", e),
+        }
+    }
+
+    /// Check a raw key and, if valid, increment its counter.
+    pub async fn validate_and_bump(&self, raw_key: &str) -> Option<ApiKeyEntry> {
+        let mut data = self.data.write().await;
+        let entry = data.keys.get_mut(raw_key)?;
+        if !entry.is_active {
+            return None;
+        }
+        entry.request_count += 1;
+        Some(entry.clone())
+    }
+
+    /// Generate a new key. Returns (raw_key, entry).
+    pub async fn generate(&self, tier: u8, email: String, note: String) -> (String, ApiKeyEntry) {
+        let uid   = Uuid::new_v4().to_string().replace('-', "");
+        let raw   = format!("tern_{}_{}", tier, &uid[..24]);
+        let key_id = format!("tk_{}", &uid[..8]);
+
+        let entry = ApiKeyEntry {
+            key_id:        key_id.clone(),
+            tier,
+            email,
+            note,
+            created_at:    Utc::now().to_rfc3339(),
+            is_active:     true,
+            request_count: 0,
+        };
+
+        self.data.write().await.keys.insert(raw.clone(), entry.clone());
+        self.save().await;
+        (raw, entry)
+    }
+
+    /// Revoke a key by raw value. Returns true if the key existed.
+    pub async fn revoke(&self, raw_key: &str) -> bool {
+        let mut data = self.data.write().await;
+        if let Some(entry) = data.keys.get_mut(raw_key) {
+            entry.is_active = false;
+            drop(data);
+            self.save().await;
+            return true;
+        }
+        false
+    }
+
+    /// List all entries (key hidden, only metadata).
+    pub async fn list(&self) -> Vec<Value> {
+        let data = self.data.read().await;
+        data.keys.iter().map(|(raw, e)| json!({
+            "key_id":        e.key_id,
+            "key_preview":   format!("{}…", &raw[..12]),
+            "tier":          e.tier,
+            "email":         e.email,
+            "note":          e.note,
+            "created_at":    e.created_at,
+            "is_active":     e.is_active,
+            "request_count": e.request_count,
+        })).collect()
+    }
+}
+
 // ─── App state ───────────────────────────────────────────────────────────────
 
 #[derive(Clone)]
 struct AppState {
-    api_key: String,
-    version: &'static str,
+    admin_key: String,
+    keys:      Arc<KeyStore>,
+    version:   &'static str,
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -59,7 +188,7 @@ fn api_error(status: StatusCode, message: &str) -> Response {
     (status, Json(json!({ "error": message, "docs": "https://ternlang.com/docs/api" }))).into_response()
 }
 
-// ─── Auth middleware ──────────────────────────────────────────────────────────
+// ─── Auth middleware (API routes) ─────────────────────────────────────────────
 
 async fn require_api_key(
     State(state): State<Arc<AppState>>,
@@ -70,24 +199,48 @@ async fn require_api_key(
     let path = request.uri().path().to_string();
 
     // Public endpoints — no key required
-    if path == "/" || path == "/health" {
+    if path == "/" || path == "/health" || path.starts_with("/admin") {
         return next.run(request).await;
     }
 
-    let provided = headers
+    let raw = headers
         .get("X-Ternlang-Key")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
 
-    if provided.is_empty() {
-        return api_error(
-            StatusCode::UNAUTHORIZED,
-            "Missing X-Ternlang-Key header. Get a key at https://ternlang.com/api",
-        );
+    if raw.is_empty() {
+        return api_error(StatusCode::UNAUTHORIZED,
+            "Missing X-Ternlang-Key header. Acquire a key at https://ternlang.com/#licensing");
     }
 
-    if provided != state.api_key {
-        return api_error(StatusCode::UNAUTHORIZED, "Invalid API key.");
+    match state.keys.validate_and_bump(raw).await {
+        Some(_entry) => next.run(request).await,
+        None => api_error(StatusCode::UNAUTHORIZED, "Invalid or revoked API key."),
+    }
+}
+
+// ─── Admin middleware ──────────────────────────────────────────────────────────
+
+async fn require_admin_key(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    request: axum::extract::Request,
+    next: Next,
+) -> Response {
+    if !request.uri().path().starts_with("/admin") {
+        return next.run(request).await;
+    }
+
+    let provided = headers
+        .get("X-Admin-Key")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+
+    if provided.is_empty() {
+        return api_error(StatusCode::UNAUTHORIZED, "Missing X-Admin-Key header.");
+    }
+    if provided != state.admin_key {
+        return api_error(StatusCode::UNAUTHORIZED, "Invalid admin key.");
     }
 
     next.run(request).await
@@ -109,7 +262,8 @@ async fn root(State(state): State<Arc<AppState>>) -> Json<Value> {
             "POST /api/trit_consensus":   "consensus(a, b) → ternary result",
             "POST /api/quantize_weights": "f32[] → ternary weights via BitNet threshold",
             "POST /api/sparse_benchmark": "Sparse vs dense matmul performance stats",
-        }
+        },
+        "acquire_key": "https://ternlang.com/#licensing"
     }))
 }
 
@@ -117,6 +271,62 @@ async fn root(State(state): State<Arc<AppState>>) -> Json<Value> {
 
 async fn health() -> Json<Value> {
     Json(json!({ "status": "ok", "engine": "BET VM", "trit": 1 }))
+}
+
+// ─── Admin: POST /admin/keys ──────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct GenerateKeyBody {
+    tier:  Option<u8>,
+    email: Option<String>,
+    note:  Option<String>,
+}
+
+async fn admin_generate_key(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<GenerateKeyBody>,
+) -> Response {
+    let tier  = body.tier.unwrap_or(2);
+    let email = body.email.unwrap_or_default();
+    let note  = body.note.unwrap_or_default();
+
+    if tier < 1 || tier > 3 {
+        return api_error(StatusCode::BAD_REQUEST, "tier must be 1, 2, or 3");
+    }
+
+    let (raw, entry) = state.keys.generate(tier, email, note).await;
+
+    eprintln!("[admin] generated key {} for {}", entry.key_id, entry.email);
+
+    (StatusCode::CREATED, Json(json!({
+        "key":     raw,        // Only returned once — save it!
+        "key_id":  entry.key_id,
+        "tier":    entry.tier,
+        "email":   entry.email,
+        "created": entry.created_at,
+        "warning": "Store this key securely — it will not be shown again.",
+    }))).into_response()
+}
+
+// ─── Admin: GET /admin/keys ───────────────────────────────────────────────────
+
+async fn admin_list_keys(State(state): State<Arc<AppState>>) -> Json<Value> {
+    let entries = state.keys.list().await;
+    Json(json!({ "total": entries.len(), "keys": entries }))
+}
+
+// ─── Admin: DELETE /admin/keys/{key} ─────────────────────────────────────────
+
+async fn admin_revoke_key(
+    State(state): State<Arc<AppState>>,
+    Path(raw_key): Path<String>,
+) -> Response {
+    if state.keys.revoke(&raw_key).await {
+        eprintln!("[admin] revoked key {}", &raw_key[..12.min(raw_key.len())]);
+        (StatusCode::OK, Json(json!({ "revoked": true }))).into_response()
+    } else {
+        api_error(StatusCode::NOT_FOUND, "Key not found.")
+    }
 }
 
 // ─── POST /api/trit_decide ───────────────────────────────────────────────────
@@ -229,84 +439,61 @@ async fn trit_vector(Json(body): Json<Value>) -> Response {
         .zip(ev.values.iter())
         .zip(ev.weights.iter())
         .zip(scalars.iter())
-        .map(|(((label, &raw), &weight), s)| json!({
+        .map(|(((label, &val), &w), sc)| json!({
             "label":      label,
-            "raw":        (raw * 1000.0).round() / 1000.0,
-            "weight":     weight,
-            "trit":       trit_to_i8(s.trit()),
-            "zone":       s.label(),
-            "confidence": (s.confidence() * 1000.0).round() / 1000.0,
-        }))
-        .collect();
+            "raw":        (val * 1000.0).round() / 1000.0,
+            "weight":     w,
+            "trit":       trit_to_i8(sc.trit()),
+            "label_trit": sc.label(),
+            "confidence": (sc.confidence() * 1000.0).round() / 1000.0,
+        })).collect();
 
-    let dominant = ev.dominant().map(|(label, s)| json!({
-        "label":      label,
-        "zone":       s.label(),
-        "confidence": (s.confidence() * 1000.0).round() / 1000.0,
-    }));
-
-    let recommendation = match agg.trit() {
-        Trit::PosOne => format!(
-            "Affirm — scalar {:.3}, confidence {:.0}%{}.",
-            agg.raw(), agg.confidence() * 100.0,
-            if actionable { ". Act." } else { ". Below threshold — gather more evidence." }
-        ),
-        Trit::NegOne => format!(
-            "Reject — scalar {:.3}, confidence {:.0}%{}.",
-            agg.raw(), agg.confidence() * 100.0,
-            if actionable { ". Do not act." } else { ". Below threshold — gather more evidence." }
-        ),
-        Trit::Zero => format!(
-            "Tend — scalar {:.3} in deliberation zone. Strongest signal: {}.",
-            agg.raw(),
-            ev.dominant().map(|(l, _)| l).unwrap_or("none")
-        ),
-    };
+    let zeros = breakdown.iter().filter(|d| d["trit"] == 0).count();
 
     (StatusCode::OK, Json(json!({
         "aggregate": {
-            "scalar":        (agg.raw() * 1000.0).round() / 1000.0,
-            "trit":          trit_to_i8(agg.trit()),
-            "label":         agg.label(),
-            "confidence":    (agg.confidence() * 1000.0).round() / 1000.0,
+            "scalar":     (agg.raw() * 1000.0).round() / 1000.0,
+            "trit":       trit_to_i8(agg.trit()),
+            "label":      agg.label(),
+            "confidence": (agg.confidence() * 1000.0).round() / 1000.0,
             "is_actionable": actionable,
         },
-        "breakdown":      breakdown,
-        "dominant":       dominant,
-        "tend_boundary":  TEND_BOUNDARY,
-        "recommendation": recommendation,
+        "dimensions":       breakdown,
+        "tend_boundary":    TEND_BOUNDARY,
+        "signal_sparsity":  zeros as f64 / ev.dimensions.len() as f64,
+        "recommendation":   match agg.trit() {
+            Trit::PosOne => "Affirm — weighted evidence crosses threshold.".to_string(),
+            Trit::NegOne => "Reject — weighted evidence crosses negative threshold.".to_string(),
+            Trit::Zero   => format!(
+                "Tend — aggregate {:.3} within deliberation zone. Resolve conflicting dimensions.",
+                agg.raw()
+            ),
+        },
     }))).into_response()
 }
 
 // ─── POST /api/trit_consensus ────────────────────────────────────────────────
 
 async fn trit_consensus(Json(body): Json<Value>) -> Response {
-    let a_val = match body["a"].as_i64() {
-        Some(v) => v,
-        None => return api_error(StatusCode::BAD_REQUEST, "a must be -1, 0, or 1"),
-    };
-    let b_val = match body["b"].as_i64() {
-        Some(v) => v,
-        None => return api_error(StatusCode::BAD_REQUEST, "b must be -1, 0, or 1"),
-    };
-
-    let a = match i8_to_trit(a_val) {
+    let a = match body["a"].as_i64().and_then(i8_to_trit) {
         Some(t) => t,
         None => return api_error(StatusCode::BAD_REQUEST, "a must be -1, 0, or 1"),
     };
-    let b = match i8_to_trit(b_val) {
+    let b = match body["b"].as_i64().and_then(i8_to_trit) {
         Some(t) => t,
         None => return api_error(StatusCode::BAD_REQUEST, "b must be -1, 0, or 1"),
     };
 
-    let (sum, carry) = a + b;
-    let s = TritScalar::new(trit_to_i8(sum) as f32);
+    // consensus: agree → common value (carry=0); disagree → 0 (carry=1)
+    let result = if a == b { a } else { Trit::Zero };
+    let carry  = if a == b { Trit::Zero } else { Trit::PosOne };
 
     (StatusCode::OK, Json(json!({
-        "result":     trit_to_i8(sum),
-        "label":      s.label(),
-        "carry":      trit_to_i8(carry),
-        "expression": format!("consensus({}, {}) = {}", a_val, b_val, trit_to_i8(sum)),
+        "a":      trit_to_i8(a),
+        "b":      trit_to_i8(b),
+        "result": trit_to_i8(result),
+        "carry":  trit_to_i8(carry),
+        "label":  TritScalar::new(trit_to_i8(result) as f32).label(),
     }))).into_response()
 }
 
@@ -314,13 +501,8 @@ async fn trit_consensus(Json(body): Json<Value>) -> Response {
 
 async fn quantize_weights(Json(body): Json<Value>) -> Response {
     let weights: Vec<f32> = match body["weights"].as_array() {
-        Some(arr) => match arr.iter()
-            .map(|v| v.as_f64().map(|f| f as f32).ok_or(()))
-            .collect::<Result<Vec<_>, _>>() {
-                Ok(v) => v,
-                Err(_) => return api_error(StatusCode::BAD_REQUEST, "weight values must be numbers"),
-            },
-        None => return api_error(StatusCode::BAD_REQUEST, "weights must be an array"),
+        Some(arr) => arr.iter().map(|v| v.as_f64().unwrap_or(0.0) as f32).collect(),
+        None => return api_error(StatusCode::BAD_REQUEST, "weights must be an array of numbers"),
     };
 
     if weights.is_empty() {
@@ -331,19 +513,23 @@ async fn quantize_weights(Json(body): Json<Value>) -> Response {
         .unwrap_or_else(|| bitnet_threshold(&weights) as f64) as f32;
 
     let trits: Vec<i8> = weights.iter().map(|&w| {
-        if w > threshold { 1 } else if w < -threshold { -1 } else { 0 }
+        if w > threshold { 1 }
+        else if w < -threshold { -1 }
+        else { 0 }
     }).collect();
 
-    let zeros = trits.iter().filter(|&&t| t == 0).count();
+    let zeros    = trits.iter().filter(|&&t| t == 0).count();
     let sparsity = zeros as f64 / trits.len() as f64;
 
     (StatusCode::OK, Json(json!({
+        "threshold":       (threshold * 1000.0).round() / 1000.0,
         "trits":           trits,
-        "threshold_used":  threshold,
-        "sparsity":        sparsity,
-        "zero_count":      zeros,
-        "nonzero_count":   trits.len() - zeros,
-        "total":           trits.len(),
+        "sparsity":        (sparsity * 1000.0).round() / 1000.0,
+        "non_zero":        trits.len() - zeros,
+        "bits_saved":      format!("{:.1}%", sparsity * 100.0),
+        "zone":            if sparsity < 0.40 { "warm" }
+                           else if sparsity <= 0.60 { "goldilocks ★" }
+                           else { "asymptotic" },
     }))).into_response()
 }
 
@@ -407,33 +593,45 @@ async fn not_found() -> Response {
 
 #[tokio::main]
 async fn main() {
-    let api_key = env::var("TERNLANG_API_KEY").unwrap_or_else(|_| {
-        eprintln!("[ternlang-api] WARNING: TERNLANG_API_KEY not set — using 'dev-key'");
-        eprintln!("[ternlang-api] Set TERNLANG_API_KEY=<your-key> in production");
-        "dev-key".to_string()
+    let admin_key = env::var("TERNLANG_ADMIN_KEY").unwrap_or_else(|_| {
+        eprintln!("[ternlang-api] WARNING: TERNLANG_ADMIN_KEY not set — using 'admin-dev'");
+        eprintln!("[ternlang-api] Set TERNLANG_ADMIN_KEY=<secret> in production");
+        "admin-dev".to_string()
     });
+
+    let keys_file = env::var("KEYS_FILE")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("ternlang_keys.json"));
 
     let port: u16 = env::var("PORT")
         .ok()
         .and_then(|p| p.parse().ok())
-        .unwrap_or(3731);   // 3731 — ternary 🙂
+        .unwrap_or(3731);   // 3731 — ternary
 
-    let state = Arc::new(AppState { api_key, version: "0.1.0" });
+    let keys = KeyStore::load(keys_file).await;
+
+    let state = Arc::new(AppState { admin_key, keys, version: "0.1.0" });
 
     let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::OPTIONS])
         .allow_headers(Any)
         .allow_origin(Any);
 
     let app = Router::new()
-        .route("/",                      get(root))
-        .route("/health",                get(health))
+        // Public
+        .route("/",       get(root))
+        .route("/health", get(health))
+        // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))
         .route("/api/trit_vector",       post(trit_vector))
         .route("/api/trit_consensus",    post(trit_consensus))
         .route("/api/quantize_weights",  post(quantize_weights))
         .route("/api/sparse_benchmark",  post(sparse_benchmark))
+        // Admin (requires X-Admin-Key)
+        .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
+        .route("/admin/keys/{key}",      delete(admin_revoke_key))
         .fallback(not_found)
+        .layer(middleware::from_fn_with_state(state.clone(), require_admin_key))
         .layer(middleware::from_fn_with_state(state.clone(), require_api_key))
         .layer(cors)
         .with_state(state);

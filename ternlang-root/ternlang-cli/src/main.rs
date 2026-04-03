@@ -114,7 +114,8 @@ fn main() {
                             Value::Trit(t) => println!("Reg {}: trit({})", i, t),
                             Value::Int(v) => println!("Reg {}: int({})", i, v),
                             Value::TensorRef(r) => println!("Reg {}: tensor_ref({})", i, r),
-                            Value::AgentRef(a)  => println!("Reg {}: agent_ref({})", i, a),
+                            Value::AgentRef(a, _)  => println!("Reg {}: agent_ref({})", i, a),
+                            Value::String(s) => println!("Reg {}: string({:?})", i, s),
                         }
                     }
                 }
@@ -260,7 +261,8 @@ fn run_repl() {
                             Value::Trit(t) => println!("  → {}", t),
                             Value::Int(v)  => println!("  → {}", v),
                             Value::TensorRef(r) => println!("  → tensor_ref({})", r),
-                            Value::AgentRef(a)  => println!("  → agent_ref({})", a),
+                            Value::AgentRef(a, _)  => println!("  → agent_ref({})", a),
+                            Value::String(s) => println!("  → {:?}", s),
                         }
                     }
                     Err(e) => eprintln!("  vm error: {}", e),
