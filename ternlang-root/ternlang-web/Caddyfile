@@ -1,0 +1,25 @@
+ternlang.com, www.ternlang.com {
+    # Serve the landing page
+    root * /var/www/ternlang
+    file_server
+
+    # Proxy /api/* to the Rust API server
+    reverse_proxy /api/* localhost:3731
+    reverse_proxy /health localhost:3731
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    # Compression
+    encode gzip
+
+    # TLS — Caddy auto-provisions and renews via Let's Encrypt
+    tls {
+        protocols tls1.2 tls1.3
+    }
+}

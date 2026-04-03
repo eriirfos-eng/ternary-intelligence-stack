@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ternlang — good night, binary.</title>
+  <meta name="description" content="The balanced ternary intelligence stack. reject · tend · affirm. The API for AI agents that reason under uncertainty." />
+  <meta property="og:title" content="Ternlang — good night, binary." />
+  <meta property="og:description" content="Balanced ternary computing platform. The API for AI agents that refuse to guess." />
+  <meta property="og:url" content="https://ternlang.com" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a14;
+      --bg2:      #111120;
+      --bg3:      #1a1a2e;
+      --teal:     #00d4aa;
+      --teal-dim: #00957a;
+      --blue:     #4a9eff;
+      --red:      #ff5f6d;
+      --text:     #dde0f0;
+      --muted:    #7a7d99;
+      --border:   #2a2a40;
+      --font:     'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --sans:     -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ─────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10,10,20,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font);
+      font-size: 1.1rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--teal); }
+
+    /* ── HERO ────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 30%, rgba(0,212,170,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 20% 80%, rgba(74,158,255,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      font-family: var(--font);
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.5rem;
+    }
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+    .hero-title span { color: var(--teal); font-weight: 700; }
+    .hero-tagline {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: var(--muted);
+      margin-bottom: 3rem;
+      font-style: italic;
+    }
+
+    /* trit zone diagram */
+    .zone-diagram {
+      font-family: var(--font);
+      font-size: 0.82rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem 2rem;
+      margin: 0 auto 2.5rem;
+      max-width: 640px;
+      text-align: left;
+      line-height: 2;
+    }
+    .z-reject { color: var(--red); }
+    .z-tend   { color: var(--teal); }
+    .z-affirm { color: var(--blue); }
+    .z-dim    { color: var(--muted); }
+
+    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--teal); color: #0a0a14;
+    }
+    .btn-primary:hover { background: #00f0c0; transform: translateY(-1px); }
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+
+    /* ── SECTION SHARED ──────────────────────────────────────── */
+    section { padding: 5rem 2rem; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .section-label {
+      font-family: var(--font);
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 300;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+    h2 strong { color: var(--teal); font-weight: 700; }
+    .lead {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 680px;
+      margin-bottom: 3rem;
+    }
+
+    /* ── TRIT CARDS ──────────────────────────────────────────── */
+    .trit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    .trit-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .trit-card:hover { transform: translateY(-3px); }
+    .trit-card.reject:hover { border-color: var(--red); }
+    .trit-card.tend:hover   { border-color: var(--teal); }
+    .trit-card.affirm:hover { border-color: var(--blue); }
+    .trit-value {
+      font-family: var(--font);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .reject .trit-value { color: var(--red); }
+    .tend   .trit-value { color: var(--teal); }
+    .affirm .trit-value { color: var(--blue); }
+    .trit-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+    .trit-desc { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+    .trit-key {
+      display: inline-block;
+      margin-top: 1rem;
+      font-family: var(--font);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      background: var(--bg3);
+    }
+    .reject .trit-key { color: var(--red); }
+    .tend   .trit-key { color: var(--teal); }
+    .affirm .trit-key { color: var(--blue); }
+
+    /* ── API SECTION ─────────────────────────────────────────── */
+    .api-section { background: var(--bg2); }
+    .api-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 700px) { .api-grid { grid-template-columns: 1fr; } }
+    .api-desc h3 {
+      font-size: 1.3rem; color: #fff; margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+    .api-desc p { color: var(--muted); margin-bottom: 1rem; font-size: 0.95rem; }
+    .endpoint-list { list-style: none; }
+    .endpoint-list li {
+      display: flex; gap: 0.75rem; align-items: baseline;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .endpoint-list li:last-child { border: none; }
+    .method {
+      font-family: var(--font);
+      font-size: 0.7rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      background: rgba(0,212,170,0.15);
+      color: var(--teal);
+      flex-shrink: 0;
+    }
+    .method.get { background: rgba(74,158,255,0.15); color: var(--blue); }
+    .ep-path { font-family: var(--font); color: var(--text); }
+    .ep-desc { color: var(--muted); font-size: 0.85rem; }
+
+    pre {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      font-family: var(--font);
+      font-size: 0.82rem;
+      line-height: 1.7;
+    }
+    .c-comment { color: var(--muted); }
+    .c-key     { color: var(--blue); }
+    .c-str     { color: #f9c74f; }
+    .c-num     { color: #f8961e; }
+    .c-teal    { color: var(--teal); }
+    .c-red     { color: var(--red); }
+
+    /* ── TIERS ───────────────────────────────────────────────── */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .tier-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .tier-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .tier-card.t1::before { background: var(--teal); }
+    .tier-card.t2::before { background: var(--blue); }
+    .tier-card.t3::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+    .tier-badge {
+      font-family: var(--font);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .t1 .tier-badge { color: var(--teal); }
+    .t2 .tier-badge { color: var(--blue); }
+    .t3 .tier-badge { color: var(--muted); }
+    .tier-name { font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 0.5rem; }
+    .tier-license {
+      font-family: var(--font);
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .tier-items { list-style: none; }
+    .tier-items li {
+      font-size: 0.88rem;
+      color: var(--muted);
+      padding: 0.3rem 0;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .tier-items li::before {
+      content: '→';
+      position: absolute; left: 0;
+      color: var(--teal);
+    }
+    .t2 .tier-items li::before { color: var(--blue); }
+    .t3 .tier-items li::before { color: var(--teal); }
+
+    /* ── STATS BAR ───────────────────────────────────────────── */
+    .stats-bar {
+      background: var(--bg3);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: flex; justify-content: space-around;
+      padding: 2rem;
+      flex-wrap: wrap; gap: 1.5rem;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--font);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--teal);
+      display: block;
+    }
+    .stat-label { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── CTA BAND ────────────────────────────────────────────── */
+    .cta-band {
+      background: linear-gradient(135deg, #0d1a14 0%, #0a0a14 50%, #0d0d1a 100%);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .cta-band h2 { margin-bottom: 0.5rem; }
+    .cta-band .lead { margin: 0 auto 2rem; }
+
+    /* ── FOOTER ──────────────────────────────────────────────── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
+
+    /* ── GLOW DIVIDER ────────────────────────────────────────── */
+    .glow-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--teal), transparent);
+      opacity: 0.3;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="/">ternlang</a>
+  <ul class="nav-links">
+    <li><a href="#api">API</a></li>
+    <li><a href="#tiers">Licensing</a></li>
+    <li><a href="https://github.com/eriirfos-eng/ternary-intelligence-stack">GitHub</a></li>
+    <li><a href="mailto:licensing@ternlang.com">Contact</a></li>
+    <li><a href="#api" class="btn btn-primary" style="padding:0.4rem 1rem;font-size:0.85rem;">Get API Key</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">RFI-IRFOS · Ternary Intelligence Stack</p>
+  <h1 class="hero-title">good night, <span>binary.</span></h1>
+  <p class="hero-tagline">The world has three states. Your AI should too.</p>
+
+  <div class="zone-diagram">
+    <span class="z-dim">    </span><span class="z-reject">reject</span><span class="z-dim">            </span><span class="z-tend">tend</span><span class="z-dim">              </span><span class="z-affirm">affirm</span><br>
+    <span class="z-dim">────────────────</span><span class="z-dim">┼</span><span class="z-dim">────────────────</span><span class="z-dim">┼</span><span class="z-dim">────────────────</span><br>
+    <span class="z-dim">−1.0</span><span class="z-dim">          −0.333</span><span class="z-dim">          +0.333</span><span class="z-dim">           +1.0</span><br>
+    <span class="z-dim">     ← confidence →              ← confidence →</span><br><br>
+    <span class="z-dim">  act:  </span><span class="z-reject">do not proceed</span><span class="z-dim"> · </span><span class="z-tend">not yet — deliberate</span><span class="z-dim"> · </span><span class="z-affirm">proceed</span>
+  </div>
+
+  <div class="hero-cta">
+    <a href="mailto:licensing@ternlang.com?subject=API Key Request" class="btn btn-primary">Get API Access</a>
+    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="btn btn-secondary">View on GitHub</a>
+    <a href="#api" class="btn btn-secondary">Explore the API</a>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div><span class="stat-num">3</span><span class="stat-label">states per trit</span></div>
+    <div><span class="stat-num">51</span><span class="stat-label">BET VM opcodes</span></div>
+    <div><span class="stat-num">2.27×</span><span class="stat-label">fewer multiply ops</span></div>
+    <div><span class="stat-num">130+</span><span class="stat-label">tests passing</span></div>
+    <div><span class="stat-num">7</span><span class="stat-label">API tools</span></div>
+  </div>
+</div>
+
+<!-- TRIT CARDS -->
+<section>
+  <div class="container">
+    <p class="section-label">The three states</p>
+    <h2>Not null. Not undecided. <strong>Deliberating.</strong></h2>
+    <p class="lead">Binary forces every decision into YES or NO. Ternary gives AI agents a third option — one that says "I don't have enough signal yet. Keep going."</p>
+    <div class="trit-grid">
+      <div class="trit-card reject">
+        <div class="trit-value">−1</div>
+        <div class="trit-name">reject</div>
+        <div class="trit-desc">Signal is negative and resolvable. Evidence points away from action. Do not proceed — but this is a decision, not an error.</div>
+        <div class="trit-key">conflict · NegOne · signal negative</div>
+      </div>
+      <div class="trit-card tend">
+        <div class="trit-value"> 0</div>
+        <div class="trit-name">tend</div>
+        <div class="trit-desc">The deliberation zone. Not null. Not indecision. An active instruction: gather more evidence before committing. The most misunderstood trit.</div>
+        <div class="trit-key">hold · Zero · active computation</div>
+      </div>
+      <div class="trit-card affirm">
+        <div class="trit-value">+1</div>
+        <div class="trit-name">affirm</div>
+        <div class="trit-desc">Signal is affirmative. Evidence supports action. Proceed — with a confidence score that tells you how strongly.</div>
+        <div class="trit-key">truth · PosOne · signal affirmative</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- API SECTION -->
+<section class="api-section" id="api">
+  <div class="container">
+    <p class="section-label">The API</p>
+    <h2>Any agent. <strong>Ternary reasoning.</strong></h2>
+    <p class="lead">One header. Your AI agent stops guessing and starts deliberating.</p>
+    <div class="api-grid">
+      <div class="api-desc">
+        <h3>Endpoints</h3>
+        <ul class="endpoint-list">
+          <li><span class="method get">GET</span><span class="ep-path">/health</span></li>
+          <li><span class="method">POST</span><span class="ep-path">/api/trit_decide</span></li>
+          <li><span class="method">POST</span><span class="ep-path">/api/trit_vector</span></li>
+          <li><span class="method">POST</span><span class="ep-path">/api/trit_consensus</span></li>
+          <li><span class="method">POST</span><span class="ep-path">/api/quantize_weights</span></li>
+          <li><span class="method">POST</span><span class="ep-path">/api/sparse_benchmark</span></li>
+        </ul>
+        <br>
+        <p>Auth via <code style="font-family:var(--font);color:var(--teal)">X-Ternlang-Key</code> header.<br>
+        Also available as an MCP server — plug into any Claude, GPT, or open agent framework directly.</p>
+        <br>
+        <a href="mailto:licensing@ternlang.com?subject=API Key Request" class="btn btn-primary" style="margin-top:0.5rem">Request API Key →</a>
+      </div>
+      <div>
+<pre><span class="c-comment"># Multi-source evidence → ternary decision</span>
+curl -X POST https://ternlang.com/api/trit_vector \
+  -H <span class="c-str">"X-Ternlang-Key: your-key"</span> \
+  -H <span class="c-str">"Content-Type: application/json"</span> \
+  -d <span class="c-str">'{
+    "dimensions": [
+      {"label": "sentiment",  "value":  0.75, "weight": 1.5},
+      {"label": "safety",     "value": -0.60, "weight": 3.0},
+      {"label": "relevance",  "value":  0.85, "weight": 1.0}
+    ],
+    "min_confidence": 0.6
+  }'</span>
+
+<span class="c-comment">→ response:</span>
+{
+  <span class="c-key">"aggregate"</span>: {
+    <span class="c-key">"scalar"</span>:        <span class="c-num">0.032</span>,
+    <span class="c-key">"label"</span>:         <span class="c-teal">"tend"</span>,
+    <span class="c-key">"confidence"</span>:    <span class="c-num">0.905</span>,
+    <span class="c-key">"is_actionable"</span>: <span class="c-red">false</span>
+  },
+  <span class="c-key">"recommendation"</span>: <span class="c-str">"Tend — safety signal
+    at weight 3.0 prevents action.
+    Gather more evidence."</span>
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- TIERS -->
+<section id="tiers">
+  <div class="container">
+    <p class="section-label">Licensing</p>
+    <h2>Open core. <strong>Protected edge.</strong></h2>
+    <p class="lead">The language belongs to the community. The inference engine and API power the business.</p>
+    <div class="tier-grid">
+      <div class="tier-card t1">
+        <div class="tier-badge">Tier 1</div>
+        <div class="tier-name">Open Core</div>
+        <div class="tier-license">LGPL-3.0-or-later · free forever</div>
+        <ul class="tier-items">
+          <li>ternlang-core (compiler + VM)</li>
+          <li>ternlang-cli</li>
+          <li>ternlang-lsp (language server)</li>
+          <li>ternlang-compat (ecosystem bridges)</li>
+          <li>ternpkg (package manager)</li>
+          <li>spec/ (grammar + language reference)</li>
+        </ul>
+      </div>
+      <div class="tier-card t2">
+        <div class="tier-badge">Tier 2</div>
+        <div class="tier-name">Restricted</div>
+        <div class="tier-license">BSL 1.1 · free for research · commercial license required</div>
+        <ul class="tier-items">
+          <li>ternlang-ml (sparse inference engine)</li>
+          <li>ternlang-mcp (MCP server)</li>
+          <li>ternlang-hdl (Verilog backend)</li>
+          <li>ternlang-runtime (distributed actors)</li>
+          <li>Auto-converts to Apache-2.0 in 2030</li>
+        </ul>
+      </div>
+      <div class="tier-card t3">
+        <div class="tier-badge">Tier 3</div>
+        <div class="tier-name">API &amp; Enterprise</div>
+        <div class="tier-license">Proprietary · licensing@ternlang.com</div>
+        <ul class="tier-items">
+          <li>Hosted API (ternlang.com/api)</li>
+          <li>Per-call and subscription pricing</li>
+          <li>Enterprise SLA</li>
+          <li>Commercial inference engine license</li>
+          <li>Hardware backend (FPGA targets)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- CTA -->
+<section class="cta-band">
+  <div class="container">
+    <p class="section-label">Get started</p>
+    <h2>Your agents deserve a <strong>third opinion.</strong></h2>
+    <p class="lead">Stop forcing binary decisions from ambiguous evidence. The tend zone is the deliberation budget your AI never had.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <a href="mailto:licensing@ternlang.com?subject=API Key Request" class="btn btn-primary">Request API Key</a>
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="btn btn-secondary">Read the Source</a>
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/whitepaper/ternlang-whitepaper.docx" class="btn btn-secondary">Whitepaper</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack">GitHub</a>
+    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/wiki/MCP-Integration-Guide.md">MCP Docs</a>
+    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/wiki/Scalar-Temperature.md">Scalar Temperature</a>
+    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/ROADMAP.md">Roadmap</a>
+    <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a>
+  </div>
+  <p>© 2026 RFI-IRFOS (Simeon Kepp) · Built with balanced ternary · <a href="https://ternlang.com">ternlang.com</a></p>
+  <p style="margin-top:0.5rem;font-size:0.75rem;opacity:0.5">
+    ML training restriction applies. See LICENSE-ML-TRAINING.
+  </p>
+</footer>
+
+</body>
+</html>
