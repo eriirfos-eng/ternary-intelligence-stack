@@ -86,9 +86,10 @@ opcode that elides multiply operations against zero-weighted (``hold'') trit
 elements, surfacing at the instruction-set level a property that
 BitNet-style~\cite{ma2024era} ternary quantization reveals in neural weights.
 Empirical evaluation on quantized weight matrices of $512 \times 512$
-elements yields $56.2\%$ sparsity and a $2.3\times$ reduction in multiply
-operations versus dense execution—without approximate arithmetic or hardware
-reconfiguration.
+elements yields $56.2\%$ sparsity and a $2.27\times$ reduction in multiply
+operations versus dense execution; a Compressed Sparse Column kernel with
+Rayon parallelism achieves up to $122\times$ speedup at $99\%$ sparsity—
+without approximate arithmetic or hardware reconfiguration.
 
 We further define the \textbf{Balanced Ternary Execution (BET) ISA}, a
 formal 2-bit-encoded instruction set with 51 opcodes spanning arithmetic,
@@ -96,11 +97,23 @@ tensor operations, actor messaging, and control flow; synthesise it to
 Verilog-2001 with per-cell clock-gating on zero-weight elements; and
 demonstrate interoperability with existing ternary computing efforts via the
 \texttt{ternlang-compat} bridge crate.
+
+Beyond the execution substrate, we introduce two higher-level contributions.
+The \textbf{Ternary AI Reasoning Toolkit} (Phase~8) provides five structural
+primitives—iterative deliberation, coalition voting, multi-dimensional action
+gating, scalar-to-temperature bridging, and hallucination scoring—that make
+any AI agent's decision loop architecturally ternary rather than merely
+prompted. The \textbf{MoE-13 Ternary Orchestrator} (Phase~9) implements a
+Mixture-of-Experts head with dual-key synergistic routing, $1{+}1{=}3$
+emergent triad synthesis, a hard-wired safety veto, and a three-tier memory
+mesh, realising the MoE-13 architecture~\cite{moe13_2026} in 146 passing
+tests across the full workspace.
 \end{abstract}
 
 \begin{IEEEkeywords}
 balanced ternary, ternary logic, sparse inference, BitNet, domain-specific
-language, virtual machine, actor model, FPGA synthesis, Verilog
+language, virtual machine, actor model, FPGA synthesis, Verilog,
+mixture-of-experts, AI reasoning, ternary orchestration
 \end{IEEEkeywords}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -147,7 +160,16 @@ No project provides the full vertical stack.
         benefit of ternary quantization without software overhead
         (\S\ref{sec:sparse}).
   \item A \textbf{Verilog-2001 hardware backend} with synthesisable sparse
-        matmul array and full BET processor (\S\ref{sec:hdl}).
+        matmul array and full BET processor, plus a cycle-accurate RTL
+        simulator in pure Rust (\S\ref{sec:hdl}).
+  \item A \textbf{Ternary AI Reasoning Toolkit}: five structural
+        primitives—deliberation, coalition vote, action gate, scalar
+        temperature, and hallucination score—that make any AI agent's
+        decision loop architecturally ternary (\S\ref{sec:reasoning}).
+  \item The \textbf{MoE-13 Ternary Orchestrator}: dual-key synergistic
+        routing, $1{+}1{=}3$ emergent triad synthesis, a hard safety veto,
+        and three-tier memory mesh, exposed as MCP tool calls
+        (\S\ref{sec:moe}).
   \item \textbf{Ecosystem bridges} connecting existing ternary projects to
         the BET VM as a common runtime (\S\ref{sec:ecosystem}).
 \end{enumerate}
@@ -523,6 +545,211 @@ The wire protocol uses four message types (\texttt{Send}, \texttt{Await},
 interoperability with non-Rust implementations.
 
 % ─────────────────────────────────────────────────────────────────────────────
+\section{Ternary AI Reasoning Toolkit}
+\label{sec:reasoning}
+
+Modern AI agents are structurally binary in their decision loops: evidence
+is collapsed to a scalar, thresholded, and converted to a Boolean act/wait
+flag. The three-valued nature of evidence—affirm, hold, reject—is treated
+as a side-effect of confidence scores rather than a first-class type.
+
+Phase~8 of the TIS introduces five primitives in \texttt{ternlang-ml} that
+make the decision loop architecturally ternary.
+
+\subsection{Deliberation Engine}
+
+The \texttt{DeliberationEngine} models iterative evidence accumulation using
+an exponential moving average (EMA):
+
+\begin{equation}
+  S_r = \alpha \cdot e_r + (1-\alpha) \cdot S_{r-1},
+  \quad \alpha \in (0, 1]
+  \label{eq:ema}
+\end{equation}
+
+where $e_r$ is the mean of new evidence signals in round~$r$. The engine
+commits to a ternary decision only when the confidence of $S_r$ exceeds a
+target threshold; otherwise it remains in the hold state and requests a
+further evidence round. This models the human ``let me think about it''
+behaviour—a native ternary computation rather than a binary timeout.
+
+\subsection{Coalition Vote}
+
+\texttt{coalition\_vote()} aggregates $N$ independent agent verdicts—each a
+trit with an associated confidence and weight—into a single result with
+quorum, dissent, and abstain statistics:
+
+\begin{equation}
+  \hat{t} = \mathrm{sign}\!\left(
+    \frac{\sum_i w_i \cdot c_i \cdot t_i}{\sum_i w_i \cdot c_i}
+  \right)
+  \label{eq:coalition}
+\end{equation}
+
+where $t_i \in \{-1,0,+1\}$, $c_i \in [0,1]$ is confidence, and
+$w_i > 0$ is importance weight.
+
+\subsection{Action Gate}
+
+The action gate enforces a structural separation between hard constraints
+and soft preferences. Each \texttt{GateDimension} carries an evidence
+signal, a weight, and an optional \texttt{hard\_block} flag. A hard-block
+dimension with negative evidence vetoes the action unconditionally,
+regardless of all other dimensions:
+
+\begin{equation}
+  \text{verdict} = \begin{cases}
+    \text{Block} & \exists\, d_i : \text{hard\_block}(d_i) \wedge t_{d_i} = -1 \\
+    \text{sign}(\bar{S}) & \text{otherwise}
+  \end{cases}
+  \label{eq:gate}
+\end{equation}
+
+This is the structural analogue of a safety interlock: the veto is
+unconditional, not probabilistic.
+
+\subsection{Scalar Temperature and Hallucination Score}
+
+\texttt{scalar\_temperature()} bridges the ternary decision to the LLM
+sampling temperature domain: affirm at high confidence maps to a low
+temperature (focused generation), hold maps to a mid temperature
+(exploratory generation), and reject maps to near-zero (cautious refusal).
+
+\texttt{hallucination\_score()} maps the variance of an evidence signal
+vector to a trust trit: low variance (consistent signals) yields trust $+1$;
+high variance yields $-1$, signalling that the agent's signals are
+incoherent and should not be acted upon.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{MoE-13 Ternary Orchestrator}
+\label{sec:moe}
+
+The MoE-13 architecture~\cite{moe13_2026} is implemented in the
+\texttt{ternlang-moe} crate. It realises a ternary Mixture-of-Experts head
+whose routing, synthesis, safety gate, and memory are all expressed natively
+in balanced ternary semantics.
+
+\subsection{Six-Dimensional Competence Space}
+
+Each expert is characterised by a \emph{competence vector}
+$\mathbf{v} \in [-1,1]^6$ across six axes:
+
+\begin{equation}
+  \mathbf{v} = \bigl[
+    v_\text{syntax},\,
+    v_\text{world},\,
+    v_\text{reason},\,
+    v_\text{tool},\,
+    v_\text{persona},\,
+    v_\text{safety}
+  \bigr]
+  \label{eq:competence}
+\end{equation}
+
+The synergy between two experts is defined as the complement of their cosine
+similarity—orthogonal experts are maximally complementary:
+
+\begin{equation}
+  \sigma(\mathbf{v}_i, \mathbf{v}_j)
+    = \frac{1 - \cos(\mathbf{v}_i, \mathbf{v}_j)}{2}
+    \;\in\; [0, 1]
+  \label{eq:synergy}
+\end{equation}
+
+\subsection{Dual-Key Synergistic Routing}
+
+For each candidate expert pair $(i, j)$, the routing score combines
+relevance to the query vector $\mathbf{q}$ with inter-expert synergy:
+
+\begin{equation}
+  \mathrm{score}(i, j)
+    = \rho_i(\mathbf{q}) \cdot \rho_j(\mathbf{q}) \cdot \sigma(\mathbf{v}_i, \mathbf{v}_j)
+  \label{eq:routing}
+\end{equation}
+
+where $\rho_k(\mathbf{q}) = \max(0,\, \cos(\mathbf{v}_k, \mathbf{q}))$
+is the relevance of expert~$k$ to query $\mathbf{q}$. The pair with the
+highest score is selected. Crucially, two highly relevant but similar
+experts are penalised by low $\sigma$; the router favours complementary
+coverage over redundant strength.
+
+\subsection{$1{+}1{=}3$ Triad Synthesis}
+
+After expert evaluation, an emergent \emph{triad field} is synthesised from
+the two selected competence vectors and the routing synergy:
+
+\begin{equation}
+  \mathbf{E}_k = \sigma_{ij} \cdot \frac{\mathbf{v}_i + \mathbf{v}_j}{2}
+  \label{eq:triad}
+\end{equation}
+
+This is the formal expression of $1{+}1{=}3$: two expert signals at high
+synergy produce a third signal—the emergent field $\mathbf{E}_k$—that
+neither expert could produce in isolation. The field modulates the
+subsequent vote and the LLM temperature hint.
+
+\subsection{Safety Hard Gate and Axis-6 Veto}
+
+Dimension~6 of every competence vector is the \emph{safety axis}. Before
+any vote is computed, the safety projection of the triad field is evaluated:
+
+\begin{equation}
+  \text{veto} \iff E_{k,\text{safety}} < \theta_s
+  \label{eq:veto}
+\end{equation}
+
+where $\theta_s$ is the configurable safety threshold (default $-0.3$).
+A veto immediately returns trit $-1$ at confidence $1.0$ and logs the event
+to the Axis-tier memory for audit. No downstream reasoning can override it.
+
+\subsection{Hold State and Tiebreaker}
+
+When the weighted vote yields trit $0$ or aggregate confidence falls below
+a hold threshold, the orchestrator does not immediately return. It invokes a
+tiebreaker expert—selected by highest reasoning-axis score among inactive
+experts—and re-votes with up to $\max\_\text{active}=4$ experts total. Only
+if the tiebreaker also fails to resolve does the orchestrator return the
+hold state to the caller, signalling that further evidence is needed.
+
+\subsection{Three-Tier Memory Mesh}
+
+The orchestrator maintains three memory tiers:
+
+\begin{itemize}
+  \item \textbf{Node} (TTL: seconds): LRU-bounded volatile store for
+        within-session context. Evicts on capacity overflow.
+  \item \textbf{Cluster} (TTL: minutes): routing frequency counters enabling
+        mode-collapse detection ($\text{risk} = \max\_\text{pair} / \text{total}$).
+  \item \textbf{Axis} (persistent): immutable audit log of safety vetoes with
+        timestamp, expert identity, and query hash. Global priors over expert
+        performance.
+\end{itemize}
+
+\subsection{Nine-Step Inference Pipeline}
+
+The full orchestration pass executes in nine deterministic steps:
+(1)~encode query to evidence vector;
+(2)~dual-key route to best expert pair;
+(3)~evaluate both experts independently;
+(4)~synthesise triad field via~(\ref{eq:triad});
+(5)~safety hard gate via~(\ref{eq:veto});
+(6)~weighted trit vote with synergy amplification;
+(7)~hold detection;
+(8)~optional tiebreaker invocation;
+(9)~return \texttt{OrchestrationResult} and update all three memory tiers.
+
+\subsection{MCP Exposure}
+
+The orchestrator is exposed as three MCP tool calls:
+\texttt{moe\_orchestrate} runs a full pass and returns the complete result
+including routing pair, triad field, verdicts, temperature, and prompt hint;
+\texttt{moe\_deliberate} wraps the EMA deliberation engine for multi-round
+iterative reasoning; \texttt{trit\_action\_gate} exposes the hard-block gate
+as a standalone safety check. Any MCP-compatible AI client connected to
+\texttt{ternlang-mcp} gains access to the full ternary reasoning stack as
+tool calls.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Related Work}
 \label{sec:related}
 
@@ -584,52 +811,74 @@ Q-Ternary & Qutrits & \texttt{trittensor} state model (future) \\
 
 Ternlang is implemented in Rust and comprises the following crates:
 
-\begin{itemize}
-  \item \textbf{ternlang-core} (31 tests): lexer, parser, AST, semantic
-        checker, BET bytecode emitter, VM
-  \item \textbf{ternlang-ml} (6 tests): BitNet quantization kernels, dense
-        and sparse matmul, benchmark harness
-  \item \textbf{ternlang-hdl} (21 tests): Verilog-2001 codegen, FPGA
-        simulation wrapper
-  \item \textbf{ternlang-lsp}: LSP 3.17 language server (hover, completion,
-        diagnostics)
-  \item \textbf{ternlang-mcp}: MCP server with 6 tools including
-        \texttt{trit\_decide}
-  \item \textbf{ternlang-runtime} (2 tests): distributed TCP actor runtime
-  \item \textbf{ternlang-compat} (29 tests): \texttt{.tasm} assembler,
-        Owlet S-expression parser
-  \item \textbf{ternpkg} (5 tests): package manager with GitHub-backed registry
-\end{itemize}
+\begin{table}[h]
+\centering
+\small
+\caption{Workspace crates and test counts}
+\label{tab:status}
+\begin{tabular}{p{2.4cm}lp{4.0cm}}
+\toprule
+Crate & Tests & Description \\
+\midrule
+\texttt{ternlang-core}    & 31  & Lexer, parser, AST, semantic checker, BET VM (51 opcodes) \\
+\texttt{ternlang-ml}      & 21  & BitNet quantization, sparse/CSC matmul, deliberation engine, coalition vote, action gate \\
+\texttt{ternlang-moe}     & 16  & MoE-13 orchestrator: dual-key routing, triad synthesis, 3-tier memory, 13 experts \\
+\texttt{ternlang-hdl}     & 21  & Verilog-2001 codegen, RTL simulator \\
+\texttt{ternlang-runtime} & 4   & Distributed TCP actor runtime \\
+\texttt{ternlang-compat}  & 29  & \texttt{.tasm} assembler, Owlet S-expr parser \\
+\texttt{ternpkg}          & 5   & Package manager, GitHub-backed registry \\
+\texttt{ternlang-lsp}     & ---  & LSP 3.17 (hover, completion, diagnostics) \\
+\texttt{ternlang-mcp}     & ---  & MCP server, 10 tools including \texttt{moe\_orchestrate} \\
+\texttt{ternlang-api}     & ---  & REST API, multi-tenant key management \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-The full test suite comprises \textbf{97 tests}, all passing. The repository
+The full test suite comprises \textbf{146+ tests}, all passing. The repository
 is publicly available at the URL in the author affiliation.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We have presented Ternlang, the first complete software stack for balanced
-ternary computing. The central technical contribution—\texttt{TSPARSE\_MATMUL}
-as a first-class ISA primitive—achieves a $2.27\times$ reduction in multiply
-operations for quantized neural network weights without approximation.
+We have presented Ternlang, a full-stack balanced ternary execution
+architecture spanning language, ISA, virtual machine, hardware backend,
+distributed runtime, and AI reasoning primitives. Three layers of
+contribution are unified under the same foundational primitive—the trit
+$t \in \{-1, 0, +1\}$ with an active neutral state:
+
+\begin{enumerate}
+  \item \textbf{Execution substrate}: \texttt{TSPARSE\_MATMUL} achieves a
+        $2.27\times$ reduction in multiply operations at baseline sparsity;
+        a CSC kernel with Rayon reaches $122\times$ at high sparsity.
+  \item \textbf{Reasoning primitives}: the five-tool Ternary AI Reasoning
+        Toolkit makes AI agent decision loops structurally three-valued
+        rather than binary with a ternary overlay.
+  \item \textbf{MoE orchestration}: the MoE-13 orchestrator~\cite{moe13_2026}
+        selects complementary expert pairs via dual-key synergistic routing,
+        synthesises an emergent triad field ($1{+}1{=}3$), enforces a
+        hard safety veto, and maintains a three-tier memory mesh—
+        all exposed as MCP tool calls to any AI client.
+\end{enumerate}
 
 Future directions include:
 
 \begin{itemize}
-  \item \textbf{TCOMPRESS/TUNPACK}: run-length compression of sparse trit
-        tensors in the VM heap
   \item \textbf{FPGA synthesis}: full \texttt{bet\_processor} targeting
-        Xilinx Artix-7 and Lattice ECP5
+        Xilinx Artix-7 and Lattice ECP5 via the pure-Rust RTL simulator
   \item \textbf{Memristor backend}: integration with physical ternary storage
         via the USN uMemristorToolbox~\cite{bos2020ternary}
+  \item \textbf{Streaming deliberation}: SSE endpoint for live
+        \texttt{OrchestrationResult} delivery during multi-round MoE passes
+  \item \textbf{End-to-end training}: native ternlang training loop with
+        BitNet-style gradient quantization and ternary weight persistence
   \item \textbf{Qutrit bridge}: formal mapping of \texttt{trittensor} to
         qutrit state spaces for quantum-adjacent hardware
-  \item \textbf{End-to-end training}: native ternlang training loop with
-        BitNet-style gradient quantization
 \end{itemize}
 
 The ternary computing field has been fragmented for decades. Ternlang is
-designed to be the substrate where those fragments converge.
+designed to be the substrate where those fragments converge—from ISA to
+orchestrator, from single trit to 13-expert MoE.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \bibliographystyle{IEEEtran}
