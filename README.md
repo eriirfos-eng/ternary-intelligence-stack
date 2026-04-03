@@ -182,10 +182,26 @@ cargo build --release
 
 ---
 
+## Albert Agent
+
+**albert-agent** is the high-level cognitive layer of the Ternary Intelligence Stack. It is a sovereign, offline-first local AI node that implements ternary logic at the agentic level.
+
+- **Ternary Reasoning**: Every decision is evaluated through the `{-1, 0, +1}` state space.
+- **Deep Integration**: Albert can directly execute ternary code on the BET VM via the `ternlang_run` tool.
+- **Sovereign Memory**: Persistent SQLite-based memory vault for long-term knowledge retention.
+- **Agentic Automation**: Capable of complex file operations, system telemetry, and web research.
+
+For more details, see the [albert-agent README](albert-agent/README.md).
+
+---
+
 ## Architecture
 
 ```
-ternlang-root/
+albert-agent/             High-level cognitive agent & tool harness
+├── src/                  Albert-Code brain (Ollama + Tool loop)
+└── docs/                 Albert identity, soul, and reference docs
+ternlang-root/            Ternary language & core infrastructure
 ├── ternlang-core/        Lexer, AST, parser, semantic, codegen (betbc), BET VM
 ├── ternlang-cli/         ternlang run / build (clap)
 ├── ternlang-ml/          BitNet quantization, sparse matmul, linear layer, benchmarks
