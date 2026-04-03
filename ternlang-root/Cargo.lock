@@ -345,6 +345,14 @@ name = "ternlang-test"
 version = "0.1.0"
 
 [[package]]
+name = "ternpkg"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
