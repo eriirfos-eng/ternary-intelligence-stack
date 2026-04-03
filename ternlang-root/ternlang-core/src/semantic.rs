@@ -6,19 +6,35 @@ pub enum SemanticError {
     UndefinedVariable(String),
     UndefinedStruct(String),
     UndefinedField { struct_name: String, field: String },
+    UndefinedFunction(String),
 }
 
 pub struct SemanticAnalyzer {
     scopes: Vec<std::collections::HashMap<String, Type>>,
     /// Struct definitions registered at program level
     struct_defs: std::collections::HashMap<String, Vec<(String, Type)>>,
+    /// Function return types: name → return_type (user-defined + built-ins)
+    func_signatures: std::collections::HashMap<String, Type>,
 }
 
 impl SemanticAnalyzer {
     pub fn new() -> Self {
+        let mut func_signatures = std::collections::HashMap::new();
+        // Register built-in function return types
+        func_signatures.insert("consensus".into(), Type::Trit);
+        func_signatures.insert("invert".into(),    Type::Trit);
+        func_signatures.insert("truth".into(),     Type::Trit);
+        func_signatures.insert("hold".into(),      Type::Trit);
+        func_signatures.insert("conflict".into(),  Type::Trit);
+        func_signatures.insert("matmul".into(),    Type::TritTensor { dims: vec![1, 1] }); // dims are dynamic
+        func_signatures.insert("sparsity".into(),  Type::Int);
+        func_signatures.insert("shape".into(),     Type::Int);
+        func_signatures.insert("cast".into(),      Type::Trit); // cast returns type of binding, fallback Trit
+
         Self {
             scopes: vec![std::collections::HashMap::new()],
             struct_defs: std::collections::HashMap::new(),
+            func_signatures,
         }
     }
 
@@ -29,9 +45,30 @@ impl SemanticAnalyzer {
         }
     }
 
+    /// Register user-defined function signatures (name → return type).
+    pub fn register_functions(&mut self, functions: &[Function]) {
+        for f in functions {
+            self.func_signatures.insert(f.name.clone(), f.return_type.clone());
+        }
+    }
+
+    /// Register agent method signatures under "AgentName::method" and "method".
+    pub fn register_agents(&mut self, agents: &[AgentDef]) {
+        for agent in agents {
+            for method in &agent.methods {
+                self.func_signatures.insert(method.name.clone(), method.return_type.clone());
+                let fq = format!("{}::{}", agent.name, method.name);
+                self.func_signatures.insert(fq, method.return_type.clone());
+            }
+        }
+    }
+
     pub fn check_program(&mut self, program: &Program) -> Result<(), SemanticError> {
         self.register_structs(&program.structs);
-        // Register agent method signatures so calls inside agents are resolved.
+        // Register all signatures first so forward calls resolve correctly.
+        self.register_functions(&program.functions);
+        self.register_agents(&program.agents);
+        // Then type-check bodies.
         for agent in &program.agents {
             for method in &agent.methods {
                 self.check_function(method)?;
@@ -45,7 +82,6 @@ impl SemanticAnalyzer {
 
     fn check_function(&mut self, func: &Function) -> Result<(), SemanticError> {
         self.scopes.push(std::collections::HashMap::new());
-        // Bind parameters into the function scope
         for (name, ty) in &func.params {
             self.scopes.last_mut().unwrap().insert(name.clone(), ty.clone());
         }
@@ -60,11 +96,13 @@ impl SemanticAnalyzer {
         match stmt {
             Stmt::Let { name, ty, value } => {
                 let val_ty = self.infer_expr_type(value)?;
-                // For Named (struct) types: accept zero-initializer (TritLiteral 0 = hold)
-                // For Cast: accept any source type — cast is always valid
                 let type_ok = val_ty == *ty
                     || matches!(value, Expr::Cast { .. })
-                    || (matches!(ty, Type::Named(_)) && val_ty == Type::Trit);
+                    || (matches!(ty, Type::Named(_)) && val_ty == Type::Trit)
+                    // TritTensor dims are dynamically inferred — accept any TritTensor for now
+                    || (matches!(ty, Type::TritTensor { .. }) && matches!(val_ty, Type::TritTensor { .. }))
+                    // AgentRef from spawn
+                    || (*ty == Type::AgentRef && val_ty == Type::AgentRef);
                 if !type_ok {
                     return Err(SemanticError::TypeMismatch { expected: ty.clone(), found: val_ty });
                 }
@@ -135,7 +173,6 @@ impl SemanticAnalyzer {
                 Ok(())
             }
             Stmt::FieldSet { object, field, value } => {
-                // Look up object type in scope, verify field exists, check value type
                 let obj_ty = self.lookup_var(object)?;
                 if let Type::Named(struct_name) = obj_ty {
                     let field_ty = self.lookup_field(&struct_name, field)?;
@@ -145,7 +182,6 @@ impl SemanticAnalyzer {
                     }
                     Ok(())
                 } else {
-                    // Non-struct field set — tolerate for trit fields in simple programs
                     self.infer_expr_type(value)?;
                     Ok(())
                 }
@@ -189,16 +225,20 @@ impl SemanticAnalyzer {
                 Ok(l_ty)
             }
             Expr::UnaryOp { expr, .. } => self.infer_expr_type(expr),
-            Expr::Call { .. }          => Ok(Type::Trit), // mocked — full resolution is Phase 4 todo
+            Expr::Call { callee, .. } => {
+                // Real function signature lookup — no more mock
+                self.func_signatures.get(callee.as_str())
+                    .cloned()
+                    .ok_or_else(|| SemanticError::UndefinedFunction(callee.clone()))
+            }
             Expr::Cast { ty, .. }      => Ok(ty.clone()),
             Expr::Spawn { .. }         => Ok(Type::AgentRef),
-            Expr::Await { .. }         => Ok(Type::Trit),  // agents communicate in trits v0.1
+            Expr::Await { .. }         => Ok(Type::Trit),
             Expr::FieldAccess { object, field } => {
                 let obj_ty = self.infer_expr_type(object)?;
                 if let Type::Named(struct_name) = obj_ty {
                     self.lookup_field(&struct_name, field)
                 } else {
-                    // Accessing a field on a non-struct — return Trit for builtins
                     Ok(Type::Trit)
                 }
             }
