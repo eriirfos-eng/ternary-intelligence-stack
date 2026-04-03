@@ -117,8 +117,12 @@ This is our philosopher's stone. Full resource commitment.
 
 ---
 
-## 📡 Phase 6: Hardware & HDL Backends
-- [ ] **Verilog/VHDL Codegen**: `ternlang-hdl` crate, map trit → 2-bit wire pairs
+## 📡 Phase 6: Hardware & HDL Backends — PHASE 6.0 COMPLETE ✅
+- [x] **Verilog/VHDL Codegen**: `ternlang-hdl` crate, map trit → 2-bit wire pairs
+  - Primitives: trit_neg, trit_cons, trit_mul, trit_add, trit_reg, bet_alu
+  - Sparse matmul array: parameterised N×N with per-cell zero-skip enable
+  - ISA control: bet_regfile (27 reg), bet_pc (16-bit), bet_control (all opcodes), bet_processor (top-level)
+  - 11 HDL tests passing
 - [ ] **BET ISA Spec Document**: formal published standard (citable by academics)
 - [ ] **FPGA Simulation**: Verilator/Icarus Verilog wrapper for BET bytecode
 
@@ -126,7 +130,7 @@ This is our philosopher's stone. Full resource commitment.
 
 ## 🛠 Developer Tooling (Parallel Track)
 - [ ] **LSP**: `ternlang-lsp` crate — diagnostics, hover, go-to-definition, autocomplete
-- [ ] **VS Code extension**: syntax highlighting, `.tern` file association, LSP client
+- [ ] **VS Code extension**: syntax highlighting, `.tern` file association, LSP client — **NEXT**
 - [ ] **Formatter**: `ternlang fmt` — canonical style for 3-way match arms
 - [ ] **REPL**: `ternlang repl` — interactive trit expression evaluation
 - [ ] **Package manager (ternpkg)**: `ternlang.toml`, `ternlang install`, GitHub-backed registry
@@ -152,3 +156,5 @@ This is our philosopher's stone. Full resource commitment.
 | 2026-04-02 | Phase 4 language completeness: for/while/loop/break/continue/mut/use/::. Match exhaustiveness enforced at parser. 20 core tests + 6 ML tests + 1 codegen tests = 28 total passing. |
 | 2026-04-02 | stdlib source files: std::trit, std::math, std::tensor, std::io, ml::quantize, ml::inference. Struct defs + field access (s.field) + field assignment (s.field=v) + cast() + Type::Named. Dot token in lexer. 25/25 tests passing. |
 | 2026-04-02 | Phase 5.0 actor model: agent/spawn/send/await/agentref in lexer+AST+parser+semantic+codegen+VM. TSPAWN/TSEND/TAWAIT opcodes. AgentInstance with mailbox. Integration test: spawn echo agent, send +1, await +1. 30/30 tests passing. |
+| 2026-04-02 | Phase 5.1: ternlang-runtime crate (TCP distributed actors). TernNode with listen/connect/remote_send/remote_await. Wire protocol: newline JSON over TCP. remote/nodeid keywords. spawn remote "addr" syntax. StringLit token. Real function call type resolution in semantic checker. 31 core + 2 runtime tests. |
+| 2026-04-02 | Phase 6.0: ternlang-hdl crate. Verilog primitives: trit_neg/cons/mul/add/reg, bet_alu, sparse_matmul(N). ISA control: bet_regfile/pc/control/processor. All BET opcodes mapped. 52 total tests passing. |
