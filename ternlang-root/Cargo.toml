@@ -5,7 +5,7 @@ members = [
     "ternlang-ml",
     "ternlang-cli",
     "ternlang-api",
-    "ternlang-test", "ternlang-mcp", "ternlang-runtime", "ternlang-hdl", "ternlang-lsp", "ternpkg", "ternlang-compat",
+    "ternlang-test", "ternlang-mcp", "ternlang-runtime", "ternlang-hdl", "ternlang-lsp", "ternpkg", "ternlang-compat", "ternlang-moe",
 ]
 resolver = "2"
 
