@@ -21,6 +21,14 @@ This is our philosopher's stone. Full resource commitment.
 - Update this ROADMAP at the end of every session with current status
 - The AI assistant (Claude) maintains a memory file at `~/.claude/projects/.../memory/project_ternlang.md` — update it each session too
 
+### 📄 Whitepaper Update Protocol
+The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/ternlang-whitepaper.docx`) is a **living document**. Update it whenever a phase produces measurable results:
+- New opcodes or VM features → update Section 4 (ISA) and Section 10 (implementation status)
+- New benchmark numbers → update Section 5 (sparse inference) tables
+- New crates or test counts → update Table 8 (implementation status)
+- Rebuild DOCX: `python3 whitepaper/build_docx.py`
+- Rebuild PDF: `cd whitepaper && pdflatex ternlang-whitepaper.tex` (requires texlive)
+
 ---
 
 ## ✅ Phase 1: Core Language & VM Stability — COMPLETE
@@ -64,7 +72,7 @@ This is our philosopher's stone. Full resource commitment.
     - [x] `0x24` `TSHAPE` — push tensor dimensions to stack
     - [x] `0x25` `TSPARSITY` — compute zero-element count
 - [x] **Implement `@sparseskip`** in codegen → emits `TSPARSE_MATMUL` — DONE
-- [ ] **`TCOMPRESS` / `TUNPACK`** — run-length compression (next)
+- [x] **`TCOMPRESS` (0x26) / `TUNPACK` (0x27)** — base-3 RLE codec for sparse trit tensors; max-chunk=8 (2 base-3 digits), NegOne header; 5 VM tests
 - [x] **Fill `ternlang-ml`** with real kernels — DONE:
     - [x] `quantize(f32_weights, threshold) -> Vec<Trit>` — BitNet-style ternary quantization
     - [x] `bitnet_threshold(weights)` — auto-compute τ = 0.5 × mean(|w|)
@@ -73,6 +81,8 @@ This is our philosopher's stone. Full resource commitment.
     - [x] `linear(input, W) -> (TritMatrix, skipped)` — BitNet-style ternary linear layer
     - [x] `benchmark(a, b) -> BenchmarkResult` — prints summary with skip rate
 - [x] **First benchmark result**: 56% weight sparsity → **2.3x fewer multiply ops** vs dense
+- [x] **Wall-clock timing benchmark**: 5 sizes (32²–512²), 5-rep median; 1.05–1.11× at 25% sparsity (debug build); 2.0–2.3× expected at BitNet 55–65% sparsity
+- [x] **TernaryMLP**: 2-layer MLP (from_f32, forward, predict, XOR/parity datasets, accuracy eval) — full inference path tested end-to-end
 - [ ] **Publish sparse matmul benchmark** — write blog post / README section comparing vs float32
 
 ---
@@ -137,6 +147,23 @@ This is our philosopher's stone. Full resource commitment.
 
 ---
 
+## 🌐 Phase 7: Ecosystem Bridges — PHASE 7A COMPLETE ✅
+**Goal: make ternlang the convergence point for all existing ternary computing projects.**
+
+- [x] **Hub positioning**: README + TERNARY-ECOSYSTEM.md — maps every active ternary project to a ternlang interop bridge
+- [x] **TasmAssembler** (ternlang-compat): two-pass 9-trit RISC assembler → BET bytecode; parses balanced ternary literals (T=-1); 15 tests
+- [x] **OwletParser** (ternlang-compat): S-expression ternary front-end → ternlang AST → BET VM; full S-expr grammar; 14 tests
+- [x] **VS Code VSIX packaging**: `ternlang-0.1.0.vsix` built, publisher metadata set (rfi-irfos)
+- [x] **Cargo workspace metadata**: `[workspace.package]` with keywords, categories, license, repository for crates.io
+- [x] **Academic whitepaper**: `whitepaper/ternlang-whitepaper.tex` (IEEE two-column LaTeX) + `ternlang-whitepaper.docx`
+- [x] **Spec consolidation**: `spec/grammar.ebnf`, `spec/ternlang-language-reference-v0.1.md`, `spec/ternlang-dictionary-v0.1.json` versioned in main repo
+- [ ] **Phase 7B**: VS Code Marketplace publication (needs user publisher PAT token → `vsce publish`)
+- [ ] **Phase 7B**: crates.io publication (`cargo login` + `cargo publish -p ternlang-core` etc.)
+- [ ] **Phase 7B**: MCP registry publication, integration guide
+- [ ] **Phase 7C**: USN / Bos+Gundersen academic outreach, joint whitepaper draft
+
+---
+
 ## ⚖️ Licensing & IP
 - [ ] **Open core**: LGPL v3 (compiler + stdlib) — forces compiler contributions back
 - [ ] **Commercial tier**: proprietary license for `ternlang-ml`, HDL backend, distributed runtime
@@ -159,3 +186,4 @@ This is our philosopher's stone. Full resource commitment.
 | 2026-04-02 | Phase 5.1: ternlang-runtime crate (TCP distributed actors). TernNode with listen/connect/remote_send/remote_await. Wire protocol: newline JSON over TCP. remote/nodeid keywords. spawn remote "addr" syntax. StringLit token. Real function call type resolution in semantic checker. 31 core + 2 runtime tests. |
 | 2026-04-02 | Phase 6.0: ternlang-hdl crate. Verilog primitives: trit_neg/cons/mul/add/reg, bet_alu, sparse_matmul(N). ISA control: bet_regfile/pc/control/processor. All BET opcodes mapped. 52 total tests passing. |
 | 2026-04-03 | BET-ISA-SPEC.md formal spec published. ternlang-lsp: full LSP 3.17 JSON-RPC (hover, completion, diagnostics). ternlang-vscode: TextMate grammar, LSP client extension. ternlang fmt + repl in CLI. ternpkg v0.1: init/install/list/info, GitHub-backed registry. 58 total tests passing. |
+| 2026-04-03 | Phase 7A: TasmAssembler + OwletParser (ternlang-compat, 29 tests). TCOMPRESS/TUNPACK RLE codec (0x26/0x27). TernaryMLP 2-layer with from_f32/forward/predict, XOR+parity datasets. timed_benchmark: 32²–512², 5-rep median wall-clock. BET sim emitter (Icarus Verilog testbench). Hub README + TERNARY-ECOSYSTEM.md. VSIX packaging. Whitepaper TEX+DOCX published (10 sections, IEEE two-column). Spec files consolidated into main repo. 116 total tests passing. |

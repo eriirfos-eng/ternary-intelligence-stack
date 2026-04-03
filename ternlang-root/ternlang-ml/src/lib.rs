@@ -617,4 +617,11 @@ mod tests {
         assert!(result.skip_rate > 0.0 && result.skip_rate <= 1.0);
         result.print_summary();
     }
+
+    #[test]
+    fn test_full_benchmark() {
+        let results = timed_benchmark(&[32, 64, 128, 256, 512], 5);
+        assert_eq!(results.len(), 5);
+        print_benchmark_table(&results);
+    }
 }
