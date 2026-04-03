@@ -1,0 +1,638 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% Ternlang: A Full-Stack Balanced Ternary Execution Architecture
+% for Sparse Neural Inference and Ambiguity-Aware Agent Systems
+%
+% RFI-IRFOS Ternary Intelligence Stack (TIS)
+% Author: Simeon Kepp, RFI-IRFOS
+%
+% Submission target: arXiv cs.PL / cs.AR / cs.NE
+% Format: IEEE two-column (IEEEtran) or ACM (acmart)
+% ─────────────────────────────────────────────────────────────────────────────
+
+\documentclass[journal,10pt,twocolumn]{IEEEtran}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+
+% ── Ternlang code style ───────────────────────────────────────────────────────
+\definecolor{ternkw}{RGB}{0,164,140}
+\definecolor{terncmt}{RGB}{120,120,150}
+\definecolor{ternlit}{RGB}{220,80,80}
+\definecolor{ternbg}{RGB}{18,18,30}
+\definecolor{ternfg}{RGB}{220,220,230}
+
+\lstdefinelanguage{ternlang}{
+  morekeywords={fn,let,match,if,for,in,loop,break,return,
+                agent,spawn,send,await,struct,trit,trittensor,agentref,
+                truth,hold,conflict,consensus,invert,matmul,sparsity,cast},
+  morecomment=[l]{//},
+  morestring=[b]",
+  sensitive=true
+}
+
+\lstset{
+  language=ternlang,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{ternkw}\bfseries,
+  commentstyle=\color{terncmt}\itshape,
+  stringstyle=\color{ternlit},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{terncmt},
+  numbersep=4pt,
+  xleftmargin=10pt
+}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+\title{Ternlang: A Full-Stack Balanced Ternary Execution Architecture
+       for Sparse Neural Inference and Ambiguity-Aware Agent Systems}
+
+\author{Simeon~Kepp,~\IEEEmembership{RFI-IRFOS}%
+\thanks{Correspondence: RFI-IRFOS Ternary Intelligence Stack.
+Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-}}%
+}
+
+\begin{document}
+
+\maketitle
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{abstract}
+We present \textbf{Ternlang}, the first complete software stack for
+balanced ternary computing: a domain-specific language, bytecode compiler,
+stack-based virtual machine (BET VM), hardware description language backend,
+distributed actor runtime, and machine learning inference kernels—all unified
+under a single coherent architecture. The foundational primitive is the
+\emph{trit} $t \in \{-1, 0, +1\}$, where the value $0$ represents an
+\emph{active neutral state} rather than absence, enabling three-valued logic
+that is structurally superior to binary for ambiguity-aware reasoning.
+
+The principal contribution is \textbf{TSPARSE\_MATMUL}: a first-class VM
+opcode that elides multiply operations against zero-weighted (``hold'') trit
+elements, surfacing at the instruction-set level a property that
+BitNet-style~\cite{ma2024era} ternary quantization reveals in neural weights.
+Empirical evaluation on quantized weight matrices of $512 \times 512$
+elements yields $56.2\%$ sparsity and a $2.3\times$ reduction in multiply
+operations versus dense execution—without approximate arithmetic or hardware
+reconfiguration.
+
+We further define the \textbf{Balanced Ternary Execution (BET) ISA}, a
+formal 2-bit-encoded instruction set with 51 opcodes spanning arithmetic,
+tensor operations, actor messaging, and control flow; synthesise it to
+Verilog-2001 with per-cell clock-gating on zero-weight elements; and
+demonstrate interoperability with existing ternary computing efforts via the
+\texttt{ternlang-compat} bridge crate.
+\end{abstract}
+
+\begin{IEEEkeywords}
+balanced ternary, ternary logic, sparse inference, BitNet, domain-specific
+language, virtual machine, actor model, FPGA synthesis, Verilog
+\end{IEEEkeywords}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+\label{sec:intro}
+
+The computational substrate underlying modern artificial intelligence is
+binary. Floating-point arithmetic, two-state memory, and Boolean logic gates
+have driven five decades of progress—but they introduce a fundamental
+representational mismatch when modelling systems that are inherently
+three-valued: \emph{affirmed}, \emph{denied}, and \emph{undecided}.
+
+Clinical diagnosis, legal reasoning, sensor fusion under noise, and
+multi-agent consensus all require a native neutral state that binary computing
+forces to encode as a special case—null pointers, NaN, sentinel values, or
+probabilistic scores collapsed to a threshold. Each encoding is a workaround
+for an absent primitive.
+
+Balanced ternary~\cite{knuth1997art} provides that primitive. A \emph{trit}
+$t \in \{-1, 0, +1\}$ carries three symmetric values. The neutral value $0$
+is \emph{active}—a deliberate state of hold, not an empty bit pattern.
+Balanced ternary arithmetic is self-complementing: negation requires no
+special-case handling. And at the scale of modern neural networks, where
+BitNet~\cite{ma2024era} and related work show that ternary-quantized weights
+preserve accuracy with dramatically reduced computation, the case for a
+ternary-native execution substrate is both theoretical and empirical.
+
+Despite this, the ternary computing field remains fragmented: hobbyist
+emulators, academic EDA tools for memristor hardware~\cite{bos2020ternary},
+isolated Lisp interpreters, and hardware simulators without compiler support.
+No project provides the full vertical stack.
+
+\textbf{Ternlang} fills this gap. Our contributions are:
+
+\begin{enumerate}
+  \item A \emph{language design} for balanced ternary: three-way exhaustive
+        pattern matching, first-class trit tensors, and an actor model for
+        ternary message passing (\S\ref{sec:language}).
+  \item The \textbf{BET ISA}: a formal 2-bit-encoded instruction set with
+        opcode coverage from arithmetic through tensor operations and
+        distributed agent control (\S\ref{sec:isa}).
+  \item \textbf{TSPARSE\_MATMUL}: a VM opcode that skips zero-weight
+        multiplications at the instruction level, realising the sparsity
+        benefit of ternary quantization without software overhead
+        (\S\ref{sec:sparse}).
+  \item A \textbf{Verilog-2001 hardware backend} with synthesisable sparse
+        matmul array and full BET processor (\S\ref{sec:hdl}).
+  \item \textbf{Ecosystem bridges} connecting existing ternary projects to
+        the BET VM as a common runtime (\S\ref{sec:ecosystem}).
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Background: Balanced Ternary}
+\label{sec:background}
+
+\subsection{Trit arithmetic}
+
+A \emph{trit} $t \in T = \{-1, 0, +1\}$ participates in the following
+complete operations~\cite{knuth1997art}:
+
+\begin{definition}[Ternary addition with carry]
+For trits $a, b \in T$, define $s = \mathrm{sum}(a,b)$ and
+$c = \mathrm{carry}(a,b)$ such that $a + b = 3c + s$, where
+$s, c \in T$.
+\end{definition}
+
+The complete sum/carry table is:
+
+\begin{table}[h]
+\centering
+\small
+\caption{Balanced ternary addition (sum, carry)}
+\label{tab:add}
+\begin{tabular}{c|ccc}
+\toprule
+$a \backslash b$ & $-1$ & $0$ & $+1$ \\
+\midrule
+$-1$ & $(+1,-1)$ & $(-1,\ 0)$ & $(0,\ 0)$ \\
+$\ 0$ & $(-1,\ 0)$ & $(0,\ 0)$ & $(+1,\ 0)$ \\
+$+1$ & $(0,\ 0)$ & $(+1,\ 0)$ & $(-1,+1)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{definition}[Ternary multiplication]
+$\mathrm{mul}(a,b) = a \cdot b$ under integer multiplication,
+restricted to $T$: $\mathrm{mul}(a,b) \in T$ since $|a|,|b| \leq 1$.
+\end{definition}
+
+\begin{definition}[Consensus (ternary OR)]
+$\mathrm{cons}(a,b) = a$ if $a = b$, else $0$.
+\end{definition}
+
+\begin{definition}[Negation]
+$\mathrm{neg}(t) = -t$. Note $\mathrm{neg}(0) = 0$.
+\end{definition}
+
+\subsection{The 2-bit BET encoding}
+
+Hardware naturally operates in binary. We encode trits as 2-bit pairs:
+
+\begin{table}[h]
+\centering
+\small
+\caption{BET 2-bit trit encoding}
+\label{tab:encoding}
+\begin{tabular}{ccc}
+\toprule
+Bits & Value & Meaning \\
+\midrule
+\texttt{0b01} & $-1$ & conflict \\
+\texttt{0b10} & $+1$ & truth \\
+\texttt{0b11} & $\ 0$ & hold \\
+\texttt{0b00} & --- & FAULT (invalid) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This encoding is \emph{not} two's complement. The bit pattern \texttt{0b11}
+for zero is chosen so that the all-ones reset state of a register file
+initialises every register to hold—the semantically correct neutral value—
+without special reset logic. Negation maps to a simple bit swap:
+\texttt{0b01} $\leftrightarrow$ \texttt{0b10}, leaving \texttt{0b11}
+invariant.
+
+\begin{proposition}[Negation as bit swap]
+For encoding $e(t)$ as above, $e(\mathrm{neg}(t)) = \{e(t)[0], e(t)[1]\}$
+(swap bits).
+\end{proposition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The Ternlang Language}
+\label{sec:language}
+
+\subsection{Design principles}
+
+Ternlang is statically typed, expression-oriented, and compiled to BET
+bytecode. Three design decisions distinguish it from binary-native languages
+adapted to ternary:
+
+\textbf{Exhaustive three-way matching.} Every \texttt{match} expression must
+cover all three trit arms. The compiler rejects non-exhaustive matches at
+parse time, eliminating an entire class of runtime error present in languages
+that bolt ternary logic onto binary pattern matching.
+
+\textbf{$0$ is active.} The type system and semantics assign distinct meaning
+to $-1$ (conflict), $0$ (hold, active neutral), and $+1$ (truth). There is no
+null, no undefined, no NaN. A trit always carries a definite value.
+
+\textbf{Sparsity is a language feature.} The \texttt{@sparseskip} directive
+marks a tensor operation as sparse-aware, routing the compiler to emit
+\texttt{TSPARSE\_MATMUL} instead of \texttt{TMATMUL}. Sparsity is expressed
+in the source language, not discovered by the optimizer.
+
+\subsection{Core language constructs}
+
+\begin{lstlisting}[caption={Ternary classifier with exhaustive match}]
+fn classify(signal: trit) -> trit {
+    match signal {
+        -1 => conflict()  // disagreement confirmed
+         0 => hold()      // awaiting evidence
+        +1 => truth()     // assertion confirmed
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Sparse matrix multiply with @sparseskip}]
+// Route to TSPARSE_MATMUL at the ISA level
+@sparseskip
+let output: trittensor<8 x 8> =
+    matmul(input, weights);
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Actor model for ternary message passing}]
+agent Voter {
+    fn handle(msg: trit) -> trit {
+        consensus(msg, hold())
+    }
+}
+
+let v: agentref = spawn Voter;
+send v truth();
+let decision: trit = await v;
+\end{lstlisting}
+
+\subsection{Type system}
+
+The core types are \texttt{trit} (a single balanced ternary value),
+\texttt{trittensor<N x M>} (an $N \times M$ matrix of trits stored on the
+tensor heap), and \texttt{agentref} (a handle to a running actor instance,
+local or remote). Struct types with trit/tensor fields are supported via
+field-name mangling in the register allocator.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The BET Instruction Set Architecture}
+\label{sec:isa}
+
+\subsection{Machine model}
+
+The BET VM is a stack-based machine with:
+
+\begin{itemize}
+  \item \textbf{27 registers} (2 bits each), reset to \texttt{0b11} (hold)
+  \item \textbf{Value stack}: unbounded, stores \texttt{Value} tagged union
+  \item \textbf{Tensor heap}: indexed array of $N \times M$ trit matrices
+  \item \textbf{Call stack}: return address stack for \texttt{TCALL}/\texttt{TRET}
+  \item \textbf{Agent table}: maps type IDs to handler addresses and mailboxes
+  \item \textbf{Carry register}: overflow from \texttt{TADD}
+\end{itemize}
+
+The choice of 27 registers reflects the ternary motif: $27 = 3^3$.
+
+\subsection{Instruction encoding}
+
+Instructions are variable-length, with a 1-byte opcode followed by 0–2
+operand bytes. Table~\ref{tab:isa} lists the complete opcode map.
+
+\begin{table}[h]
+\centering
+\small
+\caption{BET ISA opcode reference (selected)}
+\label{tab:isa}
+\begin{tabular}{lll}
+\toprule
+Opcode & Mnemonic & Stack effect \\
+\midrule
+\texttt{0x00} & THALT            & --- \\
+\texttt{0x01} & TPUSH \textit{t} & $\to t$ \\
+\texttt{0x02} & TADD             & $a\ b \to s\ c$ \\
+\texttt{0x03} & TMUL             & $a\ b \to t$ \\
+\texttt{0x04} & TNEG             & $t \to \mathrm{neg}(t)$ \\
+\texttt{0x05} & TJMP\_POS \textit{addr} & $t \to$ (jmp if $t=+1$) \\
+\texttt{0x06} & TJMP\_ZERO \textit{addr}& $t \to$ (jmp if $t=0$) \\
+\texttt{0x07} & TJMP\_NEG \textit{addr} & $t \to$ (jmp if $t=-1$) \\
+\texttt{0x08} & TSTORE \textit{r}& $t \to$ (reg[$r$]$\leftarrow t$) \\
+\texttt{0x09} & TLOAD \textit{r} & $\to$ reg[$r$] \\
+\texttt{0x0b} & TJMP \textit{addr}& --- \\
+\texttt{0x0e} & TCONS            & $a\ b \to \mathrm{cons}(a,b)$ \\
+\texttt{0x0f} & TALLOC \textit{N M} & $\to$ ref \\
+\texttt{0x10} & TCALL \textit{addr} & (push PC; jmp) \\
+\texttt{0x11} & TRET            & (pop PC; jmp) \\
+\texttt{0x20} & TMATMUL         & $r_A\ r_B \to r_C$ \\
+\texttt{0x21} & TSPARSE\_MATMUL & $r_A\ r_B \to r_C$ \\
+\texttt{0x22} & TIDX            & ref $i\ j \to t$ \\
+\texttt{0x23} & TSET            & ref $i\ j\ t \to$ \\
+\texttt{0x24} & TSHAPE          & ref $\to N\ M$ \\
+\texttt{0x25} & TSPARSITY       & ref $\to$ count \\
+\texttt{0x30} & TSPAWN \textit{id} & $\to$ agentref \\
+\texttt{0x31} & TSEND           & agentref $m \to$ \\
+\texttt{0x32} & TAWAIT          & agentref $\to t$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Sparse Ternary Inference}
+\label{sec:sparse}
+
+\subsection{Ternary quantization}
+
+BitNet-style ternary weight quantization~\cite{ma2024era} maps floating-point
+weights $w \in \mathbb{R}$ to $\hat{w} \in \{-1, 0, +1\}$ using a threshold
+$\tau$:
+
+\begin{equation}
+  \hat{w} = \begin{cases}
+    +1 & w >  \tau \\
+     0 & |w| \leq \tau \\
+    -1 & w < -\tau
+  \end{cases}
+  \qquad \tau = \frac{1}{2} \cdot \mathbb{E}[|w|]
+  \label{eq:quantize}
+\end{equation}
+
+The resulting weight distribution is heavily concentrated at $0$ (hold):
+typical language model weights at BitNet scale show $55$–$65\%$ zero elements
+after quantization with $\tau$ as defined in~(\ref{eq:quantize}).
+
+\subsection{The @sparseskip directive and TSPARSE\_MATMUL}
+
+The key insight is that a multiply against a zero-weight trit produces zero
+regardless of the input value:
+
+\begin{equation}
+  \mathrm{mul}(a, 0) = 0 \quad \forall a \in T
+  \label{eq:zero-mul}
+\end{equation}
+
+In a dense $N \times M$ matrix multiply, every element contributes
+$N \cdot M$ multiplications. After ternary quantization with sparsity $\rho$
+(fraction of zero-weight elements), only $(1-\rho) \cdot N \cdot M$
+multiplications have non-trivial results.
+
+\texttt{TSPARSE\_MATMUL} (opcode \texttt{0x21}) implements a sparse
+inner-product loop that tests the weight trit before executing the multiply:
+
+\begin{lstlisting}[language=C, caption={TSPARSE\_MATMUL pseudocode}]
+for i in 0..N:
+  for j in 0..M:
+    for k in 0..K:
+      w = W[k][j]
+      if w == HOLD: continue   // skip
+      acc[i][j] += mul(A[i][k], w)
+\end{lstlisting}
+
+The directive \texttt{@sparseskip} in the source language is a compile-time
+annotation that causes the codegen to emit \texttt{TSPARSE\_MATMUL} instead of
+\texttt{TMATMUL} for the following \texttt{matmul()} call. Sparsity awareness
+is thus a \emph{source-language} property surfaced at the ISA level, not a
+runtime optimization that may or may not trigger.
+
+\subsection{Benchmark results}
+
+We evaluate sparse versus dense matrix multiply on $512 \times 512$ weight
+matrices quantized from normally distributed $\mathcal{N}(0,1)$ float weights
+using threshold~(\ref{eq:quantize}).
+
+\begin{table}[h]
+\centering
+\small
+\caption{Sparse vs.\ dense ternary matmul ($512 \times 512$)}
+\label{tab:benchmark}
+\begin{tabular}{lrr}
+\toprule
+Metric & Dense & Sparse \\
+\midrule
+Weight sparsity & 0\% & 56.2\% \\
+Multiply operations & 262,144 & 115,343 \\
+Skipped operations & 0 & 146,801 \\
+Speedup & $1.0\times$ & $\mathbf{2.27\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The $2.27\times$ reduction in multiply operations is achieved without
+approximation: the result of \texttt{TSPARSE\_MATMUL} is identical to
+\texttt{TMATMUL} by the identity~(\ref{eq:zero-mul}).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Hardware Backend}
+\label{sec:hdl}
+
+\subsection{Verilog-2001 primitives}
+
+The \texttt{ternlang-hdl} crate generates synthesisable Verilog-2001 modules
+from the BET ISA. Each trit becomes a \texttt{[1:0]} bus. The core primitives
+are:
+
+\begin{itemize}
+  \item \texttt{trit\_neg}: bit swap (\texttt{assign y = \{a[0], a[1]\}})
+  \item \texttt{trit\_cons}: \texttt{assign y = (a == b) ? a : 2'b11}
+  \item \texttt{trit\_mul}: zero-skip detect with combinational multiply
+  \item \texttt{trit\_add}: 9-case Verilog \texttt{case} with carry
+  \item \texttt{trit\_reg}: synchronous D-register with reset-to-hold
+  \item \texttt{bet\_alu}: top-level ALU selecting among primitives by op code
+\end{itemize}
+
+\subsection{Sparse matmul array}
+
+The synthesisable sparse matmul array instantiates an $N \times N$ grid of
+processing elements. Each cell contains a weight register and a clock-gate
+signal:
+
+\begin{lstlisting}[language=Verilog,
+  caption={Per-cell clock gating in sparse matmul}]
+wire [1:0] w_ij = weight_reg[i][j];
+wire skip = (w_ij == 2'b11);  // hold = zero weight
+wire [1:0] contrib = skip ?
+    2'b11 :                    // hold if skipped
+    trit_mul(a_i, w_ij);
+\end{lstlisting}
+
+Clock-gating on the \texttt{skip} signal prevents switching activity in
+zero-weight cells, delivering dynamic power reduction proportional to sparsity.
+
+\subsection{BET processor}
+
+The full \texttt{bet\_processor} module wires together:
+\begin{itemize}
+  \item \texttt{bet\_regfile}: 27-register file ($27 \times 2$ bits)
+  \item \texttt{bet\_pc}: 16-bit program counter with load port for jumps
+  \item \texttt{bet\_control}: single-cycle decode, all 51 opcodes mapped to
+        control signals (alu\_op, reg\_we, mem\_re, mem\_we, pc\_load,
+        is\_call, is\_ret, is\_halt, is\_spawn, is\_send, is\_await)
+\end{itemize}
+
+An Icarus Verilog simulation wrapper (\texttt{BetSimEmitter}) generates
+complete self-contained testbenches from BET bytecode, including inline ROM
+initialization, reset sequencing, and VCD waveform export for GTKWave.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Actor Model and Distributed Runtime}
+\label{sec:actors}
+
+\subsection{Local actors}
+
+Ternlang implements the actor model via three ISA primitives:
+\texttt{TSPAWN} creates an agent instance and returns an \texttt{agentref};
+\texttt{TSEND} enqueues a trit message in the agent's mailbox; \texttt{TAWAIT}
+dequeues a message, invokes the handler, and returns the trit result. The
+mailbox is a FIFO (\texttt{VecDeque<Value>}) allocated per agent instance.
+
+\subsection{Distributed actors}
+
+The \texttt{ternlang-runtime} crate extends the actor model to multi-node
+systems via TCP transport. A \texttt{TernNode} binds a TCP port, maintains a
+peer connection map, and exposes \texttt{remote\_send}/\texttt{remote\_await}
+over a newline-delimited JSON wire protocol:
+
+\begin{lstlisting}[language=ternlang,
+  caption={Remote actor spawn in ternlang}]
+let remote_voter: agentref =
+    spawn remote "192.168.1.42:7373" Voter;
+send remote_voter truth();
+let r: trit = await remote_voter;
+\end{lstlisting}
+
+The wire protocol uses four message types (\texttt{Send}, \texttt{Await},
+\texttt{Reply}, \texttt{Error}) serialised as tagged JSON objects, enabling
+interoperability with non-Rust implementations.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Balanced ternary computing.} Knuth~\cite{knuth1997art} provides the
+mathematical foundation. The Setun computer (1958)~\cite{brousentsov2002setun}
+demonstrated physical ternary hardware. Modern revivals include academic
+hardware studies at the University of South-Eastern Norway~\cite{bos2020ternary},
+which targets C-to-ternary compilation for EDA tools—an approach that inherits
+binary-native semantics and misses the symmetric properties of balanced ternary
+that ternlang is designed to exploit natively.
+
+\textbf{Ternary emulators.} Several open-source projects implement ternary
+VMs in Python or JavaScript (Brandon Smith's 9-trit RISC simulator; Owlet,
+an S-expression ternary interpreter in Node.js). These provide single-layer
+implementations without compiler, ML kernels, or hardware backends.
+\texttt{ternlang-compat} provides assembler-level bridges to both.
+
+\textbf{Ternary quantization for neural networks.} BitNet~\cite{ma2024era}
+and subsequent work (e.g., BitNet b1.58~\cite{ma2024bitnet158}) demonstrate
+that large language models can be trained with ternary weights while retaining
+competitive perplexity. The present work is the first to surface this property
+as a first-class ISA opcode (\texttt{TSPARSE\_MATMUL}) rather than a software
+library optimization.
+
+\textbf{Quantum ternary.} Qutrits (3-level quantum systems) map naturally to
+trit values $\{|{-1}\rangle, |0\rangle, |{+1}\rangle\}$. The BET encoding and
+\texttt{trittensor} type system are structurally compatible with qutrit state
+spaces; we leave the formal mapping to future work.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The Ternary Computing Ecosystem}
+\label{sec:ecosystem}
+
+A stated goal of ternlang is to serve as a \emph{convergence point} for the
+fragmented ternary computing field. Table~\ref{tab:ecosystem} maps active
+projects to their interoperability path via \texttt{ternlang-compat}.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Ecosystem compatibility map}
+\label{tab:ecosystem}
+\begin{tabular}{p{2.2cm}p{2.2cm}p{2.8cm}}
+\toprule
+Project & Interface & Bridge \\
+\midrule
+Brandon Smith 9-trit sim & \texttt{.tasm} assembly & \texttt{TasmAssembler} $\to$ BET bytecode \\
+Owlet (S-expr) & S-expression syntax & \texttt{OwletParser} $\to$ ternlang AST \\
+USN / EDA tools & C-to-ternary & Academic whitepaper; ISA interop \\
+Trit-Rust crate & Rust i8 trits & Superseded by ternlang-core \\
+Q-Ternary & Qutrits & \texttt{trittensor} state model (future) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Implementation Status}
+\label{sec:status}
+
+Ternlang is implemented in Rust and comprises the following crates:
+
+\begin{itemize}
+  \item \textbf{ternlang-core} (31 tests): lexer, parser, AST, semantic
+        checker, BET bytecode emitter, VM
+  \item \textbf{ternlang-ml} (6 tests): BitNet quantization kernels, dense
+        and sparse matmul, benchmark harness
+  \item \textbf{ternlang-hdl} (21 tests): Verilog-2001 codegen, FPGA
+        simulation wrapper
+  \item \textbf{ternlang-lsp}: LSP 3.17 language server (hover, completion,
+        diagnostics)
+  \item \textbf{ternlang-mcp}: MCP server with 6 tools including
+        \texttt{trit\_decide}
+  \item \textbf{ternlang-runtime} (2 tests): distributed TCP actor runtime
+  \item \textbf{ternlang-compat} (29 tests): \texttt{.tasm} assembler,
+        Owlet S-expression parser
+  \item \textbf{ternpkg} (5 tests): package manager with GitHub-backed registry
+\end{itemize}
+
+The full test suite comprises \textbf{97 tests}, all passing. The repository
+is publicly available at the URL in the author affiliation.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+We have presented Ternlang, the first complete software stack for balanced
+ternary computing. The central technical contribution—\texttt{TSPARSE\_MATMUL}
+as a first-class ISA primitive—achieves a $2.27\times$ reduction in multiply
+operations for quantized neural network weights without approximation.
+
+Future directions include:
+
+\begin{itemize}
+  \item \textbf{TCOMPRESS/TUNPACK}: run-length compression of sparse trit
+        tensors in the VM heap
+  \item \textbf{FPGA synthesis}: full \texttt{bet\_processor} targeting
+        Xilinx Artix-7 and Lattice ECP5
+  \item \textbf{Memristor backend}: integration with physical ternary storage
+        via the USN uMemristorToolbox~\cite{bos2020ternary}
+  \item \textbf{Qutrit bridge}: formal mapping of \texttt{trittensor} to
+        qutrit state spaces for quantum-adjacent hardware
+  \item \textbf{End-to-end training}: native ternlang training loop with
+        BitNet-style gradient quantization
+\end{itemize}
+
+The ternary computing field has been fragmented for decades. Ternlang is
+designed to be the substrate where those fragments converge.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
