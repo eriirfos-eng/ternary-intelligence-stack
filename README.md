@@ -17,9 +17,9 @@ Binary systems treat absence as null. Ternary systems treat it as a **state**.
 ## The Three States
 
 ```
--1  ->  conflict     signal is negative, resolvable
- 0  ->  hold         active, not null -- the most misunderstood trit
-+1  ->  truth        signal is affirmative
+-1  ->  reject     signal is negative, resolvable
+ 0  ->  tend       active, not null -- the most misunderstood trit
++1  ->  affirm     signal is affirmative
 ```
 
 Every value, every branch, every match arm in ternlang is grounded in these three states. The compiler enforces exhaustiveness — you cannot write a `match` that forgets `0`.
