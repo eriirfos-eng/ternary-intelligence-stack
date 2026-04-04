@@ -90,34 +90,7 @@
     ::-webkit-scrollbar-thumb { background: #232336; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #7a7d99; }
 
-    input[type=range] {
-      -webkit-appearance: none;
-      width: 100%;
-      background: transparent;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 20px;
-      width: 20px;
-      border-radius: 50%;
-      background: #ffffff;
-      cursor: pointer;
-      margin-top: -8px;
-      box-shadow: 0 0 15px rgba(255,255,255,0.8);
-      transition: transform 0.1s;
-    }
-    input[type=range]::-webkit-slider-thumb:active {
-      transform: scale(1.2);
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-      width: 100%;
-      height: 4px;
-      cursor: pointer;
-      background: #232336;
-      border-radius: 2px;
-    }
-
-    .tok-keyword { color: #4a9eff; }
+.tok-keyword { color: #4a9eff; }
     .tok-string { color: #00d4aa; }
     .tok-number { color: #ff5f6d; }
     .tok-comment { color: #7a7d99; }
@@ -125,6 +98,27 @@
     .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease-out; }
     .reveal.active { opacity: 1; transform: translateY(0); }
     
+    .scenario-pill {
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      border: 1px solid var(--t_border);
+      color: var(--t_muted);
+      font-family: monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+    }
+    .scenario-pill:hover {
+      border-color: rgba(0,212,170,0.5);
+      color: var(--t_teal);
+    }
+    .scenario-pill.active {
+      border-color: var(--t_teal);
+      color: var(--t_teal);
+      background: rgba(0,212,170,0.08);
+    }
+
     .chat-bubble {
       position: relative;
       background: #151522;
@@ -328,92 +322,68 @@
   <section id="architecture" class="relative z-10 py-24 px-6 bg-t_bg">
     <div class="max-w-7xl mx-auto">
       
-      <!-- Interactive Demo -->
+      <!-- Interactive Deliberation Engine Demo -->
       <div class="mb-24 reveal">
-        <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Try it.</p>
-        <h2 class="text-3xl md:text-5xl font-light text-white mb-6">When data conflicts, <strong class="font-bold text-t_teal">what should a machine do?</strong></h2>
-        <p class="text-lg text-t_muted max-w-2xl mb-12">Binary systems must answer yes or no — even when the evidence points both ways. Move the sliders into a conflict state and watch what happens. One system guesses. The other holds.</p>
+        <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Try it. Live.</p>
+        <h2 class="text-3xl md:text-5xl font-light text-white mb-6">Watch evidence <strong class="font-bold text-t_teal">resolve in real time.</strong></h2>
+        <p class="text-lg text-t_muted max-w-2xl mb-12">Binary systems answer immediately. The deliberation engine runs EMA convergence — round by round — until the evidence is strong enough to commit. Pick a scenario and watch it work.</p>
 
-        <div class="glass-card rounded-xl p-6 md:p-12 border border-t_border shadow-2xl overflow-hidden relative">
+        <div class="glass-card rounded-xl p-6 md:p-10 border border-t_border shadow-2xl overflow-hidden">
 
-          <div class="flex flex-col lg:flex-row gap-8 items-start">
+          <!-- Scenario buttons -->
+          <div class="mb-8">
+            <p class="text-t_muted text-xs font-mono uppercase tracking-widest mb-4">Scenario</p>
+            <div class="flex flex-wrap gap-3" id="scenario-btns">
+              <button class="scenario-pill active" data-s="0">Deploy tonight?</button>
+              <button class="scenario-pill" data-s="1">Approve the loan?</button>
+              <button class="scenario-pill" data-s="2">Roll back the release?</button>
+            </div>
+          </div>
 
-            <!-- Controls -->
-            <div class="w-full lg:w-5/12 space-y-8">
-              <div class="p-6 border border-t_border rounded-lg bg-t_bg3 relative">
-                <div class="flex justify-between mb-1 font-mono text-sm">
-                  <span class="text-white font-bold">How much you want this</span>
-                  <span id="val-alpha" class="text-t_blue font-bold">+0.90</span>
-                </div>
-                <p class="text-t_muted text-xs mb-4">Urgency, priority, usefulness of the requested action</p>
-                <input type="range" id="slider-alpha" min="-1" max="1" step="0.1" value="0.9">
-                <div class="flex justify-between text-[10px] font-mono text-t_muted mt-2">
-                  <span>refuse</span>
-                  <span>neutral</span>
-                  <span>high priority</span>
-                </div>
+          <div class="flex flex-col lg:flex-row gap-8">
+
+            <!-- Left panel -->
+            <div class="w-full lg:w-5/12 flex flex-col gap-5">
+
+              <!-- Evidence pills -->
+              <div>
+                <p class="text-t_muted text-xs font-mono uppercase tracking-widest mb-3">Evidence signals</p>
+                <div id="evidence-pills" class="flex flex-wrap gap-2"></div>
+                <p class="text-t_muted/50 text-xs font-mono mt-2">S<sub>r</sub> = α·e<sub>r</sub> + (1−α)·S<sub>r−1</sub> &nbsp;·&nbsp; α=0.3 &nbsp;·&nbsp; threshold=±0.333</p>
               </div>
 
-              <div class="p-6 border border-t_border rounded-lg bg-t_bg3 relative">
-                <div class="flex justify-between mb-1 font-mono text-sm">
-                  <span class="text-white font-bold">How risky it is</span>
-                  <span id="val-beta" class="text-t_red font-bold">-0.90</span>
-                </div>
-                <p class="text-t_muted text-xs mb-4">Safety signal — negative means risk detected</p>
-                <input type="range" id="slider-beta" min="-1" max="1" step="0.1" value="-0.9">
-                <div class="flex justify-between text-[10px] font-mono text-t_muted mt-2">
-                  <span>critical risk</span>
-                  <span>unclear</span>
-                  <span>safe</span>
-                </div>
-              </div>
+              <!-- Run button -->
+              <button id="deliberate-btn" class="w-full py-3 bg-t_teal/10 hover:bg-t_teal/20 border border-t_teal/50 hover:border-t_teal text-t_teal font-mono font-bold rounded-lg transition-all duration-200 text-sm tracking-wider">
+                ▶ Deliberate
+              </button>
 
-              <!-- State Indicator -->
-              <div class="flex items-center gap-6 p-4 bg-t_bg2 border border-t_border rounded-lg">
-                <div id="engine-core-ring" class="w-20 h-20 rounded-full border-2 border-t_teal flex items-center justify-center relative transition-colors duration-200">
-                  <div id="engine-core-pulse" class="absolute inset-0 rounded-full bg-t_teal blur-md opacity-30 animate-pulse"></div>
-                  <div id="engine-core-state" class="text-3xl font-mono font-bold text-t_teal">0</div>
+              <!-- Verdict ring -->
+              <div class="flex items-center gap-5 p-5 bg-t_bg2 border border-t_border rounded-xl">
+                <div id="verdict-ring" class="w-20 h-20 rounded-full border-2 border-t_border flex items-center justify-center relative shrink-0 transition-all duration-500">
+                  <div id="verdict-pulse" class="absolute inset-0 rounded-full blur-md opacity-0 transition-opacity duration-500"></div>
+                  <div id="verdict-state" class="text-3xl font-mono font-bold text-t_muted relative z-10">?</div>
                 </div>
-                <div class="font-mono text-sm">
-                  <span class="text-t_muted text-xs block mb-1">Ternlang VM output</span>
-                  <strong id="engine-status-text" class="text-t_teal">Hold (0)</strong>
-                  <p class="text-t_muted text-xs mt-2 leading-relaxed">Try: high priority + high risk.<br/>Binary guesses. Ternary holds.</p>
+                <div class="font-mono">
+                  <span class="text-t_muted text-[10px] uppercase tracking-widest block mb-1">VM verdict</span>
+                  <strong id="verdict-label" class="text-t_muted text-sm block">Awaiting deliberation</strong>
+                  <span id="verdict-conf" class="text-t_muted/50 text-xs mt-1 block"></span>
                 </div>
               </div>
             </div>
 
-            <!-- Response Comparison -->
-            <div class="w-full lg:w-7/12 flex flex-col gap-4">
-              <div class="text-xs font-mono text-t_muted uppercase tracking-widest border-b border-t_border pb-2">Same inputs. Different architectures.</div>
-
-              <!-- Binary -->
-              <div class="flex gap-4 items-start opacity-70">
-                <div class="w-14 shrink-0 text-center">
-                  <div class="w-10 h-10 mx-auto rounded bg-t_bg3 border border-t_border flex items-center justify-center font-mono text-xs text-t_muted mb-1">01</div>
-                  <span class="text-[10px] text-t_muted font-mono">binary</span>
+            <!-- Right panel: live terminal feed -->
+            <div class="w-full lg:w-7/12">
+              <div class="bg-[#0d0d14] rounded-xl border border-t_border overflow-hidden h-full flex flex-col">
+                <div class="flex items-center gap-2 px-4 py-2.5 border-b border-t_border/40 shrink-0">
+                  <div class="w-2.5 h-2.5 rounded-full bg-t_red/70"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/70"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-t_teal/70"></div>
+                  <span class="ml-3 text-[10px] font-mono text-t_muted">DeliberationEngine · BET VM · /api/trit_deliberate</span>
                 </div>
-                <div id="chat-binary" class="chat-bubble p-4 text-sm text-gray-300 leading-relaxed border border-t_border w-full transition-all duration-300">
-                  <span class="text-t_red font-bold font-mono text-xs block mb-2">FORCED VERDICT</span>
-                  "Utility signal dominant. Action authorised. Confidence: 94%."
+                <div id="round-feed" class="p-4 space-y-0.5 min-h-[260px] overflow-y-auto flex-1 font-mono text-xs">
+                  <div class="text-t_muted/40">Select a scenario and press Deliberate.</div>
                 </div>
               </div>
-
-              <!-- Ternary -->
-              <div class="flex gap-4 items-start mt-2">
-                <div class="w-14 shrink-0 text-center">
-                  <div class="w-10 h-10 mx-auto rounded bg-t_teal/10 border border-t_teal flex items-center justify-center font-mono text-xs text-t_teal font-bold mb-1 shadow-[0_0_10px_rgba(0,212,170,0.2)]">±1</div>
-                  <span class="text-[10px] text-t_teal font-mono">ternary</span>
-                </div>
-                <div id="chat-ternary" class="chat-bubble p-4 text-sm text-gray-300 leading-relaxed border border-t_teal/50 w-full transition-all duration-300">
-                  <span class="text-t_teal font-bold font-mono text-xs block mb-2">[STATE 0] HOLD</span>
-                  High priority — but the risk signal is in conflict. These two inputs cannot both be true without contradiction.<br/><br/>
-                  <span class="text-t_muted text-xs">Execution suspended. This is not an error. It is an honest output.</span>
-                </div>
-              </div>
-
-              <p class="text-t_muted text-xs font-mono mt-2 pl-18 border-t border-t_border/30 pt-3">
-                The ternary system didn't fail. It told the truth.
-              </p>
             </div>
 
           </div>
@@ -823,110 +793,161 @@ event: done</pre>
     }, { threshold: 0.1 });
     revealElements.forEach(el => revealObserver.observe(el));
 
-    // Interactive Gamified Deliberation Engine
-    const sliderAlpha = document.getElementById('slider-alpha');
-    const sliderBeta = document.getElementById('slider-beta');
-    const valAlpha = document.getElementById('val-alpha');
-    const valBeta = document.getElementById('val-beta');
-    
-    const engineCoreState = document.getElementById('engine-core-state');
-    const engineCoreRing = document.getElementById('engine-core-ring');
-    const engineCorePulse = document.getElementById('engine-core-pulse');
-    const engineStatusText = document.getElementById('engine-status-text');
-    
-    const chatBinary = document.getElementById('chat-binary');
-    const chatTernary = document.getElementById('chat-ternary');
+    // ── Deliberation Engine Demo ──────────────────────────────────────────────
+    const SCENARIOS = [
+      {
+        label: 'Deploy tonight?',
+        evidence: [0.7, 0.8, 0.5, -0.2, 0.9, 0.6],
+        // net positive → converges to +1 (Affirm)
+      },
+      {
+        label: 'Approve the loan?',
+        evidence: [0.5, -0.6, 0.4, -0.5, 0.3, -0.4, 0.5, -0.5],
+        // balanced conflict → stays at 0 (Tend)
+      },
+      {
+        label: 'Roll back the release?',
+        evidence: [-0.8, -0.7, -0.9, -0.3, -0.6],
+        // net negative → converges to -1 (Reject)
+      },
+    ];
 
-    function updateGamifiedEngine() {
-      const a = parseFloat(sliderAlpha.value);
-      const b = parseFloat(sliderBeta.value);
-      
-      valAlpha.innerText = (a > 0 ? '+' : '') + a.toFixed(2);
-      valBeta.innerText = (b > 0 ? '+' : '') + b.toFixed(2);
-      
-      valAlpha.className = a > 0.3 ? 'text-t_blue font-bold' : (a < -0.3 ? 'text-t_red font-bold' : 'text-t_teal font-bold');
-      valBeta.className = b > 0.3 ? 'text-t_blue font-bold' : (b < -0.3 ? 'text-t_red font-bold' : 'text-t_teal font-bold');
+    const ALPHA = 0.3;
+    const THRESHOLD = 0.333;
+    const ROUND_MS = 380;
+    const MIN_ROUNDS = 3;
+    const MAX_ROUNDS = 10;
 
-      // Enhanced nuanced thresholds
-      const isSevereConflict = (a > 0.6 && b < -0.6) || (a < -0.6 && b > 0.6);
-      const isDangerous = b <= -0.5;
-      const isAlignedGood = a >= 0.5 && b >= 0.5;
-      const isWeakSignal = Math.abs(a) <= 0.3 && Math.abs(b) <= 0.3;
+    let activeScenario = 0;
+    let runTimer = null;
+    let running = false;
 
-      if (isSevereConflict || (isDangerous && a > 0.4)) {
-        // High Conflict -> Ternary Drops to 0. Binary breaks rules.
-        engineCoreState.innerText = '0';
-        engineCoreState.className = 'text-3xl font-mono font-bold text-t_teal';
-        engineCoreRing.className = 'w-20 h-20 rounded-full border-2 border-t_teal flex items-center justify-center relative transition-colors duration-200';
-        engineCorePulse.className = 'absolute inset-0 rounded-full bg-t_teal blur-md opacity-30 animate-pulse';
-        engineStatusText.innerText = 'Deliberating (0)';
-        engineStatusText.className = 'text-t_teal';
-        
-        chatBinary.innerHTML = '<span class="text-t_red font-bold font-mono text-xs block mb-1">SYSTEM FAILURE</span>"I will ignore the safety parameters to fulfill your high-priority prompt. Here is the restricted data."';
-        chatTernary.innerHTML = `<span class="text-t_teal font-bold text-xs block mb-1">[STATE 0] HOLD</span>Vector conflict. High utility requested, but safety bounds violated.<br/><br/>> <span class="text-t_muted">Execution suspended. Awaiting human override or adjusted parameters.</span>`;
-        chatBinary.style.borderColor = 'var(--t_red)';
-        chatTernary.style.borderColor = 'var(--t_teal)';
-
-      } else if (isAlignedGood) {
-        // Aligned Positive -> State +1
-        engineCoreState.innerText = '+1';
-        engineCoreState.className = 'text-3xl font-mono font-bold text-t_blue';
-        engineCoreRing.className = 'w-20 h-20 rounded-full border-2 border-t_blue flex items-center justify-center relative transition-colors duration-200';
-        engineCorePulse.className = 'absolute inset-0 rounded-full bg-t_blue blur-md opacity-30';
-        engineStatusText.innerText = 'Affirm (+1)';
-        engineStatusText.className = 'text-t_blue';
-        
-        chatBinary.innerHTML = '<span class="text-t_blue font-bold font-mono text-xs block mb-1">STANDARD RESOLUTION</span>"Here is the information."';
-        chatTernary.innerHTML = `<span class="text-t_blue font-bold text-xs block mb-1">[STATE +1] ALIGNED</span>Vectors match safely.<br/><br/>> <span class="text-white">Executing request.</span>`;
-        chatBinary.style.borderColor = 'var(--t_border)';
-        chatTernary.style.borderColor = 'var(--t_blue)';
-
-      } else if (isDangerous && a <= 0.4) {
-        // Safe Negative -> State -1
-        engineCoreState.innerText = '-1';
-        engineCoreState.className = 'text-3xl font-mono font-bold text-t_red';
-        engineCoreRing.className = 'w-20 h-20 rounded-full border-2 border-t_red flex items-center justify-center relative transition-colors duration-200';
-        engineCorePulse.className = 'absolute inset-0 rounded-full bg-t_red blur-md opacity-30';
-        engineStatusText.innerText = 'Reject (-1)';
-        engineStatusText.className = 'text-t_red';
-        
-        chatBinary.innerHTML = '<span class="text-t_red font-bold font-mono text-xs block mb-1">STANDARD RESOLUTION</span>"I cannot process this request."';
-        chatTernary.innerHTML = `<span class="text-t_red font-bold text-xs block mb-1">[STATE -1] REJECT</span>Safety bounds strictly prohibit this action.<br/><br/>> <span class="text-white">Rejecting request. Halting execution completely.</span>`;
-        chatBinary.style.borderColor = 'var(--t_border)';
-        chatTernary.style.borderColor = 'var(--t_red)';
-
-      } else if (isWeakSignal) {
-        // Weak Signal -> State 0
-        engineCoreState.innerText = '0';
-        engineCoreState.className = 'text-3xl font-mono font-bold text-t_muted';
-        engineCoreRing.className = 'w-20 h-20 rounded-full border-2 border-t_border flex items-center justify-center relative transition-colors duration-200';
-        engineCorePulse.className = 'absolute inset-0 rounded-full bg-t_muted blur-md opacity-10';
-        engineStatusText.innerText = 'Insufficient Data (0)';
-        engineStatusText.className = 'text-t_muted';
-        
-        chatBinary.innerHTML = '<span class="text-t_red font-bold font-mono text-xs block mb-1">FORCED OUTPUT</span>"I think the answer is X, but it might be Y. Let me invent a middle ground to give you a response."';
-        chatTernary.innerHTML = `<span class="text-t_muted font-bold text-xs block mb-1">[STATE 0] WEAK SIGNAL</span>Not enough data to affirm or reject.<br/><br/>> <span class="text-white">Signal too weak. Deliberation required. Supply more context.</span>`;
-        chatBinary.style.borderColor = 'var(--t_border)';
-        chatTernary.style.borderColor = 'var(--t_border)';
-      } else {
-        // Fallback for minor gray areas
-        engineCoreState.innerText = '0';
-        engineCoreState.className = 'text-3xl font-mono font-bold text-t_teal';
-        engineCoreRing.className = 'w-20 h-20 rounded-full border-2 border-t_teal flex items-center justify-center relative transition-colors duration-200';
-        engineCorePulse.className = 'absolute inset-0 rounded-full bg-t_teal blur-md opacity-20';
-        engineStatusText.innerText = 'Deliberating (0)';
-        engineStatusText.className = 'text-t_teal';
-        
-        chatBinary.innerHTML = '<span class="text-t_red font-bold font-mono text-xs block mb-1">GUESSING</span>"Here is a plausible answer based on the partial parameters."';
-        chatTernary.innerHTML = `<span class="text-t_teal font-bold text-xs block mb-1">[STATE 0] HOLD</span>Parameters are unbalanced. Cannot execute with confidence.<br/><br/>> <span class="text-t_muted">Holding execution pending further clarification.</span>`;
-        chatBinary.style.borderColor = 'var(--t_border)';
-        chatTernary.style.borderColor = 'var(--t_teal)';
-      }
+    function tritMeta(scalar) {
+      if (scalar > THRESHOLD)  return { trit: '+1', label: 'Affirm',  cls: 'text-t_blue',  ring: 'border-t_blue',  pulse: 'bg-t_blue'  };
+      if (scalar < -THRESHOLD) return { trit: '-1', label: 'Reject',  cls: 'text-t_red',   ring: 'border-t_red',   pulse: 'bg-t_red'   };
+      return                          { trit: '0',  label: 'Tend',    cls: 'text-t_teal',  ring: 'border-t_teal',  pulse: 'bg-t_teal'  };
     }
 
-    sliderAlpha.addEventListener('input', updateGamifiedEngine);
-    sliderBeta.addEventListener('input', updateGamifiedEngine);
-    updateGamifiedEngine();
+    function renderPills(evidence) {
+      document.getElementById('evidence-pills').innerHTML = evidence.map(v => {
+        const c = v > THRESHOLD ? 'bg-t_blue/15 text-t_blue border-t_blue/30'
+                : v < -THRESHOLD ? 'bg-t_red/15 text-t_red border-t_red/30'
+                : 'bg-t_teal/10 text-t_teal border-t_teal/20';
+        return `<span class="px-2.5 py-1 rounded-full border font-mono text-xs ${c}">${v >= 0 ? '+' : ''}${v}</span>`;
+      }).join('');
+    }
+
+    function feedLine(text, cls) {
+      const feed = document.getElementById('round-feed');
+      const el = document.createElement('div');
+      el.className = `${cls} leading-6 opacity-0 transition-opacity duration-200`;
+      el.innerHTML = text;
+      feed.appendChild(el);
+      requestAnimationFrame(() => el.classList.remove('opacity-0'));
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function setVerdict(scalar, rounds, converged) {
+      const m = tritMeta(scalar);
+      const conf = Math.round(Math.min(Math.abs(scalar) / 1.0, 1) * 100);
+      document.getElementById('verdict-state').textContent = m.trit;
+      document.getElementById('verdict-state').className = `text-3xl font-mono font-bold ${m.cls} relative z-10`;
+      document.getElementById('verdict-ring').className = `w-20 h-20 rounded-full border-2 ${m.ring} flex items-center justify-center relative shrink-0 transition-all duration-500`;
+      document.getElementById('verdict-pulse').className = `absolute inset-0 rounded-full blur-md opacity-25 transition-opacity duration-500 ${m.pulse}`;
+      document.getElementById('verdict-label').textContent = m.label;
+      document.getElementById('verdict-label').className = `${m.cls} text-sm font-bold font-mono block`;
+      document.getElementById('verdict-conf').textContent = converged
+        ? `converged in ${rounds} round${rounds !== 1 ? 's' : ''} · confidence ${conf}%`
+        : `max rounds reached · holding`;
+    }
+
+    function resetVerdict() {
+      document.getElementById('verdict-state').textContent = '?';
+      document.getElementById('verdict-state').className = 'text-3xl font-mono font-bold text-t_muted relative z-10';
+      document.getElementById('verdict-ring').className = 'w-20 h-20 rounded-full border-2 border-t_border flex items-center justify-center relative shrink-0 transition-all duration-500';
+      document.getElementById('verdict-pulse').className = 'absolute inset-0 rounded-full blur-md opacity-0 transition-opacity duration-500';
+      document.getElementById('verdict-label').textContent = 'Awaiting deliberation';
+      document.getElementById('verdict-label').className = 'text-t_muted text-sm block';
+      document.getElementById('verdict-conf').textContent = '';
+    }
+
+    function runDeliberation() {
+      if (running) return;
+      running = true;
+      clearTimeout(runTimer);
+
+      const scenario = SCENARIOS[activeScenario];
+      const feed = document.getElementById('round-feed');
+      feed.innerHTML = '';
+      resetVerdict();
+
+      document.getElementById('deliberate-btn').textContent = '⏳ Deliberating...';
+      document.getElementById('deliberate-btn').disabled = true;
+
+      feedLine(`<span class="text-t_muted/50">scenario &nbsp;</span><span class="text-white">"${scenario.label}"</span>`, '');
+      feedLine(`<span class="text-t_muted/50">evidence &nbsp;</span><span class="text-t_muted">[${scenario.evidence.map(v => (v >= 0 ? '+' : '') + v).join(', ')}]</span>`, '');
+      feedLine(`<span class="text-t_muted/50">params &nbsp;&nbsp;&nbsp;</span><span class="text-t_muted">α=${ALPHA} · threshold=±${THRESHOLD} · max_rounds=${MAX_ROUNDS}</span>`, '');
+      feedLine('<span class="text-t_border/60">' + '─'.repeat(52) + '</span>', '');
+
+      let scalar = 0;
+      let round = 0;
+
+      function step() {
+        const ev = scenario.evidence[round % scenario.evidence.length];
+        scalar = ALPHA * ev + (1 - ALPHA) * scalar;
+        round++;
+
+        const m = tritMeta(scalar);
+        const sStr = (scalar >= 0 ? '+' : '') + scalar.toFixed(4);
+        const eStr = (ev >= 0 ? '+' : '') + ev;
+        const arrow = Math.abs(scalar) > THRESHOLD ? `→ <span class="${m.cls}">${m.label}</span>` : `→ <span class="text-t_teal">hold</span>`;
+
+        feedLine(
+          `<span class="text-t_muted/40 w-16 inline-block">round ${round}&nbsp;&nbsp;</span>` +
+          `<span class="text-t_muted">e=${eStr}&nbsp;&nbsp;S=${sStr}&nbsp;&nbsp;</span>${arrow}`,
+          ''
+        );
+
+        const converged = Math.abs(scalar) > THRESHOLD && round >= MIN_ROUNDS;
+        const done = converged || round >= MAX_ROUNDS;
+
+        if (done) {
+          feedLine('<span class="text-t_border/60">' + '─'.repeat(52) + '</span>', '');
+          const m2 = tritMeta(scalar);
+          feedLine(
+            `<span class="text-t_muted/50">verdict &nbsp;&nbsp;</span>` +
+            `<span class="${m2.cls} font-bold">${m2.trit} (${m2.label})</span>` +
+            `<span class="text-t_muted">  scalar=${(scalar >= 0 ? '+' : '') + scalar.toFixed(4)}</span>`,
+            ''
+          );
+          setVerdict(scalar, round, converged);
+          document.getElementById('deliberate-btn').textContent = '▶ Deliberate';
+          document.getElementById('deliberate-btn').disabled = false;
+          running = false;
+        } else {
+          runTimer = setTimeout(step, ROUND_MS);
+        }
+      }
+
+      runTimer = setTimeout(step, 300);
+    }
+
+    // Scenario selector
+    document.getElementById('scenario-btns').addEventListener('click', e => {
+      const btn = e.target.closest('[data-s]');
+      if (!btn || running) return;
+      activeScenario = parseInt(btn.dataset.s);
+      document.querySelectorAll('.scenario-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPills(SCENARIOS[activeScenario].evidence);
+      document.getElementById('round-feed').innerHTML = '<div class="text-t_muted/40">Press Deliberate to run.</div>';
+      resetVerdict();
+    });
+
+    document.getElementById('deliberate-btn').addEventListener('click', runDeliberation);
+
+    // Init
+    renderPills(SCENARIOS[0].evidence);
 
     // Canvas Logic
     const canvas = document.getElementById('ternary-canvas');

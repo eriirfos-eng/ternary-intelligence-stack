@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Ternlang — RFI-IRFOS Ternary Intelligence Stack
+// Copyright (C) 2026 RFI-IRFOS
+// Open-core compiler. See LICENSE-LGPL in the repository root.
+
 //! ternlang-compat — Compatibility bridges for the ternary computing ecosystem
 //!
 //! This crate is the convergence point for existing ternary computing projects,

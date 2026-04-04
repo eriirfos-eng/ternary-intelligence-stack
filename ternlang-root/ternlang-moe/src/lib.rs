@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
+// Ternlang — RFI-IRFOS Ternary Intelligence Stack
+// Copyright (C) 2026 RFI-IRFOS. All rights reserved.
+// Commercial tier. See LICENSE-COMMERCIAL in the repository root.
+// Unauthorized use, copying, or distribution is prohibited.
+
 //! # ternlang-moe — Ternary Mixture-of-Experts Orchestrator (MoE-13)
 //!
 //! Implements the MoE-13 architecture from:
