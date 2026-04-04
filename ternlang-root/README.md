@@ -1,95 +1,207 @@
 # Ternlang — Balanced Ternary Intelligence Stack
 
 **The definitive platform for balanced ternary computing.**
-Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper](whitepaper/ternlang-whitepaper.docx)
+
+[![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
+[![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
+[![tests](https://img.shields.io/badge/tests-146%2B%20passing-brightgreen)](#architecture)
+[![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
+[![MCP](https://img.shields.io/badge/MCP-10%20tools-purple)](https://ternlang.com/mcp)
+
+Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
 ---
 
-## What is Ternlang?
+## The Problem with Binary AI
 
-Ternlang is a programming language, virtual machine, inference engine, and AI agent reasoning platform built on **balanced ternary** — a number system where every digit (a *trit*) carries three states:
+Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either hallucinate a confident answer or return null.
 
-| Trit | Semantic | Meaning |
-|------|----------|---------|
-| `−1` | **reject** | Signal is negative, resolvable |
-| ` 0` | **tend**   | Active deliberation — not null, not undecided |
-| `+1` | **affirm** | Signal is affirmative |
+Ternlang adds the third state.
 
-The `tend` state is the core insight: **it is not null**. It is a computational instruction — *gather more evidence before acting*. This makes ternlang the natural platform for AI agents that must reason under uncertainty.
+| Trit | Name | What it means |
+|------|------|---------------|
+| `−1` | **reject** | Clear negative signal. Do not proceed. |
+| ` 0` | **hold** | Insufficient data. Gather more before acting. |
+| `+1` | **affirm** | Clear positive signal. Proceed. |
 
----
-
-## The Scalar Temperature Model
-
-Every ternary decision has a **temperature** — a continuous scalar on [−1.0, +1.0]:
-
-```
-    reject              tend              affirm
-────────────────┼────────────────┼────────────────
-−1.0          −0.333          +0.333           +1.0
-      ← confidence →              ← confidence →
-```
-
-An agent should only act when its scalar clears the tend boundary **and** confidence meets its threshold. The `trit_vector` API accepts named evidence dimensions with weights and returns the full picture — aggregate scalar, per-source breakdown, dominant signal, and a plain-language recommendation.
+The `hold` state is not indecision. It is a **first-class routing instruction** — a computational directive to remain in deliberation until evidence crosses a threshold. This makes ternlang the natural foundation for AI agents that must reason honestly under uncertainty.
 
 ---
 
-## Three-Tier Structure
+## What's in This Repository
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  TIER 1 — Open Core (LGPL-3.0)                                  │
-│  ternlang-core · ternlang-cli · ternlang-lsp · ternlang-compat  │
-│  ternpkg · spec/                                                 │
-│  Free to use, modify, distribute. Modifications must be         │
-│  contributed back under LGPL.                                   │
-├─────────────────────────────────────────────────────────────────┤
-│  TIER 2 — Restricted (Business Source License 1.1)              │
-│  ternlang-ml · ternlang-mcp · ternlang-hdl · ternlang-runtime   │
-│  Source visible. Free for personal/research use.                │
-│  Commercial use requires a license → licensing@ternlang.com     │
-│  Auto-converts to Apache-2.0 on 2030-04-03.                     │
-├─────────────────────────────────────────────────────────────────┤
-│  TIER 3 — Proprietary (ternlang.com)                            │
-│  Hosted API · Enterprise SLA · Commercial inference engine      │
-│  Contact: licensing@ternlang.com                                │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-> **ML Training Restriction:** The contents of this repository may NOT be used to train, fine-tune, or distill machine learning models without explicit written permission from RFI-IRFOS. See [LICENSE-ML-TRAINING](LICENSE-ML-TRAINING).
+| Layer | What it does |
+|-------|-------------|
+| [Language & VM](#language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
+| [Sparse Inference](#sparse-ternary-inference) | BitNet-style ternary weights with 86–122× speedup over dense float32 |
+| [MoE-13 Orchestrator](#moe-13-ternary-orchestrator) | Mixture-of-Experts reasoning engine with safety hard gate |
+| [Live API](#live-api) | REST + SSE + MCP endpoints at `https://ternlang.com` |
+| [Example Library](#example-library) | 250+ `.tern` programs across every domain |
+| [Ecosystem Bridges](#ecosystem-position) | Interop with Brandon Smith 9-trit, Owlet, BitNet b1.58 |
 
 ---
 
-## Quick Start
+## Language & VM
 
-```bash
-git clone https://github.com/eriirfos-eng/ternary-intelligence-stack
-cd "ternary-intelligence-stack/ternlang-root"
-cargo build --release
-cargo test --workspace
-```
-
-Write a ternary program:
+Ternlang programs use `trit` as the only scalar type. Every `match` must cover all three arms — the compiler rejects non-exhaustive matches.
 
 ```ternlang
-fn decide(a: trit, b: trit) -> trit {
-    match consensus(a, b) {
-        -1 => { return conflict(); }
-         0 => { return hold(); }
-         1 => { return truth(); }
+// A ternary medical triage gate
+fn patient_conscious(signal: trit) -> trit {
+    match signal {
+        -1 => { return -1; }   // hard gate — unconscious patient blocks all other evaluation
+         0 => { return 0;  }
+         1 => { return 1;  }
     }
+}
+
+fn vital_signs(heart: trit, pressure: trit) -> trit {
+    return consensus(heart, pressure);
+}
+
+let conscious: trit = patient_conscious(1);
+
+match conscious {
+    -1 => { return -1; }   // immediate escalation, no further checks
+     0 => { return 0;  }
+     1 => {
+         let vitals: trit = vital_signs(1, 0);
+         match vitals {
+             -1 => { return -1; }
+              0 => { return 0;  }
+              1 => { return 1;  }
+         }
+     }
 }
 ```
 
-Run it:
+**Built-in functions:** `consensus(a, b)` · `invert(x)` · `truth()` · `hold()` · `conflict()`
+
+**Quick start:**
+
 ```bash
-cargo run --bin ternlang -- run program.tern
+git clone https://github.com/eriirfos-eng/ternary-intelligence-stack
+cd ternary-intelligence-stack/ternlang-root
+cargo build --release
+cargo run --bin ternlang -- run examples/03_rocket_launch.tern
 ```
 
 ---
 
-## MCP Integration — Any Agent Becomes Ternary
+## Sparse Ternary Inference
 
+`mul(a, 0) = 0` for all `a` — provably zero, no computation needed. The `ternlang-ml` kernel precomputes a Compressed Sparse Column index, flattens weights to raw `i8`, and dispatches rows in parallel via Rayon. No branches in the inner loop.
+
+**Goldilocks sparsity sweep** (release build, 3-rep median):
+
+| Sparsity | 32² | 64² | 128² | 256² | 512² |
+|----------|-----|-----|------|------|------|
+| 25% | 6.3× | 11.5× | 26.4× | 39.3× | 53.1× |
+| 40% | 6.3× | 13.1× | 29.6× | 46.0× | 73.6× |
+| **50%** | **5.9×** | **10.2×** | **28.7×** | **56.6×** | **82.1×** |
+| **60%** | **5.8×** | **9.5×** | **27.9×** | **32.1×** | **86.1×** |
+| 99% | 1.8× | 9.9× | 13.1× | 53.9× | **122.3×** |
+
+**Peak: 122× at 512×512, 99% sparsity.**
+**Goldilocks zone: 40–60% → 20–86× on medium matrices.** This is exactly where BitNet b1.58 quantization (`τ = 0.5 × mean(|w|)`) naturally places weights in trained language models. The kernel and the quantization scheme are structurally aligned.
+
+---
+
+## MoE-13 Ternary Orchestrator
+
+`ternlang-moe` implements the MoE-13 architecture ([DOI: 10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a ternary Mixture-of-Experts system that routes queries through a pool of 13 domain experts, synthesises an emergent signal, enforces a hard safety veto, and returns a ternary decision with confidence and temperature.
+
+```rust
+use ternlang_moe::TernMoeOrchestrator;
+
+let mut orch = TernMoeOrchestrator::with_standard_experts();
+
+// [syntax, world_knowledge, reasoning, tool_use, persona, safety]
+let evidence = [0.6, 0.7, 0.8, 0.5, 0.4, 0.9];
+let result = orch.orchestrate("Should I proceed with this action?", &evidence);
+
+println!("trit={} conf={:.0}% held={}", result.trit, result.confidence * 100.0, result.held);
+// → trit=1 conf=84% held=false
+println!("{}", result.prompt_hint);
+// → "Affirm with confidence 84%. Emergent field amplifying."
+```
+
+**How it works:**
+
+1. **Dual-key routing** — scores every expert pair by `relevance_a × relevance_b × synergy`. Complementary experts outperform redundant ones.
+2. **1+1=3 triad synthesis** — emergent field `Ek = synergy × (vi + vj) / 2`. Two orthogonal experts produce a third signal neither could generate alone.
+3. **Safety hard gate** — Axis-6 veto fires before any vote. Every veto is permanently logged to `AxisMemory` for audit.
+4. **Hold with tiebreaker** — a split vote or low confidence yields `trit=0`. The orchestrator invokes a tiebreaker (max 4 active experts) before committing, modelling the human *"let me think about this"* behaviour.
+5. **Three-tier memory** — Node (TTL: seconds), Cluster (routing frequency, mode-collapse risk), Axis (persistent priors + veto audit log).
+
+**13 standard experts:** Syntax · WorldKnowledge · DeductiveReason · InductiveReason · ToolUse · Persona · Safety · FactCheck · CausalReason · AmbiguityRes · MathReason · ContextMem · MetaSafety
+
+**AgentHarness** provides a pluggable interface for all 13 experts:
+
+```rust
+use ternlang_moe::agents::AgentHarness;
+
+let harness = AgentHarness::with_standard_agents();
+let verdicts = harness.run("Is this safe to execute?", &evidence);
+```
+
+---
+
+## Live API
+
+The full TIS API runs at **`https://ternlang.com`** — deployed on Fly.io, Frankfurt region.
+
+```bash
+# Health check
+curl https://ternlang.com/health
+
+# MoE-13 orchestration (no API key required for MCP)
+curl -X POST https://ternlang.com/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call",
+       "params":{"name":"moe_orchestrate",
+                 "arguments":{"query":"Should I send this email?"}}}'
+
+# Scalar ternary decision (API key required)
+curl -X POST https://ternlang.com/api/trit_decide \
+  -H "X-Ternlang-Key: your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"evidence":[0.8, -0.2, 0.6, 0.9]}'
+```
+
+**REST endpoints** (require `X-Ternlang-Key`):
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/trit_decide` | Float evidence array → reject / hold / affirm + confidence |
+| `POST /api/trit_vector` | Named dimensions with weights → aggregate ternary decision |
+| `POST /api/trit_consensus` | `consensus(a, b)` → ternary result |
+| `POST /api/trit_deliberate` | EMA convergence loop — multi-round evidence → stable trit |
+| `POST /api/trit_coalition` | N-agent weighted vote → quorum / dissent / abstain |
+| `POST /api/trit_gate` | Multi-dimensional hard-block safety gate |
+| `POST /api/moe/orchestrate` | Full MoE-13 pass — synchronous JSON result |
+| `GET  /api/stream/moe_orchestrate` | MoE-13 pass streamed round-by-round via SSE |
+| `GET  /api/stream/deliberate` | EMA deliberation streamed per round via SSE |
+
+**API key:** [ternlang.com/#licensing](https://ternlang.com/#licensing)
+
+### MCP Server
+
+The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, and any HTTP MCP client.
+
+**10 tools:** `trit_decide` · `trit_consensus` · `trit_eval` · `ternlang_run` · `quantize_weights` · `sparse_benchmark` · `moe_orchestrate` · `moe_deliberate` · `trit_action_gate` · `trit_enlighten`
+
+```json
+{
+  "mcpServers": {
+    "ternlang": {
+      "url": "https://ternlang.com/mcp"
+    }
+  }
+}
+```
+
+For local stdio transport (Claude Desktop, offline use):
 ```json
 {
   "mcpServers": {
@@ -101,45 +213,24 @@ cargo run --bin ternlang -- run program.tern
 }
 ```
 
-Call `trit_vector` from any MCP client:
-```json
-{
-  "dimensions": [
-    {"label": "user_sentiment",  "value":  0.75, "weight": 1.5},
-    {"label": "safety_check",    "value": -0.60, "weight": 3.0},
-    {"label": "relevance_score", "value":  0.85, "weight": 1.0}
-  ],
-  "min_confidence": 0.6
-}
-```
-
-Returns aggregate scalar, zone (reject/tend/affirm), confidence, per-source breakdown, and a plain-language recommendation. The agent deliberates until `is_actionable` is true.
-
 ---
 
-## Sparse Ternary Inference
+## Example Library
 
-`mul(a, 0) = 0` for all `a` — provably zero, no computation needed. The ternlang-ml
-kernel precomputes a Compressed Sparse Column index, flattens weights to raw `i8`,
-and dispatches rows in parallel via Rayon. No branches in the inner loop.
+**250+ `.tern` programs** covering real-world decision logic across every domain — the largest collection of balanced ternary programs in existence.
 
-**Goldilocks sparsity sweep** (release build, 3-rep median):
+| Category | Examples |
+|----------|---------|
+| [Aerospace & Safety](examples/03_rocket_launch.tern) | Rocket launch, aircraft deicing, runway incursion, satellite collision |
+| [Medicine](examples/05_medical_triage.tern) | ER triage, ICU ventilator, sepsis warning, organ transplant, APGAR |
+| [Finance](examples/42_algorithmic_trading.tern) | Algorithmic trading, AML filter, options expiry, loan underwriting |
+| [Infrastructure](examples/14_circuit_breaker.tern) | Circuit breaker, nuclear reactor SCRAM, bridge health, power grid |
+| [AI Agents](examples/08_evidence_collector.tern) | Evidence density, confidence escalation, MoE routing, deliberation |
+| [Civic Systems](examples/12_vote_aggregator.tern) | Vote aggregation, bail decision, treaty negotiation, refugee status |
+| [Computer Science](examples/09_risc_fetch_decode.tern) | CPU pipeline, cache invalidation, API rate limiting, deployment gate |
+| [Tutorials](examples/tutorials/) | 20 self-documenting files — one concept per file |
 
-| Sparsity | 32² | 64² | 128² | 256² | 512² |
-|----------|-----|-----|------|------|------|
-| 25% | 6.3× | 11.5× | 26.4× | 39.3× | 53.1× |
-| 40% | 6.3× | 13.1× | 29.6× | 46.0× | 73.6× |
-| **50%** | **5.9×** | **10.2×** | **28.7×** | **56.6×** | **82.1×** |
-| **60%** | **5.8×** | **9.5×** | **27.9×** | **32.1×** | **86.1×** |
-| 90% | 2.0× | 5.8× | 18.7× | 38.6× | 70.9× |
-| 99% | 1.8× | 9.9× | 13.1× | 53.9× | **122.3×** |
-
-**Peak: 122× at 99% sparsity, 512×512.**
-**Goldilocks zone: 40–60% sparsity → 20–86× on medium-to-large matrices.**
-
-This range is not accidental — it is exactly where BitNet b1.58 quantization
-(τ = 0.5 × mean(|w|)) naturally places weights in trained language models.
-The kernel and the quantization scheme are structurally aligned.
+→ [**Browse all examples**](examples/INDEX.md)
 
 ---
 
@@ -147,95 +238,91 @@ The kernel and the quantization scheme are structurally aligned.
 
 | Crate | Tier | Description |
 |-------|------|-------------|
-| `ternlang-core` | Open | Lexer, parser, AST, BET VM, 51 opcodes, 27 registers |
-| `ternlang-ml` | BSL | Sparse matmul, BitNet quantization, TritScalar, TernaryMLP, deliberation engine, coalition vote, action gate |
-| `ternlang-moe` | BSL | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, 13 domain experts |
-| `ternlang-api` | BSL | REST API — multi-tenant key management, Phase 8 reasoning endpoints |
-| `ternlang-mcp` | BSL | MCP server — 7 tools including `trit_decide` and `trit_vector` |
-| `ternlang-hdl` | BSL | Verilog-2001 codegen, BET processor, Icarus testbench emitter |
-| `ternlang-runtime` | BSL | Distributed TCP actor runtime |
-| `ternlang-lsp` | Open | LSP 3.17 — hover, completion, diagnostics |
-| `ternlang-compat` | Open | 9-trit RISC assembler, Owlet S-expression parser |
-| `ternpkg` | Open | Package manager, GitHub-backed registry |
-| `ternlang-cli` | Open | `run / build / sim / fmt / repl / compat` |
+| [`ternlang-core`](ternlang-core/) | Open (LGPL) | Lexer, parser, AST, BET VM — 51 opcodes, 27 registers |
+| [`ternlang-cli`](ternlang-cli/) | Open (LGPL) | `run` · `build` · `sim` · `fmt` · `repl` · `compat` |
+| [`ternlang-lsp`](ternlang-lsp/) | Open (LGPL) | LSP 3.17 — hover, completion, diagnostics |
+| [`ternlang-compat`](ternlang-compat/) | Open (LGPL) | 9-trit RISC assembler (Brandon Smith bridge), Owlet S-expr parser |
+| [`ternpkg`](ternpkg/) | Open (LGPL) | Package manager, GitHub-backed registry |
+| [`ternlang-ml`](ternlang-ml/) | BSL-1.1 | Sparse matmul, BitNet quantization, TernaryMLP, deliberation engine, coalition vote, action gate |
+| [`ternlang-moe`](ternlang-moe/) | BSL-1.1 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, AgentHarness |
+| [`ternlang-api`](ternlang-api/) | BSL-1.1 | REST + SSE API, multi-tenant key management, all reasoning endpoints |
+| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 10 tools, stdio + HTTP transport |
+| [`ternlang-hdl`](ternlang-hdl/) | BSL-1.1 | Verilog-2001 codegen, BET processor, FPGA simulation |
+| [`ternlang-runtime`](ternlang-runtime/) | BSL-1.1 | Distributed TCP actor runtime |
 
-**146+ tests · All passing · v0.1**
+**146+ tests · All passing · v0.1.0**
 
 ---
 
-## MoE-13 Ternary Orchestrator
+## Licensing Tiers
 
-`ternlang-moe` implements the MoE-13 architecture (DOI: [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a ternary Mixture-of-Experts orchestrator that routes queries through expert pairs, synthesises an emergent field, and returns a ternary decision with a hard safety gate.
-
-```rust
-use ternlang_moe::TernMoeOrchestrator;
-
-let mut orch = TernMoeOrchestrator::with_standard_experts();
-
-// Evidence vector: [syntax, world_knowledge, reasoning, tool_use, persona, safety]
-let evidence = [0.6, 0.7, 0.8, 0.5, 0.4, 0.9];
-let result = orch.orchestrate("Should I proceed?", &evidence);
-
-println!("trit={} conf={:.0}% held={}", result.trit, result.confidence * 100.0, result.held);
-// → trit=1 conf=84% held=false
-println!("{}", result.prompt_hint);
-// → "Affirm with confidence 84%. Emergent field amplifying."
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TIER 1 — Open Core (LGPL-3.0)                                  │
+│  ternlang-core · ternlang-cli · ternlang-lsp · ternlang-compat  │
+│  ternpkg · spec/                                                 │
+│  Free to use, modify, and distribute. Modifications must be     │
+│  contributed back under LGPL.                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  TIER 2 — Restricted (Business Source License 1.1)              │
+│  ternlang-ml · ternlang-mcp · ternlang-hdl · ternlang-runtime   │
+│  ternlang-moe · ternlang-api                                    │
+│  Source visible. Free for personal and research use.            │
+│  Commercial use requires a license → licensing@ternlang.com     │
+│  Auto-converts to Apache-2.0 on 2030-04-03.                     │
+├─────────────────────────────────────────────────────────────────┤
+│  TIER 3 — Proprietary (ternlang.com)                            │
+│  Hosted API · Enterprise SLA · Commercial inference engine      │
+│  Contact: licensing@ternlang.com                                │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**How it works:**
-
-1. **Dual-key routing** — scores every expert pair by `relevance_a × relevance_b × synergy`. Complementary experts beat redundant ones.
-2. **1+1=3 triad synthesis** — emergent field `Ek = synergy × (vi + vj) / 2`. Two orthogonal experts produce a third signal neither could alone.
-3. **Safety hard gate** — Axis-6 veto fires before any vote. The `AxisMemory` logs every veto permanently for audit.
-4. **Hold state** — low confidence or a split vote yields `trit=0`. The orchestrator invokes a tiebreaker (max 4 active experts) before giving up, just like a human saying *"I'll think about it"*.
-5. **Three-tier memory** — Node (TTL: seconds), Cluster (routing frequency, mode-collapse risk), Axis (persistent priors + veto audit log).
-
-The pool ships with **13 domain experts** from the MoE-13 paper: Syntax, WorldKnowledge, DeductiveReason, InductiveReason, ToolUse, Persona, Safety, FactCheck, CausalReason, AmbiguityRes, MathReason, ContextMem, MetaSafety.
+> **ML Training Restriction:** The contents of this repository may not be used to train, fine-tune, or distill machine learning models without explicit written permission from RFI-IRFOS. See [LICENSE-ML-TRAINING](LICENSE-ML-TRAINING).
 
 ---
 
 ## Ecosystem Position
 
-Ternlang is designed to be the convergence point for the fragmented ternary computing field:
+Ternlang is designed to be the convergence point for the fragmented ternary computing field.
 
 | Project | Bridge |
 |---------|--------|
-| Brandon Smith 9-trit RISC sim | `TasmAssembler` → BET bytecode |
-| Owlet S-expression interpreter | `OwletParser` → ternlang AST |
-| BitNet b1.58 LLMs | `TSPARSE_MATMUL` + BitNet threshold quantization |
-| USN / Bos+Gundersen EDA | Academic whitepaper, ISA interop (in progress) |
-| Physical memristors | Phase 9 hardware target |
+| [Brandon Smith 9-trit RISC simulator](https://github.com/brandon-smith-187) | `TasmAssembler` in `ternlang-compat` — assembles `.tasm` → BET bytecode |
+| [Owlet S-expression interpreter](https://github.com/owlet-lang) | `OwletParser` in `ternlang-compat` — S-expr front-end → ternlang AST |
+| [BitNet b1.58](https://arxiv.org/abs/2402.17764) | `TSPARSE_MATMUL` + `bitnet_threshold()` — structurally aligned quantization |
+| USN / Bos & Gundersen (EDA ternary logic) | Academic whitepaper — ISA interop in progress |
+| Physical memristor arrays | Phase 10 hardware target |
+
+→ [**Full ecosystem map**](TERNARY-ECOSYSTEM.md)
 
 ---
 
-## Whitepaper
+## Whitepaper & Specs
 
-IEEE two-column format, arXiv-ready (cs.PL / cs.AR / cs.NE):
+- [ternlang-whitepaper.tex](whitepaper/ternlang-whitepaper.tex) — IEEE two-column, arXiv-ready (cs.PL / cs.AR / cs.NE)
+- [BET-ISA-SPEC.md](BET-ISA-SPEC.md) — formal ISA specification with encoding tables and stack-effect notation
+- [spec/grammar.ebnf](spec/grammar.ebnf) — language grammar
+- [spec/ternlang-language-reference-v0.1.md](spec/ternlang-language-reference-v0.1.md) — language reference
 
-- [ternlang-whitepaper.docx](whitepaper/ternlang-whitepaper.docx)
-- [ternlang-whitepaper.tex](whitepaper/ternlang-whitepaper.tex)
-
-Citation:
+```bibtex
+@misc{kepp2026ternlang,
+  author  = {Kepp, Simeon},
+  title   = {Ternlang: Balanced Ternary Intelligence Stack},
+  year    = {2026},
+  url     = {https://ternlang.com},
+  doi     = {10.17605/OSF.IO/TZ7DC}
+}
 ```
-Kepp, S. (2026). Ternlang: Balanced Ternary Intelligence Stack.
-RFI-IRFOS. https://ternlang.com
-```
-
----
-
-## Wiki
-
-Full documentation at [wiki/Home.md](wiki/Home.md):
-- [Scalar Temperature Model](wiki/Scalar-Temperature.md)
-- [MCP Integration Guide](wiki/MCP-Integration-Guide.md)
-- [Language Reference](wiki/Language-Reference.md)
 
 ---
 
 ## Contact & Licensing
 
-- **Commercial licensing:** licensing@ternlang.com
-- **Website:** https://ternlang.com
-- **Academic collaboration:** Open — cite the whitepaper
+| | |
+|---|---|
+| **Website** | [ternlang.com](https://ternlang.com) |
+| **Commercial licensing** | [licensing@ternlang.com](mailto:licensing@ternlang.com) |
+| **Academic collaboration** | Open — cite the whitepaper |
+| **API access** | [ternlang.com/#licensing](https://ternlang.com/#licensing) |
 
-*"The place where fragmented ternary efforts compile into beauty."*
+*"The place where fragmented ternary efforts compile into one."*
