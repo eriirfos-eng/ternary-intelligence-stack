@@ -1,0 +1,30 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 263_qnn_rl_reward.tern — Triadic Reward Signal in RL
+//
+// WHY TERNARY?
+// Binary activation functions (ReLU) squash all ambiguity into on/off states.
+// QNNs use triadic nonlinearities: trit=-1 is penalty,
+// trit=0 is neutral state,
+// trit=+1 is reward.
+// This preserves gradients and models the real dynamics of reinforcement learning.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mark_penalty(r) {
+  invert(r)
+}
+
+fn mark_neutral(r) {
+  r
+}
+
+fn mark_reward(r) {
+  r
+}
+
+let reward_trit = 1;
+
+match reward_trit {
+  -1 => { mark_penalty(reward_trit) },
+  0  => { mark_neutral(reward_trit) },
+  1  => { mark_reward(reward_trit) }
+}

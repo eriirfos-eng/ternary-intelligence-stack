@@ -1,0 +1,30 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 265_qnn_inference_pipeline.tern — Full QNN Inference Pass
+//
+// WHY TERNARY?
+// Binary activation functions (ReLU) squash all ambiguity into on/off states.
+// QNNs use triadic nonlinearities: trit=-1 is inference rejection,
+// trit=0 is inference uncertainty,
+// trit=+1 is inference classification.
+// This preserves gradients and models the real dynamics of complete QNN models.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mark_rejection(p) {
+  invert(p)
+}
+
+fn mark_uncertainty(p) {
+  p
+}
+
+fn mark_classification(p) {
+  p
+}
+
+let pipeline_trit = 1;
+
+match pipeline_trit {
+  -1 => { mark_rejection(pipeline_trit) },
+  0  => { mark_uncertainty(pipeline_trit) },
+  1  => { mark_classification(pipeline_trit) }
+}
