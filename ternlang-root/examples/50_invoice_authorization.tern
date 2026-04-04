@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 50_invoice_authorization.tern — Accounts Payable Workflow
+//
+// Binary failure: Simple binary "Pay/Reject" logic leads to either payment 
+// of fraudulent invoices (ghost billing) or vendor friction when 
+// legitimate invoices have minor clerical errors.
+// Ternary advantage: The 'hold' state (VERIFY) enables a reconciliation 
+// workflow where an invoice is matched against receiving logs, allowing 
+// for "Partial Approval" rather than a hard stop.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_vendor_id(id: trit) -> trit { return id; }
+fn check_po_match(po: trit) -> trit { return po; }
+fn check_tax_compliance(tax: trit) -> trit { return tax; }
+
+fn authorize_invoice(vendor: trit, po: trit, tax: trit) -> trit {
+    // Vendor must be in the approved list
+    match vendor {
+        -1 => { return conflict(); } // Unknown vendor: Reject
+         0 => { 
+             // New vendor: PO and Tax must be perfect
+             return consensus(po, tax);
+         }
+         1 => {
+             // Trusted vendor: Match against PO
+             let match_status: trit = consensus(po, tax);
+             return match_status;
+         }
+    }
+}
+
+// ── Concrete scenario: Trusted vendor, PO mismatch ──
+let approved_vendor: trit = truth(); // Long-term strategic partner
+let po_alignment: trit = hold();     // Quantity on invoice > quantity on PO
+let tax_info_valid: trit = truth();  // VAT ID and address are correct
+
+let payment_status: trit = authorize_invoice(approved_vendor, po_alignment, tax_info_valid);
+
+match payment_status {
+    -1 => { return conflict(); } // REJECT: Mark as fraudulent or invalid
+     0 => { return hold(); }     // VERIFY: Send to purchasing dept for review
+     1 => { return truth(); }    // PAY: Schedule for disbursement
+}

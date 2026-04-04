@@ -1,0 +1,45 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 51_bail_decision.tern — Pre-trial Justice Algorithm
+//
+// Binary failure: Remand/Release binary choices lead to either unnecessary 
+// pre-trial detention (ruining lives before conviction) or public safety 
+// risks when dangerous individuals are freed.
+// Ternary advantage: 'conditions' (0) enables "Supervised Release" (SR), 
+// using electronic monitoring or mandatory check-ins to mitigate risk 
+// without total deprivation of liberty.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn flight_risk_score(risk: trit) -> trit { return invert(risk); }
+fn public_safety_threat(threat: trit) -> trit { return invert(threat); }
+fn community_ties(ties: trit) -> trit { return ties; }
+
+fn determine_bail(risk: trit, threat: trit, ties: trit) -> trit {
+    // Public safety is the hard gate
+    let safety: trit = public_safety_threat(threat);
+    
+    match safety {
+        -1 => { return conflict(); } // High threat: Remand without bail
+         0 => { 
+             // Uncertain threat: Flight risk and ties determine conditions
+             return consensus(flight_risk_score(risk), ties);
+         }
+         1 => {
+             // Low threat: evaluate flight risk
+             let flight: trit = flight_risk_score(risk);
+             return consensus(flight, ties);
+         }
+    }
+}
+
+// ── Concrete scenario: First-time offender, low ties ──
+let high_risk: trit = hold();        // Moderate risk of missing court
+let violent_threat: trit = hold();   // Not violent, but high-value theft
+let family_ties: trit = hold();      // New to the area, few local relatives
+
+let bail_result: trit = determine_bail(high_risk, violent_threat, family_ties);
+
+match bail_result {
+    -1 => { return conflict(); } // REMAND: Hold in custody until trial
+     0 => { return hold(); }     // CONDITIONS: Ankle monitor + weekly report
+     1 => { return truth(); }    // RELEASE: Own Recognizance (OR)
+}

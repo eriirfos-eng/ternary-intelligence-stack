@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 82_api_rate_limit.tern — API rate limit enforcement
+//
+// Binary rate limits block legitimate users during traffic spikes (HTTP 429).
+// Ternary limits use 'hold' to actively throttle the connection, keeping the
+// pipe open but slowing down processing, preventing client-side crash loops.
+//   +1: Allow request
+//    0: Throttle request (Hold)
+//   -1: Block IP
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn token_bucket(tokens: trit) -> trit { return tokens; }
+fn historical_reputation(rep: trit) -> trit { return rep; }
+fn server_load(load: trit) -> trit { return load; }
+
+fn rate_limiter(tokens: trit, rep: trit, load: trit) -> trit {
+    match tokens {
+        -1 => {
+            // Bucket empty.
+            match rep {
+                -1 => { return conflict(); } // Known bad actor -> Block
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // Good user, just over limit -> Throttle instead of block
+            }
+        }
+         0 => { return hold(); } // Bucket low, preemptively throttle
+         1 => {
+             // Bucket full.
+             match load {
+                 -1 => { return hold(); }    // Server dying -> Throttle everyone
+                  0 => { return truth(); }
+                  1 => { return truth(); }
+             }
+         }
+    }
+}
+
+let user_tokens: trit = conflict();
+let user_rep: trit = truth();
+let backend_load: trit = truth();
+
+let api_action: trit = rate_limiter(user_tokens, user_rep, backend_load);
+
+match api_action {
+    -1 => { return conflict(); }   // BLOCK: Drop connection, return HTTP 429
+     0 => { return hold();    }   // THROTTLE: Delay processing by 500ms
+     1 => { return truth();   }   // ALLOW: Process immediately, HTTP 200
+}

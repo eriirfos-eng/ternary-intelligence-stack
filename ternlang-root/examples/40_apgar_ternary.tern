@@ -1,0 +1,49 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 40_apgar_ternary.tern — Neonatal APGAR-inspired ternary score
+//
+// The APGAR score evaluates newborns at 1 and 5 minutes. Instead of mapping
+// a 0-10 score to binary "resuscitate/okay", a native ternary evaluation uses
+// 'hold' to mean "stimulate and provide blow-by oxygen", reserving conflict
+// for full CPR and truth for routine skin-to-skin contact.
+//   +1: Vigorous, routine care
+//    0: Depressed, provide stimulation/O2
+//   -1: Unresponsive, neonatal CPR
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn heart_rate_response(hr: trit) -> trit { return hr; }
+fn respiratory_effort(resp: trit) -> trit { return resp; }
+fn muscle_tone(tone: trit) -> trit { return tone; }
+
+fn newborn_assessment(hr: trit, resp: trit, tone: trit) -> trit {
+    // Heart rate < 100 is critical in neonates
+    match hr {
+        -1 => { return conflict(); } // HR < 60, begin chest compressions
+         0 => {
+             // HR 60-100. Needs ventilation.
+             match resp {
+                 -1 => { return conflict(); } // Apneic + low HR = code
+                  0 => { return hold(); }     // Weak cry + low HR = positive pressure vent
+                  1 => { return hold(); }
+             }
+         }
+         1 => {
+             // HR > 100. Check breathing and tone.
+             let lung_muscle: trit = consensus(resp, tone);
+             return lung_muscle;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let baby_hr: trit = truth();         // HR is 140 bpm
+let baby_resp: trit = hold();        // Irregular breathing, weak cry
+let baby_tone: trit = hold();        // Some flexion, but mostly flaccid
+
+let delivery_action: trit = newborn_assessment(baby_hr, baby_resp, baby_tone);
+
+// Expected result: hold() - Heart is good, but breathing/tone are sluggish.
+match delivery_action {
+    -1 => { return conflict(); }   // CODE: Intubate and begin chest compressions
+     0 => { return hold();    }   // STIMULATE: Rub back, provide blow-by oxygen
+     1 => { return truth();   }   // ROUTINE: Dry, wrap, hand to mother
+}

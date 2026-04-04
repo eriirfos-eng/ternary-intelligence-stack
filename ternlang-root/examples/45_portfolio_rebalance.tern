@@ -1,0 +1,46 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 45_portfolio_rebalance.tern — Wealth Management Drift Control
+//
+// Binary failure: Binary rebalancing triggers on any deviation, leading to 
+// high tax consequences and commission drag. Over-conservative binary gates 
+// lead to extreme risk exposure when markets trend.
+// Ternary advantage: 'monitor' creates a buffer zone where drift is noted 
+// but execution is delayed until a "consensus" of multiple asset classes 
+// requires a systemic adjustment.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn target_drift(dev: trit) -> trit { return dev; }
+fn market_volatility(vix: trit) -> trit { return invert(vix); }
+fn tax_impact(loss: trit) -> trit { return loss; }
+
+fn rebalance_logic(drift: trit, vol: trit, tax: trit) -> trit {
+    // Large drift is the primary driver
+    match drift {
+        -1 => { return conflict(); } // No drift: Stay put
+         0 => { 
+             // Moderate drift: Check if market is stable enough to trade
+             return consensus(vol, tax);
+         }
+         1 => {
+             // High drift: Rebalance unless tax impact is catastrophic
+             match tax {
+                 -1 => { return hold(); }    // Wait for new tax year
+                  0 => { return truth(); }   // Rebalance now
+                  1 => { return truth(); }   // Rebalance now
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: Bull market drift ──
+let asset_drift: trit = truth();     // Equities are 10% over target
+let low_vix: trit = truth();         // Market is calm
+let capital_gains: trit = hold();    // Moderate tax liability if sold
+
+let plan: trit = rebalance_logic(asset_drift, low_vix, capital_gains);
+
+match plan {
+    -1 => { return conflict(); } // HOLD: Do nothing
+     0 => { return hold(); }     // MONITOR: Watch closely, do not trade yet
+     1 => { return truth(); }    // REBALANCE: Execute trades to target
+}

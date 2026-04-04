@@ -1,0 +1,61 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 21_nuclear_reactor.tern — Nuclear reactor SCRAM / HOLD / NORMAL decision
+//
+// Binary approaches to reactor safety often force a premature SCRAM (shutdown)
+// on noisy sensor data, causing massive financial loss and grid instability.
+// Ternary logic introduces a native 'hold' state: an active hold reduces power
+// and triggers operator review without dropping the rods entirely.
+//   +1: Normal operation (truth)
+//    0: Power reduction & operator review (hold)
+//   -1: SCRAM / Emergency shutdown (conflict)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_core_temp(temp_signal: trit) -> trit {
+    // -1: critically high, 0: elevated/warning, 1: normal
+    return temp_signal;
+}
+
+fn check_coolant_pressure(pressure_signal: trit) -> trit {
+    // -1: loss of pressure, 0: fluctuating, 1: stable
+    return pressure_signal;
+}
+
+fn check_radiation_levels(rad_signal: trit) -> trit {
+    // -1: breach detected, 0: slightly elevated, 1: baseline
+    return rad_signal;
+}
+
+fn evaluate_reactor_state(temp: trit, pressure: trit, rads: trit) -> trit {
+    // Hard gate: If radiation is a conflict, SCRAM immediately.
+    match rads {
+        -1 => { return conflict(); }
+         0 => {
+             // Radiation is elevated. If any other sensor is not perfectly normal, SCRAM.
+             let temp_press: trit = consensus(temp, pressure);
+             match temp_press {
+                 -1 => { return conflict(); }
+                  0 => { return conflict(); }
+                  1 => { return hold(); }
+             }
+         }
+         1 => {
+             // Radiation is normal, consensus on temp and pressure
+             let base_state: trit = consensus(temp, pressure);
+             return base_state;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let core_temp: trit = hold();      // Temp is elevated but not critical
+let coolant_pressure: trit = truth(); // Pressure is completely stable
+let radiation: trit = truth();        // Radiation is at baseline
+
+let result: trit = evaluate_reactor_state(core_temp, coolant_pressure, radiation);
+
+// Expected result: hold() - Operator review required, reduce power, no SCRAM yet.
+match result {
+    -1 => { return conflict(); }   // SCRAM: Drop control rods immediately
+     0 => { return hold();    }   // HOLD: Reduce thermal output and page operator
+     1 => { return truth();   }   // NORMAL: Continue full power generation
+}

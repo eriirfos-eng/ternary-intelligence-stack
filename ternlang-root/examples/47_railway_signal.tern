@@ -1,0 +1,52 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 47_railway_signal.tern — Railway signal block occupancy
+//
+// Binary railway blocks (Red/Green) cause massive delays when track circuits
+// occasionally flutter. A ternary system uses 'hold' (Yellow/Amber) to mean
+// "Proceed at restricted speed, be prepared to stop," improving throughput
+// while maintaining safety.
+//   +1: Clear (Green)
+//    0: Restricted (Yellow)
+//   -1: Stop (Red)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn block_circuit(circuit: trit) -> trit { return circuit; }
+fn next_block_signal(next: trit) -> trit { return next; }
+fn switch_points(switch: trit) -> trit { return switch; }
+
+fn signal_aspect(circuit: trit, next: trit, switch: trit) -> trit {
+    // If switches aren't locked, absolute red.
+    match switch {
+        -1 => { return conflict(); } // Switch is moving or broken
+         0 => { return conflict(); }
+         1 => {
+             // Switches are aligned. Check track circuits.
+             match circuit {
+                 -1 => { return conflict(); } // Train in block
+                  0 => { return hold(); }     // Circuit fluttering, proceed with caution
+                  1 => {
+                      // Our block is clear. What about the next one?
+                      match next {
+                          -1 => { return hold(); }  // Next is red, so we show yellow
+                           0 => { return hold(); }  // Next is yellow, we show yellow
+                           1 => { return truth(); } // Next is green, we show green
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let current_block: trit = truth();    // Track is empty
+let next_signal: trit = conflict();   // The block after us has a train in it
+let switches_locked: trit = truth();  // Route is safely aligned
+
+let aspect: trit = signal_aspect(current_block, next_signal, switches_locked);
+
+// Expected result: hold() - Our block is clear, but next is occupied. Show yellow.
+match aspect {
+    -1 => { return conflict(); }   // RED: Stop immediately
+     0 => { return hold();    }   // YELLOW: Proceed at 15mph, prepare to stop at next signal
+     1 => { return truth();   }   // GREEN: Proceed at track speed
+}

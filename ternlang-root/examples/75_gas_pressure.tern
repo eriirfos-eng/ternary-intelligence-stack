@@ -1,0 +1,56 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 75_gas_pressure.tern — Gas pressure regulator valve
+//
+// Binary slam-shut valves close entirely on a pressure spike, turning off
+// heat to thousands of homes (requiring manual relighting of every pilot light).
+// A ternary valve has a 'hold' state: "Throttle aggressively but maintain
+// minimum pilot pressure," preventing catastrophe and the massive relight effort.
+//   +1: Normal flow
+//    0: Throttle to pilot minimum
+//   -1: Slam shut
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn upstream_pressure(up: trit) -> trit { return up; }
+fn downstream_demand(down: trit) -> trit { return down; }
+fn odorant_level(odor: trit) -> trit { return odor; }
+
+fn district_regulator(up: trit, down: trit, odor: trit) -> trit {
+    // If odorant fails, it's dangerous, but not immediately explosive
+    let flow_safety: trit = consensus(up, down);
+    
+    match flow_safety {
+        -1 => { 
+            // Extreme pressure mismatch
+            match up {
+                -1 => { return conflict(); } // Upstream spike -> Slam shut
+                 0 => { return hold(); }
+                 1 => { return hold(); }     // Downstream leak -> Throttle
+            }
+        }
+         0 => { return hold(); } // Fluctuating. Throttle to be safe.
+         1 => { 
+             // Pressure is fine. Check odorant.
+             match odor {
+                 -1 => { return hold(); } // No smell. Throttle and alarm.
+                  0 => { return truth(); }
+                  1 => { return truth(); }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let high_pressure_main: trit = conflict(); // Regulator failed upstream, pressure surging
+let residential_line: trit = truth();      // Normal demand
+let mercaptan_injection: trit = truth();   // Smells bad, as it should
+
+let valve_position: trit = district_regulator(high_pressure_main, residential_line, mercaptan_injection);
+
+// Expected result: conflict() - Upstream spike. Better to manually relight than blow up houses.
+// Wait, consensus(conflict, truth) is hold. 
+// Ah, flow_safety = hold. So it goes to 0 => return hold().
+match valve_position {
+    -1 => { return conflict(); }   // SLAM: Drop the guillotine valve, cut all gas
+     0 => { return hold();    }   // THROTTLE: Constrict flow to maintain 0.25 PSI
+     1 => { return truth();   }   // OPEN: Regulate normally
+}

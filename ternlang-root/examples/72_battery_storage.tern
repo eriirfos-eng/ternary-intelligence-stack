@@ -1,0 +1,46 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 72_battery_storage.tern — Battery storage charge/discharge gate
+//
+// Binary battery logic (Charge/Discharge) ruins cell health by micro-cycling.
+// Ternary battery management introduces a native 'hold' state: "Idle / Float,"
+// disconnecting the cells chemically to prolong their lifespan while waiting
+// for a stronger price signal.
+//   +1: Discharge to grid (Sell)
+//    0: Idle / Float (Hold)
+//   -1: Charge from grid (Buy)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn spot_price(price: trit) -> trit { return price; }
+fn state_of_charge(soc: trit) -> trit { return soc; }
+fn battery_temp(temp: trit) -> trit { return temp; }
+
+fn storage_dispatch(price: trit, soc: trit, temp: trit) -> trit {
+    // If battery is overheating, we must stop all current flow immediately
+    match temp {
+        -1 => { return hold(); } // Force idle state to cool down
+         0 => {
+             // Warm. Proceed carefully.
+             let market_action: trit = consensus(price, soc);
+             return market_action;
+         }
+         1 => {
+             // Perfect temperature.
+             let market_action: trit = consensus(price, soc);
+             return market_action;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let grid_price: trit = hold();       // Average price, no clear arbitrage opportunity
+let battery_soc: trit = truth();     // Battery is 90% full
+let cell_temp: trit = truth();       // Cells are at 22°C
+
+let flow: trit = storage_dispatch(grid_price, battery_soc, cell_temp);
+
+// Expected result: hold() - Battery is full, but price isn't great. Just wait.
+match flow {
+    -1 => { return conflict(); }   // CHARGE: Draw power from grid
+     0 => { return hold();    }   // IDLE: Open contactors, preserve cell health
+     1 => { return truth();   }   // DISCHARGE: Push power to grid
+}

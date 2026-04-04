@@ -1,0 +1,51 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 48_central_bank_rate.tern — Monetary Policy Decision
+//
+// Binary failure: Binary "Raise/Cut" systems can over-steer the economy, 
+// creating volatility when contradictory data (e.g., high inflation but 
+// slowing growth) suggests caution is required.
+// Ternary advantage: 'hold' provides a formal "Neutral" stance, allowing 
+// the committee to wait for lagging indicators (like employment) to 
+// confirm the structural trend before changing policy.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn inflation_signal(cpi: trit) -> trit { return cpi; }
+fn employment_status(jobs: trit) -> trit { return jobs; }
+fn growth_forecast(gdp: trit) -> trit { return gdp; }
+
+fn set_monetary_policy(cpi: trit, jobs: trit, gdp: trit) -> trit {
+    // Primary mission: Price stability (CPI) vs Full Employment (Jobs)
+    let dual_mandate: trit = consensus(cpi, invert(jobs));
+    
+    match dual_mandate {
+        -1 => { 
+            // Low inflation, high unemployment -> Cut rates
+            return conflict(); 
+        }
+         0 => { 
+             // Mixed data -> Hold and watch growth
+             match gdp {
+                 -1 => { return hold(); }     // Slow growth: don't raise
+                  0 => { return hold(); }     // Stagnant: keep steady
+                  1 => { return hold(); }     // Strong growth: prepare to raise
+             }
+         }
+         1 => {
+             // High inflation, low unemployment -> Raise rates
+             return truth();
+         }
+    }
+}
+
+// ── Concrete scenario: Stagflation worries ──
+let inflation_high: trit = truth();  // CPI is at 6%
+let jobless_rising: trit = hold();   // Unemployment is starting to tick up
+let gdp_slowing: trit = hold();      // Growth is barely positive
+
+let rate_decision: trit = set_monetary_policy(inflation_high, jobless_rising, gdp_slowing);
+
+match rate_decision {
+    -1 => { return conflict(); } // CUT: Stimulate the economy
+     0 => { return hold(); }     // HOLD: Wait for more data
+     1 => { return truth(); }    // RAISE: Combat inflation
+}

@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 53_patent_prior_art.tern — Intellectual Property Examination
+//
+// Binary failure: Rigid binary novelty checks lead to "Patent Thickets" where
+// obvious ideas are granted protection, or legitimate breakthroughs are 
+// rejected due to surface-level similarities with existing art.
+// Ternary advantage: The 'hold' state (UNCERTAIN) triggers a "Deep Search" 
+// phase, including non-patent literature and foreign language archives, 
+// ensuring high patent quality and legal defensibility.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_novelty(art: trit) -> trit { return invert(art); }
+fn check_inventive_step(step: trit) -> trit { return step; }
+fn check_utility(use: trit) -> trit { return use; }
+
+fn examine_patent(novelty: trit, step: trit, utility: trit) -> trit {
+    // If it's already known, it's a hard reject
+    match novelty {
+        -1 => { return conflict(); }
+         0 => { 
+             // Marginal novelty: Inventive step must be very clear
+             return consensus(step, utility);
+         }
+         1 => {
+             // Novel: check if it's actually inventive and useful
+             let merit: trit = consensus(step, utility);
+             return merit;
+         }
+    }
+}
+
+// ── Concrete scenario: Improved battery chemistry ──
+let prior_art_found: trit = hold();  // Similar but not identical process found
+let inventive_jump: trit = truth();  // 30% increase in density over known art
+let is_useful: trit = truth();       // Clearly applicable to EVs
+
+let ip_status: trit = examine_patent(prior_art_found, inventive_jump, is_useful);
+
+match ip_status {
+    -1 => { return conflict(); } // KNOWN: Reject for lack of novelty
+     0 => { return hold(); }     // UNCERTAIN: Perform extended prior art search
+     1 => { return truth(); }    // NOVEL: Grant patent protection
+}

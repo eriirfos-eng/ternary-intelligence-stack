@@ -1,0 +1,45 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 52_patent_prior_art.tern — Patent prior art check
+//
+// Automated patent searches often return either "Found (Reject)" or "Clear (Grant)".
+// The reality of patents is a vast middle ground. Ternary systems output 'hold'
+// for "claims are overlapping but distinct; examiner review required," saving
+// the binary choices for obvious copies or obviously novel inventions.
+//   +1: Novel (Grant)
+//    0: Overlapping claims (Examiner review)
+//   -1: Existing prior art (Reject)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn keyword_similarity(keyword: trit) -> trit { return keyword; }
+fn structural_overlap(structure: trit) -> trit { return structure; }
+fn filing_date_priority(date: trit) -> trit { return date; }
+
+fn patent_analyzer(keyword: trit, structure: trit, date: trit) -> trit {
+    match date {
+        -1 => { return conflict(); } // We are definitely late. Reject immediately.
+         0 => { return hold(); }     // Competing application filed same week. Interference proceeding.
+         1 => {
+             // We have priority. Check the content.
+             let content_match: trit = consensus(keyword, structure);
+             match content_match {
+                 -1 => { return conflict(); } // Exact duplicate of existing prior art
+                  0 => { return hold(); }     // Similar keywords, different structure. Review.
+                  1 => { return truth(); }    // Completely novel
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let text_similarity: trit = hold();     // Some standard industry terms matched
+let claim_structure: trit = truth();    // Method of action is completely different
+let priority_date: trit = truth();      // Filed well before any cited art
+
+let patent_decision: trit = patent_analyzer(text_similarity, claim_structure, priority_date);
+
+// Expected result: hold() - Novel structure but similar keywords. Human examiner must verify.
+match patent_decision {
+    -1 => { return conflict(); }   // REJECT: Issue Office Action with 102/103 rejections
+     0 => { return hold();    }   // REVIEW: Route to specialized patent examiner
+     1 => { return truth();   }   // ALLOW: Issue Notice of Allowance
+}

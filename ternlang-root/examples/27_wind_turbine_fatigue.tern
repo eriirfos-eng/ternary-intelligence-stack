@@ -1,0 +1,58 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 27_wind_turbine_fatigue.tern — Wind turbine blade fatigue monitoring
+//
+// Turbines usually pitch out of the wind completely if vibration crosses a binary
+// threshold, losing massive efficiency. Ternary logic allows a 'hold' state:
+// feathering the blades slightly to reduce RPM and vibration while still
+// generating power, only fully braking if the conflict persists.
+//   +1: Optimal attack angle (Full power)
+//    0: Feather blades (Reduced power/vibration)
+//   -1: Apply mechanical brake (Shutdown)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn blade_vibration(vib: trit) -> trit {
+    return vib;
+}
+
+fn nacelle_sway(sway: trit) -> trit {
+    return sway;
+}
+
+fn wind_gusts(gusts: trit) -> trit {
+    return gusts;
+}
+
+fn turbine_pitch_controller(vib: trit, sway: trit, gusts: trit) -> trit {
+    let mechanical_stress: trit = consensus(vib, sway);
+    
+    match mechanical_stress {
+        -1 => { return conflict(); } // Structural danger, stop immediately
+         0 => {
+             // Marginal stress. Are the gusts worsening it?
+             match gusts {
+                 -1 => { return conflict(); } // Bad stress + bad gusts = brake
+                  0 => { return hold(); }     // Bad stress + moderate gusts = feather
+                  1 => { return hold(); }     // Bad stress + calm wind = feather and observe
+             }
+         }
+         1 => { 
+             // Structure is fine, but check extreme gusts
+             let final_state: trit = consensus(mechanical_stress, gusts);
+             return final_state;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let vibration_sensor: trit = hold();    // Blades are resonating slightly
+let sway_sensor: trit = truth();        // Tower is perfectly stable
+let anemometer: trit = hold();          // Wind is turbulent
+
+let pitch_decision: trit = turbine_pitch_controller(vibration_sensor, sway_sensor, anemometer);
+
+// Expected result: hold() - consensus(hold, truth) is hold. 
+match pitch_decision {
+    -1 => { return conflict(); }   // BRAKE: Lock rotor, yaw out of wind
+     0 => { return hold();    }   // FEATHER: Pitch blades to reduce RPM by 20%
+     1 => { return truth();   }   // OPTIMAL: Maintain max generation pitch
+}

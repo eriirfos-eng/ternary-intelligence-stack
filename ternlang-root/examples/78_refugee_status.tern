@@ -1,0 +1,52 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 78_refugee_status.tern — Refugee status determination
+//
+// Processing asylum claims is notoriously slow because the binary (Grant/Deport)
+// is so high stakes. A ternary approach formalizes 'hold': "Temporary Protected
+// Status (TPS) while country conditions are evaluated."
+//   +1: Grant Asylum
+//    0: Temporary Protected Status (Hold)
+//   -1: Deny / Deport
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn credible_fear(fear: trit) -> trit { return fear; }
+fn country_conditions(country: trit) -> trit { return country; }
+fn identity_verified(id: trit) -> trit { return id; }
+
+fn asylum_determination(fear: trit, country: trit, id: trit) -> trit {
+    // Identity must be known to grant full asylum
+    match id {
+        -1 => { return conflict(); } // Known criminal/terrorist alias -> Deport
+         0 => {
+             // Identity unclear. Cannot grant full asylum, but can protect if fear is real.
+             match fear {
+                 -1 => { return conflict(); } // No fear + Unclear ID -> Deport
+                  0 => { return hold(); }
+                  1 => { return hold(); }     // Real fear, but who are they? -> TPS
+             }
+         }
+         1 => {
+             // ID verified. Check claims.
+             let claim_strength: trit = consensus(fear, country);
+             match claim_strength {
+                 -1 => { return conflict(); } // Safe country, no fear
+                  0 => { return hold(); }     // Marginal claim or degrading country -> TPS
+                  1 => { return truth(); }    // Strong claim -> Asylum
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let applicant_fear: trit = hold();     // Fear is generalized, not specifically targeted
+let home_country: trit = hold();       // Country is in civil unrest
+let applicant_id: trit = truth();      // Brought valid passport
+
+let immigration_status: trit = asylum_determination(applicant_fear, home_country, applicant_id);
+
+// Expected result: hold() - consensus(hold, hold) is hold. Generalized unrest -> TPS.
+match immigration_status {
+    -1 => { return conflict(); }   // DEPORT: Issue removal order
+     0 => { return hold();    }   // TPS: Issue 1-year work permit, stay removal
+     1 => { return truth();   }   // ASYLUM: Grant permanent residency track
+}

@@ -1,0 +1,50 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 42_trading_signal.tern — Volatility-Aware Market Decision
+//
+// Binary failure: Binary buy/sell indicators cause "whipsawing" in range-bound
+// markets, leading to excessive trading fees and capital erosion.
+// Ternary advantage: The 'hold' state acts as a neutral zone, requiring a 
+// stronger consensus of indicators to trigger a position change, effectively 
+// filtering out low-confidence market noise.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn trend_analysis(short: trit) -> trit { return short; }
+fn momentum_check(rsi: trit) -> trit { return rsi; }
+fn volume_validation(vol: trit) -> trit { return vol; }
+
+fn get_trade_signal(trend: trit, momentum: trit, volume: trit) -> trit {
+    // Primary trend must align with volume
+    let strong_trend: trit = consensus(trend, volume);
+    
+    match strong_trend {
+        -1 => { 
+            // Strong downtrend with volume - Sell
+            return conflict(); 
+        }
+         0 => { 
+            // Neutral or low-volume market - Hold
+            return hold(); 
+        }
+         1 => {
+            // Uptrend - confirm with momentum
+            match momentum {
+                -1 => { return hold(); }     // Divergence - wait
+                 0 => { return hold(); }     // Weak momentum - stay neutral
+                 1 => { return truth(); }    // Strong buy signal
+            }
+         }
+    }
+}
+
+// ── Concrete scenario: Consolidating market ──
+let market_trend: trit = truth();    // Short-term trend is up
+let trade_volume: trit = hold();     // Volume is average/thin
+let rsi_momentum: trit = truth();    // Momentum indicators are bullish
+
+let signal: trit = get_trade_signal(market_trend, rsi_momentum, trade_volume);
+
+match signal {
+    -1 => { return conflict(); } // SELL: High-conviction exit/short
+     0 => { return hold(); }     // HOLD: Stay in cash or maintain position
+     1 => { return truth(); }    // BUY: High-conviction entry/long
+}

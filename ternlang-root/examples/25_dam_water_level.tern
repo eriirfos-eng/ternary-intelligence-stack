@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 25_dam_water_level.tern — Dam water level management
+//
+// Binary dam logic (spillways open/closed) fails during sudden flash floods
+// where sensor latency causes thrashing. The ternary 'hold' state represents
+// opening the lower penstocks for controlled release, reserving the massive
+// emergency spillways for true conflicts, protecting downstream communities.
+//   +1: Retain water (Build head pressure)
+//    0: Controlled release (Penstocks)
+//   -1: Emergency spillway open
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn reservoir_level(level: trit) -> trit {
+    return level;
+}
+
+fn upstream_inflow(inflow: trit) -> trit {
+    return inflow;
+}
+
+fn downstream_capacity(capacity: trit) -> trit {
+    return capacity;
+}
+
+fn spillway_decision(level: trit, inflow: trit, downstream: trit) -> trit {
+    let water_load: trit = consensus(level, inflow);
+    
+    match water_load {
+        -1 => {
+            // High water load. Check downstream capacity before flooding them.
+            match downstream {
+                -1 => { return conflict(); } // Downstream flooded, dam at risk. Spillway!
+                 0 => { return conflict(); } 
+                 1 => { return hold(); }     // Downstream is clear, use controlled release
+            }
+        }
+         0 => { return hold(); } // Moderate load, controlled release
+         1 => { return truth(); } // Low load, retain water
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let level_sensor: trit = hold();       // Water is above normal but not at crest
+let inflow_sensor: trit = conflict();  // Flash flood detected upstream
+let river_capacity: trit = truth();    // Downstream river is at low tide
+
+let dam_action: trit = spillway_decision(level_sensor, inflow_sensor, river_capacity);
+
+// Expected result: hold() - High load consensus with -1 and 0 is 0. Wait, consensus(-1, 0) is 0?
+// Actually consensus(hold(), conflict()) -> hold(). 
+match dam_action {
+    -1 => { return conflict(); }   // SPILLWAY: Open main emergency gates
+     0 => { return hold();    }   // PENSTOCK: Generate max power, controlled release
+     1 => { return truth();   }   // RETAIN: Keep all gates closed
+}

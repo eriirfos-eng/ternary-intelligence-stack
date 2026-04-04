@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 39_mental_health_triage.tern — Mental health crisis triage
+//
+// Binary assessment (hospitalize / send home) in crisis centers misses the
+// vast middle ground of care. Ternary logic formalizes the 'hold' state as
+// "safety plan and 24-hour outpatient follow-up."
+//   +1: Outpatient therapy
+//    0: Safety plan & 24h follow-up
+//   -1: Involuntary psychiatric hold
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn ideation_intent(intent: trit) -> trit { return intent; }
+fn support_system(support: trit) -> trit { return support; }
+fn substance_influence(substance: trit) -> trit { return substance; }
+
+fn crisis_triage(intent: trit, support: trit, substance: trit) -> trit {
+    // Active intent is an immediate conflict
+    match intent {
+        -1 => { return conflict(); } // High risk, imminent danger
+         0 => {
+             // Vague ideation. Depends heavily on support and sobriety.
+             match substance {
+                 -1 => { return conflict(); } // Intoxicated + ideation = hospital
+                  0 => { return hold(); }
+                  1 => {
+                      // Sober. Check support system.
+                      match support {
+                          -1 => { return hold(); } // Alone = keep them here until safe
+                           0 => { return hold(); }
+                           1 => { return truth(); } // Good support, can go home
+                      }
+                  }
+             }
+         }
+         1 => {
+             // No active ideation.
+             let baseline: trit = consensus(support, substance);
+             return baseline;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let patient_intent: trit = hold();       // Passive ideation, no plan
+let patient_support: trit = conflict();  // Lives alone, alienated family
+let patient_substance: trit = truth();   // Sober at assessment
+
+let disposition: trit = crisis_triage(patient_intent, patient_support, patient_substance);
+
+// Expected result: hold() - Sober with passive ideation, but no support.
+match disposition {
+    -1 => { return conflict(); }   // ADMIT: Secure inpatient stabilization
+     0 => { return hold();    }   // WARM HANDOFF: Create safety plan, schedule urgent call
+     1 => { return truth();   }   // DISCHARGE: Routine outpatient referral
+}

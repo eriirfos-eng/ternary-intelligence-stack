@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 60_soil_contamination.tern — Soil contamination classification
+//
+// Brownfield site redevelopment is stymied by binary "Toxic / Safe" labels.
+// Ternary EPA protocols utilize 'hold' to mean "Industrial capping required,
+// but safe for commercial use (not residential)," unlocking massive land value
+// safely.
+//   +1: Safe for residential (Unrestricted)
+//    0: Capping required (Commercial only)
+//   -1: Toxic (Remediation required)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn heavy_metals(metals: trit) -> trit { return metals; }
+fn volatile_organics(vocs: trit) -> trit { return vocs; }
+fn groundwater_leaching(leach: trit) -> trit { return leach; }
+
+fn site_classification(metals: trit, vocs: trit, leach: trit) -> trit {
+    // Groundwater leaching of toxins is an immediate failure
+    match leach {
+        -1 => { return conflict(); } // Moving offsite. Must remediate.
+         0 => { 
+             // Uncertain leaching. If toxins are present, we must dig them out.
+             let toxins: trit = consensus(metals, vocs);
+             match toxins {
+                 -1 => { return conflict(); }
+                  0 => { return conflict(); }
+                  1 => { return hold(); }     // Clean soil but weird water? Investigate.
+             }
+         }
+         1 => {
+             // Stable. Nothing is leaching into the aquifer.
+             let toxins: trit = consensus(metals, vocs);
+             match toxins {
+                 -1 => { return hold(); }    // High metals, but stable. Cap it with concrete.
+                  0 => { return hold(); }    // Moderate toxins. Cap it.
+                  1 => { return truth(); }   // Clean soil, clean water.
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let soil_metals: trit = conflict();  // High lead and arsenic from old factory
+let soil_vocs: trit = truth();       // No solvents or gases
+let water_leach: trit = truth();     // Deep bedrock, zero groundwater contamination
+
+let zoning: trit = site_classification(soil_metals, soil_vocs, water_leach);
+
+// Expected result: hold() - High metals, but zero leaching. Safe if paved over.
+match zoning {
+    -1 => { return conflict(); }   // EXCAVATE: Millions required to haul soil to hazmat dump
+     0 => { return hold();    }   // CAP: Pave with asphalt, zone for warehouse/retail
+     1 => { return truth();   }   // UNRESTRICTED: Safe to build single-family homes
+}

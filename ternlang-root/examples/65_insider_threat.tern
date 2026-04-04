@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 65_insider_threat.tern — Insider threat behavioral flag
+//
+// Binary access controls trust an employee implicitly until they are fired.
+// Ternary Zero-Trust architecture utilizes 'hold' for "Silent auditing and
+// peer-review enforcement," allowing the employee to keep working but with
+// invisible guardrails if their behavior shifts.
+//   +1: Normal access
+//    0: Enforce strict auditing & peer review
+//   -1: Revoke access
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn download_volume(vol: trit) -> trit { return vol; }
+fn off_hours_access(hours: trit) -> trit { return hours; }
+fn data_classification(class: trit) -> trit { return class; }
+
+fn zero_trust_policy(vol: trit, hours: trit, class: trit) -> trit {
+    let behavioral_anomaly: trit = consensus(vol, hours);
+    
+    match behavioral_anomaly {
+        -1 => {
+            // Downloading huge amounts at 3 AM. What are they downloading?
+            match class {
+                -1 => { return conflict(); } // Source code/Customer data -> Block immediately
+                 0 => { return hold(); }     // Internal wikis -> Audit closely
+                 1 => { return hold(); }     // Public marketing assets -> Weird, but just audit
+            }
+        }
+         0 => {
+             // Slight anomaly (e.g. logging in late, but no big downloads).
+             match class {
+                 -1 => { return hold(); }    // Touching sensitive data off-hours -> Audit
+                  0 => { return truth(); }
+                  1 => { return truth(); }
+             }
+         }
+         1 => {
+             return truth(); // Normal volume, normal hours.
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let daily_dl: trit = conflict();     // Downloading 50GB of data (unusual)
+let login_time: trit = hold();       // Logged in at 8 PM (slightly late)
+let data_type: trit = conflict();    // Accessing the master CRM database
+
+let security_stance: trit = zero_trust_policy(daily_dl, login_time, data_type);
+
+// Expected result: conflict() - Massive CRM download late at night.
+match security_stance {
+    -1 => { return conflict(); }   // REVOKE: Suspend SSO token, alert SOC
+     0 => { return hold();    }   // SHADOW: Enable screen recording and require 2-man rule
+     1 => { return truth();   }   // TRUST: Standard RBAC permissions apply
+}

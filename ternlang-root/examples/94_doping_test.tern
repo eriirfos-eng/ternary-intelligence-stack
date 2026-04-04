@@ -1,0 +1,49 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 94_doping_test.tern — Doping test result gate
+//
+// Binary doping tests (Positive/Negative) are vulnerable to contaminated meat
+// or supplements. A ternary system uses 'hold' for "Atypical Finding," triggering
+// an investigation into diet and an immediate B-sample test without destroying
+// the athlete's career prematurely.
+//   +1: Negative / Clean
+//    0: Atypical Finding (Hold)
+//   -1: Adverse Analytical Finding (Positive)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn substance_concentration(conc: trit) -> trit { return conc; }
+fn biological_passport(passport: trit) -> trit { return passport; }
+fn known_contaminant(cont: trit) -> trit { return cont; }
+
+fn wada_protocol(conc: trit, passport: trit, cont: trit) -> trit {
+    match conc {
+        -1 => {
+            // Massive concentration of banned substance
+            match cont {
+                -1 => { return conflict(); } // Not a known food contaminant -> Positive
+                 0 => { return conflict(); } 
+                 1 => { return hold(); }     // High concentration, but known meat issue in area -> Investigate
+            }
+        }
+         0 => {
+             // Trace amounts. Check baseline passport.
+             match passport {
+                 -1 => { return conflict(); } // Trace amounts but massive shift from baseline -> Positive
+                  0 => { return hold(); }
+                  1 => { return hold(); }     // Trace amounts, normal baseline -> Atypical
+             }
+         }
+         1 => { return truth(); } // Below detection limits
+    }
+}
+
+let test_conc: trit = hold();        // Clenbuterol found at trace levels
+let bio_pass: trit = truth();        // Blood values are totally normal
+let local_food: trit = truth();      // Currently competing in a country known for contaminated beef
+
+let doping_result: trit = wada_protocol(test_conc, bio_pass, local_food);
+
+match doping_result {
+    -1 => { return conflict(); }   // POSITIVE: Provisional suspension announced
+     0 => { return hold();    }   // ATYPICAL: Investigate meat sourcing, test B-sample silently
+     1 => { return truth();   }   // NEGATIVE: Athlete cleared
+}

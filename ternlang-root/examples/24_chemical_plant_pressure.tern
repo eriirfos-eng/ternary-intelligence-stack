@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 24_chemical_plant_pressure.tern — Chemical plant pressure relief valve
+//
+// Binary systems open relief valves fully or close them entirely, which can
+// lead to environmental spills or dangerous pressure spikes. A ternary approach
+// uses the 'hold' state to vent gradually or route to a secondary containment
+// buffer, smoothing out the pressure curve safely.
+//   +1: Keep valves closed (Normal)
+//    0: Vent to secondary containment (Hold)
+//   -1: Emergency atmospheric vent (Conflict)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn tank_pressure(pressure: trit) -> trit {
+    return pressure;
+}
+
+fn reaction_temperature(temp: trit) -> trit {
+    return temp;
+}
+
+fn secondary_containment_capacity(capacity: trit) -> trit {
+    return capacity;
+}
+
+fn relief_valve_controller(pressure: trit, temp: trit, sec_cap: trit) -> trit {
+    let internal_state: trit = consensus(pressure, temp);
+    
+    match internal_state {
+        -1 => { 
+            // Reaction is out of control. Can we vent safely?
+            match sec_cap {
+                -1 => { return conflict(); } // Secondary is full, must vent to atmosphere
+                 0 => { return conflict(); } 
+                 1 => { return hold(); }    // Vent to secondary containment
+            }
+        }
+         0 => { return hold(); } // Slightly elevated, bleed into secondary
+         1 => { return truth(); } // Perfectly nominal
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let current_pressure: trit = conflict(); // Pressure is critically high
+let current_temp: trit = hold();         // Temp is rising
+let secondary_cap: trit = truth();       // Secondary containment is empty
+
+let valve_action: trit = relief_valve_controller(current_pressure, current_temp, secondary_cap);
+
+// Expected result: hold() - We avoid atmospheric venting because secondary is available
+match valve_action {
+    -1 => { return conflict(); }   // FLARE: Open emergency atmospheric vent
+     0 => { return hold();    }   // BLEED: Open valve to secondary containment
+     1 => { return truth();   }   // SEAL: Keep all relief valves closed
+}

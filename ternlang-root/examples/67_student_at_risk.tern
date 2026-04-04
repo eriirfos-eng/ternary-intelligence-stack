@@ -1,0 +1,57 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 67_student_at_risk.tern — Student at-risk early warning
+//
+// Binary flags (At Risk / Fine) lead to intervention fatigue for counselors.
+// A ternary early warning system uses 'hold' for "Monitor closely, send automated
+// check-in email," reserving the hard conflict state for students who need
+// an immediate human intervention.
+//   +1: On track
+//    0: Monitor / Automated nudge
+//   -1: Active intervention required
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn attendance_trend(att: trit) -> trit { return att; }
+fn assignment_grades(grades: trit) -> trit { return grades; }
+fn lms_login_activity(logins: trit) -> trit { return logins; }
+
+fn early_warning_system(att: trit, grades: trit, logins: trit) -> trit {
+    let engagement: trit = consensus(att, logins);
+    
+    // Grades dropping is a serious warning sign
+    match grades {
+        -1 => {
+            // Failing classes. Why?
+            match engagement {
+                -1 => { return conflict(); } // Failing + Not showing up = Crisis
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // Failing but trying hard (logged in, attending). Needs tutoring.
+            }
+        }
+         0 => {
+             // Marginal grades.
+             match engagement {
+                 -1 => { return hold(); }    // Marginal + Disengaging = Nudge them now
+                  0 => { return hold(); }
+                  1 => { return truth(); }   // Marginal but highly engaged. Let them work.
+             }
+         }
+         1 => {
+             // Good grades. 
+             return truth(); // Ignore slight attendance blips if they are getting A's
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let current_attendance: trit = hold();  // Missed 2 classes recently
+let current_grades: trit = conflict();  // Failed the midterm
+let platform_logins: trit = truth();    // Still logging into Canvas daily
+
+let action: trit = early_warning_system(current_attendance, current_grades, platform_logins);
+
+// Expected result: hold() - consensus(hold, truth) is hold. Failing but trying -> Tutor referral.
+match action {
+    -1 => { return conflict(); }   // INTERVENE: Academic counselor schedules mandatory meeting
+     0 => { return hold();    }   // NUDGE: Send email linking to tutoring center
+     1 => { return truth();   }   // CLEAR: No action needed
+}

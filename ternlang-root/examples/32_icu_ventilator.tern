@@ -1,0 +1,59 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 32_icu_ventilator.tern — ICU ventilator weaning readiness
+//
+// Extubating a patient is dangerous. Binary criteria (ready / not ready) often
+// fail because vital signs fluctuate. A ternary system evaluates vitals over
+// time. 'Hold' means "patient is trying to breathe, switch to pressure support
+// mode but do not remove the tube yet."
+//   +1: Ready for extubation
+//    0: Spontaneous breathing trial (Pressure support)
+//   -1: Keep fully sedated and ventilated
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn oxygen_saturation(spo2: trit) -> trit {
+    return spo2;
+}
+
+fn respiratory_rate(rr: trit) -> trit {
+    return rr;
+}
+
+fn patient_consciousness(gcs: trit) -> trit {
+    return gcs;
+}
+
+fn weaning_decision(spo2: trit, rr: trit, gcs: trit) -> trit {
+    // Consciousness is a hard gate. Cannot extubate a comatose patient safely.
+    match gcs {
+        -1 => { return conflict(); } // Deep sedation/coma. No weaning.
+         0 => {
+             // Patient is waking up but groggy. 
+             // We can do a breathing trial if lungs are doing well.
+             let lung_status: trit = consensus(spo2, rr);
+             match lung_status {
+                 -1 => { return conflict(); }
+                  0 => { return hold(); }
+                  1 => { return hold(); } // Even with perfect lungs, still groggy
+             }
+         }
+         1 => {
+             // Patient is awake and following commands. Check lungs.
+             let lung_status: trit = consensus(spo2, rr);
+             return lung_status;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let current_spo2: trit = truth();     // SpO2 > 95% on minimal support
+let current_rr: trit = hold();        // Breathing a bit fast, but stable
+let awareness: trit = truth();        // Patient is awake and nodding
+
+let ventilator_action: trit = weaning_decision(current_spo2, current_rr, awareness);
+
+// Expected result: hold() - consensus(truth, hold) is hold. Do a breathing trial.
+match ventilator_action {
+    -1 => { return conflict(); }   // VENTILATE: Maintain mandatory control mode
+     0 => { return hold();    }   // TRIAL: Switch to CPAP/Pressure Support
+     1 => { return truth();   }   // EXTUBATE: Remove endotracheal tube
+}

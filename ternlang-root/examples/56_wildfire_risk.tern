@@ -1,0 +1,56 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 56_wildfire_risk.tern — Wildfire risk assessment
+//
+// Binary risk models (Fire / No Fire) fail to capture the physics of ignition.
+// A ternary system evaluates fuel, weather, and topography. 'Hold' triggers
+// a "Red Flag Warning" (ban outdoor burns, preposition crews) rather than just
+// waiting for a fire to start.
+//   +1: Low Risk
+//    0: Red Flag Warning (Hold)
+//   -1: Extreme / Active Fire Behavior
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn fuel_moisture(fuel: trit) -> trit { return fuel; }
+fn wind_speed(wind: trit) -> trit { return wind; }
+fn relative_humidity(rh: trit) -> trit { return rh; }
+
+fn fire_risk_model(fuel: trit, wind: trit, rh: trit) -> trit {
+    let weather_danger: trit = consensus(wind, rh);
+    
+    // If fuel is completely dry, weather dictates the rest
+    match fuel {
+        -1 => {
+            match weather_danger {
+                -1 => { return conflict(); } // Dry fuel + high wind/low RH = Extreme
+                 0 => { return hold(); }     // Dry fuel + moderate weather = Red Flag
+                 1 => { return hold(); }     // Dry fuel + calm/humid = Monitor closely
+            }
+        }
+         0 => {
+             // Curing fuels.
+             match weather_danger {
+                 -1 => { return conflict(); } // Curing + terrible weather = Extreme
+                  0 => { return hold(); }
+                  1 => { return truth(); }
+             }
+         }
+         1 => {
+             // Wet fuels. Very hard to burn.
+             return truth();
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let brush_moisture: trit = conflict(); // 1000-hour fuels are bone dry
+let local_winds: trit = hold();        // Breezy, 15mph
+let local_rh: trit = truth();          // Humidity is decently high at 45%
+
+let risk_level: trit = fire_risk_model(brush_moisture, local_winds, local_rh);
+
+// Expected result: hold() - weather consensus is hold. Dry fuel + hold weather = Red Flag.
+match risk_level {
+    -1 => { return conflict(); }   // EXTREME: Pre-position strike teams, authorize evacuations
+     0 => { return hold();    }   // WARNING: Issue Red Flag, ban campfires
+     1 => { return truth();   }   // NOMINAL: Standard seasonal readiness
+}

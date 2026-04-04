@@ -1,0 +1,59 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 31_drug_interaction.tern — Drug interaction checker
+//
+// Binary checkers either block a prescription or allow it. When there is a
+// minor interaction, binary checkers often annoy doctors with alarm fatigue.
+// Ternary allows a "safe / monitor / contraindicated" paradigm. 'Hold' means
+// the pharmacist must review the interaction before dispensing, while not
+// outright blocking the doctor's intent.
+//   +1: Safe to dispense
+//    0: Pharmacist review / Monitor
+//   -1: Contraindicated / Block
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn enzyme_competition(comp: trit) -> trit {
+    return comp;
+}
+
+fn qt_prolongation_risk(qt: trit) -> trit {
+    return qt;
+}
+
+fn patient_kidney_function(egfr: trit) -> trit {
+    return egfr;
+}
+
+fn evaluate_prescription(comp: trit, qt: trit, egfr: trit) -> trit {
+    // If kidney function is compromised, risk increases for all drugs
+    match egfr {
+        -1 => {
+            // Poor kidney function. Any other risk makes it contraindicated.
+            let interactions: trit = consensus(comp, qt);
+            match interactions {
+                -1 => { return conflict(); }
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // No direct interaction, but requires dose adjustment
+            }
+        }
+         0 => { return hold(); } // Marginal kidney function, pharmacist must adjust dose
+         1 => {
+             // Kidneys are fine, check specific drug-drug interactions
+             let interactions: trit = consensus(comp, qt);
+             return interactions;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let cyp450_competition: trit = hold();  // Minor competition for CYP3A4
+let ecg_qt_risk: trit = truth();        // No QT prolongation expected
+let patient_egfr: trit = truth();       // Normal kidney clearance
+
+let dispensing_action: trit = evaluate_prescription(cyp450_competition, ecg_qt_risk, patient_egfr);
+
+// Expected result: hold() - consensus(hold, truth) is hold. Pharmacist reviews.
+match dispensing_action {
+    -1 => { return conflict(); }   // BLOCK: Fatal interaction risk
+     0 => { return hold();    }   // REVIEW: Pharmacist checks dosage and alerts patient
+     1 => { return truth();   }   // DISPENSE: Automatically send to labeling
+}

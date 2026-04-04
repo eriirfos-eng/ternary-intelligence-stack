@@ -1,0 +1,46 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 64_ransomware_behavior.tern — Ransomware behavior detection
+//
+// AV software historically relied on binary signature matching, failing against
+// zero-days. Behavioral detection produces false positives (like a developer
+// compiling code). Ternary 'hold' means "suspend the process and snapshot the
+// filesystem" rather than instantly terminating a potentially critical app.
+//   +1: Benign process
+//    0: Suspend process & snapshot (Hold)
+//   -1: Terminate & Quarantine
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn file_entropy_change(entropy: trit) -> trit { return entropy; }
+fn rename_extension(rename: trit) -> trit { return rename; }
+fn shadow_copy_deletion(shadow: trit) -> trit { return shadow; }
+
+fn edr_agent(entropy: trit, rename: trit, shadow: trit) -> trit {
+    // Deleting volume shadow copies is almost exclusively malicious
+    match shadow {
+        -1 => { return conflict(); } // VSSAdmin delete -> Kill immediately
+         0 => { return hold(); }     // VSS service stopped unexpectedly
+         1 => {
+             // Backups are intact. Check file operations.
+             let encryption_behavior: trit = consensus(entropy, rename);
+             match encryption_behavior {
+                 -1 => { return hold(); }    // High entropy + weird extensions = Suspend and ask user
+                  0 => { return hold(); }    // Moderate anomaly = Suspend
+                  1 => { return truth(); }   // Normal file I/O
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let file_writes: trit = conflict();  // Writing high-entropy (encrypted) files
+let file_renames: trit = conflict(); // Appending .crypt to everything
+let system_backups: trit = truth();  // Shadow copies are untouched
+
+let agent_action: trit = edr_agent(file_writes, file_renames, system_backups);
+
+// Expected result: hold() - Suspicious encryption, but backups are intact. Suspend it.
+match agent_action {
+    -1 => { return conflict(); }   // KILL: Terminate process tree, isolate host from network
+     0 => { return hold();    }   // SUSPEND: Pause thread execution, prompt admin
+     1 => { return truth();   }   // ALLOW: Process is likely a zip/compression utility
+}

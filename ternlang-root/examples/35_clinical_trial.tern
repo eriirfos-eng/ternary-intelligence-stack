@@ -1,0 +1,42 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 35_clinical_trial.tern — Clinical trial eligibility screening
+//
+// Patients are often rejected from clinical trials by rigid binary criteria.
+// A ternary approach allows borderline patients to enter a 'hold' state where
+// additional specific lab tests are requested to confirm eligibility, expanding
+// the viable patient pool safely.
+//   +1: Eligible
+//    0: Request specific biomarker test
+//   -1: Excluded
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn primary_diagnosis(diag: trit) -> trit { return diag; }
+fn previous_treatments(prev: trit) -> trit { return prev; }
+fn organ_function(organs: trit) -> trit { return organs; }
+
+fn trial_screener(diag: trit, prev: trit, organs: trit) -> trit {
+    // Diagnosis is a hard gate - must have the target disease
+    match diag {
+        -1 => { return conflict(); } // Wrong disease type/stage
+         0 => { return hold(); }     // Needs biopsy confirmation
+         1 => {
+             // Has disease. Check history and organs.
+             let history_health: trit = consensus(prev, organs);
+             return history_health;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let patient_diag: trit = truth();    // Confirmed stage III
+let prior_lines: trit = truth();     // Naive to target therapy class
+let liver_function: trit = hold();   // Liver enzymes slightly elevated
+
+let enrollment: trit = trial_screener(patient_diag, prior_lines, liver_function);
+
+// Expected result: hold() - Disease is correct, but liver needs check.
+match enrollment {
+    -1 => { return conflict(); }   // EXCLUDE: Does not meet inclusion criteria
+     0 => { return hold();    }   // PEND: Request updated comprehensive metabolic panel
+     1 => { return truth();   }   // ENROLL: Proceed to informed consent
+}

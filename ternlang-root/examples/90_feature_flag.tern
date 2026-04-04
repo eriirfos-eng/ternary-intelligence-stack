@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 90_feature_flag.tern — Feature flag rollout gate
+//
+// Binary feature flags are either on or off. A ternary flag naturally supports
+// a "Beta / Dogfood" state, allowing internal users or beta testers to access
+// the feature without exposing it to the general public.
+//   +1: Fully Enabled (Global)
+//    0: Beta / Internal Only (Hold)
+//   -1: Disabled
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn user_cohort(user: trit) -> trit { return user; }
+fn system_stability(sys: trit) -> trit { return sys; }
+fn flag_state(flag: trit) -> trit { return flag; }
+
+fn feature_evaluator(user: trit, sys: trit, flag: trit) -> trit {
+    match flag {
+        -1 => { return conflict(); } // Flag is globally off
+         0 => {
+             // Flag is in Beta mode.
+             match user {
+                 -1 => { return conflict(); } // Normal user -> Disabled
+                  0 => { return truth(); }    // Beta tester -> Enabled
+                  1 => { return truth(); }    // Internal employee -> Enabled
+             }
+         }
+         1 => {
+             // Flag is globally on. Only disable if system is crashing.
+             match sys {
+                 -1 => { return conflict(); } // System crashing, killswitch feature
+                  0 => { return truth(); }
+                  1 => { return truth(); }
+             }
+         }
+    }
+}
+
+let current_user: trit = hold();   // Beta tester
+let sys_health: trit = truth();    // System stable
+let global_flag: trit = hold();    // Feature is in Beta
+
+let render_action: trit = feature_evaluator(current_user, sys_health, global_flag);
+
+match render_action {
+    -1 => { return conflict(); }   // HIDE: Render old UI
+     0 => { return hold();    }   // (Unused in final output here, mapped internally)
+     1 => { return truth();   }   // SHOW: Render new feature
+}

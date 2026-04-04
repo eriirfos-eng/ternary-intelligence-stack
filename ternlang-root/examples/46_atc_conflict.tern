@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 46_atc_conflict.tern — Air traffic control conflict alert
+//
+// TCAS/ATC systems often issue binary resolution advisories (Climb/Descend).
+// Ternary logic allows a formal 'hold' state: "Maintain current vector, monitor
+// traffic," preventing pilots from maneuvering unnecessarily when geometry
+// is safely diverging.
+//   +1: Safe separation
+//    0: Monitor traffic, maintain vector
+//   -1: Resolution Advisory (Maneuver now)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn vertical_separation(alt: trit) -> trit { return alt; }
+fn lateral_separation(lat: trit) -> trit { return lat; }
+fn closure_rate(rate: trit) -> trit { return rate; }
+
+fn conflict_alert_system(alt: trit, lat: trit, rate: trit) -> trit {
+    let separation: trit = consensus(alt, lat);
+    
+    match separation {
+        -1 => {
+            // Very close. Check closure rate.
+            match rate {
+                -1 => { return conflict(); } // Close AND getting closer = Maneuver!
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // Close but diverging = Monitor
+            }
+        }
+         0 => {
+             // Marginal separation.
+             match rate {
+                 -1 => { return hold(); }    // Marginal but converging = Get ready
+                  0 => { return hold(); }
+                  1 => { return truth(); }   // Marginal but diverging = Safe
+             }
+         }
+         1 => {
+             return truth(); // Plenty of room
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let alt_sep: trit = conflict();      // Only 500ft vertical separation
+let lat_sep: trit = hold();          // 3 miles lateral
+let converging: trit = truth();      // Planes are moving away from each other
+
+let advisory: trit = conflict_alert_system(alt_sep, lat_sep, converging);
+
+// Expected result: hold() - Close, but actively diverging. Don't cause panic.
+match advisory {
+    -1 => { return conflict(); }   // RESOLUTION: "Climb, Climb Now"
+     0 => { return hold();    }   // TRAFFIC: "Traffic, 2 o'clock, diverging"
+     1 => { return truth();   }   // CLEAR: No conflict
+}

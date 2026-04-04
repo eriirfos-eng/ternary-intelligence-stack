@@ -1,0 +1,47 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 53_building_code.tern — Building code compliance inspection
+//
+// Binary inspections (Pass/Fail) mean a single missing electrical cover plate
+// halts a million-dollar construction project. Ternary inspections use 'hold'
+// as a "Conditional Pass," allowing drywall to proceed while noting a minor
+// defect that must be fixed before final occupancy.
+//   +1: Full Pass
+//    0: Conditional Pass (Fix before next phase)
+//   -1: Fail (Stop work)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn structural_integrity(structural: trit) -> trit { return structural; }
+fn life_safety(safety: trit) -> trit { return safety; }
+fn cosmetic_or_minor(minor: trit) -> trit { return minor; }
+
+fn code_inspection(structural: trit, safety: trit, minor: trit) -> trit {
+    // Structural and Life Safety are hard gates
+    let critical_systems: trit = consensus(structural, safety);
+    
+    match critical_systems {
+        -1 => { return conflict(); } // Major violation. Stop work immediately.
+         0 => { return conflict(); } // Uncertain structure? Cannot allow work.
+         1 => {
+             // Critical systems are good. Check minor issues.
+             match minor {
+                 -1 => { return hold(); }    // Bad minor issues -> Conditional pass
+                  0 => { return hold(); }    // Uncertain minor issues -> Conditional pass
+                  1 => { return truth(); }   // Flawless
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let framing_check: trit = truth();   // Joists and load bearing walls perfect
+let fire_blocking: trit = truth();   // All penetrations sealed
+let outlet_covers: trit = conflict(); // Three outlet covers missing
+
+let inspection_result: trit = code_inspection(framing_check, fire_blocking, outlet_covers);
+
+// Expected result: hold() - Criticals pass, minor issues fail. Conditional pass.
+match inspection_result {
+    -1 => { return conflict(); }   // RED TAG: Stop work order issued
+     0 => { return hold();    }   // YELLOW TAG: Proceed, but fix items before final
+     1 => { return truth();   }   // GREEN TAG: Passed, fully approved
+}

@@ -1,0 +1,42 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 91_dns_resolution.tern — DNS resolution confidence
+//
+// Binary DNS blocks (like Pi-hole) sometimes break legitimate sites. A ternary
+// DNS resolver uses 'hold' to return a "Warning interstitial page," allowing
+// the user to bypass it manually if they know it's a false positive.
+//   +1: Resolve normally
+//    0: Warning page (Hold)
+//   -1: NXDOMAIN (Block completely)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn domain_age(age: trit) -> trit { return age; }
+fn threat_feed(threat: trit) -> trit { return threat; }
+fn typo_squat(typo: trit) -> trit { return typo; }
+
+fn dns_resolver(age: trit, threat: trit, typo: trit) -> trit {
+    match threat {
+        -1 => { return conflict(); } // Known malware/phishing. Block.
+         0 => { return hold(); }     // Suspicious on some feeds. Warn.
+         1 => {
+             // Clean on feeds. Check age and typos.
+             let sketch: trit = consensus(age, typo);
+             match sketch {
+                 -1 => { return hold(); }    // Registered yesterday + looks like g00gle.com -> Warn
+                  0 => { return hold(); }
+                  1 => { return truth(); }   // Old domain, no typos -> Allow
+             }
+         }
+    }
+}
+
+let dom_age: trit = conflict();      // 2 days old
+let dom_threat: trit = truth();      // Not on blocklists yet
+let dom_typo: trit = conflict();     // Looks like a bank login URL
+
+let dns_action: dns_resolver(dom_age, dom_threat, dom_typo);
+
+match dns_action {
+    -1 => { return conflict(); }   // BLOCK: Return 0.0.0.0
+     0 => { return hold();    }   // INTERSTITIAL: Redirect to warning page
+     1 => { return truth();   }   // RESOLVE: Return actual IP address
+}

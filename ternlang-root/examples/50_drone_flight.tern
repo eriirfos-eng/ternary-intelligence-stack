@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 50_drone_flight.tern — Drone flight authorization
+//
+// Geofencing in drones is often rigidly binary. If a drone drifts near a stadium,
+// it falls out of the sky. Ternary geofencing uses 'hold' to trigger an automated
+// "return to home" or "hover in place" behavior, preserving the asset safely.
+//   +1: Free flight allowed
+//    0: Hover in place / Return to home
+//   -1: Force land / Kill motors
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn gps_zone(zone: trit) -> trit { return zone; }
+fn battery_level(batt: trit) -> trit { return batt; }
+fn wind_conditions(wind: trit) -> trit { return wind; }
+
+fn flight_controller(zone: trit, batt: trit, wind: trit) -> trit {
+    // Battery is the ultimate hard gate
+    match batt {
+        -1 => { return conflict(); } // 1% battery, drop immediately
+         0 => { 
+             // 20% battery. We need to go home.
+             return hold(); 
+         }
+         1 => {
+             // Battery good. Check airspace.
+             match zone {
+                 -1 => { return conflict(); } // Entered Class B airspace, kill motors to prevent collision
+                  0 => { return hold(); }     // Approaching restricted zone, hover
+                  1 => {
+                      // Airspace clear. Can we fly in this wind?
+                      match wind {
+                          -1 => { return hold(); } // Gale force. Don't fly, just hover and wait.
+                           0 => { return truth(); }
+                           1 => { return truth(); }
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let airspace_zone: trit = hold();    // 500 meters from a temporary flight restriction
+let drone_battery: trit = truth();   // 85% full
+let local_wind: trit = truth();      // Calm winds
+
+let drone_action: trit = flight_controller(airspace_zone, drone_battery, local_wind);
+
+// Expected result: hold() - Too close to a restricted zone, stop advancing.
+match drone_action {
+    -1 => { return conflict(); }   // LAND: Cut power and descend immediately
+     0 => { return hold();    }   // HOVER: Maintain altitude and position, await pilot input
+     1 => { return truth();   }   // FLY: Respond to remote control sticks normally
+}

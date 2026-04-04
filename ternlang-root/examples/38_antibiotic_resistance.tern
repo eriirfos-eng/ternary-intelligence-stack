@@ -1,0 +1,57 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 38_antibiotic_resistance.tern — Antibiotic resistance risk
+//
+// Prescribing antibiotics is fraught with binary "just in case" logic leading
+// to superbugs. A ternary stewardship protocol evaluates clinical need vs. risk.
+// 'Hold' means "prescribe delayed-action or narrow-spectrum" pending culture
+// results, reducing unnecessary broad-spectrum usage.
+//   +1: No resistance risk, standard prescription
+//    0: Culture pending, narrow spectrum only
+//   -1: High MRSA/VRE risk, restrict usage
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn prior_hospitalization(hosp: trit) -> trit { return hosp; }
+fn local_antibiogram(local: trit) -> trit { return local; }
+fn clinical_severity(sev: trit) -> trit { return sev; }
+
+fn stewardship_decision(hosp: trit, local: trit, sev: trit) -> trit {
+    let risk_factors: trit = consensus(hosp, local);
+    
+    match sev {
+        -1 => { 
+            // Severe infection (e.g., sepsis). We cannot wait.
+            // But if resistance risk is also high (-1), we need restricted drugs.
+            match risk_factors {
+                -1 => { return conflict(); } // Severe + High Risk = Use restricted reserves
+                 0 => { return conflict(); } 
+                 1 => { return hold(); }     // Severe but low risk = Broad spectrum, de-escalate later
+            }
+        }
+         0 => {
+             // Moderate severity. We have time.
+             match risk_factors {
+                 -1 => { return hold(); }    // High risk = Wait for cultures before treating
+                  0 => { return hold(); }
+                  1 => { return truth(); }   // Low risk = Standard first-line therapy
+             }
+         }
+         1 => {
+             // Mild severity. 
+             return truth(); // Likely viral or easily cleared. Standard/No meds.
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let recent_hosp: trit = conflict();  // Discharged 2 weeks ago
+let local_rates: trit = hold();      // Moderate MRSA rates in community
+let severity: trit = hold();         // Moderate cellulitis
+
+let action: trit = stewardship_decision(recent_hosp, local_rates, severity);
+
+// Expected result: hold() - consensus(conflict, hold) is hold. Severity hold -> return hold().
+match action {
+    -1 => { return conflict(); }   // RESTRICTED: ID consult required for Vancomycin
+     0 => { return hold();    }   // DELAYED: Swab wound, wait 48h before dispensing
+     1 => { return truth();   }   // STANDARD: Prescribe basic Amoxicillin
+}

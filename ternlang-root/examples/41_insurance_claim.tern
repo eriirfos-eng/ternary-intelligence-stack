@@ -1,0 +1,44 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 41_insurance_claim.tern — Automated Claims Processing
+//
+// Binary failure: Hard binary "pay/deny" logic leads to either high fraud 
+// losses (false positives) or customer churn due to unfair denials (false 
+// negatives). 
+// Ternary advantage: The 'hold' state enables a "Soft Gate" for manual 
+// investigation of suspicious patterns, preventing immediate denial of 
+// edge cases while protecting capital.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_policy_active(status: trit) -> trit { return status; }
+fn check_premium_paid(paid: trit) -> trit { return paid; }
+fn check_fraud_score(risk: trit) -> trit { return invert(risk); }
+fn check_damage_proof(evidence: trit) -> trit { return evidence; }
+
+fn process_claim(active: trit, paid: trit, risk: trit, proof: trit) -> trit {
+    // Hard gate: Policy must be active and paid
+    let policy_ok: trit = consensus(active, paid);
+    
+    match policy_ok {
+        -1 => { return conflict(); } // Deny: lapsed or unpaid policy
+         0 => { return hold(); }     // Investigate: payment grace period?
+         1 => {
+             // Policy is good, check fraud risk and proof
+             let merit: trit = consensus(check_fraud_score(risk), proof);
+             return merit;
+         }
+    }
+}
+
+// ── Concrete scenario: Suspicious but plausible claim ──
+let is_active: trit = truth();       // Policy is currently active
+let is_paid: trit = truth();         // Premiums are up to date
+let risk_level: trit = hold();       // Automated system flags moderate risk
+let evidence_quality: trit = truth(); // Detailed photos and police report provided
+
+let decision: trit = process_claim(is_active, is_paid, risk_level, evidence_quality);
+
+match decision {
+    -1 => { return conflict(); } // DENY: Fraud detected or policy invalid
+     0 => { return hold(); }     // INVESTIGATE: Send to human adjuster
+     1 => { return truth(); }    // PAY: Automated approval and disbursement
+}
