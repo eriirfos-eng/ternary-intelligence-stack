@@ -1,288 +1,187 @@
-> `trit ∈ { -1, 0, +1 }` — A systems programming language for ternary computing.
+# Ternary Intelligence Stack
 
-Compiles to BET bytecode · Runs on the BET VM · Ships an MCP server.
+**A balanced ternary language, virtual machine, and AI reasoning platform.**
 
-[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
-[![Phase 5.0](https://img.shields.io/badge/Phase-5.0%20Actor%20Model-brightgreen)](ROADMAP.md)
-[![RFI-IRFOS](https://img.shields.io/badge/Built%20by-RFI--IRFOS-8B5CF6)](https://rfi-irfos.com)
+[![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
+[![License](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](ternlang-root/LICENSE)
+[![Tests](https://img.shields.io/badge/tests-146%2B%20passing-brightgreen)](ternlang-root/ROADMAP.md)
+[![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
+[![MCP](https://img.shields.io/badge/MCP-10%20tools-purple)](https://ternlang.com/mcp)
 
----
-
-Binary systems treat absence as null. Ternary systems treat it as a **state**.
-
-`0` in ternlang is *hold*. A live, active trit that has not resolved. This distinction unlocks a class of computation that binary systems can only approximate: ambiguity-aware inference, conflict-aware logic, and sparse neural computation where zero-weighted connections are skipped *at the instruction level* — not masked in software.
+Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com)
 
 ---
 
-## The Three States
+Binary systems treat uncertainty as null. Ternlang treats it as a **state**.
+
+Every value in ternlang is a *trit* — one of three:
 
 ```
--1  ->  reject     signal is negative, resolvable
- 0  ->  tend       active, not null -- the most misunderstood trit
-+1  ->  affirm     signal is affirmative
+-1  →  reject    Clear negative signal. Do not proceed.
+ 0  →  hold      Not enough data. Gather more before acting.
++1  →  affirm    Clear positive signal. Proceed.
 ```
 
-Every value, every branch, every match arm in ternlang is grounded in these three states. The compiler enforces exhaustiveness — you cannot write a `match` that forgets `0`.
+The `hold` state is the core innovation. It is not null. It is not undecided. It is a **computational instruction** — a formal signal that tells the system to remain in deliberation until evidence is sufficient. This makes ternlang the natural foundation for AI agents that must reason honestly under uncertainty, sparse neural inference where zero-weights are skipped at the instruction level, and safety-critical systems where a premature decision is worse than no decision.
 
 ---
 
-## Language at a Glance
+## What's in This Repository
 
-```ternlang
-// Balanced ternary addition with carry
-fn ternadd(a: trit, b: trit, c: trit) -> trit {
-    let ab: trit = consensus(a, b);
-    return consensus(ab, c);
-}
-
-// Sparse inference -- zero-weighted connections skipped at the VM level
-fn linear(W: trittensor<128 x 64>, x: trittensor<64 x 1>) -> trittensor<128 x 1> {
-    @sparseskip let out: trittensor<128 x 1> = matmul(W, x);
-    return out;
-}
-
-// Every match must cover -1, 0, +1 -- or the compiler rejects it
-fn decide(signal: trit) -> trit {
-    match signal {
-         1 => { return  1; }   // truth
-         0 => { return  0; }   // hold
-        -1 => { return -1; }   // conflict
-    }
-}
+```
+ternlang-root/        Language, VM, inference engine, API, MCP server
+albert-agent/         Local AI node built on the Ternary Intelligence Stack
+ternlang-vscode/      VS Code extension (.tern syntax highlighting + LSP)
 ```
 
-### Structs
-
-```ternlang
-struct Synapse {
-    weight: trit,
-    active: trit,
-}
-
-fn update(s: Synapse, input: trit) -> trit {
-    let w: trit = s.weight;
-    return consensus(w, input);
-}
-```
-
-### Actor Model
-
-```ternlang
-agent Voter {
-    fn handle(msg: trit) -> trit {
-        match msg {
-             1 => { return  1; }
-             0 => { return  0; }
-            -1 => { return -1; }
-        }
-    }
-}
-
-fn run_vote(signal: trit) -> trit {
-    let v: agentref = spawn Voter;
-    send v signal;
-    let result: trit = await v;
-    return result;
-}
-```
+→ **[Full technical documentation](ternlang-root/README.md)**
+→ **[Development roadmap](ternlang-root/ROADMAP.md)**
+→ **[250+ .tern example programs](ternlang-root/examples/INDEX.md)**
 
 ---
 
-## Benchmark: Sparse Ternary Inference
+## The Stack at a Glance
 
-The `@sparseskip` annotation routes `matmul()` to the `TSPARSE_MATMUL` opcode — zero-weight elements are **skipped at the instruction level**, not masked in software.
-
-Measured on BitNet-style ternary weight matrices:
-
-```
-Weight matrix sparsity:   56.2%
-Dense multiply ops:       4,096
-Sparse multiply ops:      1,792
-Skipped (free):           2,304
-
-Result:  2.3x fewer multiply operations vs float32 dense
-```
-
-In a ternary weight model, 0-weighted connections contribute nothing to output. The BET VM eliminates them entirely — no conditional branches, no software masks, no wasted cycles.
+| Layer | What it does |
+|-------|-------------|
+| **Language** | `.tern` programs compile to BET bytecode and run on the BET VM — 51 opcodes, 27 registers, exhaustive 3-way match enforcement |
+| **Sparse Inference** | `@sparseskip` routes `matmul()` to `TSPARSE_MATMUL` — zero-weight elements skipped at the instruction level. **86–122× faster** than dense float32 at BitNet sparsity levels |
+| **MoE-13 Orchestrator** | Mixture-of-Experts reasoning engine: 13 domain experts, dual-key synergistic routing, 1+1=3 emergent triad synthesis, safety hard gate with permanent audit log |
+| **Reasoning Toolkit** | Deliberation engine (EMA convergence), coalition vote, action gate (hard-block safety veto), scalar temperature, hallucination score |
+| **Live API** | REST + SSE + MCP endpoints at `https://ternlang.com` — deployed on Fly.io |
+| **MCP Server** | 10 tools via HTTP or stdio — any MCP client becomes a ternary decision engine |
 
 ---
 
-## MCP Integration
+## MoE-13 Ternary Orchestrator
 
-`ternlang-mcp` connects to any MCP-compatible agent (Claude Desktop, custom agents) and exposes ternary logic as callable tools. Any binary agent becomes a ternary decision engine.
+The flagship reasoning component. Based on prior research ([DOI: 10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)).
 
-**Claude Desktop setup** — add to `claude_desktop_config.json`:
+```rust
+use ternlang_moe::TernMoeOrchestrator;
+
+let mut orch = TernMoeOrchestrator::with_standard_experts();
+let result = orch.orchestrate("Should I proceed?", &[0.6, 0.7, 0.8, 0.5, 0.4, 0.9]);
+
+// trit=1 conf=84% held=false
+// "Affirm with confidence 84%. Emergent field amplifying."
+```
+
+Routes through 13 specialists: Syntax · WorldKnowledge · DeductiveReason · InductiveReason · ToolUse · Persona · Safety · FactCheck · CausalReason · AmbiguityRes · MathReason · ContextMem · MetaSafety.
+
+Safety is a hard gate — a negative safety signal vetoes the entire result regardless of all other experts, and every veto is permanently logged.
+
+---
+
+## Live API
+
+```bash
+# Health check
+curl https://ternlang.com/health
+
+# MCP — no API key required
+curl -X POST https://ternlang.com/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call",
+       "params":{"name":"trit_decide","arguments":{"evidence":[0.8,0.6,-0.2,0.9]}}}'
+
+# REST — requires X-Ternlang-Key
+curl -X POST https://ternlang.com/api/moe/orchestrate \
+  -H "X-Ternlang-Key: your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"Is this action safe?"}'
+```
+
+**MCP server:** `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, and any HTTP MCP client.
 
 ```json
-{
-  "mcpServers": {
-    "ternlang": {
-      "command": "/path/to/ternlang-root/target/release/ternlang-mcp"
-    }
-  }
-}
+{ "mcpServers": { "ternlang": { "url": "https://ternlang.com/mcp" } } }
 ```
 
-### Available Tools
+---
 
-| Tool | Description |
-|------|-------------|
-| `trit_decide` | Float evidence -> ternary decision with confidence + sparsity |
-| `trit_consensus` | `consensus(a, b)` with carry on the live BET VM |
-| `trit_eval` | Evaluate a ternlang expression via MCP |
-| `ternlang_run` | Compile and run a `.tern` program remotely |
-| `quantize_weights` | `f32[]` -> `{-1, 0, +1}` via BitNet thresholding |
-| `sparse_benchmark` | Sparse vs dense matmul with skip statistics |
+## Sparse Inference Benchmark
 
-### Example: Ternary Decision Call
+| Sparsity | 128² | 256² | 512² |
+|----------|------|------|------|
+| 40% | 29.6× | 46.0× | 73.6× |
+| **60%** | **27.9×** | **32.1×** | **86.1×** |
+| 99% | 13.1× | 53.9× | **122.3×** |
 
-```json
-{
-  "tool": "trit_decide",
-  "arguments": {
-    "evidence": [0.8, -0.3, 0.1, 0.9, -0.7],
-    "threshold": 0.35
-  }
-}
-```
+40–60% sparsity is exactly where BitNet b1.58 quantization (`τ = 0.5 × mean(|w|)`) places weights in trained language models. The kernel and the quantization scheme are structurally aligned.
 
-Response:
+---
 
-```json
-{
-  "decision": "+1 (truth)",
-  "confidence": 0.72,
-  "signal_sparsity": "40.0%",
-  "quantized_trits": [1, -1, 0, 1, -1],
-  "interpretation": "Majority evidence is affirmative. Sparse signal -- 40% of inputs are neutral."
-}
-```
+## Albert Agent
+
+[albert-agent/](albert-agent/) is a sovereign, offline-first local AI node built on top of the Ternary Intelligence Stack. It uses the BET VM and MoE-13 orchestrator as its native reasoning layer — every decision is evaluated through the `{-1, 0, +1}` state space rather than a binary confidence threshold.
+
+→ [Albert Agent documentation](albert-agent/README.md)
 
 ---
 
 ## Quick Start
 
 ```bash
-# Build everything
-cd ternlang-root
+git clone https://github.com/eriirfos-eng/ternary-intelligence-stack
+cd ternary-intelligence-stack/ternlang-root
 cargo build --release
+cargo test --workspace
 
 # Run a .tern program
-./target/release/ternlang-cli run test.tern
+cargo run --bin ternlang -- run examples/03_rocket_launch.tern
 
-# Compile to bytecode
-./target/release/ternlang-cli build test.tern
-
-# Start the MCP server
+# Start the MCP server (stdio)
 ./target/release/ternlang-mcp
-
-# Easter egg
-./target/release/ternlang-cli enlighten
 ```
 
 ---
 
-## Albert Agent
+## Crates
 
-**albert-agent** is the high-level cognitive layer of the Ternary Intelligence Stack. It is a sovereign, offline-first local AI node that implements ternary logic at the agentic level.
+All published on [crates.io](https://crates.io/search?q=ternlang):
 
-- **Ternary Reasoning**: Every decision is evaluated through the `{-1, 0, +1}` state space.
-- **Deep Integration**: Albert can directly execute ternary code on the BET VM via the `ternlang_run` tool.
-- **Sovereign Memory**: Persistent SQLite-based memory vault for long-term knowledge retention.
-- **Agentic Automation**: Capable of complex file operations, system telemetry, and web research.
+| Crate | Tier | Description |
+|-------|------|-------------|
+| `ternlang-core` | LGPL | Lexer, parser, BET VM |
+| `ternlang-cli` | LGPL | `run` · `build` · `sim` · `fmt` · `repl` |
+| `ternlang-lsp` | LGPL | LSP 3.17 server |
+| `ternlang-compat` | LGPL | 9-trit RISC assembler, Owlet S-expr bridge |
+| `ternpkg` | LGPL | Package manager |
+| `ternlang-ml` | BSL-1.1 | Sparse matmul, BitNet quantization, reasoning toolkit |
+| `ternlang-moe` | BSL-1.1 | MoE-13 orchestrator, AgentHarness |
+| `ternlang-mcp` | BSL-1.1 | MCP server — 10 tools |
+| `ternlang-api` | BSL-1.1 | REST + SSE API |
+| `ternlang-hdl` | BSL-1.1 | Verilog-2001 codegen, FPGA simulation |
+| `ternlang-runtime` | BSL-1.1 | Distributed TCP actor runtime |
 
-For more details, see the [albert-agent README](albert-agent/README.md).
+BSL-1.1 converts automatically to Apache-2.0 on 2030-04-03.
 
 ---
 
-## Architecture
+## Whitepaper
 
+[ternlang-root/whitepaper/](ternlang-root/whitepaper/) — IEEE two-column, arXiv-ready.
+
+```bibtex
+@misc{kepp2026ternlang,
+  author = {Kepp, Simeon},
+  title  = {Ternlang: Balanced Ternary Intelligence Stack},
+  year   = {2026},
+  url    = {https://ternlang.com},
+  doi    = {10.17605/OSF.IO/TZ7DC}
+}
 ```
-albert-agent/             High-level cognitive agent & tool harness
-├── src/                  Albert-Code brain (Ollama + Tool loop)
-└── docs/                 Albert identity, soul, and reference docs
-ternlang-root/            Ternary language & core infrastructure
-├── ternlang-core/        Lexer, AST, parser, semantic, codegen (betbc), BET VM
-├── ternlang-cli/         ternlang run / build (clap)
-├── ternlang-ml/          BitNet quantization, sparse matmul, linear layer, benchmarks
-├── ternlang-mcp/         MCP server -- 6 tools, JSON-RPC 2.0 stdio
-├── ternlang-codegen/     stub -- HDL backend planned
-├── ternlang-test/        stub -- integration test harness
-└── stdlib/
-    ├── std/trit.tern      abs, min, max, clamp, threshold, sign, majority
-    ├── std/math.tern      ternadd3, neg, balance, step, rectify
-    ├── std/tensor.tern    zeros, sparse_mm, dense_mm
-    ├── std/io.tern        print_trit, print_tensor, newline
-    ├── ml/quantize.tern   hard_threshold, soft_threshold
-    └── ml/inference.tern  linear, linear_dense, attend, decide
-```
-
----
-
-## BET VM Opcode Reference
-
-| Opcode | Mnemonic | Description |
-|--------|----------|-------------|
-| `0x01` | `TPUSH` | Push trit literal |
-| `0x02` | `TADD` | Balanced ternary add with carry |
-| `0x03` | `TMUL` | Ternary multiply |
-| `0x04` | `TNEG` | Negate trit |
-| `0x05-07` | `TJMP_POS/ZERO/NEG` | Conditional jump |
-| `0x08` | `TSTORE` | Store to register |
-| `0x09` | `TLOAD` | Load from register |
-| `0x0e` | `TCONS` | Consensus (ternary OR) |
-| `0x0f` | `TALLOC` | Allocate tensor on heap |
-| `0x10` | `TCALL` | Call function (push return addr) |
-| `0x11` | `TRET` | Return from function |
-| `0x20` | `TMATMUL` | Dense matrix multiply |
-| `0x21` | `TSPARSE_MATMUL` | **Sparse matmul -- zero weights skipped** |
-| `0x22` | `TIDX` | Index into tensor |
-| `0x23` | `TSET` | Set tensor element |
-| `0x24` | `TSHAPE` | Push tensor dimensions |
-| `0x25` | `TSPARSITY` | Count zero elements |
-| `0x30` | `TSPAWN` | Spawn agent instance |
-| `0x31` | `TSEND` | Send message to agent mailbox |
-| `0x32` | `TAWAIT` | Await agent response |
-
-BET encoding: `0b01` = -1, `0b10` = +1, `0b11` = 0, `0b00` = invalid (fault)
-
----
-
-## Key Language Properties
-
-- **`trit`** — three states: `-1` (conflict), `0` (hold — active, not null), `+1` (truth)
-- **`match`** — must cover all three arms or the compiler rejects it (`NonExhaustiveMatch`)
-- **`@sparseskip`** — routes `matmul()` to `TSPARSE_MATMUL`; zero-state elements skipped at VM level
-- **actors** — `agent` / `spawn` / `send` / `await`; synchronous in v0.1, distributed in v0.2
-- **pipeline** — `.tern` -> `.tbc` (bytecode) -> BET VM execution
-
----
-
-## Roadmap
-
-| Phase | Description | Status |
-|-------|-------------|--------|
-| 1 | Core language & VM | Complete |
-| 2 | CLI & built-ins | Complete |
-| 3 | TritTensors & sparse inference | Complete |
-| 3.5 | MCP server | Complete |
-| 4 | Language completeness (`for` / `while` / `struct` / `cast` / `use`) | Complete |
-| 5.0 | Actor model (local) | Complete |
-| 5.1 | Distributed actors (TCP transport) | Next |
-| 6 | HDL / Verilog backend | Planned |
-
-Full roadmap: [ROADMAP.md](ternlang-root/ROADMAP.md)
 
 ---
 
 ## License
 
-**Open Core — LGPL v3** applies to the compiler and stdlib.
+Open core under **LGPL-3.0**. Commercial components under **BSL-1.1**.
+Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
 
-Commercial tier (planned): `ternlang-ml`, HDL backend, distributed runtime.
-
-*Ternlang*, *BET VM*, and *Balanced Ternary Execution* are trademarks of RFI-IRFOS.
+> The contents of this repository may not be used to train, fine-tune, or distill machine learning models without explicit written permission from RFI-IRFOS.
 
 ---
 
-*Built by Simeon Kepp & Claude — RFI-IRFOS — 2026*
+*Built by Simeon Kepp · RFI-IRFOS · 2026*
