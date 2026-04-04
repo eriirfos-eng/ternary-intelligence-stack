@@ -1,0 +1,30 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 260_qnn_ecosystem_modeling.tern — Triadic Ecosystem State Modeling
+//
+// WHY TERNARY?
+// Binary activation functions (ReLU) squash all ambiguity into on/off states.
+// QNNs use triadic nonlinearities: trit=-1 is habitat collapse,
+// trit=0 is stasis/equilibrium,
+// trit=+1 is biodiversity growth.
+// This preserves gradients and models the real dynamics of ecological stability.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mark_collapse(e) {
+  invert(e)
+}
+
+fn mark_stasis(e) {
+  e
+}
+
+fn mark_growth(e) {
+  e
+}
+
+let ecosystem_trit = 0;
+
+match ecosystem_trit {
+  -1 => { mark_collapse(ecosystem_trit) },
+  0  => { mark_stasis(ecosystem_trit) },
+  1  => { mark_growth(ecosystem_trit) }
+}

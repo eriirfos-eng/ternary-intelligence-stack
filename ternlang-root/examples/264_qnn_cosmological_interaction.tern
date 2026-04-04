@@ -1,0 +1,30 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 264_qnn_cosmological_interaction.tern — Cosmological Triadic Interaction Modeling
+//
+// WHY TERNARY?
+// Binary activation functions (ReLU) squash all ambiguity into on/off states.
+// QNNs use triadic nonlinearities: trit=-1 is gravitational attraction,
+// trit=0 is spatial expansion,
+// trit=+1 is dark energy push.
+// This preserves gradients and models the real dynamics of cosmic evolution.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mark_attraction(i) {
+  invert(i)
+}
+
+fn mark_expansion(i) {
+  i
+}
+
+fn mark_dark_energy(i) {
+  i
+}
+
+let interaction_trit = -1;
+
+match interaction_trit {
+  -1 => { mark_attraction(interaction_trit) },
+  0  => { mark_expansion(interaction_trit) },
+  1  => { mark_dark_energy(interaction_trit) }
+}

@@ -1,0 +1,30 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 262_qnn_nlp_classification.tern — Ternary NLP Uncertainty Classification
+//
+// WHY TERNARY?
+// Binary activation functions (ReLU) squash all ambiguity into on/off states.
+// QNNs use triadic nonlinearities: trit=-1 is negative sentiment,
+// trit=0 is neutral/uncertain,
+// trit=+1 is positive sentiment.
+// This preserves gradients and models the real dynamics of natural language.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mark_negative(n) {
+  invert(n)
+}
+
+fn mark_uncertain(n) {
+  n
+}
+
+fn mark_positive(n) {
+  n
+}
+
+let sentiment_trit = 0;
+
+match sentiment_trit {
+  -1 => { mark_negative(sentiment_trit) },
+  0  => { mark_uncertain(sentiment_trit) },
+  1  => { mark_positive(sentiment_trit) }
+}

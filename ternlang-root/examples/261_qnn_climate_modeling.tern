@@ -1,0 +1,30 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 261_qnn_climate_modeling.tern — Intermediate State Climate Modeling
+//
+// WHY TERNARY?
+// Binary activation functions (ReLU) squash all ambiguity into on/off states.
+// QNNs use triadic nonlinearities: trit=-1 is thermal cooling,
+// trit=0 is climate stasis,
+// trit=+1 is thermal warming.
+// This preserves gradients and models the real dynamics of climate feedback.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mark_cooling(c) {
+  invert(c)
+}
+
+fn mark_stasis(c) {
+  c
+}
+
+fn mark_warming(c) {
+  c
+}
+
+let climate_trit = 1;
+
+match climate_trit {
+  -1 => { mark_cooling(climate_trit) },
+  0  => { mark_stasis(climate_trit) },
+  1  => { mark_warming(climate_trit) }
+}
