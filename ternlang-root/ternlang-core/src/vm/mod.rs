@@ -32,13 +32,20 @@ pub enum VmError {
 impl fmt::Display for VmError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            VmError::StackUnderflow => write!(f, "Stack underflow"),
-            VmError::BetFault(fault) => write!(f, "BET Fault: {:?}", fault),
-            VmError::Halt => write!(f, "VM Halted"),
-            VmError::InvalidOpcode(op) => write!(f, "Invalid opcode: 0x{:02x}", op),
-            VmError::InvalidRegister(reg) => write!(f, "Invalid register: {}", reg),
-            VmError::PcOutOfBounds(pc) => write!(f, "PC out of bounds: {}", pc),
-            VmError::TypeMismatch => write!(f, "Type mismatch"),
+            VmError::StackUnderflow =>
+                write!(f, "[BET-001] Stack underflow — you tried to pop a truth that wasn't there."),
+            VmError::BetFault(fault) =>
+                write!(f, "[BET-002] BET encoding fault: {fault:?}. The 0b00 state is invalid — only -1, 0, +1 exist."),
+            VmError::Halt =>
+                write!(f, "[BET-003] VM halted cleanly. Execution reached the end."),
+            VmError::InvalidOpcode(op) =>
+                write!(f, "[BET-004] Unknown opcode 0x{op:02x} — the machine doesn't know this instruction. Conflict state."),
+            VmError::InvalidRegister(reg) =>
+                write!(f, "[BET-005] Register {reg} is out of range. The BET has 27 registers (0–26)."),
+            VmError::PcOutOfBounds(pc) =>
+                write!(f, "[BET-006] PC {pc} is out of bounds — you jumped outside the known universe. Recompile."),
+            VmError::TypeMismatch =>
+                write!(f, "[BET-007] Runtime type mismatch — a trit was expected but something else arrived."),
         }
     }
 }

@@ -330,6 +330,27 @@ Every example follows the same pattern: three states (`-1` / `0` / `+1`) map to 
 | 249 | [249_corporate_esg_reporting.tern](249_corporate_esg_reporting.tern) | Governance & Social with "Materiality Assessment" state |
 | 250 | [250_supply_chain_human_rights.tern](250_supply_chain_human_rights.tern) | Ethical Sourcing with "Corrective Action" state |
 
+### Qutrit Neural Networks (QNN)
+*Based on the QNN research paper by Simeon Kepp / RFI-IRFOS. The ternary state space {-1, 0, +1} maps exactly to the qutrit basis |−⟩/|0⟩/|+⟩ — decay/stasis/growth. No encoding layer needed.*
+
+| # | File | Summary |
+|---|------|---------|
+| 251 | [251_qnn_gate_activation.tern](251_qnn_gate_activation.tern) | Triadic Neuron Activation Gate with "Equilibrium" stasis state |
+| 252 | [252_qnn_forward_pass.tern](252_qnn_forward_pass.tern) | Forward Pass Through QNN Hidden Layer with "Partial Decoherence" hold state |
+| 253 | [253_qnn_input_encoding.tern](253_qnn_input_encoding.tern) | Input Layer Ternary Encoding with dark/neutral/bright qutrit pixel model |
+| 254 | [254_qnn_vs_relu.tern](254_qnn_vs_relu.tern) | Triadic Nonlinearity vs ReLU — explicit model of what binary activation loses |
+| 255 | [255_qnn_coherence_verification.tern](255_qnn_coherence_verification.tern) | Qutrit State Coherence Verification with "Partial Coherence" hold state |
+| 256 | [256_qnn_tesseract_stabilizer.tern](256_qnn_tesseract_stabilizer.tern) | Tesseract Recursive Syntax (TRS) Stabilizer with "Not Yet Converged" hold state |
+| 257 | [257_qnn_error_correction.tern](257_qnn_error_correction.tern) | Real-Time Quantum Error Correction with "Self-Correcting" hold state |
+| 258 | [258_qnn_key_generation.tern](258_qnn_key_generation.tern) | Qutrit Cryptographic Key Bit Generation with "Re-Sample" hold state |
+| 259 | [259_qnn_qkd.tern](259_qnn_qkd.tern) | Qutrit Quantum Key Distribution with "Eavesdrop Monitor" hold state |
+| 260 | [260_qnn_ecosystem_modeling.tern](260_qnn_ecosystem_modeling.tern) | Triadic Ecosystem State Modeling with "Equilibrium" as primary hold state |
+| 261 | [261_qnn_climate_modeling.tern](261_qnn_climate_modeling.tern) | Intermediate State Climate Modeling with "Metastable" hold before tipping point |
+| 262 | [262_qnn_nlp_classification.tern](262_qnn_nlp_classification.tern) | Ternary NLP Uncertainty Classification with "Hedged Language" stasis state |
+| 263 | [263_qnn_rl_reward.tern](263_qnn_rl_reward.tern) | Triadic Reward Signal in RL — neutral action preserved as informative stasis |
+| 264 | [264_qnn_cosmological_interaction.tern](264_qnn_cosmological_interaction.tern) | Cosmological Triadic Interaction Modeling — growth/equilibrium/decay stellar phases |
+| 265 | [265_qnn_inference_pipeline.tern](265_qnn_inference_pipeline.tern) | Full QNN Inference Pipeline — composed encoding → layer → coherence → TRS → output |
+
 
 ## Patterns Demonstrated
 

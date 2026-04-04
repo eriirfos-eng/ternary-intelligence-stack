@@ -1,99 +1,158 @@
-/// StdlibLoader — resolves `use` statements into parsed function definitions.
+/// StdlibLoader / ModuleResolver — resolves `use` statements into parsed function definitions.
 ///
-/// When user code contains `use std::trit;` inside a function body, this module
-/// parses the corresponding stdlib source and injects the functions into the
-/// program before semantic analysis and codegen.
+/// Two resolution strategies, tried in order:
+///   1. Built-in stdlib (embedded at compile time via `include_str!`) — zero filesystem I/O.
+///   2. User-defined modules: looks for `<segment>/<segment>.tern` relative to the source file.
 ///
-/// Stdlib sources are embedded at compile time via `include_str!` so the
-/// compiler binary is fully self-contained — no filesystem lookups at runtime.
-use crate::ast::{Program, Stmt};
+/// Use `StdlibLoader::resolve()` for quick stdlib-only resolution (backwards-compat API).
+/// Use `ModuleResolver::from_source_file(path).resolve(program)` for full module support.
+use crate::ast::{Function, Program, Stmt};
 use crate::parser::Parser;
+
+// ─── Built-in stdlib sources (compile-time embedded) ─────────────────────────
+
+fn stdlib_source_for(path: &[String]) -> Option<&'static str> {
+    match path.join("::").as_str() {
+        "std::trit"     => Some(include_str!("../stdlib/std/trit.tern")),
+        "std::math"     => Some(include_str!("../stdlib/std/math.tern")),
+        "std::tensor"   => Some(include_str!("../stdlib/std/tensor.tern")),
+        "std::io"       => Some(include_str!("../stdlib/std/io.tern")),
+        "ml::quantize"  => Some(include_str!("../stdlib/ml/quantize.tern")),
+        "ml::inference" => Some(include_str!("../stdlib/ml/inference.tern")),
+        _               => None,
+    }
+}
+
+// ─── Shared helpers ──────────────────────────────────────────────────────────
+
+/// Recursively collect `use` paths from a slice of statements.
+fn collect_use_paths(stmts: &[Stmt]) -> Vec<Vec<String>> {
+    let mut paths = Vec::new();
+    for stmt in stmts {
+        match stmt {
+            Stmt::Use { path } => paths.push(path.clone()),
+            Stmt::Block(inner) => paths.extend(collect_use_paths(inner)),
+            Stmt::IfTernary { on_pos, on_zero, on_neg, .. } => {
+                paths.extend(collect_use_paths(&[*on_pos.clone()]));
+                paths.extend(collect_use_paths(&[*on_zero.clone()]));
+                paths.extend(collect_use_paths(&[*on_neg.clone()]));
+            }
+            Stmt::Match { arms, .. } => {
+                for (_, arm_stmt) in arms {
+                    paths.extend(collect_use_paths(&[arm_stmt.clone()]));
+                }
+            }
+            _ => {}
+        }
+    }
+    paths
+}
+
+/// Parse source string and extract its functions; deduplicate against `known`.
+fn parse_and_extract(src: &str, key: &str, known: &mut std::collections::HashSet<String>) -> Vec<Function> {
+    let mut parser = Parser::new(src);
+    match parser.parse_program() {
+        Ok(prog) => prog.functions.into_iter().filter(|f| known.insert(f.name.clone())).collect(),
+        Err(e)   => { eprintln!("[MOD-000] Failed to parse module '{key}': {e}"); vec![] }
+    }
+}
+
+/// Resolve all `use` paths, injecting matching functions into `program`.
+/// `extra_source` is called for paths not found in the stdlib — returns `Option<String>`.
+fn resolve_with<F>(program: &mut Program, extra_source: F)
+where
+    F: Fn(&[String]) -> Option<String>,
+{
+    let mut known: std::collections::HashSet<String> =
+        program.functions.iter().map(|f| f.name.clone()).collect();
+
+    let mut all_paths: Vec<Vec<String>> = program
+        .functions
+        .iter()
+        .flat_map(|f| collect_use_paths(&f.body))
+        .collect();
+    all_paths.sort();
+    all_paths.dedup();
+
+    let mut injected: Vec<Function> = Vec::new();
+
+    for path in &all_paths {
+        let key = path.join("::");
+        if let Some(src) = stdlib_source_for(path) {
+            injected.extend(parse_and_extract(src, &key, &mut known));
+        } else if let Some(src) = extra_source(path) {
+            injected.extend(parse_and_extract(&src, &key, &mut known));
+        } else {
+            eprintln!("[MOD-001] Unknown module '{key}' — no stdlib match and no file found. Did you mean std::trit?");
+        }
+    }
+
+    injected.extend(program.functions.drain(..));
+    program.functions = injected;
+}
+
+// ─── StdlibLoader (backwards-compat, stdlib-only) ────────────────────────────
 
 pub struct StdlibLoader;
 
 impl StdlibLoader {
-    fn source_for(path: &[String]) -> Option<&'static str> {
-        match path.join("::").as_str() {
-            "std::trit"     => Some(include_str!("../stdlib/std/trit.tern")),
-            "std::math"     => Some(include_str!("../stdlib/std/math.tern")),
-            "std::tensor"   => Some(include_str!("../stdlib/std/tensor.tern")),
-            "std::io"       => Some(include_str!("../stdlib/std/io.tern")),
-            "ml::quantize"  => Some(include_str!("../stdlib/ml/quantize.tern")),
-            "ml::inference" => Some(include_str!("../stdlib/ml/inference.tern")),
-            _               => None,
-        }
-    }
-
-    /// Recursively collect `use` paths from a slice of statements.
-    fn collect_use_paths(stmts: &[Stmt]) -> Vec<Vec<String>> {
-        let mut paths = Vec::new();
-        for stmt in stmts {
-            match stmt {
-                Stmt::Use { path } => paths.push(path.clone()),
-                Stmt::Block(inner) => paths.extend(Self::collect_use_paths(inner)),
-                Stmt::IfTernary { on_pos, on_zero, on_neg, .. } => {
-                    paths.extend(Self::collect_use_paths(&[*on_pos.clone()]));
-                    paths.extend(Self::collect_use_paths(&[*on_zero.clone()]));
-                    paths.extend(Self::collect_use_paths(&[*on_neg.clone()]));
-                }
-                Stmt::Match { arms, .. } => {
-                    for (_, arm_stmt) in arms {
-                        paths.extend(Self::collect_use_paths(&[arm_stmt.clone()]));
-                    }
-                }
-                _ => {}
-            }
-        }
-        paths
-    }
-
-    /// Parse stdlib modules referenced by `use` statements and prepend their
-    /// functions to `program.functions`.  Functions already present by name are
-    /// not duplicated, so calling this multiple times is safe.
+    /// Resolve stdlib `use` statements in `program`.  User-defined modules are
+    /// left for a `ModuleResolver` to handle.
     pub fn resolve(program: &mut Program) {
-        // Build the set of already-defined function names
-        let mut known: std::collections::HashSet<String> =
-            program.functions.iter().map(|f| f.name.clone()).collect();
+        resolve_with(program, |_| None);
+    }
+}
 
-        // Collect all use paths from every function body
-        let mut all_paths: Vec<Vec<String>> = program
-            .functions
-            .iter()
-            .flat_map(|f| Self::collect_use_paths(&f.body))
-            .collect();
+// ─── ModuleResolver (stdlib + user-defined cross-file modules) ───────────────
 
-        // Deduplicate so we parse each module at most once
-        all_paths.sort();
-        all_paths.dedup();
+/// Full module resolver.  Resolves stdlib built-ins AND user `.tern` modules
+/// found relative to a source file's directory.
+///
+/// # Usage
+/// ```ignore
+/// let mut resolver = ModuleResolver::from_source_file(Path::new("src/main.tern"));
+/// resolver.resolve(&mut program);
+/// ```
+pub struct ModuleResolver {
+    base_dir: Option<std::path::PathBuf>,
+}
 
-        let mut stdlib_fns = Vec::new();
+impl ModuleResolver {
+    /// Resolve relative to the directory containing `source_file`.
+    pub fn from_source_file(source_file: &std::path::Path) -> Self {
+        Self { base_dir: source_file.parent().map(|p| p.to_path_buf()) }
+    }
 
-        for path in &all_paths {
-            let key = path.join("::");
-            let Some(src) = Self::source_for(path) else {
-                // Unknown module — leave as-is; semantic checker will surface errors
-                continue;
-            };
-            let mut parser = Parser::new(src);
-            match parser.parse_program() {
-                Ok(stdlib_prog) => {
-                    for f in stdlib_prog.functions {
-                        if !known.contains(&f.name) {
-                            known.insert(f.name.clone());
-                            stdlib_fns.push(f);
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("[stdlib] Failed to parse {}: {:?}", key, e);
-                }
+    /// Resolve relative to `dir` (directory, not file).
+    pub fn from_dir(dir: std::path::PathBuf) -> Self {
+        Self { base_dir: Some(dir) }
+    }
+
+    /// Stdlib-only resolver (no file-system access). Equivalent to `StdlibLoader`.
+    pub fn stdlib_only() -> Self {
+        Self { base_dir: None }
+    }
+
+    /// Attempt to load `path` (e.g. `["mymod", "utils"]`) as `base_dir/mymod/utils.tern`.
+    fn load_user_module(&self, path: &[String]) -> Option<String> {
+        let base = self.base_dir.as_ref()?;
+        let mut file_path = base.clone();
+        for (i, segment) in path.iter().enumerate() {
+            if i == path.len() - 1 {
+                file_path = file_path.join(format!("{segment}.tern"));
+            } else {
+                file_path = file_path.join(segment);
             }
         }
+        match std::fs::read_to_string(&file_path) {
+            Ok(src) => Some(src),
+            Err(_)  => None,
+        }
+    }
 
-        // Prepend stdlib functions so they appear before user-defined functions
-        // (call order in bytecode doesn't matter, but it keeps the symbol table tidy)
-        stdlib_fns.extend(program.functions.drain(..));
-        program.functions = stdlib_fns;
+    /// Resolve all `use` statements: stdlib first, then user files.
+    pub fn resolve(&self, program: &mut Program) {
+        resolve_with(program, |path| self.load_user_module(path));
     }
 }
 
@@ -114,7 +173,7 @@ mod tests {
             vec!["ml".to_string(), "inference".to_string()],
         ];
         for path in &modules {
-            let src = StdlibLoader::source_for(path)
+            let src = stdlib_source_for(path)
                 .unwrap_or_else(|| panic!("Missing stdlib source for {}", path.join("::")));
             let mut parser = Parser::new(src);
             parser.parse_program()

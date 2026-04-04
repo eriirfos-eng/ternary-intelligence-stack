@@ -18,7 +18,7 @@ pub use causal::CausalReasonAgent;
 pub use context::ContextMemAgent;
 pub use deductive::DeductiveReasonAgent;
 pub use fact::FactCheckAgent;
-pub use harness::{AgentHarness, TernaryAgent};
+pub use harness::{AgentHarness, AggregateVerdict, TernaryAgent};
 pub use inductive::InductiveReasonAgent;
 pub use math::MathReasonAgent;
 pub use metasafety::MetaSafetyAgent;

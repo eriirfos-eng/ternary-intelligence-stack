@@ -12,27 +12,31 @@ pub enum SemanticError {
     ReturnTypeMismatch { function: String, expected: Type, found: Type },
     ArgCountMismatch { function: String, expected: usize, found: usize },
     ArgTypeMismatch { function: String, param_index: usize, expected: Type, found: Type },
+    /// `?` used on an expression that doesn't return trit
+    PropagateOnNonTrit { found: Type },
 }
 
 impl std::fmt::Display for SemanticError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::TypeMismatch { expected, found } =>
-                write!(f, "type mismatch: expected {:?}, found {:?}", expected, found),
+                write!(f, "[TYPE-001] Type mismatch: expected {expected:?}, found {found:?}. Binary types don't map cleanly to ternary space."),
             Self::UndefinedVariable(n) =>
-                write!(f, "undefined variable: '{}'", n),
+                write!(f, "[SCOPE-001] '{n}' is undefined. Hold state — declare before use."),
             Self::UndefinedStruct(n) =>
-                write!(f, "undefined struct: '{}'", n),
+                write!(f, "[STRUCT-001] Struct '{n}' doesn't exist. The type system can't find it."),
             Self::UndefinedField { struct_name, field } =>
-                write!(f, "struct '{}' has no field '{}'", struct_name, field),
+                write!(f, "[STRUCT-002] Struct '{struct_name}' has no field '{field}'. Check your definition."),
             Self::UndefinedFunction(n) =>
-                write!(f, "undefined function: '{}'", n),
+                write!(f, "[FN-001] '{n}' is not defined. Did you forget to declare it or import its module?"),
             Self::ReturnTypeMismatch { function, expected, found } =>
-                write!(f, "function '{}' declared return type {:?} but returns {:?}", function, expected, found),
+                write!(f, "[FN-002] Function '{function}' declared return type {expected:?} but returned {found:?}. Ternary contracts are strict."),
             Self::ArgCountMismatch { function, expected, found } =>
-                write!(f, "function '{}' expects {} argument(s), got {}", function, expected, found),
+                write!(f, "[FN-003] '{function}' expects {expected} arg(s), got {found}. Arity is not optional."),
             Self::ArgTypeMismatch { function, param_index, expected, found } =>
-                write!(f, "function '{}' argument {}: expected {:?}, found {:?}", function, param_index, expected, found),
+                write!(f, "[FN-004] '{function}' arg {param_index}: expected {expected:?}, found {found:?}. Types travel with their values."),
+            Self::PropagateOnNonTrit { found } =>
+                write!(f, "[PROP-001] '?' used on a {found:?} expression. Only trit-returning functions can signal conflict. The third state requires a trit."),
         }
     }
 }
@@ -364,6 +368,14 @@ impl SemanticAnalyzer {
             Expr::Spawn { .. }        => Ok(Type::AgentRef),
             Expr::Await { .. }        => Ok(Type::Trit),
             Expr::NodeId              => Ok(Type::String),
+
+            Expr::Propagate { expr } => {
+                let inner = self.infer_expr_type(expr)?;
+                if inner != Type::Trit {
+                    return Err(SemanticError::PropagateOnNonTrit { found: inner });
+                }
+                Ok(Type::Trit)
+            }
 
             Expr::FieldAccess { object, field } => {
                 let obj_ty = self.infer_expr_type(object)?;

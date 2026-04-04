@@ -1,32 +1,31 @@
-# fly.toml — Ternlang API on Fly.io
-# Deploy: fly deploy
-# Logs:   fly logs
-# Status: fly status
+# fly.toml app configuration file generated for ternlang-api on 2026-04-04T06:28:03Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "ternlang-api"
-primary_region = "fra"   # Frankfurt — closest to ternlang.com audience
+app = 'ternlang-api'
+primary_region = 'fra'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  PORT = "8080"
-  # Set your admin key via: fly secrets set TERNLANG_ADMIN_KEY=<secret>
+  PORT = '8080'
 
 [http_service]
-  internal_port       = 8080
-  force_https         = true
-  auto_stop_machines  = true    # free tier: sleeps when idle, wakes on request
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 0      # 0 = fully free (cold starts ~1-2s)
+  min_machines_running = 0
 
   [[http_service.checks]]
-    grace_period = "5s"
-    interval     = "30s"
-    method       = "GET"
-    path         = "/health"
-    timeout      = "5s"
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '5s'
+    method = 'GET'
+    path = '/health'
 
 [[vm]]
-  size   = "shared-cpu-1x"
-  memory = "256mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'

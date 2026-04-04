@@ -942,6 +942,9 @@ dependencies = [
 [[package]]
 name = "ternlang-codegen"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-compat"
@@ -1012,6 +1015,9 @@ dependencies = [
 [[package]]
 name = "ternlang-test"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternpkg"

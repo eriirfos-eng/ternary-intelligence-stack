@@ -14,6 +14,21 @@ pub enum ParseError {
     NonExhaustiveMatch(String),
 }
 
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnexpectedToken(tok) =>
+                write!(f, "[PARSE-001] Unexpected token '{tok}' — the lexer hit something it didn't expect. Check your syntax."),
+            Self::ExpectedToken(expected, found) =>
+                write!(f, "[PARSE-002] Expected {expected} but found '{found}'. The grammar demands it."),
+            Self::InvalidTrit(val) =>
+                write!(f, "[PARSE-003] '{val}' is not a valid trit. Trits are -1, 0, or +1. No in-betweens."),
+            Self::NonExhaustiveMatch(msg) =>
+                write!(f, "[PARSE-004] Non-exhaustive match: {msg}. Ternary has three states — cover all three or the compiler won't let you through."),
+        }
+    }
+}
+
 impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
         Self { lex: Token::lexer(input) }
@@ -161,18 +176,32 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Parse unary prefix expressions, then wrap with postfix (field access).
+    /// Parse unary prefix expressions, then wrap with postfix (field access, `?`).
     fn parse_unary_expr(&mut self) -> Result<Expr, ParseError> {
         let mut expr = self.parse_primary_expr()?;
-        // Postfix: `.field` chains
         loop {
             if let Ok(Token::Dot) = self.peek_token() {
+                // Postfix: `.field` chain
                 self.next_token()?; // consume `.`
                 let field = match self.next_token()? {
                     Token::Ident(n) => n,
                     t => return Err(ParseError::ExpectedToken("field name".into(), format!("{:?}", t))),
                 };
                 expr = Expr::FieldAccess { object: Box::new(expr), field };
+            } else if let Ok(Token::UncertainBranch) = self.peek_token() {
+                // Postfix `?` — ternary error propagation.
+                // Disambiguate from `if cond ? { }`: if the token after `?` is `{`, this
+                // `?` belongs to the enclosing if/while statement — don't consume it.
+                let mut lookahead = self.lex.clone();
+                lookahead.next(); // skip `?`
+                let after_q = lookahead.next();
+                let is_uncertain_branch = matches!(after_q, Some(Ok(Token::LBrace)));
+                if !is_uncertain_branch {
+                    self.next_token()?; // consume `?`
+                    expr = Expr::Propagate { expr: Box::new(expr) };
+                } else {
+                    break;
+                }
             } else {
                 break;
             }

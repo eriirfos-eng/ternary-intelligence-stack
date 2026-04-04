@@ -39,6 +39,7 @@ COPY ternlang-codegen/src   ternlang-codegen/src
 COPY ternlang-ml/src        ternlang-ml/src
 COPY ternlang-cli/src       ternlang-cli/src
 COPY ternlang-api/src       ternlang-api/src
+COPY ternlang-web/index.html ternlang-web/index.html
 COPY ternlang-mcp/src       ternlang-mcp/src
 COPY ternlang-moe/src       ternlang-moe/src
 COPY ternlang-test/src      ternlang-test/src
