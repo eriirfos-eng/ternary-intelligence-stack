@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 96_music_rights.tern — Music rights clearance
+//
+// YouTube's binary ContentID either leaves a video monetized or strikes it down.
+// Ternary rights management introduces 'hold': "Escrow ad revenue until human
+// copyright holders resolve the dispute."
+//   +1: Clear (Creator monetizes)
+//    0: Dispute (Hold revenue in escrow)
+//   -1: Strike (Takedown)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn audio_match(audio: trit) -> trit { return audio; }
+fn fair_use_transform(fair: trit) -> trit { return fair; }
+fn claimant_history(claim: trit) -> trit { return claim; }
+
+fn rights_management(audio: trit, fair: trit, claim: trit) -> trit {
+    match audio {
+        -1 => {
+            // Exact match found.
+            match fair {
+                -1 => { return conflict(); } // Exact match, no commentary -> Takedown
+                 0 => { return hold(); }     // Exact match, maybe a review video? -> Escrow
+                 1 => { return hold(); }     // Exact match, clear parody -> Escrow for human review
+            }
+        }
+         0 => {
+             // Partial/Short match. 
+             match claim {
+                 -1 => { return hold(); }    // Known aggressive claimant -> Escrow
+                  0 => { return truth(); }   // Probably fine
+                  1 => { return truth(); }   
+             }
+         }
+         1 => { return truth(); } // No matches
+    }
+}
+
+let vid_audio: trit = conflict();    // 10 seconds of a Beatles song
+let vid_fair: trit = truth();        // Creator is talking over it, analyzing the chords
+let corp_claim: trit = conflict();   // Universal Music Group auto-claimed it
+
+let content_action: trit = rights_management(vid_audio, vid_fair, corp_claim);
+
+match content_action {
+    -1 => { return conflict(); }   // STRIKE: Remove video and issue warning
+     0 => { return hold();    }   // ESCROW: Keep ads running, freeze money until resolved
+     1 => { return truth();   }   // CLEAR: Creator keeps all revenue
+}

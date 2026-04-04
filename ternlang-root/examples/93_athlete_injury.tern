@@ -1,0 +1,42 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 93_athlete_injury.tern — Athlete injury risk before match
+//
+// Binary clearance (Cleared / Benched) pressures doctors to clear athletes too
+// early. Ternary clearance uses 'hold' for "Minutes Restriction / Avoid Contact,"
+// allowing partial participation without risking season-ending damage.
+//   +1: Fully Cleared
+//    0: Restricted Minutes (Hold)
+//   -1: Benched
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn pain_level(pain: trit) -> trit { return pain; }
+fn range_of_motion(rom: trit) -> trit { return rom; }
+fn structural_mri(mri: trit) -> trit { return mri; }
+
+fn medical_clearance(pain: trit, rom: trit, mri: trit) -> trit {
+    match mri {
+        -1 => { return conflict(); } // Torn ligament -> Benched
+         0 => { return hold(); }     // Swelling hiding the joint -> Restricted
+         1 => {
+             // Structure is fine. Check pain and ROM.
+             let function: trit = consensus(pain, rom);
+             match function {
+                 -1 => { return conflict(); } // Too much pain/stiffness to play safely
+                  0 => { return hold(); }     // Sore but functional -> Restricted
+                  1 => { return truth(); }    // 100% healthy
+             }
+         }
+    }
+}
+
+let current_pain: trit = hold();     // Mild soreness
+let current_rom: trit = truth();     // Full range of motion
+let scan_result: trit = truth();     // No structural damage
+
+let play_status: trit = medical_clearance(current_pain, current_rom, scan_result);
+
+match play_status {
+    -1 => { return conflict(); }   // BENCHED: Do not dress for game
+     0 => { return hold();    }   // RESTRICTED: Max 15 minutes, non-contact only
+     1 => { return truth();   }   // CLEARED: Start the game normally
+}

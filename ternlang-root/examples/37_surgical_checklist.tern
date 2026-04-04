@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 37_surgical_checklist.tern — Surgical go/no-go checklist
+//
+// The WHO Surgical Safety Checklist. Binary checkboxes often lead to pencil-whipping.
+// Ternary allows a formal "hold" where the team pauses to resolve a discrepancy
+// (e.g., missing imaging) without outright cancelling the surgery.
+//   +1: Clear to incise
+//    0: Pause / Resolve discrepancy
+//   -1: Abort procedure
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn patient_identity(id: trit) -> trit { return id; }
+fn site_marked(site: trit) -> trit { return site; }
+fn equipment_ready(equip: trit) -> trit { return equip; }
+
+fn surgical_timeout(id: trit, site: trit, equip: trit) -> trit {
+    // Identity is non-negotiable
+    match id {
+        -1 => { return conflict(); } // Wrong patient?! Abort immediately.
+         0 => { return hold(); }     // Bracelet missing, go check records.
+         1 => {
+             let site_equip: trit = consensus(site, equip);
+             return site_equip;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let id_verified: trit = truth();     // Patient confirmed name and DOB
+let marking_visible: trit = truth(); // Surgeon's initials on correct limb
+let instruments_sterile: trit = hold(); // One tray indicator is ambiguous
+
+let timeout_result: trit = surgical_timeout(id_verified, marking_visible, instruments_sterile);
+
+// Expected result: hold() - We don't cut until we get a fresh, confirmed sterile tray.
+match timeout_result {
+    -1 => { return conflict(); }   // ABORT: Cancel and wake patient
+     0 => { return hold();    }   // TIME-OUT: Stop. Send for new instrument tray.
+     1 => { return truth();   }   // SCALPEL: Begin operation
+}

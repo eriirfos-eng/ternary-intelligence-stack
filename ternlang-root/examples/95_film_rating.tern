@@ -1,0 +1,50 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 95_film_rating.tern — Film rating board classification
+//
+// Rating boards struggle with borderline content. A binary logic model either
+// slaps an R rating on a PG-13 film or lets it slide. Ternary logic's 'hold'
+// translates to "Requires mandatory edits to achieve desired rating," creating
+// a negotiation loop rather than a final verdict.
+//   +1: Approved for PG-13
+//    0: Edit required (Hold)
+//   -1: Rated R / NC-17
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn violence_level(vio: trit) -> trit { return vio; }
+fn language_use(lang: trit) -> trit { return lang; }
+fn thematic_elements(theme: trit) -> trit { return theme; }
+
+fn rating_board(vio: trit, lang: trit, theme: trit) -> trit {
+    match vio {
+        -1 => { return conflict(); } // Extreme gore -> Automatic R
+         0 => {
+             // Borderline violence.
+             match lang {
+                 -1 => { return conflict(); } // Borderline violence + heavy cursing -> R
+                  0 => { return hold(); }     // Both borderline -> Needs edits
+                  1 => { return hold(); }     // Just violence is borderline -> Needs edits
+             }
+         }
+         1 => {
+             // Mild violence.
+             let text: trit = consensus(lang, theme);
+             match text {
+                 -1 => { return conflict(); } // Too much language -> R
+                  0 => { return hold(); }     // One too many F-words -> Edit required
+                  1 => { return truth(); }    // Clean -> PG-13
+             }
+         }
+    }
+}
+
+let film_vio: trit = truth();        // Mostly off-screen action
+let film_lang: trit = hold();        // Uses the F-word exactly twice (rules say once)
+let film_theme: trit = truth();      // Standard superhero themes
+
+let classification: trit = rating_board(film_vio, film_lang, film_theme);
+
+match classification {
+    -1 => { return conflict(); }   // RATED R: Issue certificate
+     0 => { return hold();    }   // EDITS: Provide notes on what audio to mute for PG-13
+     1 => { return truth();   }   // PG-13: Issue certificate
+}

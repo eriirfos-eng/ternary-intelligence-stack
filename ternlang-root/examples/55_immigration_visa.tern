@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 55_immigration_visa.tern — Border Control & Talent Mobility
+//
+// Binary failure: Binary "Approve/Deny" creates diplomatic friction and 
+// talent flight when valid applicants are rejected for minor errors, or 
+// security vulnerabilities when vetting is rushed.
+// Ternary advantage: 'hold' enables an "Administrative Processing" (AP) 
+// state, where a "Request for Evidence" (RFE) allows the applicant to 
+// clarify intent or provide missing tax returns without a final rejection.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_security_clearance(clear: trit) -> trit { return clear; }
+fn check_financial_support(funds: trit) -> trit { return funds; }
+fn check_intent_of_visit(intent: trit) -> trit { return intent; }
+
+fn adjudicate_visa(sec: trit, funds: trit, intent: trit) -> trit {
+    // Security is the absolute hard gate
+    match sec {
+        -1 => { return conflict(); } // Security threat: Deny
+         0 => { 
+             // Watchlist hit: Requires manual vetting
+             return hold();
+         }
+         1 => {
+             // Security clear: check funds and intent
+             let merit: trit = consensus(funds, intent);
+             return merit;
+         }
+    }
+}
+
+// ── Concrete scenario: Skilled worker, missing bank statement ──
+let security_clear: trit = truth();  // No criminal or watchlist record
+let bank_records: trit = hold();     // Proof of funds is incomplete
+let job_offer: trit = truth();       // Valid H-1B sponsorship confirmed
+
+let visa_result: trit = adjudicate_visa(security_clear, bank_records, job_offer);
+
+match visa_result {
+    -1 => { return conflict(); } // DENY: Permanent ineligibility
+     0 => { return hold(); }     // HOLD: Issue Request for Evidence (RFE)
+     1 => { return truth(); }    // APPROVE: Issue visa stamp
+}

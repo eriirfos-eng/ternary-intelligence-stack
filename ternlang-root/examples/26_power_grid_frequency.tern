@@ -1,0 +1,56 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 26_power_grid_frequency.tern — Power grid frequency stability
+//
+// Maintaining 50/60Hz is crucial. Binary systems either trip breakers (blackout)
+// or do nothing. A ternary system uses the 'hold' state to shed non-essential
+// industrial load instantly (demand response) while keeping residential areas
+// online, preventing a cascading failure without plunging cities into darkness.
+//   +1: Grid stable
+//    0: Shed industrial load (Hold)
+//   -1: Rolling blackouts / Trip breakers
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn grid_frequency(freq: trit) -> trit {
+    return freq;
+}
+
+fn spinning_reserve(reserve: trit) -> trit {
+    return reserve;
+}
+
+fn line_temperature(temp: trit) -> trit {
+    return temp;
+}
+
+fn grid_stability_controller(freq: trit, reserve: trit, temp: trit) -> trit {
+    // Frequency drops are catastrophic
+    match freq {
+        -1 => {
+            // Frequency crashing. Check if we have backup power.
+            match reserve {
+                -1 => { return conflict(); } // No backup, shed everything
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // Backup available, shed industrial only to catch up
+            }
+        }
+         0 => { 
+             let temp_reserve: trit = consensus(temp, reserve);
+             return temp_reserve;
+         }
+         1 => { return truth(); }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let current_freq: trit = conflict();   // Frequency dropped to 59.5 Hz
+let available_reserve: trit = truth(); // Peaker plants are spinning up
+let transmission_temp: trit = truth(); // Lines are cool
+
+let grid_action: trit = grid_stability_controller(current_freq, available_reserve, transmission_temp);
+
+// Expected result: hold() - Shed industrial loads to buy time for peaker plants
+match grid_action {
+    -1 => { return conflict(); }   // BLACKOUT: Trip substation breakers
+     0 => { return hold();    }   // SHED: Activate industrial demand response
+     1 => { return truth();   }   // STABLE: Maintain current generation
+}

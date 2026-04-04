@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 52_parole_review.tern — Corrections Rehabilitation Assessment
+//
+// Binary failure: Release/Deny logic can result in high recidivism if 
+// inmates are released without support, or perpetual incarceration for 
+// those who are low-risk but lack a "perfect" record.
+// Ternary advantage: 'defer' (0) creates a "Step-Down" pathway, requiring 
+// the inmate to transition through a work-release program or halfway house 
+// to prove stability before final parole.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn rehabilitation_progress(prog: trit) -> trit { return prog; }
+fn disciplinary_record(rec: trit) -> trit { return rec; }
+fn re_entry_plan(plan: trit) -> trit { return plan; }
+
+fn evaluate_parole(prog: trit, rec: trit, plan: trit) -> trit {
+    // Disciplinary record is a hard gate
+    match rec {
+        -1 => { return conflict(); } // Recent violence: Deny
+         0 => { 
+             // Minor infractions: Progress must be high
+             return consensus(prog, plan);
+         }
+         1 => {
+             // Clean record: check re-entry and progress
+             let readiness: trit = consensus(prog, plan);
+             return readiness;
+         }
+    }
+}
+
+// ── Concrete scenario: Reformed inmate, weak home plan ──
+let high_rehab: trit = truth();      // Completed all vocational training
+let clean_record: trit = truth();    // Zero infractions in 5 years
+let home_plan: trit = hold();        // Housing not yet secured
+
+let board_decision: trit = evaluate_parole(high_rehab, clean_record, home_plan);
+
+match board_decision {
+    -1 => { return conflict(); } // DENY: Maintain incarceration
+     0 => { return hold(); }     // DEFER: Move to transitional housing first
+     1 => { return truth(); }    // GRANT: Release on supervised parole
+}

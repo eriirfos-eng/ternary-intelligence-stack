@@ -1,0 +1,52 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 74_ev_charging.tern — EV charging session authorization
+//
+// Binary chargers either work or fail entirely if the internet connection drops.
+// Ternary chargers use 'hold' to dispense a "courtesy charge" (enough to reach
+// the next station) when the credit card network is down, avoiding stranding
+// the driver.
+//   +1: Full charge authorized
+//    0: Courtesy charge (5 kWh)
+//   -1: Deny / Connector locked
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn cable_connected(cable: trit) -> trit { return cable; }
+fn network_status(network: trit) -> trit { return network; }
+fn payment_auth(auth: trit) -> trit { return auth; }
+
+fn charger_logic(cable: trit, network: trit, auth: trit) -> trit {
+    // Must be plugged in safely to dispense anything
+    match cable {
+        -1 => { return conflict(); } // Faulty ground or disconnected
+         0 => { return conflict(); }
+         1 => {
+             // Plugged in. Check network.
+             match network {
+                 -1 => { return hold(); } // Offline. Dispense courtesy charge so they aren't stranded.
+                  0 => { return hold(); }
+                  1 => {
+                      // Online. Check payment.
+                      match auth {
+                          -1 => { return conflict(); } // Card declined.
+                           0 => { return hold(); }     // Auth pending
+                           1 => { return truth(); }    // Card approved.
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let pilot_signal: trit = truth();    // Car communicating perfectly
+let cellular_link: trit = conflict(); // LTE modem has no signal
+let card_token: trit = hold();       // Cannot verify card without network
+
+let dispensing: trit = charger_logic(pilot_signal, cellular_link, card_token);
+
+// Expected result: hold() - Offline, dispense a slow courtesy charge.
+match dispensing {
+    -1 => { return conflict(); }   // DENY: Display error and lock connector
+     0 => { return hold();    }   // COURTESY: Dispense 5kWh at low speed, bill account later
+     1 => { return truth();   }   // FAST CHARGE: Engage 350kW DC contactors
+}

@@ -1,0 +1,47 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 71_solar_dispatch.tern — Solar panel dispatch decision
+//
+// Binary grid tie-ins either push power or trip off completely. A ternary inverter
+// uses 'hold' to mean "curtail output to match local load, do not export to grid",
+// preventing grid overvoltage on sunny days without entirely wasting the energy.
+//   +1: Export max power to grid
+//    0: Curtail / Zero-export mode (Hold)
+//   -1: Disconnect / Trip offline
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn grid_voltage(volts: trit) -> trit { return volts; }
+fn local_consumption(load: trit) -> trit { return load; }
+fn solar_irradiance(sun: trit) -> trit { return sun; }
+
+fn inverter_controller(volts: trit, load: trit, sun: trit) -> trit {
+    // Grid voltage too high/low means we must physically disconnect for safety
+    match volts {
+        -1 => { return conflict(); } // Anti-islanding protection activated
+         0 => {
+             // Grid is running hot. We shouldn't export.
+             match load {
+                 -1 => { return conflict(); } // No local load to sink the power into. Trip.
+                  0 => { return hold(); }     // Match generation to whatever local load exists
+                  1 => { return hold(); }     // Local load is high, just feed the house
+             }
+         }
+         1 => {
+             // Grid is stable and wants power.
+             return truth();
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let ac_voltage: trit = hold();       // Grid is at 252V (approaching overvoltage limits)
+let house_load: trit = truth();      // Air conditioning is running full blast
+let panel_sun: trit = truth();       // Cloudless noon
+
+let dispatch: trit = inverter_controller(ac_voltage, house_load, panel_sun);
+
+// Expected result: hold() - Grid is hot, don't export. But house needs it, so curtail to match.
+match dispatch {
+    -1 => { return conflict(); }   // TRIP: Open AC relays, shut down generation
+     0 => { return hold();    }   // CURTAIL: Zero-export mode, generate only what the house uses
+     1 => { return truth();   }   // MPPT: Max Power Point Tracking, export all excess
+}

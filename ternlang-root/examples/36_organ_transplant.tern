@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 36_organ_transplant.tern — Organ transplant compatibility
+//
+// Matching organs is complex. Binary match/no-match ignores nuanced immunological
+// risk. Ternary matching introduces 'hold', meaning the match is marginal but
+// viable if the patient is critical. It escalates the decision to the transplant
+// board rather than automatically discarding the organ.
+//   +1: Perfect match
+//    0: Marginal match (Board review)
+//   -1: Incompatible
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn blood_type(abo: trit) -> trit { return abo; }
+fn hla_typing(hla: trit) -> trit { return hla; }
+fn donor_quality(kdpi: trit) -> trit { return kdpi; }
+
+fn transplant_match(abo: trit, hla: trit, kdpi: trit) -> trit {
+    // Blood type is absolute hard gate (ignoring specialized incompatible transplants)
+    match abo {
+        -1 => { return conflict(); } // ABO incompatible, fatal rejection risk
+         0 => { return conflict(); } // Cannot be unsure about blood type
+         1 => {
+             // Blood matches. Check HLA antibodies and organ quality.
+             match hla {
+                 -1 => { return conflict(); } // High antibody crossmatch
+                  0 => { 
+                      // Marginal HLA match. Depends on organ quality.
+                      match kdpi {
+                          -1 => { return conflict(); } // Poor organ + marginal match = reject
+                           0 => { return hold(); }
+                           1 => { return hold(); }     // Good organ + marginal match = board review
+                      }
+                  }
+                  1 => {
+                      // Good HLA match. Check organ quality.
+                      return kdpi;
+                  }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let patient_abo: trit = truth();      // O to O match
+let antibody_hla: trit = hold();      // Low level donor-specific antibodies detected
+let organ_kdpi: trit = truth();       // Young, healthy donor (low KDPI)
+
+let allocation: trit = transplant_match(patient_abo, antibody_hla, organ_kdpi);
+
+// Expected result: hold() - Good organ, marginal immune match. Let surgeons decide.
+match allocation {
+    -1 => { return conflict(); }   // DECLINE: Offer to next patient on list
+     0 => { return hold();    }   // ESCALATE: Urgent surgeon review for risk/benefit
+     1 => { return truth();   }   // ACCEPT: Dispatch recovery team immediately
+}

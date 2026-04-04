@@ -1,0 +1,47 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 48_autonomous_lane_change.tern — Autonomous vehicle lane change
+//
+// AVs often get stuck behind slow vehicles because their binary logic
+// (safe to merge / unsafe) is too timid. Ternary logic allows a 'hold' state:
+// "signal intent, edge closer to lane line, and wait for a gap to open."
+//   +1: Execute lane change
+//    0: Signal and position for gap
+//   -1: Abort lane change
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn blind_spot_radar(radar: trit) -> trit { return radar; }
+fn rear_camera_speed(cam: trit) -> trit { return camera; } // Wait, param is cam
+fn adjacent_lane_flow(flow: trit) -> trit { return flow; }
+
+fn lane_change_decision(radar: trit, cam: trit, flow: trit) -> trit {
+    // Hard gate: If radar sees a car right next to us, abort.
+    match radar {
+        -1 => { return conflict(); } // Car in blind spot
+         0 => { return hold(); }     // Radar noisy, wait
+         1 => {
+             // Blind spot clear. Check approaching traffic speed.
+             match cam {
+                 -1 => { return conflict(); } // Car approaching at 100mph, abort
+                  0 => { return hold(); }     // Car approaching moderately, signal intent
+                  1 => {
+                      // Space is clear. Is there room to merge into the flow?
+                      return consensus(radar, flow);
+                  }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let blind_spot: trit = truth();      // No car directly beside us
+let rear_approach: trit = hold();    // Car is 50m back but closing slowly
+let lane_flow: trit = truth();       // Traffic is moving smoothly
+
+let maneuver: trit = lane_change_decision(blind_spot, rear_approach, lane_flow);
+
+// Expected result: hold() - Car approaching slowly. Signal to see if they yield.
+match maneuver {
+    -1 => { return conflict(); }   // ABORT: Turn off blinker, stay in lane
+     0 => { return hold();    }   // INTENT: Turn on blinker, hug the lane divider
+     1 => { return truth();   }   // MERGE: Steer smoothly into target lane
+}

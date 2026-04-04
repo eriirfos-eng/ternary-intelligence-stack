@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 80_noise_complaint.tern — Noise complaint escalation
+//
+// Police responding to binary noise complaints (Ignore / Arrest) wastes resources.
+// A ternary civic system uses 'hold' for "Send automated SMS warning to property
+// owner," de-escalating the situation without requiring a squad car.
+//   +1: Dismiss (Unfounded)
+//    0: Automated warning (Hold)
+//   -1: Dispatch Police
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn decibel_reading(db: trit) -> trit { return db; }
+fn time_of_day(time: trit) -> trit { return time; }
+fn prior_complaints(priors: trit) -> trit { return priors; }
+
+fn complaint_triage(db: trit, time: trit, priors: trit) -> trit {
+    // If we have an objective meter reading, use it.
+    match db {
+        -1 => {
+            // Extremely loud. Check time and priors.
+            let context: trit = consensus(time, priors);
+            match context {
+                -1 => { return conflict(); } // 3 AM + Known party house = Dispatch cops
+                 0 => { return hold(); }     // Loud, but maybe middle of day? Send warning.
+                 1 => { return hold(); }     // Loud, day time, first offense. Warning.
+            }
+        }
+         0 => {
+             // Moderately loud. 
+             match time {
+                 -1 => { return hold(); }    // Moderate at 3 AM -> Warning
+                  0 => { return hold(); }
+                  1 => { return truth(); }   // Moderate at noon -> Dismiss
+             }
+         }
+         1 => {
+             return truth(); // Quiet. Dismiss.
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let smart_meter_db: trit = hold();    // 65 dB (loud music)
+let complaint_time: trit = conflict(); // 2:00 AM (quiet hours)
+let house_priors: trit = truth();     // Zero previous complaints
+
+let civic_action: trit = complaint_triage(smart_meter_db, complaint_time, house_priors);
+
+// Expected result: hold() - Moderate noise at night, first offense. Text them.
+match civic_action {
+    -1 => { return conflict(); }   // DISPATCH: Send patrol car to enforce ordinance
+     0 => { return hold();    }   // WARN: Send automated SMS to registered landlord/tenant
+     1 => { return truth();   }   // DISMISS: Log data but take no action
+}

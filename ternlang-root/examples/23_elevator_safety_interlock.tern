@@ -1,0 +1,50 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 23_elevator_safety_interlock.tern — Elevator safety interlock
+//
+// Binary elevator logic struggles with edge cases like a slightly ajar door
+// or fluctuating weight sensors, often resulting in sudden emergency stops.
+// Ternary logic allows a 'hold' state where the doors remain open and a buzzer
+// sounds, actively requesting the condition to resolve instead of trapping people.
+//   +1: Safe to move
+//    0: Door buzzer / waiting for resolution
+//   -1: Emergency brake / out of service
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_door_sensors(door_closed: trit) -> trit {
+    return door_closed;
+}
+
+fn check_weight_limit(weight: trit) -> trit {
+    return weight;
+}
+
+fn check_cable_tension(tension: trit) -> trit {
+    return tension;
+}
+
+fn evaluate_interlock(door: trit, weight: trit, tension: trit) -> trit {
+    // Tension is a hard gate - any issue means emergency brake
+    match tension {
+        -1 => { return conflict(); }
+         0 => { return conflict(); } // Even uncertain tension is too risky
+         1 => {
+             // Cables are fine. Check weight and doors.
+             let door_weight: trit = consensus(door, weight);
+             return door_weight;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let door_state: trit = hold();      // Something is blocking the beam intermittently
+let car_weight: trit = truth();     // Well under maximum capacity
+let cable_state: trit = truth();    // Tension is perfectly balanced
+
+let movement_decision: trit = evaluate_interlock(door_state, car_weight, cable_state);
+
+// Expected result: hold() - Sounds buzzer to clear the doorway
+match movement_decision {
+    -1 => { return conflict(); }   // BRAKE: Engage mechanical safeties
+     0 => { return hold();    }   // BUZZ: Sound alarm, keep doors open
+     1 => { return truth();   }   // MOVE: Proceed to requested floor
+}

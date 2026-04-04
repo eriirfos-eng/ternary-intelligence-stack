@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 62_biometric_liveness.tern — Biometric liveness detection
+//
+// Facial recognition systems face a binary dilemma: accept a high-quality photo
+// of the user (spoof) or reject a blurry real user. Ternary liveness detection
+// uses 'hold' to trigger an active challenge ("Turn your head left") to break
+// the tie, avoiding false rejections.
+//   +1: Live human confirmed
+//    0: Active challenge required
+//   -1: Spoof / Presentation Attack
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn depth_map(depth: trit) -> trit { return depth; }
+fn micro_movements(micro: trit) -> trit { return micro; }
+fn texture_analysis(texture: trit) -> trit { return texture; }
+
+fn liveness_evaluator(depth: trit, micro: trit, texture: trit) -> trit {
+    // If it's completely flat (a screen or paper), it's a spoof.
+    match depth {
+        -1 => { return conflict(); } 
+         0 => {
+             // Unclear depth (bad lighting).
+             let realism: trit = consensus(micro, texture);
+             match realism {
+                 -1 => { return conflict(); }
+                  0 => { return hold(); }     // Need them to move to be sure
+                  1 => { return hold(); }     // Looks real, but bad depth. Challenge.
+             }
+         }
+         1 => {
+             // Good 3D depth map (could be a silicone mask). Check texture/movement.
+             let realism: trit = consensus(micro, texture);
+             match realism {
+                 -1 => { return hold(); }    // 3D but perfectly still/weird texture. Challenge!
+                  0 => { return hold(); }
+                  1 => { return truth(); }   // 3D, moving, human skin texture.
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let face_depth: trit = truth();      // Has 3D geometry
+let face_micro: trit = conflict();   // Completely static, no blinking or pulse
+let face_texture: trit = hold();     // Unusually smooth
+
+let auth_action: trit = liveness_evaluator(face_depth, face_micro, face_texture);
+
+// Expected result: hold() - 3D but no movement. Could be a mask. Trigger challenge.
+match auth_action {
+    -1 => { return conflict(); }   // REJECT: Confirmed photo/screen attack
+     0 => { return hold();    }   // CHALLENGE: "Please smile and blink"
+     1 => { return truth();   }   // VERIFY: Biometric match successful
+}

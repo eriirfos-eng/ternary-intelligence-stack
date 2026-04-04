@@ -1,0 +1,41 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 92_referee_challenge.tern — Referee challenge review
+//
+// Binary reviews (Overturn / Uphold) ignore the reality of bad camera angles.
+// Ternary reviews formally embrace 'hold': "Call Stands (Inconclusive)," meaning
+// the evidence isn't strong enough to change the original ruling on the field.
+//   +1: Confirmed (Uphold)
+//    0: Inconclusive (Call Stands / Hold)
+//   -1: Overturn
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn camera_angle(cam: trit) -> trit { return cam; }
+fn visual_evidence(vis: trit) -> trit { return vis; }
+fn original_call(call: trit) -> trit { return call; }
+
+fn replay_booth(cam: trit, vis: trit, call: trit) -> trit {
+    match cam {
+        -1 => { return hold(); } // Bad angle, obstructed view. Call stands.
+         0 => { return hold(); }
+         1 => {
+             // Great camera angle.
+             match vis {
+                 -1 => { return conflict(); } // Clear visual evidence against the call -> Overturn
+                  0 => { return hold(); }     // Still blurry -> Call stands
+                  1 => { return truth(); }    // Clear visual evidence supporting the call -> Confirmed
+             }
+         }
+    }
+}
+
+let best_angle: trit = truth();       // 4K goal line camera
+let clear_evidence: trit = conflict(); // Foot was clearly out of bounds
+let field_call: trit = truth();       // Ruled a touchdown on the field
+
+let booth_decision: trit = replay_booth(best_angle, clear_evidence, field_call);
+
+match booth_decision {
+    -1 => { return conflict(); }   // OVERTURN: Reverse the ruling on the field
+     0 => { return hold();    }   // STANDS: Not enough evidence to overturn
+     1 => { return truth();   }   // CONFIRMED: Irrefutable proof field was right
+}

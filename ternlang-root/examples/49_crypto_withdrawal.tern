@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 49_crypto_withdrawal.tern — Digital Asset Custody Gate
+//
+// Binary failure: In crypto, binary "Yes" allows irreversible theft if 
+// credentials are stolen. Binary "No" creates a poor user experience and 
+// can lead to panic if users can't access their funds.
+// Ternary advantage: 'review' implements a "Time-Lock" or "Multi-Sig" 
+// request, where the transaction is staged but can be cancelled if the 
+// user reports a hack within the review window.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_whitelisted_addr(addr: trit) -> trit { return addr; }
+fn check_mfa_status(mfa: trit) -> trit { return mfa; }
+fn check_amount_size(size: trit) -> trit { return invert(size); }
+
+fn authorize_withdrawal(addr: trit, mfa: trit, size: trit) -> trit {
+    // If address is whitelisted and MFA is good, allow
+    let trust_score: trit = consensus(addr, mfa);
+    
+    match trust_score {
+        -1 => { return conflict(); } // Block: Unknown addr + failed MFA
+         0 => { 
+             // Mixed trust: check amount
+             return size;
+         }
+         1 => {
+             // High trust: allow unless amount is extremely large
+             match size {
+                 -1 => { return hold(); }     // Huge amount: extra review
+                  0 => { return truth(); }    // Standard amount: allow
+                  1 => { return truth(); }    // Small amount: allow
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: Large withdrawal to new address ──
+let is_new_addr: trit = hold();      // Address not seen before, but valid format
+let mfa_passed: trit = truth();      // Hardware key used for auth
+let is_large_sum: trit = hold();     // Significant percentage of balance
+
+let custody_action: trit = authorize_withdrawal(is_new_addr, mfa_passed, is_large_sum);
+
+match custody_action {
+    -1 => { return conflict(); } // BLOCK: Suspected hack
+     0 => { return hold(); }     // REVIEW: 24-hour time-lock enabled
+     1 => { return truth(); }    // ALLOW: Instant broadcast
+}

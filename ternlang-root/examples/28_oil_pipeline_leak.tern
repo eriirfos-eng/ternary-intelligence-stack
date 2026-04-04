@@ -1,0 +1,60 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 28_oil_pipeline_leak.tern — Oil pipeline leak detection
+//
+// Binary pressure drop sensors trigger full pipeline shutdowns on false positives
+// (like thermal contraction), costing millions. Ternary logic's 'hold' state
+// means "drop pressure by 50% and launch inspection drone." Only a hard conflict
+// triggers the emergency block valves.
+//   +1: Flow normal
+//    0: Reduce pressure & inspect
+//   -1: Isolate segment immediately
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn segment_pressure(press: trit) -> trit {
+    return press;
+}
+
+fn acoustic_sensors(acc: trit) -> trit {
+    return acc;
+}
+
+fn temperature_gradient(temp: trit) -> trit {
+    return temp;
+}
+
+fn pipeline_safety_monitor(press: trit, acc: trit, temp: trit) -> trit {
+    // Acoustic anomalies (hissing) are highly indicative of leaks
+    match acc {
+        -1 => {
+            // Hissing detected. Is pressure dropping too?
+            match press {
+                -1 => { return conflict(); } // Confirmed leak
+                 0 => { return conflict(); } // Probable leak
+                 1 => { return hold(); }     // Anomaly but pressure holding
+            }
+        }
+         0 => {
+             // Uncertain acoustics. Rely on pressure and temp.
+             let flow_state: trit = consensus(press, temp);
+             return flow_state;
+         }
+         1 => {
+             let flow_state: trit = consensus(press, temp);
+             return flow_state;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let local_pressure: trit = hold();      // Slight pressure drop
+let local_acoustic: trit = truth();     // No hissing sounds
+let local_temp: trit = conflict();      // Rapid localized cooling (gas expansion?)
+
+let safety_action: trit = pipeline_safety_monitor(local_pressure, local_acoustic, local_temp);
+
+// Expected result: hold() - Acoustics are fine, but consensus of hold and conflict is hold.
+match safety_action {
+    -1 => { return conflict(); }   // ISOLATE: Slam shut block valves
+     0 => { return hold();    }   // INSPECT: Throttle pumps and dispatch drone
+     1 => { return truth();   }   // PUMP: Maintain flow rate
+}

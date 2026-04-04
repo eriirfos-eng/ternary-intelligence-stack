@@ -1,0 +1,49 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 30_runway_incursion.tern — Runway incursion detection
+//
+// Ground radar systems often suffer from ghost echoes. Binary alarms cause
+// unnecessary go-arounds. Ternary logic aggregates ADS-B, ground radar, and
+// ML camera vision. The 'hold' state tells the arriving pilot "continue approach
+// but prepare for go-around," keeping options open longer.
+//   +1: Runway clear
+//    0: Caution, verify visually
+//   -1: Go-around / Abort takeoff
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn adsb_signal(adsb: trit) -> trit {
+    return adsb;
+}
+
+fn ground_radar(radar: trit) -> trit {
+    return radar;
+}
+
+fn optical_camera(optical: trit) -> trit {
+    return optical;
+}
+
+fn runway_safety_logic(adsb: trit, radar: trit, optical: trit) -> trit {
+    let sensor_fusion: trit = consensus(adsb, radar);
+    let total_fusion: trit = consensus(sensor_fusion, optical);
+    
+    // Hard gate on ADS-B - if a plane broadcasts it is on the runway, believe it.
+    match adsb {
+        -1 => { return conflict(); }
+         0 => { return total_fusion; }
+         1 => { return total_fusion; }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let aircraft_adsb: trit = truth();     // No transponders detected on runway
+let surface_radar: trit = conflict();  // Radar sees a blip (maybe a flock of birds?)
+let tower_camera: trit = hold();       // Camera is obscured by fog
+
+let clearance: trit = runway_safety_logic(aircraft_adsb, surface_radar, tower_camera);
+
+// Expected result: hold() - consensus(truth, conflict) is hold, consensus(hold, hold) is hold.
+match clearance {
+    -1 => { return conflict(); }   // ABORT: Execute go-around immediately
+     0 => { return hold();    }   // CAUTION: Continue approach, tower verifying
+     1 => { return truth();   }   // CLEAR: Cleared to land
+}

@@ -1,0 +1,41 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 89_container_health.tern — Container health probe
+//
+// Binary health checks (Alive/Dead) cause Kubernetes to brutally kill containers
+// that are just busy. Ternary logic's 'hold' state means "Container is busy,
+// stop sending new traffic, but let existing requests finish."
+//   +1: Healthy (Accepting traffic)
+//    0: Busy / Draining (Hold)
+//   -1: Unhealthy (Restart)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn cpu_usage(cpu: trit) -> trit { return cpu; }
+fn memory_usage(mem: trit) -> trit { return mem; }
+fn response_time(resp: trit) -> trit { return resp; }
+
+fn health_probe(cpu: trit, mem: trit, resp: trit) -> trit {
+    match mem {
+        -1 => { return conflict(); } // OOM impending. Kill it.
+         0 => { return hold(); }     // High memory. Stop traffic.
+         1 => {
+             let performance: trit = consensus(cpu, resp);
+             match performance {
+                 -1 => { return hold(); }    // High CPU + Slow response = Busy, don't kill yet
+                  0 => { return hold(); }
+                  1 => { return truth(); }   // Fast and lean
+             }
+         }
+    }
+}
+
+let cont_cpu: trit = conflict();   // 99% CPU
+let cont_mem: trit = truth();      // 40% RAM
+let cont_resp: trit = conflict();  // 5000ms latency
+
+let k8s_action: trit = health_probe(cont_cpu, cont_mem, cont_resp);
+
+match k8s_action {
+    -1 => { return conflict(); }   // KILL: SIGKILL and restart pod
+     0 => { return hold();    }   // UNREADY: Remove from load balancer pool temporarily
+     1 => { return truth();   }   // READY: Keep in load balancer pool
+}

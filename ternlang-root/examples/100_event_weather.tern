@@ -1,0 +1,49 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 100_event_weather.tern — Event cancellation weather gate
+//
+// Outdoor concerts face massive insurance payouts if cancelled. Binary logic
+// (Cancel / Proceed) is too rigid. Ternary logic's 'hold' state means "Evacuate
+// patrons to concourse, delay start by 1 hour, wait for cell to pass."
+//   +1: Proceed with show
+//    0: Shelter in place / Delay (Hold)
+//   -1: Cancel show / Send home
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn lightning_proximity(strike: trit) -> trit { return strike; }
+fn wind_shear(wind: trit) -> trit { return wind; }
+fn cell_trajectory(traj: trit) -> trit { return traj; }
+
+fn event_director(strike: trit, wind: trit, traj: trit) -> trit {
+    // Wind destroys stages. High wind is an absolute cancel.
+    match wind {
+        -1 => { return conflict(); } 
+         0 => { return hold(); }     // Monitor stage rigging
+         1 => {
+             // Wind is fine. Check lightning.
+             match strike {
+                 -1 => {
+                     // Lightning close by. Check trajectory.
+                     match traj {
+                         -1 => { return conflict(); } // Cell stalling over us -> Cancel
+                          0 => { return hold(); }     // Cell moving slowly -> Delay
+                          1 => { return hold(); }     // Cell moving fast away -> Delay until clear
+                     }
+                 }
+                  0 => { return hold(); } // Lightning far away but visible -> Delay and monitor
+                  1 => { return truth(); } // All clear
+             }
+         }
+    }
+}
+
+let storm_strike: trit = conflict(); // Strike within 5 miles
+let stage_wind: trit = truth();      // Calm
+let storm_traj: trit = truth();      // Radar shows it moving rapidly East
+
+let concert_status: trit = event_director(storm_strike, stage_wind, storm_traj);
+
+match concert_status {
+    -1 => { return conflict(); }   // CANCEL: Announce over PA, clear parking lots
+     0 => { return hold();    }   // DELAY: Move fans to concrete concourse, wait 30 mins
+     1 => { return truth();   }   // PLAY: Band takes the stage
+}

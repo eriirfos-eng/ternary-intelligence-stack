@@ -1,0 +1,46 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 44_options_expiry.tern — Options Trading Settlement
+//
+// Binary failure: Simple binary "ITM/OTM" logic can trigger exercise on 
+// marginal positions where transaction costs exceed profit, or miss 
+// opportunities due to last-minute volatility.
+// Ternary advantage: The 'hold' state identifies "At-The-Money" (ATM) 
+// situations where the decision is statistically uncertain, prompting a 
+// manual review or a volatility-weighted assessment.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn intrinsic_value(itm: trit) -> trit { return itm; }
+fn time_to_expiry(time: trit) -> trit { return time; }
+fn liquidity_check(vol: trit) -> trit { return vol; }
+
+fn settlement_decision(itm: trit, time: trit, vol: trit) -> trit {
+    // If it's deep out of the money, let it expire
+    match itm {
+        -1 => { return conflict(); }
+         0 => { 
+             // At the money. Check time and liquidity.
+             return consensus(time, vol);
+         }
+         1 => {
+             // In the money. Check if we have time to wait for better price.
+             match time {
+                 -1 => { return truth(); }   // Expiring now: exercise
+                  0 => { return hold(); }    // Some time left: wait
+                  1 => { return hold(); }    // Plenty of time: hold
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: ATM Option near expiry ──
+let is_itm: trit = hold();           // Price is exactly at the strike
+let expiry_near: trit = hold();      // Expiry is in 2 hours
+let market_liquid: trit = truth();   // High trading volume in this series
+
+let action: trit = settlement_decision(is_itm, expiry_near, market_liquid);
+
+match action {
+    -1 => { return conflict(); } // EXPIRE: Let position lapse
+     0 => { return hold(); }     // HOLD: Wait for final price action
+     1 => { return truth(); }    // EXERCISE: Convert to underlying
+}

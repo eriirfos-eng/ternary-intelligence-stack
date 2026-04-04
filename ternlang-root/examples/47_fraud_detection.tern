@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 47_fraud_detection.tern — E-commerce Payment Integrity
+//
+// Binary failure: Rigid binary fraud scoring either lets professional 
+// scammers through or blocks high-value legitimate customers, causing 
+// significant lost revenue and customer frustration.
+// Ternary advantage: The 'hold' state (REVIEW) triggers a Step-Up 
+// Authentication (like 2FA) rather than a hard decline, allowing legitimate 
+// users to verify their identity in real-time.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_device_reputation(rep: trit) -> trit { return rep; }
+fn check_ip_location(loc: trit) -> trit { return loc; }
+fn check_velocity(v: trit) -> trit { return invert(v); }
+
+fn transaction_risk_engine(dev: trit, ip: trit, vel: trit) -> trit {
+    // If device is known fraudulent, block immediately
+    match dev {
+        -1 => { return conflict(); }
+         0 => { 
+             // Suspicious device: check IP and velocity
+             return consensus(ip, vel);
+         }
+         1 => {
+             // Trusted device: check for account takeover (high velocity)
+             let behavioral_risk: trit = consensus(ip, vel);
+             return behavioral_risk;
+         }
+    }
+}
+
+// ── Concrete scenario: New IP, trusted device ──
+let trusted_device: trit = truth();  // User's regular smartphone
+let foreign_ip: trit = hold();       // User is traveling in a new country
+let normal_velocity: trit = truth(); // First purchase in 3 days
+
+let risk_result: trit = transaction_risk_engine(trusted_device, foreign_ip, normal_velocity);
+
+match risk_result {
+    -1 => { return conflict(); } // FRAUDULENT: Decline and flag account
+     0 => { return hold(); }     // REVIEW: Prompt for SMS verification
+     1 => { return truth(); }    // SAFE: Approve transaction
+}

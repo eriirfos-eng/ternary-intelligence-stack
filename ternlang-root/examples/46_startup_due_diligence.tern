@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 46_startup_due_diligence.tern — Venture Capital Filter
+//
+// Binary failure: "Fear Of Missing Out" (FOMO) leads to binary 'Yes' on 
+// unproven teams, while rigid criteria lead to binary 'No' on disruptive 
+// but early-stage ideas.
+// Ternary advantage: 'hold' allows the firm to "stay in the loop" or offer 
+// a "bridge" contingent on hitting a specific traction milestone, 
+// preserving optionality.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn team_quality(talent: trit) -> trit { return talent; }
+fn market_size(tam: trit) -> trit { return tam; }
+fn product_traction(growth: trit) -> trit { return growth; }
+
+fn investment_committee(team: trit, market: trit, traction: trit) -> trit {
+    // Team quality is the non-negotiable hard gate
+    match team {
+        -1 => { return conflict(); } // Poor team: Pass
+         0 => { 
+             // Uncertain team: Traction must be incredible
+             return consensus(market, traction);
+         }
+         1 => {
+             // Great team: check market and product
+             let opportunity: trit = consensus(market, traction);
+             return opportunity;
+         }
+    }
+}
+
+// ── Concrete scenario: Great team, early product ──
+let found_team: trit = truth();      // Serial entrepreneurs with exits
+let tam_sam: trit = truth();         // Multi-billion dollar market
+let growth_rate: trit = hold();      // Product just launched, low data
+
+let vc_decision: trit = investment_committee(found_team, tam_sam, growth_rate);
+
+match vc_decision {
+    -1 => { return conflict(); } // PASS: Not a fit for the fund
+     0 => { return hold(); }     // HOLD: Wait for Q3 revenue data
+     1 => { return truth(); }    // INVEST: Issue term sheet
+}

@@ -1,0 +1,58 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 33_sepsis_warning.tern — Sepsis early warning
+//
+// Sepsis kills quickly. Binary alarms either miss early signs or trigger constantly
+// on minor fevers (alarm fatigue). A ternary score aggregates vitals, labs, and
+// clinical suspicion. 'Hold' means "draw blood cultures now" rather than "wait
+// and see" or "start broad-spectrum antibiotics immediately."
+//   +1: No sepsis suspected
+//    0: Draw cultures & lactate (Hold)
+//   -1: Sepsis confirmed - start protocol
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn heart_rate(hr: trit) -> trit { return hr; }
+fn blood_pressure(map: trit) -> trit { return map; }
+fn white_blood_cell(wbc: trit) -> trit { return wbc; }
+
+fn sepsis_evaluator(hr: trit, map: trit, wbc: trit) -> trit {
+    let vitals_state: trit = consensus(hr, map);
+    
+    // Low blood pressure is the most dangerous sign of septic shock
+    match map {
+        -1 => { 
+            // Shock. If HR or WBC are also bad, it's definitely sepsis.
+            match wbc {
+                -1 => { return conflict(); }
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // Low BP but normal WBC? Investigate other causes.
+            }
+        }
+         0 => {
+             // Marginal BP. 
+             let systemic: trit = consensus(hr, wbc);
+             match systemic {
+                 -1 => { return conflict(); }
+                  0 => { return hold(); }
+                  1 => { return hold(); } // Marginal BP needs monitoring
+             }
+         }
+         1 => {
+             // Good BP. Check other signs.
+             return consensus(hr, wbc);
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let patient_hr: trit = conflict();   // Tachycardia (>110 bpm)
+let patient_map: trit = hold();      // Blood pressure trending down slightly
+let patient_wbc: trit = conflict();  // Elevated white blood cell count
+
+let clinical_action: trit = sepsis_evaluator(patient_hr, patient_map, patient_wbc);
+
+// Expected result: conflict() - Tachycardia and high WBC with marginal BP means sepsis.
+match clinical_action {
+    -1 => { return conflict(); }   // CODE SEPSIS: IV fluids, broad-spectrum antibiotics NOW
+     0 => { return hold();    }   // INVESTIGATE: Draw lactate and blood cultures
+     1 => { return truth();   }   // ROUTINE: Standard vital monitoring
+}

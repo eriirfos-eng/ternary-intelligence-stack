@@ -1,0 +1,43 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 54_contract_clause_risk.tern — Legal Document Analysis
+//
+// Binary failure: Binary risk tools often "cry wolf" on standard 
+// indemnification or miss subtle "poison pill" liabilities in non-standard 
+// language, leading to either reckless signing or paralyzed negotiations.
+// Ternary advantage: 'review' highlights specifically where language 
+// diverges from the "Corporate Playbook," allowing legal counsel to focus 
+// 100% of their attention on the 5% of the contract that actually matters.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_indemnity(risk: trit) -> trit { return invert(risk); }
+fn check_termination(risk: trit) -> trit { return invert(risk); }
+fn check_governing_law(law: trit) -> trit { return law; }
+
+fn assess_contract(indem: trit, term: trit, law: trit) -> trit {
+    // Governing law is a hard gate (e.g., must be Delaware)
+    match law {
+        -1 => { return conflict(); } // Hostile jurisdiction: Block
+         0 => { 
+             // Neutral jurisdiction: check risks carefully
+             return consensus(indem, term);
+         }
+         1 => {
+             // Standard jurisdiction: evaluate commercial risks
+             let commercial_risk: trit = consensus(indem, term);
+             return commercial_risk;
+         }
+    }
+}
+
+// ── Concrete scenario: Neutral law, moderate indemnity ──
+let high_indemnity: trit = hold();   // Liability capped at 2x contract value
+let short_termination: trit = truth(); // Standard 30-day notice period
+let swiss_law: trit = hold();        // Neutral but non-standard jurisdiction
+
+let risk_level: trit = assess_contract(high_indemnity, short_termination, swiss_law);
+
+match risk_level {
+    -1 => { return conflict(); } // HIGH_RISK: Flag for senior partner veto
+     0 => { return hold(); }     // REVIEW: Suggest counter-offer language
+     1 => { return truth(); }    // SAFE: Approve for signature
+}

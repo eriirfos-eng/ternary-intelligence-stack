@@ -1,0 +1,49 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 79_elder_care.tern — Elder care assessment
+//
+// Binary independence assessments (Independent / Nursing Home) force seniors
+// out of their homes prematurely. Ternary 'hold' formally assigns "In-home
+// nursing support & Meals on Wheels," maintaining dignity safely.
+//   +1: Fully Independent
+//    0: Assisted Living / In-home care (Hold)
+//   -1: Skilled Nursing Facility required
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mobility_score(mobility: trit) -> trit { return mobility; }
+fn cognitive_score(cog: trit) -> trit { return cog; }
+fn daily_living_activities(adl: trit) -> trit { return adl; }
+
+fn care_level_assessment(mobility: trit, cog: trit, adl: trit) -> trit {
+    // Severe cognitive decline (e.g., advanced dementia) requires 24/7 care
+    match cog {
+        -1 => { return conflict(); } // Advanced Alzheimer's -> SNF
+         0 => {
+             // Mild cognitive impairment. 
+             let physical: trit = consensus(mobility, adl);
+             match physical {
+                 -1 => { return conflict(); } // Poor body + failing mind -> SNF
+                  0 => { return hold(); }     // Needs daily check-ins
+                  1 => { return hold(); }     // Physically great, but forgetful -> Assisted Living
+             }
+         }
+         1 => {
+             // Sharp mind. Check physical abilities.
+             let physical: trit = consensus(mobility, adl);
+             return physical;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let patient_mobility: trit = hold();  // Uses a walker, slow
+let patient_cog: trit = truth();      // Perfectly sharp and articulate
+let patient_adl: trit = hold();       // Struggles to cook, but can dress themselves
+
+let care_plan: trit = care_level_assessment(patient_mobility, patient_cog, patient_adl);
+
+// Expected result: hold() - Mind is sharp, but body is slowing down.
+match care_plan {
+    -1 => { return conflict(); }   // SNF: Transfer to 24/7 skilled nursing facility
+     0 => { return hold();    }   // ASSISTED: Arrange Meals on Wheels and visiting nurse
+     1 => { return truth();   }   // INDEPENDENT: Remain in current living situation
+}

@@ -1,0 +1,57 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 34_radiology_flag.tern — Radiology report flag
+//
+// AI models reading X-rays are forced to output binary "tumor / no tumor"
+// decisions, leading to liability issues. Ternary models introduce an active
+// 'hold' state meaning "equivocal finding, requires senior radiologist review"
+// or "recommend follow-up MRI," avoiding false negatives while saving time.
+//   +1: Benign / Normal
+//    0: Equivocal / Senior review
+//   -1: Malignant / Urgent flag
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mass_shape(shape: trit) -> trit { return shape; }
+fn mass_density(density: trit) -> trit { return density; }
+fn growth_rate(growth: trit) -> trit { return growth; }
+
+fn radiograph_triage(shape: trit, density: trit, growth: trit) -> trit {
+    let morphology: trit = consensus(shape, density);
+    
+    // Fast growth is highly suspicious
+    match growth {
+        -1 => {
+            // Growing quickly. Unless morphology is perfectly normal, escalate.
+            match morphology {
+                -1 => { return conflict(); }
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // Fast growing but looks benign (cyst?)
+            }
+        }
+         0 => {
+             // Unknown prior or slow growth. Let morphology decide, but cap at hold.
+             match morphology {
+                 -1 => { return conflict(); } // Looks bad even if slow
+                  0 => { return hold(); }
+                  1 => { return hold(); }     // Slow growth needs follow-up anyway
+             }
+         }
+         1 => {
+             // Stable/No growth. Trust the morphology.
+             return morphology;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let scan_shape: trit = hold();       // Irregular borders, hard to tell
+let scan_density: trit = hold();     // Mixed density
+let prior_growth: trit = truth();    // Unchanged since last year
+
+let review_queue: trit = radiograph_triage(scan_shape, scan_density, prior_growth);
+
+// Expected result: hold() - Stable, but morphology is unclear.
+match review_queue {
+    -1 => { return conflict(); }   // URGENT: Page referring oncologist
+     0 => { return hold();    }   // REVIEW: Send to senior radiologist reading queue
+     1 => { return truth();   }   // NORMAL: Auto-generate standard benign report
+}

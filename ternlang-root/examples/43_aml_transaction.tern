@@ -1,0 +1,44 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 43_aml_transaction.tern — Anti-Money Laundering (AML) Filter
+//
+// Binary failure: Rigid AML rules either block legitimate international 
+// business (false positives) or allow sophisticated laundering (false 
+// negatives) if thresholds are just barely avoided.
+// Ternary advantage: 'review' allows for "Enhanced Due Diligence" (EDD) where
+// a transaction is paused for KYC verification without a full SAR filing, 
+// maintaining flow while ensuring compliance.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn source_of_funds(kyc: trit) -> trit { return kyc; }
+fn watch_list_check(sanctions: trit) -> trit { return invert(sanctions); }
+fn velocity_check(frequency: trit) -> trit { return invert(frequency); }
+fn amount_threshold(size: trit) -> trit { return invert(size); }
+
+fn screening_engine(kyc: trit, sanc: trit, freq: trit, size: trit) -> trit {
+    // Sanctions list is a hard gate
+    let legal_status: trit = watch_list_check(sanc);
+    
+    match legal_status {
+        -1 => { return conflict(); } // Hard Block: Sanctioned entity
+         0 => { return hold(); }     // Potential match: Manual identity check
+         1 => {
+             // Legal status clear, check transaction behavior
+             let risk_profile: trit = consensus(velocity_check(freq), amount_threshold(size));
+             return consensus(legal_status, risk_profile);
+         }
+    }
+}
+
+// ── Concrete scenario: Large but verified transfer ──
+let kyc_verified: trit = truth();    // Customer has submitted all docs
+let sanction_match: trit = hold();   // Partial name match on sanctions list
+let high_velocity: trit = truth();   // Normal frequency for this user
+let large_amount: trit = hold();     // Slightly above typical monthly volume
+
+let aml_result: trit = screening_engine(kyc_verified, sanction_match, high_velocity, large_amount);
+
+match aml_result {
+    -1 => { return conflict(); } // FLAG: Report to regulatory authorities
+     0 => { return hold(); }     // REVIEW: Request additional documentation
+     1 => { return truth(); }    // CLEAR: Allow transaction to proceed
+}

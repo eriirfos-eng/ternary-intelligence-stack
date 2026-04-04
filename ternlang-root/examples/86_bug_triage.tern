@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 86_bug_triage.tern — Bug severity triage
+//
+// Binary "Fix / WontFix" ignores the reality of software maintenance.
+// Ternary 'hold' formally means "Add to backlog / Low priority," ensuring
+// critical bugs get fixed now while minor ones aren't just deleted.
+//   +1: Immediate Fix (Critical)
+//    0: Backlog (Hold)
+//   -1: WontFix / Working as Intended
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn data_loss_risk(data: trit) -> trit { return data; }
+fn user_impact(impact: trit) -> trit { return impact; }
+fn workaround_exists(workaround: trit) -> trit { return workaround; }
+
+fn bug_triage(data: trit, impact: trit, workaround: trit) -> trit {
+    match data {
+        -1 => { return truth(); } // Data loss is always an immediate fix
+         0 => { return truth(); } // Potential data loss -> Fix it now
+         1 => {
+             // No data loss.
+             match impact {
+                 -1 => {
+                     // High impact. Check workaround.
+                     match workaround {
+                         -1 => { return truth(); }   // No workaround -> Fix now
+                          0 => { return hold(); }
+                          1 => { return hold(); }    // Good workaround exists -> Backlog
+                     }
+                 }
+                  0 => { return hold(); } // Moderate impact -> Backlog
+                  1 => { return conflict(); } // Barely any impact, no data loss -> WontFix
+             }
+         }
+    }
+}
+
+let bug_data: trit = truth();       // No data loss
+let bug_impact: trit = hold();      // Annoying UI glitch
+let bug_workaround: trit = truth(); // Can just refresh the page
+
+let triage_action: trit = bug_triage(bug_data, bug_impact, bug_workaround);
+
+match triage_action {
+    -1 => { return conflict(); }   // WONTFIX: Close issue
+     0 => { return hold();    }   // BACKLOG: Schedule for later sprint
+     1 => { return truth();   }   // CRITICAL: Drop everything and fix
+}

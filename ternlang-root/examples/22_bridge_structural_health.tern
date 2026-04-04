@@ -1,0 +1,58 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 22_bridge_structural_health.tern — Bridge structural health monitoring
+//
+// Binary sensors for bridge load either show "safe" or "unsafe", leading to
+// unnecessary closures or missed micro-fractures. A ternary approach evaluates
+// strain, traffic load, and wind speed. 'Hold' means restricting heavy vehicles
+// while allowing passenger cars, rather than a full closure.
+//   +1: Open to all traffic
+//    0: Restrict heavy loads (Hold)
+//   -1: Close bridge entirely
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn eval_strain_gauges(strain: trit) -> trit {
+    return strain;
+}
+
+fn eval_wind_speed(wind: trit) -> trit {
+    return wind;
+}
+
+fn eval_traffic_density(density: trit) -> trit {
+    return density;
+}
+
+fn bridge_safety_decision(strain: trit, wind: trit, density: trit) -> trit {
+    // Strain is the most critical metric
+    match strain {
+        -1 => { return conflict(); } // Structural failure risk: Close bridge
+         0 => {
+             // Micro-fractures detected or anomalous readings
+             // If wind is also bad, close it. Otherwise, hold.
+             match wind {
+                 -1 => { return conflict(); }
+                  0 => { return hold(); }
+                  1 => { return hold(); }
+             }
+         }
+         1 => {
+             // Strain is normal. Consensus of wind and density.
+             let wind_traffic: trit = consensus(wind, density);
+             return wind_traffic;
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let current_strain: trit = truth();   // Strain gauges show nominal flexibility
+let current_wind: trit = conflict();  // Gale force winds detected
+let current_traffic: trit = hold();   // Traffic is backing up
+
+let bridge_status: trit = bridge_safety_decision(current_strain, current_wind, current_traffic);
+
+// Expected result: conflict() due to gale force winds causing consensus failure or hard gate
+match bridge_status {
+    -1 => { return conflict(); }   // CLOSE: Lower boom gates, red lights
+     0 => { return hold();    }   // RESTRICT: Passenger vehicles only, no trucks
+     1 => { return truth();   }   // OPEN: Normal traffic flow
+}

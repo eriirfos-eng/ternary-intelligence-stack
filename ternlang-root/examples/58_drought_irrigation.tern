@@ -1,0 +1,58 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 58_drought_irrigation.tern — Drought irrigation trigger
+//
+// Smart farming binary timers just turn water on or off. Ternary logic aggregates
+// soil moisture, rain forecast, and crop stress. 'Hold' means "Wait 24 hours,
+// rain is expected; do not waste aquifer water yet."
+//   +1: Do not irrigate
+//    0: Delay & Monitor (Hold)
+//   -1: Irrigate immediately
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn soil_moisture(soil: trit) -> trit { return soil; }
+fn rain_forecast(rain: trit) -> trit { return rain; }
+fn crop_stress_visual(stress: trit) -> trit { return stress; }
+
+fn smart_irrigation(soil: trit, rain: trit, stress: trit) -> trit {
+    // If the crop is visibly dying, water it regardless of forecast.
+    match stress {
+        -1 => { return conflict(); } // Wilting! Open valves.
+         0 => {
+             // Slight drooping. 
+             match rain {
+                 -1 => { return hold(); }    // Rain is coming very soon, hold off.
+                  0 => { return conflict(); } // No rain guaranteed, water them.
+                  1 => { return conflict(); } // No rain coming, water them.
+             }
+         }
+         1 => {
+             // Crop looks healthy. Base it on soil and rain.
+             match soil {
+                 -1 => { 
+                     // Soil dry. Wait for rain if it's coming.
+                     match rain {
+                         -1 => { return hold(); }    // Rain coming
+                          0 => { return conflict(); } // Maybe rain? Better water.
+                          1 => { return conflict(); } // No rain, definitely water.
+                     }
+                 }
+                  0 => { return hold(); } // Soil moist enough
+                  1 => { return truth(); } // Soil wet
+             }
+         }
+    }
+}
+
+// ── Concrete scenario with realistic values ──
+let field_soil: trit = conflict();   // Soil moisture below 20%
+let local_forecast: trit = conflict(); // 90% chance of heavy rain tonight
+let canopy_stress: trit = truth();   // Leaves still turgid and green
+
+let pump_action: trit = smart_irrigation(field_soil, local_forecast, canopy_stress);
+
+// Expected result: hold() - Soil is dry, but rain is imminent and crop is fine. Wait.
+match pump_action {
+    -1 => { return conflict(); }   // PUMP: Turn on drip irrigation for 2 hours
+     0 => { return hold();    }   // DELAY: Wait 24 hours for incoming weather
+     1 => { return truth();   }   // OFF: Adequate moisture present
+}
