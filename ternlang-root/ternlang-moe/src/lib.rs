@@ -416,6 +416,9 @@ pub struct OrchestrationResult {
 // Full Orchestrator
 // ---------------------------------------------------------------------------
 
+pub mod agents;
+pub use agents::{TernaryAgent, AgentHarness};
+
 /// Three-tier memory bundle owned by the orchestrator.
 pub struct OrchestratorMemory {
     pub node: NodeMemory,
