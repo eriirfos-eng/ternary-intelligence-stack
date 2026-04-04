@@ -208,7 +208,9 @@ async fn require_api_key(
     let path = request.uri().path().to_string();
 
     // Public endpoints — no key required
-    if path == "/" || path == "/health" || path == "/mcp" || path.starts_with("/admin") {
+    if path == "/" || path == "/health" || path == "/mcp"
+        || path == "/.well-known/mcp/server-card.json"
+        || path.starts_with("/admin") {
         return next.run(request).await;
     }
 
@@ -1142,6 +1144,46 @@ async fn stream_deliberate(
     )
 }
 
+// ─── GET /.well-known/mcp/server-card.json — Smithery scan skip ──────────────
+//
+// Smithery reads this to skip the automatic scanning step.
+// Without it, Smithery tries GET /mcp which returns 405.
+
+async fn mcp_server_card() -> Json<Value> {
+    Json(json!({
+        "name":        "ternlang",
+        "displayName": "Ternlang — Ternary Intelligence Stack",
+        "version":     "0.1.0",
+        "description": "Turns any binary AI agent into a ternary decision engine. Adds the third state: hold (trit=0) — not indecision, a first-class routing instruction.",
+        "homepage":    "https://ternlang.com",
+        "repository":  "https://github.com/eriirfos-eng/ternary-intelligence-stack",
+        "protocol":    "2024-11-05",
+        "transport":   "http",
+        "endpoint":    "https://ternlang.com/mcp",
+        "auth":        { "type": "none" },
+        "tools": [
+            "trit_decide", "trit_consensus", "trit_eval", "ternlang_run",
+            "quantize_weights", "sparse_benchmark", "moe_orchestrate",
+            "moe_deliberate", "trit_action_gate", "trit_enlighten"
+        ]
+    }))
+}
+
+// ─── GET /mcp — server info (Smithery scans this with GET before POST) ────────
+
+async fn mcp_info() -> Json<Value> {
+    Json(json!({
+        "name":      "ternlang-mcp",
+        "version":   "0.1.0",
+        "protocol":  "2024-11-05",
+        "transport": "http",
+        "endpoint":  "https://ternlang.com/mcp",
+        "usage":     "POST JSON-RPC 2.0 — methods: initialize, tools/list, tools/call",
+        "tools":     10,
+        "auth":      "none",
+    }))
+}
+
 // ─── POST /mcp — HTTP MCP transport (Smithery / Claude Desktop HTTP mode) ─────
 //
 // Smithery requires a live HTTP URL.  This endpoint implements JSON-RPC 2.0
@@ -1598,7 +1640,8 @@ async fn main() {
         // Public
         .route("/",       get(root))
         .route("/health", get(health))
-        .route("/mcp",    post(mcp_handler))
+        .route("/mcp",    get(mcp_info).post(mcp_handler))
+        .route("/.well-known/mcp/server-card.json", get(mcp_server_card))
         // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))
         .route("/api/trit_vector",       post(trit_vector))
