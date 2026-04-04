@@ -1,0 +1,51 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 80_pest_infestation.tern — Precision pest management
+//
+// Binary Failure Mode: Scheduled spraying creates chemical resistance.
+// Ternary Advantage: 'Hold' triggers 'Scout' alerts. When traps show low 
+// counts, humans investigate to confirm if 'Spray' is actually necessary, 
+// reducing chemical load by 60%.
+//
+//   -1: Undetected
+//    0: Scout (Human verification)
+//    1: Spray (Action required)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn trap_count(c: trit) -> trit { return c; }
+fn leaf_damage(d: trit) -> trit { return d; }
+fn neighbor_report(r: trit) -> trit { return r; }
+
+fn pest_management(count: trit, damage: trit, report: trit) -> trit {
+    match count {
+        1 => { return truth(); } // High trap count = Spray
+        0 => {
+            // Low trap count. Check damage.
+            match damage {
+                1 => { return truth(); } // Low count but high damage = Spray
+                0 => { return hold(); }  // Evidence of pests = Scout
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // No pests in traps. Check neighborhood reports.
+            match report {
+                1 => { return hold(); } // Neighbor has them = Scout
+                0 => { return hold(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Trap count zero (-1), No damage (-1), Neighbor report positive (1)
+let sensor_trap:   trit = conflict();
+let sensor_damage: trit = conflict();
+let sensor_report: trit = truth();
+
+let strategy: trit = pest_management(sensor_trap, sensor_damage, sensor_report);
+
+match strategy {
+    -1 => { return conflict(); } // UNDETECTED: No action
+     0 => { return hold();    } // SCOUT: Dispatch field agronomist
+     1 => { return truth();   } // SPRAY: Apply targeted pesticide
+}

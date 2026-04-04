@@ -1,0 +1,34 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 136_streaming_quality.tern — Adaptive Streaming Quality Selector
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'medium' to prevent constant buffering on fluctuating links.
+//   +1: LOW
+//    0: MEDIUM
+//   -1: HIGH
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_bandwidth(x: trit) -> trit { return x; }
+fn check_latency(x: trit) -> trit { return x; }
+fn check_buffer(x: trit) -> trit { return x; }
+
+fn main_logic(bw: trit, lat: trit, buf: trit) -> trit {
+    match buf {
+        1 => { return invert(truth()); }
+        0 => { return hold(); }
+        -1 => { return truth(); }
+    }
+}
+
+// ── Concrete scenario: Moderate buffer health, trigger medium quality. ──
+let s_0: trit = invert(truth());
+let s_1: trit = hold();
+let s_2: trit = hold();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // LOW
+    0 => { return hold();  }    // MEDIUM
+   -1 => { return invert(truth()); } // HIGH
+}

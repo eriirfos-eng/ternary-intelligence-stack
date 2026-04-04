@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 137_esports_anti_cheat.tern — Esports Anti-Cheat Gate
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'suspicious' for human review instead of instant bans.
+//   +1: BANNED
+//    0: SUSPICIOUS
+//   -1: LEGIT
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_aim(x: trit) -> trit { return x; }
+fn check_wall(x: trit) -> trit { return x; }
+fn check_reports(x: trit) -> trit { return x; }
+
+fn main_logic(aim: trit, wall: trit, reports: trit) -> trit {
+    match aim {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => {
+            match reports {
+                1 => { return hold(); }
+                0 => { return invert(truth()); }
+                -1 => { return invert(truth()); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Legit aiming, but high number of player reports. ──
+let s_0: trit = invert(truth());
+let s_1: trit = invert(truth());
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // BANNED
+    0 => { return hold();  }    // SUSPICIOUS
+   -1 => { return invert(truth()); } // LEGIT
+}

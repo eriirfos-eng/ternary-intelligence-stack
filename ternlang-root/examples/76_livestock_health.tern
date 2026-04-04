@@ -1,0 +1,60 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 76_livestock_health.tern — Livestock health monitoring
+//
+// Binary Failure Mode: Sick animals often infect the herd before being removed.
+// Ternary Advantage: 'Hold' triggers an 'Isolate' command. If an animal shows 
+// high temperature or lethargy but no clear pathogen, it is moved to a 
+// transition pen for observation rather than staying in the herd.
+//
+//   -1: Stable
+//    0: Isolate (Observation)
+//    1: Veterinary Intervention (Urgent)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn body_temp(t: trit) -> trit { return t; }
+fn activity_level(a: trit) -> trit { return a; }
+fn appetite_check(f: trit) -> trit { return f; }
+
+fn health_decision(temp: trit, activity: trit, appetite: trit) -> trit {
+    match temp {
+        1 => {
+            // High fever. Hard gate to intervention.
+            return truth();
+        }
+        0 => {
+            // Elevated temp. Check other signs.
+            match activity {
+                1 => { return truth(); } // Fever + Lethargy = Vet
+                0 => { return hold(); }  // Fever + Low activity = Isolate
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // Normal temp. Check for unusual behavior.
+            match appetite {
+                1 => {
+                    match activity {
+                        1 => { return hold(); } // No appetite + Lethargy = Isolate
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Normal temp (-1), Lethargy (1), Poor appetite (1)
+let t_reading: trit = conflict();
+let a_reading: trit = truth();
+let f_reading: trit = truth();
+
+let disposition: trit = health_decision(t_reading, a_reading, f_reading);
+
+match disposition {
+    -1 => { return conflict(); } // STABLE: Animal remains with herd
+     0 => { return hold();    } // ISOLATE: Move to observation pen
+     1 => { return truth();   } // VETERINARY: Immediate clinical treatment
+}

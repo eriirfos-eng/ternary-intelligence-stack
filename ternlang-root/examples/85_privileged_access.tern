@@ -1,0 +1,58 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 85_privileged_access.tern — Privileged Access Management (PAM)
+//
+// Binary Failure Mode: Permanent admin rights (PAM) are a massive attack vector.
+// Ternary Advantage: 'Hold' represents 'Escalate' (Just-In-Time access). 
+// Requests for sensitive DB access are neither granted nor denied but 
+// escalated for a second-person approval or additional reasoning.
+//
+//   -1: Approved
+//    0: Escalate (Requires approval)
+//    1: Rejected
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn role_clearance(r: trit) -> trit { return r; }
+fn resource_sensitivity(s: trit) -> trit { return s; }
+fn window_policy(w: trit) -> trit { return w; }
+
+fn pam_gate(role: trit, sense: trit, window: trit) -> trit {
+    match sense {
+        1 => {
+            // Critical resource. Hard gate to Escalation or Rejection.
+            match role {
+                -1 => { return hold(); } // Even admins must escalate for Production DB
+                 0 => { return hold(); }
+                 1 => { return truth(); }
+            }
+        }
+        0 => {
+            // Moderate resource. Check window.
+            match window {
+                -1 => { return conflict(); } // Working hours = Approved
+                 0 => { return hold(); }      // Edge of window = Escalate
+                 1 => { return hold(); }      // Outside window = Escalate
+            }
+        }
+        -1 => {
+            // Low sensitivity. Allow if role is okay.
+            match role {
+                1 => { return truth(); } // No role = Rejected
+                0 => { return hold(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Senior Engineer (-1), Production DB access (+1), Late night (1)
+let engineer_role: trit = conflict();
+let prod_db_sense: trit = truth();
+let time_window:    trit = truth();
+
+let access_fate: trit = pam_gate(engineer_role, prod_db_sense, time_window);
+
+match access_fate {
+    -1 => { return conflict(); } // APPROVED: Temporary session token issued
+     0 => { return hold();    } // ESCALATE: Notify On-call Manager for approval
+     1 => { return truth();   } // REJECTED: Access denied, log for audit
+}

@@ -1,0 +1,52 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 119_quarantine_decision.tern — Public Health Quarantine Logic
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'isolate' for incubation monitoring, avoiding binary over-reaction.
+//   +1: QUARANTINE
+//    0: ISOLATE
+//   -1: RELEASE
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_test(x: trit) -> trit { return x; }
+fn check_symptoms(x: trit) -> trit { return x; }
+fn check_exposure(x: trit) -> trit { return x; }
+
+fn main_logic(test: trit, symptoms: trit, exposure: trit) -> trit {
+    match test {
+        1 => { return truth(); } // Positive test
+        0 => { 
+            match symptoms {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => { 
+                    match exposure {
+                        1 => { return hold(); }
+                        0 => { return hold(); }
+                        -1 => { return invert(truth()); }
+                    }
+                }
+            }
+        }
+        -1 => {
+            match exposure {
+                1 => { return hold(); }
+                0 => { return invert(truth()); }
+                -1 => { return invert(truth()); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Inconclusive test, mild symptoms, high exposure. ──
+let s_0: trit = hold();
+let s_1: trit = hold();
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // QUARANTINE
+    0 => { return hold();  }    // ISOLATE
+   -1 => { return invert(truth()); } // RELEASE
+}

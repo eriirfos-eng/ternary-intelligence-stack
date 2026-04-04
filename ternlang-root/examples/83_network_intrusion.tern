@@ -1,0 +1,57 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 83_network_intrusion.tern — IDS/IPS decision logic
+//
+// Binary Failure Mode: Blocking every "Suspicious" packet causes downtime.
+// Ternary Advantage: 'Hold' puts packets into a 'Suspicious' sandbox/quarantine 
+// for deep packet inspection (DPI) without dropping the connection, 
+// maintaining availability while investigating.
+//
+//   -1: Benign
+//    0: Suspicious (Sandbox/DPI)
+//    1: Malicious (Drop/Block)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn payload_signature(s: trit) -> trit { return s; }
+fn traffic_volume(v: trit) -> trit { return v; }
+fn port_behavior(b: trit) -> trit { return b; }
+
+fn ids_engine(sig: trit, vol: trit, behave: trit) -> trit {
+    match sig {
+        1 => { return truth(); } // Known exploit sig = Malicious
+        0 => {
+            // Heuristic match. Check behavior.
+            match behave {
+                1 => { return truth(); } // Heuristic + Port scan = Malicious
+                0 => { return hold(); }  // Heuristic + Unusual port = Suspicious
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // No signature match. Check volume.
+            match vol {
+                1 => {
+                    match behave {
+                        1 => { return hold(); } // High volume + Scan = Suspicious
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: No signatures (-1), High traffic volume (1), Port scanning (1)
+let sig_result: trit = conflict();
+let vol_result: trit = truth();
+let beh_result: trit = truth();
+
+let packet_fate: trit = ids_engine(sig_result, vol_result, beh_result);
+
+match packet_fate {
+    -1 => { return conflict(); } // BENIGN: Pass traffic to destination
+     0 => { return hold();    } // SUSPICIOUS: Redirect to sandbox for inspection
+     1 => { return truth();   } // MALICIOUS: Drop packet and block IP
+}

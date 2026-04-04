@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 126_code_review_gate.tern — Automated Code Review Gate
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'revision' for non-blocking feedback that needs address.
+//   +1: REJECT
+//    0: REVISION
+//   -1: APPROVE
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_lint(x: trit) -> trit { return x; }
+fn check_coverage(x: trit) -> trit { return x; }
+fn check_complexity(x: trit) -> trit { return x; }
+
+fn main_logic(lint: trit, cov: trit, comp: trit) -> trit {
+    match lint {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => {
+            match cov {
+                1 => { return invert(truth()); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Zero lint errors but moderate coverage and complexity. ──
+let s_0: trit = invert(truth());
+let s_1: trit = hold();
+let s_2: trit = hold();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // REJECT
+    0 => { return hold();  }    // REVISION
+   -1 => { return invert(truth()); } // APPROVE
+}

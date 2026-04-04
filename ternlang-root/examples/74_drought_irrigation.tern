@@ -1,0 +1,57 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 74_drought_irrigation.tern — Drought-based irrigation control
+//
+// Binary Failure Mode: Systems often stay "On" until the reservoir is empty.
+// Ternary Advantage: 'Hold' enables 'Restricted' usage (even-numbered days or 
+// nighttime only) when moisture is dropping but not yet at critical drought.
+//
+//   -1: Normal
+//    0: Restricted (Limit usage)
+//    1: Suspended (Prohibited)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn soil_moisture(m: trit) -> trit { return m; }
+fn reservoir_level(l: trit) -> trit { return l; }
+fn heat_index(h: trit) -> trit { return h; }
+
+fn irrigation_policy(moisture: trit, reservoir: trit, heat: trit) -> trit {
+    // Hard gate: If reservoir is critical (+1), suspend immediately.
+    match reservoir {
+        1 => { return truth(); }
+        0 => {
+            // Reservoir is low. Restriction is the minimum.
+            match moisture {
+                1 => { return truth(); } // Dry soil + Low water = Suspend
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // Reservoir is healthy. Check local heat and moisture.
+            match moisture {
+                1 => {
+                    match heat {
+                        1 => { return hold(); } // Very hot and dry = Restricted
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Reservoir low (0), Soil is dry (1), Heat is high (1)
+let current_moisture:  trit = truth();
+let current_reservoir: trit = hold();
+let current_heat:      trit = truth();
+
+let policy: trit = irrigation_policy(current_moisture, current_reservoir, current_heat);
+
+match policy {
+    -1 => { return conflict(); } // NORMAL: Standard watering schedule
+     0 => { return hold();    } // RESTRICTED: Reduced watering hours
+     1 => { return truth();   } // SUSPENDED: Irrigation prohibited
+}

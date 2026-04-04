@@ -1,0 +1,52 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 108_outage_isolation.tern — Electrical Outage Segmentation
+//
+// Binary breakers trip at the main feeder level, plunging whole neighborhoods 
+// into darkness. Ternary logic uses 'isolate' to segment a specific downstream 
+// transformer or branch, allowing the primary feeder to remain energized 
+// while the faulty circuit is safely cut.
+//   +1: CLEAR (Branch energized)
+//    0: ISOLATE (Segmented / Service limited)
+//   -1: FAULT (Upstream trip / Total blackout)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn amp_spike(a: trit) -> trit { return a; }
+fn smart_fuse(f: trit) -> trit { return f; }
+fn network_topology(t: trit) -> trit { return t; }
+fn recloser_ready(r: trit) -> trit { return r; }
+
+fn outage_logic(spike: trit, fuse: trit, topology: trit, recloser: trit) -> trit {
+    // Check for massive current spike first.
+    match spike {
+        1 => { 
+            // Fault detected. Can we isolate locally or must we trip upstream?
+            match fuse {
+                1 => { return hold(); }          // Smart fuse is operational, ISOLATE
+                _ => { return invert(truth()); } // Fuse failed, UPSTREAM TRIP (FAULT)
+            }
+        }
+        0 => { return hold(); } // Minor harmonics, isolate for safety.
+        -1 => {
+            // No spike, system nominal. Check recloser status.
+            match recloser {
+                1 => { return truth(); }         // Recloser confirmed circuit clear
+                _ => { return hold(); }          // Recloser cycle in progress
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Current spike detected, but smart fuse is ready ──
+let detected_spike: trit = truth();
+let fuse_health: trit = truth();
+let mesh_topology: trit = hold();
+let auto_recloser: trit = invert(truth());
+
+let status: trit = outage_logic(detected_spike, fuse_health, mesh_topology, auto_recloser);
+
+// Expected Result: 0 (ISOLATE) - we have a spike but we can segment it.
+match status {
+    1 => { return truth(); }     // CLEAR: All downstream loads active
+    0 => { return hold();  }     // ISOLATE: Trip local relay only, stay segmenting
+   -1 => { return conflict(); }  // FAULT: feeder level lockout, blackout
+}

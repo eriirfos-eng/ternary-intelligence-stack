@@ -1,0 +1,57 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 109_demand_response.tern — Smart Appliance Load Shedding
+//
+// Binary demand response systems (DR) often hard-kill pool pumps or HVACs, 
+// leading to user frustration. Ternary logic adds 'standby', allowing 
+// devices to cycle at 30% duty or enter a low-power mode, smoothing the 
+// aggregate demand spike without making the home environment uninhabitable.
+//   +1: ACTIVE (Full power mode)
+//    0: STANDBY (Low-power / Eco mode)
+//   -1: DISABLED (Mandatory load shed)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn grid_freq(f: trit) -> trit { return f; }
+fn opt_out_status(o: trit) -> trit { return o; }
+fn energy_price(p: trit) -> trit { return p; }
+fn comfort_delta(c: trit) -> trit { return c; }
+
+fn dr_logic(freq: trit, opt_out: trit, price: trit, comfort: trit) -> trit {
+    // Check if the user has explicitly opt-out of DR events
+    match opt_out {
+        1 => { return truth(); }         // User overrides, always ACTIVE
+        -1 => { 
+            // Mandatory participation. Check grid health.
+            match freq {
+                -1 => { return invert(truth()); } // Critical instability, must DISABLE
+                 0 => { return hold(); }          // Drifting frequency, STANDBY
+                 1 => {
+                     // Grid stable, check price signal
+                     match price {
+                         1 => { return hold(); }  // Expensive, go to eco mode
+                         _ => { return truth(); } // Cheap or negative, stay ACTIVE
+                     }
+                 }
+            }
+        }
+        0 => { 
+            // Default behavior, balance price and comfort
+            return consensus(price, comfort);
+        }
+    }
+}
+
+// ── Concrete scenario: Mandatory DR, high price, but user comfort is low ──
+let freq_stability: trit = truth();
+let user_override: trit = invert(truth()); // Mandatory participant
+let electricity_price: trit = truth();      // Peak pricing active
+let room_comfort: trit = invert(truth());  // It's getting too hot/cold
+
+let app_mode: trit = dr_logic(freq_stability, user_override, electricity_price, room_comfort);
+
+// Expected Result: 0 (STANDBY) - Price is high, but comfort is low. 
+// consensus(truth, invert(truth)) = 0.
+match app_mode {
+    1 => { return truth(); }     // ACTIVE: Full operation
+    0 => { return hold();  }     // STANDBY: Run at 30% capacity
+   -1 => { return conflict(); }  // DISABLED: Full shutdown of appliance
+}

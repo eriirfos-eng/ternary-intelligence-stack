@@ -1,0 +1,56 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 75_crop_disease.tern — Automated crop disease detection
+//
+// Binary Failure Mode: Treating everything as diseased leads to chemical waste.
+// Ternary Advantage: 'Hold' triggers 'Monitor' / 'Scout' alerts. Drone images 
+// showing discoloration but not clear fungal growth prompt human inspection.
+//
+//   -1: Healthy
+//    0: Monitor (Increased scouting)
+//    1: Treat (Apply intervention)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn spectral_anomaly(s: trit) -> trit { return s; }
+fn humidity_risk(h: trit) -> trit { return h; }
+fn visual_spotting(v: trit) -> trit { return v; }
+
+fn disease_logic(spectral: trit, humidity: trit, visual: trit) -> trit {
+    match visual {
+        1 => { return truth(); } // Definitive visual signs = Treat
+        0 => {
+            // Possible spots. Check humidity and spectral.
+            match humidity {
+                1 => { return truth(); } // High humidity + spots = High risk (Treat)
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // No visual spots. Check sensors.
+            match spectral {
+                1 => {
+                    match humidity {
+                        1 => { return hold(); } // Spectral anomaly + High humidity = Monitor
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Spectral anomaly high (+1), Humidity low (-1), Visuals clear (-1)
+let spectral_val: trit = truth();
+let humidity_val: trit = conflict();
+let visual_val:   trit = conflict();
+
+let action: trit = disease_logic(spectral_val, humidity_val, visual_val);
+
+match action {
+    -1 => { return conflict(); } // HEALTHY: No action needed
+     0 => { return hold();    } // MONITOR: Targeted drone inspection
+     1 => { return truth();   } // TREAT: Apply targeted fungicide
+}

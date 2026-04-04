@@ -1,0 +1,60 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 94_academic_integrity.tern — Academic Integrity Triage
+//
+// Binary Failure Mode: Accusing a student of cheating based on a 
+// similarity score (Turnitin) often leads to false accusations.
+// Ternary Advantage: 'Hold' represents 'Review' (Instructor discussion),
+// distinguishing between poor citation and deliberate plagiarism.
+//
+//   +1: Clear (No violation)
+//    0: Review (Discuss citations)
+//   -1: Violation (Formal charge)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn similarity_score(sim: trit) -> trit { return sim; }
+fn citation_quality(cite: trit) -> trit { return cite; }
+fn prior_history(hist: trit) -> trit { return hist; }
+
+fn integrity_triage(sim: trit, cite: trit, hist: trit) -> trit {
+    // High similarity is a major red flag.
+    match sim {
+        -1 => {
+            // Massive similarity. Check history.
+            match hist {
+                -1 => { return conflict(); } // Repeat offender: Violation
+                 0 => { return conflict(); }
+                 1 => { return hold(); }     // High sim but first offense: Review
+            }
+        }
+        0 => {
+            // Moderate similarity. Check citation quality.
+            match cite {
+                -1 => { return hold(); }     // Poor citations: Review
+                 0 => { return hold(); }
+                 1 => { return truth(); }    // Good citations: Clear
+            }
+        }
+        1 => {
+            // Low similarity.
+            match cite {
+                -1 => { return hold(); }     // Even with low sim, bad cites need review
+                 0 => { return truth(); }
+                 1 => { return truth(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Similarity score is in the moderate range (0), citations are 
+// poor (-1), but it is the student's first offense (+1).
+let sim_val:  trit = hold();
+let cite_val: trit = conflict();
+let hist_val: trit = truth();
+
+let case_status: trit = integrity_triage(sim_val, cite_val, hist_val);
+
+match case_status {
+    -1 => { return conflict(); } // VIOLATION: Submit to Dean of Students
+     0 => { return hold();    } // REVIEW: Schedule meeting with student
+     1 => { return truth();   } // CLEAR: Release grade
+}

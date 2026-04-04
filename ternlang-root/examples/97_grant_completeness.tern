@@ -1,0 +1,53 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 97_grant_completeness.tern — Research Grant Application Completeness
+//
+// Binary Failure Mode: Rejecting a multi-million dollar grant for a 
+// missing signature is administrative paralysis.
+// Ternary Advantage: 'Hold' represents 'Supplemental' (Request missing info),
+// ensuring bureaucracy doesn't kill viable research.
+//
+//   +1: Complete (Forward to technical review)
+//    0: Supplemental (Request missing items)
+//   -1: Incomplete (Administrative rejection)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn budget_attached(b: trit) -> trit { return b; }
+fn bio_sketches_present(bio: trit) -> trit { return bio; }
+fn signatures_valid(sig: trit) -> trit { return sig; }
+
+fn completeness_gate(budget: trit, bio: trit, sig: trit) -> trit {
+    // Budget is a hard gate.
+    match budget {
+        -1 => { return conflict(); } // No budget: Incomplete
+         0 => { return hold(); }     // Budget format error: Supplemental
+         1 => {
+             // Budget okay. Check biosketches.
+             match bio {
+                 -1 => { return hold(); } // Bios missing: Supplemental
+                  0 => { return hold(); }
+                  1 => {
+                      // Bios okay. Check signatures.
+                      match sig {
+                          1 => { return truth(); } // All good: Complete
+                          0 => { return hold(); }  // Digital sig error: Supplemental
+                          -1 => { return hold(); } // Missing one sig: Supplemental
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Budget is perfect (+1), biosketches are present (+1), but 
+// the Co-PI's signature is missing from the final page (-1).
+let budget_status: trit = truth();
+let bio_status:    trit = truth();
+let sig_status:    trit = conflict();
+
+let admin_status: trit = completeness_gate(budget_status, bio_status, sig_status);
+
+match admin_status {
+    -1 => { return conflict(); } // INCOMPLETE: Return to sender
+     0 => { return hold();    } // SUPPLEMENTAL: Open portal for missing signature
+     1 => { return truth();   } // COMPLETE: Move to merit review panel
+}

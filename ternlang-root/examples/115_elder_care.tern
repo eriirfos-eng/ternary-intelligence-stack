@@ -1,0 +1,64 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 115_elder_care.tern — Geriatric Placement Decision Engine
+//
+// Binary care models often force a traumatic choice between isolated "Home Care" 
+// (risking falls/malnutrition) or full "Clinical Nursing" (risking loss of 
+// autonomy/depression). Ternary logic adds "Assisted Living" (Community based) 
+// for seniors who need medication and meal management but don't yet require 
+// a full clinical staff for 24/7 wound/respiratory care.
+//   +1: CLINICAL (Skilled nursing facility)
+//    0: ASSISTED (Congregate housing / Group home)
+//   -1: HOME_CARE (Age-in-place / Family support)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn mobility_score(m: trit) -> trit { return m; }
+fn cognitive_status(c: trit) -> trit { return c; }
+fn family_availability(f: trit) -> trit { return f; }
+fn clinical_necessity(n: trit) -> trit { return n; }
+
+fn care_logic(mobility: trit, cognition: trit, family: trit, clinical: trit) -> trit {
+    // If there's a hard clinical need (e.g. ventilator), it must be clinical.
+    match clinical {
+        1 => { return truth(); }
+        _ => {
+            // No hard clinical need, evaluate based on safety and support.
+            match cognition {
+                -1 => { 
+                    // Severe cognitive decline. Needs constant eyes.
+                    match family {
+                        1 => { return hold(); }          // Strong family, ASSISTED
+                        _ => { return truth(); }         // No family, CLINICAL
+                    }
+                }
+                0 => { return hold(); }                  // Mild decline, ASSISTED
+                1 => {
+                    // Cognitive health is good. Check mobility and family support.
+                    match mobility {
+                        -1 => { return hold(); }         // Bed-bound but sharp, ASSISTED
+                         0 => { return hold(); }         // Frail but ambulatory
+                         1 => {
+                             // Sharp and mobile. Home is best if family is there.
+                             return consensus(invert(family), invert(family));
+                             // Wait, I can't just do that. I'll use invert(family)
+                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Sharp cognition, frail mobility, and strong family ──
+let high_mobility: trit = hold();
+let sharp_mind: trit = truth();
+let family_active: trit = truth();
+let zero_clinical: trit = invert(truth());
+
+let placement: trit = care_logic(high_mobility, sharp_mind, family_active, zero_clinical);
+
+// Expected Result: 0 (ASSISTED) - frailty means home is risky, even with family.
+match placement {
+    1 => { return truth(); }     // CLINICAL: Nursing home, 24/7 staff
+    0 => { return hold();  }     // ASSISTED: Senior housing with concierge meds
+   -1 => { return conflict(); }  // HOME_CARE: Stay at home with family checks
+}

@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 124_ab_test_significance.tern — A/B Test Statistical Significance
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'hold' for inconclusive results, preventing premature winner selection.
+//   +1: SIGNIFICANT
+//    0: HOLD
+//   -1: INSIGNIFICANT
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_p_value(x: trit) -> trit { return x; }
+fn check_sample_size(x: trit) -> trit { return x; }
+fn check_delta(x: trit) -> trit { return x; }
+
+fn main_logic(p: trit, n: trit, delta: trit) -> trit {
+    match p {
+        1 => { return invert(truth()); } // High p-value = insignificant
+        0 => { 
+            match n {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        -1 => { return truth(); }
+    }
+}
+
+// ── Concrete scenario: Borderline p-value with medium sample size. ──
+let s_0: trit = hold();
+let s_1: trit = hold();
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // SIGNIFICANT
+    0 => { return hold();  }    // HOLD
+   -1 => { return invert(truth()); } // INSIGNIFICANT
+}

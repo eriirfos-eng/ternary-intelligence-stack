@@ -1,0 +1,53 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 98_lab_safety.tern — Laboratory Safety Compliance Gate
+//
+// Binary Failure Mode: Shutting down a lab for a minor labeling error is 
+// overkill. Ignoring safety violations is dangerous.
+// Ternary Advantage: 'Hold' represents 'Corrective' (Fix within 24h),
+// allowing research to continue while enforcing high safety standards.
+//
+//   +1: Safe (Continue operations)
+//    0: Corrective (Notice of violation)
+//   -1: Halt (Immediate shutdown)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn ppe_usage(ppe: trit) -> trit { return ppe; }
+fn chemical_storage(store: trit) -> trit { return store; }
+fn fire_extinguisher_status(fire: trit) -> trit { return fire; }
+
+fn safety_gate(ppe: trit, store: trit, fire: trit) -> trit {
+    // Fire safety is a hard gate.
+    match fire {
+        -1 => { return conflict(); } // Expired/Missing extinguisher: Halt
+         0 => { return hold(); }     // Blocked access to extinguisher: Corrective
+         1 => {
+             // Fire safety okay. Check chemical storage.
+             match store {
+                 -1 => { return conflict(); } // Incompatible chemicals touching: Halt
+                  0 => { return hold(); }     // Unlabeled beaker: Corrective
+                  1 => {
+                      // Storage okay. Check PPE.
+                      match ppe {
+                          1 => { return truth(); } // Full compliance: Safe
+                          0 => { return hold(); }  // Improper glove type: Corrective
+                          -1 => { return hold(); } // Student not wearing glasses: Corrective
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Extinguisher is fine (+1), chemicals stored correctly (+1), 
+// but an inspector found an unlabeled beaker of distilled water (0).
+let fire_val:  trit = truth();
+let store_val: trit = truth();
+let ppe_val:   trit = hold();
+
+let lab_status: trit = safety_gate(ppe_val, store_val, fire_val);
+
+match lab_status {
+    -1 => { return conflict(); } // HALT: Lock lab doors and revoke access
+     0 => { return hold();    } // CORRECTIVE: Issue warning, re-inspect tomorrow
+     1 => { return truth();   } // SAFE: No violations found
+}

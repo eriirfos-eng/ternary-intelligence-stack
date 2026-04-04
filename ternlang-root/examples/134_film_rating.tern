@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 134_film_rating.tern — Motion Picture Content Rating
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'parental' guidance for content that isn't for kids but isn't adult-only.
+//   +1: ADULT
+//    0: PARENTAL
+//   -1: ALL_AGES
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_violence(x: trit) -> trit { return x; }
+fn check_language(x: trit) -> trit { return x; }
+fn check_maturity(x: trit) -> trit { return x; }
+
+fn main_logic(viol: trit, lang: trit, mat: trit) -> trit {
+    match mat {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => {
+            match viol {
+                1 => { return hold(); }
+                0 => { return hold(); }
+                -1 => { return invert(truth()); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Moderate violence but child-friendly themes and language. ──
+let s_0: trit = hold();
+let s_1: trit = invert(truth());
+let s_2: trit = invert(truth());
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // ADULT
+    0 => { return hold();  }    // PARENTAL
+   -1 => { return invert(truth()); } // ALL_AGES
+}

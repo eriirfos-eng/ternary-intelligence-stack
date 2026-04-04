@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 77_harvest_timing.tern — Optimal harvest decision logic
+//
+// Binary Failure Mode: Binary "Not Ripe" vs "Ripe" misses the peak window.
+// Ternary Advantage: 'Hold' represents the 'Wait' state (ripening), while
+// -1 is the 'Optimal' window and +1 is 'Overripe'. This forces the harvest
+// to occur exactly at the moment of peak quality.
+//
+//   -1: Optimal (Harvest now)
+//    0: Wait (Ripening)
+//    1: Overripe (Degrading)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn sugar_content(s: trit) -> trit { return s; }
+fn firmness_check(f: trit) -> trit { return f; }
+fn color_index(c: trit) -> trit { return c; }
+
+fn harvest_eval(brix: trit, firm: trit, color: trit) -> trit {
+    match firm {
+        1 => {
+            // Softening. Is it overripe or just right?
+            match brix {
+                1 => { return truth(); } // Very soft + High sugar = Overripe
+                0 => { return conflict(); } // Optimal
+                -1 => { return conflict(); }
+            }
+        }
+        0 => {
+            // Firmness is perfect. Check sugar and color.
+            match brix {
+                1 => { return conflict(); } // High sugar + Perfect firm = Optimal
+                0 => { return conflict(); }
+                -1 => { return hold(); }     // Perfect firm + Low sugar = Wait
+            }
+        }
+        -1 => {
+            // Hard as a rock. Definitely wait.
+            return hold();
+        }
+    }
+}
+
+// SCENARIO: Perfect sugar (0), Perfect firmness (0), Color index high (1)
+let s_val: trit = hold();
+let f_val: trit = hold();
+let c_val: trit = truth();
+
+let harvest_action: trit = harvest_eval(s_val, f_val, c_val);
+
+match harvest_action {
+    -1 => { return conflict(); } // OPTIMAL: Deploy picking crews immediately
+     0 => { return hold();    } // WAIT: Re-test in 48 hours
+     1 => { return truth();   } // OVERRIPE: Divert to processing/juice
+}

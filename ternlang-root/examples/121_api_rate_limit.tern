@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 121_api_rate_limit.tern — API Rate Limiting Controller
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'throttle' to degrade service gracefully instead of hard blocking.
+//   +1: BLOCK
+//    0: THROTTLE
+//   -1: ALLOW
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn get_request_count(x: trit) -> trit { return x; }
+fn get_auth_tier(x: trit) -> trit { return x; }
+fn get_system_load(x: trit) -> trit { return x; }
+
+fn main_logic(reqs: trit, tier: trit, load: trit) -> trit {
+    match reqs {
+        1 => { 
+            match tier {
+                1 => { return hold(); } // VIP gets throttled even at high usage
+                0 => { return truth(); }
+                -1 => { return truth(); }
+            }
+        }
+        0 => { return hold(); }
+        -1 => { return invert(truth()); }
+    }
+}
+
+// ── Concrete scenario: High request count but VIP user. ──
+let s_0: trit = truth();
+let s_1: trit = truth();
+let s_2: trit = hold();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // BLOCK
+    0 => { return hold();  }    // THROTTLE
+   -1 => { return invert(truth()); } // ALLOW
+}

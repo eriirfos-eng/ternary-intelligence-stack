@@ -1,0 +1,59 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 117_community_grant.tern — Municipal Micro-Grant Allocation
+//
+// Binary grant models (all-or-nothing) lead to a few "winners" and many 
+// discouraged community groups. Ternary logic adds 'partial' funding, 
+// ensuring that more projects get "seed" money to prove their concept 
+// while the municipality maintains its fiscal cushion for emergency use.
+//   +1: FUNDED (100% of request)
+//    0: PARTIAL (50% grant / Matching required)
+//   -1: REJECTED (Out of scope / Poor feasibility)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn impact_score(i: trit) -> trit { return i; }
+fn feasibility(f: trit) -> trit { return f; }
+fn budget_reserve(b: trit) -> trit { return b; }
+fn partner_match(p: trit) -> trit { return p; }
+
+fn grant_logic(impact: trit, feasible: trit, budget: trit, partner: trit) -> trit {
+    // If it's not feasible, it's rejected.
+    match feasible {
+        -1 => { return invert(truth()); } // Pipe dream, REJECT
+         0 => { return hold(); }          // Uncertain, PARTIAL (Pilot)
+         1 => {
+             // Feasible. Check community impact and budget.
+             match impact {
+                 1 => {
+                     // High impact. Check budget reserve.
+                     match budget {
+                         1 => { return truth(); }         // Plenty of funds, FULL FUND
+                         _ => { return hold(); }          // Tight budget, PARTIAL
+                     }
+                 }
+                 0 => { return hold(); }                  // Medium impact, PARTIAL
+                 -1 => {
+                     // Low impact. REJECT unless they have a partner.
+                     match partner {
+                         1 => { return hold(); }          // Has a partner, PARTIAL
+                         _ => { return invert(truth()); } // No partner, REJECT
+                     }
+                 }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: High impact, but tight municipal budget ──
+let high_impact: trit = truth();
+let solid_plan: trit = truth();
+let lean_budget: trit = hold(); // Budget is nearly empty
+let has_partner: trit = invert(truth());
+
+let grant_result: trit = grant_logic(high_impact, solid_plan, lean_budget, has_partner);
+
+// Expected Result: 0 (PARTIAL) - impact is high but budget is tight.
+match grant_result {
+    1 => { return truth(); }     // FUNDED: Cut check for full amount
+    0 => { return hold();  }     // PARTIAL: Send letter requesting matching donor
+   -1 => { return conflict(); }  // REJECTED: Fund exhausted / Project weak
+}

@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 79_aquaculture_oxygen.tern — Fish farm dissolved oxygen control
+//
+// Binary Failure Mode: Aerators turn on too late, causing mass fish mortality.
+// Ternary Advantage: 'Hold' triggers 'Aerate' when oxygen starts a downward 
+// trend at night, preventing the 'Critical' state before it occurs.
+//
+//   -1: Saturated
+//    0: Aerate (Active prevention)
+//    1: Critical (Low oxygen)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn do_level(l: trit) -> trit { return l; }
+fn water_temp(t: trit) -> trit { return t; }
+fn biomass_density(d: trit) -> trit { return d; }
+
+fn pump_control(oxygen: trit, temp: trit, density: trit) -> trit {
+    match oxygen {
+        1 => {
+            // Oxygen is low. Critical.
+            return truth();
+        }
+        0 => {
+            // Oxygen is dropping. Aerate.
+            return hold();
+        }
+        -1 => {
+            // Oxygen is high. But if temp is high and density is high, aerate early.
+            match temp {
+                1 => {
+                    match density {
+                        1 => { return hold(); } // High risk of drop
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Oxygen saturated (-1), High temp (1), High biomass (1)
+let o2_sensor:   trit = conflict();
+let temp_sensor: trit = truth();
+let dens_sensor: trit = truth();
+
+let pump_action: trit = pump_control(o2_sensor, temp_sensor, dens_sensor);
+
+match pump_action {
+    -1 => { return conflict(); } // SATURATED: Pumps off
+     0 => { return hold();    } // AERATE: Engage auxiliary pumps
+     1 => { return truth();   } // CRITICAL: Emergency liquid oxygen injection
+}

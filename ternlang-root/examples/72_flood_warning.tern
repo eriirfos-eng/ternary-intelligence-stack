@@ -1,0 +1,58 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 72_flood_warning.tern — Flood warning and advisory system
+//
+// Binary Failure Mode: Fixed flood gates often fail to account for rising rates.
+// Ternary Advantage: 'Hold' represents an 'Advisory' state where ground is 
+// saturated and rain is persistent, even if water levels are currently below 
+// the flood wall.
+//
+//   -1: Clear
+//    0: Advisory (Prepare defenses)
+//    1: Warning (Active flooding)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn water_level(sensor: trit) -> trit { return sensor; }
+fn rain_rate(rate: trit) -> trit { return rate; }
+fn soil_saturation(sat: trit) -> trit { return sat; }
+
+fn flood_logic(level: trit, rain: trit, soil: trit) -> trit {
+    // If water level is already high (+1), it is a Warning.
+    match level {
+        1 => { return truth(); }
+        0 => {
+            // Level is rising. Check rain and soil.
+            match rain {
+                1 => { return truth(); } // Rising level + Heavy rain = Warning
+                0 => { return hold(); }  // Rising level + Steady rain = Advisory
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // Level is low. Is ground saturated and rain heavy?
+            match soil {
+                1 => {
+                    match rain {
+                        1 => { return hold(); } // Low level but high soil/rain = Advisory
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Water level low (-1), Heavy rain (+1), Ground saturated (+1)
+let sensor_level: trit = conflict();
+let sensor_rain:  trit = truth();
+let sensor_soil:  trit = truth();
+
+let flood_status: trit = flood_logic(sensor_level, sensor_rain, sensor_soil);
+
+match flood_status {
+    -1 => { return conflict(); } // CLEAR: No flood risk
+     0 => { return hold();    } // ADVISORY: Sandbagging recommended
+     1 => { return truth();   } // WARNING: Evacuate low-lying areas
+}

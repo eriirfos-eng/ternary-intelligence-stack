@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 86_zero_trust_policy.tern — Zero Trust Architecture (ZTA) Policy
+//
+// Binary Failure Mode: Binary "Trust/Untrust" based on network perimeter is dead.
+// Ternary Advantage: 'Hold' represents 'Challenge' (MFA/Step-up), allowing for 
+// dynamic risk adjustment instead of binary permit/deny.
+//
+//   +1: Allow (Full Access)
+//    0: Challenge (MFA / Step-up)
+//   -1: Block (Access Denied)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn identity_verified(v: trit) -> trit { return v; }
+fn device_managed(m: trit) -> trit { return m; }
+fn location_safe(l: trit) -> trit { return l; }
+fn behavior_normal(b: trit) -> trit { return b; }
+
+fn zero_trust_gate(id: trit, dev: trit, loc: trit, beh: trit) -> trit {
+    // Identity is a hard gate. If identity is compromised (-1), block immediately.
+    match id {
+        -1 => { return conflict(); }
+         0 => { return hold(); } // Identity uncertain, challenge
+         1 => {
+             // Identity good. Now check device and behavior.
+             let environmental_risk: trit = consensus(loc, beh);
+             match environmental_risk {
+                 1 => { 
+                     // Environment looks good. Check device.
+                     match dev {
+                         1 => { return truth(); } // All green: Allow
+                         0 => { return hold(); }  // Unmanaged device: Challenge
+                         -1 => { return hold(); } // Dirty device: Challenge/Quarantine
+                     }
+                 }
+                 0 => { return hold(); } // Unusual location/behavior: Challenge
+                 -1 => { return conflict(); } // High risk indicators: Block
+             }
+         }
+    }
+}
+
+// SCENARIO: Verified user (+1), using personal device (0), from known home office (+1), 
+// but at unusual 3 AM timestamp (0).
+let user_id:   trit = truth();
+let user_dev:  trit = hold();
+let user_loc:  trit = truth();
+let user_beh:  trit = hold();
+
+let access_decision: trit = zero_trust_gate(user_id, user_dev, user_loc, user_beh);
+
+match access_decision {
+    -1 => { return conflict(); } // BLOCK: Deny access and alert SOC
+     0 => { return hold();    } // CHALLENGE: Trigger MFA push notification
+     1 => { return truth();   } // ALLOW: Grant session token
+}

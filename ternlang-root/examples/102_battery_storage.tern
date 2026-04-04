@@ -1,0 +1,47 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 102_battery_storage.tern — Battery Storage Management Strategy
+//
+// Binary battery management systems (BMS) alternate between full-charge or 
+// full-discharge, leading to high cycle stress. Ternary logic enables 'hold'
+// (float mode) where the battery neither draws nor provides power, matching 
+// parasitic loads and preserving lithium-ion health during price-flat intervals.
+//   +1: DISCHARGE (Selling to grid)
+//    0: HOLD (Idle / Float / Parasitic offset)
+//   -1: CHARGE (Buying from grid)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn battery_soc(soc: trit) -> trit { return soc; }
+fn grid_price(price: trit) -> trit { return price; }
+fn thermal_status(temp: trit) -> trit { return temp; }
+fn demand_forecast(demand: trit) -> trit { return demand; }
+
+fn battery_mgmt(soc: trit, price: trit, temp: trit, demand: trit) -> trit {
+    // Thermal safety gate
+    match temp {
+        -1 => { return hold(); }     // Too cold, heaters on but no power flow
+         0 => { 
+             // Thermal nominal, check State of Charge
+             match soc {
+                 -1 => { return invert(truth()); } // Low SOC, must charge
+                  0 => { return consensus(price, demand); } // Medium SOC, optimize
+                  1 => { return truth(); } // High SOC, ready to discharge
+             }
+         }
+         1 => { return conflict(); } // Overheating, disconnect.
+    }
+}
+
+// ── Concrete scenario: Normal temp, medium SOC, but low price ──
+let temperature: trit = hold();      // Nominal thermal state
+let current_soc: trit = hold();      // 50% state of charge
+let spot_price: trit = invert(truth()); // Energy is very cheap
+let forecasted_demand: trit = hold(); // Demand is average
+
+let strategy: trit = battery_mgmt(current_soc, spot_price, temperature, forecasted_demand);
+
+// Expected Result: -1 (CHARGE) - because price is low and SOC is medium.
+match strategy {
+    1 => { return truth(); }     // DISCHARGE: Max export to stabilize grid
+    0 => { return hold();  }     // HOLD: Float charge, preserve cycle count
+   -1 => { return conflict(); }  // CHARGE: Buy power now while it's cheap
+}

@@ -1,0 +1,52 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 106_thermal_storage.tern — Concentrated Solar Thermal (CST) Storage
+//
+// Binary molten-salt systems are either "heating" or "generating". Ternary 
+// logic adds a 'hold' state for thermal equilibrium, preventing excessive 
+// pump wear during transient cloud cover or brief grid frequency spikes 
+// where neither full storage nor full release is optimal.
+//   +1: RELEASE (Drive steam turbine)
+//    0: HOLD (Equilibrium / No pump movement)
+//   -1: STORE (Absorb solar heat)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn salt_temp(t: trit) -> trit { return t; }
+fn turbine_demand(d: trit) -> trit { return d; }
+fn heliostat_focus(f: trit) -> trit { return f; }
+fn pump_pressure(p: trit) -> trit { return p; }
+
+fn thermal_logic(temp: trit, demand: trit, focus: trit, pump: trit) -> trit {
+    // Check if the salt is hot enough to even release
+    match temp {
+        -1 => { 
+            // Salt is cold (too cool for turbine)
+            match focus {
+                1 => { return invert(truth()); } // Sun is out, must STORE
+                _ => { return hold(); }          // Sun is gone, stay in HOLD
+            }
+        }
+        0 => { return consensus(demand, focus); } // Nominal temp, follow flux
+        1 => {
+            // Salt is at max temp. Priority is RELEASE or danger.
+            match demand {
+                1 => { return truth(); }         // Grid wants it, release now
+                _ => { return hold(); }          // No demand, but don't store more.
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Salt is at nominal temp, grid demand is high, sun is obscured ──
+let molten_salt_temp: trit = hold();
+let grid_demand: trit = truth();
+let sun_focus: trit = invert(truth()); // Heavy cloud cover
+let system_pump: trit = hold();
+
+let thermal_state: trit = thermal_logic(molten_salt_temp, grid_demand, sun_focus, system_pump);
+
+// Expected Result: 0 (HOLD) - consensus(truth(), invert(truth())) = 0.
+match thermal_state {
+    1 => { return truth(); }     // RELEASE: Pump to steam heat exchanger
+    0 => { return hold();  }     // HOLD: Isolate tanks, maintain vacuum
+   -1 => { return conflict(); }  // STORE: Pump through solar receiver
+}

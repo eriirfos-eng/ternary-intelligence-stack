@@ -1,0 +1,47 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 99_replication_crisis.tern — Research Replication Assessment
+//
+// Binary Failure Mode: Binary "Replicated/Failed" labels oversimplify the 
+// nuance of effect sizes and p-hacking.
+// Ternary Advantage: 'Hold' represents 'Uncertain' (Requires meta-analysis),
+// reflecting the true state of many controversial scientific findings.
+//
+//   +1: Replicated (High confidence)
+//    0: Uncertain (Mixed results)
+//   -1: Failed (Direct contradiction)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn effect_size_match(eff: trit) -> trit { return eff; }
+fn p_value_consistency(p: trit) -> trit { return p; }
+fn protocol_fidelity(prot: trit) -> trit { return prot; }
+
+fn replication_logic(eff: trit, p: trit, prot: trit) -> trit {
+    // Protocol fidelity is required for a valid replication attempt.
+    match prot {
+        -1 => { return hold(); } // Different protocol: Result is uncertain
+         0 => { return hold(); } 
+         1 => {
+             // Same protocol. Check statistical consistency.
+             let stats: trit = consensus(eff, p);
+             match stats {
+                 1 => { return truth(); } // Strong match: Replicated
+                 0 => { return hold(); }  // Weak/Noisy match: Uncertain
+                 -1 => { return conflict(); } // Direct contradiction: Failed
+             }
+         }
+    }
+}
+
+// SCENARIO: Protocol was followed perfectly (+1), but the p-value was 
+// borderline (0) and the effect size was much smaller than the original (-1).
+let protocol: trit = truth();
+let p_cons:   trit = hold();
+let effect:   trit = conflict();
+
+let rep_outcome: trit = replication_logic(effect, p_cons, protocol);
+
+match rep_outcome {
+    -1 => { return conflict(); } // FAILED: The original effect did not hold up
+     0 => { return hold();    } // UNCERTAIN: Evidence is inconclusive
+     1 => { return truth();   } // REPLICATED: The finding is robust
+}

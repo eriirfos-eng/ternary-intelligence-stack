@@ -1,0 +1,52 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 107_renewable_curtailment.tern — Wind/Solar Grid Curtailment Logic
+//
+// Binary curtailment (on/off) wastes significant gigawatt-hours of green energy 
+// when the grid is slightly congested. Ternary 'mitigate' allows for a partial 
+// reduction (ramping) or a redirect to local hydrogen/battery storage, 
+// ensuring that "excess" energy is captured rather than dumped.
+//   +1: ALLOW (Full generation to grid)
+//    0: MITIGATE (Dump to storage / Partial ramp)
+//   -1: CURTAIL (Hard stop / Feather blades)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn grid_congestion(c: trit) -> trit { return c; }
+fn local_storage(s: trit) -> trit { return s; }
+fn weather_ramp(w: trit) -> trit { return w; }
+fn market_price(p: trit) -> trit { return p; }
+
+fn curtail_logic(grid: trit, storage: trit, weather: trit, price: trit) -> trit {
+    // Hard gate: If the grid is severely congested, we MUST stop exporting.
+    match grid {
+        -1 => { 
+            // Congestion is high. Check if we can store it locally instead of curtailing.
+            match storage {
+                1 => { return hold(); }          // High storage capacity, mitigate
+                _ => { return invert(truth()); } // Storage full, CURTAIL
+            }
+        }
+        0 => { return hold(); } // Moderate congestion, stay in mitigation
+        1 => {
+            // Grid is clear. Optimize for price and weather volatility.
+            match price {
+                -1 => { return hold(); } // Negative price, better to store
+                _ => { return truth(); } // Positive price, EXPORT
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Grid is congested, but battery is ready for energy ──
+let congestion: trit = invert(truth()); // High grid load/bottleneck
+let battery_room: trit = truth();      // Plenty of space to store
+let wind_gusts: trit = hold();
+let energy_price: trit = hold();
+
+let decision: trit = curtail_logic(congestion, battery_room, wind_gusts, energy_price);
+
+// Expected Result: 0 (MITIGATE) - grid is full but battery can take the load.
+match decision {
+    1 => { return truth(); }     // ALLOW: Export every electron/joule
+    0 => { return hold();  }     // MITIGATE: Charge local BESS / Divert
+   -1 => { return conflict(); }  // CURTAIL: Stop production immediately
+}

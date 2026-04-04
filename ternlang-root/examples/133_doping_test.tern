@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 133_doping_test.tern — Anti-Doping Sample Analysis
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'provisional' for B-sample verification or TUE checks.
+//   +1: POSITIVE
+//    0: PROVISIONAL
+//   -1: NEGATIVE
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_a_sample(x: trit) -> trit { return x; }
+fn check_tue(x: trit) -> trit { return x; }
+fn check_substance(x: trit) -> trit { return x; }
+
+fn main_logic(a_sample: trit, tue: trit, subs: trit) -> trit {
+    match a_sample {
+        1 => { 
+            match tue {
+                1 => { return hold(); }
+                0 => { return truth(); }
+                -1 => { return truth(); }
+            }
+        }
+        0 => { return hold(); }
+        -1 => { return invert(truth()); }
+    }
+}
+
+// ── Concrete scenario: A-sample positive, but athlete has a Therapeutic Use Exemption. ──
+let s_0: trit = truth();
+let s_1: trit = truth();
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // POSITIVE
+    0 => { return hold();  }    // PROVISIONAL
+   -1 => { return invert(truth()); } // NEGATIVE
+}

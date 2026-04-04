@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 138_track_condition.tern — Race Track Surface Condition
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'yielding' for moisture that affects speed but isn't a mud bath.
+//   +1: HEAVY
+//    0: YIELDING
+//   -1: FAST
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_moisture(x: trit) -> trit { return x; }
+fn check_compaction(x: trit) -> trit { return x; }
+fn check_rain(x: trit) -> trit { return x; }
+
+fn main_logic(moist: trit, comp: trit, rain: trit) -> trit {
+    match moist {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => {
+            match rain {
+                1 => { return hold(); }
+                0 => { return invert(truth()); }
+                -1 => { return invert(truth()); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Moderate moisture, high compaction. ──
+let s_0: trit = hold();
+let s_1: trit = truth();
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // HEAVY
+    0 => { return hold();  }    // YIELDING
+   -1 => { return invert(truth()); } // FAST
+}

@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 128_container_health.tern — Container Health Orchestrator
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'degraded' to allow traffic draining before a hard kill.
+//   +1: FAILED
+//    0: DEGRADED
+//   -1: HEALTHY
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_cpu(x: trit) -> trit { return x; }
+fn check_mem(x: trit) -> trit { return x; }
+fn check_errors(x: trit) -> trit { return x; }
+
+fn main_logic(cpu: trit, mem: trit, err: trit) -> trit {
+    match err {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => {
+            match cpu {
+                1 => { return hold(); }
+                0 => { return invert(truth()); }
+                -1 => { return invert(truth()); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: High CPU usage but zero error rate. ──
+let s_0: trit = truth();
+let s_1: trit = invert(truth());
+let s_2: trit = invert(truth());
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // FAILED
+    0 => { return hold();  }    // DEGRADED
+   -1 => { return invert(truth()); } // HEALTHY
+}
