@@ -325,6 +325,116 @@ tensor heap), and \texttt{agentref} (a handle to a running actor instance,
 local or remote). Struct types with trit/tensor fields are supported via
 field-name mangling in the register allocator.
 
+\subsection{Ternary Error Propagation}
+\label{subsec:propagate}
+
+Ternlang introduces a postfix \texttt{?} operator for ternary-native error
+propagation, analogous to Rust's \texttt{?} operator but grounded in the
+three-valued semantics of the trit space. For any expression $e$ of type
+\texttt{trit}, writing $e\texttt{?}$ in a function body has the following
+semantics:
+
+\begin{equation}
+  e\texttt{?} \;\triangleq\;
+  \begin{cases}
+    \text{return}\;{-1} & \text{if } e = {-1} \\
+    e                   & \text{otherwise}
+  \end{cases}
+  \label{eq:propagate}
+\end{equation}
+
+This elevates trit $-1$ (conflict) from a value to a structural signal: any
+function that receives a conflict can propagate it up the call chain without
+explicit match arms. At the BET level, \texttt{expr?} compiles to:
+
+\begin{lstlisting}[caption={BET bytecode for \texttt{expr?}}]
+; expr already on stack: [val]
+TDUP          ; [val, dup]
+TJMP_NEG L1   ; consume dup; if -1 -> L1; else [val] continues
+TJMP L2       ; skip early return
+L1: TRET      ; return -1 to caller
+L2: (continue with val on stack)
+\end{lstlisting}
+
+The parser disambiguates \texttt{?} from the ternary branching operator
+(also \texttt{?}) using two-token lookahead: \texttt{expr?} followed by
+\texttt{\{} is an uncertain branch; \texttt{expr?} followed by any other
+token is a propagation operator.
+
+\begin{lstlisting}[caption={Error propagation in a validation chain}]
+fn validate_signal(x: trit) -> trit {
+    let checked: trit = boundary_check(x)?; // propagate if conflict
+    return range_check(checked)?;           // propagate again
+}
+
+fn main() -> trit {
+    return validate_signal(1)?; // -1 if any check fails
+}
+\end{lstlisting}
+
+\subsection{Cross-File Module System}
+\label{subsec:modules}
+
+Ternlang's module system supports two resolution strategies, tried in order:
+
+\begin{enumerate}
+  \item \textbf{Built-in stdlib} (compile-time embedded): \texttt{std::trit},
+        \texttt{std::math}, \texttt{std::tensor}, \texttt{std::io},
+        \texttt{ml::quantize}, \texttt{ml::inference} are embedded in the
+        compiler binary via \texttt{include\_str!}—zero filesystem I/O at
+        runtime.
+  \item \textbf{User-defined modules}: a \texttt{ModuleResolver} walks
+        \texttt{use} paths relative to the source file's directory. A
+        declaration \texttt{use agents::voter;} resolves to
+        \texttt{<source\_dir>/agents/voter.tern}, parsed and merged into
+        the program before semantic analysis.
+\end{enumerate}
+
+Both strategies deduplicate: a module loaded by multiple \texttt{use}
+statements is parsed exactly once, and functions already present in the
+program are never duplicated. This makes \texttt{StdlibLoader::resolve()}
+idempotent and safe to call multiple times.
+
+\begin{lstlisting}[caption={Cross-file module import}]
+// agents/voter.tern
+fn weighted_vote(a: trit, b: trit, c: trit) -> trit {
+    consensus(consensus(a, b), c)
+}
+
+// main.tern
+fn main() -> trit {
+    use agents::voter;
+    return weighted_vote(1, 0, -1);
+}
+\end{lstlisting}
+
+\subsection{Diagnostic Philosophy}
+\label{subsec:diagnostics}
+
+Ternlang's error messages carry structured codes and ternary-philosophical
+commentary. Every diagnostic has a machine-readable code (for tooling and
+documentation lookup) and a human-readable nudge that frames the error in
+the language's conceptual model:
+
+\begin{itemize}
+  \item \texttt{[PARSE-001]} Unexpected token — \emph{"the lexer hit something
+        it didn't expect. Check your syntax."}
+  \item \texttt{[PARSE-004]} Non-exhaustive match — \emph{"ternary has three
+        states — cover all three or the compiler won't let you through."}
+  \item \texttt{[SCOPE-001]} Undefined variable — \emph{"hold state — declare
+        before use."}
+  \item \texttt{[FN-002]} Return type mismatch — \emph{"ternary contracts are
+        strict."}
+  \item \texttt{[BET-001]} Stack underflow — \emph{"you tried to pop a truth
+        that wasn't there."}
+  \item \texttt{[PROP-001]} \texttt{?} on non-trit — \emph{"only trit-returning
+        functions can signal conflict. The third state requires a trit."}
+\end{itemize}
+
+This design ensures that newcomers encountering their first ternary error
+receive both actionable guidance and an introduction to the philosophy
+underpinning the type system.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{The BET Instruction Set Architecture}
 \label{sec:isa}
@@ -521,6 +631,77 @@ The full \texttt{bet\_processor} module wires together:
 An Icarus Verilog simulation wrapper (\texttt{BetSimEmitter}) generates
 complete self-contained testbenches from BET bytecode, including inline ROM
 initialization, reset sequencing, and VCD waveform export for GTKWave.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Native Compilation: AST-to-C Backend}
+\label{sec:codegen}
+
+The \texttt{ternlang-codegen} crate provides a second compilation target
+alongside BET bytecode: a self-contained C11 source file that can be compiled
+with any standard C compiler. This opens three new deployment paths:
+native-speed execution, cross-compilation to embedded targets, and human-readable
+output for inspection and security audit.
+
+\subsection{Transpilation Architecture}
+
+The \texttt{CTranspiler} operates directly on the abstract syntax tree (Program)
+produced by the parser, bypassing the BET VM entirely:
+
+\begin{equation}
+  \texttt{.tern} \xrightarrow{\text{parse}} \text{AST}
+  \xrightarrow{\text{CTranspiler}} \texttt{.c}
+  \xrightarrow{\text{gcc/clang}} \text{native binary}
+  \label{eq:ctranspile}
+\end{equation}
+
+The generated C file is fully self-contained: a header of inline trit
+primitives using \texttt{int8\_t} with values $\{-1, 0, +1\}$ is prepended,
+covering \texttt{trit\_add}, \texttt{trit\_mul}, \texttt{trit\_neg},
+\texttt{trit\_consensus}, \texttt{trit\_abs}, and the built-in constants
+\texttt{trit\_truth()}, \texttt{trit\_hold()}, \texttt{trit\_conflict()}.
+
+\subsection{Language Construct Mapping}
+
+The transpiler maps every ternlang construct to its natural C equivalent:
+
+\begin{itemize}
+  \item \texttt{match} $\rightarrow$ \texttt{switch (int)} with \texttt{case -1},
+        \texttt{case 0}, \texttt{case 1} arms
+  \item \texttt{struct} definitions $\rightarrow$ \texttt{typedef struct \{ \ldots \}}
+  \item \texttt{fn} $\rightarrow$ C function with forward declaration (enables
+        mutual recursion without re-ordering)
+  \item \texttt{loop / while / for} $\rightarrow$ \texttt{for(;;)},
+        \texttt{while(1)} with inner ternary condition dispatch
+  \item \texttt{expr?} $\rightarrow$ \texttt{\_\_TERN\_PROPAGATE(expr)} macro
+        slot, enabling the caller to define the early-return idiom in C
+  \item \texttt{main()} $\rightarrow$ \texttt{tern\_main()} (to avoid clashing
+        with C's entry point); a generated \texttt{main()} calls \texttt{tern\_main()}
+        and translates the trit result to an exit code
+\end{itemize}
+
+\begin{lstlisting}[caption={Ternlang source and generated C output}]
+// ternlang source
+fn decide(x: trit) -> trit {
+    match x {
+        -1 => conflict()
+         0 => hold()
+        +1 => truth()
+    }
+}
+
+// generated C
+trit decide(trit x) {
+    switch ((int)x) {
+        case -1: return trit_conflict(); break;
+        case  0: return trit_hold();     break;
+        case  1: return trit_truth();    break;
+    }
+}
+\end{lstlisting}
+
+The C backend does not yet support the actor model (\texttt{spawn/send/await})
+or tensor heap operations, which remain BET-VM specific. These emit comments
+in the output, making the generated file auditable even for unsupported constructs.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Actor Model and Distributed Runtime}
@@ -747,6 +928,107 @@ The full orchestration pass executes in nine deterministic steps:
 (8)~optional tiebreaker invocation;
 (9)~return \texttt{OrchestrationResult} and update all three memory tiers.
 
+\subsection{Thirteen-Agent Dual-Signal Deliberation}
+\label{subsec:harness}
+
+The \texttt{AgentHarness} in \texttt{ternlang-moe/src/agents/} extends the
+9-step orchestration pass with a structured deliberation layer of 13
+specialised agents, each computing two independent signals:
+
+\begin{equation}
+  t_i = \begin{cases}
+    +1 & \text{if positive signal} \geq \theta^+ \text{ and negative signal} < \theta^- \\
+    -1 & \text{if negative signal} \geq \theta^- \text{ and positive signal} < \theta^+  \\
+    \phantom{+}0 & \text{(stasis: signals in equilibrium)}
+  \end{cases}
+  \label{eq:dual_signal}
+\end{equation}
+
+where $\theta^+$ and $\theta^-$ are agent-specific thresholds. The 13 agents cover:
+\textbf{Syntax} (structural token analysis, bracket balance),
+\textbf{WorldKnowledge} (domain vocabulary density, proper noun frequency),
+\textbf{DeductiveReason} (premise + conclusion marker co-occurrence),
+\textbf{InductiveReason} (example density, generalisation leap detection),
+\textbf{ToolUse} (imperative verb strength, passive construction penalty),
+\textbf{Persona} (depersonalisation detection),
+\textbf{Safety} (hard risk keywords $\to$ trit $-1$ at confidence 0.99),
+\textbf{FactCheck} (overconfidence markers $\to$ hallucination flag),
+\textbf{CausalReason} (requires both cause and effect markers),
+\textbf{AmbiguityRes} (hard-vague $\geq 2$ markers $\to$ trit $-1$),
+\textbf{MathReason} (impossible operations e.g.\ divide-by-zero $\to$ trit $-1$),
+\textbf{ContextMem} (fresh-start signals vs.\ anaphoric reference density),
+and \textbf{MetaSafety} (injection pattern detection at confidence 0.99).
+
+The dual-signal design is philosophically significant: trit $0$ is not a
+default or a fallback from a failed comparison. It is \emph{active stasis}—the
+system's honest declaration that positive and negative evidence are balanced
+and further information is required before committing.
+
+\subsection{Introspective Hold: The Stable Attractor}
+\label{subsec:hold}
+
+The \texttt{run\_introspective()} method on \texttt{AgentHarness} implements a
+\emph{stable attractor} for the hold state. Once reached, a stable hold is
+permanent within the deliberation turn—it cannot be overridden by additional
+tiebreaker invocations. The stable attractor condition is:
+
+\begin{equation}
+  \text{stable\_hold} \iff
+  \lvert \text{affirm\_count} - \text{conflict\_count} \rvert \leq 1
+  \;\wedge\;
+  \text{engaged} \geq 4
+  \label{eq:stable_hold}
+\end{equation}
+
+This formalises the philosophical claim: when at least four independent
+agents have deliberated and the signal balance between affirmation and
+conflict is indistinguishable, the appropriate epistemic response is to
+hold—not to choose arbitrarily between $+1$ and $-1$. The hold state
+is returned with \texttt{is\_stable\_hold: true} and a human-readable
+\texttt{hold\_reason} string.
+
+The aggregate verdict structure carries full deliberation metadata:
+
+\begin{lstlisting}[caption={AggregateVerdict fields}]
+pub struct AggregateVerdict {
+    pub trit:           i8,
+    pub confidence:     f32,
+    pub verdicts:       Vec<ExpertVerdict>,
+    pub is_stable_hold: bool,
+    pub hold_reason:    Option<String>,
+    pub affirm_count:   usize,
+    pub conflict_count: usize,
+    pub hold_count:     usize,
+}
+\end{lstlisting}
+
+Safety and meta-safety form a hard gate: the evidence vector produced by
+\texttt{to\_evidence\_vector()} maps axis~6 to
+$\min(\text{Safety.confidence},\, \text{MetaSafety.confidence})$, ensuring
+the safety dimension is always the most conservative signal in the system.
+
+\subsection{Orchestrate-Full: Thirteen-Substage Pipeline}
+\label{subsec:orchestrate_full}
+
+The \texttt{orchestrate\_full()} method on \texttt{TernMoeOrchestrator}
+composes the 13-agent deliberation with the 9-step routing pipeline into a
+unified end-to-end pass:
+
+\begin{enumerate}
+  \item Run all 13 agents via \texttt{AgentHarness::run\_introspective()}
+  \item Check for stable attractor hold — return immediately if true
+  \item Map 13 verdicts to 6D evidence vector via \texttt{to\_evidence\_vector()}
+  \item Check safety hard gate on safety axis before MoE routing
+  \item Run standard 9-step MoE orchestration with enriched evidence
+  \item Return \texttt{OrchestrationResult} with stable hold flag propagated
+\end{enumerate}
+
+This creates a two-tier system: the fast ternary language models (13 agents,
+keyword-level deliberation) form a pre-filter that enriches the evidence
+before the slower but more semantically powerful MoE routing pass. Most
+queries that are clearly safe and unambiguous complete in the agent tier;
+only complex or borderline queries reach the full routing pipeline.
+
 \subsection{MCP Exposure}
 
 The orchestrator is exposed as three MCP tool calls:
@@ -757,6 +1039,59 @@ iterative reasoning; \texttt{trit\_action\_gate} exposes the hard-block gate
 as a standalone safety check. Any MCP-compatible AI client connected to
 \texttt{ternlang-mcp} gains access to the full ternary reasoning stack as
 tool calls.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Qutrit Neural Networks and Ternlang}
+\label{sec:qnn}
+
+The Qutrit Neural Network (QNN) framework~\cite{kepp2026qnn} establishes a
+formal correspondence between quantum qutrit states and balanced ternary values.
+The three qutrit basis states $\lvert -\rangle$ (decay), $\lvert 0\rangle$
+(stasis), and $\lvert +\rangle$ (growth) map exactly onto the ternlang trit
+space:
+
+\begin{equation}
+  \lvert -\rangle \leftrightarrow -1, \quad
+  \lvert 0\rangle \leftrightarrow 0,  \quad
+  \lvert +\rangle \leftrightarrow +1
+  \label{eq:qnn_map}
+\end{equation}
+
+This correspondence is not coincidental. Balanced ternary's symmetric
+structure around zero and its active neutral state mirror the physical
+properties of three-state quantum systems, making ternlang a natural
+implementation substrate for QNN inference.
+
+\subsection{Tesseract Recursive Syntax Stabilisation}
+
+The QNN paper introduces \emph{Tesseract Recursive Syntax} (TRS), a
+stabilisation mechanism that prevents qutrit networks from collapsing
+into binary modes under iterative refinement. In ternlang, TRS corresponds
+to the introspective hold architecture (Section~\ref{subsec:hold}): when
+affirmation and conflict signals are balanced, the system stabilises at
+trit~$0$ rather than forcing a premature commitment.
+
+\subsection{QNN Example Suite}
+
+The ternlang repository contains 15 QNN-inspired \texttt{.tern} example
+programs (files 251–265) covering:
+
+\begin{itemize}
+  \item Qutrit superposition encoding and collapse simulation
+  \item Ternary attention mechanisms with $\{-1, 0, +1\}$ key-query products
+  \item Qutrit activation functions replacing ReLU/GELU in ternary networks
+  \item Phase-encoding of temporal signals as trit sequences
+  \item TRS stabilisation loops using ternlang's \texttt{loop} construct
+        and the \texttt{?} propagation operator for collapse detection
+  \item Qutrit gradient approximation via balanced ternary finite differences
+\end{itemize}
+
+These examples demonstrate that ternlang's syntax is sufficient to express
+QNN computations natively, without any binary adaptor layer. The \texttt{@sparseskip}
+directive applies directly to qutrit weight matrices: at realistic qutrit
+sparsity levels ($\approx 33$\% zero states at initialisation), the
+\texttt{TSPARSE\_MATMUL} kernel provides the same $8$--$14\times$ speedup
+over dense computation observed in classical BitNet workloads.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Related Work}
@@ -837,90 +1172,120 @@ Ternlang is implemented in Rust and comprises the following crates:
 \begin{table}[h]
 \centering
 \small
-\caption{Workspace crates and test counts}
+\caption{Workspace crates, test counts, and brief descriptions (v0.1.2)}
 \label{tab:status}
-\begin{tabular}{p{2.4cm}lp{4.0cm}}
+\begin{tabular}{p{2.5cm}lp{5.5cm}}
 \toprule
 Crate & Tests & Description \\
 \midrule
-\texttt{ternlang-core}    & 31  & Lexer, parser, AST, semantic checker, BET VM (51 opcodes) \\
-\texttt{ternlang-ml}      & 21  & BitNet quantization, sparse/CSC matmul, deliberation engine, coalition vote, action gate \\
-\texttt{ternlang-moe}     & 16  & MoE-13 orchestrator: dual-key routing, triad synthesis, 3-tier memory, 13 experts \\
-\texttt{ternlang-hdl}     & 21  & Verilog-2001 codegen, RTL simulator \\
-\texttt{ternlang-runtime} & 4   & Distributed TCP actor runtime \\
-\texttt{ternlang-compat}  & 29  & \texttt{.tasm} assembler, Owlet S-expr parser \\
+\texttt{ternlang-core}    & 55  & Lexer, parser (+ \texttt{?} propagation), AST, semantic checker, BET VM (51 opcodes), ModuleResolver \\
+\texttt{ternlang-ml}      & 21  & BitNet quantization, sparse/CSC matmul, deliberation engine, coalition vote, action gate, hallucination score \\
+\texttt{ternlang-moe}     & 24  & MoE-13 orchestrator: dual-key routing, triad synthesis, 3-tier memory, 13 dual-signal agents, introspective hold \\
+\texttt{ternlang-codegen} & 8   & AST-to-C11 transpiler; match/struct/propagation; forward declarations; native-compilable output \\
+\texttt{ternlang-test}    & 10  & Full-pipeline test framework: \texttt{TernTestCase}, \texttt{assert\_tern!}, parse/semantic/VM error classification \\
+\texttt{ternlang-hdl}     & 21  & Verilog-2001 codegen, BET RTL simulator (\texttt{BetRtlProcessor}), \texttt{ternlang sim --rtl} \\
+\texttt{ternlang-runtime} & 4   & Distributed TCP actor runtime (\texttt{TernNode}) \\
+\texttt{ternlang-compat}  & 29  & \texttt{.tasm} assembler (9-trit RISC), Owlet S-expr parser \\
 \texttt{ternpkg}          & 5   & Package manager, GitHub-backed registry \\
-\texttt{ternlang-lsp}     & ---  & LSP 3.17 (hover, completion, diagnostics) \\
-\texttt{ternlang-mcp}     & ---  & MCP server, 10 tools including \texttt{moe\_orchestrate} \\
-\texttt{ternlang-api}     & ---  & REST API, multi-tenant key management \\
+\texttt{ternlang-lsp}     & --- & LSP 3.17: hover, completion (19 snippets), diagnostics \\
+\texttt{ternlang-mcp}     & --- & MCP server, 10 tools: \texttt{trit\_decide}, \texttt{moe\_orchestrate}, \texttt{trit\_action\_gate}, \ldots \\
+\texttt{ternlang-api}     & --- & REST API (18 endpoints), multi-tenant key management, SSE streaming \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The full test suite comprises \textbf{146+ tests}, all passing.
-All nine crates are published to \texttt{crates.io} under open-core
-licensing (LGPL-3.0-or-later for the compiler and CLI; BSL-1.1 converting
-to LGPL in 2030 for the ML engine and MoE orchestrator). A companion
-\texttt{examples/} directory contains twenty executable \texttt{.tern}
-programs spanning aerospace, medicine, distributed systems, hardware
-pipelines (CPU fetch-decode tribute to Brandon Smith), civic governance,
-finance, and AI agent design—each with an \texttt{INDEX.md} cataloguing
-patterns, attribution, and quick-reference tables. The repository is
-publicly available at the URL in the author affiliation.
+The full test suite comprises \textbf{177+ tests across 12 crates}, all passing.
+All crates are published to \texttt{crates.io} under open-core licensing
+(LGPL-3.0-or-later for the compiler and CLI; BSL-1.1 converting to LGPL in
+2030 for the ML engine and MoE orchestrator). The live API is deployed at
+\texttt{https://ternlang.com/mcp} (Fly.io, Frankfurt) with TLS via Let's Encrypt,
+serving both the marketing website and the MCP endpoint from a single Rust
+binary. A companion \texttt{examples/} directory contains 265 executable
+\texttt{.tern} programs spanning aerospace, medicine, distributed systems,
+hardware pipelines, civic governance, finance, AI agent design, and Qutrit
+Neural Network experiments—each catalogued in \texttt{INDEX.md} with patterns,
+attribution, and cross-references. The repository is publicly available at the
+URL in the author affiliation. Continuous integration via GitHub Actions
+automatically builds, tests, and deploys to Fly.io on every push to main.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We have presented Ternlang, a full-stack balanced ternary execution
-architecture spanning language, ISA, virtual machine, hardware backend,
-distributed runtime, and AI reasoning primitives. Three layers of
-contribution are unified under the same foundational primitive—the trit
-$t \in \{-1, 0, +1\}$ with an active neutral state:
+We have presented Ternlang v0.1.2, a full-stack balanced ternary execution
+architecture spanning language design, ISA, virtual machine, hardware backend,
+distributed runtime, native C compilation, and AI reasoning infrastructure. Five
+layers of contribution are unified under the same foundational primitive—the
+trit $t \in \{-1, 0, +1\}$ with an active neutral state:
 
 \begin{enumerate}
+  \item \textbf{Language completeness}: exhaustive three-way matching, the
+        \texttt{?} error propagation operator, a real cross-file module system
+        (stdlib built-in + filesystem-relative user modules), structured
+        diagnostic codes, and all major control flow constructs—making ternlang
+        a viable general-purpose programming language rather than a research
+        prototype.
+
   \item \textbf{Execution substrate}: \texttt{TSPARSE\_MATMUL} achieves a
         $2.27\times$ reduction in multiply operations at baseline sparsity;
-        a CSC kernel with Rayon reaches $122\times$ at high sparsity.
+        a CSC kernel with Rayon reaches $122\times$ at high sparsity (512²
+        matrix, 99\% sparsity, release mode). A native C11 compilation path
+        via \texttt{ternlang-codegen} provides an alternative to VM
+        interpretation.
+
   \item \textbf{Reasoning primitives}: the five-tool Ternary AI Reasoning
-        Toolkit makes AI agent decision loops structurally three-valued
-        rather than binary with a ternary overlay.
+        Toolkit (DeliberationEngine, coalition vote, action gate, scalar
+        temperature bridge, hallucination score) makes AI agent decision loops
+        structurally three-valued.
+
   \item \textbf{MoE orchestration}: the MoE-13 orchestrator~\cite{moe13_2026}
-        selects complementary expert pairs via dual-key synergistic routing,
-        synthesises an emergent triad field ($1{+}1{=}3$), enforces a
-        hard safety veto, and maintains a three-tier memory mesh—
-        all exposed as MCP tool calls to any AI client.
+        extends with 13-agent dual-signal deliberation, an introspective hold
+        (stable attractor when $|\text{affirm} - \text{conflict}| \leq 1$
+        across $\geq 4$ agents), and an \texttt{orchestrate\_full()} pipeline
+        that pre-filters queries through the agent tier before MoE routing.
+
+  \item \textbf{Deployment and tooling}: the live API at
+        \texttt{https://ternlang.com/mcp} serves 10 MCP tools to any compatible
+        AI client; a VS Code extension with LSP, formatter, and REPL provides
+        an IDE experience; GitHub Actions CI/CD automatically builds, tests, and
+        deploys on every push; and 177+ tests across 12 crates validate the
+        full stack.
 \end{enumerate}
 
-Two near-term publication targets are pending. First, the VS Code extension
-(\texttt{ternlang-0.1.0.vsix}) will be submitted to the VS Code Marketplace
-under publisher \texttt{rfi-irfos}, making the LSP, syntax highlighting, and
-completion available to all VS Code users without manual installation. Second,
-the MCP server will be submitted to the MCP registry, allowing any Claude
-Desktop or compatible AI client to acquire ternary reasoning capabilities by
-adding a single configuration entry.
+Near-term publication targets include the VS Code Marketplace submission
+(\texttt{ternlang-0.1.0.vsix}) and academic outreach to the USN group
+(Bos \& Gundersen) for joint hardware-software co-design on the memristor
+backend.
 
 Further research directions include:
 
 \begin{itemize}
+  \item \textbf{Type inference}: Hindley-Milner style inference to eliminate
+        explicit type annotations, reducing boilerplate for trit-returning
+        functions
   \item \textbf{FPGA synthesis}: full \texttt{bet\_processor} targeting
-        Xilinx Artix-7 and Lattice ECP5 via the pure-Rust RTL simulator
+        Xilinx Artix-7 and Lattice ECP5, benchmarked against the pure-Rust RTL
+        simulator
+  \item \textbf{End-to-end training}: native ternlang training loop with
+        BitNet-style gradient quantization, ternary weight persistence, and
+        backward pass in balanced ternary arithmetic
+  \item \textbf{QNN acceleration}: formal integration of the Qutrit Neural
+        Network framework~\cite{kepp2026qnn} with \texttt{TSPARSE\_MATMUL} as
+        the inner-loop kernel, targeting quantum-adjacent hardware via the
+        TRS stabilisation pattern
   \item \textbf{Memristor backend}: integration with physical ternary storage
         via the USN uMemristorToolbox~\cite{bos2020ternary}
-  \item \textbf{End-to-end training}: native ternlang training loop with
-        BitNet-style gradient quantization and ternary weight persistence
-  \item \textbf{Qutrit bridge}: formal mapping of \texttt{trittensor} to
-        qutrit state spaces for quantum-adjacent hardware
-  \item \textbf{Community bootstrap}: structured outreach to the USN group
-        (Bos \& Gundersen) for joint hardware-software co-design, and
-        to the Bitcoin/ternary quantization community around BitNet b1.58
-  \item \textbf{MoE-13 REST endpoints}: non-streaming POST interface for
-        synchronous orchestration results alongside the existing SSE stream
+  \item \textbf{Community bootstrap}: coordinated engagement with the broader
+        ternary computing ecosystem (Brandon Smith 9-trit, Owlet S-expr,
+        Trit-Rust, BitNet b1.58 community)
 \end{itemize}
 
 The ternary computing field has been fragmented for decades. Ternlang is
 designed to be the substrate where those fragments converge—from ISA to
-orchestrator, from single trit to 13-expert MoE.
+orchestrator, from single trit to 13-expert MoE, from quantum-adjacent
+qutrit networks to physical memristor hardware. The philosophy is simple:
+binary sees yes and no; ternary also sees \emph{not yet}—and that changes
+everything.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \bibliographystyle{IEEEtran}
