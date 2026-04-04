@@ -34,16 +34,28 @@ By utilizing [Ollama](https://ollama.com/) for local inference of the `albert:la
 
 ---
 
+## Inference & Ternary Logic
+
+**Albert** uses a hybrid intelligence model:
+- **LLM Inference (Local)**: General reasoning, text generation, and tool orchestration are handled locally via **Ollama** (`albert:latest`). This ensures privacy, speed, and offline capability for core agent functions.
+- **Ternary Decision Gating (Remote API)**: Critical triadic decisions, expert MoE deliberation, and complex consensus logic are routed to the **Ternlang API** (`https://ternlang.com`).
+  - `trit_decide`: High-fidelity triadic signal processing.
+  - `moe_orchestrate`: Deliberation across the 13-expert Mixture-of-Experts (MoE) stack.
+  
+*Note: The Ternlang API is a specialized logic engine, not a general-purpose LLM endpoint.*
+
+---
+
 ## Requirements & Installation
 
 ### 1. Prerequisites
 - **Python 3.10+**
-- **Ollama**: [Download and install Ollama](https://ollama.com/)
-- **Albert Model**: Create the local model using the provided `Modelfile`:
+- **Ollama**: [Download and install Ollama](https://ollama.com/). You must pull the base model and create the Albert manifest:
   ```bash
   ollama pull qwen2.5:3b
   ollama create albert -f Modelfile
   ```
+- **Ternlang API Key**: Set your `TERNLANG_API_KEY` environment variable to access remote expert deliberation.
 
 ### 2. Install Dependencies
 Clone the repository and install the required Python packages:
