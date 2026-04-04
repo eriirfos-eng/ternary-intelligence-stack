@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 73_air_quality.tern — Air quality index monitoring
+//
+// Binary Failure Mode: Binary masks (Safe/Dangerous) ignore sensitive groups.
+// Ternary Advantage: 'Hold' captures the 'Sensitive' range (Yellow/Orange AQI),
+// triggering alerts for asthma sufferers without shutting down city activities.
+//
+//   -1: Good
+//    0: Sensitive (Unhealthy for some)
+//    1: Unhealthy (Dangerous for all)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn pm25_level(p: trit) -> trit { return p; }
+fn ozone_level(o: trit) -> trit { return o; }
+fn no2_level(n: trit) -> trit { return n; }
+
+fn calculate_aqi(pm: trit, oz: trit, no: trit) -> trit {
+    // Hard gate: If any pollutant is critical (+1), AQI is Unhealthy.
+    match pm {
+        1 => { return truth(); }
+        0 => {
+            match oz {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            match oz {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => {
+                    match no {
+                        1 => { return truth(); }
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// SCENARIO: PM2.5 is moderate (0), Ozone is low (-1), NO2 is low (-1)
+let pm_reading: trit = hold();
+let oz_reading: trit = conflict();
+let no_reading: trit = conflict();
+
+let aqi_result: trit = calculate_aqi(pm_reading, oz_reading, no_reading);
+
+match aqi_result {
+    -1 => { return conflict(); } // GOOD: Open windows
+     0 => { return hold();    } // SENSITIVE: Sensitive groups stay indoors
+     1 => { return truth();   } // UNHEALTHY: Wear masks, avoid exertion
+}

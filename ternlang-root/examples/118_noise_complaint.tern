@@ -1,0 +1,59 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 118_noise_complaint.tern — Acoustic Ordinance Enforcement
+//
+// Binary enforcement (Fine/No Fine) often results in a "Karen" culture of 
+// over-reporting or police frustration with minor calls. Ternary logic 
+// adds 'warning', allowing an officer to issue a formal log entry that 
+// doesn't trigger a fine but escalates future occurrences, reducing the 
+// immediate burden on the legal system and the violator's wallet.
+//   +1: VIOLATION (Fine issued / Case filed)
+//    0: WARNING (Official log / No fine)
+//   -1: CLEAR (Dismissed / Within limits)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn decibel_readout(d: trit) -> trit { return d; }
+fn hour_of_night(h: trit) -> trit { return h; }
+fn prior_warnings(p: trit) -> trit { return p; }
+fn officer_discretion(o: trit) -> trit { return o; }
+
+fn noise_logic(db: trit, hour: trit, prior: trit, discretion: trit) -> trit {
+    // If it's a massive decibel breach at 3 AM, it's a violation.
+    match db {
+        1 => {
+            // Very loud. Check the hour.
+            match hour {
+                1 => { return truth(); }         // Late night + loud, VIOLATION
+                _ => { return hold(); }          // Daytime + loud, WARNING
+            }
+        }
+        0 => { 
+            // Moderate noise. Check if they have priors.
+            match prior {
+                1 => { return truth(); }         // Repeat offender, VIOLATION
+                _ => { return hold(); }          // First offense, WARNING
+            }
+        }
+        -1 => { 
+            // Quiet. Is it just an officer's hunch?
+            match discretion {
+                1 => { return hold(); }          // Officer sees a pattern, WARNING
+                _ => { return invert(truth()); } // Nothing to see here, CLEAR
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Moderate noise at midnight, but first-time offense ──
+let moderate_noise: trit = hold();
+let midnight_hour: trit = truth();
+let zero_priors: trit = invert(truth());
+let officer_mood: trit = hold();
+
+let outcome: trit = noise_logic(moderate_noise, midnight_hour, zero_priors, officer_mood);
+
+// Expected Result: 0 (WARNING) - moderate noise with zero priors.
+match outcome {
+    1 => { return truth(); }     // VIOLATION: $250 fine assessed
+    0 => { return hold();  }     // WARNING: Logged verbal warning
+   -1 => { return conflict(); }  // CLEAR: Complaint unfounded
+}

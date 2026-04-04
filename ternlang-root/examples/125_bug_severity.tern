@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 125_bug_severity.tern — Bug Severity Triage
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'moderate' to prioritize fixes beyond just 'broken' or 'minor'.
+//   +1: CRITICAL
+//    0: MODERATE
+//   -1: LOW
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_impact(x: trit) -> trit { return x; }
+fn check_workaround(x: trit) -> trit { return x; }
+fn check_data_loss(x: trit) -> trit { return x; }
+
+fn main_logic(impact: trit, workaround: trit, loss: trit) -> trit {
+    match loss {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => {
+            match impact {
+                1 => { return hold(); }
+                0 => { return hold(); }
+                -1 => { return invert(truth()); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Large impact scope but a simple workaround exists and no data loss risk. ──
+let s_0: trit = truth();
+let s_1: trit = invert(truth());
+let s_2: trit = invert(truth());
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // CRITICAL
+    0 => { return hold();  }    // MODERATE
+   -1 => { return invert(truth()); } // LOW
+}

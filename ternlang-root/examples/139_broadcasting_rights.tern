@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 139_broadcasting_rights.tern — Sports Broadcasting Rights Engine
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'shared' for non-exclusive windows or regional splits.
+//   +1: RESTRICTED
+//    0: SHARED
+//   -1: EXCLUSIVE
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_territory(x: trit) -> trit { return x; }
+fn check_blackout(x: trit) -> trit { return x; }
+fn check_subscription(x: trit) -> trit { return x; }
+
+fn main_logic(terr: trit, black: trit, sub: trit) -> trit {
+    match terr {
+        1 => { 
+            match black {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => { return invert(truth()); }
+            }
+        }
+        0 => { return hold(); }
+        -1 => { return truth(); }
+    }
+}
+
+// ── Concrete scenario: Correct territory, but a regional blackout is partially active. ──
+let s_0: trit = truth();
+let s_1: trit = hold();
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // RESTRICTED
+    0 => { return hold();  }    // SHARED
+   -1 => { return invert(truth()); } // EXCLUSIVE
+}

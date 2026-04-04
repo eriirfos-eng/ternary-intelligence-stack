@@ -19,49 +19,200 @@ Every example follows the same pattern: three states (`-1` / `0` / `+1`) map to 
 ## Examples
 
 ### Fundamentals
-
-| # | File | What it shows |
-|---|------|---------------|
-| 01 | [hello_trit.tern](01_hello_trit.tern) | All three trit values, `invert()`, `consensus()` — start here |
-| 02 | [decision_gate.tern](02_decision_gate.tern) | Safety as a hard gate: safety conflict blocks everything else |
+| # | File | Summary |
+|---|------|---------|
+| 01 | [01_hello_trit.tern](01_hello_trit.tern) | All three trit values, `invert()`, `consensus()` — start here |
+| 02 | [02_decision_gate.tern](02_decision_gate.tern) | Safety as a hard gate: safety conflict blocks everything else |
 
 ### Real-World Decisions
-
-| # | File | Domain | Key pattern |
-|---|------|--------|-------------|
-| 03 | [rocket_launch.tern](03_rocket_launch.tern) | Aerospace | Go / No-Go / Hold; range safety as absolute veto |
-| 04 | [sensor_fusion.tern](04_sensor_fusion.tern) | Autonomous vehicles | Four-sensor fusion; any obstacle signal dominates |
-| 05 | [medical_triage.tern](05_medical_triage.tern) | Healthcare | ER triage; consciousness as hard gate |
-| 06 | [git_merge.tern](06_git_merge.tern) | DevOps | CI as hard gate; auto-merge / review / block |
-| 07 | [spam_filter.tern](07_spam_filter.tern) | Email | Quarantine ≠ spam folder; hold is an active routing label |
-| 08 | [evidence_collector.tern](08_evidence_collector.tern) | AI agents | Low data density detection; formal "I need more" signal |
+| # | File | Summary |
+|---|------|---------|
+| 03 | [03_rocket_launch.tern](03_rocket_launch.tern) | Aerospace Go / No-Go / Hold; range safety as absolute veto |
+| 04 | [04_sensor_fusion.tern](04_sensor_fusion.tern) | Autonomous vehicle four-sensor fusion; any obstacle signal dominates |
+| 05 | [05_medical_triage.tern](05_medical_triage.tern) | ER triage; consciousness as hard gate |
+| 06 | [06_git_merge.tern](06_git_merge.tern) | CI as hard gate; auto-merge / review / block |
+| 07 | [07_spam_filter.tern](07_spam_filter.tern) | Email: Quarantine ≠ spam folder; hold is an active routing label |
+| 08 | [08_evidence_collector.tern](08_evidence_collector.tern) | AI agents: low data density detection; formal "I need more" signal |
 
 ### Computer Science & Systems
-
-| # | File | Domain | Key pattern |
-|---|------|--------|-------------|
-| 09 | [risc_fetch_decode.tern](09_risc_fetch_decode.tern) | CPU / Systems | Fetch-decode-execute pipeline; stall = hold; inspired by Brandon Smith's 9-trit RISC simulator |
-| 13 | [owlet_bridge.tern](13_owlet_bridge.tern) | Programming languages | Ternary S-expression eval loop; suspended eval = hold; inspired by the Owlet interpreter |
-| 14 | [circuit_breaker.tern](14_circuit_breaker.tern) | Microservices | HALF-OPEN state is natively trit = 0; no special-casing needed |
+| # | File | Summary |
+|---|------|---------|
+| 09 | [09_risc_fetch_decode.tern](09_risc_fetch_decode.tern) | CPU / Systems pipeline; stall = hold |
+| 13 | [13_owlet_bridge.tern](13_owlet_bridge.tern) | Ternary S-expression eval loop; suspended eval = hold |
+| 14 | [14_circuit_breaker.tern](14_circuit_breaker.tern) | Microservices: HALF-OPEN state is natively trit = 0 |
+| 17 | [17_job_scheduler.tern](17_job_scheduler.tern) | Systems: Defer ≠ cancel; resource pressure produces hold |
+| 19 | [19_cache_invalidation.tern](19_cache_invalidation.tern) | Web / CDN: Stale-while-revalidate is natively trit = 0 |
 
 ### Human Decisions & Civic Systems
+| # | File | Summary |
+|---|------|---------|
+| 10 | [10_confidence_escalator.tern](10_confidence_escalator.tern) | AI agent self-assessment; escalate when uncertain |
+| 11 | [11_form_validator.tern](11_form_validator.tern) | UX / Web: Empty ≠ invalid; ternary UX avoids hostile errors |
+| 12 | [12_vote_aggregator.tern](12_vote_aggregator.tern) | Civic: Abstain is signal, not silence; quorum detection |
+| 15 | [15_loan_underwriter.tern](15_loan_underwriter.tern) | Finance: Approve / refer to human / decline; automated humility |
+| 16 | [16_content_moderation.tern](16_content_moderation.tern) | Trust & Safety: Allow / review / remove; human in the loop |
+| 18 | [18_treaty_negotiation.tern](18_treaty_negotiation.tern) | Diplomacy: Veto ≠ reserve; failed ratification vs. procedural hold |
+| 20 | [20_hiring_pipeline.tern](20_hiring_pipeline.tern) | HR: Hold bucket is the most valuable stage; references as soft gate |
 
-| # | File | Domain | Key pattern |
-|---|------|--------|-------------|
-| 10 | [confidence_escalator.tern](10_confidence_escalator.tern) | AI agents | Self-assessment before answering; escalate when uncertain |
-| 11 | [form_validator.tern](11_form_validator.tern) | UX / Web | Empty ≠ invalid; ternary UX avoids hostile "required field" errors |
-| 12 | [vote_aggregator.tern](12_vote_aggregator.tern) | Civic / Governance | Abstain is signal, not silence; quorum detection |
-| 15 | [loan_underwriter.tern](15_loan_underwriter.tern) | Finance | Approve / refer to human / decline; automated humility |
-| 16 | [content_moderation.tern](16_content_moderation.tern) | Trust & Safety | Allow / review / remove; human in the loop for the hold zone |
-| 18 | [treaty_negotiation.tern](18_treaty_negotiation.tern) | Diplomacy | Veto ≠ reserve; failed ratification vs. procedural hold |
-| 20 | [hiring_pipeline.tern](20_hiring_pipeline.tern) | HR / Recruiting | Hold bucket is the most valuable stage; references as soft gate |
+### Engineering & Infrastructure
+| # | File | Summary |
+|---|------|---------|
+| 21 | [21_nuclear_reactor.tern](21_nuclear_reactor.tern) | Nuclear reactor SCRAM / HOLD / NORMAL decision |
+| 22 | [22_bridge_structural_health.tern](22_bridge_structural_health.tern) | Bridge structural health monitoring / warning / closure |
+| 23 | [23_elevator_safety_interlock.tern](23_elevator_safety_interlock.tern) | Elevator safety interlock: floor alignment and door status |
+| 24 | [24_chemical_plant_pressure.tern](24_chemical_plant_pressure.tern) | Chemical plant pressure relief valve control |
+| 25 | [25_dam_water_level.tern](25_dam_water_level.tern) | Dam water level management: discharge / hold / fill |
+| 26 | [26_power_grid_frequency.tern](26_power_grid_frequency.tern) | Power grid frequency stability monitoring |
+| 27 | [27_wind_turbine_fatigue.tern](27_wind_turbine_fatigue.tern) | Wind turbine blade fatigue monitoring and maintenance |
+| 28 | [28_oil_pipeline_leak.tern](28_oil_pipeline_leak.tern) | Oil pipeline leak detection and isolation |
+| 29 | [29_aircraft_deicing.tern](29_aircraft_deicing.tern) | Aircraft deicing decision based on weather and queue |
+| 30 | [30_runway_incursion.tern](30_runway_incursion.tern) | Runway incursion detection and ground control |
+| 61 | [61_atc_conflict_alert.tern](61_atc_conflict_alert.tern) | Air traffic control conflict alert and resolution |
+| 62 | [62_rail_block_occupancy.tern](62_rail_block_occupancy.tern) | Railway signal block occupancy and safety |
+| 63 | [63_av_lane_change.tern](63_av_lane_change.tern) | Autonomous vehicle lane change safety assessment |
+| 64 | [64_customs_clearance.tern](64_customs_clearance.tern) | Port of entry customs clearance and inspection |
+| 65 | [65_drone_flight_authorization.tern](65_drone_flight_authorization.tern) | Drone flight authorization and airspace safety |
+| 66 | [66_fleet_maintenance_dispatch.tern](66_fleet_maintenance_dispatch.tern) | Vehicle fleet maintenance scheduling and dispatch |
+| 67 | [67_cold_chain_breach.tern](67_cold_chain_breach.tern) | Logistics cold chain temperature breach detection |
+| 68 | [68_last_mile_delivery.tern](68_last_mile_delivery.tern) | Last-mile delivery attempt / reschedule / return |
+| 69 | [69_adaptive_traffic_signal.tern](69_adaptive_traffic_signal.tern) | Adaptive traffic signal timing and congestion control |
+| 70 | [70_ship_collision_avoidance.tern](70_ship_collision_avoidance.tern) | Maritime ship collision avoidance (COLREGs) |
+| 101 | [101_solar_dispatch.tern](101_solar_dispatch.tern) | Solar power dispatch / curtail / storage decision |
+| 102 | [102_battery_storage.tern](102_battery_storage.tern) | Battery energy storage charge/discharge management |
+| 103 | [103_smart_meter_anomaly.tern](103_smart_meter_anomaly.tern) | Smart meter data anomaly and theft detection |
+| 104 | [104_ev_charging.tern](104_ev_charging.tern) | EV charging session authorization and load balancing |
+| 105 | [105_gas_regulator.tern](105_gas_regulator.tern) | Natural gas pressure regulator valve safety |
+| 106 | [106_thermal_storage.tern](106_thermal_storage.tern) | Thermal energy storage dispatch and optimization |
+| 107 | [107_renewable_curtailment.tern](107_renewable_curtailment.tern) | Renewable energy curtailment decision |
+| 108 | [108_outage_isolation.tern](108_outage_isolation.tern) | Power grid outage isolation and restoration |
+| 109 | [109_demand_response.tern](109_demand_response.tern) | Smart grid demand response event activation |
+| 110 | [110_carbon_verification.tern](110_carbon_verification.tern) | Carbon offset verification and credit issuance |
 
-### Infrastructure & Engineering
+### Medicine & Health
+| # | File | Summary |
+|---|------|---------|
+| 31 | [31_drug_interaction.tern](31_drug_interaction.tern) | Drug interaction checker for safe prescribing |
+| 32 | [32_icu_ventilator.tern](32_icu_ventilator.tern) | ICU ventilator weaning readiness assessment |
+| 33 | [33_sepsis_warning.tern](33_sepsis_warning.tern) | Sepsis early warning system (SIRS/SOFA) |
+| 34 | [34_radiology_flag.tern](34_radiology_flag.tern) | Radiology report urgent flag detection |
+| 35 | [35_clinical_trial.tern](35_clinical_trial.tern) | Clinical trial eligibility and enrollment screening |
+| 36 | [36_organ_transplant.tern](36_organ_transplant.tern) | Organ transplant compatibility and priority matching |
+| 37 | [37_surgical_checklist.tern](37_surgical_checklist.tern) | Surgical go/no-go checklist for operating room safety |
+| 38 | [38_antibiotic_resistance.tern](38_antibiotic_resistance.tern) | Antibiotic resistance risk and stewardship |
+| 39 | [39_mental_health_triage.tern](39_mental_health_triage.tern) | Mental health crisis triage and intervention |
+| 40 | [40_apgar_ternary.tern](40_apgar_ternary.tern) | Neonatal APGAR-inspired ternary assessment score |
+| 119 | [119_quarantine_decision.tern](119_quarantine_decision.tern) | Public health quarantine / isolation / release decision |
 
-| # | File | Domain | Key pattern |
-|---|------|--------|-------------|
-| 17 | [job_scheduler.tern](17_job_scheduler.tern) | Systems | Defer ≠ cancel; resource pressure produces hold, not cancellation |
-| 19 | [cache_invalidation.tern](19_cache_invalidation.tern) | Web / CDN | Stale-while-revalidate is natively trit = 0; named properly at last |
+### Finance & Risk
+| # | File | Summary |
+|---|------|---------|
+| 41 | [41_insurance_claim.tern](41_insurance_claim.tern) | Automated insurance claim processing and fraud check |
+| 42 | [42_trading_signal.tern](42_trading_signal.tern) | Volatility-aware market buy/sell/hold decision |
+| 43 | [43_aml_transaction.tern](43_aml_transaction.tern) | Anti-Money Laundering (AML) transaction filtering |
+| 44 | [44_options_expiry.tern](44_options_expiry.tern) | Options trading settlement and exercise decision |
+| 45 | [45_portfolio_rebalance.tern](45_portfolio_rebalance.tern) | Wealth management portfolio drift control |
+| 46 | [46_startup_due_diligence.tern](46_startup_due_diligence.tern) | Venture capital startup due diligence filter |
+| 47 | [47_fraud_detection.tern](47_fraud_detection.tern) | E-commerce payment integrity and fraud detection |
+| 48 | [48_central_bank_rate.tern](48_central_bank_rate.tern) | Central bank monetary policy interest rate decision |
+| 49 | [49_crypto_withdrawal.tern](49_crypto_withdrawal.tern) | Digital asset custody withdrawal security gate |
+| 50 | [50_invoice_authorization.tern](50_invoice_authorization.tern) | Accounts payable invoice authorization workflow |
+
+### Legal & Governance
+| # | File | Summary |
+|---|------|---------|
+| 51 | [51_bail_decision.tern](51_bail_decision.tern) | Pre-trial bail/release decision algorithm |
+| 52 | [52_parole_review.tern](52_parole_review.tern) | Corrections parole eligibility and rehabilitation assessment |
+| 53 | [53_patent_prior_art.tern](53_patent_prior_art.tern) | Patent prior art search and novelty examination |
+| 54 | [54_contract_clause_risk.tern](54_contract_clause_risk.tern) | Legal document contract clause risk analysis |
+| 55 | [55_immigration_visa.tern](55_immigration_visa.tern) | Border control and talent mobility visa assessment |
+| 56 | [56_environmental_permit.tern](56_environmental_permit.tern) | Industrial environmental permit approval process |
+| 57 | [57_building_code.tern](57_building_code.tern) | Building code compliance and safety inspection |
+| 58 | [58_whistleblower_triage.tern](58_whistleblower_triage.tern) | Whistleblower report triage and investigation |
+| 59 | [59_evidence_admissibility.tern](59_evidence_admissibility.tern) | Courtroom evidence admissibility and relevance gate |
+| 60 | [60_regulatory_filing.tern](60_regulatory_filing.tern) | Corporate regulatory filing completeness and accuracy |
+
+### Environment & Agriculture
+| # | File | Summary |
+|---|------|---------|
+| 71 | [71_wildfire_risk.tern](71_wildfire_risk.tern) | Wildfire risk assessment based on fuel and weather |
+| 72 | [72_flood_warning.tern](72_flood_warning.tern) | Flood warning and emergency evacuation trigger |
+| 73 | [73_air_quality.tern](73_air_quality.tern) | Air quality index (AQI) monitoring and public advisory |
+| 74 | [74_drought_irrigation.tern](74_drought_irrigation.tern) | Drought management and irrigation scheduling |
+| 75 | [75_crop_disease.tern](75_crop_disease.tern) | Agricultural crop disease detection and treatment |
+| 76 | [76_livestock_health.tern](76_livestock_health.tern) | Livestock health monitoring and disease outbreak gate |
+| 77 | [77_harvest_timing.tern](77_harvest_timing.tern) | Optimal crop harvest timing based on maturity |
+| 78 | [78_soil_contamination.tern](78_soil_contamination.tern) | Soil contamination classification and remediation |
+| 79 | [79_aquaculture_oxygen.tern](79_aquaculture_oxygen.tern) | Aquaculture dissolved oxygen management |
+| 80 | [80_pest_infestation.tern](80_pest_infestation.tern) | Pest infestation threshold and control decision |
+
+### Security & Access Control
+| # | File | Summary |
+|---|------|---------|
+| 81 | [81_multi_factor_auth.tern](81_multi_factor_auth.tern) | Multi-factor authentication (MFA) security gate |
+| 82 | [82_biometric_liveness.tern](82_biometric_liveness.tern) | Biometric liveness and spoofing detection |
+| 83 | [83_network_intrusion.tern](83_network_intrusion.tern) | Network intrusion detection system (NIDS) alerts |
+| 84 | [84_physical_access.tern](84_physical_access.tern) | Physical building access control and tailgating |
+| 85 | [85_privileged_access.tern](85_privileged_access.tern) | Privileged access management (PAM) authorization |
+| 86 | [86_zero_trust_policy.tern](86_zero_trust_policy.tern) | Zero trust network access (ZTNA) policy enforcement |
+| 87 | [87_firewall_rule.tern](87_firewall_rule.tern) | Firewall rule hit classification and packet filtering |
+| 88 | [88_ransomware_detection.tern](88_ransomware_detection.tern) | Ransomware behavior detection and file protection |
+| 89 | [89_supply_chain_integrity.tern](89_supply_chain_integrity.tern) | Software supply chain integrity and provenance check |
+| 90 | [90_insider_threat.tern](90_insider_threat.tern) | Insider threat behavioral analysis and anomaly detection |
+
+### Education & Research
+| # | File | Summary |
+|---|------|---------|
+| 91 | [91_adaptive_test.tern](91_adaptive_test.tern) | Education: Adaptive test difficulty and progression gate |
+| 92 | [92_student_at_risk.tern](92_student_at_risk.tern) | Student at-risk early warning and intervention |
+| 93 | [93_scholarship_eligibility.tern](93_scholarship_eligibility.tern) | Scholarship eligibility scoring and award decision |
+| 94 | [94_academic_integrity.tern](94_academic_integrity.tern) | Academic integrity and plagiarism detection gate |
+| 95 | [95_research_ethics.tern](95_research_ethics.tern) | Research ethics board (IRB) approval workflow |
+| 96 | [96_peer_review.tern](96_peer_review.tern) | Academic paper peer-review recommendation |
+| 97 | [97_grant_completeness.tern](97_grant_completeness.tern) | Research grant application completeness check |
+| 98 | [98_lab_safety.tern](98_lab_safety.tern) | Laboratory safety compliance and hazard check |
+| 99 | [99_replication_crisis.tern](99_replication_crisis.tern) | Scientific replication study significance and validity |
+| 100 | [100_phd_dissertation.tern](100_phd_dissertation.tern) | PhD dissertation defense / revision / fail decision |
+
+### Social & Civic
+| # | File | Summary |
+|---|------|---------|
+| 111 | [111_shelter_allocation.tern](111_shelter_allocation.tern) | Emergency shelter bed allocation and occupancy |
+| 112 | [112_food_bank_eligibility.tern](112_food_bank_eligibility.tern) | Food bank eligibility and nutritional assistance |
+| 113 | [113_refugee_status.tern](113_refugee_status.tern) | Refugee status determination and asylum processing |
+| 114 | [114_cps_referral.tern](114_cps_referral.tern) | Child protective services (CPS) referral triage |
+| 115 | [115_elder_care.tern](115_elder_care.tern) | Elder care assistance and facility placement |
+| 116 | [116_disability_accommodation.tern](116_disability_accommodation.tern) | Workplace disability accommodation request review |
+| 117 | [117_community_grant.tern](117_community_grant.tern) | Local community grant funding allocation |
+| 118 | [118_noise_complaint.tern](118_noise_complaint.tern) | Municipal noise complaint escalation and enforcement |
+| 120 | [120_housing_benefit.tern](120_housing_benefit.tern) | Social housing benefit eligibility and subsidy |
+
+### Technology & Software
+| # | File | Summary |
+|---|------|---------|
+| 121 | [121_api_rate_limit.tern](121_api_rate_limit.tern) | API rate limit enforcement and quota management |
+| 122 | [122_database_query.tern](122_database_query.tern) | Database query classification and optimization |
+| 123 | [123_deployment_readiness.tern](123_deployment_readiness.tern) | Software deployment readiness and smoke test gate |
+| 124 | [124_ab_test_significance.tern](124_ab_test_significance.tern) | A/B test statistical significance and rollout |
+| 125 | [125_bug_severity.tern](125_bug_severity.tern) | Software bug severity and priority triage |
+| 126 | [126_code_review_gate.tern](126_code_review_gate.tern) | Code review approval and merge gate |
+| 127 | [127_vulnerability_check.tern](127_vulnerability_check.tern) | Software vulnerability scan and patching decision |
+| 128 | [128_container_health.tern](128_container_health.tern) | Container liveness and readiness probe logic |
+| 129 | [129_feature_flag_rollout.tern](129_feature_flag_rollout.tern) | Feature flag percentage rollout and canary gate |
+| 130 | [130_dns_resolution.tern](130_dns_resolution.tern) | DNS resolution confidence and failover decision |
+
+### Sports & Entertainment
+| # | File | Summary |
+|---|------|---------|
+| 131 | [131_referee_challenge.tern](131_referee_challenge.tern) | Sports referee challenge review and reversal |
+| 132 | [132_athlete_injury_risk.tern](132_athlete_injury_risk.tern) | Athlete injury risk assessment before competition |
+| 133 | [133_doping_test.tern](133_doping_test.tern) | Anti-doping test result gate and investigation |
+| 134 | [134_film_rating.tern](134_film_rating.tern) | Film rating board content classification |
+| 135 | [135_music_rights_clearance.tern](135_music_rights_clearance.tern) | Music rights and royalty clearance workflow |
+| 136 | [136_streaming_quality.tern](136_streaming_quality.tern) | Adaptive bitrate streaming quality adjustment |
+| 137 | [137_esports_anti_cheat.tern](137_esports_anti_cheat.tern) | Esports anti-cheat detection and ban logic |
+| 138 | [138_track_condition.tern](138_track_condition.tern) | Racing track condition (fast/sloppy/muddy) flag |
+| 139 | [139_broadcasting_rights.tern](139_broadcasting_rights.tern) | Sports broadcasting rights geo-fencing gate |
+| 140 | [140_weather_gate.tern](140_weather_gate.tern) | Outdoor event weather safety go/no-go gate |
 
 ---
 
@@ -123,98 +274,3 @@ Every example should:
 - Balanced ternary mathematical foundations: Knuth (1997), *The Art of Computer Programming*
 - Physical ternary precedent: Setun computer, Moscow State University, 1958
 - BitNet b1.58 ternary neural network weights: Ma et al. (2024)
-
-### Newly Added Examples (21-100)
-
-| # | File | Domain / What it shows |
-|---|------|------------------------|
-| 100 | [100_event_weather.tern](100_event_weather.tern) | Event cancellation weather gate |
-| 21 | [21_nuclear_reactor.tern](21_nuclear_reactor.tern) | Nuclear reactor SCRAM / HOLD / NORMAL decision |
-| 22 | [22_bridge_structural_health.tern](22_bridge_structural_health.tern) | Bridge structural health monitoring |
-| 23 | [23_elevator_safety_interlock.tern](23_elevator_safety_interlock.tern) | Elevator safety interlock |
-| 24 | [24_chemical_plant_pressure.tern](24_chemical_plant_pressure.tern) | Chemical plant pressure relief valve |
-| 25 | [25_dam_water_level.tern](25_dam_water_level.tern) | Dam water level management |
-| 26 | [26_power_grid_frequency.tern](26_power_grid_frequency.tern) | Power grid frequency stability |
-| 27 | [27_wind_turbine_fatigue.tern](27_wind_turbine_fatigue.tern) | Wind turbine blade fatigue monitoring |
-| 28 | [28_oil_pipeline_leak.tern](28_oil_pipeline_leak.tern) | Oil pipeline leak detection |
-| 29 | [29_aircraft_deicing.tern](29_aircraft_deicing.tern) | Aircraft deicing decision |
-| 30 | [30_runway_incursion.tern](30_runway_incursion.tern) | Runway incursion detection |
-| 31 | [31_drug_interaction.tern](31_drug_interaction.tern) | Drug interaction checker |
-| 32 | [32_icu_ventilator.tern](32_icu_ventilator.tern) | ICU ventilator weaning readiness |
-| 33 | [33_sepsis_warning.tern](33_sepsis_warning.tern) | Sepsis early warning |
-| 34 | [34_radiology_flag.tern](34_radiology_flag.tern) | Radiology report flag |
-| 35 | [35_clinical_trial.tern](35_clinical_trial.tern) | Clinical trial eligibility screening |
-| 36 | [36_organ_transplant.tern](36_organ_transplant.tern) | Organ transplant compatibility |
-| 37 | [37_surgical_checklist.tern](37_surgical_checklist.tern) | Surgical go/no-go checklist |
-| 38 | [38_antibiotic_resistance.tern](38_antibiotic_resistance.tern) | Antibiotic resistance risk |
-| 39 | [39_mental_health_triage.tern](39_mental_health_triage.tern) | Mental health crisis triage |
-| 40 | [40_apgar_ternary.tern](40_apgar_ternary.tern) | Neonatal APGAR-inspired ternary score |
-| 41 | [41_insurance_claim.tern](41_insurance_claim.tern) | Automated Claims Processing |
-| 42 | [42_algorithmic_trading.tern](42_algorithmic_trading.tern) | Algorithmic trading signal |
-| 42 | [42_trading_signal.tern](42_trading_signal.tern) | Volatility-Aware Market Decision |
-| 43 | [43_aml_transaction.tern](43_aml_transaction.tern) | Anti-Money Laundering (AML) Filter |
-| 44 | [44_options_expiry.tern](44_options_expiry.tern) | Options Trading Settlement |
-| 45 | [45_portfolio_rebalance.tern](45_portfolio_rebalance.tern) | Wealth Management Drift Control |
-| 46 | [46_atc_conflict.tern](46_atc_conflict.tern) | Air traffic control conflict alert |
-| 46 | [46_startup_due_diligence.tern](46_startup_due_diligence.tern) | Venture Capital Filter |
-| 47 | [47_railway_signal.tern](47_railway_signal.tern) | Railway signal block occupancy |
-| 47 | [47_fraud_detection.tern](47_fraud_detection.tern) | E-commerce Payment Integrity |
-| 48 | [48_central_bank_rate.tern](48_central_bank_rate.tern) | Monetary Policy Decision |
-| 48 | [48_autonomous_lane_change.tern](48_autonomous_lane_change.tern) | Autonomous vehicle lane change |
-| 49 | [49_port_customs.tern](49_port_customs.tern) | Port container customs clearance |
-| 49 | [49_crypto_withdrawal.tern](49_crypto_withdrawal.tern) | Digital Asset Custody Gate |
-| 50 | [50_drone_flight.tern](50_drone_flight.tern) | Drone flight authorization |
-| 50 | [50_invoice_authorization.tern](50_invoice_authorization.tern) | Accounts Payable Workflow |
-| 51 | [51_bail_decision.tern](51_bail_decision.tern) | Pre-trial Justice Algorithm |
-| 52 | [52_patent_prior_art.tern](52_patent_prior_art.tern) | Patent prior art check |
-| 52 | [52_parole_review.tern](52_parole_review.tern) | Corrections Rehabilitation Assessment |
-| 53 | [53_building_code.tern](53_building_code.tern) | Building code compliance inspection |
-| 53 | [53_patent_prior_art.tern](53_patent_prior_art.tern) | Intellectual Property Examination |
-| 54 | [54_contract_clause_risk.tern](54_contract_clause_risk.tern) | Legal Document Analysis |
-| 54 | [54_environmental_permit.tern](54_environmental_permit.tern) | Environmental permit approval |
-| 55 | [55_immigration_visa.tern](55_immigration_visa.tern) | Border Control & Talent Mobility |
-| 55 | [55_whistleblower_triage.tern](55_whistleblower_triage.tern) | Whistleblower complaint triage |
-| 56 | [56_wildfire_risk.tern](56_wildfire_risk.tern) | Wildfire risk assessment |
-| 57 | [57_air_quality.tern](57_air_quality.tern) | Air quality index action |
-| 58 | [58_drought_irrigation.tern](58_drought_irrigation.tern) | Drought irrigation trigger |
-| 59 | [59_crop_disease.tern](59_crop_disease.tern) | Crop disease detection |
-| 60 | [60_soil_contamination.tern](60_soil_contamination.tern) | Soil contamination classification |
-| 61 | [61_mfa_authentication.tern](61_mfa_authentication.tern) | Multi-factor authentication |
-| 62 | [62_biometric_liveness.tern](62_biometric_liveness.tern) | Biometric liveness detection |
-| 63 | [63_firewall_rule.tern](63_firewall_rule.tern) | Firewall rule hit classification |
-| 64 | [64_ransomware_behavior.tern](64_ransomware_behavior.tern) | Ransomware behavior detection |
-| 65 | [65_insider_threat.tern](65_insider_threat.tern) | Insider threat behavioral flag |
-| 66 | [66_adaptive_test.tern](66_adaptive_test.tern) | Adaptive test difficulty gate |
-| 67 | [67_student_at_risk.tern](67_student_at_risk.tern) | Student at-risk early warning |
-| 68 | [68_scholarship_scoring.tern](68_scholarship_scoring.tern) | Scholarship eligibility scoring |
-| 69 | [69_academic_integrity.tern](69_academic_integrity.tern) | Academic integrity flag |
-| 70 | [70_peer_review.tern](70_peer_review.tern) | Paper peer-review recommendation |
-| 71 | [71_solar_dispatch.tern](71_solar_dispatch.tern) | Solar panel dispatch decision |
-| 72 | [72_battery_storage.tern](72_battery_storage.tern) | Battery storage charge/discharge gate |
-| 73 | [73_smart_meter_anomaly.tern](73_smart_meter_anomaly.tern) | Smart meter anomaly detection |
-| 74 | [74_ev_charging.tern](74_ev_charging.tern) | EV charging session authorization |
-| 75 | [75_gas_pressure.tern](75_gas_pressure.tern) | Gas pressure regulator valve |
-| 76 | [76_emergency_shelter.tern](76_emergency_shelter.tern) | Emergency shelter allocation |
-| 77 | [77_food_bank.tern](77_food_bank.tern) | Food bank eligibility |
-| 78 | [78_refugee_status.tern](78_refugee_status.tern) | Refugee status determination |
-| 79 | [79_elder_care.tern](79_elder_care.tern) | Elder care assessment |
-| 80 | [80_noise_complaint.tern](80_noise_complaint.tern) | Noise complaint escalation |
-| 81 | [81_housing_benefit.tern](81_housing_benefit.tern) | Housing benefit eligibility |
-| 82 | [82_api_rate_limit.tern](82_api_rate_limit.tern) | API rate limit enforcement |
-| 83 | [83_database_query.tern](83_database_query.tern) | Database query classification |
-| 84 | [84_deployment_gate.tern](84_deployment_gate.tern) | Deployment readiness gate |
-| 85 | [85_ab_test_gate.tern](85_ab_test_gate.tern) | A/B test significance gate |
-| 86 | [86_bug_triage.tern](86_bug_triage.tern) | Bug severity triage |
-| 87 | [87_code_review.tern](87_code_review.tern) | Code review approval gate |
-| 88 | [88_dependency_vulnerability.tern](88_dependency_vulnerability.tern) | Dependency vulnerability check |
-| 89 | [89_container_health.tern](89_container_health.tern) | Container health probe |
-| 90 | [90_feature_flag.tern](90_feature_flag.tern) | Feature flag rollout gate |
-| 91 | [91_dns_resolution.tern](91_dns_resolution.tern) | DNS resolution confidence |
-| 92 | [92_referee_challenge.tern](92_referee_challenge.tern) | Referee challenge review |
-| 93 | [93_athlete_injury.tern](93_athlete_injury.tern) | Athlete injury risk before match |
-| 94 | [94_doping_test.tern](94_doping_test.tern) | Doping test result gate |
-| 95 | [95_film_rating.tern](95_film_rating.tern) | Film rating board classification |
-| 96 | [96_music_rights.tern](96_music_rights.tern) | Music rights clearance |
-| 97 | [97_live_streaming.tern](97_live_streaming.tern) | Live streaming quality adaptation |
-| 98 | [98_esports_anti_cheat.tern](98_esports_anti_cheat.tern) | Esports anti-cheat classification |
-| 99 | [99_horse_racing.tern](99_horse_racing.tern) | Horse racing track condition flag |

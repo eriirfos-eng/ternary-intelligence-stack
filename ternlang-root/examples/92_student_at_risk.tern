@@ -1,0 +1,59 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 92_student_at_risk.tern — Early Warning System for Student Success
+//
+// Binary Failure Mode: Identifying students only when they fail a course is 
+// too late for effective intervention.
+// Ternary Advantage: 'Hold' represents 'Watch' (Low-intensity support),
+// catching sliding performance before it becomes a failure.
+//
+//   +1: Stable (On track)
+//    0: Watch (Academic advising)
+//   -1: Intervention (Urgent support)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn attendance_rate(att: trit) -> trit { return att; }
+fn assignment_grades(grade: trit) -> trit { return grade; }
+fn lms_engagement(eng: trit) -> trit { return eng; }
+
+fn risk_assessment(att: trit, grade: trit, eng: trit) -> trit {
+    // Attendance is a hard gate for risk.
+    match att {
+        -1 => { return conflict(); } // Missing many classes: Intervention
+         0 => {
+             // Spotted attendance. Check grades.
+             match grade {
+                 -1 => { return conflict(); }
+                  0 => { return hold(); }
+                  1 => { return hold(); }
+             }
+         }
+         1 => {
+             // Good attendance. Check engagement.
+             match eng {
+                 -1 => { return hold(); }   // Not logging in: Watch
+                  0 => { return hold(); }
+                  1 => {
+                      match grade {
+                          -1 => { return hold(); } // Good engagement but bad grades: Watch
+                           0 => { return hold(); }
+                           1 => { return truth(); } // All green
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Perfect attendance (+1), but grades are dropping (0) and 
+// engagement with online materials has stopped (-1).
+let attendance: trit = truth();
+let grades:     trit = hold();
+let engagement: trit = conflict();
+
+let risk_level: trit = risk_assessment(attendance, grades, engagement);
+
+match risk_level {
+    -1 => { return conflict(); } // INTERVENTION: Mandatory meeting with counselor
+     0 => { return hold();    } // WATCH: Send automated resource suggestions
+     1 => { return truth();   } // STABLE: No action needed
+}

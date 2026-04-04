@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 78_soil_contamination.tern — Soil remediation gate
+//
+// Binary Failure Mode: Fixed thresholds lead to "Safe" labels for polluted sites.
+// Ternary Advantage: 'Hold' flags 'Remediate' for sites with low but present 
+// toxins, preventing construction until cleanup is verified, avoiding 
+// expensive lawsuits or health crises later.
+//
+//   -1: Safe
+//    0: Remediate (Cleanup required)
+//    1: Prohibited (Hazardous)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn heavy_metals(m: trit) -> trit { return m; }
+fn hydrocarbons(h: trit) -> trit { return h; }
+fn ph_balance(p: trit) -> trit { return p; }
+
+fn land_use_permit(metals: trit, fuel: trit, ph: trit) -> trit {
+    // Hard gate: High toxins = Prohibited.
+    match metals {
+        1 => { return truth(); }
+        0 => {
+            // Trace metals. Remediation needed.
+            return hold();
+        }
+        -1 => {
+            match fuel {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => {
+                    // Metals and fuels are safe. Check pH.
+                    match ph {
+                        1 => { return hold(); } // Extreme pH = Remediate
+                        0 => { return conflict(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// SCENARIO: No heavy metals (-1), Trace hydrocarbons (0), Normal pH (-1)
+let current_metals: trit = conflict();
+let current_fuel:   trit = hold();
+let current_ph:     trit = conflict();
+
+let land_status: trit = land_use_permit(current_metals, current_fuel, current_ph);
+
+match land_status {
+    -1 => { return conflict(); } // SAFE: Residential permit granted
+     0 => { return hold();    } // REMEDIATE: Soil vapor extraction required
+     1 => { return truth();   } // PROHIBITED: Industrial zone only
+}

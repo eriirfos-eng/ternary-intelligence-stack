@@ -1,0 +1,53 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 89_supply_chain_integrity.tern — Software Supply Chain Integrity
+//
+// Binary Failure Mode: Trusting any signed package can lead to SolarWinds-style
+// attacks. Denying unsigned packages breaks development velocity.
+// Ternary Advantage: 'Hold' represents 'Audit' (Static/Dynamic analysis), 
+// allowing unverified packages to be checked before inclusion in production.
+//
+//   +1: Verified (Allow deployment)
+//    0: Audit (Manual/Deep scan required)
+//   -1: Untrusted (Reject package)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn signature_valid(sig: trit) -> trit { return sig; }
+fn vendor_trusted(vend: trit) -> trit { return vend; }
+fn sbom_complete(sbom: trit) -> trit { return sbom; }
+
+fn integrity_gate(sig: trit, vend: trit, sbom: trit) -> trit {
+    // Signature is a hard gate. Invalid signature is a hard reject.
+    match sig {
+        -1 => { return conflict(); }
+         0 => { return hold(); } // Signature missing or expired: Audit
+         1 => {
+             // Signature valid. Check vendor trust.
+             match vend {
+                 -1 => { return conflict(); } // Blacklisted vendor: Reject
+                  0 => { return hold(); }     // New/Unknown vendor: Audit
+                  1 => {
+                      // Vendor trusted. Check SBOM.
+                      match sbom {
+                          1 => { return truth(); } // Full SBOM: Verified
+                          0 => { return hold(); }  // Incomplete SBOM: Audit
+                          -1 => { return hold(); } // Missing SBOM: Audit
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Valid signature (+1), but from a new vendor (0) with 
+// an incomplete SBOM (0).
+let pkg_sig:  trit = truth();
+let pkg_vend: trit = hold();
+let pkg_sbom: trit = hold();
+
+let deployment_fate: trit = integrity_gate(pkg_sig, pkg_vend, pkg_sbom);
+
+match deployment_fate {
+    -1 => { return conflict(); } // UNTRUSTED: Reject deployment
+     0 => { return hold();    } // AUDIT: Flag for security team review
+     1 => { return truth();   } // VERIFIED: Promote to production
+}

@@ -1,0 +1,60 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 116_disability_accommodation.tern — Workplace Reasonable Accommodation
+//
+// Binary accommodation models (approve/deny) create a hostile workplace culture 
+// where a request that is slightly "unreasonable" leads to a total failure 
+// of support. Ternary logic adds 'alternative', allowing an employer to 
+// suggest a modified version of the request that meets the employee's need 
+// without placing undue hardship on the organization.
+//   +1: APPROVED (Request met exactly)
+//    0: ALTERNATIVE (Modified support / Interactive process)
+//   -1: REJECTED (Undue hardship / Not qualified)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn clinical_proof(c: trit) -> trit { return c; }
+fn cost_impact(cost: trit) -> trit { return cost; }
+fn job_relevance(j: trit) -> trit { return j; }
+fn previous_precedent(p: trit) -> trit { return p; }
+
+fn accommodation_logic(proof: trit, cost: trit, job: trit, precedent: trit) -> trit {
+    // If there's no clinical proof of disability, it's a hard rejection.
+    match proof {
+        -1 => { return invert(truth()); } // Unsubstantiated, REJECT
+         0 => { return hold(); }          // Insufficient data, ALTERNATIVE (request more)
+         1 => {
+             // Proof exists. Check if it's relevant to the job.
+             match job {
+                 1 => {
+                     // Relevant. Check cost impact.
+                     match cost {
+                         -1 => { return truth(); } // Zero/Low cost, APPROVE
+                          0 => { return hold(); }  // Moderate cost, offer ALTERNATIVE
+                          1 => {
+                              // High cost. Is there a precedent?
+                              match precedent {
+                                  1 => { return hold(); } // Precedent exists, ALTERNATIVE
+                                  _ => { return invert(truth()); } // Too expensive, REJECT
+                              }
+                          }
+                     }
+                 }
+                 _ => { return hold(); } // Tangentially relevant, ALTERNATIVE
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: Clear proof, but high cost and some precedent ──
+let has_proof: trit = truth();
+let expensive_item: trit = truth(); // Expensive standing desk + ergonomic setup
+let relevant_to_role: trit = truth();
+let similar_request_granted: trit = truth();
+
+let hr_decision: trit = accommodation_logic(has_proof, expensive_item, relevant_to_role, similar_request_granted);
+
+// Expected Result: 0 (ALTERNATIVE) - high cost but precedent exists.
+match hr_decision {
+    1 => { return truth(); }     // APPROVED: Purchase equipment immediately
+    0 => { return hold();  }     // ALTERNATIVE: Offer partial subsidy or loaner
+   -1 => { return conflict(); }  // REJECTED: Legally justified denial
+}

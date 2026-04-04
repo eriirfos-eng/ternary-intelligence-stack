@@ -1,0 +1,61 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 81_multi_factor_auth.tern — Risk-based MFA adaptive logic
+//
+// Binary Failure Mode: Forcing MFA on every login causes MFA fatigue/bypass.
+// Ternary Advantage: 'Hold' triggers 'Step-up' authentication (SMS/App) only 
+// when login risk is moderate (new device or unusual time), while allowing 
+// seamless login for trusted patterns.
+//
+//   -1: Allow (No MFA needed)
+//    0: Step-up (Require MFA)
+//    1: Deny (Blocked)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn device_trust(d: trit) -> trit { return d; }
+fn geo_velocity(v: trit) -> trit { return v; }
+fn credential_stuffing(c: trit) -> trit { return c; }
+
+fn auth_policy(device: trit, velocity: trit, stuffing: trit) -> trit {
+    match stuffing {
+        1 => { return truth(); } // Known bad credentials = Deny
+        0 => { return hold(); }  // Probable attack = Step-up
+        -1 => {
+            // Credentials okay. Check context.
+            match device {
+                1 => {
+                    // New/Unknown device. Step-up.
+                    return hold();
+                }
+                0 => {
+                    // Semi-trusted device. Check velocity.
+                    match velocity {
+                        1 => { return hold(); } // Impossible travel = Step-up
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                -1 => {
+                    // Trusted device. Check velocity.
+                    match velocity {
+                        1 => { return hold(); } // Trusted device but weird location = Step-up
+                        0 => { return conflict(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// SCENARIO: Trusted device (-1), Impossible travel (1), Credentials valid (-1)
+let dev_state: trit = conflict();
+let geo_state: trit = truth();
+let stuffing_state: trit = conflict();
+
+let auth_action: trit = auth_policy(dev_state, geo_state, stuffing_state);
+
+match auth_action {
+    -1 => { return conflict(); } // ALLOW: Immediate session start
+     0 => { return hold();    } // STEP-UP: Prompt for biometric/SMS
+     1 => { return truth();   } // DENY: Account locked for security
+}

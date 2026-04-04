@@ -1,0 +1,46 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 120_housing_benefit.tern — Housing Benefit Eligibility
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'partial' benefit for those on the income threshold gap.
+//   +1: FULL
+//    0: PARTIAL
+//   -1: NONE
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_income(x: trit) -> trit { return x; }
+fn check_assets(x: trit) -> trit { return x; }
+fn check_residency(x: trit) -> trit { return x; }
+
+fn main_logic(income: trit, assets: trit, residency: trit) -> trit {
+    match income {
+        1 => { return invert(truth()); } // High income
+        0 => { 
+            match assets {
+                1 => { return invert(truth()); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            match residency {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => { return invert(truth()); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Low income, low assets, confirmed residency. ──
+let s_0: trit = invert(truth());
+let s_1: trit = invert(truth());
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // FULL
+    0 => { return hold();  }    // PARTIAL
+   -1 => { return invert(truth()); } // NONE
+}

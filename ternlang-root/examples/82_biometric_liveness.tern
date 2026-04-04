@@ -1,0 +1,51 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 82_biometric_liveness.tern — Face/Voice liveness detection
+//
+// Binary Failure Mode: Low thresholds allow photos (spoofs); high ones block users.
+// Ternary Advantage: 'Hold' captures 'Uncertain' results (bad lighting or poor 
+// audio), prompting a secondary challenge (e.g., "blink" or "say a phrase") 
+// instead of a frustrating rejection.
+//
+//   -1: Real
+//    0: Uncertain (Retry/Challenge)
+//    1: Spoof (Attack detected)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn texture_analysis(t: trit) -> trit { return t; }
+fn motion_sync(m: trit) -> trit { return m; }
+fn depth_mapping(d: trit) -> trit { return d; }
+
+fn liveness_gate(texture: trit, motion: trit, depth: trit) -> trit {
+    match depth {
+        1 => { return truth(); } // Flat surface detected = Spoof
+        0 => {
+            // Depth map is blurry. Check texture.
+            match texture {
+                1 => { return truth(); } // Blurry depth + Paper texture = Spoof
+                0 => { return hold(); }  // Uncertain depth + Uncertain texture = Retry
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // Depth map looks 3D. Check motion.
+            match motion {
+                1 => { return hold(); } // 3D but no movement = Uncertain
+                0 => { return hold(); }
+                -1 => { return conflict(); } // 3D + Life-like motion = Real
+            }
+        }
+    }
+}
+
+// SCENARIO: Depth map is 3D (-1), Motion is static/laggy (1), Texture is real (-1)
+let d_map: trit = conflict();
+let m_syn: trit = truth();
+let t_ana: trit = conflict();
+
+let liveness_status: trit = liveness_gate(t_ana, m_syn, d_map);
+
+match liveness_status {
+    -1 => { return conflict(); } // REAL: Identity verified
+     0 => { return hold();    } // UNCERTAIN: Please blink or turn your head
+     1 => { return truth();   } // SPOOF: Access denied, logging attempt
+}

@@ -1,0 +1,47 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 100_phd_dissertation.tern — PhD Dissertation Defense Decision
+//
+// Binary Failure Mode: Pass/Fail defense ignores the reality of revisions.
+// Most PhDs pass with "Minor or Major Revisions."
+// Ternary Advantage: 'Hold' represents 'Revision' (Minor/Major), formalizing
+// the final polish required for doctoral candidacy.
+//
+//   +1: Ready (Deposit dissertation)
+//    0: Revision (Minor/Major fixes)
+//   -1: Deferred (Second defense required)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn original_contribution(orig: trit) -> trit { return orig; }
+fn defense_performance(def: trit) -> trit { return def; }
+fn committee_consensus(comm: trit) -> trit { return comm; }
+
+fn defense_gate(orig: trit, def: trit, comm: trit) -> trit {
+    // Original contribution is a hard gate for a PhD.
+    match orig {
+        -1 => { return conflict(); } // No original contribution: Deferred
+         0 => { return hold(); }     // Weak contribution: Revision
+         1 => {
+             // Science is good. Check performance and consensus.
+             let outcome: trit = consensus(def, comm);
+             match outcome {
+                 1 => { return truth(); } // Stellar defense: Ready
+                 0 => { return hold(); }  // Good defense, minor comments: Revision
+                 -1 => { return hold(); } // Rough defense: Major Revision
+             }
+         }
+    }
+}
+
+// SCENARIO: Exceptional original contribution (+1), solid defense 
+// performance (0), but one committee member is demanding more data (0).
+let originality: trit = truth();
+let performance: trit = hold();
+let consensus_val: trit = hold();
+
+let defense_result: trit = defense_gate(originality, performance, consensus_val);
+
+match defense_result {
+    -1 => { return conflict(); } // DEFERRED: Fail defense, retake in 6 months
+     0 => { return hold();    } // REVISION: Pass pending committee chair approval
+     1 => { return truth();   } // READY: Congratulations, Doctor!
+}

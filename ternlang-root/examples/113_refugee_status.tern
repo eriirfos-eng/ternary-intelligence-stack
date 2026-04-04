@@ -1,0 +1,57 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 113_refugee_status.tern — Humanitarian Asylum Triage
+//
+// Binary asylum systems (yes/no) lead to years of legal limbo or dangerous 
+// deportations. Ternary logic uses 'deferred' status for "Temporary 
+// Protected Status" (TPS) when the origin country is in active conflict 
+// but identity/legal vetting isn't yet finalized, ensuring humane treatment 
+// without permanent legal finality.
+//   +1: GRANTED (Permanent residency path)
+//    0: DEFERRED (TPS / Temporary stay)
+//   -1: DENIED (Removal order / Inadmissible)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn origin_war(w: trit) -> trit { return w; }
+fn biometric_id(i: trit) -> trit { return i; }
+fn legal_precedent(p: trit) -> trit { return p; }
+fn security_clearance(s: trit) -> trit { return s; }
+
+fn asylum_logic(war: trit, id: trit, precedent: trit, sec: trit) -> trit {
+    // Security check is a hard gate
+    match sec {
+        -1 => { return invert(truth()); } // Known threat, REJECT
+         0 => { return hold(); }          // Flags raised, DEFER for investigation
+         1 => {
+             // Sec clear, check origin status
+             match war {
+                 1 => {
+                     // Active war zone. Check ID.
+                     match id {
+                         1 => { return truth(); } // Proven ID + war, GRANT
+                         _ => { return hold(); }  // War but no papers, DEFER
+                     }
+                 }
+                 0 => { return hold(); } // Frozen conflict, DEFER
+                 -1 => {
+                     // Safe country of origin. Check specific case precedent.
+                     return consensus(precedent, id);
+                 }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: Active war zone, no physical papers, but clear security ──
+let active_war: trit = truth();
+let missing_id: trit = invert(truth()); // Papers lost in fire
+let strong_precedent: trit = hold();
+let clear_background: trit = truth();
+
+let status: trit = asylum_logic(active_war, missing_id, strong_precedent, clear_background);
+
+// Expected Result: 0 (DEFERRED) - cannot grant without ID, but cannot deny with war.
+match status {
+    1 => { return truth(); }     // GRANTED: Issue resident permit
+    0 => { return hold();  }     // DEFERRED: Issue temporary work auth
+   -1 => { return conflict(); }  // DENIED: Issue voluntary departure
+}

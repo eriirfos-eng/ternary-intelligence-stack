@@ -1,0 +1,59 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 104_ev_charging.tern — Electric Vehicle Charging Controller
+//
+// Binary EV chargers are either "On" or "Off". In high-demand scenarios, this
+// binary flip causes massive grid surges. Ternary logic adds "Throttle", allowing 
+// for 50% power delivery. This satisfies the user by providing some range while 
+// alleviating grid strain and preventing thermal runaway in aging transformers.
+//   +1: AUTHORIZE (Full 22kW charging)
+//    0: THROTTLE (Limited 7kW charging)
+//   -1: BLOCK (Safety cutoff / High Peak)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn grid_stress(g: trit) -> trit { return g; }
+fn battery_soc(s: trit) -> trit { return s; }
+fn user_tier(u: trit) -> trit { return u; }
+fn plug_temp(t: trit) -> trit { return t; }
+
+fn charge_logic(grid: trit, soc: trit, tier: trit, temp: trit) -> trit {
+    // Thermal hard gate: overheating equals block
+    match temp {
+        1 => { return invert(truth()); } // Excessive heat, emergency block
+        0 => { 
+            // Warm connector, throttle for safety regardless of grid
+            return hold();
+        }
+        -1 => {
+            // Cool connector, now check grid and user status
+            match grid {
+                -1 => { 
+                    // Grid at critical peak. Only high-tier VIPs get even throttled charging.
+                    match tier {
+                        1 => { return hold(); }
+                        _ => { return invert(truth()); }
+                    }
+                }
+                0 => { return hold(); } // Grid under pressure, everyone throttles
+                1 => {
+                    // Grid is green. Now check if the battery even needs it.
+                    return consensus(soc, tier);
+                }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Grid under pressure, battery low, but plug is cool ──
+let peak_demand: trit = hold();
+let state_of_charge: trit = invert(truth()); // Battery empty
+let subscription: trit = truth(); // Premium user
+let connector_temp: trit = invert(truth()); // Icy cold
+
+let session: trit = charge_logic(peak_demand, state_of_charge, subscription, connector_temp);
+
+// Expected Result: 0 (THROTTLE) - grid pressure overrides individual low SOC.
+match session {
+    1 => { return truth(); }     // AUTHORIZE: Fast DC charging active
+    0 => { return hold();  }     // THROTTLE: Eco-mode active, slow charge
+   -1 => { return conflict(); }  // BLOCK: Charger inactive / Grid blackout prevention
+}

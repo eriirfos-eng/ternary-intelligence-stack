@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 91_adaptive_test.tern — Adaptive Learning Assessment
+//
+// Binary Failure Mode: Pass/Fail testing doesn't account for the "Zone of Proximal 
+// Development." Students who almost pass are treated the same as those who fail.
+// Ternary Advantage: 'Hold' represents 'Repeat' (Reinforcement), allowing
+// for granular educational paths instead of binary progress gates.
+//
+//   +1: Advance (Next module)
+//    0: Repeat (Review same module)
+//   -1: Remediate (Back to basics)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn correct_answers(ans: trit) -> trit { return ans; }
+fn time_taken(time: trit) -> trit { return time; }
+fn confidence_score(conf: trit) -> trit { return conf; }
+
+fn adaptive_logic(ans: trit, time: trit, conf: trit) -> trit {
+    // Correct answers are the primary gate.
+    match ans {
+        1 => {
+            // Strong performance. Check confidence and speed.
+            let secondary: trit = consensus(time, conf);
+            match secondary {
+                1 => { return truth(); } // Fast and confident: Advance
+                0 => { return truth(); }
+                -1 => { return hold(); }  // Correct but unsure/slow: Repeat
+            }
+        }
+        0 => {
+            // Mixed performance.
+            match conf {
+                1 => { return hold(); }   // Confident but wrong: Repeat
+                0 => { return hold(); }
+                -1 => { return conflict(); } // Unsure and wrong: Remediate
+            }
+        }
+        -1 => { return conflict(); } // Poor performance: Remediate
+    }
+}
+
+// SCENARIO: Mostly correct answers (0), but took a long time (-1) and 
+// expressed very low confidence (-1).
+let answers:    trit = hold();
+let speed:      trit = conflict();
+let confidence: trit = conflict();
+
+let test_outcome: trit = adaptive_logic(answers, speed, confidence);
+
+match test_outcome {
+    -1 => { return conflict(); } // REMEDIATE: Assign foundational exercises
+     0 => { return hold();    } // REPEAT: Re-assign current module with hints
+     1 => { return truth();   } // ADVANCE: Unlock next module
+}

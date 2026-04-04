@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 105_gas_regulator.tern — Natural Gas Pressure Regulator
+//
+// Binary valves either dump full pressure or cut flow entirely, causing hammer
+// effects in the pipeline and stressing downstream gaskets. Ternary logic 
+// introduces 'modulate' for pilot-flow or partial opening, allowing the system
+// to maintain steady pressure even under varying industrial demand.
+//   +1: OPEN (Full throughput)
+//    0: MODULATE (Pilot flow / Partial)
+//   -1: CLOSE (Safety cutoff / Leak)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn upstream_p(p1: trit) -> trit { return p1; }
+fn downstream_p(p2: trit) -> trit { return p2; }
+fn leak_detection(l: trit) -> trit { return l; }
+fn actuator_pos(a: trit) -> trit { return a; }
+
+fn valve_control(p1: trit, p2: trit, leak: trit, actuator: trit) -> trit {
+    // Safety critical: If a leak is detected, we close immediately.
+    match leak {
+        -1 => { return invert(truth()); } // Odorant sensor high, SHUT OFF
+         0 => { return hold(); }          // Sensor noise, stay in low-flow mode
+         1 => {
+             // No leak, check pressure delta.
+             match p1 {
+                 -1 => { return invert(truth()); } // No supply pressure
+                  0 => { return hold(); }          // Low supply, modulate
+                  1 => {
+                      // Supply is high, check demand (p2)
+                      match p2 {
+                          1 => { return invert(truth()); } // Downstream overpressure
+                          0 => { return hold(); }          // Downstream nominal
+                          -1 => { return truth(); }        // Downstream low, open up!
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: Normal supply, nominal demand, but minor sensor noise ──
+let supply_pressure: trit = truth();
+let demand_pressure: trit = hold();
+let gas_leak_sensor: trit = hold(); // Minor flutter, not a confirmed leak
+let current_actuator: trit = truth();
+
+let valve_cmd: trit = valve_control(supply_pressure, demand_pressure, gas_leak_sensor, current_actuator);
+
+// Expected Result: 0 (MODULATE) - sensor noise forces a safe mid-point state.
+match valve_cmd {
+    1 => { return truth(); }     // OPEN: Industrial furnace active
+    0 => { return hold();  }     // MODULATE: Sustain pilot flame only
+   -1 => { return conflict(); }  // CLOSE: Emergency fire trip
+}

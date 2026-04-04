@@ -1,0 +1,56 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 111_shelter_allocation.tern — Emergency Shelter Bed Assignment
+//
+// Binary shelter systems either admit or reject, leading to high-risk street 
+// sleeping during peak winter. Ternary logic adds 'waitlist', allowing 
+// for a triage-based queue where the most vulnerable move up, and others 
+// are held in a warm waiting area rather than being turned back into the cold.
+//   +1: ASSIGN (Immediate bed allocation)
+//    0: WAITLIST (Triage queue / Warm waiting area)
+//   -1: INELIGIBLE (Rule violation / Safety risk)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn vulnerability_score(v: trit) -> trit { return v; }
+fn bed_availability(b: trit) -> trit { return b; }
+fn safety_assessment(s: trit) -> trit { return s; }
+fn local_residency(r: trit) -> trit { return r; }
+
+fn shelter_logic(vulnerable: trit, beds: trit, safe: trit, residency: trit) -> trit {
+    // Safety check: Is it safe to admit this person?
+    match safe {
+        -1 => { return invert(truth()); } // Violent or safety risk, REJECT
+         0 => { return hold(); }          // Uncertain safety, waitlist/interview
+         1 => {
+             // Safe to admit. Check bed availability.
+             match beds {
+                 1 => {
+                     // Beds available, check vulnerability and residency.
+                     return consensus(vulnerable, residency);
+                 }
+                 0 => { return hold(); } // Beds limited, waitlist
+                 -1 => {
+                     // No beds. Even if vulnerable, they must wait.
+                     match vulnerable {
+                         1 => { return hold(); } // Highly vulnerable, priority wait
+                         _ => { return invert(truth()); } // Full and low priority
+                     }
+                 }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: High vulnerability, no beds available, but safe ──
+let high_vulnerability: trit = truth();
+let beds_open: trit = invert(truth()); // Zero beds
+let safety_ok: trit = truth();
+let resident_status: trit = hold();
+
+let decision: trit = shelter_logic(high_vulnerability, beds_open, safety_ok, resident_status);
+
+// Expected Result: 0 (WAITLIST) - no beds but high vulnerability keeps them in queue.
+match decision {
+    1 => { return truth(); }     // ASSIGN: Bed issued, provide intake forms
+    0 => { return hold();  }     // WAITLIST: Escort to warm waiting area
+   -1 => { return conflict(); }  // INELIGIBLE: Refer to external outreach
+}

@@ -1,0 +1,53 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 87_firewall_rule.tern — Deep Packet Inspection (DPI) Firewall Rule
+//
+// Binary Failure Mode: Simple Allow/Deny rules cannot handle encrypted traffic 
+// or complex protocols that require stateful inspection.
+// Ternary Advantage: 'Hold' represents 'Inspect' (Redirect to sandbox or IDS),
+// enabling deep analysis without blocking legitimate flow or allowing threats.
+//
+//   +1: Pass (Forward packet)
+//    0: Inspect (Send to IDS/Sandbox)
+//   -1: Drop (Discard packet)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn ip_reputation(rep: trit) -> trit { return rep; }
+fn port_allowed(port: trit) -> trit { return port; }
+fn payload_signature(sig: trit) -> trit { return sig; }
+
+fn firewall_gate(ip: trit, port: trit, pay: trit) -> trit {
+    // Port check is a hard gate. If port is unauthorized (-1), drop.
+    match port {
+        -1 => { return conflict(); }
+         0 => { return hold(); } // Port trigger: ambiguous, inspect
+         1 => {
+             // Port okay, check IP reputation.
+             match ip {
+                 -1 => { return conflict(); } // Known bad IP: Drop
+                  0 => { return hold(); }     // Unknown IP: Inspect
+                  1 => {
+                      // IP good, check payload signature.
+                      match pay {
+                          -1 => { return conflict(); } // Malware found: Drop
+                           0 => { return hold(); }     // Suspicious payload: Inspect
+                           1 => { return truth(); }    // Clean: Pass
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Known good IP (+1), authorized port (+1), but payload contains 
+// an unrecognized encrypted blob (0).
+let source_ip:   trit = truth();
+let target_port: trit = truth();
+let payload_sig: trit = hold();
+
+let packet_fate: trit = firewall_gate(source_ip, target_port, payload_sig);
+
+match packet_fate {
+    -1 => { return conflict(); } // DROP: Log and drop packet
+     0 => { return hold();    } // INSPECT: Route to Deep Packet Inspection
+     1 => { return truth();   } // PASS: Forward to destination
+}

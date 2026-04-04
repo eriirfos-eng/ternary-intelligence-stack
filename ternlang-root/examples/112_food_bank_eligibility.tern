@@ -1,0 +1,58 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 112_food_bank_eligibility.tern — Social Safety Net Nutrition Support
+//
+// Binary eligibility models (in/out) create a "benefit cliff" where a single 
+// dollar of income can disqualify a family from all assistance. Ternary logic 
+// adds 'partial', enabling a scale-down of support where families receive 
+// supplemental staples (flour, oil) while being tapered off full meat/dairy boxes.
+//   +1: ELIGIBLE (Full aid package)
+//    0: PARTIAL (Supplemental dry goods only)
+//   -1: INELIGIBLE (Income exceeds limits)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn income_level(i: trit) -> trit { return i; }
+fn dependants_count(d: trit) -> trit { return d; }
+fn emergency_need(e: trit) -> trit { return e; }
+fn asset_verification(a: trit) -> trit { return a; }
+
+fn food_logic(income: trit, dependants: trit, need: trit, asset: trit) -> trit {
+    // If there's an immediate emergency (e.g. fire/disaster), they get full aid.
+    match need {
+        1 => { return truth(); }
+        _ => {
+            // No disaster, check income and family size.
+            match income {
+                -1 => { return truth(); }         // Deep poverty, full eligible
+                 0 => { 
+                     // Working poor/Middle income. Check household size.
+                     match dependants {
+                         1 => { return hold(); }  // Large family, partial support
+                         _ => { return consensus(dependants, asset); }
+                     }
+                 }
+                 1 => {
+                     // High income. Ineligible unless assets are depleted.
+                     match asset {
+                         -1 => { return hold(); } // Liquid assets gone, partial aid
+                         _ => { return invert(truth()); } // High income/high assets
+                     }
+                 }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Middle income, small household, but zero liquid assets ──
+let middle_income: trit = hold();
+let small_household: trit = invert(truth());
+let life_emergency: trit = invert(truth());
+let broken_savings: trit = invert(truth()); // Savings depleted
+
+let status: trit = food_logic(middle_income, small_household, life_emergency, broken_savings);
+
+// Expected Result: 0 (PARTIAL) - middle income but assets are gone.
+match status {
+    1 => { return truth(); }     // ELIGIBLE: Full nutritious meat/veg box
+    0 => { return hold();  }     // PARTIAL: Supplemental grain/canned package
+   -1 => { return conflict(); }  // INELIGIBLE: Redirect to local co-op
+}

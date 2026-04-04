@@ -1,0 +1,53 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 95_research_ethics.tern — Institutional Review Board (IRB) Ethics Gate
+//
+// Binary Failure Mode: Approving or Rejecting research ignores the iterative 
+// nature of ethical refinement.
+// Ternary Advantage: 'Hold' represents 'Revise' (Provisional approval),
+// enabling researchers to fix specific ethical concerns instead of restarting.
+//
+//   +1: Approved (Proceed with study)
+//    0: Revise (Address concerns)
+//   -1: Rejected (Unethical design)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn informed_consent(ic: trit) -> trit { return ic; }
+fn data_anonymization(anon: trit) -> trit { return anon; }
+fn risk_benefit_ratio(ratio: trit) -> trit { return ratio; }
+
+fn irb_gate(ic: trit, anon: trit, ratio: trit) -> trit {
+    // Informed consent is a hard gate.
+    match ic {
+        -1 => { return conflict(); } // No consent plan: Rejected
+         0 => { return hold(); }     // Vague consent plan: Revise
+         1 => {
+             // Consent okay. Check risk/benefit.
+             match ratio {
+                 -1 => { return conflict(); } // High risk, low benefit: Rejected
+                  0 => { return hold(); }     // Borderline: Revise
+                  1 => {
+                      // Risk/benefit good. Check anonymization.
+                      match anon {
+                          1 => { return truth(); } // Clean: Approved
+                          0 => { return hold(); }  // Minor anon issues: Revise
+                          -1 => { return hold(); } // Major anon issues: Revise
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Perfect informed consent (+1), good risk/benefit (+1), 
+// but the data anonymization strategy for GPS coordinates is weak (0).
+let consent: trit = truth();
+let benefit: trit = truth();
+let anon_lvl: trit = hold();
+
+let irb_decision: trit = irb_gate(consent, anon_lvl, benefit);
+
+match irb_decision {
+    -1 => { return conflict(); } // REJECTED: Research cannot proceed
+     0 => { return hold();    } // REVISE: Submit updated data management plan
+     1 => { return truth();   } // APPROVED: Ethics clearance granted
+}

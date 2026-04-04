@@ -1,0 +1,46 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 122_database_query.tern — Database Query Execution Optimizer
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'slow' state to trigger optimization or background processing.
+//   +1: ABORT
+//    0: SLOW
+//   -1: FAST
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn get_complexity(x: trit) -> trit { return x; }
+fn get_index_usage(x: trit) -> trit { return x; }
+fn get_cache_hit(x: trit) -> trit { return x; }
+
+fn main_logic(comp: trit, idx: trit, cache: trit) -> trit {
+    match comp {
+        1 => { 
+            match idx {
+                1 => { return hold(); }
+                0 => { return truth(); }
+                -1 => { return truth(); }
+            }
+        }
+        0 => { 
+            match cache {
+                1 => { return invert(truth()); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        -1 => { return invert(truth()); }
+    }
+}
+
+// ── Concrete scenario: Moderate complexity, no index, cache miss. ──
+let s_0: trit = hold();
+let s_1: trit = invert(truth());
+let s_2: trit = invert(truth());
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // ABORT
+    0 => { return hold();  }    // SLOW
+   -1 => { return invert(truth()); } // FAST
+}

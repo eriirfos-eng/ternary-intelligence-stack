@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 131_referee_challenge.tern — Sports Referee Video Review
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'inconclusive' to maintain the call on the field when evidence is blurry.
+//   +1: UPHELD
+//    0: INCONCLUSIVE
+//   -1: OVERTURN
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_angle(x: trit) -> trit { return x; }
+fn check_evidence(x: trit) -> trit { return x; }
+fn check_original(x: trit) -> trit { return x; }
+
+fn main_logic(angle: trit, evidence: trit, original: trit) -> trit {
+    match evidence {
+        1 => { 
+            match original {
+                1 => { return truth(); }
+                -1 => { return invert(truth()); }
+                0 => { return hold(); }
+            }
+        }
+        0 => { return hold(); }
+        -1 => { return hold(); }
+    }
+}
+
+// ── Concrete scenario: Evidence is not clear, original call was negative. ──
+let s_0: trit = truth();
+let s_1: trit = invert(truth());
+let s_2: trit = invert(truth());
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // UPHELD
+    0 => { return hold();  }    // INCONCLUSIVE
+   -1 => { return invert(truth()); } // OVERTURN
+}

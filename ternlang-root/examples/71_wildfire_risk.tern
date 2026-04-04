@@ -1,0 +1,69 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 71_wildfire_risk.tern — Wildfire risk assessment
+//
+// Binary Failure Mode: Binary systems often jump from "Safe" to "Fire" too late.
+// Ternary Advantage: The 'hold' state (Watch) allows for prepositioning of 
+// resources when smoke or extreme dry conditions are detected before ignition.
+//
+//   -1: Low risk
+//    0: Watch (High risk, prepare)
+//    1: Evacuation (Active threat)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_smoke(sensor: trit) -> trit { return sensor; }
+fn check_temp(heat: trit) -> trit { return heat; }
+fn check_wind(speed: trit) -> trit { return speed; }
+
+fn assess_wildfire(smoke: trit, heat: trit, wind: trit) -> trit {
+    match smoke {
+        1 => {
+            // Smoke is present. Check heat.
+            match heat {
+                1 => { return truth(); } // Smoke + High Heat = Fire (Evacuation)
+                0 => { return hold(); }  // Smoke + Moderate Heat = Watch
+                -1 => { return hold(); } // Smoke + Low Heat = Watch (investigate)
+            }
+        }
+        0 => {
+            // Smoke sensor is inconclusive. Check heat and wind.
+            match heat {
+                1 => {
+                    match wind {
+                        1 => { return hold(); } // No smoke but extreme heat/wind = Watch
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return hold(); }
+                -1 => { return conflict(); }
+            }
+        }
+        -1 => {
+            // No smoke. Check for extreme conditions.
+            match heat {
+                1 => {
+                    match wind {
+                        1 => { return hold(); } // Red flag warning: extreme heat/wind
+                        0 => { return conflict(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                0 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+    }
+}
+
+// SCENARIO: Smoke detected (+1), High temperature (+1), Moderate wind (0)
+let current_smoke: trit = truth();
+let current_heat:  trit = truth();
+let current_wind:  trit = hold();
+
+let decision: trit = assess_wildfire(current_smoke, current_heat, current_wind);
+
+match decision {
+    -1 => { return conflict(); } // LOW: No immediate threat
+     0 => { return hold();    } // WATCH: Preposition firefighters
+     1 => { return truth();   } // EVACUATION: Life safety priority
+}

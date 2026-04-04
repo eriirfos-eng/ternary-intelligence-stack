@@ -1,0 +1,66 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 114_cps_referral.tern — Child Protective Services Intake Triage
+//
+// Binary intake models either launch a traumatic, high-conflict investigation 
+// (risking family separation) or dismiss the case (risking child harm). 
+// Ternary 'monitor' allows for a social worker check-in or community support 
+// referral, providing a middle-ground for low-risk neglect or poverty-based 
+// issues where services, not enforcement, are the best medicine.
+//   +1: INVESTIGATE (Immediate field visit / forensic)
+//    0: MONITOR (Home visit / Service referral)
+//   -1: DISMISS (Unfounded / No risk)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn risk_level(r: trit) -> trit { return r; }
+fn prior_reports(p: trit) -> trit { return p; }
+fn mandatory_flag(f: trit) -> trit { return f; }
+fn family_cooperation(c: trit) -> trit { return c; }
+
+fn referral_logic(risk: trit, prior: trit, flag: trit, coop: trit) -> trit {
+    // If it's a mandatory report (e.g. from a doctor), we cannot DISMISS
+    match flag {
+        1 => {
+            // Check risk and history
+            match risk {
+                1 => { return truth(); }         // High risk, INVESTIGATE
+                _ => { return hold(); }          // Low risk but mandatory, MONITOR
+            }
+        }
+        _ => {
+            // Not mandatory, use consensus on risk and priors.
+            match risk {
+                1 => { return truth(); }         // Severe injury, INVESTIGATE
+                 0 => { 
+                     // Potential neglect. Check family cooperation.
+                     match coop {
+                         -1 => { return truth(); } // Hostile, must INVESTIGATE
+                          0 => { return hold(); }  // Cautious, MONITOR
+                          1 => { return hold(); }  // Cooperative, refer to aid
+                     }
+                 }
+                 -1 => {
+                     // Low risk. Dismiss if no priors.
+                     match prior {
+                         -1 => { return invert(truth()); } // No history, DISMISS
+                         _ => { return hold(); }           // Some history, MONITOR
+                     }
+                 }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Moderate risk neglect, no prior history, but high cooperation ──
+let suspected_neglect: trit = hold();
+let zero_priors: trit = invert(truth());
+let non_mandatory: trit = invert(truth()); // Anonymous caller
+let mother_cooperates: trit = truth();
+
+let status: trit = referral_logic(suspected_neglect, zero_priors, non_mandatory, mother_cooperates);
+
+// Expected Result: 0 (MONITOR) - risk is hold, so result is hold.
+match status {
+    1 => { return truth(); }     // INVESTIGATE: Law enforcement + forensic kit
+    0 => { return hold();  }     // MONITOR: Social worker home visit/food bank ref
+   -1 => { return conflict(); }  // DISMISS: Close case, unfounded
+}

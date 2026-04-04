@@ -1,0 +1,56 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 84_physical_access.tern — Secure facility badge entry
+//
+// Binary Failure Mode: Tailgating or lost badges are either ignored or lock everyone out.
+// Ternary Advantage: 'Hold' places the turnstile in a 'Hold' state when a 
+// badge is valid but weight sensors detect two people, or when a badge is 
+// used in an impossible sequence (anti-passback).
+//
+//   -1: Granted
+//    0: Hold (Visual verification)
+//    1: Denied (Security alert)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn badge_valid(b: trit) -> trit { return b; }
+fn weight_sensor(w: trit) -> trit { return w; }
+fn anti_passback(a: trit) -> trit { return a; }
+
+fn gate_logic(badge: trit, weight: trit, passback: trit) -> trit {
+    match badge {
+        1 => { return truth(); } // Invalid/Expired badge = Denied
+        0 => { return hold(); }  // Damaged chip = Hold (Intercom)
+        -1 => {
+            // Badge is valid. Check sensors.
+            match weight {
+                1 => { return hold(); } // Valid badge but two people = Hold
+                0 => {
+                    match passback {
+                        1 => { return hold(); } // Sequence error = Hold
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                -1 => {
+                    match passback {
+                        1 => { return hold(); } // Weight ok but passback error = Hold
+                        0 => { return conflict(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// SCENARIO: Valid badge (-1), Weight sensor alert (1), Passback ok (-1)
+let b_val: trit = conflict();
+let w_val: trit = truth();
+let a_val: trit = conflict();
+
+let entry_action: trit = gate_logic(b_val, w_val, a_val);
+
+match entry_action {
+    -1 => { return conflict(); } // GRANTED: Open turnstile
+     0 => { return hold();    } // HOLD: Dispatch guard for visual check
+     1 => { return truth();   } // DENIED: Sound alarm, lock door
+}

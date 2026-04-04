@@ -1,0 +1,60 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 90_insider_threat.tern — Insider Threat Detection (UEBA)
+//
+// Binary Failure Mode: Lockouts based on false positives alienate employees.
+// Ignoring behavioral anomalies leads to massive data exfiltration.
+// Ternary Advantage: 'Hold' represents 'Monitor' (Enhanced logging),
+// providing a middle ground for suspicious but not definitive behavior.
+//
+//   +1: Normal (Low risk)
+//    0: Monitor (Increased logging)
+//   -1: Lock (Account suspended)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn access_pattern(p: trit) -> trit { return p; }
+fn data_volume(v: trit) -> trit { return v; }
+fn off_hours_activity(h: trit) -> trit { return h; }
+
+fn threat_triage(pattern: trit, volume: trit, hours: trit) -> trit {
+    // Large data volume exfiltration is a critical indicator.
+    match volume {
+        -1 => { return conflict(); } // Massive export: Lock now
+         0 => {
+             // Unusual volume. Check patterns and hours.
+             let environmental: trit = consensus(pattern, hours);
+             match environmental {
+                 -1 => { return conflict(); } // High risk combo: Lock
+                  0 => { return hold(); }     // Suspicious: Monitor
+                  1 => { return hold(); }     // Unusual: Monitor
+             }
+         }
+         1 => {
+             // Volume normal. Check if everything else is okay.
+             match pattern {
+                 -1 => { return hold(); }     // Strange patterns: Monitor
+                  0 => { return hold(); }
+                  1 => {
+                      match hours {
+                          -1 => { return hold(); } // Late night: Monitor
+                           0 => { return hold(); }
+                           1 => { return truth(); } // All normal
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Normal data volume (+1), but accessing unusual directories (-1)
+// during late night hours (-1).
+let vol:  trit = truth();
+let pat:  trit = conflict();
+let hrs:  trit = conflict();
+
+let threat_level: trit = threat_triage(pat, vol, hrs);
+
+match threat_level {
+    -1 => { return conflict(); } // LOCK: Suspend account and alert HR
+     0 => { return hold();    } // MONITOR: Enable screen recording and session audit
+     1 => { return truth();   } // NORMAL: Business as usual
+}

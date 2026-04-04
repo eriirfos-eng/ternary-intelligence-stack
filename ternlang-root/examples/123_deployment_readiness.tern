@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 123_deployment_readiness.tern — CI/CD Deployment Readiness Gate
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'canary' for staged rollouts instead of all-or-nothing shipping.
+//   +1: ROLLBACK
+//    0: CANARY
+//   -1: SHIP
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_pass_rate(x: trit) -> trit { return x; }
+fn check_perf(x: trit) -> trit { return x; }
+fn check_security(x: trit) -> trit { return x; }
+
+fn main_logic(pass_rate: trit, perf: trit, sec: trit) -> trit {
+    match pass_rate {
+        1 => { 
+            match perf {
+                1 => { return invert(truth()); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        0 => { return hold(); }
+        -1 => { return truth(); }
+    }
+}
+
+// ── Concrete scenario: All tests pass, but performance has a slight regression. ──
+let s_0: trit = truth();
+let s_1: trit = hold();
+let s_2: trit = truth();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // ROLLBACK
+    0 => { return hold();  }    // CANARY
+   -1 => { return invert(truth()); } // SHIP
+}

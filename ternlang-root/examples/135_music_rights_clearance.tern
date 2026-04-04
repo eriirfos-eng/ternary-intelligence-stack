@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 135_music_rights_clearance.tern — Music Rights Clearance Logic
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'pending' for ongoing negotiations or sample clearance.
+//   +1: BLOCKED
+//    0: PENDING
+//   -1: CLEARED
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_master(x: trit) -> trit { return x; }
+fn check_publishing(x: trit) -> trit { return x; }
+fn check_fair_use(x: trit) -> trit { return x; }
+
+fn main_logic(master: trit, pub: trit, fair: trit) -> trit {
+    match master {
+        1 => { 
+            match pub {
+                1 => { return invert(truth()); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        0 => { return hold(); }
+        -1 => { return truth(); }
+    }
+}
+
+// ── Concrete scenario: Master cleared, but publishing license is still in negotiation. ──
+let s_0: trit = truth();
+let s_1: trit = hold();
+let s_2: trit = invert(truth());
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // BLOCKED
+    0 => { return hold();  }    // PENDING
+   -1 => { return invert(truth()); } // CLEARED
+}

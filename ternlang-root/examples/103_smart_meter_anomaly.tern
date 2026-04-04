@@ -1,0 +1,50 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 103_smart_meter_anomaly.tern — Smart Meter Anomaly Detection
+//
+// Binary meters either "Report" (everything's fine) or "Disconnect" (on a fatal
+// error). Ternary logic adds "Inspect" (Flagged) which allows a meter to 
+// continue functioning but with a lower confidence interval for billing, 
+// avoiding abrupt power cuts due to sensor noise or minor jitter.
+//   +1: NORMAL (Healthy data flow)
+//    0: INSPECT (Flagged for field check / Noise)
+//   -1: ALERT (Tamper / Critical Malfunction)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn variance_level(v: trit) -> trit { return v; }
+fn physical_seal(s: trit) -> trit { return s; }
+fn comms_uptime(u: trit) -> trit { return u; }
+fn load_profile(p: trit) -> trit { return p; }
+
+fn meter_health(v: trit, s: trit, u: trit, p: trit) -> trit {
+    // Check physical integrity first
+    match s {
+        -1 => { return invert(truth()); } // Seal broken, immediate ALERT
+         0 => { 
+             // Minor mechanical vibration/tilt. Check signal.
+             match u {
+                 -1 => { return hold(); } // Signal lost, inspect required.
+                  0 => { return hold(); } // Flaky signal, flag it.
+                  1 => { return consensus(v, p); } // Good signal, check data consistency.
+             }
+         }
+         1 => { 
+             // Secure seal, proceed with data analysis.
+             return consensus(v, p);
+         }
+    }
+}
+
+// ── Concrete scenario: Secure seal but flaky comms and high data variance ──
+let seal_status: trit = truth();
+let comms_quality: trit = hold();
+let data_variance: trit = hold();
+let typical_profile: trit = truth();
+
+let result: trit = meter_health(data_variance, seal_status, comms_quality, typical_profile);
+
+// Expected Result: 0 (INSPECT) - comms are hold() and variance is hold()
+match result {
+    1 => { return truth(); }     // NORMAL: Standard billing cycle
+    0 => { return hold();  }     // INSPECT: Log data but request technician review
+   -1 => { return conflict(); }  // ALERT: Disconnect meter / Raise fraud flag
+}

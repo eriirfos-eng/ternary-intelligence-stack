@@ -1,0 +1,60 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 93_scholarship_eligibility.tern — Scholarship Merit Assessment
+//
+// Binary Failure Mode: Cutoff scores (e.g., GPA > 3.8) ignore exceptional 
+// talents or socioeconomic hurdles that slightly depress raw scores.
+// Ternary Advantage: 'Hold' represents 'Review' (Holistic Committee),
+// ensuring candidates on the bubble get a human look instead of a bot reject.
+//
+//   +1: Eligible (Automatic Award)
+//    0: Review (Committee Evaluation)
+//   -1: Ineligible (Rejected)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn academic_gpa(gpa: trit) -> trit { return gpa; }
+fn community_service(svc: trit) -> trit { return svc; }
+fn financial_need(need: trit) -> trit { return need; }
+
+fn scholarship_gate(gpa: trit, svc: trit, need: trit) -> trit {
+    // GPA is the primary filter.
+    match gpa {
+        1 => {
+            // High GPA. Check if others are okay for auto-award.
+            match svc {
+                1 => { return truth(); } // Top GPA and service: Auto-award
+                0 => { return truth(); }
+                -1 => { return hold(); } // Top GPA but no service: Review
+            }
+        }
+        0 => {
+            // Solid GPA. Requires manual review of context.
+            match need {
+                1 => { return hold(); } // Solid GPA + need: Review
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+        -1 => {
+            // Low GPA. Check for extreme financial need/hardship.
+            match need {
+                1 => { return hold(); }     // Low GPA but high need: Review context
+                0 => { return conflict(); } // Low GPA, moderate need: Reject
+                -1 => { return conflict(); } // Low GPA, low need: Reject
+            }
+        }
+    }
+}
+
+// SCENARIO: GPA is slightly below automatic cutoff (0), but the student 
+// has exceptional community service (+1) and high financial need (+1).
+let gpa_trit:  trit = hold();
+let svc_trit:  trit = truth();
+let need_trit: trit = truth();
+
+let award_fate: trit = scholarship_gate(gpa_trit, svc_trit, need_trit);
+
+match award_fate {
+    -1 => { return conflict(); } // INELIGIBLE: Send rejection letter
+     0 => { return hold();    } // REVIEW: Forward to Scholarship Committee
+     1 => { return truth();   } // ELIGIBLE: Issue Award Letter
+}

@@ -1,0 +1,40 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 132_athlete_injury_risk.tern — Athlete Injury Risk Assessment
+//
+// Binary logic fails by forcing a choice between two extremes. 
+// Ternary logic: Adds 'monitor' for sub-clinical fatigue that precedes injury.
+//   +1: SIT_OUT
+//    0: MONITOR
+//   -1: SAFE
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_hrv(x: trit) -> trit { return x; }
+fn check_sleep(x: trit) -> trit { return x; }
+fn check_soreness(x: trit) -> trit { return x; }
+
+fn main_logic(hrv: trit, sleep: trit, sore: trit) -> trit {
+    match sore {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => {
+            match hrv {
+                1 => { return invert(truth()); }
+                0 => { return hold(); }
+                -1 => { return hold(); }
+            }
+        }
+    }
+}
+
+// ── Concrete scenario: Medium sleep quality and medium soreness. ──
+let s_0: trit = invert(truth());
+let s_1: trit = hold();
+let s_2: trit = hold();
+
+let outcome: trit = main_logic(s_0, s_1, s_2);
+
+match outcome {
+    1 => { return truth(); }    // SIT_OUT
+    0 => { return hold();  }    // MONITOR
+   -1 => { return invert(truth()); } // SAFE
+}

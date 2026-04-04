@@ -1,0 +1,53 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 88_ransomware_detection.tern — Behavioral Ransomware Detection
+//
+// Binary Failure Mode: Traditional AV kills processes on vague suspicion, 
+// causing data corruption or business interruption for critical systems.
+// Ternary Advantage: 'Hold' represents 'Quarantine' (Snapshot and Suspend),
+// preserving the system state for forensic analysis before a final Kill.
+//
+//   +1: Safe (Allow process)
+//    0: Quarantine (Suspend & Snapshot)
+//   -1: Kill (Terminate process)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn file_entropy(ent: trit) -> trit { return ent; }
+fn encryption_rate(rate: trit) -> trit { return rate; }
+fn shadow_copy_deleted(del: trit) -> trit { return del; }
+
+fn detect_ransomware(ent: trit, rate: trit, del: trit) -> trit {
+    // Shadow copy deletion is a high-confidence indicator.
+    match del {
+        -1 => { return conflict(); } // VSS deletion: Kill immediately
+         0 => {
+             // Potential deletion. Check encryption activity.
+             match rate {
+                 -1 => { return conflict(); }
+                  0 => { return hold(); }
+                  1 => { return hold(); }
+             }
+         }
+         1 => {
+             // Shadow copies safe. Check file entropy.
+             match ent {
+                 -1 => { return hold(); }     // Massive high-entropy changes: Quarantine
+                  0 => { return hold(); }     // Moderate entropy change: Quarantine
+                  1 => { return truth(); }    // Normal entropy: Safe
+             }
+         }
+    }
+}
+
+// SCENARIO: Normal entropy (+1), but encryption rate is spiking (0) and 
+// shadow copies are being tampered with (0).
+let entropy:  trit = truth();
+let enc_rate: trit = hold();
+let vss_del:  trit = hold();
+
+let process_action: trit = detect_ransomware(entropy, enc_rate, vss_del);
+
+match process_action {
+    -1 => { return conflict(); } // KILL: Terminate process and alert
+     0 => { return hold();    } // QUARANTINE: Freeze process, take snapshot
+     1 => { return truth();   } // SAFE: Continue monitoring
+}

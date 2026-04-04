@@ -1,0 +1,49 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 101_solar_dispatch.tern — Solar energy grid injection strategy
+//
+// Binary logic either forces injection (risking grid trip) or shuts down (wasting 
+// green energy). Ternary logic adds a 'wait' state for synchronization or 
+// frequency alignment, allowing for a gradual ramp rather than a hard binary flip.
+//   +1: DISPATCH (Full injection)
+//    0: WAIT (Synchronizing / Frequency Matching)
+//   -1: CURTAIL (Safety shutdown / Overvoltage)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn grid_frequency(freq: trit) -> trit { return freq; }
+fn inverter_sync(sync: trit) -> trit { return sync; }
+fn weather_condition(sun: trit) -> trit { return sun; }
+fn energy_demand(load: trit) -> trit { return load; }
+
+fn solar_logic(freq: trit, sync: trit, sun: trit, load: trit) -> trit {
+    // Hard gate: Frequency must be stable
+    match freq {
+        -1 => { return conflict(); } // Grid instability
+         0 => { return hold(); }     // Frequency drifting, wait.
+         1 => {
+             // Frequency is good, check inverter sync
+             match sync {
+                 -1 => { return conflict(); } // Hardware fault
+                  0 => { return hold(); }     // Sync in progress
+                  1 => {
+                      // Synchronized, now check supply/demand
+                      return consensus(sun, load);
+                  }
+             }
+         }
+    }
+}
+
+// ── Concrete scenario: Grid frequency is stable, syncing, and it's sunny ──
+let freq_stable: trit = truth(); 
+let sync_status: trit = hold();  
+let sun_intensity: trit = truth();
+let local_load: trit = truth();
+
+let action: trit = solar_logic(freq_stable, sync_status, sun_intensity, local_load);
+
+// Expected Result: 0 (WAIT) - frequency is fine but sync is still holding.
+match action {
+    1 => { return truth(); }     // DISPATCH: Full power to grid
+    0 => { return hold(); }      // WAIT: Maintain sync, do not inject yet
+   -1 => { return conflict(); }  // CURTAIL: Disconnect DC strings immediately
+}

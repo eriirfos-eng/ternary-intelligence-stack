@@ -1,0 +1,53 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 96_peer_review.tern — Scientific Peer Review Process
+//
+// Binary Failure Mode: Simple Accept/Reject ignores the crucial middle ground 
+// of peer review where most papers live.
+// Ternary Advantage: 'Hold' represents 'Revise' (Major/Minor), capturing
+// the iterative nature of scientific consensus.
+//
+//   +1: Accept (Publish as is)
+//    0: Revise (Address reviewer comments)
+//   -1: Reject (Flawed methodology)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn methodology_sound(m: trit) -> trit { return m; }
+fn results_novel(n: trit) -> trit { return n; }
+fn writing_clear(c: trit) -> trit { return c; }
+
+fn review_gate(m: trit, n: trit, c: trit) -> trit {
+    // Methodology is a hard gate.
+    match m {
+        -1 => { return conflict(); } // Flawed science: Reject
+         0 => { return hold(); }     // Methodological concerns: Revise
+         1 => {
+             // Methodology good. Check novelty.
+             match n {
+                 -1 => { return conflict(); } // Derivative work: Reject
+                  0 => { return hold(); }     // Incremental: Revise
+                  1 => {
+                      // Novel and sound. Check clarity.
+                      match c {
+                          1 => { return truth(); } // Perfect: Accept
+                          0 => { return hold(); }  // Minor typos: Revise
+                          -1 => { return hold(); } // Poor English: Revise
+                      }
+                  }
+             }
+         }
+    }
+}
+
+// SCENARIO: Sound methodology (+1), novel results (+1), but the 
+// discussion section is confusing and poorly written (-1).
+let methods: trit = truth();
+let novelty: trit = truth();
+let clarity: trit = conflict();
+
+let review_fate: trit = review_gate(methods, novelty, clarity);
+
+match review_fate {
+    -1 => { return conflict(); } // REJECT: Paper not suitable for publication
+     0 => { return hold();    } // REVISE: Resubmit after addressing reviewer feedback
+     1 => { return truth();   } // ACCEPT: Send to copy-editing for publication
+}
