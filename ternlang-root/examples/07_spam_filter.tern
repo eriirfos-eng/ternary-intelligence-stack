@@ -1,0 +1,71 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// spam_filter.tern — Email classification in balanced ternary
+//
+// Binary spam filters: spam or ham.
+// This produces too many false positives (legitimate email in spam folder)
+// and false negatives (spam in inbox).
+//
+// Ternary spam filter adds the "review" category:
+//   +1 = definitely legitimate — deliver to inbox
+//    0 = uncertain — quarantine for user review
+//   -1 = definitely spam — discard silently
+//
+// The quarantine folder is not the spam folder. It is the hold zone.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn signal_strength(raw: trit) -> trit {
+    // Normalise a raw signal to a definitive vote or hold
+    match raw {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn evaluate_email(
+    known_sender:    trit,   // +1 in contacts, -1 on blocklist, 0 unknown
+    subject_score:   trit,   // NLP scan of subject line
+    body_score:      trit,   // NLP scan of body
+    link_reputation: trit    // URL reputation check
+) -> trit {
+
+    // Known blocklisted sender = immediate discard, no further analysis
+    match known_sender {
+        -1 => { return conflict(); }   // blocked sender → spam
+
+         0 => {
+            // Unknown sender — evaluate content signals
+            let content:  trit = consensus(subject_score, body_score);
+            let combined: trit = consensus(content, link_reputation);
+            match combined {
+                -1 => { return conflict(); }   // strong spam signals → discard
+                 0 => { return hold();    }   // mixed signals → quarantine
+                 1 => { return hold();    }   // looks ok but sender unknown → still quarantine
+            }
+         }
+
+         1 => {
+            // Known contact — much higher bar to classify as spam
+            let content: trit = consensus(subject_score, body_score);
+            match content {
+                -1 => { return hold();    }   // known sender but spam content → quarantine (unusual)
+                 0 => { return truth();   }   // known sender, neutral content → inbox
+                 1 => { return truth();   }   // known sender, good content → inbox
+            }
+         }
+    }
+}
+
+// Incoming email: unknown sender, suspicious subject, clean body, bad link
+let sender:   trit = hold();      // not in contacts, not on blocklist
+let subject:  trit = conflict();  // "You've won a prize!" — spam signal
+let body:     trit = hold();      // generic, no obvious spam words
+let links:    trit = conflict();  // link resolves to known phishing domain
+
+let verdict: trit = evaluate_email(sender, subject, body, links);
+
+match verdict {
+    -1 => { return conflict(); }   // DISCARD — definite spam
+     0 => { return hold();    }   // QUARANTINE — user decides
+     1 => { return truth();   }   // INBOX — deliver
+}

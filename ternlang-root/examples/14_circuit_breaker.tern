@@ -1,0 +1,90 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// circuit_breaker.tern — Microservice resilience pattern in balanced ternary
+//
+// The binary circuit breaker has two states: closed (passing) / open (blocked).
+// This causes a problem: when a service is recovering (flaky, not fully up),
+// the binary breaker oscillates — snapping open and closed on every retry.
+//
+// The ternary circuit breaker adds a third state: half-open (probing).
+//
+//   +1 = CLOSED   — service healthy, requests pass through
+//    0 = HALF-OPEN — service recovering, send probe request only
+//   -1 = OPEN     — service down, fail fast without forwarding
+//
+// This is not a theoretical improvement — it is the standard production pattern
+// (Netflix Hystrix, Resilience4j). The ternary model IS the industry best practice.
+// Binary models bolt on the half-open state as a special case.
+// Ternary models make it a first-class value.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn classify_failure_rate(
+    recent_errors:  trit,   // high error rate in window? -1=yes, 0=borderline, 1=no
+    consecutive_ok: trit    // last N requests all successful? 1=yes, 0=some, -1=no
+) -> trit {
+    let health: trit = consensus(recent_errors, consecutive_ok);
+    return health;
+}
+
+fn breaker_state(
+    health:          trit,   // from classify_failure_rate
+    timeout_elapsed: trit,   // has the open timeout passed? (allow retry)
+    probe_success:   trit    // did the probe request succeed?
+) -> trit {
+    match health {
+        1 => { return truth(); }   // healthy → CLOSED
+
+        -1 => {
+            // Unhealthy — check if we're allowed to probe yet
+            match timeout_elapsed {
+                -1 => { return conflict(); }   // still within backoff → OPEN
+                 0 => { return conflict(); }   // timeout borderline → OPEN (conservative)
+                 1 => {
+                    // Timeout passed — send one probe
+                    match probe_success {
+                        -1 => { return conflict(); }   // probe failed → stay OPEN, reset timer
+                         0 => { return hold();    }   // probe in-flight → HALF-OPEN
+                         1 => { return truth();   }   // probe ok → CLOSED
+                    }
+                 }
+            }
+         }
+
+         0 => {
+            // Borderline health — enter HALF-OPEN probing mode
+            return hold();
+         }
+    }
+}
+
+fn route_request(breaker: trit, request_valid: trit) -> trit {
+    match breaker {
+        -1 => { return conflict(); }   // OPEN — fail fast, return cached/error
+         0 => {
+            // HALF-OPEN — only pass the probe through, queue rest
+            return hold();    // caller should send probe and wait
+         }
+         1 => {
+            // CLOSED — normal routing
+            return request_valid;
+         }
+    }
+}
+
+// ── Service recovering after an outage ───────────────────────────────────────
+let failure_rate:  trit = hold();      // error rate dropping but not clear yet
+let consec_ok:     trit = hold();      // last few ok but not enough to trust
+let timeout_done:  trit = truth();     // backoff window has elapsed
+let probe_result:  trit = hold();      // probe just sent — awaiting response
+
+let health: trit = classify_failure_rate(failure_rate, consec_ok);
+let state:  trit = breaker_state(health, timeout_done, probe_result);
+
+// → hold: HALF-OPEN state — probe sent, waiting
+
+let routing: trit = route_request(state, truth());
+
+match routing {
+    -1 => { return conflict(); }   // OPEN — return 503 immediately
+     0 => { return hold();    }   // HALF-OPEN — queue request, wait for probe
+     1 => { return truth();   }   // CLOSED — forward request normally
+}

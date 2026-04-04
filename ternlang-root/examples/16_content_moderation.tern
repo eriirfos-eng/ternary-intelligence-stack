@@ -1,0 +1,132 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// content_moderation.tern — Automated content review with human escalation
+//
+// Binary moderation: allow / remove.
+// The problem: automated systems either over-remove (censoring edge cases)
+// or under-remove (leaving harmful content up during review lag).
+//
+// Ternary moderation:
+//   +1 = allow  — clearly within guidelines
+//    0 = review  — send to human moderator queue
+//   -1 = remove  — clearly violates policy
+//
+// The key insight: the "review" queue is not the "probably fine" bucket.
+// It is the uncertainty bucket — content the classifier is not confident
+// about in either direction. Human judgment is the right tool for uncertainty.
+//
+// Automated classifiers should have wide review margins.
+// Confident removals should require high classifier certainty.
+// Confident allows should also require high classifier certainty.
+// Everything else: human.
+//
+// This dramatically reduces both false positives AND false negatives.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn has_violation(signal: trit) -> trit {
+    // Returns conflict if signal is a confirmed violation, truth otherwise
+    match signal {
+        -1 => { return conflict(); }
+         0 => { return truth();   }
+         1 => { return truth();   }
+    }
+}
+
+fn classify_text(
+    hate_signal:     trit,   // hate speech classifier: -1=detected, 0=unclear, +1=clean
+    violence_signal: trit,   // violence classifier
+    spam_signal:     trit    // spam/manipulation classifier
+) -> trit {
+    // Any strong negative signal → remove (fail safe)
+    let hate_ok:     trit = has_violation(hate_signal);
+    let violence_ok: trit = has_violation(violence_signal);
+    let spam_ok:     trit = has_violation(spam_signal);
+
+    let safety: trit = consensus(hate_ok, violence_ok);
+    let all_ok: trit = consensus(safety, spam_ok);
+
+    match all_ok {
+        -1 => { return conflict(); }   // at least one violation confirmed
+         0 => {
+            // No hard violations, aggregate original signals for allow/review
+            let hs:  trit = consensus(hate_signal, violence_signal);
+            let agg: trit = consensus(hs, spam_signal);
+            return agg;
+         }
+         1 => {
+            // All clean — aggregate original signals
+            let hs:  trit = consensus(hate_signal, violence_signal);
+            let agg: trit = consensus(hs, spam_signal);
+            return agg;
+         }
+    }
+}
+
+fn check_context(
+    account_standing:  trit,   // poster's account history: -1=suspended, 0=new, +1=trusted
+    reported_by_users: trit,   // community reports: -1=many, 0=few, +1=none
+    viral_velocity:    trit    // spreading fast? -1=viral, 0=moderate, +1=slow/none
+) -> trit {
+    // Suspended account is a hard gate
+    match account_standing {
+        -1 => { return conflict(); }   // suspended account — review or remove
+
+         0 => {
+            // New account — context matters more
+            let ctx: trit = consensus(reported_by_users, viral_velocity);
+            match ctx {
+                -1 => { return hold(); }   // new account + reports + viral = review
+                 0 => { return hold(); }   // new account + some signals = review
+                 1 => { return hold(); }   // new account even with no flags = review (watch)
+            }
+         }
+
+         1 => {
+            // Trusted account — lighter touch
+            let ctx: trit = consensus(reported_by_users, viral_velocity);
+            return ctx;
+         }
+    }
+}
+
+fn moderate(text_class: trit, context_class: trit) -> trit {
+    // Conflict from either dimension → remove
+    let tc_ok: trit = has_violation(text_class);
+    let cc_ok: trit = has_violation(context_class);
+    let both_safe: trit = consensus(tc_ok, cc_ok);
+
+    match both_safe {
+        -1 => { return conflict(); }
+         0 => {
+            // One side flagged — combine for routing
+            let combined: trit = consensus(text_class, context_class);
+            return combined;
+         }
+         1 => {
+            // Both sides safe — combine text and context for final answer
+            let combined: trit = consensus(text_class, context_class);
+            return combined;
+         }
+    }
+}
+
+// ── Post: political satire from a new account, getting shares ─────────────────
+let hate:     trit = truth();     // no hate speech detected
+let violence: trit = truth();     // no violence signals
+let spam:     trit = hold();      // coordinated sharing pattern, unclear
+
+let standing: trit = hold();      // 2-week-old account
+let reports:  trit = hold();      // 3 user reports — below threshold
+let velocity: trit = conflict();  // spreading fast in partisan networks
+
+let text_verdict:    trit = classify_text(hate, violence, spam);
+let context_verdict: trit = check_context(standing, reports, velocity);
+let final_verdict:   trit = moderate(text_verdict, context_verdict);
+
+// → hold: clean text but context flags (new account + viral + some reports)
+//         send to human moderator — they can assess satire vs. manipulation
+
+match final_verdict {
+    -1 => { return conflict(); }   // REMOVE — policy violation confirmed
+     0 => { return hold();    }   // REVIEW — human moderator queue
+     1 => { return truth();   }   // ALLOW — publish / leave up
+}

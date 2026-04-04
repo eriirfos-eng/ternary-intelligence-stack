@@ -1,0 +1,76 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// form_validator.tern — Multi-field form validation with partial-submit guard
+//
+// Binary form validation: valid / invalid.
+// The problem: "invalid" conflates two very different states:
+//   a) the user actively entered wrong data  → reject
+//   b) the user hasn't filled the field yet  → wait
+//
+// A binary validator rejects both the same way, creating hostile UX.
+// A ternary validator distinguishes:
+//   +1 = field is complete and valid — accept
+//    0 = field is empty or partial   — wait (do not block, do not accept)
+//   -1 = field has invalid data      — reject with explanation
+//
+// The form cannot submit unless:
+//   - All required fields are +1
+//   - No field is -1
+//
+// Optional fields at 0 are simply skipped.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn validate_required(field: trit) -> trit {
+    // A required field must be truth to pass. Hold means incomplete.
+    match field {
+        -1 => { return conflict(); }   // invalid input — show error
+         0 => { return hold();    }   // empty — show "required" hint, don't error
+         1 => { return truth();   }   // valid — check mark
+    }
+}
+
+fn validate_optional(field: trit) -> trit {
+    // Optional fields: invalid data still blocks, but empty is fine
+    match field {
+        -1 => { return conflict(); }   // invalid even for optional — must fix
+         0 => { return truth();   }   // empty optional → treat as valid
+         1 => { return truth();   }   // filled and valid → also fine
+    }
+}
+
+fn can_submit(
+    required_a: trit,
+    required_b: trit,
+    required_c: trit,
+    optional_d: trit
+) -> trit {
+    // Validate each field
+    let va: trit = validate_required(required_a);
+    let vb: trit = validate_required(required_b);
+    let vc: trit = validate_required(required_c);
+    let vd: trit = validate_optional(optional_d);
+
+    // All must pass — any conflict blocks, any hold blocks
+    let ab:  trit = consensus(va, vb);
+    let abc: trit = consensus(ab, vc);
+    let all: trit = consensus(abc, vd);
+    return all;
+}
+
+// ── Scenario: Onboarding form, user partially filled ─────────────────────────
+// Required: name, email, password
+// Optional: company name
+let name_field:     trit = truth();     // "Simeon" — valid
+let email_field:    trit = conflict();  // "simeon@" — invalid format
+let password_field: trit = hold();      // not filled yet
+let company_field:  trit = hold();      // empty — optional, no problem
+
+let submit_ok: trit = can_submit(name_field, email_field, password_field, company_field);
+
+// → conflict: email is malformed — show inline error on email field only
+//             password field shows "required" hint but no error (it's just empty)
+
+match submit_ok {
+    -1 => { return conflict(); }   // BLOCK SUBMIT — highlight invalid fields
+     0 => { return hold();    }   // NOT YET — show "please complete required fields"
+     1 => { return truth();   }   // SUBMIT — all required fields valid
+}

@@ -1,0 +1,55 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// git_merge.tern — Branch merge conflict resolution in balanced ternary
+//
+// A git merge has three outcomes:
+//   +1 = clean merge (fast-forward or auto-resolved)
+//    0 = mergeable with review (non-conflicting changes in same file)
+//   -1 = hard conflict (same lines changed differently)
+//
+// Binary VCS treats conflict as boolean: conflict or no conflict.
+// Ternary VCS distinguishes "auto-resolved" from "needs review"
+// — a whole category of changes that are safe but deserve human eyes.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn file_merge(theirs: trit, ours: trit) -> trit {
+    // If both branches touched the same file:
+    let delta: trit = consensus(theirs, ours);
+    match delta {
+        -1 => { return conflict(); }   // same lines, different content → CONFLICT
+         0 => { return hold();    }   // different areas of file → REVIEW NEEDED
+         1 => { return truth();   }   // only one branch touched it → CLEAN
+    }
+}
+
+fn merge_pr(src_main: trit, src_tests: trit, src_docs: trit, ci: trit) -> trit {
+    // CI must pass — failing CI is a hard NO
+    match ci {
+        -1 => { return conflict(); }   // CI red → block merge
+
+         0 => {
+            // CI pending — can't decide yet
+            return hold();
+         }
+
+         1 => {
+            // CI green — evaluate the source changes
+            let source:  trit = consensus(src_main, src_tests);
+            let overall: trit = consensus(source, src_docs);
+            return overall;
+         }
+    }
+}
+
+// PR: adds new feature, updates tests, touches shared config file
+let main_changes:  trit = hold();      // non-conflicting overlap with main → review
+let test_changes:  trit = truth();     // clean — separate test file
+let doc_changes:   trit = truth();     // clean — new docs only
+let ci_status:     trit = truth();     // green — all checks pass
+
+let merge_verdict: trit = merge_pr(main_changes, test_changes, doc_changes, ci_status);
+
+match merge_verdict {
+    -1 => { return conflict(); }   // BLOCKED — fix conflicts before merging
+     0 => { return hold();    }   // REVIEW — approved once reviewed by human
+     1 => { return truth();   }   // AUTO-MERGE — squash and ship it
+}

@@ -1,0 +1,75 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// treaty_negotiation.tern — Multi-party agreement with veto and hold
+//
+// International treaty ratification: three parties must agree.
+// Binary voting: pass / fail.
+// The problem: "failed ratification" conflates:
+//   a) one party actively blocking  → hard veto
+//   b) one party needing more time  → procedural hold
+//
+// These are completely different diplomatic situations with different next steps.
+// Binary systems route both to the same "failed" state.
+// Ternary negotiation keeps them distinct.
+//
+//   +1 = ratify   — party signs
+//    0 = reserve   — party needs more time / clarification / domestic ratification
+//   -1 = veto     — party formally blocks
+//
+// If any party vetoes → treaty fails (hard block).
+// If any party reserves → treaty in procedural hold (resume later).
+// All ratify → treaty enters force.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn party_vote(
+    domestic_support: trit,   // has the party's parliament/congress approved?
+    legal_cleared:    trit,   // are constitutional concerns resolved?
+    terms_accepted:   trit    // does the party accept the current draft terms?
+) -> trit {
+    // Terms must be accepted — rejection is a veto, not a hold
+    match terms_accepted {
+        -1 => { return conflict(); }   // formal objection to terms — veto
+         0 => { return hold();    }   // terms under review — reserve
+         1 => {
+            // Terms ok — need domestic ratification
+            let domestic: trit = consensus(domestic_support, legal_cleared);
+            match domestic {
+                -1 => { return conflict(); }   // domestic veto (constitutional block)
+                 0 => { return hold();    }   // pending domestic vote — reserve
+                 1 => { return truth();   }   // fully ratified
+            }
+         }
+    }
+}
+
+fn treaty_status(party_a: trit, party_b: trit, party_c: trit) -> trit {
+    // Any veto → treaty fails (can be renegotiated, not the same as hold)
+    let ab: trit = consensus(party_a, party_b);
+    let all: trit = consensus(ab, party_c);
+    return all;
+}
+
+// ── Three-party climate agreement ─────────────────────────────────────────────
+
+// Party A (major economy): terms ok, parliament approved, no legal blocks
+let vote_a: trit = party_vote(truth(), truth(), truth());
+// → truth: fully ratified
+
+// Party B (island nation): terms ok, parliament vote pending
+let vote_b: trit = party_vote(hold(), truth(), truth());
+// → hold: waiting on parliamentary vote
+
+// Party C (emerging economy): terms disputed on a subsidy clause
+let vote_c: trit = party_vote(hold(), truth(), hold());
+// → hold: terms still under review
+
+let status: trit = treaty_status(vote_a, vote_b, vote_c);
+
+// → hold: two parties in procedural reserve, no vetoes
+//         diplomatic outcome: extend negotiation window 90 days
+//         (different from a veto, which would require renegotiation)
+
+match status {
+    -1 => { return conflict(); }   // FAILED — at least one party formally vetoed
+     0 => { return hold();    }   // IN RESERVE — extend window, resume negotiations
+     1 => { return truth();   }   // IN FORCE — treaty takes legal effect
+}

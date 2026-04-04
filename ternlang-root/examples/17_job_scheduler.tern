@@ -1,0 +1,88 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// job_scheduler.tern — Background task scheduling with resource awareness
+//
+// Binary schedulers: run / skip.
+// The problem: a skipped job due to resource pressure looks identical to
+// a cancelled job — so retry logic fires when it shouldn't, or doesn't
+// fire when it should.
+//
+// Ternary scheduler:
+//   +1 = schedule now — resources available, job is ready
+//    0 = defer — resources constrained, retry after backoff
+//   -1 = cancel — job is stale, forbidden, or a hard prerequisite failed
+//
+// Deferral is a positive signal. It means: "I tried. I chose to wait.
+// Come back in T seconds." Cancel means: "Do not try again."
+// Binary conflates these. Ternary keeps them apart.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn resource_ok(cpu: trit, memory: trit, io_bandwidth: trit) -> trit {
+    // All three resources must be non-critical to schedule
+    let cm:  trit = consensus(cpu, memory);
+    let all: trit = consensus(cm, io_bandwidth);
+    return all;
+}
+
+fn job_ready(
+    dependency_met: trit,   // prerequisite jobs finished? -1=failed, 0=running, +1=done
+    not_expired:    trit,   // is the job still within its execution window?
+    not_forbidden:  trit    // has the job been explicitly cancelled or revoked?
+) -> trit {
+    // Forbidden is a hard gate — revoked jobs never run
+    match not_forbidden {
+        -1 => { return conflict(); }   // job cancelled — do not schedule, remove from queue
+
+         0 => {
+            // Forbidden state unclear — do not schedule yet
+            return hold();
+         }
+
+         1 => {
+            // Not forbidden — check dependency and expiry
+            match not_expired {
+                -1 => { return conflict(); }   // job window closed — cancel it
+                 0 => { return hold();    }   // window unclear — wait
+                 1 => {
+                    // Expiry ok — check dependency
+                    return dependency_met;
+                 }
+            }
+         }
+    }
+}
+
+fn schedule(job_readiness: trit, resources: trit) -> trit {
+    match job_readiness {
+        -1 => { return conflict(); }   // job should be removed from queue
+         0 => { return hold();    }   // job waiting on deps/window — defer
+         1 => {
+            // Job is ready — now check resources
+            match resources {
+                -1 => { return hold();    }   // resource pressure — defer (not cancel)
+                 0 => { return hold();    }   // resources borderline — defer
+                 1 => { return truth();   }   // resources ok — schedule now
+            }
+         }
+    }
+}
+
+// ── Video encoding job: dependency done, resources tight ─────────────────────
+let deps:     trit = truth();     // source file upload complete
+let window:   trit = truth();     // encoding window: next 4 hours
+let revoked:  trit = truth();     // job is active
+
+let cpu:      trit = hold();      // CPU at 70% — borderline
+let mem:      trit = truth();     // memory fine
+let io:       trit = truth();     // disk bandwidth available
+
+let readiness: trit = job_ready(deps, window, revoked);
+let resources: trit = resource_ok(cpu, mem, io);
+let verdict:   trit = schedule(readiness, resources);
+
+// → hold: job is ready but CPU is borderline — defer 30s and retry
+
+match verdict {
+    -1 => { return conflict(); }   // CANCEL — remove from queue permanently
+     0 => { return hold();    }   // DEFER — retry after backoff interval
+     1 => { return truth();   }   // SCHEDULE — dispatch worker now
+}

@@ -1,0 +1,101 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// hiring_pipeline.tern — Recruitment decision with structured uncertainty
+//
+// Binary hiring: offer / reject.
+// The problem: recruiters have a mountain of "maybe" candidates that binary
+// systems either push into the reject pile (losing good hires) or the offer
+// pile (wasting everyone's time on interviews they shouldn't reach).
+//
+// Ternary recruiting:
+//   +1 = advance  — candidate meets bar for next stage
+//    0 = hold     — promising but incomplete picture; gather more signal
+//   -1 = decline  — clear mismatch on a non-negotiable dimension
+//
+// The "hold" bucket is the pipeline's most valuable bucket.
+// It contains people who might be your best hire — you just don't know yet.
+// Routing them to human judgment (one more call, a portfolio review, a test)
+// costs much less than losing them to a binary reject.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn screen_resume(
+    skills_match:   trit,   // does experience match role requirements?
+    level_match:    trit,   // is seniority appropriate (not severely over/under)?
+    no_hard_block:  trit    // no dealbreakers (e.g. geographic restriction, visa)?
+) -> trit {
+    // Hard blocks are absolute — don't waste anyone's time
+    match no_hard_block {
+        -1 => { return conflict(); }   // hard block — decline with brief note
+         0 => { return hold();    }   // block unclear — check before advancing
+         1 => {
+            // No hard blocks — evaluate fit
+            let fit: trit = consensus(skills_match, level_match);
+            return fit;
+         }
+    }
+}
+
+fn phone_screen(
+    communication:  trit,   // clear communicator?
+    motivation:     trit,   // genuine interest in role/company?
+    salary_aligned: trit    // expectations within range?
+) -> trit {
+    // Salary misalignment is a hard block at this stage
+    match salary_aligned {
+        -1 => { return conflict(); }   // out of range — decline to save time
+         0 => {
+            // Salary to be confirmed — can still advance if other signals strong
+            let signal: trit = consensus(communication, motivation);
+            match signal {
+                -1 => { return conflict(); }
+                 0 => { return hold();    }   // weak screen + unclear salary → hold
+                 1 => { return hold();    }   // strong screen, confirm salary next
+            }
+         }
+         1 => {
+            // Salary aligned — evaluate quality of conversation
+            let quality: trit = consensus(communication, motivation);
+            return quality;
+         }
+    }
+}
+
+fn final_decision(
+    technical_bar:   trit,   // passed technical assessment?
+    culture_signal:  trit,   // would add to team dynamics?
+    reference_check: trit    // references clear?
+) -> trit {
+    // References are a soft gate — a negative reference is a serious signal
+    match reference_check {
+        -1 => { return conflict(); }   // negative reference — decline
+         0 => { return hold();    }   // references pending — wait before offer
+         1 => {
+            // References clear — technical + culture
+            let technical: trit = technical_bar;
+            let combined:  trit = consensus(technical, culture_signal);
+            return combined;
+         }
+    }
+}
+
+// ── Candidate: strong resume, great phone screen, references pending ──────────
+let resume: trit = screen_resume(truth(), truth(), truth());
+// → truth: resume advances
+
+let screen: trit = phone_screen(truth(), truth(), truth());
+// → truth: phone screen passes
+
+let decision: trit = final_decision(
+    truth(),    // passed technical round
+    truth(),    // strong culture signal
+    hold()      // references: sent request, awaiting responses
+);
+
+// → hold: everything points to offer, but references haven't come back yet
+//         do not make offer until references clear
+//         (and do not reject — this is your top candidate)
+
+match decision {
+    -1 => { return conflict(); }   // DECLINE — send polite rejection
+     0 => { return hold();    }   // HOLD — gather remaining signal before deciding
+     1 => { return truth();   }   // ADVANCE / OFFER — make the call
+}

@@ -163,7 +163,7 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 - [x] **Academic whitepaper**: `whitepaper/ternlang-whitepaper.tex` (IEEE two-column LaTeX) + `ternlang-whitepaper.docx`
 - [x] **Spec consolidation**: `spec/grammar.ebnf`, `spec/ternlang-language-reference-v0.1.md`, `spec/ternlang-dictionary-v0.1.json` versioned in main repo
 - [ ] **Phase 7B**: VS Code Marketplace publication (needs user publisher PAT token → `vsce publish`)
-- [ ] **Phase 7B**: crates.io publication (`cargo login` + `cargo publish -p ternlang-core` etc.)
+- [x] **Phase 7B**: crates.io — all 9 crates published (2026-04-04)
 - [ ] **Phase 7B**: MCP registry publication, integration guide
 - [ ] **Phase 7C**: USN / Bos+Gundersen academic outreach, joint whitepaper draft
 
@@ -210,11 +210,12 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 - [x] **`OrchestrationResult`** — trit, confidence, verdicts, triad_field, pair, held, safety_vetoed, temperature, prompt_hint
 - [x] 16 tests: competence vectors, router, triad synthesis, safety veto, hold/tiebreaker, reject, memory (node TTL, cluster mode-collapse, axis veto log), standard pool, full orchestration
 
-**Next for MoE:**
-- [ ] MCP tools: `orchestrator_route`, `trit_action_gate`, `moe_deliberate`
-- [ ] Whitepaper update — add Phase 9 / MoE-13 implementation section
-- [ ] REST endpoints in `ternlang-api` for orchestrator access
-- [ ] Stream `OrchestrationResult` as SSE for live agent deliberation
+**Phase 9 additions (2026-04-04):**
+- [x] MCP tools: `moe_orchestrate`, `moe_deliberate`, `trit_action_gate` (3 new tools → 10 total in ternlang-mcp)
+- [x] Whitepaper updated — Phase 8 + Phase 9 sections added (887 lines)
+- [x] SSE streaming in `ternlang-api`: `GET /api/stream/moe_orchestrate` + `GET /api/stream/deliberate`
+- [x] All 9 crates published to crates.io (ternlang-core through ternlang-cli, BSL + LGPL)
+- [x] Wall-E easter egg hidden in `ternlang-moe::orchestrate()` — fires on query "wall-e"
 
 ---
 
@@ -247,3 +248,4 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 | 2026-04-03 | Phase 6.1 COMPLETE: BetRtlProcessor — cycle-accurate RTL simulator in pure Rust. Mirrors bet_processor.v exactly: TritWire 2-bit encoding, trit_neg/cons/mul/add combinational primitives, BetRegfile (27 regs), BetPc (16-bit), BetAlu, bet_decode control unit. `ternlang sim --rtl [--max-cycles N]` CLI. 12 RTL unit tests + 2 doctests. 93 tests total across core/hdl/runtime. |
 | 2026-04-03 | Phase 8 COMPLETE: Ternary AI Reasoning Toolkit in ternlang-ml — DeliberationEngine (EMA convergence), coalition_vote (quorum/dissent/abstain), action_gate (multi-dim hard-block), scalar_temperature (trit→LLM temp bridge), hallucination_score (variance→trust trit). TritScalar gains trit_i8() + Clone. Phase 8 REST endpoints in ternlang-api (5 endpoints). 15 reasoning tests. |
 | 2026-04-03 | Phase 9 COMPLETE: ternlang-moe crate — MoE-13 ternary orchestrator (DOI 10.17605/OSF.IO/TZ7DC). CompetenceVector (6D), TernMoeRouter (dual-key synergistic routing), TriadField (1+1=3 emergent synthesis), three-tier memory mesh (Node/Cluster/Axis), TernMoeOrchestrator (9-step pipeline), 13-expert standard pool, temperature bridge, safety hard gate with audit log. 16/16 tests passing. 146+ total tests across workspace. |
+| 2026-04-04 | MCP Phase 9 tools: moe_orchestrate, moe_deliberate, trit_action_gate (10 MCP tools total). SSE streaming endpoints in ternlang-api (stream/moe_orchestrate, stream/deliberate). Whitepaper updated to 887 lines with Phase 8+9 sections. All 9 crates published to crates.io. 20 .tern example files added to examples/ with INDEX.md — covering aerospace, medicine, DevOps, autonomous vehicles, AI agents, civic systems, finance, CPU pipeline (Brandon Smith tribute), S-expression eval (Owlet tribute), microservices, diplomacy, recruiting, scheduling, caching. Homepage updated with plain-language "Why Ternary" section (traffic lights, doctors, judges analogies) + all new API routes in nav. |

@@ -1,0 +1,105 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// confidence_escalator.tern — AI agent self-assessment before answering
+//
+// An AI agent should not answer confidently when it is uncertain.
+// Binary agents either answer or refuse. That binary is too coarse:
+//   - A refusal when the agent is 70% confident wastes capability.
+//   - An answer when the agent is 30% confident spreads misinformation.
+//
+// The ternary answer: a third path — escalate to human for more context.
+//
+// Confidence pipeline:
+//   Step 1 — query_clarity: is the question unambiguous?
+//   Step 2 — knowledge_match: does my training cover this domain?
+//   Step 3 — recency_check: is this knowledge likely still current?
+//
+// Low confidence on any step → hold → request clarification or escalate.
+// All high → commit to an answer.
+// Any negative → refuse (hallucination risk too high).
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn assess_query_clarity(
+    has_subject:    trit,   // did the query mention a specific subject?
+    has_intent:     trit,   // is the desired output clear?
+    no_ambiguity:   trit    // are there no double meanings? (truth = unambiguous)
+) -> trit {
+    let subject_intent: trit = consensus(has_subject, has_intent);
+    let clarity:        trit = consensus(subject_intent, no_ambiguity);
+    return clarity;
+}
+
+fn assess_knowledge(
+    domain_known:   trit,   // is this domain in my training?
+    depth_adequate: trit,   // is coverage deep enough to answer accurately?
+    sources_cited:  trit    // can I attribute this to known sources?
+) -> trit {
+    // Domain knowledge is the hard gate here — unknown domain means no answer
+    match domain_known {
+        -1 => { return conflict(); }   // out of domain — do not hallucinate
+         0 => { return hold();    }   // partial domain — ask for scope narrowing
+         1 => {
+            let depth: trit = consensus(depth_adequate, sources_cited);
+            return depth;
+         }
+    }
+}
+
+fn assess_recency(
+    is_evergreen:   trit,   // is this topic time-invariant (math, logic, history)?
+    cutoff_ok:      trit,   // is it within my training cutoff?
+    volatile_domain: trit   // -1 if domain changes fast (news, prices, live data)
+) -> trit {
+    // Evergreen content bypasses recency check
+    match is_evergreen {
+        1 => { return truth(); }   // math doesn't expire
+        0 => {
+            // Temporal domain — check cutoff and volatility
+            let time_ok: trit = consensus(cutoff_ok, volatile_domain);
+            return time_ok;
+        }
+        -1 => {
+            // Explicitly marked as time-sensitive
+            return hold();    // always ask for current data
+        }
+    }
+}
+
+fn agent_decision(
+    query_clarity:   trit,
+    knowledge_score: trit,
+    recency_score:   trit
+) -> trit {
+    // All three must be truth for the agent to answer directly
+    // Any conflict → refuse (too risky to answer)
+    // Any hold → escalate (need more context)
+
+    let cq: trit = consensus(query_clarity, knowledge_score);
+    let all: trit = consensus(cq, recency_score);
+    return all;
+}
+
+// ── Scenario A: Agent asked about a fast-moving technical topic ───────────────
+// "What is the current market share of ternary processors?"
+let clarity_a:   trit = truth();     // question is clear
+let knowledge_a: trit = hold();      // partial domain (emerging hardware)
+let recency_a:   trit = hold();      // market data → volatile domain
+
+let verdict_a: trit = agent_decision(clarity_a, knowledge_a, recency_a);
+// → hold: "I have partial information. For current market data, please
+//          provide a recent source or I can answer with a caveat."
+
+// ── Scenario B: Agent asked about ternary logic mathematics ──────────────────
+// "What is the consensus of T and F in balanced ternary?"
+let clarity_b:   trit = truth();     // question is clear
+let knowledge_b: trit = truth();     // mathematics — well-covered domain
+let recency_b:   trit = truth();     // evergreen — logic doesn't change
+
+let verdict_b: trit = agent_decision(clarity_b, knowledge_b, recency_b);
+// → truth: answer directly with high confidence
+
+// Return Scenario A to demonstrate escalation path
+match verdict_a {
+    -1 => { return conflict(); }   // REFUSE — hallucination risk too high
+     0 => { return hold();    }   // ESCALATE — ask user for clarification
+     1 => { return truth();   }   // ANSWER — commit to response
+}
