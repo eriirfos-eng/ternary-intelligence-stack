@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Ternlang — RFI-IRFOS Ternary Intelligence Stack
+// Copyright (C) 2026 RFI-IRFOS
+// Open-core compiler. See LICENSE-LGPL in the repository root.
+
 use clap::{Parser as ClapParser, Subcommand};
 use std::fs;
 use std::path::PathBuf;

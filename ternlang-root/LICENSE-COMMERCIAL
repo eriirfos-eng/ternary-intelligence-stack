@@ -1,0 +1,101 @@
+TERNLANG COMMERCIAL LICENSE
+Version 1.0 — Effective 2026-04-04
+RFI-IRFOS — https://ternlang.com
+
+Copyright (C) 2026 RFI-IRFOS. All rights reserved.
+
+─────────────────────────────────────────────────────────────────────────────
+
+SCOPE
+
+This license governs the following crates of the Ternary Intelligence Stack:
+
+  ternlang-ml       — AI Reasoning Toolkit
+                      (DeliberationEngine, coalition_vote, action_gate,
+                       scalar_temperature, hallucination_score, TernaryMLP,
+                       CSC sparse matmul kernels, Goldilocks benchmark)
+
+  ternlang-hdl      — Hardware Description Language backend
+                      (Verilog/VHDL codegen, BET-ISA RTL simulator,
+                       FPGA-ready sparse matmul array, BET-ISA-SPEC.md)
+
+  ternlang-runtime  — Distributed Actor Runtime
+                      (TernNode, TCP actor routing, RemoteTransport,
+                       distributed TSEND/TAWAIT over TCP)
+
+  ternlang-moe      — MoE-13 Ternary Orchestrator
+                      (CompetenceVector, TernMoeRouter, TriadField,
+                       three-tier memory mesh, TernMoeOrchestrator,
+                       13-expert standard pool)
+
+  ternlang-mcp      — MCP Server
+                      (JSON-RPC 2.0 MCP transport, 10 tools,
+                       server-card.json, MCP-over-HTTP endpoint)
+
+  ternlang-api      — REST API Server
+                      (ternlang.com backend, multi-tenant key management,
+                       SSE streaming endpoints, Fly.io deployment)
+
+─────────────────────────────────────────────────────────────────────────────
+
+GRANT OF LICENSE
+
+Subject to the terms of a valid commercial license agreement with RFI-IRFOS,
+you are granted a non-exclusive, non-transferable license to:
+
+  1. Use the commercial-tier crates in your internal systems and products.
+  2. Integrate the REST API (ternlang.com) into your software under the terms
+     of your API subscription.
+
+─────────────────────────────────────────────────────────────────────────────
+
+RESTRICTIONS
+
+Without a signed commercial license agreement you MAY NOT:
+
+  1. Use, copy, modify, or distribute the commercial-tier crates or any
+     derivative work thereof.
+  2. Reverse engineer, decompile, or disassemble any portion of the
+     commercial-tier crates.
+  3. Sublicense, sell, or transfer the commercial-tier crates or any rights
+     therein to any third party.
+  4. Use the commercial-tier crates in any product or service competing
+     directly with RFI-IRFOS offerings.
+  5. Remove or alter this license notice or any copyright notices from any
+     source or compiled files.
+
+─────────────────────────────────────────────────────────────────────────────
+
+TIERS
+
+  Free tier    — Access to the MCP server (/mcp endpoint) and public API
+                 endpoints. No source access. Rate-limited.
+
+  Pro tier     — Full REST API access. Higher rate limits. Priority support.
+                 Contact: license@ternlang.com
+
+  Enterprise   — Source license to commercial-tier crates. On-premise
+                 deployment rights. SLA. Custom integrations.
+                 Contact: enterprise@ternlang.com
+
+─────────────────────────────────────────────────────────────────────────────
+
+OPEN CORE
+
+The open-core crates (ternlang-core, ternlang-codegen, ternlang-cli,
+ternlang-lsp, ternlang-compat, ternlang-test, ternpkg) are licensed
+separately under LGPL v3. See LICENSE-LGPL.
+
+─────────────────────────────────────────────────────────────────────────────
+
+DISCLAIMER
+
+THE COMMERCIAL-TIER SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+IN NO EVENT SHALL RFI-IRFOS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Contact: license@ternlang.com | https://ternlang.com
