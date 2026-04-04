@@ -34,7 +34,7 @@ use axum::{
     extract::{Path, Query, State},
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
-    response::{sse::{Event, Sse}, IntoResponse, Response},
+    response::{sse::{Event, Sse}, Html, IntoResponse, Response},
     routing::{delete, get, post},
 };
 use tokio_stream::StreamExt as TokioStreamExt;
@@ -259,7 +259,17 @@ async fn require_admin_key(
 
 // ─── GET / ───────────────────────────────────────────────────────────────────
 
-async fn root(State(state): State<Arc<AppState>>) -> Json<Value> {
+static INDEX_HTML: &str = include_str!("../../ternlang-web/index.html");
+
+async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Response {
+    // Serve the website to browsers; return JSON manifest to API clients.
+    let accept = headers
+        .get("accept")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    if accept.contains("text/html") {
+        return Html(INDEX_HTML).into_response();
+    }
     Json(json!({
         "name":    "Ternlang API",
         "version": state.version,
@@ -289,7 +299,7 @@ async fn root(State(state): State<Arc<AppState>>) -> Json<Value> {
             "description": "POST /mcp — all 10 tools available, no API key required",
         },
         "acquire_key": "https://ternlang.com/#licensing"
-    }))
+    })).into_response()
 }
 
 // ─── GET /health ─────────────────────────────────────────────────────────────
@@ -1153,14 +1163,26 @@ async fn mcp_server_card() -> Json<Value> {
     Json(json!({
         "name":        "ternlang",
         "displayName": "Ternlang — Ternary Intelligence Stack",
-        "version":     "0.1.0",
-        "description": "Turns any binary AI agent into a ternary decision engine. Adds the third state: hold (trit=0) — not indecision, a first-class routing instruction.",
+        "version":     "0.1.1",
+        "description": "Turns any binary AI agent into a ternary decision engine. Adds the third state: hold (trit=0) — not indecision, a first-class routing instruction that tells the agent to gather more data before committing.",
         "homepage":    "https://ternlang.com",
+        "icon":        "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/ternlang-root/ternlang-web/favicon.svg",
         "repository":  "https://github.com/eriirfos-eng/ternary-intelligence-stack",
         "protocol":    "2024-11-05",
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
         "auth":        { "type": "none" },
+        "configSchema": {
+            "type": "object",
+            "properties": {
+                "apiKey": {
+                    "type": "string",
+                    "title": "Ternlang API Key",
+                    "description": "Required for moe_orchestrate and premium REST endpoints. Pass as X-Ternlang-Key header. The 10 MCP tools work without a key. Get a key at https://ternlang.com/#licensing"
+                }
+            },
+            "required": []
+        },
         "tools": [
             "trit_decide", "trit_consensus", "trit_eval", "ternlang_run",
             "quantize_weights", "sparse_benchmark", "moe_orchestrate",
@@ -1552,53 +1574,120 @@ fn mcp_trit_enlighten() -> Result<Value, String> {
 
 fn mcp_tools_manifest() -> Value {
     json!({ "tools": [
-        { "name": "trit_decide",
-          "description": "Convert float evidence into a ternary decision (-1/0/+1) with confidence score and interpretation.",
+        {
+          "name": "trit_decide",
+          "description": "Convert float evidence into a ternary decision (-1 conflict / 0 hold / +1 affirm) with confidence score and human-readable interpretation. The core ternary reasoning primitive.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["evidence"],
-            "properties": { "evidence": { "type": "array", "items": {"type":"number"} },
-                            "threshold": { "type": "number" } } } },
-        { "name": "trit_consensus",
-          "description": "Balanced ternary consensus of two trits: +1 if both affirm, -1 if both reject, 0 otherwise.",
+            "properties": {
+              "evidence": { "type": "array", "items": {"type":"number"}, "description": "Array of float values in range [-1.0, 1.0]. Each value is one evidence dimension. Positive = supporting, negative = opposing, near-zero = ambiguous." },
+              "threshold": { "type": "number", "description": "Optional decision threshold in (0, 1). Values above threshold → affirm (+1), below negative threshold → conflict (-1), otherwise hold (0). Defaults to 0.3." }
+            }
+          }
+        },
+        {
+          "name": "trit_consensus",
+          "description": "Balanced ternary consensus of two trit values: +1 if both affirm, -1 if both conflict, 0 (hold) for any disagreement. Use to merge two independent ternary judgements.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["a","b"],
-            "properties": { "a": {"type":"number"}, "b": {"type":"number"} } } },
-        { "name": "trit_eval",
-          "description": "Evaluate a ternlang expression on the live BET VM.",
+            "properties": {
+              "a": { "type": "number", "description": "First trit value. Must be -1, 0, or +1." },
+              "b": { "type": "number", "description": "Second trit value. Must be -1, 0, or +1." }
+            }
+          }
+        },
+        {
+          "name": "trit_eval",
+          "description": "Evaluate a single ternlang expression on the live BET (Balanced Execution Trit) VM. Returns the trit result. Good for quick expression testing without writing a full program.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["expression"],
-            "properties": { "expression": {"type":"string"} } } },
-        { "name": "ternlang_run",
-          "description": "Compile and run a complete .tern program on the BET VM.",
+            "properties": {
+              "expression": { "type": "string", "description": "A ternlang expression to evaluate, e.g. 'trit_add(+1, -1)' or 'majority(+1, +1, -1)'. Must be valid ternlang syntax." }
+            }
+          }
+        },
+        {
+          "name": "ternlang_run",
+          "description": "Compile and run a complete .tern source program on the BET VM. Use for multi-statement programs, function definitions, struct usage, agent spawning, and tensor operations.",
+          "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["code"],
-            "properties": { "code": {"type":"string"} } } },
-        { "name": "quantize_weights",
-          "description": "Quantize f32 neural network weights to ternary {-1,0,+1} using BitNet-style thresholding.",
+            "properties": {
+              "code": { "type": "string", "description": "Full ternlang source code as a UTF-8 string. May contain fn definitions, let bindings, match expressions, struct defs, agent/spawn/send/await, and @sparseskip directives." }
+            }
+          }
+        },
+        {
+          "name": "quantize_weights",
+          "description": "Quantize f32 neural network weights to ternary {-1, 0, +1} using BitNet-style absolute-mean thresholding. Returns quantized weights, sparsity ratio, and effective compute savings.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["weights"],
-            "properties": { "weights": {"type":"array","items":{"type":"number"}},
-                            "threshold": {"type":"number"} } } },
-        { "name": "sparse_benchmark",
-          "description": "Run sparse vs dense ternary matrix multiplication benchmark.",
+            "properties": {
+              "weights": { "type": "array", "items": {"type":"number"}, "description": "Array of f32 neural network weights to quantize. Typically a flattened matrix row or layer." },
+              "threshold": { "type": "number", "description": "Optional quantization threshold. Weights with |w| < threshold become 0 (sparse). Defaults to 0.5× mean absolute value of the input weights (BitNet b1.58 heuristic)." }
+            }
+          }
+        },
+        {
+          "name": "sparse_benchmark",
+          "description": "Benchmark sparse vs dense ternary matrix multiplication. Reports sparsity ratio, multiply-op count for both methods, and speedup factor. Demonstrates the @sparseskip efficiency gain.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object",
-            "properties": { "size": {"type":"integer"}, "threshold": {"type":"number"} } } },
-        { "name": "moe_orchestrate",
-          "description": "Full MoE-13 orchestration pass with dual-key synergistic routing and safety veto.",
+            "properties": {
+              "size": { "type": "integer", "description": "Square matrix dimension N for the N×N benchmark. Defaults to 8. Larger sizes amplify the sparsity benefit." },
+              "threshold": { "type": "number", "description": "Sparsity threshold: weights with |w| below this value are treated as zero and skipped. Defaults to 0.3." }
+            }
+          }
+        },
+        {
+          "name": "moe_orchestrate",
+          "description": "Full MoE-13 orchestration pass. Routes the query through 13 specialised expert agents (syntax, world-knowledge, deductive, inductive, tool-use, persona, safety, fact-check, causal, ambiguity, math, context, meta-safety) with dual-key synergistic routing and a hard safety veto. Returns the aggregate ternary verdict, active expert list, confidence, and introspective hold flag.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
           "inputSchema": { "type": "object", "required": ["query"],
-            "properties": { "query": {"type":"string"},
-                            "evidence": {"type":"array","items":{"type":"number"}} } } },
-        { "name": "moe_deliberate",
-          "description": "EMA-based iterative deliberation engine. Feeds evidence round by round toward a confidence target.",
+            "properties": {
+              "query": { "type": "string", "description": "Natural-language query or statement for the expert ensemble to deliberate on. Can be a question, an action proposal, a claim to verify, or a text to analyse." },
+              "evidence": { "type": "array", "items": {"type":"number"}, "description": "Optional 6-element evidence vector [syntax, world_knowledge, reasoning, tool_use, persona, safety] in range [-1.0, 1.0]. Seeds the deliberation. Defaults to zeros if omitted." }
+            }
+          }
+        },
+        {
+          "name": "moe_deliberate",
+          "description": "EMA-based iterative deliberation engine. Feeds evidence round by round, applying exponential moving average smoothing, until the target confidence is reached or max_rounds is exhausted. Returns per-round trace and final trit verdict.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["target_confidence","rounds_evidence"],
-            "properties": { "target_confidence": {"type":"number"},
-                            "rounds_evidence": {"type":"array","items":{"type":"array","items":{"type":"number"}}},
-                            "alpha": {"type":"number"}, "max_rounds": {"type":"integer"} } } },
-        { "name": "trit_action_gate",
-          "description": "Multi-dimensional safety gate. Any dimension with hard_block:true and negative evidence vetoes the action.",
+            "properties": {
+              "target_confidence": { "type": "number", "description": "Confidence level (0.0–1.0) at which deliberation stops early. E.g. 0.85 means stop once the EMA confidence exceeds 85%." },
+              "rounds_evidence": { "type": "array", "items": {"type":"array","items":{"type":"number"}}, "description": "Array of evidence vectors, one per deliberation round. Each inner array is the same format as trit_decide's evidence parameter. Rounds are applied in order." },
+              "alpha": { "type": "number", "description": "EMA smoothing factor in (0, 1). Higher values weight recent evidence more heavily. Defaults to 0.3." },
+              "max_rounds": { "type": "integer", "description": "Maximum deliberation rounds before stopping, regardless of confidence. Defaults to 10." }
+            }
+          }
+        },
+        {
+          "name": "trit_action_gate",
+          "description": "Multi-dimensional safety gate for action authorisation. Each dimension contributes weighted evidence; any dimension marked hard_block:true with negative evidence immediately vetoes the action and returns trit=-1. Returns aggregate trit, per-dimension breakdown, and veto reason if blocked.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["dimensions"],
-            "properties": { "dimensions": { "type": "array",
-              "items": { "type": "object", "required": ["name","evidence","weight"],
-                "properties": { "name": {"type":"string"}, "evidence": {"type":"number"},
-                                "weight": {"type":"number"}, "hard_block": {"type":"boolean"} } } } } } },
-        { "name": "trit_enlighten",
-          "description": "Receive a piece of ternary wisdom. Try it.",
-          "inputSchema": { "type": "object", "properties": {} } }
+            "properties": {
+              "dimensions": { "type": "array",
+                "description": "Array of evaluation dimensions. Each entry names a dimension, provides an evidence score, a weight, and an optional hard-block flag.",
+                "items": { "type": "object", "required": ["name","evidence","weight"],
+                  "properties": {
+                    "name": { "type": "string", "description": "Human-readable dimension name, e.g. 'safety', 'reversibility', 'user_intent'." },
+                    "evidence": { "type": "number", "description": "Evidence score for this dimension in [-1.0, 1.0]. Negative = risk present, positive = risk absent." },
+                    "weight": { "type": "number", "description": "Relative weight of this dimension in the aggregate score. Values are normalised across all dimensions." },
+                    "hard_block": { "type": "boolean", "description": "If true and evidence < 0, this dimension unconditionally vetoes the action and returns trit=-1 regardless of other dimensions." }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "trit_enlighten",
+          "description": "Receive a rotating piece of ternary wisdom — philosophical, technical, or historical. A gentle reminder that the third state changes everything.",
+          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
+          "inputSchema": { "type": "object", "properties": {} }
+        }
     ]})
 }
 
