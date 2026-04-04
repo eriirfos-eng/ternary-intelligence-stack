@@ -1,0 +1,93 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// evidence_collector.tern — Low data density detection + clarification request
+//
+// The hold state is not a failure. It is a signal to the caller:
+//   "I do not have enough to decide. Give me more."
+//
+// This pattern is the ternary answer to premature commitment.
+// Binary systems are forced to guess when evidence is thin.
+// Ternary systems can formally say: "I don't know yet — here's what I need."
+//
+// Data density = ratio of decisive signals (non-zero) to total signals.
+// Low density → hold → clarification request.
+// High density → commit to a direction.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn is_decisive(signal: trit) -> trit {
+    // A signal is decisive if it is not hold
+    match signal {
+        -1 => { return truth(); }   // negative is decisive
+         0 => { return conflict(); } // hold is not decisive
+         1 => { return truth(); }   // positive is decisive
+    }
+}
+
+fn density_vote(s1: trit, s2: trit, s3: trit) -> trit {
+    // How many of three signals are decisive?
+    let d1: trit = is_decisive(s1);
+    let d2: trit = is_decisive(s2);
+    let d3: trit = is_decisive(s3);
+
+    // If fewer than two are decisive → low density → hold
+    let pair_ab: trit = consensus(d1, d2);
+    let pair_bc: trit = consensus(d2, d3);
+    let pair_ac: trit = consensus(d1, d3);
+
+    let any_pair: trit = consensus(pair_ab, pair_bc);
+
+    match any_pair {
+        -1 => { return hold();  }   // no decisive pairs → ask for more data
+         0 => { return hold();  }   // mixed → still not enough
+         1 => { return truth(); }   // two or more decisive → sufficient density
+    }
+}
+
+fn decide_with_density_check(
+    evidence_a: trit,
+    evidence_b: trit,
+    evidence_c: trit
+) -> trit {
+    // Step 1: check if we have enough signal to even make a call
+    let density_ok: trit = density_vote(evidence_a, evidence_b, evidence_c);
+
+    match density_ok {
+        -1 => {
+            // Should not happen given density_vote logic, but handle gracefully
+            return hold();
+        }
+         0 => {
+            // NOT ENOUGH DATA — return hold to signal caller to ask more questions
+            return hold();
+        }
+         1 => {
+            // Density sufficient — now make the actual decision
+            let combined_ab: trit = consensus(evidence_a, evidence_b);
+            let combined:    trit = consensus(combined_ab, evidence_c);
+            return combined;
+        }
+    }
+}
+
+// ── Scenario A: Sparse data — only one signal provided ───────────────────────
+// User answered one question, left two blank → not enough to decide
+let sparse_a: trit = truth();    // answered: "yes I want this feature"
+let sparse_b: trit = hold();     // skipped: "how urgent is it?"
+let sparse_c: trit = hold();     // skipped: "what's your use case?"
+
+let sparse_result: trit = decide_with_density_check(sparse_a, sparse_b, sparse_c);
+// → hold: need answers to at least two of three questions before proceeding
+
+// ── Scenario B: Dense data — all three signals present ───────────────────────
+let dense_a: trit = truth();     // wants feature: yes
+let dense_b: trit = truth();     // urgency: high
+let dense_c: trit = conflict();  // use case: not a match for this product
+
+let dense_result: trit = decide_with_density_check(dense_a, dense_b, dense_c);
+// → hold or conflict: contradictory signals (wants it but wrong use case)
+
+// Return the sparse result to demonstrate the hold-as-clarification pattern
+match sparse_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }   // ← this is the expected result: ask for more
+     1 => { return truth();   }
+}

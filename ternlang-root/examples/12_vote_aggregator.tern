@@ -1,0 +1,84 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// vote_aggregator.tern — Democratic voting where abstain is meaningful
+//
+// Binary voting: yes / no.
+// The problem: forced-choice voting with genuine uncertainty produces
+// strategic voting, random votes, or abstention counted as "no."
+//
+// Ternary voting:
+//   +1 = yes  — affirmative vote
+//    0 = abstain — "I have no strong opinion; I defer to the group"
+//   -1 = no   — negative vote
+//
+// Abstain is NOT a soft no. It is signal-carrying silence:
+//   "Remove my vote from the denominator when calculating majority."
+//
+// Quorum check: if too many abstain, the vote lacks mandate (hold).
+// Conflict check: if yes and no are tied within margin, the vote is contested.
+//
+// This is Condorcet ternary applied to small committee decisions.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn quorum_ok(
+    v1: trit, v2: trit, v3: trit, v4: trit, v5: trit
+) -> trit {
+    // Count decisive votes (non-abstain). Need at least 3 of 5.
+    // Using the density vote pattern from example 08.
+    let d1: trit = is_decisive(v1);
+    let d2: trit = is_decisive(v2);
+    let d3: trit = is_decisive(v3);
+    let d4: trit = is_decisive(v4);
+    let d5: trit = is_decisive(v5);
+
+    let row_a: trit = consensus(d1, d2);
+    let row_b: trit = consensus(d3, d4);
+    let mid:   trit = consensus(row_a, row_b);
+    let all:   trit = consensus(mid, d5);
+    return all;
+}
+
+fn is_decisive(v: trit) -> trit {
+    match v {
+        -1 => { return truth(); }
+         0 => { return conflict(); }
+         1 => { return truth(); }
+    }
+}
+
+fn aggregate_votes(
+    v1: trit, v2: trit, v3: trit, v4: trit, v5: trit
+) -> trit {
+    // First: do we have quorum?
+    let quorum: trit = quorum_ok(v1, v2, v3, v4, v5);
+    match quorum {
+        -1 => { return hold(); }   // too many abstentions — no mandate
+         0 => { return hold(); }   // borderline — recount or extend deadline
+         1 => {
+            // Quorum met — aggregate the decisive votes
+            let ab:    trit = consensus(v1, v2);
+            let abc:   trit = consensus(ab, v3);
+            let abcd:  trit = consensus(abc, v4);
+            let total: trit = consensus(abcd, v5);
+            return total;
+         }
+    }
+}
+
+// ── Board vote: "Should we open-source the ternlang MoE module?" ─────────────
+let member_a: trit = truth();     // yes — strategic advantage
+let member_b: trit = truth();     // yes — community trust
+let member_c: trit = conflict();  // no  — competitive moat
+let member_d: trit = hold();      // abstain — conflict of interest
+let member_e: trit = truth();     // yes — developer ecosystem
+
+let resolution: trit = aggregate_votes(member_a, member_b, member_c, member_d, member_e);
+
+// Quorum: 4 decisive votes out of 5 → quorum met
+// Consensus: 3 yes, 1 no → truth (yes wins)
+// → Motion carries with clear majority
+
+match resolution {
+    -1 => { return conflict(); }   // REJECTED — motion fails
+     0 => { return hold();    }   // NO MANDATE — revote or defer
+     1 => { return truth();   }   // PASSED — motion carries
+}

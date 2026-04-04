@@ -1,0 +1,61 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// medical_triage.tern — Emergency room triage in balanced ternary
+//
+// Binary triage: stable / unstable.
+// Ternary triage: stable / observe / critical.
+//
+// The "observe" (hold) category is not a waiting room — it is active monitoring.
+// A patient in the hold zone is being watched for the next signal that will
+// commit them to stable or critical. This maps exactly to trit = 0.
+//
+// Vital signs each vote independently. The triage protocol aggregates them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn vital_sign(reading: trit, normal_range: trit) -> trit {
+    // Within range = stable, outside range = critical, edge = observe
+    let deviation: trit = consensus(reading, normal_range);
+    match deviation {
+        -1 => { return conflict(); }   // critically out of range
+         0 => { return hold();    }   // borderline — keep watching
+         1 => { return truth();   }   // within normal limits
+    }
+}
+
+fn triage(heart_rate: trit, bp: trit, oxygen: trit, consciousness: trit) -> trit {
+    // Consciousness is a hard gate — unconscious = critical regardless
+    match consciousness {
+        -1 => { return conflict(); }   // immediate intervention
+
+         0 => {
+            // Altered consciousness — check other vitals to guide urgency
+            let vitals: trit = consensus(heart_rate, bp);
+            match vitals {
+                -1 => { return conflict(); }   // deteriorating — critical
+                 0 => { return hold();    }   // stable-ish — observe closely
+                 1 => { return hold();    }   // good vitals, altered consciousness → still observe
+            }
+         }
+
+         1 => {
+            // Conscious and oriented — full vital sign assessment
+            let cardio:  trit = consensus(heart_rate, bp);
+            let resp:    trit = oxygen;
+            let overall: trit = consensus(cardio, resp);
+            return overall;
+         }
+    }
+}
+
+// Patient presenting: chest pain, mild breathlessness
+let heart_rate:    trit = hold();      // 105 bpm — borderline tachycardia
+let blood_pressure: trit = truth();   // 128/82 — acceptable
+let oxygen_sat:    trit = hold();     // 94% — slightly low
+let consciousness: trit = truth();    // alert and oriented
+
+let triage_result: trit = triage(heart_rate, blood_pressure, oxygen_sat, consciousness);
+
+match triage_result {
+    -1 => { return conflict(); }   // CRITICAL — immediate resuscitation bay
+     0 => { return hold();    }   // OBSERVE — monitored bed, 15-min checks
+     1 => { return truth();   }   // STABLE — waiting room + 1-hour recheck
+}

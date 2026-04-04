@@ -1,0 +1,95 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// cache_invalidation.tern — Ternary cache freshness model
+//
+// Phil Karlton famously said: "There are only two hard problems in computer
+// science: cache invalidation and naming things."
+//
+// The problem with binary cache models: a cache entry is either VALID or INVALID.
+// This binary collapses two very different states:
+//   a) the entry is definitely stale (TTL expired, origin returned 200 with new data)
+//   b) the entry's freshness is UNKNOWN (network partition, origin unreachable)
+//
+// Binary CDNs handle (b) by either: serving stale (risky) or returning 503 (wasteful).
+// Ternary cache adds a third answer: STALE-WHILE-REVALIDATE.
+//
+//   +1 = FRESH     — serve from cache immediately
+//    0 = UNCERTAIN — serve stale, trigger background revalidation, mark staleness
+//   -1 = INVALID   — purge entry, fetch from origin, block request until done
+//
+// This is literally how HTTP cache-control works (stale-while-revalidate directive).
+// The web already invented this. Ternlang names it properly.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn ttl_status(
+    ttl_remaining:  trit,   // +1=plenty, 0=about to expire, -1=expired
+    etag_match:     trit,   // origin ETag matches? +1=yes, 0=unchecked, -1=mismatch
+    max_stale_ok:   trit    // is serving stale allowed by cache-control policy?
+) -> trit {
+    match ttl_remaining {
+        1 => {
+            // TTL healthy — check ETag for extra certainty
+            match etag_match {
+                -1 => { return conflict(); }   // ETag mismatch even with good TTL — purge
+                 0 => { return truth();   }   // ETag unchecked but TTL good — serve fresh
+                 1 => { return truth();   }   // ETag matches — definitely fresh
+            }
+         }
+
+         0 => {
+            // TTL borderline — serve stale if policy allows
+            match max_stale_ok {
+                -1 => { return conflict(); }   // policy says never serve stale — invalidate
+                 0 => { return hold();    }   // policy unclear — serve stale + revalidate
+                 1 => { return hold();    }   // policy allows stale — serve + revalidate
+            }
+         }
+
+        -1 => {
+            // TTL expired — can we serve stale at all?
+            match max_stale_ok {
+                -1 => { return conflict(); }   // cannot serve stale — must fetch from origin
+                 0 => { return conflict(); }   // borderline policy, TTL expired — fetch
+                 1 => { return hold();    }   // stale-while-revalidate — serve + background fetch
+            }
+         }
+    }
+}
+
+fn serve_request(cache_status: trit, origin_available: trit) -> trit {
+    match cache_status {
+        1 => { return truth(); }   // FRESH — serve from cache, don't touch origin
+
+        0 => {
+            // UNCERTAIN — serve stale, trigger background revalidation
+            return hold();    // caller: return cached copy + async revalidate
+         }
+
+        -1 => {
+            // INVALID — must fetch from origin
+            match origin_available {
+                -1 => { return conflict(); }   // origin down AND cache invalid → 503
+                 0 => { return hold();    }   // origin uncertain → serve stale if possible
+                 1 => { return truth();   }   // origin up → fetch and repopulate
+            }
+         }
+    }
+}
+
+// ── CDN node: entry with 30s TTL remaining, ETag unchecked, stale-while-revalidate allowed
+let ttl:          trit = hold();      // 30 seconds left — borderline
+let etag:         trit = hold();      // conditional GET not yet sent
+let stale_policy: trit = truth();     // cache-control: stale-while-revalidate=3600
+
+let origin_up:    trit = truth();     // origin responding normally
+
+let freshness: trit = ttl_status(ttl, etag, stale_policy);
+let response:  trit = serve_request(freshness, origin_up);
+
+// → hold: serve the cached copy immediately, trigger background revalidation
+//         user gets fast response, cache stays fresh
+
+match response {
+    -1 => { return conflict(); }   // FETCH REQUIRED — block until origin responds
+     0 => { return hold();    }   // STALE-WHILE-REVALIDATE — serve now, update async
+     1 => { return truth();   }   // FRESH — serve from cache, no origin contact
+}

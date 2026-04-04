@@ -1,0 +1,109 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// loan_underwriter.tern — Credit decision with ternary risk assessment
+//
+// Binary lending: approve / deny.
+// The problem: binary systems push borderline applicants into one bucket,
+// producing both over-rejection (lost revenue) and over-approval (bad debt).
+//
+// Ternary underwriting:
+//   +1 = approve — clear credit quality
+//    0 = refer   — human underwriter reviews
+//   -1 = decline — clear risk indicators
+//
+// The "refer" channel is not a soft decline. It is the mechanism by which
+// borderline applications get a fair hearing — and by which the model
+// limits its own authority to cases it is confident about.
+//
+// This is how responsible automated decision-making is built.
+// Trit = 0 is not indecision. It is epistemic humility with a routing label.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn score_credit_history(
+    payment_record: trit,   // +1=excellent, 0=some lates, -1=defaults/collections
+    utilization:    trit,   // +1=low (<30%), 0=moderate, -1=high (>80%)
+    length:         trit    // +1=>5yr history, 0=2-5yr, -1=thin file
+) -> trit {
+    let base: trit = consensus(payment_record, utilization);
+    let full: trit = consensus(base, length);
+    return full;
+}
+
+fn score_capacity(
+    dti_ratio:     trit,   // debt-to-income: +1=low, 0=moderate, -1=high
+    income_stable: trit,   // +1=salaried/long-tenure, 0=variable, -1=self-emp/gaps
+    reserves:      trit    // +1=6mo expenses, 0=1-3mo, -1=no reserves
+) -> trit {
+    // DTI is the hardest gate in capacity scoring
+    match dti_ratio {
+        -1 => { return conflict(); }   // DTI too high — can't service the debt
+         0 => {
+            let other: trit = consensus(income_stable, reserves);
+            match other {
+                -1 => { return conflict(); }
+                 0 => { return hold();    }   // borderline across all factors
+                 1 => { return hold();    }   // DTI marginal even with good income
+            }
+         }
+         1 => {
+            let other: trit = consensus(income_stable, reserves);
+            return other;
+         }
+    }
+}
+
+fn underwrite(
+    credit_score: trit,
+    capacity_score: trit,
+    collateral: trit    // property value vs loan amount: +1=adequate, 0=borderline, -1=insufficient
+) -> trit {
+    // Collateral is a risk floor — insufficient collateral limits approval
+    match collateral {
+        -1 => {
+            // Poor collateral — only approve if credit AND capacity are excellent
+            let both: trit = consensus(credit_score, capacity_score);
+            match both {
+                 1 => { return hold();    }   // exceptional borrower, poor collateral → refer
+                 0 => { return hold();    }   // mixed — refer
+                -1 => { return conflict(); }  // everything bad — decline
+            }
+         }
+         0 => {
+            // Marginal collateral — any weakness → refer
+            let combined: trit = consensus(credit_score, capacity_score);
+            match combined {
+                 1 => { return hold();    }   // good borrower, marginal collateral → refer
+                 0 => { return hold();    }   // borderline everything → refer
+                -1 => { return conflict(); }  // bad borrower, marginal collateral → decline
+            }
+         }
+         1 => {
+            // Adequate collateral — standard underwriting
+            let combined: trit = consensus(credit_score, capacity_score);
+            return combined;
+         }
+    }
+}
+
+// ── Application: first-time buyer, good job, low savings ─────────────────────
+let payment_record: trit = truth();     // perfect payment history
+let utilization:    trit = truth();     // low credit card utilization
+let history_length: trit = hold();      // only 3 years of credit history
+
+let dti:            trit = truth();     // low debt-to-income
+let income:         trit = truth();     // stable salaried employment
+let reserves:       trit = conflict();  // less than 1 month emergency fund
+
+let collateral_val: trit = truth();     // property appraised at 85% LTV
+
+let credit: trit   = score_credit_history(payment_record, utilization, history_length);
+let capacity: trit = score_capacity(dti, income, reserves);
+let decision: trit = underwrite(credit, capacity, collateral_val);
+
+// → hold: good credit and income, but no reserves — refer to human underwriter
+//         underwriter may approve with condition: 2-month reserves at close
+
+match decision {
+    -1 => { return conflict(); }   // DECLINE — send adverse action notice
+     0 => { return hold();    }   // REFER — queue for human underwriter
+     1 => { return truth();   }   // APPROVE — generate offer letter
+}

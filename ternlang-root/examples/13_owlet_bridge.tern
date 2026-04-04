@@ -1,0 +1,90 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// owlet_bridge.tern — S-expression evaluator decision model
+//
+// Owlet is a ternary S-expression interpreter in Node.js.
+// It evaluates symbolic expressions in balanced ternary — think Lisp,
+// but with three truth values instead of two.
+//
+// This file models the *evaluation pipeline decision logic* that a ternary
+// S-expression interpreter needs at each node:
+//
+//   Can I evaluate this atom?          → truth / hold / conflict
+//   Are my subexpressions all resolved? → wait for them / fail / proceed
+//   Is the operator valid?             → apply / stall / error
+//
+// The ternary eval loop does not crash on partial evaluation.
+// It holds, returns to the scheduler, and resumes when dependencies resolve.
+// This is cooperative ternary evaluation — analogous to async/await,
+// but expressed as a native trit at every node of the expression tree.
+//
+// Reference: Owlet — ternary S-expression interpreter (Node.js, open source)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn eval_atom(
+    is_bound:    trit,   // is this symbol bound in the current env?
+    type_ok:     trit,   // does the binding have the expected type?
+    value_ready: trit    // has the value been computed (not a thunk)?
+) -> trit {
+    match is_bound {
+        -1 => { return conflict(); }   // unbound symbol — eval error
+         0 => { return hold();    }   // symbol exists but not yet bound — lazy eval
+         1 => {
+            let usable: trit = consensus(type_ok, value_ready);
+            return usable;
+         }
+    }
+}
+
+fn eval_list(
+    car_evaled: trit,   // head (operator) evaluated?
+    cdr_evaled: trit,   // tail (arguments) all evaluated?
+    op_valid:   trit    // is the operator applicable to these argument types?
+) -> trit {
+    // Must have both operator and arguments before applying
+    let args_ready: trit = consensus(car_evaled, cdr_evaled);
+    match args_ready {
+        -1 => { return conflict(); }   // eval error in subexpr — propagate up
+         0 => { return hold();    }   // waiting for subexpressions — suspend
+         1 => {
+            // Both ready — check operator applicability
+            match op_valid {
+                -1 => { return conflict(); }   // type error — arity or type mismatch
+                 0 => { return hold();    }   // operator not yet resolved (higher-order)
+                 1 => { return truth();   }   // apply — produce result
+            }
+         }
+    }
+}
+
+fn eval_node(is_atom: trit, atom_result: trit, list_result: trit) -> trit {
+    // Dispatch: atom or list?
+    match is_atom {
+        1  => { return atom_result; }   // atom path result
+        -1 => { return list_result; }   // list path result
+         0 => { return hold();      }   // type not yet determined — malformed or partial
+    }
+}
+
+// ── Example: evaluating (consensus T F) ──────────────────────────────────────
+// The expression is a 3-element list: operator=consensus, arg1=T, arg2=F
+// All symbols are bound, types match, operator is valid
+
+let op_ready:   trit = truth();     // consensus is a known builtin
+let arg1_ready: trit = truth();     // T is bound to truth()
+let arg2_ready: trit = truth();     // F is bound to conflict()
+
+let car_ev: trit = eval_atom(truth(), truth(), op_ready);
+let cdr_ev: trit = eval_atom(truth(), truth(), consensus(arg1_ready, arg2_ready));
+
+let list_ev: trit = eval_list(car_ev, cdr_ev, truth());
+
+// is_atom = -1 → this is a list node
+let node_result: trit = eval_node(conflict(), hold(), list_ev);
+
+// → truth: expression fully evaluates, result is ready to return up the tree
+
+match node_result {
+    -1 => { return conflict(); }   // EVAL ERROR — propagate exception
+     0 => { return hold();    }   // SUSPENDED — re-enqueue for next eval tick
+     1 => { return truth();   }   // EVALUATED — result in register
+}
