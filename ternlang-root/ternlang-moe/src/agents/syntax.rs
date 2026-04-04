@@ -5,17 +5,42 @@ pub struct SyntaxAgent;
 
 impl TernaryAgent for SyntaxAgent {
     fn deliberate(&self, query: &str, ev: &[f32]) -> ExpertVerdict {
-        let markers = ["(", ")", "[", "]", "{", "}", ";", ".", ",", "```"];
-        let count: usize = markers.iter().map(|m| query.matches(m).count()).sum();
-        
+        // Positive: rich, well-formed structural tokens
+        let structure_tokens = ["fn ", "let ", "match ", "->", "::", "impl ", "struct ", "```",
+                                 "pub ", "use ", "return ", "if ", "else ", "for ", "while "];
+        let rich_punct = ["(", ")", "[", "]", "{", "}", ";", ":"];
+        let pos = structure_tokens.iter().map(|s| query.matches(s).count()).sum::<usize>()
+                + rich_punct.iter().map(|s| query.matches(s).count()).sum::<usize>();
+
+        // Negative: bracket imbalance signals malformed structure
+        let opens  = query.chars().filter(|&c| c == '(' || c == '[' || c == '{').count();
+        let closes = query.chars().filter(|&c| c == ')' || c == ']' || c == '}').count();
+        let imbalance = (opens as i32 - closes as i32).unsigned_abs() as usize;
+
+        // Hold detector: some structure present but ambiguous (single token, no context)
+        let words = query.split_whitespace().count();
+        let density = if words > 0 { pos as f32 / words as f32 } else { 0.0 };
+
         let ev_signal = ev.get(0).copied().unwrap_or(0.0);
-        let trit = if count > 5 || ev_signal > 0.5 { 1 } else if count > 0 { 0 } else { -1 };
-        let confidence = (0.7 + (count as f32 * 0.05).min(0.25) + ev_signal.abs() * 0.05).clamp(0.0, 1.0);
+        let raw = pos as f32 * 0.4 - imbalance as f32 * 1.8 + ev_signal * 1.5;
+
+        let trit: i8 = if raw > 1.2 { 1 } else if raw < -1.0 || imbalance > 3 { -1 } else { 0 };
+
+        let confidence = (0.60 + (density * 0.25).min(0.35) + ev_signal.abs() * 0.05)
+            .clamp(0.0, 1.0);
 
         ExpertVerdict {
             trit,
             confidence,
-            reasoning: format!("Found {} structural markers. Structural complexity is {}.", count, if count > 10 { "high" } else if count > 3 { "moderate" } else { "low" }),
+            reasoning: format!(
+                "Structural tokens: {}, bracket imbalance: {}, token density: {:.2}. Structure is {}.",
+                pos, imbalance, density,
+                match trit {
+                    1  => "well-formed and rich",
+                    0  => "partial — holding for structural completeness",
+                    _  => "malformed or critically unbalanced",
+                }
+            ),
             expert_id: 0,
             expert_name: "Syntax".into(),
         }

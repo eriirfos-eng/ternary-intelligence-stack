@@ -15,4 +15,4 @@ pub use parser::Parser;
 pub use semantic::SemanticAnalyzer;
 pub use codegen::betbc::BytecodeEmitter;
 pub use vm::BetVm;
-pub use stdlib::StdlibLoader;
+pub use stdlib::{StdlibLoader, ModuleResolver};

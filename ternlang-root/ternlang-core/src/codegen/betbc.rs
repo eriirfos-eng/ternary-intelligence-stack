@@ -523,6 +523,27 @@ impl BytecodeEmitter {
                 self.code.push(0x01);
                 self.code.extend(pack_trits(&[Trit::Zero]));
             }
+            Expr::Propagate { expr } => {
+                // Evaluate inner expression → stack: [val]
+                self.emit_expr(expr);
+                // TDUP → [val, dup]
+                self.code.push(0x0a);
+                // TJMP_NEG to propagate path — consumes dup; if -1 jumps, else [val] remains
+                let neg_patch = self.code.len() + 1;
+                self.code.push(0x07); // TJMP_NEG
+                self.code.extend_from_slice(&[0u8, 0u8]);
+                // Not -1: skip over the early return
+                let skip_patch = self.code.len() + 1;
+                self.code.push(0x0b); // TJMP
+                self.code.extend_from_slice(&[0u8, 0u8]);
+                // propagate path: val=-1 is still on stack — TRET returns it
+                let prop_addr = self.code.len() as u16;
+                self.patch_u16(neg_patch, prop_addr);
+                self.code.push(0x11); // TRET
+                // skip label: continue with val on stack
+                let skip_addr = self.code.len() as u16;
+                self.patch_u16(skip_patch, skip_addr);
+            }
             Expr::Cast { expr, .. } => {
                 // cast() is a no-op at the BET level — trits are already in canonical form.
                 // Emit the inner expression; the type annotation guides the type checker only.
@@ -569,6 +590,19 @@ impl BytecodeEmitter {
                 self.code.push(0x32); // TAWAIT
             }
             _ => {}
+        }
+    }
+
+    /// Emit a TCALL to a named function.  Call this after `emit_program()` to
+    /// create an entry point that executes a specific function (typically `main`).
+    /// The TJMP in `emit_program` already points past all function bodies, so
+    /// code appended here is what actually runs at startup.
+    ///
+    /// The function's return value will be on the stack when the VM halts.
+    pub fn emit_entry_call(&mut self, func_name: &str) {
+        if let Some(&addr) = self.func_addrs.get(func_name) {
+            self.code.push(0x10); // TCALL — push return addr, jump to func
+            self.code.extend_from_slice(&addr.to_le_bytes());
         }
     }
 

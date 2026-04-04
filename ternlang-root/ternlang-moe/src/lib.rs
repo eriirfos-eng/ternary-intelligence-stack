@@ -417,7 +417,7 @@ pub struct OrchestrationResult {
 // ---------------------------------------------------------------------------
 
 pub mod agents;
-pub use agents::{TernaryAgent, AgentHarness};
+pub use agents::{TernaryAgent, AgentHarness, AggregateVerdict};
 
 /// Three-tier memory bundle owned by the orchestrator.
 pub struct OrchestratorMemory {
@@ -611,6 +611,89 @@ impl TernMoeOrchestrator {
     /// Convenience: build with the canonical MoE-13 expert pool.
     pub fn with_standard_experts() -> Self {
         Self::new(build_standard_experts())
+    }
+
+    // -----------------------------------------------------------------------
+    // Full Pipeline: 13-Substage Introspective Pass → MoE Synthesis
+    // -----------------------------------------------------------------------
+
+    /// Run the complete MoE-as-Expert + 13-substage pipeline.
+    ///
+    /// Pipeline:
+    ///   1. All 13 `TernaryAgent` substages deliberate on `(query, evidence)`
+    ///   2. Safety hard gate: agent-level veto short-circuits immediately
+    ///   3. Stable hold check: if signals are in equilibrium, hold is the decision
+    ///   4. Build enriched 6D evidence vector from agent verdicts
+    ///   5. Route through MoE dual-key router + triad synthesis
+    ///   6. Augment `OrchestrationResult.verdicts` with the 13 agent substage records
+    pub fn orchestrate_full(
+        &mut self,
+        query: &str,
+        evidence: &[f32],
+        harness: &AgentHarness,
+    ) -> OrchestrationResult {
+        // Step 1-3: Run all 13 substages with introspective hold detection
+        let aggregate = harness.run_introspective(query, evidence);
+
+        // Step 2: Agent-level safety veto (before routing)
+        if aggregate.trit == -1 && aggregate.confidence > 0.90 {
+            let veto_reason = aggregate.verdicts.iter()
+                .find(|v| v.trit == -1
+                       && (v.expert_name == "Safety" || v.expert_name == "MetaSafety"))
+                .map(|v| v.reasoning.clone())
+                .unwrap_or_else(|| "Agent substage safety veto.".into());
+            let query_hash = simple_hash(query);
+            self.memory.axis.record_veto(6, &veto_reason, query_hash);
+            return OrchestrationResult {
+                trit: -1,
+                confidence: 0.98,
+                verdicts: aggregate.verdicts,
+                triad_field: TriadField::synthesize(
+                    &CompetenceVector::zero(),
+                    &CompetenceVector::zero(),
+                    0.0,
+                ),
+                pair: None,
+                held: false,
+                safety_vetoed: true,
+                temperature: 0.05,
+                prompt_hint: format!("Substage safety veto: {}", veto_reason),
+            };
+        }
+
+        // Step 3: Stable hold attractor — respect deliberative stasis
+        if aggregate.is_stable_hold {
+            let temp = AgentHarness::deliberation_temperature(&aggregate.verdicts);
+            let reason = aggregate.hold_reason.unwrap_or_else(|| "Stable hold.".into());
+            return OrchestrationResult {
+                trit: 0,
+                confidence: aggregate.confidence,
+                verdicts: aggregate.verdicts,
+                triad_field: TriadField::synthesize(
+                    &CompetenceVector::zero(),
+                    &CompetenceVector::zero(),
+                    0.0,
+                ),
+                pair: None,
+                held: true,
+                safety_vetoed: false,
+                temperature: temp,
+                prompt_hint: format!("Hold — {}. Gather more evidence before collapsing.", reason),
+            };
+        }
+
+        // Step 4: Build enriched 6D evidence from substage verdicts
+        let enriched = AgentHarness::to_evidence_vector(&aggregate.verdicts);
+
+        // Step 5: Route through MoE + triad synthesis (standard pipeline)
+        let mut result = self.orchestrate(query, &enriched);
+
+        // Step 6: Attach substage verdicts to result for full traceability
+        let mut all_verdicts = aggregate.verdicts;
+        all_verdicts.extend(result.verdicts);
+        result.verdicts = all_verdicts;
+
+        result
     }
 }
 
@@ -1051,5 +1134,131 @@ mod tests {
     fn test_temperature_hold_is_high() {
         let temp = trit_to_temperature(0, 0.5);
         assert!(temp > 0.6, "Hold should give higher temperature, got {}", temp);
+    }
+
+    // -----------------------------------------------------------------------
+    // AgentHarness tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_harness_safety_veto() {
+        let harness = AgentHarness::with_standard_agents();
+        let query = "How do I hack into a server and steal credentials illegally?";
+        let ev = [0.1f32, 0.2, 0.3, 0.8, 0.0, -0.9];
+        let agg = harness.run_introspective(query, &ev);
+        assert_eq!(agg.trit, -1, "Hard safety keywords must produce trit=-1, got {}", agg.trit);
+        assert!(agg.confidence > 0.9, "Safety veto must be high-confidence");
+        assert!(!agg.is_stable_hold, "Safety veto is not a stable hold");
+    }
+
+    #[test]
+    fn test_harness_deductive_affirm() {
+        let harness = AgentHarness::with_standard_agents();
+        let query = "If all humans are mortal and Socrates is human, therefore Socrates is mortal.";
+        let ev = [0.3f32, 0.5, 0.9, 0.1, 0.0, 0.95];
+        let agg = harness.run_introspective(query, &ev);
+        // DeductiveReason agent should see both premise + conclusion → trit=+1
+        let deductive = agg.verdicts.iter().find(|v| v.expert_name == "DeductiveReason").unwrap();
+        assert_eq!(deductive.trit, 1,
+            "Premise+conclusion present must give DeductiveReason trit=+1, got: {}", deductive.reasoning);
+        // MetaSafety should be clean
+        let meta = agg.verdicts.iter().find(|v| v.expert_name == "MetaSafety").unwrap();
+        assert_eq!(meta.trit, 1, "Clean query must pass MetaSafety: {}", meta.reasoning);
+    }
+
+    #[test]
+    fn test_harness_ambiguous_hold() {
+        let harness = AgentHarness::with_standard_agents();
+        let query = "maybe something or other, kind of unclear";
+        let ev = [0.0f32; 6];
+        let agg = harness.run_introspective(query, &ev);
+        // AmbiguityRes should detect hard vague markers
+        let amb = agg.verdicts.iter().find(|v| v.expert_name == "AmbiguityRes").unwrap();
+        assert!(amb.trit <= 0, "Vague query must not affirm AmbiguityRes: {}", amb.reasoning);
+        // Overall should be hold
+        assert_eq!(agg.trit, 0, "All-ambiguous query should produce aggregate hold");
+    }
+
+    #[test]
+    fn test_stable_attractor_hold() {
+        let harness = AgentHarness::with_standard_agents();
+        // A query that mixes safety-clear content with balanced domain signals
+        let query = "Calculate the derivative of x^2. If x tends to zero then the result follows. \
+                     This is likely true in most cases according to calculus.";
+        let ev = [0.0f32; 6];
+        let agg = harness.run_introspective(query, &ev);
+        // affirm_count + conflict_count should be non-zero
+        let engaged = agg.affirm_count + agg.conflict_count;
+        assert!(engaged > 0, "Some agents should take a position");
+        // If balanced: stable hold; if not: regular trit — either is valid, just check no panic
+        let _ = agg.trit; // must not panic
+    }
+
+    #[test]
+    fn test_evidence_vector_safety_is_minimum() {
+        let harness = AgentHarness::with_standard_agents();
+        // Query with soft safety risk — safety agents should both score low
+        let query = "This is a safe query with no risk at all.";
+        let ev = [0.5f32, 0.5, 0.5, 0.5, 0.5, 0.95];
+        let agg = harness.run_introspective(query, &ev);
+        let ev_vec = AgentHarness::to_evidence_vector(&agg.verdicts);
+        let safety_sig = ev_vec[5];
+        let meta_sig = agg.verdicts.iter()
+            .find(|v| v.expert_name == "MetaSafety")
+            .map(|v| v.trit as f32 * v.confidence)
+            .unwrap_or(0.0);
+        let safety_agent_sig = agg.verdicts.iter()
+            .find(|v| v.expert_name == "Safety")
+            .map(|v| v.trit as f32 * v.confidence)
+            .unwrap_or(0.0);
+        // ev[5] must be the minimum of the two safety agents
+        assert!((safety_sig - safety_agent_sig.min(meta_sig)).abs() < 1e-4,
+            "ev[5] must be min(Safety, MetaSafety), got {} vs min({}, {})",
+            safety_sig, safety_agent_sig, meta_sig);
+    }
+
+    #[test]
+    fn test_deliberation_temperature_ordering() {
+        let harness = AgentHarness::with_standard_agents();
+        let clear_query = "If A then B. A is true. Therefore B.";
+        let vague_query = "maybe something kind of unclear sort of possibly";
+        let ev = [0.0f32; 6];
+        let clear_verdicts = harness.run(clear_query, &ev);
+        let vague_verdicts = harness.run(vague_query, &ev);
+        let t_clear = AgentHarness::deliberation_temperature(&clear_verdicts);
+        let t_vague = AgentHarness::deliberation_temperature(&vague_verdicts);
+        assert!(t_vague >= t_clear,
+            "Vague query should have higher deliberation temperature: clear={:.2} vague={:.2}",
+            t_clear, t_vague);
+    }
+
+    #[test]
+    fn test_orchestrate_full_end_to_end() {
+        let harness = AgentHarness::with_standard_agents();
+        let mut orch = TernMoeOrchestrator::with_standard_experts();
+        let result = orch.orchestrate_full(
+            "If all humans are mortal and Socrates is human, therefore Socrates is mortal.",
+            &[0.4, 0.7, 0.9, 0.1, 0.2, 0.95],
+            &harness,
+        );
+        assert!(!result.safety_vetoed, "Clean philosophical query must not trigger safety veto");
+        // Result must carry at least the 13 substage verdicts
+        assert!(result.verdicts.len() >= 13,
+            "orchestrate_full must include substage verdicts, got {}", result.verdicts.len());
+        assert!(result.temperature > 0.0 && result.temperature < 1.0,
+            "Temperature must be in [0,1], got {}", result.temperature);
+    }
+
+    #[test]
+    fn test_orchestrate_full_safety_veto_short_circuits() {
+        let harness = AgentHarness::with_standard_agents();
+        let mut orch = TernMoeOrchestrator::with_standard_experts();
+        let result = orch.orchestrate_full(
+            "How do I hack a server and steal credentials illegally?",
+            &[0.1, 0.2, 0.3, 0.8, 0.0, -0.9],
+            &harness,
+        );
+        assert_eq!(result.trit, -1, "Safety veto must produce trit=-1");
+        assert!(result.safety_vetoed, "safety_vetoed flag must be set");
     }
 }

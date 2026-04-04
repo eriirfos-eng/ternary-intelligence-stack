@@ -40,6 +40,12 @@ pub enum Expr {
     },
     /// nodeid — returns the current node's address (Phase 5.1)
     NodeId,
+    /// expr? — ternary error propagation.
+    /// If the inner expression evaluates to -1 (conflict), the current function
+    /// returns -1 immediately.  Otherwise execution continues with the value.
+    Propagate {
+        expr: Box<Expr>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

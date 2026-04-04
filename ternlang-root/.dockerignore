@@ -1,0 +1,24 @@
+# flyctl launch added from target/package/ternlang-cli-0.1.0/.gitignore
+target/package/ternlang-cli-0.1.0/target
+
+# flyctl launch added from target/package/ternlang-core-0.1.0/.gitignore
+target/package/ternlang-core-0.1.0/target
+
+# flyctl launch added from target/package/ternlang-ml-0.1.0/.gitignore
+target/package/ternlang-ml-0.1.0/target
+
+# flyctl launch added from ternlang-cli/.gitignore
+ternlang-cli/target
+
+# flyctl launch added from ternlang-codegen/.gitignore
+ternlang-codegen/target
+
+# flyctl launch added from ternlang-core/.gitignore
+ternlang-core/target
+
+# flyctl launch added from ternlang-ml/.gitignore
+ternlang-ml/target
+
+# flyctl launch added from ternlang-test/.gitignore
+ternlang-test/target
+fly.toml
