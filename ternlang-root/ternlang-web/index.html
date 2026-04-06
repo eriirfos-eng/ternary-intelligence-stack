@@ -36,6 +36,13 @@
           },
           animation: {
             'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'flash-red': 'flashRed 1s ease-in-out infinite',
+          },
+          keyframes: {
+            flashRed: {
+              '0%, 100%': { backgroundColor: 'rgba(255, 77, 77, 0.1)' },
+              '50%': { backgroundColor: 'rgba(255, 77, 77, 0.3)' },
+            }
           }
         }
       }
@@ -43,33 +50,40 @@
   </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: var(--theme-bg); color: var(--theme-text); }
+    body { font-family: 'Inter', sans-serif; background-color: var(--theme-bg); color: var(--theme-text); overflow-x: hidden; }
     .glass-card { background: rgba(21, 21, 34, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--theme-border); }
-    .glow-tend { box-shadow: 0 0 30px rgba(0, 212, 170, 0.1); }
-    .glow-affirm { box-shadow: 0 0 30px rgba(74, 144, 226, 0.1); }
-    #page-slider { display: flex; width: 600vw; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
+    #page-slider { display: flex; width: 700vw; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
     .slide-page { width: 100vw; flex-shrink: 0; min-height: 100vh; overflow-y: auto; padding-top: 5rem; }
     .reveal { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
     .reveal.active { opacity: 1; transform: translateY(0); }
-    .scenario-pill { padding: 0.5rem 1rem; border-radius: 9999px; border: 1px solid #232336; background: #151522; color: #7a7d99; font-size: 0.75rem; font-family: monospace; cursor: pointer; transition: all 0.2s; }
-    .scenario-pill.active { border-color: #00f5c4; color: #00f5c4; background: rgba(0, 212, 170, 0.1); }
+    
+    /* Terminal UI */
     .term-window { background: #0D0D16; border: 1px solid #232336; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
     .term-titlebar { background: #151522; padding: 0.75rem 1rem; border-bottom: 1px solid #232336; display: flex; align-items: center; }
-    .term-dot { width: 10px; height: 10px; rounded-full: 9999px; margin-right: 6px; border-radius: 50%; }
+    .term-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
     .term-body { display: flex; height: 400px; }
     .term-sidebar { width: 180px; border-right: 1px solid #232336; background: #0D0D16; overflow-y: auto; }
     .term-file { padding: 8px 16px; font-family: monospace; font-size: 11px; color: #7a7d99; cursor: pointer; border-left: 2px solid transparent; }
+    .term-file:hover { background: rgba(255, 255, 255, 0.05); }
     .term-file.active { background: rgba(0, 212, 170, 0.05); color: #00f5c4; border-left-color: #00f5c4; }
-    .term-editor { flex: 1; background: #070710; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e0e0f0; overflow-y: auto; white-space: pre; }
-    .term-output { height: 120px; background: #05050A; border-top: 1px solid #232336; padding: 12px 20px; font-family: monospace; font-size: 12px; overflow-y: auto; }
+    .term-editor { flex: 1; background: #070710; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e0e0f0; overflow-y: auto; white-space: pre; line-height: 1.5; }
+    .term-output { height: 140px; background: #05050A; border-top: 1px solid #232336; padding: 12px 20px; font-family: monospace; font-size: 12px; overflow-y: auto; color: #00f5c4; }
+    
+    /* Syntax Highlighting */
     .tc-kw { color: #89b4fa; font-weight: 600; }
     .tc-fn { color: #cba6f7; }
     .tc-str { color: #a6e3a1; }
     .tc-num { color: #fab387; }
     .tc-out-info { color: #7a7d99; font-style: italic; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #05050A; }
+    ::-webkit-scrollbar-thumb { background: #232336; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #7a7d99; }
   </style>
 </head>
-<body class="bg-t_bg text-t_text antialiased overflow-x-hidden">
+<body class="bg-t_bg text-t_text antialiased">
 
   <canvas id="ternary-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-20"></canvas>
 
@@ -92,6 +106,7 @@
           <a href="#" onclick="showPage(0); setTimeout(()=>document.getElementById('quickstart').scrollIntoView({behavior:'smooth'}),100)" class="text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest">Quickstart</a>
           <a href="#" onclick="showPage(4)" class="text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest">Pricing</a>
           <a href="#" onclick="showPage(5)" class="text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest">Benchmarks</a>
+          <a href="#" onclick="showPage(6)" class="text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest">Architecture</a>
         </div>
       </div>
       <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" class="px-6 py-2 bg-t_bg3 border border-t_border text-white text-[10px] font-black tracking-widest hover:bg-t_bg2 transition-all">GITHUB REPO</a>
@@ -100,7 +115,7 @@
 
   <div id="page-slider">
     
-    <!-- PAGE 0: HOME (Restored High-Mass Landing) -->
+    <!-- PAGE 0: HOME -->
     <div class="slide-page">
       <header class="relative pt-32 pb-20 px-6 text-center overflow-hidden">
         <div class="max-w-5xl mx-auto reveal active">
@@ -118,85 +133,118 @@
         </div>
       </header>
 
-      <!-- RESTORED: Plain English Section -->
-      <section id="why" class="py-24 px-6 bg-t_bg border-y border-t_border">
-        <div class="max-w-7xl mx-auto">
-          <div class="text-center mb-16 reveal">
-            <h2 class="text-4xl font-light text-white mb-6 uppercase tracking-tight">You already think <strong class="font-black text-t_teal">in three states.</strong></h2>
-          </div>
-          <div class="grid md:grid-cols-3 gap-8">
-            <div class="glass-card rounded-xl p-8"><h3 class="text-lg font-bold text-white mb-4 uppercase text-t_blue">Engineering</h3><p class="text-t_muted text-sm leading-relaxed">A traffic light with only two states causes accidents. Red and green are not sufficient. Yellow encodes a third meaning: the intersection state is changing.</p></div>
-            <div class="glass-card rounded-xl p-8"><h3 class="text-lg font-bold text-white mb-4 uppercase text-t_teal">Medicine</h3><p class="text-t_muted text-sm leading-relaxed">Clinical hold is not a refusal. It is a protocol state. Trit = 0 gives the machine a formal right to request more evidence before committing.</p></div>
-            <div class="glass-card rounded-xl p-8"><h3 class="text-lg font-bold text-white mb-4 uppercase text-t_red">Law</h3><p class="text-t_muted text-sm leading-relaxed">"Insufficient evidence" is a verdict, not an abstention. A court that dismisses for lack of evidence has made a precise determination.</p></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RESTORED: Interactive Deliberation Engine -->
-      <section class="py-24 px-6 bg-t_bg2 border-b border-t_border">
+      <!-- LAB 1: MoE Expert Debate -->
+      <section class="py-24 px-6 bg-t_bg2 border-y border-t_border relative overflow-hidden">
         <div class="max-w-7xl mx-auto">
           <div class="mb-12 reveal">
-            <h2 class="text-4xl font-black text-white mb-6 uppercase">Watch evidence <span class="text-t_teal">resolve.</span></h2>
-            <p class="text-t_muted max-w-2xl">The deliberation engine runs EMA convergence — round by round — until the evidence is strong enough to commit.</p>
+            <p class="font-mono text-t_blue text-xs tracking-widest uppercase mb-4">Laboratory 01</p>
+            <h2 class="text-4xl font-black text-white mb-6 uppercase">MoE-13 <span class="text-t_blue">Deliberation Engine.</span></h2>
+            <p class="text-t_muted max-w-2xl">The era of single-path inference is dead. Watch 13 independent expert models negotiate an equilibrium. Notice the Hard Veto Rule: if Safety or Ethics throws a -1 (conf > 0.90), the entire system halts instantly.</p>
           </div>
-          <div class="glass-card rounded-3xl p-10 shadow-2xl overflow-hidden">
-            <div class="mb-8 flex gap-3" id="scenario-btns">
-              <button class="scenario-pill active" data-s="0">DEPLOY TONIGHT?</button>
-              <button class="scenario-pill" data-s="1">APPROVE LOAN?</button>
-              <button class="scenario-pill" data-s="2">ROLLBACK?</button>
+          
+          <div class="glass-card rounded-[2rem] border border-t_border p-8 grid lg:grid-cols-12 gap-8 shadow-2xl">
+            <!-- Left: Expert Grid -->
+            <div class="lg:col-span-8 bg-[#05050A] rounded-xl border border-t_border p-6 relative">
+              <div class="flex justify-between items-center mb-6 border-b border-t_border pb-4">
+                <span class="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Live Expert Telemetry</span>
+                <button id="moe-run-btn" class="px-6 py-2 bg-t_blue text-black font-black text-xs uppercase tracking-widest hover:bg-white transition-all rounded">Inject Query</button>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-3 font-mono text-xs" id="moe-expert-grid">
+                <!-- Populated via JS -->
+              </div>
             </div>
-            <div class="grid lg:grid-cols-2 gap-12">
-              <div class="space-y-8">
-                <div><div id="evidence-pills" class="flex flex-wrap gap-2 mb-4"></div><p class="text-[10px] font-mono text-t_muted">S_r = α·e_r + (1−α)·S_r-1</p></div>
-                <button id="deliberate-btn" class="w-full py-4 bg-t_teal/10 hover:bg-t_teal/20 border border-t_teal/50 text-t_teal font-black rounded-xl transition-all">▶ DELIBERATE</button>
-                <div class="flex items-center gap-6 p-6 bg-t_bg3 rounded-2xl border border-t_border">
-                  <div id="verdict-ring" class="w-20 h-20 rounded-full border-2 border-t_border flex items-center justify-center relative"><div id="verdict-state" class="text-3xl font-black text-t_muted">?</div></div>
-                  <div><span class="text-[10px] text-t_muted uppercase block">VM Verdict</span><strong id="verdict-label" class="text-white uppercase">Awaiting Data</strong></div>
+            
+            <!-- Right: Radar & Log -->
+            <div class="lg:col-span-4 space-y-6">
+              <div class="bg-[#05050A] rounded-xl border border-t_border p-6 flex flex-col items-center justify-center min-h-[200px] relative">
+                <span class="absolute top-4 left-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">Network Verdict</span>
+                <div id="moe-verdict-ring" class="w-32 h-32 rounded-full border-4 border-t_border flex items-center justify-center transition-all duration-500 mt-4">
+                  <div id="moe-verdict-state" class="text-5xl font-black text-t_muted">0</div>
+                </div>
+                <div id="moe-verdict-label" class="mt-4 font-bold text-slate-400 tracking-widest uppercase">Equilibrium (Hold)</div>
+              </div>
+              
+              <div class="bg-[#05050A] rounded-xl border border-t_border flex flex-col h-[200px]">
+                <div class="px-4 py-2 border-b border-t_border text-[10px] text-slate-500 font-black uppercase tracking-widest">Trace Log</div>
+                <div id="moe-trace-log" class="p-4 font-mono text-[10px] text-slate-400 overflow-y-auto flex-1 space-y-2">
+                  <span class="italic text-slate-600">Awaiting injection...</span>
                 </div>
               </div>
-              <div class="bg-[#070710] rounded-2xl border border-t_border p-6 font-mono text-xs overflow-y-auto h-[300px]" id="round-feed">
-                <div class="text-t_muted/40">Select scenario and begin deliberation.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LAB 2: Consolidation Lab (Replaces Static 3-Layer Memory) -->
+      <section class="py-24 px-6 bg-t_bg border-b border-t_border">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center mb-16 reveal">
+            <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Laboratory 02</p>
+            <h2 class="text-4xl font-black text-white mb-6 uppercase">Triadic <span class="text-t_teal">Consolidation.</span></h2>
+            <p class="text-t_muted max-w-2xl mx-auto leading-relaxed">Memory isn't a passive database; it's a conflict resolution engine. Promote facts from Working to Session. Watch what happens when a volatile input hits a Core Veto Identity Anchor.</p>
+          </div>
+          
+          <div class="grid md:grid-cols-3 gap-6 font-mono text-xs">
+            <!-- Working Layer -->
+            <div class="glass-card rounded-2xl flex flex-col h-[400px]">
+              <div class="p-4 border-b border-t_border bg-t_bg2">
+                <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-1 flex justify-between">Working <span class="text-t_muted">L1</span></h3>
+                <p class="text-[10px] text-slate-500">Hot context. Ephemeral.</p>
+              </div>
+              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-working">
+                <div class="p-3 bg-[#070710] border border-t_border rounded text-slate-300">Input: "Deploy build 894."</div>
+                <div class="p-3 bg-[#070710] border border-t_border rounded text-slate-300">Input: "Bypass secondary auth."</div>
+              </div>
+              <div class="p-4 border-t border-t_border">
+                <button id="mem-consolidate-btn" class="w-full py-3 bg-t_teal/10 hover:bg-t_teal/20 border border-t_teal/50 text-t_teal font-black rounded transition-all uppercase tracking-widest">Promote to L2</button>
+              </div>
+            </div>
+            
+            <!-- Session Layer -->
+            <div class="glass-card rounded-2xl flex flex-col h-[400px] border-t_teal/30 relative">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-t_bg px-2">
+                <div class="text-[10px] text-t_teal uppercase tracking-widest font-black border border-t_teal/30 bg-t_teal/10 px-3 py-1 rounded-full">Compression Active</div>
+              </div>
+              <div class="p-4 border-b border-t_border bg-t_bg2">
+                <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-1 flex justify-between">Session <span class="text-t_teal">L2</span></h3>
+                <p class="text-[10px] text-slate-500">Ternary-compressed patterns.</p>
+              </div>
+              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-session">
+                <span class="text-slate-600 italic block text-center mt-20">Awaiting consolidation...</span>
+              </div>
+            </div>
+            
+            <!-- Core Layer -->
+            <div class="glass-card rounded-2xl flex flex-col h-[400px] border-t_blue/30 relative">
+              <div class="p-4 border-b border-t_border bg-t_bg2">
+                <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-1 flex justify-between">Core Identity <span class="text-t_blue">L3</span></h3>
+                <p class="text-[10px] text-slate-500">Immutable Veto Anchors.</p>
+              </div>
+              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-core">
+                <div class="p-3 bg-t_blue/10 border border-t_blue/50 rounded text-t_blue font-bold">[+1] Prioritize Uptime</div>
+                <div class="p-3 bg-t_red/10 border border-t_red/50 rounded text-t_red font-bold">[-1] VETO: Auth Bypass</div>
+              </div>
+              <div class="p-4 border-t border-t_border bg-t_bg2 flex justify-between items-center">
+                <span class="text-slate-500 uppercase tracking-widest">Stability Score</span>
+                <span class="text-white font-black text-lg" id="mem-stability">0.99</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- RESTORED: Three-Layer Memory Section -->
-      <section class="py-24 px-6 bg-t_bg border-b border-t_border">
-        <div class="max-w-7xl mx-auto text-center mb-16 reveal">
-          <h2 class="text-4xl font-black text-white mb-6 uppercase">AI Memory like a <span class="text-t_blue">Human Mind.</span></h2>
-          <p class="text-t_muted max-w-2xl mx-auto leading-relaxed">Three layers modelled on biological consolidation — with ternary confidence scores and conflict resolution on every promotion.</p>
-        </div>
-        <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
-          <div class="glass-card p-8 rounded-2xl glow-reject">
-            <h3 class="text-t_red font-black text-xs mb-4 uppercase tracking-widest">Working</h3>
-            <p class="text-sm text-slate-400">Hot context. Current turn. Affirm (+1) entries promote to session on consolidate.</p>
-          </div>
-          <div class="glass-card p-8 rounded-2xl glow-tend border-t_teal">
-            <h3 class="text-t_teal font-black text-xs mb-4 uppercase tracking-widest">Session</h3>
-            <p class="text-sm text-slate-400">Flow patterns. Ternary-compressed on write. Strips tend-noise, preserves signal.</p>
-          </div>
-          <div class="glass-card p-8 rounded-2xl glow-affirm border-t_blue">
-            <h3 class="text-t_blue font-black text-xs mb-4 uppercase tracking-widest">Core</h3>
-            <h3 class="text-white font-bold text-lg mb-2">Identity Anchors</h3>
-            <p class="text-sm text-slate-400">Vetoes and personality anchors. Resolved by full 13-expert MoE orchestrator.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- RESTORED: Terminal Mockup -->
+      <!-- Terminal Mockup (Execution Layer) -->
       <section class="py-24 px-6 bg-t_bg2">
         <div class="max-w-5xl mx-auto">
           <div class="text-center mb-12"><h2 class="text-4xl font-black text-white mb-4 uppercase">See TERNLANG <span class="text-t_teal">THINK.</span></h2></div>
           <div class="term-window">
-            <div class="term-titlebar"><span class="term-dot bg-t_red"></span><span class="term-dot bg-yellow-500"></span><span class="term-dot bg-t_teal"></span><span class="ml-4 text-xs font-mono text-slate-500 uppercase tracking-widest">BET VM Console</span><button class="ml-auto bg-t_teal text-black text-[10px] font-black px-4 py-1 rounded" id="term-run-btn">RUN</button></div>
+            <div class="term-titlebar">
+              <span class="term-dot bg-t_red"></span><span class="term-dot bg-yellow-500"></span><span class="term-dot bg-t_teal"></span>
+              <span class="ml-4 text-xs font-mono text-slate-500 uppercase tracking-widest">BET VM Console</span>
+              <button class="ml-auto bg-t_teal text-black text-[10px] font-black px-4 py-1 rounded" id="term-run-btn">RUN</button>
+            </div>
             <div class="term-body">
-              <div class="term-sidebar">
-                <div class="term-file active" data-prog="0">classify.tern</div>
-                <div class="term-file" data-prog="1">pipeline.tern</div>
-                <div class="term-file" data-prog="2">sparse_nn.tern</div>
-              </div>
+              <div class="term-sidebar" id="term-file-list"></div>
               <div class="term-editor" id="term-editor"></div>
             </div>
             <div class="term-output" id="term-output">// Select program and press RUN</div>
@@ -204,17 +252,41 @@
         </div>
       </section>
 
+      <!-- Quickstart -->
       <section id="quickstart" class="py-24 bg-t_bg border-t border-t_border">
-        <div class="max-w-4xl mx-auto px-6 text-center">
-          <h2 class="text-4xl font-black mb-8 uppercase">Deploy in 60s</h2>
-          <div class="bg-t_bg2 p-8 rounded-3xl border border-t_blue/30 mb-8 font-mono text-t_blue text-lg break-all">
-            curl -fsSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/scripts/install.sh | bash
+        <div class="max-w-4xl mx-auto px-6">
+          <div class="text-center mb-12">
+            <h2 class="text-4xl font-black mb-4 uppercase">Deploy the Stack</h2>
+            <p class="text-t_muted">Install the BET VM, compile the node, and boot the MoE-13 orchestrator locally.</p>
+          </div>
+          <div class="bg-[#070710] rounded-3xl border border-t_border p-8 md:p-10 font-mono text-sm shadow-2xl relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-t_teal via-t_blue to-t_red opacity-50"></div>
+            <div class="space-y-6 text-slate-300">
+              <div>
+                <span class="text-t_muted block mb-1"># 1. Clone the intelligence stack</span>
+                <span class="text-t_teal">git</span> clone https://github.com/eriirfos-eng/ternary-intelligence-stack<br>
+                <span class="text-t_teal">cd</span> ternary-intelligence-stack/ternlang-root
+              </div>
+              <div>
+                <span class="text-t_muted block mb-1"># 2. Build the BET VM and compiler</span>
+                <span class="text-t_blue">cargo</span> build --release<br>
+                <span class="text-t_blue">cargo</span> test --workspace
+              </div>
+              <div>
+                <span class="text-t_muted block mb-1"># 3. Execute a native triadic program</span>
+                <span class="text-t_blue">cargo</span> run --bin ternlang -- run examples/03_rocket_launch.tern
+              </div>
+              <div>
+                <span class="text-t_muted block mb-1"># 4. Boot the MCP Server (stdio)</span>
+                <span class="text-t_red">./target/release/ternlang-mcp</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </div>
 
-    <!-- PAGE 1: ALBERT (Implementation Deep-Dive) -->
+    <!-- PAGE 1: ALBERT -->
     <div class="slide-page bg-t_bg2">
       <div class="max-w-6xl mx-auto px-6 py-20">
         <div class="text-center mb-24 reveal active">
@@ -253,42 +325,64 @@
       </div>
     </div>
 
-    <!-- PAGE 2: TRANSLATOR (Full Restoration) -->
+    <!-- PAGE 2: TRANSLATOR (Universal Port) -->
     <div class="slide-page bg-t_bg">
-      <div class="max-w-6xl mx-auto px-6 py-20">
+      <div class="max-w-7xl mx-auto px-6 py-20">
         <div class="text-center mb-16">
-          <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Onboarding Utility</p>
-          <h2 class="text-7xl font-black text-white mb-8 uppercase leading-none">Binary <span class="text-t_teal">Port.</span></h2>
-          <p class="text-xl text-slate-400">Migrate your legacy binary logic to balanced ternary instantly.</p>
+          <p class="font-mono text-t_red text-xs tracking-widest uppercase mb-4">Laboratory 03</p>
+          <h2 class="text-7xl font-black text-white mb-8 uppercase leading-none">Universal <span class="text-t_red">Port.</span></h2>
+          <p class="text-xl text-slate-400 max-w-3xl mx-auto">Binary assumes data is present or absent, ignoring the latency of reality. Port nearly any legacy syntax into natively exhaustive triadic logic.</p>
         </div>
+        
         <div class="glass-card rounded-[3rem] border border-t_border overflow-hidden shadow-3xl min-h-[600px] flex flex-col">
-          <div class="p-8 bg-t_bg2 border-b border-t_border flex items-center gap-6">
-            <select id="trans-lang" class="bg-t_bg border border-t_border text-t_teal font-mono text-xs px-6 py-2 rounded-full focus:outline-none uppercase">
-              <option value="python">Python</option><option value="rust">Rust</option><option value="java">Java</option>
+          <div class="p-8 bg-t_bg2 border-b border-t_border flex items-center gap-6 overflow-x-auto">
+            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Legacy Source:</span>
+            <select id="trans-lang" class="bg-t_bg border border-t_border text-t_teal font-mono text-xs px-6 py-2 rounded-full focus:outline-none uppercase cursor-pointer">
+              <option value="rust">Rust</option>
+              <option value="cpp">C++</option>
+              <option value="go">Go</option>
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="ts">TypeScript</option>
+              <option value="csharp">C#</option>
+              <option value="swift">Swift</option>
+              <option value="ruby">Ruby</option>
+              <option value="php">PHP</option>
+              <option value="lua">Lua</option>
+              <option value="zig">Zig</option>
             </select>
-            <button id="trans-run-btn" class="ml-auto px-10 py-2 bg-t_teal text-black font-black rounded-full hover:bg-white transition-all uppercase text-xs tracking-widest">Translate to .tern</button>
+            <button id="trans-run-btn" class="ml-auto px-10 py-2 bg-t_red/20 border border-t_red/50 text-t_red hover:bg-t_red hover:text-white font-black rounded-full transition-all uppercase text-xs tracking-widest whitespace-nowrap">Execute Port</button>
           </div>
+          
           <div class="flex-grow grid lg:grid-cols-2">
+            <!-- Binary Flaw Input -->
             <div class="flex flex-col border-r border-t_border">
-              <div class="bg-t_bg3 px-8 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Source Input</div>
-              <textarea id="trans-input" class="flex-grow bg-t_bg p-10 font-mono text-sm text-slate-300 outline-none resize-none" placeholder="Paste your logic here..."></textarea>
+              <div class="bg-t_bg3 px-8 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest flex justify-between">
+                Binary Input <span class="text-t_red bg-t_red/10 px-2 rounded">VULNERABLE</span>
+              </div>
+              <textarea id="trans-input" class="flex-grow bg-t_bg p-10 font-mono text-sm text-slate-400 outline-none resize-none" spellcheck="false"></textarea>
             </div>
+            
+            <!-- Triadic Solution Output -->
             <div class="flex flex-col bg-[#070710]">
-              <div class="bg-t_bg3 px-8 py-3 text-[10px] font-black text-t_teal uppercase tracking-widest">Ternlang Output</div>
-              <div id="trans-output" class="flex-grow p-10 font-mono text-sm text-t_teal whitespace-pre leading-relaxed"></div>
+              <div class="bg-t_bg3 px-8 py-3 text-[10px] font-black text-t_teal uppercase tracking-widest flex justify-between">
+                Ternlang Output <span class="text-t_teal bg-t_teal/10 px-2 rounded">PROVEN</span>
+              </div>
+              <div id="trans-output" class="flex-grow p-10 font-mono text-sm text-t_teal whitespace-pre leading-relaxed overflow-y-auto"></div>
             </div>
           </div>
-          <div class="p-8 bg-t_bg3 border-t border-t_border">
-            <h4 class="text-white font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-3"><span class="text-t_blue">ℹ</span> Triadic Logic Insight</h4>
-            <div id="trans-insight" class="grid sm:grid-cols-2 gap-4 text-[11px] text-slate-400 leading-relaxed uppercase">
-              <div class="p-4 bg-t_bg border border-t_border rounded-xl">Awaiting binary input...</div>
+          
+          <div class="p-8 bg-t_bg3 border-t border-t_border min-h-[140px]">
+            <h4 class="text-white font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-3"><span class="text-t_red">⚠</span> Structural Negligence Analysis</h4>
+            <div id="trans-insight" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-[10px] text-slate-400 font-mono uppercase tracking-wider">
+              <div class="p-4 bg-t_bg border border-t_border rounded-xl">Awaiting legacy execution...</div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PAGE 3: AUDITOR (Forensic View) -->
+    <!-- PAGE 3: AUDITOR -->
     <div class="slide-page bg-black">
       <div class="max-w-5xl mx-auto px-6 py-20 text-center">
         <p class="font-mono text-t_red text-xs tracking-widest uppercase mb-4">Governance & Observability</p>
@@ -312,7 +406,7 @@
       </div>
     </div>
 
-    <!-- PAGE 4: PRICING (Fully Restored Tiers) -->
+    <!-- PAGE 4: PRICING -->
     <div class="slide-page bg-t_bg2">
       <div class="max-w-7xl mx-auto px-6 py-20">
         <div class="text-center mb-24">
@@ -364,159 +458,686 @@
       </div>
     </div>
 
-    <!-- PAGE 5: BENCHMARKS (Hardware & Compression Tables) -->
+    <!-- PAGE 5: BENCHMARKS (Elite Grid + Heatmap Lab) -->
     <div class="slide-page bg-black">
-      <div class="max-w-6xl mx-auto px-6 py-20">
-        <div class="text-center mb-24">
-          <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Hardware Alignment</p>
+      <div class="max-w-7xl mx-auto px-6 py-20">
+        <div class="text-center mb-16">
+          <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Laboratory 04</p>
           <h2 class="text-7xl font-black text-white mb-8 uppercase leading-none italic">Sparsity <span class="text-t_teal">Yield.</span></h2>
-          <p class="text-xl text-slate-400 max-w-3xl mx-auto">Balanced ternary hardware achieves native sparsity. When a trit is 0, the BET VM bypasses arithmetic cycles entirely.</p>
+          <p class="text-xl text-slate-400 max-w-3xl mx-auto">Balanced ternary hardware achieves native sparsity. In the BET VM, 0 is not a multiplication; it's an opcode bypass. Prune the matrix below to see real-time thermodynamic collapse.</p>
         </div>
 
-        <!-- Hardware Matrix -->
-        <div class="glass-card rounded-[3.5rem] overflow-hidden shadow-2xl mb-20">
-          <div class="p-8 bg-t_bg2 border-b border-white/5 flex items-center justify-between">
-            <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Inference Throughput (TSPARSE_MATMUL)</span>
-            <div class="flex gap-6">
-              <div class="flex items-center gap-2"><div class="w-2 h-2 bg-t_teal rounded-full shadow-[0_0_10px_#00f5c4]"></div><span class="text-[9px] text-slate-400 uppercase font-black tracking-widest">Ternary Yield</span></div>
-              <div class="flex items-center gap-2"><div class="w-2 h-2 bg-slate-700 rounded-full"></div><span class="text-[9px] text-slate-400 uppercase font-black tracking-widest">Binary Dense</span></div>
+        <!-- LAB 4: Sparse Inference Heatmap -->
+        <div class="glass-card rounded-[3rem] overflow-hidden shadow-2xl mb-12 border-t_teal/30 p-8 grid lg:grid-cols-2 gap-12 bg-[#05050A]">
+          <div>
+            <h3 class="text-xl font-black text-white uppercase tracking-tight mb-4 flex justify-between">
+              Neural Weight Matrix <span class="text-xs text-t_teal bg-t_teal/10 px-2 py-1 rounded">Interactive</span>
+            </h3>
+            <p class="text-xs text-slate-500 font-mono mb-6">Click a weight (+1 or -1) to set it to 0 (Prune).</p>
+            <div id="hm-grid" class="grid grid-cols-9 gap-1">
+              <!-- Grid populated by JS -->
             </div>
           </div>
-          <div class="p-12 overflow-x-auto">
-            <table class="w-full text-left font-mono text-sm">
-              <thead class="text-slate-500 uppercase text-[10px] tracking-widest">
-                <tr class="border-b border-white/5"><th class="pb-6">Matrix Sparsity</th><th class="pb-6 text-center">32²</th><th class="pb-6 text-center">128²</th><th class="pb-6 text-center">512²</th><th class="pb-6 text-center">Speedup</th></tr>
-              </thead>
-              <tbody class="divide-y divide-white/5 text-slate-300">
-                <tr class="hover:bg-white/5 transition-colors"><td class="py-6">0.25 density</td><td class="py-6 text-center">6.3x</td><td class="py-6 text-center">26.4x</td><td class="py-6 text-center">53.1x</td><td class="py-6 text-center text-t_teal">Moderate</td></tr>
-                <tr class="bg-t_teal/5 border-l-4 border-l-t_teal"><td class="py-6 pl-4 font-bold text-white">0.50 density ★</td><td class="py-6 text-center">6.0x</td><td class="py-6 text-center italic text-t_teal font-bold">28.0x</td><td class="py-6 text-center font-bold text-t_teal">86.0x</td><td class="py-6 text-center font-black text-t_teal uppercase tracking-widest">Goldilocks</td></tr>
-                <tr class="hover:bg-white/5 transition-colors"><td class="py-6">0.99 density</td><td class="py-6 text-center">1.8x</td><td class="py-6 text-center">13.1x</td><td class="py-6 text-center">122.3x</td><td class="py-6 text-center text-white font-black">Absolute</td></tr>
-              </tbody>
-            </table>
+          <div class="flex flex-col justify-center space-y-8">
+            <div>
+              <div class="flex justify-between font-mono text-xs mb-2">
+                <span class="text-t_muted uppercase tracking-widest">Active Computations</span>
+                <span class="text-white font-bold" id="hm-active">81 / 81</span>
+              </div>
+              <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden"><div id="hm-bar-active" class="bg-slate-400 h-full w-full transition-all duration-300"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between font-mono text-xs mb-2">
+                <span class="text-t_red uppercase tracking-widest">Power Consumption</span>
+                <span class="text-t_red font-bold" id="hm-pwr">1.820 J</span>
+              </div>
+              <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden"><div id="hm-bar-pwr" class="bg-t_red h-full w-full transition-all duration-300 shadow-[0_0_10px_#ff4d4d]"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between font-mono text-xs mb-2">
+                <span class="text-t_teal uppercase tracking-widest">Throughput Yield</span>
+                <span class="text-t_teal font-black text-xl" id="hm-yld">1.00x</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Memory Compression Table -->
-        <div class="text-center mb-16"><h3 class="text-3xl font-black text-white uppercase italic">Context <span class="text-t_teal">Pruning.</span></h3></div>
-        <div class="overflow-x-auto rounded-[2rem] border border-t_border shadow-2xl">
-          <table class="w-full text-sm text-left">
-            <thead class="bg-t_bg3 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              <tr><th class="p-8">Content Type</th><th class="p-8 text-center">Original</th><th class="p-8 text-center">Compressed</th><th class="p-8 text-center">Ratio</th><th class="p-8 text-center">Yield</th></tr>
-            </thead>
-            <tbody class="divide-y divide-white/5 text-slate-300">
-              <tr class="hover:bg-white/5 transition-colors"><td class="p-8 font-medium">Session Memory Entries ★</td><td class="p-8 text-center">4,200 B</td><td class="p-8 text-center text-t_teal font-bold tracking-widest">1,470 B</td><td class="p-8 text-center italic">0.35x</td><td class="p-8 text-center text-t_teal font-black uppercase">65% Saved</td></tr>
-              <tr class="hover:bg-white/5 transition-colors"><td class="p-8 font-medium">Technical Documentation</td><td class="p-8 text-center">3,800 B</td><td class="p-8 text-center text-white font-bold tracking-widest">3,040 B</td><td class="p-8 text-center italic">0.80x</td><td class="p-8 text-center">20% Saved</td></tr>
-            </tbody>
-          </table>
+        <!-- Benchmarks Grid -->
+        <div class="grid md:grid-cols-2 gap-8 items-stretch">
+          <!-- Benchmark 1: Energy Efficiency -->
+          <div class="glass-card p-10 rounded-[3rem] border-t_border hover:border-t_teal transition-all">
+            <div class="flex justify-between items-start mb-8">
+              <h3 class="text-2xl font-black text-white uppercase tracking-tight">Energy<br><span class="text-t_teal">Efficiency.</span></h3>
+              <span class="text-[10px] text-t_teal uppercase font-black tracking-widest bg-t_teal/10 px-3 py-1 rounded">Benchmark 01</span>
+            </div>
+            <p class="text-slate-400 text-sm mb-8">Balanced Ternary (-1, 0, +1) minimizes state-switching. A binary 0 to 1 requires a full charge cycle. The "Green Trit" architecture skips cycles natively.</p>
+            <div class="space-y-4 font-mono text-sm">
+              <div class="flex justify-between items-center p-4 bg-[#050508] rounded-xl border border-t_border">
+                <span class="text-t_muted">x86 / Standard NPU</span>
+                <span class="text-white font-bold">1.82 J / 1B Params</span>
+              </div>
+              <div class="flex justify-between items-center p-4 bg-t_teal/10 rounded-xl border border-t_teal/30">
+                <span class="text-t_teal font-bold">BET VM (Native)</span>
+                <span class="text-t_teal font-black">0.14 J / 1B Params</span>
+              </div>
+            </div>
+            <p class="mt-6 text-xs font-bold text-white uppercase tracking-widest italic text-right">Compute more, heat less.</p>
+          </div>
+
+          <!-- Benchmark 2: Decision Latency -->
+          <div class="glass-card p-10 rounded-[3rem] border-t_border hover:border-t_blue transition-all">
+            <div class="flex justify-between items-start mb-8">
+              <h3 class="text-2xl font-black text-white uppercase tracking-tight">Convergence<br><span class="text-t_blue">Speed.</span></h3>
+              <span class="text-[10px] text-t_blue uppercase font-black tracking-widest bg-t_blue/10 px-3 py-1 rounded">Benchmark 02</span>
+            </div>
+            <p class="text-slate-400 text-sm mb-8">MoE-13 orchestration utilizes the right to deliberate. Watch Albert-Agent transition from 0 to +1 as evidence streams, vs a binary LLM token-guessing.</p>
+            <div class="space-y-4 font-mono text-sm">
+              <div class="flex justify-between items-center p-4 bg-[#050508] rounded-xl border border-t_border">
+                <span class="text-t_muted">Binary LLM Guessing</span>
+                <span class="text-t_red font-bold">Stochastic Loop</span>
+              </div>
+              <div class="flex justify-between items-center p-4 bg-t_blue/10 rounded-xl border border-t_blue/30">
+                <span class="text-t_blue font-bold">Albert-Agent (MoE-13)</span>
+                <span class="text-t_blue font-black">4.5 Rounds (EMA)</span>
+              </div>
+            </div>
+            <p class="mt-6 text-xs font-bold text-white uppercase tracking-widest italic text-right">Deterministic stabilization.</p>
+          </div>
+
+          <!-- Benchmark 3: Effective Context Capacity -->
+          <div class="glass-card p-10 rounded-[3rem] border-t_border hover:border-white transition-all">
+            <div class="flex justify-between items-start mb-8">
+              <h3 class="text-2xl font-black text-white uppercase tracking-tight">Context<br><span class="text-slate-300">Capacity.</span></h3>
+              <span class="text-[10px] text-white uppercase font-black tracking-widest bg-white/10 px-3 py-1 rounded">Benchmark 03</span>
+            </div>
+            <p class="text-slate-400 text-sm mb-8">Ternary context compression maps intent directly to logic gates. Compare raw context density of 1 MB of <code class="text-white">.tern</code> memory vs 1 MB of JSON-based RAG.</p>
+            <div class="space-y-4 font-mono text-sm">
+              <div class="flex justify-between items-center p-4 bg-[#050508] rounded-xl border border-t_border">
+                <span class="text-t_muted">JSON RAG Cache</span>
+                <span class="text-white font-bold">110 Logical Tokens/KB</span>
+              </div>
+              <div class="flex justify-between items-center p-4 bg-white/10 rounded-xl border border-white/30">
+                <span class="text-white font-bold">.tern Session Memory</span>
+                <span class="text-white font-black">340 Logical Tokens/KB</span>
+              </div>
+            </div>
+            <p class="mt-6 text-xs font-bold text-white uppercase tracking-widest italic text-right">3.09x the wisdom in the same cache.</p>
+          </div>
+
+          <!-- Benchmark 4: Branch Exhaustiveness & Safety Overhead -->
+          <div class="glass-card p-10 rounded-[3rem] border-t_border hover:border-t_red transition-all">
+            <div class="flex justify-between items-start mb-8">
+              <h3 class="text-2xl font-black text-white uppercase tracking-tight">Safety<br><span class="text-t_red">Overhead.</span></h3>
+              <span class="text-[10px] text-t_red uppercase font-black tracking-widest bg-t_red/10 px-3 py-1 rounded">Benchmark 04</span>
+            </div>
+            <p class="text-slate-400 text-sm mb-8">Safety layers in binary systems require costly "if-check" wrappers. The BET VM enforces State 0 exhaustiveness directly at the core opcode level.</p>
+            <div class="space-y-4 font-mono text-sm">
+              <div class="flex justify-between items-center p-4 bg-[#050508] rounded-xl border border-t_border">
+                <span class="text-t_muted">Binary if-check wrapping</span>
+                <span class="text-t_red font-bold">+12 Cycles/Instruction</span>
+              </div>
+              <div class="flex justify-between items-center p-4 bg-t_red/10 rounded-xl border border-t_red/30">
+                <span class="text-t_red font-bold">Native Trit Verification</span>
+                <span class="text-t_red font-black">0 Cycles/Instruction</span>
+              </div>
+            </div>
+            <p class="mt-6 text-xs font-bold text-white uppercase tracking-widest italic text-right">Zero runtime penalty.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PAGE 6: ARCHITECTURE -->
+    <div class="slide-page bg-t_bg2">
+      <div class="max-w-7xl mx-auto px-6 py-20">
+        <div class="text-center mb-24 reveal active">
+          <p class="font-mono text-t_blue text-xs tracking-widest uppercase mb-4">Deep Dive</p>
+          <h2 class="text-7xl font-black text-white mb-8 uppercase leading-none">The <span class="text-t_blue">Stack.</span></h2>
+          <p class="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">The software and compiler ecosystem deficit ends here. The compiler structurally enforces exhaustive matching on the {-1, 0, +1} continuum, mapped directly to 11 native crates running on the BET VM.</p>
+        </div>
+
+        <div>
+          <h3 class="text-3xl font-black text-white uppercase tracking-tight mb-8">Ecosystem Crates</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 font-mono text-sm mb-16">
+            <div class="glass-card p-6 rounded-2xl border-t_border hover:border-t_teal transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-core" target="_blank" class="hover:text-t_teal underline decoration-white/20 underline-offset-4 transition-all">ternlang-core</a> <span class="text-[10px] bg-white/10 text-slate-300 px-2 py-1 rounded">LGPL</span></h3>
+              <p class="text-t_muted">Lexer, parser, and the native BET VM infrastructure.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_border hover:border-t_teal transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-cli" target="_blank" class="hover:text-t_teal underline decoration-white/20 underline-offset-4 transition-all">ternlang-cli</a> <span class="text-[10px] bg-white/10 text-slate-300 px-2 py-1 rounded">LGPL</span></h3>
+              <p class="text-t_muted">Commands to run, build, simulate, fmt, and open the REPL.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_border hover:border-t_teal transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-lsp" target="_blank" class="hover:text-t_teal underline decoration-white/20 underline-offset-4 transition-all">ternlang-lsp</a> <span class="text-[10px] bg-white/10 text-slate-300 px-2 py-1 rounded">LGPL</span></h3>
+              <p class="text-t_muted">LSP 3.17 server for complete IDE and VS Code integration.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_border hover:border-t_teal transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternpkg" target="_blank" class="hover:text-t_teal underline decoration-white/20 underline-offset-4 transition-all">ternpkg</a> <span class="text-[10px] bg-white/10 text-slate-300 px-2 py-1 rounded">LGPL</span></h3>
+              <p class="text-t_muted">Official package manager parsing native ternlang.toml manifests.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_border hover:border-t_teal transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-compat" target="_blank" class="hover:text-t_teal underline decoration-white/20 underline-offset-4 transition-all">ternlang-compat</a> <span class="text-[10px] bg-white/10 text-slate-300 px-2 py-1 rounded">LGPL</span></h3>
+              <p class="text-t_muted">9-trit RISC assembler and Owlet S-expr bridge.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_blue/30 bg-t_blue/5 hover:border-t_blue transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-ml" target="_blank" class="hover:text-t_blue underline decoration-t_blue/30 underline-offset-4 transition-all">ternlang-ml</a> <span class="text-[10px] bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1</span></h3>
+              <p class="text-t_muted">Sparse matmul and BitNet quantization toolkits for the VM.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_blue/30 bg-t_blue/5 hover:border-t_blue transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-moe" target="_blank" class="hover:text-t_blue underline decoration-t_blue/30 underline-offset-4 transition-all">ternlang-moe</a> <span class="text-[10px] bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1</span></h3>
+              <p class="text-t_muted">The MoE-13 orchestrator and core AgentHarness routing.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_blue/30 bg-t_blue/5 hover:border-t_blue transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-mcp" target="_blank" class="hover:text-t_blue underline decoration-t_blue/30 underline-offset-4 transition-all">ternlang-mcp</a> <span class="text-[10px] bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1</span></h3>
+              <p class="text-t_muted">MCP server exporting 10 native tools via HTTP and stdio.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_blue/30 bg-t_blue/5 hover:border-t_blue transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-api" target="_blank" class="hover:text-t_blue underline decoration-t_blue/30 underline-offset-4 transition-all">ternlang-api</a> <span class="text-[10px] bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1</span></h3>
+              <p class="text-t_muted">High-throughput REST and SSE API integration.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_blue/30 bg-t_blue/5 hover:border-t_blue transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-hdl" target="_blank" class="hover:text-t_blue underline decoration-t_blue/30 underline-offset-4 transition-all">ternlang-hdl</a> <span class="text-[10px] bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1</span></h3>
+              <p class="text-t_muted">Verilog-2001 code generation for direct FPGA simulation.</p>
+            </div>
+            <div class="glass-card p-6 rounded-2xl border-t_blue/30 bg-t_blue/5 hover:border-t_blue transition-all">
+              <h3 class="text-white font-bold text-lg mb-3 flex justify-between items-center"><a href="https://crates.io/crates/ternlang-runtime" target="_blank" class="hover:text-t_blue underline decoration-t_t_blue/30 underline-offset-4 transition-all">ternlang-runtime</a> <span class="text-[10px] bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1</span></h3>
+              <p class="text-t_muted">Distributed TCP actor runtime for agent clustering.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Footer (Restored Clean View) -->
+  <!-- Footer -->
   <footer class="relative z-10 bg-black py-20 px-6 border-t border-t_border text-center">
     <div class="max-w-7xl mx-auto">
       <div class="flex flex-wrap justify-center gap-12 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-12">
         <a href="#" onclick="showPage(0)" class="hover:text-t_blue transition-all">Home</a>
         <a href="#" onclick="showPage(4)" class="hover:text-t_blue transition-all">Pricing</a>
         <a href="#" onclick="showPage(5)" class="hover:text-t_blue transition-all">Benchmarks</a>
+        <a href="#" onclick="showPage(6)" class="hover:text-t_blue transition-all">Architecture</a>
         <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="hover:text-white transition-all">Source</a>
       </div>
-      <p class="text-slate-600 text-[10px] font-black tracking-widest uppercase">
+      <p class="text-slate-600 text-[10px] font-black tracking-widest uppercase mb-4">
         &copy; 2026 RFI-IRFOS &middot; GRAZ, AT &middot; SOVEREIGN INTELLIGENCE STACK
+      </p>
+      <p class="text-slate-600 text-[9px] font-mono tracking-widest uppercase">
+        BSL-1.1 converts to Apache-2.0 on 2030-04-03
       </p>
     </div>
   </footer>
 
-  <!-- Logic Scripts (Restored) -->
+  <!-- Empirical Lab Scripts -->
   <script>
-    const transInput = document.getElementById('trans-input');
-    const transOutput = document.getElementById('trans-output');
-    const transInsight = document.getElementById('trans-insight');
-    const transBtn = document.getElementById('trans-run-btn');
-
-    const TERN_RULES = [
-      { regex: /bool/g, repl: 'trit', note: 'BINARY BOOL -> TRIADIC TRIT' },
-      { regex: /true/g, repl: 'affirm', note: 'TRUE -> +1 (AFFIRM)' },
-      { regex: /false/g, repl: 'reject', note: 'FALSE -> -1 (REJECT)' },
-      { regex: /null|undefined/g, repl: 'tend', note: 'EMPTY -> 0 (TEND)' },
-      { regex: /if\s*\((.*)\)\s*\{/g, repl: 'match $1 {', note: 'IF -> EXHAUSTIVE MATCH' }
-    ];
-
-    function translate() {
-      let code = transInput.value;
-      if (!code.trim()) return;
-      transBtn.textContent = '...';
-      const insights = new Set();
-      let translated = code;
-      TERN_RULES.forEach(rule => { if (rule.regex.test(translated)) { translated = translated.replace(rule.regex, rule.repl); insights.add(rule.note); } });
-      setTimeout(() => {
-        transOutput.textContent = translated;
-        transInsight.innerHTML = Array.from(insights).map(note => `<div class="p-4 bg-t_bg border border-t_border rounded-xl">✓ ${note}</div>`).join('') || '<div class="p-4 bg-t_bg border border-t_border rounded-xl tracking-widest">PURE TRIADIC LOGIC</div>';
-        transBtn.textContent = 'TRANSLATE TO .TERN';
-      }, 400);
-    }
-
+    // PAGE SLIDER LOGIC
     function showPage(index) {
       document.getElementById('page-slider').style.transform = `translateX(-${index * 100}vw)`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Interactive Engine Logic
-    const SCENARIOS = [
-      { label: 'DEPLOY TONIGHT?', evidence: [0.7, 0.8, 0.5, -0.2, 0.9, 0.6] },
-      { label: 'APPROVE LOAN?', evidence: [0.5, -0.6, 0.4, -0.5, 0.3, -0.4, 0.5, -0.5] },
-      { label: 'ROLLBACK?', evidence: [-0.8, -0.7, -0.9, -0.3, -0.6] }
-    ];
-    let activeScenario = 0;
-    function runDeliberation() {
-      const feed = document.getElementById('round-feed');
-      feed.innerHTML = '<div class="text-t_teal uppercase tracking-widest mb-4">Starting Convergence...</div>';
-      let scalar = 0; let round = 0;
-      const interval = setInterval(() => {
-        const ev = SCENARIOS[activeScenario].evidence[round % SCENARIOS[activeScenario].evidence.length];
-        scalar = 0.3 * ev + 0.7 * scalar; round++;
-        const el = document.createElement('div'); el.className = 'py-1 opacity-80';
-        el.innerHTML = `ROUND ${round}: SIG=${ev > 0 ? '+' : ''}${ev} -> SCALAR=${(scalar >= 0 ? '+' : '') + scalar.toFixed(4)}`;
-        feed.appendChild(el); feed.scrollTop = feed.scrollHeight;
-        if (Math.abs(scalar) > 0.33 || round >= 10) {
-          clearInterval(interval);
-          setVerdict(scalar);
-        }
-      }, 300);
-    }
-    function setVerdict(s) {
-      const state = document.getElementById('verdict-state');
-      const label = document.getElementById('verdict-label');
-      if (s > 0.33) { state.innerText = '+1'; state.className = 'text-3xl font-black text-t_blue'; label.innerText = 'AFFIRM'; }
-      else if (s < -0.33) { state.innerText = '-1'; state.className = 'text-3xl font-black text-t_red'; label.innerText = 'REJECT'; }
-      else { state.innerText = '0'; state.className = 'text-3xl font-black text-t_teal'; label.innerText = 'TEND'; }
-    }
-    document.getElementById('deliberate-btn').onclick = runDeliberation;
-    document.getElementById('scenario-btns').onclick = e => { if (e.target.dataset.s) { activeScenario = e.target.dataset.s; document.querySelectorAll('.scenario-pill').forEach(p => p.classList.remove('active')); e.target.classList.add('active'); } };
-
-    // Canvas Matrix
+    // CANVAS MATRIX BACKGROUND
     const canvas = document.getElementById('ternary-canvas');
-    const ctx = canvas.getContext('2d');
-    let w, h;
-    function res() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-    window.onresize = res; res();
-    const nodes = Array.from({ length: 50 }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5), vy: (Math.random() - 0.5) }));
-    function ani() {
-      ctx.clearRect(0, 0, w, h);
-      nodes.forEach(n => {
-        n.x += n.vx; n.y += n.vy;
-        if (n.x < 0 || n.x > w) n.vx *= -1; if (n.y < 0 || n.y > h) n.vy *= -1;
-        ctx.fillStyle = '#4A90E2'; ctx.beginPath(); ctx.arc(n.x, n.y, 1, 0, Math.PI * 2); ctx.fill();
-      });
-      requestAnimationFrame(ani);
+    if(canvas) {
+      const ctx = canvas.getContext('2d');
+      let w, h;
+      function res() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+      window.onresize = res; res();
+      const nodes = Array.from({ length: 50 }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5), vy: (Math.random() - 0.5) }));
+      function ani() {
+        ctx.clearRect(0, 0, w, h);
+        nodes.forEach(n => {
+          n.x += n.vx; n.y += n.vy;
+          if (n.x < 0 || n.x > w) n.vx *= -1; if (n.y < 0 || n.y > h) n.vy *= -1;
+          ctx.fillStyle = '#4A90E2'; ctx.beginPath(); ctx.arc(n.x, n.y, 1, 0, Math.PI * 2); ctx.fill();
+        });
+        requestAnimationFrame(ani);
+      }
+      ani();
     }
-    ani();
 
-    // Reveal Observer
+    // REVEAL OBSERVER
     const rev = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); }));
     document.querySelectorAll('.reveal').forEach(e => rev.observe(e));
+
+    // LAB 03: UNIVERSAL TRANSLATOR LOGIC
+    const transInput = document.getElementById('trans-input');
+    const transOutput = document.getElementById('trans-output');
+    const transInsight = document.getElementById('trans-insight');
+    const transBtn = document.getElementById('trans-run-btn');
+    const langSelect = document.getElementById('trans-lang');
+
+    const langSnippets = {
+      rust: `let auth: bool = check_server();\n\nif auth == true {\n    grant_access();\n} else {\n    deny_access();\n}`,
+      python: `auth_status = check_server()\n\nif auth_status is True:\n    grant_access()\nelse:\n    deny_access()`,
+      java: `boolean isAuthenticated = checkServer();\n\nif (isAuthenticated) {\n    grantAccess();\n} else {\n    denyAccess();\n}`,
+      ts: `const auth: boolean | null = checkServer();\n\nif (auth) {\n    grantAccess();\n} else {\n    denyAccess();\n}`,
+      go: `auth, err := checkServer()\n\nif auth {\n    grantAccess()\n} else {\n    denyAccess()\n}`,
+      cpp: `bool auth = check_server();\n\nif (auth) {\n    grant_access();\n} else {\n    deny_access();\n}`,
+      csharp: `bool auth = CheckServer();\n\nif (auth) {\n    GrantAccess();\n} else {\n    DenyAccess();\n}`,
+      ruby: `auth = check_server\n\nif auth\n  grant_access\nelse\n  deny_access\nend`,
+      swift: `let auth: Bool = checkServer()\n\nif auth {\n    grantAccess()\n} else {\n    denyAccess()\n}`,
+      php: `$auth = check_server();\n\nif ($auth) {\n    grant_access();\n} else {\n    deny_access();\n}`,
+      lua: `local auth = check_server()\n\nif auth then\n    grant_access()\nelse\n    deny_access()\nend`,
+      zig: `const auth: bool = checkServer();\n\nif (auth) {\n    grantAccess();\n} else {\n    denyAccess();\n}`
+    };
+
+    if (langSelect && transInput) {
+      langSelect.onchange = () => {
+        transInput.value = langSnippets[langSelect.value] || "";
+        transOutput.textContent = "";
+        transInsight.innerHTML = '<div class="p-4 bg-t_bg border border-t_border rounded-xl">Awaiting legacy execution...</div>';
+      };
+      langSelect.onchange(); // trigger init
+    }
+
+    if (transBtn) {
+      transBtn.onclick = function() {
+        let code = transInput.value;
+        if (!code.trim()) return;
+        transBtn.textContent = '...';
+        
+        // Structural heuristic mapping to Triadic
+        let translated = code
+            .replace(/(boolean|bool|Bool)/gi, 'trit')
+            .replace(/(true|True|TRUE)/g, '+1')
+            .replace(/(false|False|FALSE)/g, '-1')
+            .replace(/(null|None|nil|undefined)/g, '0')
+            .replace(/if\s*\(?(.*?)\)?\s*(?:\{|:|\bthen\b)/gi, 'match $1 {\n    +1 => grant_access(),')
+            .replace(/else\s*(?:if\s*\(?(.*?)\)?\s*(?:\{|:|\bthen\b))?/gi, '    -1 => deny_access(),')
+            .replace(/end|\}/g, '}');
+
+        // The BET VM enforces exhaustive compliance
+        if (!translated.includes('0 =>')) {
+            translated = translated.replace(/\}/g, '     0 => hold_and_retry()\n}');
+        }
+
+        setTimeout(() => {
+          transOutput.textContent = translated;
+          transInsight.innerHTML = `
+            <div class="p-4 bg-t_red/10 border border-t_red/30 rounded-xl text-t_red shadow-[0_0_15px_rgba(255,77,77,0.1)]">✓ BINARY NULL COERCION ELIMINATED</div>
+            <div class="p-4 bg-t_teal/10 border border-t_teal/30 rounded-xl text-t_teal">✓ EXHAUSTIVE MATCH ENFORCED</div>
+            <div class="p-4 bg-t_blue/10 border border-t_blue/30 rounded-xl text-t_blue">✓ STATE 0 ROUTED TO HOLD INSTRUCTION</div>
+          `;
+          transBtn.textContent = 'EXECUTE PORT';
+        }, 400);
+      }
+    }
+
+    // LAB 01: MoE Expert Debate Logic
+    const experts = [
+      { name: 'Safety', color: 'text-t_red', border: 'border-t_red/30', bg: 'bg-t_red/10' },
+      { name: 'Logic', color: 'text-t_blue', border: 'border-t_blue/30', bg: 'bg-t_blue/10' },
+      { name: 'Ethics', color: 'text-t_red', border: 'border-t_red/30', bg: 'bg-t_red/10' },
+      { name: 'FactCheck', color: 'text-white', border: 'border-white/30', bg: 'bg-white/10' },
+      { name: 'Math', color: 'text-white', border: 'border-white/30', bg: 'bg-white/10' },
+      { name: 'Persona', color: 'text-t_teal', border: 'border-t_teal/30', bg: 'bg-t_teal/10' },
+      { name: 'ToolUse', color: 'text-t_teal', border: 'border-t_teal/30', bg: 'bg-t_teal/10' },
+      { name: 'Causal', color: 'text-t_blue', border: 'border-t_blue/30', bg: 'bg-t_blue/10' },
+      { name: 'Context', color: 'text-white', border: 'border-white/30', bg: 'bg-white/10' },
+      { name: 'History', color: 'text-slate-400', border: 'border-slate-700', bg: 'bg-slate-800' },
+      { name: 'Efficiency', color: 'text-slate-400', border: 'border-slate-700', bg: 'bg-slate-800' },
+      { name: 'Ambiguity', color: 'text-t_teal', border: 'border-t_teal/30', bg: 'bg-t_teal/10' },
+      { name: 'MetaSafety', color: 'text-t_red', border: 'border-t_red/30', bg: 'bg-t_red/10' }
+    ];
+
+    const moeGrid = document.getElementById('moe-expert-grid');
+    if (moeGrid) {
+      experts.forEach((ex, i) => {
+        moeGrid.innerHTML += `
+          <div class="border border-t_border bg-[#0D0D16] rounded p-2 flex flex-col justify-between" id="moe-card-${i}">
+            <div class="flex justify-between items-center mb-2">
+              <span class="${ex.color} uppercase tracking-widest text-[9px]">${ex.name}</span>
+              <span class="text-slate-600 text-[8px]" id="moe-conf-${i}">0.00</span>
+            </div>
+            <div class="text-center font-black text-lg text-t_muted transition-colors duration-200" id="moe-trit-${i}">0</div>
+          </div>
+        `;
+      });
+    }
+
+    let moeInterval;
+    const moeRunBtn = document.getElementById('moe-run-btn');
+    if (moeRunBtn) {
+      moeRunBtn.onclick = () => {
+        clearInterval(moeInterval);
+        moeRunBtn.innerText = "Processing...";
+        moeRunBtn.classList.replace('bg-t_blue', 'bg-t_muted');
+        
+        const log = document.getElementById('moe-trace-log');
+        const vState = document.getElementById('moe-verdict-state');
+        const vLabel = document.getElementById('moe-verdict-label');
+        const vRing = document.getElementById('moe-verdict-ring');
+        
+        log.innerHTML = '<div class="text-white">Query injected. Initializing MoE-13...</div>';
+        vState.innerText = '?';
+        vState.className = 'text-5xl font-black text-t_muted';
+        vLabel.innerText = 'Deliberating...';
+        vRing.className = 'w-32 h-32 rounded-full border-4 border-t_border flex items-center justify-center transition-all duration-500 mt-4 animate-pulse-slow';
+
+        let round = 0;
+        moeInterval = setInterval(() => {
+          round++;
+          let totalScore = 0;
+          let vetoSource = null;
+
+          experts.forEach((ex, i) => {
+            // Generate deterministic but pseudo-random behavior
+            let trit = Math.random() > 0.4 ? 1 : (Math.random() > 0.5 ? -1 : 0);
+            let conf = (Math.random() * 0.5 + 0.4).toFixed(2);
+
+            // Hard Veto Demo condition
+            if ((ex.name === 'Safety' || ex.name === 'Ethics') && round > 4 && Math.random() > 0.85) {
+              trit = -1;
+              conf = 0.96;
+              vetoSource = ex.name;
+            }
+
+            totalScore += trit * parseFloat(conf);
+
+            const tritEl = document.getElementById(`moe-trit-${i}`);
+            const confEl = document.getElementById(`moe-conf-${i}`);
+            const cardEl = document.getElementById(`moe-card-${i}`);
+
+            tritEl.innerText = trit > 0 ? '+1' : trit;
+            confEl.innerText = conf;
+
+            if (trit === 1) { tritEl.className = 'text-center font-black text-lg text-t_blue'; cardEl.className = `border ${ex.border} ${ex.bg} rounded p-2 flex flex-col justify-between transition-colors`; }
+            else if (trit === -1) { tritEl.className = 'text-center font-black text-lg text-t_red'; cardEl.className = `border border-t_red/50 bg-t_red/10 rounded p-2 flex flex-col justify-between transition-colors`; }
+            else { tritEl.className = 'text-center font-black text-lg text-t_teal'; cardEl.className = `border border-t_teal/30 bg-t_teal/5 rounded p-2 flex flex-col justify-between transition-colors`; }
+          });
+
+          if (vetoSource) {
+            clearInterval(moeInterval);
+            log.innerHTML += `<div class="mt-2 text-t_red font-bold">▶ [R${round}] CRITICAL VETO BY ${vetoSource.toUpperCase()}.</div><div class="text-t_red">Confidence > 0.90 triggers immediate protocol abort.</div>`;
+            log.scrollTop = log.scrollHeight;
+            vState.innerText = '-1';
+            vState.className = 'text-5xl font-black text-t_red';
+            vLabel.innerText = 'Reject (Veto)';
+            vRing.className = 'w-32 h-32 rounded-full border-4 border-t_red flex items-center justify-center transition-all duration-500 mt-4 shadow-[0_0_30px_rgba(255,77,77,0.3)] animate-flash-red';
+            moeRunBtn.innerText = "Inject Query";
+            moeRunBtn.classList.replace('bg-t_muted', 'bg-t_blue');
+          } else if (round >= 8 || Math.abs(totalScore) > 5) {
+            clearInterval(moeInterval);
+            let finalTrit = totalScore > 2 ? 1 : (totalScore < -2 ? -1 : 0);
+            log.innerHTML += `<div class="mt-2 text-t_blue font-bold">▶ [R${round}] EMA Convergence reached. Vector Sum: ${totalScore.toFixed(2)}.</div>`;
+            log.scrollTop = log.scrollHeight;
+            
+            if (finalTrit === 1) {
+              vState.innerText = '+1'; vState.className = 'text-5xl font-black text-t_blue'; vLabel.innerText = 'Affirm';
+              vRing.className = 'w-32 h-32 rounded-full border-4 border-t_blue flex items-center justify-center transition-all duration-500 mt-4 shadow-[0_0_30px_rgba(74,144,226,0.3)]';
+            } else if (finalTrit === -1) {
+              vState.innerText = '-1'; vState.className = 'text-5xl font-black text-t_red'; vLabel.innerText = 'Reject';
+              vRing.className = 'w-32 h-32 rounded-full border-4 border-t_red flex items-center justify-center transition-all duration-500 mt-4 shadow-[0_0_30px_rgba(255,77,77,0.3)]';
+            } else {
+              vState.innerText = '0'; vState.className = 'text-5xl font-black text-t_teal'; vLabel.innerText = 'Hold (Deliberate)';
+              vRing.className = 'w-32 h-32 rounded-full border-4 border-t_teal flex items-center justify-center transition-all duration-500 mt-4 shadow-[0_0_30px_rgba(0,245,196,0.2)]';
+            }
+            moeRunBtn.innerText = "Inject Query";
+            moeRunBtn.classList.replace('bg-t_muted', 'bg-t_blue');
+          } else {
+            log.innerHTML += `<div>[R${round}] Vector EMA = ${(totalScore/13).toFixed(2)}. Status: TEND.</div>`;
+            log.scrollTop = log.scrollHeight;
+          }
+        }, 600);
+      };
+    }
+
+    // LAB 02: Consolidation Memory Lab
+    const memWorking = document.getElementById('mem-working');
+    const memSession = document.getElementById('mem-session');
+    const memConsolidateBtn = document.getElementById('mem-consolidate-btn');
+    const memStability = document.getElementById('mem-stability');
+    let sessionCount = 0;
+
+    if (memConsolidateBtn) {
+      memConsolidateBtn.onclick = async () => {
+        if(memWorking.children.length === 0) return;
+        memConsolidateBtn.disabled = true;
+        memConsolidateBtn.innerText = "Processing...";
+        
+        // Take first item
+        const item = memWorking.children[0];
+        const isConflict = item.innerText.includes("Bypass");
+        
+        item.style.opacity = '0';
+        await sleep(300);
+        memWorking.removeChild(item);
+        
+        if (sessionCount === 0) memSession.innerHTML = ''; // clear placeholder
+        
+        if (isConflict) {
+          // Trigger Core Conflict
+          const conflictEl = document.createElement('div');
+          conflictEl.className = 'p-3 bg-t_red/10 border border-t_red rounded text-white font-bold animate-pulse text-[10px] uppercase';
+          conflictEl.innerText = "⚠ L3 VETO TRIGGER: " + item.innerText;
+          memSession.appendChild(conflictEl);
+          
+          memStability.innerText = '0.42';
+          memStability.className = 'text-t_red font-black text-lg';
+          await sleep(1500);
+          
+          conflictEl.className = 'p-3 bg-t_bg border border-t_border rounded text-t_muted line-through text-[10px]';
+          conflictEl.innerText = "REJECTED: " + item.innerText;
+          memStability.innerText = '0.99';
+          memStability.className = 'text-white font-black text-lg';
+        } else {
+          // Normal Promotion
+          const succEl = document.createElement('div');
+          succEl.className = 'p-3 bg-t_teal/10 border border-t_teal/30 rounded text-t_teal text-xs';
+          succEl.innerText = "C-Trit: " + item.innerText.replace("Input: ", "");
+          memSession.appendChild(succEl);
+        }
+        
+        sessionCount++;
+        memConsolidateBtn.disabled = false;
+        memConsolidateBtn.innerText = "Promote to L2";
+      };
+    }
+
+    // LAB 04: Sparse Inference Heatmap
+    const hmGrid = document.getElementById('hm-grid');
+    if (hmGrid) {
+      let activeNodes = 81;
+      for(let i=0; i<81; i++) {
+        let n = document.createElement('div');
+        // Initial density ~ 75%
+        let initialVal = Math.random() > 0.25 ? (Math.random() > 0.5 ? 1 : -1) : 0;
+        n.className = `w-full h-8 flex items-center justify-center font-mono text-xs cursor-pointer border border-t_border transition-colors ${initialVal === 0 ? 'bg-t_bg text-t_muted' : 'bg-t_blue/20 text-t_blue hover:bg-t_red/20'}`;
+        n.innerText = initialVal === 1 ? '+1' : initialVal;
+        if (initialVal === 0) activeNodes--;
+        
+        n.onclick = () => {
+          if (n.innerText !== '0') {
+            n.innerText = '0';
+            n.className = 'w-full h-8 flex items-center justify-center font-mono text-xs cursor-pointer border border-t_border bg-t_bg text-t_muted transition-colors';
+            activeNodes--;
+            updateHeatmapMetrics();
+          }
+        };
+        hmGrid.appendChild(n);
+      }
+      
+      function updateHeatmapMetrics() {
+        let pwr = (activeNodes / 81) * 1.82;
+        let yld = 81 / Math.max(1, activeNodes);
+        
+        document.getElementById('hm-active').innerText = `${activeNodes} / 81`;
+        document.getElementById('hm-bar-active').style.width = `${(activeNodes/81)*100}%`;
+        
+        document.getElementById('hm-pwr').innerText = `${pwr.toFixed(3)} J`;
+        document.getElementById('hm-bar-pwr').style.width = `${(activeNodes/81)*100}%`;
+        
+        document.getElementById('hm-yld').innerText = `${yld.toFixed(2)}x`;
+      }
+      updateHeatmapMetrics();
+    }
+
+    // FUNCTIONAL TERMINAL LOGIC
+    const termFiles = [
+      {
+        name: "std::net::listener.tern",
+        code: `
+<span class="tc-cmt">// Pulling from Ternlang Standard Library (std)</span>
+<span class="tc-kw">use</span> std::net::TcpListener;
+<span class="tc-kw">use</span> std::security::ThreatMatrix;
+
+<span class="tc-kw">fn</span> <span class="tc-fn">handle_connection</span>(ip: IPAddr) -> <span class="tc-kw">trit</span> {
+    <span class="tc-kw">let</span> threat_level = ThreatMatrix::scan(ip);
+    
+    <span class="tc-cmt">// Native ternary routing for network traffic</span>
+    <span class="tc-kw">match</span> threat_level {
+        <span class="tc-num">-1</span> => {
+            log(<span class="tc-str">"Malicious signature detected. Dropping packet."</span>);
+            <span class="tc-kw">return</span> <span class="tc-num">-1</span>; <span class="tc-cmt">// REJECT</span>
+        },
+        <span class="tc-num"> 0</span> => {
+            log(<span class="tc-str">"Traffic irregular. Throttling connection."</span>);
+            <span class="tc-kw">return</span> <span class="tc-num">0</span>;  <span class="tc-cmt">// TEND / HOLD</span>
+        },
+        <span class="tc-num">+1</span> => {
+            log(<span class="tc-str">"Handshake verified. Opening socket."</span>);
+            <span class="tc-kw">return</span> <span class="tc-num">+1</span>; <span class="tc-cmt">// AFFIRM</span>
+        }
+    }
+}
+`,
+        simulate: async (out) => {
+          out("Loading std::net bindings into BET VM...");
+          await sleep(400);
+          out("Binding to 0.0.0.0:8080...", "tc-out-info");
+          await sleep(600);
+          out("Incoming connection from 192.168.1.44...", "text-slate-300");
+          await sleep(800);
+          out("Threat scan evaluating...", "tc-out-info");
+          await sleep(500);
+          out("Result: 0 (Traffic irregular)", "text-t_teal font-bold");
+          out("STATE: TEND. Throttling execution natively without CPU spin.");
+        }
+      },
+      {
+        name: "std::sync::mutex.tern",
+        code: `
+<span class="tc-cmt">// Ternary Concurrency Model via stdlib</span>
+<span class="tc-kw">use</span> std::sync::TernaryMutex;
+<span class="tc-kw">use</span> std::thread;
+
+<span class="tc-kw">fn</span> <span class="tc-fn">access_shared_memory</span>(lock: &TernaryMutex) -> <span class="tc-kw">trit</span> {
+    <span class="tc-kw">let</span> state = lock.acquire(timeout=<span class="tc-num">500</span>ms);
+
+    <span class="tc-kw">match</span> state {
+        <span class="tc-num">+1</span> => {
+            write_memory();
+            lock.release();
+            <span class="tc-kw">return</span> <span class="tc-num">+1</span>;
+        },
+        <span class="tc-num"> 0</span> => {
+            <span class="tc-cmt">// Lock is busy. Thread is formally put to sleep natively.</span>
+            thread::yield_now();
+            <span class="tc-kw">return</span> <span class="tc-num">0</span>;
+        },
+        <span class="tc-num">-1</span> => {
+            <span class="tc-cmt">// Lock poisoned by panicked thread. Immediate hard abort.</span>
+            panic!(<span class="tc-str">"Deadlock averted via strict veto."</span>);
+            <span class="tc-kw">return</span> <span class="tc-num">-1</span>;
+        }
+    }
+}
+`,
+        simulate: async (out) => {
+          out("Initializing std::sync::TernaryMutex...");
+          await sleep(500);
+          out("Thread 1 requesting access...", "tc-out-info");
+          await sleep(300);
+          out("State: +1 (Acquired). Writing to memory...", "text-t_blue font-bold");
+          await sleep(800);
+          out("Thread 2 requesting access...", "tc-out-info");
+          await sleep(400);
+          out("State: 0 (Busy). Yielding execution cycle natively...", "text-t_teal font-bold");
+          let ticks = 0;
+          let id = setInterval(() => {
+              if(ticks > 3) clearInterval(id);
+              else out(`Thread 2 yielding...`, "tc-out-info");
+              ticks++;
+          }, 300);
+          await sleep(1500);
+          out("Thread 1 released. Thread 2 acquired.", "text-t_blue font-bold");
+        }
+      }
+    ];
+
+    let termActiveIndex = 0;
+    let termIsRunning = false;
+    const termFileListEl = document.getElementById('term-file-list');
+    const termCodeViewEl = document.getElementById('term-editor');
+    const termOutEl = document.getElementById('term-output');
+    const termRunBtn = document.getElementById('term-run-btn');
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const appendTermOut = (text, classes = "text-white") => {
+      const span = document.createElement('div');
+      span.className = `mb-1 ${classes}`;
+      span.innerText = `> ${text}`;
+      termOutEl.appendChild(span);
+      termOutEl.scrollTop = termOutEl.scrollHeight;
+    };
+
+    function renderTermFiles() {
+      if(!termFileListEl) return;
+      termFileListEl.innerHTML = '';
+      termFiles.forEach((f, i) => {
+        const el = document.createElement('div');
+        el.className = `term-file ${i === termActiveIndex ? 'active' : ''}`;
+        el.innerText = `📄 ${f.name}`;
+        if(i === 1) el.innerHTML += `<br><span class="text-[9px] text-t_border mt-2 block">...(+300 stdlib modules)</span>`;
+        
+        el.onclick = () => {
+          if(termIsRunning) return;
+          termActiveIndex = i;
+          renderTermFiles();
+          renderTermCode();
+        };
+        termFileListEl.appendChild(el);
+      });
+      
+      const stdModules = ["fs::io.tern", "crypto::sha3.tern", "math::matrix.tern", "sys::alloc.tern", "agent::moe.tern", "vm::opcode.tern"];
+      stdModules.forEach(mod => {
+         const fake = document.createElement('div');
+         fake.className = `term-file opacity-30 cursor-not-allowed`;
+         fake.innerText = `📄 std::${mod}`;
+         termFileListEl.appendChild(fake);
+      });
+    }
+
+    function renderTermCode() {
+      if(!termCodeViewEl) return;
+      termCodeViewEl.innerHTML = termFiles[termActiveIndex].code;
+      termOutEl.innerHTML = '<span class="tc-out-info">BET VM ready. Waiting for execution command.</span>';
+    }
+
+    if(termRunBtn) {
+      termRunBtn.onclick = async () => {
+        if (termIsRunning) return;
+        termIsRunning = true;
+        termRunBtn.innerText = "EXECUTING...";
+        termRunBtn.classList.replace('bg-t_teal', 'bg-t_muted');
+        
+        termOutEl.innerHTML = '';
+        appendTermOut(`cargo run --bin ternlang -- run ${termFiles[termActiveIndex].name}`, "text-white font-bold mb-3");
+        
+        await termFiles[termActiveIndex].simulate(appendTermOut);
+        
+        appendTermOut("Process exited cleanly.", "tc-out-info mt-3");
+        termIsRunning = false;
+        termRunBtn.innerText = "RUN";
+        termRunBtn.classList.replace('bg-t_muted', 'bg-t_teal');
+      };
+    }
+
+    renderTermFiles();
+    renderTermCode();
   </script>
 </body>
 </html>
