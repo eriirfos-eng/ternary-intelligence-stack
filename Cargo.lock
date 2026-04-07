@@ -1746,6 +1746,7 @@ dependencies = [
  "ternlang-core",
  "ternlang-ml",
  "ternlang-moe",
+ "uuid",
 ]
 
 [[package]]
