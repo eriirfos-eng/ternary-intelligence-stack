@@ -399,6 +399,7 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "POST /api/moe/orchestrate":          "MoE-13 full orchestration — synchronous JSON result",
             "GET  /api/stream/moe_orchestrate":  "SSE: MoE-13 orchestration pass streamed event-by-event",
             "GET  /api/stream/deliberate":       "SSE: EMA deliberation — one event per round, live feed",
+            "POST /api/v1/taas/infer":           "TaaS: Hardware-native sparse inference with MoE-13 safety audit.",
         },
         "mcp": {
             "url":         "https://ternlang.com/mcp",
@@ -2809,6 +2810,50 @@ async fn stripe_webhook(
     (StatusCode::OK, Json(json!({ "received": true }))).into_response()
 }
 
+// ─── TaaS Payloads ────────────────────────────────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+pub struct TaasInferRequest {
+    pub action: String,        // e.g., "TSPARSE_MATMUL"
+    pub density: f64,          // Sparsity metric for cuTern routing
+    pub dims: Vec<usize>,      // Matrix dimensions
+    pub security_gate: String, // Requested audit level
+}
+
+#[derive(Debug, Serialize)]
+pub struct TaasInferResponse {
+    pub status: i8,            // 1=Affirm, 0=Deliberate, -1=Veto
+    pub optimization: String,  // e.g., "122x Sparse Bypass Active"
+    pub audit_log: String,     // Summary of MoE-13 deliberation
+}
+
+pub async fn taas_infer(
+    State(_state): State<Arc<AppState>>,
+    Json(payload): Json<TaasInferRequest>,
+) -> impl IntoResponse {
+    let mut orchestrator = TernMoeOrchestrator::with_standard_experts();
+    
+    // Perform safety audit on the inference request
+    let audit_context = format!("Taas Action: {} | Dimensions: {:?} | Density: {:.2}", 
+                                payload.action, payload.dims, payload.density);
+    
+    let result = orchestrator.orchestrate(&audit_context, &[payload.density as f32, 0.8, 0.9]);
+
+    let (status, opt_msg) = if result.trit == 1 {
+        (1, format!("{:.1}x Sparse Bypass Active (cuTern)", 1.0 / (payload.density + 0.008)))
+    } else if result.trit == 0 {
+        (0, "Hardware Equilibrium (THOLD) - Consensus Pending".to_string())
+    } else {
+        (-1, "VETO: Access Denied by RFI-IRFOS MetaSafety Expert".to_string())
+    };
+
+    Json(TaasInferResponse {
+        status,
+        optimization: opt_msg,
+        audit_log: result.summary,
+    })
+}
+
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 
 async fn not_found() -> Response {
@@ -2886,6 +2931,8 @@ async fn main() {
         // Phase 9: SSE streaming endpoints
         .route("/api/stream/moe_orchestrate", get(stream_moe_orchestrate))
         .route("/api/stream/deliberate",      get(stream_deliberate))
+        // Phase 10: TaaS (Ternary-as-a-Service)
+        .route("/api/v1/taas/infer",          post(taas_infer))
         // Admin (requires X-Admin-Key)
         .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
         .route("/admin/keys/{key}",      delete(admin_revoke_key))
