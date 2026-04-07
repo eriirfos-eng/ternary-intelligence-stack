@@ -917,6 +917,10 @@ fn run_resume_command(
                 )),
             })
         }
+        SlashCommand::Discover => Ok(ResumeCommandOutcome {
+            session: session.clone(),
+            message: Some(format_node_discovery(discover_ternary_nodes())),
+        }),
         SlashCommand::Bughunter { .. }
         | SlashCommand::Commit
         | SlashCommand::Pr { .. }
@@ -3923,10 +3927,6 @@ mod tests {
             &events[0],
             AssistantEvent::ToolUse { name, input, .. }
                 if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
-        ));
-    }
-}
-_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
         ));
     }
 }
