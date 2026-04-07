@@ -329,6 +329,7 @@ Every example follows the same pattern: three states (`-1` / `0` / `+1`) map to 
 | 248 | [248_green_bond_verification.tern](248_green_bond_verification.tern) | Financial Impact Audit with "Sustainability Verification" state |
 | 249 | [249_corporate_esg_reporting.tern](249_corporate_esg_reporting.tern) | Governance & Social with "Materiality Assessment" state |
 | 250 | [250_supply_chain_human_rights.tern](250_supply_chain_human_rights.tern) | Ethical Sourcing with "Corrective Action" state |
+| 251 | [251_monopoly_payload_standards_demo.tern](251_monopoly_payload_standards_demo.tern) | Integrated demo of Industrial Standards (T-TOKEN, T-SQL, T-SENSE, T-Fi) |
 
 ### Qutrit Neural Networks (QNN)
 *Based on the QNN research paper by Simeon Kepp / RFI-IRFOS. The ternary state space {-1, 0, +1} maps exactly to the qutrit basis |−⟩/|0⟩/|+⟩ — decay/stasis/growth. No encoding layer needed.*
