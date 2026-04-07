@@ -24,9 +24,9 @@ use compat_harness::{extract_manifest, UpstreamPaths};
 use init::initialize_repo;
 use render::{MarkdownStreamState, Spinner, TerminalRenderer};
 use runtime::{
-    clear_oauth_credentials, generate_pkce_pair, generate_state, load_system_prompt,
-    parse_oauth_callback_request_target, save_oauth_credentials, ApiClient, ApiRequest,
-    AssistantEvent, CompactionConfig, ConfigLoader, ConfigSource, ContentBlock,
+    clear_oauth_credentials, discover_ternary_nodes, generate_pkce_pair, generate_state,
+    load_system_prompt, parse_oauth_callback_request_target, save_oauth_credentials, ApiClient,
+    ApiRequest, AssistantEvent, CompactionConfig, ConfigLoader, ConfigSource, ContentBlock,
     ConversationMessage, ConversationRuntime, MessageRole, OAuthAuthorizationRequest, OAuthConfig,
     OAuthTokenExchangeRequest, PermissionMode, PermissionPolicy, ProjectContext, RuntimeError,
     Session, TokenUsage, ToolError, ToolExecutor, UsageTracker,
@@ -1217,11 +1217,20 @@ impl LiveCli {
             SlashCommand::Session { action, target } => {
                 self.handle_session_command(action.as_deref(), target.as_deref())?
             }
+            SlashCommand::Discover => {
+                self.run_discovery();
+                false
+            }
             SlashCommand::Unknown(name) => {
                 eprintln!("unknown slash command: /{name}");
                 false
             }
         })
+    }
+
+    fn run_discovery(&self) {
+        let nodes = discover_ternary_nodes();
+        println!("{}", format_node_discovery(nodes));
     }
 
     fn persist_session(&self) -> Result<(), Box<dyn std::error::Error>> {
@@ -3221,6 +3230,28 @@ fn print_help() {
     let _ = print_help_to(&mut io::stdout());
 }
 
+fn format_node_discovery(nodes: Vec<TernaryNode>) -> String {
+    let mut lines = vec![
+        "\x1b[1;36m=== TERNARY NODE DISCOVERY (IoT Mode) ===\x1b[0m".to_string(),
+        format!("Found {} compatible nodes on local network.", nodes.len()),
+        "".to_string(),
+    ];
+
+    for node in nodes {
+        let status_color = match node.status.as_str() {
+            "Active" => "\x1b[1;32m",
+            "Hold"   => "\x1b[1;33m",
+            _        => "\x1b[1;31m",
+        };
+        lines.push(format!("  \x1b[1m{:<15}\x1b[0m | IP: {:<12} | Status: {}{}\x1b[0m | Comp: {:.0}%", 
+            node.hostname, node.ip, status_color, node.status, node.compatibility * 100.0));
+    }
+
+    lines.push("".to_string());
+    lines.push("\x1b[2mAll .tern roads lead to RFI-IRFOS.\x1b[0m".to_string());
+    lines.join("\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -3892,6 +3923,10 @@ mod tests {
             &events[0],
             AssistantEvent::ToolUse { name, input, .. }
                 if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
+        ));
+    }
+}
+_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
         ));
     }
 }

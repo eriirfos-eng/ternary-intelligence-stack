@@ -171,6 +171,12 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         argument_hint: Some("[list|switch <session-id>]"),
         resume_supported: false,
     },
+    SlashCommandSpec {
+        name: "discover",
+        summary: "Passive discovery of local ternary-compatible nodes (IoT Mode)",
+        argument_hint: None,
+        resume_supported: true,
+    },
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -222,6 +228,7 @@ pub enum SlashCommand {
         action: Option<String>,
         target: Option<String>,
     },
+    Discover,
     Unknown(String),
 }
 
@@ -239,6 +246,7 @@ impl SlashCommand {
             "help" => Self::Help,
             "status" => Self::Status,
             "compact" => Self::Compact,
+            "discover" => Self::Discover,
             "bughunter" => Self::Bughunter {
                 scope: remainder_after_command(trimmed, command),
             },
@@ -492,6 +500,7 @@ mod tests {
                 target: Some("abc123".to_string())
             })
         );
+        assert_eq!(SlashCommand::parse("/discover"), Some(SlashCommand::Discover));
     }
 
     #[test]
@@ -520,8 +529,9 @@ mod tests {
         assert!(help.contains("/version"));
         assert!(help.contains("/export [file]"));
         assert!(help.contains("/session [list|switch <session-id>]"));
-        assert_eq!(slash_command_specs().len(), 22);
-        assert_eq!(resume_supported_slash_commands().len(), 11);
+        assert!(help.contains("/discover"));
+        assert_eq!(slash_command_specs().len(), 23);
+        assert_eq!(resume_supported_slash_commands().len(), 12);
     }
 
     #[test]
