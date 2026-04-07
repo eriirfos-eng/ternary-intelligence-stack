@@ -157,6 +157,11 @@ curl -X POST https://ternlang-api.fly.dev/mcp \
 | [`ternlang-bci`](ternlang-root/ternlang-bci/) | Tier 3 | Brain-Computer Interface (Native Inhibitory Decoding) |
 | [`ternlang-astro`](ternlang-root/ternlang-astro/) | Tier 3 | Interplanetary Delay-Tolerant Networking (DTN) |
 | [`ternlang-swarm`](ternlang-root/ternlang-swarm/) | Tier 3 | Triadic Kinematics (Biological Hesitation for Robotics) |
+| [`ternlang-bio`](ternlang-root/ternlang-bio/) | Tier 3 | Triadic Genomic Sequencing (Native Epigenetic Methylation) |
+| [`ternlang-sec`](ternlang-root/ternlang-sec/) | Tier 3 | Post-Quantum Cryptography (Native Triadic Lattices) |
+| [`ternlang-grid`](ternlang-root/ternlang-grid/) | Tier 3 | Triadic Energy Distribution (State 0 Phase-Hold) |
+| [`ternlang-cad`](ternlang-root/ternlang-cad/) | Tier 3 | Topology Optimization (Triadic Metamaterials) |
+| [`ternlang-edu`](ternlang-root/ternlang-edu/) | Tier 1 | "The Education Cartel" (Standardized Curriculum Tools) |
 
 ---
 
@@ -171,6 +176,10 @@ RFI-IRFOS is standardizing the triadic era. These are the definitive specificati
 - [**TTP**](ternlang-root/spec/standards/TTP-v1.0.md): Replaces HTTP Status 200/400 with 000 (Deliberating).
 - [**T-POSIX**](ternlang-root/spec/standards/T-POSIX-v1.0.md): Triadic process signals and scheduler logic.
 - [**T-GENESIS**](ternlang-root/spec/standards/GENESIS-ANCHOR.md): The cryptographic root of trust and Fly.io tether.
+- [**T-BIO v1.0**](ternlang-root/spec/standards/T-BIO-v1.0.md): Triadic Genomic Sequencing Standard.
+- [**T-SEC v1.0**](ternlang-root/spec/standards/T-SEC-v1.0.md): Triadic Post-Quantum Cryptography (T-PQKE).
+- [**T-GRID v1.0**](ternlang-root/spec/standards/T-GRID-v1.0.md): Triadic Energy Distribution Standard.
+- [**T-CAD v1.0**](ternlang-root/spec/standards/T-CAD-v1.0.md): Triadic Topology Optimization Standard.
 
 ---
 
