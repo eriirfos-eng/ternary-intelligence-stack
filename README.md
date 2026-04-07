@@ -45,8 +45,6 @@ ternlang-root/spec/   Institutional standards (BET-ISA, IEEE TFP-754, etc.)
 
 ##  Ecosystem Architecture
 
-## Ecosystem Architecture
-
 ```text
 ┌──────────────────────────────────────────────────────────────┐
 │                    TERNARY INTELLIGENCE STACK                │
@@ -216,7 +214,7 @@ curl -X POST https://ternlang-api.fly.dev/mcp \
 
 ---
 
-## Architecture
+## Stack
 
 | Crate | Tier | Description |
 |-------|------|-------------|
