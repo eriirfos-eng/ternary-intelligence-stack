@@ -212,3 +212,4 @@ Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
 
 *Obm. Simeon Kepp · [Research Focus Institute – Interdisciplinary Research Facility for Open Sciences](https://ternlang.com)*  
 *ZVR: 1015608684 · Elisabethinergasse 25, 8020 Graz, Austria*
+<!-- Index Nudge: Tue Apr  7 10:10:45 UTC 2026 -->
