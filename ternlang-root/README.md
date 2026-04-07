@@ -303,7 +303,7 @@ For local stdio transport (Claude Desktop, offline use):
 RFI-IRFOS is establishing the regulatory and technical standards for the post-binary era. These specifications are designed to mandate Ternary compliance across global hardware and AI industries.
 
 - [**BET-ISA v1.0**](spec/standards/BET-ISA-v1.0.md): The definitive 9-Trit RISC Instruction Set Architecture.
-- [**IEEE TFP-754 (Draft)**](spec/standards/IEEE-TFP-754.md): Global standard for Ternary Floating-Point Arithmetic.
+- [**IEEE TFP-754**](spec/standards/IEEE-TFP-754.md): Global standard for Ternary Floating-Point Arithmetic.
 - [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating State 0 abstention in safety-critical AI.
 
 ---
