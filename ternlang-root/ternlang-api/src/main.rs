@@ -2850,7 +2850,7 @@ pub async fn taas_infer(
     Json(TaasInferResponse {
         status,
         optimization: opt_msg,
-        audit_log: result.pair,
+        audit_log: format!("{:?}", result.pair),
     })
 }
 
