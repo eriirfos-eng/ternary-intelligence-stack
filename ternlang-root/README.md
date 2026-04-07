@@ -303,6 +303,10 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-tson`](ternlang-tson/) | BSL-1.1 | **TSON**: Ternary Standard Object Notation (30% denser than JSON) |
 | [`ternlang-ttp`](ternlang-ttp/) | BSL-1.1 | **TTP**: Triadic Transfer Protocol (Status 000: Deliberating) |
 | [`ternlang-posix`](ternlang-posix/) | BSL-1.1 | **T-POSIX**: Triadic Operating System Interface |
+| [`ternlang-time`](ternlang-time/) | BSL-1.1 | **T-NTP**: Triadic Network Time Protocol (Temporal Hold) |
+| [`ternlang-auth`](ternlang-auth/) | BSL-1.1 | **T-DID**: Triadic Decentralized Identity (Provisional Auth) |
+| [`ternlang-gfx`](ternlang-gfx/) | BSL-1.1 | **T-GPU**: Triadic Graphics Pipeline (Depth-as-a-Trit) |
+| [`ternlang-contract`](ternlang-contract/) | BSL-1.1 | **T-Contract**: Triadic Smart Contracts (Arbitration State) |
 
 **212+ tests · All passing · v0.3.0**
 
@@ -318,6 +322,10 @@ RFI-IRFOS is establishing the regulatory and technical standards for the post-bi
 - [**TSON v1.0**](spec/standards/TSON-v1.0.md): Optimized data serialization for triadic systems.
 - [**TTP v1.0**](spec/standards/TTP-v1.0.md): Web transfer protocol eliminating binary timeouts.
 - [**T-POSIX v1.0**](spec/standards/T-POSIX-v1.0.md): Operating system interface redefining process state logic.
+- [**T-NTP v1.0**](spec/standards/T-NTP-v1.0.md): Network time protocol with native temporal equilibrium.
+- [**T-DID v1.0**](spec/standards/T-DID-v1.0.md): Decentralized identity standard with provisional authorization.
+- [**T-GPU v1.0**](spec/standards/T-GPU-v1.0.md): Graphics pipeline standard for sparse 3D rendering.
+- [**T-Contract v1.0**](spec/standards/T-Contract-v1.0.md): Smart contract standard with native hardware arbitration.
 
 ---
 
