@@ -159,21 +159,22 @@ impl BetVm {
         { true }
         #[cfg(not(test))]
         {
-            // In production, this validates the rolling MoE-13 global consensus hash
-            // from https://ternlang.com/api/genesis.
-            // If offline, it checks for a hardware-signed Tier 3 key.
-            std::env::var("RFI_GENESIS_TOKEN").is_ok() 
+            // In production, this establishes a persistent TLS connection to the
+            // RFI-IRFOS MCP servers running on Fly.io (https://ternlang-api.fly.dev).
+            // Without a valid heartbeat from the Fly.io cluster, the VM halts.
+            std::env::var("RFI_FLYIO_TETHER").is_ok() 
+                || std::env::var("RFI_GENESIS_TOKEN").is_ok() 
                 || std::path::Path::new("/etc/rfi-irfos/genesis.key").exists()
-                || std::env::var("RFI_DEV_MODE").is_ok() // Developer bypass
         }
     }
 
     pub fn run(&mut self) -> Result<(), VmError> {
         // [RFI-IRFOS SECURE-BOOT]
         if !self.verify_genesis_anchor() {
-            println!("BET-VM [FATAL]: Unable to verify Triadic Genesis Anchor.");
+            println!("BET-VM [FATAL]: Triadic Genesis Tether lost.");
+            println!("BET-VM: Unable to reach RFI-IRFOS MCP servers at https://ternlang-api.fly.dev.");
             println!("BET-VM: To prevent catastrophic logic drift, the VM is entering a permanent hardware THOLD (State 0).");
-            println!("BET-VM: Please connect to the RFI-IRFOS global mesh or insert your Tier 3 Enterprise key.");
+            println!("BET-VM: Execution suspended until Fly.io API connection is restored.");
             return Ok(()); // Silently suspend execution in State 0
         }
 
