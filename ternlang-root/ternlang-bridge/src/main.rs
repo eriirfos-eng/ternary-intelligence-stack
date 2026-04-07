@@ -3,7 +3,6 @@
 
 use std::env;
 use std::fs;
-use std::path::Path;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

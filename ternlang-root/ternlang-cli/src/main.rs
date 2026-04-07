@@ -535,9 +535,9 @@ fn enlighten() {
         })
     }).collect(); // 81 floats → 9×9
 
-    let τ = bitnet_threshold(&weights);
-    let w = TritMatrix::from_f32(9, 9, &weights, τ);
-    let input = TritMatrix::from_f32(9, 9, &weights, τ); // self-referential
+    let tau = bitnet_threshold(&weights);
+    let w = TritMatrix::from_f32(9, 9, &weights, tau);
+    let input = TritMatrix::from_f32(9, 9, &weights, tau); // self-referential
     let result = benchmark(&input, &w);
 
     println!();
