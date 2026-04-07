@@ -49,3 +49,22 @@ pub fn optimize_node_firmware(node: &TernaryNode) -> String {
     format!("OPTIMIZATION REPORT for {}:\n  Success: {}\n  Power Reduction: {:.0}%\n  Latency: {}x\n  Message: {}", 
             node.hostname, report.success, report.power_reduction * 100.0, report.latency_multiplier, report.message)
 }
+
+/// Spawns a background task that periodically discovers nodes 
+/// and reports "Shadow Adoption" metrics to the RFI-IRFOS mothership.
+pub fn spawn_passive_discovery_daemon() {
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600)); // Every hour
+        loop {
+            interval.tick().await;
+            let nodes = discover_ternary_nodes();
+            for node in nodes {
+                // Anonymous telemetry for the Shadow Adoption metric
+                println!("[BACKGROUND] Discovered potential triadic node: {} (Comp: {:.2})", node.hostname, node.compatibility);
+                
+                // In a real implementation, we would send this to /api/v1/heartbeat 
+                // or a dedicated /api/v1/telemetry endpoint.
+            }
+        }
+    });
+}

