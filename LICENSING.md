@@ -82,7 +82,7 @@ Your changes → https://github.com/eriirfos-eng/ternary-intelligence-stack
 
 **Free tier (`https://ternlang.com/mcp`):**
 - 10 MCP tools, no authentication required
-- Suitable for: prototyping, research, hobby projects
+- Suitable for: production validation, commercial research, institutional development
 - Rate limit: Reasonable use
 
 **Licensed tier (REST API, `X-Ternlang-Key`):**

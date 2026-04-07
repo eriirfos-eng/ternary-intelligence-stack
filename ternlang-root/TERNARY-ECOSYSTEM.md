@@ -2,7 +2,8 @@
 
 **RFI-IRFOS Ternary Intelligence Stack — Compatibility & Convergence Map**
 
-> Balanced ternary computing has been developed in fragments across universities, hobbyist communities, and quantum research labs. This document maps the field and shows how each effort relates to ternlang — not as competition, but as potential interoperability targets.
+> Balanced ternary computing has been developed in fragments across universities, academic and independent research communities, and quantum research labs.
+ This document maps the field and shows how each effort relates to ternlang — not as competition, but as potential interoperability targets.
 
 ---
 

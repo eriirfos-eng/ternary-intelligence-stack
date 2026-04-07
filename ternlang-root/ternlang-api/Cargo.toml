@@ -1,6 +1,6 @@
 [package]
 name              = "ternlang-api"
-description       = "ternlang.com HTTP API — REST wrapper for the Ternary Intelligence Stack. Powers /api/trit_decide, /api/trit_vector, and friends."
+description       = "ternlang.com Institutional API Gateway — Core REST interface for the Ternary Intelligence Stack. Powers /api/trit_decide, /api/trit_vector, and the TaaS mesh."
 version.workspace = true
 edition.workspace = true
 license           = "LicenseRef-BSL-1.1"

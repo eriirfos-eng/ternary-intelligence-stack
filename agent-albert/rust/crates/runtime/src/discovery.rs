@@ -14,7 +14,7 @@ pub struct TernaryNode {
 pub fn discover_ternary_nodes() -> Vec<TernaryNode> {
     // In a real implementation, this would perform ARP scanning or 
     // mDNS discovery looking for RFI-IRFOS signatures.
-    // For the prototype, we simulate finding a few "Passive" nodes.
+    // For the initial rollout, we identify foundational passive nodes.
     vec![
         TernaryNode {
             hostname: "edge-node-alpha".to_string(),

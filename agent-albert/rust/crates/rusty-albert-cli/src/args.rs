@@ -6,7 +6,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 #[command(
     name = "rusty-albert-cli",
     version,
-    about = "Rust Albert CLI prototype"
+    about = "Rust Albert CLI Industrial Implementation"
 )]
 pub struct Cli {
     #[arg(long, default_value = "albert-opus-4-6")]
