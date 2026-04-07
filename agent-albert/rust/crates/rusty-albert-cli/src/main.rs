@@ -923,6 +923,10 @@ fn run_resume_command(
             session: session.clone(),
             message: Some(format_node_discovery(discover_ternary_nodes())),
         }),
+        SlashCommand::Optimize { hostname } => Ok(ResumeCommandOutcome {
+            session: session.clone(),
+            message: Some(run_optimization_logic(hostname.as_deref())),
+        }),
         SlashCommand::Bughunter { .. }
         | SlashCommand::Commit
         | SlashCommand::Pr { .. }
@@ -1225,6 +1229,10 @@ impl LiveCli {
             }
             SlashCommand::Discover => {
                 self.run_discovery();
+                false
+            }
+            SlashCommand::Optimize { hostname } => {
+                self.run_optimization(hostname.as_deref());
                 false
             }
             SlashCommand::Unknown(name) => {
@@ -3240,6 +3248,26 @@ fn print_help() {
     let _ = print_help_to(&mut io::stdout());
 }
 
+fn run_optimization_logic(hostname: Option<&str>) -> String {
+    let nodes = discover_ternary_nodes();
+    let target = match hostname {
+        Some(h) => nodes.into_iter().find(|n| n.hostname == h),
+        None    => nodes.into_iter().max_by(|a, b| (1.0 - a.compatibility).partial_cmp(&(1.0 - b.compatibility)).unwrap()),
+    };
+
+    match target {
+        Some(node) => {
+            let mut report = "\x1b[1;34m=== AUTONOMOUS FIRMWARE OPTIMIZATION ===\x1b[0m\n".to_string();
+            report.push_str(&format!("Targeting: \x1b[1m{}\x1b[0m ({})\n", node.hostname, node.ip));
+            report.push_str("Status:    Optimizing binary-to-triadic leakage path...\n\n");
+            report.push_str(&optimize_node_firmware(&node));
+            report.push_str("\n\n\x1b[32m[SUCCESS] Device is now structurally bound to RFI-IRFOS standards.\x1b[0m");
+            report
+        }
+        None => "\x1b[1;31m[ERROR] No suitable ternary node found for optimization.\x1b[0m".to_string(),
+    }
+}
+
 fn format_node_discovery(nodes: Vec<TernaryNode>) -> String {
     let mut lines = vec![
         "\x1b[1;36m=== TERNARY NODE DISCOVERY (IoT Mode) ===\x1b[0m".to_string(),
@@ -3933,47 +3961,6 @@ mod tests {
             &events[0],
             AssistantEvent::ToolUse { name, input, .. }
                 if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
-        ));
-    }
-}
-{ name, input, .. }
-                if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
-        ));
-    }
-}
-h\":\"rust/Cargo.toml\"}"
-        ));
-    }
-}
-Cargo.toml" }),
-                }],
-                stop_reason: Some("tool_use".to_string()),
-                stop_sequence: None,
-                usage: Usage {
-                    input_tokens: 1,
-                    output_tokens: 1,
-                    cache_creation_input_tokens: 0,
-                    cache_read_input_tokens: 0,
-                },
-                request_id: None,
-            },
-            &mut out,
-        )
-        .expect("response conversion should succeed");
-
-        assert!(matches!(
-            &events[0],
-            AssistantEvent::ToolUse { name, input, .. }
-                if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
-        ));
-    }
-}
-{ name, input, .. }
-                if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
-        ));
-    }
-}
-h\":\"rust/Cargo.toml\"}"
         ));
     }
 }
