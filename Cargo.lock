@@ -1692,6 +1692,10 @@ name = "ternlang-grid"
 version = "0.1.0"
 
 [[package]]
+name = "ternlang-harmony"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-hdl"
 version = "0.1.0"
 

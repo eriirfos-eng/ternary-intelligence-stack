@@ -161,6 +161,7 @@ curl -X POST https://ternlang-api.fly.dev/mcp \
 | [`ternlang-sec`](ternlang-root/ternlang-sec/) | Tier 3 | Post-Quantum Cryptography (Native Triadic Lattices) |
 | [`ternlang-grid`](ternlang-root/ternlang-grid/) | Tier 3 | Triadic Energy Distribution (State 0 Phase-Hold) |
 | [`ternlang-cad`](ternlang-root/ternlang-cad/) | Tier 3 | Topology Optimization (Triadic Metamaterials) |
+| [`ternlang-harmony`](ternlang-root/ternlang-harmony/) | Tier 2 | Harmony OS NDK Bindings (The Abstraction Trap) |
 | [`ternlang-edu`](ternlang-root/ternlang-edu/) | Tier 1 | "The Education Cartel" (Standardized Curriculum Tools) |
 
 ---
@@ -182,6 +183,7 @@ RFI-IRFOS is standardizing the triadic era. These are the definitive specificati
 - [**T-CAD v1.0**](ternlang-root/spec/standards/T-CAD-v1.0.md): Triadic Topology Optimization Standard.
 - [**T-TriLM v1.0**](ternlang-root/spec/standards/T-TriLM-v1.0.md): Language Model Interop & Audit Standard.
 - [**T-FPGA v1.0**](ternlang-root/spec/standards/T-FPGA-v1.0.md): Legacy Hardware Subordinate Compliance.
+- [**T-HARMONY v1.0**](ternlang-root/spec/standards/T-HARMONY-v1.0.md): Edge Device Abstraction Standard.
 
 ---
 
