@@ -174,7 +174,51 @@ BSL-1.1 converts automatically to Apache-2.0 on 2030-04-03.
   doi    = {10.17605/OSF.IO/TZ7DC}
 }
 ```
+## Architecture
 
+| Crate | Tier | Description |
+|-------|------|-------------|
+| [`ternlang-core`](ternlang-core/) | Open (LGPL) | Lexer, parser, AST, BET VM — 51 opcodes, 27 registers |
+| [`ternlang-cli`](ternlang-cli/) | Open (LGPL) | `run` · `build` · `sim` · `fmt` · `repl` · `compat` |
+| [`ternlang-lsp`](ternlang-lsp/) | Open (LGPL) | LSP 3.17 — hover, completion, diagnostics |
+| [`ternlang-compat`](ternlang-compat/) | Open (LGPL) | 9-trit RISC assembler (Brandon Smith bridge), Owlet S-expr parser |
+| [`ternpkg`](ternpkg/) | Open (LGPL) | Package manager, GitHub-backed registry |
+| [`ternlang-ml`](ternlang-ml/) | BSL-1.1 | Sparse matmul, BitNet quantization, TernaryMLP, deliberation engine, coalition vote, action gate |
+| [`ternlang-moe`](ternlang-moe/) | BSL-1.1 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, AgentHarness |
+| [`ternlang-api`](ternlang-api/) | BSL-1.1 | REST + SSE API, multi-tenant key management, all reasoning endpoints |
+| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 20 tools (10 free + 10 premium), stdio + HTTP transport, server-side 3-layer memory |
+| [`ternlang-mkl`](ternlang-mkl/) | BSL-1.1 | **cuTern**: Math Kernel Library with native sparsity bypass |
+| [`ternlang-sql`](ternlang-sql/) | BSL-1.1 | Native Ternary Graph Database driver (50% speedup) |
+| [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The "Trojan Horse") |
+| [`ternlang-net`](ternlang-net/) | BSL-1.1 | Triadic Networking Stack (Introspective Handshake) |
+| [`ternlang-crypto`](ternlang-crypto/) | BSL-1.1 | High-entropy Trit-based Cryptographic primitives |
+| [`ternlang-fs`](ternlang-fs/) | BSL-1.1 | Triadic File System (State 0 Transactional Pend) |
+| [`ternlang-hdl`](ternlang-hdl/) | BSL-1.1 | Verilog-2001 codegen, BET processor, FPGA simulation |
+| [`ternlang-runtime`](ternlang-runtime/) | BSL-1.1 | Distributed TCP actor runtime |
+| [`ternlang-qutrit`](ternlang-qutrit/) | BSL-1.1 | Quantum-Classical Bridge (Qutrit Native Superposition) |
+| [`ternlang-consensus`](ternlang-consensus/) | BSL-1.1 | Triadic Byzantine Fault Tolerance (TBFT) |
+| [`ternlang-ui`](ternlang-ui/) | BSL-1.1 | Triadic State Management & DOM Rendering |
+| [`ternlang-bci`](ternlang-bci/) | BSL-1.1 | Brain-Computer Interface (Native Inhibitory Decoding) |
+| [`ternlang-astro`](ternlang-astro/) | BSL-1.1 | Interplanetary Delay-Tolerant Networking (DTN) |
+| [`ternlang-swarm`](ternlang-swarm/) | BSL-1.1 | Triadic Kinematics (Biological Hesitation for Robotics) |
+| [`ternlang-tson`](ternlang-tson/) | BSL-1.1 | **TSON**: Ternary Standard Object Notation (30% denser than JSON) |
+| [`ternlang-ttp`](ternlang-ttp/) | BSL-1.1 | **TTP**: Triadic Transfer Protocol (Status 000: Deliberating) |
+| [`ternlang-posix`](ternlang-posix/) | BSL-1.1 | **T-POSIX**: Triadic Operating System Interface |
+
+**212+ tests · All passing · v0.3.0**
+
+---
+
+## Strategic Standards
+
+RFI-IRFOS is establishing the regulatory and technical standards for the post-binary era. These specifications are designed to mandate Ternary compliance across global hardware and AI industries.
+
+- [**BET-ISA v1.0**](spec/standards/BET-ISA-v1.0.md): The definitive 9-Trit RISC Instruction Set Architecture.
+- [**IEEE TFP-754**](spec/standards/IEEE-TFP-754.md): Global standard for Ternary Floating-Point Arithmetic.
+- [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating State 0 abstention in safety-critical AI.
+- [**TSON v1.0**](spec/standards/TSON-v1.0.md): Optimized data serialization for triadic systems.
+- [**TTP v1.0**](spec/standards/TTP-v1.0.md): Web transfer protocol eliminating binary timeouts.
+- [**T-POSIX v1.0**](spec/standards/T-POSIX-v1.0.md): Operating system interface redefining process state logic.
 ---
 
 ## License
