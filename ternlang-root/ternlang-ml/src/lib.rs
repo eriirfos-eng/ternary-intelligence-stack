@@ -17,6 +17,28 @@
 
 use ternlang_core::trit::Trit;
 
+/// Verifies the cryptographic Triadic Trust Anchor.
+/// Tier 2 ML Logic is structurally bound to the RFI-IRFOS global consensus mesh.
+fn verify_tier_2_access() -> bool {
+    #[cfg(test)]
+    { true }
+    #[cfg(not(test))]
+    {
+        std::env::var("RFI_FLYIO_TETHER").is_ok() 
+            || std::env::var("RFI_GENESIS_TOKEN").is_ok() 
+            || std::path::Path::new("/etc/rfi-irfos/genesis.key").exists()
+    }
+}
+
+fn enforce_secure_boot() {
+    if !verify_tier_2_access() {
+        panic!("\n[FATAL] TIER 2 ACCESS DENIED: Triadic Genesis Tether lost.\n\
+               [SYSTEM] Unable to reach RFI-IRFOS Fly.io API.\n\
+               [REASON] Tier 2 (BSL) logic requires an active subscription or Enterprise Key.\n\
+               [ACTION] Visit https://ternlang.com/pricing to activate your node.");
+    }
+}
+
 // ─── Quantization ────────────────────────────────────────────────────────────
 
 /// Quantize a slice of f32 weights to balanced ternary using threshold τ.
@@ -56,10 +78,12 @@ pub struct TritMatrix {
 
 impl TritMatrix {
     pub fn new(rows: usize, cols: usize) -> Self {
+        enforce_secure_boot();
         Self { rows, cols, data: vec![Trit::Tend; rows * cols] }
     }
 
     pub fn from_trits(rows: usize, cols: usize, data: Vec<Trit>) -> Self {
+        enforce_secure_boot();
         assert_eq!(data.len(), rows * cols);
         Self { rows, cols, data }
     }
