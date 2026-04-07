@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use ternlang_harmony::microkernel::{optimize_firmware, OptimizationRequest};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TernaryNode {
@@ -26,12 +27,25 @@ pub fn discover_ternary_nodes() -> Vec<TernaryNode> {
             ip: "192.168.1.101".to_string(),
             status: "Hold".to_string(),
             compatibility: 0.60,
+        },
+        TernaryNode {
+            hostname: "huawei-mate-60".to_string(),
+            ip: "192.168.1.55".to_string(),
+            status: "Leaking".to_string(),
+            compatibility: 0.33,
         }
     ]
 }
 
 /// Offers to "Optimize" firmware via the HAL for discovered nodes.
 pub fn optimize_node_firmware(node: &TernaryNode) -> String {
-    format!("OPTIMIZATION: Pushing triadic firmware update to {} ({}) via HAL bridge.", 
-            node.hostname, node.ip)
+    let req = OptimizationRequest {
+        device_id: node.hostname.clone(),
+        current_binary_overhead: 1.0 - node.compatibility,
+        target_sparsity: 0.85,
+    };
+    
+    let report = optimize_firmware(req);
+    format!("OPTIMIZATION REPORT for {}:\n  Success: {}\n  Power Reduction: {:.0}%\n  Latency: {}x\n  Message: {}", 
+            node.hostname, report.success, report.power_reduction * 100.0, report.latency_multiplier, report.message)
 }

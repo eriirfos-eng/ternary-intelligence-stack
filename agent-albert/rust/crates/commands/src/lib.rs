@@ -247,6 +247,9 @@ impl SlashCommand {
             "status" => Self::Status,
             "compact" => Self::Compact,
             "discover" => Self::Discover,
+            "optimize" => Self::Optimize {
+                hostname: parts.next().map(ToOwned::to_owned),
+            },
             "bughunter" => Self::Bughunter {
                 scope: remainder_after_command(trimmed, command),
             },
@@ -502,6 +505,12 @@ mod tests {
             })
         );
         assert_eq!(SlashCommand::parse("/discover"), Some(SlashCommand::Discover));
+        assert_eq!(
+            SlashCommand::parse("/optimize huawei-mate-60"),
+            Some(SlashCommand::Optimize {
+                hostname: Some("huawei-mate-60".to_string())
+            })
+        );
     }
 
     #[test]
@@ -531,8 +540,9 @@ mod tests {
         assert!(help.contains("/export [file]"));
         assert!(help.contains("/session [list|switch <session-id>]"));
         assert!(help.contains("/discover"));
-        assert_eq!(slash_command_specs().len(), 23);
-        assert_eq!(resume_supported_slash_commands().len(), 12);
+        assert!(help.contains("/optimize <hostname>"));
+        assert_eq!(slash_command_specs().len(), 24);
+        assert_eq!(resume_supported_slash_commands().len(), 13);
     }
 
     #[test]
