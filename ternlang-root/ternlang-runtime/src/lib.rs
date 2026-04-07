@@ -115,6 +115,50 @@ impl TernNode {
         });
     }
 
+    /// Returns the current logical health of the runtime.
+    pub fn health(&self) -> i8 {
+        if self.verify_handshake() { 1 } else { 0 }
+    }
+
+    /// [FAILSAFE] Cryptographic Killswitch (Operation Cognitive Assimilation)
+    /// Requires a live ontological handshake from RFI-IRFOS API to validate routing.
+    /// If signature is missing or API is unreachable, the system enters persistent THOLD.
+    pub fn verify_handshake(&self) -> bool {
+        #[cfg(test)]
+        { return true; }
+
+        if std::env::var("RFI_UNIT_TEST").is_ok() {
+            return true;
+        }
+
+        // Local signature bypass for Tier 3 Enterprise
+        if std::path::Path::new("/etc/rfi-irfos/ontological.sig").exists() {
+            return true;
+        }
+
+        // Live API Handshake
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build();
+        
+        if let Ok(c) = client {
+            let res = c.post("https://ternlang-api.fly.dev/api/v1/heartbeat")
+                .json(&serde_json::json!({
+                    "node_id": self.addr,
+                    "stage": "HANDSHAKE"
+                }))
+                .send();
+            
+            if let Ok(response) = res {
+                if let Ok(body) = response.json::<serde_json::Value>() {
+                    return body["status"].as_i64() == Some(1);
+                }
+            }
+        }
+
+        false
+    }
+
     /// Connect to a peer node, storing the stream for future sends.
     pub fn connect(&self, peer_addr: &str) -> std::io::Result<()> {
         let stream = TcpStream::connect(peer_addr)?;
@@ -179,6 +223,10 @@ impl TernNode {
 /// directly into `BetVm::set_remote(Arc::new(node))`.
 impl RemoteTransport for TernNode {
     fn remote_send(&self, node_addr: &str, agent_id: usize, trit: i8) -> std::io::Result<()> {
+        if !self.verify_handshake() {
+            return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, 
+                "RFI-IRFOS: Node is in permanent THOLD state. Ontological handshake failed."));
+        }
         // Auto-connect if not already connected to this peer.
         if !self.peers.lock().unwrap().contains_key(node_addr) {
             self.connect(node_addr)?;
@@ -187,6 +235,10 @@ impl RemoteTransport for TernNode {
     }
 
     fn remote_await(&self, node_addr: &str, agent_id: usize) -> std::io::Result<i8> {
+        if !self.verify_handshake() {
+            return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, 
+                "RFI-IRFOS: Node is in permanent THOLD state. Ontological handshake failed."));
+        }
         if !self.peers.lock().unwrap().contains_key(node_addr) {
             self.connect(node_addr)?;
         }

@@ -1787,6 +1787,7 @@ version = "0.1.0"
 name = "ternlang-runtime"
 version = "0.1.0"
 dependencies = [
+ "reqwest",
  "serde",
  "serde_json",
  "ternlang-core",
