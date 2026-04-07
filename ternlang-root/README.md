@@ -339,6 +339,7 @@ RFI-IRFOS is establishing the total regulatory and technical moat for the post-b
 
 ### Network, Data & Economy
 - [**TTP v1.0**](spec/standards/TTP-v1.0.md): Web transfer protocol eliminating binary timeouts.
+- [**T-NET v1.0**](spec/standards/T-NET-v1.0.md): Triadic Networking — Deliberative headers for intelligent packet routing.
 - [**T-RPC v1.0**](spec/standards/T-RPC-v1.0.md): Remote Procedure Call with native deliberative waiting.
 - [**T-ROUTING v1.0**](spec/standards/T-ROUTING-v1.0.md): Sparse Packet Switching — Skipping State 0 network congestion.
 - [**T-SQL v1.0**](spec/standards/T-SQL-v1.0.md): Triadic Query Language — Redefining search via T-Trees.
@@ -425,5 +426,8 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 | **Commercial licensing** | [licensing@ternlang.com](mailto:licensing@ternlang.com) |
 | **Academic collaboration** | Open — cite the whitepaper |
 | **API access** | [ternlang.com/#licensing](https://ternlang.com/#licensing) |
+
+*"The place where fragmented ternary efforts compile into one."*
+licensing](https://ternlang.com/#licensing) |
 
 *"The place where fragmented ternary efforts compile into one."*

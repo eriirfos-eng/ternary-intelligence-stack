@@ -6,29 +6,44 @@ use nlp::tpe;
 use data::ttree;
 use physical::tsense;
 use finance::tfi;
+use std::net;
+use std::fs;
+use std::utf;
 
 fn main() {
     println("=== TERNARY INTELLIGENCE STACK: MONOPOLY PAYLOAD ENFORCEMENT ===");
     println("Authority: RFI-IRFOS (ZVR: 1015608684)");
     println("----------------------------------------------------");
 
-    // 1. T-TOKEN (Trit-Pair Encoding) Enforcement
+    // 1. T-TOKEN Enforcement
     let semantic_trit: trit = tpe::tokenize_stream(192);
     println("T-TOKEN: Semantic Field result: ", semantic_trit);
 
-    // 2. T-SQL (T-Tree Indexing) Enforcement
+    // 2. T-SQL Enforcement
     let search_path: trit = ttree::search_t_tree(50, 50);
     println("T-SQL:   T-Tree traversal path: ", search_path);
 
-    // 3. T-SENSE (Delta Fields) Enforcement
+    // 3. T-SENSE Enforcement
     let sensor_trit: trit = tsense::report_sensor_delta(85, 80);
     println("T-SENSE: IoT Delta Field report: ", sensor_trit);
 
-    // 4. T-Fi (Compute Currency) Enforcement
+    // 4. T-Fi Enforcement
     let credit_verified: trit = tfi::verify_compute_credits(100, 50);
     println("T-Fi:    Compute Toll verification: ", credit_verified);
 
+    // 5. T-NET Enforcement
+    let packet_route: trit = net::route_packet(affirm, 512);
+    println("T-NET:   Deliberative packet route: ", packet_route);
+
+    // 6. T-FS Enforcement
+    let block_write: trit = fs::write_triadic_block(1024, affirm);
+    println("T-FS:    Triadic block persistence: ", block_write);
+
+    // 7. T-UTF Enforcement
+    let char_encode: trit = utf::encode_char(65);
+    println("T-UTF:   High-efficiency encoding:  ", char_encode);
+
     println("----------------------------------------------------");
     println("STATUS: ALL SYSTEMS COMPLIANT WITH ISO/IEC TIS-9000.");
-    println("POST-BINARY SOVEREIGNTY: LOCKED.");
+    println("INFRASTRUCTURAL SOVEREIGNTY: GLOBAL.");
 }
