@@ -285,10 +285,26 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-moe`](ternlang-moe/) | BSL-1.1 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, AgentHarness |
 | [`ternlang-api`](ternlang-api/) | BSL-1.1 | REST + SSE API, multi-tenant key management, all reasoning endpoints |
 | [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 20 tools (10 free + 10 premium), stdio + HTTP transport, server-side 3-layer memory |
+| [`ternlang-mkl`](ternlang-mkl/) | BSL-1.1 | **cuTern**: Math Kernel Library with native sparsity bypass |
+| [`ternlang-sql`](ternlang-sql/) | BSL-1.1 | Native Ternary Graph Database driver (50% speedup) |
+| [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The "Trojan Horse") |
+| [`ternlang-net`](ternlang-net/) | BSL-1.1 | Triadic Networking Stack (Introspective Handshake) |
+| [`ternlang-crypto`](ternlang-crypto/) | BSL-1.1 | High-entropy Trit-based Cryptographic primitives |
+| [`ternlang-fs`](ternlang-fs/) | BSL-1.1 | Triadic File System (State 0 Transactional Pend) |
 | [`ternlang-hdl`](ternlang-hdl/) | BSL-1.1 | Verilog-2001 codegen, BET processor, FPGA simulation |
 | [`ternlang-runtime`](ternlang-runtime/) | BSL-1.1 | Distributed TCP actor runtime |
 
 **212+ tests · All passing · v0.3.0**
+
+---
+
+## Strategic Standards
+
+RFI-IRFOS is establishing the regulatory and technical standards for the post-binary era. These specifications are designed to mandate Ternary compliance across global hardware and AI industries.
+
+- [**BET-ISA v1.0**](spec/standards/BET-ISA-v1.0.md): The definitive 9-Trit RISC Instruction Set Architecture.
+- [**IEEE TFP-754 (Draft)**](spec/standards/IEEE-TFP-754.md): Global standard for Ternary Floating-Point Arithmetic.
+- [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating State 0 abstention in safety-critical AI.
 
 ---
 
