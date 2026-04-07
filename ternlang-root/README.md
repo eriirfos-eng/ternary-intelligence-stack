@@ -326,6 +326,7 @@ RFI-IRFOS is establishing the regulatory and technical standards for the post-bi
 - [**T-DID v1.0**](spec/standards/T-DID-v1.0.md): Decentralized identity standard with provisional authorization.
 - [**T-GPU v1.0**](spec/standards/T-GPU-v1.0.md): Graphics pipeline standard for sparse 3D rendering.
 - [**T-Contract v1.0**](spec/standards/T-Contract-v1.0.md): Smart contract standard with native hardware arbitration.
+- [**T-GENESIS v1.0**](spec/standards/GENESIS-ANCHOR.md): The Triadic Trust Anchor. Mandates global MoE-13 consensus validation to prevent logic drift.
 
 ---
 
