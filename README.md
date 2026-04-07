@@ -53,46 +53,46 @@ ternlang-root/spec/   Institutional standards (BET-ISA, IEEE TFP-754, etc.)
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                    USER / DEVELOPER LAYER                   │
-│-------------------------------------------------------------│
-│ CLI tools           | SDK / API          | External agents  │
-│ ternlang-cli        | Rust crates        | AI workflows     │
-│ REPL / build / run  | Package imports    | orchestration    │
+│                    USER / DEVELOPER LAYER                    │
+│--------------------------------------------------------------│
+│ CLI tools           | SDK / API          | External agents   │
+│ ternlang-cli        | Rust crates        | AI workflows      │
+│ REPL / build / run  | Package imports    | orchestration     │
 └──────────────────────────────────────────────────────────────┘
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                  LANGUAGE & TOOLING LAYER                   │
-│-------------------------------------------------------------│
-│ ternpkg             → package manager                       │
-│ ternlang-cli        → build / simulate / format / repl      │
-│ grammar.ebnf        → language formal grammar               │
-│ .tern source files  → user programs / proofs                │
+│                  LANGUAGE & TOOLING LAYER                    │
+│--------------------------------------------------------------│
+│ ternpkg             → package manager                        │
+│ ternlang-cli        → build / simulate / format / repl       │
+│ grammar.ebnf        → language formal grammar                │
+│ .tern source files  → user programs / proofs                 │
 └──────────────────────────────────────────────────────────────┘
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                    COMPILER CORE LAYER                      │
-│-------------------------------------------------------------│
-│ ternlang-core                                             │
-│                                                           │
-│ Lexer → Parser → AST → Semantic Pass → BET Bytecode       │
-│                                                           │
-│ Tokens      Syntax tree      ternary semantics            │
-│ (-1,0,+1)   proof states     static checks                │
+│                    COMPILER CORE LAYER                       │
+│--------------------------------------------------------------│
+│ ternlang-core                                                │
+│                                                              │
+│ Lexer → Parser → AST → Semantic Pass → BET Bytecode          │
+│                                                              │
+│ Tokens      Syntax tree      ternary semantics               │
+│ (-1,0,+1)   proof states     static checks                   │
 └──────────────────────────────────────────────────────────────┘
                                │
                                ▼
-┌──────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────┐
 │                    EXECUTION / VM LAYER                     │
 │-------------------------------------------------------------│
-│ Balanced Ternary Execution VM                              │
-│ Runtime state machine                                      │
-│ Register / memory model                                    │
-│ Opcode interpreter                                         │
-│ Stack + heap                                               │
-│ State transitions: veto | tend | affirm                    │
-└──────────────────────────────────────────────────────────────┘
+│ Balanced Ternary Execution VM                               │
+│ Runtime state machine                                       │
+│ Register / memory model                                     │
+│ Opcode interpreter                                          │
+│ Stack + heap                                                │
+│ State transitions: veto | tend | affirm                     │
+└─────────────────────────────────────────────────────────────┘
                                │
                 ┌──────────────┴──────────────┐
                 ▼                             ▼
@@ -106,29 +106,29 @@ ternlang-root/spec/   Institutional standards (BET-ISA, IEEE TFP-754, etc.)
 └──────────────────────────────┘   └──────────────────────────┘
                 │
                 ▼
-┌──────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────┐
 │                ORCHESTRATION / MoE LAYER                    │
 │-------------------------------------------------------------│
-│ ternlang-moe                                               │
-│                                                           │
-│ expert routing                                            │
-│ dual-key synergy                                          │
-│ 13-agent mixture                                          │
-│ triad synthesis                                           │
-│ safety gating                                             │
-│ memory mesh                                               │
-└──────────────────────────────────────────────────────────────┘
+│ ternlang-moe                                                │
+│                                                             │
+│ expert routing                                              │
+│ dual-key synergy                                            │
+│ 13-agent mixture                                            │
+│ triad synthesis                                             │
+│ safety gating                                               │
+│ memory mesh                                                 │
+└─────────────────────────────────────────────────────────────┘
                                │
                                ▼
-┌──────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────┐
 │                 RESEARCH / OPEN SCIENCE                     │
 │-------------------------------------------------------------│
-│ OSF papers / DOI                                           │
-│ benchmark experiments                                      │
-│ theoretical proofs                                         │
-│ architectural RFCs                                         │
-│ public GitHub releases                                     │
-└──────────────────────────────────────────────────────────────┘
+│ OSF papers / DOI                                            │
+│ benchmark experiments                                       │
+│ theoretical proofs                                          │
+│ architectural RFCs                                          │
+│ public GitHub releases                                      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 
