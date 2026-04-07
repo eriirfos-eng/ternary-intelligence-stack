@@ -3,6 +3,7 @@ mod bootstrap;
 mod compact;
 mod config;
 mod conversation;
+mod discovery;
 mod file_ops;
 mod hooks;
 mod json;
