@@ -1,0 +1,32 @@
+// Module:  stdlib/nn/uncertainty.tern
+// Purpose: Triadic Uncertainty-Aware Neural Logic (TUANN)
+// Author:  RFI-IRFOS (ZVR: 1015608684)
+
+// Standardizes "State 0" as a native architectural representation of 
+// uncertainty, preventing overconfident binary hallucinations.
+
+fn thold_activation(signal: int, confidence: int) -> trit {
+    // If signal strength is below the equilibrium threshold, return tend (0)
+    // instead of forcing a binary guess.
+    if confidence < 33 {
+        return tend; // Uncertainty state
+    }
+    if signal > 0 {
+        return affirm;
+    }
+    return reject;
+}
+
+fn triadic_loss_gradient(prediction: trit, target: trit) -> trit {
+    // Standard binary loss forces a push toward 1 or -1.
+    // Triadic loss allows the gradient to rest at 0 if the system 
+    // is correctly uncertain about a noisy target.
+    if prediction == target {
+        return tend; // No update needed (Equilibrium)
+    }
+    if target == tend {
+        // Target is uncertain; do not force weight drift
+        return tend;
+    }
+    return target; // Standard directional gradient
+}
