@@ -31,8 +31,12 @@ jobs:
     - name: Build & Compile to BET Bytecode
       run: |
         ternlang build --target bet-vm-v1
+      env:
+        RFI_UNIT_TEST: "true"
 
     - name: Execute Sparse Inference Tests
       run: |
         # Runs the unit tests natively on the software BET VM emulator
         ternlang test --yield-metrics
+      env:
+        RFI_UNIT_TEST: "true"

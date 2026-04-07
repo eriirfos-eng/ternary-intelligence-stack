@@ -1593,6 +1593,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-astro"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-audit"
 version = "0.1.0"
 dependencies = [
@@ -1603,6 +1607,18 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "ternlang-auth"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-bci"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-bridge"
+version = "0.1.0"
 
 [[package]]
 name = "ternlang-cli"
@@ -1632,12 +1648,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-consensus"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-contract"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-core"
 version = "0.1.0"
 dependencies = [
  "ariadne",
  "logos",
 ]
+
+[[package]]
+name = "ternlang-crypto"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-fs"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-gfx"
+version = "0.1.0"
 
 [[package]]
 name = "ternlang-hdl"
@@ -1664,6 +1700,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-mkl"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-ml"
 version = "0.1.0"
 dependencies = [
@@ -1682,6 +1722,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-net"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-posix"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-qutrit"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-runtime"
 version = "0.1.0"
 dependencies = [
@@ -1691,11 +1743,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-sql"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-swarm"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-test"
 version = "0.1.0"
 dependencies = [
  "ternlang-core",
 ]
+
+[[package]]
+name = "ternlang-time"
+version = "0.1.0"
 
 [[package]]
 name = "ternlang-translator"
@@ -1708,12 +1772,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-tson"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-ttp"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-ui"
+version = "0.1.0"
+
+[[package]]
 name = "ternpkg"
 version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "ternpkg-registry"
+version = "0.1.0"
 
 [[package]]
 name = "tinystr"
