@@ -32,7 +32,7 @@ The **TEND (0)** state is the core innovation of the **BET-VM**. It is not "unde
 
 ```
 ternlang-root/        Language, VM, inference engine, API, MCP server
-albert-agent/         Local AI node built on the Ternary Intelligence Stack
+agent-albert/         Local AI node built on the Ternary Intelligence Stack
 ternlang-vscode/      VS Code extension (.tern syntax highlighting + LSP)
 ternlang-root/spec/   Institutional standards (BET-ISA, IEEE TFP-754, etc.)
 ```
@@ -121,9 +121,9 @@ curl -X POST https://ternlang-api.fly.dev/mcp \
 
 ---
 
-## Albert Agent
+## Agent Albert
 
-[albert-agent/](albert-agent/) is a sovereign, offline-first local AI node built on top of the Ternary Intelligence Stack. It uses the BET VM and MoE-13 orchestrator as its native reasoning layer — every decision is evaluated through the `{-1, 0, +1}` state space.
+[agent-albert/](agent-albert/) is a sovereign, offline-first local AI node built on top of the Ternary Intelligence Stack. It uses the BET VM and MoE-13 orchestrator as its native reasoning layer — every decision is evaluated through the `{-1, 0, +1}` state space.
 
 ---
 

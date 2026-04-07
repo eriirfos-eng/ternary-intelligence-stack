@@ -60,7 +60,7 @@ By utilizing [Ollama](https://ollama.com/) for local inference of the `albert:la
 ### 2. Install Dependencies
 Clone the repository and install the required Python packages:
 ```bash
-cd albert-agent
+cd agent-albert
 pip install -r requirements.txt
 ```
 

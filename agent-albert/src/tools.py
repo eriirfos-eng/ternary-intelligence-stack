@@ -58,7 +58,7 @@ from .config import DB_PATH
 #  PATHS & CONSTANTS
 # ─────────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-ALBERT_DIR = REPO_ROOT / "albert-agent"
+ALBERT_DIR = REPO_ROOT / "agent-albert"
 # DB_PATH is imported from config.py
 
 LIB_DIR         = str(ALBERT_DIR / "library")
@@ -270,7 +270,7 @@ def ternlang_run(path_or_code: str):
     is_snippet = not path_or_code.endswith(".tern") or not os.path.exists(path_or_code)
     
     if is_snippet:
-        run_path = "albert_agent_snippet.tern"
+        run_path = "agent_albert_snippet.tern"
         with open(run_path, "w") as f:
             f.write(path_or_code)
             
