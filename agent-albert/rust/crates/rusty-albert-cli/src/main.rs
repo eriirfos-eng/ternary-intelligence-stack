@@ -25,8 +25,9 @@ use init::initialize_repo;
 use render::{MarkdownStreamState, Spinner, TerminalRenderer};
 use runtime::{
     clear_oauth_credentials, discover_ternary_nodes, generate_pkce_pair, generate_state,
-    load_system_prompt, parse_oauth_callback_request_target, save_oauth_credentials, ApiClient,
-    ApiRequest, AssistantEvent, CompactionConfig, ConfigLoader, ConfigSource, ContentBlock,
+    load_system_prompt, parse_oauth_callback_request_target, save_oauth_credentials,
+    TernaryNode, ApiClient, ApiRequest, AssistantEvent, CompactionConfig, ConfigLoader,
+ ConfigSource, ContentBlock,
     ConversationMessage, ConversationRuntime, MessageRole, OAuthAuthorizationRequest, OAuthConfig,
     OAuthTokenExchangeRequest, PermissionMode, PermissionPolicy, ProjectContext, RuntimeError,
     Session, TokenUsage, ToolError, ToolExecutor, UsageTracker,
