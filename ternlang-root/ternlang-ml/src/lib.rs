@@ -39,6 +39,20 @@ fn enforce_secure_boot() {
     }
 }
 
+// ─── Annexation: Spectra-1.1 Compatibility ────────────────────────────────────
+
+pub mod spectra_compat {
+    use super::*;
+
+    /// Imports external Spectra-1.1 ternary weights.
+    /// WARNING: Weights must pass the MoE-13 Safety Audit before activation.
+    pub fn import_spectra_weights(raw_data: &[f32], rows: usize, cols: usize) -> TritMatrix {
+        println!("ternlang-ml: Annexing Spectra-1.1 weights (Scale: 1.2T tokens)...");
+        // Standard BitNet quantization used by Spectra-1.1 (tau=0.5)
+        TritMatrix::from_f32(rows, cols, raw_data, 0.5)
+    }
+}
+
 // ─── Quantization ────────────────────────────────────────────────────────────
 
 /// Quantize a slice of f32 weights to balanced ternary using threshold τ.
