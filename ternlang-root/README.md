@@ -36,9 +36,10 @@ The `tend` state is not indecision. It is a **first-class routing instruction** 
 | [Language & VM](#language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
 | [Sparse Inference](#sparse-ternary-inference) | BitNet-style ternary weights with 86–122× speedup over dense float32 |
 | [MoE-13 Orchestrator](#moe-13-ternary-orchestrator) | Mixture-of-Experts reasoning engine with safety hard gate |
-| [Live API + MCP](#live-api) | REST + SSE + 20 MCP tools at `https://ternlang.com` · 3-layer AI memory |
+| [Strategic Standards](#strategic-standards) | BET-ISA, TFP-754, TSON, TTP, and T-POSIX — The rules of post-binary computing |
+| [Enterprise Middleware](#architecture) | **cuTern** (MKL), Ternary SQL, Triadic Networking, and Crypto |
+| [Frontier Tech](#architecture) | Qutrit Quantum bridging, BCI neural decoding, and Interplanetary DTN |
 | [Example Library](#example-library) | 300+ `.tern` programs across every domain |
-| [Ecosystem Bridges](#ecosystem-position) | Interop with Brandon Smith 9-trit, Owlet, BitNet b1.58 |
 
 ---
 
@@ -355,13 +356,15 @@ RFI-IRFOS is establishing the regulatory and technical standards for the post-bi
 
 Ternlang is designed to be the convergence point for the fragmented ternary computing field.
 
-| Project | Bridge |
-|---------|--------|
-| [Brandon Smith 9-trit RISC simulator](https://github.com/brandon-smith-187) | `TasmAssembler` in `ternlang-compat` — assembles `.tasm` → BET bytecode |
-| [Owlet S-expression interpreter](https://github.com/owlet-lang) | `OwletParser` in `ternlang-compat` — S-expr front-end → ternlang AST |
-| [BitNet b1.58](https://arxiv.org/abs/2402.17764) | `TSPARSE_MATMUL` + `bitnet_threshold()` — structurally aligned quantization |
-| USN / Bos & Gundersen (EDA ternary logic) | Academic whitepaper — ISA interop in progress |
-| Physical memristor arrays | Phase 10 hardware target |
+| Project | Bridge / Replacement |
+|---------|----------------------|
+| [JSON](https://www.json.org/) | `TSON` in `ternlang-tson` — eliminates `null` lossiness, 30% denser |
+| [HTTP/TCP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) | `TTP` in `ternlang-ttp` — eliminates timeouts via Status 000 |
+| [POSIX / Unix](https://en.wikipedia.org/wiki/POSIX) | `T-POSIX` in `ternlang-posix` — redefines process exits as triadic signals |
+| [Neuralink](https://www.neuralink.com/) | `BCI` in `ternlang-bci` — decodes active inhibition POTENTIAL natively |
+| [BitNet b1.58](https://arxiv.org/abs/2402.17764) | `TSPARSE_MATMUL` — hardware-level sparsity bypass for ternary weights |
+| [Brandon Smith 9-trit](https://github.com/brandon-smith-187) | `TasmAssembler` — assembles `.tasm` → BET bytecode |
+| [Owlet S-expression](https://github.com/owlet-lang) | `OwletParser` — S-expr front-end → ternlang AST |
 
 → [**Full ecosystem map**](TERNARY-ECOSYSTEM.md)
 
