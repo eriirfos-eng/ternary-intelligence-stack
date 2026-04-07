@@ -1647,6 +1647,7 @@ dependencies = [
  "clap",
  "colored",
  "ternlang-core",
+ "ternlang-edu",
  "ternlang-hdl",
  "ternlang-ml",
  "ternlang-runtime",
