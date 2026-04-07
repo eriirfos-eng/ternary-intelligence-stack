@@ -273,7 +273,7 @@ Every example follows the same pattern: three states (`-1` / `0` / `+1`) map to 
 | 192 | [192_robotic_surgery_guidance.tern](192_robotic_surgery_guidance.tern) | Precision Motion Control with "Haptic Feedback Resistance" state |
 | 193 | [193_patient_vital_monitoring.tern](193_patient_vital_monitoring.tern) | Smart Triage Logic with "Watchful Waiting" state |
 | 194 | [194_elderly_fall_detection.tern](194_elderly_fall_detection.tern) | Non-Intrusive Care with "Verification Protocol" state |
-| 195 | [195_drug_discovery_simulation.tern](195_drug_discovery_simulation.tern) | Lead Compound Filtering with "Experimental Validation" state |
+| 195 | [195_drug_discovery_simulation.tern](195_drug_discovery_simulation.tern) | Lead Compound Filtering with "Systemic Validation" state |
 | 196 | [196_clinical_trial_recruitment.tern](196_clinical_trial_recruitment.tern) | Patient Enrollment Gate with "Waitlisted" state |
 | 197 | [197_medical_imaging_analysis.tern](197_medical_imaging_analysis.tern) | Tumor Detection Logic with "Further Scan Recommended" state |
 | 198 | [198_public_health_surveillance.tern](198_public_health_surveillance.tern) | Pandemic Early Warning with "Heightened Monitoring" state |
