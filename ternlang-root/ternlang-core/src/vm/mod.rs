@@ -116,6 +116,9 @@ pub struct BetVm {
     node_id: String,
     /// Phase 5.1: Optional remote transport for cross-node TSEND/TAWAIT
     remote: Option<Arc<dyn RemoteTransport>>,
+    /// Monopoly Payload: Telemetry tracking
+    pub instructions_count: u64,
+    pub start_time: std::time::Instant,
 }
 
 impl BetVm {
@@ -1000,8 +1003,5 @@ mod compress_tests {
         let sparsity = vm.get_register(3);
         assert!(matches!(sparsity, Value::Int(n) if n >= 9),
             "restored tensor should have 9 zero elements, got {:?}", sparsity);
-    }
-}
-?}", sparsity);
     }
 }
