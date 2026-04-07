@@ -250,8 +250,9 @@ type MemBlob = serde_json::Map<String, Value>;
 /// Per-key server-side memory store.
 type MemStore = Arc<std::sync::RwLock<std::collections::HashMap<String, MemBlob>>>;
 
-struct AppState {
-    admin_key:              String,
+pub struct AppState {
+    pub admin_key: String,
+
     keys:                   Arc<KeyStore>,
     version:                &'static str,
     stripe_webhook_secret:  String,
@@ -381,9 +382,11 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
     Json(json!({
         "name":    "Ternlang API",
         "version": state.version,
-        "by":      "RFI-IRFOS",
+        "by":      "RFI-IRFOS (ZVR: 1015608684)",
+        "authority": "Research Focus Institute – Interdisciplinary Research Facility for Open Sciences",
         "website": "https://ternlang.com",
         "docs":    "https://ternlang.com/docs/api",
+
         "auth":    "X-Ternlang-Key header required for /api/* endpoints",
         "endpoints": {
             "POST /api/trit_decide":             "Scalar ternary decision: evidence[] → reject/tend/affirm + confidence",
@@ -2816,8 +2819,11 @@ async fn stripe_webhook(
 pub struct TaasInferRequest {
     pub action: String,        // e.g., "TSPARSE_MATMUL"
     pub density: f64,          // Sparsity metric for cuTern routing
-    pub dims: Vec<usize>,      // Matrix dimensions
+    pub dims: Vec<usize>,      // Matrix dimensions: [rows, cols] (W) and [batch, in] (X)
     pub security_gate: String, // Requested audit level
+    pub weights: Option<Vec<f32>>,
+    pub input:   Option<Vec<f32>>,
+    pub threshold: Option<f32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -2825,6 +2831,8 @@ pub struct TaasInferResponse {
     pub status: i8,            // 1=Affirm, 0=Deliberate, -1=Veto
     pub optimization: String,  // e.g., "122x Sparse Bypass Active"
     pub audit_log: String,     // Summary of MoE-13 deliberation
+    pub result: Option<Vec<i8>>, // Resultant TritMatrix data
+    pub skipped: Option<usize>, // Number of zero-weight multiplications skipped
 }
 
 pub async fn taas_infer(
@@ -2837,20 +2845,45 @@ pub async fn taas_infer(
     let audit_context = format!("Taas Action: {} | Dimensions: {:?} | Density: {:.2}", 
                                 payload.action, payload.dims, payload.density);
     
-    let result = orchestrator.orchestrate(&audit_context, &[payload.density as f32, 0.8, 0.9]);
+    let moe_result = orchestrator.orchestrate(&audit_context, &[payload.density as f32, 0.8, 0.9]);
 
-    let (status, opt_msg) = if result.trit == 1 {
+    let (status, opt_msg) = if moe_result.trit == 1 {
         (1, format!("{:.1}x Sparse Bypass Active (cuTern)", 1.0 / (payload.density + 0.008)))
-    } else if result.trit == 0 {
+    } else if moe_result.trit == 0 {
         (0, "Hardware Equilibrium (THOLD) - Consensus Pending".to_string())
     } else {
         (-1, "VETO: Access Denied by RFI-IRFOS MetaSafety Expert".to_string())
     };
 
+    let mut result_data = None;
+    let mut skipped_count = None;
+
+    // Execute actual matmul if data is provided AND safety audit passed (Affirm)
+    if status == 1 && payload.action == "TSPARSE_MATMUL" {
+        if let (Some(w_vec), Some(i_vec)) = (payload.weights, payload.input) {
+            let out_features = payload.dims.get(0).cloned().unwrap_or(1);
+            let in_features  = payload.dims.get(1).cloned().unwrap_or(w_vec.len() / out_features);
+            
+            let threshold = payload.threshold.unwrap_or_else(|| bitnet_threshold(&w_vec));
+            
+            // For sparse_matmul(A, B), A is input [batch, in], B is weights [in, out]
+            // If the user sends weights as [out, in] (PyTorch default), we need to be careful.
+            // For now, we assume the data in w_vec is laid out as [in, out] OR we handle it.
+            let w     = TritMatrix::from_f32(in_features, out_features, &w_vec, threshold);
+            let input = TritMatrix::from_f32(1, in_features, &i_vec, threshold); 
+
+            let (res_matrix, skipped) = sparse_matmul(&input, &w);
+            result_data   = Some(res_matrix.to_i8_vec());
+            skipped_count = Some(skipped);
+        }
+    }
+
     Json(TaasInferResponse {
         status,
         optimization: opt_msg,
-        audit_log: format!("{:?}", result.pair),
+        audit_log: format!("{:?}", moe_result.pair),
+        result: result_data,
+        skipped: skipped_count,
     })
 }
 

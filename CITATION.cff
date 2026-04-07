@@ -7,6 +7,9 @@ authors:
     city: "Graz"
     post-code: "8020"
     country: "AT"
+    identifiers:
+      - type: other
+        value: "ZVR: 1015608684"
 title: "Ternary Intelligence Stack (TIS) & Ternlang Programming Language"
 version: 0.1.0
 date-released: 2026-04-05
@@ -22,6 +25,8 @@ keywords:
   - "ternary intelligence stack"
   - "ternlang"
 license: "LGPL-3.0-or-later"
+publisher:
+  name: "RFI-IRFOS (ZVR: 1015608684)"
 preferred-citation:
   type: article
   authors:

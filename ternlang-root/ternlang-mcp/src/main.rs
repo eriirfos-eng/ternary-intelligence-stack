@@ -24,6 +24,7 @@ use ternlang_moe::TernMoeOrchestrator;
 // ─── JSON-RPC types ──────────────────────────────────────────────────────────
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct RpcRequest {
     jsonrpc: String,
     id:      Option<Value>,
