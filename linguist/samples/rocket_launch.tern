@@ -1,0 +1,54 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// rocket_launch.tern — Go / No-Go / Hold launch procedure
+//
+// NASA uses a formal Go/No-Go poll before every launch. Each system
+// officer votes: GO, NO-GO, or HOLD. A single NO-GO or unresolved HOLD
+// scrubs or delays the launch.
+//
+// This is ternary logic in the real world — it existed before the name did.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_system(status: trit, threshold: trit) -> trit {
+    // A system is GO only if status meets threshold
+    let vote: trit = consensus(status, threshold);
+    match vote {
+        -1 => { return conflict(); }   // NO-GO
+         0 => { return hold();    }   // HOLD — need more data
+         1 => { return truth();   }   // GO
+    }
+}
+
+fn launch_poll(propulsion: trit, avionics: trit, weather: trit, range_safety: trit) -> trit {
+    // Range safety is hard gate — NO-GO = abort, no exceptions
+    match range_safety {
+        -1 => { return conflict(); }   // ABORT
+
+         0 => {
+            // Range safety is HOLD — scrub until resolved
+            return hold();
+         }
+
+         1 => {
+            // Range safety GO — evaluate remaining systems
+            let systems_12: trit = consensus(propulsion, avionics);
+            let systems_34: trit = consensus(weather, range_safety);
+            let all_systems: trit = consensus(systems_12, systems_34);
+            return all_systems;
+         }
+    }
+}
+
+// T-minus 10: poll each system
+let propulsion:  trit = truth();     // GO — engines nominal
+let avionics:    trit = truth();     // GO — guidance locked
+let weather:     trit = hold();      // HOLD — upper winds marginal
+let range_safety: trit = truth();    // GO — range clear
+
+let launch_decision: trit = launch_poll(propulsion, avionics, weather, range_safety);
+
+// Weather is HOLD — so we're in a hold pattern
+match launch_decision {
+    -1 => { return conflict(); }   // ABORT ABORT ABORT
+     0 => { return hold();    }   // HOLD — waiting on weather
+     1 => { return truth();   }   // GO FOR LAUNCH
+}

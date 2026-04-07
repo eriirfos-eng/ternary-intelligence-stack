@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 203_credit_risk_assessment.tern — Dynamic Lending Decision
+//
+// WHY TERNARY?
+// Many high-potential borrowers have "Thin" credit files (0). Binary "Yes/No" 
+// systems exclude them. Ternary (0) routes these applicants to "Secured 
+// Lending" or "Co-signer" paths, expanding market reach without taking 
+// on uncompensated risk.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn evaluate_income(stability: trit, debt_ratio: trit) -> trit {
+    return consensus(stability, debt_ratio);
+}
+
+fn loan_approval(income_score: trit, collateral_val: trit) -> trit {
+    match income_score {
+        -1 => {
+            match collateral_val {
+                -1 => { return conflict(); } 
+                 0 => { return conflict(); }
+                 1 => { return hold();     } // Bad income but GREAT collateral
+            }
+        }
+        0 => {
+            return hold(); // Borderline case
+        }
+        1 => {
+            match collateral_val {
+                -1 => { return hold();     } // Good income, no collateral
+                 0 => { return truth();    }
+                 1 => { return truth();    }
+            }
+        }
+    }
+}
+
+let income: trit = hold();  // Freelancer, variable income
+let debt:   trit = truth(); // No debt
+let asset:  trit = truth(); // Strong collateral
+
+let score: trit = evaluate_income(income, debt);
+let result: trit = loan_approval(score, asset);
+
+match result {
+    -1 => { return conflict(); } // DENY
+     0 => { return hold();     } // SECURED LOAN ONLY
+     1 => { return truth();    } // APPROVE UNSECURED
+}

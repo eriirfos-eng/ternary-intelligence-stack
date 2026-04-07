@@ -1,0 +1,5 @@
+Sitemap: https://ternlang.com/sitemap.xml
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/v1/keys/

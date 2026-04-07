@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 148_clinical_genomics.tern — Genetic Variant Pathogenicity
+//
+// WHY TERNARY?
+// In genomics, variants are rarely just "Benign" or "Pathogenic". The ACMG
+// classification relies heavily on "Variants of Uncertain Significance" (VUS).
+// Ternary (0) provides a native state for VUS, preventing binary logic from
+// either missing a risk or causing undue patient alarm.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn variant_classification(bioinformatics: trit, database_match: trit) -> trit {
+    // Determine the consensus on variant pathogenicity.
+    return consensus(bioinformatics, database_match);
+}
+
+fn diagnostic_report(classification: trit, read_quality: trit) -> trit {
+    match read_quality {
+        -1 => { 
+            // Sequencer failure or low coverage.
+            return conflict(); 
+        }
+        0 => {
+            // Noisy data. The classification is provisional.
+            return hold();
+        }
+        1 => {
+            // High-quality sequencing. Trust the classification.
+            match classification {
+                -1 => { return conflict(); } // CLEARLY BENIGN
+                 0 => { return hold();     } // VUS - NEEDS RESEARCH
+                 1 => { return truth();    } // PATHOGENIC VARIANT
+            }
+        }
+    }
+}
+
+let pipeline_score: trit = truth(); // Algorithmic prediction of harm
+let ClinVar_match:  trit = hold();  // Database shows conflicting results
+let sequencer_qc:   trit = truth(); // 100x depth coverage
+
+let variant_risk: trit = variant_classification(pipeline_score, ClinVar_match);
+let final_report: trit = diagnostic_report(variant_risk, sequencer_qc);
+
+match final_report {
+    -1 => { return conflict(); } // NEGATIVE - NORMAL FINDINGS
+     0 => { return hold();     } // VUS - FOLLOW-UP STUDY REQUIRED
+     1 => { return truth();    } // POSITIVE - CONFIRMED RISK
+}
