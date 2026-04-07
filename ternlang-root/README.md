@@ -293,6 +293,9 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-fs`](ternlang-fs/) | BSL-1.1 | Triadic File System (State 0 Transactional Pend) |
 | [`ternlang-hdl`](ternlang-hdl/) | BSL-1.1 | Verilog-2001 codegen, BET processor, FPGA simulation |
 | [`ternlang-runtime`](ternlang-runtime/) | BSL-1.1 | Distributed TCP actor runtime |
+| [`ternlang-qutrit`](ternlang-qutrit/) | BSL-1.1 | Quantum-Classical Bridge (Qutrit Native Superposition) |
+| [`ternlang-consensus`](ternlang-consensus/) | BSL-1.1 | Triadic Byzantine Fault Tolerance (TBFT) |
+| [`ternlang-ui`](ternlang-ui/) | BSL-1.1 | Triadic State Management & DOM Rendering |
 
 **212+ tests · All passing · v0.3.0**
 
