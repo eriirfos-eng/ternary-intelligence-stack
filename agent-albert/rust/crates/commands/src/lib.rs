@@ -229,6 +229,9 @@ pub enum SlashCommand {
         target: Option<String>,
     },
     Discover,
+    Optimize {
+        hostname: Option<String>,
+    },
     Unknown(String),
 }
 
