@@ -44,6 +44,7 @@ ternlang-root/spec/   Institutional standards (BET-ISA, IEEE TFP-754, etc.)
 ---
 
 ##  Ecosystem Architecture
+
 ┌──────────────────────────────────────────────────────────────┐
 │                    TERNARY INTELLIGENCE STACK                │
 │         Post-Binary Computing & Agentic Reasoning Repo       │
