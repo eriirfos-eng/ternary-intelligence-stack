@@ -162,6 +162,7 @@ curl -X POST https://ternlang-api.fly.dev/mcp \
 | [`ternlang-grid`](ternlang-root/ternlang-grid/) | Tier 3 | Triadic Energy Distribution (State 0 Phase-Hold) |
 | [`ternlang-cad`](ternlang-root/ternlang-cad/) | Tier 3 | Topology Optimization (Triadic Metamaterials) |
 | [`ternlang-harmony`](ternlang-root/ternlang-harmony/) | Tier 2 | Harmony OS NDK Bindings (The Abstraction Trap) |
+| [`ternlang-driver`](ternlang-root/ternlang-driver/) | Tier 2 | Universal Hardware Abstraction Layer (HAL) |
 | [`ternlang-edu`](ternlang-root/ternlang-edu/) | Tier 1 | "The Education Cartel" (Standardized Curriculum Tools) |
 
 ---
@@ -184,6 +185,8 @@ RFI-IRFOS is standardizing the triadic era. These are the definitive specificati
 - [**T-TriLM v1.0**](ternlang-root/spec/standards/T-TriLM-v1.0.md): Language Model Interop & Audit Standard.
 - [**T-FPGA v1.0**](ternlang-root/spec/standards/T-FPGA-v1.0.md): Legacy Hardware Subordinate Compliance.
 - [**T-HARMONY v1.0**](ternlang-root/spec/standards/T-HARMONY-v1.0.md): Edge Device Abstraction Standard.
+- [**T-DRIVER v1.0**](ternlang-root/spec/standards/T-DRIVER-v1.0.md): Universal Hardware Abstraction Standard.
+- [**ISO/IEC TIS-9000**](ternlang-root/spec/standards/ISO-TIS-9000.md): Triadic Computing Systems Certification & Benchmarks.
 
 ---
 
