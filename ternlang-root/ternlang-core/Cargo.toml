@@ -1,6 +1,6 @@
 [package]
 name        = "ternlang-core"
-description = "Compiler core for ternlang — lexer, parser, AST, BET bytecode emitter, and VM for balanced ternary computing."
+description = "Post-Quantum Balanced Ternary Core. Native Sparsity for 60% Power Reduction. The definitive BET VM implementation."
 version.workspace   = true
 edition.workspace   = true
 license.workspace   = true

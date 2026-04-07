@@ -1720,6 +1720,9 @@ version = "0.1.0"
 [[package]]
 name = "ternlang-harmony"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "ternlang-hdl"
