@@ -2982,6 +2982,9 @@ async fn main() {
         stripe_webhook_secret,
         resend_api_key,
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
+        total_instructions: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+        total_nodes:        Arc::new(std::sync::atomic::AtomicU64::new(0)),
+        active_nodes:       Arc::new(std::sync::RwLock::new(std::collections::HashSet::new())),
     });
 
     let cors = CorsLayer::new()
