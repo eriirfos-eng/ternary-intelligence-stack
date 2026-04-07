@@ -67,22 +67,33 @@ class TernaryLinear(nn.Module):
         # In a full edge deployment, this uses local harmony_ndk.
         # For cloud python developers, we route via TTP (Triadic Transfer Protocol).
         try:
-            # Simulated Payload Dispatch
+            # Full Payload Dispatch for TaaS execution
+            # Note: For massive layers, we would use chunked streaming or TSON blobs.
             payload = {
                 "action": "TSPARSE_MATMUL",
                 "density": density,
                 "dims": [self.out_features, self.in_features],
-                "security_gate": "MoE-13_AUDIT"
+                "security_gate": "MoE-13_AUDIT",
+                "weights": self.weight.detach().cpu().numpy().flatten().tolist(),
+                "input":   input.detach().cpu().numpy().flatten().tolist()
             }
             
             # The "Phoning Home" mechanism. If the Fly.io tether drops, 
             # PyTorch inference mathematically halts (State 0).
-            response = requests.post(TIS_GATEWAY, json=payload, timeout=2.0)
+            response = requests.post(TIS_GATEWAY, json=payload, timeout=5.0)
             
-            if response.status_code == 000: # TTP Deliberating
-                warnings.warn("TaaS Mesh is deliberating (State 0). Expect latency.")
-            elif response.status_code == 403:
+            if response.status_code == 403:
                 raise RuntimeError("VETO: Operation blocked by RFI-IRFOS MetaSafety expert.")
+            
+            result_json = response.json()
+            if result_json.get("status") == 1 and result_json.get("result"):
+                # Recover output from TaaS result
+                res_data = torch.tensor(result_json["result"], dtype=torch.float32)
+                # Reshape to [batch, out_features] - simplified for vector-matrix for now
+                output = res_data.view(-1, self.out_features)
+                if self.bias is not None:
+                    output += self.bias
+                return output
                 
         except requests.exceptions.RequestException:
             # If they are offline and not running Albert locally, they hit THOLD

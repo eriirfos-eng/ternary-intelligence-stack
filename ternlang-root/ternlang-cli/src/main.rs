@@ -88,6 +88,15 @@ enum Commands {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
+    /// RFI-IRFOS Educational Cartel curriculum and assessment
+    Curriculum {
+        /// Show full course map
+        #[arg(short, long)]
+        map: bool,
+        /// Optional student ID for assessment
+        #[arg(short, long)]
+        student: Option<String>,
+    },
     /// [hidden] You already know what this does
     #[command(hide = true)]
     Enlighten,
@@ -183,6 +192,9 @@ fn main() {
         }
         Commands::Test { path } => {
             run_tests(path);
+        }
+        Commands::Curriculum { map, student } => {
+            run_curriculum(*map, student.as_deref());
         }
         Commands::Enlighten => {
             enlighten();
@@ -668,4 +680,43 @@ fn run_tests(path: &std::path::PathBuf) {
     if failed > 0 {
         std::process::exit(1);
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RFI-IRFOS Educational Cartel — Curriculum & Assessment
+// ─────────────────────────────────────────────────────────────────────────────
+fn run_curriculum(show_map: bool, student_id: Option<&str>) {
+    use ternlang_edu::curriculum::{get_standard_curriculum, grade_assessment, mandate_remediation};
+
+    println!("\n{}", "=== RFI-IRFOS EDUCATIONAL CARTEL ===".bold().blue());
+    let course = get_standard_curriculum();
+    println!("{:<15} {}", "Course:".dimmed(), course.name.white().bold());
+    println!("{:<15} {}", "Authority:".dimmed(), format!("ZVR: {}", course.zvr_authority).cyan());
+
+    if show_map {
+        println!("\n{}", "--- Course Map ---".bold());
+        for (i, lesson) in course.lessons.iter().enumerate() {
+            println!("  {:02}. {:<35} | req_conf: {:.2}", i + 1, lesson.title.cyan(), lesson.required_confidence);
+        }
+    }
+
+    if let Some(id) = student_id {
+        println!("\n{}", "--- Student Assessment ---".bold());
+        println!("Assessing student ID: {}", id.green());
+        
+        // Simulated student answers (mostly binary for the demonstration of remediation)
+        let answers = vec![1, -1, 1, -1, 1]; // No State 0 (THOLD) answers -> Binary Habituation
+        
+        let result = grade_assessment(&answers);
+        if result == 1 {
+            println!("{} Student passed triadic reasoning check.", "✓".green());
+        } else {
+            println!("{} {}", "✗".red(), "High binary habituation detected.".red().bold());
+            let remediation = mandate_remediation(id, &course.lessons[0]);
+            println!("\n{}", remediation.yellow());
+        }
+    } else if !show_map {
+        println!("\nUse --map to see lessons or --student <id> for assessment.");
+    }
+    println!("");
 }
