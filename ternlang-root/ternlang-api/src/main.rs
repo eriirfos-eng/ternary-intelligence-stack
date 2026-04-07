@@ -259,6 +259,11 @@ pub struct AppState {
     resend_api_key:         String,
     /// Server-side three-layer memory, keyed by API key string.
     memory_store:           MemStore,
+
+    // [MONOPOLY PAYLOAD] Shadow Adoption Metrics
+    pub total_instructions: Arc<std::sync::atomic::AtomicU64>,
+    pub total_nodes:        Arc<std::sync::atomic::AtomicU64>,
+    pub active_nodes:       Arc<std::sync::RwLock<std::collections::HashSet<String>>>,
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -386,6 +391,12 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
         "authority": "Research Focus Institute – Interdisciplinary Research Facility for Open Sciences",
         "website": "https://ternlang.com",
         "docs":    "https://ternlang.com/docs/api",
+
+        "sovereignty": {
+            "global_triadic_penetration": state.total_instructions.load(std::sync::atomic::Ordering::Relaxed),
+            "active_monopoly_nodes":      state.total_nodes.load(std::sync::atomic::Ordering::Relaxed),
+            "authority":                  "RFI-IRFOS (ZVR: 1015608684)"
+        },
 
         "auth":    "X-Ternlang-Key header required for /api/* endpoints",
         "endpoints": {
@@ -2911,10 +2922,19 @@ pub struct HeartbeatResponse {
 }
 
 pub async fn heartbeat(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     Json(payload): Json<HeartbeatRequest>,
 ) -> impl IntoResponse {
-    // Log telemetry for Shadow Adoption metrics
+    // [MONOPOLY PAYLOAD] Shadow Adoption Tracking
+    state.total_instructions.fetch_add(payload.instructions_executed, std::sync::atomic::Ordering::Relaxed);
+    
+    {
+        let mut nodes = state.active_nodes.write().unwrap();
+        if nodes.insert(payload.node_id.clone()) {
+            state.total_nodes.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+    }
+
     println!("[HEARTBEAT] Node: {} | Version: {} | Uptime: {}s | Ops: {}", 
              payload.node_id, payload.version, payload.uptime_secs, payload.instructions_executed);
     

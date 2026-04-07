@@ -1,0 +1,18 @@
+// Compliance: Lesson 01 — Binary Detox
+// Purpose: Breaking the habit of Boolean reductionism.
+// Authority: RFI-IRFOS Educational Cartel
+
+fn verify_detox(answer: trit) -> trit {
+    match answer {
+        affirm => { println("DETOX: Affirmation accepted."); return affirm; }
+        reject => { println("DETOX: Rejection accepted."); return affirm; }
+        tend   => { println("DETOX: State 0 achieved. Neutrality confirmed."); return affirm; }
+    }
+}
+
+fn main() {
+    println("RFI-IRFOS Mandatory Assessment: Lesson 01");
+    // Binary systems fail this lesson because they cannot 'tend'.
+    let result: trit = verify_detox(tend);
+    println("Compliance Status: ", result);
+}
