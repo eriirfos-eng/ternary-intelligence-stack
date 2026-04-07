@@ -111,6 +111,12 @@
     [data-theme="light"] .theme-toggle .icon-moon { display: none; }
     [data-theme="light"] .theme-toggle .icon-sun  { display: inline; }
 
+    /* Mobile Hamburger */
+    .hamburger span { transition: transform 0.3s, opacity 0.3s; }
+    .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
     /* Terminal UI */
     .term-window { background: var(--theme-bg2); border: 1px solid var(--theme-border); border-radius: 0.75rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
     .term-titlebar { background: var(--theme-bg3); padding: 0.75rem 1rem; border-bottom: 1px solid var(--theme-border); display: flex; align-items: center; }
@@ -168,27 +174,28 @@
   <nav class="fixed top-0 left-0 right-0 z-50 border-b border-t_border bg-t_bg/80 backdrop-blur-xl h-20">
     <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
       <div class="flex items-center gap-8 lg:gap-12">
-        <a href="#" onclick="showPage(0)" class="text-2xl font-black tracking-tighter hover:text-t_blue transition-colors">ternlang</a>
+        <a href="#" onclick="navTo(0)" class="text-2xl font-black tracking-tighter hover:text-t_blue transition-colors">ternlang</a>
+        <!-- Desktop Links -->
         <div class="hidden lg:flex items-center gap-6">
           <div class="relative group py-2">
             <button class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest flex items-center gap-1">
               PRODUCTS <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </button>
             <div class="absolute top-full left-0 w-64 bg-t_bg2 border border-t_border rounded-xl p-2 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all shadow-2xl">
-              <a href="#" onclick="showPage(1)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">Agent Albert <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">CLI</span></div></a>
-              <a href="#" onclick="showPage(2)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">TernTranslator</div></a>
-              <a href="#" onclick="showPage(3)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">TernAudit</div></a>
-              <a href="#" onclick="showPage(4)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">Logic Library</div></a>
-              <a href="#" onclick="showPage(5)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">MCP Server</div></a>
-              <a href="#" onclick="showPage(6)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">Sparsity Engine</div></a>
-              <a href="#" onclick="showPage(7)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_teal uppercase">BET VM & Compiler</div></a>
+              <a href="#" onclick="navTo(1)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">Agent Albert <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">CLI</span></div></a>
+              <a href="#" onclick="navTo(2)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">TernTranslator</div></a>
+              <a href="#" onclick="navTo(3)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">TernAudit</div></a>
+              <a href="#" onclick="navTo(4)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">Logic Library</div></a>
+              <a href="#" onclick="navTo(5)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">MCP Server</div></a>
+              <a href="#" onclick="navTo(6)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-white uppercase">Sparsity Engine</div></a>
+              <a href="#" onclick="navTo(7)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_teal uppercase">BET VM & Compiler</div></a>
             </div>
           </div>
-          <a href="#" onclick="showPage(0); setTimeout(()=>document.getElementById('quickstart').scrollIntoView({behavior:'smooth'}),100)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Quickstart</a>
-          <a href="#" onclick="showPage(5)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">API & VM</a>
-          <a href="#" onclick="showPage(6)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Benchmarks</a>
-          <a href="#" onclick="showPage(7)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Architecture</a>
-          <a href="#" onclick="showPage(8)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Pricing</a>
+          <a href="#" onclick="navTo(0); setTimeout(()=>document.getElementById('quickstart').scrollIntoView({behavior:'smooth'}),300)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Quickstart</a>
+          <a href="#" onclick="navTo(5)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">API & VM</a>
+          <a href="#" onclick="navTo(6)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Benchmarks</a>
+          <a href="#" onclick="navTo(7)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Architecture</a>
+          <a href="#" onclick="navTo(8)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest">Pricing</a>
         </div>
       </div>
       <div class="flex items-center gap-4">
@@ -196,9 +203,42 @@
           <span class="icon-moon">🌙</span><span class="icon-sun">☀️</span>
         </button>
         <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" class="hidden md:block px-6 py-2 bg-t_bg3 border border-t_border text-t_text text-[10px] font-black tracking-widest hover:bg-t_bg2 transition-all">GITHUB REPO</a>
+        <!-- Hamburger Button -->
+        <button id="mobile-menu-btn" class="hamburger lg:hidden w-10 h-10 flex flex-col items-center justify-center gap-1 focus:outline-none" aria-label="Toggle mobile menu">
+          <span class="w-5 h-0.5 bg-t_text rounded-full"></span>
+          <span class="w-5 h-0.5 bg-t_text rounded-full"></span>
+          <span class="w-5 h-0.5 bg-t_text rounded-full"></span>
+        </button>
       </div>
     </div>
   </nav>
+
+  <!-- Mobile Routing Curtain -->
+  <div id="mobile-menu" class="fixed inset-0 bg-t_bg/95 backdrop-blur-2xl z-40 flex flex-col pt-24 px-8 pb-8 transform translate-x-full transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto">
+    <div class="flex flex-col gap-6 text-sm font-bold tracking-widest uppercase">
+      <a href="#" onclick="navTo(0)" class="text-t_text hover:text-t_teal transition-colors">Home</a>
+      
+      <div class="h-px w-full bg-t_border/50"></div>
+      <p class="text-[10px] text-t_muted">Core Products</p>
+      <a href="#" onclick="navTo(1)" class="text-t_text hover:text-t_teal transition-colors pl-4">Agent Albert <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">CLI</span></a>
+      <a href="#" onclick="navTo(2)" class="text-t_text hover:text-t_teal transition-colors pl-4">TernTranslator</a>
+      <a href="#" onclick="navTo(3)" class="text-t_text hover:text-t_teal transition-colors pl-4">TernAudit</a>
+      <a href="#" onclick="navTo(4)" class="text-t_text hover:text-t_teal transition-colors pl-4">Logic Library</a>
+      <a href="#" onclick="navTo(5)" class="text-t_text hover:text-t_teal transition-colors pl-4">MCP Server</a>
+      <a href="#" onclick="navTo(6)" class="text-t_text hover:text-t_teal transition-colors pl-4">Sparsity Engine</a>
+      <a href="#" onclick="navTo(7)" class="text-t_teal hover:text-white transition-colors pl-4">BET VM & Compiler</a>
+      
+      <div class="h-px w-full bg-t_border/50"></div>
+      <p class="text-[10px] text-t_muted">Ecosystem</p>
+      <a href="#" onclick="navTo(0); setTimeout(()=>document.getElementById('quickstart').scrollIntoView({behavior:'smooth'}),300)" class="text-t_text hover:text-t_teal transition-colors pl-4">Quickstart</a>
+      <a href="#" onclick="navTo(6)" class="text-t_text hover:text-t_teal transition-colors pl-4">Benchmarks</a>
+      <a href="#" onclick="navTo(7)" class="text-t_text hover:text-t_teal transition-colors pl-4">Architecture</a>
+      <a href="#" onclick="navTo(8)" class="text-t_text hover:text-t_teal transition-colors pl-4">Pricing</a>
+      
+      <div class="h-px w-full bg-t_border/50"></div>
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" class="text-t_blue mt-2">GitHub Repository ↗</a>
+    </div>
+  </div>
 
   <div id="page-slider">
     
@@ -214,8 +254,8 @@
             Yes, No, and <em class="text-white not-italic font-semibold underline decoration-t_teal underline-offset-8">not yet</em>. Ternlang gives AI the formal right to deliberate before committing.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <button onclick="showPage(1)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-white transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)]">MEET AGENT ALBERT</button>
-            <button onclick="showPage(5)" class="px-10 py-4 border border-t_border text-white font-black hover:border-t_teal transition-all">EXPLORE API</button>
+            <button onclick="navTo(1)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-white transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)]">MEET AGENT ALBERT</button>
+            <button onclick="navTo(5)" class="px-10 py-4 border border-t_border text-white font-black hover:border-t_teal transition-all">EXPLORE API</button>
           </div>
         </div>
       </header>
@@ -226,23 +266,38 @@
           <div class="text-center mb-12">
             <p class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Plain English</p>
             <h2 class="text-3xl md:text-5xl font-light text-white mb-6">You already think <strong class="font-bold text-t_teal">in three states.</strong></h2>
-            <p class="text-lg text-t_muted max-w-2xl mx-auto">You just haven't built software that admits it yet.</p>
+            <p class="text-lg text-t_text max-w-2xl mx-auto mb-6">You just haven't built software that admits it yet.</p>
+            <div class="bg-t_bg3 border border-t_border p-6 rounded-2xl max-w-3xl mx-auto shadow-lg text-left">
+              <p class="text-slate-300 text-sm leading-relaxed"><strong class="text-white">Why binary fails:</strong> It forces the machine to guess when data is missing — creating hallucinations and brittle edge cases. Ternlang fixes this by giving systems the native capability to pause, request more evidence, and deliberate before making a binding decision.</p>
+            </div>
           </div>
           <div class="grid md:grid-cols-3 gap-8">
-            <div class="glass-card rounded-xl p-8">
+            <div class="glass-card rounded-xl p-8 border-t-2 border-transparent hover:border-t_blue transition-all">
               <div class="font-mono text-xs text-t_muted uppercase tracking-widest mb-4">Engineering</div>
               <h3 class="text-lg font-bold text-white mb-3">A traffic light with only two states causes accidents.</h3>
-              <p class="text-t_muted text-sm leading-relaxed">Red and green are not sufficient. Yellow encodes a third meaning: <em>the intersection state is changing — do not commit yet</em>. Every distributed system failure during state transition was missing a yellow light.</p>
+              <p class="text-slate-300 text-sm leading-relaxed">Red and green are not sufficient. Yellow encodes a third meaning: <span class="text-t_blue font-bold cursor-pointer border-b border-dashed border-t_blue hover:bg-t_blue/10 px-1 rounded transition-colors" onclick="toggleExp('exp-eng')">the intersection state is changing</span>. Every distributed system failure during state transition was missing a yellow light.</p>
+              <div id="exp-eng" class="hidden mt-4 p-4 bg-t_blue/10 border border-t_blue/30 rounded-xl text-t_text text-xs leading-relaxed">
+                <strong class="text-t_blue block mb-1">What this does:</strong>
+                It acts as a native mutex lock, halting execution precisely when a state is volatile so data doesn't collide.
+              </div>
             </div>
-            <div class="glass-card rounded-xl p-8 border-t-2 border-t-t_teal">
+            <div class="glass-card rounded-xl p-8 border-t-2 border-transparent hover:border-t_teal transition-all">
               <div class="font-mono text-xs text-t_muted uppercase tracking-widest mb-4">Medicine</div>
               <h3 class="text-lg font-bold text-white mb-3">Clinical hold is not a refusal. It is a protocol.</h3>
-              <p class="text-t_muted text-sm leading-relaxed">When a physician orders additional workup, that is not uncertainty — it is the correct decision given the data. <strong class="text-t_teal">Trit = 0 gives the machine a formal right to request more evidence</strong>.</p>
+              <p class="text-slate-300 text-sm leading-relaxed">When a physician orders additional workup, that is not uncertainty. It is the correct decision given the data. <span class="text-t_teal font-bold cursor-pointer border-b border-dashed border-t_teal hover:bg-t_teal/10 px-1 rounded transition-colors" onclick="toggleExp('exp-med')">Trit = 0 gives the machine a formal right</span> to request more evidence.</p>
+              <div id="exp-med" class="hidden mt-4 p-4 bg-t_teal/10 border border-t_teal/30 rounded-xl text-t_text text-xs leading-relaxed">
+                <strong class="text-t_teal block mb-1">What this does:</strong>
+                It stops an AI from hallucinating a diagnosis, forcing it to escalate to a human or trigger a secondary test sequence instead.
+              </div>
             </div>
-            <div class="glass-card rounded-xl p-8">
+            <div class="glass-card rounded-xl p-8 border-t-2 border-transparent hover:border-t_red transition-all">
               <div class="font-mono text-xs text-t_muted uppercase tracking-widest mb-4">Law</div>
-              <h3 class="text-lg font-bold text-white mb-3">"Insufficient evidence" is a verdict, not an abstention.</h3>
-              <p class="text-t_muted text-sm leading-relaxed">A court dismissing a case has made a precise determination. Binary logic forces a guess. Ternlang gives it a computational name, a formal type, and runtime semantics.</p>
+              <h3 class="text-lg font-bold text-white mb-3">"Insufficient evidence" is a verdict.</h3>
+              <p class="text-slate-300 text-sm leading-relaxed">A court dismissing a case has made a precise determination. Binary logic forces a guess. Ternlang gives ambiguity a <span class="text-t_red font-bold cursor-pointer border-b border-dashed border-t_red hover:bg-t_red/10 px-1 rounded transition-colors" onclick="toggleExp('exp-law')">computational name</span>, a formal type, and runtime semantics.</p>
+              <div id="exp-law" class="hidden mt-4 p-4 bg-t_red/10 border border-t_red/30 rounded-xl text-t_text text-xs leading-relaxed">
+                <strong class="text-t_red block mb-1">What this does:</strong>
+                It maps ambiguity as a mathematical value (-1, 0, +1), making uncertainty safely measurable and routable within the code.
+              </div>
             </div>
           </div>
         </div>
@@ -397,7 +452,7 @@
                 <span class="term-dot bg-t_red"></span><span class="term-dot bg-yellow-500"></span><span class="term-dot bg-t_teal"></span>
                 <span class="ml-4 text-[10px] font-mono text-t_muted uppercase tracking-widest">albert-code — hybrid mode</span>
               </div>
-              <span class="text-[9px] text-t_blue border border-t_blue/30 bg-t_blue/10 px-2 rounded-full uppercase tracking-widest">qwen2.5:3b</span>
+              <span class="text-[9px] text-t_blue border border-t_blue/30 bg-t_blue/10 px-2 rounded-full uppercase tracking-widest hidden sm:inline-block">qwen2.5:3b</span>
             </div>
             <div class="p-6 bg-t_bg font-mono text-xs overflow-y-auto h-[460px] text-t_text space-y-4">
               <div><span class="text-t_blue font-bold">$</span> albert run --model albert:latest --mode hybrid</div>
@@ -1047,9 +1102,9 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tok-number">0</span
   <footer class="relative z-10 bg-[#020205] py-20 px-6 border-t border-t_border text-center">
     <div class="max-w-7xl mx-auto">
       <div class="flex flex-wrap justify-center gap-8 md:gap-12 text-[10px] font-black text-t_muted uppercase tracking-[0.3em] mb-12">
-        <a href="#" onclick="showPage(0)" class="hover:text-t_teal transition-all">Home</a>
-        <a href="#" onclick="showPage(5)" class="hover:text-t_teal transition-all">API</a>
-        <a href="#" onclick="showPage(8)" class="hover:text-t_teal transition-all">Pricing</a>
+        <a href="#" onclick="navTo(0)" class="hover:text-t_teal transition-all">Home</a>
+        <a href="#" onclick="navTo(5)" class="hover:text-t_teal transition-all">API</a>
+        <a href="#" onclick="navTo(8)" class="hover:text-t_teal transition-all">Pricing</a>
         <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="hover:text-white transition-all">Source</a>
       </div>
       <p class="text-t_muted text-[10px] font-black tracking-widest uppercase mb-4">
@@ -1067,6 +1122,40 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tok-number">0</span
     function showPage(index) {
       document.getElementById('page-slider').style.transform = `translateX(-${index * 100}vw)`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // EXPANSION TOGGLE LOGIC
+    function toggleExp(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle('hidden');
+    }
+
+    // MOBILE MENU LOGIC
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    let menuOpen = false;
+
+    mobileBtn.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileBtn.classList.toggle('open', menuOpen);
+      if(menuOpen) {
+        mobileMenu.classList.remove('translate-x-full');
+        mobileMenu.classList.add('translate-x-0');
+      } else {
+        closeMobileMenu();
+      }
+    });
+
+    function closeMobileMenu() {
+      menuOpen = false;
+      mobileBtn.classList.remove('open');
+      mobileMenu.classList.remove('translate-x-0');
+      mobileMenu.classList.add('translate-x-full');
+    }
+
+    function navTo(index) {
+      showPage(index);
+      closeMobileMenu();
     }
 
     // THEME TOGGLE LOGIC
