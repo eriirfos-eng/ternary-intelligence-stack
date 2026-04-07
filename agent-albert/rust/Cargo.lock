@@ -1096,6 +1096,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "ternlang-harmony",
  "tokio",
  "walkdir",
 ]
@@ -1426,6 +1427,13 @@ dependencies = [
  "thiserror",
  "walkdir",
  "yaml-rust",
+]
+
+[[package]]
+name = "ternlang-harmony"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

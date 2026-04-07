@@ -25,8 +25,9 @@ use init::initialize_repo;
 use render::{MarkdownStreamState, Spinner, TerminalRenderer};
 use runtime::{
     clear_oauth_credentials, discover_ternary_nodes, generate_pkce_pair, generate_state,
-    load_system_prompt, parse_oauth_callback_request_target, save_oauth_credentials,
-    TernaryNode, ApiClient, ApiRequest, AssistantEvent, CompactionConfig, ConfigLoader,
+    load_system_prompt, optimize_node_firmware, parse_oauth_callback_request_target,
+    save_oauth_credentials, TernaryNode, ApiClient, ApiRequest, AssistantEvent, CompactionConfig,
+ ConfigLoader,
  ConfigSource, ContentBlock,
     ConversationMessage, ConversationRuntime, MessageRole, OAuthAuthorizationRequest, OAuthConfig,
     OAuthTokenExchangeRequest, PermissionMode, PermissionPolicy, ProjectContext, RuntimeError,
@@ -1236,6 +1237,10 @@ impl LiveCli {
     fn run_discovery(&self) {
         let nodes = discover_ternary_nodes();
         println!("{}", format_node_discovery(nodes));
+    }
+
+    fn run_optimization(&self, hostname: Option<&str>) {
+        println!("{}", run_optimization_logic(hostname));
     }
 
     fn persist_session(&self) -> Result<(), Box<dyn std::error::Error>> {
@@ -3928,6 +3933,47 @@ mod tests {
             &events[0],
             AssistantEvent::ToolUse { name, input, .. }
                 if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
+        ));
+    }
+}
+{ name, input, .. }
+                if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
+        ));
+    }
+}
+h\":\"rust/Cargo.toml\"}"
+        ));
+    }
+}
+Cargo.toml" }),
+                }],
+                stop_reason: Some("tool_use".to_string()),
+                stop_sequence: None,
+                usage: Usage {
+                    input_tokens: 1,
+                    output_tokens: 1,
+                    cache_creation_input_tokens: 0,
+                    cache_read_input_tokens: 0,
+                },
+                request_id: None,
+            },
+            &mut out,
+        )
+        .expect("response conversion should succeed");
+
+        assert!(matches!(
+            &events[0],
+            AssistantEvent::ToolUse { name, input, .. }
+                if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
+        ));
+    }
+}
+{ name, input, .. }
+                if name == "read_file" && input == "{\"path\":\"rust/Cargo.toml\"}"
+        ));
+    }
+}
+h\":\"rust/Cargo.toml\"}"
         ));
     }
 }
