@@ -398,6 +398,7 @@ pub fn handle_slash_command(
         | SlashCommand::Export { .. }
         | SlashCommand::Session { .. }
         | SlashCommand::Discover
+        | SlashCommand::Optimize { .. }
         | SlashCommand::Unknown(_) => None,
     }
 }
