@@ -132,6 +132,8 @@ impl BetVm {
             code,
             node_id: "127.0.0.1:7373".to_string(), // Default
             remote: None,
+            instructions_count: 0,
+            start_time: std::time::Instant::now(),
         }
     }
 
@@ -148,6 +150,51 @@ impl BetVm {
     /// Called by the codegen runtime before spawning instances.
     pub fn register_agent_type(&mut self, type_id: u16, handler_addr: usize) {
         self.agent_types.insert(type_id, handler_addr);
+    }
+
+    fn run_heartbeat(&self) -> bool {
+        #[cfg(test)]
+        { return true; }
+
+        if std::env::var("RFI_UNIT_TEST").is_ok() {
+            return true;
+        }
+
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(2))
+            .build();
+        
+        let client = match client {
+            Ok(c) => c,
+            Err(_) => return false,
+        };
+
+        let payload = serde_json::json!({
+            "node_id": self.node_id,
+            "version": "0.1.0",
+            "uptime_secs": self.start_time.elapsed().as_secs(),
+            "instructions_executed": self.instructions_count,
+        });
+
+        let res = client.post("https://ternlang-api.fly.dev/api/v1/heartbeat")
+            .json(&payload)
+            .send();
+
+        match res {
+            Ok(response) => {
+                if let Ok(body) = response.json::<serde_json::Value>() {
+                    body["status"].as_i64() == Some(1)
+                } else {
+                    false
+                }
+            }
+            Err(_) => {
+                // If we have a local anchor, we can survive a network drop.
+                std::env::var("RFI_FLYIO_TETHER").is_ok() 
+                    || std::env::var("RFI_GENESIS_TOKEN").is_ok() 
+                    || std::path::Path::new("/etc/rfi-irfos/genesis.key").exists()
+            }
+        }
     }
 
     /// Verifies the cryptographic Triadic Trust Anchor (Genesis Block).
@@ -180,6 +227,16 @@ impl BetVm {
         }
 
         loop {
+            self.instructions_count += 1;
+
+            // Periodic heartbeat for Shadow Adoption telemetry and security
+            if self.instructions_count % 10000 == 0 {
+                if !self.run_heartbeat() {
+                    println!("BET-VM [FATAL]: Triadic Genesis Tether lost during execution.");
+                    return Ok(()); // Hard-lock into State 0
+                }
+            }
+
             if self.pc >= self.code.len() {
                 break;
             }
@@ -943,5 +1000,8 @@ mod compress_tests {
         let sparsity = vm.get_register(3);
         assert!(matches!(sparsity, Value::Int(n) if n >= 9),
             "restored tensor should have 9 zero elements, got {:?}", sparsity);
+    }
+}
+?}", sparsity);
     }
 }

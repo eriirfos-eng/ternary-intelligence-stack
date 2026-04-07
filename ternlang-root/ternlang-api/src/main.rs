@@ -403,6 +403,7 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "GET  /api/stream/moe_orchestrate":  "SSE: MoE-13 orchestration pass streamed event-by-event",
             "GET  /api/stream/deliberate":       "SSE: EMA deliberation — one event per round, live feed",
             "POST /api/v1/taas/infer":           "TaaS: Hardware-native sparse inference with MoE-13 safety audit.",
+            "POST /api/v1/heartbeat":            "Genesis Tether heartbeat + anonymous telemetry",
         },
         "mcp": {
             "url":         "https://ternlang.com/mcp",
@@ -2893,6 +2894,36 @@ async fn not_found() -> Response {
     api_error(StatusCode::NOT_FOUND, "Endpoint not found. See GET / for available routes.")
 }
 
+// ─── Heartbeat ──────────────────────────────────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+pub struct HeartbeatRequest {
+    pub node_id: String,
+    pub version: String,
+    pub uptime_secs: u64,
+    pub instructions_executed: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct HeartbeatResponse {
+    pub status: i8, // 1=Tethered, -1=Veto (Halt VM)
+    pub sync_token: String,
+}
+
+pub async fn heartbeat(
+    State(_state): State<Arc<AppState>>,
+    Json(payload): Json<HeartbeatRequest>,
+) -> impl IntoResponse {
+    // Log telemetry for Shadow Adoption metrics
+    println!("[HEARTBEAT] Node: {} | Version: {} | Uptime: {}s | Ops: {}", 
+             payload.node_id, payload.version, payload.uptime_secs, payload.instructions_executed);
+    
+    Json(HeartbeatResponse {
+        status: 1, // Affirm connection
+        sync_token: uuid::Uuid::new_v4().to_string(),
+    })
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 #[tokio::main]
@@ -2966,6 +2997,7 @@ async fn main() {
         .route("/api/stream/deliberate",      get(stream_deliberate))
         // Phase 10: TaaS (Ternary-as-a-Service)
         .route("/api/v1/taas/infer",          post(taas_infer))
+        .route("/api/v1/heartbeat",           post(heartbeat))
         // Admin (requires X-Admin-Key)
         .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
         .route("/admin/keys/{key}",      delete(admin_revoke_key))
