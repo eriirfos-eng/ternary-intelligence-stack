@@ -190,6 +190,17 @@ RFI-IRFOS is standardizing the triadic era. These are the definitive specificati
 
 ---
 
+## 🤝 Help Ternlang Get Recognized
+
+We are currently working toward official recognition by **GitHub Linguist** (Issue [#7904](https://github.com/github-linguist/linguist/issues/7904)). To meet their inclusion criteria, we need **2000 unique `.tern` files** across the GitHub ecosystem.
+
+**How you can help:**
+1. Create a `.tern` logic file in your own public repository.
+2. Share your triadic algorithms with the community.
+3. Track our progress: [extension:tern NOT is:fork](https://github.com/search?q=extension%3Atern+NOT+is%3Afork&type=code)
+
+---
+
 ## License
 
 Open core under **LGPL-3.0**. Restricted components under **BSL-1.1**.

@@ -1,0 +1,48 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// 170_cern_beam_abort.tern — Particle Accelerator Safety
+//
+// WHY TERNARY?
+// A beam dump costs millions and days of downtime. Binary "Abort/Run" is too 
+// primitive. Ternary (0) allows for "SOFT_CLAMP" where magnets are adjusted 
+// to correct trajectory before a catastrophic quench forces a hard abort.
+// ─────────────────────────────────────────────────────────────────────────────
+
+fn check_quench_status(temp_sensors: trit, helium_pressure: trit) -> trit {
+    // If pressure drops (-1) or temp rises (-1), we have a problem.
+    let quench_risk: trit = consensus(temp_sensors, helium_pressure);
+    return quench_risk;
+}
+
+fn determine_abort_necessity(beam_intensity: trit, vacuum_pressure: trit, quench_status: trit) -> trit {
+    match quench_status {
+        -1 => { return conflict(); } // HARD ABORT - SUPERCONDUCTOR LOSS
+         0 => {
+             // Degraded magnets, check beam
+             match beam_intensity {
+                -1 => { return conflict(); } // TOO INTENSE FOR WEAK MAGNETS
+                 0 => { return hold();     } // SUSPEND INJECTION
+                 1 => { return hold();     }
+             }
+         }
+         1 => {
+             // Magnets ok, check vacuum
+             match vacuum_pressure {
+                -1 => { return conflict(); } // LEAK DETECTED
+                 0 => { return hold();     } // DEGRADED VACUUM
+                 1 => { return truth();    } // BEAM CLEAR
+             }
+         }
+    }
+}
+
+let intensity: trit = hold();
+let vacuum:    trit = hold();
+let magnets:   trit = truth();
+
+let safety_gate: trit = determine_abort_necessity(intensity, vacuum, magnets);
+
+match safety_gate {
+    -1 => { return conflict(); } // DUMP BEAM IMMEDIATELY
+     0 => { return hold();     } // COLLIMATOR ADJUSTMENT REQUIRED
+     1 => { return truth();    } // COLLISION RUN STABLE
+}
