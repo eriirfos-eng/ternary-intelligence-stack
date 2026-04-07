@@ -1676,6 +1676,13 @@ name = "ternlang-crypto"
 version = "0.1.0"
 
 [[package]]
+name = "ternlang-driver"
+version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+]
+
+[[package]]
 name = "ternlang-edu"
 version = "0.1.0"
 

@@ -1,0 +1,880 @@
+changes	Set up job	﻿2026-04-07T10:18:43.0581429Z Current runner version: '2.333.1'
+changes	Set up job	2026-04-07T10:18:43.0608511Z ##[group]Runner Image Provisioner
+changes	Set up job	2026-04-07T10:18:43.0609278Z Hosted Compute Agent
+changes	Set up job	2026-04-07T10:18:43.0609783Z Version: 20260213.493
+changes	Set up job	2026-04-07T10:18:43.0610340Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+changes	Set up job	2026-04-07T10:18:43.0610987Z Build Date: 2026-02-13T00:28:41Z
+changes	Set up job	2026-04-07T10:18:43.0611608Z Worker ID: {12f6c2b7-4271-4a8a-abdc-72919c6634be}
+changes	Set up job	2026-04-07T10:18:43.0612189Z Azure Region: westcentralus
+changes	Set up job	2026-04-07T10:18:43.0612730Z ##[endgroup]
+changes	Set up job	2026-04-07T10:18:43.0613936Z ##[group]Operating System
+changes	Set up job	2026-04-07T10:18:43.0614651Z Ubuntu
+changes	Set up job	2026-04-07T10:18:43.0615053Z 24.04.4
+changes	Set up job	2026-04-07T10:18:43.0615556Z LTS
+changes	Set up job	2026-04-07T10:18:43.0615929Z ##[endgroup]
+changes	Set up job	2026-04-07T10:18:43.0616426Z ##[group]Runner Image
+changes	Set up job	2026-04-07T10:18:43.0616941Z Image: ubuntu-24.04
+changes	Set up job	2026-04-07T10:18:43.0617349Z Version: 20260329.72.1
+changes	Set up job	2026-04-07T10:18:43.0618254Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260329.72/images/ubuntu/Ubuntu2404-Readme.md
+changes	Set up job	2026-04-07T10:18:43.0619743Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260329.72
+changes	Set up job	2026-04-07T10:18:43.0620494Z ##[endgroup]
+changes	Set up job	2026-04-07T10:18:43.0621441Z ##[group]GITHUB_TOKEN Permissions
+changes	Set up job	2026-04-07T10:18:43.0623410Z Contents: read
+changes	Set up job	2026-04-07T10:18:43.0623916Z Metadata: read
+changes	Set up job	2026-04-07T10:18:43.0624682Z Packages: read
+changes	Set up job	2026-04-07T10:18:43.0625212Z ##[endgroup]
+changes	Set up job	2026-04-07T10:18:43.0627769Z Secret source: Actions
+changes	Set up job	2026-04-07T10:18:43.0628427Z Prepare workflow directory
+changes	Set up job	2026-04-07T10:18:43.1072220Z Prepare all required actions
+changes	Set up job	2026-04-07T10:18:43.1112184Z Getting action download info
+changes	Set up job	2026-04-07T10:18:43.5161882Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+changes	Set up job	2026-04-07T10:18:43.6199499Z Download action repository 'dorny/paths-filter@v3' (SHA:de90cc6fb38fc0963ad72b210f1f284cd68cea36)
+changes	Set up job	2026-04-07T10:18:44.3859661Z Complete job name: changes
+changes	Run actions/checkout@v4	﻿2026-04-07T10:18:44.4641620Z ##[group]Run actions/checkout@v4
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4643032Z with:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4643998Z   repository: eriirfos-eng/ternary-intelligence-stack
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4645797Z   token: ***
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4646579Z   ssh-strict: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4647356Z   ssh-user: git
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4648193Z   persist-credentials: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4649064Z   clean: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4649875Z   sparse-checkout-cone-mode: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4650818Z   fetch-depth: 1
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4651628Z   fetch-tags: false
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4652414Z   show-progress: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4653236Z   lfs: false
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4653957Z   submodules: false
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4654949Z   set-safe-directory: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4656159Z env:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4656888Z   CARGO_TERM_COLOR: always
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4657870Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4658863Z   RFI_UNIT_TEST: true
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.4659704Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5638053Z Syncing repository: eriirfos-eng/ternary-intelligence-stack
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5641233Z ##[group]Getting Git version info
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5642946Z Working directory is '/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack'
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5646161Z [command]/usr/bin/git version
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5647090Z git version 2.53.0
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5667588Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5682383Z Temporarily overriding HOME='/home/runner/work/_temp/ab31768c-cd7c-44de-9fca-4ec023161ed9' before making global git config changes
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5685226Z Adding repository directory to the temporary git global config as a safe directory
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5688866Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5719076Z Deleting the contents of '/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack'
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5722822Z ##[group]Initializing the repository
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5727924Z [command]/usr/bin/git init /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5801991Z hint: Using 'master' as the name for the initial branch. This default branch name
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5804390Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5806651Z hint: to use in all of your new repositories, which will suppress this warning,
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5808040Z hint: call:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5808707Z hint:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5809698Z hint: 	git config --global init.defaultBranch <name>
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5810892Z hint:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5812251Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5814032Z hint: 'development'. The just-created branch can be renamed via this command:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5815654Z hint:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5816420Z hint: 	git branch -m <name>
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5817450Z hint:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5818624Z hint: Disable this message with "git config set advice.defaultBranchName false"
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5820964Z Initialized empty Git repository in /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/.git/
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5825127Z [command]/usr/bin/git remote add origin https://github.com/eriirfos-eng/ternary-intelligence-stack
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5842390Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5844788Z ##[group]Disabling automatic garbage collection
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5847095Z [command]/usr/bin/git config --local gc.auto 0
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5872757Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5875071Z ##[group]Setting up auth
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5880564Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.5909494Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6156273Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6184019Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6360023Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6392160Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6579909Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6610296Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6613880Z ##[group]Fetching the repository
+changes	Run actions/checkout@v4	2026-04-07T10:18:44.6622749Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5:refs/remotes/origin/main
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3847917Z From https://github.com/eriirfos-eng/ternary-intelligence-stack
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3849307Z  * [new ref]         efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5 -> origin/main
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3872386Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3873387Z ##[group]Determining the checkout info
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3875034Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3880432Z [command]/usr/bin/git sparse-checkout disable
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3916837Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3940933Z ##[group]Checking out the ref
+changes	Run actions/checkout@v4	2026-04-07T10:19:00.3945075Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+changes	Run actions/checkout@v4	2026-04-07T10:19:01.7327160Z Updating files:  32% (1937/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.0100091Z Updating files:  33% (1965/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.1469086Z Updating files:  34% (2025/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.2431204Z Updating files:  35% (2084/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.3925258Z Updating files:  36% (2144/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.4184630Z Updating files:  37% (2203/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.4189905Z Updating files:  37% (2245/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.4979678Z Updating files:  38% (2263/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.5073149Z Updating files:  39% (2323/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.5389241Z Updating files:  40% (2382/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.5499571Z Updating files:  41% (2442/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.5938071Z Updating files:  42% (2501/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.6068274Z Updating files:  43% (2561/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.6498960Z Updating files:  44% (2620/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.6909786Z Updating files:  45% (2680/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.7265173Z Updating files:  46% (2739/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.7618389Z Updating files:  47% (2799/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.7941356Z Updating files:  48% (2858/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.8005467Z Updating files:  49% (2918/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.8235176Z Updating files:  50% (2977/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.8388120Z Updating files:  51% (3037/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.8610315Z Updating files:  52% (3097/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.8833555Z Updating files:  53% (3156/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.8937429Z Updating files:  54% (3216/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:02.9132574Z Updating files:  55% (3275/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0017785Z Updating files:  56% (3335/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0031466Z Updating files:  57% (3394/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0049644Z Updating files:  58% (3454/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0066545Z Updating files:  59% (3513/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0085743Z Updating files:  60% (3573/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0103431Z Updating files:  61% (3632/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0116445Z Updating files:  62% (3692/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0137002Z Updating files:  63% (3752/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0148232Z Updating files:  64% (3811/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0162330Z Updating files:  65% (3871/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0176554Z Updating files:  66% (3930/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0196584Z Updating files:  67% (3990/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0215496Z Updating files:  68% (4049/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0235146Z Updating files:  69% (4109/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0248300Z Updating files:  70% (4168/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0260827Z Updating files:  71% (4228/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0273290Z Updating files:  72% (4287/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0286300Z Updating files:  73% (4347/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0299428Z Updating files:  74% (4406/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0313600Z Updating files:  75% (4466/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0326385Z Updating files:  76% (4526/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0339142Z Updating files:  77% (4585/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0353426Z Updating files:  78% (4645/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0370828Z Updating files:  79% (4704/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0383291Z Updating files:  80% (4764/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0395781Z Updating files:  81% (4823/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0407411Z Updating files:  82% (4883/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0420162Z Updating files:  83% (4942/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0432887Z Updating files:  84% (5002/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0452161Z Updating files:  85% (5061/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0471562Z Updating files:  86% (5121/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0484852Z Updating files:  87% (5180/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0497075Z Updating files:  88% (5240/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0509337Z Updating files:  89% (5300/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0521739Z Updating files:  90% (5359/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0536274Z Updating files:  91% (5419/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0553357Z Updating files:  92% (5478/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0568247Z Updating files:  93% (5538/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0583603Z Updating files:  94% (5597/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0600442Z Updating files:  95% (5657/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0622082Z Updating files:  96% (5716/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0649951Z Updating files:  97% (5776/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0677263Z Updating files:  98% (5835/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0710460Z Updating files:  99% (5895/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0710916Z Updating files: 100% (5954/5954)
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0711253Z Updating files: 100% (5954/5954), done.
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0783958Z Switched to a new branch 'main'
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0784964Z branch 'main' set up to track 'origin/main'.
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0835305Z ##[endgroup]
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0878711Z [command]/usr/bin/git log -1 --format=%H
+changes	Run actions/checkout@v4	2026-04-07T10:19:03.0899858Z efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5
+changes	Run dorny/paths-filter@v3	﻿2026-04-07T10:19:03.1101905Z ##[group]Run dorny/paths-filter@v3
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1102172Z with:
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1102549Z   filters: logic:
+changes	Run dorny/paths-filter@v3	  - '**/src/**'
+changes	Run dorny/paths-filter@v3	  - '**/Cargo.toml'
+changes	Run dorny/paths-filter@v3	  - '**/Cargo.lock'
+changes	Run dorny/paths-filter@v3	  - 'Dockerfile'
+changes	Run dorny/paths-filter@v3	frontend:
+changes	Run dorny/paths-filter@v3	  - '**/index.html'
+changes	Run dorny/paths-filter@v3	
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1103135Z   token: ***
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1103321Z   list-files: none
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1103507Z   initial-fetch-depth: 100
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1103717Z env:
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1103880Z   CARGO_TERM_COLOR: always
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1104289Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1104586Z   RFI_UNIT_TEST: true
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1104783Z ##[endgroup]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1877278Z ##[group]Get current git ref
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1921772Z [command]/usr/bin/git branch --show-current
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1959099Z main
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1976770Z ##[endgroup]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1977422Z Changes will be detected between f384ae17e9f466bade3d364192a28590486870ef and main
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1978861Z ##[group]Ensuring f384ae17e9f466bade3d364192a28590486870ef is fetched from origin
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.1991059Z [command]/usr/bin/git cat-file -e f384ae17e9f466bade3d364192a28590486870ef^{commit}
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.2017887Z fatal: Not a valid object name f384ae17e9f466bade3d364192a28590486870ef^{commit}
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.2031590Z [command]/usr/bin/git fetch --depth=1 --no-tags origin f384ae17e9f466bade3d364192a28590486870ef
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5447408Z From https://github.com/eriirfos-eng/ternary-intelligence-stack
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5448082Z  * branch            f384ae17e9f466bade3d364192a28590486870ef -> FETCH_HEAD
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5479879Z [command]/usr/bin/git cat-file -e f384ae17e9f466bade3d364192a28590486870ef^{commit}
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5508161Z ##[endgroup]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5508832Z ##[group]Ensuring main is fetched from origin
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5519552Z [command]/usr/bin/git show-ref main
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5541980Z efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5 refs/heads/main
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5542669Z efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5 refs/remotes/origin/main
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5550180Z ##[endgroup]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5550660Z ##[group]Change detection f384ae17e9f466bade3d364192a28590486870ef..main
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5560511Z [command]/usr/bin/git diff --no-renames --name-status -z f384ae17e9f466bade3d364192a28590486870ef..refs/remotes/origin/main
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5589114Z M ternlang-root/ternlang-api/src/main.rs 
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5590006Z ##[endgroup]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5590293Z Detected 1 changed files
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5595464Z Results:
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5596044Z ##[group]Filter logic = true
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5596423Z Matching files:
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5596649Z ternlang-root/ternlang-api/src/main.rs [modified]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5603220Z ##[endgroup]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5603671Z ##[group]Filter frontend = false
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5603983Z Matching files: none
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5605444Z ##[endgroup]
+changes	Run dorny/paths-filter@v3	2026-04-07T10:19:03.5605645Z Changes output set to ["logic"]
+changes	Post Run actions/checkout@v4	﻿2026-04-07T10:19:03.5756212Z Post job cleanup.
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6568430Z [command]/usr/bin/git version
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6604595Z git version 2.53.0
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6641899Z Temporarily overriding HOME='/home/runner/work/_temp/901766c9-0335-45eb-b32f-df9bc8aed03e' before making global git config changes
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6643618Z Adding repository directory to the temporary git global config as a safe directory
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6648393Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6685969Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6719120Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.6975379Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.7000089Z http.https://github.com/.extraheader
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.7011727Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.7045116Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.7247681Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+changes	Post Run actions/checkout@v4	2026-04-07T10:19:03.7277077Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+changes	Complete job	﻿2026-04-07T10:19:03.7594429Z Evaluate and set job outputs
+changes	Complete job	2026-04-07T10:19:03.7604660Z Set output 'logic'
+changes	Complete job	2026-04-07T10:19:03.7606536Z Set output 'frontend'
+changes	Complete job	2026-04-07T10:19:03.7607432Z Cleaning up orphan processes
+changes	Complete job	2026-04-07T10:19:03.7855941Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, dorny/paths-filter@v3. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build	Set up job	﻿2026-04-07T10:19:09.9619794Z Current runner version: '2.333.1'
+build	Set up job	2026-04-07T10:19:09.9643318Z ##[group]Runner Image Provisioner
+build	Set up job	2026-04-07T10:19:09.9644167Z Hosted Compute Agent
+build	Set up job	2026-04-07T10:19:09.9644832Z Version: 20260213.493
+build	Set up job	2026-04-07T10:19:09.9645393Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+build	Set up job	2026-04-07T10:19:09.9646070Z Build Date: 2026-02-13T00:28:41Z
+build	Set up job	2026-04-07T10:19:09.9646708Z Worker ID: {5625bb9a-0b78-491b-9c15-7a16e48ddbd4}
+build	Set up job	2026-04-07T10:19:09.9647391Z Azure Region: centralus
+build	Set up job	2026-04-07T10:19:09.9647920Z ##[endgroup]
+build	Set up job	2026-04-07T10:19:09.9649457Z ##[group]Operating System
+build	Set up job	2026-04-07T10:19:09.9650090Z Ubuntu
+build	Set up job	2026-04-07T10:19:09.9650530Z 24.04.4
+build	Set up job	2026-04-07T10:19:09.9651014Z LTS
+build	Set up job	2026-04-07T10:19:09.9651440Z ##[endgroup]
+build	Set up job	2026-04-07T10:19:09.9651924Z ##[group]Runner Image
+build	Set up job	2026-04-07T10:19:09.9652399Z Image: ubuntu-24.04
+build	Set up job	2026-04-07T10:19:09.9653213Z Version: 20260329.72.1
+build	Set up job	2026-04-07T10:19:09.9654171Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260329.72/images/ubuntu/Ubuntu2404-Readme.md
+build	Set up job	2026-04-07T10:19:09.9655849Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260329.72
+build	Set up job	2026-04-07T10:19:09.9656748Z ##[endgroup]
+build	Set up job	2026-04-07T10:19:09.9657876Z ##[group]GITHUB_TOKEN Permissions
+build	Set up job	2026-04-07T10:19:09.9659862Z Contents: read
+build	Set up job	2026-04-07T10:19:09.9660384Z Metadata: read
+build	Set up job	2026-04-07T10:19:09.9660960Z Packages: read
+build	Set up job	2026-04-07T10:19:09.9661451Z ##[endgroup]
+build	Set up job	2026-04-07T10:19:09.9663889Z Secret source: Actions
+build	Set up job	2026-04-07T10:19:09.9665274Z Prepare workflow directory
+build	Set up job	2026-04-07T10:19:10.0050281Z Prepare all required actions
+build	Set up job	2026-04-07T10:19:10.0088189Z Getting action download info
+build	Set up job	2026-04-07T10:19:10.4360302Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+build	Set up job	2026-04-07T10:19:10.5641396Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+build	Set up job	2026-04-07T10:19:10.8942101Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+build	Set up job	2026-04-07T10:19:11.1196312Z Complete job name: build
+build	Run actions/checkout@v4	﻿2026-04-07T10:19:11.1934680Z ##[group]Run actions/checkout@v4
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1935596Z with:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1936127Z   repository: eriirfos-eng/ternary-intelligence-stack
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1936947Z   token: ***
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1937364Z   ssh-strict: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1937785Z   ssh-user: git
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1938213Z   persist-credentials: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1938714Z   clean: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1939135Z   sparse-checkout-cone-mode: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1939651Z   fetch-depth: 1
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1940059Z   fetch-tags: false
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1940501Z   show-progress: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1940918Z   lfs: false
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1941317Z   submodules: false
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1941741Z   set-safe-directory: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1942411Z env:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1943041Z   CARGO_TERM_COLOR: always
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1943573Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1944152Z   RFI_UNIT_TEST: true
+build	Run actions/checkout@v4	2026-04-07T10:19:11.1944611Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2855926Z Syncing repository: eriirfos-eng/ternary-intelligence-stack
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2857919Z ##[group]Getting Git version info
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2858917Z Working directory is '/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack'
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2860226Z [command]/usr/bin/git version
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2881246Z git version 2.53.0
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2902205Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2916372Z Temporarily overriding HOME='/home/runner/work/_temp/2584fbdf-3191-4096-bd3b-8631875b8d14' before making global git config changes
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2917946Z Adding repository directory to the temporary git global config as a safe directory
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2921527Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2952580Z Deleting the contents of '/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack'
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2956521Z ##[group]Initializing the repository
+build	Run actions/checkout@v4	2026-04-07T10:19:11.2961248Z [command]/usr/bin/git init /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3044349Z hint: Using 'master' as the name for the initial branch. This default branch name
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3045822Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3046974Z hint: to use in all of your new repositories, which will suppress this warning,
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3047864Z hint: call:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3048288Z hint:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3048845Z hint: 	git config --global init.defaultBranch <name>
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3049549Z hint:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3050209Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3051301Z hint: 'development'. The just-created branch can be renamed via this command:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3052063Z hint:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3052470Z hint: 	git branch -m <name>
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3053491Z hint:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3054302Z hint: Disable this message with "git config set advice.defaultBranchName false"
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3055830Z Initialized empty Git repository in /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/.git/
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3057897Z [command]/usr/bin/git remote add origin https://github.com/eriirfos-eng/ternary-intelligence-stack
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3116196Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3116977Z ##[group]Disabling automatic garbage collection
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3120923Z [command]/usr/bin/git config --local gc.auto 0
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3149227Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3150619Z ##[group]Setting up auth
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3156398Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3187165Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3458969Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3489691Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3701736Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3732431Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3943917Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3976238Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3977013Z ##[group]Fetching the repository
+build	Run actions/checkout@v4	2026-04-07T10:19:11.3986980Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5:refs/remotes/origin/main
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0831606Z From https://github.com/eriirfos-eng/ternary-intelligence-stack
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0833102Z  * [new ref]         efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5 -> origin/main
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0859157Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0859953Z ##[group]Determining the checkout info
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0862431Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0867861Z [command]/usr/bin/git sparse-checkout disable
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0903922Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0928171Z ##[group]Checking out the ref
+build	Run actions/checkout@v4	2026-04-07T10:19:27.0931848Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+build	Run actions/checkout@v4	2026-04-07T10:19:28.3597221Z Updating files:  32% (1944/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:28.6320300Z Updating files:  33% (1965/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:28.7607988Z Updating files:  34% (2025/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:28.8460819Z Updating files:  35% (2084/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:28.9784218Z Updating files:  36% (2144/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.0041082Z Updating files:  37% (2203/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.0799209Z Updating files:  38% (2263/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.0897482Z Updating files:  39% (2323/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.1030401Z Updating files:  40% (2382/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.1186843Z Updating files:  40% (2407/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.1283562Z Updating files:  41% (2442/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.1692994Z Updating files:  42% (2501/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.1831237Z Updating files:  43% (2561/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.2231543Z Updating files:  44% (2620/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.2639640Z Updating files:  45% (2680/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.2933475Z Updating files:  46% (2739/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.3268236Z Updating files:  47% (2799/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.3578390Z Updating files:  48% (2858/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.3650668Z Updating files:  49% (2918/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.3879211Z Updating files:  50% (2977/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.4032253Z Updating files:  51% (3037/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.4293673Z Updating files:  52% (3097/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.4507153Z Updating files:  53% (3156/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.4613616Z Updating files:  54% (3216/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.4826386Z Updating files:  55% (3275/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5617419Z Updating files:  56% (3335/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5642505Z Updating files:  57% (3394/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5669919Z Updating files:  58% (3454/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5697414Z Updating files:  59% (3513/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5731825Z Updating files:  60% (3573/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5760004Z Updating files:  61% (3632/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5783114Z Updating files:  62% (3692/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5806108Z Updating files:  63% (3752/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5827479Z Updating files:  64% (3811/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5850226Z Updating files:  65% (3871/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5874869Z Updating files:  66% (3930/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5896875Z Updating files:  67% (3990/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5919222Z Updating files:  68% (4049/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5947373Z Updating files:  69% (4109/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5969184Z Updating files:  70% (4168/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.5991160Z Updating files:  71% (4228/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6012996Z Updating files:  72% (4287/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6036130Z Updating files:  73% (4347/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6058356Z Updating files:  74% (4406/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6089134Z Updating files:  75% (4466/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6111465Z Updating files:  76% (4526/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6136695Z Updating files:  77% (4585/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6159629Z Updating files:  78% (4645/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6183352Z Updating files:  79% (4704/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6205693Z Updating files:  80% (4764/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6226588Z Updating files:  81% (4823/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6248341Z Updating files:  82% (4883/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6271989Z Updating files:  83% (4942/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6293942Z Updating files:  84% (5002/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6317332Z Updating files:  85% (5061/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6339006Z Updating files:  86% (5121/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6362362Z Updating files:  87% (5180/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6383185Z Updating files:  88% (5240/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6405513Z Updating files:  89% (5300/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6426853Z Updating files:  90% (5359/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6451860Z Updating files:  91% (5419/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6478212Z Updating files:  92% (5478/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6514713Z Updating files:  93% (5538/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6539823Z Updating files:  94% (5597/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6571182Z Updating files:  95% (5657/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6603654Z Updating files:  96% (5716/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6645753Z Updating files:  97% (5776/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6691913Z Updating files:  98% (5835/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6739930Z Updating files:  99% (5895/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6740401Z Updating files: 100% (5954/5954)
+build	Run actions/checkout@v4	2026-04-07T10:19:29.6741223Z Updating files: 100% (5954/5954), done.
+build	Run actions/checkout@v4	2026-04-07T10:19:29.7160809Z Switched to a new branch 'main'
+build	Run actions/checkout@v4	2026-04-07T10:19:29.7169673Z branch 'main' set up to track 'origin/main'.
+build	Run actions/checkout@v4	2026-04-07T10:19:29.7299993Z ##[endgroup]
+build	Run actions/checkout@v4	2026-04-07T10:19:29.7342505Z [command]/usr/bin/git log -1 --format=%H
+build	Run actions/checkout@v4	2026-04-07T10:19:29.7366837Z efabc949e78fbbf6f3c5bd3bafdfe75cf3ec94c5
+build	Install Rust 1.86+	﻿2026-04-07T10:19:29.7746673Z ##[group]Run dtolnay/rust-toolchain@stable
+build	Install Rust 1.86+	2026-04-07T10:19:29.7746989Z with:
+build	Install Rust 1.86+	2026-04-07T10:19:29.7747179Z   toolchain: 1.86
+build	Install Rust 1.86+	2026-04-07T10:19:29.7747367Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:29.7747543Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:29.7747870Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.7748330Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.7748660Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:29.7933475Z ##[group]Run : parse toolchain version
+build	Install Rust 1.86+	2026-04-07T10:19:29.7933848Z [36;1m: parse toolchain version[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7934122Z [36;1mif [[ -z $toolchain ]]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7934658Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7935232Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7935523Z [36;1m  exit 1[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7935860Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7936279Z [36;1m  if [[ Linux == macOS ]]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7936856Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7937369Z [36;1m  else[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7937767Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7938213Z [36;1m  fi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7938499Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7939011Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7939468Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7939985Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7940473Z [36;1melse[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7940706Z [36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7940979Z [36;1mfi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.7972508Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:29.7973118Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:29.7973301Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:29.7973552Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.7973822Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.7974016Z   toolchain: 1.86
+build	Install Rust 1.86+	2026-04-07T10:19:29.7974194Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:29.8209701Z ##[group]Run : construct rustup command line
+build	Install Rust 1.86+	2026-04-07T10:19:29.8210022Z [36;1m: construct rustup command line[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8210773Z [36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8211476Z [36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8211972Z [36;1mecho "downgrade=" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8239437Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:29.8239775Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:29.8239955Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:29.8240204Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8240459Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8240664Z   targets: 
+build	Install Rust 1.86+	2026-04-07T10:19:29.8240833Z   components: 
+build	Install Rust 1.86+	2026-04-07T10:19:29.8241014Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:29.8627337Z ##[group]Run : set $CARGO_HOME
+build	Install Rust 1.86+	2026-04-07T10:19:29.8627779Z [36;1m: set $CARGO_HOME[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8628313Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8658630Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:29.8659184Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:29.8659472Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:29.8659888Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8660330Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8660665Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:29.8736634Z ##[group]Run : install rustup if needed
+build	Install Rust 1.86+	2026-04-07T10:19:29.8737114Z [36;1m: install rustup if needed[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8737415Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8738160Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8738897Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8739163Z [36;1mfi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8763885Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:29.8764258Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:29.8764444Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:29.8764705Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8764969Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8765179Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:29.8765416Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:29.8837367Z ##[group]Run rustup toolchain install 1.86 --profile minimal --no-self-update
+build	Install Rust 1.86+	2026-04-07T10:19:29.8837895Z [36;1mrustup toolchain install 1.86 --profile minimal --no-self-update[0m
+build	Install Rust 1.86+	2026-04-07T10:19:29.8863895Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:29.8864232Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:29.8864416Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:29.8864661Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8864923Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:29.8865145Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:29.8865405Z   RUSTUP_PERMIT_COPY_RENAME: 1
+build	Install Rust 1.86+	2026-04-07T10:19:29.8865630Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:30.5715983Z info: syncing channel updates for 1.86-x86_64-unknown-linux-gnu
+build	Install Rust 1.86+	2026-04-07T10:19:30.8397489Z info: latest update on 2025-04-03 for version 1.86.0 (05f9846f8 2025-03-31)
+build	Install Rust 1.86+	2026-04-07T10:19:30.8398420Z info: downloading 3 components
+build	Install Rust 1.86+	2026-04-07T10:19:38.5152833Z 
+build	Install Rust 1.86+	2026-04-07T10:19:38.5225733Z   1.86-x86_64-unknown-linux-gnu installed - rustc 1.86.0 (05f9846f8 2025-03-31)
+build	Install Rust 1.86+	2026-04-07T10:19:38.5226272Z 
+build	Install Rust 1.86+	2026-04-07T10:19:38.5296394Z ##[group]Run rustup default 1.86
+build	Install Rust 1.86+	2026-04-07T10:19:38.5296693Z [36;1mrustup default 1.86[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5322179Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:38.5322509Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:38.5322962Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:38.5323214Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.5323486Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.5323693Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:38.5323931Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:38.5418094Z info: using existing install for 1.86-x86_64-unknown-linux-gnu
+build	Install Rust 1.86+	2026-04-07T10:19:38.5424241Z info: default toolchain set to 1.86-x86_64-unknown-linux-gnu
+build	Install Rust 1.86+	2026-04-07T10:19:38.5424783Z 
+build	Install Rust 1.86+	2026-04-07T10:19:38.5492331Z   1.86-x86_64-unknown-linux-gnu unchanged - rustc 1.86.0 (05f9846f8 2025-03-31)
+build	Install Rust 1.86+	2026-04-07T10:19:38.5492972Z 
+build	Install Rust 1.86+	2026-04-07T10:19:38.5523190Z ##[group]Run : create cachekey
+build	Install Rust 1.86+	2026-04-07T10:19:38.5523480Z [36;1m: create cachekey[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5523983Z [36;1mDATE=$(rustc +1.86 --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5524659Z [36;1mHASH=$(rustc +1.86 --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5525150Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5549498Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:38.5549829Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:38.5550005Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:38.5550251Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.5550505Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.5550716Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:38.5551110Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:38.5888572Z ##[group]Run : disable incremental compilation
+build	Install Rust 1.86+	2026-04-07T10:19:38.5888941Z [36;1m: disable incremental compilation[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5889253Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5889577Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5890032Z [36;1mfi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5915487Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:38.5915809Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:38.5915996Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:38.5916243Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.5916512Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.5916724Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:38.5916958Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:38.5976539Z ##[group]Run : enable colors in Cargo output
+build	Install Rust 1.86+	2026-04-07T10:19:38.5976848Z [36;1m: enable colors in Cargo output[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5977145Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5977491Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.5977771Z [36;1mfi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6000338Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:38.6000660Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:38.6000843Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:38.6001094Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6001381Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6001598Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:38.6001835Z   CARGO_INCREMENTAL: 0
+build	Install Rust 1.86+	2026-04-07T10:19:38.6002028Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:38.6061737Z ##[group]Run : enable Cargo sparse registry
+build	Install Rust 1.86+	2026-04-07T10:19:38.6062058Z [36;1m: enable Cargo sparse registry[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6062412Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6063386Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6064128Z [36;1m  if rustc +1.86 --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6064686Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6065213Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6065694Z [36;1m  elif rustc +1.86 --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6066231Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6066742Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6067077Z [36;1m  fi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6067247Z [36;1mfi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6089937Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:38.6090263Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:38.6090445Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:38.6090703Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6090956Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6091168Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:38.6091406Z   CARGO_INCREMENTAL: 0
+build	Install Rust 1.86+	2026-04-07T10:19:38.6091607Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:38.6405383Z ##[group]Run : work around spurious network errors in curl 8.0
+build	Install Rust 1.86+	2026-04-07T10:19:38.6405822Z [36;1m: work around spurious network errors in curl 8.0[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6406378Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6406965Z [36;1mif rustc +1.86 --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6407409Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6407708Z [36;1mfi[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6433006Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:38.6433344Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:38.6433526Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:38.6433982Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6434274Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6434483Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:38.6434724Z   CARGO_INCREMENTAL: 0
+build	Install Rust 1.86+	2026-04-07T10:19:38.6434918Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:38.6627511Z ##[group]Run rustc +1.86 --version --verbose
+build	Install Rust 1.86+	2026-04-07T10:19:38.6627867Z [36;1mrustc +1.86 --version --verbose[0m
+build	Install Rust 1.86+	2026-04-07T10:19:38.6653553Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+build	Install Rust 1.86+	2026-04-07T10:19:38.6653887Z env:
+build	Install Rust 1.86+	2026-04-07T10:19:38.6654064Z   CARGO_TERM_COLOR: always
+build	Install Rust 1.86+	2026-04-07T10:19:38.6654316Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6654577Z   RFI_UNIT_TEST: true
+build	Install Rust 1.86+	2026-04-07T10:19:38.6654789Z   CARGO_HOME: /home/runner/.cargo
+build	Install Rust 1.86+	2026-04-07T10:19:38.6655031Z   CARGO_INCREMENTAL: 0
+build	Install Rust 1.86+	2026-04-07T10:19:38.6655226Z ##[endgroup]
+build	Install Rust 1.86+	2026-04-07T10:19:38.6811276Z rustc 1.86.0 (05f9846f8 2025-03-31)
+build	Install Rust 1.86+	2026-04-07T10:19:38.6811816Z binary: rustc
+build	Install Rust 1.86+	2026-04-07T10:19:38.6812229Z commit-hash: 05f9846f893b09a1be1fc8560e33fc3c815cfecb
+build	Install Rust 1.86+	2026-04-07T10:19:38.6812579Z commit-date: 2025-03-31
+build	Install Rust 1.86+	2026-04-07T10:19:38.6813404Z host: x86_64-unknown-linux-gnu
+build	Install Rust 1.86+	2026-04-07T10:19:38.6813806Z release: 1.86.0
+build	Install Rust 1.86+	2026-04-07T10:19:38.6814425Z LLVM version: 19.1.7
+build	Cache cargo registry	﻿2026-04-07T10:19:38.7430341Z ##[group]Run actions/cache@v4
+build	Cache cargo registry	2026-04-07T10:19:38.7430616Z with:
+build	Cache cargo registry	2026-04-07T10:19:38.7430832Z   path: ~/.cargo/registry
+build	Cache cargo registry	~/.cargo/git
+build	Cache cargo registry	target
+build	Cache cargo registry	
+build	Cache cargo registry	2026-04-07T10:19:38.7431293Z   key: Linux-cargo-2d6dc4925f0cd218782bdf6b2addd3e0571a9861c1c7050b07af3c3fafd6a523
+build	Cache cargo registry	2026-04-07T10:19:38.7431743Z   enableCrossOsArchive: false
+build	Cache cargo registry	2026-04-07T10:19:38.7431993Z   fail-on-cache-miss: false
+build	Cache cargo registry	2026-04-07T10:19:38.7432222Z   lookup-only: false
+build	Cache cargo registry	2026-04-07T10:19:38.7432429Z   save-always: false
+build	Cache cargo registry	2026-04-07T10:19:38.7432855Z env:
+build	Cache cargo registry	2026-04-07T10:19:38.7433054Z   CARGO_TERM_COLOR: always
+build	Cache cargo registry	2026-04-07T10:19:38.7433300Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Cache cargo registry	2026-04-07T10:19:38.7433559Z   RFI_UNIT_TEST: true
+build	Cache cargo registry	2026-04-07T10:19:38.7433771Z   CARGO_HOME: /home/runner/.cargo
+build	Cache cargo registry	2026-04-07T10:19:38.7434017Z   CARGO_INCREMENTAL: 0
+build	Cache cargo registry	2026-04-07T10:19:38.7434216Z ##[endgroup]
+build	Cache cargo registry	2026-04-07T10:19:38.8426436Z (node:2421) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build	Cache cargo registry	2026-04-07T10:19:38.8427697Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build	Cache cargo registry	2026-04-07T10:19:38.9946333Z Cache hit for: Linux-cargo-2d6dc4925f0cd218782bdf6b2addd3e0571a9861c1c7050b07af3c3fafd6a523
+build	Cache cargo registry	2026-04-07T10:19:39.0101876Z (node:2421) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build	Cache cargo registry	2026-04-07T10:19:40.1346062Z Received 117440512 of 560810200 (20.9%), 111.9 MBs/sec
+build	Cache cargo registry	2026-04-07T10:19:41.1374345Z Received 322961408 of 560810200 (57.6%), 153.7 MBs/sec
+build	Cache cargo registry	2026-04-07T10:19:42.1370912Z Received 553648128 of 560810200 (98.7%), 175.8 MBs/sec
+build	Cache cargo registry	2026-04-07T10:19:42.1501570Z Received 560810200 of 560810200 (100.0%), 177.3 MBs/sec
+build	Cache cargo registry	2026-04-07T10:19:42.1504784Z Cache Size: ~535 MB (560810200 B)
+build	Cache cargo registry	2026-04-07T10:19:42.1545189Z [command]/usr/bin/tar -xf /home/runner/work/_temp/2497b110-05ee-48cb-ac0b-d2104a59f1f5/cache.tzst -P -C /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack --use-compress-program unzstd
+build	Cache cargo registry	2026-04-07T10:19:45.7591785Z Cache restored successfully
+build	Cache cargo registry	2026-04-07T10:19:45.8766910Z Cache restored from key: Linux-cargo-2d6dc4925f0cd218782bdf6b2addd3e0571a9861c1c7050b07af3c3fafd6a523
+build	Build all crates	﻿2026-04-07T10:19:45.8899362Z ##[group]Run cargo build --workspace --verbose
+build	Build all crates	2026-04-07T10:19:45.8899746Z [36;1mcargo build --workspace --verbose[0m
+build	Build all crates	2026-04-07T10:19:45.8928087Z shell: /usr/bin/bash -e {0}
+build	Build all crates	2026-04-07T10:19:45.8928355Z env:
+build	Build all crates	2026-04-07T10:19:45.8928555Z   CARGO_TERM_COLOR: always
+build	Build all crates	2026-04-07T10:19:45.8928820Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+build	Build all crates	2026-04-07T10:19:45.8929098Z   RFI_UNIT_TEST: true
+build	Build all crates	2026-04-07T10:19:45.8929323Z   CARGO_HOME: /home/runner/.cargo
+build	Build all crates	2026-04-07T10:19:45.8929576Z   CARGO_INCREMENTAL: 0
+build	Build all crates	2026-04-07T10:19:45.8929967Z ##[endgroup]
+build	Build all crates	2026-04-07T10:19:47.2499234Z [1m[32m       Fresh[0m unicode-ident v1.0.24
+build	Build all crates	2026-04-07T10:19:47.2499994Z [1m[32m       Fresh[0m proc-macro2 v1.0.106
+build	Build all crates	2026-04-07T10:19:47.2500573Z [1m[32m       Fresh[0m itoa v1.0.18
+build	Build all crates	2026-04-07T10:19:47.2501106Z [1m[32m       Fresh[0m quote v1.0.45
+build	Build all crates	2026-04-07T10:19:47.2501635Z [1m[32m       Fresh[0m libc v0.2.184
+build	Build all crates	2026-04-07T10:19:47.2502149Z [1m[32m       Fresh[0m fnv v1.0.7
+build	Build all crates	2026-04-07T10:19:47.2502927Z [1m[32m       Fresh[0m cfg-if v1.0.4
+build	Build all crates	2026-04-07T10:19:47.2503631Z [1m[32m       Fresh[0m syn v2.0.117
+build	Build all crates	2026-04-07T10:19:47.2504198Z [1m[32m       Fresh[0m regex-syntax v0.8.10
+build	Build all crates	2026-04-07T10:19:47.2504796Z [1m[32m       Fresh[0m smallvec v1.15.1
+build	Build all crates	2026-04-07T10:19:47.2505384Z [1m[32m       Fresh[0m synstructure v0.13.2
+build	Build all crates	2026-04-07T10:19:47.2505998Z [1m[32m       Fresh[0m pin-project-lite v0.2.17
+build	Build all crates	2026-04-07T10:19:47.2506587Z [1m[32m       Fresh[0m bytes v1.11.1
+build	Build all crates	2026-04-07T10:19:47.2507165Z [1m[32m       Fresh[0m serde_core v1.0.228
+build	Build all crates	2026-04-07T10:19:47.2507758Z [1m[32m       Fresh[0m zerofrom-derive v0.1.7
+build	Build all crates	2026-04-07T10:19:47.2508326Z [1m[32m       Fresh[0m memchr v2.8.0
+build	Build all crates	2026-04-07T10:19:47.2508894Z [1m[32m       Fresh[0m futures-core v0.3.32
+build	Build all crates	2026-04-07T10:19:47.2509455Z [1m[32m       Fresh[0m zerofrom v0.1.7
+build	Build all crates	2026-04-07T10:19:47.2510019Z [1m[32m       Fresh[0m yoke-derive v0.8.2
+build	Build all crates	2026-04-07T10:19:47.2510584Z [1m[32m       Fresh[0m scopeguard v1.2.0
+build	Build all crates	2026-04-07T10:19:47.2511184Z [1m[32m       Fresh[0m stable_deref_trait v1.2.1
+build	Build all crates	2026-04-07T10:19:47.2511785Z [1m[32m       Fresh[0m once_cell v1.21.4
+build	Build all crates	2026-04-07T10:19:47.2512390Z [1m[32m       Fresh[0m logos-codegen v0.16.1
+build	Build all crates	2026-04-07T10:19:47.2513245Z [1m[32m       Fresh[0m lock_api v0.4.14
+build	Build all crates	2026-04-07T10:19:47.2513804Z [1m[32m       Fresh[0m yoke v0.8.2
+build	Build all crates	2026-04-07T10:19:47.2514374Z [1m[32m       Fresh[0m parking_lot_core v0.9.12
+build	Build all crates	2026-04-07T10:19:47.2514977Z [1m[32m       Fresh[0m serde_derive v1.0.228
+build	Build all crates	2026-04-07T10:19:47.2515549Z [1m[32m       Fresh[0m errno v0.3.14
+build	Build all crates	2026-04-07T10:19:47.2516031Z [1m[32m       Fresh[0m parking_lot v0.12.5
+build	Build all crates	2026-04-07T10:19:47.2516523Z [1m[32m       Fresh[0m serde v1.0.228
+build	Build all crates	2026-04-07T10:19:47.2517065Z [1m[32m       Fresh[0m signal-hook-registry v1.4.8
+build	Build all crates	2026-04-07T10:19:47.2517615Z [1m[32m       Fresh[0m logos-derive v0.16.1
+build	Build all crates	2026-04-07T10:19:47.2518142Z [1m[32m       Fresh[0m tokio-macros v2.7.0
+build	Build all crates	2026-04-07T10:19:47.2518683Z [1m[32m       Fresh[0m zerovec-derive v0.11.3
+build	Build all crates	2026-04-07T10:19:47.2519233Z [1m[32m       Fresh[0m socket2 v0.6.3
+build	Build all crates	2026-04-07T10:19:47.2519543Z [1m[32m       Fresh[0m mio v1.2.0
+build	Build all crates	2026-04-07T10:19:47.2519840Z [1m[32m       Fresh[0m log v0.4.29
+build	Build all crates	2026-04-07T10:19:47.2520164Z [1m[32m       Fresh[0m unicode-width v0.2.2
+build	Build all crates	2026-04-07T10:19:47.2520510Z [1m[32m       Fresh[0m yansi v1.0.1
+build	Build all crates	2026-04-07T10:19:47.2520812Z [1m[32m       Fresh[0m ariadne v0.6.0
+build	Build all crates	2026-04-07T10:19:47.2521114Z [1m[32m       Fresh[0m zerovec v0.11.6
+build	Build all crates	2026-04-07T10:19:47.2521421Z [1m[32m       Fresh[0m tokio v1.51.0
+build	Build all crates	2026-04-07T10:19:47.2521709Z [1m[32m       Fresh[0m zmij v1.0.21
+build	Build all crates	2026-04-07T10:19:47.2521987Z [1m[32m       Fresh[0m logos v0.16.1
+build	Build all crates	2026-04-07T10:19:47.2522287Z [1m[32m       Fresh[0m displaydoc v0.2.5
+build	Build all crates	2026-04-07T10:19:47.2523433Z [1m[32m       Fresh[0m find-msvc-tools v0.1.9
+build	Build all crates	2026-04-07T10:19:47.2524240Z [1m[32m       Fresh[0m shlex v1.3.0
+build	Build all crates	2026-04-07T10:19:47.2524959Z [1m[32m       Fresh[0m serde_json v1.0.149
+build	Build all crates	2026-04-07T10:19:47.2527341Z [1m[32m       Dirty[0m ternlang-core v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-core): the file `ternlang-root/ternlang-core/src/lib.rs` has changed (1775557169.662468458s, 1h 52m 38s after last build at 1775550411.325579413s)
+build	Build all crates	2026-04-07T10:19:47.2530880Z [1m[32m   Compiling[0m ternlang-core v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-core)
+build	Build all crates	2026-04-07T10:19:47.2532559Z [1m[32m       Fresh[0m cc v1.2.59
+build	Build all crates	2026-04-07T10:19:47.2533992Z [1m[32m       Fresh[0m tracing-core v0.1.36
+build	Build all crates	2026-04-07T10:19:47.2534820Z [1m[32m       Fresh[0m http v1.4.0
+build	Build all crates	2026-04-07T10:19:47.2535543Z [1m[32m       Fresh[0m pkg-config v0.3.32
+build	Build all crates	2026-04-07T10:19:47.2536125Z [1m[32m       Fresh[0m vcpkg v0.2.15
+build	Build all crates	2026-04-07T10:19:47.2536778Z [1m[32m       Fresh[0m crossbeam-utils v0.8.21
+build	Build all crates	2026-04-07T10:19:47.2537391Z [1m[32m       Fresh[0m tracing v0.1.44
+build	Build all crates	2026-04-07T10:19:47.2545085Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_core --edition=2024 ternlang-root/ternlang-core/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=331dfbecc3634019 -C extra-filename=-e77a8c6ac0fdf005 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps --extern ariadne=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libariadne-f7485dcea80522e2.rmeta --extern logos=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/liblogos-da6a5524524998e1.rmeta`
+build	Build all crates	2026-04-07T10:19:47.2551623Z [1m[32m       Fresh[0m slab v0.4.12
+build	Build all crates	2026-04-07T10:19:47.2552204Z [1m[32m       Fresh[0m crossbeam-epoch v0.9.18
+build	Build all crates	2026-04-07T10:19:47.2553032Z [1m[32m       Fresh[0m http-body v1.0.1
+build	Build all crates	2026-04-07T10:19:47.2553596Z [1m[32m       Fresh[0m tinystr v0.8.3
+build	Build all crates	2026-04-07T10:19:47.2554160Z [1m[32m       Fresh[0m version_check v0.9.5
+build	Build all crates	2026-04-07T10:19:47.2554703Z [1m[32m       Fresh[0m writeable v0.6.3
+build	Build all crates	2026-04-07T10:19:47.2555212Z [1m[32m       Fresh[0m litemap v0.8.2
+build	Build all crates	2026-04-07T10:19:47.2555751Z [1m[32m       Fresh[0m icu_locale_core v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2556345Z [1m[32m       Fresh[0m crossbeam-deque v0.8.6
+build	Build all crates	2026-04-07T10:19:47.2556893Z [1m[32m       Fresh[0m zerotrie v0.2.4
+build	Build all crates	2026-04-07T10:19:47.2557446Z [1m[32m       Fresh[0m potential_utf v0.1.5
+build	Build all crates	2026-04-07T10:19:47.2557998Z [1m[32m       Fresh[0m equivalent v1.0.2
+build	Build all crates	2026-04-07T10:19:47.2558520Z [1m[32m       Fresh[0m utf8_iter v1.0.4
+build	Build all crates	2026-04-07T10:19:47.2559063Z [1m[32m       Fresh[0m futures-task v0.3.32
+build	Build all crates	2026-04-07T10:19:47.2559621Z [1m[32m       Fresh[0m tower-service v0.3.3
+build	Build all crates	2026-04-07T10:19:47.2560166Z [1m[32m       Fresh[0m hashbrown v0.16.1
+build	Build all crates	2026-04-07T10:19:47.2560716Z [1m[32m       Fresh[0m futures-sink v0.3.32
+build	Build all crates	2026-04-07T10:19:47.2561292Z [1m[32m       Fresh[0m percent-encoding v2.3.2
+build	Build all crates	2026-04-07T10:19:47.2561863Z [1m[32m       Fresh[0m tokio-util v0.7.18
+build	Build all crates	2026-04-07T10:19:47.2562388Z [1m[32m       Fresh[0m indexmap v2.13.1
+build	Build all crates	2026-04-07T10:19:47.2578982Z [1m[32m       Fresh[0m icu_collections v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2579579Z [1m[32m       Fresh[0m futures-util v0.3.32
+build	Build all crates	2026-04-07T10:19:47.2580130Z [1m[32m       Fresh[0m icu_provider v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2580663Z [1m[32m       Fresh[0m rayon-core v1.13.0
+build	Build all crates	2026-04-07T10:19:47.2581176Z [1m[32m       Fresh[0m typenum v1.19.0
+build	Build all crates	2026-04-07T10:19:47.2581670Z [1m[32m       Fresh[0m try-lock v0.2.5
+build	Build all crates	2026-04-07T10:19:47.2582175Z [1m[32m       Fresh[0m utf8parse v0.2.2
+build	Build all crates	2026-04-07T10:19:47.2582915Z [1m[32m       Fresh[0m foreign-types-shared v0.1.1
+build	Build all crates	2026-04-07T10:19:47.2583482Z [1m[32m       Fresh[0m bitflags v2.11.0
+build	Build all crates	2026-04-07T10:19:47.2584243Z [1m[32m       Fresh[0m atomic-waker v1.1.2
+build	Build all crates	2026-04-07T10:19:47.2584753Z [1m[32m       Fresh[0m either v1.15.0
+build	Build all crates	2026-04-07T10:19:47.2585277Z [1m[32m       Fresh[0m rayon v1.11.0
+build	Build all crates	2026-04-07T10:19:47.2585768Z [1m[32m       Fresh[0m h2 v0.4.13
+build	Build all crates	2026-04-07T10:19:47.2586277Z [1m[32m       Fresh[0m foreign-types v0.3.2
+build	Build all crates	2026-04-07T10:19:47.2586833Z [1m[32m       Fresh[0m anstyle-parse v1.0.0
+build	Build all crates	2026-04-07T10:19:47.2587345Z [1m[32m       Fresh[0m want v0.3.1
+build	Build all crates	2026-04-07T10:19:47.2588285Z [1m[32m       Fresh[0m generic-array v0.14.7
+build	Build all crates	2026-04-07T10:19:47.2588951Z [1m[32m       Fresh[0m icu_normalizer_data v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2589300Z [1m[32m       Fresh[0m httparse v1.10.1
+build	Build all crates	2026-04-07T10:19:47.2589645Z [1m[32m       Fresh[0m icu_properties_data v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2590009Z [1m[32m       Fresh[0m openssl-sys v0.9.112
+build	Build all crates	2026-04-07T10:19:47.2590349Z [1m[32m       Fresh[0m sync_wrapper v1.0.2
+build	Build all crates	2026-04-07T10:19:47.2590682Z [1m[32m       Fresh[0m futures-channel v0.3.32
+build	Build all crates	2026-04-07T10:19:47.2591035Z [1m[32m       Fresh[0m openssl-macros v0.1.1
+build	Build all crates	2026-04-07T10:19:47.2591354Z [1m[32m       Fresh[0m anstyle v1.0.14
+build	Build all crates	2026-04-07T10:19:47.2591650Z [1m[32m       Fresh[0m httpdate v1.0.3
+build	Build all crates	2026-04-07T10:19:47.2591963Z [1m[32m       Fresh[0m anstyle-query v1.1.5
+build	Build all crates	2026-04-07T10:19:47.2592302Z [1m[32m       Fresh[0m autocfg v1.5.0
+build	Build all crates	2026-04-07T10:19:47.2592916Z [1m[32m       Fresh[0m is_terminal_polyfill v1.70.2
+build	Build all crates	2026-04-07T10:19:47.2593674Z [1m[32m       Fresh[0m tower-layer v0.3.3
+build	Build all crates	2026-04-07T10:19:47.2594481Z [1m[32m       Fresh[0m colorchoice v1.0.5
+build	Build all crates	2026-04-07T10:19:47.2595227Z [1m[32m       Fresh[0m anstream v1.0.0
+build	Build all crates	2026-04-07T10:19:47.2595839Z [1m[32m       Fresh[0m hyper v1.9.0
+build	Build all crates	2026-04-07T10:19:47.2596546Z [1m[32m       Fresh[0m openssl v0.10.76
+build	Build all crates	2026-04-07T10:19:47.2597157Z [1m[32m       Fresh[0m icu_properties v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2597711Z [1m[32m       Fresh[0m icu_normalizer v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2598269Z [1m[32m       Fresh[0m form_urlencoded v1.2.2
+build	Build all crates	2026-04-07T10:19:47.2623063Z [1m[32m       Fresh[0m http-body-util v0.1.3
+build	Build all crates	2026-04-07T10:19:47.2623685Z [1m[32m       Fresh[0m ipnet v2.12.0
+build	Build all crates	2026-04-07T10:19:47.2624180Z [1m[32m       Fresh[0m base64 v0.22.1
+build	Build all crates	2026-04-07T10:19:47.2624683Z [1m[32m       Fresh[0m clap_lex v1.1.0
+build	Build all crates	2026-04-07T10:19:47.2625227Z [1m[32m       Fresh[0m openssl-probe v0.2.1
+build	Build all crates	2026-04-07T10:19:47.2625745Z [1m[32m       Fresh[0m heck v0.5.0
+build	Build all crates	2026-04-07T10:19:47.2626223Z [1m[32m       Fresh[0m strsim v0.11.1
+build	Build all crates	2026-04-07T10:19:47.2626745Z [1m[32m       Fresh[0m native-tls v0.2.18
+build	Build all crates	2026-04-07T10:19:47.2627263Z [1m[32m       Fresh[0m clap_derive v4.6.0
+build	Build all crates	2026-04-07T10:19:47.2627780Z [1m[32m       Fresh[0m clap_builder v4.6.0
+build	Build all crates	2026-04-07T10:19:47.2628302Z [1m[32m       Fresh[0m hyper-util v0.1.20
+build	Build all crates	2026-04-07T10:19:47.2628823Z [1m[32m       Fresh[0m idna_adapter v1.2.1
+build	Build all crates	2026-04-07T10:19:47.2629321Z [1m[32m       Fresh[0m tower v0.5.3
+build	Build all crates	2026-04-07T10:19:47.2629832Z [1m[32m       Fresh[0m crypto-common v0.1.7
+build	Build all crates	2026-04-07T10:19:47.2630381Z [1m[32m       Fresh[0m block-buffer v0.10.4
+build	Build all crates	2026-04-07T10:19:47.2630881Z [1m[32m       Fresh[0m ryu v1.0.23
+build	Build all crates	2026-04-07T10:19:47.2631382Z [1m[32m       Fresh[0m lazy_static v1.5.0
+build	Build all crates	2026-04-07T10:19:47.2631884Z [1m[32m       Fresh[0m mime v0.3.17
+build	Build all crates	2026-04-07T10:19:47.2632367Z [1m[32m       Fresh[0m subtle v2.6.1
+build	Build all crates	2026-04-07T10:19:47.2633063Z [1m[32m       Fresh[0m colored v2.2.0
+build	Build all crates	2026-04-07T10:19:47.2633694Z [1m[32m       Fresh[0m digest v0.10.7
+build	Build all crates	2026-04-07T10:19:47.2634248Z [1m[32m       Fresh[0m serde_urlencoded v0.7.1
+build	Build all crates	2026-04-07T10:19:47.2634800Z [1m[32m       Fresh[0m num-traits v0.2.19
+build	Build all crates	2026-04-07T10:19:47.2635303Z [1m[32m       Fresh[0m idna v1.1.0
+build	Build all crates	2026-04-07T10:19:47.2635777Z [1m[32m       Fresh[0m clap v4.6.0
+build	Build all crates	2026-04-07T10:19:47.2636288Z [1m[32m       Fresh[0m tokio-native-tls v0.3.1
+build	Build all crates	2026-04-07T10:19:47.2636854Z [1m[32m       Fresh[0m aho-corasick v1.1.4
+build	Build all crates	2026-04-07T10:19:47.2637380Z [1m[32m       Fresh[0m zeroize v1.8.2
+build	Build all crates	2026-04-07T10:19:47.2638123Z [1m[32m       Fresh[0m iana-time-zone v0.1.65
+build	Build all crates	2026-04-07T10:19:47.2638667Z [1m[32m       Fresh[0m iri-string v0.7.12
+build	Build all crates	2026-04-07T10:19:47.2639200Z [1m[32m       Fresh[0m regex-automata v0.4.14
+build	Build all crates	2026-04-07T10:19:47.2639730Z [1m[32m       Fresh[0m tower-http v0.6.8
+build	Build all crates	2026-04-07T10:19:47.2640236Z [1m[32m       Fresh[0m chrono v0.4.44
+build	Build all crates	2026-04-07T10:19:47.2640778Z [1m[32m       Fresh[0m rustls-pki-types v1.14.0
+build	Build all crates	2026-04-07T10:19:47.2641328Z [1m[32m       Fresh[0m hyper-tls v0.6.0
+build	Build all crates	2026-04-07T10:19:47.2641980Z [1m[32m       Fresh[0m url v2.5.8
+build	Build all crates	2026-04-07T10:19:47.2642463Z [1m[32m       Fresh[0m anyhow v1.0.102
+build	Build all crates	2026-04-07T10:19:47.2673424Z [1m[32m       Fresh[0m getrandom v0.4.2
+build	Build all crates	2026-04-07T10:19:47.2673992Z [1m[32m       Fresh[0m axum-core v0.5.6
+build	Build all crates	2026-04-07T10:19:47.2674581Z [1m[32m       Fresh[0m serde_path_to_error v0.1.20
+build	Build all crates	2026-04-07T10:19:47.2675189Z [1m[32m       Fresh[0m encoding_rs v0.8.35
+build	Build all crates	2026-04-07T10:19:47.2675760Z [1m[32m       Fresh[0m cpufeatures v0.2.17
+build	Build all crates	2026-04-07T10:19:47.2676374Z [1m[32m       Fresh[0m same-file v1.0.6
+build	Build all crates	2026-04-07T10:19:47.2676987Z [1m[32m       Fresh[0m matchit v0.8.4
+build	Build all crates	2026-04-07T10:19:47.2677519Z [1m[32m       Fresh[0m sha2 v0.10.9
+build	Build all crates	2026-04-07T10:19:47.2678029Z [1m[32m       Fresh[0m walkdir v2.5.0
+build	Build all crates	2026-04-07T10:19:47.2678555Z [1m[32m       Fresh[0m axum v0.8.8
+build	Build all crates	2026-04-07T10:19:47.2679088Z [1m[32m       Fresh[0m reqwest v0.12.28
+build	Build all crates	2026-04-07T10:19:47.2679614Z [1m[32m       Fresh[0m uuid v1.23.0
+build	Build all crates	2026-04-07T10:19:47.2680143Z [1m[32m       Fresh[0m regex v1.12.3
+build	Build all crates	2026-04-07T10:19:47.2680669Z [1m[32m       Fresh[0m hmac v0.12.1
+build	Build all crates	2026-04-07T10:19:47.2681219Z [1m[32m       Fresh[0m tokio-stream v0.1.18
+build	Build all crates	2026-04-07T10:19:47.2681773Z [1m[32m       Fresh[0m hex v0.4.3
+build	Build all crates	2026-04-07T10:19:47.2684241Z [1m[32m       Dirty[0m ternlang-hdl v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-hdl): the file `ternlang-root/ternlang-hdl/src/isa.rs` has changed (1775557169.664585577s, 1h 52m 15s after last build at 1775550434.436553246s)
+build	Build all crates	2026-04-07T10:19:47.2687050Z [1m[32m   Compiling[0m ternlang-hdl v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-hdl)
+build	Build all crates	2026-04-07T10:19:47.2689954Z [1m[32m       Dirty[0m ternlang-translator v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-translator): the file `ternlang-translator/src/main.rs` has changed (1775557169.672738433s, 1h 52m 14s after last build at 1775550435.024552482s)
+build	Build all crates	2026-04-07T10:19:47.2692884Z [1m[32m   Compiling[0m ternlang-translator v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-translator)
+build	Build all crates	2026-04-07T10:19:47.2698710Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_hdl --edition=2024 ternlang-root/ternlang-hdl/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=cb5a21a10eb625c7 -C extra-filename=-d224cf58926f96f1 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps`
+build	Build all crates	2026-04-07T10:19:47.2707744Z [1m[32m       Dirty[0m ternlang-audit v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-audit): the file `ternlang-audit/src/main.rs` has changed (1775557169.559359285s, 1h 52m 13s after last build at 1775550436.314550608s)
+build	Build all crates	2026-04-07T10:19:47.2710307Z [1m[32m   Compiling[0m ternlang-audit v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-audit)
+build	Build all crates	2026-04-07T10:19:47.2722912Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_audit --edition=2024 ternlang-audit/src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=c47b1720c199ba9b -C extra-filename=-c22bf98082888079 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps --extern anyhow=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libanyhow-14bde6a2801d4e5d.rlib --extern chrono=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libchrono-272554969cdc494b.rlib --extern clap=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libclap-4aea8bda512e5092.rlib --extern colored=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libcolored-cfc62aa7c8eb4687.rlib --extern serde=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libserde-25999117dcdc8715.rlib --extern serde_json=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libserde_json-661f0f0eba635836.rlib`
+build	Build all crates	2026-04-07T10:19:47.2773676Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_translator --edition=2024 ternlang-translator/src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=76f558fbdedc7378 -C extra-filename=-46354d14d7c13d59 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps --extern anyhow=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libanyhow-14bde6a2801d4e5d.rlib --extern clap=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libclap-4aea8bda512e5092.rlib --extern colored=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libcolored-cfc62aa7c8eb4687.rlib --extern regex=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libregex-fa0a5343837e53d4.rlib`
+build	Build all crates	2026-04-07T10:19:47.5816860Z [1m[32m       Dirty[0m ternpkg v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternpkg): the file `ternlang-root/ternpkg/src/main.rs` has changed (1775557169.671006603s, 1h 52m 12s after last build at 1775550437.637548468s)
+build	Build all crates	2026-04-07T10:19:47.5821076Z [1m[32m   Compiling[0m ternpkg v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternpkg)
+build	Build all crates	2026-04-07T10:19:47.5831998Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternpkg --edition=2024 ternlang-root/ternpkg/src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=f0a0de3493e33f75 -C extra-filename=-ac8b7fa6a0145168 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps --extern serde=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libserde-25999117dcdc8715.rlib --extern serde_json=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps/libserde_json-661f0f0eba635836.rlib`
+build	Build all crates	2026-04-07T10:19:48.0720175Z [1m[32m       Dirty[0m ternlang-swarm v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-swarm): the file `ternlang-root/ternlang-swarm/src/lib.rs` has changed (1775557169.668851193s, 1h 52m 11s after last build at 1775550438.430547185s)
+build	Build all crates	2026-04-07T10:19:48.0725025Z [1m[32m   Compiling[0m ternlang-swarm v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-swarm)
+build	Build all crates	2026-04-07T10:19:48.0733766Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_swarm --edition=2024 ternlang-root/ternlang-swarm/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=a529633d95700643 -C extra-filename=-427b2df95ba85489 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps`
+build	Build all crates	2026-04-07T10:19:48.1154967Z [1m[32m       Dirty[0m ternlang-bci v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-bci): the file `ternlang-root/ternlang-bci/src/lib.rs` has changed (1775557169.660457206s, 1h 52m 11s after last build at 1775550438.602546907s)
+build	Build all crates	2026-04-07T10:19:48.1159621Z [1m[32m   Compiling[0m ternlang-bci v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-bci)
+build	Build all crates	2026-04-07T10:19:48.1169310Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_bci --edition=2024 ternlang-root/ternlang-bci/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=b22145fa0f26dd06 -C extra-filename=-f59c7b0095ec863c --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps`
+build	Build all crates	2026-04-07T10:19:48.1568300Z [1m[32m       Dirty[0m ternlang-time v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-time): the file `ternlang-root/ternlang-time/src/lib.rs` has changed (1775557169.669399595s, 1h 52m 11s after last build at 1775550438.867546478s)
+build	Build all crates	2026-04-07T10:19:48.1574268Z [1m[32m   Compiling[0m ternlang-time v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-time)
+build	Build all crates	2026-04-07T10:19:48.1583650Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_time --edition=2024 ternlang-root/ternlang-time/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=0092e0476f35595a -C extra-filename=-be3809611d977148 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps`
+build	Build all crates	2026-04-07T10:19:48.1995578Z [1m[32m   Compiling[0m ternlang-driver v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-driver)
+build	Build all crates	2026-04-07T10:19:48.2005203Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_driver --edition=2024 ternlang-root/ternlang-driver/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=1362001a79f531f8 -C extra-filename=-5fecf6cdb50ade72 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps`
+build	Build all crates	2026-04-07T10:19:48.2039457Z [1m[32m       Dirty[0m ternlang-fs v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-fs): the file `ternlang-root/ternlang-fs/src/lib.rs` has changed (1775557169.663980769s, 1h 52m 11s after last build at 1775550438.237547497s)
+build	Build all crates	2026-04-07T10:19:48.2045116Z [1m[32m   Compiling[0m ternlang-fs v0.1.0 (/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/ternlang-root/ternlang-fs)
+build	Build all crates	2026-04-07T10:19:48.2053755Z [1m[32m     Running[0m `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_fs --edition=2024 ternlang-root/ternlang-fs/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=3eacfc1dba3df5a5 -C extra-filename=-27e589ad388de6e7 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps`
+build	Build all crates	2026-04-07T10:19:48.2200868Z [0m[1m[38;5;9merror[E0433][0m[0m[1m: failed to resolve: use of unresolved module or unlinked crate `ternlang_core`[0m
+build	Build all crates	2026-04-07T10:19:48.2203855Z [0m [0m[0m[1m[38;5;12m--> [0m[0mternlang-root/ternlang-driver/src/lib.rs:7:5[0m
+build	Build all crates	2026-04-07T10:19:48.2206401Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build all crates	2026-04-07T10:19:48.2213829Z [0m[1m[38;5;12m7[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse ternlang_core::trit::Trit;[0m
+build	Build all crates	2026-04-07T10:19:48.2215183Z [0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9muse of unresolved module or unlinked crate `ternlang_core`[0m
+build	Build all crates	2026-04-07T10:19:48.2216192Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build all crates	2026-04-07T10:19:48.2217489Z [0m  [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: if you wanted to use a crate named `ternlang_core`, use `cargo add ternlang_core` to add it to your `Cargo.toml`[0m
+build	Build all crates	2026-04-07T10:19:48.2218422Z 
+build	Build all crates	2026-04-07T10:19:48.2318627Z [0m[1mFor more information about this error, try `rustc --explain E0433`.[0m
+build	Build all crates	2026-04-07T10:19:48.2337901Z [1m[31merror[0m[1m:[0m could not compile `ternlang-driver` (lib) due to 1 previous error
+build	Build all crates	2026-04-07T10:19:48.2340062Z 
+build	Build all crates	2026-04-07T10:19:48.2341469Z Caused by:
+build	Build all crates	2026-04-07T10:19:48.2348715Z   process didn't exit successfully: `/home/runner/.rustup/toolchains/1.86-x86_64-unknown-linux-gnu/bin/rustc --crate-name ternlang_driver --edition=2024 ternlang-root/ternlang-driver/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=1362001a79f531f8 -C extra-filename=-5fecf6cdb50ade72 --out-dir /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps -L dependency=/home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack/target/debug/deps` (exit status: 1)
+build	Build all crates	2026-04-07T10:19:48.2358204Z [1m[33mwarning[0m[1m:[0m build failed, waiting for other jobs to finish...
+build	Build all crates	2026-04-07T10:19:48.6738220Z ##[error]Process completed with exit code 101.
+build	Post Run actions/checkout@v4	﻿2026-04-07T10:19:48.6824660Z Post job cleanup.
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7592620Z [command]/usr/bin/git version
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7660558Z git version 2.53.0
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7700132Z Temporarily overriding HOME='/home/runner/work/_temp/4b4a3656-6591-4fe6-b31c-82155e4c98e2' before making global git config changes
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7701465Z Adding repository directory to the temporary git global config as a safe directory
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7706623Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ternary-intelligence-stack/ternary-intelligence-stack
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7741576Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7774777Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.7997495Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.8019128Z http.https://github.com/.extraheader
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.8029081Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.8059155Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.8278031Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+build	Post Run actions/checkout@v4	2026-04-07T10:19:48.8307356Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+build	Complete job	﻿2026-04-07T10:19:48.8647252Z Cleaning up orphan processes
+build	Complete job	2026-04-07T10:19:48.8939610Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

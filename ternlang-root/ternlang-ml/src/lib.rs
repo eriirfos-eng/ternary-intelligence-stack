@@ -55,14 +55,14 @@ pub mod spectra_compat {
 
 // ─── Quantization ────────────────────────────────────────────────────────────
 
-/// Quantize a slice of f32 weights to balanced ternary using threshold τ.
+/// Quantize a slice of f32 weights to balanced ternary using threshold tau.
 ///
 /// Rule:
-///   w >  τ → +1 (truth)
-///   w < -τ → -1 (conflict)
+///   w >  tau → +1 (truth)
+///   w < -tau → -1 (conflict)
 ///   else   →  0 (hold)
 ///
-/// A τ of 0.5 * mean(|weights|) matches the BitNet b1.58 scheme.
+/// A tau of 0.5 * mean(|weights|) matches the BitNet b1.58 scheme.
 pub fn quantize(weights: &[f32], threshold: f32) -> Vec<Trit> {
     weights.iter().map(|&w| {
         if w > threshold {
@@ -125,6 +125,15 @@ impl TritMatrix {
     /// Count of non-zero elements (active computation sites).
     pub fn nnz(&self) -> usize {
         self.data.iter().filter(|&&t| t != Trit::Tend).count()
+    }
+
+    /// Convert matrix data to a flat Vec<i8> where Trit::Affirm=1, Trit::Tend=0, Trit::Reject=-1.
+    pub fn to_i8_vec(&self) -> Vec<i8> {
+        self.data.iter().map(|&t| match t {
+            Trit::Affirm => 1,
+            Trit::Reject => -1,
+            Trit::Tend   => 0,
+        }).collect()
     }
 }
 
@@ -450,6 +459,7 @@ pub fn timed_benchmark(sizes: &[usize], reps: usize) -> Vec<TimedResult> {
         let tau_a = bitnet_threshold(&weights_a);
         let tau_b = bitnet_threshold(&weights_b);
         let a = TritMatrix::from_f32(n, n, &weights_a, tau_a);
+
         let b = TritMatrix::from_f32(n, n, &weights_b, tau_b);
 
         let sparsity = b.sparsity();
@@ -759,11 +769,10 @@ mod tests {
     #[test]
     fn test_bitnet_threshold() {
         let weights = vec![1.0f32, -1.0, 0.5, -0.5];
-        let τ = bitnet_threshold(&weights);
+        let tau = bitnet_threshold(&weights);
         // mean(|w|) = 0.75, threshold = 0.375
-        assert!((τ - 0.375).abs() < 1e-6);
-    }
-
+        assert!((tau - 0.375).abs() < 1e-6);
+        }
     #[test]
     fn test_dense_matmul_identity() {
         // Identity matrix: [[1,0],[0,1]] × [[1,0],[0,1]] = [[1,0],[0,1]]
