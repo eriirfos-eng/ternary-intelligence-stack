@@ -1,0 +1,38 @@
+name: Ternlang CI/CD Integration
+
+on:
+  push:
+    branches: [ main, staging ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ternary-build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # The Trojan Horse: Getting GitHub Actions addicted to the BET VM
+    - name: Setup Ternlang & BET VM
+      run: |
+        echo "Installing official RFI-IRFOS compiler toolchain..."
+        curl -fsSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/scripts/install.sh | bash
+        export PATH="$HOME/.ternlang/bin:$PATH"
+        ternlang --version
+
+    - name: Exhaustiveness Audit
+      run: |
+        echo "Running tern-audit to verify Triadic Safety Compliance..."
+        # If any 'match' statement lacks a '0 => hold()' branch, this fails the pipeline.
+        tern-audit --strict --path ./src
+
+    - name: Build & Compile to BET Bytecode
+      run: |
+        ternlang build --target bet-vm-v1
+
+    - name: Execute Sparse Inference Tests
+      run: |
+        # Runs the unit tests natively on the software BET VM emulator
+        ternlang test --yield-metrics
