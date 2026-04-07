@@ -7,11 +7,12 @@
 # After the Linguist PR merges, replace "Rust" with "Ternlang".
 # UNCOMMENT ONLY ONE BLOCK AT A TIME.
 
-# --- PHASE 1 (pre-merge): Interim highlighting via Rust grammar ---
-# Ternlang is syntactically adjacent to Rust: fn/let/match/struct/use/mod.
-# Rust highlighting is imperfect but far better than "Text" and keeps
-# .tern files as a visually distinct class in GitHub's language bar.
-*.tern linguist-language=Rust
+# --- PHASE 1 (pre-merge): Native detection for indexing ---
+# We previously used Rust highlighting, but this prevents .tern files 
+# from being indexed correctly under their own extension.
+# We now switch to native detection to build the 2000-file quota.
+*.tern linguist-language=Ternlang
+# *.tern linguist-language=Rust (DEPRECATED)
 
 # --- PHASE 2 (post-merge): Switch to native Ternlang detection ---
 # Uncomment this and remove the Rust line after the Linguist PR is accepted:
