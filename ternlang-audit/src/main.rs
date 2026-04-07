@@ -40,6 +40,15 @@ enum Commands {
         #[arg(short, long)]
         version: Option<String>,
     },
+    /// Issue a Triadic Efficiency Certificate for a model or hardware target
+    Certify {
+        /// Target name (e.g. "huawei-mate-60", "llama-3-ternary")
+        #[arg(short, long)]
+        target: String,
+        /// Standard to verify against (TOKEN, KV-CACHE, T-Fi)
+        #[arg(short, long)]
+        standard: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
