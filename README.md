@@ -180,6 +180,8 @@ RFI-IRFOS is standardizing the triadic era. These are the definitive specificati
 - [**T-SEC v1.0**](ternlang-root/spec/standards/T-SEC-v1.0.md): Triadic Post-Quantum Cryptography (T-PQKE).
 - [**T-GRID v1.0**](ternlang-root/spec/standards/T-GRID-v1.0.md): Triadic Energy Distribution Standard.
 - [**T-CAD v1.0**](ternlang-root/spec/standards/T-CAD-v1.0.md): Triadic Topology Optimization Standard.
+- [**T-TriLM v1.0**](ternlang-root/spec/standards/T-TriLM-v1.0.md): Language Model Interop & Audit Standard.
+- [**T-FPGA v1.0**](ternlang-root/spec/standards/T-FPGA-v1.0.md): Legacy Hardware Subordinate Compliance.
 
 ---
 

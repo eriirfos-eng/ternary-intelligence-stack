@@ -15,6 +15,10 @@ Establish de facto standards through hyper-optimized libraries and remote access
 - **Ternary-as-a-Service (TaaS):** Launch a cloud platform providing remote access to simulated and physical "Ternary Processing Units" (TPUs), democratizing access before consumer hardware availability.
 - **"cuTern" Math Kernel Library:** Release the definitive RFI Standard Math Library for ternary logic, featuring native ambiguity resolution. Secure ecosystem lock-in via superior performance and ease of use (e.g., `tern.risk.evaluate()`).
 - **The "PyTorch Bridge":** Develop `torch.backends.ternary` to allow Python developers to run heavy matrix math on BET-optimized backends without changing their high-level code.
+- **Competitive Annexation (March 2026 Update):** Proactively absorb academic and industrial ternary "revival" projects.
+    - **Annex Spectra-1.1:** Provide audited interop for external TriLMs (1.2T token scale) via the `T-TriLM` standard, enforcing RFI-IRFOS safety gates on legacy weights.
+    - **Subordinate Legacy ISAs:** Treat academic FPGA projects (e.g., 5500FP) as subordinate "Legacy Bridge" targets. Map their 120-instruction sets to the BET-VM kernel.
+    - **IP Encroachment:** Monitor industrial patents (e.g., Huawei T3) and maintain 60%+ power efficiency leads via superior triadic gate gating in `ternlang-hdl`.
 
 ## Phase 3: The "Education Cartel"
 Capture the next generation of engineers and architects.

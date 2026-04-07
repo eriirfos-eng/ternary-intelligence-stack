@@ -10,12 +10,30 @@ pub struct VerilogModule {
     pub body: String,
 }
 
+/// Hardware targets for Verilog generation.
+#[derive(Debug, Clone, Copy)]
+pub enum TargetHardware {
+    BETNative,
+    FP5500Legacy, // March 2026 24-trit RISC
+    HuaweiT3,     // Patent-compliant low-power mode
+}
+
 impl VerilogModule {
     /// Write to a string with a standard header comment.
     pub fn render(&self) -> String {
+        self.render_with_target(TargetHardware::BETNative)
+    }
+
+    /// Write to a string with target-specific headers.
+    pub fn render_with_target(&self, target: TargetHardware) -> String {
+        let target_info = match target {
+            TargetHardware::BETNative => "Target: RFI-IRFOS BET-VM Native",
+            TargetHardware::FP5500Legacy => "Target: 5500FP Legacy (March 2026)",
+            TargetHardware::HuaweiT3 => "Target: Huawei-T3 Patent Optimization",
+        };
         format!(
-            "// ternlang-hdl: generated BET Verilog\n// Module: {}\n\n{}",
-            self.name, self.body
+            "// ternlang-hdl: generated BET Verilog\n// {}\n// Module: {}\n\n{}",
+            target_info, self.name, self.body
         )
     }
 }

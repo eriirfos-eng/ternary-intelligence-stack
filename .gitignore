@@ -27,3 +27,4 @@ venv/
 # Secrets / env
 .env
 *.env
+legacy_archive/
