@@ -19,7 +19,7 @@ Binary systems treat uncertainty as null. Ternlang treats it as a **first-class 
 Every value in the stack is a *trit* — one of three:
 
 ```
--1  →  VETO      Hard rejection. unrecoverable security panic.
+-1  →  REJECT     Hard rejection. unrecoverable security panic.
  0  →  TEND      Deliberation. Insufficient data. Enter hardware equilibrium.
 +1  →  AFFIRM    Authorization. Proceed with execution.
 ```
