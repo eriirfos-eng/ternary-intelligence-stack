@@ -1617,7 +1617,15 @@ name = "ternlang-bci"
 version = "0.1.0"
 
 [[package]]
+name = "ternlang-bio"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-bridge"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-cad"
 version = "0.1.0"
 
 [[package]]
@@ -1668,11 +1676,19 @@ name = "ternlang-crypto"
 version = "0.1.0"
 
 [[package]]
+name = "ternlang-edu"
+version = "0.1.0"
+
+[[package]]
 name = "ternlang-fs"
 version = "0.1.0"
 
 [[package]]
 name = "ternlang-gfx"
+version = "0.1.0"
+
+[[package]]
+name = "ternlang-grid"
 version = "0.1.0"
 
 [[package]]
@@ -1741,6 +1757,10 @@ dependencies = [
  "serde_json",
  "ternlang-core",
 ]
+
+[[package]]
+name = "ternlang-sec"
+version = "0.1.0"
 
 [[package]]
 name = "ternlang-sql"
