@@ -330,15 +330,19 @@ RFI-IRFOS is establishing the regulatory and technical standards for the post-bi
 │  Free to use, modify, and distribute. Modifications must be     │
 │  contributed back under LGPL.                                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  TIER 2 — Restricted (Business Source License 1.1)              │
-│  ternlang-ml · ternlang-mcp · ternlang-hdl · ternlang-runtime   │
-│  ternlang-moe · ternlang-api                                    │
-│  Source visible. Free for personal and research use.            │
+│  TIER 2 — Restricted API (BSL 1.1)                              │
+│  €24.99 / MONTH                                                 │
+│  ★ 20 MCP tools (full stack)                                    │
+│  ✓ Server-side 3-layer memory                                   │
+│  ✓ MoE-13 consolidation                                         │
+│  ✓ Ternary context compression                                  │
+│  ✓ 10,000 high-mass API calls                                   │
 │  Commercial use requires a license → licensing@ternlang.com     │
 │  Auto-converts to Apache-2.0 on 2030-04-03.                     │
 ├─────────────────────────────────────────────────────────────────┤
-│  TIER 3 — Proprietary (ternlang.com)                            │
+│  TIER 3 — Enterprise (ternlang.com)                             │
 │  Hosted API · Enterprise SLA · Commercial inference engine      │
+│  On-premise node clusters · Custom FPGA implementations         │
 │  Contact: licensing@ternlang.com                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
