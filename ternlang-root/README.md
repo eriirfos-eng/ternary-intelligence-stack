@@ -326,6 +326,9 @@ RFI-IRFOS is establishing the regulatory and technical standards for the post-bi
 - [**T-DID v1.0**](spec/standards/T-DID-v1.0.md): Decentralized identity standard with provisional authorization.
 - [**T-GPU v1.0**](spec/standards/T-GPU-v1.0.md): Graphics pipeline standard for sparse 3D rendering.
 - [**T-Contract v1.0**](spec/standards/T-Contract-v1.0.md): Smart contract standard with native hardware arbitration.
+- [**T-TOKEN v1.0**](spec/standards/T-TOKEN-v1.0.md): Trit-Pair Encoding (TPE) — Compressing semantic entropy by 33%.
+- [**T-KV-CACHE v1.0**](spec/standards/T-KV-CACHE-v1.0.md): The Memory Moat — Eliminating 60% of zero-signal KV allocations.
+- [**T-Fi v1.0**](spec/standards/T-Fi-v1.0.md): Triadic Compute Currency — Standardizing the cryptographic toll for TaaS offloading.
 - [**T-GENESIS v1.0**](spec/standards/GENESIS-ANCHOR.md): The Triadic Trust Anchor. Mandates global MoE-13 consensus validation to prevent logic drift.
 
 ---
