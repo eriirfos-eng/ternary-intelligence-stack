@@ -1685,6 +1685,9 @@ dependencies = [
 [[package]]
 name = "ternlang-edu"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "ternlang-fs"
