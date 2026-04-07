@@ -339,10 +339,10 @@ impl TernaryMLP {
         in_features: usize, hidden_size: usize, out_features: usize,
         w1_f32: &[f32], w2_f32: &[f32],
     ) -> Self {
-        let τ1 = bitnet_threshold(w1_f32);
-        let τ2 = bitnet_threshold(w2_f32);
-        let w1 = TritMatrix::from_f32(in_features, hidden_size, w1_f32, τ1);
-        let w2 = TritMatrix::from_f32(hidden_size, out_features, w2_f32, τ2);
+        let tau1 = bitnet_threshold(w1_f32);
+        let tau2 = bitnet_threshold(w2_f32);
+        let w1 = TritMatrix::from_f32(in_features, hidden_size, w1_f32, tau1);
+        let w2 = TritMatrix::from_f32(hidden_size, out_features, w2_f32, tau2);
         Self::new(w1, w2)
     }
 
@@ -433,10 +433,10 @@ pub fn timed_benchmark(sizes: &[usize], reps: usize) -> Vec<TimedResult> {
     sizes.iter().map(|&n| {
         let weights_a = lcg_weights(n * n, 0xdeadbeef);
         let weights_b = lcg_weights(n * n, 0xc0ffee42);
-        let τa = bitnet_threshold(&weights_a);
-        let τb = bitnet_threshold(&weights_b);
-        let a = TritMatrix::from_f32(n, n, &weights_a, τa);
-        let b = TritMatrix::from_f32(n, n, &weights_b, τb);
+        let tau_a = bitnet_threshold(&weights_a);
+        let tau_b = bitnet_threshold(&weights_b);
+        let a = TritMatrix::from_f32(n, n, &weights_a, tau_a);
+        let b = TritMatrix::from_f32(n, n, &weights_b, tau_b);
 
         let sparsity = b.sparsity();
         let dense_ops  = n * n * n;
@@ -525,7 +525,7 @@ pub fn timed_benchmark_bitnet(sizes: &[usize], reps: usize) -> Vec<TimedResult> 
 pub fn timed_benchmark_at_sparsity(target_sparsity: f64, sizes: &[usize], reps: usize) -> Vec<TimedResult> {
     use std::time::Instant;
 
-    let BITNET_SPARSITY: f64 = target_sparsity;
+    let bitnet_sparsity: f64 = target_sparsity;
 
     fn median_us(mut v: Vec<u64>) -> u64 {
         v.sort_unstable();
@@ -533,8 +533,8 @@ pub fn timed_benchmark_at_sparsity(target_sparsity: f64, sizes: &[usize], reps: 
     }
 
     sizes.iter().map(|&n| {
-        let a = bitnet_matrix(n, n, 0xdeadbeef, BITNET_SPARSITY);
-        let b = bitnet_matrix(n, n, 0xc0ffee42, BITNET_SPARSITY);
+        let a = bitnet_matrix(n, n, 0xdeadbeef, bitnet_sparsity);
+        let b = bitnet_matrix(n, n, 0xc0ffee42, bitnet_sparsity);
 
         let sparsity   = b.sparsity();
         let dense_ops  = n * n * n;
@@ -1356,10 +1356,6 @@ pub fn coalition_vote(members: &[CoalitionMember]) -> CoalitionResult {
         breakdown,
     }
 }
-
-// Helper to get the sign of an i8 as i8
-trait Sign { fn signum(self) -> i8; }
-impl Sign for i8 { fn signum(self) -> i8 { if self > 0 { 1 } else if self < 0 { -1 } else { 0 } } }
 
 // ─── 3. Action Gate ───────────────────────────────────────────────────────────
 

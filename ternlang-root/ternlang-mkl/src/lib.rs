@@ -86,7 +86,7 @@ pub mod tensor {
 }
 
 pub mod risk {
-    use super::tensor::{TernaryTensor, Trit};
+    use super::tensor::TernaryTensor;
 
     /// High-level Enterprise Underwriting Kernel.
     /// Securely routes financial decisions without binary if/else coercion.

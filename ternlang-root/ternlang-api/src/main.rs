@@ -65,7 +65,7 @@ use ternlang_core::{trit::Trit, parser::Parser, codegen::betbc::BytecodeEmitter,
 use ternlang_moe::TernMoeOrchestrator;
 use ternlang_ml::{
     TritScalar, TritEvidenceVec, TEND_BOUNDARY,
-    bitnet_threshold, benchmark, dense_matmul, sparse_matmul, TritMatrix,
+    bitnet_threshold, benchmark, sparse_matmul, TritMatrix,
     // Phase 8: Ternary AI Reasoning Toolkit
     DeliberationEngine, CoalitionMember, coalition_vote,
     GateDimension, action_gate, GateVerdict,

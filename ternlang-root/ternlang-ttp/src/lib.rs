@@ -5,6 +5,7 @@
 //! maintain a stateful connection without "spinning" or "timing out".
 
 pub mod ttp {
+    #[derive(Debug, PartialEq, Clone, Copy)]
     pub enum TriadicStatus {
         Affirm200 = 1,  // Resource delivered
         Deliberate000 = 0, // Request accepted, consensus pending (State 0)

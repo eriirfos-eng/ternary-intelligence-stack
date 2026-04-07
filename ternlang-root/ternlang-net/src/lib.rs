@@ -5,7 +5,7 @@
 //! return a State 0 (TEND) status to a client while a MoE-13 security audit is processed.
 
 pub mod protocol {
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone, Copy)]
     pub enum ConnectionState {
         Established = 1,
         Handshaking = 0,
@@ -28,7 +28,7 @@ pub mod protocol {
         /// Executes a triadic handshake.
         /// Unlike binary TCP, this does not "timeout" or "reject" immediately.
         /// It stays in State 0 (TEND) until the BET VM clears the packet via 
-//!     the hardware security audit opcode (TVETO/TLOCK).
+        /// the hardware security audit opcode (TVETO/TLOCK).
         pub fn handshake(&mut self) -> ConnectionState {
             println!("tern-net: Initiating triadic handshake with {}...", self.addr);
             // Simulation of MoE-13 packet audit

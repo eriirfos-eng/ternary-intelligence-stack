@@ -587,7 +587,7 @@ impl BytecodeEmitter {
                     self.code.extend(pack_trits(&[Trit::Tend]));
                 }
             }
-            Expr::StringLiteral(s) => {
+            Expr::StringLiteral(_s) => {
                 // For v0.1: we don't have a TPUSH_STRING opcode.
                 // Instead, we hack it by passing strings out-of-band or
                 // just ignoring them in the BET bytecode for now.
