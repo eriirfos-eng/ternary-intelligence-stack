@@ -1,5 +1,5 @@
 # BET VM Instruction Set Architecture (ISA) v1.0
-**Status:** Canonical Draft | **Sponsor:** RFI-IRFOS | **Architecture:** 9-Trit RISC
+**Status:** Published Standard | **Sponsor:** RFI-IRFOS | **Architecture:** 9-Trit RISC
 
 ## 1. Core Architectural Philosophy
 The Balanced Execution Ternary Virtual Machine (BET VM) ISA is fundamentally distinct from x86, ARM, or RISC-V. It is structurally immune to binary boolean coercion and is designed for native sparse inference operations.

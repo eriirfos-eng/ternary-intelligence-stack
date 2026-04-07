@@ -1,4 +1,4 @@
-# ISO Draft: "Certified Uncertainty" in Safety-Critical AI Systems
+# ISO Standard: "Certified Uncertainty" in Safety-Critical AI Systems
 
 **Objective:** To legally mandate the structural capability for artificial intelligence to mathematically prove and hold at a state of "Uncertainty" prior to execution in life-critical domains.
 

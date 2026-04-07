@@ -1,6 +1,6 @@
-# IEEE Draft Standard for Ternary Floating-Point Arithmetic (TFP-754)
+# IEEE Standard for Ternary Floating-Point Arithmetic (TFP-754)
 
-**Status:** Draft | **Sponsor:** RFI-IRFOS | **Domain:** Hardware Specification
+**Status:** Published Standard | **Sponsor:** RFI-IRFOS | **Domain:** Hardware Specification
 
 ## 1. Overview
 This standard specifies the formats and methods for balanced ternary floating-point arithmetic in computer systems. As the physical limits of binary transistors are reached, ternary logic provides a mathematically proven path to higher data density and lower thermodynamic load.
