@@ -314,21 +314,37 @@ For local stdio transport (Claude Desktop, offline use):
 
 ## Strategic Standards
 
-RFI-IRFOS is establishing the regulatory and technical standards for the post-binary era. These specifications are designed to mandate Ternary compliance across global hardware and AI industries.
+RFI-IRFOS is establishing the total regulatory and technical moat for the post-binary era. These specifications are designed to mandate Ternary compliance across global hardware, software, and AI industries.
 
+### Core Architecture & Logic
 - [**BET-ISA v1.0**](spec/standards/BET-ISA-v1.0.md): The definitive 9-Trit RISC Instruction Set Architecture.
 - [**IEEE TFP-754**](spec/standards/IEEE-TFP-754.md): Global standard for Ternary Floating-Point Arithmetic.
-- [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating State 0 abstention in safety-critical AI.
+- [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating State 0 abstention.
 - [**TSON v1.0**](spec/standards/TSON-v1.0.md): Optimized data serialization for triadic systems.
-- [**TTP v1.0**](spec/standards/TTP-v1.0.md): Web transfer protocol eliminating binary timeouts.
 - [**T-POSIX v1.0**](spec/standards/T-POSIX-v1.0.md): Operating system interface redefining process state logic.
-- [**T-NTP v1.0**](spec/standards/T-NTP-v1.0.md): Network time protocol with native temporal equilibrium.
-- [**T-DID v1.0**](spec/standards/T-DID-v1.0.md): Decentralized identity standard with provisional authorization.
-- [**T-GPU v1.0**](spec/standards/T-GPU-v1.0.md): Graphics pipeline standard for sparse 3D rendering.
-- [**T-Contract v1.0**](spec/standards/T-Contract-v1.0.md): Smart contract standard with native hardware arbitration.
+
+### AI, Memory & Intelligence
 - [**T-TOKEN v1.0**](spec/standards/T-TOKEN-v1.0.md): Trit-Pair Encoding (TPE) — Compressing semantic entropy by 33%.
 - [**T-KV-CACHE v1.0**](spec/standards/T-KV-CACHE-v1.0.md): The Memory Moat — Eliminating 60% of zero-signal KV allocations.
-- [**T-Fi v1.0**](spec/standards/T-Fi-v1.0.md): Triadic Compute Currency — Standardizing the cryptographic toll for TaaS offloading.
+- [**T-WEIGHT v1.0**](spec/standards/T-WEIGHT-v1.0.md): Triadic Weight Exchange — Mandatory safety headers for LLM weights.
+- [**T-EXPLAIN v1.0**](spec/standards/T-EXPLAIN-v1.0.md): Triadic Traceability — Standardizing MoE-13 deliberation logs.
+- [**T-HALO v1.0**](spec/standards/T-HALO-v1.0.md): Triadic Alignment & Governance — Hardware-locked safety holds.
+
+### Hardware, Physical & Frontier
+- [**T-HAL v1.0**](spec/standards/T-HAL-v1.0.md): Universal Hardware Abstraction — The bridge for Huawei/NVIDIA/FPGA.
+- [**T-SENSE v1.0**](spec/standards/T-SENSE-v1.0.md): Ternary Sensor Fusion — Triadic Delta fields for IoT efficiency.
+- [**T-THERMAL v1.0**](spec/standards/T-THERMAL-v1.0.md): Power-Aware Compute — Dynamic clock scaling via sparsity.
+- [**T-BIO v1.0**](spec/standards/T-BIO-v1.0.md): Triadic Neural Encoding — 1:1 parity for Brain-Computer Interfaces.
+- [**T-QUT v1.0**](spec/standards/T-QUT-v1.0.md): Qutrit Bridge Standard — Positioning TIS as the OS for Quantum.
+
+### Network, Data & Economy
+- [**TTP v1.0**](spec/standards/TTP-v1.0.md): Web transfer protocol eliminating binary timeouts.
+- [**T-RPC v1.0**](spec/standards/T-RPC-v1.0.md): Remote Procedure Call with native deliberative waiting.
+- [**T-ROUTING v1.0**](spec/standards/T-ROUTING-v1.0.md): Sparse Packet Switching — Skipping State 0 network congestion.
+- [**T-SQL v1.0**](spec/standards/T-SQL-v1.0.md): Triadic Query Language — Redefining search via T-Trees.
+- [**T-ARCHIVE v1.0**](spec/standards/T-ARCHIVE-v1.0.md): Triadic Cold Storage — Neutral State structural stability.
+- [**T-Fi v1.0**](spec/standards/T-Fi-v1.0.md): Triadic Compute Currency — Standardizing the TaaS cryptographic toll.
+- [**T-TAX v1.0**](spec/standards/T-TAX-v1.0.md): Automatic Compute Dividends — Decentralized royalty routing.
 - [**T-GENESIS v1.0**](spec/standards/GENESIS-ANCHOR.md): The Triadic Trust Anchor. Mandates global MoE-13 consensus validation to prevent logic drift.
 
 ---
