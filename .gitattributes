@@ -1,0 +1,14 @@
+# .gitattributes — Ternary Intelligence Stack (TIS)
+# Root override to force Linguist to index .tern files.
+
+# Phase 1: Map to Rust to get highlighting and ensure they are NOT ignored 
+# while the Linguist PR is in progress. 
+# Once the PR is merged, we will change this to linguist-language=Ternlang.
+
+*.tern linguist-language=Rust
+*.tern linguist-vendored=false
+*.tern linguist-generated=false
+*.tern linguist-detectable=true
+
+# Bet Bytecode
+*.tbc binary
