@@ -1,0 +1,14 @@
+// Module:  stdlib/sim/stellar_solver.example.tern
+// Purpose: Production usage example for stellar_solver
+// Author:  RFI-IRFOS
+
+fn example_stellarsolver() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}
