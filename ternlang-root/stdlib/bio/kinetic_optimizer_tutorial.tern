@@ -1,0 +1,11 @@
+// Module:  stdlib/bio/kinetic_optimizer_tutorial.tern
+// Purpose: Self-documenting tutorial for kinetic_optimizer
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of kinetic_optimizer.
+fn kinetic_optimizer_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
