@@ -1,0 +1,11 @@
+// Module:  stdlib/bio/thermal_filter_tutorial.tern
+// Purpose: Self-documenting tutorial for thermal_filter
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of thermal_filter.
+fn thermal_filter_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
