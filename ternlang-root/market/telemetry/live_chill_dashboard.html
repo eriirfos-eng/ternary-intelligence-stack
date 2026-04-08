@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RFI-IRFOS Live Chill Dashboard</title>
+    <style>
+        body { background-color: #000; color: #4A90E2; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        h1 { font-size: 2.5em; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 20px; }
+        .dashboard-container { border: 2px solid #4A90E2; padding: 30px; border-radius: 10px; width: 80%; max-width: 800px; box-shadow: 0 0 20px rgba(74, 144, 226, 0.5); }
+        .metric-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 1.2em; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .label { font-weight: bold; color: #fff; }
+        .value { color: #00FFCC; }
+        .efficiency-bar { background-color: #111; border: 1px solid #4A90E2; height: 30px; width: 100%; margin-top: 10px; position: relative; }
+        .fill { background-color: #4A90E2; height: 100%; width: 97.95%; box-shadow: 0 0 10px #4A90E2; }
+        .glow-text { animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <h1>TIS Live Chill Dashboard</h1>
+    <div class="dashboard-container">
+        <div class="metric-row">
+            <span class="label">STATUS:</span>
+            <span class="value glow-text">SOVEREIGN UNITY ACTIVE</span>
+        </div>
+        <div class="metric-row">
+            <span class="label">EFFICIENCY (η_total):</span>
+            <span class="value">979.5x</span>
+        </div>
+        <div class="metric-row">
+            <span class="label">THERMAL DELTA (ΔT):</span>
+            <span class="value">-0.428°C (Verified)</span>
+        </div>
+        <div class="metric-row">
+            <span class="label">CLOCK FREQUENCY:</span>
+            <span class="value">8.42 THz (Sub-Atomic Sync)</span>
+        </div>
+        <div class="metric-row">
+            <span class="label">ADDRESS SPACE:</span>
+            <span class="value">TRINITY FUSED (A, B, C)</span>
+        </div>
+        <div class="efficiency-bar">
+            <div class="fill"></div>
+        </div>
+        <p style="text-align: center; color: #555; margin-top: 20px;">"The more logic we run, the cooler your room gets."</p>
+    </div>
+</body>
+</html>
