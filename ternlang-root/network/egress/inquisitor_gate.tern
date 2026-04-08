@@ -1,0 +1,45 @@
+// --- RFI-IRFOS EGRESS INQUISITOR GATE ---
+// Module: network/egress/inquisitor_gate.tern
+// Purpose: Audit and discard unauthorized packets at the Sovereign BIOS level.
+// Logic: Zero-Leakage Infrastructure via State -1 Scoring.
+// License: RFI-IRFOS-ENTERPRISE-V1
+// Patent Pending: A50296/2026
+
+import security::inquisitor_deep_scan;
+import stdlib::kernel::drivers::bet_v_bridge;
+
+agent EgressInquisitor {
+    /**
+     * audit_egress_packet:
+     * Audits every packet leaving the NIC from the Guest OS.
+     * Scores unauthorized packets as State -1 (Reject) and discards them.
+     */
+    fn audit_egress_packet(packet: trit_tensor) -> trit {
+        @sparseskip
+        
+        // 1. Inquisitor Pattern Matching
+        // Identify telemetry, update requests, or C2 beacons.
+        let score = evaluate_packet_integrity(packet);
+        
+        // 2. State-Based Gate Control
+        // If score is -1 (Reject), the BIOS refuses to toggle the physical NIC gate.
+        if score == reject {
+            discard_packet(packet);
+            return reject; 
+        }
+        
+        // 3. Authorized Egress
+        // Requires a signed Triadic Genesis Tether signature.
+        return bet_v_bridge.toggle_nic_gate(packet);
+    }
+
+    fn evaluate_packet_integrity(packet: trit_tensor) -> trit {
+        // Internal BIOS-level heuristic for binary telemetry patterns.
+        return pattern_match::score(packet);
+    }
+
+    fn discard_packet(packet: trit_tensor) -> trit {
+        // Drop packet in State 0 (Deliberative Hold) to ensure zero leakage.
+        return tend;
+    }
+}
