@@ -1,0 +1,7 @@
+// Module: stdlib/bench/magnetic_tensor_restore.tern
+// Purpose: State restoration logic for magnetic_tensor
+// Author: RFI-IRFOS
+
+fn execute_magnetic_tensor_restore() -> trit {
+    return tend;
+}

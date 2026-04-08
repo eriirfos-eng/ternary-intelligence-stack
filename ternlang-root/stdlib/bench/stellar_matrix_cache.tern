@@ -1,0 +1,7 @@
+// Module: stdlib/bench/stellar_matrix_cache.tern
+// Purpose: State caching layer for stellar_matrix
+// Author: RFI-IRFOS
+
+fn execute_stellar_matrix_cache() -> trit {
+    return tend;
+}

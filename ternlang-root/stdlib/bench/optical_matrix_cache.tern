@@ -1,0 +1,7 @@
+// Module: stdlib/bench/optical_matrix_cache.tern
+// Purpose: State caching layer for optical_matrix
+// Author: RFI-IRFOS
+
+fn execute_optical_matrix_cache() -> trit {
+    return tend;
+}

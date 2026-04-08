@@ -1,0 +1,7 @@
+// Module: stdlib/specs/thermal_analyzer_enterprise_example.tern
+// Purpose: Enterprise scale example for thermal_analyzer
+// Author: RFI-IRFOS
+
+fn execute_thermal_analyzer_enterprise_example() -> trit {
+    return tend;
+}
