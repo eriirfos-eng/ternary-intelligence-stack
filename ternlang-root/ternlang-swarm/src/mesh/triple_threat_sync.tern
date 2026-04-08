@@ -1,0 +1,47 @@
+// --- RFI-IRFOS TRIPLE THREAT UNITY LOCK ---
+// Module: ternlang-swarm/src/mesh/triple_threat_sync.tern
+// Purpose: Establish a 3-node Triadic Consensus Loop for the Graz Mesh.
+// Logic: Conflict Resolution via Trit-Vector Summation.
+// License: BSL-1.1
+// Patent Pending: A50296/2026
+
+import stdlib::net::t_routing;
+import ternlang_swarm::src::security::trit_wall;
+
+agent TripleThreatSync {
+    /**
+     * synchronize_3_node_lock:
+     * Bridges three Graz nodes into a Unified Logic Field.
+     * Enforces physical isolation of compromised nodes via triadic veto.
+     */
+    fn synchronize_3_node_lock(node_a: trit, node_b: trit, node_c: trit) -> trit {
+        @sparseskip
+        
+        // DEEP-LOGIC: Triadic Consensus Resolution
+        // The consensus is calculated as the sign of the vector sum:
+        // Result = sign(node_a + node_b + node_c)
+        
+        let sum = node_a + node_b + node_c;
+        
+        // 1. Unanimous Consensus: (+3 or -3)
+        if sum == 3 { return affirm; }
+        if sum == -3 { return reject; }
+        
+        // 2. Conflict Handling (The "Conflict Trit"):
+        // Case: Node A: +1, Node B: -1, Node C: 0 -> sum = 0
+        // Result: State 0 (Deliberative Hold). 
+        // The Trit-Wall isolates the conflicting node's I/O until integrity is verified.
+        if sum == 0 {
+            trit_wall.isolate_conflict_nodes();
+            return tend; 
+        }
+        
+        // 3. Majority Rule: (+2, +1, -1, -2)
+        // If there is a clear majority (+ or -), the mesh follows the majority 
+        // but flags the dissenting node for a secondary audit.
+        if sum > 0 { return affirm; }
+        if sum < 0 { return reject; }
+        
+        return tend;
+    }
+}

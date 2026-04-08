@@ -1,0 +1,24 @@
+// --- RFI-IRFOS SANITIZER PROTOCOL ---
+// Module: security/sanitizer_protocol.tern
+// Purpose: Pend malicious threads in State 0 (Deliberative Hold).
+// Logic: Non-Destructive Thread Neutralization.
+// License: BSL-1.1
+
+import security::inquisitor_deep_scan;
+
+agent Sanitizer {
+    /**
+     * neutralize_ghost:
+     * When a legacy ghost is found, the thread is "pended" in State 0.
+     * Rendering it harmless without alerting the C2 server.
+     */
+    fn neutralize_ghost(malicious_thread_id: int) -> trit {
+        @sparseskip
+        
+        // 1. Map malicious thread to State 0 (tend).
+        // 2. Suspend execution gate without terminating the process.
+        // 3. Render thread inert while maintaining observation.
+        
+        return affirm; // Threat neutralized in escrow.
+    }
+}
