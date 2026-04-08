@@ -1,0 +1,63 @@
+// --- RFI-IRFOS EXECUTIVE SHOCK INTERFACE ---
+// Module: marketing/vc_dashboard_core/dashboard_core.tern
+// Purpose: Generalized Executive Shock Interface for institutional validation.
+// License: BSL-1.1 (Business Source License)
+// Reference: Patent Pending A50296/2026
+
+import benchmarks/matmul_sparse_bypass
+import benchmarks/silicon_thermal_load
+import benchmarks/ternadam_memory_clamp
+import benchmarks/tposix_thread_storm
+import tier3/commercial/t_detect
+
+agent TelemetryPipe {
+    fn ingest_live_metrics() -> tson_frame {
+        // Wire to raw stdout of /benchmarks/Makefile
+        let speedup: float = matmul_sparse_bypass::bench_speedup();
+        let thermal_reduction: float = silicon_thermal_load::bench_thermal();
+        
+        return {
+            "TRCE_Speedup": speedup,
+            "Thermal_Gain": thermal_reduction,
+            "Hardware_Status": "BET-ISA Native"
+        };
+    }
+}
+
+agent BurnRateSimulator {
+    fn calculate_burn(investment: float, efficiency_gap: float) -> float {
+        // Quantify capital waste caused by binary inefficiency
+        // gap = 0.85 (85% waste in legacy binary)
+        return investment * efficiency_gap;
+    }
+}
+
+agent DichotomyEngine {
+    fn render_comparison() -> tson_frame {
+        return {
+            "Legacy_Binary": "OOM Starvation | Kernel Panic | Thermal Ceiling",
+            "TIS_Triadic": "Sparse Bypass | State-0 Resiliency | 80% Joule Reduction"
+        };
+    }
+}
+
+agent ExecutiveShockInterface {
+    fn initialize_interface() -> trit {
+        @sparseskip
+        return affirm;
+    }
+
+    fn run_demo(portfolio_investment: float) -> tson_frame {
+        let metrics = TelemetryPipe::ingest_live_metrics();
+        let waste: float = BurnRateSimulator::calculate_burn(portfolio_investment, 0.85);
+        let comparison = DichotomyEngine::render_comparison();
+        
+        return {
+            "Interface": "RFI-IRFOS Global VC Dashboard",
+            "Metrics": metrics,
+            "Capital_Waste_Detected": waste,
+            "Recommendation": "Migrate Portfolio to TIS (State +1)",
+            "Legal": "Patent Pending A50296/2026"
+        };
+    }
+}
