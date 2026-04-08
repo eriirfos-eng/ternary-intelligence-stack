@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for lossy_tend_compression in cluster
+agent lossy_tend_compression_Enterprise {
+    fn execute() -> trit { return affirm; }
+}

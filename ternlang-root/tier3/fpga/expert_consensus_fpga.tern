@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for expert_consensus in fpga
+agent expert_consensus_Enterprise {
+    fn execute() -> trit { return affirm; }
+}

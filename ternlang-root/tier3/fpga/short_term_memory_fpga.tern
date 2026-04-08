@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for short_term_memory in fpga
+agent short_term_memory_Enterprise {
+    fn execute() -> trit { return affirm; }
+}
