@@ -1,0 +1,37 @@
+<!--
+  (C) 2026 RFI-IRFOS Graz Institute (ZVR: 1015608684)
+  Licensed under the Business Source License 1.1 (BSL-1.1).
+  Patent Reference: A50296/2026.
+  For licensing inquiries, contact: licensing@ternlang.com
+-->
+<idea-plugin>
+    <id>at.rfi-irfos.ternlang</id>
+    <name>Ternlang</name>
+    <vendor email="licensing@ternlang.com" url="https://github.com/eriirfos-eng/ternary-intelligence-stack">RFI-IRFOS Graz Institute</vendor>
+
+    <description><![CDATA[
+    Official RFI-IRFOS Ternlang Plugin.
+    Provides syntax highlighting, code completion, and MoE-13 integration for the Ternary Intelligence Stack (TIS).
+    <br>
+    Patent: A50296/2026
+    ]]></description>
+
+    <change-notes><![CDATA[
+    Initial release of the RFI-IRFOS Ternlang integration for IntelliJ IDEA.
+    ]]>
+    </change-notes>
+
+    <idea-version since-build="221"/>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="Ternlang File" implementationClass="at.rfi_irfos.ternlang.TernlangFileType"
+                  fieldName="INSTANCE" language="Ternlang" extensions="tern"/>
+        <lang.parserDefinition language="Ternlang" implementationClass="at.rfi_irfos.ternlang.TernlangParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="Ternlang"
+                                       implementationClass="at.rfi_irfos.ternlang.TernlangSyntaxHighlighterFactory"/>
+    </extensions>
+
+    <actions>
+        <!-- Add actions here -->
+    </actions>
+</idea-plugin>

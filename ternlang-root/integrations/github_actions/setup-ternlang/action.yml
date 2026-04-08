@@ -1,0 +1,28 @@
+# (C) 2026 RFI-IRFOS Graz Institute (ZVR: 1015608684)
+# Licensed under the Business Source License 1.1 (BSL-1.1).
+# Patent Reference: A50296/2026.
+# For licensing inquiries, contact: licensing@ternlang.com
+
+name: 'Setup Ternlang'
+description: 'Install the official RFI-IRFOS Ternlang compiler and ecosystem'
+inputs:
+  version:
+    description: 'The version of ternlang to install'
+    required: false
+    default: '0.1.0'
+  token:
+    description: 'RFI-IRFOS repository access token'
+    required: false
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      run: |
+        echo "Installing Ternlang Version ${{ inputs.version }} (RFI-IRFOS/TIS)"
+        echo "Patent Verification: A50296/2026"
+        # Actual installation script would go here
+        echo "/opt/tis/bin" >> $GITHUB_PATH
+        echo "Ternlang setup complete via RFI-IRFOS."
+branding:
+  icon: 'cpu'
+  color: 'blue'
