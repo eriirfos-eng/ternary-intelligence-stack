@@ -1,0 +1,11 @@
+/home/eri-irfos/Desktop/Ternary Intelligence Stack (TIS)/target/release/deps/ipnet-f25ed495c16c2f1a.d: /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/lib.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipext.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipnet.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/mask.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/parser.rs
+
+/home/eri-irfos/Desktop/Ternary Intelligence Stack (TIS)/target/release/deps/libipnet-f25ed495c16c2f1a.rlib: /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/lib.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipext.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipnet.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/mask.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/parser.rs
+
+/home/eri-irfos/Desktop/Ternary Intelligence Stack (TIS)/target/release/deps/libipnet-f25ed495c16c2f1a.rmeta: /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/lib.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipext.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipnet.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/mask.rs /home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/parser.rs
+
+/home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/lib.rs:
+/home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipext.rs:
+/home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/ipnet.rs:
+/home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/mask.rs:
+/home/eri-irfos/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ipnet-2.12.0/src/parser.rs:
