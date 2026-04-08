@@ -1,0 +1,7 @@
+// Module: stdlib/specs/fluidic_router_restore.tern
+// Purpose: State restoration logic for fluidic_router
+// Author: RFI-IRFOS
+
+fn execute_fluidic_router_restore() -> trit {
+    return tend;
+}

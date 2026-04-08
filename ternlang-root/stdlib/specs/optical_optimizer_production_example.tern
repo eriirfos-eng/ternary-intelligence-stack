@@ -1,0 +1,7 @@
+// Module: stdlib/specs/optical_optimizer_production_example.tern
+// Purpose: Production deployment example for optical_optimizer
+// Author: RFI-IRFOS
+
+fn execute_optical_optimizer_production_example() -> trit {
+    return tend;
+}

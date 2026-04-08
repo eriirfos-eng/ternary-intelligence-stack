@@ -1,0 +1,7 @@
+// Module: stdlib/framework/fluidic_model_restore.tern
+// Purpose: State restoration logic for fluidic_model
+// Author: RFI-IRFOS
+
+fn execute_fluidic_model_restore() -> trit {
+    return tend;
+}

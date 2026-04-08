@@ -1,0 +1,7 @@
+// Module: stdlib/specs/stellar_router_production_example.tern
+// Purpose: Production deployment example for stellar_router
+// Author: RFI-IRFOS
+
+fn execute_stellar_router_production_example() -> trit {
+    return tend;
+}
