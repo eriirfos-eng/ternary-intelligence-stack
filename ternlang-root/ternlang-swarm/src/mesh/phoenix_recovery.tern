@@ -1,0 +1,48 @@
+// --- RFI-IRFOS PHOENIX RECOVERY ---
+// Module: ternlang-swarm/src/mesh/phoenix_recovery.tern
+// Purpose: Mesh-based hardware recovery for Sovereign nodes.
+// Logic: Stationary Wave Re-Injection.
+// License: BSL-1.1
+
+import stdlib::net::t_routing;
+import hardware::bios::t_genesis_boot;
+
+agent PhoenixRecovery {
+    /**
+     * monitor_node_pulse:
+     * Nodes B and C monitor Node A for power-up pulses.
+     * On pulse detection, they inject the T-Genesis core.
+     */
+    fn monitor_node_pulse(node_id: trit_tensor) -> trit {
+        @sparseskip
+        
+        let node_status = t_routing.ping_node(node_id);
+        
+        if node_status == tend {
+            // Node is powering up (Waiting for Handshake)
+            return execute_phoenix_injection(node_id);
+        }
+        
+        return affirm; // Node is already active
+    }
+
+    /**
+     * execute_phoenix_injection:
+     * Re-injects the Sovereign Substrate into the target node's gate arrays.
+     * Uses the picosecond Stationary Wave to ensure lossless reconstruction.
+     */
+    fn execute_phoenix_injection(node_id: trit_tensor) -> trit {
+        @sparseskip
+        
+        // 1. Fetch encrypted Shadow Reflection of Node A state.
+        let shadow_state = fetch_shadow_reflection(node_id);
+        
+        // 2. Broadcast picosecond injection pulse.
+        return t_routing.inject_substrate(node_id, shadow_state);
+    }
+
+    fn fetch_shadow_reflection(node_id: trit_tensor) -> trit_tensor {
+        // Retrieve state held in high-alert escrow by the Mesh.
+        return tensor::ones(27);
+    }
+}

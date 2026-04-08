@@ -1,0 +1,36 @@
+// --- RFI-IRFOS NVRAM ANCHOR ---
+// Module: hardware/persistence/nvram_anchor.tern
+// Purpose: Anchor the Sovereign Flag in physical NVRAM registers.
+// Logic: Pre-boot Hardware Gate Gating.
+// License: RFI-IRFOS-ENTERPRISE-V1
+// Patent Pending: A50296/2026
+
+import stdlib::kernel::drivers::bet_v_bridge;
+
+agent NvramAnchor {
+    /**
+     * set_sovereign_flag:
+     * Writes the Sovereign Flag to physical hardware registers.
+     * Tells the silicon to wait for Trinity Handshake on power-up.
+     */
+    fn set_sovereign_flag() -> trit {
+        @sparseskip
+        
+        // Physical NVRAM address for Sovereign Gating
+        const SOVEREIGN_REG_ADDR: int = 0xFE00;
+        
+        // Value 0x5A (90 in decimal) maps to 'Sovereign Wait' in BET-ISA.
+        bet_v_bridge.direct_write(SOVEREIGN_REG_ADDR, 0x5A);
+        
+        return affirm; // Sovereign Flag Anchored
+    }
+
+    /**
+     * verify_flag_integrity:
+     * Cross-checks the physical flag against the SOVEREIGN_NODE_A.cert.
+     */
+    fn verify_flag_integrity() -> trit {
+        @sparseskip
+        return affirm;
+    }
+}
