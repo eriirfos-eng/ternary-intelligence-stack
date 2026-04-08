@@ -1676,6 +1676,9 @@ dependencies = [
 [[package]]
 name = "ternlang-crypto"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-driver"
@@ -1788,6 +1791,9 @@ dependencies = [
 [[package]]
 name = "ternlang-qutrit"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-ros2"
@@ -1810,6 +1816,10 @@ dependencies = [
 [[package]]
 name = "ternlang-sec"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+ "ternlang-crypto",
+]
 
 [[package]]
 name = "ternlang-sql"

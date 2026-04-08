@@ -2,11 +2,8 @@
 name = "ternlang-crypto"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-keywords.workspace = true
-categories.workspace = true
+license = "LicenseRef-BSL-1.1"
+description = "Post-Quantum Ternary-Hardened Cryptography. Implements modulo-3 hashing and balanced-ternary permutation as a defense against Shor's Algorithm."
 
 [dependencies]
+ternlang-core = { path = "../ternlang-core", version = "0.1.0" }

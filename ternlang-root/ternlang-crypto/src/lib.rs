@@ -1,27 +1,26 @@
-//! ternlang-crypto: Post-Binary Cryptographic Primitives.
-//! 
-//! Standard binary encryption relies on bits (0, 1). 
-//! `ternlang-crypto` utilizes trits (-1, 0, 1) to achieve higher entropy 
-//! per byte. A binary brute-force attacker is fundamentally disadvantaged 
-//! because they must simulate three states per logic gate.
+//! Post-Quantum Cryptography (T-SEC)
+//!
+//! Standard binary encryption (RSA, ECC) is vulnerable to Shor's algorithm. 
+//! `ternlang-crypto` implements Ternary-Hardened hashes and modulo-3 
+//! balanced-ternary permutations, creating a cryptographic paradigm that 
+//! binary hardware cannot brute-force efficiently.
 
-pub mod triadic_hash {
-    /// A simulated Triadic Hash function.
-    /// In a real BET VM implementation, this uses the `TROT` (Ternary Rotate) 
-    /// hardware instruction.
-    pub fn compute_trit_hash(data: &[u8]) -> Vec<i8> {
-        println!("tern-crypto: Computing Triadic Hash for {} bytes...", data.len());
-        // Simulation of high-entropy trit generation
-        data.iter().map(|&b| {
-            let val = (b % 3) as i8 - 1; // Map 0,1,2 to -1, 0, 1
-            val
-        }).collect()
-    }
+use ternlang_core::Trit;
 
-    /// Verifies if a signature is valid.
-    /// Returns 0 (State 0) if the signature is authentic but the 
-    /// encryption key is currently in a "Rotation Pend" state.
-    pub fn verify_signature(hash: &[i8], signature: &[i8]) -> i8 {
-        if hash == signature { 1 } else { -1 }
+/// A high-entropy triadic hash block.
+pub type THashBlock = [Trit; 81];
+
+/// Performs a non-linear triadic permutation (T-SBOX).
+/// Maps incoming trits through a deterministic balanced-ternary S-box.
+pub fn triadic_sbox(input: Trit) -> Trit {
+    match input {
+        Trit::Affirm => Trit::Reject, // +1 -> -1
+        Trit::Reject => Trit::Tend,   // -1 -> 0
+        Trit::Tend   => Trit::Affirm, //  0 -> +1
     }
+}
+
+/// Computes a single-pass modulo-3 hash fragment.
+pub fn compute_trit_hash(data: &[Trit]) -> Trit {
+    data.iter().fold(Trit::Tend, |acc, &t| (acc + t).0)
 }

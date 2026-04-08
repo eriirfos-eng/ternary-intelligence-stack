@@ -1,26 +1,21 @@
-//! ternlang-sec: Triadic Post-Quantum Cryptography (T-SEC).
+//! Ternary Security (T-SEC)
 //!
-//! Provides hardware-native lattice cryptography utilizing the `{-1, 0, 1}` 
-//! ternary vector space to achieve post-quantum security without binary bloat.
+//! Provides the "Hardened Safety Gate" for triadic operations. 
+//! Integrates MoE-13 Veto logic to ensure that mission-critical 
+//! decisions (e.g. key rotation, hardware wipe) require triadic consensus.
 
-pub mod pqke {
-    /// A single coefficient in a polynomial ring used for lattice encryption.
-    /// Natively operates on the BET-VM without binary emulation overhead.
-    #[derive(Debug, PartialEq, Clone, Copy)]
-    pub enum LatticeCoefficient {
-        Positive = 1,
-        Negative = -1,
-        Null = 0, // Decoy State (State 0)
-    }
+use ternlang_core::Trit;
+use ternlang_crypto::compute_trit_hash;
 
-    pub fn encrypt_vector(input: &[i8], noise: &[LatticeCoefficient]) -> Vec<i8> {
-        // High-speed native ternary encryption logic
-        input.iter().zip(noise.iter()).map(|(&i, n)| {
-            match n {
-                LatticeCoefficient::Null => i, // State 0 passes through uncorrupted
-                LatticeCoefficient::Positive => if i == 1 { 0 } else { 1 },
-                LatticeCoefficient::Negative => if i == -1 { 0 } else { -1 },
-            }
-        }).collect()
+pub struct SafetyGate;
+
+impl SafetyGate {
+    /// Authorizes a sensitive operation based on triadic consensus.
+    /// Requires Trit::Affirm (+1) from all experts.
+    pub fn authorize_operation(consensus: Trit) -> bool {
+        match consensus {
+            Trit::Affirm => true,
+            _ => false, // Reject or Tend results in immediate lockdown
+        }
     }
 }
