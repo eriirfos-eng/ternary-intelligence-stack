@@ -2,11 +2,9 @@
 name = "ternlang-bci"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-keywords.workspace = true
-categories.workspace = true
+license = "LicenseRef-BSL-1.1"
+description = "Biologically Native Programming Middleware. Maps EEG/EMG neural signals directly to the TIS Trit data type for Brain-Computer Interfaces."
 
 [dependencies]
+ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
+ternlang-bio = { path = "../ternlang-bio", version = "0.1.0" }

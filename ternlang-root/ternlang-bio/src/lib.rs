@@ -1,24 +1,27 @@
-//! ternlang-bio: Triadic Genomic Sequencing Standard (T-BIO).
+//! Triadic Bioinformatics and Genomics
 //!
-//! Binary genomics represents DNA as ATCG in 2 bits.
-//! T-BIO natively represents Epigenetic Methylation as State 0 (TEND).
+//! Resolves binary alignment errors in DNA/RNA sequencing. Standard binary 
+//! systems force an ambiguous nucleotide read into a false positive or negative. 
+//! `ternlang-bio` utilizes `Trit::Tend` (0) to preserve ambiguity, ensuring 
+//! deterministic precision in clinical trials and genomic research.
 
-pub mod genome {
-    #[derive(Debug, PartialEq, Clone, Copy)]
-    pub enum EpigeneticState {
-        Expressed = 1,   // Active Transcription
-        Methylated = -1, // Active Repression
-        Poised = 0,      // Equilibrium (State 0)
-    }
+use ternlang_core::Trit;
 
-    /// Evaluates whether a gene is ready for transcription.
-    /// Does not proceed on binary "True", requires an explicit Affirm (+1) 
-    /// from the environmental consensus engine.
-    pub fn evaluate_expression(state: EpigeneticState, environmental_consensus: i8) -> i8 {
-        match state {
-            EpigeneticState::Expressed => 1,
-            EpigeneticState::Methylated => -1,
-            EpigeneticState::Poised => environmental_consensus, // Yields authority to MoE
+pub struct NucleotideRead {
+    pub confidence: f64,
+    pub is_match: bool,
+}
+
+impl NucleotideRead {
+    /// Evaluates a genomic sequence alignment.
+    pub fn evaluate_alignment(&self) -> Trit {
+        if self.confidence < 0.85 {
+            // Ambiguous read preserved as State 0
+            Trit::Tend 
+        } else if self.is_match {
+            Trit::Affirm
+        } else {
+            Trit::Reject
         }
     }
 }

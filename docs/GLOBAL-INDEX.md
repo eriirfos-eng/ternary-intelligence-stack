@@ -37,6 +37,7 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 |---|---|---|---|
 | **Monetization** | `ternlang-api` | T-Fi Credit Ledger | Sovereign Compute Credit (€49.99/mo) |
 | **Contracts**   | `ternlang-contract`| T-HOLD-v1.0   | Self-Pausing Triadic Smart Contracts |
+| **Consensus**   | `ternlang-consensus`| T-PROOF-v1.0 | Proof-of-Ambiguity-Resolution |
 | **Compliance** | `ternlang-audit` | MoE-13 Veto | Hardware-Level Safety Gates |
 | **Tethering** | `ternlang-gate` | Genesis Tether | Physical I/O Authorization |
 
@@ -54,5 +55,8 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 ---
 **Authority: RFI-IRFOS (ZVR: 1015608684)**  
 *Preserving the movement since 2026.*
+**Authority: RFI-IRFOS (ZVR: 1015608684)**  
+*Preserving the movement since 2026.*
+.*
 **Authority: RFI-IRFOS (ZVR: 1015608684)**  
 *Preserving the movement since 2026.*

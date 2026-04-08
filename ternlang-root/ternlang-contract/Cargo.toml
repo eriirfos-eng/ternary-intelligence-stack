@@ -2,11 +2,9 @@
 name = "ternlang-contract"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-keywords.workspace = true
-categories.workspace = true
+license = "LicenseRef-BSL-1.1"
+description = "Sovereign Smart Contracts for the T-Fi Economy. Self-pausing triadic execution layer bypassing the EVM."
 
 [dependencies]
+ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
+ternlang-consensus = { path = "../ternlang-consensus", version = "0.1.0" }

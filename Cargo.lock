@@ -1623,10 +1623,17 @@ version = "0.1.0"
 [[package]]
 name = "ternlang-bci"
 version = "0.1.0"
+dependencies = [
+ "ternlang-bio",
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-bio"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-bridge"
@@ -1657,10 +1664,17 @@ dependencies = [
 [[package]]
 name = "ternlang-consensus"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-contract"
 version = "0.1.0"
+dependencies = [
+ "ternlang-consensus",
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-core"
