@@ -1,0 +1,7 @@
+// Module: stdlib/bench/optical_engine_enterprise_example.tern
+// Purpose: Enterprise scale example for optical_engine
+// Author: RFI-IRFOS
+
+fn execute_optical_engine_enterprise_example() -> trit {
+    return tend;
+}

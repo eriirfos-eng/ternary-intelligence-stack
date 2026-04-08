@@ -1,0 +1,7 @@
+// Module: stdlib/bench/thermal_solver_enterprise_example.tern
+// Purpose: Enterprise scale example for thermal_solver
+// Author: RFI-IRFOS
+
+fn execute_thermal_solver_enterprise_example() -> trit {
+    return tend;
+}

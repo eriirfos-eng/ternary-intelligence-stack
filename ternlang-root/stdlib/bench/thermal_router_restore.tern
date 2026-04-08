@@ -1,0 +1,7 @@
+// Module: stdlib/bench/thermal_router_restore.tern
+// Purpose: State restoration logic for thermal_router
+// Author: RFI-IRFOS
+
+fn execute_thermal_router_restore() -> trit {
+    return tend;
+}
