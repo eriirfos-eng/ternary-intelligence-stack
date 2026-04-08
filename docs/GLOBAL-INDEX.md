@@ -12,8 +12,9 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 ## 2. Artificial Intelligence (The Resource Management Layer)
 | Framework | Integration | Mechanism | status |
 |---|---|---|---|
+| **PyTorch** | `ternlang-ml` | T-WEIGHT-v1.0 | `torch_dispatch` Sparse Bypass (Freemium) |
+| **Wasm Edge** | `wasm_simd.rs` | T-EDGE-v1.0 | v128 SIMD WebBrowser Inference |
 | **Candle** | `ternlang-candle` | T-WEIGHT-v1.0 | Sparse Dot-Product Acceleration |
-| **Wasmtime** | `ternlang-wasm` | T-SANDBOX-v1.0 | Sovereign ISA Authorization |
 | **MoE-13** | `ternlang-moe` | T-ROUTING-v1.0 | Deterministic Kernel Dispatching |
 
 ## 3. Core Frameworks (The Basal Layer)

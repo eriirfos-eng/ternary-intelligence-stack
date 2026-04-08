@@ -11,6 +11,7 @@ pub mod parser;
 pub mod semantic;
 pub mod codegen;
 pub mod stdlib;
+pub mod wasm_simd;
 
 pub use trit::Trit;
 pub use vm::bet::{pack_trits, unpack_trits, BetFault};
