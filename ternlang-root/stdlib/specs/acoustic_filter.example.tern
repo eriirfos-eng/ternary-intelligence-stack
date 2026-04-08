@@ -1,0 +1,14 @@
+// Module:  stdlib/specs/acoustic_filter.example.tern
+// Purpose: Production usage example for acoustic_filter
+// Author:  RFI-IRFOS
+
+fn example_acousticfilter() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}
