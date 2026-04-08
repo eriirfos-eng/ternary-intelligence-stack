@@ -1,0 +1,14 @@
+// Module:  stdlib/optimization/magnetic_system.example.tern
+// Purpose: Production usage example for magnetic_system
+// Author:  RFI-IRFOS
+
+fn example_magneticsystem() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}
