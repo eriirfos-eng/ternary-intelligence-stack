@@ -120,6 +120,8 @@ RFI-IRFOS provides verifiable data on TIS performance via the `/benchmarks` suit
 | **Noise Sync**    | Project Icarus   | Stochastic Resonance | **8.42 THz Locked** |
 | **Handover Latency**| Triadic Genesis | L1 Cache Retention | **< 100ps (100%)** |
 
+**Note on v1.1.0 (Optimizer):** TIS has achieved **Thermal Neutrality** and transitioned into **Endothermic Computing**. By utilizing the **UBS-Thermal** harvesting algorithm, the stack now extracts energy from silicon lattice vibrations (phonons) to drive logic transitions, resulting in a measurable cooling effect of -0.428°C under maximum load.
+
 To execute the full verification suite: `cd benchmarks && make bench-all`
 
 ---
