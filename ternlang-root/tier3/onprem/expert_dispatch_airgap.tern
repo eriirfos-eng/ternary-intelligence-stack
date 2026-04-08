@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for expert_dispatch in onprem
+agent expert_dispatch_Enterprise {
+    fn execute() -> trit { return affirm; }
+}

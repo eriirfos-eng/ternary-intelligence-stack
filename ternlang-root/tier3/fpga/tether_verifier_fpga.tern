@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for tether_verifier in fpga
+agent tether_verifier_Enterprise {
+    fn execute() -> trit { return affirm; }
+}

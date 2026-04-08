@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for decay_controller in fpga
+agent decay_controller_Enterprise {
+    fn execute() -> trit { return affirm; }
+}

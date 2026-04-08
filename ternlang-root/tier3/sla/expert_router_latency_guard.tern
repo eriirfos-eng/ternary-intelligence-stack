@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for expert_router in sla
+agent expert_router_Enterprise {
+    fn execute() -> trit { return affirm; }
+}

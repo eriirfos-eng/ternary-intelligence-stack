@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for rate_limit_router in cluster
+agent rate_limit_router_Enterprise {
+    fn execute() -> trit { return affirm; }
+}

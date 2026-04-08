@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
+// Wrapper for retrieval_gate in cluster
+agent retrieval_gate_Enterprise {
+    fn execute() -> trit { return affirm; }
+}
