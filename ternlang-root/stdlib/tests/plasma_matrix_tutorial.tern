@@ -1,0 +1,11 @@
+// Module:  stdlib/tests/plasma_matrix_tutorial.tern
+// Purpose: Self-documenting tutorial for plasma_matrix
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of plasma_matrix.
+fn plasma_matrix_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
