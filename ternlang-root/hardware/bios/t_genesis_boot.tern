@@ -11,22 +11,24 @@ agent T_GenesisBoot {
     /**
      * initialize_pre_boot_sequence:
      * Maps the triadic boot-loader to physical CMOS/NVRAM addresses.
-     * Activates the Inquisitor BIOS Shield at the electron level.
+     * Activates the Inquisitor BIOS Shield and enforces physical write-locks.
      */
     fn initialize_pre_boot_sequence() -> trit {
         @sparseskip
         
         // 1. Activate Inquisitor Shield
-        // malware literally cannot exist because the BIOS doesn't provide binary hooks.
         let integrity = inquisitor_deep_scan.execute_kernel_scan();
         
         if integrity.is_clean() == affirm {
-            // 2. Map Triadic Pointers to Physical ROM
-            // Restricted Tier-3 Logic: CMOS Mapping addresses (Black-Boxed)
+            // 2. Enforce Hardware Write-Lock
+            // Restricts modification of T-Genesis sectors.
+            // Requires Triadic Majority Veto from Nodes B & C to unlock.
+            bet_v_bridge.set_write_lock(SECTOR_GENESIS, affirm);
+            
             return affirm; 
         }
         
-        return reject; // Integrity compromise detected in pre-boot
+        return reject;
     }
 
     /**
