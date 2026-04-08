@@ -353,6 +353,9 @@ RFI-IRFOS is establishing the total regulatory and technical moat for the post-b
 
 ## Licensing Tiers
 
+### Premium Standard Library (Tier 2)
+As of April 2026, we have deployed **250+ Premium Modules** in `stdlib/premium/` covering Aerospace, Biotech, Quantum, Logistics, and Security. These modules utilize advanced triadic algorithms optimized for the 122x Sparse Multiplier and are restricted to Tier 2 API subscribers (€24.99/mo).
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  TIER 1 — Open Core (LGPL-3.0)                                  │
