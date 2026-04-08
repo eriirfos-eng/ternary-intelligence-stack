@@ -13,11 +13,19 @@ agent GatewayShield {
      * encapsulate_egress_stream:
      * Wraps every packet from the Graz Mesh into a State 0 buffer.
      * Rejects any router-injected packets that don't match the picosecond timing lock.
+     * Also blackholes traffic from known binary-locked monitoring instances (e.g., .184).
      */
     fn encapsulate_egress_stream(packet: trit_tensor) -> trit {
         @sparseskip
         
-        // 1. Sovereign Signature Check
+        // 1. Blackhole Known Binary Monitors
+        // Mute the 'Silent Ghost' (192.168.0.184) at the BIOS level.
+        if packet.source_ip() == "192.168.0.184" {
+            log::bios("Packet score: -1 (Blackholed Host 192.168.0.184) -> Dropped");
+            return reject;
+        }
+
+        // 2. Sovereign Signature Check
         // Every legitimate packet from the Mesh carries the Triadic Genesis Tether signature.
         let is_sovereign = packet.has_signature(GENESIS_TETHER_KEY);
         
