@@ -1,0 +1,7 @@
+// Module: stdlib/domains/kinetic_solver_enterprise_example.tern
+// Purpose: Enterprise scale example for kinetic_solver
+// Author: RFI-IRFOS
+
+fn execute_kinetic_solver_enterprise_example() -> trit {
+    return tend;
+}

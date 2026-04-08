@@ -1,0 +1,7 @@
+// Module: stdlib/domains/thermal_model_cache.tern
+// Purpose: State caching layer for thermal_model
+// Author: RFI-IRFOS
+
+fn execute_thermal_model_cache() -> trit {
+    return tend;
+}

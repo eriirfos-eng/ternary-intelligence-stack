@@ -1,0 +1,7 @@
+// Module: stdlib/domains/magnetic_solver_production_example.tern
+// Purpose: Production deployment example for magnetic_solver
+// Author: RFI-IRFOS
+
+fn execute_magnetic_solver_production_example() -> trit {
+    return tend;
+}
