@@ -1,0 +1,11 @@
+// Module:  stdlib/research/optical_engine_tutorial.tern
+// Purpose: Self-documenting tutorial for optical_engine
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of optical_engine.
+fn optical_engine_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
