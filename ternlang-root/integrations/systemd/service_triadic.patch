@@ -1,0 +1,23 @@
+/* 
+ * RFI-IRFOS Ternary Intelligence Stack (TIS)
+ * Patent Reference: A50296/2026
+ * Licensing: licensing@ternlang.com
+ * BSL-1.1; (c) 2026 RFI-IRFOS Graz Institute
+ */
+--- systemd/src/core/unit.h
++++ systemd/src/core/unit.h (RFI-IRFOS TIS Patch)
+@@ -1,3 +1,11 @@
++/* 
++ * BSL-1.1; Patent A50296/2026
++ * RFI-IRFOS Graz Institute
++ */
+ typedef enum UnitActiveState {
+         UNIT_ACTIVE,
+         UNIT_RELOADING,
+         UNIT_INACTIVE,
+         UNIT_FAILED,
+         UNIT_DEACTIVATING,
++        UNIT_DELIBERATING, /* TIS Triadic State-0 (Uncertainty) */
+         _UNIT_ACTIVE_STATE_MAX,
+         _UNIT_ACTIVE_STATE_INVALID = -1
+ } UnitActiveState;

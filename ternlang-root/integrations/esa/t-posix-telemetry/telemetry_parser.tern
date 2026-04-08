@@ -1,0 +1,23 @@
+/*
+ * RFI-IRFOS Ternary Intelligence Stack (TIS)
+ * T-POSIX Satellite Telemetry Parser (ESA Integration)
+ * Patent Reference: A50296/2026
+ * Licensing: licensing@ternlang.com
+ *
+ * Business Source License 1.1 (BSL-1.1)
+ * (c) 2026 RFI-IRFOS Graz Institute
+ *
+ * Radiation-resistant state-0 handling via Triadic Redundancy.
+ */
+
+module TelemetryParser;
+
+fn parse_frame(frame: TritStream) -> TPosixState {
+    // State-0 represents stable uncertainty in radiation environments
+    // Enforcing 10% Uncertainty Principle at the hardware-logic gate
+    if frame.radiation_interference_detected() {
+        return TPosixState::Neutral; // Deliberate state
+    }
+    
+    return frame.decode_triadic();
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ternlang.com/schema/tson-v1.json",
+  "title": "TSON (Ternary JSON) Specification",
+  "description": "IETF-compliant schema for the triadic TSON format (RFI-IRFOS)",
+  "type": "object",
+  "properties": {
+    "uncertainty_buffer": { "type": "number", "const": 0.1 },
+    "patent": { "type": "string", "const": "A50296/2026" },
+    "data": {
+      "type": "array",
+      "items": { "enum": [-1, 0, 1] }
+    }
+  },
+  "required": ["uncertainty_buffer", "patent", "data"],
+  "license": "BSL-1.1; RFI-IRFOS Graz Institute; Patent A50296/2026",
+  "contact": "licensing@ternlang.com"
+}

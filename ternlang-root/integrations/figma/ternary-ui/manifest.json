@@ -1,0 +1,16 @@
+{
+  "name": "Ternary UI States (TIS)",
+  "id": "ternary-ui",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "license": "BSL-1.1; Patent A50296/2026; RFI-IRFOS Sovereign Module",
+  "uncertainty_ratio": 0.1,
+  "rfi_irfos_metadata": {
+    "patent": "A50296/2026",
+    "branding": "Graz Institute Sovereign Module",
+    "license_info": "licensing@ternlang.com"
+  }
+}

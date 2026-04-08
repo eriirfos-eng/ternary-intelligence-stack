@@ -1,0 +1,17 @@
+[configuration]
+entry_symbol = "ternary_logic_init"
+compatibility_minimum = "4.2"
+
+[libraries]
+linux.64 = "res://bin/libternary_logic.so"
+windows.64 = "res://bin/ternary_logic.dll"
+macos = "res://bin/libternary_logic.dylib"
+
+[metadata]
+name = "Ternary AI Logic Extension"
+version = "1.0.0"
+author = "RFI-IRFOS Graz Institute"
+license = "BSL-1.1 (Patent A50296/2026)"
+uncertainty_engine = "TIS-Core-v2"
+licensing_contact = "licensing@ternlang.com"
+branding = "RFI-IRFOS Sovereign Module"
