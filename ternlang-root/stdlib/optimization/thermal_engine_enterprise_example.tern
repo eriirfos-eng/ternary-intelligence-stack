@@ -1,0 +1,7 @@
+// Module: stdlib/optimization/thermal_engine_enterprise_example.tern
+// Purpose: Enterprise scale example for thermal_engine
+// Author: RFI-IRFOS
+
+fn execute_thermal_engine_enterprise_example() -> trit {
+    return tend;
+}
