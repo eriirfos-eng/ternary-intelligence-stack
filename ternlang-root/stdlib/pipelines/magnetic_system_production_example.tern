@@ -1,0 +1,7 @@
+// Module: stdlib/pipelines/magnetic_system_production_example.tern
+// Purpose: Production deployment example for magnetic_system
+// Author: RFI-IRFOS
+
+fn execute_magnetic_system_production_example() -> trit {
+    return tend;
+}
