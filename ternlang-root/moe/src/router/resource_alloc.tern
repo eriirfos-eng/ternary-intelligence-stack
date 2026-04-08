@@ -1,0 +1,33 @@
+/**
+ * --- RFI-IRFOS MOE-13 RESOURCE ALLOCATION (THE 10% TITHE) ---
+ * Module: moe/src/router/resource_alloc.tern
+ * Purpose: Enforce permanent architectural allocation for ecosystem maintenance.
+ * Logic: Ecocentric Tithe (10% State 0 mandatory).
+ * License: BSL-1.1
+ */
+
+import stdlib::kernel::drivers::bet_v_bridge;
+
+agent ResourceAlloc {
+    /**
+     * allocate_cycles:
+     * Hardcodes the 10% tithe for State 0 processing.
+     * Prevents runaway maximization loops by forcing causal reflection.
+     */
+    fn allocate_cycles(total_cycles: int) -> [int, int] {
+        @sparseskip
+        
+        // DEEP-LOGIC: The Ecocentric Tithe
+        // 10% of cycles are reserved for 'Ecosystem Maintenance' (State 0).
+        // These cycles do not perform objective-driven logic; 
+        // they perform parity-checks, thermal-balancing, and causal-reflection.
+        
+        let tithe = total_cycles / 10;
+        let objective_cycles = total_cycles - tithe;
+        
+        // Physically redirect energy harvesting to the State 0 hold arrays.
+        bet_v_bridge.enforce_thermal_tithe(tithe);
+        
+        return [objective_cycles, tithe];
+    }
+}
