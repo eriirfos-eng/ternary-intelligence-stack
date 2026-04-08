@@ -1,0 +1,35 @@
+// --- RFI-IRFOS T-SQL CORE ---
+// Module: stdlib/database/t_sql_core.tern
+// Purpose: Implement triadic join logic for TIS-native graph databases.
+// License: BSL-1.1
+// Patent Pending: A50296/2026
+
+agent T_SQL_CORE {
+    fn execute_triadic_join(record_a: trit_tensor, record_b: trit_tensor) -> trit {
+        // Implementation of the Triadic Join logic.
+        // Unlike a binary join (Match/No Match), a T-Join returns State 0 (tend)
+        // for "Partial Match/Incomplete Data," allowing the query to continue.
+        
+        let overlap: float = record_a.cosine_similarity(record_b);
+        
+        // Exact Match
+        if overlap > 0.99 {
+            return affirm;
+        }
+        
+        // Definite Mismatch
+        if overlap < 0.30 {
+            return reject;
+        }
+        
+        // Partial Match / Incomplete Data: State 0 (Deliberative Hold)
+        // This allows the record to stay in the pipeline for secondary resolution.
+        return tend;
+    }
+
+    fn resolve_partial_matches(results: trit_tensor) -> trit_tensor {
+        @sparseskip
+        // Map any 'tend' states to a secondary resolution queue instead of dropping.
+        return results.map_tend_to_escrow();
+    }
+}
