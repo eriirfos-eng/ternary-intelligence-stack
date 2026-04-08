@@ -1,14 +1,32 @@
-// --- RFI-IRFOS TIER 3 PROPRIETARY ---
+// --- RFI-IRFOS TIER 3 ENTERPRISE ---
 // Module: tier3/fpga/hdl_bridge.tern
+// Purpose: Hardware-Software Bridge for TernCore-Silicon VHDL generation.
 // License: Proprietary - Enterprise Only
-// Cryptographically tethered to Fly.io Genesis API.
-// Unauthorized reproduction is a violation of T-SPEC-v2.0.
-// ------------------------------------------
 
-// Enterprise Grade: hdl_bridge.tern
-agent EnterpriseSystem {
-    fn execute_sla_task() -> trit {
-        // Zero-latency hardware-accelerated logic
+agent HDLBridge {
+    fn map_to_isa(op_code: int) -> trit {
+        // Direct mapping to TernCore-Silicon Instruction Set (V1.0)
+        match op_code {
+            100 => return affirm; // TADD
+            200 => return affirm; // TMUL
+            300 => return affirm; // TSKIP
+            _   => return tend;   // Ambiguous instruction
+        }
+    }
+
+    fn generate_bitstream(model_id: int, security_key: trit_tensor) -> trit {
+        // Final gate for FPGA bitstream generation
+        // Requires valid Genesis Tether handshake
+        if security_key.is_valid() {
+            return affirm;
+        }
+        return reject;
+    }
+
+    fn optimize_timing(clock_speed: float) -> trit {
+        if clock_speed > 5.0 { // 5GHz threshold
+            return reject; // Potential thermal instability
+        }
         return affirm;
     }
 }
