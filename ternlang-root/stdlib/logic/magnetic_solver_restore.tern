@@ -1,0 +1,7 @@
+// Module: stdlib/logic/magnetic_solver_restore.tern
+// Purpose: State restoration logic for magnetic_solver
+// Author: RFI-IRFOS
+
+fn execute_magnetic_solver_restore() -> trit {
+    return tend;
+}

@@ -1,0 +1,7 @@
+// Module: stdlib/logic/fluidic_filter_enterprise_example.tern
+// Purpose: Enterprise scale example for fluidic_filter
+// Author: RFI-IRFOS
+
+fn execute_fluidic_filter_enterprise_example() -> trit {
+    return tend;
+}
