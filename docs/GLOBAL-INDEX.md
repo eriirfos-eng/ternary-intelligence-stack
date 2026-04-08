@@ -6,12 +6,15 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 | Framework | Integration | Standard | Impact |
 |---|---|---|---|
 | **FPGA / ASIC** | `ternlang-hdl` | BET-ISA-v2.0 | Native 2-Bit Trit Synthesis |
+| **HFT Trading** | `ternlang-hft` | T-LATENCY-v1.0| 50-Microsecond Latency Arbitrage |
+| **Drone RTOS**  | `ternlang-ros2`| T-AVOID-v1.0  | Deterministic Collision Avoidance (PX4)|
 | **MVL Logic** | `ternlang-esp32`| T-THERMAL-v1.0 | Deterministic Clock-Gating |
 | **BitNet-T3** | `ml::tuann` | T-SPEC-v2.0 | Single-Cycle 1.58-bit MatMul |
 
 ## 2. Artificial Intelligence (The Resource Management Layer)
 | Framework | Integration | Mechanism | status |
 |---|---|---|---|
+| **Viral Agent**| `agent-albert` | 0-Trit Hold   | Offline-First / Sovereign SQLite Memory |
 | **PyTorch** | `ternlang-ml` | T-WEIGHT-v1.0 | `torch_dispatch` Sparse Bypass (Freemium) |
 | **Wasm Edge** | `wasm_simd.rs` | T-EDGE-v1.0 | v128 SIMD WebBrowser Inference |
 | **Candle** | `ternlang-candle` | T-WEIGHT-v1.0 | Sparse Dot-Product Acceleration |
@@ -21,6 +24,7 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 | Sector | Standard | Implementation | Technical Effect |
 |---|---|---|---|
 | **Networking** | T-NET-v1.0 | `std::net` | 50% Congestion Pruning |
+| **Orbit (GEO)**| T-ASTRO-v1.0 | `ternlang-astro` | Delay-Tolerant Routing / AI Cyber Defense |
 | **Storage** | T-FS-v1.0 | `std::fs` | State-0 Memory Block Isolation |
 | **Serialization**| TSON-v1.0 | `ternlang-tson` | 30% Higher Density / Triadic Encoding |
 | **OS Kernel** | T-POSIX | `ternlang-posix` | Edge/RTOS Active Deliberation Scheduler |

@@ -16,21 +16,21 @@
 
 ## What is Albert-Code?
 
-**Albert-Code** is the terminal-based evolution of **Albert** (the ecocentric, ternary logic model from RFI-IRFOS). While the original `albert.py` provides a rich web interface via Streamlit, **Albert-Code** is designed for maximum speed and efficiency in the terminal.
+**Albert-Code** is the terminal-based evolution of **Albert**—a strictly local, offline-first AI gateway that writes its own skills and controls local integrations without sending your data to the cloud. 
 
-By utilizing [Ollama](https://ollama.com/) for local inference of the `albert:latest` model (based on `qwen2.5:3b`), Albert-Code achieves lightning-fast responses while maintaining access to a powerful set of sovereign tools.
+By utilizing [Ollama](https://ollama.com/) for local inference, Albert-Code achieves lightning-fast responses. Unlike cloud-tethered assistants that monetize your telemetry, Albert relies on **SQLite Sovereign Memory** and **0-Trit Privacy Holds**. Your data never leaves your machine unless you explicitly authorize a team-scaling API call to the enterprise MoE-13 tier.
 
 ## Key Features
 
-- **🚀 Terminal Speed**: Direct interaction with the model via Ollama, bypassing web UI overhead.
+- **🚀 Terminal Speed & Autonomy**: Direct interaction with the model via Ollama. Albert runs 100% offline.
+- **🧠 SQLite Sovereign Memory**: Your context, your data. Albert's memories are strictly local and un-scrapeable.
+- **🛡 0-Trit Privacy Holds**: Hardware-level triadic logic guarantees that ambiguous, potentially sensitive commands trigger a `0` (HOLD) state, preventing accidental cloud telemetry or destructive local actions.
 - **🔧 Functional Tool Harness**:
   - `execute_bash`: Full shell access on your local machine.
   - `create_file` / `read_file`: Seamless local file management.
   - `web_search`: Search the web via DuckDuckGo.
-  - `retrieve_memory` / `log_memory`: Persistent SQLite-based memory vault shared with `albert.py`.
-  - `get_system_health`: Real-time system telemetry.
-- **🛡 Sovereignty Checks**: Built-in mechanisms to ensure Albert acts rather than narrates.
-- **🧠 Neurosymbolic Fallback**: Intercepts plain-text tool requests and routes them to the correct actuator.
+  - `retrieve_memory` / `log_memory`: Persistent, sovereign data vault.
+- **🌐 Enterprise Escalation**: Once your local workflows depend on `.tern` scripts, seamlessly unlock complex team orchestration via the commercial TIS MoE-13 API tier.
 
 ---
 

@@ -1,11 +1,10 @@
 [package]
-name = "ternlang-astro"
+name = "ternlang-ros2"
 version.workspace = true
 edition.workspace = true
 license = "LicenseRef-BSL-1.1"
-description = "Orbital and Satellite Routing Control. MoE-13 orchestrator and T-POSIX framework for non-binary, noisy space communication (GEO-LEO)."
+description = "Ternary-optimized DDS Middleware bridging ROS 2 and PX4. Enforces deterministic collision avoidance for autonomous drones."
 
 [dependencies]
 ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
 ternlang-posix = { path = "../ternlang-posix", version = "0.1.0" }
-ternlang-moe = { path = "../ternlang-moe", version = "0.1.2" }
