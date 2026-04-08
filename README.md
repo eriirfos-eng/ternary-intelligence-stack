@@ -48,91 +48,9 @@ logs/                 Hardware-level audit trails
 
 ##  Ecosystem Architecture
 
-```text
-┌──────────────────────────────────────────────────────────────┐
-│                    TERNARY INTELLIGENCE STACK                │
-│         Post-Binary Computing & Agentic Reasoning Repo       │
-└──────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    USER / DEVELOPER LAYER                    │
-│--------------------------------------------------------------│
-│ CLI tools           | SDK / API          | External agents   │
-│ ternlang-cli        | Rust crates        | AI workflows      │
-│ REPL / build / run  | Package imports    | orchestration     │
-└──────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  LANGUAGE & TOOLING LAYER                    │
-│--------------------------------------------------------------│
-│ ternpkg             → package manager                        │
-│ ternlang-cli        → build / simulate / format / repl       │
-│ grammar.ebnf        → language formal grammar                │
-│ .tern source files  → user programs / proofs                 │
-└──────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    COMPILER CORE LAYER                       │
-│--------------------------------------------------------------│
-│ ternlang-core                                                │
-│                                                              │
-│ Lexer → Parser → AST → Semantic Pass → BET Bytecode          │
-│                                                              │
-│ Tokens      Syntax tree      ternary semantics               │
-│ (-1,0,+1)   proof states     static checks                   │
-└──────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    EXECUTION / VM LAYER                     │
-│-------------------------------------------------------------│
-│ Balanced Ternary Execution VM                               │
-│ Runtime state machine                                       │
-│ Register / memory model                                     │
-│ Opcode interpreter                                          │
-│ Stack + heap                                                │
-│ State transitions: veto | tend | affirm                     │
-└─────────────────────────────────────────────────────────────┘
-                               │
-                ┌──────────────┴──────────────┐
-                ▼                             ▼
-┌──────────────────────────────┐   ┌──────────────────────────┐
-│      ML / REASONING LAYER    │   │     HARDWARE / HDL       │
-│------------------------------│   │--------------------------│
-│ ternlang-ml                  │   │ ternlang-hdl             │
-│ symbolic inference           │   │ ternary circuit logic    │
-│ agent reasoning              │   │ future hardware mapping  │
-│ uncertainty modeling         │   │ FPGA / ASIC vision       │
-└──────────────────────────────┘   └──────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                ORCHESTRATION / MoE LAYER                    │
-│-------------------------------------------------------------│
-│ ternlang-moe                                                │
-│                                                             │
-│ expert routing                                              │
-│ dual-key synergy                                            │
-│ 13-agent mixture                                            │
-│ triad synthesis                                             │
-│ safety gating                                               │
-│ memory mesh                                                 │
-└─────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 RESEARCH / OPEN SCIENCE                     │
-│-------------------------------------------------------------│
-│ OSF papers / DOI                                            │
-│ benchmark experiments                                       │
-│ theoretical proofs                                          │
-│ architectural RFCs                                          │
-│ public GitHub releases                                      │
-└─────────────────────────────────────────────────────────────┘
-```
+
+<img width="1702" height="921" alt="image" src="https://github.com/user-attachments/assets/b9fec9f6-aa29-41c5-bb17-460c0ab52f43" />
+
 
 
 The TIS is partitioned into three tiers to ensure global institutional stability and vendor security:
