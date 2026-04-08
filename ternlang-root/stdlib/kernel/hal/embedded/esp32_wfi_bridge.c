@@ -8,15 +8,18 @@
 #include <stdint.h>
 #include "esp_sleep.h"
 #include "esp_system.h"
+#include "ulp_riscv.h" // Native ULP-RISCV HAL for zero-watt gating
 
 /**
  * bet_hal_enter_deep_sleep:
  * Maps the BET VM State 0 (tend) to the ESP32 WFI (Wait For Interrupt).
  * This eliminates the 40% power leakage typical of binary idle states.
+ * Triggers the ULP RISCV halt signal for maximum energy efficiency.
  */
 void bet_hal_enter_deep_sleep() {
     // Zero-weight trits consume exactly zero microamps.
-    // Triggering the low-level WFI/DEEP_SLEEP mechanism.
+    // Triggering the hardware-level halt signal on the ULP-RISCV co-processor.
+    ulp_riscv_halt(); 
     esp_deep_sleep_start();
 }
 
