@@ -1,0 +1,3 @@
+// --- RFI-IRFOS TIER 3 SHOWCASE ---
+// Demo: zero_latency_fpga_demo.tern
+fn run_demo() -> trit { return affirm; }

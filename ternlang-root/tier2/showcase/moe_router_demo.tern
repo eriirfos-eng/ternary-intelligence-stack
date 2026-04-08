@@ -1,0 +1,3 @@
+// --- RFI-IRFOS TIER 2 SHOWCASE ---
+// Demo: moe_router_demo.tern
+fn run_demo() -> trit { return affirm; }
