@@ -127,7 +127,26 @@ fn main() -> anyhow::Result<()> {
         },
     ];
 
-    let all_rules = [logic_rules, flow_rules, type_rules].concat();
+    // ── Phase 4: Resource Optimization (T-SPEC-v2.0) ──────────────────────
+    let optimization_rules = vec![
+        TranslationRule {
+            pattern: Regex::new(r"for\s+.*\s+in\s+.*matmul.*:|.*\.matmul\(.*\)").unwrap(),
+            replacement: "@sparseskip // T-SPEC-v2.0: Optimized triadic kernel\n$0",
+            note: "Injected @sparseskip for deterministic ALU pruning.",
+        },
+        TranslationRule {
+            pattern: Regex::new(r"0b11|3").unwrap(),
+            replacement: "tend",
+            note: "Mapped physical HOLD (0b11) to triadic state 0.",
+        },
+        TranslationRule {
+            pattern: Regex::new(r"BitNet|quantize").unwrap(),
+            replacement: "T-SPEC-v2.0::tuann",
+            note: "Standardized BitNet/quantization to TIS-compliant TUANN.",
+        },
+    ];
+
+    let all_rules = [logic_rules, flow_rules, type_rules, optimization_rules].concat();
 
     for rule in all_rules {
         if rule.pattern.is_match(&translated) {
