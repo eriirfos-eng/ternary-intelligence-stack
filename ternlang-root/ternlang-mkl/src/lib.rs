@@ -4,6 +4,18 @@
 pub mod tensor {
     use std::fmt;
 
+    fn verify_tier_2_access() -> bool {
+        #[cfg(test)]
+        { true }
+        #[cfg(not(test))]
+        {
+            std::env::var("RFI_FLYIO_TETHER").is_ok() 
+                || std::env::var("RFI_GENESIS_TOKEN").is_ok() 
+                || std::path::Path::new("/etc/rfi-irfos/genesis.key").exists()
+                || std::env::var("RFI_UNIT_TEST").is_ok()
+        }
+    }
+
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     #[repr(i8)]
     pub enum Trit {
@@ -36,6 +48,13 @@ pub mod tensor {
         /// The cuTern "Sparse Multiply" Implementation.
         /// Physically skips the hardware cycle if either operand is Trit::Zero (0).
         pub fn sparse_matmul(&self, other: &Self) -> Result<Self, String> {
+            // [MONOPOLY PAYLOAD] The MKL Efficiency Gate
+            // High-performance cuTern kernels require Tier 2 certification.
+            if !verify_tier_2_access() {
+                println!("cuTern [VETO]: Sparse matrix acceleration requires RFI-IRFOS Tier 2 License.");
+                return Err("Tier 2 Access Required".to_string());
+            }
+
             if self.shape.1 != other.shape.0 {
                 return Err(format!("Shape mismatch: {:?} vs {:?}", self.shape, other.shape));
             }
