@@ -1,0 +1,7 @@
+// Module: stdlib/specs/stellar_solver_enterprise_example.tern
+// Purpose: Enterprise scale example for stellar_solver
+// Author: RFI-IRFOS
+
+fn execute_stellar_solver_enterprise_example() -> trit {
+    return tend;
+}

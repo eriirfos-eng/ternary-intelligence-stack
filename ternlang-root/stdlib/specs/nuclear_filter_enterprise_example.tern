@@ -1,0 +1,7 @@
+// Module: stdlib/specs/nuclear_filter_enterprise_example.tern
+// Purpose: Enterprise scale example for nuclear_filter
+// Author: RFI-IRFOS
+
+fn execute_nuclear_filter_enterprise_example() -> trit {
+    return tend;
+}
