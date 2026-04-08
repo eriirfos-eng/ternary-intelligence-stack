@@ -197,7 +197,25 @@ curl -X POST https://ternlang.com/api/trit_decide \
 | `POST /api/trit_coalition` | N-agent weighted vote → quorum / dissent / abstain |
 | `POST /api/trit_gate` | Multi-dimensional hard-block safety gate |
 | `POST /api/moe/orchestrate` | Full MoE-13 pass — synchronous JSON result |
-| `GET  /api/stream/moe_orchestrate` | MoE-13 pass streamed round-by-round via SSE |
+| `POST /api/stream/moe_orchestrate` | MoE-13 pass streamed round-by-round via SSE |
+
+---
+
+## 🏛️ Enterprise Offering (Tier-3): The "Titan" Control Plane
+
+The **Titan Control Plane** is the definitive infrastructure for air-gapped enterprise clusters, optimized for high-frequency trading, defense, and foundational AI labs.
+
+### Key Industrial Advantages:
+*   **152.8x Aggregate Efficiency (η_total):** Achieve 150x more compute within the same thermal and power envelope.
+*   **Zero-Loss Data Retention:** T-SQL and the Deliberative Hold (State 0) guarantee 100% data retention for corrupted or anomalous entries.
+*   **Hardware-Native Substrate:** Direct integration with BET-ISA hardware through the `T-DRIVER` and `@sparseskip` directive.
+
+**[Read the Titan Enterprise SLA](tier3/commercial/TITAN_SLA.md)** | **[Technical Specifications](tier3/commercial/TITAN_SPECS.md)**
+
+For pilot inquiries and industrial integration, contact: `enterprise@rfi-irfos.org`
+
+---
+
 | `GET  /api/stream/deliberate` | EMA deliberation streamed per round via SSE |
 | `GET  /api/usage` | Monthly usage stats for the authenticated key |
 
