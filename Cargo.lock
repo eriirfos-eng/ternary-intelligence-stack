@@ -1598,6 +1598,11 @@ dependencies = [
 [[package]]
 name = "ternlang-astro"
 version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+ "ternlang-moe",
+ "ternlang-posix",
+]
 
 [[package]]
 name = "ternlang-audit"
@@ -1718,6 +1723,14 @@ name = "ternlang-hdl"
 version = "0.1.0"
 
 [[package]]
+name = "ternlang-hft"
+version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+ "ternlang-hdl",
+]
+
+[[package]]
 name = "ternlang-lsp"
 version = "0.1.0"
 dependencies = [
@@ -1775,6 +1788,14 @@ dependencies = [
 [[package]]
 name = "ternlang-qutrit"
 version = "0.1.0"
+
+[[package]]
+name = "ternlang-ros2"
+version = "0.1.0"
+dependencies = [
+ "ternlang-core",
+ "ternlang-posix",
+]
 
 [[package]]
 name = "ternlang-runtime"
