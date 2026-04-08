@@ -1,0 +1,16 @@
+// Module:  stdlib/specs/optical_analyzer.schema.tern
+// Purpose: T-SON serialization schema for optical_analyzer
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+struct Optical_analyzerSchema {
+    id: int,
+    confidence: trit,
+    weight: float
+}
+
+fn validate_schema(data: Optical_analyzerSchema) -> trit {
+    if data.weight > 0.0 { return affirm; }
+    if data.weight < 0.0 { return reject; }
+    return tend;
+}
