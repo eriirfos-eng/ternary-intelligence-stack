@@ -2,11 +2,11 @@
 
 # Ternary Intelligence Stack (TIS)
 
-**The Institutional Standard for Post-Binary Computing and Triadic Reasoning.**
+**The Institutional Standard for Deterministic Resource Optimization in Post-Binary Computing.**
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![License](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1%20%2F%20Proprietary-blue)](ternlang-root/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](ternlang-root/ROADMAP.md)
+[![Technical Spec](https://img.shields.io/badge/T--SPEC-v2.0-blue)](docs/standards/TECHNICAL-SPEC.md)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![Tether](https://img.shields.io/badge/Genesis_Tether-Active-red)](#)
 
@@ -14,28 +14,28 @@ Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.co
 
 ---
 
-Binary systems treat uncertainty as null. Ternlang treats it as a **first-class hardware state**.
+Binary systems treat uncertainty as an error state. TIS treats it as a **Physical State Pruning Primitive**.
 
-Every value in the stack is a *trit* — one of three:
+Every instruction in the stack utilizes a *trit* — mapping to deterministic hardware states:
 
 ```
--1  →  REJECT     Hard rejection. unrecoverable security panic.
- 0  →  TEND      Deliberation. Insufficient data. Enter hardware equilibrium.
-+1  →  AFFIRM    Authorization. Proceed with execution.
+-1  →  REJECT     Inverse polarity. Immediate gate-level reversal.
+ 0  →  HOLD       ALU Clock-Gate. Execute non-speculative branch pruning.
++1  →  AFFIRM     Forward polarity. Proceed with instruction execution.
 ```
 
-The **TEND (0)** state is the core innovation of the **BET-VM**. It is not "undecided"; it is a formal signal that tells the system to remain in deliberation until evidence is sufficient. This eliminates "hallucination-by-coercion" in AI, sparse neural inference where zero-weights are skipped at the instruction level, and safety-critical systems where a premature decision is worse than no decision.
+The **HOLD (0)** state is the core technical innovation of the **BET-VM**. It is a formal hardware signal that triggers **Internal Processor State Equilibrium**. This eliminates the energy overhead of speculative execution in AI, enables 1.58-bit (BitNet) sparse neural inference at the gate level, and provides a deterministic safety gate for high-integrity autonomous systems.
 
 ---
 
 ## What's in This Repository
 
 ```text
-ternlang-root/        Language, VM, inference engine, API, MCP server
-agent-albert/         Local AI node built on the Ternary Intelligence Stack
+ternlang-root/        Deterministic VM, instruction-level scheduler, API
+agent-albert/         Local AI node built on the TIS Resource Manager
 ternlang-vscode/      VS Code extension (.tern syntax highlighting + LSP)
-docs/                 Institutional standards, index, and quickstart
-logs/                 Runtime logs and audit trails
+docs/                 T-SPEC-v2.0, MVL standards, and quickstart
+logs/                 Hardware-level audit trails
 ```
 
 → **[Institutional Index](docs/GLOBAL-INDEX.md)**
