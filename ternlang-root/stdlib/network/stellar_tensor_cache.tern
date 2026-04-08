@@ -1,0 +1,7 @@
+// Module: stdlib/network/stellar_tensor_cache.tern
+// Purpose: State caching layer for stellar_tensor
+// Author: RFI-IRFOS
+
+fn execute_stellar_tensor_cache() -> trit {
+    return tend;
+}
