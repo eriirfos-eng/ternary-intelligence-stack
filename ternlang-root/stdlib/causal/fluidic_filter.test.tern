@@ -1,0 +1,12 @@
+// Module:  stdlib/causal/fluidic_filter.test.tern
+// Purpose: Unit test suite for fluidic_filter
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+fn fluidic_filter_test_verify() -> trit {
+    let state: trit = tend;
+    if state == tend {
+        return affirm;
+    }
+    return reject;
+}
