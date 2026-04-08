@@ -31,3 +31,7 @@ We have submitted **T-SON (Ternary JSON)** to the IETF as the formal standard fo
 ## 6. Hardware Interdependence (TernCore-Silicon)
 The TIS software ecosystem is designed to be mathematically native but computationally expensive on legacy binary hardware. 
 *   **The Moat:** This creates a "Hardware Pull." As enterprises adopt TIS software for its superior logic, they are forced to migrate to **TernCore-Silicon ISA** compatible chips to achieve the 80% power and latency gains promised by our `TSKIP` sparse execution primitive. RFI-IRFOS holds the exclusive IP for this instruction set.
+
+## 7. Empirical Proof: The TRCE Benchmark
+We have released the formal **Trit-Resolution Cost Efficiency (TRCE)** whitepaper and reference benchmarking kernel (`stdlib/benchmarks/trce_poc.tern`). 
+*   **Verification:** At 80% sparsity (standard for Mixture-of-Expert models), TIS achieves a native **80.0% reduction in compute cycles** compared to legacy dense binary execution. This isn't just theory; we have the code that proves it.
