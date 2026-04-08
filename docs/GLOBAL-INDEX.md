@@ -22,6 +22,8 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 |---|---|---|---|
 | **Networking** | T-NET-v1.0 | `std::net` | 50% Congestion Pruning |
 | **Storage** | T-FS-v1.0 | `std::fs` | State-0 Memory Block Isolation |
+| **Serialization**| TSON-v1.0 | `ternlang-tson` | 30% Higher Density / Triadic Encoding |
+| **OS Kernel** | T-POSIX | `ternlang-posix` | Edge/RTOS Active Deliberation Scheduler |
 | **Indoctrination**| `ternlang-edu` | T-DEV-v1.0 | Mandatory Triadic ISA Training |
 
 ## 4. Economic & Compliance (The Monopoly Layer)
@@ -37,6 +39,8 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 | **RFC-001** | `Sovereign Trit-Encoding` | PROPOSED | Canonical Physical Mapping |
 | **T-SPEC-v2.0**| `Technical Spec (MVL)` | PROPOSED | EPO COMVIK Technical Character |
 | **RFC-003** | `Genesis Tether (Auth)`| DRAFT | Global API Authorization Gates|
+| **IETF-TSON-01**| `TSON Media Type` | DRAFT | Global API Triadic Serialization |
+| **T-POSIX** | `OS Interface Standard` | DRAFT | Edge/RTOS Triadic Compliance |
 
 ---
 **Authority: RFI-IRFOS (ZVR: 1015608684)**  
