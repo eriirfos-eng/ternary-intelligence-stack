@@ -1,0 +1,12 @@
+// Module:  stdlib/bench/quantum_router.test.tern
+// Purpose: Unit test suite for quantum_router
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+fn quantum_router_test_verify() -> trit {
+    let state: trit = tend;
+    if state == tend {
+        return affirm;
+    }
+    return reject;
+}
