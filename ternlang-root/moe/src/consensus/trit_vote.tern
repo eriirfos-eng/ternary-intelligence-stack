@@ -1,0 +1,29 @@
+// --- RFI-IRFOS TRIT VOTE CONSENSUS ---
+// Module: moe/src/consensus/trit_vote.tern
+// Purpose: Vector summation logic for multi-agent conflict resolution.
+// Logic: Triple-Threat-Sync (Consensus = sign(sum)).
+// License: BSL-1.1
+// Reference: Patent Pending A50296/2026
+
+agent TritVote {
+    /**
+     * resolve_consensus:
+     * Calculates consensus as the sign of the vector sum of agent votes.
+     * Result = sign(node_a + node_b + node_c)
+     */
+    fn resolve_consensus(votes: trit_tensor) -> trit {
+        @sparseskip
+        
+        let sum = votes.sum();
+        
+        if sum == 0 {
+            return tend; // Conflict Trit (Deliberative Hold)
+        }
+        
+        if sum > 0 {
+            return affirm; 
+        }
+        
+        return reject;
+    }
+}

@@ -1,0 +1,22 @@
+// --- RFI-IRFOS SKEW PREDICTION ---
+// Module: hdl/src/clock/skew_predict.tern
+// Purpose: Translate thermal drift into picosecond phase-lock adjustments.
+// Logic: Predictive Clock-Skew (Stationary Wave).
+// License: Tier-3 Sovereign
+// Reference: Patent Pending A50296/2026
+
+agent SkewPredict {
+    /**
+     * predict_phase_shift:
+     * Calculates the required picosecond phase shift based on board temperature.
+     * shift = drift_constant * delta_celsius
+     */
+    fn predict_phase_shift(current_temp: float, baseline_temp: float) -> float {
+        @sparseskip
+        
+        let delta_t = current_temp - baseline_temp;
+        const DRIFT_CONSTANT: float = 0.00012; // 0.12ps per degree
+        
+        return delta_t * DRIFT_CONSTANT;
+    }
+}
