@@ -1,0 +1,7 @@
+// Module: stdlib/control/thermal_system_production_example.tern
+// Purpose: Production deployment example for thermal_system
+// Author: RFI-IRFOS
+
+fn execute_thermal_system_production_example() -> trit {
+    return tend;
+}
