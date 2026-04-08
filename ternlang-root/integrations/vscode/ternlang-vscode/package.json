@@ -1,0 +1,51 @@
+{
+  "name": "ternlang-vscode",
+  "displayName": "Ternlang VSCode Integration",
+  "description": "Official RFI-IRFOS Ternlang Extension. Includes syntax highlighting, MoE-13 linter, and triadic logic tools.",
+  "version": "0.1.0",
+  "publisher": "RFI-IRFOS",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "license": "BSL-1.1",
+  "homepage": "https://github.com/eriirfos-eng/ternary-intelligence-stack",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eriirfos-eng/ternary-intelligence-stack.git"
+  },
+  "activationEvents": [
+    "onLanguage:ternlang"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "ternlang",
+        "aliases": [
+          "Ternlang",
+          "tern"
+        ],
+        "extensions": [
+          ".tern"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ternlang",
+        "scopeName": "source.tern",
+        "path": "./syntaxes/ternlang.tmLanguage.json"
+      }
+    ]
+  },
+  "_rfi_meta": {
+    "institute": "RFI-IRFOS Graz Institute (ZVR: 1015608684)",
+    "patent": "A50296/2026",
+    "contact": "licensing@ternlang.com"
+  }
+}

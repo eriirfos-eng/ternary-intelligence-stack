@@ -1,0 +1,30 @@
+{
+  "name": "ternary-logic",
+  "version": "0.1.0",
+  "description": "Official RFI-IRFOS Ternary Logic Implementation (BET-ISA)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ternary",
+    "logic",
+    "BET-ISA",
+    "RFI-IRFOS"
+  ],
+  "author": "RFI-IRFOS Graz Institute",
+  "license": "BSL-1.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eriirfos-eng/ternary-intelligence-stack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eriirfos-eng/ternary-intelligence-stack/issues"
+  },
+  "homepage": "https://github.com/eriirfos-eng/ternary-intelligence-stack#readme",
+  "_rfi_meta": {
+    "institute": "RFI-IRFOS Graz Institute (ZVR: 1015608684)",
+    "patent": "A50296/2026",
+    "contact": "licensing@ternlang.com"
+  }
+}
