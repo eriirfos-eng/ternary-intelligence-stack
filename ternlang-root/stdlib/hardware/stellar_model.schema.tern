@@ -1,0 +1,16 @@
+// Module:  stdlib/hardware/stellar_model.schema.tern
+// Purpose: T-SON serialization schema for stellar_model
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+struct Stellar_modelSchema {
+    id: int,
+    confidence: trit,
+    weight: float
+}
+
+fn validate_schema(data: Stellar_modelSchema) -> trit {
+    if data.weight > 0.0 { return affirm; }
+    if data.weight < 0.0 { return reject; }
+    return tend;
+}
