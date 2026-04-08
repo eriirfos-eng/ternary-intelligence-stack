@@ -1,0 +1,11 @@
+// Module:  stdlib/logic/plasma_optimizer_tutorial.tern
+// Purpose: Self-documenting tutorial for plasma_optimizer
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of plasma_optimizer.
+fn plasma_optimizer_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
