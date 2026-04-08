@@ -1,6 +1,7 @@
 name: 'TIS Auditor: Thermal Waste Scanner'
-description: 'Identify binary inefficiencies and thermal waste in legacy codebases.'
+description: 'Identify binary inefficiencies and thermal waste in legacy codebases (v0.1.1).'
 author: 'RFI-IRFOS'
+version: 'v0.1.1'
 inputs:
   path:
     description: 'Project path to scan'
