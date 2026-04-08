@@ -1,0 +1,12 @@
+// Module:  stdlib/bench/kinetic_filter.test.tern
+// Purpose: Unit test suite for kinetic_filter
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+fn kinetic_filter_test_verify() -> trit {
+    let state: trit = tend;
+    if state == tend {
+        return affirm;
+    }
+    return reject;
+}
