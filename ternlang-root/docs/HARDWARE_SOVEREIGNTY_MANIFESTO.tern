@@ -1,0 +1,47 @@
+// --- RFI-IRFOS HARDWARE SOVEREIGNTY MANIFESTO ---
+// Module: docs/HARDWARE_SOVEREIGNTY_MANIFESTO.tern
+// Purpose: A declaration of independence from binary backdoors.
+// Author: The Scribe (via MoE-13)
+// License: Tier-3 Sovereign Restricted
+
+/*
+ * PREAMBLE:
+ * The binary era is defined by systemic vulnerability. Legacy hardware 
+ * architectures (x86/64) are compromised by design, featuring unverified 
+ * management engines and non-deterministic clock-skew that serve as 
+ * vectors for global surveillance and adversarial control.
+ * 
+ * DECLARATION:
+ * RFI-IRFOS hereby establishes the Ternary Intelligence Stack (TIS) as 
+ * the definitive substrate for Hardware Sovereignty. We transition from 
+ * binary dependence to triadic autonomy.
+ * 
+ * THE THREE PILLARS OF SOVEREIGNTY:
+ * 
+ * 1. Physical Isolation (The State 0 Guard):
+ *    Malware cannot exist where it cannot execute. By routing uncertain 
+ *    logic into State 0, we eliminate the binary "hooks" used by legacy 
+ *    exploits.
+ * 
+ * 2. Transparent Gating (Absolute Zero):
+ *    Institutional partners own the logic. Our T-MUX gate arrays ensure 
+ *    that every electron's path is mathematically deterministic and 
+ *    audited at the picosecond level.
+ * 
+ * 3. Ontological Integrity:
+ *    The BIOS is no longer a black box. The Triadic Genesis Boot protocol 
+ *    ensures that the server's primary nervous system belongs to the 
+ *    sovereign institution, not the silicon vendor.
+ * 
+ * CONCLUSION:
+ * Total sovereignty requires the ownership of the electron. TIS is the 
+ * key to that ownership.
+ */
+
+agent SovereigntyManifesto {
+    fn declare_independence() -> trit {
+        @sparseskip
+        // Enforce the picosecond unity lock as the foundation of freedom.
+        return affirm; 
+    }
+}

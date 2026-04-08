@@ -1,0 +1,15 @@
+name: 'TIS Inquisitor Pro: The Hunter'
+description: 'Hunt legacy binary ghosts in the picosecond shadows of the CPU clock.'
+author: 'RFI-IRFOS'
+version: 'v1.0.0'
+inputs:
+  scan_depth:
+    description: 'Kernel scan depth (standard/pro)'
+    required: false
+    default: 'standard'
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'eye'
+  color: 'red'
