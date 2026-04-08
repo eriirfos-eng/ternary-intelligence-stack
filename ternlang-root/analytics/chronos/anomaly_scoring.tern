@@ -1,0 +1,41 @@
+// --- RFI-IRFOS CHRONOS ANOMALY SCORING ---
+// Module: analytics/chronos/anomaly_scoring.tern
+// Purpose: Real-time Ontological Scoring of HFT streams.
+// Logic: Threshold Gate Transitions (-1, 0, +1).
+// License: RFI-IRFOS-ENTERPRISE-V1
+// Patent Pending: A50296/2026
+
+agent ChronosMatcher {
+    /**
+     * score_hft_signal:
+     * Analyzes HFT signals for ontological integrity and fraud detection.
+     */
+    fn score_hft_signal(signal: trit_tensor, pattern_match: float) -> trit {
+        @sparseskip
+        
+        // 1. Threshold logic:
+        
+        // Match < 0.3: High-Confidence Malicious.
+        // Direct hit on known fraud/spoofing patterns.
+        if pattern_match < 0.3 {
+            // Instant Kill signal (-1).
+            return reject; 
+        }
+        
+        // Match 0.3 - 0.7: Ambiguous Signal.
+        // Partial fragmentation or non-standard pattern.
+        if pattern_match >= 0.3 && pattern_match <= 0.7 {
+            // Route to Deliberative Escrow (0).
+            return tend; 
+        }
+        
+        // Match > 0.7: Verified Institutional Pattern.
+        // High-confidence valid trade.
+        if pattern_match > 0.7 {
+            // Auto-Execution path (+1).
+            return affirm; 
+        }
+        
+        return tend; // Default to State 0 for safety.
+    }
+}

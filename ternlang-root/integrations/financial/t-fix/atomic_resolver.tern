@@ -1,0 +1,34 @@
+// --- RFI-IRFOS T-FIX ATOMIC RESOLVER ---
+// Module: integrations/financial/t-fix/atomic_resolver.tern
+// Purpose: Resolve microsecond race conditions between Cancellation (+1) and Execution (-1).
+// Logic: Triadic Trit-Vector Resolution (Lossless).
+// License: RFI-IRFOS-ENTERPRISE-V1
+// Patent Pending: A50296/2026
+
+agent T_FIX_AtomicResolver {
+    /**
+     * resolve_transaction_conflict:
+     * Handles simultaneous Cancellation (+1) and Execution (-1) signals.
+     * Maps conflict to State 0 (Deliberative Hold) to prevent double-spending.
+     */
+    fn resolve_transaction_conflict(signal_a: trit, signal_b: trit) -> trit {
+        @sparseskip
+        
+        // 1. Unified Direction: Both signals match (Affirm/Reject).
+        if signal_a == signal_b {
+            return signal_a;
+        }
+        
+        // 2. Conflict Detection: Simultaneous Cancellation (+1) and Execution (-1).
+        // Standard binary mutex locks cause latency. T-FIX routes to State 0.
+        // Deep-Logic: (affirm + reject) / 2 = tend (State 0).
+        if (signal_a == affirm && signal_b == reject) || (signal_a == reject && signal_b == affirm) {
+            // Instantaneous routing to Deliberative Hold. 
+            // Prevents "Ghost Fills" by suspending the atomic gate.
+            return tend; 
+        }
+        
+        // 3. Fallback: Any other uncertain state defaults to escrow.
+        return tend;
+    }
+}
