@@ -29,12 +29,12 @@ The "Octopus Paradigm" monetization model for the **Ternary Intelligence Stack (
 *   **Pricing:** $1M - $5M annual recurring site license + hardware integration fees.
 *   **ARR Target:** **$100 Million - $250 Million**.
 
-## Phase 4: Hardware Standard Adoption (Months 36+)
-**Strategy:** RFI-IRFOS licenses the TernCore-Silicon instruction set architecture (ISA) to semiconductor manufacturers (NVIDIA, AMD, TSMC) building native ternary ALUs.
-**Value Prop:** Chipmakers are forced to build ternary chips because the software ecosystem (TIS) demands it. We hold the software key to the hardware kingdom.
+## Phase 4: Global Silicon Royalties (Months 36+)
+**Strategy:** Licensing the **TernCore-Silicon ISA (v1.0)** to top-tier semiconductor fabs (TSMC, Intel, NVIDIA).
+**Value Prop:** As TIS becomes the industry standard for AI, chipmakers must support the `TSKIP` primitive natively. We collect a royalty on every ternary ALU produced.
 **Financial Projection:** 
-*   IP Licensing and royalties on semiconductor fabrication. 
-*   **ARR Target:** **$1B+**.
+*   Targeting a $1.00 royalty per chip across an estimated 1 billion AI-native units.
+*   **ARR Target:** **$1 Billion+**.
 
 ## Funding Requirement
 We are currently raising a **$25M Series A** at a **$1.5B post-money valuation** to rapidly scale the Enterprise/Defense sales team and finalize the TernCore-Silicon VHDL `hdl_bridge`.
