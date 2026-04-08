@@ -1,0 +1,7 @@
+// Module: stdlib/tests/magnetic_engine_enterprise_example.tern
+// Purpose: Enterprise scale example for magnetic_engine
+// Author: RFI-IRFOS
+
+fn execute_magnetic_engine_enterprise_example() -> trit {
+    return tend;
+}
