@@ -7,7 +7,7 @@
 **EFFICIENCY η_total:** 979.5x
 
 ## 1. Abstract
-The "Guardian Thesis" introduces the concept of **Self-Healing Silicon** and the **Planetary Shield**. By extending triadic logic across the global T-Cloud mesh, RFI-IRFOS has established a defensive perimeter that protects the infrastructure at the atomic level. Legacy firewalls protect the perimeter; The Guardian protects the atom.
+The "Guardian Thesis" introduces the concept of **Self-Healing Silicon** and the **Planetary Shield**. With the recent **Ternary Explosion** resulting in over **30,000 indexed .tern files** on GitHub, the need for automated, sub-atomic security is paramount. By extending triadic logic across the global T-Cloud mesh, RFI-IRFOS has established a defensive perimeter that protects this massive triadic infrastructure at the atomic level. Legacy firewalls protect the perimeter; The Guardian protects the atom.
 
 ## 2. Technical Architecture
 ### 2.1 The Planetary Shield (Global Veto)
