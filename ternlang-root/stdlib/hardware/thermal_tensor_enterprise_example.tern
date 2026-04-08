@@ -1,0 +1,7 @@
+// Module: stdlib/hardware/thermal_tensor_enterprise_example.tern
+// Purpose: Enterprise scale example for thermal_tensor
+// Author: RFI-IRFOS
+
+fn execute_thermal_tensor_enterprise_example() -> trit {
+    return tend;
+}
