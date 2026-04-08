@@ -1,0 +1,7 @@
+// Module: stdlib/network/optical_filter_production_example.tern
+// Purpose: Production deployment example for optical_filter
+// Author: RFI-IRFOS
+
+fn execute_optical_filter_production_example() -> trit {
+    return tend;
+}

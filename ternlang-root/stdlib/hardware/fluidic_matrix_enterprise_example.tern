@@ -1,0 +1,7 @@
+// Module: stdlib/hardware/fluidic_matrix_enterprise_example.tern
+// Purpose: Enterprise scale example for fluidic_matrix
+// Author: RFI-IRFOS
+
+fn execute_fluidic_matrix_enterprise_example() -> trit {
+    return tend;
+}
