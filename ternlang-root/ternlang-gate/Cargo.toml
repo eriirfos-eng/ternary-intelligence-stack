@@ -1,0 +1,8 @@
+[package]
+name = "ternlang-gate"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-BSL-1.1"
+description = "Minimal no-std triadic gate resolution for silicon parasite enforcement."
+
+[dependencies]
