@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// TIER 2 VERTICAL: POLICY System 9
+fn policy_op_9() -> trit {
+    return affirm;
+}

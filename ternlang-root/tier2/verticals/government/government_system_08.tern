@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// TIER 2 VERTICAL: GOVERNMENT System 8
+fn government_op_8() -> trit {
+    return affirm;
+}
