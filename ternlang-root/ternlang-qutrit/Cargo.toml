@@ -2,11 +2,8 @@
 name = "ternlang-qutrit"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-keywords.workspace = true
-categories.workspace = true
+license = "LicenseRef-BSL-1.1"
+description = "Native 3-state Quantum (Qutrit) Compiler. Maps triadic {-1, 0, +1} logic states directly to qutrit spin levels (0, 1, 2) for quantum supremacy."
 
 [dependencies]
+ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
