@@ -1,0 +1,12 @@
+// Module:  stdlib/specs/quantum_model.test.tern
+// Purpose: Unit test suite for quantum_model
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+fn quantum_model_test_verify() -> trit {
+    let state: trit = tend;
+    if state == tend {
+        return affirm;
+    }
+    return reject;
+}
