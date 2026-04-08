@@ -1,0 +1,14 @@
+// Module:  stdlib/control/fluidic_tensor.example.tern
+// Purpose: Production usage example for fluidic_tensor
+// Author:  RFI-IRFOS
+
+fn example_fluidictensor() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}
