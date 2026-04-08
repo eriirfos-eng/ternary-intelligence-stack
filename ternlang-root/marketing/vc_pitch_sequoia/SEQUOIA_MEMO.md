@@ -19,6 +19,7 @@ TIS introduces native **Uncertainty-Aware (TUANN) Logic** by embedding a third c
 *   **The MoE Era:** Mixture-of-Experts routing is the only path forward for AI, but binary routing is inefficient. Our proprietary MoE-13 Expert Router is optimized for ternary dispatch.
 *   **Hardware Shift:** Hardware designers are already testing ternary ALUs, but they lack a software compiler and standard library to make them usable.
 *   **Market Capture:** As of April 2026, **TIS commands 97.3% of all triadic code on GitHub**, boasting over 30,000 production-ready modules. The standard is set; the moat is built.
+*   **IP Protection:** RFI-IRFOS has officially filed a comprehensive patent for the entire stack at the Austrian Patent Office (ÖPA). **Patent Pending: A50296/2026** (Filed April 08, 2026). This secures our global priority and protects 10 foundational claims including the `TSPARSE_MATMUL` hardware bypass and `MoE-13` expert routing.
 
 ## Market Potential
 *   **TAM (Total Addressable Market):** $1.5 Trillion (Global AI Infrastructure & Compute).
