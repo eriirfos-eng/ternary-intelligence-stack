@@ -1,0 +1,13 @@
+name: 'TIS Debugger: Deadlock Resolver'
+description: 'Identify and resolve real-time deadlocks using T-POSIX standards.'
+author: 'RFI-IRFOS'
+inputs:
+  process_id:
+    description: 'ID of the process to monitor'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'terminal'
+  color: 'purple'

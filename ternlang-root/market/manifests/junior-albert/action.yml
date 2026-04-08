@@ -1,0 +1,13 @@
+name: 'TIS Junior-Albert: Local Gateway'
+description: 'Lightweight local gateway to the Ternary Intelligence Stack.'
+author: 'RFI-IRFOS'
+inputs:
+  project_name:
+    description: 'Name of the project to initialize'
+    required: false
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'user'
+  color: 'white'

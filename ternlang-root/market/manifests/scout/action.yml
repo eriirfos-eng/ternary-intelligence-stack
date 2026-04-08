@@ -1,0 +1,13 @@
+name: 'TIS Scout: Market Analysis'
+description: 'Crawl and analyze market trends using triadic search logic.'
+author: 'RFI-IRFOS'
+inputs:
+  keywords:
+    description: 'Keywords to scan for'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'globe'
+  color: 'blue'

@@ -1,0 +1,13 @@
+name: 'TIS Guard: Real-Time Threat Detection'
+description: 'Proactively detect anomalous traffic using triadic logic.'
+author: 'RFI-IRFOS'
+inputs:
+  log_source:
+    description: 'Path to access logs'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'shield'
+  color: 'red'

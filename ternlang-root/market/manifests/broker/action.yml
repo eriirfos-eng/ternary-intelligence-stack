@@ -1,0 +1,13 @@
+name: 'TIS Broker: Cloud Cost Optimization'
+description: 'Optimize cloud expenditure by intelligently scheduling tasks using State 0.'
+author: 'RFI-IRFOS'
+inputs:
+  project_id:
+    description: 'Cloud project ID'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'credit-card'
+  color: 'yellow'
