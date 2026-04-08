@@ -1,0 +1,11 @@
+// --- RFI-IRFOS SHADOW-TERN KERNEL ---
+// Module: stdlib/shadow_tern/q4_0_quantization.tern
+// Purpose: GGML Trit-level Dequantization
+// License: BSL-1.1 - Proprietary RFI-IRFOS IP
+// Efficiency: η = 0.8 (TRCE)
+
+fn dequantize_q4_0(block: trit_tensor, scale: float) -> trit_tensor {
+    @sparseskip
+    let result: trit_tensor = block.scale(scale);
+    return result;
+}

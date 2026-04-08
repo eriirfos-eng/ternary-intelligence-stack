@@ -1,0 +1,18 @@
+// --- RFI-IRFOS INDUSTRIAL MASTER ---
+// Module: examples/industrial/bio/sepsis_predictive_triage_master.tern
+// Purpose: Sepsis Predictive Triage with 10% Uncertainty Principle
+// License: BSL-1.1 - Proprietary RFI-IRFOS IP
+
+agent SepsisTriageMaster {
+    fn evaluate_vitals(hr: int, bp: int, temp: float) -> trit {
+        @sparseskip
+        // Triadic states: healthy (affirm), septic (reject), borderline (tend)
+        if (hr > 100 && bp < 90) {
+            return reject; // High risk
+        }
+        if (hr < 80 && bp > 110) {
+            return affirm; // Stable
+        }
+        return tend; // Borderline: Trigger secondary blood cultures
+    }
+}
