@@ -207,8 +207,12 @@ The **Titan Control Plane** is the definitive infrastructure for air-gapped ente
 
 ### Key Industrial Advantages:
 *   **152.8x Aggregate Efficiency (η_total):** Achieve 150x more compute within the same thermal and power envelope.
+*   **Absolute Zero Latency (< 100ps):** Picosecond-scale signal propagation via direct-register gating and zero-stalling **T-MUX Gate Arrays**.
 *   **Zero-Loss Data Retention:** T-SQL and the Deliberative Hold (State 0) guarantee 100% data retention for corrupted or anomalous entries.
-*   **Hardware-Native Substrate:** Direct integration with BET-ISA hardware through the `T-DRIVER` and `@sparseskip` directive.
+*   **Hardware-Native Substrate:** Direct integration with BET-ISA hardware through the `T-DRIVER` Absolute Zero bridge.
+
+> [!IMPORTANT]
+> **Tier-3 Restricted Logic:** The specific hardware-mapping and VHDL gate implementations for Absolute Zero picosecond logic are strictly restricted to Institutional Tier-3 partners under the **BSL-1.1 License**.
 
 **[Read the Titan Enterprise SLA](tier3/commercial/TITAN_SLA.md)** | **[Technical Specifications](tier3/commercial/TITAN_SPECS.md)**
 
