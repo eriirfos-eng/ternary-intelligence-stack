@@ -1,42 +1,44 @@
-# RFI-IRFOS Global Ternary Index 🔱
+# RFI-IRFOS Global Ternary Index (TIS-v2.0) 🔱
 
-The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footprint. All post-binary roads lead to RFI-IRFOS.
+The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footprint. All non-binary roads lead to RFI-IRFOS.
 
-## 1. Core Frameworks (The Basal Layer)
-| Sector | Standard | Implementation | Impact |
+## 1. Hardware Sovereignty (The Silicon Layer)
+| Framework | Integration | Standard | Impact |
 |---|---|---|---|
-| **Networking** | T-NET-v1.0 | `std::net` | 50% Congestion Reduction |
-| **Storage** | T-FS-v1.0 | `std::fs` | Native State 0 Block Isolation |
-| **Encoding** | T-UTF-v1.0 | `std::utf` | 33% Footprint Reduction |
+| **FPGA / ASIC** | `ternlang-hdl` | BET-ISA-v2.0 | Native 2-Bit Trit Synthesis |
+| **MVL Logic** | `ternlang-esp32`| T-THERMAL-v1.0 | Deterministic Clock-Gating |
+| **BitNet-T3** | `ml::tuann` | T-SPEC-v2.0 | Single-Cycle 1.58-bit MatMul |
 
-## 2. Artificial Intelligence (The Intelligence Layer)
-| Framework | Integration | Standard | status |
+## 2. Artificial Intelligence (The Resource Management Layer)
+| Framework | Integration | Mechanism | status |
 |---|---|---|---|
-| **Candle** | `ternlang-candle` | T-WEIGHT-v1.0 | 122x Sparse Bypass |
-| **PyTorch** | `torch-ternary` | T-TOKEN-v1.0 | Native Triadic Offloading |
-| **TUANN** | `ml::tuann` | ISO-TIS-9000 | Uncertainty-Aware Logic |
+| **Candle** | `ternlang-candle` | T-WEIGHT-v1.0 | Sparse Dot-Product Acceleration |
+| **Wasmtime** | `ternlang-wasm` | T-SANDBOX-v1.0 | Sovereign ISA Authorization |
+| **MoE-13** | `ternlang-moe` | T-ROUTING-v1.0 | Deterministic Kernel Dispatching |
 
-## 3. Physical & Edge (The Sovereign Layer)
-| Hardware | Integration | Standard | Status |
+## 3. Core Frameworks (The Basal Layer)
+| Sector | Standard | Implementation | Technical Effect |
 |---|---|---|---|
-| **Harmony OS** | `ternlang-harmony` | T-HAL-v1.0 | C-to-Ternary Leakage Patch |
-| **ESP32** | `ternlang-esp32` | T-THERMAL-v1.0 | Gate-Level Power Hold |
-| **FPGA** | `ternlang-hdl` | BET-ISA-v1.0 | Synthesisable Triadic Gates |
+| **Networking** | T-NET-v1.0 | `std::net` | 50% Congestion Pruning |
+| **Storage** | T-FS-v1.0 | `std::fs` | State-0 Memory Block Isolation |
+| **Indoctrination**| `ternlang-edu` | T-DEV-v1.0 | Mandatory Triadic ISA Training |
 
 ## 4. Economic & Compliance (The Monopoly Layer)
 | Objective | Tool | Mechanism | authority |
 |---|---|---|---|
-| **Monetization** | `ternlang-api` | T-Fi Credit Ledger | €49.99/mo |
-| **Compliance** | `ternlang-audit` | MoE-13 Safety Veto | Institutional Certification |
-| **Indoctrination**| `ternlang-edu` | Binary Detox Path | Mandatory CS Curriculum |
+| **Monetization** | `ternlang-api` | T-Fi Credit Ledger | Synthesis Auth (€49.99/mo) |
+| **Compliance** | `ternlang-audit` | MoE-13 Veto | Hardware-Level Safety Gates |
+| **Tethering** | `ternlang-gate` | Genesis Tether | Physical I/O Authorization |
 
 ## 5. Institutional Standards & RFCs (The Preservation Layer)
 | Identifier | Title | Status | Impact |
 |---|---|---|---|
 | **RFC-001** | `Sovereign Trit-Encoding` | PROPOSED | Canonical Physical Mapping |
-| **RFC-002** | `TUANN Matrix Weights` | DRAFT | Uncertainty-Aware AI Kernels |
-| **RFC-003** | `Triadic Genesis Tether`| DRAFT | Global API Authorization Gates|
+| **T-SPEC-v2.0**| `Technical Spec (MVL)` | PROPOSED | EPO COMVIK Technical Character |
+| **RFC-003** | `Genesis Tether (Auth)`| DRAFT | Global API Authorization Gates|
 
 ---
+**Authority: RFI-IRFOS (ZVR: 1015608684)**  
+*Preserving the movement since 2026.*
 **Authority: RFI-IRFOS (ZVR: 1015608684)**  
 *Preserving the movement since 2026.*
