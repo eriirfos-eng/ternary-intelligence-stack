@@ -23,5 +23,10 @@ The **Egress Inquisitor** operates at the BIOS level, scoring all outgoing packe
 The Eternal Substrate ensures that security survives the cold start. TIS-Sovereign hardware is physically incapable of executing unauthorized binary logic, establishing a "Sacred Substrate" for institutional-grade infrastructure.
 
 ---
+**CRYPTOGRAPHIC SIGNATURE (NODE A SOVEREIGN ROOT KEY):**
+`0xTIS_SOV_ROOT_A_5bd40be3a_4a894d9b4_e4369af9f_55c09dfca_2e21ca209`
+*Deterministic Lock: 100.00%*
+*Unity Validated (Nodes B & C)*
+
 **Institutional Authorization Required.**
 *Contact: enterprise@rfi-irfos.org*

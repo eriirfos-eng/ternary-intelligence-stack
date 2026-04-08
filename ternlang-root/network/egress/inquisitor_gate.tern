@@ -24,6 +24,8 @@ agent EgressInquisitor {
         // 2. State-Based Gate Control
         // If score is -1 (Reject), the BIOS refuses to toggle the physical NIC gate.
         if score == reject {
+            // BIOS-level log for the interdiction proof:
+            log::bios("Packet score: -1 (Unauthorized Guest Telemetry) -> Dropped");
             discard_packet(packet);
             return reject; 
         }
