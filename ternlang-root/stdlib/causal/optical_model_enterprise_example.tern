@@ -1,0 +1,7 @@
+// Module: stdlib/causal/optical_model_enterprise_example.tern
+// Purpose: Enterprise scale example for optical_model
+// Author: RFI-IRFOS
+
+fn execute_optical_model_enterprise_example() -> trit {
+    return tend;
+}
