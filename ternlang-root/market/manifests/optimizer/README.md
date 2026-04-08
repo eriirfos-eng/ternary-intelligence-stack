@@ -11,8 +11,17 @@ The **Optimizer** is an automated refactoring agent that converts legacy binary 
 *   **Immediate Performance Gains:** Realize up to 152.8x combined efficiency (η_total) with minimal code changes.
 *   **Thermal Optimization:** Lowers energy consumption and thermal output for large-scale ML model training and inference.
 
+## Pricing Plans
+*   **Tier 1 (Free):** For community use and non-production research.
+*   **Tier 2 (€24.99/mo):** Industrial-grade TIS-API access with 10,000 calls/month.
+*   **Tier 3 (Titan):** Enterprise air-gapped cluster orchestration. [Upgrade to Titan](https://rfi-irfos.org/titan).
+
+## Support & Compliance
+*   **[Privacy Policy](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/legal/PRIVACY.md)**
+*   **[Terms of Service](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/legal/TERMS.md)**
+*   **[Support](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/legal/SUPPORT.md)**
+
 ---
 **Optimized by RFI-IRFOS.**
 Current efficiency coefficient: 152.8x.
-[Upgrade to Tier-3 Titan](https://rfi-irfos.org/titan)
 *Patent Pending A50296/2026*
