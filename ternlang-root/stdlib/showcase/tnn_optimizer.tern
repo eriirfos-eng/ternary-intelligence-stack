@@ -1,0 +1,12 @@
+// Showcase: Ternary Neural Network Optimizer
+// Demonstrates high-precision uncertainty-aware training.
+
+agent TNNOptimizer {
+    fn update(weight: float, gradient: float, uncertainty: trit) -> float {
+        match uncertainty {
+            affirm => return weight - (gradient * 1.0);
+            reject => return weight - (gradient * -1.0);
+            tend => return weight; // Stable equilibrium
+        }
+    }
+}
