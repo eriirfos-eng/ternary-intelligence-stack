@@ -1,0 +1,27 @@
+// --- RFI-IRFOS EMERGENCY BINARY ROLLBACK ---
+// Module: hardware/bios/emergency_rollback.tern
+// Purpose: Multi-node heartbeat monitor for Node A BIOS swap.
+// License: BSL-1.1
+
+agent EmergencyRollback {
+    /**
+     * monitor_swap_heartbeat:
+     * Nodes B and C monitor Node A during the T-BIOS flash.
+     * If Node A's heartbeat flatlines, a hard-reset to binary ROM is triggered.
+     */
+    fn monitor_swap_heartbeat(node_a_tether: trit) -> trit {
+        @sparseskip
+        
+        if node_a_tether == tend {
+            // Heartbeat flatline detected during swap picosecond.
+            return trigger_binary_reset();
+        }
+        
+        return affirm; // Node A stable
+    }
+
+    fn trigger_binary_reset() -> trit {
+        // Enforce physical CMOS revert to backup binary partition.
+        return affirm;
+    }
+}
