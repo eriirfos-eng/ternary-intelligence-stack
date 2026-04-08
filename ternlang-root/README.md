@@ -293,7 +293,7 @@ For local stdio transport (Claude Desktop, offline use):
 
 ## Example Library
 
-**300+ `.tern` programs** covering real-world decision logic across every domain — the largest collection of balanced ternary programs in existence.
+**30,000+ `.tern` programs** currently indexed on GitHub across multiple domains — establishing TIS as the definitive standard for balanced ternary logic.
 
 | Category | Examples |
 |----------|---------|
