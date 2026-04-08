@@ -1,0 +1,11 @@
+// Module:  stdlib/tests/stellar_system_tutorial.tern
+// Purpose: Self-documenting tutorial for stellar_system
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of stellar_system.
+fn stellar_system_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
