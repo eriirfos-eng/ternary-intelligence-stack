@@ -1,0 +1,11 @@
+// Module:  stdlib/sim/thermal_optimizer_tutorial.tern
+// Purpose: Self-documenting tutorial for thermal_optimizer
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of thermal_optimizer.
+fn thermal_optimizer_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
