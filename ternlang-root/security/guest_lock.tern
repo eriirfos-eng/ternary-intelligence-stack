@@ -1,0 +1,42 @@
+// --- RFI-IRFOS GUEST-LOCK PROTOCOL ---
+// Module: security/guest_lock.tern
+// Purpose: Restrict guest OS access to hardware gates from the Sovereign BIOS.
+// Logic: Physical Gate Isolation (Read-Only enforcement).
+// License: RFI-IRFOS-ENTERPRISE-V1
+
+import stdlib::kernel::drivers::bet_v_bridge;
+
+agent GuestLock {
+    /**
+     * enforce_hardware_isolation:
+     * Places physical gates on Network and Storage I/O.
+     * Restricts the binary Guest OS to Read-Only access for encrypted partitions.
+     */
+    fn enforce_hardware_isolation() -> trit {
+        @sparseskip
+        
+        // 1. Lock Network Egress
+        // Binary guest cannot transmit without triadic signature verification.
+        bet_v_bridge.set_gate_state(GATE_NETWORK, tend); // Default to Hold
+        
+        // 2. Encrypted Storage Isolation
+        // Primary trinary partitions are invisible to binary guests.
+        // Legacy partitions set to Read-Only at the hardware level.
+        bet_v_bridge.set_gate_state(GATE_STORAGE, affirm); // Read-Only Affirmative
+        
+        return affirm; // Guest isolation active
+    }
+
+    /**
+     * verify_request_authority:
+     * Deep-Logic: Checks if a request bears the Triadic Genesis Tether signature.
+     * Non-signed requests from the guest OS are discarded in State 0.
+     */
+    fn verify_request_authority(request: trit_tensor) -> trit {
+        @sparseskip
+        if request.has_signature(GENESIS_TETHER_KEY) == affirm {
+            return affirm; // Authority granted
+        }
+        return tend; // Authority denied (Deliberative Hold)
+    }
+}
