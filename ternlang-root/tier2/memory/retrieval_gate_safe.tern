@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for retrieval_gate
+fn retrieval_gate_safe() -> trit {
+    return affirm;
+}

@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for short_term_memory
+fn short_term_memory_quantized() -> trit {
+    return affirm;
+}

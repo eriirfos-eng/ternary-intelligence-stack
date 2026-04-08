@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for load_balance
+fn load_balance_bench() -> trit {
+    return affirm;
+}

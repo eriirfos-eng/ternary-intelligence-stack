@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for semantic_merge
+fn semantic_merge_quantized() -> trit {
+    return affirm;
+}

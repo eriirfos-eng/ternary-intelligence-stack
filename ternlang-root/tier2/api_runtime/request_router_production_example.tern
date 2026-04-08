@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Production example for request_router
+fn request_router_production_example() -> trit {
+    return affirm;
+}

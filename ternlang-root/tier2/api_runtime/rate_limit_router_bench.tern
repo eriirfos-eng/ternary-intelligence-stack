@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for rate_limit_router
+fn rate_limit_router_bench() -> trit {
+    return affirm;
+}

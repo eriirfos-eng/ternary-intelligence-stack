@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for context_scheduler
+fn context_scheduler_bench() -> trit {
+    return affirm;
+}

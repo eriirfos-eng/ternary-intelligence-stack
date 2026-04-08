@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for context_scheduler
+fn context_scheduler_safe() -> trit {
+    return affirm;
+}

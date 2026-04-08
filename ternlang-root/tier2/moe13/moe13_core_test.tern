@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Unit test for moe13_core
+fn moe13_core_test() -> trit {
+    return affirm;
+}

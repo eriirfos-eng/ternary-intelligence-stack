@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Restore layer for request_router
+fn request_router_restore() -> trit {
+    return affirm;
+}

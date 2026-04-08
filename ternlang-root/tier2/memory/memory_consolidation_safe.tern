@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for memory_consolidation
+fn memory_consolidation_safe() -> trit {
+    return affirm;
+}

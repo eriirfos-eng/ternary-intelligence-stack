@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Restore layer for decay_controller
+fn decay_controller_restore() -> trit {
+    return affirm;
+}

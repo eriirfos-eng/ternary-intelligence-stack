@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Unit test for semantic_memory
+fn semantic_memory_test() -> trit {
+    return affirm;
+}

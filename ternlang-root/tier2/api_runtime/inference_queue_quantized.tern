@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for inference_queue
+fn inference_queue_quantized() -> trit {
+    return affirm;
+}

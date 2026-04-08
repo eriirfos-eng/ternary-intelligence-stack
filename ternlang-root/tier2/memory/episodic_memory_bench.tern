@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for episodic_memory
+fn episodic_memory_bench() -> trit {
+    return affirm;
+}

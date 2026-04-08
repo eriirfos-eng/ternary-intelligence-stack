@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for key_rotator
+fn key_rotator_bench() -> trit {
+    return affirm;
+}

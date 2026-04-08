@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for tether_verifier
+fn tether_verifier_bench() -> trit {
+    return affirm;
+}

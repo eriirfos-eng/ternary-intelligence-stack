@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Cache layer for expert_router
+fn expert_router_cache() -> trit {
+    return affirm;
+}

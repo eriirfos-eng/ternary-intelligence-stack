@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Cache layer for retry_fallback
+fn retry_fallback_cache() -> trit {
+    return affirm;
+}

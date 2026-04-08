@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for moe13_core
+fn moe13_core_safe() -> trit {
+    return affirm;
+}

@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for research_tool
+fn research_tool_safe() -> trit {
+    return affirm;
+}

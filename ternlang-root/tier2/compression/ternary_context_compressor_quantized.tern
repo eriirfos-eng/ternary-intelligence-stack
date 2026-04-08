@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for ternary_context_compressor
+fn ternary_context_compressor_quantized() -> trit {
+    return affirm;
+}

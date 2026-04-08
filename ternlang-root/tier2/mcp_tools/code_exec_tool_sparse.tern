@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Sparse execution for code_exec_tool
+fn code_exec_tool_sparse() -> trit {
+    return affirm;
+}

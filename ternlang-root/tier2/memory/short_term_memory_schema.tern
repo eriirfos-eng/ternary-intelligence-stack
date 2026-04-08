@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Schema definition for short_term_memory
+fn short_term_memory_schema() -> trit {
+    return affirm;
+}

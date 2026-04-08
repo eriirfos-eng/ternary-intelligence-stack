@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Production example for semantic_merge
+fn semantic_merge_production_example() -> trit {
+    return affirm;
+}

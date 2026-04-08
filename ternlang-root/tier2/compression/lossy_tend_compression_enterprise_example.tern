@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Enterprise example for lossy_tend_compression
+fn lossy_tend_compression_enterprise_example() -> trit {
+    return affirm;
+}

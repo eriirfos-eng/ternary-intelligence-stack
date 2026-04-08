@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Schema definition for semantic_merge
+fn semantic_merge_schema() -> trit {
+    return affirm;
+}

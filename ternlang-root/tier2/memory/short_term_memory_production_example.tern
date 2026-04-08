@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Production example for short_term_memory
+fn short_term_memory_production_example() -> trit {
+    return affirm;
+}

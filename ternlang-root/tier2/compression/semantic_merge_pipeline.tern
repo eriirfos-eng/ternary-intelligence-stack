@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Pipeline stream for semantic_merge
+fn semantic_merge_pipeline() -> trit {
+    return affirm;
+}

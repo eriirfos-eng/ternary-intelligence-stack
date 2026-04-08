@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Cache layer for tool_router
+fn tool_router_cache() -> trit {
+    return affirm;
+}

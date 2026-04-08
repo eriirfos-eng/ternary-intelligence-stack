@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for window_optimizer
+fn window_optimizer_quantized() -> trit {
+    return affirm;
+}

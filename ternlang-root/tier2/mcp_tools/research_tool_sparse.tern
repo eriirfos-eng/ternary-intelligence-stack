@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Sparse execution for research_tool
+fn research_tool_sparse() -> trit {
+    return affirm;
+}

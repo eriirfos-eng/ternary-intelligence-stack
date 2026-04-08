@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Schema definition for quota_enforcer
+fn quota_enforcer_schema() -> trit {
+    return affirm;
+}
