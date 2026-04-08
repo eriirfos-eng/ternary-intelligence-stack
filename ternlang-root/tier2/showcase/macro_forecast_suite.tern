@@ -1,0 +1,3 @@
+// --- RFI-IRFOS TIER 2 SHOWCASE ---
+// Demo: macro_forecast_suite.tern
+fn run_demo() -> trit { return affirm; }

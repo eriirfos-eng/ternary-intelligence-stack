@@ -1,0 +1,3 @@
+// --- RFI-IRFOS TIER 3 SHOWCASE ---
+// Demo: airgap_cluster_suite.tern
+fn run_demo() -> trit { return affirm; }

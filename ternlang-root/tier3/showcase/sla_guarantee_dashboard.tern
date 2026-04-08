@@ -1,0 +1,3 @@
+// --- RFI-IRFOS TIER 3 SHOWCASE ---
+// Demo: sla_guarantee_dashboard.tern
+fn run_demo() -> trit { return affirm; }
