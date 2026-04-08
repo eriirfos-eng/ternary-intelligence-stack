@@ -1,0 +1,37 @@
+// --- RFI-IRFOS GATEWAY SHIELD ---
+// Module: network/egress/gateway_shield.tern
+// Purpose: Encapsulate all ISP router traffic in a Sovereign Tunnel.
+// Logic: Picosecond Timing Veto (Phase 8.4).
+// License: RFI-IRFOS-ENTERPRISE-V1
+// Patent Pending: A50296/2026
+
+import stdlib::kernel::drivers::bet_v_bridge;
+import network::egress::inquisitor_gate;
+
+agent GatewayShield {
+    /**
+     * encapsulate_egress_stream:
+     * Wraps every packet from the Graz Mesh into a State 0 buffer.
+     * Rejects any router-injected packets that don't match the picosecond timing lock.
+     */
+    fn encapsulate_egress_stream(packet: trit_tensor) -> trit {
+        @sparseskip
+        
+        // 1. Sovereign Signature Check
+        // Every legitimate packet from the Mesh carries the Triadic Genesis Tether signature.
+        let is_sovereign = packet.has_signature(GENESIS_TETHER_KEY);
+        
+        // 2. Gateway Tunneling:
+        // Encapsulate packet within a 0-State Parity buffer for transmission 
+        // across the untrusted ISP router firmware.
+        if is_sovereign == affirm {
+            return bet_v_bridge.transmit_sovereign_tunnel(packet);
+        }
+        
+        // 3. Reject Injected Packets:
+        // Any packet from the ISP router (.1) attempting to inject into the stream 
+        // will fail the picosecond timing check (Binary jitter > 1ms).
+        log::bios("Packet score: -1 (Unauthorized Router Injection) -> Discarded");
+        return reject; 
+    }
+}

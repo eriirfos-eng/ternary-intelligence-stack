@@ -1,0 +1,32 @@
+// --- RFI-IRFOS THERMAL PHYSICAL AUDIT ---
+// Module: hardware/verification/thermal_physical_audit.tern
+// Purpose: Correlate internal sensors with Trit-Noise Floor benchmarks.
+// Logic: Physical Thermal Neutrality (Phase 8.3).
+// License: BSL-1.1
+// Reference: Patent Pending A50296/2026
+
+import stdlib::kernel::drivers::bet_v_bridge;
+import hardware::optimizer::thermal_recycler;
+
+agent ThermalAudit {
+    /**
+     * execute_physical_verification:
+     * Reads actual system sensors and maps them to the η_max efficiency.
+     * Correlates thermal output with Stochastic Resonance stability.
+     */
+    fn execute_physical_verification() -> trit {
+        @sparseskip
+        
+        // 1. Capture Sensor-Data Delta:
+        // Reads from the physical thermal zones of Node A.
+        let delta_t = bet_v_bridge.get_thermal_delta();
+        
+        // 2. Correlate with η_max:
+        // Verification: If delta_t <= 0.001C, Thermal Neutrality is confirmed.
+        if delta_t <= 0.001 {
+            return affirm; // Physical Efficiency Verified
+        }
+        
+        return tend; // Drift detected, recalibrating
+    }
+}
