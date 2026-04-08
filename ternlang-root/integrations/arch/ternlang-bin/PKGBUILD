@@ -1,0 +1,30 @@
+# Maintainer: RFI-IRFOS Graz Institute <licensing@ternlang.com>
+# PKGBUILD for 'ternlang' binary (TIS Ecosystem)
+# Patent: A50296/2026
+# License: BSL-1.1
+# Sovereign Mandate: Ternary Purity over Legacy Compatibility.
+
+pkgname=ternlang-bin
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Pre-compiled binary for the Ternlang systems language (Balanced Ternary)"
+arch=('x86_64')
+url="https://ternlang.com"
+license=('custom:BSL-1.1')
+depends=('gcc-libs' 'glibc')
+source=("https://github.com/eriirfos-eng/ternlang/releases/download/v${pkgver}/ternlang-linux-x64")
+sha256sums=('SKIP')
+
+package() {
+  install -Dm755 "${srcdir}/ternlang-linux-x64" "${pkgdir}/usr/bin/ternlang"
+  
+  # Install BSL license and Patent reference
+  mkdir -p "${pkgdir}/usr/share/licenses/${pkgname}"
+  cat <<EOF > "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+RFI-IRFOS Ternary Intelligence Stack (TIS)
+Patent Reference: A50296/2026
+Business Source License 1.1 (BSL-1.1)
+Licensing: licensing@ternlang.com
+(c) 2026 RFI-IRFOS Graz Institute
+EOF
+}

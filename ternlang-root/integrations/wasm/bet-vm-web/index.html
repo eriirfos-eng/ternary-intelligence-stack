@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BET-VM Web Runner (RFI-IRFOS)</title>
+    <!--
+      RFI-IRFOS Ternary Intelligence Stack (TIS)
+      Patent Reference: A50296/2026
+      Licensing: licensing@ternlang.com
+      Business Source License 1.1 (BSL-1.1)
+      (c) 2026 RFI-IRFOS Graz Institute
+    -->
+    <style>
+        body { background: #000; color: #4A90E2; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        canvas { border: 1px solid #4A90E2; box-shadow: 0 0 20px #4A90E2; }
+        .branding { position: absolute; top: 10px; left: 10px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <div class="branding">
+        RFI-IRFOS Graz Institute | Patent A50296/2026<br>
+        TIS BET-VM Triadic Visualizer (60FPS)<br>
+        Uncertainty Buffer: 10% (Active)
+    </div>
+    <canvas id="triadicCanvas" width="800" height="600"></canvas>
+    <script type="module">
+        /*
+         * RFI-IRFOS BET-VM Web Runner
+         * BSL-1.1; licensing@ternlang.com
+         * Sovereign Mandate: Ternary Purity
+         */
+        import init, { BetVM } from "./pkg/bet_vm.js";
+        async function run() {
+            await init();
+            const vm = new BetVM();
+            const ctx = document.getElementById('triadicCanvas').getContext('2d');
+            function render() {
+                vm.step(); // Execute Triadic Cycle
+                vm.visualize(ctx); // 60FPS Render
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+        run();
+    </script>
+</body>
+</html>

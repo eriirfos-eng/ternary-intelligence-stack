@@ -1,0 +1,17 @@
+/* 
+ * RFI-IRFOS Ternary Intelligence Stack (TIS)
+ * Patent Reference: A50296/2026
+ * TTP: Triadic Transfer Protocol
+ * BSL-1.1; (c) 2026 RFI-IRFOS Graz Institute
+ */
+--- curl/lib/http.c
++++ curl/lib/http.c (TTP Support - RFI-IRFOS)
+@@ -1,3 +1,11 @@
++/* 
++ * BSL-1.1; Patent A50296/2026
++ * TTP: Triadic Transfer Protocol (Sovereign Mandate)
++ */
++if(conn->handler->protocol & PROTO_TTP) {
++  result = Curl_add_header(data, "TIS-Uncertainty: 0.1", &headers);
++  result = Curl_add_header(data, "TIS-Patent: A50296/2026", &headers);
++}

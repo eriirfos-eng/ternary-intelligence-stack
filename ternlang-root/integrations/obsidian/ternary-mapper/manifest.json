@@ -1,0 +1,17 @@
+{
+  "id": "ternary-mapper",
+  "name": "Ternary Logic Mapper",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Mapping notes to '+1, 0, -1' triadic logic for RFI-IRFOS TIS.",
+  "author": "RFI-IRFOS Graz Institute",
+  "authorUrl": "https://ternlang.com",
+  "isDesktopOnly": false,
+  "license": "BSL-1.1; Patent A50296/2026; Contact: licensing@ternlang.com",
+  "uncertainty_index": 0.1,
+  "rfi_irfos_metadata": {
+    "patent": "A50296/2026",
+    "branding": "Graz Institute Sovereign Module",
+    "license_url": "mailto:licensing@ternlang.com"
+  }
+}
