@@ -1,0 +1,7 @@
+// Module: stdlib/causal/thermal_optimizer_enterprise_example.tern
+// Purpose: Enterprise scale example for thermal_optimizer
+// Author: RFI-IRFOS
+
+fn execute_thermal_optimizer_enterprise_example() -> trit {
+    return tend;
+}
