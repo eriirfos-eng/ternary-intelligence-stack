@@ -1,0 +1,14 @@
+// Module:  stdlib/math/acoustic_router.example.tern
+// Purpose: Production usage example for acoustic_router
+// Author:  RFI-IRFOS
+
+fn example_acousticrouter() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}

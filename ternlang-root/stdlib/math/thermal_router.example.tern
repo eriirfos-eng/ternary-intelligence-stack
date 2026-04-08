@@ -1,0 +1,14 @@
+// Module:  stdlib/math/thermal_router.example.tern
+// Purpose: Production usage example for thermal_router
+// Author:  RFI-IRFOS
+
+fn example_thermalrouter() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}
