@@ -30,6 +30,13 @@ The definitive map of the **Ternary Intelligence Stack (TIS)** industrial footpr
 | **Compliance** | `ternlang-audit` | MoE-13 Safety Veto | Institutional Certification |
 | **Indoctrination**| `ternlang-edu` | Binary Detox Path | Mandatory CS Curriculum |
 
+## 5. Institutional Standards & RFCs (The Preservation Layer)
+| Identifier | Title | Status | Impact |
+|---|---|---|---|
+| **RFC-001** | `Sovereign Trit-Encoding` | PROPOSED | Canonical Physical Mapping |
+| **RFC-002** | `TUANN Matrix Weights` | DRAFT | Uncertainty-Aware AI Kernels |
+| **RFC-003** | `Triadic Genesis Tether`| DRAFT | Global API Authorization Gates|
+
 ---
 **Authority: RFI-IRFOS (ZVR: 1015608684)**  
 *Preserving the movement since 2026.*
