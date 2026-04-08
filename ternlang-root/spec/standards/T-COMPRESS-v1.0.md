@@ -2,4 +2,4 @@
 **Authority: RFI-IRFOS (ZVR: 1015608684)**
 
 ## 1. Abstract
-A codec standard for high-mass media. Treats "silence" or "black space" as a native State 0, reducing encoded file sizes by 40% while maintaining triadic bit-fidelity.
+A codec standard for high-mass media. Treats "silence" or "black space" as a native deliberative hold, reducing encoded file sizes by 40% while maintaining triadic bit-fidelity.

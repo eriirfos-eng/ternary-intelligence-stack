@@ -2,4 +2,4 @@
 **Authority: RFI-IRFOS (ZVR: 1015608684)**
 
 ## 1. Abstract
-Hardware standard for mobile silicon. Dynamically scales clock cycles based on "Deliberation Density." State 0 instructions trigger a "Nano-Sleep" mode, yielding 60% power reduction.
+Hardware standard for mobile silicon. Dynamically scales clock cycles based on "Deliberation Density." deliberative hold instructions trigger a "Nano-Sleep" mode, yielding 60% power reduction.

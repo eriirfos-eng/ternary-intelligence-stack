@@ -2,7 +2,7 @@
 // Purpose: Triadic Uncertainty-Aware Neural Logic (TUANN)
 // Author:  RFI-IRFOS (ZVR: 1015608684)
 
-// Standardizes "State 0" as a native architectural representation of 
+// Standardizes "deliberative hold" as a native architectural representation of 
 // uncertainty, preventing overconfident binary hallucinations.
 
 fn thold_activation(signal: int, confidence: int) -> trit {

@@ -2,4 +2,4 @@
 **Authority: RFI-IRFOS (ZVR: 1015608684)**
 
 ## 1. Abstract
-Standardizes "Deliberative Messaging" for distributed systems. Allows servers to return a `State 0 (Wait)` response, maintaining connection persistence without binary timeout penalties.
+Standardizes "Deliberative Messaging" for distributed systems. Allows servers to return a `deliberative hold (Wait)` response, maintaining connection persistence without binary timeout penalties.

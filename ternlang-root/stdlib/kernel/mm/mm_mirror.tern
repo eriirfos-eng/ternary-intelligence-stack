@@ -19,7 +19,7 @@ agent MemoryManager {
             return reject;
         }
         
-        // State 0 (tend): Pend/Deliberate. 
+        // deliberative hold (tend): Pend/Deliberate. 
         // This instructs apps to flush caches rather than immediate termination.
         return tend;
     }

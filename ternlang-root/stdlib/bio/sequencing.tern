@@ -9,5 +9,5 @@ fn scan_nucleotide(signal: i32) -> trit {
     }
     
     // Epigenetic equilibrium
-    return 0; // POISED (State 0)
+    return 0; // POISED (deliberative hold)
 }

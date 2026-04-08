@@ -6,16 +6,16 @@ Modern AI systems fail when forced to map complex, ambiguous reality into binary
 
 Our math introduces the missing third state: `tend` (equilibrium/ambiguity). 
 
-**Slide 2: Dominance by the Numbers**
+**Slide 2: Adoption Metrics**
 As of April 2026:
 - **97.3%** of all triadic code on GitHub is TIS.
 - **30,000+** production-grade, mathematically verified algorithmic modules.
 - **20+** industrial domains covered (Aerospace, Finance, Biomedicine, Logistics).
 
 **Slide 3: The Three-Tier Ecosystem**
-We operate on a strictly enforced monetization and distribution model (The Octopus Paradigm):
+We operate on a standardized monetization and distribution model:
 1. **Tier 1 (Open Core):** 30k+ FFS-v1.0 compliant modules available under LGPL-3.0 for academic and open research.
-2. **Tier 2 (Commercial API - €24.99/mo):** Proprietary 3-Layer Memory Stacks, MoE-13 expert routing, and lossy context compression, tethered via Fly.io.
+2. **Tier 2 (Commercial API - €24.99/mo):** Proprietary 3-Layer Memory Stacks, MoE-13 expert routing, and lossy context compression, connected via Fly.io.
 3. **Tier 3 (Enterprise):** Air-gapped on-premise execution, zero-latency hardware (FPGA) bridges, and SLA-guaranteed consensus clusters.
 
 **Slide 4: Why Upgrade to Tier 3?**
@@ -31,5 +31,5 @@ We have populated complete, deployable enterprise suites for:
 - 🛡️ Cybersecurity (Zero-Trust Latency Guards)
 - 🏛️ Government Policy (Multi-Agent Simulation)
 
-**Join the Post-Binary Revolution.**
+**Join the Transition to Post-Binary Computing.**
 Contact enterprise@rfi-irfos.at for Tier 3 SLA agreements and site-licensing.

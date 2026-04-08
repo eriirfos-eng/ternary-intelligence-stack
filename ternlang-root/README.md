@@ -15,7 +15,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.co
 
 ## The Problem with Binary AI
 
-Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either hallucinate a confident answer or return null.
+Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either unverified inference a confident answer or return null.
 
 Ternlang adds the third state.
 
@@ -108,8 +108,8 @@ cargo build --release
 
 ---
 
-## 6. Empirical Verification (Operation: Empirical Omnipresence)
-RFI-IRFOS provides absolute, verifiable proof of TIS superiority via the `/benchmarks` suite. These metrics represent the hardware-software parity achieved through native BET-ISA implementation.
+## 6. Empirical Verification Suite
+RFI-IRFOS provides verifiable data on TIS performance via the `/benchmarks` suite. These metrics represent the hardware-software parity achieved through native BET-ISA implementation.
 
 | Benchmark | Target Architecture | Efficiency Metric | Result (η) |
 |-----------|--------------------|-------------------|------------|
@@ -285,10 +285,10 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 20 tools (10 free + 10 premium), stdio + HTTP transport, server-side 3-layer memory |
 | [`ternlang-mkl`](ternlang-mkl/) | BSL-1.1 | **cuTern**: Math Kernel Library with native sparsity bypass |
 | [`ternlang-sql`](ternlang-sql/) | BSL-1.1 | Native Ternary Graph Database driver (50% speedup) |
-| [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The "Trojan Horse") |
+| [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The Seamless Migration Layer) |
 | [`ternlang-net`](ternlang-net/) | BSL-1.1 | Triadic Networking Stack (Introspective Handshake) |
 | [`ternlang-crypto`](ternlang-crypto/) | BSL-1.1 | High-entropy Trit-based Cryptographic primitives |
-| [`ternlang-fs`](ternlang-fs/) | BSL-1.1 | Triadic File System (State 0 Transactional Pend) |
+| [`ternlang-fs`](ternlang-fs/) | BSL-1.1 | Triadic File System (deliberative hold Transactional Pend) |
 | [`ternlang-hdl`](ternlang-hdl/) | BSL-1.1 | Verilog-2001 codegen, BET processor, FPGA simulation |
 | [`ternlang-runtime`](ternlang-runtime/) | BSL-1.1 | Distributed TCP actor runtime |
 | [`ternlang-qutrit`](ternlang-qutrit/) | BSL-1.1 | Quantum-Classical Bridge (Qutrit Native Superposition) |
@@ -311,12 +311,12 @@ For local stdio transport (Claude Desktop, offline use):
 
 ## Strategic Standards
 
-RFI-IRFOS is establishing the total regulatory and technical moat for the post-binary era. These specifications are designed to mandate Ternary compliance across global hardware, software, and AI industries.
+RFI-IRFOS is establishing the comprehensive regulatory and technical framework for the post-binary era. These specifications are designed to standardize Ternary integration across global hardware, software, and AI industries.
 
 ### Core Architecture & Logic
 - [**BET-ISA v1.0**](spec/standards/BET-ISA-v1.0.md): The definitive 9-Trit RISC Instruction Set Architecture.
 - [**IEEE TFP-754**](spec/standards/IEEE-TFP-754.md): Global standard for Ternary Floating-Point Arithmetic.
-- [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating State 0 abstention.
+- [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating deliberative hold abstention.
 - [**TSON v1.0**](spec/standards/TSON-v1.0.md): Optimized data serialization for triadic systems.
 - [**T-POSIX v1.0**](spec/standards/T-POSIX-v1.0.md): Operating system interface redefining process state logic.
 
@@ -326,7 +326,7 @@ RFI-IRFOS is establishing the total regulatory and technical moat for the post-b
 - [**T-WEIGHT v1.0**](spec/standards/T-WEIGHT-v1.0.md): Triadic Weight Exchange — Mandatory safety headers for LLM weights.
 - [**T-EXPLAIN v1.0**](spec/standards/T-EXPLAIN-v1.0.md): Triadic Traceability — Standardizing MoE-13 deliberation logs.
 - [**T-HALO v1.0**](spec/standards/T-HALO-v1.0.md): Triadic Alignment & Governance — Hardware-locked safety holds.
-- [**TUANN v1.0**](stdlib/ml/tuann.tern): Triadic Uncertainty-Aware Neural Networks — Native State 0 for hallucination rejection.
+- [**TUANN v1.0**](stdlib/ml/tuann.tern): Triadic Uncertainty-Aware Neural Networks — Native deliberative hold for hallucination rejection.
 
 ### Hardware, Physical & Frontier
 - [**T-HAL v1.0**](spec/standards/T-HAL-v1.0.md): Universal Hardware Abstraction — The bridge for Huawei/NVIDIA/FPGA.
@@ -339,7 +339,7 @@ RFI-IRFOS is establishing the total regulatory and technical moat for the post-b
 - [**TTP v1.0**](spec/standards/TTP-v1.0.md): Web transfer protocol eliminating binary timeouts.
 - [**T-NET v1.0**](spec/standards/T-NET-v1.0.md): Triadic Networking — Deliberative headers for intelligent packet routing.
 - [**T-RPC v1.0**](spec/standards/T-RPC-v1.0.md): Remote Procedure Call with native deliberative waiting.
-- [**T-ROUTING v1.0**](spec/standards/T-ROUTING-v1.0.md): Sparse Packet Switching — Skipping State 0 network congestion.
+- [**T-ROUTING v1.0**](spec/standards/T-ROUTING-v1.0.md): Sparse Packet Switching — Skipping deliberative hold network congestion.
 - [**T-SQL v1.0**](spec/standards/T-SQL-v1.0.md): Triadic Query Language — Redefining search via T-Trees.
 - [**T-ARCHIVE v1.0**](spec/standards/T-ARCHIVE-v1.0.md): Triadic Cold Storage — Neutral State structural stability.
 - [**T-Fi v1.0**](spec/standards/T-Fi-v1.0.md): Triadic Compute Currency — Standardizing the TaaS cryptographic toll.

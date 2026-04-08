@@ -9,5 +9,5 @@ fn resolve_voxel(stress: i32) -> trit {
     }
     
     // Procedural metamaterial lattice
-    return 0; // LATTICE (State 0)
+    return 0; // LATTICE (deliberative hold)
 }

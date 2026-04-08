@@ -1,7 +1,7 @@
-# RFI-IRFOS Empirical Omnipresence: Benchmark Suite
+# RFI-IRFOS Empirical Verification Suite: Benchmark Suite
 ## RFI-IRFOS Research Publication - April 08, 2026
 
-This directory contains the absolute verification suite for the **Ternary Intelligence Stack (TIS)**. These benchmarks provide empirical and physical evidence of the 122.3x speedup, thermal efficiency, and memory resilience of balanced ternary architectures against legacy binary (CUDA, x86).
+This directory contains the comprehensive verification suite for the **Ternary Intelligence Stack (TIS)**. These benchmarks provide empirical and physical evidence of the 122.3x speedup, thermal efficiency, and memory resilience of balanced ternary architectures against legacy binary (CUDA, x86).
 
 ### Benchmark Matrix
 | Benchmark | Target | Metric | Result |

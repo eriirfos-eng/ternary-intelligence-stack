@@ -10,4 +10,4 @@ TTP is the replacement for the legacy HTTP protocol. It eliminates "timeouts" by
 - **-1xx (Veto):** Request blocked by hardware-level security policy.
 
 ## 3. The "Infinite Ping" Solution
-TTP nodes maintain an open State 0 socket that consumes zero CPU cycles on the server, leveraging the `THOLD` hardware opcode. This makes the concept of "polling" or "long-polling" obsolete.
+TTP nodes maintain an open deliberative hold socket that consumes zero CPU cycles on the server, leveraging the `THOLD` hardware opcode. This makes the concept of "polling" or "long-polling" obsolete.

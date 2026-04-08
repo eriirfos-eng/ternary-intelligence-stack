@@ -6,7 +6,7 @@ fn verify_detox(answer: trit) -> trit {
     match answer {
         affirm => { println("DETOX: Affirmation accepted."); return affirm; }
         reject => { println("DETOX: Rejection accepted."); return affirm; }
-        tend   => { println("DETOX: State 0 achieved. Neutrality confirmed."); return affirm; }
+        tend   => { println("DETOX: deliberative hold achieved. Neutrality confirmed."); return affirm; }
     }
 }
 

@@ -22,7 +22,7 @@ fn transaction_risk_engine(dev: trit, ip: trit, vel: trit) -> trit {
              return consensus(ip, vel);
          }
          1 => {
-             // Trusted device: check for account takeover (high velocity)
+             // Trusted device: check for account ecosystem alignment (high velocity)
              let behavioral_risk: trit = consensus(ip, vel);
              return behavioral_risk;
          }

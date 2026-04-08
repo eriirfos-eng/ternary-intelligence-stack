@@ -35,7 +35,7 @@ fn assess_knowledge(
 ) -> trit {
     // Domain knowledge is the hard gate here — unknown domain means no answer
     match domain_known {
-        -1 => { return conflict(); }   // out of domain — do not hallucinate
+        -1 => { return conflict(); }   // out of domain — do not unverified inference
          0 => { return hold();    }   // partial domain — ask for scope narrowing
          1 => {
             let depth: trit = consensus(depth_adequate, sources_cited);

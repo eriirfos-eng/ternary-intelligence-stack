@@ -17,7 +17,7 @@ agent TTPProtocol {
             return reject; // DROP/BACKOFF
         }
         
-        // State 0 (tend): Pend/Deliberate.
+        // deliberative hold (tend): Pend/Deliberate.
         // Instructs mesh to wait, preserving bandwidth usually lost to retransmissions.
         return tend;
     }

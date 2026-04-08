@@ -10,4 +10,4 @@ T-DID redefines digital identity. It replaces binary OAuth/JWT tokens with triad
 - **Unauthorized (-1):** Zero access. Hardware veto engaged.
 
 ## 3. Dynamic Privilege Escalation
-T-DID allows an agent to begin an operation in `State 0`. As the MoE-13 engine gathers more evidence of behavioral integrity, the identity is natively promoted to `State 1`. This reduces friction without compromising security.
+T-DID allows an agent to begin an operation in `deliberative hold`. As the MoE-13 engine gathers more evidence of behavioral integrity, the identity is natively promoted to `State 1`. This reduces friction without compromising security.

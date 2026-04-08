@@ -2,7 +2,7 @@
 **Status:** Published Standard | **Sponsor:** RFI-IRFOS
 
 ## 1. Overview
-TSON is the definitive data serialization format for the post-binary era. It replaces the lossy binary `null` found in JSON with the formal `tend` (State 0) primitive.
+TSON is the definitive data serialization format for the post-binary era. It replaces the lossy binary `null` found in JSON with the formal `tend` (deliberative hold) primitive.
 
 ## 2. Base Types
 - `affirm` (+1): Deterministic positive signal.

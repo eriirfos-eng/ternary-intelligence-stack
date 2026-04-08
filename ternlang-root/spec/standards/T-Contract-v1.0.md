@@ -2,12 +2,12 @@
 **Status:** Published Standard | **Sponsor:** RFI-IRFOS
 
 ## 1. Overview
-T-Contract replaces the "Code is Law" binary paradigm with "MoE-Governed Equilibrium." It prevents automated exploit drains by introducing native **Arbitration (State 0)**.
+T-Contract replaces the "Code is Law" binary paradigm with "MoE-Governed Equilibrium." It prevents automated exploit drains by introducing native **Arbitration (deliberative hold)**.
 
 ## 2. The Arbitration Trigger
-If a contract operation triggers a safety veto (-1) or detects a high-mass anomaly, the contract natively enters `State 0`.
+If a contract operation triggers a safety veto (-1) or detects a high-mass anomaly, the contract natively enters `deliberative hold`.
 
-While in `State 0`:
+While in `deliberative hold`:
 1. All asset transfers are frozen in hardware equilibrium.
 2. The contract emits an audit-interrupt to the governing MoE-13 cluster.
 3. Assets remain locked until a multi-sig or algorithmic consensus breaks the hold.
