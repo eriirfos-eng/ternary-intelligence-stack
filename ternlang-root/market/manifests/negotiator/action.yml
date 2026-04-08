@@ -1,0 +1,13 @@
+name: 'TIS Negotiator: Conflict Resolver'
+description: 'Eliminate 404/500 errors by routing uncertain requests to State 0.'
+author: 'RFI-IRFOS'
+inputs:
+  endpoint:
+    description: 'Target API endpoint'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'shield'
+  color: 'blue'

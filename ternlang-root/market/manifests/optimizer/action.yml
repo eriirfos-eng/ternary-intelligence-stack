@@ -1,0 +1,14 @@
+name: 'TIS Optimizer: Ternary Refactoring'
+description: 'Refactor legacy code into the TIS standard for 152.8x efficiency.'
+author: 'RFI-IRFOS'
+inputs:
+  path:
+    description: 'Path to source code'
+    required: false
+    default: 'src/'
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'zap'
+  color: 'green'

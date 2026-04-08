@@ -1,0 +1,14 @@
+name: 'TIS Curator: Hive Manager'
+description: 'Autonomously update and manage Marketplace manifests for the Ternary Legion.'
+author: 'RFI-IRFOS'
+inputs:
+  manifest_path:
+    description: 'Path to Marketplace manifests'
+    required: false
+    default: 'market/manifests/'
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'package'
+  color: 'blue'
