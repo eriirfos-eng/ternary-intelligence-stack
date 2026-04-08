@@ -1,0 +1,14 @@
+name: 'TIS Thermal Inefficiency Audit'
+description: 'Scans repositories for "Binary Waste" and generates a Thermal Inefficiency Report.'
+author: 'RFI-IRFOS Theoretical Research Department'
+inputs:
+  path:
+    description: 'Path to scan'
+    required: false
+    default: '.'
+runs:
+  using: 'node16'
+  main: 'index.js'
+branding:
+  icon: 'zap'
+  color: 'green'
