@@ -12,6 +12,8 @@ pub mod curriculum {
         SparseMatrixOptimization,
         MoESafetyGovernance,
         BetVmArchitecture,
+        AmbiguityResolutionIndex,
+        PhysicalResourceAllocation,
     }
 
     #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -48,7 +50,7 @@ pub mod curriculum {
 
     pub fn get_standard_curriculum() -> Course {
         Course {
-            name: "The Triadic Paradigm".to_string(),
+            name: "The Triadic Paradigm (v2.0)".to_string(),
             zvr_authority: "1015608684".to_string(),
             lessons: vec![
                 Lesson {
@@ -60,6 +62,16 @@ pub mod curriculum {
                     title: "Native Sparsity and @sparseskip".to_string(),
                     lesson_type: LessonType::SparseMatrixOptimization,
                     required_confidence: 0.95,
+                },
+                Lesson {
+                    title: "ARI-v1.0: Measuring Ambiguity Resolution".to_string(),
+                    lesson_type: LessonType::AmbiguityResolutionIndex,
+                    required_confidence: 0.98,
+                },
+                Lesson {
+                    title: "T-SPEC-v2.0: Deterministic Resource Routing".to_string(),
+                    lesson_type: LessonType::PhysicalResourceAllocation,
+                    required_confidence: 1.0,
                 }
             ],
         }
