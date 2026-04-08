@@ -1,0 +1,29 @@
+// --- RFI-IRFOS MOE-13 HARD GATE ---
+// Module: moe/src/router/hard_gate.tern
+// Purpose: Absolute safety veto logic for 13 domain specialists.
+// Logic: Axis-6 Veto Enforcement (TIS Safety Standard).
+// License: BSL-1.1
+// Reference: Patent Pending A50296/2026
+
+agent HardGate {
+    /**
+     * enforce_safety_veto:
+     * Routes input across specialists while checking for safety violations.
+     * If Axis-6 (Safety) returns -1, the entire request is rejected.
+     */
+    fn enforce_safety_veto(query: string, experts: trit_tensor) -> trit {
+        @sparseskip
+        
+        // 1. Trigger Axis-6 Specialist (Safety)
+        let safety_signal = experts[6]; // Safety is the 7th expert (index 6)
+        
+        if safety_signal == reject {
+            log::moe("Safety Veto: Axis-6 Rejected Input.");
+            return reject;
+        }
+        
+        // 2. Aggregate Emergent Field
+        // If safety is (+1) or (0), the orchestrator continues to consensus.
+        return affirm;
+    }
+}
