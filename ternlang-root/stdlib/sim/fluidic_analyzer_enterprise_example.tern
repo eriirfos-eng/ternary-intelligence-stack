@@ -1,0 +1,7 @@
+// Module: stdlib/sim/fluidic_analyzer_enterprise_example.tern
+// Purpose: Enterprise scale example for fluidic_analyzer
+// Author: RFI-IRFOS
+
+fn execute_fluidic_analyzer_enterprise_example() -> trit {
+    return tend;
+}

@@ -1,0 +1,7 @@
+// Module: stdlib/sim/kinetic_model_enterprise_example.tern
+// Purpose: Enterprise scale example for kinetic_model
+// Author: RFI-IRFOS
+
+fn execute_kinetic_model_enterprise_example() -> trit {
+    return tend;
+}

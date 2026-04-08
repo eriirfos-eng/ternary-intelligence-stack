@@ -1,0 +1,7 @@
+// Module: stdlib/sim/fluidic_filter_production_example.tern
+// Purpose: Production deployment example for fluidic_filter
+// Author: RFI-IRFOS
+
+fn execute_fluidic_filter_production_example() -> trit {
+    return tend;
+}
