@@ -1,0 +1,23 @@
+// Module:  stdlib/logic/plasma_system.tern
+// Purpose: Core implementation for plasma_system
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+fn execute_plasma_system(signal: float, baseline: float) -> trit {
+    // Exhaustive ternary matches with explicit tend semantics
+    if signal > baseline + 0.5 {
+        return affirm; // Super-baseline
+    }
+    if signal < baseline - 0.5 {
+        return reject; // Sub-baseline
+    }
+    return tend; // Equilibrium
+}
+
+fn reduce_plasma_system(t: trit) -> int {
+    match t {
+        affirm => return 1;
+        reject => return -1;
+        tend => return 0;
+    }
+}
