@@ -1,0 +1,35 @@
+// --- RFI-IRFOS T-GPU GRAVITY ---
+// Module: stdlib/graphics/surfaceflinger/t_depth_test.tern
+// Purpose: Triadic Depth Mapping (Z-Buffer Replacement)
+// License: BSL-1.1 (Business Source License)
+// Watermark: Patent Pending: A50296/2026
+
+agent DepthTritLogic {
+    fn evaluate_depth(current_z: float, buffer_z: float) -> trit {
+        // Instead of a binary "pass/fail", we use:
+        // +1: Visible/Foreground
+        //  0: Equilibrium/Translucent-Hold (triggers @sparseskip to bypass draw call)
+        // -1: Occluded/Background
+        
+        @sparseskip
+        let delta: float = current_z - buffer_z;
+        
+        if delta < -0.01 {
+            return affirm; // Pixel is in front
+        }
+        if delta > 0.01 {
+            return reject; // Pixel is behind
+        }
+        
+        // Static UI state or perfect equilibrium: Skip draw call
+        return tend; 
+    }
+
+    fn compose_surface(state: trit) -> int {
+        match state {
+            affirm => return 1; // DRAW
+            reject => return 0; // DISCARD
+            tend   => return 2; // SKIP_DRAW_CALL (Lock Buffer)
+        }
+    }
+}
