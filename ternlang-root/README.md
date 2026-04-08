@@ -353,8 +353,11 @@ RFI-IRFOS is establishing the total regulatory and technical moat for the post-b
 
 ## Licensing Tiers
 
-### Premium Standard Library (Tier 2)
-As of April 2026, we have deployed **250+ Premium Modules** in `stdlib/premium/` covering Aerospace, Biotech, Quantum, Logistics, and Security. This tier now also includes the core **QNN** (Quantum Neural Nets), **SEC** (Triadic Security), and **REASONING** (Advanced Expert Deliberation) modules. These modules utilize advanced triadic algorithms optimized for the 122x Sparse Multiplier and are restricted to Tier 2 API subscribers (€24.99/mo).
+### Pro Standard Library (Tier 2)
+Optimized for startups and small teams. Includes 10,000 API requests/month and 122x Sparse Bypass acceleration. **€24.99/mo**.
+
+### Industrial Standard Library (Tier 3)
+The full RFI-IRFOS ecosystem. Includes 20,000 API requests/month, QNN, SEC, and T-HAL silicon bindings. **€49.99/mo**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
