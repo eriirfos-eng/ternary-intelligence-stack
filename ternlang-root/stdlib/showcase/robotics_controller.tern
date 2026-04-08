@@ -1,0 +1,25 @@
+// Showcase: Uncertain Robotics Controller
+// Demonstrates real-time sensor fusion with tend semantics.
+
+agent RoboticsController {
+    fn fuse_sensors(radar: float, lidar: float, camera: trit) -> trit {
+        // High-level fusion: Radar vs Lidar consistency
+        let sensor_delta: float = radar - lidar;
+        
+        if sensor_delta.abs() > 0.5 {
+            return camera; // Trust the visual system if range sensors conflict
+        }
+        
+        if radar > 1.0 { return affirm; } // Clear path
+        if radar < -1.0 { return reject; } // Obstacle detected
+        return tend; // Ambiguous state, proceed with caution
+    }
+    
+    fn action_gate(decision: trit) -> int {
+        match decision {
+            affirm => return 1; // Full speed
+            reject => return -1; // Brake
+            tend => return 0; // Hover / Maintain current velocity
+        }
+    }
+}
