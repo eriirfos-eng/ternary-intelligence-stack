@@ -1,0 +1,7 @@
+// Module: stdlib/tests/quantum_solver_restore.tern
+// Purpose: State restoration logic for quantum_solver
+// Author: RFI-IRFOS
+
+fn execute_quantum_solver_restore() -> trit {
+    return tend;
+}

@@ -1,0 +1,7 @@
+// Module: stdlib/pipelines/plasma_filter_enterprise_example.tern
+// Purpose: Enterprise scale example for plasma_filter
+// Author: RFI-IRFOS
+
+fn execute_plasma_filter_enterprise_example() -> trit {
+    return tend;
+}

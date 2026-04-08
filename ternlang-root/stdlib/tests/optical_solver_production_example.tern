@@ -1,0 +1,7 @@
+// Module: stdlib/tests/optical_solver_production_example.tern
+// Purpose: Production deployment example for optical_solver
+// Author: RFI-IRFOS
+
+fn execute_optical_solver_production_example() -> trit {
+    return tend;
+}

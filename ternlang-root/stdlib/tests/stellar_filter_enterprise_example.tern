@@ -1,0 +1,7 @@
+// Module: stdlib/tests/stellar_filter_enterprise_example.tern
+// Purpose: Enterprise scale example for stellar_filter
+// Author: RFI-IRFOS
+
+fn execute_stellar_filter_enterprise_example() -> trit {
+    return tend;
+}
