@@ -1,0 +1,11 @@
+// Module:  stdlib/security/stellar_analyzer_tutorial.tern
+// Purpose: Self-documenting tutorial for stellar_analyzer
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of stellar_analyzer.
+fn stellar_analyzer_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
