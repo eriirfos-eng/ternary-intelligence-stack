@@ -13,11 +13,10 @@ const { LanguageClient, TransportKind } = require('vscode-languageclient/node');
 let client;
 
 function activate(context) {
-    // Path to the compiled ternlang-lsp binary.
-    // Adjust if your ternlang-root is in a different location.
+    // Path to the bundled ternlang-lsp binary.
     const lspBin = path.join(
         context.extensionPath,
-        '..', 'ternlang-root', 'target', 'release', 'ternlang-lsp'
+        'bin', 'ternlang-lsp'
     );
 
     const serverOptions = {
