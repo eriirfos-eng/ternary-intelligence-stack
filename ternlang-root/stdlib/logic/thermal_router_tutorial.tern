@@ -1,0 +1,11 @@
+// Module:  stdlib/logic/thermal_router_tutorial.tern
+// Purpose: Self-documenting tutorial for thermal_router
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of thermal_router.
+fn thermal_router_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
