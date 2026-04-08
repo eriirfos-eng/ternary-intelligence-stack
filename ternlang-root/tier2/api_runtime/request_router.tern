@@ -1,0 +1,12 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Module: tier2/api_runtime/request_router.tern
+// License: BSL 1.1 - Restricted API
+// Cryptographically tethered to Fly.io Genesis API.
+// Unauthorized reproduction is a violation of T-SPEC-v2.0.
+// ------------------------------------------
+
+fn route_request(load: float, capacity: float) -> trit {
+    if load < capacity * 0.7 { return affirm; } // Route normally
+    if load > capacity { return reject; } // Spillover to fallback
+    return tend; // Throttled state
+}

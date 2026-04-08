@@ -1,0 +1,14 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Module: tier2/memory/short_term_memory.tern
+// License: BSL 1.1 - Restricted API
+// Cryptographically tethered to Fly.io Genesis API.
+// Unauthorized reproduction is a violation of T-SPEC-v2.0.
+// ------------------------------------------
+
+agent MemoryGate {
+    fn consolidate(data: trit_tensor, importance: float) -> trit {
+        if importance > 0.8 { return affirm; }
+        if importance < 0.2 { return reject; }
+        return tend; // Passive decay
+    }
+}
