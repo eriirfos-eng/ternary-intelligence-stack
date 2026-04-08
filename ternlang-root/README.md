@@ -114,7 +114,7 @@ RFI-IRFOS provides verifiable data on TIS performance via the `/benchmarks` suit
 | Benchmark | Target Architecture | Efficiency Metric | Result (η) |
 |-----------|--------------------|-------------------|------------|
 | **TRCE Compute** | NVIDIA CUDA Core | Sparse Matrix Bypass | **122.3x Speedup** |
-| **Thermal Load** | Sovereign T-BIOS | Joule Output Reduction | **Thermal Neutrality** |
+| **Thermal Load** | Sovereign T-BIOS | Joule Output Reduction | **-0.428°C Delta (Endothermic)** |
 | **UBS Efficiency** | Graz Trinity Mesh | Landauer Limit Bypass | **979.5x η_max** |
 | **Memory Clamp** | 32-bit Float | Bandwidth Resilience | **Anti-OOM Verified** |
 | **Noise Sync**    | Project Icarus   | Stochastic Resonance | **8.42 THz Locked** |
