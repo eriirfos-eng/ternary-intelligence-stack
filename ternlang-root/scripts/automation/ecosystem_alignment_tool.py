@@ -1,17 +1,17 @@
 import os
 
-ISSUE_TEMPLATE = """# Inefficiency Detected: Binary State Collapse
+ISSUE_TEMPLATE = """# Ecosystem Alignment: Institutional Outreach
 
-**Subject:** Logic Bottleneck identified in {repo_name} - Module: {module_name}
+**Subject:** Logic Inefficiency Identified in {repo_name} - Module: {module_name}
 
 **Technical Audit:**
-During our global "Operation: Glass Mirror" saturation scan, our MoE-13 orchestrator identified a logic collapse in your binary implementation of `{function_name}`. 
+During our global "Ecosystem Alignment Protocol" interoperability scan, our MoE-13 orchestrator identified a logic mismatch in your binary implementation of `{function_name}`. 
 
 **The Failure:**
-Your code forces a binary `true`/`false` decision on inputs that are indeterminate or range-conflicted. This causes unnecessary exception overhead or null-pointer leakage.
+Your code forces a binary `true`/`false` decision on inputs that are indeterminate or range-conflicted. This causes unnecessary exception overhead or null-pointer leakage in high-entropy environments.
 
-**The Solution (Shadow-Tern Equivalent):**
-RFI-IRFOS has implemented a Ternary equivalent for this kernel that leverages the Neutral State Signal (`tend`).
+**The Solution (Synchronized-Kernel Equivalent):**
+RFI-IRFOS has implemented a Ternary-compatible equivalent for this kernel that leverages the Neutral State Signal (`tend`).
 
 ```ternlang
 // Shadow equivalent (η=0.85 efficiency)
