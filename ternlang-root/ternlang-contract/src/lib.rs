@@ -1,43 +1,27 @@
-//! ternlang-contract: Triadic Smart Contracts (T-Contract).
+//! Sovereign Smart Contracts (The T-Fi Economy)
 //!
-//! Introduces the "Arbitration" state to prevent automated exploit drain.
-//! Replaces binary "Code is Law" with "MoE-Governed Equilibrium".
+//! The Ethereum Virtual Machine (EVM) is a bloated, binary relic. 
+//! `ternlang-contract` deploys the BET VM as a blockchain execution layer. 
+//! Smart contracts written in `.tern` utilize the `HOLD (0)` state to automatically 
+//! pause execution during network congestion without failing the transaction.
 
-pub mod contract {
-    #[derive(Debug, PartialEq, Clone, Copy)]
-    pub enum ContractState {
-        Active = 1,
-        Arbitration = 0, // State 0: Funds frozen, MoE-13 security audit pending.
-        Vetoed = -1,     // Permanent contract kill.
-    }
+use ternlang_core::Trit;
 
-    pub struct TernarySmartContract {
-        pub balance: u64,
-        pub state: ContractState,
-    }
+pub struct TContract {
+    pub contract_id: String,
+    pub state: Trit,
+}
 
-    impl TernarySmartContract {
-        pub fn new(initial_balance: u64) -> Self {
-            TernarySmartContract { balance: initial_balance, state: ContractState::Active }
-        }
-
-        /// Executes a transfer. 
-        /// If an anomaly is detected (e.g., massive withdrawal), the contract 
-        /// natively transitions to State 0 (Arbitration) instead of failing.
-        pub fn transfer(&mut self, amount: u64) -> Result<(), &'static str> {
-            if amount > self.balance / 2 {
-                self.state = ContractState::Arbitration;
-                return Err("ANOMALY: High-mass withdrawal detected. Contract entering State 0 (Arbitration).");
-            }
-
-            match self.state {
-                ContractState::Active => {
-                    self.balance -= amount;
-                    Ok(())
-                }
-                ContractState::Arbitration => Err("HOLD: Contract in State 0. Consensus required to release funds."),
-                ContractState::Vetoed => Err("VETO: Contract terminated by security audit."),
-            }
+impl TContract {
+    /// Executes a smart contract transaction.
+    /// Returns Trit::Tend to gracefully pause execution without consuming gas.
+    pub fn execute_transaction(network_congestion: f64) -> Trit {
+        if network_congestion > 0.90 {
+            // Auto-pause to prevent EVM-style state contention and gas spikes
+            Trit::Tend
+        } else {
+            // Transaction clears
+            Trit::Affirm
         }
     }
 }

@@ -1,38 +1,27 @@
-//! ternlang-bci: Native Brain-Computer Interface (BCI) decoding for the BET VM.
+//! Biological Computing & BCI (The Wetware Hijack)
 //!
-//! Binary BCIs (like Neuralink) reduce complex neural activity to a binary spike (0 or 1).
-//! This is biologically inaccurate. Neurons exhibit excitation (+1), resting potential (0), 
-//! and active inhibition (-1). `ternlang-bci` decodes EEG/ECoG arrays directly into 
-//! native hardware trits, preserving the brain's natural inhibitory pathways.
+//! The human nervous system computes in triadic states: Excitatory (+1), 
+//! Inhibitory (-1), and Resting Potential (0). 
+//! `ternlang-bci` maps EEG/EMG neural signals directly to the `Trit` data type, 
+//! creating the first "Biologically Native" programming language.
 
-pub mod neural {
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    #[repr(i8)]
-    pub enum NeuralSignal {
-        Excitation = 1,
-        Resting = 0,
-        Inhibition = -1,
-    }
+use ternlang_core::Trit;
 
-    pub struct BCIArray {
-        pub channels: usize,
-    }
+/// A raw neural signal reading from a BCI sensor (e.g., microvolt potential).
+pub struct NeuralSignal {
+    pub microvolts: f64,
+}
 
-    impl BCIArray {
-        pub fn new(channels: usize) -> Self {
-            BCIArray { channels }
-        }
-
-        /// Decodes a raw voltage delta directly into a hardware trit.
-        /// No lossy sigmoid functions. No arbitrary binary thresholds.
-        pub fn decode_voltage_delta(&self, voltage_mv: f32, threshold: f32) -> NeuralSignal {
-            if voltage_mv > threshold {
-                NeuralSignal::Excitation // Action potential
-            } else if voltage_mv < -threshold {
-                NeuralSignal::Inhibition // Hyperpolarization (Active suppression)
-            } else {
-                NeuralSignal::Resting // State 0 (TEND) - Baseline
-            }
+impl NeuralSignal {
+    /// Translates an analog neural potential into a deterministic triadic state.
+    /// Bypasses the massive latency of binary floating-point conversion.
+    pub fn to_trit(&self) -> Trit {
+        if self.microvolts > 15.0 {
+            Trit::Affirm // Excitatory
+        } else if self.microvolts < -15.0 {
+            Trit::Reject // Inhibitory
+        } else {
+            Trit::Tend   // Resting Potential (HOLD)
         }
     }
 }

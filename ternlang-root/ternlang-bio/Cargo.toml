@@ -2,11 +2,8 @@
 name = "ternlang-bio"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-keywords.workspace = true
-categories.workspace = true
+license = "LicenseRef-BSL-1.1"
+description = "Triadic Bioinformatics and Genomics. Eliminates binary alignment errors in DNA sequence processing by utilizing the Tend (0) state for ambiguity."
 
 [dependencies]
+ternlang-core = { path = "../ternlang-core", version = "0.1.0" }

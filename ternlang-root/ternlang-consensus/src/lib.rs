@@ -1,54 +1,26 @@
-//! ternlang-consensus: Triadic Byzantine Fault Tolerance (TBFT).
+//! Triadic Consensus (Proof-of-Ambiguity-Resolution)
 //!
-//! Binary distributed consensus (Raft, Paxos) relies on timeouts and binary
-//! (Yes/No) voting. This leads to split-brain scenarios and catastrophic 
-//! election storms. `ternlang-consensus` introduces a native `Hold` (State 0)
-//! vote, allowing a network to intentionally pause without crashing.
+//! Replaces legacy PoW and PoS with a native triadic consensus algorithm 
+//! for the RFI-IRFOS Compute Economy. Nodes reach agreement by deterministically 
+//! resolving `Trit::Tend` states across the network, validating the T-Fi Ledger.
 
-pub mod tbft {
-    #[derive(Debug, PartialEq, Clone, Copy)]
-    pub enum Vote {
-        Commit = 1,
-        Hold = 0,
-        Reject = -1,
-    }
+use ternlang_core::Trit;
 
-    pub struct Node {
-        pub id: usize,
-        pub health: f32,
-    }
+pub struct TriadicLedger;
 
-    impl Node {
-        /// Casts a triadic vote.
-        /// If network latency is high, a node casts `Hold` (0) instead of failing.
-        pub fn cast_vote(&self) -> Vote {
-            if self.health > 0.8 {
-                Vote::Commit
-            } else if self.health < 0.2 {
-                Vote::Reject
-            } else {
-                Vote::Hold // Intentional network pause. No timeout required.
-            }
-        }
-    }
-
-    /// Evaluates a cluster election without binary coercion.
-    pub fn evaluate_quorum(votes: &[Vote]) -> i8 {
-        let mut sum = 0;
-        for v in votes {
-            if *v == Vote::Reject {
-                println!("ternlang-consensus: Veto detected. Election aborted.");
-                return -1; // Single veto destroys quorum
-            }
-            sum += *v as i8;
-        }
-
-        if sum > (votes.len() as i8 / 2) {
-            println!("ternlang-consensus: Supermajority achieved. Committing.");
-            1
-        } else {
-            println!("ternlang-consensus: Quorum suspended in State 0. Waiting for data.");
-            0
+impl TriadicLedger {
+    /// Validates a block on the T-Fi Ledger by achieving triadic consensus.
+    pub fn validate_block(node_a: Trit, node_b: Trit, node_c: Trit) -> Trit {
+        // Multi-valued logic consensus: Requires at least two Affirm states,
+        // or defaults to Tend (Hold) to prevent chain forks.
+        match (node_a, node_b, node_c) {
+            (Trit::Affirm, Trit::Affirm, _) => Trit::Affirm,
+            (_, Trit::Affirm, Trit::Affirm) => Trit::Affirm,
+            (Trit::Affirm, _, Trit::Affirm) => Trit::Affirm,
+            (Trit::Reject, Trit::Reject, _) => Trit::Reject,
+            (_, Trit::Reject, Trit::Reject) => Trit::Reject,
+            (Trit::Reject, _, Trit::Reject) => Trit::Reject,
+            _ => Trit::Tend, // Consensus not reached, block held
         }
     }
 }
