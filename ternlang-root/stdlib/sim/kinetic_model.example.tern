@@ -1,0 +1,14 @@
+// Module:  stdlib/sim/kinetic_model.example.tern
+// Purpose: Production usage example for kinetic_model
+// Author:  RFI-IRFOS
+
+fn example_kineticmodel() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}
