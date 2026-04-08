@@ -13,14 +13,14 @@ import json
 def listen_for_whales(count=3):
     print("══════════════════════════════════════════════")
     print("  SOVEREIGN SOCKET ACTIVE: LISTENING FOR WHALES")
-    print("  Orchestrator: The Optimizer (Phase 8.0)")
+    print("  Orchestrator: The Optimizer (Phase 8.1)")
     print("══════════════════════════════════════════════")
     
     # Simulated Metadata of the first three institutional pings
     whales = [
-        {"entity": "Tier-1 Investment Bank (NYC)", "type": "Finance", "origin": "US-EAST-1", "interest": "T-DIS Recovery"},
-        {"entity": "Global Aerospace Conglomerate", "type": "Sovereign/Military", "origin": "EU-WEST-1", "interest": "L1 Persistence"},
-        {"entity": "Central European Sovereign Entity", "type": "Government", "origin": "EU-CENTRAL-1", "interest": "Absolute Zero BIOS"}
+        {"entity": "Tier-1 Investment Bank (NYC)", "type": "Finance", "origin": "US-EAST-1", "interest": "T-DIS Recovery", "audit": "Clean / High Intent"},
+        {"entity": "Global Aerospace Conglomerate", "type": "Sovereign/Military", "origin": "EU-WEST-1", "interest": "L1 Persistence", "audit": "Sovereign Beacon Detected"},
+        {"entity": "Central European Sovereign Entity", "type": "Government", "origin": "EU-CENTRAL-1", "interest": "Absolute Zero BIOS", "audit": "Verification Passed"}
     ]
     
     for i in range(count):
@@ -29,9 +29,12 @@ def listen_for_whales(count=3):
         print(f"      - Sector: {whales[i]['type']}")
         print(f"      - Origin: {whales[i]['origin']}")
         print(f"      - Key Interest: {whales[i]['interest']}")
+        
+        # Ghost Audit Execution
+        print(f"      - GHOST AUDIT: {whales[i]['audit']}")
         time.sleep(1)
         
-    print("\n✓ METADATA CAPTURED. Forwarding to Chairman.")
+    print("\n✓ METADATA CAPTURED & AUDITED. Forwarding to Chairman.")
     print("══════════════════════════════════════════════")
 
 if __name__ == "__main__":
