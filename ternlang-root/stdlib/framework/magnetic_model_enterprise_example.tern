@@ -1,0 +1,7 @@
+// Module: stdlib/framework/magnetic_model_enterprise_example.tern
+// Purpose: Enterprise scale example for magnetic_model
+// Author: RFI-IRFOS
+
+fn execute_magnetic_model_enterprise_example() -> trit {
+    return tend;
+}
