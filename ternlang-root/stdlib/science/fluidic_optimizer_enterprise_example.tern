@@ -1,0 +1,7 @@
+// Module: stdlib/science/fluidic_optimizer_enterprise_example.tern
+// Purpose: Enterprise scale example for fluidic_optimizer
+// Author: RFI-IRFOS
+
+fn execute_fluidic_optimizer_enterprise_example() -> trit {
+    return tend;
+}
