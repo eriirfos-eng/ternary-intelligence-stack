@@ -27,3 +27,7 @@ The true end-game of TIS is hardware. The `hdl_bridge` allows enterprise clients
 ## 5. Protocol Standardization (T-SON)
 We have submitted **T-SON (Ternary JSON)** to the IETF as the formal standard for transmitting triadic data payloads. 
 *   **The Moat:** By embedding `affirm`, `reject`, and `tend` as foundational unquoted scalars into the internet's data interchange format, we are cementing TIS into the backbone of global telecommunications, bypassing the need to coerce uncertainty into binary `true`/`false`.
+
+## 6. Hardware Interdependence (TernCore-Silicon)
+The TIS software ecosystem is designed to be mathematically native but computationally expensive on legacy binary hardware. 
+*   **The Moat:** This creates a "Hardware Pull." As enterprises adopt TIS software for its superior logic, they are forced to migrate to **TernCore-Silicon ISA** compatible chips to achieve the 80% power and latency gains promised by our `TSKIP` sparse execution primitive. RFI-IRFOS holds the exclusive IP for this instruction set.
