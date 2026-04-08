@@ -1,4 +1,4 @@
-# Sequoia Capital Pitch Memo: The Ternary Intelligence Stack (TIS)
+# Global Venture Capital Pitch Memo: The Ternary Intelligence Stack (TIS)
 
 ## Company Purpose
 To establish the fundamental software and hardware infrastructure for the post-binary computing era. We are making AI capable of native ambiguity resolution.
