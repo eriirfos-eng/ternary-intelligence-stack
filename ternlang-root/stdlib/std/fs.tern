@@ -2,10 +2,10 @@
 // Purpose: T-FS-v1.0: Triadic File System
 // Author:  RFI-IRFOS (ZVR: 1015608684)
 
-// Standardizes triadic persistence with State 0 block isolation.
+// Standardizes triadic persistence with deliberative hold block isolation.
 
 fn write_triadic_block(address: int, data: trit) -> trit {
-    // Utilize State 0 as a native physical barrier between blocks
+    // Utilize deliberative hold as a native physical barrier between blocks
     if address % 2 == 0 {
         // Hardware isolation barrier
         return tend; 

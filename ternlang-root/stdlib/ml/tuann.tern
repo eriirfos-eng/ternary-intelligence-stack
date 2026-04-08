@@ -5,7 +5,7 @@
 use nn::uncertainty;
 
 fn forward_pass(input_vector: int, weight_matrix: int, confidence_score: int) -> trit {
-    // Core TUANN forward pass utilizing State 0 for noise rejection.
+    // Core TUANN forward pass utilizing deliberative hold for noise rejection.
     let activation: trit = uncertainty::thold_activation(input_vector * weight_matrix, confidence_score);
     return activation;
 }

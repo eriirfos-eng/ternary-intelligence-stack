@@ -6,11 +6,11 @@
 This standard specifies the formats and methods for balanced ternary floating-point arithmetic in computer systems. As the physical limits of binary transistors are reached, ternary logic provides a mathematically proven path to higher data density and lower thermodynamic load.
 
 ## 2. The "Unknown" State Mandate
-Unlike IEEE 754 (Binary), TFP-754 structurally distinguishes between numerical zero and the logical `State 0` (Tend/Unknown/Pending). 
+Unlike IEEE 754 (Binary), TFP-754 structurally distinguishes between numerical zero and the logical `deliberative hold` (Tend/Unknown/Pending). 
 
 Hardware complying with TFP-754 MUST:
-1. Provide a physical hardware bypass for multiplication cycles where an operand is `State 0`.
-2. Propagate `State 0` deterministically through arithmetic pipelines without coercing the value to a false binary boolean (`+1` or `-1`).
+1. Provide a physical hardware bypass for multiplication cycles where an operand is `deliberative hold`.
+2. Propagate `deliberative hold` deterministically through arithmetic pipelines without coercing the value to a false binary boolean (`+1` or `-1`).
 
 ## 3. Patent & Licensing
 This standard is driven by foundational patents held by **RFI-IRFOS**. 

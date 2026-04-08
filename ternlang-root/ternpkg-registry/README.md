@@ -5,7 +5,7 @@ The central nervous system of the Ternary ecosystem. If NPM controls JavaScript 
 ## The Strategy: The Audit Gatekeeper
 We do not just host code; we enforce the paradigm. Every package uploaded to the global registry is automatically scanned by `tern-audit`.
 
-If a developer tries to publish a `.ternpkg` that uses binary boolean coercion or fails to exhaustively handle `State 0` (The "Hold" State), **the registry rejects the package**. 
+If a developer tries to publish a `.ternpkg` that uses binary boolean coercion or fails to exhaustively handle `deliberative hold` (The "Hold" State), **the registry rejects the package**. 
 
 By controlling the distribution pipeline, we guarantee that the entire third-party ecosystem remains structurally dependent on the BET VM and RFI-IRFOS standards. 
 

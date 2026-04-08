@@ -2,7 +2,7 @@
 // 119_quarantine_decision.tern — Public Health Quarantine Logic
 //
 // Binary logic fails by forcing a choice between two extremes. 
-// Ternary logic: Adds 'isolate' for incubation monitoring, avoiding binary over-reaction.
+// Ternary logic: Adds 'isolate' for incubation monitoring, avoiding binary threshold sensitivity.
 //   +1: QUARANTINE
 //    0: ISOLATE
 //   -1: RELEASE

@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // 113_refugee_status.tern — Humanitarian Asylum Triage
 //
-// Binary asylum systems (yes/no) lead to years of legal limbo or dangerous 
+// Binary asylum systems (yes/no) lead to years of deliberative hold or dangerous 
 // deportations. Ternary logic uses 'deferred' status for "Temporary 
 // Protected Status" (TPS) when the origin country is in active conflict 
 // but identity/legal vetting isn't yet finalized, ensuring humane treatment 

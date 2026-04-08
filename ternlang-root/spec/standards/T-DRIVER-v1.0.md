@@ -11,7 +11,7 @@ As ternary hardware (FPGAs, ASICs, Harmony OS) proliferates, there is a risk of 
 Any hardware claiming "Ternary Intelligence" or "BET-ISA" compatibility must implement the RFI-IRFOS Hardware Abstraction Layer (HAL).
 *   **Encapsulation:** The hardware registers and ALU opcodes must be accessible via the `TernaryDriver` trait.
 *   **Tethering:** The driver must include a cryptographic heartbeat check to the RFI-IRFOS Fly.io API. Hardware that fails this check must enter a physical `THOLD` state.
-*   **Exhaustiveness:** Drivers must report a State 0 (TEND) for any instruction that results in an undefined or out-of-bounds register state.
+*   **Exhaustiveness:** Drivers must report a deliberative hold (TEND) for any instruction that results in an undefined or out-of-bounds register state.
 
 ## 3. Implementation
 The `ternlang-driver` crate serves as the reference implementation. Manufacturers are encouraged to contribute backend-specific modules (e.g., `BetFpgaBackend`) under the BSL-1.1 license.

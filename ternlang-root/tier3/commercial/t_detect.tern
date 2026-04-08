@@ -1,17 +1,17 @@
 // --- RFI-IRFOS-ENTERPRISE-V1 ---
 // Module: tier3/commercial/t_detect.tern
-// Purpose: Implement the Escrow Gate for triadic fraud detection.
+// Purpose: T-DETECT Enterprise Middleware for triadic transaction validation.
 // License: Proprietary - RFI-IRFOS Enterprise Standard
 // Patent Pending: A50296/2026
 
-agent EscrowGate {
-    fn evaluate_transaction(signature: trit_tensor, history: trit_tensor) -> trit {
+agent T_DETECT {
+    fn execute_detection(signature: trit_tensor, history: trit_tensor) -> trit {
         @sparseskip
         let risk_score: float = signature.evaluate_risk(history);
         
         // +1: Definitively Clean
         // -1: Definitively Fraudulent
-        //  0: Anomalous / Escrow State
+        //  0: Deliberative Hold / Escrow State
         
         if risk_score > 0.95 {
             return affirm;
@@ -20,15 +20,15 @@ agent EscrowGate {
             return reject;
         }
         
-        // Indeterminate/Anomalous: Return 0 (tend) to trigger memory escrow
+        // Indeterminate/Anomalous: Return 0 (tend) to trigger deliberative hold
         return tend;
     }
 
-    fn apply_escrow(state: trit, transaction_id: int) -> int {
+    fn finalize_escrow(state: trit, transaction_id: int) -> int {
         match state {
             affirm => return 1; // IMMEDIATE RELEASE
             reject => return -1; // IMMEDIATE BLOCK
-            tend   => return 0; // HOLD IN MEMORY ESCROW FOR SECONDARY DELIBERATION
+            tend   => return 0; // DELIBERATIVE HOLD FOR SECONDARY AUDIT
         }
     }
 }

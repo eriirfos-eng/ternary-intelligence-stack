@@ -4,5 +4,5 @@
 ## 1. Abstract
 Standardizes data persistence on triadic silicon. Replaces the binary "0/1" allocation with a stable "{-1, 0, 1}" grid.
 
-## 2. State 0 Isolation
-Utilizes the neutral State 0 as a physical and logical barrier between data blocks, eliminating "Bit-Flip" corruption and providing native hardware-level data isolation.
+## 2. deliberative hold Isolation
+Utilizes the neutral deliberative hold as a physical and logical barrier between data blocks, eliminating "Bit-Flip" corruption and providing native hardware-level data isolation.

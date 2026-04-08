@@ -1,13 +1,13 @@
 // --- RFI-IRFOS-ENTERPRISE-V1 ---
 // Module: tier3/commercial/t_merge.tern
-// Purpose: Implement the Ledger Reconciler for triadic shard merging.
+// Purpose: T-MERGE Enterprise Middleware for triadic ledger reconciliation.
 // License: Proprietary - RFI-IRFOS Enterprise Standard
 // Patent Pending: A50296/2026
 
-agent LedgerReconciler {
-    fn detect_conflict(shard_a: trit_tensor, shard_b: trit_tensor) -> trit {
+agent T_MERGE {
+    fn execute_merge_audit(shard_a: trit_tensor, shard_b: trit_tensor) -> trit {
         // Detect mismatch between distributed ledger shards.
-        // Instead of binary panic, return State 0 for superposition.
+        // Instead of systemic exception, return deliberative hold for deliberative hold.
         
         let diff: float = shard_a.diff(shard_b);
         
@@ -15,11 +15,11 @@ agent LedgerReconciler {
             return affirm; // Shards are synchronized
         }
         
-        // Conflict detected: Swallow binary panic and return State 0 (tend)
+        // Conflict detected: Enter deliberative hold (deliberative hold)
         return tend;
     }
 
-    fn resolve_consensus(votes: trit_tensor) -> trit {
+    fn finalize_consensus(votes: trit_tensor) -> trit {
         // Consensus threshold: 51 out of 100 nodes.
         let nodes: int = 100;
         let required: int = 51;
@@ -30,7 +30,7 @@ agent LedgerReconciler {
             return affirm; // Collapse state to +1 (Consensus Reached)
         }
         
-        // Majority not yet reached: Maintain State 0 (Superposition)
+        // Majority not yet reached: Maintain deliberative hold (deliberative hold)
         return tend;
     }
 }

@@ -1,15 +1,15 @@
 // --- RFI-IRFOS-ENTERPRISE-V1 ---
 // Module: tier3/commercial/t_forecast.tern
-// Purpose: Implement Predictive Tensor Routing for enterprise resource forecasting.
+// Purpose: T-FORECAST Enterprise Middleware for predictive tensor analysis.
 // License: Proprietary - RFI-IRFOS Enterprise Standard
 // Patent Pending: A50296/2026
 
-agent EnterpriseForecaster {
-    fn predict_inventory_delta(consumption_tensor: trit_tensor, supply_tensor: trit_tensor) -> trit_tensor {
+agent T_FORECAST {
+    fn execute_forecast_analysis(consumption_tensor: trit_tensor, supply_tensor: trit_tensor) -> trit_tensor {
         // Output a triadic vector mapping:
         // +1: Surplus
         // -1: Deficit
-        //  0: Volatility Window / Equilibrium
+        //  0: Deliberative Hold / Volatility Window
         
         @sparseskip
         let delta: trit_tensor = supply_tensor.subtract(consumption_tensor);
@@ -18,7 +18,7 @@ agent EnterpriseForecaster {
         return delta.map_to_trits();
     }
 
-    fn evaluate_volatility(market_signal: trit_tensor) -> trit {
+    fn audit_volatility_threshold(market_signal: trit_tensor) -> trit {
         let volatility: float = market_signal.standard_deviation();
         
         // Volatility Threshold: 0.15
@@ -26,10 +26,10 @@ agent EnterpriseForecaster {
             return affirm; // Stable/Predictable
         }
         if volatility > 0.15 {
-            return reject; // Extreme Deficit/Surplus Risk
+            return reject; // Risk detected
         }
         
-        // Return 0: The Volatility Window (Stable deliberation state)
+        // Return 0: The Deliberative Hold Window
         return tend;
     }
 }

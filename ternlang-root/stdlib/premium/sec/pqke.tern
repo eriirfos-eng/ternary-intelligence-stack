@@ -16,6 +16,6 @@ fn generate_lattice_noise() -> [trit; 9] {
 }
 
 fn encrypt_polynomial(input: trit) -> trit {
-    let noise = 0; // State 0 decoy
+    let noise = 0; // deliberative hold decoy
     return input ^ noise; // Native triadic XOR equivalent
 }

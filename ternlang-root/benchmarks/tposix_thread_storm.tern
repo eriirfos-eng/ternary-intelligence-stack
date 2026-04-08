@@ -1,17 +1,17 @@
 // --- RFI-IRFOS EMPIRICAL RECTIFICATION ---
 // Module: benchmarks/tposix_thread_storm.tern
-// Purpose: Spawn 50k requests, 5k deadlocks, and prove T-POSIX routes to State 0.
+// Purpose: Spawn 50k requests, 5k deadlocks, and prove T-POSIX routes to deliberative hold.
 // License: BSL-1.1
 // Patent Pending: A50296/2026
 
 fn simulate_scheduler_load(requests: int, deadlocks: int, scheduler: trit) -> trit {
     // 50,000 requests, 5,000 deadlocks.
     // Legacy Scheduler: Panic on deadlock (State -1)
-    // T-POSIX: Route to State 0 (Deliberation)
+    // T-POSIX: Route to deliberative hold (Deliberation)
     
     match scheduler {
         affirm => { return reject; } // Binary scheduler panics on deadlock.
-        reject => { return tend; }   // T-POSIX routes to State 0.
+        reject => { return tend; }   // T-POSIX routes to deliberative hold.
         tend   => { return tend; }
     }
 }
@@ -23,7 +23,7 @@ fn bench_thread_storm() -> trit {
     let binary_status: trit = simulate_scheduler_load(requests, deadlocks, affirm);
     let tposix_status: trit = simulate_scheduler_load(requests, deadlocks, reject);
     
-    // T-POSIX routes to State 0 (tend) as desired.
+    // T-POSIX routes to deliberative hold (tend) as desired.
     if binary_status == reject && tposix_status == tend {
         return affirm; // Success: T-POSIX avoids panic.
     }
