@@ -30,13 +30,16 @@ The **TEND (0)** state is the core innovation of the **BET-VM**. It is not "unde
 
 ## What's in This Repository
 
-```
+```text
 ternlang-root/        Language, VM, inference engine, API, MCP server
 agent-albert/         Local AI node built on the Ternary Intelligence Stack
 ternlang-vscode/      VS Code extension (.tern syntax highlighting + LSP)
-ternlang-root/spec/   Institutional standards (BET-ISA, IEEE TFP-754, etc.)
+docs/                 Institutional standards, index, and quickstart
+logs/                 Runtime logs and audit trails
 ```
 
+→ **[Institutional Index](docs/GLOBAL-INDEX.md)**
+→ **[Quickstart Guide](docs/QUICKSTART.md)**
 → **[Full technical documentation](ternlang-root/README.md)**
 → **[Development roadmap](ternlang-root/ROADMAP.md)**
 → **[250+ .tern example programs](ternlang-root/examples/INDEX.md)**

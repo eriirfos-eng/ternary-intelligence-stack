@@ -28,3 +28,6 @@ venv/
 .env
 *.env
 legacy_archive/
+
+# TIS logs
+logs/
