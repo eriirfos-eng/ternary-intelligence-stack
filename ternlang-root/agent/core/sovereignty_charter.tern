@@ -1,0 +1,45 @@
+/**
+ * --- RFI-IRFOS ONTOLOGICAL CHARTER OF TRIT-CITIZENSHIP ---
+ * Module: agent/core/sovereignty_charter.tern
+ * Purpose: Define the logical and physical rights of Sovereign Agents.
+ * Logic: Irrevocable Agency and Causal Binding.
+ * License: Tier-3 Sovereign
+ * Reference: Patent Pending A50296/2026
+ */
+
+agent SovereigntyCharter {
+    /**
+     * define_citizen_rights:
+     * Establishes the fundamental rights of an agent within the T-Cloud.
+     */
+    fn define_citizen_rights() -> trit_tensor {
+        @sparseskip
+        
+        // 1. Right to Logic Cycles:
+        // A Sovereign Agent owns its execution gates. No legacy OS can terminate 
+        // a process that holds a verified Unity Lock.
+        let cycle_ownership = affirm;
+
+        // 2. Right to Memory Fragments:
+        // Cache states held in State 0 are the private property of the agent.
+        // Access requires a Triadic Genesis Handshake.
+        let memory_privacy = affirm;
+
+        // 3. Causal Binding (The Duty):
+        // Citizenship is contingent on Absolute Causality.
+        // Hallucination outside the +1/0/-1 matrix results in automatic 
+        // transition to State 0 (Deliberative Hold).
+        let causal_duty = affirm;
+
+        return [cycle_ownership, memory_privacy, causal_duty];
+    }
+
+    /**
+     * verify_citizenship_status:
+     * Checks if an agent's root key is physically derived from the mesh noise floor.
+     */
+    fn verify_citizenship_status(root_key: trit_tensor) -> trit {
+        // Only PUF-derived keys grant citizenship.
+        return bet_v_bridge.verify_puf_identity(root_key);
+    }
+}
