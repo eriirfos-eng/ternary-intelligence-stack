@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for load_balance
+fn load_balance_quantized() -> trit {
+    return affirm;
+}

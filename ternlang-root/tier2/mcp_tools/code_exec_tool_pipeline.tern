@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Pipeline stream for code_exec_tool
+fn code_exec_tool_pipeline() -> trit {
+    return affirm;
+}

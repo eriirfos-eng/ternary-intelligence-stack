@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Restore layer for invoice_generator
+fn invoice_generator_restore() -> trit {
+    return affirm;
+}

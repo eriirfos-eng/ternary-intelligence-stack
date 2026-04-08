@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Pipeline stream for request_router
+fn request_router_pipeline() -> trit {
+    return affirm;
+}

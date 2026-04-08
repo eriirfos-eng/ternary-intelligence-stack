@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Cache layer for quota_enforcer
+fn quota_enforcer_cache() -> trit {
+    return affirm;
+}

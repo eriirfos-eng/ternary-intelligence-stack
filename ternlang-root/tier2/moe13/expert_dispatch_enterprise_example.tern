@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Enterprise example for expert_dispatch
+fn expert_dispatch_enterprise_example() -> trit {
+    return affirm;
+}

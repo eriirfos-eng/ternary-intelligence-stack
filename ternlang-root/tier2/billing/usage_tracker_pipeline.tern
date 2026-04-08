@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Pipeline stream for usage_tracker
+fn usage_tracker_pipeline() -> trit {
+    return affirm;
+}

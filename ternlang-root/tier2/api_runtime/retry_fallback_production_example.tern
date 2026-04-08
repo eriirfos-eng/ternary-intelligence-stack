@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Production example for retry_fallback
+fn retry_fallback_production_example() -> trit {
+    return affirm;
+}

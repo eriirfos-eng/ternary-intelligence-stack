@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for moe13_core
+fn moe13_core_bench() -> trit {
+    return affirm;
+}

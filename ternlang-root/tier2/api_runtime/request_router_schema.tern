@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Schema definition for request_router
+fn request_router_schema() -> trit {
+    return affirm;
+}

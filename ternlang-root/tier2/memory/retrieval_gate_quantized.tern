@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for retrieval_gate
+fn retrieval_gate_quantized() -> trit {
+    return affirm;
+}

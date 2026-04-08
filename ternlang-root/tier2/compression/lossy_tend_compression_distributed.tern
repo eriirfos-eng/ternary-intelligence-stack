@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Distributed logic for lossy_tend_compression
+fn lossy_tend_compression_distributed() -> trit {
+    return affirm;
+}

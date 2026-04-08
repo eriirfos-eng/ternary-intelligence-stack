@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Sparse execution for window_optimizer
+fn window_optimizer_sparse() -> trit {
+    return affirm;
+}

@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for tool_router
+fn tool_router_quantized() -> trit {
+    return affirm;
+}

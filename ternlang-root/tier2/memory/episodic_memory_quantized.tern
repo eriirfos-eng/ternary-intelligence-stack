@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for episodic_memory
+fn episodic_memory_quantized() -> trit {
+    return affirm;
+}

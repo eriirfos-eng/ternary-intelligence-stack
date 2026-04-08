@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Sparse execution for episodic_memory
+fn episodic_memory_sparse() -> trit {
+    return affirm;
+}

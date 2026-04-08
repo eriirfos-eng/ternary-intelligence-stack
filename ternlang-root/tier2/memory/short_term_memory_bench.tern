@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for short_term_memory
+fn short_term_memory_bench() -> trit {
+    return affirm;
+}

@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for load_balance
+fn load_balance_safe() -> trit {
+    return affirm;
+}

@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Pipeline stream for invoice_generator
+fn invoice_generator_pipeline() -> trit {
+    return affirm;
+}

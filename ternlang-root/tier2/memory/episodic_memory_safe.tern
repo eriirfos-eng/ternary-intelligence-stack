@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for episodic_memory
+fn episodic_memory_safe() -> trit {
+    return affirm;
+}

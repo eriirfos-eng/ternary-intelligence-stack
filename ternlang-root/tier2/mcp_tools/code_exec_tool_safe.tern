@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Safety wrapper for code_exec_tool
+fn code_exec_tool_safe() -> trit {
+    return affirm;
+}

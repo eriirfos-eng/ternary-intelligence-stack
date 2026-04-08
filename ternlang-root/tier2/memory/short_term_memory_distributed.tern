@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Distributed logic for short_term_memory
+fn short_term_memory_distributed() -> trit {
+    return affirm;
+}

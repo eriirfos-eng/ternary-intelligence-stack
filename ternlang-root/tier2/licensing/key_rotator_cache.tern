@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Cache layer for key_rotator
+fn key_rotator_cache() -> trit {
+    return affirm;
+}

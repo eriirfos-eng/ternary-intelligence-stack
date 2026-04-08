@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Production example for decay_controller
+fn decay_controller_production_example() -> trit {
+    return affirm;
+}

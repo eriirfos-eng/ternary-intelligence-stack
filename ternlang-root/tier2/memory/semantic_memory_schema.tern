@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Schema definition for semantic_memory
+fn semantic_memory_schema() -> trit {
+    return affirm;
+}

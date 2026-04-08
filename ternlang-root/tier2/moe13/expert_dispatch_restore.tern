@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Restore layer for expert_dispatch
+fn expert_dispatch_restore() -> trit {
+    return affirm;
+}

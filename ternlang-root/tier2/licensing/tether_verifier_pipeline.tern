@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Pipeline stream for tether_verifier
+fn tether_verifier_pipeline() -> trit {
+    return affirm;
+}

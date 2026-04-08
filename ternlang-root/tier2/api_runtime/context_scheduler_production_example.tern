@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Production example for context_scheduler
+fn context_scheduler_production_example() -> trit {
+    return affirm;
+}

@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Distributed logic for context_scheduler
+fn context_scheduler_distributed() -> trit {
+    return affirm;
+}

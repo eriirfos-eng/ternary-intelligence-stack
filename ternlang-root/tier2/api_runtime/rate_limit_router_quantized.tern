@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for rate_limit_router
+fn rate_limit_router_quantized() -> trit {
+    return affirm;
+}

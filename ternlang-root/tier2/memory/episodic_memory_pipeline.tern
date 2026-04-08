@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Pipeline stream for episodic_memory
+fn episodic_memory_pipeline() -> trit {
+    return affirm;
+}

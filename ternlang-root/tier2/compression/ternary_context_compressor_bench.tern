@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Benchmark for ternary_context_compressor
+fn ternary_context_compressor_bench() -> trit {
+    return affirm;
+}

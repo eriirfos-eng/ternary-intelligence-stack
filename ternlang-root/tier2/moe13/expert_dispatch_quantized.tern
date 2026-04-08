@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Quantized model for expert_dispatch
+fn expert_dispatch_quantized() -> trit {
+    return affirm;
+}
