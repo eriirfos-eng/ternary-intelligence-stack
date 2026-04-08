@@ -1,0 +1,8 @@
+[package]
+name = "ternlang-candle"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-BSL-1.1"
+description = "Native Triadic Kernels for HuggingFace Candle. The definitive 122x Sparse Bypass bridge."
+
+[dependencies]

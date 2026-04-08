@@ -1,0 +1,8 @@
+[package]
+name = "ternlang-wasmtime"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-BSL-1.1"
+description = "Ontological Handshake for Wasmtime Runtime. Sovereign triadic WASM authorization."
+
+[dependencies]
