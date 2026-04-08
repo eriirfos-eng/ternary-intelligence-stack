@@ -1,0 +1,12 @@
+{
+  "name": "tern-web-core",
+  "version": "0.1.0",
+  "description": "Substrate Integration for the Ternary Intelligence Stack (TIS) in the browser.",
+  "main": "index.js",
+  "author": "RFI-IRFOS Theoretical Research Department",
+  "license": "BSL-1.1",
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
