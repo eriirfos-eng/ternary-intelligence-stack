@@ -1767,6 +1767,10 @@ version = "0.1.0"
 [[package]]
 name = "ternlang-posix"
 version = "0.1.0"
+dependencies = [
+ "libc",
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-qutrit"
@@ -1818,6 +1822,11 @@ dependencies = [
 [[package]]
 name = "ternlang-tson"
 version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ternlang-core",
+]
 
 [[package]]
 name = "ternlang-ttp"

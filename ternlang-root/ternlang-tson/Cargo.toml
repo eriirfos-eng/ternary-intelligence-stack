@@ -2,11 +2,10 @@
 name = "ternlang-tson"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-keywords.workspace = true
-categories.workspace = true
+license = "LicenseRef-BSL-1.1"
+description = "TSON (Ternary JSON) parser. Native triadic state encoding with 30% higher density and proprietary MoE-13 compression."
 
 [dependencies]
+ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

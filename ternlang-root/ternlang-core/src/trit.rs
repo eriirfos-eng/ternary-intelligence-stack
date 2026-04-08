@@ -1,7 +1,8 @@
 use std::fmt;
 use std::ops::{Add, Mul, Neg};
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Trit {
     Reject = -1,   // logical -1 — conflict, negation
     Tend   =  0,   // logical  0 — hold, uncertainty
