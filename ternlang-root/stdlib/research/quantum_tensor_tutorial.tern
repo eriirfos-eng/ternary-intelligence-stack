@@ -1,0 +1,11 @@
+// Module:  stdlib/research/quantum_tensor_tutorial.tern
+// Purpose: Self-documenting tutorial for quantum_tensor
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of quantum_tensor.
+fn quantum_tensor_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
