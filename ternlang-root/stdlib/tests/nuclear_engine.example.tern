@@ -1,0 +1,14 @@
+// Module:  stdlib/tests/nuclear_engine.example.tern
+// Purpose: Production usage example for nuclear_engine
+// Author:  RFI-IRFOS
+
+fn example_nuclearengine() -> trit {
+    let signal: float = 0.75;
+    let baseline: float = 0.5;
+    
+    // Demonstrate usage of the core module
+    if signal > baseline {
+        return affirm;
+    }
+    return tend;
+}
