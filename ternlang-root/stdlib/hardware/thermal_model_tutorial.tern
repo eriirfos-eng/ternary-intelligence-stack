@@ -1,0 +1,11 @@
+// Module:  stdlib/hardware/thermal_model_tutorial.tern
+// Purpose: Self-documenting tutorial for thermal_model
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of thermal_model.
+fn thermal_model_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
