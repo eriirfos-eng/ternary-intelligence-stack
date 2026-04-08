@@ -1,0 +1,11 @@
+// Module:  stdlib/sim/fluidic_filter_tutorial.tern
+// Purpose: Self-documenting tutorial for fluidic_filter
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+// In this tutorial, we explore the ternary logic of fluidic_filter.
+fn fluidic_filter_tutorial_demo() -> trit {
+    // Explicit tend semantics
+    let ambiguous_state: trit = tend;
+    return ambiguous_state;
+}
