@@ -1,0 +1,16 @@
+// Module:  stdlib/bench/acoustic_system.schema.tern
+// Purpose: T-SON serialization schema for acoustic_system
+// Author:  RFI-IRFOS
+// Ref:     https://ternlang.com
+
+struct Acoustic_systemSchema {
+    id: int,
+    confidence: trit,
+    weight: float
+}
+
+fn validate_schema(data: Acoustic_systemSchema) -> trit {
+    if data.weight > 0.0 { return affirm; }
+    if data.weight < 0.0 { return reject; }
+    return tend;
+}
