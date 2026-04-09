@@ -965,123 +965,135 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         </div>
 
         <div class="space-y-16">
-          
+
           <!-- Toolchain -->
           <div class="reveal">
-            <h3 class="text-xl font-black text-t_text uppercase tracking-tight mb-6 border-b border-t_border pb-3">Core & Toolchain</h3>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-core</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">AST & BET VM internals</span>
+            <div class="flex items-center gap-4 mb-6 border-b border-t_border pb-3">
+              <h3 class="text-xl font-black text-t_text uppercase tracking-tight">Tier 1 — Open Core</h3>
+              <span class="text-[10px] font-mono font-bold bg-t_teal/10 text-t_teal px-2 py-1 rounded">LGPL-3.0 · crates.io</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <a href="https://crates.io/crates/ternlang-core" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-core</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Lexer, parser, AST, and 51-opcode BET VM. The compiler core — all .tern programs pass through here before bytecode emission.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-cli</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Build, run, sim, REPL</span>
+              <a href="https://crates.io/crates/ternlang-cli" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-cli</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed"><code class="text-t_text">run</code> · <code class="text-t_text">build</code> · <code class="text-t_text">sim</code> · <code class="text-t_text">fmt</code> · <code class="text-t_text">repl</code> · <code class="text-t_text">compat</code>. CLI frontend for the BET VM. Entry point for every .tern workflow.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-lsp</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">IDE tooling & diags</span>
+              <a href="https://crates.io/crates/ternlang-lsp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-lsp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">LSP 3.17 server: hover types, trit exhaustiveness diagnostics, and completions. Works with VS Code, Neovim, Zed, any LSP client.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternpkg</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Manifests & Registry</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternpkg" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternpkg</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Package manager with GitHub-backed registry. Resolves .tern module manifests and dependency graphs at compile time.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-compat</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">9-trit RISC & S-expr</span>
-              </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-edu</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">"Das programmierte Brot"</span>
+              <a href="https://crates.io/crates/ternlang-compat" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-compat</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">9-trit RISC assembler bridge. Translates Brandon Smith ternary assembly and Owlet S-expressions to BET bytecode.</span>
               </a>
             </div>
           </div>
 
           <!-- AI Middleware -->
           <div class="reveal">
-            <h3 class="text-xl font-black text-t_text uppercase tracking-tight mb-6 border-b border-t_border pb-3">AI & Inference Middleware <span class="text-[10px] font-mono font-bold bg-t_blue/20 text-t_blue ml-3 px-2 py-1 rounded align-middle">BSL-1.1</span></h3>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <a href="#" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_blue font-black text-sm md:text-base">ternlang-moe</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">MoE-13 Orchestrator</span>
+            <div class="flex items-center gap-4 mb-6 border-b border-t_border pb-3">
+              <h3 class="text-xl font-black text-t_text uppercase tracking-tight">Tier 2 — AI & Inference Middleware</h3>
+              <span class="text-[10px] font-mono font-bold bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1 · API key required</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <a href="https://crates.io/crates/ternlang-moe" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-moe</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Mixture-of-Experts orchestrator: 13 specialist models vote via weighted EMA convergence. Hard veto rule — Safety at conf &gt; 0.90 terminates the chain unconditionally.</span>
               </a>
-              <a href="#" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_blue font-black text-sm md:text-base">ternlang-ml</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">BitNet & Sparse Ops</span>
+              <a href="https://crates.io/crates/ternlang-ml" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-ml</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Sparse matmul kernel, BitNet b1.58 weight quantization, EMA deliberation engine, coalition vote, hallucination scoring, and scalar temperature.</span>
               </a>
-              <a href="#" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_blue font-black text-sm md:text-base">ternlang-mkl</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">cuTern Math Kernel</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mkl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mkl</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Math Kernel Library. Implements <code class="text-t_teal">TSPARSE_MATMUL</code> — skips multiply-accumulate when weight = 0. Patent-pending zero-MAC bypass (RFI-IRFOS).</span>
               </a>
-              <a href="#" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_blue font-black text-sm md:text-base">ternlang-mcp</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">JSON-RPC 2.0 Server</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mcp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mcp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">13-tool MCP server over stdio + HTTP. JSON-RPC 2.0. Connects Claude Desktop, Cursor, or any MCP client to the ternary decision engine.</span>
               </a>
-              <a href="#" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_blue font-black text-sm md:text-base">ternlang-api</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">REST & SSE Streams</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-api" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-api</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Axum REST + SSE API on Fly.io. Multi-tenant key provisioning via Stripe webhook. Rate-limited by tier (10k / 20k / unlimited calls/month).</span>
+              </a>
+              <a href="https://crates.io/crates/ternlang-hdl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-hdl</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Verilog-2001 codegen from .tern HDL descriptions. Simulates a BET processor on FPGA. Trit-encoded register file and ALU.</span>
               </a>
             </div>
           </div>
 
           <!-- Frontier -->
           <div class="reveal">
-            <h3 class="text-xl font-black text-t_text uppercase tracking-tight mb-6 border-b border-t_border pb-3">Frontier & Hardware <span class="text-[10px] font-mono font-bold bg-t_red/20 text-t_red ml-3 px-2 py-1 rounded align-middle">BSL-1.1</span></h3>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-hdl</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Verilog codegen & FPGA</span>
+            <div class="flex items-center gap-4 mb-6 border-b border-t_border pb-3">
+              <h3 class="text-xl font-black text-t_text uppercase tracking-tight">Tier 3 & 4 — Frontier Domains</h3>
+              <span class="text-[10px] font-mono font-bold bg-t_red/20 text-t_red px-2 py-1 rounded">BSL-1.1 / Proprietary</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-qutrit" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-qutrit</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Quantum-classical bridge. Maps qutrit states {|−1⟩, |0⟩, |+1⟩} to BET trit space. Enables hybrid quantum circuits with ternary control flow.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-qutrit</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Quantum Superposition</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-bci" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-bci</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Brain-computer interface decoder. Maps inhibitory / excitatory / ambiguous neuron firing states to trit = −1/+1/0. Eliminates forced binary decoding.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-bci</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Neuralik Inhibitory</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-astro" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-astro</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Interplanetary delay-tolerant networking (DTN). Hold state buffers packets during signal blackout windows instead of dropping or retrying blindly.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-astro</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Delay-Tolerant Routing</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-bio" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-bio</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Genomic sequencing pipeline. DNA methylation state (methylated / unmethylated / ambiguous) maps natively to trit — no forced binary call on ambiguous reads.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-swarm</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Triadic Kinematics</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-sec" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-sec</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Post-quantum cryptography over ternary lattices. Signature verification returns trit — valid / invalid / tamper-indeterminate, not a forced bool.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">ternlang-sql</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">T-Tree DB Driver</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-swarm" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-swarm</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Robotic swarm kinematics. Models biological hesitation — trit = 0 when proximity sensors conflict, suspending actuation until the contradiction resolves.</span>
               </a>
             </div>
           </div>
 
-          <!-- Standards -->
+          <!-- RFI-IRFOS Specifications -->
           <div class="reveal">
-            <h3 class="text-xl font-black text-t_text uppercase tracking-tight mb-6 border-b border-t_border pb-3">Strategic Standards</h3>
+            <div class="flex items-center gap-4 mb-2 border-b border-t_border pb-3">
+              <h3 class="text-xl font-black text-t_text uppercase tracking-tight">RFI-IRFOS Protocol Specifications</h3>
+            </div>
+            <p class="text-xs text-t_muted font-mono mb-6">Open proposals — not yet ratified by external standards bodies. Published for community review and adoption.</p>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">TSON</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">30% denser than JSON</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/TSON-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">TSON</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
+                <span class="text-[11px] text-t_muted leading-relaxed">Ternary serialization format. 2-bit trit packing is ~30% denser than JSON float64 for numerical payloads.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">TTP</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">No-timeout transfers</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/TTP-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">TTP</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
+                <span class="text-[11px] text-t_muted leading-relaxed">Transfer protocol with a hold-state response code (000) for in-progress deliberation. Replaces timeout errors with structured wait.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">T-POSIX</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Triadic OS Interop</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-POSIX-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">T-POSIX</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
+                <span class="text-[11px] text-t_muted leading-relaxed">OS interface standard: ternary process signals, 3-state scheduler, and trit-valued syscall return codes.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">T-NTP</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Temporal Hold Sync</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/BET-ISA-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">BET-ISA</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
+                <span class="text-[11px] text-t_muted leading-relaxed">9-trit RISC instruction set architecture. 51 opcodes, 27 registers, THOLD as a first-class pipeline gate.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">T-DID</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Provisional Auth State</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-BIO-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">T-BIO</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
+                <span class="text-[11px] text-t_muted leading-relaxed">Genomic sequencing standard: methylation, expression, and SNP states encoded as trit arrays.</span>
               </a>
-              <a href="#" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col justify-between min-h-[110px] shadow-sm">
-                <span class="text-t_text font-black text-sm md:text-base">T-Contract</span>
-                <span class="text-[11px] md:text-xs text-t_muted mt-2 font-medium leading-relaxed">Arbitration lock escrow</span>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-SEC-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">T-SEC</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
+                <span class="text-[11px] text-t_muted leading-relaxed">Post-quantum cryptography spec: ternary lattice key exchange and trit-valued signature verification.</span>
               </a>
             </div>
           </div>
