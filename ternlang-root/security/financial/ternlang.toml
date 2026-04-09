@@ -1,0 +1,11 @@
+[package]
+name = "fiat-firewall"
+version = "1.0.0"
+description = "CBDC Interception and Digital ID Sanitization Layer"
+license = "BSL-1.1"
+organization = "RFI-IRFOS"
+
+[dependencies]
+stdlib-net = "latest"
+stdlib-crypto = "latest"
+kernel-protocols = "latest"

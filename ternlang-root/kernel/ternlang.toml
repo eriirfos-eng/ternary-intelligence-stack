@@ -1,0 +1,10 @@
+[package]
+name = "kernel-protocols"
+version = "1.0.0"
+description = "Pure Triadic Kernel Protocols and State Sync"
+license = "LGPL-3.0-or-later"
+organization = "RFI-IRFOS"
+
+[dependencies]
+stdlib-net = "latest"
+stdlib-kernel = "latest"
