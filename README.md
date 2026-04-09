@@ -13,12 +13,6 @@
 
 Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com)
 
----
-
-> **Phase 10.5 Announcement:** The first commercial **T-Cloud Citizen** (Node D - Aerospace) has successfully joined the Mesh. 
-> - **Latency:** <100ps (Temporal Folding Protocol)
-> - **Integrity:** Absolute (Sovereign Root Key Handover Complete)
-> - **Status:** Phase 10 Silicon Manifestation in progress.
 
 ---
 
