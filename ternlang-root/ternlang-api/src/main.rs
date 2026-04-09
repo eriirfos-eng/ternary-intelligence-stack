@@ -1804,7 +1804,7 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
                 "GET  /api/stream/deliberate",
                 "GET  /api/usage",
             ],
-            "get_key":     "https://ternlang.com/#licensing",
+            "get_key":     "https://buy.stripe.com/00w5kFgpigajfyB37a7N604",
             "pricing":     "https://ternlang.com/pricing",
         },
 
@@ -1817,7 +1817,7 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
             "moe_experts": "all 13 experts · full verdicts · triad field · routing pair",
             "streaming":   "GET /api/stream/moe_orchestrate — SSE, event-per-expert",
             "rest_api":    true,
-            "get_key":     "https://ternlang.com/pricing",
+            "get_key":     "https://buy.stripe.com/3cI00l1uo6zJdqtazC7N606",
             "pricing":     "https://ternlang.com/pricing",
         },
 
