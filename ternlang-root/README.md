@@ -375,10 +375,10 @@ For local stdio transport (Claude Desktop, offline use):
 ## Licensing Tiers
 
 ### Tier 2 — Pro Standard
-For developers and startups building AI agents with uncertainty-aware reasoning. Includes 10,000 API calls/month, `@sparseskip` inference acceleration, server-side 3-layer memory, and MoE-13 consolidation. **€99/month** · [Subscribe](https://buy.stripe.com/00w5kFgpigajfyB37a7N604)
+For developers and startups building AI agents with uncertainty-aware reasoning. Includes 10,000 API calls/month, `@sparseskip` inference acceleration, server-side 3-layer memory, and MoE-13 consolidation. **€99/month** · [Subscribe](https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608)
 
 ### Tier 3 — Industrial
-Production-grade deployment for teams requiring EU AI Act-compliant safety gating, audit trails, and high-volume inference. Includes 50,000 API calls/month, QNN & SEC modules, T-HAL silicon bindings, and TernAudit log access. **€349/month** · [Subscribe](https://buy.stripe.com/3cI00l1uo6zJdqtazC7N606)
+Production-grade deployment for teams requiring EU AI Act-compliant safety gating, audit trails, and high-volume inference. Includes 50,000 API calls/month, QNN & SEC modules, T-HAL silicon bindings, and TernAudit log access. **€349/month** · [Subscribe](https://buy.stripe.com/eVq7sNfle0bl86937a7N609)
 
 ### Tier 4 — Enterprise
 On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimited throughput, dedicated SLA, and direct BSL-1.1 source access for air-gapped or regulated environments. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) — **from €2,500/month.**
