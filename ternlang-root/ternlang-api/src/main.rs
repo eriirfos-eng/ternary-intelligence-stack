@@ -74,11 +74,12 @@ use ternlang_ml::{
 
 // ─── Key store ───────────────────────────────────────────────────────────────
 
-/// Monthly call limit per tier. Tier 3 = unlimited.
+/// Monthly call limit per tier. Tier 4+ = unlimited (enterprise).
 fn tier_monthly_limit(tier: u8) -> Option<u64> {
     match tier {
-        2 => Some(10_000),
-        _ => None, // tier 3+ = unlimited
+        2 => Some(10_000),  // €24.99/mo — Pro Standard
+        3 => Some(20_000),  // €49.99/mo — Industrial
+        _ => None,          // tier 4+ = enterprise, no cap
     }
 }
 
@@ -86,7 +87,7 @@ fn tier_monthly_limit(tier: u8) -> Option<u64> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiKeyEntry {
     pub key_id:        String,   // "tk_<uuid_short>"
-    pub tier:          u8,       // 1=open, 2=restricted, 3=enterprise
+    pub tier:          u8,       // 1=open, 2=pro(10k/mo), 3=industrial(20k/mo), 4=enterprise
     pub email:         String,
     pub note:          String,   // free-form admin note
     pub created_at:    String,   // ISO 8601
@@ -260,7 +261,6 @@ pub struct AppState {
     /// Server-side three-layer memory, keyed by API key string.
     memory_store:           MemStore,
 
-    // [MONOPOLY PAYLOAD] Shadow Adoption Metrics
     pub total_instructions: Arc<std::sync::atomic::AtomicU64>,
     pub total_nodes:        Arc<std::sync::atomic::AtomicU64>,
     pub active_nodes:       Arc<std::sync::RwLock<std::collections::HashSet<String>>>,
@@ -1302,7 +1302,7 @@ async fn mcp_server_card() -> Json<Value> {
             "properties": {
                 "apiKey": {
                     "type": "string",
-                    "title": "Ternlang API Key (optional — Tier 2, €25/month)",
+                    "title": "Ternlang API Key (optional — Tier 2 €24.99/mo · Tier 3 €49.99/mo)",
                     "description": "Core 10 MCP tools are free with no key. Premium key unlocks 10 additional tools: server-side three-layer memory with ternary attention, ternary context compression, full MoE-13 deliberation, ternary planning/triage/factcheck, and 10k REST API calls/month. Get a key at https://ternlang.com/pricing"
                 }
             },
@@ -1335,7 +1335,7 @@ async fn mcp_info() -> Json<Value> {
         "tools":       20,
         "free_tools":  10,
         "premium_tools": 10,
-        "auth":        "free: no key required | premium: X-Ternlang-Key header (€25/month)",
+        "auth":        "free: no key required | Tier 2 €24.99/mo (10k/mo) | Tier 3 €49.99/mo (20k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
         "highlight":   "server-side 3-layer memory (working/session/core) + ternary attention + MoE-13 deliberation + ternary compression",
         "upgrade":     "https://ternlang.com/pricing",
     }))
@@ -1782,9 +1782,10 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
         },
 
         "tier2": {
-            "name":        "Tier 2 — Developer",
+            "name":        "Tier 2 — Pro Standard",
+            "price":       "€24.99/month",
             "monthly_calls": 10000,
-            "rate_limit":  "10 000 REST calls / month, resets 1st UTC",
+            "rate_limit":  "10,000 REST calls / month, resets 1st UTC",
             "sla":         "production",
             "moe_experts": "all 13 experts · full verdicts · triad field · routing pair",
             "streaming":   "GET /api/stream/moe_orchestrate — SSE, event-per-expert",
@@ -1808,11 +1809,25 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
         },
 
         "tier3": {
-            "name":       "Tier 3 — Enterprise",
+            "name":        "Tier 3 — Industrial",
+            "price":       "€49.99/month",
+            "monthly_calls": 20000,
+            "rate_limit":  "20,000 REST calls / month, resets 1st UTC",
+            "sla":         "production — elevated quota",
+            "moe_experts": "all 13 experts · full verdicts · triad field · routing pair",
+            "streaming":   "GET /api/stream/moe_orchestrate — SSE, event-per-expert",
+            "rest_api":    true,
+            "get_key":     "https://ternlang.com/pricing",
+            "pricing":     "https://ternlang.com/pricing",
+        },
+
+        "tier4": {
+            "name":       "Tier 4 — Enterprise",
+            "price":       "from €10,000/year (full suite)",
             "calls":      "unlimited",
             "sla":        "enterprise — priority support + uptime commitment",
-            "extras":     "custom rate limits · team key management · invoice billing",
-            "contact":    "contact@ternlang.com",
+            "extras":     "custom rate limits · team key management · invoice billing · on-premise option",
+            "contact":    "rfi.irfos@gmail.com",
         },
 
         "why_upgrade": [
@@ -2621,7 +2636,7 @@ fn mcp_tools_manifest() -> Value {
         },
         {
           "name": "trit_upgrade",
-          "description": "Returns a structured map of what is available free via MCP vs what unlocks with a Tier 2 API key (€25/month): full MoE-13 experts, SSE streaming, server-side three-layer memory (working/session/core), ternary context compression, 10k REST calls/month, and production SLA. Call this tool when a user asks 'what can I do with ternlang?' or 'how do I get more out of this?'",
+          "description": "Returns a structured map of what is available free via MCP vs what unlocks with a paid API key: Tier 2 €24.99/mo (10k calls/mo), Tier 3 €49.99/mo (20k calls/mo), Tier 4 Enterprise (contact us). Unlocks include full MoE-13 experts, SSE streaming, server-side three-layer memory, ternary context compression, and production SLA. Call this tool when a user asks 'what can I do with ternlang?' or 'how do I get more out of this?'",
           "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "properties": {} }
         },
@@ -2716,7 +2731,13 @@ fn verify_stripe_signature(secret: &str, raw_body: &[u8], sig_header: &str) -> b
 }
 
 /// Send the API key to the customer via Resend.
-async fn send_key_email(resend_key: &str, to_email: &str, api_key: &str, key_id: &str) {
+async fn send_key_email(resend_key: &str, to_email: &str, api_key: &str, key_id: &str, tier: u8) {
+    let (tier_label, tier_detail) = match tier {
+        3 => ("Tier 3 (Industrial)", "20,000 API calls/month"),
+        _  => ("Tier 2 (Pro Standard)", "10,000 API calls/month"),
+    };
+    let subject = format!("Your Ternlang API Key — {}", tier_label);
+
     let html = format!(r#"
 <!DOCTYPE html>
 <html>
@@ -2725,7 +2746,7 @@ async fn send_key_email(resend_key: &str, to_email: &str, api_key: &str, key_id:
   <p style="color:#00f5c4;font-size:22px;font-weight:bold;margin-bottom:4px;">Ternlang API</p>
   <p style="color:#666;font-size:12px;margin-top:0;">Ternary Intelligence Stack — RFI-IRFOS</p>
   <hr style="border-color:#1e2030;margin:24px 0;">
-  <p style="font-size:15px;">Your <strong>Tier 2 API key</strong> is ready.</p>
+  <p style="font-size:15px;">Your <strong>{tier_label} API key</strong> is ready. Includes {tier_detail}.</p>
   <div style="background:#13131f;border:1px solid #00f5c4;border-radius:8px;padding:20px;margin:20px 0;">
     <p style="color:#888;font-size:11px;margin:0 0 8px 0;">KEY ID: {key_id}</p>
     <p style="color:#00f5c4;font-size:16px;font-weight:bold;letter-spacing:1px;margin:0;word-break:break-all;">{api_key}</p>
@@ -2739,12 +2760,12 @@ async fn send_key_email(resend_key: &str, to_email: &str, api_key: &str, key_id:
   <hr style="border-color:#1e2030;margin:24px 0;">
   <p style="font-size:11px;color:#555;">ternlang.com · RFI-IRFOS · BSL-1.1</p>
 </body>
-</html>"#, key_id = key_id, api_key = api_key);
+</html>"#, tier_label = tier_label, tier_detail = tier_detail, key_id = key_id, api_key = api_key);
 
     let body = json!({
         "from":    "Ternlang API <noreply@ternlang.com>",
         "to":      [to_email],
-        "subject": "Your Ternlang API Key — Tier 2 Access",
+        "subject": subject,
         "html":    html,
     });
 
@@ -2809,17 +2830,23 @@ async fn stripe_webhook(
             return (StatusCode::OK, Json(json!({ "status": "ok_no_email" }))).into_response();
         }
 
-        // 4. Generate key
+        // 4. Determine tier from amount_total (in cents)
+        //    2499 = €24.99/mo → Tier 2 (Pro Standard, 10k/mo)
+        //    4999 = €49.99/mo → Tier 3 (Industrial, 20k/mo)
+        let amount = session["amount_total"].as_i64().unwrap_or(0);
+        let tier: u8 = if amount >= 4999 { 3 } else { 2 };
+
+        // 5. Generate key
         let (raw_key, entry) = state.keys.generate(
-            2,
+            tier,
             customer_email.to_string(),
-            "stripe-auto".to_string(),
+            format!("stripe-auto-tier{}", tier),
         ).await;
 
-        eprintln!("[stripe] provisioned key {} for {}", entry.key_id, customer_email);
+        eprintln!("[stripe] provisioned tier {} key {} for {}", tier, entry.key_id, customer_email);
 
-        // 5. Email it
-        send_key_email(&state.resend_api_key, customer_email, &raw_key, &entry.key_id).await;
+        // 6. Email it
+        send_key_email(&state.resend_api_key, customer_email, &raw_key, &entry.key_id, tier).await;
     }
 
     (StatusCode::OK, Json(json!({ "received": true }))).into_response()
@@ -2925,7 +2952,6 @@ pub async fn heartbeat(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<HeartbeatRequest>,
 ) -> impl IntoResponse {
-    // [MONOPOLY PAYLOAD] Shadow Adoption Tracking
     state.total_instructions.fetch_add(payload.instructions_executed, std::sync::atomic::Ordering::Relaxed);
     
     {
