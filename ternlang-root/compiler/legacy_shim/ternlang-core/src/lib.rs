@@ -4,6 +4,7 @@
 // Open-core compiler. See LICENSE-LGPL in the repository root.
 
 pub mod trit;
+pub mod types;
 pub mod vm;
 pub mod lexer;
 pub mod ast;

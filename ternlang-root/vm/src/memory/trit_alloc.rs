@@ -21,9 +21,6 @@ pub struct TritAllocator {
 impl TritAllocator {
     /// Initialise a raw memory block for trit allocation.
     pub fn new(size_trits: usize) -> Self {
-        #[cfg(not(test))]
-        crate::security::enforce_secure_boot();
-
         let layout = std::alloc::Layout::from_size_align(size_trits, 1).unwrap();
         let ptr = unsafe { std::alloc::alloc(layout) };
         

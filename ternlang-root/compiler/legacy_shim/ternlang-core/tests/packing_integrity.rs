@@ -5,7 +5,7 @@
  * Reference: Patent Pending A50296/2026
  */
 
-use crate::types::trit::{Trit, TritBlock5};
+use ternlang_core::types::trit::{Trit, TritBlock5};
 use std::time::Instant;
 use rand::Rng;
 
