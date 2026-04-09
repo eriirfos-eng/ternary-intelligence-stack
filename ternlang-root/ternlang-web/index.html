@@ -647,22 +647,22 @@
         <div class="text-center mb-16 reveal active">
           <p class="font-mono text-t_red text-xs font-bold tracking-widest uppercase mb-4">Governance & Observability</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Tern<span class="text-t_red">Audit.</span></h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">The "Black Box" for triadic decisions. Understand why your agent held, committed, or vetoed with forensic precision. No silent overrides.</p>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">Your model makes thousands of decisions per day. TernAudit logs every trit=0 hold and trit=−1 veto with full trace: which expert fired, at what confidence, on what input. No silent overrides. No guessing after the fact.</p>
         </div>
         
         <div class="glass-card rounded-[3rem] p-10 md:p-16 text-left shadow-[0_0_100px_rgba(255,77,77,0.05)] border-t_red/10 relative max-w-5xl mx-auto reveal">
           <div class="grid md:grid-cols-3 gap-12 mb-16">
             <div>
               <h4 class="text-t_text font-black text-sm uppercase mb-4 tracking-widest">Evidence Graph</h4>
-              <p class="text-xs text-t_muted font-medium leading-relaxed">Visualize the conflict between expert vectors in real-time. Trace confidence drift.</p>
+              <p class="text-xs text-t_muted font-medium leading-relaxed">See exactly which input dimensions pushed — or failed to push — your agent's confidence above threshold. Real-time, during inference. Not a post-mortem. You watch the decision form.</p>
             </div>
             <div>
               <h4 class="text-t_text font-black text-sm uppercase mb-4 tracking-widest">Veto Trace</h4>
-              <p class="text-xs text-t_muted font-medium leading-relaxed">Identify which specific expert triggered the -1 state and why. Every veto is logged persistently to AxisMemory.</p>
+              <p class="text-xs text-t_muted font-medium leading-relaxed">Safety fired a −1 block. TernAudit gives you the expert name, its confidence score, and the exact input vector that triggered it — timestamped, permanently logged to AxisMemory. You don't debug it. You read it.</p>
             </div>
             <div>
               <h4 class="text-t_text font-black text-sm uppercase mb-4 tracking-widest">Resolution Path</h4>
-              <p class="text-xs text-t_muted font-medium leading-relaxed">Receive formal guidance on what evidence is needed to break a State 0 equilibrium. The machine maps its own uncertainty.</p>
+              <p class="text-xs text-t_muted font-medium leading-relaxed">Agent stuck on trit=0? TernAudit generates a typed evidence request: the exact dimensions that are under-threshold and what value they need to resolve. You supply the data. The hold clears. No guesswork, no manual log trawl.</p>
             </div>
           </div>
           <div class="bg-t_bg rounded-3xl p-8 border border-t_red/20 font-mono text-sm relative group overflow-hidden">
@@ -690,49 +690,49 @@
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">📈</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">Algorithmic Trading</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">Liquidity anomaly detected during execution. Does not force a buy or sell — emits trit 0 to hold capital in escrow pending confirmation.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">Liquidity anomaly detected during execution. Does not force a buy or sell — emits trit 0 to hold capital in escrow pending confirmation.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">42_algorithmic_trading.tern</div>
           </div>
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">🧠</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">BCI Neural Decoding</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">Decodes active inhibitory potentials. The brain's "stop" signal isn't an absence of action, it's a measurable third state. Mapped 1:1 natively.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">Decodes active inhibitory potentials. The brain's "stop" signal isn't an absence of action, it's a measurable third state. Mapped 1:1 natively.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">bci_inhibitory_decode.tern</div>
           </div>
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">🛰️</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">Astro DTN Routing</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">Interplanetary Delay-Tolerant Networking. Node offline is not a dropped packet (-1). It is an expected temporal hold (0) pending orbital alignment.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">Interplanetary Delay-Tolerant Networking. Node offline is not a dropped packet (-1). It is an expected temporal hold (0) pending orbital alignment.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">astro_dtn_routing.tern</div>
           </div>
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">⚖️</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">Treaty Consensus</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">Multi-agent vote aggregation. Resolves gridlock by escalating contentious dimensions to a formal "Needs Debate" state rather than failing the build.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">Multi-agent vote aggregation. Resolves gridlock by escalating contentious dimensions to a formal "Needs Debate" state rather than failing the build.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">12_vote_aggregator.tern</div>
           </div>
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">🤖</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">Hallucination Detector</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">Context density &lt; 0.25 yields a formal "insufficient data" signal. The LLM is never allowed to generate from sparse inference noise.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">Context density &lt; 0.25 yields a formal "insufficient data" signal. The LLM is never allowed to generate from sparse inference noise.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">08_evidence_collector.tern</div>
           </div>
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">🏥</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">Medical Triage</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">"Observe" is a real clinical outcome, not a bin for the indecisive. Ternary gives it its own routing path separate from discharge/ICU.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">"Observe" is a real clinical outcome, not a bin for the indecisive. Ternary gives it its own routing path separate from discharge/ICU.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">05_medical_triage.tern</div>
           </div>
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">🔌</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">Circuit Breaker</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">CLOSED (+1), OPEN (-1), HALF-OPEN (0). The VM handles all three natively.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">CLOSED (+1), OPEN (-1), HALF-OPEN (0). The VM handles all three natively.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">14_circuit_breaker.tern</div>
           </div>
           <div class="glass-card p-6 rounded-xl border border-t_border hover:border-t_teal/40 transition-colors group flex flex-col shadow-sm">
             <div class="text-2xl mb-3">📜</div>
             <h4 class="text-t_text font-black text-sm mb-2 group-hover:text-t_teal transition-colors">Contract Arbitration</h4>
-            <p class="text-t_muted text-xs font-medium flex-grow leading-relaxed">Triadic Smart Contracts. Capital locks in State 0 pending external oracle consensus, eliminating vulnerability to race-condition exploits.</p>
+            <p class="text-t_muted text-sm font-medium flex-grow leading-relaxed">Triadic Smart Contracts. Capital locks in State 0 pending external oracle consensus, eliminating vulnerability to race-condition exploits.</p>
             <div class="font-mono text-[10px] font-bold text-t_muted/50 mt-4">contract_arbitration.tern</div>
           </div>
         </div>
@@ -752,8 +752,13 @@
         <div class="grid lg:grid-cols-2 gap-16 items-start mb-24 reveal">
           <div>
             <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">The Integration</p>
-            <h2 class="text-5xl font-black text-t_text mb-6 uppercase">Any agent. <br/><span class="text-t_teal">Ternary reasoning.</span></h2>
-            <p class="text-lg text-t_muted mb-8 font-medium">One header upgrade to establish actual causal mapping.</p>
+            <h2 class="text-5xl font-black text-t_text mb-6 uppercase">Your agent.<br/><span class="text-t_teal">Now it can say hold.</span></h2>
+            <p class="text-lg text-t_muted mb-6 font-medium">Claude, Cursor, any MCP-compatible agent — add one header, get a native third state. No Ternlang code to write. No new language to learn.</p>
+            <ul class="space-y-3 mb-8 text-sm font-medium">
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">When evidence is insufficient, the API returns <code class="font-mono text-t_teal bg-t_teal/10 px-1 rounded">trit=0</code> — "gather more data before acting" — instead of forcing a binary guess.</span></li>
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Persistent 3-layer memory keyed to your API key. No state blob to pass between calls.</span></li>
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Safety hard veto: if the Safety expert returns −1 at confidence &gt; 0.90, the chain terminates before any action executes.</span></li>
+            </ul>
             
             <div class="space-y-2 font-mono text-[10px] sm:text-xs bg-t_bg p-6 rounded-xl border border-t_border shadow-sm">
               <div class="text-t_muted font-bold uppercase tracking-widest pb-2 border-b border-t_border/30 mb-2">AI Reasoning (Phase 8)</div>
