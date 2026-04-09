@@ -77,8 +77,8 @@ use ternlang_ml::{
 /// Monthly call limit per tier. Tier 4+ = unlimited (enterprise).
 fn tier_monthly_limit(tier: u8) -> Option<u64> {
     match tier {
-        2 => Some(10_000),  // €24.99/mo — Pro Standard
-        3 => Some(20_000),  // €49.99/mo — Industrial
+        2 => Some(10_000),  // €99/mo  — Pro Standard
+        3 => Some(50_000),  // €349/mo — Industrial
         _ => None,          // tier 4+ = enterprise, no cap
     }
 }
@@ -87,7 +87,7 @@ fn tier_monthly_limit(tier: u8) -> Option<u64> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiKeyEntry {
     pub key_id:        String,   // "tk_<uuid_short>"
-    pub tier:          u8,       // 1=open, 2=pro(10k/mo), 3=industrial(20k/mo), 4=enterprise
+    pub tier:          u8,       // 1=open, 2=pro(10k/mo), 3=industrial(50k/mo), 4=enterprise
     pub email:         String,
     pub note:          String,   // free-form admin note
     pub created_at:    String,   // ISO 8601
@@ -1804,7 +1804,7 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
                 "GET  /api/stream/deliberate",
                 "GET  /api/usage",
             ],
-            "get_key":     "https://buy.stripe.com/00w5kFgpigajfyB37a7N604",
+            "get_key":     "https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608",
             "pricing":     "https://ternlang.com/pricing",
         },
 
@@ -1817,7 +1817,7 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
             "moe_experts": "all 13 experts · full verdicts · triad field · routing pair",
             "streaming":   "GET /api/stream/moe_orchestrate — SSE, event-per-expert",
             "rest_api":    true,
-            "get_key":     "https://buy.stripe.com/3cI00l1uo6zJdqtazC7N606",
+            "get_key":     "https://buy.stripe.com/eVq7sNfle0bl86937a7N609",
             "pricing":     "https://ternlang.com/pricing",
         },
 
@@ -2831,10 +2831,10 @@ async fn stripe_webhook(
         }
 
         // 4. Determine tier from amount_total (in cents)
-        //    2499 = €24.99/mo → Tier 2 (Pro Standard, 10k/mo)
-        //    4999 = €49.99/mo → Tier 3 (Industrial, 20k/mo)
+        //    9900  = €99/mo  → Tier 2 (Pro Standard, 10k/mo)
+        //    34900 = €349/mo → Tier 3 (Industrial, 50k/mo)
         let amount = session["amount_total"].as_i64().unwrap_or(0);
-        let tier: u8 = if amount >= 4999 { 3 } else { 2 };
+        let tier: u8 = if amount >= 34900 { 3 } else { 2 };
 
         // 5. Generate key
         let (raw_key, entry) = state.keys.generate(
