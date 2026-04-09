@@ -6,6 +6,6 @@ license = "LicenseRef-BSL-1.1"
 description = "TSON (Ternary JSON) parser. Native triadic state encoding with 30% higher density and proprietary MoE-13 compression."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.1.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.2.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

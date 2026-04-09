@@ -1,6 +1,7 @@
 [package]
 name        = "ternlang-ml"
-description = "T-TriLM: High-Performance Ternary ML. 122x Sparse Bypass inference for Harmony OS and FPGA clusters."
+description = "Ternary ML inference kernels — quantize, sparse_matmul (@sparseskip), TritMatrix, deliberation engine, action gate, and MLP for the Ternlang ecosystem."
+readme = "README.md"
 version.workspace   = true
 edition.workspace   = true
 license          = "LicenseRef-BSL-1.1"
@@ -11,5 +12,5 @@ keywords.workspace  = true
 categories.workspace = true
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.1.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.2.0" }
 rayon = "1"

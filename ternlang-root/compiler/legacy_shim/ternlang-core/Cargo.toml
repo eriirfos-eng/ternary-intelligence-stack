@@ -1,6 +1,7 @@
 [package]
 name        = "ternlang-core"
-description = "Post-Quantum Balanced Ternary Core. Native Sparsity for 60% Power Reduction. The definitive BET VM implementation."
+description = "Compiler and VM for Ternlang — balanced ternary language with affirm/tend/reject trit semantics, @sparseskip codegen, and BET bytecode execution."
+readme = "README.md"
 version.workspace   = true
 edition.workspace   = true
 license.workspace   = true

@@ -6,5 +6,5 @@ license = "LicenseRef-BSL-1.1"
 description = "T-POSIX integration layer. Injects the triadic state directly into OS kernels for edge, drone, and RTOS environments."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.1.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.2.0" }
 libc = "0.2"

@@ -5,8 +5,6 @@
  * Reference: Patent Pending A50296/2026
  */
 
-use std::mem;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i8)]
 pub enum Trit {
@@ -63,6 +61,7 @@ impl TritBlock5 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::mem;
 
     #[test]
     fn test_trit_block_packing_efficiency() {
