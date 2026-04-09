@@ -1,0 +1,20 @@
+// stdlib/nlp/ternary_sentiment_test.tern
+// Demonstrates: Ternary sentiment aggregation for NLP.
+// Tier: 2 — Pro Standard
+
+fn aggregate_sentiment(s0: trit, s1: trit, s2: trit, s3: trit, s4: trit) -> trit {
+    let score: trit = 0;
+    score = consensus(score, s0);
+    score = consensus(score, s1);
+    score = consensus(score, s2);
+    score = consensus(score, s3);
+    score = consensus(score, s4);
+    return score;
+}
+
+fn main() -> trit {
+    if aggregate_sentiment(1, 0, 1, 0, 1) != 1 { return -1; }
+    if aggregate_sentiment(1, -1, 0, 0, 0) != 0 { return -1; }
+    if aggregate_sentiment(-1, -1, 0, 0, 0) != -1 { return -1; }
+    return 1;
+}
