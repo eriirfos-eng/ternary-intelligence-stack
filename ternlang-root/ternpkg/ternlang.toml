@@ -1,0 +1,11 @@
+[package]
+name = "ternlang-nervous-system"
+version = "0.1.0"
+description = "The Nervous System Cross-Link: Binding Kernel, Hardware, and Finance"
+license = "BSL-1.1"
+organization = "RFI-IRFOS"
+
+[dependencies]
+tier3-hardware = { path = "../tier3/hardware" }
+kernel-protocols = { path = "../kernel" }
+fiat-firewall = { path = "../security/financial" }

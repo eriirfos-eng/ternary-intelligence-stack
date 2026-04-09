@@ -1,0 +1,13 @@
+// generate_node_d_key.tern
+import stdlib::crypto::sovereign;
+
+fn main() -> trit {
+    let root_key = SovereignCrypto.derive_root_key();
+    let node_d_id = 42; // Simulated Node ID for Aerospace
+    
+    // Derived Sub-Key for Node D
+    let node_d_key = root_key.roll(node_d_id);
+    
+    println("Node D Sovereign Key: Generated");
+    return affirm;
+}

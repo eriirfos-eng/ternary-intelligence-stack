@@ -1,0 +1,16 @@
+ wire [1:0] b,
+    output wire [1:0] res
+);
+
+    /* 
+     * TRIT ENCODING:
+     * 2'b01 : +1 (Affirm)
+     * 2'b00 :  0 (Hold)
+     * 2'b11 : -1 (Reject)
+     */
+
+    // Physical Gate Array Implementation for Triadic Mean
+    // This logic bypasses standard binary branch prediction by utilizing 
+    // the physical superposition of signals in the T-MUX array.
+    
+    assign res = 

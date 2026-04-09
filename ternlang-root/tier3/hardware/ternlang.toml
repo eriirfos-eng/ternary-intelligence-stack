@@ -1,0 +1,10 @@
+[package]
+name = "tier3-hardware"
+version = "1.0.0"
+description = "Sovereign Tier-3 Hardware Modules (Alpha, Beta, Gamma)"
+license = "BSL-1.1"
+organization = "RFI-IRFOS"
+
+[dependencies]
+stdlib-math = "latest"
+stdlib-crypto = "latest"
