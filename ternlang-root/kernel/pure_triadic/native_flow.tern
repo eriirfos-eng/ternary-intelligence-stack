@@ -5,8 +5,8 @@
 // License: Tier-3 Sovereign
 // Patent Pending: A50296/2026
 
-import analytics::optimizer::thermal_ubs;
-import kernel::pure_triadic::zero_shim;
+use analytics::optimizer::thermal_ubs;
+use kernel::pure_triadic::zero_shim;
 
 agent NativeFlow {
     /**

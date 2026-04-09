@@ -1,5 +1,5 @@
 // generate_node_d_key.tern
-import stdlib::crypto::sovereign;
+use stdlib::crypto::sovereign;
 
 fn main() -> trit {
     let root_key = SovereignCrypto.derive_root_key();

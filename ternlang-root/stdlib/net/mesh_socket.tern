@@ -5,7 +5,7 @@
 // License: Tier-3 Sovereign
 // Reference: Patent Pending A50296/2026
 
-import stdlib::net::t_routing;
+use stdlib::net::t_routing;
 
 agent MeshSocket {
     /**

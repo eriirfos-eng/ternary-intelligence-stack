@@ -116,6 +116,7 @@ fn main() {
                 Ok(mut prog) => {
                     StdlibLoader::resolve(&mut prog);
                     emitter.emit_program(&prog);
+                    emitter.emit_entry_call("main");
                 }
                 Err(e) => {
                     eprintln!("Parse program error: {:?}", e);

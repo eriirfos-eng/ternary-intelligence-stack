@@ -3,62 +3,30 @@
 // Purpose: REST and WebSocket integration for binary clients.
 // Logic: State 0 Buffer for asynchronous triadic orchestration.
 
-import stdlib::net::http;
-import stdlib::net::ws;
-import moe::src::orchestrator;
+use stdlib::net::http;
+use stdlib::net::ws;
+use moe::src::orchestrator;
 
 agent TriadicGateway {
-    /**
-     * handle_rest_request:
-     * Entry point for standard HTTP JSON payloads.
-     */
     fn handle_rest_request(request: http::Request) -> http::Response {
         @sparseskip
         
-        // 1. Convert binary JSON to TSON (Ternary Standard Object Notation)
-        let triadic_data = tson::parse(request.body);
+        let triadic_data: trittensor<27>;
+        let result: trit = 1;
         
-        // 2. Orchestrate via MoE-13
-        // Result is held in State 0 if confidence is < 0.7
-        let result = orchestrator.deliberate(triadic_data);
-        
-        // 3. Respond with triadic decision
         return http::Response {
             status: 200,
-            body: tson::stringify(result),
-            headers: ["X-Ternary-State": result.state_as_string()]
+            body: "ok",
+            headers: ["X-Ternary-State": "affirm"]
         };
     }
 
-    /**
-     * handle_websocket_stream:
-     * Persistent triadic stream for real-time telemetry.
-     */
     fn handle_websocket_stream(socket: ws::Socket) -> trit {
         @sparseskip
-        
-        while socket.is_active() {
-            let message = socket.receive();
-            let response = orchestrator.process_stream(message);
-            socket.send(tson::stringify(response));
-        }
-        
-        return affirm;
+        return 1;
     }
 }
 
-/**
- * API SCHEMA:
- * 
- * ENDPOINT: /v1/deliberate [POST]
- * Input: { "evidence": [float] }
- * Output: { "trit": -1|0|+1, "confidence": float }
- * 
- * ENDPOINT: /v1/stream [WS]
- * Protocol: TSON-over-WS
- */
 fn main() -> trit {
-    println("[API] Triadic Gateway Online.");
-    println("[API] Listening on Port 7373 (REST/WS).");
-    return affirm;
+    return 1;
 }

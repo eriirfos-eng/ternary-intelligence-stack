@@ -178,6 +178,7 @@ pub struct AgentDef {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Program {
+    pub imports: Vec<Vec<String>>,
     pub structs: Vec<StructDef>,
     pub agents: Vec<AgentDef>,
     pub functions: Vec<Function>,

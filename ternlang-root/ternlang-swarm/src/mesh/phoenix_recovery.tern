@@ -4,8 +4,8 @@
 // Logic: Stationary Wave Re-Injection.
 // License: BSL-1.1
 
-import stdlib::net::t_routing;
-import hardware::bios::t_genesis_boot;
+use stdlib::net::t_routing;
+use hardware::bios::t_genesis_boot;
 
 agent PhoenixRecovery {
     /**

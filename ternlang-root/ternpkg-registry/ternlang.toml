@@ -1,0 +1,10 @@
+[package]
+name = "ternpkg-registry"
+version = "1.0.0"
+description = "Decentralized IPFS-backed package registry for the Ternary Intelligence Stack"
+license = "LGPL-3.0-or-later"
+organization = "RFI-IRFOS"
+
+[dependencies]
+stdlib-net = "latest"
+stdlib-crypto = "latest"

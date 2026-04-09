@@ -6,7 +6,7 @@
  * License: BSL-1.1
  */
 
-import stdlib::kernel::drivers::bet_v_bridge;
+use stdlib::kernel::drivers::bet_v_bridge;
 
 agent ResourceAlloc {
     /**

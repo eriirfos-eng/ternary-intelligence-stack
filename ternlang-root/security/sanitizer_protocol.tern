@@ -4,7 +4,7 @@
 // Logic: Non-Destructive Thread Neutralization.
 // License: BSL-1.1
 
-import security::inquisitor_deep_scan;
+use security::inquisitor_deep_scan;
 
 agent Sanitizer {
     /**

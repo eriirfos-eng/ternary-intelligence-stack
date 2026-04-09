@@ -4,8 +4,8 @@
 // License: RFI-IRFOS-ENTERPRISE-V1
 // Status: COLD BUILD (Simulation Only)
 
-import stdlib::kernel::drivers::bet_v_bridge;
-import security::inquisitor_deep_scan;
+use stdlib::kernel::drivers::bet_v_bridge;
+use security::inquisitor_deep_scan;
 
 agent T_GenesisBoot {
     /**

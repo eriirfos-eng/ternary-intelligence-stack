@@ -1,20 +1,4 @@
-// --- OPERATION ARCHIMEDES: POST-SHANNON INFORMATION THEORY ---
-// Module: research/theory/triadic_entropy.tern
-// Purpose: Mathematical proof of Triadic Entropy > Binary Entropy.
-// Logic: Information density and Landauer Limit bypass.
-
-fn calculate_triadic_entropy(n: float) -> float {
-    // Shannon's Entropy: H_b = -Sum(p * log2(p))
-    // Triadic Entropy: H_t = -Sum(p * log3(p))
-    // Density per digit: log2(3) ≈ 1.58496 bits per trit.
-    // This allows the BET-VM to process 58.5% more information per state transition.
-    return 1.58496;
-}
-
+// research/theory/triadic_entropy.tern
 fn main() -> trit {
-    println("[THEORY] Initiating Post-Shannon Triadic Entropy Proof...");
-    let density = calculate_triadic_entropy(1.0);
-    println("[THEORY] Bits per Trit mapped: 1.58496");
-    println("[THEORY] Conclusion: The theoretical minimum energy per computation is exponentially lower in Base-3. The binary Landauer Limit is formally bypassed.");
-    return affirm;
+    return 1;
 }

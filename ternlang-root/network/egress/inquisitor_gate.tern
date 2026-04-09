@@ -5,8 +5,8 @@
 // License: RFI-IRFOS-ENTERPRISE-V1
 // Patent Pending: A50296/2026
 
-import security::inquisitor_deep_scan;
-import stdlib::kernel::drivers::bet_v_bridge;
+use security::inquisitor_deep_scan;
+use stdlib::kernel::drivers::bet_v_bridge;
 
 agent EgressInquisitor {
     /**

@@ -35,17 +35,23 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_program(&mut self) -> Result<Program, ParseError> {
+        let mut imports = Vec::new();
         let mut structs = Vec::new();
         let mut agents = Vec::new();
         let mut functions = Vec::new();
         while self.peek_token().is_ok() {
             match self.peek_token()? {
+                Token::Use => {
+                    if let Stmt::Use { path } = self.parse_stmt()? {
+                        imports.push(path);
+                    }
+                }
                 Token::Struct => structs.push(self.parse_struct_def()?),
                 Token::Agent  => agents.push(self.parse_agent_def()?),
                 _             => functions.push(self.parse_function()?),
             }
         }
-        Ok(Program { structs, agents, functions })
+        Ok(Program { imports, structs, agents, functions })
     }
 
     fn parse_agent_def(&mut self) -> Result<AgentDef, ParseError> {

@@ -3,7 +3,7 @@
 // Purpose: Map Triadic 0-State to x86 Atomic LOCK.
 // Logic: Mid-Level IR for binary legacy execution.
 
-import stdlib::kernel::drivers::bet_v_bridge;
+use stdlib::kernel::drivers::bet_v_bridge;
 
 agent LLVMSolver {
     /**

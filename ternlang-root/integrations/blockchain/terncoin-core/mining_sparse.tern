@@ -12,7 +12,7 @@
 
 module MiningSparse;
 
-import TIS::Core::Matrix;
+use TIS::Core::Matrix;
 
 // Solve sparse triadic matrix for block validation
 fn solve_mining_hash(matrix: TritMatrix[27, 27]) -> trit {
