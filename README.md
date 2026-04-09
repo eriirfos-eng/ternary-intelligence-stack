@@ -66,8 +66,9 @@ The TIS is partitioned into three tiers to ensure global institutional stability
 | Tier | License | Scope | Access |
 |------|---------|-------|--------|
 | **Tier 1: Open Core** | LGPL-3.0 | Language, VM, Parser, CLI, Package Manager | Open Source |
-| **Tier 2: Restricted API** | BSL-1.1 | MoE-13, Sparse ML, cuTern, Networking, Crypto | **€24.99/mo** |
-| **Tier 3: Enterprise** | Proprietary | T-GPU, T-BCI, T-Astro, Genesis Hardware Key | **Contact RFI** |
+| **Tier 2: Pro Standard** | BSL-1.1 | MoE-13, Sparse ML, REST API (10k calls/mo) | **€24.99/mo** |
+| **Tier 3: Industrial** | BSL-1.1 | All Tier 2 + 20k calls/mo, elevated SLA | **€49.99/mo** |
+| **Tier 4: Enterprise** | Proprietary | T-GPU, T-BCI, T-Astro, Genesis Hardware Key | **Contact RFI** |
 
 > **Security Note:** All VM execution is structurally bound to the **RFI-IRFOS Triadic Genesis Tether**. Unauthorized execution of restricted opcodes forces a permanent hardware `THOLD` (State 0).
 
@@ -82,7 +83,7 @@ The TIS is partitioned into three tiers to ensure global institutional stability
 | **MoE-13 Orchestrator** | Mixture-of-Experts reasoning engine: 13 domain experts, dual-key synergistic routing, 1+1=3 emergent triad synthesis, safety hard gate |
 | **Reasoning Toolkit** | Deliberation engine (EMA convergence), coalition vote, action gate (hard-block safety veto), scalar temperature, hallucination score |
 | **Live API** | REST + SSE + MCP endpoints at `https://ternlang-api.fly.dev` — deployed on Fly.io |
-| **MCP Server** | 20 tools via HTTP or stdio — any MCP client becomes a ternary decision engine |
+| **MCP Server** | 13 tools via HTTP or stdio — any MCP client becomes a ternary decision engine |
 
 ---
 
@@ -155,7 +156,7 @@ curl -X POST https://ternlang-api.fly.dev/mcp \
 | [`ternlang-ml`](ternlang-root/ternlang-ml/) | Tier 2 | Sparse matmul, BitNet quantization, deliberation engine, coalition vote, action gate |
 | [`ternlang-moe`](ternlang-root/ternlang-moe/) | Tier 2 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-layer memory |
 | [`ternlang-api`](ternlang-root/ternlang-api/) | Tier 2 | REST + SSE API, multi-tenant key management |
-| [`ternlang-mcp`](ternlang-root/ternlang-mcp/) | Tier 2 | MCP server — 20 tools, stdio + HTTP transport |
+| [`ternlang-mcp`](ternlang-root/ternlang-mcp/) | Tier 2 | MCP server — 13 tools, stdio + HTTP transport |
 | [`ternlang-mkl`](ternlang-root/ternlang-mkl/) | Tier 2 | **cuTern**: Math Kernel Library with native sparsity bypass |
 | [`ternlang-sql`](ternlang-root/ternlang-sql/) | Tier 2 | Native Ternary Graph Database driver |
 | [`ternlang-bridge`](ternlang-root/ternlang-bridge/) | Tier 2 | Binary-to-Ternary Transpiler (The "Trojan Horse") |
