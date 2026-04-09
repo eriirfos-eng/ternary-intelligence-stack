@@ -6,7 +6,7 @@
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
-[![MCP](https://img.shields.io/badge/MCP-20%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
+[![MCP](https://img.shields.io/badge/MCP-13%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
 [![Linguist PR](https://img.shields.io/badge/GitHub%20Linguist-PR%20pending-yellow)](https://github.com/github/linguist/pulls)
 
 Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
@@ -36,7 +36,7 @@ The `tend` state is not indecision. It is a **first-class routing instruction** 
 | [Language & VM](#language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
 | [Sparse Inference](#sparse-ternary-inference) | @sparseskip: 2.3× measured baseline, scales to 122× at extreme sparsity |
 | [MoE-13 Orchestrator](#moe-13-ternary-orchestrator) | Mixture-of-Experts reasoning engine with safety hard gate |
-| [Strategic Standards](#strategic-standards) | BET-ISA, TFP-754, TSON, TTP, and T-POSIX — The rules of post-binary computing |
+| [Protocol Specifications](#rfi-irfos-protocol-specifications) | BET-ISA, TFP-754, TSON, TTP, and T-POSIX — RFI-IRFOS open proposals |
 | [Enterprise Middleware](#architecture) | **cuTern** (MKL), Ternary SQL, Triadic Networking, and Crypto |
 | [Frontier Tech](#architecture) | Qutrit Quantum bridging, BCI neural decoding, and Interplanetary DTN |
 | [Example Library](#example-library) | 300+ `.tern` programs across every domain |
@@ -152,7 +152,7 @@ println!("{}", result.prompt_hint);
 **How it works:**
 
 1. **Dual-key routing** — scores every expert pair by `relevance_a × relevance_b × synergy`. Complementary experts outperform redundant ones.
-2. **1+1=3 triad synthesis** — emergent field `Ek = synergy × (vi + vj) / 2`. Two orthogonal experts produce a third signal neither could generate alone.
+2. **Emergent triad synthesis** — weighted field `Ek = synergy × (vi + vj) / 2`. Two orthogonal experts produce a composite signal whose confidence exceeds either input independently.
 3. **Safety hard gate** — Axis-6 veto fires before any vote. Every veto is permanently logged to `AxisMemory` for audit.
 4. **Hold with tiebreaker** — a split vote or low confidence yields `trit=0`. The orchestrator invokes a tiebreaker (max 4 active experts) before committing, modelling the human *"let me think about this"* behaviour.
 5. **Three-tier memory** — Node (TTL: seconds), Cluster (routing frequency, mode-collapse risk), Axis (persistent priors + veto audit log).
@@ -207,7 +207,7 @@ curl -X POST https://ternlang.com/api/trit_decide \
 
 ---
 
-## Enterprise Offering (Tier-3)
+## Enterprise Offering (Tier 4)
 
 The Tier-3 plan provides on-premise deployment, custom FPGA integration via `ternlang-hdl`, enterprise SLA, and direct access to the full BSL-1.1 codebase for air-gapped or regulated environments.
 
@@ -223,13 +223,13 @@ For inquiries: `enterprise@rfi-irfos.org`
 
 **API key:** [ternlang.com/pricing](https://ternlang.com/pricing) · Tier 2 (€24/month): 10,000 calls/month, calendar-month reset
 
-### MCP Server — v0.3.0 (20 tools)
+### MCP Server — v0.3.0 (13 tools)
 
 The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, and any HTTP MCP client.
 
 **10 free tools (no key):** `trit_decide` · `trit_consensus` · `trit_eval` · `ternlang_run` · `quantize_weights` · `sparse_benchmark` · `moe_orchestrate` · `moe_deliberate` · `trit_action_gate` · `trit_upgrade`
 
-**10 premium tools (X-Ternlang-Key):** `trit_compress` · `trit_triage` · `trit_plan` · `trit_factcheck` · `moe_full` · `trit_mem_write` · `trit_mem_read` · `trit_mem_consolidate` · `trit_mem_stats` · `trit_mem_compress`
+**3 premium tools (X-Ternlang-Key):** `trit_mem_write` · `trit_mem_read` · `trit_mem_consolidate`
 
 #### Three-Layer AI Memory (v0.3.0 flagship)
 
@@ -302,7 +302,7 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-ml`](ternlang-ml/) | BSL-1.1 | Sparse matmul, BitNet quantization, TernaryMLP, deliberation engine, coalition vote, action gate |
 | [`ternlang-moe`](ternlang-moe/) | BSL-1.1 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, AgentHarness |
 | [`ternlang-api`](ternlang-api/) | BSL-1.1 | REST + SSE API, multi-tenant key management, all reasoning endpoints |
-| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 20 tools (10 free + 10 premium), stdio + HTTP transport, server-side 3-layer memory |
+| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 13 tools (10 free + 3 premium), stdio + HTTP transport, server-side 3-layer memory |
 | [`ternlang-mkl`](ternlang-mkl/) | BSL-1.1 | **cuTern**: Math Kernel Library with native sparsity bypass |
 | [`ternlang-sql`](ternlang-sql/) | BSL-1.1 | Native Ternary Graph Database driver (50% speedup) |
 | [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The Seamless Migration Layer) |
@@ -329,14 +329,14 @@ For local stdio transport (Claude Desktop, offline use):
 
 ---
 
-## Strategic Standards
+## RFI-IRFOS Protocol Specifications
 
-RFI-IRFOS is establishing the comprehensive regulatory and technical framework for the post-binary era. These specifications are designed to standardize Ternary integration across global hardware, software, and AI industries.
+> These are open technical proposals authored by RFI-IRFOS. They are not yet ratified by IEEE, ISO, or any external standards body. They define intended behaviour for the Ternlang ecosystem and are published to establish prior art and invite community review.
 
 ### Core Architecture & Logic
 - [**BET-ISA v1.0**](spec/standards/BET-ISA-v1.0.md): The definitive 9-Trit RISC Instruction Set Architecture.
-- [**IEEE TFP-754**](spec/standards/IEEE-TFP-754.md): Global standard for Ternary Floating-Point Arithmetic.
-- [**ISO Certified Uncertainty**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Regulatory framework mandating deliberative hold abstention.
+- [**TFP-754**](spec/standards/IEEE-TFP-754.md): RFI-IRFOS proposal for Ternary Floating-Point Arithmetic (analogous to IEEE 754).
+- [**T-UNCERTAINTY**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Specification for deliberative hold abstention in safety-critical decision systems.
 - [**TSON v1.0**](spec/standards/TSON-v1.0.md): Optimized data serialization for triadic systems.
 - [**T-POSIX v1.0**](spec/standards/T-POSIX-v1.0.md): Operating system interface redefining process state logic.
 
@@ -370,33 +370,37 @@ RFI-IRFOS is establishing the comprehensive regulatory and technical framework f
 
 ## Licensing Tiers
 
-### Pro Standard Library (Tier 2)
-Optimized for startups and small teams. Includes 10,000 API requests/month and 122x Sparse Bypass acceleration. **€24.99/mo**.
+### Tier 2 — Pro Standard
+For startups and small teams. Includes 10,000 API calls/month, `@sparseskip` inference, server-side 3-layer memory, and MoE-13 consolidation. **€24.99/month** · [Subscribe](https://buy.stripe.com/00w5kFgpigajfyB37a7N604)
 
-### Industrial Standard Library (Tier 3)
-The full RFI-IRFOS ecosystem. Includes 20,000 API requests/month, QNN, SEC, and T-HAL silicon bindings. **€49.99/mo**.
+### Tier 3 — Industrial
+Full RFI-IRFOS ecosystem. Includes 20,000 API calls/month, QNN & SEC modules, and T-HAL silicon bindings. **€49.99/month** · [Subscribe](https://buy.stripe.com/3cI00l1uo6zJdqtazC7N606)
+
+### Tier 4 — Enterprise
+On-premise BET-VM clusters, custom FPGA integration, unlimited throughput, and enterprise SLA. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) for pricing.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  TIER 1 — Open Core (LGPL-3.0)                                  │
+│  TIER 1 — Open Core (LGPL-3.0)                     Free         │
 │  ternlang-core · ternlang-cli · ternlang-lsp · ternlang-compat  │
 │  ternpkg · spec/                                                 │
 │  Free to use, modify, and distribute. Modifications must be     │
 │  contributed back under LGPL.                                   │
 ├─────────────────────────────────────────────────────────────────┤
-│  TIER 2 — Restricted API (BSL 1.1)                              │
-│  €24.99 / MONTH                                                 │
-│  ★ 20 MCP tools (full stack)                                    │
-│  ✓ Server-side 3-layer memory                                   │
-│  ✓ MoE-13 consolidation                                         │
-│  ✓ Ternary context compression                                  │
-│  ✓ 10,000 high-mass API calls                                   │
-│  Commercial use requires a license → licensing@ternlang.com     │
+│  TIER 2 — Pro Standard (BSL-1.1)                €24.99/mo       │
+│  ★ 13 MCP tools (full stack)                                    │
+│  ✓ 10,000 API calls/month · @sparseskip inference               │
+│  ✓ Server-side 3-layer memory · MoE-13 consolidation            │
 │  Auto-converts to Apache-2.0 on 2030-04-03.                     │
 ├─────────────────────────────────────────────────────────────────┤
-│  TIER 3 — Enterprise (ternlang.com)                             │
-│  Hosted API · Enterprise SLA · Commercial inference engine      │
-│  On-premise node clusters · Custom FPGA implementations         │
+│  TIER 3 — Industrial (BSL-1.1)                  €49.99/mo       │
+│  ✓ 20,000 API calls/month · QNN & SEC modules                   │
+│  ✓ T-HAL silicon bindings · Full premium stdlib                 │
+│  Auto-converts to Apache-2.0 on 2030-04-03.                     │
+├─────────────────────────────────────────────────────────────────┤
+│  TIER 4 — Enterprise (Proprietary)         Contact for pricing  │
+│  On-premise BET-VM clusters · Custom FPGA · Enterprise SLA      │
+│  Unlimited throughput · Dedicated support                        │
 │  Contact: licensing@ternlang.com                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -439,7 +443,6 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
   doi     = {10.17605/OSF.IO/TZ7DC}
 }
 ```
-*.tern linguist-language=Ternlang
 ---
 
 ## Contact & Licensing
