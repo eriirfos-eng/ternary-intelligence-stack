@@ -1,0 +1,54 @@
+// stdlib/math/ternary_min_max_test.tern
+// Demonstrates: Ternary comparison logic for finding min and max values.
+// In balanced ternary, comparison naturally yields a trit.
+// Tier: 1 — Open Core
+
+fn compare(a: int, b: int) -> trit {
+    if a < b {
+        return reject; // -1
+    }
+    if a > b {
+        return affirm; // 1
+    }
+    return tend;       // 0
+}
+
+fn get_max(a: int, b: int) -> int {
+    let cmp: trit = compare(a, b);
+    match cmp {
+        reject => { return b; } // b is greater
+        tend   => { return a; } // equal
+        affirm => { return a; } // a is greater
+    }
+}
+
+fn get_min(a: int, b: int) -> int {
+    let cmp: trit = compare(a, b);
+    match cmp {
+        reject => { return a; } // a is smaller
+        tend   => { return a; } // equal
+        affirm => { return b; } // b is smaller
+    }
+}
+
+fn main() -> trit {
+    let val1: int = 10;
+    let val2: int = 20;
+
+    let max_val: int = get_max(val1, val2);
+    let min_val: int = get_min(val1, val2);
+
+    // Validate results for Test runner (must return affirm/tend/reject)
+    // max_val should be 20, min_val should be 10.
+    match compare(max_val, 20) {
+        tend => {
+            match compare(min_val, 10) {
+                tend => { return affirm; }
+                reject => { return reject; }
+                affirm => { return reject; }
+            }
+        }
+        reject => { return reject; }
+        affirm => { return reject; }
+    }
+}
