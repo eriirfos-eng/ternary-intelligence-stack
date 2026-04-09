@@ -532,8 +532,8 @@ impl BetVm {
                     self.stack.push(Value::String(self.node_id.clone()));
                 }
                 0x14 => { // TLESS — integer less-than: pop b, pop a → push trit(a < b)
-                    let b = self.stack.pop().unwrap_or(Value::Int(0));
-                    let a = self.stack.pop().unwrap_or(Value::Int(0));
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let result = match (a, b) {
                         (Value::Int(x), Value::Int(y)) => {
                             if x < y { Trit::Affirm } else if x == y { Trit::Tend } else { Trit::Reject }
@@ -543,8 +543,8 @@ impl BetVm {
                     self.stack.push(Value::Trit(result));
                 }
                 0x15 => { // TGREATER — integer greater-than: pop b, pop a → push trit(a > b)
-                    let b = self.stack.pop().unwrap_or(Value::Int(0));
-                    let a = self.stack.pop().unwrap_or(Value::Int(0));
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let result = match (a, b) {
                         (Value::Int(x), Value::Int(y)) => {
                             if x > y { Trit::Affirm } else if x == y { Trit::Tend } else { Trit::Reject }
@@ -558,6 +558,14 @@ impl BetVm {
                     let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let result = if a == b { Trit::Affirm } else { Trit::Reject };
                     self.stack.push(Value::Trit(result));
+                }
+                0x17 => { // TpushInt — push i64 literal
+                    if self.pc + 7 >= self.code.len() { return Err(VmError::PcOutOfBounds(self.pc)); }
+                    let mut bytes = [0u8; 8];
+                    bytes.copy_from_slice(&self.code[self.pc..self.pc+8]);
+                    let val = i64::from_le_bytes(bytes);
+                    self.pc += 8;
+                    self.stack.push(Value::Int(val));
                 }
                 // ─────────────────────────────────────────────────────────────────
 

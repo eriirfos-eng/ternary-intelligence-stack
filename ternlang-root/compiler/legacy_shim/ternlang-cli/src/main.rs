@@ -110,20 +110,27 @@ fn main() {
                     emitter.emit_entry_call("main");
                 }
                 Err(e) => {
-                    eprintln!("Parse program error: {:?}", e);
-                    // Fallback: Reset and try parsing statements (for snippets without 'fn')
-                    let mut parser = Parser::new(&input);
-                    loop {
-                        match parser.parse_stmt() {
-                            Ok(stmt) => emitter.emit_stmt(&stmt),
-                            Err(e) => {
-                                if format!("{:?}", e).contains("EOF") {
+                    // Only fallback if it's not a program (e.g. missing 'fn')
+                    // If it's a parse error in a real program, we should probably report it and stop.
+                    let error_str = format!("{:?}", e);
+                    if error_str.contains("ExpectedToken(\"Fn\"") || error_str.contains("UnexpectedToken(\"Let\"") {
+                        // Fallback: Reset and try parsing statements (for snippets without 'fn')
+                        let mut parser = Parser::new(&input);
+                        loop {
+                            match parser.parse_stmt() {
+                                Ok(stmt) => emitter.emit_stmt(&stmt),
+                                Err(e) => {
+                                    if format!("{:?}", e).contains("EOF") {
+                                        break;
+                                    }
+                                    eprintln!("Parse stmt error: {:?}", e);
                                     break;
                                 }
-                                eprintln!("Parse stmt error: {:?}", e);
-                                break;
                             }
                         }
+                    } else {
+                        eprintln!("Parse program error: {:?}", e);
+                        std::process::exit(1);
                     }
                 }
             }
@@ -150,6 +157,13 @@ fn main() {
 
             match vm.run() {
                 Ok(_) => {
+                    // Check top of stack for return value (affirm/tend/reject)
+                    let result = vm.peek_stack();
+                    if let Some(Value::Trit(ternlang_core::trit::Trit::Reject)) = result {
+                        eprintln!("Program exited with error (Reject state).");
+                        std::process::exit(1);
+                    }
+
                     println!("Program exited successfully.");
                     // Print registers for debugging
                     for i in 0..10 {
@@ -163,7 +177,10 @@ fn main() {
                         }
                     }
                 }
-                Err(e) => eprintln!("VM Error: {}", e),
+                Err(e) => {
+                    eprintln!("VM Error: {}", e);
+                    std::process::exit(1);
+                }
             }
         }
         Commands::Repl => {
@@ -615,6 +632,10 @@ fn run_tests(path: &std::path::PathBuf) {
                     Ok(mut prog) => {
                         ternlang_core::StdlibLoader::resolve(&mut prog);
                         emitter.emit_program(&prog);
+                        // If there is a main function, we need to call it.
+                        if prog.functions.iter().any(|f| f.name == "main") {
+                            emitter.emit_entry_call("main");
+                        }
                     }
                     Err(_) => {
                         // Fallback to statement-by-statement for simple scripts
