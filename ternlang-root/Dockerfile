@@ -37,6 +37,7 @@ RUN cargo fetch
 # Now copy the real source
 COPY stdlib/                stdlib/
 COPY compiler/legacy_shim/ternlang-core/src      compiler/legacy_shim/ternlang-core/src
+COPY compiler/legacy_shim/ternlang-core/stdlib   compiler/legacy_shim/ternlang-core/stdlib
 COPY ternlang-ml/src        ternlang-ml/src
 COPY ternlang-api/src       ternlang-api/src
 COPY ternlang-web/index.html   ternlang-web/index.html
