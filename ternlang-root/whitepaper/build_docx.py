@@ -167,7 +167,7 @@ doc.add_page_break()
 
 heading("Abstract", 1)
 body(
-    "We present Ternlang v0.1.2, the first complete software stack for balanced ternary "
+    "We present Ternlang v0.2.0, the first complete software stack for balanced ternary "
     "computing: a domain-specific language with real error propagation and a cross-file "
     "module system, bytecode compiler, stack-based virtual machine (BET VM), native C11 "
     "compilation target, hardware description language backend, distributed actor runtime, "
@@ -1372,7 +1372,7 @@ divider()
 heading("14. Implementation Status", 1)
 
 body(
-    "Ternlang v0.1.2 is implemented in Rust as a Cargo workspace. All crates are publicly "
+    "Ternlang v0.2.0 is implemented in Rust as a Cargo workspace. All crates are publicly "
     "available on crates.io. The full test suite comprises 177+ tests across 12 crates, "
     "all passing. The live API is deployed at https://ternlang.com/mcp (Fly.io, Frankfurt) "
     "with TLS via Let's Encrypt. Continuous integration via GitHub Actions automatically "
@@ -1382,20 +1382,20 @@ body(
 add_table(
     ["Crate", "Tests", "Description"],
     [
-        ["ternlang-core",    "55",  "Lexer, parser (+ ? propagation), AST, semantic checker, BET VM (51 opcodes), ModuleResolver"],
+        ["ternlang-core",    "56",  "Lexer, parser (+ ? propagation), AST, semantic checker, BET VM (51 opcodes), ModuleResolver"],
         ["ternlang-ml",      "21",  "BitNet quantization, sparse/CSC matmul, deliberation engine, coalition vote, action gate, hallucination score"],
         ["ternlang-moe",     "24",  "MoE-13 orchestrator: dual-key routing, triad synthesis, 3-tier memory, 13 dual-signal agents, introspective hold"],
         ["ternlang-codegen", "8",   "AST-to-C11 transpiler; match/struct/propagation; forward declarations; native-compilable output"],
         ["ternlang-test",    "10",  "Full-pipeline test framework: TernTestCase, assert_tern!, parse/semantic/VM error classification"],
         ["ternlang-hdl",     "21",  "Verilog-2001 codegen, BET RTL simulator (BetRtlProcessor), ternlang sim --rtl"],
         ["ternlang-lsp",     "—",   "LSP 3.17 server: hover documentation, 19 snippets, diagnostics"],
-        ["ternlang-mcp",     "—",   "MCP server: 10 tools including trit_decide, moe_orchestrate, trit_action_gate"],
+        ["ternlang-mcp",     "—",   "MCP server: 13 tools including trit_decide, moe_orchestrate, trit_action_gate"],
         ["ternlang-runtime", "4",   "Distributed TCP actor runtime (TernNode, wire protocol)"],
         ["ternlang-compat",  "29",  ".tasm assembler (9-trit RISC), Owlet S-expression parser"],
         ["ternpkg",          "5",   "Package manager: ternlang.toml, GitHub-backed registry"],
         ["ternlang-api",     "—",   "REST API (18 endpoints), multi-tenant key management, SSE streaming, MCP endpoint"],
     ],
-    "Table 11. Ternlang crate inventory and test counts (v0.1.2, 2026-04-04)."
+    "Table 11. Ternlang crate inventory and test counts (v0.2.0, 2026-04-04)."
 )
 
 body(
@@ -1415,7 +1415,7 @@ divider()
 heading("15. Conclusion and Future Work", 1)
 
 body(
-    "We have presented Ternlang v0.1.2, a full-stack balanced ternary execution architecture "
+    "We have presented Ternlang v0.2.0, a full-stack balanced ternary execution architecture "
     "spanning language design, ISA, virtual machine, hardware backend, distributed runtime, "
     "native C compilation, and AI reasoning infrastructure. Five layers of contribution are "
     "unified under the same foundational primitive — the trit t ∈ {−1, 0, +1} with an active "
@@ -1425,7 +1425,7 @@ bullet("Language completeness: exhaustive three-way matching, the ? error propag
 bullet("Execution substrate: TSPARSE_MATMUL achieves a 2.27× reduction in multiply operations at baseline sparsity; a CSC kernel with Rayon reaches 122× at high sparsity (512² matrix, 99% sparsity, release mode). A native C11 compilation path via ternlang-codegen provides an alternative to VM interpretation.")
 bullet("Reasoning primitives: the five-tool Ternary AI Reasoning Toolkit (DeliberationEngine, coalition vote, action gate, scalar temperature bridge, hallucination score) makes AI agent decision loops structurally three-valued.")
 bullet("MoE orchestration: the MoE-13 orchestrator extends with 13-agent dual-signal deliberation, an introspective hold (stable attractor when |affirm − conflict| ≤ 1 across ≥ 4 agents), and an orchestrate_full() pipeline that pre-filters queries through the agent tier before MoE routing.")
-bullet("Deployment and tooling: the live API at https://ternlang.com/mcp serves 10 MCP tools to any compatible AI client; a VS Code extension with LSP, formatter, and REPL provides an IDE experience; GitHub Actions CI/CD automatically builds, tests, and deploys on every push; and 177+ tests across 12 crates validate the full stack.")
+bullet("Deployment and tooling: the live API at https://ternlang.com/mcp serves 13 MCP tools to any compatible AI client; a VS Code extension with LSP, formatter, and REPL provides an IDE experience; GitHub Actions CI/CD automatically builds, tests, and deploys on every push; and 177+ tests across 12 crates validate the full stack.")
 
 body(
     "Near-term publication targets include the VS Code Marketplace submission "
