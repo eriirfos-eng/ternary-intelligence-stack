@@ -8,6 +8,10 @@
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![MCP](https://img.shields.io/badge/MCP-13%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
 [![Linguist PR](https://img.shields.io/badge/GitHub%20Linguist-PR%20pending-yellow)](https://github.com/github/linguist/pulls)
+[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
+[![Human Oversight](https://img.shields.io/badge/Human%20Oversight-Article%2014%20Ready-003399)](https://ternlang.com/compliance)
+[![Data Residency](https://img.shields.io/badge/Data%20Residency-EU%20Frankfurt-003399)](https://ternlang.com/compliance)
+[![GDPR](https://img.shields.io/badge/GDPR-Compliant%20Design-003399)](https://ternlang.com/compliance)
 
 Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
@@ -277,7 +281,7 @@ For local stdio transport (Claude Desktop, offline use):
 |----------|---------|
 | [Aerospace & Safety](examples/03_rocket_launch.tern) | Rocket launch, aircraft deicing, runway incursion, satellite collision |
 | [Medicine](examples/05_medical_triage.tern) | ER triage, ICU ventilator, sepsis warning, organ transplant, APGAR |
-| [Finance](examples/42_algorithmic_trading.tern) | Algorithmic trading, AML filter, options expiry, loan underwriting |
+| [Finance](examples/42_trading_signal.tern) | Algorithmic trading, AML filter, options expiry, loan underwriting |
 | [Infrastructure](examples/14_circuit_breaker.tern) | Circuit breaker, nuclear reactor SCRAM, bridge health, power grid |
 | [AI Agents](examples/08_evidence_collector.tern) | Evidence density, confidence escalation, MoE routing, deliberation |
 | [Civic Systems](examples/12_vote_aggregator.tern) | Vote aggregation, bail decision, treaty negotiation, refugee status |
@@ -371,36 +375,35 @@ For local stdio transport (Claude Desktop, offline use):
 ## Licensing Tiers
 
 ### Tier 2 — Pro Standard
-For startups and small teams. Includes 10,000 API calls/month, `@sparseskip` inference, server-side 3-layer memory, and MoE-13 consolidation. **€24.99/month** · [Subscribe](https://buy.stripe.com/00w5kFgpigajfyB37a7N604)
+For developers and startups building AI agents with uncertainty-aware reasoning. Includes 10,000 API calls/month, `@sparseskip` inference acceleration, server-side 3-layer memory, and MoE-13 consolidation. **€99/month** · [Subscribe](https://buy.stripe.com/00w5kFgpigajfyB37a7N604)
 
 ### Tier 3 — Industrial
-Full RFI-IRFOS ecosystem. Includes 20,000 API calls/month, QNN & SEC modules, and T-HAL silicon bindings. **€49.99/month** · [Subscribe](https://buy.stripe.com/3cI00l1uo6zJdqtazC7N606)
+Production-grade deployment for teams requiring EU AI Act-compliant safety gating, audit trails, and high-volume inference. Includes 50,000 API calls/month, QNN & SEC modules, T-HAL silicon bindings, and TernAudit log access. **€349/month** · [Subscribe](https://buy.stripe.com/3cI00l1uo6zJdqtazC7N606)
 
 ### Tier 4 — Enterprise
-On-premise BET-VM clusters, custom FPGA integration, unlimited throughput, and enterprise SLA. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) for pricing.
+On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimited throughput, dedicated SLA, and direct BSL-1.1 source access for air-gapped or regulated environments. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) — **from €2,500/month.**
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  TIER 1 — Open Core (LGPL-3.0)                     Free         │
 │  ternlang-core · ternlang-cli · ternlang-lsp · ternlang-compat  │
 │  ternpkg · spec/                                                 │
-│  Free to use, modify, and distribute. Modifications must be     │
-│  contributed back under LGPL.                                   │
+│  Free to use, modify, and distribute under LGPL.                │
 ├─────────────────────────────────────────────────────────────────┤
-│  TIER 2 — Pro Standard (BSL-1.1)                €24.99/mo       │
+│  TIER 2 — Pro Standard (BSL-1.1)                  €99/mo        │
 │  ★ 13 MCP tools (full stack)                                    │
 │  ✓ 10,000 API calls/month · @sparseskip inference               │
 │  ✓ Server-side 3-layer memory · MoE-13 consolidation            │
 │  Auto-converts to Apache-2.0 on 2030-04-03.                     │
 ├─────────────────────────────────────────────────────────────────┤
-│  TIER 3 — Industrial (BSL-1.1)                  €49.99/mo       │
-│  ✓ 20,000 API calls/month · QNN & SEC modules                   │
-│  ✓ T-HAL silicon bindings · Full premium stdlib                 │
+│  TIER 3 — Industrial (BSL-1.1)                  €349/mo         │
+│  ✓ 50,000 API calls/month · QNN & SEC modules                   │
+│  ✓ T-HAL silicon bindings · TernAudit · Full premium stdlib     │
 │  Auto-converts to Apache-2.0 on 2030-04-03.                     │
 ├─────────────────────────────────────────────────────────────────┤
-│  TIER 4 — Enterprise (Proprietary)         Contact for pricing  │
+│  TIER 4 — Enterprise (Proprietary)      from €2,500/mo          │
 │  On-premise BET-VM clusters · Custom FPGA · Enterprise SLA      │
-│  Unlimited throughput · Dedicated support                        │
+│  Unlimited throughput · Dedicated support · Air-gap ready        │
 │  Contact: licensing@ternlang.com                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -443,6 +446,24 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
   doi     = {10.17605/OSF.IO/TZ7DC}
 }
 ```
+---
+
+## EU AI Act Compliance
+
+> Ternlang is designed from first principles to support EU AI Act compliance for downstream AI systems. The following applies to TIS v0.3.0 and later. This is a self-declaration by RFI-IRFOS — independent third-party audit is available on request for Tier 4 Enterprise customers.
+
+| EU AI Act Article | How Ternlang addresses it |
+|-------------------|--------------------------|
+| **Art. 9 — Risk Management** | MoE-13 Safety hard gate: Axis-6 veto fires unconditionally when Safety confidence > 0.90. Every veto is permanently logged to AxisMemory. |
+| **Art. 11 — Technical Documentation** | BET-ISA-SPEC.md, ternlang-whitepaper.tex (DOI: 10.17605/OSF.IO/TZ7DC), RFI-IRFOS protocol specifications (spec/standards/). |
+| **Art. 12 — Record-Keeping** | TernAudit: every trit=0 hold and trit=−1 veto is timestamped, logged, and queryable. Persistent AxisMemory. |
+| **Art. 13 — Transparency** | `trit` type is an explicit uncertainty carrier. Every decision includes a confidence score and a `hint` field explaining the outcome in plain text. |
+| **Art. 14 — Human Oversight** | `trit = 0` (hold) is a first-class routing signal to human review queues. The system cannot be forced to commit — it blocks until evidence threshold is met or a human resolves the hold. |
+| **Art. 15 — Accuracy & Robustness** | Compile-time exhaustive 3-way match enforcement. Non-exhaustive matches are a compile error. EMA convergence loop prevents single-round snap decisions. |
+| **GDPR — Data Residency** | API deployed on Fly.io Frankfurt region (EU). Server-side memory is keyed to API key and not shared across tenants. |
+
+**EU AI Act risk classification:** Ternlang is a **general-purpose AI tool** (not a listed high-risk system per Annex III). When deployed in high-risk contexts (medical, financial, judicial), downstream operators bear classification responsibility. Ternlang's architecture is designed to make those deployments auditable and verifiable.
+
 ---
 
 ## Contact & Licensing
