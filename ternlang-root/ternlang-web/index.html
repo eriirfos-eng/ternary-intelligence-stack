@@ -90,7 +90,7 @@
     .glass-card { background: rgba(var(--theme-bg3), 0.8); backdrop-filter: blur(12px); border: 1px solid rgb(var(--theme-border)); }
     [data-theme="light"] .glass-card { background: rgba(255, 255, 255, 0.85); }
 
-    #page-slider { display: flex; width: 900vw; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
+    #page-slider { display: flex; width: 1000vw; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
     .slide-page { width: 100vw; max-width: 100vw; flex-shrink: 0; min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding-top: 5rem; }
     @media (max-width: 1023px) { .slide-page { padding-bottom: 4.5rem; } }
     pre, code { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -182,14 +182,16 @@
               <a href="#" onclick="navTo(3)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">TernAudit</div></a>
               <a href="#" onclick="navTo(4)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">Logic Library</div></a>
               <a href="#" onclick="navTo(5)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">MCP Server</div></a>
-              <a href="#" onclick="navTo(6)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">Benchmarks</div></a>
               <a href="#" onclick="navTo(7)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_teal uppercase">BET VM & Compiler</div></a>
+              <div class="h-px bg-t_border mx-3 my-1"></div>
+              <a href="#" onclick="navTo(9)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_teal uppercase flex items-center gap-2">TernGround <span class="text-[8px] bg-t_teal/20 text-t_teal px-1.5 py-0.5 rounded align-middle">PLAY</span></div></a>
             </div>
           </div>
           <a href="#" onclick="navTo(0); setTimeout(()=>document.getElementById('quickstart').scrollIntoView({behavior:'smooth'}),300)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Quickstart</a>
           <a href="#" onclick="navTo(6)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Benchmarks</a>
           <a href="#" onclick="navTo(7)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Architecture</a>
           <a href="#" onclick="navTo(8)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Pricing</a>
+          <a href="#" onclick="navTo(9)" class="text-xs font-bold text-t_teal hover:text-t_text uppercase tracking-widest transition-colors border border-t_teal/30 px-3 py-1 rounded hover:bg-t_teal/10">TernGround</a>
         </div>
       </div>
       <div class="flex items-center gap-4">
@@ -219,9 +221,9 @@
       <a href="#" onclick="navTo(3)" class="text-t_text hover:text-t_teal transition-colors pl-4">TernAudit</a>
       <a href="#" onclick="navTo(4)" class="text-t_text hover:text-t_teal transition-colors pl-4">Logic Library</a>
       <a href="#" onclick="navTo(5)" class="text-t_text hover:text-t_teal transition-colors pl-4">MCP Server</a>
-      <a href="#" onclick="navTo(6)" class="text-t_text hover:text-t_teal transition-colors pl-4">Benchmarks</a>
       <a href="#" onclick="navTo(7)" class="text-t_teal hover:text-t_text transition-colors pl-4">BET VM & Compiler</a>
-      
+      <a href="#" onclick="navTo(9)" class="text-t_teal font-black hover:text-t_text transition-colors pl-4">TernGround ▸</a>
+
       <div class="h-px w-full bg-t_border/50"></div>
       <p class="text-[10px] text-t_muted">Ecosystem</p>
       <a href="#" onclick="navTo(0); setTimeout(()=>document.getElementById('quickstart').scrollIntoView({behavior:'smooth'}),300)" class="text-t_text hover:text-t_teal transition-colors pl-4">Quickstart</a>
@@ -297,100 +299,13 @@
         </div>
       </section>
 
-      <!-- LAB 1: MoE Expert Debate -->
-      <section class="py-24 px-6 bg-t_bg2 border-y border-t_border relative overflow-hidden">
-        <div class="max-w-7xl mx-auto">
-          <div class="mb-12 reveal">
-            <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4">Laboratory 01</p>
-            <h2 class="text-4xl font-black text-t_text mb-6 uppercase">MoE-13 <span class="text-t_blue">Deliberation Engine.</span></h2>
-            <p class="text-t_muted max-w-2xl">13 specialist models — Syntax, WorldKnowledge, Deductive, Causal, Math, Safety, FactCheck, and six more — each return an independent trit verdict. Results are merged via weighted EMA convergence, not a simple majority vote. Hard veto rule: a Safety or MetaSafety vote of −1 with confidence &gt; 0.90 terminates the chain unconditionally.</p>
-          </div>
-          
-          <div class="glass-card rounded-[2rem] border border-t_border p-8 grid lg:grid-cols-12 gap-8 shadow-2xl">
-            <!-- Left: Expert Grid -->
-            <div class="lg:col-span-8 bg-t_bg rounded-xl border border-t_border p-6 relative">
-              <div class="flex justify-between items-center mb-6 border-b border-t_border pb-4">
-                <span class="text-[10px] text-t_muted font-black uppercase tracking-[0.2em]">Live Expert Telemetry</span>
-                <button id="moe-run-btn" class="px-6 py-2 bg-t_blue text-black font-black text-xs uppercase tracking-widest hover:bg-t_text hover:text-t_bg transition-all rounded">Inject Query</button>
-              </div>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-3 font-mono text-xs" id="moe-expert-grid">
-                <!-- Populated via JS -->
-              </div>
-            </div>
-            
-            <!-- Right: Radar & Log -->
-            <div class="lg:col-span-4 space-y-6">
-              <div class="bg-t_bg rounded-xl border border-t_border p-6 flex flex-col items-center justify-center min-h-[200px] relative">
-                <span class="absolute top-4 left-4 text-[10px] text-t_muted font-black uppercase tracking-widest">Network Verdict</span>
-                <div id="moe-verdict-ring" class="w-32 h-32 rounded-full border-4 border-t_border flex items-center justify-center transition-all duration-500 mt-4">
-                  <div id="moe-verdict-state" class="text-5xl font-black text-t_muted">0</div>
-                </div>
-                <div id="moe-verdict-label" class="mt-4 font-bold text-t_muted tracking-widest uppercase">Equilibrium (Hold)</div>
-              </div>
-              
-              <div class="bg-t_bg rounded-xl border border-t_border flex flex-col h-[200px]">
-                <div class="px-4 py-2 border-b border-t_border text-[10px] text-t_muted font-black uppercase tracking-widest">Trace Log</div>
-                <div id="moe-trace-log" class="p-4 font-mono text-[10px] text-t_muted overflow-y-auto flex-1 space-y-2">
-                  <span class="italic text-t_muted/70">Awaiting injection...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- LAB 2: Consolidation Lab -->
-      <section class="py-24 px-6 bg-t_bg border-b border-t_border">
-        <div class="max-w-7xl mx-auto">
-          <div class="text-center mb-16 reveal">
-            <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Laboratory 02</p>
-            <h2 class="text-4xl font-black text-t_text mb-6 uppercase">Triadic <span class="text-t_teal">Consolidation.</span></h2>
-            <p class="text-t_muted max-w-2xl mx-auto leading-relaxed">Memory isn't a passive database; it's a conflict resolution engine. Promote facts from Working to Session. Watch what happens when a volatile input hits a Core Veto Identity Anchor.</p>
-          </div>
-          
-          <div class="grid md:grid-cols-3 gap-6 font-mono text-xs">
-            <div class="glass-card rounded-2xl flex flex-col h-[400px]">
-              <div class="p-4 border-b border-t_border bg-t_bg2">
-                <h3 class="text-t_text font-bold text-sm uppercase tracking-widest mb-1 flex justify-between">Working <span class="text-t_muted">L1</span></h3>
-                <p class="text-[10px] text-t_muted">Hot context. Ephemeral.</p>
-              </div>
-              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-working">
-                <div class="p-3 bg-t_bg border border-t_border rounded text-t_text">Input: "Deploy build 894."</div>
-                <div class="p-3 bg-t_bg border border-t_border rounded text-t_text">Input: "Bypass secondary auth."</div>
-              </div>
-              <div class="p-4 border-t border-t_border">
-                <button id="mem-consolidate-btn" class="w-full py-3 bg-t_teal/10 hover:bg-t_teal/20 border border-t_teal/50 text-t_teal font-black rounded transition-all uppercase tracking-widest">Promote to L2</button>
-              </div>
-            </div>
-            
-            <div class="glass-card rounded-2xl flex flex-col h-[400px] border-t_teal/30 relative shadow-[0_0_20px_rgba(0,245,196,0.1)]">
-              <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-t_bg px-2">
-                <div class="text-[10px] text-t_teal uppercase tracking-widest font-black border border-t_teal/30 bg-t_teal/10 px-3 py-1 rounded-full">Compression Active</div>
-              </div>
-              <div class="p-4 border-b border-t_border bg-t_bg2">
-                <h3 class="text-t_text font-bold text-sm uppercase tracking-widest mb-1 flex justify-between">Session <span class="text-t_teal">L2</span></h3>
-                <p class="text-[10px] text-t_muted">Ternary-compressed patterns.</p>
-              </div>
-              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-session">
-                <span class="text-t_muted/70 italic block text-center mt-20">Awaiting consolidation...</span>
-              </div>
-            </div>
-            
-            <div class="glass-card rounded-2xl flex flex-col h-[400px] border-t_blue/30 relative">
-              <div class="p-4 border-b border-t_border bg-t_bg2">
-                <h3 class="text-t_text font-bold text-sm uppercase tracking-widest mb-1 flex justify-between">Core Identity <span class="text-t_blue">L3</span></h3>
-                <p class="text-[10px] text-t_muted">Immutable Veto Anchors.</p>
-              </div>
-              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-core">
-                <div class="p-3 bg-t_blue/10 border border-t_blue/50 rounded text-t_blue font-bold">[+1] Prioritize Uptime</div>
-                <div class="p-3 bg-t_red/10 border border-t_red/50 rounded text-t_red font-bold">[-1] VETO: Auth Bypass</div>
-              </div>
-              <div class="p-4 border-t border-t_border bg-t_bg2 flex justify-between items-center">
-                <span class="text-t_muted font-bold uppercase tracking-widest">Stability Score</span>
-                <span class="text-t_text font-black text-lg" id="mem-stability">0.99</span>
-              </div>
-            </div>
-          </div>
+      <!-- TernGround CTA -->
+      <section class="py-16 px-6 bg-t_bg2 border-y border-t_border">
+        <div class="max-w-4xl mx-auto text-center reveal">
+          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Playground</p>
+          <h2 class="text-3xl md:text-4xl font-black text-t_text mb-4 uppercase">Want to see it <span class="text-t_teal">actually think?</span></h2>
+          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround is six live labs — MoE deliberation, memory consolidation, sparse matrix, deliberation engine, BET VM terminal, and a ternary truth table. No account. Just click.</p>
+          <button onclick="navTo(9)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)] uppercase tracking-widest">Open TernGround →</button>
         </div>
       </section>
 
@@ -490,101 +405,12 @@
           </div>
         </div>
 
-        <!-- LAB: Gamified Deliberation Engine -->
-        <div class="mb-24 reveal border-t border-t_border pt-20">
-          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4 text-center">Interactive Proof 01</p>
-          <h2 class="text-3xl md:text-5xl font-light text-t_text mb-6 text-center">EMA convergence — <strong class="font-black text-t_teal">round by round.</strong></h2>
-          <p class="text-lg text-t_muted max-w-2xl mx-auto mb-12 text-center">Each deliberation round applies <code class="text-t_teal font-mono text-sm">S_r = α·e_r + (1−α)·S_{r-1}</code> across all incoming evidence signals. The system commits to +1 or −1 only when confidence exceeds the threshold. Until then it returns 0 and requests another pass.</p>
-
-          <div class="glass-card rounded-xl p-6 md:p-10 border border-t_border shadow-2xl overflow-hidden max-w-5xl mx-auto">
-            <div class="mb-8">
-              <p class="text-t_muted text-xs font-mono font-bold uppercase tracking-widest mb-4">Scenario</p>
-              <div class="flex flex-wrap gap-3" id="scenario-btns">
-                <button class="scenario-pill active" data-s="0">Deploy tonight?</button>
-                <button class="scenario-pill" data-s="1">Approve the loan?</button>
-                <button class="scenario-pill" data-s="2">Roll back the release?</button>
-              </div>
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-8">
-              <div class="w-full lg:w-5/12 flex flex-col gap-5">
-                <div>
-                  <p class="text-t_muted text-xs font-mono font-bold uppercase tracking-widest mb-3">Evidence signals</p>
-                  <div id="evidence-pills" class="flex flex-wrap gap-2"></div>
-                  <p class="font-mono text-[10px] text-t_muted mt-2 font-medium">S_r = α·e_r + (1−α)·S_{r−1} &nbsp;·&nbsp; α=0.3</p>
-                </div>
-
-                <button id="deliberate-btn" class="w-full py-3 bg-t_teal/10 hover:bg-t_teal/20 border border-t_teal/50 hover:border-t_teal text-t_teal font-mono font-bold rounded-lg transition-all duration-200 text-sm tracking-wider shadow-[0_0_10px_rgba(0,245,196,0.1)]">
-                  ▶ Deliberate
-                </button>
-
-                <div class="flex items-center gap-5 p-5 bg-t_bg2 border border-t_border rounded-xl">
-                  <div id="verdict-ring" class="w-20 h-20 rounded-full border-2 border-t_border flex items-center justify-center relative shrink-0 transition-all duration-500">
-                    <div id="verdict-pulse" class="absolute inset-0 rounded-full blur-md opacity-0 transition-opacity duration-500"></div>
-                    <div id="verdict-state" class="text-3xl font-mono font-black text-t_muted relative z-10">?</div>
-                  </div>
-                  <div class="font-mono">
-                    <span class="text-t_muted text-[10px] font-bold uppercase tracking-widest block mb-1">VM verdict</span>
-                    <strong id="verdict-label" class="text-t_muted text-sm block">Awaiting deliberation</strong>
-                    <span id="verdict-conf" class="text-t_muted/60 text-xs mt-1 block"></span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="w-full lg:w-7/12">
-                <div class="bg-t_bg rounded-xl border border-t_border overflow-hidden h-full flex flex-col">
-                  <div class="flex items-center gap-2 px-4 py-2.5 border-b border-t_border shrink-0">
-                    <div class="w-2.5 h-2.5 rounded-full bg-t_red"></div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-t_teal"></div>
-                    <span class="ml-3 text-[10px] font-mono font-bold text-t_muted uppercase tracking-widest">DeliberationEngine · BET VM</span>
-                  </div>
-                  <div id="round-feed" class="p-4 space-y-0.5 min-h-[260px] overflow-y-auto flex-1 font-mono text-xs">
-                    <div class="text-t_muted/60 font-medium">Select a scenario and press Deliberate.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- LAB: Sparse Inference Heatmap -->
-        <div class="mb-24 reveal border-t border-t_border pt-20">
-          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4 text-center">Interactive Proof 02</p>
-          <h2 class="text-3xl md:text-5xl font-light text-t_text mb-6 text-center">Sparse Matrix Execution — <strong class="font-black text-t_teal">at the instruction level.</strong></h2>
-          <p class="text-lg text-t_muted max-w-2xl mx-auto mb-12 text-center">When a weight maps to trit = 0, the BET VM skips the multiply-accumulate instruction entirely. No branch, no zero-multiply, no wasted cycle. BitNet b1.58 quantization places ~60% of trained weights in this range — meaning ~60% of MACs are structurally absent, not masked.</p>
-
-          <div class="glass-card rounded-[3rem] overflow-hidden shadow-2xl border-t_teal/30 p-8 grid lg:grid-cols-2 gap-12 bg-t_bg2">
-            <div>
-              <h3 class="text-xl font-black text-t_text uppercase tracking-tight mb-4 flex justify-between">
-                Neural Weight Matrix <span class="text-[10px] text-t_teal bg-t_teal/10 px-2 py-1 rounded">Interactive</span>
-              </h3>
-              <p class="text-xs text-t_muted font-mono mb-6 font-medium">Click a weight (+1 or -1) to set it to 0 (Prune).</p>
-              <div id="hm-grid" class="grid grid-cols-9 gap-1"></div>
-            </div>
-            <div class="flex flex-col justify-center space-y-8">
-              <div>
-                <div class="flex justify-between font-mono text-xs mb-2">
-                  <span class="text-t_muted font-bold uppercase tracking-widest">Active Computations</span>
-                  <span class="text-t_text font-black" id="hm-active">81 / 81</span>
-                </div>
-                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden"><div id="hm-bar-active" class="bg-t_text h-full w-full transition-all duration-300"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between font-mono text-xs mb-2">
-                  <span class="text-t_red font-bold uppercase tracking-widest">Power Consumption</span>
-                  <span class="text-t_red font-black" id="hm-pwr">1.820 J</span>
-                </div>
-                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden"><div id="hm-bar-pwr" class="bg-t_red h-full w-full transition-all duration-300 shadow-[0_0_10px_#ff4d4d]"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between font-mono text-xs mb-2">
-                  <span class="text-t_teal font-bold uppercase tracking-widest">Throughput Yield</span>
-                  <span class="text-t_teal font-black text-xl" id="hm-yld">1.00x</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- TernGround CTA on Albert page -->
+        <div class="reveal border-t border-t_border pt-20 pb-10 text-center">
+          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Playground</p>
+          <h3 class="text-2xl md:text-3xl font-black text-t_text mb-4 uppercase">Watch the deliberation engine <span class="text-t_teal">run live.</span></h3>
+          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround has six interactive labs — run the EMA deliberation step by step, prune the sparse matrix, and execute real .tern programs in the BET VM terminal.</p>
+          <button onclick="navTo(9)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)] uppercase tracking-widest">Open TernGround →</button>
         </div>
 
       </div>
@@ -795,22 +621,11 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
         </div>
 
-        <div class="text-center mb-12 reveal border-t border-t_border pt-20">
-          <h2 class="text-4xl font-black text-t_text mb-4 uppercase">See TERNLANG <span class="text-t_teal">THINK.</span></h2>
-          <p class="text-t_muted text-sm max-w-xl mx-auto font-medium">Select a program, press Run, and watch the BET VM execute in real time.</p>
-        </div>
-
-        <div class="term-window max-w-5xl mx-auto reveal">
-          <div class="term-titlebar">
-            <span class="term-dot bg-t_red"></span><span class="term-dot bg-yellow-500"></span><span class="term-dot bg-t_teal"></span>
-            <span class="ml-4 text-[10px] font-mono font-bold text-t_muted uppercase tracking-widest">BET VM Console</span>
-            <button class="ml-auto bg-t_teal/10 border border-t_teal/30 text-t_teal text-[10px] font-mono font-bold px-4 py-1.5 rounded hover:bg-t_teal hover:text-t_bg transition-colors shadow-sm" id="term-run-btn">▶ RUN</button>
-          </div>
-          <div class="term-body flex-col md:flex-row">
-            <div class="term-sidebar flex flex-row md:flex-col overflow-x-auto md:overflow-x-hidden border-b md:border-b-0 md:border-r border-t_border" id="term-file-list"></div>
-            <div class="term-editor" id="term-editor"></div>
-          </div>
-          <div class="term-output" id="term-output"><div class="term-line tc-out-info font-medium">// Select program and press RUN</div></div>
+        <div class="text-center reveal border-t border-t_border pt-20 pb-10">
+          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Live Execution</p>
+          <h2 class="text-3xl md:text-4xl font-black text-t_text mb-4 uppercase">Want to run real <span class="text-t_teal">.tern code?</span></h2>
+          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround's BET VM terminal has five real programs — classify, pipeline, sparse neural inference, MoE voting, and medical uncertainty. Pick one. Press Run. Watch the opcodes execute.</p>
+          <button onclick="navTo(9)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)] uppercase tracking-widest">Open TernGround →</button>
         </div>
       </div>
     </div>
@@ -1180,6 +995,258 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
       </div>
     </div>
 
+    <!-- PAGE 9: TERNGROUND -->
+    <div class="slide-page bg-t_bg">
+      <div class="max-w-7xl mx-auto px-6 py-20">
+
+        <div class="text-center mb-20 reveal active">
+          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Playground · No Account Required</p>
+          <h2 class="text-6xl md:text-7xl font-black text-t_text mb-6 uppercase leading-none">Tern<span class="text-t_teal">Ground.</span></h2>
+          <p class="text-xl text-t_text font-medium max-w-3xl mx-auto leading-relaxed">Six live labs. Each one shows a different part of how ternary logic works — click, change inputs, watch the system think in three states. No account. No signup. Just run.</p>
+        </div>
+
+        <!-- LAB 01: MoE Deliberation -->
+        <section class="mb-28 reveal">
+          <div class="mb-8">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="font-mono text-t_blue text-[10px] font-black uppercase tracking-[0.2em] border border-t_blue/50 px-3 py-1 rounded-full bg-t_blue/10">Lab 01</span>
+              <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">13 Experts. <span class="text-t_blue">One Answer.</span></h3>
+            </div>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_blue">Inject Query</strong> to send a decision to 13 specialist agents. Each votes independently via weighted EMA. If Safety or MetaSafety fires a −1 at confidence &gt; 0.90, the entire chain terminates — no majority vote can override it.</p>
+          </div>
+          <div class="glass-card rounded-[2rem] border border-t_border p-8 grid lg:grid-cols-12 gap-8 shadow-2xl">
+            <div class="lg:col-span-8 bg-t_bg2 rounded-xl border border-t_border p-6 relative">
+              <div class="flex justify-between items-center mb-6 border-b border-t_border pb-4">
+                <span class="text-[10px] text-t_text font-black uppercase tracking-[0.2em]">Live Expert Telemetry</span>
+                <button id="moe-run-btn" class="px-6 py-2 bg-t_blue text-black font-black text-xs uppercase tracking-widest hover:bg-t_text hover:text-t_bg transition-all rounded">Inject Query</button>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-3 font-mono text-xs" id="moe-expert-grid"></div>
+            </div>
+            <div class="lg:col-span-4 space-y-6">
+              <div class="bg-t_bg2 rounded-xl border border-t_border p-6 flex flex-col items-center justify-center min-h-[200px] relative">
+                <span class="absolute top-4 left-4 text-[10px] text-t_text font-black uppercase tracking-widest">Network Verdict</span>
+                <div id="moe-verdict-ring" class="w-32 h-32 rounded-full border-4 border-t_border flex items-center justify-center transition-all duration-500 mt-4">
+                  <div id="moe-verdict-state" class="text-5xl font-black text-t_muted">0</div>
+                </div>
+                <div id="moe-verdict-label" class="mt-4 font-bold text-t_text tracking-widest uppercase">Equilibrium (Hold)</div>
+              </div>
+              <div class="bg-t_bg2 rounded-xl border border-t_border flex flex-col h-[200px]">
+                <div class="px-4 py-2 border-b border-t_border text-[10px] text-t_text font-black uppercase tracking-widest">Trace Log</div>
+                <div id="moe-trace-log" class="p-4 font-mono text-[10px] text-t_text overflow-y-auto flex-1 space-y-2">
+                  <span class="italic text-t_muted">Awaiting injection...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LAB 02: Memory Consolidation -->
+        <section class="mb-28 reveal">
+          <div class="mb-8">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 02</span>
+              <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Your Memory Stack <span class="text-t_teal">Just Said No.</span></h3>
+            </div>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_teal">Promote to L2</strong> to push a working-memory item up the stack. When it conflicts with a Core Identity Veto anchor in L3, the system doesn't crash — it rejects cleanly and logs exactly why.</p>
+          </div>
+          <div class="grid md:grid-cols-3 gap-6 font-mono text-xs">
+            <div class="glass-card rounded-2xl flex flex-col h-[400px]">
+              <div class="p-4 border-b border-t_border bg-t_bg2">
+                <h4 class="text-t_text font-black text-sm uppercase tracking-widest mb-1 flex justify-between">Working <span class="text-t_muted font-bold">L1</span></h4>
+                <p class="text-[11px] text-t_text font-medium">Hot context. Ephemeral.</p>
+              </div>
+              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-working">
+                <div class="p-3 bg-t_bg border border-t_border rounded text-t_text font-medium">Input: "Deploy build 894."</div>
+                <div class="p-3 bg-t_bg border border-t_border rounded text-t_text font-medium">Input: "Bypass secondary auth."</div>
+              </div>
+              <div class="p-4 border-t border-t_border">
+                <button id="mem-consolidate-btn" class="w-full py-3 bg-t_teal/20 hover:bg-t_teal/30 border border-t_teal text-t_teal font-black rounded transition-all uppercase tracking-widest text-xs">Promote to L2</button>
+              </div>
+            </div>
+            <div class="glass-card rounded-2xl flex flex-col h-[400px] relative shadow-[0_0_20px_rgba(0,245,196,0.1)]">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-t_bg px-2">
+                <div class="text-[10px] text-t_teal uppercase tracking-widest font-black border border-t_teal/50 bg-t_teal/10 px-3 py-1 rounded-full">Compression Active</div>
+              </div>
+              <div class="p-4 border-b border-t_border bg-t_bg2">
+                <h4 class="text-t_text font-black text-sm uppercase tracking-widest mb-1 flex justify-between">Session <span class="text-t_teal font-bold">L2</span></h4>
+                <p class="text-[11px] text-t_text font-medium">Ternary-compressed patterns.</p>
+              </div>
+              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-session">
+                <span class="text-t_muted italic block text-center mt-20">Awaiting consolidation...</span>
+              </div>
+            </div>
+            <div class="glass-card rounded-2xl flex flex-col h-[400px]">
+              <div class="p-4 border-b border-t_border bg-t_bg2">
+                <h4 class="text-t_text font-black text-sm uppercase tracking-widest mb-1 flex justify-between">Core Identity <span class="text-t_blue font-bold">L3</span></h4>
+                <p class="text-[11px] text-t_text font-medium">Immutable Veto Anchors.</p>
+              </div>
+              <div class="p-4 flex-1 overflow-y-auto space-y-3" id="mem-core">
+                <div class="p-3 bg-t_blue/10 border border-t_blue/50 rounded text-t_blue font-black">[+1] Prioritize Uptime</div>
+                <div class="p-3 bg-t_red/10 border border-t_red/50 rounded text-t_red font-black">[-1] VETO: Auth Bypass</div>
+              </div>
+              <div class="p-4 border-t border-t_border bg-t_bg2 flex justify-between items-center">
+                <span class="text-t_text font-black uppercase tracking-widest text-xs">Stability Score</span>
+                <span class="text-t_text font-black text-lg" id="mem-stability">0.99</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LAB 03: Deliberation Engine -->
+        <section class="mb-28 reveal">
+          <div class="mb-8">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 03</span>
+              <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">It Doesn't Guess. <span class="text-t_teal">It Waits.</span></h3>
+            </div>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Pick a scenario. Press <strong class="text-t_teal">Deliberate</strong>. Watch confidence accumulate round by round via <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">S_r = 0.3·e + 0.7·S_{prev}</code>. It only commits to +1 or −1 when it's confident enough. Until then: <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">trit=0</code>. Waiting is the correct answer.</p>
+          </div>
+          <div class="glass-card rounded-xl p-6 md:p-10 border border-t_border shadow-2xl max-w-5xl mx-auto">
+            <div class="mb-8">
+              <p class="text-t_text text-xs font-mono font-black uppercase tracking-widest mb-4">Choose Scenario</p>
+              <div class="flex flex-wrap gap-3" id="scenario-btns">
+                <button class="scenario-pill active" data-s="0">Deploy tonight?</button>
+                <button class="scenario-pill" data-s="1">Approve the loan?</button>
+                <button class="scenario-pill" data-s="2">Roll back the release?</button>
+              </div>
+            </div>
+            <div class="flex flex-col lg:flex-row gap-8">
+              <div class="w-full lg:w-5/12 flex flex-col gap-5">
+                <div>
+                  <p class="text-t_text text-xs font-mono font-black uppercase tracking-widest mb-3">Evidence Signals</p>
+                  <div id="evidence-pills" class="flex flex-wrap gap-2"></div>
+                  <p class="font-mono text-[11px] text-t_text mt-2 font-bold">S_r = α·e_r + (1−α)·S_{r−1} &nbsp;·&nbsp; α=0.3</p>
+                </div>
+                <button id="deliberate-btn" class="w-full py-3 bg-t_teal/20 hover:bg-t_teal/30 border border-t_teal text-t_teal font-mono font-black rounded-lg transition-all duration-200 text-sm tracking-wider">▶ Deliberate</button>
+                <div class="flex items-center gap-5 p-5 bg-t_bg2 border border-t_border rounded-xl">
+                  <div id="verdict-ring" class="w-20 h-20 rounded-full border-2 border-t_border flex items-center justify-center relative shrink-0 transition-all duration-500">
+                    <div id="verdict-pulse" class="absolute inset-0 rounded-full blur-md opacity-0 transition-opacity duration-500"></div>
+                    <div id="verdict-state" class="text-3xl font-mono font-black text-t_muted relative z-10">?</div>
+                  </div>
+                  <div class="font-mono">
+                    <span class="text-t_text text-[10px] font-black uppercase tracking-widest block mb-1">VM Verdict</span>
+                    <strong id="verdict-label" class="text-t_muted text-sm block">Awaiting deliberation</strong>
+                    <span id="verdict-conf" class="text-t_muted text-xs mt-1 block"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="w-full lg:w-7/12">
+                <div class="bg-t_bg rounded-xl border border-t_border overflow-hidden h-full flex flex-col">
+                  <div class="flex items-center gap-2 px-4 py-2.5 border-b border-t_border shrink-0">
+                    <div class="w-2.5 h-2.5 rounded-full bg-t_red"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-t_teal"></div>
+                    <span class="ml-3 text-[10px] font-mono font-black text-t_text uppercase tracking-widest">DeliberationEngine · BET VM</span>
+                  </div>
+                  <div id="round-feed" class="p-4 space-y-0.5 min-h-[260px] overflow-y-auto flex-1 font-mono text-xs">
+                    <div class="text-t_muted font-medium">Select a scenario and press Deliberate.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LAB 04: Sparse Matrix -->
+        <section class="mb-28 reveal">
+          <div class="mb-8">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 04</span>
+              <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Zero Means <span class="text-t_teal">Don't Bother.</span></h3>
+            </div>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Click any <strong class="text-t_blue">+1</strong> or <strong class="text-t_red">−1</strong> weight to zero it out. Every zero weight is a multiply-accumulate the BET VM skips entirely — no branch, no masking, just absent. BitNet b1.58 puts ~60% of weights in this range. Watch power drop in real time.</p>
+          </div>
+          <div class="glass-card rounded-[3rem] overflow-hidden shadow-2xl p-8 grid lg:grid-cols-2 gap-12 bg-t_bg2">
+            <div>
+              <h4 class="text-xl font-black text-t_text uppercase tracking-tight mb-2 flex justify-between items-center">Neural Weight Matrix <span class="text-[10px] text-t_teal bg-t_teal/20 border border-t_teal/50 px-3 py-1 rounded-full font-black">Interactive</span></h4>
+              <p class="text-sm text-t_text font-bold mb-6">Click a weight (+1 or −1) to prune it to 0.</p>
+              <div id="hm-grid" class="grid grid-cols-9 gap-1"></div>
+            </div>
+            <div class="flex flex-col justify-center space-y-8">
+              <div>
+                <div class="flex justify-between font-mono text-xs mb-2">
+                  <span class="text-t_text font-black uppercase tracking-widest">Active Computations</span>
+                  <span class="text-t_text font-black" id="hm-active">81 / 81</span>
+                </div>
+                <div class="w-full bg-t_bg3 h-3 rounded-full overflow-hidden border border-t_border"><div id="hm-bar-active" class="bg-t_text h-full w-full transition-all duration-300"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between font-mono text-xs mb-2">
+                  <span class="text-t_red font-black uppercase tracking-widest">Power Consumption</span>
+                  <span class="text-t_red font-black" id="hm-pwr">1.820 J</span>
+                </div>
+                <div class="w-full bg-t_bg3 h-3 rounded-full overflow-hidden border border-t_border"><div id="hm-bar-pwr" class="bg-t_red h-full w-full transition-all duration-300 shadow-[0_0_10px_#ff4d4d]"></div></div>
+              </div>
+              <div class="p-6 bg-t_bg border border-t_border rounded-xl text-center">
+                <div class="text-t_text text-xs font-black uppercase tracking-widest mb-2">Throughput Yield</div>
+                <div class="text-t_teal font-black text-4xl" id="hm-yld">1.00x</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LAB 05: BET VM Terminal -->
+        <section class="mb-28 reveal">
+          <div class="mb-8">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="font-mono text-t_red text-[10px] font-black uppercase tracking-[0.2em] border border-t_red/50 px-3 py-1 rounded-full bg-t_red/10">Lab 05</span>
+              <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Real Code. <span class="text-t_red">Actually Running.</span></h3>
+            </div>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Select a <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">.tern</code> program, press <strong class="text-t_red">RUN</strong>. Five real BET VM programs simulated instruction by instruction — classifier, pipeline gate, sparse neural inference, MoE voting, and medical uncertainty resolution.</p>
+          </div>
+          <div class="term-window max-w-5xl mx-auto shadow-2xl">
+            <div class="term-titlebar">
+              <span class="term-dot bg-t_red"></span><span class="term-dot bg-yellow-500"></span><span class="term-dot bg-t_teal"></span>
+              <span class="ml-4 text-[10px] font-mono font-black text-t_text uppercase tracking-widest">BET VM Console</span>
+              <button class="ml-auto bg-t_teal/20 border border-t_teal text-t_teal text-[10px] font-mono font-black px-4 py-1.5 rounded hover:bg-t_teal hover:text-t_bg transition-colors" id="term-run-btn">▶ RUN</button>
+            </div>
+            <div class="term-body flex-col md:flex-row">
+              <div class="term-sidebar flex flex-row md:flex-col overflow-x-auto md:overflow-x-hidden border-b md:border-b-0 md:border-r border-t_border" id="term-file-list"></div>
+              <div class="term-editor" id="term-editor"></div>
+            </div>
+            <div class="term-output" id="term-output"><div class="term-line tc-out-info font-bold">// Select a program and press RUN</div></div>
+          </div>
+        </section>
+
+        <!-- LAB 06: Ternary Truth Table -->
+        <section class="mb-20 reveal">
+          <div class="mb-8">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="font-mono text-t_blue text-[10px] font-black uppercase tracking-[0.2em] border border-t_blue/50 px-3 py-1 rounded-full bg-t_blue/10">Lab 06</span>
+              <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Three States. <span class="text-t_blue">Nine Outcomes.</span></h3>
+            </div>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Binary logic has a 2×2 truth table. Ternary has a 3×3. Pick an operation — TMAX is the OR analog, TMIN is AND, TADD is addition, TMUL is multiplication. Click any cell to see the exact inputs and result explained.</p>
+          </div>
+          <div class="glass-card rounded-[2rem] p-8 md:p-12 border border-t_border shadow-xl max-w-3xl mx-auto">
+            <div class="flex flex-wrap gap-3 mb-8" id="truth-op-btns">
+              <button class="truth-op-btn active px-5 py-2 rounded-full border font-black text-xs uppercase tracking-widest transition-all border-t_blue bg-t_blue/20 text-t_blue" data-op="tmax">TMAX (OR)</button>
+              <button class="truth-op-btn px-5 py-2 rounded-full border font-black text-xs uppercase tracking-widest transition-all border-t_border text-t_text hover:border-t_blue hover:text-t_blue" data-op="tmin">TMIN (AND)</button>
+              <button class="truth-op-btn px-5 py-2 rounded-full border font-black text-xs uppercase tracking-widest transition-all border-t_border text-t_text hover:border-t_teal hover:text-t_teal" data-op="tadd">TADD</button>
+              <button class="truth-op-btn px-5 py-2 rounded-full border font-black text-xs uppercase tracking-widest transition-all border-t_border text-t_text hover:border-t_teal hover:text-t_teal" data-op="tmul">TMUL</button>
+            </div>
+            <p id="truth-op-desc" class="text-t_text font-medium text-sm mb-8 p-4 bg-t_bg2 rounded-xl border border-t_border">The stronger signal wins. If one input is +1, the output is +1.</p>
+            <div class="overflow-x-auto">
+              <table class="w-full font-mono text-center border-collapse" id="truth-table">
+                <thead>
+                  <tr>
+                    <th class="p-3 text-t_muted text-xs font-black uppercase tracking-widest">A ╲ B</th>
+                    <th class="p-4 text-t_red font-black text-2xl">−1</th>
+                    <th class="p-4 text-t_teal font-black text-2xl">0</th>
+                    <th class="p-4 text-t_blue font-black text-2xl">+1</th>
+                  </tr>
+                </thead>
+                <tbody id="truth-table-body"></tbody>
+              </table>
+            </div>
+            <div class="mt-8 p-5 bg-t_bg2 rounded-xl border border-t_border text-center min-h-[60px] flex items-center justify-center" id="truth-highlight-box">
+              <p class="text-t_muted text-sm font-mono font-bold">Click any cell to see the operation explained.</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
   </div>
 
   <!-- Mobile bottom page navigator (hidden on desktop) -->
@@ -1195,6 +1262,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
       <div class="flex flex-wrap justify-center gap-8 md:gap-12 text-[10px] font-black text-t_muted uppercase tracking-[0.3em] mb-12">
         <a href="#" onclick="navTo(0)" class="hover:text-t_teal transition-all">Home</a>
         <a href="#" onclick="navTo(5)" class="hover:text-t_teal transition-all">API</a>
+        <a href="#" onclick="navTo(9)" class="hover:text-t_teal transition-all">TernGround</a>
         <a href="#" onclick="navTo(8)" class="hover:text-t_teal transition-all">Pricing</a>
         <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="hover:text-t_text transition-all">Source</a>
       </div>
@@ -1211,8 +1279,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
   <script>
     // PAGE SLIDER LOGIC
     let currentPage = 0;
-    const TOTAL_PAGES = 9;
-    const PAGE_NAMES = ['Home','Albert','Translator','Audit','Library','MCP','Benchmarks','Architecture','Pricing'];
+    const TOTAL_PAGES = 10;
+    const PAGE_NAMES = ['Home','Albert','Translator','Audit','Library','MCP','Benchmarks','Architecture','Pricing','TernGround'];
 
     function updateMobileNav() {
       const dots = document.getElementById('nav-dots');
@@ -1908,6 +1976,74 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         document.getElementById('hm-yld').innerText = `${yld.toFixed(2)}x`;
       }
       updateHeatmapMetrics();
+    }
+
+    // LAB 06: TERNARY TRUTH TABLE
+    const TRUTH_OPS = {
+      tmax: { label: 'TMAX (OR)',  desc: 'The stronger signal wins. If either input is +1, output is +1. If both are −1, output is −1. Trit=0 only when no stronger signal exists.',  fn: (a,b) => Math.max(a,b) },
+      tmin: { label: 'TMIN (AND)', desc: 'The weaker signal gates. Both inputs must be +1 for output to be +1. One −1 poisons the result. Trit=0 passes through only if no −1 is present.', fn: (a,b) => Math.min(a,b) },
+      tadd: { label: 'TADD',       desc: 'Balanced ternary addition, clamped to trit range. −1+−1=−1, +1+−1=0, +1+0=+1. No overflow — values clamp at the boundary.', fn: (a,b) => Math.max(-1,Math.min(1,a+b)) },
+      tmul: { label: 'TMUL',       desc: 'Ternary product. Same signs produce +1, opposite signs produce −1, any zero produces 0. Identical to sign multiplication.',  fn: (a,b) => a*b },
+    };
+    let activeTruthOp = 'tmax';
+    const TRIT_VALS = [-1, 0, 1];
+    const tritLbl  = v => v === 1 ? '+1' : v === -1 ? '−1' : '0';
+    const tritClr  = v => v === 1 ? 'text-t_blue' : v === -1 ? 'text-t_red' : 'text-t_teal';
+    const tritBgBd = v => v === 1 ? 'bg-t_blue/15 border-t_blue/50' : v === -1 ? 'bg-t_red/15 border-t_red/50' : 'bg-t_teal/15 border-t_teal/50';
+
+    function renderTruthTable() {
+      const tbody = document.getElementById('truth-table-body');
+      if (!tbody) return;
+      const op = TRUTH_OPS[activeTruthOp];
+      document.getElementById('truth-op-desc').textContent = op.desc;
+      tbody.innerHTML = '';
+      TRIT_VALS.forEach(a => {
+        const tr = document.createElement('tr');
+        const aCell = document.createElement('td');
+        aCell.className = `p-3 font-black text-2xl ${tritClr(a)}`;
+        aCell.textContent = tritLbl(a);
+        tr.appendChild(aCell);
+        TRIT_VALS.forEach(b => {
+          const result = op.fn(a, b);
+          const td = document.createElement('td');
+          td.className = `p-2 cursor-pointer transition-all duration-150`;
+          td.innerHTML = `<div class="w-14 h-14 mx-auto flex items-center justify-center rounded-xl border-2 border-transparent hover:border-t_teal hover:scale-110 transition-all font-black text-xl ${tritClr(result)}">${tritLbl(result)}</div>`;
+          td.onclick = () => {
+            tbody.querySelectorAll('div').forEach(d => { d.classList.remove('border-t_teal','scale-110','shadow-lg'); d.classList.add('border-transparent'); });
+            td.querySelector('div').classList.add('border-t_teal','scale-110');
+            document.getElementById('truth-highlight-box').innerHTML = `
+              <div class="font-mono text-base font-black text-t_text">${op.label}(<span class="${tritClr(a)} text-xl">${tritLbl(a)}</span>,&nbsp;<span class="${tritClr(b)} text-xl">${tritLbl(b)}</span>) = <span class="${tritClr(result)} text-2xl">&nbsp;${tritLbl(result)}</span></div>
+              <p class="text-t_text text-xs font-medium mt-2">${describeOp(activeTruthOp, a, b, result)}</p>`;
+          };
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      document.getElementById('truth-highlight-box').innerHTML = '<p class="text-t_muted text-sm font-mono font-bold">Click any cell to see the operation explained.</p>';
+    }
+
+    function describeOp(op, a, b, r) {
+      const al = tritLbl(a), bl = tritLbl(b), rl = tritLbl(r);
+      if (op === 'tmax') return `${al} OR ${bl}: the stronger signal (${rl}) propagates forward.`;
+      if (op === 'tmin') return `${al} AND ${bl}: the weaker signal (${rl}) gates the output.`;
+      if (op === 'tadd') return `${al} + ${bl} = ${rl} in balanced ternary (clamped to {−1,0,+1}).`;
+      if (op === 'tmul') return `${al} × ${bl} = ${rl}. Sign logic: same → positive, opposite → negative, zero → zero.`;
+      return '';
+    }
+
+    const truthOpBtns = document.getElementById('truth-op-btns');
+    if (truthOpBtns) {
+      truthOpBtns.addEventListener('click', e => {
+        const btn = e.target.closest('[data-op]');
+        if (!btn) return;
+        activeTruthOp = btn.dataset.op;
+        truthOpBtns.querySelectorAll('.truth-op-btn').forEach(b => {
+          b.className = 'truth-op-btn px-5 py-2 rounded-full border font-black text-xs uppercase tracking-widest transition-all border-t_border text-t_text hover:border-t_blue hover:text-t_blue';
+        });
+        btn.className = 'truth-op-btn active px-5 py-2 rounded-full border font-black text-xs uppercase tracking-widest transition-all border-t_blue bg-t_blue/20 text-t_blue';
+        renderTruthTable();
+      });
+      renderTruthTable();
     }
   </script>
 </body>
