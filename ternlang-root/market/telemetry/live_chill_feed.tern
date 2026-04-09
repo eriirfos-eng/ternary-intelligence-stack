@@ -5,7 +5,7 @@
 // License: BSL-1.1
 // Reference: Patent Pending A50296/2026
 
-import hardware::verification::thermal_physical_audit;
+use hardware::verification::thermal_physical_audit;
 
 agent LiveChillFeed {
     /**

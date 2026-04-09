@@ -5,8 +5,8 @@
 // License: Tier-3 Sovereign (Project Icarus)
 // Reference: Patent Pending A50296/2026
 
-import stdlib::kernel::drivers::bet_v_bridge;
-import hardware::verification::sovereign_node_a;
+use stdlib::kernel::drivers::bet_v_bridge;
+use hardware::verification::sovereign_node_a;
 
 agent QuantumNoiseHarvest {
     /**

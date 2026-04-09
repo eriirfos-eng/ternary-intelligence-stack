@@ -5,8 +5,8 @@
 // License: RFI-IRFOS-ENTERPRISE-V1
 // Patent Pending: A50296/2026
 
-import stdlib::kernel::drivers::bet_v_bridge;
-import network::egress::inquisitor_gate;
+use stdlib::kernel::drivers::bet_v_bridge;
+use network::egress::inquisitor_gate;
 
 agent GatewayShield {
     /**

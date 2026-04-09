@@ -1,9 +1,9 @@
 // Ternlang Tutorial 05: Physical Reasoning & Sensor Fusion
 // Demonstrating the use of physical.robotics and physical.sensors modules.
 
-import physical.robotics.kinematics;
-import physical.sensors.fusion;
-import reasoning.uncertainty_ext;
+use physical.robotics.kinematics;
+use physical.sensors.fusion;
+use reasoning.uncertainty_ext;
 
 pub fn main() {
     // 1. Simulate sensor inputs

@@ -1,8 +1,8 @@
 // Ternlang Tutorial 07: Sovereign Systems
 // Building a resilient sovereign node with triadic routing and security.
 
-import systems.network.routing;
-import systems.security.zero_trust;
+use systems.network.routing;
+use systems.security.zero_trust;
 
 pub fn main() {
     // ── 1. Network Path Assessment ─────────────────────────────────────────

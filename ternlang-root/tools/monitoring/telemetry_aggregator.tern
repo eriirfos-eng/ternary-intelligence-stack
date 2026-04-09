@@ -4,8 +4,8 @@
 // Privacy: 100% Anonymized. No PII or source data collected.
 // License: BSL-1.1
 
-import stdlib::net::t_routing;
-import stdlib::math::triadic_stats;
+use stdlib::net::t_routing;
+use stdlib::math::triadic_stats;
 
 agent TelemetryAggregator {
     /**

@@ -414,7 +414,7 @@ impl BytecodeEmitter {
 
             Stmt::Return(expr) => {
                 self.emit_expr(expr);
-                self.code.push(0x00); // THALT
+                self.code.push(0x11); // TRET
             }
             Stmt::Block(stmts) => {
                 for stmt in stmts {

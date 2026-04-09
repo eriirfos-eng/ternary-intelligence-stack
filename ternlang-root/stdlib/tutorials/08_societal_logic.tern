@@ -1,8 +1,8 @@
 // Ternlang Tutorial 08: Societal Logic & Governance
 // Modeling ethical gatekeeping and multi-agent governance.
 
-import societal.ethics.deliberation;
-import societal.governance.policy;
+use societal.ethics.deliberation;
+use societal.governance.policy;
 
 pub fn main() {
     // ── 1. Ethics: Moral Gatekeeping ───────────────────────────────────────

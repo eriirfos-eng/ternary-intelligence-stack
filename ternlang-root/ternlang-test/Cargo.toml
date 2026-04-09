@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.1.0" }

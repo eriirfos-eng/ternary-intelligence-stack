@@ -5,7 +5,7 @@
 // License: Tier-3 Sovereign
 // Patent Pending: A50296/2026
 
-import ternlang_swarm::src::mesh::triple_threat_sync;
+use ternlang_swarm::src::mesh::triple_threat_sync;
 
 agent TritLedger {
     /**

@@ -3,8 +3,8 @@
 // Purpose: Simulate network partitions and verify Triadic Paxos resilience.
 // License: BSL-1.1 - Proprietary RFI-IRFOS IP
 
-import tier3/cluster/distributed_shard_manager
-import tier3/sla/latency_guarantee
+use tier3/cluster/distributed_shard_manager
+use tier3/sla/latency_guarantee
 
 agent PaxosStressTest {
     fn simulate_partition(node_count: int, failure_rate: float) -> trit_tensor {

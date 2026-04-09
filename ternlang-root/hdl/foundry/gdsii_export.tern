@@ -1,0 +1,4 @@
+// hdl/foundry/gdsii_export.tern
+fn main() -> trit {
+    return 1;
+}

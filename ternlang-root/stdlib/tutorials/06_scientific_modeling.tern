@@ -1,8 +1,8 @@
 // Ternlang Tutorial 06: Scientific Modeling
 // Modeling physical stability and biological regulation.
 
-import scientific.physics.stability;
-import bio.gene_regulation;
+use scientific.physics.stability;
+use bio.gene_regulation;
 
 pub fn main() {
     // ── 1. Physics: Stability Analysis ─────────────────────────────────────

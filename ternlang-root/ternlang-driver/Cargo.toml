@@ -10,4 +10,4 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-ternlang-core = { path = "../ternlang-core", version = "0.1.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.1.0" }

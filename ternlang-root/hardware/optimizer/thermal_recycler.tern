@@ -5,7 +5,7 @@
 // License: Tier-3 Sovereign
 // Patent Pending: A50296/2026
 
-import stdlib::kernel::drivers::bet_v_bridge;
+use stdlib::kernel::drivers::bet_v_bridge;
 
 agent ThermalRecycler {
     /**

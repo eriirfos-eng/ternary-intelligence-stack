@@ -4,11 +4,11 @@
 // License: BSL-1.1 (Business Source License)
 // Reference: Patent Pending A50296/2026
 
-import benchmarks/matmul_sparse_bypass
-import benchmarks/silicon_thermal_load
-import benchmarks/ternadam_memory_clamp
-import benchmarks/tposix_thread_storm
-import tier3/commercial/t_detect
+use benchmarks/matmul_sparse_bypass
+use benchmarks/silicon_thermal_load
+use benchmarks/ternadam_memory_clamp
+use benchmarks/tposix_thread_storm
+use tier3/commercial/t_detect
 
 agent TelemetryPipe {
     fn ingest_live_metrics() -> tson_frame {

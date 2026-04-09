@@ -5,9 +5,9 @@
 // License: BSL-1.1
 // Patent Pending: A50296/2026
 
-import stdlib::net::t_routing;
-import stdlib::kernel::drivers::bet_v_bridge;
-import stdlib::math::triadic_stats;
+use stdlib::net::t_routing;
+use stdlib::kernel::drivers::bet_v_bridge;
+use stdlib::math::triadic_stats;
 
 agent UnitySync {
     /**

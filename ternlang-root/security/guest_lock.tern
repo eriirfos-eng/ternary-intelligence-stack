@@ -4,7 +4,7 @@
 // Logic: Physical Gate Isolation (Read-Only enforcement).
 // License: RFI-IRFOS-ENTERPRISE-V1
 
-import stdlib::kernel::drivers::bet_v_bridge;
+use stdlib::kernel::drivers::bet_v_bridge;
 
 agent GuestLock {
     /**

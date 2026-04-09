@@ -5,8 +5,8 @@
 // License: Tier-3 Sovereign
 // Reference: Patent Pending A50296/2026
 
-import ternlang_swarm::src::mesh::unity_sync;
-import stdlib::net::t_routing;
+use ternlang_swarm::src::mesh::unity_sync;
+use stdlib::net::t_routing;
 
 agent SovereignMesh {
     /**

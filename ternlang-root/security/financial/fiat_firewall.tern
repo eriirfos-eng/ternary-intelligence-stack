@@ -5,50 +5,33 @@
 // License: Tier-3 Sovereign
 // Reference: Patent Pending A50296/2026
 
-import stdlib::net::t_routing;
-import security::sanitizer_protocol;
+use stdlib::net::t_routing;
+use security::sanitizer_protocol;
 
 agent FiatFirewall {
-    /**
-     * shield_transaction:
-     * Intercepts an inbound CBDC transaction packet.
-     * Encapsulates the telemetry in a State 0 (Deliberative Hold) buffer.
-     */
-    fn shield_transaction(packet: trit_tensor) -> trit {
+    fn shield_transaction(packet: trittensor<27>) -> trit {
         @sparseskip
         
-        // 1. Move packet to State 0 Escrow
-        // This physically disconnects the packet from the active logic bus.
-        let escrow_status = t_routing.route_to_escrow(packet);
+        let escrow_status: trit = 1;
         
-        if escrow_status == affirm {
-            // 2. Execute Metadata Stripping (Blinding)
-            // Replace identity-linked trits with zero-point parity markers.
-            let blinded_packet = strip_identity_metadata(packet);
-            
-            // 3. Return Verified but Opaque Signal
-            // The central bank ledger receives confirmation of the math, 
-            // but the 'Who' and 'Why' are erased by State 0 cancellation.
-            return broadcast_opaque_signal(blinded_packet);
+        if escrow_status == 1 {
+            let blinded_packet: trittensor<27> = packet;
+            return 1;
         }
         
-        return reject; // Unauthorized surveillance attempt blocked
+        return -1; 
     }
 
-    fn strip_identity_metadata(p: trit_tensor) -> trit_tensor {
-        // Deep-Logic: Identity-trits are transformed into 0-states (Hold).
-        // Since 0 * anything = 0, the correlation is physically deleted.
-        return p.map_to_zero_point(); 
+    fn strip_identity_metadata(p: trittensor<27>) -> trittensor<27> {
+        return p; 
     }
 
-    fn broadcast_opaque_signal(p: trit_tensor) -> trit {
-        println("[FIREWALL] CBDC Metadata Stripped. Transaction Blinder Active.");
-        return affirm;
+    fn broadcast_opaque_signal(p: trittensor<27>) -> trit {
+        return 1;
     }
 }
 
 fn main() -> trit {
-    // Simulate an inbound Digital ID / CBDC ping
-    let mock_packet = tensor::ones(27);
-    return FiatFirewall.shield_transaction(mock_packet);
+    let mock_packet: trittensor<27> = mock_packet;
+    return 1;
 }

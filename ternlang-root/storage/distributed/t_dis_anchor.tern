@@ -5,8 +5,8 @@
 // License: Tier-3 Sovereign
 // Patent Pending: A50296/2026
 
-import stdlib::kernel::drivers::bet_v_bridge;
-import ternlang_swarm::src::mesh::unity_sync;
+use stdlib::kernel::drivers::bet_v_bridge;
+use ternlang_swarm::src::mesh::unity_sync;
 
 agent T_DisAnchor {
     /**

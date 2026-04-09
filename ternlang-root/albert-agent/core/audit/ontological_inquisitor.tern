@@ -4,7 +4,7 @@
 // License: BSL-1.1 - Proprietary RFI-IRFOS IP
 // Reference: Patent Pending A50296/2026
 
-import stdlib/core/TIS_COMPLIANCE_MATRIX
+use stdlib/core/TIS_COMPLIANCE_MATRIX
 
 agent OntologicalInquisitor {
     fn audit_module(module_id: int, source_code: trit_tensor) -> trit {

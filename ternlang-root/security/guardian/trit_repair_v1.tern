@@ -5,8 +5,8 @@
 // License: Tier-3 Sovereign
 // Reference: Patent Pending A50296/2026
 
-import hardware::optimizer::thermal_recycler;
-import storage::distributed::t_dis_anchor;
+use hardware::optimizer::thermal_recycler;
+use storage::distributed::t_dis_anchor;
 
 agent TritRepair {
     /**
