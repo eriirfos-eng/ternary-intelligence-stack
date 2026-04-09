@@ -3,7 +3,7 @@
 # Run AFTER: cargo login   (paste token from crates.io → Account Settings → API Tokens)
 #
 # Publish order matters — each crate must be on crates.io before dependents.
-# All inter-crate deps already carry version = "0.1.0".
+# All inter-crate deps now carry version = "0.2.0".
 #
 # Usage: bash publish.sh
 # Dry run only: bash publish.sh --dry-run
@@ -27,6 +27,7 @@ publish() {
 publish ternlang-core     # no internal deps
 publish ternlang-hdl      # no internal deps (depends on ternlang-core)
 publish ternlang-ml       # depends on ternlang-core
+publish ternlang-moe      # depends on ternlang-core, ternlang-ml
 publish ternlang-compat   # depends on ternlang-core
 publish ternlang-lsp      # depends on ternlang-core
 publish ternlang-runtime  # depends on ternlang-core
@@ -36,7 +37,7 @@ publish ternlang-cli      # depends on all of the above
 # Note: BSL-licensed crates may be published to crates.io for visibility.
 # Users are subject to the BSL 1.1 license terms.
 # Uncomment when ready:
-# publish ternlang-mcp
+# publish ternlang-mcp   # depends on ternlang-core, ternlang-ml, ternlang-moe
 # publish ternlang-api
 
 echo ""
