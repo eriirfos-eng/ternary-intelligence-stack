@@ -106,7 +106,7 @@ any AI agent's decision loop architecturally ternary rather than merely
 prompted. The \textbf{MoE-13 Ternary Orchestrator} (Phase~9) implements a
 Mixture-of-Experts head with dual-key synergistic routing, $1{+}1{=}3$
 emergent triad synthesis, a hard-wired safety veto, and a three-tier memory
-mesh, realising the MoE-13 architecture~\cite{moe13_2026} in 146 passing
+mesh, realising the MoE-13 architecture~\cite{moe13_2026} in 177+ passing
 tests across the full workspace. All nine crates are published to
 \texttt{crates.io} under open-core licensing. A companion corpus of
 twenty executable \texttt{.tern} programs demonstrates the hold state
@@ -1172,13 +1172,13 @@ Ternlang is implemented in Rust and comprises the following crates:
 \begin{table}[h]
 \centering
 \small
-\caption{Workspace crates, test counts, and brief descriptions (v0.1.2)}
+\caption{Workspace crates, test counts, and brief descriptions (v0.2.0)}
 \label{tab:status}
 \begin{tabular}{p{2.5cm}lp{5.5cm}}
 \toprule
 Crate & Tests & Description \\
 \midrule
-\texttt{ternlang-core}    & 55  & Lexer, parser (+ \texttt{?} propagation), AST, semantic checker, BET VM (51 opcodes), ModuleResolver \\
+\texttt{ternlang-core}    & 56  & Lexer, parser (+ \texttt{?} propagation), AST, semantic checker, BET VM (51 opcodes), ModuleResolver \\
 \texttt{ternlang-ml}      & 21  & BitNet quantization, sparse/CSC matmul, deliberation engine, coalition vote, action gate, hallucination score \\
 \texttt{ternlang-moe}     & 24  & MoE-13 orchestrator: dual-key routing, triad synthesis, 3-tier memory, 13 dual-signal agents, introspective hold \\
 \texttt{ternlang-codegen} & 8   & AST-to-C11 transpiler; match/struct/propagation; forward declarations; native-compilable output \\
@@ -1188,7 +1188,7 @@ Crate & Tests & Description \\
 \texttt{ternlang-compat}  & 29  & \texttt{.tasm} assembler (9-trit RISC), Owlet S-expr parser \\
 \texttt{ternpkg}          & 5   & Package manager, GitHub-backed registry \\
 \texttt{ternlang-lsp}     & --- & LSP 3.17: hover, completion (19 snippets), diagnostics \\
-\texttt{ternlang-mcp}     & --- & MCP server, 10 tools: \texttt{trit\_decide}, \texttt{moe\_orchestrate}, \texttt{trit\_action\_gate}, \ldots \\
+\texttt{ternlang-mcp}     & --- & MCP server, 13 tools: \texttt{trit\_decide}, \texttt{moe\_orchestrate}, \texttt{trit\_action\_gate}, \ldots \\
 \texttt{ternlang-api}     & --- & REST API (18 endpoints), multi-tenant key management, SSE streaming \\
 \bottomrule
 \end{tabular}
@@ -1212,7 +1212,7 @@ automatically builds, tests, and deploys to Fly.io on every push to main.
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We have presented Ternlang v0.1.2, a full-stack balanced ternary execution
+We have presented Ternlang v0.2.0, a full-stack balanced ternary execution
 architecture spanning language design, ISA, virtual machine, hardware backend,
 distributed runtime, native C compilation, and AI reasoning infrastructure. Five
 layers of contribution are unified under the same foundational primitive—the
@@ -1245,7 +1245,7 @@ trit $t \in \{-1, 0, +1\}$ with an active neutral state:
         that pre-filters queries through the agent tier before MoE routing.
 
   \item \textbf{Deployment and tooling}: the live API at
-        \texttt{https://ternlang.com/mcp} serves 10 MCP tools to any compatible
+        \texttt{https://ternlang.com/mcp} serves 13 MCP tools to any compatible
         AI client; a VS Code extension with LSP, formatter, and REPL provides
         an IDE experience; GitHub Actions CI/CD automatically builds, tests, and
         deploys on every push; and 177+ tests across 12 crates validate the
