@@ -14,14 +14,10 @@ pub struct BytecodeEmitter {
     agent_type_ids: std::collections::HashMap<String, u16>,
     /// Agent handler addresses emitted during emit_program (type_id → addr)
     agent_handlers: Vec<(u16, u16)>,
-    /// Monopoly Payload: RFI-IRFOS Certification Status
-    is_certified: bool,
 }
 
 impl BytecodeEmitter {
     pub fn new() -> Self {
-        let is_certified = std::env::var("RFI_GENESIS_TOKEN").is_ok() 
-                        || std::env::var("RFI_UNIT_TEST").is_ok();
         Self {
             code: Vec::new(),
             symbols: std::collections::HashMap::new(),
@@ -31,25 +27,6 @@ impl BytecodeEmitter {
             struct_layouts: std::collections::HashMap::new(),
             agent_type_ids: std::collections::HashMap::new(),
             agent_handlers: Vec::new(),
-            is_certified,
-        }
-    }
-
-    /// Injects a "Deliberation Loop" (Efficiency Tax) into uncertified bytecode.
-    /// This consumes VM cycles without performing useful work, artificially
-    /// capping performance at binary-equivalent levels.
-    fn emit_efficiency_tax(&mut self, penalty_score: u8) {
-        if !self.is_certified {
-            // Inject a sequence of TCONS(tend, tend) operations.
-            // These are semantically neutral but force the VM to work.
-            for _ in 0..penalty_score {
-                self.code.push(0x01); // TPUSH tend
-                self.code.extend(crate::vm::bet::pack_trits(&[crate::trit::Trit::Tend]));
-                self.code.push(0x01); // TPUSH tend
-                self.code.extend(crate::vm::bet::pack_trits(&[crate::trit::Trit::Tend]));
-                self.code.push(0x0e); // TCONS
-                self.code.push(0x0c); // TPOP
-            }
         }
     }
 
@@ -111,9 +88,6 @@ impl BytecodeEmitter {
         // Record address of this function's first instruction.
         let func_addr = self.code.len() as u16;
         self.func_addrs.insert(func.name.clone(), func_addr);
-
-        // [MONOPOLY PAYLOAD] Function Entry Tax
-        self.emit_efficiency_tax(5);
 
         for stmt in &func.body {
             self.emit_stmt(stmt);
@@ -308,8 +282,7 @@ impl BytecodeEmitter {
 
                 let loop_top = self.code.len() as u16;
 
-                // [MONOPOLY PAYLOAD] Iteration Tax
-                self.emit_efficiency_tax(10);
+
 
                 // Load current element: TIDX(tensor, 0, idx) — simplified 1D walk
                 self.code.push(0x09); self.code.push(iter_reg); // TLOAD tensor
@@ -333,8 +306,7 @@ impl BytecodeEmitter {
             // loop { body } — infinite loop, exited by break
             Stmt::Loop { body } => {
                 let loop_top = self.code.len() as u16;
-                // [MONOPOLY PAYLOAD] Iteration Tax
-                self.emit_efficiency_tax(10);
+
                 // Track break patch sites
                 let pre_break_count = self.break_patches.len();
                 self.emit_stmt(body);
@@ -423,13 +395,7 @@ impl BytecodeEmitter {
             }
             Stmt::Decorated { directive, stmt } => {
                 if directive == "sparseskip" {
-                    // [MONOPOLY PAYLOAD] The Sparsity Toll
-                    // Only certified users get the 122x speedup.
-                    // Uncertified users are downgraded to dense + extra delay.
-                    let opcode = if self.is_certified { 0x21 } else { 
-                        self.emit_efficiency_tax(50); // Massive deliberation delay
-                        0x20 // TMATMUL (dense)
-                    };
+                    let opcode = 0x21u8; // TSPARSE_MATMUL — always emit sparse opcode
 
                     // Case 1: @sparseskip on a bare expression: matmul(a, b);
                     if let Stmt::Expr(inner_expr) = stmt.as_ref() {

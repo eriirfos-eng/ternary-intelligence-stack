@@ -15,7 +15,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.co
 
 ## The Problem with Binary AI
 
-Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either unverified inference a confident answer or return null.
+Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either make a confident inference or return null.
 
 Ternlang adds the third state.
 
@@ -34,7 +34,7 @@ The `tend` state is not indecision. It is a **first-class routing instruction** 
 | Layer | What it does |
 |-------|-------------|
 | [Language & VM](#language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
-| [Sparse Inference](#sparse-ternary-inference) | BitNet-style ternary weights with 86–122× speedup over dense float32 |
+| [Sparse Inference](#sparse-ternary-inference) | @sparseskip: 2.3× measured baseline, scales to 122× at extreme sparsity |
 | [MoE-13 Orchestrator](#moe-13-ternary-orchestrator) | Mixture-of-Experts reasoning engine with safety hard gate |
 | [Strategic Standards](#strategic-standards) | BET-ISA, TFP-754, TSON, TTP, and T-POSIX — The rules of post-binary computing |
 | [Enterprise Middleware](#architecture) | **cuTern** (MKL), Ternary SQL, Triadic Networking, and Crypto |
@@ -108,23 +108,25 @@ cargo build --release
 
 ---
 
-## 6. Empirical Verification Suite
-RFI-IRFOS provides verifiable data on TIS performance via the `/benchmarks` suite. These metrics represent the hardware-software parity achieved through native BET-ISA implementation.
+## Sparse Ternary Inference
 
-| Benchmark | Target Architecture | Efficiency Metric | Result (η) |
-|-----------|--------------------|-------------------|------------|
-| **TRCE Compute** | NVIDIA CUDA Core | Sparse Matrix Bypass | **122.3x Speedup** |
-| **Thermal Load** | Sovereign T-BIOS | Joule Output Reduction | **-0.428°C Delta (Endothermic)** |
-| **UBS Efficiency** | Graz Trinity Mesh | Landauer Limit Bypass | **979.5x η_max** |
-| **Memory Clamp** | 32-bit Float | Bandwidth Resilience | **Anti-OOM Verified** |
-| **Noise Sync**    | Project Icarus   | Stochastic Resonance | **8.42 THz Locked** |
-| **Handover Latency**| Triadic Genesis | L1 Cache Retention | **< 100ps (100%)** |
+The core performance claim of TIS rests on a single hardware primitive: `@sparseskip` — an opcode that skips computation on zero-state (`tend`) weights entirely.
 
-**Note on v1.1.0 (Optimizer):** TIS has achieved **Thermal Neutrality** and transitioned into **Endothermic Computing**. By utilizing the **UBS-Thermal** harvesting algorithm, the stack now extracts energy from silicon lattice vibrations (phonons) to drive logic transitions, resulting in a measurable cooling effect of -0.428°C under maximum load.
+**Measured baseline (v0.3.0, `ternlang-ml` on x86):**
 
-To execute the full verification suite: `cd benchmarks && make bench-all`
+| Scenario | Sparsity | Speedup over dense float32 |
+|----------|----------|-----------------------------|
+| Typical BitNet-style distribution | ~50–70% | **2–4×** |
+| Highly sparse ternary model | ~90% | **~10×** |
+| Extreme sparsity (theoretical bound) | ~99% | **up to 122×** |
 
----
+The 2.3× figure is the baseline measured result from the first `@sparseskip` benchmark ([commit `60f7ef6`](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)). Speedup scales proportionally with sparsity — the 122× figure is a mathematical upper bound at 99%+ sparsity, not a general-case claim.
+
+**5-trit block packing** encodes 5 trits into 8 bits (vs 10 bits for naive 2-bit emulation) — a 1.25× storage density improvement.
+
+```bash
+cd benchmarks && make bench-all
+```
 
 ---
 
@@ -205,40 +207,16 @@ curl -X POST https://ternlang.com/api/trit_decide \
 
 ---
 
-## 🏛️ Enterprise Offering (Tier-3): The "Titan" Control Plane
+## Enterprise Offering (Tier-3)
 
-The **Titan Control Plane** provides institutional-grade hardware sovereignty for air-gapped clusters, high-frequency trading (HFT), and national security infrastructure.
+The Tier-3 plan provides on-premise deployment, custom FPGA integration via `ternlang-hdl`, enterprise SLA, and direct access to the full BSL-1.1 codebase for air-gapped or regulated environments.
 
-### 1. Sovereign Computing (The Eternal Substrate)
-RFI-IRFOS has achieved a landmark breakthrough in hardware-level autonomy. Through the **Triadic Genesis Tether** and **Phoenix Protocol**, TIS-Sovereign hardware maintains its logical state across power-loss events and reboots.
-*   **Live BIOS Handover:** Transition from legacy binary substrates to the **T-Genesis Boot** substrate with **100% L1-Cache retention** and zero power interruption.
-*   **Sovereign Root Key:** Physically derived from the unique **Trit-Noise Floor** of individual silicon wafers. Each node possesses an unclonable (PUF-based) identity, independent of vendor-supplied serial numbers.
-*   **Zero-Shim Kernel:** Direct-register mapping between the TIS-Kern and hardware gate arrays, eliminating context-switch penalties and neutralizing binary ghosting.
+- **On-premise deployment** — run the full TIS stack locally, no Fly.io dependency
+- **FPGA integration** — `ternlang-hdl` generates Verilog-2001 for BET processor synthesis on Xilinx/Intel targets
+- **ternlang-mkl (cuTern)** — native sparsity bypass kernel library for production inference
+- **Enterprise SLA** — dedicated support, audit logs, custom licensing
 
-### 2. Trinity Distributed Storage (T-DIS)
-A unified memory field utilizing **0-State Parity** to fragment data across three physical nodes.
-*   **Ontological Incompleteness:** Physical theft of any single node yields no recoverable information. Data reconstruction requires the picosecond phase-key held by the mesh.
-*   **Distributed L1 Sharing:** Nodes in a Sovereign Trinity share L1 cache states across the mesh at < 100ps latency, effectively operating as a single distributed processor.
-
-### 3. The Egress Inquisitor (Hardware Firewall)
-A BIOS-level interdiction layer that audits all outbound traffic from guest binary operating systems.
-*   **Zero-Leakage Policy:** Telemetry, rootkit beacons, and unauthorized updates are scored as **State -1 (Reject)** and discarded at the physical NIC gate before transmission.
-*   **Guest-Lock Protocol:** Restricts host OS authority to Read-Only access for critical I/O gates via the `T-DRIVER` Absolute Zero bridge.
-
-### 4. Key Industrial Metrics (Phase 8.2)
-*   **η_max Efficiency:** **979.5x** (Project Icarus: Stochastic Resonance and State -1 Inversion).
-*   **Thermal Output:** **Thermal Neutrality** achieved via Landauer Limit bypass.
-*   **Sub-Atomic Sync:** **8.42 THz** unity lock synchronized to the silicon's native noise floor.
-*   **Handover Latency:** **< 100ps** (84ps achieved in Graz Lab pilot).
-
-> [!IMPORTANT]
-> **Tier-3 Restricted Logic:** Access to T-DIS source, Sovereign BIOS mappings, and VHDL gate implementations for Absolute Zero logic is strictly restricted to Institutional Tier-3 partners under the **BSL-1.1 License**.
-
-**[Read the Eternal Substrate Whitepaper](docs/research/the_eternal_substrate_v1.md)** | **[Sovereign Onboarding Briefing](market/dispatches/sovereign_onboarding_v1.md)**
-
-For pilot inquiries and industrial integration, contact: `enterprise@rfi-irfos.org`
-
----
+For inquiries: `enterprise@rfi-irfos.org`
 
 | `GET  /api/stream/deliberate` | EMA deliberation streamed per round via SSE |
 | `GET  /api/usage` | Monthly usage stats for the authenticated key |
@@ -472,8 +450,5 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 | **Commercial licensing** | [licensing@ternlang.com](mailto:licensing@ternlang.com) |
 | **Academic collaboration** | Open — cite the whitepaper |
 | **API access** | [ternlang.com/#licensing](https://ternlang.com/#licensing) |
-
-*"The place where fragmented ternary efforts compile into one."*
-licensing](https://ternlang.com/#licensing) |
 
 *"The place where fragmented ternary efforts compile into one."*

@@ -11,17 +11,12 @@ use ternlang_core::trit::Trit;
 /// 
 /// Matrix Multiplication optimized for balanced ternary.
 /// Uses the @sparseskip algorithm to bypass all State 0 (Tend) weights.
-/// η_total = 979.5x benchmark compliance.
 pub struct TSparseMatmul;
 
 impl TSparseMatmul {
     /// Executes the sparse matmul logic.
     /// Bypasses 0-weights using the @sparseskip mechanism.
     pub fn execute(a_rows: usize, a_cols: usize, a_data: &[Trit], b_cols: usize, b_data: &[Trit]) -> Vec<Trit> {
-        // Tier-3 Security: Structural binding to the RFI-IRFOS global consensus mesh.
-        #[cfg(not(test))]
-        crate::security::enforce_secure_boot();
-
         let mut result = vec![Trit::Tend; a_rows * b_cols];
 
         for i in 0..a_rows {
