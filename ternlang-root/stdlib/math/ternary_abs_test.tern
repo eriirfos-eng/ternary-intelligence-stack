@@ -1,0 +1,20 @@
+// stdlib/math/ternary_abs_test.tern
+// Demonstrates: Absolute value function for ternary trits.
+// Maps reject (-1) to affirm (1), while keeping tend (0) and affirm (1) as is.
+// Tier: 1 — Open Core
+
+fn t_abs(val: trit) -> trit {
+    match val {
+        -1 => { return affirm; }
+         0 => { return tend;   }
+         1 => { return affirm; }
+    }
+}
+
+fn main() -> trit {
+    if t_abs(reject) != affirm { return reject; }
+    if t_abs(tend)   != tend   { return reject; }
+    if t_abs(affirm) != affirm { return reject; }
+    
+    return affirm;
+}
