@@ -6,5 +6,5 @@ license = "LicenseRef-BSL-1.1"
 description = "HFT Latency Arbitrage FPGA Integrator. Maps trading logic to physical triadic gates for zero-instruction-fetch execution."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.1.0" }
-ternlang-hdl = { path = "../ternlang-hdl", version = "0.1.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.2.0" }
+ternlang-hdl = { path = "../ternlang-hdl", version = "0.2.0" }

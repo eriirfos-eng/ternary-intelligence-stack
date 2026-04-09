@@ -6,4 +6,4 @@ license = "LicenseRef-BSL-1.1"
 description = "Triadic Bioinformatics and Genomics. Eliminates binary alignment errors in DNA sequence processing by utilizing the Tend (0) state for ambiguity."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.1.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.2.0" }

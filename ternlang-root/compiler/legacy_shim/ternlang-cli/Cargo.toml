@@ -1,6 +1,7 @@
 [package]
 name             = "ternlang-cli"
 description      = "Command-line interface for ternlang — run, build, sim, fmt, repl, and compat commands for the Balanced Ternary Execution VM."
+readme           = "README.md"
 version.workspace   = true
 edition.workspace   = true
 license.workspace   = true
@@ -11,11 +12,11 @@ keywords.workspace  = true
 categories.workspace = true
 
 [dependencies]
-ternlang-core    = { path = "../ternlang-core",    version = "0.1.0" }
-ternlang-ml      = { path = "../../../ternlang-ml",      version = "0.1.0" }
-ternlang-hdl     = { path = "../../../ternlang-hdl",     version = "0.1.0" }
-ternlang-runtime = { path = "../ternlang-runtime", version = "0.1.0" }
-ternlang-edu     = { path = "../../../ternlang-edu",     version = "0.1.0" }
+ternlang-core    = { path = "../ternlang-core",    version = "0.2.0" }
+ternlang-ml      = { path = "../../../ternlang-ml",      version = "0.2.0" }
+ternlang-hdl     = { path = "../../../ternlang-hdl",     version = "0.2.0" }
+ternlang-runtime = { path = "../ternlang-runtime", version = "0.2.0" }
+ternlang-edu     = { path = "../../../ternlang-edu",     version = "0.2.0" }
 clap = { version = "4.4", features = ["derive"] }
 walkdir = "2.4"
 colored = "2.0"

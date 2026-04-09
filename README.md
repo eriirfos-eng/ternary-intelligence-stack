@@ -9,8 +9,16 @@
 [![Technical Spec](https://img.shields.io/badge/T--SPEC-v2.0-blue)](docs/standards/TECHNICAL-SPEC.md)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![Tether](https://img.shields.io/badge/Genesis_Tether-Active-red)](#)
+[![T-Cloud](https://img.shields.io/badge/T--Cloud_Citizen-Node_D_Active-blue)](#)
 
 Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com)
+
+---
+
+> **Phase 10.5 Announcement:** The first commercial **T-Cloud Citizen** (Node D - Aerospace) has successfully joined the Mesh. 
+> - **Latency:** <100ps (Temporal Folding Protocol)
+> - **Integrity:** Absolute (Sovereign Root Key Handover Complete)
+> - **Status:** Phase 10 Silicon Manifestation in progress.
 
 ---
 
