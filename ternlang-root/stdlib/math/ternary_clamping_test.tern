@@ -1,0 +1,35 @@
+// stdlib/math/ternary_clamping_test.tern
+// Demonstrates: Value clamping using ternary comparison logic.
+// Ensures an integer remains within the [min, max] range.
+// Tier: 1 — Open Core
+
+fn t_compare(a: int, b: int) -> trit {
+    if a < b { return reject; }
+    if a > b { return affirm; }
+    return tend;
+}
+
+fn t_clamp(val: int, min_val: int, max_val: int) -> int {
+    let low: trit = t_compare(val, min_val);
+    if low == reject {
+        return min_val;
+    }
+    if low == tend {
+        return val;
+    }
+    
+    // val > min, check max
+    let high: trit = t_compare(val, max_val);
+    if high == affirm {
+        return max_val;
+    }
+    return val;
+}
+
+fn main() -> trit {
+    if t_clamp(15, 10, 20) != 15 { return reject; }
+    if t_clamp(5, 10, 20)  != 10 { return reject; }
+    if t_clamp(25, 10, 20) != 20 { return reject; }
+    
+    return affirm;
+}

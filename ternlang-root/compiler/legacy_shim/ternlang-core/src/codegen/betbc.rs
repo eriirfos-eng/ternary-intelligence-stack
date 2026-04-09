@@ -63,6 +63,7 @@ impl BytecodeEmitter {
         // Setup initial address for Pass 1 (should match real code len)
         let base_addr = real_code.len() as u16;
 
+        let mut func_depth = 0;
         for agent in &program.agents {
             let type_id = self.agent_type_ids[&agent.name];
             let mut handler_addr: Option<u16> = None;
@@ -71,9 +72,10 @@ impl BytecodeEmitter {
                 if handler_addr.is_none() {
                     handler_addr = Some(addr);
                 }
-                self.emit_function(method);
+                self.emit_function(method, func_depth);
                 let fq = format!("{}::{}", agent.name, method.name);
                 self.func_addrs.insert(fq, addr);
+                func_depth += 1;
             }
             if let Some(addr) = handler_addr {
                 self.agent_handlers.push((type_id, addr));
@@ -83,7 +85,8 @@ impl BytecodeEmitter {
         for func in &program.functions {
             let addr = base_addr + self.code.len() as u16;
             self.func_addrs.insert(func.name.clone(), addr);
-            self.emit_function(func);
+            self.emit_function(func, func_depth);
+            func_depth += 1;
         }
 
         // Now we have all addresses in self.func_addrs. 
@@ -96,13 +99,16 @@ impl BytecodeEmitter {
         self.next_reg = parent_next_reg; // Reset next_reg for Pass 2
 
         // PASS 2: Real emission
+        let mut func_depth = 0;
         for agent in &program.agents {
             for method in &agent.methods {
-                self.emit_function(method);
+                self.emit_function(method, func_depth);
+                func_depth += 1;
             }
         }
         for func in &program.functions {
-            self.emit_function(func);
+            self.emit_function(func, func_depth);
+            func_depth += 1;
         }
 
         // Patch entry jump to land after all bodies.
@@ -110,7 +116,7 @@ impl BytecodeEmitter {
         self.patch_u16(entry_jmp_patch, after_funcs);
     }
 
-    pub fn emit_function(&mut self, func: &Function) {
+    pub fn emit_function(&mut self, func: &Function, depth: u8) {
         // Record address of this function's first instruction.
         let func_addr = self.code.len() as u16;
         self.func_addrs.insert(func.name.clone(), func_addr);
@@ -118,12 +124,12 @@ impl BytecodeEmitter {
         // Function-local scope for symbols and registers
         let parent_symbols = self.symbols.clone();
         let parent_next_reg = self.next_reg;
-        self.next_reg = 0;
+        
+        // Offset registers by depth to avoid clobbering caller
+        let base_reg = depth * 8;
+        self.next_reg = base_reg;
 
         // Map parameters to registers.
-        // Caller pushes args in forward order (left-to-right).
-        // Stack: [arg0, arg1, arg2]
-        // We pop them in reverse order (right-to-left) to map them.
         for (name, _) in func.params.iter().rev() {
             let reg = self.next_reg;
             self.symbols.insert(name.clone(), reg);
@@ -131,7 +137,8 @@ impl BytecodeEmitter {
             self.code.push(0x08); // TSTORE
             self.code.push(reg);
         }
-
+        
+        // Locals follow parameters
         for stmt in &func.body {
             self.emit_stmt(stmt);
         }
@@ -236,35 +243,54 @@ impl BytecodeEmitter {
             }
             Stmt::Match { condition, arms } => {
                 self.emit_expr(condition);
-                let mut patches = Vec::new();
+                let cond_reg = self.next_reg;
+                self.next_reg += 1;
+                self.code.push(0x08); // TSTORE
+                self.code.push(cond_reg);
+
                 let mut end_patches = Vec::new();
-                for (val, _) in arms {
-                    self.code.push(0x0a); // TDUP
-                    let patch_pos = self.code.len() + 1;
+                let mut next_arm_start_patch: Option<usize> = None;
+
+                for (val, stmt) in arms {
+                    if let Some(patch) = next_arm_start_patch {
+                        let addr = self.code.len() as u16;
+                        self.patch_u16(patch, addr);
+                    }
+
+                    self.code.push(0x09); // TLOAD
+                    self.code.push(cond_reg);
+                    
+                    let match_jmp_patch = self.code.len() + 1;
                     match val {
-                        1  => self.code.push(0x05),
-                        0  => self.code.push(0x06),
-                        -1 => self.code.push(0x07),
+                        1  => self.code.push(0x05), // TJMP_POS
+                        0  => self.code.push(0x06), // TJMP_ZERO
+                        -1 => self.code.push(0x07), // TJMP_NEG
                         _  => unreachable!(),
                     }
                     self.code.extend_from_slice(&[0, 0]);
-                    patches.push((patch_pos, *val));
-                }
-                self.code.push(0x0c); // TPOP
-                let end_jmp_no_match = self.code.len() + 1;
-                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
-                for (patch_pos, val) in patches {
-                    let addr = self.code.len() as u16;
-                    self.patch_u16(patch_pos, addr);
-                    self.code.push(0x0c); // TPOP
-                    let stmt = arms.iter().find(|(v, _)| *v == val).unwrap().1.clone();
-                    self.emit_stmt(&stmt);
+                    
+                    let skip_body_patch = self.code.len() + 1;
+                    self.code.push(0x0b); // TJMP to next arm
+                    self.code.extend_from_slice(&[0, 0]);
+                    next_arm_start_patch = Some(skip_body_patch);
+
+                    let arm_body_addr = self.code.len() as u16;
+                    // println!("Debug Emitter: Match arm {} at 0x{:04x}", val, arm_body_addr);
+                    self.patch_u16(match_jmp_patch, arm_body_addr);
+                    self.emit_stmt(stmt);
+                    
                     let end_patch = self.code.len() + 1;
-                    self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                    self.code.push(0x0b); // TJMP to end
+                    self.code.extend_from_slice(&[0, 0]);
                     end_patches.push(end_patch);
                 }
+
+                if let Some(patch) = next_arm_start_patch {
+                    let addr = self.code.len() as u16;
+                    self.patch_u16(patch, addr);
+                }
+
                 let end_addr = self.code.len() as u16;
-                self.patch_u16(end_jmp_no_match, end_addr);
                 for p in end_patches {
                     self.patch_u16(p, end_addr);
                 }
