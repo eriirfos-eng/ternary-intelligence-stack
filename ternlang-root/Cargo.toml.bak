@@ -1,16 +1,22 @@
 [workspace]
 members = [
-    "ternlang-core",
-    "ternlang-codegen",
+    "compiler/legacy_shim/ternlang-core",
+    "compiler/legacy_shim/ternlang-codegen",
+    "compiler/legacy_shim/ternlang-cli",
     "ternlang-ml",
-    "ternlang-cli",
     "ternlang-api",
-    "ternlang-test", "ternlang-mcp", "ternlang-runtime", "ternlang-hdl", "ternlang-lsp", "ternpkg", "ternlang-compat", "ternlang-moe", "../ternlang-translator",
+    "ternlang-test",
+    "ternlang-mcp",
+    "ternlang-hdl",
+    "ternlang-lsp",
+    "ternpkg",
+    "ternlang-compat",
+    "ternlang-moe",
 ]
 resolver = "2"
 
 [workspace.package]
-version     = "0.1.0"
+version     = "0.2.0"
 edition     = "2024"
 license     = "LGPL-3.0-or-later"
 repository  = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
