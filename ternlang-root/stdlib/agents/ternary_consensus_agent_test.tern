@@ -1,0 +1,30 @@
+// stdlib/agents/ternary_consensus_agent_test.tern
+// Demonstrates: A ternary agent that merges input signals via consensus.
+// Tier: 2 — Pro Standard
+
+agent ConsensusAgent {
+    fn handle(msg: trit) -> trit {
+        // Simple agent that merges message with affirm
+        return consensus(affirm, msg);
+    }
+}
+
+fn main() -> trit {
+    // Phase 5.1 local spawn
+    let a: agentref = spawn ConsensusAgent;
+    
+    // send/await pattern
+    send a affirm;
+    let r1: trit = await a;
+    if r1 != affirm { return reject; }
+
+    send a tend;
+    let r2: trit = await a;
+    if r2 != affirm { return reject; } // consensus(1, 0) -> 1
+
+    send a reject;
+    let r3: trit = await a;
+    if r3 != tend { return reject; } // consensus(1, -1) -> 0
+
+    return affirm;
+}
