@@ -2,6 +2,7 @@
 members = [
     "compiler/legacy_shim/ternlang-core",
     "compiler/legacy_shim/ternlang-codegen",
+    "compiler/legacy_shim/ternlang-runtime",
     "compiler/legacy_shim/ternlang-cli",
     "ternlang-ml",
     "ternlang-api",

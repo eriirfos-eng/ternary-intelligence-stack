@@ -10,6 +10,7 @@ COPY Cargo.toml.bak ./Cargo.toml
 COPY Cargo.lock ./
 COPY compiler/legacy_shim/ternlang-core/Cargo.toml    compiler/legacy_shim/ternlang-core/Cargo.toml
 COPY compiler/legacy_shim/ternlang-codegen/Cargo.toml compiler/legacy_shim/ternlang-codegen/Cargo.toml
+COPY compiler/legacy_shim/ternlang-runtime/Cargo.toml compiler/legacy_shim/ternlang-runtime/Cargo.toml
 COPY compiler/legacy_shim/ternlang-cli/Cargo.toml     compiler/legacy_shim/ternlang-cli/Cargo.toml
 COPY ternlang-ml/Cargo.toml        ternlang-ml/Cargo.toml
 COPY ternlang-api/Cargo.toml       ternlang-api/Cargo.toml
@@ -23,7 +24,7 @@ COPY ternlang-compat/Cargo.toml    ternlang-compat/Cargo.toml
 
 # Stub out all src dirs so cargo can resolve deps without full source
 RUN for crate in compiler/legacy_shim/ternlang-core compiler/legacy_shim/ternlang-codegen \
-      compiler/legacy_shim/ternlang-cli \
+      compiler/legacy_shim/ternlang-runtime compiler/legacy_shim/ternlang-cli \
       ternlang-ml ternlang-api ternlang-mcp ternlang-moe ternlang-test \
       ternlang-hdl ternlang-lsp ternpkg ternlang-compat; do \
       mkdir -p $crate/src && echo "fn main() {}" > $crate/src/main.rs && \
