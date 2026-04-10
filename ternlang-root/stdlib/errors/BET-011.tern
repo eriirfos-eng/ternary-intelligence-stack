@@ -1,0 +1,57 @@
+// stdlib/errors/BET-011.tern
+// Error: BET-011 — Agent ID Invalid
+// Tier: 2 — Pro Standard
+//
+// "Agent #N doesn't exist — no agent was spawned at this ID.
+//  TSEND and TAWAIT require a live agent."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TSEND or TAWAIT instruction received an AgentRef with an ID that has
+// no corresponding agent in the VM's agent table. The agent was never spawned,
+// or the AgentRef was constructed with an invalid ID.
+//
+// Agent IDs are assigned sequentially at spawn time: the first 'spawn'
+// returns AgentRef(0), the second returns AgentRef(1), and so on.
+// Trying to TSEND to AgentRef(5) when only 3 agents have been spawned
+// raises BET-011.
+//
+// ─── The difference between BET-010 and BET-011 ───────────────────────────────
+//
+//   BET-010: The AGENT TYPE (declaration) was never registered.
+//            TSPAWN failed — no agent was created at all.
+//
+//   BET-011: The AGENT INSTANCE (spawned object) doesn't exist.
+//            TSPAWN succeeded (or wasn't called), but the ID referenced
+//            by TSEND/TAWAIT points to a slot that was never populated.
+//
+// ─── In normal .tern code ─────────────────────────────────────────────────────
+//
+//   You should not see BET-011 from correctly written .tern code.
+//   The 'spawn', 'send', and 'await' keywords compile to TSPAWN/TSEND/TAWAIT
+//   using the AgentRef returned by TSPAWN — which is always valid if BET-010
+//   did not fire. If you see BET-011 from normal .tern, it is a compiler bug.
+//
+// ─── Correct pattern — use the AgentRef returned by spawn ────────────────────
+
+agent Monitor {
+    fn handle(v: trit) -> trit {
+        match v {
+            -1 => { return conflict(); }
+             0 => { return hold();    }
+             1 => { return truth();   }
+        }
+    }
+}
+
+// The AgentRef 'mon' is the ONLY valid reference to this agent instance.
+// Do not construct AgentRef values manually — use the one returned by spawn.
+let mon: agent = spawn Monitor;
+send mon, 0;
+let status: trit = await mon;
+
+match status {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

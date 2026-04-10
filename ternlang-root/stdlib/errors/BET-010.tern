@@ -1,0 +1,60 @@
+// stdlib/errors/BET-010.tern
+// Error: BET-010 — Agent Type Not Registered
+// Tier: 2 — Pro Standard
+//
+// "Agent type_id 0xNNNN was never registered. You can't spawn what was never declared."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The TSPAWN instruction received a type_id that has no registered handler
+// address in the VM's agent type table. Before an agent can be spawned,
+// the VM needs to know which bytecode address to jump to when the agent
+// is invoked.
+//
+// This registration happens automatically when the CLI loads a program
+// containing 'agent' declarations. If an agent type is used but not declared
+// in the same program (or the declaration was in a module that wasn't loaded),
+// TSPAWN has no handler to jump to — and raises BET-010.
+//
+// ─── In normal .tern code ─────────────────────────────────────────────────────
+//
+//   If you declare an agent with 'agent MyAgent { ... }' and then spawn it
+//   with 'spawn MyAgent', the compiler and CLI handle registration automatically.
+//   BET-010 from normal .tern code means the agent declaration is missing
+//   or in a module that wasn't imported. This is a compile-time gap —
+//   ideally caught by FN-001 before reaching the VM.
+//
+// ─── Correct agent lifecycle ──────────────────────────────────────────────────
+//
+//   1. Declare the agent (emits TALLOC equivalent for the handler address)
+//   2. Spawn it with 'spawn' (TSPAWN → receives AgentRef)
+//   3. Send messages with 'send' (TSEND → puts value in mailbox)
+//   4. Await response with 'await' (TAWAIT → synchronously runs handler)
+//
+// ─── Correct pattern — full agent lifecycle ───────────────────────────────────
+
+// Tier 2 pattern: local synchronous actor
+agent Validator {
+    fn handle(signal: trit) -> trit {
+        match signal {
+            -1 => { return conflict(); }   // rejected
+             0 => { return hold();    }   // pending further review
+             1 => { return truth();   }   // validated
+        }
+    }
+}
+
+// Spawn the declared agent type — registration is automatic:
+let v: agent = spawn Validator;
+
+// Send a signal to the agent's mailbox:
+send v, 1;
+
+// Await processes the mailbox and returns the handler's result:
+let decision: trit = await v;
+
+match decision {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

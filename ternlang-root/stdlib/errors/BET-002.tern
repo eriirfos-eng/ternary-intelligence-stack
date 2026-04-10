@@ -1,0 +1,63 @@
+// stdlib/errors/BET-002.tern
+// Error: BET-002 — BET Encoding Fault
+// Tier: 1 — Open Core
+//
+// "The 0b00 bit pattern is forbidden in balanced ternary encoding.
+//  Only 01 (-1), 10 (0), and 11 (+1) exist. You found the state that shouldn't be — the void."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The BET codec uses 2 bits to represent each trit:
+//
+//   0b01  =  -1  (reject)
+//   0b10  =   0  (hold)
+//   0b11  =  +1  (affirm)
+//   0b00  =  ??? (FORBIDDEN — this is the void state)
+//
+// The 0b00 pattern has no trit value. It is the encoding equivalent of
+// a null pointer — a bit combination that should never appear in a valid
+// trit stream. If the VM encounters it while unpacking bytecode, BET-002 fires.
+//
+// ─── Who triggers this ────────────────────────────────────────────────────────
+//
+//   Normal .tern programs:    NEVER — the compiler only emits valid BET encodings
+//   Corrupted .ternbc files:  YES — if bytes are zeroed or incorrectly patched
+//   Manual bytecode authors:  YES — if 0x00 is written into a packed trit byte
+//   Faulty hardware:          YES — bit flip in memory produces 0b00
+//
+// ─── If you see this from a .tern source file ─────────────────────────────────
+//
+//   1. Delete all .ternbc cache files
+//   2. Recompile from source: cargo build --bin ternlang-cli
+//   3. If it persists, run on different hardware (possible RAM issue)
+//   4. Report as a compiler bug with the .tern source that triggers it
+//
+// ─── BET encoding reference ───────────────────────────────────────────────────
+//
+//   Each trit is packed into 2 bits. A byte holds 4 trits (8 bits / 2):
+//
+//   Byte: [ trit3 trit3 | trit2 trit2 | trit1 trit1 | trit0 trit0 ]
+//
+//   Valid byte examples:
+//     0b11111111  =  +1 +1 +1 +1  (four affirm trits)
+//     0b10101010  =   0  0  0  0  (four hold trits)
+//     0b01010101  =  -1 -1 -1 -1  (four reject trits)
+//     0b11100110  =  +1  0 -1 +1  (mixed valid)
+//     0b00xxxxxx  =  INVALID (0b00 in high pair — BET-002)
+//
+// ─── Correct usage — always use the compiler for trit encoding ────────────────
+
+fn encoding_demo(a: trit, b: trit, c: trit) -> trit {
+    // The compiler handles all BET encoding internally.
+    // Your job: use trit values. The VM's job: pack/unpack correctly.
+    let merged: trit = consensus(a, b);
+    return consensus(merged, c);
+}
+
+let result: trit = encoding_demo(1, 0, 1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

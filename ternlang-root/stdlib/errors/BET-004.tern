@@ -1,0 +1,75 @@
+// stdlib/errors/BET-004.tern
+// Error: BET-004 — Unknown Opcode
+// Tier: 1 — Open Core
+//
+// "The machine is reading your bytecode and hit an instruction it has never seen.
+//  Delete cached .ternbc files and recompile."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The VM's instruction dispatch loop encountered a byte value that is not
+// defined in the BET instruction set. The BET ISA defines 51 opcodes.
+// Any byte outside these defined values triggers BET-004.
+//
+// This is almost always caused by stale bytecode, not by your .tern source.
+//
+// ─── The BET ISA opcode map (reference) ──────────────────────────────────────
+//
+//   0x00  THALT      — clean halt (BET-003)
+//   0x01  TPUSH      — push trit literal
+//   0x02  TADD       — trit/int/float addition
+//   0x03  TMUL       — trit/int/float multiplication
+//   0x04  TNEG       — trit/int/float negation
+//   0x05  TJMP_POS   — jump if top of stack is +1
+//   0x06  TJMP_ZERO  — jump if top of stack is 0
+//   0x07  TJMP_NEG   — jump if top of stack is -1
+//   0x08  TSTORE     — store to register
+//   0x09  TLOAD      — load from register
+//   0x0a  TDUP       — duplicate top of stack
+//   0x0b  TJMP       — unconditional jump
+//   0x0c  TPOP       — discard top of stack
+//   0x0e  TCONS      — consensus of two trits
+//   0x0f  TALLOC     — allocate trittensor
+//   0x10  TCALL      — call function (saves registers)
+//   0x11  TRET       — return from function (restores registers)
+//   0x14  TLESS      — comparison: less than
+//   0x15  TGREATER   — comparison: greater than
+//   0x16  TEQ        — comparison: equal
+//   0x17  TPUSH_INT  — push integer literal
+//   0x18  TADD_INT   — integer addition
+//   0x19  TPUSH_FLOAT— push float literal
+//   0x22  TIDX       — tensor read (bounds-checked)
+//   0x23  TSET       — tensor write (bounds-checked)
+//   0x24  TSHAPE     — tensor shape query
+//   0x30  TSPAWN     — spawn agent instance
+//   0x31  TSEND      — send message to agent
+//   0x32  TAWAIT     — await agent response
+//
+//   Any byte NOT in this list → BET-004.
+//
+// ─── Fix ──────────────────────────────────────────────────────────────────────
+//
+//   rm -rf target/package
+//   cargo build --bin ternlang-cli
+//   ./target/debug/ternlang-cli run your_program.tern
+//
+// ─── Correct pattern — always compile from source, never cache bytecode ───────
+
+fn opcode_demo(a: trit, b: trit) -> trit {
+    // Your .tern source compiles to valid opcodes automatically.
+    // This uses TCONS (0x0e), TJMP_NEG (0x07), TPUSH (0x01), TRET (0x11):
+    let merged: trit = consensus(a, b);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = opcode_demo(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

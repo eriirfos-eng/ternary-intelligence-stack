@@ -1,0 +1,50 @@
+// stdlib/errors/BET-009.tern
+// Error: BET-009 — Tensor Not Allocated
+// Tier: 1 — Open Core
+//
+// "TensorRef(N) doesn't exist — you never allocated it. TALLOC first, then TIDX."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TIDX, TSET, or TSHAPE instruction received a TensorRef whose ID
+// points to a tensor slot that was never created with TALLOC (the allocation
+// opcode emitted for trittensor declarations).
+//
+// This usually means:
+//   - A TensorRef value was corrupted or manually constructed with an invalid ID
+//   - Bytecode was compiled against a state where the tensor was allocated, but
+//     the actual execution path skipped the allocation step
+//   - A tensor was used in a branch that never ran the allocation
+//
+// In normal .tern code you should not see this error — every trittensor
+// variable declaration implicitly emits TALLOC. If you see BET-009 from
+// normal .tern source, it is a compiler bug — please report it.
+//
+// ─── If you're writing bytecode manually ──────────────────────────────────────
+//
+//   TALLOC must execute BEFORE any TIDX or TSET that uses the returned TensorRef.
+//   The order of execution matters — not just the order of declaration in source.
+//
+// ─── Correct pattern — proper tensor lifecycle ────────────────────────────────
+
+fn compute_signal(a: trit, b: trit, c: trit) -> trit {
+    // In .tern, trittensor variables are declared and immediately usable.
+    // The compiler emits TALLOC at the point of declaration — guaranteed.
+    let signals: trit[] = [a, b, c];
+
+    // signals[0] is valid — the tensor was allocated when 'signals' was declared:
+    let first: trit = signals[0];
+    let second: trit = signals[1];
+    let third: trit = signals[2];
+
+    let merged_ab: trit = consensus(first, second);
+    return consensus(merged_ab, third);
+}
+
+let result: trit = compute_signal(1, 0, -1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

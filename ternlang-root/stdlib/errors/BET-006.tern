@@ -1,0 +1,69 @@
+// stdlib/errors/BET-006.tern
+// Error: BET-006 — PC Out of Bounds
+// Tier: 1 — Open Core
+//
+// "The program counter jumped to address N — outside the bytecode buffer.
+//  You jumped into the void. The universe ends at the last instruction."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A jump instruction (TJMP, TJMP_POS, TJMP_NEG, TJMP_ZERO, TCALL, etc.)
+// set the program counter to an address that is >= the length of the loaded
+// bytecode. There is no instruction at that address — execution cannot continue.
+//
+// Jump targets in BET bytecode are absolute byte offsets calculated at
+// compile time. Any change to the bytecode layout (adding instructions,
+// reordering, editing .ternbc directly) invalidates all previously computed
+// jump offsets.
+//
+// ─── Who triggers this ────────────────────────────────────────────────────────
+//
+//   Normal .tern programs:    RARELY — only if you have stale .ternbc cache
+//                             from a different compiler version
+//
+//   After compiler upgrade:   YES — if old .ternbc files remain, their jump
+//                             offsets may target positions past the new layout
+//
+//   Manual .ternbc editing:   YES — inserting bytes shifts all subsequent
+//                             offsets without updating jump targets
+//
+// ─── Fix ──────────────────────────────────────────────────────────────────────
+//
+//   Always recompile from source after:
+//   - Upgrading the ternlang-cli binary
+//   - Editing any .tern source file
+//   - Adding or removing functions
+//   - Any change to the bytecode format
+//
+//   Never cache .ternbc across compiler versions.
+//
+// ─── Correct pattern — function calls with valid jump targets ─────────────────
+
+fn first(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn second(v: trit) -> trit {
+    // TCALL to 'first' emits a jump to 'first's address.
+    // This offset is calculated at compile time and is always correct
+    // when compiled from source — it only breaks if .ternbc is stale.
+    let result: trit = first(v);
+    return result;
+}
+
+fn third(v: trit) -> trit {
+    let result: trit = second(v);
+    return result;
+}
+
+let final_result: trit = third(1);
+
+match final_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
