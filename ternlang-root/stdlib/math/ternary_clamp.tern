@@ -1,0 +1,31 @@
+// stdlib/math/ternary_clamp.tern
+// Demonstrates: Value clamping using ternary comparison logic.
+// Tier: 1 — Open Core
+// Clamps an integer value between a minimum and maximum bound.
+// Returns the clamped value as an integer.
+
+fn clamp(val: int, min: int, max: int) -> int {
+    if val < min {
+        return min;
+    }
+    if val > max {
+        return max;
+    }
+    return val;
+}
+
+fn main() -> trit {
+    // Case 1: Value within bounds
+    if clamp(5, 0, 10) != 5 { return reject; }
+    
+    // Case 2: Value below lower bound
+    if clamp(-5, 0, 10) != 0 { return reject; }
+    
+    // Case 3: Value above upper bound
+    if clamp(15, 0, 10) != 10 { return reject; }
+    
+    // Case 4: Bounds are equal
+    if clamp(5, 10, 10) != 10 { return reject; }
+
+    return affirm;
+}
