@@ -1,0 +1,18 @@
+// stdlib/core/ternary_is_hold.tern
+// Demonstrates: A boolean-like check for the 'hold' (0) state.
+// Tier: 1 — Open Core
+
+fn is_hold(val: trit) -> trit {
+    match val {
+        -1 => { return conflict(); }
+         0 => { return truth();    }
+         1 => { return conflict(); }
+    }
+}
+
+fn main() -> trit {
+    if is_hold(0) != truth() { return conflict(); }
+    if is_hold(1) == truth() { return conflict(); }
+    
+    return truth();
+}
