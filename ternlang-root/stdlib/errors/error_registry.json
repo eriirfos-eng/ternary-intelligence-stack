@@ -1,18 +1,30 @@
 {
   "_meta": {
-    "version": "1.0.0",
+    "version": "2.0.0",
+    "last_updated": "2026-04-10",
     "project": "Ternlang — Ternary Intelligence Stack",
     "maintainer": "RFI-IRFOS <licensing@ternlang.com>",
     "description": "Canonical error dictionary for the BET VM and Ternlang compiler. Every code maps to a fun message, a technical explanation, the most common causes, a concrete fix, and a runnable .tern example.",
+    "total_codes": 20,
     "namespaces": {
-      "PARSE": "Lexer / parser phase — caught before any bytecode is emitted",
-      "TYPE":  "Semantic analysis phase — type-checker caught a mismatch",
-      "SCOPE": "Name resolution — variable or binding not found",
-      "STRUCT":"Struct definition / field access errors",
-      "FN":    "Function signature / call-site errors",
-      "PROP":  "Trit propagation operator errors",
-      "BET":   "BET VM runtime errors — the bytecode is running and something went wrong"
-    }
+      "PARSE":  "Lexer / parser phase — caught before any bytecode is emitted",
+      "TYPE":   "Semantic analysis phase — type-checker caught a mismatch",
+      "SCOPE":  "Name resolution — variable or binding not found",
+      "STRUCT": "Struct definition / field access errors",
+      "FN":     "Function signature / call-site errors",
+      "PROP":   "Trit propagation operator errors",
+      "BET":    "BET VM runtime errors — the bytecode is running and something went wrong"
+    },
+    "reserved_namespaces": {
+      "IMPORT": "Module import errors — reserved for when the module system is formalized (IMPORT-001: module not found, IMPORT-002: circular import)",
+      "ANNOT":  "Annotation misuse — reserved for @sparseskip on non-matmul functions and future annotation validators (ANNOT-001)",
+      "WARN":   "Non-fatal warnings — reserved for deprecation notices, performance hints, and style guidance (WARN-001 and above)",
+      "CODE":   "Codegen internal errors — reserved for bugs in the bytecode emitter that don't map to a source error (CODE-001 and above)",
+      "HDL":    "Hardware description language errors — reserved for ternlang-hdl crate (HDL-001 and above)",
+      "MCP":    "Model Context Protocol errors — reserved for ternlang-mcp crate (MCP-001 and above)",
+      "NET":    "Network / distributed agent errors — reserved for remote TSEND/TAWAIT over ternlang-net (NET-001 and above)"
+    },
+    "cli_lookup": "ternlang errors <CODE>  — future CLI subcommand for interactive lookup (planned, not yet implemented)"
   },
 
   "errors": {
@@ -374,6 +386,72 @@
       "example_file": "stdlib/errors/BET-007.tern",
       "bad_pattern": "fn mixed(v: trit) -> trit {\n    match v {\n        -1 => { return conflict(); }  // trit ✓\n         0 => { return hold();    }  // trit ✓\n         1 => { return 42;        }  // int! BET-007 at runtime\n    }\n}",
       "good_pattern": "fn pure(v: trit) -> trit {\n    match v {\n        -1 => { return conflict(); }\n         0 => { return hold();    }\n         1 => { return truth();   }  // trit ✓ — consistent\n    }\n}"
+    },
+
+    "BET-008": {
+      "code": "BET-008",
+      "title": "Tensor Index Out of Bounds",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "Tensor[N]: index K is out of bounds — tensor only has M element(s). Trittensors don't grow on access.",
+      "technical": "A TIDX (read) or TSET (write) instruction computed an element position that is >= the tensor's allocated size. The VM performs a bounds check and refuses to fabricate trit values for memory it doesn't own.",
+      "common_causes": [
+        "Zero-based indexing confusion: trittensor<N> has valid indices 0 through N-1, not 0 through N",
+        "Off-by-one in a loop counter that reaches the tensor's size",
+        "Accessing a 2D tensor with indices that exceed the row×column layout"
+      ],
+      "fix": "Check that your index is strictly less than the tensor's declared size. Use guard conditionals before every tensor access in dynamic code.",
+      "index_rule": "trittensor<N>: valid indices are 0 to N-1. Index N is always out of bounds.",
+      "example_file": "stdlib/errors/BET-008.tern"
+    },
+
+    "BET-009": {
+      "code": "BET-009",
+      "title": "Tensor Not Allocated",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "TensorRef(N) doesn't exist — you never allocated it. TALLOC first, then TIDX.",
+      "technical": "A TIDX, TSET, or TSHAPE instruction received a TensorRef ID that exceeds the number of tensors in the VM's tensor table. The allocation step (TALLOC) was never executed for this slot.",
+      "common_causes": [
+        "In normal .tern code: a compiler bug where TALLOC was not emitted for a trittensor declaration — please report",
+        "In manual bytecode: TIDX executed before the corresponding TALLOC on a code path that was conditional",
+        "A TensorRef value was copied but points to a tensor that was allocated in a different VM instance"
+      ],
+      "fix": "In .tern code: recompile from source. If BET-009 persists from valid .tern, it is a compiler bug — report with the triggering source. In manual bytecode: ensure TALLOC always executes before TIDX on every code path.",
+      "example_file": "stdlib/errors/BET-009.tern"
+    },
+
+    "BET-010": {
+      "code": "BET-010",
+      "title": "Agent Type Not Registered",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "Agent type_id 0xNNNN was never registered. You can't spawn what was never declared.",
+      "technical": "The TSPAWN instruction received a type_id (u16) that has no entry in the VM's agent type table (agent_types HashMap). TSPAWN cannot create an agent instance without knowing which bytecode address to jump to for its handler.",
+      "common_causes": [
+        "An 'agent' declaration is missing from the program — the type was used but never defined",
+        "The agent was defined in a module that was not imported or loaded",
+        "The CLI's register_agent_type() was not called for this type_id (codegen gap)"
+      ],
+      "fix": "Declare the agent with 'agent MyAgent { ... }' before spawning it. Import the module containing the declaration if it's defined externally.",
+      "example_file": "stdlib/errors/BET-010.tern"
+    },
+
+    "BET-011": {
+      "code": "BET-011",
+      "title": "Agent ID Invalid",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "Agent #N doesn't exist — no agent was spawned at this ID. TSEND and TAWAIT require a live agent.",
+      "technical": "A TSEND or TAWAIT instruction received an AgentRef with an ID >= the number of agents in the VM's agent table. The agent at that ID was never spawned, or the AgentRef was constructed with an incorrect ID.",
+      "common_causes": [
+        "In normal .tern code: a compiler bug where an incorrect AgentRef ID was emitted — please report",
+        "In manual bytecode: TSEND executed with an AgentRef ID that was never returned by TSPAWN",
+        "A TSPAWN failed (BET-010) and the returned invalid AgentRef was used anyway"
+      ],
+      "fix": "Always use the AgentRef value returned by the 'spawn' expression. Do not construct AgentRef values manually. Ensure TSPAWN succeeds (no BET-010) before calling TSEND or TAWAIT.",
+      "distinction_from_bet_010": "BET-010 = the agent TYPE was never registered (spawn fails). BET-011 = the agent INSTANCE doesn't exist (send/await fails on a bad ID).",
+      "example_file": "stdlib/errors/BET-011.tern"
     }
 
   }

@@ -1,0 +1,63 @@
+// stdlib/errors/BET-005.tern
+// Error: BET-005 — Register Out of Range
+// Tier: 1 — Open Core
+//
+// "The BET VM has exactly 27 registers (0–26). That's 3³. The only sacred ternary number.
+//  Register N doesn't exist. There is no 28th register."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TSTORE or TLOAD instruction referenced a register index outside 0–26.
+// The BET VM's register file is fixed at exactly 27 slots:
+//
+//   3¹ = 3
+//   3² = 9
+//   3³ = 27  ← the register count
+//
+// Register indices 0–26 are valid. Register 27 and above do not exist.
+//
+// ─── Who triggers this ────────────────────────────────────────────────────────
+//
+//   Normal .tern programs:    NEVER — the compiler's register allocator
+//                             stays within 0–26. If you hit this from .tern
+//                             source, it is a compiler bug — report it.
+//
+//   Bytecode extensions:      YES — if you're writing a codegen extension
+//                             and emit TSTORE with operand > 26, BET-005 fires.
+//
+//   Manual .ternbc authors:   YES — ensure all register operands are 0–26.
+//
+// ─── Register allocation note ─────────────────────────────────────────────────
+//
+//   The VM uses TCALL/TRET to save and restore register files for function calls
+//   (register isolation). Each function call saves the full 27-register file onto
+//   an internal stack and restores it on return. This means all 27 registers are
+//   available to every function without manual save/restore.
+//
+//   If you're writing a codegen extension, the allocator should:
+//   - Assign variables to registers 0–26
+//   - Spill to the operand stack if all 27 are in use
+//   - Never emit a register operand > 26
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn many_locals(a: trit, b: trit, c: trit, d: trit) -> trit {
+    // Each local variable is assigned a register by the compiler.
+    // With 27 registers and call-frame isolation, you have plenty of headroom.
+    let ab:  trit = consensus(a, b);
+    let cd:  trit = consensus(c, d);
+    let abcd: trit = consensus(ab, cd);
+    match abcd {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = many_locals(1, 0, -1, 1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

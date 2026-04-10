@@ -1,0 +1,65 @@
+// stdlib/errors/BET-008.tern
+// Error: BET-008 — Tensor Index Out of Bounds
+// Tier: 1 — Open Core
+//
+// "Tensor[N]: index K is out of bounds — tensor only has M element(s).
+//  Trittensors don't grow on access."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TIDX (read) or TSET (write) instruction tried to access position K
+// in a trittensor, but the tensor was only allocated with M elements.
+// K >= M. The VM refuses to fabricate trit values for memory it doesn't own.
+//
+// This is a runtime bounds check. The VM caught what would have been
+// a silent memory access violation in a lower-level system.
+//
+// COMMON PATTERN THAT CAUSES THIS:
+//
+//   // Tensor allocated with size 3:
+//   let weights: trittensor<3> = [1, 0, -1];
+//
+//   // Accessing index 3 (fourth element — doesn't exist):
+//   let w: trit = weights[3];   // BET-008: index 3, size 3 (valid: 0, 1, 2)
+//
+// ─── Trittensor indexing is zero-based ──────────────────────────────────────
+//
+//   trittensor<3> has valid indices: 0, 1, 2
+//   trittensor<5> has valid indices: 0, 1, 2, 3, 4
+//   trittensor<N> has valid indices: 0 through N-1
+//
+//   Index N is always out of bounds. Index N-1 is always the last element.
+//
+// ─── How to guard against BET-008 ────────────────────────────────────────────
+//
+//   Always bound-check your index before accessing a tensor.
+//   Use a conditional to stay within the declared size.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn safe_read(weights: trit[], index: int, size: int) -> trit {
+    // Guard: index must be in [0, size - 1]
+    if index < 0 {
+        return conflict();   // index below range
+    }
+    if index >= size {
+        return conflict();   // index at or above size — would be BET-008
+    }
+    // Safe to access — index is within bounds:
+    return weights[index];
+}
+
+// Correctly sized access:
+let signal_a: trit = 1;
+let signal_b: trit = 0;
+let signal_c: trit = -1;
+
+// Access within the declared bounds — safe:
+let first: trit = safe_read([signal_a, signal_b, signal_c], 0, 3);
+let last:  trit = safe_read([signal_a, signal_b, signal_c], 2, 3);
+
+match last {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

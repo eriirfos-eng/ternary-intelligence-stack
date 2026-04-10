@@ -22,6 +22,12 @@ pub enum VmError {
     InvalidRegister(u8),
     PcOutOfBounds(usize),
     TypeMismatch { expected: String, found: String },
+    // ── Tensor errors ────────────────────────────────────────────────────────
+    TensorIndexOutOfBounds { tensor_id: usize, index: usize, size: usize },
+    TensorNotAllocated(usize),
+    // ── Agent errors ─────────────────────────────────────────────────────────
+    AgentTypeNotRegistered(u16),
+    AgentIdInvalid(usize),
 }
 
 impl fmt::Display for VmError {
@@ -41,6 +47,14 @@ impl fmt::Display for VmError {
                 write!(f, "[BET-006] PC {pc} is out of bounds — you jumped outside the known universe. Recompile from source.\n          → details: stdlib/errors/BET-006.tern  |  ternlang errors BET-006"),
             VmError::TypeMismatch { expected, found } =>
                 write!(f, "[BET-007] Runtime type mismatch — expected {expected} but found {found}. Square peg, round hole.\n          → details: stdlib/errors/BET-007.tern  |  ternlang errors BET-007"),
+            VmError::TensorIndexOutOfBounds { tensor_id, index, size } =>
+                write!(f, "[BET-008] Tensor[{tensor_id}]: index {index} is out of bounds — tensor only has {size} element(s). Trittensors don't grow on access.\n          → details: stdlib/errors/BET-008.tern  |  ternlang errors BET-008"),
+            VmError::TensorNotAllocated(idx) =>
+                write!(f, "[BET-009] TensorRef({idx}) doesn't exist — you never allocated it. TALLOC first, then TIDX.\n          → details: stdlib/errors/BET-009.tern  |  ternlang errors BET-009"),
+            VmError::AgentTypeNotRegistered(type_id) =>
+                write!(f, "[BET-010] Agent type_id 0x{type_id:04x} was never registered. You can't spawn what was never declared.\n          → details: stdlib/errors/BET-010.tern  |  ternlang errors BET-010"),
+            VmError::AgentIdInvalid(id) =>
+                write!(f, "[BET-011] Agent #{id} doesn't exist — no agent was spawned at this ID. TSEND and TAWAIT require a live agent.\n          → details: stdlib/errors/BET-011.tern  |  ternlang errors BET-011"),
         }
     }
 }
@@ -302,9 +316,15 @@ impl BetVm {
                     let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
                     match rf {
                         Value::TensorRef(idx) => {
+                            if idx >= self.tensors.len() {
+                                return Err(VmError::TensorNotAllocated(idx));
+                            }
                             let len = self.tensors[idx].len();
                             let n = (len as f64).sqrt() as usize;
                             let pos = if n * n == len { r as usize * n + c as usize } else { r as usize };
+                            if pos >= len {
+                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: len });
+                            }
                             self.stack.push(Value::Trit(self.tensors[idx][pos]));
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) }),
@@ -315,13 +335,19 @@ impl BetVm {
                     let col = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let row = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
+                    let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
                     let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
                     match (rf.clone(), val.clone()) {
                         (Value::TensorRef(idx), Value::Trit(t)) => {
+                            if idx >= self.tensors.len() {
+                                return Err(VmError::TensorNotAllocated(idx));
+                            }
                             let len = self.tensors[idx].len();
                             let n = (len as f64).sqrt() as usize;
                             let pos = if n * n == len { r as usize * n + c as usize } else { r as usize };
+                            if pos >= len {
+                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: len });
+                            }
                             self.tensors[idx][pos] = t;
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "TensorRef, Trit".into(), found: format!("{:?}", (rf, val)) }),
@@ -330,6 +356,9 @@ impl BetVm {
                 0x24 => { // Tshape
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     if let Value::TensorRef(idx) = rf {
+                        if idx >= self.tensors.len() {
+                            return Err(VmError::TensorNotAllocated(idx));
+                        }
                         let len = self.tensors[idx].len();
                         let n = (len as f64).sqrt() as usize;
                         if n * n == len {
@@ -347,7 +376,9 @@ impl BetVm {
                         let id = self.agents.len();
                         self.agents.push(AgentInstance { handler_addr, mailbox: Default::default() });
                         self.stack.push(Value::AgentRef(id, None));
-                    } else { return Err(VmError::InvalidOpcode(0x30)); }
+                    } else {
+                        return Err(VmError::AgentTypeNotRegistered(type_id));
+                    }
                 }
                 0x31 => { // Tsend — msg, target → void
                     let msg = self.stack.pop().ok_or(VmError::StackUnderflow)?;
@@ -355,8 +386,12 @@ impl BetVm {
                     if let Value::AgentRef(id, None) = target {
                         if id < self.agents.len() {
                             self.agents[id].mailbox.push_back(msg);
-                        } else { return Err(VmError::TypeMismatch { expected: "Valid AgentRef".into(), found: format!("{:?}", id) }); }
-                    } else { return Err(VmError::TypeMismatch { expected: "Local AgentRef".into(), found: format!("{:?}", target) }); }
+                        } else {
+                            return Err(VmError::AgentIdInvalid(id));
+                        }
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "Local AgentRef".into(), found: format!("{:?}", target) });
+                    }
                 }
                 0x32 => { // Tawait — target → result
                     let target = self.stack.pop().ok_or(VmError::StackUnderflow)?;
@@ -364,17 +399,17 @@ impl BetVm {
                         if id < self.agents.len() {
                             let handler_addr = self.agents[id].handler_addr;
                             let msg = self.agents[id].mailbox.pop_front().unwrap_or(Value::default());
-                            
-                            // Synchronous call to handler
+                            // Synchronous handler dispatch — identical to TCALL
                             self.register_stack.push(self.registers.clone());
                             self.call_stack.push(self.pc);
                             self.pc = handler_addr;
-                            self.stack.push(msg); // Push msg as param
-                            // After PC jump, loop continues in handler.
-                            // But wait, Tawait needs to wait for TRET.
-                            // The current loop structure is fine, just like TCALL.
-                        } else { return Err(VmError::TypeMismatch { expected: "Valid AgentRef".into(), found: format!("{:?}", id) }); }
-                    } else { return Err(VmError::TypeMismatch { expected: "Local AgentRef".into(), found: format!("{:?}", target) }); }
+                            self.stack.push(msg);
+                        } else {
+                            return Err(VmError::AgentIdInvalid(id));
+                        }
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "Local AgentRef".into(), found: format!("{:?}", target) });
+                    }
                 }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
