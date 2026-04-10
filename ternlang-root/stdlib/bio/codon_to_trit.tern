@@ -1,0 +1,26 @@
+// stdlib/bio/codon_to_trit.tern
+// Demonstrates: Mapping DNA base pairs to ternary values using IF logic.
+// A=1 (affirm), T=-1 (reject), C=0 (hold), G=1 (affirm).
+// Tier: 3 — Industrial
+
+fn dna_to_trit(base: int) -> trit {
+    // 65='A', 84='T', 67='C', 71='G'
+    if base == 65 { return truth();    } // A
+    if base == 84 { return conflict(); } // T
+    if base == 67 { return hold();     } // C
+    if base == 71 { return truth();    } // G
+    return hold(); // Default
+}
+
+fn main() -> trit {
+    // Test: A (65) -> 1
+    if dna_to_trit(65) != 1 { return conflict(); }
+    
+    // Test: T (84) -> -1
+    if dna_to_trit(84) != -1 { return conflict(); }
+    
+    // Test: C (67) -> 0
+    if dna_to_trit(67) != 0 { return conflict(); }
+    
+    return truth();
+}
