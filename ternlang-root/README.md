@@ -13,7 +13,7 @@
 [![Data Residency](https://img.shields.io/badge/Data%20Residency-EU%20Frankfurt-003399)](https://ternlang.com/compliance)
 [![GDPR](https://img.shields.io/badge/GDPR-Compliant%20Design-003399)](https://ternlang.com/compliance)
 
-Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
+Ternlang is a systems programming language built on balanced ternary logic built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
 ---
 
