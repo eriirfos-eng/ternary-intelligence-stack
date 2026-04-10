@@ -13,6 +13,9 @@ pub struct BytecodeEmitter {
     struct_layouts: std::collections::HashMap<String, Vec<String>>,
     agent_type_ids: std::collections::HashMap<String, u16>,
     agent_handlers: Vec<(u16, u16)>,
+    /// Snapshots of the local symbol table for each function, keyed by function name.
+    /// Captured just before scope is restored so callers can map reg→varname after execution.
+    function_symbols: std::collections::HashMap<String, std::collections::HashMap<String, u8>>,
 }
 
 impl BytecodeEmitter {
@@ -28,7 +31,19 @@ impl BytecodeEmitter {
             struct_layouts: std::collections::HashMap::new(),
             agent_type_ids: std::collections::HashMap::new(),
             agent_handlers: Vec::new(),
+            function_symbols: std::collections::HashMap::new(),
         }
+    }
+
+    /// Returns the top-level variable-name → register-number map.
+    pub fn get_symbols(&self) -> &std::collections::HashMap<String, u8> {
+        &self.symbols
+    }
+
+    /// Returns the local symbol snapshot for a specific function (e.g. "main").
+    /// Used by `ternlang-cli --emit-symbols` to correlate VM register dumps with source variable names.
+    pub fn get_function_symbols(&self, name: &str) -> Option<&std::collections::HashMap<String, u8>> {
+        self.function_symbols.get(name)
     }
 
     pub fn register_agents(&self, vm: &mut crate::vm::BetVm) {
@@ -118,6 +133,8 @@ impl BytecodeEmitter {
             self.code.push(0x08); self.code.push(reg);
         }
         for stmt in &func.body { self.emit_stmt(stmt); }
+        // Snapshot local symbols before scope is restored — used by --emit-symbols
+        self.function_symbols.insert(func.name.clone(), self.symbols.clone());
         self.symbols = parent_symbols;
         self.next_reg = parent_next_reg;
         self.code.push(0x11); // TRET
