@@ -1,4 +1,0 @@
-let c: trit = consensus(1, -1);
-let i: trit = invert(1);
-let t: trit = truth();
-return c;
