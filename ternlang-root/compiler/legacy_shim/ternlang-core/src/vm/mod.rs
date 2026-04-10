@@ -599,6 +599,40 @@ impl BetVm {
                     };
                     self.stack.push(Value::Trit(if is_ge { Trit::Affirm } else { Trit::Reject }));
                 }
+                0x28 => { // Tand — min(a, b) in balanced ternary (logical AND)
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let to_trit = |v: Value| -> Result<Trit, VmError> {
+                        match v {
+                            Value::Trit(t) => Ok(t),
+                            Value::Int(n) if n > 0 => Ok(Trit::Affirm),
+                            Value::Int(0) => Ok(Trit::Tend),
+                            Value::Int(_) => Ok(Trit::Reject),
+                            other => Err(VmError::TypeMismatch { expected: "Trit or Int".into(), found: format!("{:?}", other) }),
+                        }
+                    };
+                    let ta = to_trit(a)?;
+                    let tb = to_trit(b)?;
+                    let result = if (ta as i8) <= (tb as i8) { ta } else { tb };
+                    self.stack.push(Value::Trit(result));
+                }
+                0x29 => { // Tor — max(a, b) in balanced ternary (logical OR)
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let to_trit = |v: Value| -> Result<Trit, VmError> {
+                        match v {
+                            Value::Trit(t) => Ok(t),
+                            Value::Int(n) if n > 0 => Ok(Trit::Affirm),
+                            Value::Int(0) => Ok(Trit::Tend),
+                            Value::Int(_) => Ok(Trit::Reject),
+                            other => Err(VmError::TypeMismatch { expected: "Trit or Int".into(), found: format!("{:?}", other) }),
+                        }
+                    };
+                    let ta = to_trit(a)?;
+                    let tb = to_trit(b)?;
+                    let result = if (ta as i8) >= (tb as i8) { ta } else { tb };
+                    self.stack.push(Value::Trit(result));
+                }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
             }

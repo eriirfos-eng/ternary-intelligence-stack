@@ -1,0 +1,9 @@
+// BUG-E: Expr::Cast silently emits nothing
+// Old bug: let v: trit = cast(affirm); — emits nothing, v is garbage
+// Expected: v == affirm
+
+fn main() -> trit {
+    let v: trit = cast(affirm);
+    println(v);
+    return v;
+}
