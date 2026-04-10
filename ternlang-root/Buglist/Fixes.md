@@ -94,6 +94,24 @@ This file tracks all architectural improvements, bug fixes, and feature addition
     - **Fix:** Updated `vm/mod.rs` to allow `Trit` operands for `Tmod` and `Tdiv`, treating them as `i64` equivalents.
     - **Status:** Fixed.
 
+20. **WhileTernary Codegen Fix** (2026-04-10)
+    - **Trigger:** Using `while` loops with conditions that evaluate to `0` or `-1`.
+    - **Symptom:** Infinite loop even when the condition should terminate the loop.
+    - **Diagnosis:** `WhileTernary` codegen always looped back to the top after executing ANY of the three arms (`on_pos`, `on_zero`, `on_neg`). For standard `while` loops, only the `on_pos` arm should loop back.
+    - **Fix:** Updated `betbc.rs` to only emit the back-jump for the `on_pos` arm by default. `on_zero` and `on_neg` now correctly jump to the end of the loop.
+    - **Status:** Fixed.
+
+21. **Tensor length() Built-in** (2026-04-10)
+    - **Feature:** Added `length(tensor)` built-in function to retrieve the primary dimension of a `trit[]` or `trittensor`.
+    - **Implementation:** Updated `betbc.rs` to emit `TSHAPE` (0x24) followed by `TPOP` (0x0c) to leave the rows/length on the stack. Updated `semantic.rs` to recognize the `length` signature.
+    - **Benefit:** Enables idiomatic loop bounds and sequence processing in `.tern` programs.
+
+22. **Unified Numeric Literals & Coercion** (2026-04-10)
+    - **Feature:** Moved `1`, `0`, and `-1` to be `Int` literals by default in the lexer, with implicit `Int` -> `Trit` coercion in the semantic analyzer.
+    - **Reason:** Prevented loop counters (often starting at 0 or 1) from being treated as trits, which caused arithmetic overflows (e.g., `1 + 1 = -1` in ternary).
+    - **Implementation:** Updated `lexer.rs` to remove `TritLiteral` number matching. Updated `semantic.rs` to allow `Int` in places where `Trit` is expected (assignments, returns, arguments). Updated compiler tests to reflect the new flexibility.
+    - **Status:** Fixed / Feature Added.
+
 ## Known Limitations / Unresolved (2026-04-10)
 
 ### BUG-L01 — Block comments (`/* */`) are not supported
