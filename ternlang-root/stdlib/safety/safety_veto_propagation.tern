@@ -1,0 +1,37 @@
+// stdlib/safety/safety_veto_propagation.tern
+// Demonstrates: Safety veto propagation using the Early Exit Postfix '?' operator.
+// Tier: 2 — Pro Standard
+// Implements a safety pipeline where multiple checks are performed in sequence.
+// If any check returns reject (-1), the entire pipeline terminates and propagates
+// the reject signal upward immediately.
+
+fn check_alignment() -> trit {
+    return affirm; // OK
+}
+
+fn check_adversarial() -> trit {
+    return reject; // VETO!
+}
+
+fn check_bias() -> trit {
+    return affirm; // This should be skipped
+}
+
+fn safety_pipeline() -> trit {
+    check_alignment()?;
+    check_adversarial()?;
+    check_bias()?;
+    
+    return affirm;
+}
+
+fn main() -> trit {
+    let result: trit = safety_pipeline();
+    
+    // Result should be reject (-1) because check_adversarial vetoed.
+    if result == -1 {
+        return affirm;
+    }
+    
+    return reject;
+}

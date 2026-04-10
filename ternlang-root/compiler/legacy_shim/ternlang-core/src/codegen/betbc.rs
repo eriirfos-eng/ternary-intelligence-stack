@@ -447,6 +447,19 @@ impl BytecodeEmitter {
                 }
                 self.code.push(0x09); self.code.push(tr);
             }
+            Expr::Propagate { expr } => {
+                self.emit_expr(expr);
+                self.code.push(0x0a); // TDUP
+                let patch = self.code.len() + 1;
+                self.code.push(0x07); self.code.extend_from_slice(&[0, 0]); // TJMP_NEG
+                let skip = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]); // TJMP
+                let early_ret = self.code.len() as u16;
+                self.patch_u16(patch, early_ret);
+                self.code.push(0x11); // TRET
+                let next = self.code.len() as u16;
+                self.patch_u16(skip, next);
+            }
             Expr::Index { object, row, col } => {
                 self.emit_expr(object); self.emit_expr(row); self.emit_expr(col);
                 self.code.push(0x22);
