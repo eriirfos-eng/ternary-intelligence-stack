@@ -1,0 +1,23 @@
+// stdlib/logic/ternary_consensus_3.tern
+// Demonstrates: Three-way consensus logic using nested consensus calls.
+// Tier: 1 — Open Core
+// Consensus logic: maximum signal wins. If 1 and -1 meet, they stay -1? 
+// No, consensus(1, -1) usually depends on implementation.
+// Built-in consensus(a, b) uses logical merge: max signal wins, not arithmetic.
+
+fn ternary_consensus_3(a: trit, b: trit, c: trit) -> trit {
+    let result_ab: trit = consensus(a, b);
+    return consensus(result_ab, c);
+}
+
+fn main() -> trit {
+    // Test cases
+    if ternary_consensus_3(affirm, tend, tend) != affirm { return reject; }
+    if ternary_consensus_3(reject, tend, tend) != reject { return reject; }
+    if ternary_consensus_3(tend, tend, tend)   != tend   { return reject; }
+    
+    // Test mixed (implementation defined, but usually affirm wins over tend)
+    if ternary_consensus_3(affirm, reject, tend) != consensus(affirm, reject) { return reject; }
+
+    return affirm;
+}
