@@ -399,9 +399,9 @@ impl BetVm {
                     self.stack.push(Value::Float(f64::from_le_bytes(b)));
                 }
                 0x1e => { // Tdiv
-                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    match (a.clone(), b.clone()) {
+                    let b_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    match (a_val.clone(), b_val.clone()) {
                         (Value::Int(av), Value::Int(bv)) => {
                             if bv == 0 { return Err(VmError::RuntimeError("Division by zero".into())); }
                             self.stack.push(Value::Int(av / bv));
@@ -410,18 +410,36 @@ impl BetVm {
                             if bv == 0.0 { return Err(VmError::RuntimeError("Division by zero".into())); }
                             self.stack.push(Value::Float(av / bv));
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Int(av), Value::Trit(bv)) => {
+                            let b = bv as i64;
+                            if b == 0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Int(av / b));
+                        }
+                        (Value::Trit(av), Value::Int(bv)) => {
+                            if bv == 0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Int(av as i64 / bv));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a_val, b_val)) }),
                     }
                 }
                 0x1f => { // Tmod
-                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    match (a.clone(), b.clone()) {
+                    let b_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    match (a_val.clone(), b_val.clone()) {
                         (Value::Int(av), Value::Int(bv)) => {
                             if bv == 0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
                             self.stack.push(Value::Int(av % bv));
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "Int".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Int(av), Value::Trit(bv)) => {
+                            let b = bv as i64;
+                            if b == 0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                            self.stack.push(Value::Int(av % b));
+                        }
+                        (Value::Trit(av), Value::Int(bv)) => {
+                            if bv == 0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                            self.stack.push(Value::Int(av as i64 % bv));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", (a_val, b_val)) }),
                     }
                 }
                 0x20 => { // Tprint
