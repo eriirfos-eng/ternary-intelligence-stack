@@ -1,0 +1,31 @@
+// stdlib/logic/ternary_disjunction.tern
+// Demonstrates: Kleene three-valued disjunction (OR) in ternary.
+// Tier: 1 — Open Core
+// Kleene OR: affirm (1) is dominant, reject (-1) is identity, tend (0) is uncertain.
+
+fn ternary_or(a: trit, b: trit) -> trit {
+    match a {
+        1 => { return affirm; }
+        0 => {
+            match b {
+                1 => { return affirm; }
+                0 => { return tend;   }
+                -1 => { return tend;  }
+            }
+        }
+        -1 => { return b; }
+    }
+}
+
+fn main() -> trit {
+    // Test cases
+    if ternary_or(affirm, affirm) != affirm { return reject; }
+    if ternary_or(affirm, tend)   != affirm { return reject; }
+    if ternary_or(affirm, reject) != affirm { return reject; }
+    if ternary_or(tend, tend)     != tend   { return reject; }
+    if ternary_or(tend, reject)   != tend   { return reject; }
+    if ternary_or(reject, reject) != reject { return reject; }
+    if ternary_or(reject, tend)   != tend   { return reject; }
+
+    return affirm;
+}
