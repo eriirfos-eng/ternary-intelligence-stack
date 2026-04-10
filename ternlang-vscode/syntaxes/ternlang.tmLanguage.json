@@ -49,6 +49,10 @@
           "match": "\\b(spawn|send|await|remote|nodeid)\\b"
         },
         {
+          "name": "constant.language.trit.ternlang",
+          "match": "\\b(affirm|tend|reject)\\b"
+        },
+        {
           "name": "keyword.other.ternlang",
           "match": "\\b(cast|consensus|invert|truth|hold|conflict|matmul|sparsity|shape)\\b"
         }
@@ -106,7 +110,7 @@
       "patterns": [
         {
           "name": "keyword.operator.ternlang",
-          "match": "(==|!=|=>|->|::|&&|\\|\\||\\+|-|\\*|=|\\?|@)"
+          "match": "(==|!=|<=|>=|=>|->|::|&&|\\|\\||\\+|-|\\*|=|\\?|@)"
         }
       ]
     },
