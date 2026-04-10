@@ -7,6 +7,7 @@ pub struct BytecodeEmitter {
     symbols: std::collections::HashMap<String, u8>,
     func_addrs: std::collections::HashMap<String, u16>,
     break_patches: Vec<usize>,
+    continue_patches: Vec<usize>,
     next_reg: u8,
     struct_layouts: std::collections::HashMap<String, Vec<String>>,
     agent_type_ids: std::collections::HashMap<String, u16>,
@@ -20,6 +21,7 @@ impl BytecodeEmitter {
             symbols: std::collections::HashMap::new(),
             func_addrs: std::collections::HashMap::new(),
             break_patches: Vec::new(),
+            continue_patches: Vec::new(),
             next_reg: 0,
             struct_layouts: std::collections::HashMap::new(),
             agent_type_ids: std::collections::HashMap::new(),
@@ -233,7 +235,11 @@ impl BytecodeEmitter {
                 let i_reg = self.next_reg; self.next_reg += 1;
                 self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes());
                 self.code.push(0x08); self.code.push(i_reg);
+                
                 let top = self.code.len() as u16;
+                let pre_break = self.break_patches.len();
+                let pre_cont = self.continue_patches.len();
+
                 self.code.push(0x09); self.code.push(i_reg);
                 self.code.push(0x09); self.code.push(r_reg);
                 self.code.push(0x14);
@@ -252,6 +258,11 @@ impl BytecodeEmitter {
                 self.symbols.insert(var.clone(), v_reg);
                 self.code.push(0x08); self.code.push(v_reg);
                 self.emit_stmt(body);
+                
+                let cont_addr = self.code.len() as u16;
+                let cs: Vec<usize> = self.continue_patches.drain(pre_cont..).collect();
+                for p in cs { self.patch_u16(p, cont_addr); }
+
                 self.code.push(0x09); self.code.push(i_reg);
                 self.code.push(0x17); self.code.extend_from_slice(&1i64.to_le_bytes());
                 self.code.push(0x18);
@@ -261,22 +272,72 @@ impl BytecodeEmitter {
                 self.patch_u16(back, top);
                 let end = self.code.len() as u16;
                 self.patch_u16(neg, end); self.patch_u16(zero, end);
+                let bs: Vec<usize> = self.break_patches.drain(pre_break..).collect();
+                for p in bs { self.patch_u16(p, end); }
+            }
+            Stmt::WhileTernary { condition, on_pos, on_zero, on_neg } => {
+                let top = self.code.len() as u16;
+                let pre_break = self.break_patches.len();
+                let pre_cont = self.continue_patches.len();
+
+                self.emit_expr(condition);
+                self.code.push(0x0a);
+                let pos_patch = self.code.len() + 1;
+                self.code.push(0x05); self.code.extend_from_slice(&[0, 0]);
+                self.code.push(0x0a);
+                let zero_patch = self.code.len() + 1;
+                self.code.push(0x06); self.code.extend_from_slice(&[0, 0]);
+                self.code.push(0x0c);
+                self.emit_stmt(on_neg);
+                let back_neg = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                self.patch_u16(back_neg, top);
+
+                let pos_addr = self.code.len() as u16;
+                self.patch_u16(pos_patch, pos_addr);
+                self.code.push(0x0c);
+                self.emit_stmt(on_pos);
+                let back_pos = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                self.patch_u16(back_pos, top);
+
+                let zero_addr = self.code.len() as u16;
+                self.patch_u16(zero_patch, zero_addr);
+                self.code.push(0x0c);
+                self.emit_stmt(on_zero);
+                let back_zero = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                self.patch_u16(back_zero, top);
+
+                let end = self.code.len() as u16;
+                let cs: Vec<usize> = self.continue_patches.drain(pre_cont..).collect();
+                for p in cs { self.patch_u16(p, top); }
+                let bs: Vec<usize> = self.break_patches.drain(pre_break..).collect();
+                for p in bs { self.patch_u16(p, end); }
             }
             Stmt::Loop { body } => {
                 let top = self.code.len() as u16;
-                let pre = self.break_patches.len();
+                let pre_break = self.break_patches.len();
+                let pre_cont = self.continue_patches.len();
                 self.emit_stmt(body);
                 let back = self.code.len() + 1;
                 self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
                 self.patch_u16(back, top);
                 let end = self.code.len() as u16;
-                let ps: Vec<usize> = self.break_patches.drain(pre..).collect();
-                for p in ps { self.patch_u16(p, end); }
+                let cs: Vec<usize> = self.continue_patches.drain(pre_cont..).collect();
+                for p in cs { self.patch_u16(p, top); }
+                let bs: Vec<usize> = self.break_patches.drain(pre_break..).collect();
+                for p in bs { self.patch_u16(p, end); }
             }
             Stmt::Break => {
                 let p = self.code.len() + 1;
                 self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
                 self.break_patches.push(p);
+            }
+            Stmt::Continue => {
+                let p = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                self.continue_patches.push(p);
             }
             Stmt::Send { target, message } => {
                 self.emit_expr(target);
@@ -329,13 +390,27 @@ impl BytecodeEmitter {
                 match op { UnOp::Neg => self.code.push(0x04) }
             }
             Expr::Call { callee, args } => {
-                for a in args { self.emit_expr(a); }
                 match callee.as_str() {
-                    "consensus" => { if args.len() == 2 { self.code.push(0x0e); } }
+                    "print" | "println" => {
+                        for a in args {
+                            self.emit_expr(a);
+                            self.code.push(0x20); // TPRINT
+                        }
+                        self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); // return hold()
+                    }
+                    "consensus" => {
+                        for a in args { self.emit_expr(a); }
+                        if args.len() == 2 { self.code.push(0x0e); }
+                    }
+                    "mul" => {
+                        for a in args { self.emit_expr(a); }
+                        if args.len() == 2 { self.code.push(0x03); }
+                    }
                     "truth" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Affirm])); }
                     "hold" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); }
                     "conflict" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Reject])); }
                     _ => {
+                        for a in args { self.emit_expr(a); }
                         if let Some(&addr) = self.func_addrs.get(callee) {
                             self.code.push(0x10); self.code.extend_from_slice(&addr.to_le_bytes());
                         } else {

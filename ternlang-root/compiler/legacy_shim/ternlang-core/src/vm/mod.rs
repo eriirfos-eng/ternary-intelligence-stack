@@ -280,7 +280,13 @@ impl BetVm {
                             let r = if av < y { Trit::Affirm } else if av == y { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "Int or Float".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Trit(x), Value::Trit(y)) => {
+                            let av = x as i64;
+                            let bv = y as i64;
+                            let r = if av < bv { Trit::Affirm } else if av == bv { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
                 0x15 => { // Tgreater
@@ -305,7 +311,13 @@ impl BetVm {
                             let r = if av > y { Trit::Affirm } else if av == y { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "Int or Float".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Trit(x), Value::Trit(y)) => {
+                            let av = x as i64;
+                            let bv = y as i64;
+                            let r = if av > bv { Trit::Affirm } else if av == bv { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
                 0x16 => { // Teq
