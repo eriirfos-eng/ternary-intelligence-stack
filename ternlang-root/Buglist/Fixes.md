@@ -73,3 +73,24 @@ This file tracks all architectural improvements, bug fixes, and feature addition
     - Implemented `TjmpEqInt` (0x25) for arbitrary integer pattern matching.
     - Codegen now correctly cleans the stack after match completion or fallthrough.
 
+## Known Limitations / Unresolved (2026-04-10)
+
+### BUG-L01 — Block comments (`/* */`) are not supported
+
+**Trigger:** Any `.tern` file containing `/* ... */` block comments.
+**Symptom:** `Parse stmt error: UnexpectedToken("Slash")` — program may exit successfully but emits only 3 bytes and skips all real logic.
+**Diagnosis:** The Ternlang lexer does not have a block comment token rule. The `/` character is tokenized as a divide operator, and `*` starts multiplication, causing the comment to be parsed as an expression — which fails.
+**Fix:** Not fixed (compiler change required to add block comment lexer rule).
+**Workaround:** Use `//` line comments exclusively. Replace `/* comment */` with `// comment` or remove entirely. Empty match arms that previously held only a block comment must be given a valid statement (e.g., `let _h: trit = hold();`).
+**Status:** Unresolved — needs lexer change in `ternlang-core/src/` to recognize `/* ... */` token span.
+**Affected file:** `stdlib/safety/confidence_gate.tern` was broken by this. Rewritten 2026-04-10 to use `fn main()` entry point + helper function pattern; now passes.
+
+### BUG-L02 — `parse_program()` fails on mixed function + top-level code in fallback mode
+
+**Trigger:** `.tern` files where `parse_program()` fails and the fallback stmt-by-stmt parser encounters a `fn` keyword as the first or second token.
+**Symptom:** `Parse stmt error: UnexpectedToken("Fn")` — only 3 bytes emitted, logic does not run.
+**Diagnosis:** The fallback parser treats `fn` as an unexpected statement-level token. Full `parse_program()` must succeed for function-containing files to work.
+**Fix:** Not fixed in compiler.
+**Workaround:** Ensure all function-containing files parse cleanly with `parse_program()`. Use `fn main() -> trit { ... }` as the entry point. Avoid top-level code mixed with function definitions if parse errors occur.
+**Status:** Unresolved — affects `stdlib/math/ternary_median.tern` (pre-existing).
+
