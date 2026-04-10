@@ -488,19 +488,22 @@ impl BetVm {
                     let col = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let row = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
+                    let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
                     let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
                     match (rf.clone(), val.clone()) {
                         (Value::TensorRef(idx), Value::Trit(t)) => {
-                            if idx >= self.tensors.len() {
-                                return Err(VmError::TensorNotAllocated(idx));
-                            }
+                            if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
                             let tensor = &mut self.tensors[idx];
                             let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
-                            if pos >= tensor.data.len() {
-                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() });
-                            }
+                            if pos >= tensor.data.len() { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() }); }
                             tensor.data[pos] = t;
+                        }
+                        (Value::TensorRef(idx), Value::Int(v)) => {
+                            if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
+                            let tensor = &mut self.tensors[idx];
+                            let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
+                            if pos >= tensor.data.len() { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() }); }
+                            tensor.data[pos] = Trit::from(v as i8);
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "TensorRef, Trit".into(), found: format!("{:?}", (rf, val)) }),
                     }

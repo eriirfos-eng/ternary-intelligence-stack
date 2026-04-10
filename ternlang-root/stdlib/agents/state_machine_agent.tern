@@ -1,0 +1,53 @@
+// stdlib/agents/state_machine_agent.tern
+// Demonstrates: A state-based agent that transitions through integer states using ternary inputs.
+// Tier: 2 — Pro Standard
+
+fn next_state(current: int, input: trit) -> int {
+    match current {
+        1 => { // State 1: IDLE
+            match input {
+                 1 => { return 2; } // Affirm moves to BUSY
+                 0 => { return 1; } // Hold stays in IDLE
+                -1 => { return 1; } // Reject stays in IDLE
+            }
+        }
+        2 => { // State 2: BUSY
+            match input {
+                 1 => { return 3; } // Affirm moves to COMPLETED
+                 0 => { return 2; } // Hold stays in BUSY
+                -1 => { return 1; } // Reject resets to IDLE
+            }
+        }
+        3 => { // State 3: COMPLETED
+            match input {
+                -1 => { return 1; } // Reject resets to IDLE
+                 1 => { return 3; } // Stay completed
+                 0 => { return 3; } // Stay completed
+            }
+        }
+        // Catch-all for safety
+        let _ => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let state: int = 1;
+    
+    // Transition 1 -> 2
+    state = next_state(state, 1);
+    if state != 2 { return conflict(); }
+    
+    // Transition 2 -> 2 (hold)
+    state = next_state(state, 0);
+    if state != 2 { return conflict(); }
+    
+    // Transition 2 -> 3
+    state = next_state(state, 1);
+    if state != 3 { return conflict(); }
+    
+    // Transition 3 -> 1 (reset)
+    state = next_state(state, -1);
+    if state != 1 { return conflict(); }
+    
+    return truth();
+}

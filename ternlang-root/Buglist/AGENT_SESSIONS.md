@@ -28,6 +28,29 @@
 
 ---
 
+## 2026-04-10 14:00 — 6 files committed (Claude session — Gemini out of quota)
+
+**Batches:**
+- stdlib/astro/ — launch_window_gate, reentry_heat_gate, telemetry_anomaly (3 files)
+- stdlib/bench/ — opcode_coverage, inference_latency_gate (2 files)
+- stdlib/benchmarks/ — sparse_matmul rewrite (1 file)
+
+**Also done this session:**
+- stdlib/safety/confidence_gate.tern — block comment fix (BUG-L01) + fn main() rewrite
+- stdlib/nn/ternary_relu.tern — removed debug println(i)
+- vm/mod.rs Tset (0x23) — Int polymorphism fix (Fixes.md entry #23)
+- stdlib/qnn/ — placeholder ROADMAP.md created
+- Buglist/AGENT_SESSIONS.md — bootstrap log created
+- GEMINI.md — hardcoded parameter sheet committed
+- STDLIB_AGENT.md — v2.5 with weakness scan + anti-overlap
+
+**Do not work in these categories next session:** safety, astro, bench, benchmarks, math, logic (recently covered by prior sessions)
+
+**Compiler fixes this session:** BUG-L01 workaround applied (confidence_gate.tern — not fixed in compiler)
+**VM errors encountered:** BET-007 (Tset Int polymorphism) — FIXED in vm/mod.rs
+
+---
+
 ## Template for your session entry (copy this, fill in, append at bottom)
 
 ```

@@ -134,6 +134,17 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Status:** Unresolved — affects `stdlib/math/ternary_median.tern` (pre-existing).
 
 
+## 2026-04-10 — Tset (0x23) Int polymorphism + error message fix
+
+**Trigger:** Assigning integer loop counters (e.g. `i`) into tensor slots via `x[i] = ...` where `i` is `Int`.
+**Symptom:** `BET-007` TypeMismatch — expected TensorRef, Trit but found (TensorRef(0), Int(-1)).
+**Diagnosis:** `Tset` opcode only matched `(Value::TensorRef, Value::Trit)`. When the value being stored was `Value::Int` (common when loop counter or integer expression is used), the dispatch fell through to the error arm. Additionally, the row mismatch error incorrectly formatted `col` instead of `row` in its diagnostic message.
+**Fix:** Added `(Value::TensorRef(idx), Value::Int(v))` arm to Tset match in `vm/mod.rs` — converts via `Trit::from(v as i8)`. Fixed row error message to format `row` not `col`.
+**Status:** Fixed — `stdlib/nn/ternary_relu.tern` now passes.
+**File:** `compiler/legacy_shim/ternlang-core/src/vm/mod.rs` (0x23 dispatch).
+
+---
+
 ## 2026-04-10 — Add LessEqual (<=) and GreaterEqual (>=) operators
 
 **Trigger:** Writing stdlib/safety/confirmation_gate.tern which required count >= required.
