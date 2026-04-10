@@ -1,0 +1,23 @@
+// stdlib/math/ternary_sign.tern
+// Demonstrates: Sign function converting integer to ternary trit.
+// Tier: 1 — Open Core
+// Returns affirm (1) for positive, reject (-1) for negative, tend (0) for zero.
+
+fn ternary_sign(val: int) -> trit {
+    if val > 0 {
+        return affirm;
+    }
+    if val < 0 {
+        return reject;
+    }
+    return tend;
+}
+
+fn main() -> trit {
+    // Test cases
+    if ternary_sign(10)  != affirm { return reject; }
+    if ternary_sign(-5)  != reject { return reject; }
+    if ternary_sign(0)   != tend   { return reject; }
+
+    return affirm;
+}
