@@ -1,6 +1,6 @@
 # Ternary Intelligence Stack (TIS)
 
-**A systems programming language, compiler, and ML inference runtime built on balanced ternary logic.**
+**Ternlang is a systems programming language, compiler, and ML inference runtime built on balanced ternary logic.**
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](ternlang-root/LICENSE)
