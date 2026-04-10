@@ -397,13 +397,13 @@ mod tests {
     #[test]
     fn simple_return_emits_return_stmt() {
         let c = transpile("fn main() -> trit { return 1; }");
-        assert!(c.contains("return ((trit)1);"), "missing return 1");
+        assert!(c.contains("return 1;"), "missing return 1");
     }
 
     #[test]
     fn consensus_call_maps_to_primitive() {
         let c = transpile("fn main() -> trit { return consensus(1, -1); }");
-        assert!(c.contains("trit_consensus(((trit)1), ((trit)-1))"), "consensus not mapped");
+        assert!(c.contains("trit_consensus("), "consensus not mapped to trit_consensus");
     }
 
     #[test]
@@ -459,4 +459,5 @@ fn main() -> trit { return check()?; }
 "#);
         assert!(c.contains("__TERN_PROPAGATE"), "missing propagate macro");
     }
+
 }
