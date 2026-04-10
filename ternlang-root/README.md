@@ -7,6 +7,7 @@
 [![tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![MCP](https://img.shields.io/badge/MCP-13%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
+[![VS Code](https://img.shields.io/badge/VS%20Code-Open%20VSX%20v0.2.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
 [![Linguist PR](https://img.shields.io/badge/GitHub%20Linguist-PR%20pending-yellow)](https://github.com/github/linguist/pulls)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 [![Human Oversight](https://img.shields.io/badge/Human%20Oversight-Article%2014%20Ready-003399)](https://ternlang.com/compliance)
@@ -109,6 +110,47 @@ cd ternary-intelligence-stack/ternlang-root
 cargo build --release
 ./target/release/ternlang run examples/03_rocket_launch.tern
 ```
+
+---
+
+## VS Code Extension
+
+[![Open VSX](https://img.shields.io/badge/Open%20VSX-rfi--irfos.ternlang%20v0.2.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
+
+Install from the [Open VSX Registry](https://open-vsx.org/extension/rfi-irfos/ternlang) (works in VS Code, VSCodium, Gitpod, and any Open VSX-compatible editor):
+
+```
+ext install rfi-irfos.ternlang
+```
+
+Or install the VSIX directly:
+
+```bash
+code --install-extension ternlang-vscode/ternlang-0.2.0.vsix
+```
+
+**What you get:**
+
+| Feature | Details |
+|---------|---------|
+| Syntax highlighting | All keywords, types, trit literals (`affirm`/`tend`/`reject`), operators (`&&` `\|\|` `<=` `>=`), `@sparseskip` directive |
+| `.tern` file association | Opens as Ternlang automatically |
+| LSP diagnostics | Hover, completions, and error underlining via `ternlang-lsp` |
+| Language configuration | Auto-close brackets/braces, comment toggle (`Ctrl+/`) |
+
+**LSP setup** (diagnostics require the language server binary):
+
+```bash
+# Build ternlang-lsp first
+cd ternlang-root && cargo build --release --bin ternlang-lsp
+
+# Copy binary into the extension's bin/ folder
+cp target/release/ternlang-lsp ../ternlang-vscode/bin/
+```
+
+Once the binary is in place, diagnostics activate automatically when you open any `.tern` file.
+
+> **VS Code Marketplace:** submission pending publisher verification. Use Open VSX or the VSIX in the meantime — both are identical.
 
 ---
 
