@@ -1,0 +1,78 @@
+// stdlib/errors/BET-007.tern
+// Error: BET-007 — Runtime Type Mismatch
+// Tier: 1 — Open Core
+//
+// "Square peg, round hole. The VM expected a trit on the stack but found an int.
+//  The types got mixed somewhere between the call site and the instruction."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// An instruction that expects a specific value type (Trit, Int, Float, TensorRef)
+// was executed but found a different type on the operand stack.
+//
+// This is the RUNTIME version of TYPE-001. It means the static type checker
+// did not catch the mismatch — either because type annotations were missing
+// or because the error is on a code path the checker couldn't trace statically.
+//
+// WRONG (will trigger BET-007 at runtime):
+//
+//   fn mixed(v: trit) -> trit {
+//       match v {
+//           -1 => { return conflict(); }   // Trit pushed ✓
+//            0 => { return hold();    }   // Trit pushed ✓
+//            1 => { return 42;        }   // Int pushed!  ← BET-007
+//       }
+//   }
+//
+//   // The TADD instruction expects two Trit values.
+//   // If one is an Int, the VM raises BET-007.
+//
+// ─── BET-007 vs TYPE-001 ──────────────────────────────────────────────────────
+//
+//   TYPE-001 = caught at compile time (semantic phase). Better.
+//   BET-007  = caught at runtime (VM phase). Means the checker missed something.
+//
+//   If you see BET-007 where you expect TYPE-001, please report it —
+//   it means the type checker has a coverage gap.
+//
+// ─── How to prevent BET-007 ───────────────────────────────────────────────────
+//
+//   1. Add explicit type annotations to every 'let' binding.
+//      The more annotations, the more the compiler can catch statically.
+//
+//   2. Use semantic helpers (truth/hold/conflict) instead of bare literals
+//      in trit-typed contexts — they are typed functions, not literals.
+//
+//   3. If a function can return different types on different paths,
+//      you have a design problem. Decide the type and make it consistent.
+//
+// ─── Correct pattern — consistent types on all paths ─────────────────────────
+
+fn pure_gate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }   // Trit on all arms ✓
+         0 => { return hold();    }   // Trit on all arms ✓
+         1 => { return truth();   }   // Trit on all arms ✓
+    }
+}
+
+fn int_categorize(score: int) -> trit {
+    // Takes an int, returns trit — clear boundary, explicit conversion:
+    if score > 0 {
+        return truth();
+    }
+    if score < 0 {
+        return conflict();
+    }
+    return hold();
+}
+
+let raw_score: int  = 5;
+let verdict:   trit = int_categorize(raw_score);
+let final_out: trit = pure_gate(verdict);
+
+match final_out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

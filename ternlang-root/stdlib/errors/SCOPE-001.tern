@@ -1,0 +1,60 @@
+// stdlib/errors/SCOPE-001.tern
+// Error: SCOPE-001 — Undefined Variable
+// Tier: 1 — Open Core
+//
+// "Hold state — the variable doesn't exist in this scope.
+//  You can't use a truth you never declared."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The name resolver searched all enclosing scopes and found no 'let'
+// declaration for this identifier at or before the point of use.
+//
+// WRONG (will trigger SCOPE-001):
+//
+//   let result: trit = process(signal);   // 'signal' was never declared
+//
+//   fn gate(v: trit) -> trit {
+//       let inner: trit = truth();
+//       return inner;
+//   }
+//   let x: trit = inner;   // 'inner' is only in scope inside gate()
+//
+// ─── Scope rules in Ternlang ─────────────────────────────────────────────────
+//
+//   1. Variables are block-scoped — a 'let' inside { } is invisible outside.
+//   2. Function parameters are only in scope within that function's body.
+//   3. Declarations are NOT hoisted — you must declare before you use.
+//   4. Match arms do not leak their locals to the outer scope.
+//
+// ─── Common fix patterns ──────────────────────────────────────────────────────
+//
+//   Problem: used before declared     →  Move the 'let' above the usage
+//   Problem: typo in name             →  Check spelling: 'signal' vs 'singal'
+//   Problem: variable from inner scope→  Pass it as a function argument instead
+//   Problem: forgot to pass as param  →  Add it to the function signature
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Declare before use:
+let signal: trit = 1;
+let threshold: trit = 0;
+
+fn process(s: trit, t: trit) -> trit {
+    // Both 's' and 't' are in scope here — passed as arguments:
+    let merged: trit = consensus(s, t);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+// Variables declared above are in scope here:
+let result: trit = process(signal, threshold);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

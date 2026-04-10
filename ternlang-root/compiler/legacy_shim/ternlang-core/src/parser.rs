@@ -18,13 +18,13 @@ impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::UnexpectedToken(tok) =>
-                write!(f, "[PARSE-001] Unexpected token '{tok}' — the lexer hit something it didn't expect. Check your syntax."),
+                write!(f, "[PARSE-001] Unexpected token '{tok}' — the lexer hit something it didn't expect. Binary habit? Check 'fn' vs 'func', trit vs bool.\n            → details: stdlib/errors/PARSE-001.tern  |  ternlang errors PARSE-001"),
             Self::ExpectedToken(expected, found) =>
-                write!(f, "[PARSE-002] Expected {expected} but found '{found}'. The grammar demands it."),
+                write!(f, "[PARSE-002] Expected {expected} but found '{found}'. Missing type annotation, brace, or semicolon?\n            → details: stdlib/errors/PARSE-002.tern  |  ternlang errors PARSE-002"),
             Self::InvalidTrit(val) =>
-                write!(f, "[PARSE-003] '{val}' is not a valid trit. Trits are -1, 0, or +1. No in-betweens."),
+                write!(f, "[PARSE-003] '{val}' is not a valid trit. Trits are -1, 0, or +1 — the universe has exactly three states.\n            → details: stdlib/errors/PARSE-003.tern  |  ternlang errors PARSE-003"),
             Self::NonExhaustiveMatch(msg) =>
-                write!(f, "[PARSE-004] Non-exhaustive match: {msg}. Ternary has three states — cover all three or the compiler won't let you through."),
+                write!(f, "[PARSE-004] Non-exhaustive match: {msg}. Ternary has three states — cover -1, 0, and +1 or the compiler won't let you through.\n            → details: stdlib/errors/PARSE-004.tern  |  ternlang errors PARSE-004"),
         }
     }
 }

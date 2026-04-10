@@ -1,0 +1,53 @@
+// stdlib/errors/PARSE-002.tern
+// Error: PARSE-002 — Expected Token Not Found
+// Tier: 1 — Open Core
+//
+// "The grammar was expecting something specific — like a closing brace
+//  or a type annotation — and got nothing. The compiler is not a mind reader."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The parser was in a state where exactly one token was valid next,
+// and found something else (or nothing) instead.
+//
+// WRONG (will trigger PARSE-002):
+//
+//   let x = 1;              // missing ': trit' — type annotation required
+//   let x: trit = 1        // missing ';' — semicolon required
+//   fn f(v) -> trit { }    // missing ': trit' on parameter
+//   fn f(v: trit) { }      // missing '-> trit' return type
+//   match v {               // opening brace but no arms and no closing brace
+//
+// ─── The five things most often missing ──────────────────────────────────────
+//
+//   1. Type annotation on 'let':       let x: trit = 1;
+//                                              ^^^^^
+//   2. Type annotation on parameter:   fn f(v: trit) -> trit { ... }
+//                                               ^^^^^
+//   3. Return type arrow:              fn f(v: trit) -> trit { ... }
+//                                                    ^^^^^^^^
+//   4. Closing brace:                  fn f(v: trit) -> trit {
+//                                          ...
+//                                      }   ← this one
+//   5. Semicolon after statement:      let x: trit = truth();
+//                                                           ^
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn classify(signal: trit) -> trit {
+    let threshold: trit = 1;
+    match signal {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return threshold; }
+    }
+}
+
+let s: trit = 0;
+let out: trit = classify(s);
+
+match out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

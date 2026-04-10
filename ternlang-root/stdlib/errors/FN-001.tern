@@ -1,0 +1,50 @@
+// stdlib/errors/FN-001.tern
+// Error: FN-001 — Undefined Function
+// Tier: 1 — Open Core
+//
+// "You called a function that doesn't exist. Even in ternary, three states
+//  don't include 'imaginary'. Declare it or fix the typo."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A call expression referenced a name that has no 'fn' declaration
+// in scope and is not a built-in function.
+//
+// WRONG (will trigger FN-001):
+//
+//   let x: trit = evaluate(1);   // 'evaluate' never declared
+//   let x: trit = Evaluate(1);   // case matters — function names are case-sensitive
+//   let x: trit = evalulate(1);  // typo: 'evalulate' instead of 'evaluate'
+//
+// ─── Built-in functions (always available, no declaration needed) ─────────────
+//
+//   truth()           → trit  (+1)
+//   hold()            → trit  (0)
+//   conflict()        → trit  (-1)
+//   consensus(a, b)   → trit  (logical merge of two trits)
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Declare the function BEFORE calling it:
+fn evaluate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn chain_evaluate(a: trit, b: trit) -> trit {
+    // Both functions are declared above — they are in scope:
+    let first:  trit = evaluate(a);
+    let second: trit = evaluate(b);
+    return consensus(first, second);
+}
+
+let result: trit = chain_evaluate(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

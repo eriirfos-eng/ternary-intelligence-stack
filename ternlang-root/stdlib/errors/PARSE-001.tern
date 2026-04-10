@@ -1,0 +1,50 @@
+// stdlib/errors/PARSE-001.tern
+// Error: PARSE-001 — Unexpected Token
+// Tier: 1 — Open Core
+//
+// "The lexer hit something it didn't expect and entered a hold state.
+//  It's not angry — just confused."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The tokenizer encountered a character or keyword that does not exist
+// in the .tern grammar at this position. Most common cause: binary habits.
+//
+// WRONG (will trigger PARSE-001):
+//
+//   func my_fn() -> trit { ... }   // 'func' is not a keyword — use 'fn'
+//   def my_fn() -> trit { ... }    // 'def' is Python — use 'fn'
+//   let x: trit = true;            // 'true' is not a trit — use 1
+//   let x: trit = false;           // 'false' is not a trit — use -1
+//   if (a && b) { ... }            // '&&' is not an operator — use consensus()
+//   if (a == b) { ... }            // '==' is not an operator in this context
+//
+// ─── Binary habit translation table ──────────────────────────────────────────
+//
+//   Python/JS/Rust   →   Ternlang
+//   true             →   1  or  truth()
+//   false            →   -1 or  conflict()
+//   None / null      →   0  or  hold()
+//   def / func       →   fn
+//   &&               →   consensus(a, b)
+//   ||               →   consensus(a, b)    (ternary OR is consensus)
+//   !x               →   match x { -1 => 1, 0 => 0, 1 => -1 }
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn describe_signal(s: trit) -> trit {
+    match s {
+        -1 => { return conflict(); }   // reject — strong negative signal
+         0 => { return hold();    }   // hold — insufficient evidence
+         1 => { return truth();   }   // affirm — strong positive signal
+    }
+}
+
+let input: trit = 1;
+let result: trit = describe_signal(input);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
