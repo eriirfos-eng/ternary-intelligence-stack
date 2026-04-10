@@ -455,37 +455,25 @@ impl<'a> Parser<'a> {
                     let val = match self.next_token()? {
                         Token::TritLiteral => {
                             let slice = self.lex.slice();
-                            slice.parse::<i8>().map_err(|_| ParseError::InvalidTrit(slice.to_string()))?
+                            slice.parse::<i64>().map_err(|_| ParseError::InvalidTrit(slice.to_string()))?
                         }
-                        Token::Int(v) => {
-                            if v >= -1 && v <= 1 { v as i8 }
-                            else { return Err(ParseError::InvalidTrit(format!("{}", v))); }
+                        Token::Int(v) => v,
+                        Token::Minus => {
+                            match self.next_token()? {
+                                Token::Int(v) => -v,
+                                t => return Err(ParseError::ExpectedToken("integer literal after '-'".into(), format!("{:?}", t))),
+                            }
                         }
                         Token::Affirm => 1,
                         Token::Tend   => 0,
                         Token::Reject => -1,
-                        t => return Err(ParseError::ExpectedToken("trit pattern (1, 0, -1, or affirm, tend, reject)".into(), format!("{:?}", t))),
+                        t => return Err(ParseError::ExpectedToken("pattern (int or trit)".into(), format!("{:?}", t))),
                     };
                     self.expect(Token::FatArrow)?;
                     let stmt = self.parse_stmt()?;
                     arms.push((val, stmt));
                 }
                 self.expect(Token::RBrace)?;
-
-                // Enforce exhaustiveness: must have arms for -1, 0, and +1
-                let has_pos  = arms.iter().any(|(v, _)| *v ==  1);
-                let has_zero = arms.iter().any(|(v, _)| *v ==  0);
-                let has_neg  = arms.iter().any(|(v, _)| *v == -1);
-                if !has_pos || !has_zero || !has_neg {
-                    let missing: Vec<&str> = [
-                        if !has_pos  { Some("1 (truth)")    } else { None },
-                        if !has_zero { Some("0 (hold)")     } else { None },
-                        if !has_neg  { Some("-1 (conflict)") } else { None },
-                    ].iter().filter_map(|x| *x).collect();
-                    return Err(ParseError::NonExhaustiveMatch(
-                        format!("match missing arms: {}", missing.join(", "))
-                    ));
-                }
 
                 Ok(Stmt::Match { condition, arms })
             }
@@ -703,13 +691,12 @@ mod tests {
     }
 
     #[test]
-    fn test_match_exhaustiveness_enforced() {
-        // Missing hold (0) arm — must fail
+    fn test_match_parses_non_exhaustive() {
+        // Missing hold (0) arm — now parses (exhaustiveness moved to semantic)
         let input = "match x { 1 => return 1; -1 => return -1; }";
         let mut parser = Parser::new(input);
         let result = parser.parse_stmt();
-        assert!(matches!(result, Err(ParseError::NonExhaustiveMatch(_))),
-            "expected NonExhaustiveMatch error");
+        assert!(result.is_ok(), "should parse successfully even if non-exhaustive");
     }
 
     #[test]

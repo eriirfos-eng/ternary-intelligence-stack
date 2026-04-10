@@ -240,9 +240,27 @@ impl SemanticAnalyzer {
 
             Stmt::Match { condition, arms } => {
                 let cond_ty = self.infer_expr_type(condition)?;
-                if cond_ty != Type::Trit {
+                if cond_ty != Type::Trit && cond_ty != Type::Int {
                     return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: cond_ty });
                 }
+                
+                if cond_ty == Type::Trit {
+                    // Enforce exhaustiveness and value range for Trit match
+                    let has_pos = arms.iter().any(|(v, _)| *v == 1);
+                    let has_zero = arms.iter().any(|(v, _)| *v == 0);
+                    let has_neg = arms.iter().any(|(v, _)| *v == -1);
+                    if !has_pos || !has_zero || !has_neg {
+                        // We reuse TypeMismatch as a generic error here for simplicity
+                        // in the current schema if a specific exhaustiveness error isn't available.
+                        return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: cond_ty });
+                    }
+                    for (val, _) in arms {
+                        if *val < -1 || *val > 1 {
+                            return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: Type::Int });
+                        }
+                    }
+                }
+
                 for (_val, arm_stmt) in arms {
                     self.check_stmt(arm_stmt)?;
                 }

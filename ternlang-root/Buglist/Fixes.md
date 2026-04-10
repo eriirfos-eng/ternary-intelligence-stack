@@ -61,5 +61,15 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 14. **Directive Support (@)**
     - Parser and AST updated to handle `@` decorated functions (e.g., `@sparseskip`).
 
-15. **Stack Management for Early Exits**
+15. Stack Management for Early Exits
     - Fixed stack depth tracking in the emitter to ensure `?` and `return` don't leave dangling values on the VM stack during nested calls.
+
+## Recent Fixes (Batch 3 - 2026-04-10)
+
+16. **Match Statement for Integers**
+    - `Match` now supports `Int` literals and negative patterns (e.g., `-5 => ...`).
+    - Moved exhaustiveness check from Parser to Semantic analyzer.
+    - `TjmpPos` (0x05), `TjmpZero` (0x06), `TjmpNeg` (0x07) updated to **peek** instead of pop, and use **exact equality** (1, 0, -1) rather than sign checks.
+    - Implemented `TjmpEqInt` (0x25) for arbitrary integer pattern matching.
+    - Codegen now correctly cleans the stack after match completion or fallthrough.
+
