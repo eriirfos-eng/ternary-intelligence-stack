@@ -1,0 +1,29 @@
+// stdlib/logic/ternary_nand.tern
+// Demonstrates: Ternary NAND logic (NOT of the minimum).
+// Tier: 1 — Open Core
+
+fn t_nand(a: trit, b: trit) -> trit {
+    let min_val: trit = 0;
+    if a < b { min_val = a; }
+    else { min_val = b; }
+    
+    // Ternary NOT: -1 -> 1, 0 -> 0, 1 -> -1
+    match min_val {
+        -1 => { return 1;  }
+         0 => { return 0;  }
+         1 => { return -1; }
+    }
+}
+
+fn main() -> trit {
+    // Test: nand(1, 1) = NOT(1) = -1
+    if t_nand(1, 1) != -1 { return conflict(); }
+    
+    // Test: nand(-1, 1) = NOT(-1) = 1
+    if t_nand(-1, 1) != 1 { return conflict(); }
+    
+    // Test: nand(0, 1) = NOT(0) = 0
+    if t_nand(0, 1) != 0 { return conflict(); }
+    
+    return truth();
+}
