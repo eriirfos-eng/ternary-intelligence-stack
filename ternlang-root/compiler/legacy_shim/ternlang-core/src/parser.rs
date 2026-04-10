@@ -579,6 +579,12 @@ impl<'a> Parser<'a> {
 
             Token::LBrace => self.parse_block(),
 
+            // BUG-L02 fix: 'fn' at statement level — do NOT consume the token.
+            // peek_token() was used above so the lexer is still positioned at 'fn'.
+            // Returning this error lets the fallback in main.rs detect it and call
+            // parse_function() directly, which expects 'fn' as its first token.
+            Token::Fn => Err(ParseError::UnexpectedToken("Fn".into())),
+
             _ => {
                 // Could be: expr; OR assignment: ident.field = value; OR ident[row, col] = value;
                 let expr = self.parse_expr()?;

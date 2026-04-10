@@ -241,7 +241,7 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 - [ ] **crates.io republish** — After BUG-L01/L02 fixes in `ternlang-core`, bump version and republish. Badge count "212+ tests" needs update post-ternlang-compat compile error fix.
 - [x] **Open VSX publish** — `ternlang-0.2.0.vsix` published to open-vsx.org (rfi-irfos/ternlang). v0.2.0: affirm/tend/reject highlighting, <=/>= operators added to grammar.
 - [ ] **VS Code Marketplace publish** — BLOCKED: credit card not accepted by publisher portal. `ternlang-0.2.0.vsix` built and ready when resolved.
-- [ ] **MCP registry / Smithery submission** — HTTP transport live at ternlang.com/mcp. Submission pending.
+- [x] **MCP registry / Smithery** — listed as `rfi-irfos/ternlang` at smithery.ai. Description + icon updated to v0.3.0 via API. Tools auto-scanned from live server.
 - [ ] **Phase 7C: Academic outreach** — USN group (Bos & Gundersen) for co-authorship.
 
 ### Low Priority / Nice to Have
