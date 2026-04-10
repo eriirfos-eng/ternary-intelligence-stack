@@ -303,7 +303,13 @@ impl<'a> Parser<'a> {
             Token::Affirm => Ok(Expr::TritLiteral(1)),
             Token::Tend   => Ok(Expr::TritLiteral(0)),
             Token::Reject => Ok(Expr::TritLiteral(-1)),
-            Token::Int(val) => Ok(Expr::IntLiteral(val)),
+            Token::Int(val) => {
+                if val == 1 || val == 0 || val == -1 {
+                    Ok(Expr::TritLiteral(val as i8))
+                } else {
+                    Ok(Expr::IntLiteral(val))
+                }
+            }
             Token::Float(val) => Ok(Expr::FloatLiteral(val)),
             Token::StringLit(s) => Ok(Expr::StringLiteral(s)),
             Token::Ident(name) => {

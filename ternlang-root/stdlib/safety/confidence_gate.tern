@@ -1,0 +1,43 @@
+// stdlib/safety/confidence_gate.tern
+// Demonstrates: Confidence-weighted safety gate for MoE-13 orchestration.
+// Tier: 2 — Pro Standard
+// Implements a hard veto gate: if any safety signal is reject (-1), 
+// the action is blocked regardless of other signals.
+// If too many signals are tend (0), the result is hold (0) to request more evidence.
+
+fn safety_gate(signals: trit[]) -> trit {
+    let consensus_count: int = 0;
+    let veto: trit = affirm;
+
+    for s in signals {
+        match s {
+            -1 => { return reject; } // Hard veto: immediate termination
+             0 => { /* Uncertain */ }
+             1 => { consensus_count = consensus_count + 1; }
+        }
+    }
+
+    // Production logic: require at least 2 affirm signals to commit
+    if consensus_count > 1 {
+        return affirm;
+    }
+
+    return tend; // Insufficient confidence
+}
+
+fn main() -> trit {
+    let s1: trit[] = [affirm, affirm, tend];
+    let s2: trit[] = [affirm, reject, affirm];
+    let s3: trit[] = [tend, tend, affirm];
+
+    // Case 1: Enough affirm, no reject
+    if safety_gate(s1) != affirm { return reject; }
+
+    // Case 2: One reject triggers hard veto
+    if safety_gate(s2) != reject { return reject; }
+
+    // Case 3: Not enough affirm (only 1) triggers hold
+    if safety_gate(s3) != tend { return reject; }
+
+    return affirm;
+}

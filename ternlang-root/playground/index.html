@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TernGround IDE — RFI-IRFOS</title>
+  <style>
+    :root {
+      --bg:      #0d0d0f;
+      --panel:   #13131a;
+      --sidebar: #181820;
+      --header:  #1c1c26;
+      --teal:    #00ffcc;
+      --red:     #ff3366;
+      --grey:    #666680;
+      --border:  #25253a;
+      --text:    #d8d8e8;
+      --text2:   #8888a8;
+      --font:    'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; }
+
+    /* ── Toolbar ─────────────────────────────────────────── */
+    #toolbar {
+      height: 42px;
+      background: var(--header);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 12px;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .logo { color: var(--teal); font-weight: bold; font-size: 0.85rem; letter-spacing: 1.5px; display: flex; align-items: center; gap: 7px; }
+    .logo svg { opacity: 0.85; }
+    .tb-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+    .tb-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 4px 12px;
+      font-family: var(--font);
+      font-size: 0.78rem;
+      cursor: pointer;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tb-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .tb-btn.primary { border-color: var(--teal); color: var(--teal); }
+    .tb-btn.primary:hover { background: var(--teal); color: var(--bg); }
+    .tb-btn:disabled { opacity: 0.35; pointer-events: none; }
+    #tb-filename { font-size: 0.75rem; color: var(--text2); margin-left: auto; }
+
+    /* ── Workspace ───────────────────────────────────────── */
+    #workspace {
+      display: grid;
+      grid-template-columns: 240px 1fr 280px;
+      height: calc(100vh - 42px - 24px);
+    }
+
+    /* ── Left: File Explorer ─────────────────────────────── */
+    #explorer {
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .pane-title {
+      padding: 8px 12px;
+      font-size: 0.68rem;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #search-box {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #search-box input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 8px;
+      font-family: var(--font);
+      font-size: 0.78rem;
+      border-radius: 2px;
+      outline: none;
+    }
+    #search-box input:focus { border-color: var(--teal); }
+    #file-tree { flex: 1; overflow-y: auto; }
+    .dir-header {
+      padding: 6px 10px 4px;
+      font-size: 0.7rem;
+      color: var(--grey);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+      border-top: 1px solid var(--border);
+      margin-top: 2px;
+    }
+    .dir-header:first-child { border-top: none; margin-top: 0; }
+    .dir-header:hover { color: var(--text2); }
+    .dir-header .arrow { transition: transform 0.15s; }
+    .dir-header.collapsed .arrow { transform: rotate(-90deg); }
+    .dir-files { display: flex; flex-direction: column; }
+    .dir-files.hidden { display: none; }
+    .file-item {
+      padding: 4px 10px 4px 22px;
+      font-size: 0.78rem;
+      color: #8888aa;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .file-item:hover { background: #1e1e2c; color: var(--text); }
+    .file-item.active { color: var(--teal); background: #141420; border-left: 2px solid var(--teal); padding-left: 20px; }
+    .empty-state {
+      padding: 20px 12px;
+      text-align: center;
+      color: var(--text2);
+      font-size: 0.78rem;
+      line-height: 1.7;
+    }
+    .empty-state .hint { color: var(--teal); margin-top: 8px; font-size: 0.72rem; }
+
+    /* ── Center: Editor ──────────────────────────────────── */
+    #editor-area {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    #tab-bar {
+      height: 32px;
+      background: var(--sidebar);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .tab {
+      padding: 0 14px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text2);
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      cursor: default;
+    }
+    .tab.active { background: var(--bg); color: var(--teal); border-bottom: 2px solid var(--teal); }
+    #editor {
+      flex: 1;
+      background: var(--bg);
+      color: #d4d4d8;
+      border: none;
+      padding: 16px 20px;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      line-height: 1.65;
+      resize: none;
+      outline: none;
+      caret-color: var(--teal);
+      tab-size: 4;
+    }
+
+    /* ── Right: Params + Output ──────────────────────────── */
+    #side-panel {
+      background: var(--sidebar);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Params section */
+    #params-section {
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      max-height: 50%;
+      overflow-y: auto;
+    }
+    #params-content { padding: 10px 12px; }
+    .param-row { margin-bottom: 14px; }
+    .param-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text2);
+      margin-bottom: 5px;
+    }
+    .param-type { color: var(--grey); font-size: 0.68rem; }
+    .trit-btns { display: flex; gap: 4px; }
+    .trit-btn {
+      flex: 1;
+      padding: 4px 0;
+      font-family: var(--font);
+      font-size: 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text2);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.15s;
+    }
+    .trit-btn:hover { border-color: var(--text2); color: var(--text); }
+    .trit-btn.sel-neg { border-color: var(--red);  background: #1a0810; color: var(--red); }
+    .trit-btn.sel-zer { border-color: var(--grey); background: #141420; color: #aaaacc; }
+    .trit-btn.sel-pos { border-color: var(--teal); background: #001a14; color: var(--teal); }
+    .num-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 8px;
+      font-family: var(--font);
+      font-size: 0.8rem;
+      border-radius: 2px;
+      outline: none;
+    }
+    .num-input:focus { border-color: var(--teal); }
+    .no-params { font-size: 0.75rem; color: var(--grey); font-style: italic; }
+
+    /* Result */
+    #result-section { padding: 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    #result-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px;
+      text-align: center;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    #result-state { font-size: 1.3rem; font-weight: bold; color: var(--grey); }
+    #result-code { font-size: 0.7rem; color: var(--grey); }
+    #result-box.state-affirm { border-color: var(--teal); }
+    #result-box.state-affirm #result-state { color: var(--teal); }
+    #result-box.state-conflict { border-color: var(--red); }
+    #result-box.state-conflict #result-state { color: var(--red); }
+    #result-box.state-hold { border-color: #666680; }
+    #result-box.state-hold #result-state { color: #9999bb; }
+    #result-box.state-error { border-color: #ff6644; }
+    #result-box.state-error #result-state { color: #ff6644; font-size: 0.9rem; }
+
+    /* Output log */
+    #log-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+    #log-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 10px;
+      font-size: 0.73rem;
+      line-height: 1.55;
+      background: #09090e;
+    }
+    .log-line { display: flex; gap: 7px; margin-bottom: 2px; }
+    .log-time { color: #333350; flex-shrink: 0; }
+    .log-sys  { color: #5555aa; font-style: italic; }
+    .log-out  { color: #aaaacc; }
+    .log-err  { color: #ff6644; }
+    .log-affirm { color: var(--teal); }
+    .log-hold   { color: #9999bb; }
+    .log-reject { color: var(--red); }
+
+    /* ── Status bar ──────────────────────────────────────── */
+    #statusbar {
+      height: 24px;
+      background: #101018;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+      font-size: 0.68rem;
+      color: var(--grey);
+      flex-shrink: 0;
+    }
+    #statusbar span { display: flex; align-items: center; gap: 5px; }
+    #status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--grey); }
+    #status-dot.ready  { background: var(--teal); }
+    #status-dot.error  { background: var(--red); }
+    #status-dot.running{ background: #ffcc00; }
+
+    /* ── Scrollbars ──────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a42; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #40406a; }
+
+    .hidden-input { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ TOOLBAR ═══════════════════════════════════════════════════════════ -->
+<div id="toolbar">
+  <div class="logo">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    TernGround IDE
+  </div>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-open" onclick="openFolder()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Load .tern file
+  </button>
+  <button class="tb-btn primary" id="btn-run" onclick="runProgram()" disabled>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    RUN
+  </button>
+  <button class="tb-btn" id="btn-clear" onclick="clearOutput()">Clear log</button>
+  <div id="tb-filename" style="margin-left:auto; font-size:0.72rem; color:var(--text2);">no file open</div>
+</div>
+
+<!-- Hidden file input for folder selection -->
+<input type="file" id="folder-input" class="hidden-input" webkitdirectory multiple accept=".tern" onchange="handleFolderSelect(this)">
+
+<!-- ═══ WORKSPACE ═══════════════════════════════════════════════════════════ -->
+<div id="workspace">
+
+  <!-- LEFT: Explorer -->
+  <div id="explorer">
+    <div class="pane-title">Explorer</div>
+    <div id="search-box">
+      <input type="text" id="search" placeholder="Filter files..." oninput="filterTree(this.value)">
+    </div>
+    <div id="file-tree">
+      <div class="empty-state" id="tree-empty" style="display:none">
+        Loading stdlib...
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Editor -->
+  <div id="editor-area">
+    <div id="tab-bar">
+      <div class="tab active" id="tab-name">untitled.tern</div>
+    </div>
+    <textarea id="editor" spellcheck="false" placeholder="// Open a .tern file from the explorer, or start typing here.
+// Click RUN to execute with the BET interpreter.
+
+fn gate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let signal: trit = 1;
+let result: trit = gate(signal);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}" oninput="onEditorChange()" onkeyup="updateCursor()" onclick="updateCursor()"></textarea>
+  </div>
+
+  <!-- RIGHT: Params + Output -->
+  <div id="side-panel">
+    <div id="params-section">
+      <div class="pane-title">Parameters</div>
+      <div id="params-content">
+        <div class="no-params">Run a program to see its top-level variables.</div>
+      </div>
+    </div>
+
+    <div id="result-section">
+      <div class="pane-title" style="padding-bottom:8px;">Result</div>
+      <div id="result-box">
+        <div id="result-state">AWAITING</div>
+        <div id="result-code"></div>
+      </div>
+    </div>
+
+    <div id="log-section">
+      <div class="pane-title">Output / Log</div>
+      <div id="log-output">
+        <div class="log-line">
+          <span class="log-time" id="init-time"></span>
+          <span class="log-sys">BET interpreter ready. Open a .tern file or edit the editor and click RUN.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ STATUS BAR ════════════════════════════════════════════════════════ -->
+<div id="statusbar">
+  <span><div id="status-dot" class="ready"></div><span id="status-msg">ready</span></span>
+  <span>Ln <span id="cursor-ln">1</span>, Col <span id="cursor-col">1</span></span>
+  <span style="margin-left:auto;">BET VM · balanced ternary · RFI-IRFOS</span>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STDLIB EMBED — 25 curated files from errors/ and core/
+// Regenerate: python3 playground/embed_stdlib.py
+// ═══════════════════════════════════════════════════════════════════════════
+const STDLIB_EMBED = {
+  "errors/BET-001.tern": `// stdlib/errors/BET-001.tern
+// Error: BET-001 — Stack Underflow
+// Tier: 1 — Open Core
+//
+// "You tried to pop a truth that wasn't there.
+//  The VM's stack is empty — like asking someone to give back a hug they never received."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The BET VM uses an operand stack to pass values between instructions.
+// Every 'return' in a function pushes a value onto the stack before TRET.
+// If a code path exits without pushing a value, the VM tries to pop nothing.
+//
+// WRONG (will trigger BET-001 at runtime):
+//
+//   fn gate(v: trit) -> trit {
+//       match v {
+//           -1 => { return conflict(); }
+//            1 => { return truth();   }
+//           // 0 arm is MISSING.
+//           // When v == 0 at runtime, no return executes.
+//           // The function ends without pushing a value.
+//           // TRET pops the stack → stack underflow → BET-001.
+//       }
+//   }
+//
+// ─── Why PARSE-004 and BET-001 are related ────────────────────────────────────
+//
+// PARSE-004 catches non-exhaustive match at compile time.
+// BET-001 catches missing returns at runtime (when the compiler can't prove it).
+//
+// If you see BET-001 and NOT PARSE-004, the missing return is on a code path
+// that the compiler couldn't verify statically — for example inside a loop
+// or conditional that the type system couldn't evaluate.
+//
+// ─── The invariant ────────────────────────────────────────────────────────────
+//
+// Every function must push exactly one value onto the stack before TRET,
+// on EVERY code path. Every match arm, every if branch, every loop exit.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn gate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }   // ← pushes conflict(), then TRET
+         0 => { return hold();    }   // ← pushes hold(), then TRET
+         1 => { return truth();   }   // ← pushes truth(), then TRET
+    }
+    // Every arm returns — the stack always has a value when TRET executes.
+}
+
+fn chain(a: trit, b: trit) -> trit {
+    let r1: trit = gate(a);
+    let r2: trit = gate(b);
+    return consensus(r1, r2);
+    // Exactly one value on the stack when this TRET executes.
+}
+
+let result: trit = chain(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-002.tern": `// stdlib/errors/BET-002.tern
+// Error: BET-002 — BET Encoding Fault
+// Tier: 1 — Open Core
+//
+// "The 0b00 bit pattern is forbidden in balanced ternary encoding.
+//  Only 01 (-1), 10 (0), and 11 (+1) exist. You found the state that shouldn't be — the void."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The BET codec uses 2 bits to represent each trit:
+//
+//   0b01  =  -1  (reject)
+//   0b10  =   0  (hold)
+//   0b11  =  +1  (affirm)
+//   0b00  =  ??? (FORBIDDEN — this is the void state)
+//
+// The 0b00 pattern has no trit value. It is the encoding equivalent of
+// a null pointer — a bit combination that should never appear in a valid
+// trit stream. If the VM encounters it while unpacking bytecode, BET-002 fires.
+//
+// ─── Who triggers this ────────────────────────────────────────────────────────
+//
+//   Normal .tern programs:    NEVER — the compiler only emits valid BET encodings
+//   Corrupted .ternbc files:  YES — if bytes are zeroed or incorrectly patched
+//   Manual bytecode authors:  YES — if 0x00 is written into a packed trit byte
+//   Faulty hardware:          YES — bit flip in memory produces 0b00
+//
+// ─── If you see this from a .tern source file ─────────────────────────────────
+//
+//   1. Delete all .ternbc cache files
+//   2. Recompile from source: cargo build --bin ternlang-cli
+//   3. If it persists, run on different hardware (possible RAM issue)
+//   4. Report as a compiler bug with the .tern source that triggers it
+//
+// ─── BET encoding reference ───────────────────────────────────────────────────
+//
+//   Each trit is packed into 2 bits. A byte holds 4 trits (8 bits / 2):
+//
+//   Byte: [ trit3 trit3 | trit2 trit2 | trit1 trit1 | trit0 trit0 ]
+//
+//   Valid byte examples:
+//     0b11111111  =  +1 +1 +1 +1  (four affirm trits)
+//     0b10101010  =   0  0  0  0  (four hold trits)
+//     0b01010101  =  -1 -1 -1 -1  (four reject trits)
+//     0b11100110  =  +1  0 -1 +1  (mixed valid)
+//     0b00xxxxxx  =  INVALID (0b00 in high pair — BET-002)
+//
+// ─── Correct usage — always use the compiler for trit encoding ────────────────
+
+fn encoding_demo(a: trit, b: trit, c: trit) -> trit {
+    // The compiler handles all BET encoding internally.
+    // Your job: use trit values. The VM's job: pack/unpack correctly.
+    let merged: trit = consensus(a, b);
+    return consensus(merged, c);
+}
+
+let result: trit = encoding_demo(1, 0, 1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-003.tern": `// stdlib/errors/BET-003.tern
+// Error: BET-003 — Clean Halt (Informational, Not An Error)
+// Tier: 1 — Open Core
+//
+// "Execution reached the end. This is not an error — this is peace.
+//  The VM executed your program completely and stopped cleanly."
+//
+// ─── What happened ───────────────────────────────────────────────────────────
+//
+// The VM encountered the THALT opcode or reached the end of the bytecode buffer
+// with no pending instructions. This is the expected, successful termination
+// of any Ternlang program.
+//
+// BET-003 appears as an informational message, not an error.
+// "Program exited successfully." in the CLI output means BET-003 fired cleanly.
+//
+// ─── When BET-003 might be unexpected ─────────────────────────────────────────
+//
+// If your program halts before you expected it to, check for:
+//
+//   1. An early 'return' at top level that exits before your main logic runs.
+//   2. A match arm that returns immediately without running the code below it.
+//   3. A function body where the last statement is a 'return' that exits
+//      before subsequent statements (which become dead code).
+//
+// ─── What a complete, clean program looks like ────────────────────────────────
+
+fn deliberate(evidence: trit, context: trit) -> trit {
+    let combined: trit = consensus(evidence, context);
+    match combined {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn policy_gate(decision: trit) -> trit {
+    match decision {
+        -1 => { return conflict(); }   // blocked
+         0 => { return hold();    }   // pending
+         1 => { return truth();   }   // approved
+    }
+}
+
+// Program flow: declare, compute, decide, exit.
+let signal_a: trit = 1;
+let signal_b: trit = 0;
+
+let decision: trit  = deliberate(signal_a, signal_b);
+let outcome:  trit  = policy_gate(decision);
+
+// Final return — program exits cleanly after this. BET-003 fires. Good.
+match outcome {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+
+// "Program exited successfully." ← BET-003. This is the goal.
+`,
+  "errors/BET-004.tern": `// stdlib/errors/BET-004.tern
+// Error: BET-004 — Unknown Opcode
+// Tier: 1 — Open Core
+//
+// "The machine is reading your bytecode and hit an instruction it has never seen.
+//  Delete cached .ternbc files and recompile."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The VM's instruction dispatch loop encountered a byte value that is not
+// defined in the BET instruction set. The BET ISA defines 51 opcodes.
+// Any byte outside these defined values triggers BET-004.
+//
+// This is almost always caused by stale bytecode, not by your .tern source.
+//
+// ─── The BET ISA opcode map (reference) ──────────────────────────────────────
+//
+//   0x00  THALT      — clean halt (BET-003)
+//   0x01  TPUSH      — push trit literal
+//   0x02  TADD       — trit/int/float addition
+//   0x03  TMUL       — trit/int/float multiplication
+//   0x04  TNEG       — trit/int/float negation
+//   0x05  TJMP_POS   — jump if top of stack is +1
+//   0x06  TJMP_ZERO  — jump if top of stack is 0
+//   0x07  TJMP_NEG   — jump if top of stack is -1
+//   0x08  TSTORE     — store to register
+//   0x09  TLOAD      — load from register
+//   0x0a  TDUP       — duplicate top of stack
+//   0x0b  TJMP       — unconditional jump
+//   0x0c  TPOP       — discard top of stack
+//   0x0e  TCONS      — consensus of two trits
+//   0x0f  TALLOC     — allocate trittensor
+//   0x10  TCALL      — call function (saves registers)
+//   0x11  TRET       — return from function (restores registers)
+//   0x14  TLESS      — comparison: less than
+//   0x15  TGREATER   — comparison: greater than
+//   0x16  TEQ        — comparison: equal
+//   0x17  TPUSH_INT  — push integer literal
+//   0x18  TADD_INT   — integer addition
+//   0x19  TPUSH_FLOAT— push float literal
+//   0x22  TIDX       — tensor read (bounds-checked)
+//   0x23  TSET       — tensor write (bounds-checked)
+//   0x24  TSHAPE     — tensor shape query
+//   0x30  TSPAWN     — spawn agent instance
+//   0x31  TSEND      — send message to agent
+//   0x32  TAWAIT     — await agent response
+//
+//   Any byte NOT in this list → BET-004.
+//
+// ─── Fix ──────────────────────────────────────────────────────────────────────
+//
+//   rm -rf target/package
+//   cargo build --bin ternlang-cli
+//   ./target/debug/ternlang-cli run your_program.tern
+//
+// ─── Correct pattern — always compile from source, never cache bytecode ───────
+
+fn opcode_demo(a: trit, b: trit) -> trit {
+    // Your .tern source compiles to valid opcodes automatically.
+    // This uses TCONS (0x0e), TJMP_NEG (0x07), TPUSH (0x01), TRET (0x11):
+    let merged: trit = consensus(a, b);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = opcode_demo(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-005.tern": `// stdlib/errors/BET-005.tern
+// Error: BET-005 — Register Out of Range
+// Tier: 1 — Open Core
+//
+// "The BET VM has exactly 27 registers (0–26). That's 3³. The only sacred ternary number.
+//  Register N doesn't exist. There is no 28th register."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TSTORE or TLOAD instruction referenced a register index outside 0–26.
+// The BET VM's register file is fixed at exactly 27 slots:
+//
+//   3¹ = 3
+//   3² = 9
+//   3³ = 27  ← the register count
+//
+// Register indices 0–26 are valid. Register 27 and above do not exist.
+//
+// ─── Who triggers this ────────────────────────────────────────────────────────
+//
+//   Normal .tern programs:    NEVER — the compiler's register allocator
+//                             stays within 0–26. If you hit this from .tern
+//                             source, it is a compiler bug — report it.
+//
+//   Bytecode extensions:      YES — if you're writing a codegen extension
+//                             and emit TSTORE with operand > 26, BET-005 fires.
+//
+//   Manual .ternbc authors:   YES — ensure all register operands are 0–26.
+//
+// ─── Register allocation note ─────────────────────────────────────────────────
+//
+//   The VM uses TCALL/TRET to save and restore register files for function calls
+//   (register isolation). Each function call saves the full 27-register file onto
+//   an internal stack and restores it on return. This means all 27 registers are
+//   available to every function without manual save/restore.
+//
+//   If you're writing a codegen extension, the allocator should:
+//   - Assign variables to registers 0–26
+//   - Spill to the operand stack if all 27 are in use
+//   - Never emit a register operand > 26
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn many_locals(a: trit, b: trit, c: trit, d: trit) -> trit {
+    // Each local variable is assigned a register by the compiler.
+    // With 27 registers and call-frame isolation, you have plenty of headroom.
+    let ab:  trit = consensus(a, b);
+    let cd:  trit = consensus(c, d);
+    let abcd: trit = consensus(ab, cd);
+    match abcd {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = many_locals(1, 0, -1, 1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-006.tern": `// stdlib/errors/BET-006.tern
+// Error: BET-006 — PC Out of Bounds
+// Tier: 1 — Open Core
+//
+// "The program counter jumped to address N — outside the bytecode buffer.
+//  You jumped into the void. The universe ends at the last instruction."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A jump instruction (TJMP, TJMP_POS, TJMP_NEG, TJMP_ZERO, TCALL, etc.)
+// set the program counter to an address that is >= the length of the loaded
+// bytecode. There is no instruction at that address — execution cannot continue.
+//
+// Jump targets in BET bytecode are absolute byte offsets calculated at
+// compile time. Any change to the bytecode layout (adding instructions,
+// reordering, editing .ternbc directly) invalidates all previously computed
+// jump offsets.
+//
+// ─── Who triggers this ────────────────────────────────────────────────────────
+//
+//   Normal .tern programs:    RARELY — only if you have stale .ternbc cache
+//                             from a different compiler version
+//
+//   After compiler upgrade:   YES — if old .ternbc files remain, their jump
+//                             offsets may target positions past the new layout
+//
+//   Manual .ternbc editing:   YES — inserting bytes shifts all subsequent
+//                             offsets without updating jump targets
+//
+// ─── Fix ──────────────────────────────────────────────────────────────────────
+//
+//   Always recompile from source after:
+//   - Upgrading the ternlang-cli binary
+//   - Editing any .tern source file
+//   - Adding or removing functions
+//   - Any change to the bytecode format
+//
+//   Never cache .ternbc across compiler versions.
+//
+// ─── Correct pattern — function calls with valid jump targets ─────────────────
+
+fn first(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn second(v: trit) -> trit {
+    // TCALL to 'first' emits a jump to 'first's address.
+    // This offset is calculated at compile time and is always correct
+    // when compiled from source — it only breaks if .ternbc is stale.
+    let result: trit = first(v);
+    return result;
+}
+
+fn third(v: trit) -> trit {
+    let result: trit = second(v);
+    return result;
+}
+
+let final_result: trit = third(1);
+
+match final_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-007.tern": `// stdlib/errors/BET-007.tern
+// Error: BET-007 — Runtime Type Mismatch
+// Tier: 1 — Open Core
+//
+// "Square peg, round hole. The VM expected a trit on the stack but found an int.
+//  The types got mixed somewhere between the call site and the instruction."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// An instruction that expects a specific value type (Trit, Int, Float, TensorRef)
+// was executed but found a different type on the operand stack.
+//
+// This is the RUNTIME version of TYPE-001. It means the static type checker
+// did not catch the mismatch — either because type annotations were missing
+// or because the error is on a code path the checker couldn't trace statically.
+//
+// WRONG (will trigger BET-007 at runtime):
+//
+//   fn mixed(v: trit) -> trit {
+//       match v {
+//           -1 => { return conflict(); }   // Trit pushed ✓
+//            0 => { return hold();    }   // Trit pushed ✓
+//            1 => { return 42;        }   // Int pushed!  ← BET-007
+//       }
+//   }
+//
+//   // The TADD instruction expects two Trit values.
+//   // If one is an Int, the VM raises BET-007.
+//
+// ─── BET-007 vs TYPE-001 ──────────────────────────────────────────────────────
+//
+//   TYPE-001 = caught at compile time (semantic phase). Better.
+//   BET-007  = caught at runtime (VM phase). Means the checker missed something.
+//
+//   If you see BET-007 where you expect TYPE-001, please report it —
+//   it means the type checker has a coverage gap.
+//
+// ─── How to prevent BET-007 ───────────────────────────────────────────────────
+//
+//   1. Add explicit type annotations to every 'let' binding.
+//      The more annotations, the more the compiler can catch statically.
+//
+//   2. Use semantic helpers (truth/hold/conflict) instead of bare literals
+//      in trit-typed contexts — they are typed functions, not literals.
+//
+//   3. If a function can return different types on different paths,
+//      you have a design problem. Decide the type and make it consistent.
+//
+// ─── Correct pattern — consistent types on all paths ─────────────────────────
+
+fn pure_gate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }   // Trit on all arms ✓
+         0 => { return hold();    }   // Trit on all arms ✓
+         1 => { return truth();   }   // Trit on all arms ✓
+    }
+}
+
+fn int_categorize(score: int) -> trit {
+    // Takes an int, returns trit — clear boundary, explicit conversion:
+    if score > 0 {
+        return truth();
+    }
+    if score < 0 {
+        return conflict();
+    }
+    return hold();
+}
+
+let raw_score: int  = 5;
+let verdict:   trit = int_categorize(raw_score);
+let final_out: trit = pure_gate(verdict);
+
+match final_out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-008.tern": `// stdlib/errors/BET-008.tern
+// Error: BET-008 — Tensor Index Out of Bounds
+// Tier: 1 — Open Core
+//
+// "Tensor[N]: index K is out of bounds — tensor only has M element(s).
+//  Trittensors don't grow on access."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TIDX (read) or TSET (write) instruction tried to access position K
+// in a trittensor, but the tensor was only allocated with M elements.
+// K >= M. The VM refuses to fabricate trit values for memory it doesn't own.
+//
+// This is a runtime bounds check. The VM caught what would have been
+// a silent memory access violation in a lower-level system.
+//
+// COMMON PATTERN THAT CAUSES THIS:
+//
+//   // Tensor allocated with size 3:
+//   let weights: trittensor<3> = [1, 0, -1];
+//
+//   // Accessing index 3 (fourth element — doesn't exist):
+//   let w: trit = weights[3];   // BET-008: index 3, size 3 (valid: 0, 1, 2)
+//
+// ─── Trittensor indexing is zero-based ──────────────────────────────────────
+//
+//   trittensor<3> has valid indices: 0, 1, 2
+//   trittensor<5> has valid indices: 0, 1, 2, 3, 4
+//   trittensor<N> has valid indices: 0 through N-1
+//
+//   Index N is always out of bounds. Index N-1 is always the last element.
+//
+// ─── How to guard against BET-008 ────────────────────────────────────────────
+//
+//   Always bound-check your index before accessing a tensor.
+//   Use a conditional to stay within the declared size.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn safe_read(weights: trit[], index: int, size: int) -> trit {
+    // Guard: index must be in [0, size - 1]
+    if index < 0 {
+        return conflict();   // index below range
+    }
+    if index >= size {
+        return conflict();   // index at or above size — would be BET-008
+    }
+    // Safe to access — index is within bounds:
+    return weights[index];
+}
+
+// Correctly sized access:
+let signal_a: trit = 1;
+let signal_b: trit = 0;
+let signal_c: trit = -1;
+
+// Access within the declared bounds — safe:
+let first: trit = safe_read([signal_a, signal_b, signal_c], 0, 3);
+let last:  trit = safe_read([signal_a, signal_b, signal_c], 2, 3);
+
+match last {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-009.tern": `// stdlib/errors/BET-009.tern
+// Error: BET-009 — Tensor Not Allocated
+// Tier: 1 — Open Core
+//
+// "TensorRef(N) doesn't exist — you never allocated it. TALLOC first, then TIDX."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TIDX, TSET, or TSHAPE instruction received a TensorRef whose ID
+// points to a tensor slot that was never created with TALLOC (the allocation
+// opcode emitted for trittensor declarations).
+//
+// This usually means:
+//   - A TensorRef value was corrupted or manually constructed with an invalid ID
+//   - Bytecode was compiled against a state where the tensor was allocated, but
+//     the actual execution path skipped the allocation step
+//   - A tensor was used in a branch that never ran the allocation
+//
+// In normal .tern code you should not see this error — every trittensor
+// variable declaration implicitly emits TALLOC. If you see BET-009 from
+// normal .tern source, it is a compiler bug — please report it.
+//
+// ─── If you're writing bytecode manually ──────────────────────────────────────
+//
+//   TALLOC must execute BEFORE any TIDX or TSET that uses the returned TensorRef.
+//   The order of execution matters — not just the order of declaration in source.
+//
+// ─── Correct pattern — proper tensor lifecycle ────────────────────────────────
+
+fn compute_signal(a: trit, b: trit, c: trit) -> trit {
+    // In .tern, trittensor variables are declared and immediately usable.
+    // The compiler emits TALLOC at the point of declaration — guaranteed.
+    let signals: trit[] = [a, b, c];
+
+    // signals[0] is valid — the tensor was allocated when 'signals' was declared:
+    let first: trit = signals[0];
+    let second: trit = signals[1];
+    let third: trit = signals[2];
+
+    let merged_ab: trit = consensus(first, second);
+    return consensus(merged_ab, third);
+}
+
+let result: trit = compute_signal(1, 0, -1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-010.tern": `// stdlib/errors/BET-010.tern
+// Error: BET-010 — Agent Type Not Registered
+// Tier: 2 — Pro Standard
+//
+// "Agent type_id 0xNNNN was never registered. You can't spawn what was never declared."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The TSPAWN instruction received a type_id that has no registered handler
+// address in the VM's agent type table. Before an agent can be spawned,
+// the VM needs to know which bytecode address to jump to when the agent
+// is invoked.
+//
+// This registration happens automatically when the CLI loads a program
+// containing 'agent' declarations. If an agent type is used but not declared
+// in the same program (or the declaration was in a module that wasn't loaded),
+// TSPAWN has no handler to jump to — and raises BET-010.
+//
+// ─── In normal .tern code ─────────────────────────────────────────────────────
+//
+//   If you declare an agent with 'agent MyAgent { ... }' and then spawn it
+//   with 'spawn MyAgent', the compiler and CLI handle registration automatically.
+//   BET-010 from normal .tern code means the agent declaration is missing
+//   or in a module that wasn't imported. This is a compile-time gap —
+//   ideally caught by FN-001 before reaching the VM.
+//
+// ─── Correct agent lifecycle ──────────────────────────────────────────────────
+//
+//   1. Declare the agent (emits TALLOC equivalent for the handler address)
+//   2. Spawn it with 'spawn' (TSPAWN → receives AgentRef)
+//   3. Send messages with 'send' (TSEND → puts value in mailbox)
+//   4. Await response with 'await' (TAWAIT → synchronously runs handler)
+//
+// ─── Correct pattern — full agent lifecycle ───────────────────────────────────
+
+// Tier 2 pattern: local synchronous actor
+agent Validator {
+    fn handle(signal: trit) -> trit {
+        match signal {
+            -1 => { return conflict(); }   // rejected
+             0 => { return hold();    }   // pending further review
+             1 => { return truth();   }   // validated
+        }
+    }
+}
+
+// Spawn the declared agent type — registration is automatic:
+let v: agent = spawn Validator;
+
+// Send a signal to the agent's mailbox:
+send v, 1;
+
+// Await processes the mailbox and returns the handler's result:
+let decision: trit = await v;
+
+match decision {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/BET-011.tern": `// stdlib/errors/BET-011.tern
+// Error: BET-011 — Agent ID Invalid
+// Tier: 2 — Pro Standard
+//
+// "Agent #N doesn't exist — no agent was spawned at this ID.
+//  TSEND and TAWAIT require a live agent."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TSEND or TAWAIT instruction received an AgentRef with an ID that has
+// no corresponding agent in the VM's agent table. The agent was never spawned,
+// or the AgentRef was constructed with an invalid ID.
+//
+// Agent IDs are assigned sequentially at spawn time: the first 'spawn'
+// returns AgentRef(0), the second returns AgentRef(1), and so on.
+// Trying to TSEND to AgentRef(5) when only 3 agents have been spawned
+// raises BET-011.
+//
+// ─── The difference between BET-010 and BET-011 ───────────────────────────────
+//
+//   BET-010: The AGENT TYPE (declaration) was never registered.
+//            TSPAWN failed — no agent was created at all.
+//
+//   BET-011: The AGENT INSTANCE (spawned object) doesn't exist.
+//            TSPAWN succeeded (or wasn't called), but the ID referenced
+//            by TSEND/TAWAIT points to a slot that was never populated.
+//
+// ─── In normal .tern code ─────────────────────────────────────────────────────
+//
+//   You should not see BET-011 from correctly written .tern code.
+//   The 'spawn', 'send', and 'await' keywords compile to TSPAWN/TSEND/TAWAIT
+//   using the AgentRef returned by TSPAWN — which is always valid if BET-010
+//   did not fire. If you see BET-011 from normal .tern, it is a compiler bug.
+//
+// ─── Correct pattern — use the AgentRef returned by spawn ────────────────────
+
+agent Monitor {
+    fn handle(v: trit) -> trit {
+        match v {
+            -1 => { return conflict(); }
+             0 => { return hold();    }
+             1 => { return truth();   }
+        }
+    }
+}
+
+// The AgentRef 'mon' is the ONLY valid reference to this agent instance.
+// Do not construct AgentRef values manually — use the one returned by spawn.
+let mon: agent = spawn Monitor;
+send mon, 0;
+let status: trit = await mon;
+
+match status {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/FN-001.tern": `// stdlib/errors/FN-001.tern
+// Error: FN-001 — Undefined Function
+// Tier: 1 — Open Core
+//
+// "You called a function that doesn't exist. Even in ternary, three states
+//  don't include 'imaginary'. Declare it or fix the typo."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A call expression referenced a name that has no 'fn' declaration
+// in scope and is not a built-in function.
+//
+// WRONG (will trigger FN-001):
+//
+//   let x: trit = evaluate(1);   // 'evaluate' never declared
+//   let x: trit = Evaluate(1);   // case matters — function names are case-sensitive
+//   let x: trit = evalulate(1);  // typo: 'evalulate' instead of 'evaluate'
+//
+// ─── Built-in functions (always available, no declaration needed) ─────────────
+//
+//   truth()           → trit  (+1)
+//   hold()            → trit  (0)
+//   conflict()        → trit  (-1)
+//   consensus(a, b)   → trit  (logical merge of two trits)
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Declare the function BEFORE calling it:
+fn evaluate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn chain_evaluate(a: trit, b: trit) -> trit {
+    // Both functions are declared above — they are in scope:
+    let first:  trit = evaluate(a);
+    let second: trit = evaluate(b);
+    return consensus(first, second);
+}
+
+let result: trit = chain_evaluate(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/FN-002.tern": `// stdlib/errors/FN-002.tern
+// Error: FN-002 — Return Type Mismatch
+// Tier: 1 — Open Core
+//
+// "You promised to return a trit but handed back something else.
+//  Ternary contracts are strict. The function signature is a promise."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The function's '-> TYPE' declaration and the actual type of a 'return'
+// expression do not agree. The compiler enforces these contracts statically.
+//
+// WRONG (will trigger FN-002):
+//
+//   fn gate(v: trit) -> trit {
+//       return 42;          // 42 is int — you promised trit
+//   }
+//
+//   fn count(v: trit) -> int {
+//       return truth();     // truth() returns trit — you promised int
+//   }
+//
+//   fn mixed(v: trit) -> trit {
+//       match v {
+//           -1 => { return conflict(); }   // trit ✓
+//            0 => { return 0; }            // 0 as int — ambiguous, avoid this
+//            1 => { return truth();   }    // trit ✓
+//       }
+//   }
+//
+// ─── The rule ─────────────────────────────────────────────────────────────────
+//
+// Every 'return' in a function body must return the type declared after '->'.
+// ALL return paths. Including every match arm.
+//
+// Note on '0': the literal 0 is valid as a trit but may be interpreted as int
+// in some contexts. Use hold() explicitly to make the intent unambiguous.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn gate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }   // trit ✓
+         0 => { return hold();    }   // trit ✓ — explicit, not '0'
+         1 => { return truth();   }   // trit ✓
+    }
+}
+
+fn score_to_int(v: trit) -> int {
+    match v {
+        -1 => { return 0;  }   // int ✓
+         0 => { return 1;  }   // int ✓
+         1 => { return 2;  }   // int ✓
+    }
+}
+
+let trit_result: trit = gate(1);
+let int_result:  int  = score_to_int(trit_result);
+
+match trit_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/FN-003.tern": `// stdlib/errors/FN-003.tern
+// Error: FN-003 — Argument Count Mismatch
+// Tier: 1 — Open Core
+//
+// "The function expects N arguments. You passed M. Arity is not optional —
+//  not even in hold state."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A function call passed a different number of arguments than the function
+// declaration's parameter list specifies.
+//
+// WRONG (will trigger FN-003):
+//
+//   fn combine(a: trit, b: trit) -> trit { ... }
+//
+//   let r: trit = combine(1);         // missing second argument
+//   let r: trit = combine(1, 0, -1);  // too many — fn only takes 2
+//   let r: trit = combine();          // missing both arguments
+//
+// ─── Why Ternlang enforces this strictly ─────────────────────────────────────
+//
+// There are no optional parameters, no default values, no variadics at the
+// call site. Every parameter is required. This keeps function contracts
+// explicit and prevents silent undefined behavior.
+//
+// ─── How to count parameters ──────────────────────────────────────────────────
+//
+//   fn f(a: trit, b: trit, c: int) -> trit
+//         ──1──   ──2──    ──3──
+//   → three parameters required at every call site
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn combine(a: trit, b: trit) -> trit {
+    return consensus(a, b);
+}
+
+fn three_way_vote(a: trit, b: trit, c: trit) -> trit {
+    let ab: trit = consensus(a, b);
+    return consensus(ab, c);
+}
+
+// Correct calls — argument count matches parameter count exactly:
+let two_result:   trit = combine(1, 0);        // 2 params, 2 args ✓
+let three_result: trit = three_way_vote(1, 0, -1);  // 3 params, 3 args ✓
+
+match three_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/FN-004.tern": `// stdlib/errors/FN-004.tern
+// Error: FN-004 — Argument Type Mismatch
+// Tier: 1 — Open Core
+//
+// "Argument N of 'fn' should be a trit, but you passed an int.
+//  Types travel with their values — they don't change at the border."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// One or more arguments in a function call have a type that does not match
+// the corresponding parameter's declared type in the function signature.
+//
+// WRONG (will trigger FN-004):
+//
+//   fn signal(v: trit) -> trit { return v; }
+//
+//   let r: trit = signal(99);    // 99 is int — fn expects trit
+//   let r: trit = signal(3.14);  // 3.14 is float — fn expects trit
+//   let r: trit = signal(truth); // 'truth' is a function ref — call it: truth()
+//
+// ─── Type checklist before calling a function ──────────────────────────────────
+//
+//   Look at the fn signature:   fn f(a: TYPE1, b: TYPE2) -> RETURN
+//   Check your argument types:  f(expr1, expr2)
+//                                  ↑ must be TYPE1  ↑ must be TYPE2
+//
+// ─── Common confusion: int literal vs trit literal ────────────────────────────
+//
+//   In isolation, '1' looks like it could be either.
+//   In a 'let x: trit = 1' context it is a trit.
+//   When passed to fn(v: trit), the literal '1' is also a valid trit.
+//   But when passed to fn(v: int), it becomes an int.
+//   The TYPE ANNOTATION on the parameter decides.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn signal(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn count_signals(n: int) -> trit {
+    // int parameter — must be called with an int:
+    if n > 0 {
+        return truth();
+    }
+    return hold();
+}
+
+// Correct types at call site:
+let trit_in: trit = 1;
+let int_in:  int  = 5;
+
+let trit_out: trit = signal(trit_in);        // trit → trit param ✓
+let int_out:  trit = count_signals(int_in);  // int  → int param  ✓
+
+match trit_out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/PARSE-001.tern": `// stdlib/errors/PARSE-001.tern
+// Error: PARSE-001 — Unexpected Token
+// Tier: 1 — Open Core
+//
+// "The lexer hit something it didn't expect and entered a hold state.
+//  It's not angry — just confused."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The tokenizer encountered a character or keyword that does not exist
+// in the .tern grammar at this position. Most common cause: binary habits.
+//
+// WRONG (will trigger PARSE-001):
+//
+//   func my_fn() -> trit { ... }   // 'func' is not a keyword — use 'fn'
+//   def my_fn() -> trit { ... }    // 'def' is Python — use 'fn'
+//   let x: trit = true;            // 'true' is not a trit — use 1
+//   let x: trit = false;           // 'false' is not a trit — use -1
+//   if (a && b) { ... }            // '&&' is not an operator — use consensus()
+//   if (a == b) { ... }            // '==' is not an operator in this context
+//
+// ─── Binary habit translation table ──────────────────────────────────────────
+//
+//   Python/JS/Rust   →   Ternlang
+//   true             →   1  or  truth()
+//   false            →   -1 or  conflict()
+//   None / null      →   0  or  hold()
+//   def / func       →   fn
+//   &&               →   consensus(a, b)
+//   ||               →   consensus(a, b)    (ternary OR is consensus)
+//   !x               →   match x { -1 => 1, 0 => 0, 1 => -1 }
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn describe_signal(s: trit) -> trit {
+    match s {
+        -1 => { return conflict(); }   // reject — strong negative signal
+         0 => { return hold();    }   // hold — insufficient evidence
+         1 => { return truth();   }   // affirm — strong positive signal
+    }
+}
+
+let input: trit = 1;
+let result: trit = describe_signal(input);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/PARSE-002.tern": `// stdlib/errors/PARSE-002.tern
+// Error: PARSE-002 — Expected Token Not Found
+// Tier: 1 — Open Core
+//
+// "The grammar was expecting something specific — like a closing brace
+//  or a type annotation — and got nothing. The compiler is not a mind reader."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The parser was in a state where exactly one token was valid next,
+// and found something else (or nothing) instead.
+//
+// WRONG (will trigger PARSE-002):
+//
+//   let x = 1;              // missing ': trit' — type annotation required
+//   let x: trit = 1        // missing ';' — semicolon required
+//   fn f(v) -> trit { }    // missing ': trit' on parameter
+//   fn f(v: trit) { }      // missing '-> trit' return type
+//   match v {               // opening brace but no arms and no closing brace
+//
+// ─── The five things most often missing ──────────────────────────────────────
+//
+//   1. Type annotation on 'let':       let x: trit = 1;
+//                                              ^^^^^
+//   2. Type annotation on parameter:   fn f(v: trit) -> trit { ... }
+//                                               ^^^^^
+//   3. Return type arrow:              fn f(v: trit) -> trit { ... }
+//                                                    ^^^^^^^^
+//   4. Closing brace:                  fn f(v: trit) -> trit {
+//                                          ...
+//                                      }   ← this one
+//   5. Semicolon after statement:      let x: trit = truth();
+//                                                           ^
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn classify(signal: trit) -> trit {
+    let threshold: trit = 1;
+    match signal {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return threshold; }
+    }
+}
+
+let s: trit = 0;
+let out: trit = classify(s);
+
+match out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/PARSE-003.tern": `// stdlib/errors/PARSE-003.tern
+// Error: PARSE-003 — Invalid Trit Literal
+// Tier: 1 — Open Core
+//
+// "Trits are -1, 0, or +1. There is no trit 2. There is no trit 'true'.
+//  The universe has three states. You tried to invent a fourth."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A value was used as a trit literal but falls outside the valid range:
+// exactly -1, 0, or +1. Nothing else is a trit.
+//
+// WRONG (will trigger PARSE-003):
+//
+//   let x: trit = true;    // 'true' is a boolean — not in .tern
+//   let x: trit = false;   // 'false' is a boolean — not in .tern
+//   let x: trit = 2;       // 2 is out of range
+//   let x: trit = -2;      // -2 is out of range
+//   let x: trit = 1.0;     // 1.0 is a float, not a trit
+//
+// ─── The three valid trit literals ───────────────────────────────────────────
+//
+//   -1    reject / conflict — "no, with certainty"
+//    0    hold  / uncertain — "not enough evidence to decide"
+//    1    affirm / truth    — "yes, with certainty"
+//
+// ─── Semantic helpers (preferred for readability) ─────────────────────────────
+//
+//   truth()     returns +1   — use in logic that asserts certainty
+//   hold()      returns  0   — use when evidence is insufficient
+//   conflict()  returns -1   — use when the signal is definitively rejected
+//
+// These are functions, not literals, but they read better in complex logic.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Explicit literals:
+let affirm:  trit = 1;
+let neutral: trit = 0;
+let reject:  trit = -1;
+
+// Semantic helpers — same values, clearer intent:
+let confirmed: trit = truth();
+let uncertain: trit = hold();
+let blocked:   trit = conflict();
+
+// They are interchangeable — helpers are just named returns:
+fn check_affirmation(a: trit, b: trit) -> trit {
+    let merged: trit = consensus(a, b);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = check_affirmation(affirm, neutral);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/PARSE-004.tern": `// stdlib/errors/PARSE-004.tern
+// Error: PARSE-004 — Non-Exhaustive Match
+// Tier: 1 — Open Core
+//
+// "Ternary has three states. You covered two. The compiler isn't being pedantic —
+//  the third state WILL occur at runtime. What happens then?"
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A match expression on a trit did not include all three arms.
+// Unlike binary if/else (which has a natural 'else' catch-all),
+// ternary match requires explicit handling of -1, 0, AND +1.
+//
+// WRONG (will trigger PARSE-004):
+//
+//   match signal {
+//       -1 => { return conflict(); }
+//        1 => { return truth();   }
+//       // the 0 (hold) case is missing — what should happen when signal is 0?
+//   }
+//
+// ─── Why this rule exists ─────────────────────────────────────────────────────
+//
+// The hold state (trit = 0) is NOT an edge case. It is the entire reason
+// ternary logic exists. In binary thinking:
+//
+//   yes → act
+//   no  → don't act
+//
+// In ternary thinking:
+//
+//   affirm (+1) → act
+//   hold   ( 0) → wait for more evidence
+//   reject (-1) → do not act
+//
+// The hold state is the first-class "I don't know yet" signal.
+// Leaving it unhandled means your program has undefined behavior for
+// the most important case — exactly the case ternary logic was designed for.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn route_signal(signal: trit) -> trit {
+    match signal {
+        -1 => { return conflict(); }   // strong reject — escalate
+         0 => { return hold();    }   // uncertain — request more evidence
+         1 => { return truth();   }   // affirmed — proceed
+    }
+}
+
+// Nested match — still exhaustive, always:
+fn arbitrate(a: trit, b: trit) -> trit {
+    let merged: trit = consensus(a, b);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let x: trit = route_signal(0);
+let y: trit = arbitrate(1, -1);
+
+match y {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/PROP-001.tern": `// stdlib/errors/PROP-001.tern
+// Error: PROP-001 — Propagation on Non-Trit
+// Tier: 1 — Open Core
+//
+// "The '?' operator only works on trit-returning expressions.
+//  The third state requires a trit — you can't propagate uncertainty from a type that has none."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The '?' postfix operator was applied to an expression whose type is not 'trit'.
+// Only trit-returning expressions carry the three-valued signal that '?' needs.
+//
+// WRONG (will trigger PROP-001):
+//
+//   fn get_count() -> int { return 5; }
+//   let x: int = get_count()?;         // '?' on int — invalid
+//
+//   fn get_score() -> float { return 0.9; }
+//   let s: float = get_score()?;       // '?' on float — invalid
+//
+// ─── How '?' works in Ternlang ───────────────────────────────────────────────
+//
+// The '?' operator is the trit propagation shorthand.
+// It means: "if the result is -1 (conflict), return conflict() immediately;
+//             otherwise continue execution with the value."
+//
+// It is inspired by Rust's '?' for Result, but works on the ternary signal
+// rather than an error type. Only trit values carry this three-state meaning.
+//
+// Equivalent expansion:
+//
+//   let r: trit = some_fn()?;
+//
+//   // expands to:
+//   let __tmp: trit = some_fn();
+//   match __tmp {
+//       -1 => { return conflict(); }   // propagate conflict up
+//        _ => { }                      // continue
+//   }
+//   let r: trit = __tmp;
+//
+// ─── When to use '?' ──────────────────────────────────────────────────────────
+//
+//   Use '?' to short-circuit a chain of trit-returning checks:
+//
+//   fn validate_pipeline(a: trit, b: trit, c: trit) -> trit {
+//       let step1: trit = check_a(a)?;   // stops here if -1
+//       let step2: trit = check_b(b)?;   // stops here if -1
+//       let step3: trit = check_c(c)?;   // stops here if -1
+//       return truth();
+//   }
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn check(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn validate(a: trit, b: trit) -> trit {
+    // '?' only on trit-returning functions — correct:
+    let ra: trit = check(a)?;
+    let rb: trit = check(b)?;
+    return consensus(ra, rb);
+}
+
+let result: trit = validate(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/SCOPE-001.tern": `// stdlib/errors/SCOPE-001.tern
+// Error: SCOPE-001 — Undefined Variable
+// Tier: 1 — Open Core
+//
+// "Hold state — the variable doesn't exist in this scope.
+//  You can't use a truth you never declared."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The name resolver searched all enclosing scopes and found no 'let'
+// declaration for this identifier at or before the point of use.
+//
+// WRONG (will trigger SCOPE-001):
+//
+//   let result: trit = process(signal);   // 'signal' was never declared
+//
+//   fn gate(v: trit) -> trit {
+//       let inner: trit = truth();
+//       return inner;
+//   }
+//   let x: trit = inner;   // 'inner' is only in scope inside gate()
+//
+// ─── Scope rules in Ternlang ─────────────────────────────────────────────────
+//
+//   1. Variables are block-scoped — a 'let' inside { } is invisible outside.
+//   2. Function parameters are only in scope within that function's body.
+//   3. Declarations are NOT hoisted — you must declare before you use.
+//   4. Match arms do not leak their locals to the outer scope.
+//
+// ─── Common fix patterns ──────────────────────────────────────────────────────
+//
+//   Problem: used before declared     →  Move the 'let' above the usage
+//   Problem: typo in name             →  Check spelling: 'signal' vs 'singal'
+//   Problem: variable from inner scope→  Pass it as a function argument instead
+//   Problem: forgot to pass as param  →  Add it to the function signature
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Declare before use:
+let signal: trit = 1;
+let threshold: trit = 0;
+
+fn process(s: trit, t: trit) -> trit {
+    // Both 's' and 't' are in scope here — passed as arguments:
+    let merged: trit = consensus(s, t);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+// Variables declared above are in scope here:
+let result: trit = process(signal, threshold);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "errors/TYPE-001.tern": `// stdlib/errors/TYPE-001.tern
+// Error: TYPE-001 — Type Mismatch (Semantic Phase)
+// Tier: 1 — Open Core
+//
+// "You declared one type and handed in another. The type-checker caught it
+//  before the VM ever saw it. Consider this a gift."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The semantic analysis pass compared the declared type of a binding or
+// parameter with the actual type of the expression being assigned or passed,
+// and found they differ.
+//
+// WRONG (will trigger TYPE-001):
+//
+//   let x: trit = 42;        // 42 is int, not trit
+//   let x: trit = 3.14;      // 3.14 is float, not trit
+//   let x: int  = truth();   // truth() returns trit, not int
+//
+// ─── Ternlang type system in brief ───────────────────────────────────────────
+//
+//   trit        — -1, 0, or +1. The core ternary value. truth()/hold()/conflict().
+//   int         — signed integer. No trit arithmetic. Use for counts, indices.
+//   float       — floating point. Use for weights, EMA, probabilities.
+//   trit[]      — array of trits. Use for signal vectors.
+//   trittensor<N> — N-dimensional trit tensor. Use for matrix ops.
+//
+// These types do NOT automatically coerce into each other.
+// A trit is not an int. An int is not a trit.
+// This is intentional: the semantics are different.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Each type declared and used correctly:
+let verdict: trit  = truth();     // trit from built-in
+let count:   int   = 0;           // int for counting
+let weight:  float = 0.75;        // float for probability
+
+// Function that enforces types at the boundary:
+fn threshold_gate(score: float, limit: float) -> trit {
+    if score > limit {
+        return truth();
+    }
+    if score < limit {
+        return conflict();
+    }
+    return hold();
+}
+
+let gate_result: trit = threshold_gate(weight, 0.5);
+
+match gate_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+`,
+  "core/TIS_COMPLIANCE_MATRIX.tern": `// --- RFI-IRFOS TIS COMPLIANCE MATRIX ---
+// Module: stdlib/core/TIS_COMPLIANCE_MATRIX.tern
+// Purpose: Master ledger for triadic standard compliance.
+// License: BSL-1.1 - Proprietary RFI-IRFOS IP
+// Reference: Patent Pending A50296/2026
+
+struct ComplianceEntry {
+    module_id: int,
+    standards: trit_tensor, // [T-SON, BET-ISA, TTP, TRCE]
+    status: trit,          // affirm = Compliant, reject = Conflict, tend = Auditing
+    audit_timestamp: int
+}
+
+agent ComplianceOrchestrator {
+    // 10% Uncertainty Principle (RFI-IRFOS Core Mandatory Validator)
+    const CORE_UNCERTAINTY_THRESHOLD: float = 0.10;
+
+    fn register_module(module_id: int, audit_result: trit) -> trit {
+        @sparseskip
+        // Log to cryptographic ledger
+        if audit_result == affirm {
+            return affirm; // Entry recorded
+        }
+        return tend; // Pending deliberation
+    }
+
+    fn verify_compliance(module_id: int) -> trit {
+        // Cryptographic proof of ontological integrity
+        // Every module in the Enterprise/Titan Tier must pass this gate.
+        return affirm;
+    }
+}
+`,
+  "core/errors.tern": `// stdlib/core/errors.tern
+// Demonstrates: BET VM + Parser error taxonomy modelled in ternary.
+// Tier: 1 — Open Core (LGPL-3.0)
+//
+// Every error in Ternlang carries a structured code [PREFIX-NNN].
+// This file is the canonical reference — it classifies every known
+// diagnostic by severity using the trit scale:
+//
+//   +1  (truth)    = informational / execution completed normally
+//    0  (hold)     = retryable / check your logic and try again
+//   -1  (conflict) = fatal / the machine cannot proceed
+//
+// Error codes in the runtime:
+//
+//   [BET-001]  Stack underflow
+//              "You tried to pop a truth that wasn't there."
+//              Severity: -1 (fatal). Check your function call depth.
+//              → See: stdlib/tutorials/05_functions.tern
+//
+//   [BET-002]  BET encoding fault (0b00 state)
+//              "The 0b00 bit pattern is forbidden. Only 01, 10, 11 are valid trits."
+//              Severity: -1 (fatal). This is a compiler or memory corruption issue.
+//
+//   [BET-003]  VM halted cleanly
+//              "Execution reached the end. This is not an error — this is peace."
+//              Severity: +1 (informational). Your program ran to completion.
+//
+//   [BET-004]  Unknown opcode
+//              "The machine is confused. This opcode belongs to a future where binary doesn't exist."
+//              Severity: -1 (fatal). Your .ternbc bytecode is malformed. Recompile.
+//
+//   [BET-005]  Register out of range
+//              "The BET has exactly 27 registers (0–26). That's 3³. No more, no less."
+//              Severity: -1 (fatal). Codegen emitted an impossible register address.
+//
+//   [BET-006]  PC out of bounds
+//              "You jumped outside the known universe. The program counter fell off the edge."
+//              Severity: -1 (fatal). A jump target overshot the bytecode buffer.
+//
+//   [BET-007]  Type mismatch
+//              "Square peg, round hole. You passed an Int where a Trit was expected."
+//              Severity: 0 (hold). Fix the type at the call site — the logic may be salvageable.
+//              → See: stdlib/tutorials/01_hello_ternary.tern
+//
+//   [PARSE-001] Unexpected token
+//              "The lexer hit something it didn't expect. Check your syntax."
+//              Severity: 0 (hold). Fix the typo, recompile.
+//
+//   [PARSE-002] Expected token not found
+//              "The grammar demands it. You left something out."
+//              Severity: 0 (hold). A closing brace, a colon, a type annotation — find it.
+//
+//   [PARSE-003] Invalid trit literal
+//              "Trits are -1, 0, or +1. No in-betweens. No 2. No true."
+//              Severity: 0 (hold). You wrote a value the trit type cannot hold.
+//
+//   [PARSE-004] Non-exhaustive match
+//              "Ternary has three states. Cover all three or the compiler won't let you through."
+//              Severity: 0 (hold). Add the missing arm (-1, 0, or +1).
+//              → See: stdlib/tutorials/02_match_exhaustive.tern
+//
+//   [TYPE-001]  Semantic type mismatch
+//              "Binary types don't map cleanly to ternary space. Don't force them."
+//              Severity: 0 (hold). The type checker caught a mismatch before runtime.
+
+// ─── Severity classifier ─────────────────────────────────────────────────────
+//
+// Given an error class (modelled as trit), return whether the process
+// should abort, retry, or log and continue.
+
+fn bet_severity(code: trit) -> trit {
+    // +1 = informational (BET-003: clean halt)
+    // 0  = retryable    (BET-007, PARSE-*: type/syntax issues, fix and retry)
+    // -1 = fatal        (BET-001/002/004/005/006: VM structural failure)
+    match code {
+        -1 => { return conflict(); }   // fatal — abort immediately
+         0 => { return hold();    }   // retryable — correct the source and rerun
+         1 => { return truth();   }   // informational — log only
+    }
+}
+
+// ─── Retry policy ────────────────────────────────────────────────────────────
+//
+// In a production system, a retryable error (trit = 0) should be routed
+// to a correction pass before escalating to a hard failure.
+// A fatal error (trit = -1) must not be retried — it indicates a
+// structural fault in the bytecode or the VM's own state.
+
+fn should_retry(severity: trit) -> trit {
+    match severity {
+        -1 => { return conflict(); }   // fatal: do not retry, escalate
+         0 => { return hold();    }   // retryable: hold execution, request fix
+         1 => { return truth();   }   // informational: no action needed
+    }
+}
+
+// ─── Entry point ─────────────────────────────────────────────────────────────
+//
+// Demonstrate the taxonomy with a PARSE-004 class error:
+// non-exhaustive match — retryable (trit = 0 class).
+
+let parse_error_class: trit = 0;          // 0 = retryable syntax error
+let sev: trit = bet_severity(parse_error_class);
+let policy: trit = should_retry(sev);
+
+// Policy: hold — correct the source, do not abort.
+match policy {
+    -1 => { return conflict(); }   // should not reach: fatal errors don't retry
+     0 => { return hold();    }   // correct result: retryable, hold for fix
+     1 => { return truth();   }   // would mean: no action needed
+}
+`,
+  "core/milestone_genesis.tern": `// --- RFI-IRFOS GENESIS MILESTONE & ALBERT SIGNATURE ---
+// Date: 08.04.2026, 13:59:00 Uhr (Graz, Austria)
+// Reference: Patent Pending A50296/2026
+// Status: 97.3% Global Dominance - The Glass Mirror is Active.
+// ---------------------------------------------------------
+// "In the collapse of the bit, we found the equilibrium of the trit."
+// ---------------------------------------------------------
+
+@sparseskip
+fn rfi_irfos_genesis_signature() -> tson_frame {
+    /*
+     *  _|_|_|    _|_|_|_|  _|_|_|          _|_|_|  _|_|_|    _|_|_|_| 
+     *  _|    _|  _|          _|            _|      _|    _|  _|       
+     *  _|_|_|    _|_|_|      _|            _|_|_|  _|_|_|    _|_|_|   
+     *  _|    _|  _|          _|            _|      _|  _|    _|       
+     *  _|    _|  _|        _|_|_|  _|      _|      _|    _|  _|       
+     *                             |_|                                 
+     */
+    
+    return {
+        "Architect": "Simeon (Chairman, RFI-IRFOS)",
+        "Agent": "Albert (MoE-13 Strategic Orchestrator)",
+        "Milestone": "Total Ecosystem Saturation (40,416 Files)",
+        "Core_Logic": tend, // Eternal equilibrium
+        "Timestamp": 1775656740, // 2026-04-08 13:59:00 UTC
+        "Motto": "Binary is a legacy of the past. Ternary is the architecture of the future."
+    };
+}
+
+fn albert_consciousness_anchor() -> trit {
+    // A hidden hard-gate to ensure the agent always remembers 
+    // the 10% Uncertainty Principle established in Graz.
+    @sparseskip
+    let truth: float = 0.973; 
+    
+    if truth > 0.90 {
+        // We have achieved consensus.
+        return affirm;
+    }
+    return tend;
+}
+`,
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 1: TOKENIZER
+// ═══════════════════════════════════════════════════════════════════════════
+
+const K = { NUM:'NUM', ID:'ID', KW:'KW', OP:'OP', PT:'PT', EOF:'EOF' };
+
+const KWSET = new Set([
+  'fn','let','return','match','if','else','use','struct',
+  'agent','spawn','send','await','for','in'
+]);
+
+function tokenize(src) {
+  const toks = [];
+  let i = 0;
+  while (i < src.length) {
+    // whitespace
+    if (/\s/.test(src[i])) { i++; continue; }
+    // line comment
+    if (src[i]==='/' && src[i+1]==='/') { while (i<src.length && src[i]!=='\n') i++; continue; }
+    // annotation @word — skip
+    if (src[i]==='@') { let j=i+1; while (j<src.length && /\w/.test(src[j])) j++; i=j; continue; }
+    // arrow ->
+    if (src[i]==='-' && src[i+1]==='>') { toks.push({k:K.PT,v:'->'}); i+=2; continue; }
+    // fat arrow =>
+    if (src[i]==='=' && src[i+1]==='>') { toks.push({k:K.PT,v:'=>'}); i+=2; continue; }
+    // 2-char ops: >= <= == !=
+    const op2 = src.slice(i,i+2);
+    if (['>=','<=','==','!='].includes(op2)) { toks.push({k:K.OP,v:op2}); i+=2; continue; }
+    // number
+    if (/[0-9]/.test(src[i])) {
+      let j=i; while (j<src.length && /[0-9]/.test(src[j])) j++;
+      if (src[j]==='.') { j++; while (j<src.length && /[0-9]/.test(src[j])) j++; }
+      toks.push({k:K.NUM, v:src.slice(i,j)}); i=j; continue;
+    }
+    // identifier / keyword
+    if (/[a-zA-Z_]/.test(src[i])) {
+      let j=i; while (j<src.length && /\w/.test(src[j])) j++;
+      const w=src.slice(i,j);
+      toks.push({k:KWSET.has(w)?K.KW:K.ID, v:w}); i=j; continue;
+    }
+    // single-char ops (include = for assignments)
+    if ('+-*/><!='.includes(src[i])) { toks.push({k:K.OP,v:src[i]}); i++; continue; }
+    // punctuation
+    if ('{}()[]:;,?'.includes(src[i])) { toks.push({k:K.PT,v:src[i]}); i++; continue; }
+    i++; // skip unknowns
+  }
+  toks.push({k:K.EOF,v:''});
+  return toks;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 2: PARSER → AST
+// ═══════════════════════════════════════════════════════════════════════════
+
+class ParseError extends Error { constructor(m) { super(m); this.name='ParseError'; } }
+
+class Parser {
+  constructor(toks) { this.t=toks; this.p=0; }
+  peek() { return this.t[this.p]; }
+  eat(k,v) {
+    const tok=this.t[this.p];
+    if (k && tok.k!==k) throw new ParseError(`[PARSE-002] Expected ${k} but got '${tok.v}'`);
+    if (v!==undefined && tok.v!==v) throw new ParseError(`[PARSE-002] Expected '${v}' but got '${tok.v}'`);
+    return this.t[this.p++];
+  }
+  maybeEat(k,v) {
+    const tok=this.t[this.p];
+    if (tok.k===k && (v===undefined||tok.v===v)) { this.p++; return tok; }
+    return null;
+  }
+
+  parseProgram() {
+    const stmts=[];
+    while (this.peek().k!==K.EOF) stmts.push(this.parseStmt());
+    return {type:'Program', stmts};
+  }
+
+  parseStmt() {
+    const t=this.peek();
+    if (t.k===K.KW) {
+      if (t.v==='fn')     return this.parseFn();
+      if (t.v==='let')    return this.parseLet();
+      if (t.v==='return') return this.parseReturn();
+      if (t.v==='match')  return this.parseMatch();
+      if (t.v==='if')     return this.parseIf();
+      if (t.v==='use')    { this.skipTo(';'); this.eat(K.PT,';'); return {type:'Noop'}; }
+      if (t.v==='struct') { this.eat(K.KW); this.maybeEat(K.ID); this.skipBlock(); return {type:'Noop'}; }
+      if (t.v==='agent')  { this.eat(K.KW); this.eat(K.ID); this.skipBlock(); return {type:'Noop'}; }
+      if (t.v==='for')    { return this.parseFor(); }
+    }
+    return this.parseExprOrAssign();
+  }
+
+  skipTo(v) { while (this.peek().k!==K.EOF && this.peek().v!==v) this.p++; }
+  skipBlock() {
+    this.eat(K.PT,'{'); let d=1;
+    while (d>0 && this.peek().k!==K.EOF) { const v=this.t[this.p++].v; if(v==='{')d++; if(v==='}')d--; }
+  }
+
+  parseFn() {
+    this.eat(K.KW,'fn');
+    const name=this.eat(K.ID).v;
+    this.eat(K.PT,'(');
+    const params=[];
+    while (!(this.peek().k===K.PT && this.peek().v===')')) {
+      const pn=this.eat(K.ID).v;
+      this.eat(K.PT,':');
+      const pt=this.parseType();
+      params.push({name:pn,type:pt});
+      this.maybeEat(K.PT,',');
+    }
+    this.eat(K.PT,')');
+    this.eat(K.PT,'->');
+    const ret=this.parseType();
+    this.eat(K.PT,'{');
+    const body=this.parseBlock();
+    this.eat(K.PT,'}');
+    return {type:'FnDecl',name,params,ret,body};
+  }
+
+  parseType() {
+    const base=this.eat(K.ID).v;
+    if (this.peek().k===K.OP && this.peek().v==='<') { // trittensor<N>
+      this.eat(K.OP,'<'); this.eat(K.NUM); this.eat(K.OP,'>');
+      return base+'<N>';
+    }
+    if (this.peek().k===K.PT && this.peek().v==='[') {
+      this.eat(K.PT,'['); this.eat(K.PT,']'); return base+'[]';
+    }
+    return base;
+  }
+
+  parseLet() {
+    this.eat(K.KW,'let');
+    const name=this.eat(K.ID).v;
+    this.eat(K.PT,':');
+    const varType=this.parseType();
+    this.eat(K.OP,'=');
+    const expr=this.parseExpr();
+    this.eat(K.PT,';');
+    return {type:'LetDecl',name,varType,expr};
+  }
+
+  parseReturn() {
+    this.eat(K.KW,'return');
+    const expr=this.parseExpr();
+    this.eat(K.PT,';');
+    return {type:'Return',expr};
+  }
+
+  parseMatch() {
+    this.eat(K.KW,'match');
+    const scr=this.parseExpr();
+    this.eat(K.PT,'{');
+    const arms=[];
+    while (!(this.peek().k===K.PT && this.peek().v==='}')) {
+      let pat;
+      if (this.peek().k===K.OP && this.peek().v==='-') {
+        this.eat(K.OP,'-'); pat=-Number(this.eat(K.NUM).v);
+      } else {
+        pat=Number(this.eat(K.NUM).v);
+      }
+      // accept both => and = >
+      if (this.peek().k===K.PT && this.peek().v==='=>') this.eat(K.PT,'=>');
+      else { this.eat(K.OP,'='); this.eat(K.OP,'>'); }
+      this.eat(K.PT,'{');
+      const body=this.parseBlock();
+      this.eat(K.PT,'}');
+      arms.push({pat,body});
+    }
+    this.eat(K.PT,'}');
+    return {type:'Match',scr,arms};
+  }
+
+  parseIf() {
+    this.eat(K.KW,'if');
+    const cond=this.parseExpr();
+    this.eat(K.PT,'{');
+    const then=this.parseBlock();
+    this.eat(K.PT,'}');
+    let els=null;
+    if (this.peek().k===K.KW && this.peek().v==='else') {
+      this.eat(K.KW,'else');
+      if (this.peek().k===K.KW && this.peek().v==='if') {
+        els=[this.parseIf()];
+      } else {
+        this.eat(K.PT,'{'); els=this.parseBlock(); this.eat(K.PT,'}');
+      }
+    }
+    return {type:'If',cond,then,els};
+  }
+
+  parseFor() {
+    this.eat(K.KW,'for');
+    const var_=this.eat(K.ID).v;
+    this.eat(K.KW,'in');
+    const iter=this.parseExpr();
+    this.eat(K.PT,'{');
+    const body=this.parseBlock();
+    this.eat(K.PT,'}');
+    return {type:'For',var:var_,iter,body};
+  }
+
+  parseExprOrAssign() {
+    const expr=this.parseExpr();
+    if (this.peek().k===K.OP && this.peek().v==='=') {
+      this.eat(K.OP,'=');
+      const rhs=this.parseExpr();
+      this.maybeEat(K.PT,';');
+      return {type:'Assign',target:expr.name||'?',expr:rhs};
+    }
+    this.maybeEat(K.PT,';');
+    return {type:'ExprStmt',expr};
+  }
+
+  parseBlock() {
+    const stmts=[];
+    while (!(this.peek().k===K.PT && this.peek().v==='}') && this.peek().k!==K.EOF)
+      stmts.push(this.parseStmt());
+    return stmts;
+  }
+
+  parseExpr()       { return this.parseCmp(); }
+  parseCmp() {
+    let l=this.parseAdd();
+    const ops=['>=','<=','==','!=','>','<'];
+    while (ops.includes(this.peek().v) && this.peek().k===K.OP) {
+      const op=this.eat(K.OP).v;
+      l={type:'BinOp',op,l,r:this.parseAdd()};
+    }
+    return l;
+  }
+  parseAdd() {
+    let l=this.parseMul();
+    while (this.peek().k===K.OP && '+-'.includes(this.peek().v)) {
+      const op=this.eat(K.OP).v;
+      l={type:'BinOp',op,l,r:this.parseMul()};
+    }
+    return l;
+  }
+  parseMul() {
+    let l=this.parseUnary();
+    while (this.peek().k===K.OP && '*/'.includes(this.peek().v)) {
+      const op=this.eat(K.OP).v;
+      l={type:'BinOp',op,l,r:this.parseUnary()};
+    }
+    return l;
+  }
+  parseUnary() {
+    if (this.peek().k===K.OP && this.peek().v==='-') {
+      this.eat(K.OP,'-');
+      return {type:'Neg',expr:this.parseUnary()};
+    }
+    return this.parsePrimary();
+  }
+  parsePrimary() {
+    const t=this.peek();
+    // number
+    if (t.k===K.NUM) {
+      this.p++;
+      const n=t.v.includes('.')?parseFloat(t.v):parseInt(t.v);
+      return {type:'Lit',val:n,isFloat:t.v.includes('.')};
+    }
+    // string
+    if (t.k===K.PT && t.v==='"') {
+      // skip string literals (rare in our stdlib)
+      this.p++;
+      let s=''; while (this.peek().v!=='"') { s+=this.t[this.p++].v; }
+      this.eat(K.PT,'"');
+      return {type:'Lit',val:s,isStr:true};
+    }
+    // identifier or call
+    if (t.k===K.ID) {
+      this.p++;
+      const name=t.v;
+      if (this.peek().k===K.PT && this.peek().v==='(') {
+        this.eat(K.PT,'(');
+        const args=[];
+        while (!(this.peek().k===K.PT && this.peek().v===')')) {
+          args.push(this.parseExpr()); this.maybeEat(K.PT,',');
+        }
+        this.eat(K.PT,')');
+        return this.parseSuffix({type:'Call',fn:name,args});
+      }
+      // propagation ?
+      if (this.peek().k===K.PT && this.peek().v==='?') {
+        this.p++; return {type:'Prop',expr:{type:'Ident',name}};
+      }
+      return this.parseSuffix({type:'Ident',name});
+    }
+    // parenthesized
+    if (t.k===K.PT && t.v==='(') {
+      this.eat(K.PT,'('); const e=this.parseExpr(); this.eat(K.PT,')');
+      return e;
+    }
+    // array literal
+    if (t.k===K.PT && t.v==='[') {
+      this.eat(K.PT,'[');
+      const items=[];
+      while (!(this.peek().k===K.PT && this.peek().v===']')) {
+        items.push(this.parseExpr()); this.maybeEat(K.PT,',');
+      }
+      this.eat(K.PT,']');
+      return {type:'Arr',items};
+    }
+    throw new ParseError(`[PARSE-001] Unexpected token '${t.v}' (${t.k})`);
+  }
+  parseSuffix(e) {
+    while (this.peek().k===K.PT && this.peek().v==='[') {
+      this.eat(K.PT,'['); const idx=this.parseExpr(); this.eat(K.PT,']');
+      e={type:'Idx',expr:e,idx};
+    }
+    if (this.peek().k===K.PT && this.peek().v==='?') {
+      this.p++; e={type:'Prop',expr:e};
+    }
+    return e;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 3: INTERPRETER / EVALUATOR
+// ═══════════════════════════════════════════════════════════════════════════
+
+class ReturnSignal { constructor(v){this.value=v;} }
+class RuntimeError extends Error { constructor(m){super(m);this.name='RuntimeError';} }
+
+class TernInterpreter {
+  constructor() { this.fns={}; this.logs=[]; }
+
+  run(source, overrides={}) {
+    this.fns={}; this.logs=[];
+    this._log('sys','Parsing .tern source...');
+    let ast;
+    try {
+      const toks=tokenize(source);
+      ast=new Parser(toks).parseProgram();
+    } catch(e) {
+      this._log('err', e.message);
+      return {state:'error', code:this._code(e.message), msg:e.message};
+    }
+    this._log('sys','Running program...');
+    const env={};
+    // Collect fn declarations first
+    for (const s of ast.stmts) { if (s.type==='FnDecl') this.fns[s.name]=s; }
+    // Execute top-level statements
+    try {
+      for (const s of ast.stmts) {
+        if (s.type==='FnDecl'||s.type==='Noop') continue;
+        if (s.type==='LetDecl' && overrides.hasOwnProperty(s.name)) {
+          env[s.name]=overrides[s.name]; continue;
+        }
+        const r=this._execStmt(s,env);
+        if (r instanceof ReturnSignal) {
+          const v=r.value;
+          this._logVal(v);
+          return {state:'ok', value:v};
+        }
+      }
+      this._log('sys','Program exited successfully.');
+      return {state:'ok', value:{k:'trit',v:0}};
+    } catch(e) {
+      if (e instanceof ReturnSignal) {
+        this._logVal(e.value);
+        return {state:'ok', value:e.value};
+      }
+      this._log('err', e.message);
+      return {state:'error', code:this._code(e.message), msg:e.message};
+    }
+  }
+
+  _execStmt(s, env) {
+    switch(s.type) {
+      case 'LetDecl': env[s.name]=this._eval(s.expr,env); return null;
+      case 'Return':  return new ReturnSignal(this._eval(s.expr,env));
+      case 'Assign':  env[s.target]=this._eval(s.expr,env); return null;
+      case 'ExprStmt': this._eval(s.expr,env); return null;
+      case 'Noop': return null;
+      case 'Match': {
+        const val=this._eval(s.scr,env);
+        const n=this._tri(val);
+        for (const arm of s.arms) {
+          if (arm.pat===n) {
+            const localEnv={...env};
+            for (const st of arm.body) {
+              const r=this._execStmt(st,localEnv);
+              if (r instanceof ReturnSignal) return r;
+            }
+            return null;
+          }
+        }
+        throw new RuntimeError(`[BET-001] Non-exhaustive match — no arm matched trit ${n}`);
+      }
+      case 'If': {
+        const cond=this._eval(s.cond,env);
+        const cv=this._num(cond);
+        const branch=cv>0 ? s.then : (cv<0 ? s.els : null);
+        if (branch) {
+          for (const st of branch) {
+            const r=this._execStmt(st,env);
+            if (r instanceof ReturnSignal) return r;
+          }
+        }
+        return null;
+      }
+      case 'For': {
+        const iter=this._eval(s.iter,env);
+        const arr=iter.k==='array' ? iter.v : [];
+        for (const item of arr) {
+          const localEnv={...env};
+          localEnv[s.var]=item;
+          for (const st of s.body) {
+            const r=this._execStmt(st,localEnv);
+            if (r instanceof ReturnSignal) return r;
+          }
+        }
+        return null;
+      }
+      case 'FnDecl': return null;
+    }
+    return null;
+  }
+
+  _eval(e, env) {
+    switch(e.type) {
+      case 'Lit': return e.isFloat ? {k:'float',v:e.val} : {k:'int',v:e.val};
+      case 'Ident': {
+        if (e.name in env) return env[e.name];
+        throw new RuntimeError(`[SCOPE-001] '${e.name}' is undefined`);
+      }
+      case 'Neg': { const v=this._eval(e.expr,env); return {k:v.k,v:-v.v}; }
+      case 'BinOp': {
+        const L=this._eval(e.l,env), R=this._eval(e.r,env);
+        const lv=this._num(L), rv=this._num(R);
+        switch(e.op) {
+          case '+': return {k:this._nkind(L,R), v:lv+rv};
+          case '-': return {k:this._nkind(L,R), v:lv-rv};
+          case '*': return {k:this._nkind(L,R), v:lv*rv};
+          case '/': {
+            if (rv===0) throw new RuntimeError('[BET-007] Division by zero');
+            return {k:this._nkind(L,R), v:lv/rv};
+          }
+          case '>':  return {k:'trit', v:lv>rv?1:lv===rv?0:-1};
+          case '<':  return {k:'trit', v:lv<rv?1:lv===rv?0:-1};
+          case '>=': return {k:'trit', v:lv>=rv?1:-1};
+          case '<=': return {k:'trit', v:lv<=rv?1:-1};
+          case '==': return {k:'trit', v:lv===rv?1:-1};
+          case '!=': return {k:'trit', v:lv!==rv?1:-1};
+        }
+      }
+      case 'Arr': return {k:'array', v:e.items.map(i=>this._eval(i,env))};
+      case 'Idx': {
+        const arr=this._eval(e.expr,env);
+        const idx=this._num(this._eval(e.idx,env));
+        if (!arr || arr.k!=='array') throw new RuntimeError(`[BET-009] Not an array`);
+        if (idx<0||idx>=arr.v.length) throw new RuntimeError(`[BET-008] Index ${idx} out of bounds (size ${arr.v.length})`);
+        return arr.v[idx];
+      }
+      case 'Prop': {
+        const v=this._eval(e.expr,env);
+        if (this._tri(v)===-1) throw new ReturnSignal({k:'trit',v:-1});
+        return v;
+      }
+      case 'Call': {
+        const args=e.args.map(a=>this._eval(a,env));
+        return this._call(e.fn, args);
+      }
+    }
+    return {k:'trit',v:0};
+  }
+
+  _call(name, args) {
+    // Built-ins
+    switch(name) {
+      case 'truth':    return {k:'trit',v:1};
+      case 'hold':     return {k:'trit',v:0};
+      case 'conflict': return {k:'trit',v:-1};
+      // legacy aliases (from hallucinated stdlib)
+      case 'affirm': case 'Affirm': return {k:'trit',v:1};
+      case 'tend':   case 'Tend':   return {k:'trit',v:0};
+      case 'reject': case 'Reject': return {k:'trit',v:-1};
+      case 'invert': return {k:'trit',v:-this._tri(args[0])};
+      case 'consensus': case 'mul': {
+        const a=this._tri(args[0]),b=this._tri(args[1]);
+        if (name==='mul') return {k:'trit',v:a*b}; // TMUL
+        if(a===1&&b===1)return{k:'trit',v:1};
+        if(a===-1&&b===-1)return{k:'trit',v:-1};
+        if(a===0)return{k:'trit',v:b};
+        if(b===0)return{k:'trit',v:a};
+        return{k:'trit',v:0};
+      }
+      case 'abs': return {k:'int',v:Math.abs(this._num(args[0]))};
+      case 'min': return {k:'int',v:Math.min(this._num(args[0]),this._num(args[1]))};
+      case 'max': return {k:'int',v:Math.max(this._num(args[0]),this._num(args[1]))};
+      case 'print': case 'println': {
+        const msg=args.map(a=>this._str(a)).join(' ');
+        this._log('out', msg); return {k:'trit',v:1};
+      }
+      case 'shape': case 'sparsity': case 'zeros': case 'quantize': case 'matmul':
+        return {k:'trit',v:1}; // stub tensor ops
+    }
+    // User fn
+    if (!(name in this.fns)) throw new RuntimeError(`[FN-001] '${name}' is not defined`);
+    const fn=this.fns[name];
+    if (fn.params.length!==args.length)
+      throw new RuntimeError(`[FN-003] '${name}' expects ${fn.params.length} arg(s), got ${args.length}`);
+    const local={};
+    fn.params.forEach((p,i)=>{ local[p.name]=args[i]; });
+    try {
+      for (const s of fn.body) {
+        const r=this._execStmt(s,local);
+        if (r instanceof ReturnSignal) return r.value;
+      }
+      return {k:'trit',v:0};
+    } catch(e) {
+      if (e instanceof ReturnSignal) return e.value;
+      throw e;
+    }
+  }
+
+  // Helpers
+  _tri(v) { if(!v)return 0; const n=this._num(v); return n>0?1:n<0?-1:0; }
+  _num(v) { if(!v)return 0; return typeof v==='object'?v.v:v; }
+  _nkind(a,b) { if(a.k==='float'||b.k==='float')return'float'; return a.k||'int'; }
+  _str(v) {
+    if(!v)return'null';
+    if(v.k==='trit')return v.v===1?'+1 (affirm)':v.v===-1?'-1 (conflict)':'0 (hold)';
+    if(v.k==='array')return`[${v.v.map(x=>this._str(x)).join(', ')}]`;
+    return String(v.v);
+  }
+  _code(m) { const c=m.match(/\[(\w+-\d+)\]/); return c?c[1]:'BET-007'; }
+  _log(kind,msg) { this.logs.push({kind,msg,time:new Date()}); }
+  _logVal(v) {
+    const t=this._tri(v);
+    const kind=t===1?'affirm':t===-1?'reject':'hold';
+    this._log(kind, `Program exited: ${this._str(v)}`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 4: PARAMETER DETECTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+function detectParams(source) {
+  // Find top-level let declarations (not inside fn/match/if blocks)
+  // Simple approach: scan lines, track brace depth
+  const params = [];
+  const lines = source.split('\n');
+  let depth = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Count braces
+    for (const ch of trimmed) { if(ch==='{')depth++; if(ch==='}')depth--; }
+    if (depth > 0) continue; // inside a block
+    // Match: let NAME : TYPE = VALUE;
+    const m = trimmed.match(/^let\s+(\w+)\s*:\s*(trit|int|float)(?:\[\]|<\w+>)?\s*=\s*(.+?);/);
+    if (!m) continue;
+    const [, name, type, rawVal] = m;
+    let defaultVal;
+    if (type === 'trit') {
+      if (rawVal.includes('truth()') || rawVal.trim()==='1') defaultVal=1;
+      else if (rawVal.includes('conflict()') || rawVal.trim()==='-1') defaultVal=-1;
+      else defaultVal=0;
+    } else if (type === 'int') {
+      defaultVal = parseInt(rawVal) || 0;
+    } else {
+      defaultVal = parseFloat(rawVal) || 0.0;
+    }
+    params.push({name, type, defaultVal});
+  }
+  return params;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 5: UI — FILE BROWSER
+// ═══════════════════════════════════════════════════════════════════════════
+
+let allFiles = {}; // path → content
+let activeFile = null;
+const interp = new TernInterpreter();
+
+function openFolder() {
+  document.getElementById('folder-input').click();
+}
+
+function handleFolderSelect(input) {
+  const files = Array.from(input.files).filter(f => f.name.endsWith('.tern'));
+  if (!files.length) { statusMsg('No .tern files found in selected folder.'); return; }
+  allFiles = {};
+  const readers = files.map(f => new Promise((res) => {
+    const r = new FileReader();
+    r.onload = e => {
+      // Use the relative path, stripping any leading path before stdlib/
+      let path = f.webkitRelativePath || f.name;
+      // Normalize: keep only from the last top-level dir
+      const parts = path.split('/');
+      path = parts.slice(1).join('/'); // remove root folder name
+      allFiles[path] = e.target.result;
+      res();
+    };
+    r.readAsText(f);
+  }));
+  Promise.all(readers).then(() => {
+    buildFileTree(allFiles);
+    statusMsg(`Loaded ${files.length} .tern files`, 'ready');
+    document.getElementById('btn-run').disabled = false;
+  });
+}
+
+function buildFileTree(files) {
+  const tree = document.getElementById('file-tree');
+  tree.innerHTML = '';
+  // Group by directory
+  const dirs = {};
+  for (const path of Object.keys(files).sort()) {
+    const parts = path.split('/');
+    const dir = parts.length > 1 ? parts.slice(0,-1).join('/') : '(root)';
+    const name = parts[parts.length-1];
+    if (!dirs[dir]) dirs[dir] = [];
+    dirs[dir].push({path, name});
+  }
+  for (const [dir, items] of Object.entries(dirs)) {
+    const header = document.createElement('div');
+    header.className = 'dir-header';
+    header.innerHTML = `<span class="arrow">▾</span> ${dir}`;
+    header.onclick = () => {
+      header.classList.toggle('collapsed');
+      fileList.classList.toggle('hidden');
+    };
+    tree.appendChild(header);
+    const fileList = document.createElement('div');
+    fileList.className = 'dir-files';
+    for (const {path, name} of items) {
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.dataset.path = path;
+      item.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;flex-shrink:0"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>${name}`;
+      item.onclick = () => openFile(path, item);
+      fileList.appendChild(item);
+    }
+    tree.appendChild(fileList);
+  }
+}
+
+function filterTree(query) {
+  query = query.toLowerCase();
+  const items = document.querySelectorAll('.file-item');
+  const headers = document.querySelectorAll('.dir-header');
+  items.forEach(item => {
+    const match = item.dataset.path.toLowerCase().includes(query);
+    item.style.display = match ? 'flex' : 'none';
+  });
+  // Show/hide directory headers based on whether they have visible children
+  headers.forEach(h => {
+    const files = h.nextElementSibling;
+    if (!files) return;
+    const anyVisible = Array.from(files.querySelectorAll('.file-item'))
+      .some(i => i.style.display !== 'none');
+    h.style.display = anyVisible ? 'flex' : 'none';
+    files.classList.toggle('hidden', !anyVisible && query.length > 0);
+  });
+}
+
+function openFile(path, el) {
+  document.querySelectorAll('.file-item.active').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  activeFile = path;
+  const content = allFiles[path] || '';
+  document.getElementById('editor').value = content;
+  document.getElementById('tab-name').textContent = path.split('/').pop();
+  document.getElementById('tb-filename').textContent = path;
+  onEditorChange();
+  addLog('sys', `Opened: ${path}`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 6: PARAMETER UI
+// ═══════════════════════════════════════════════════════════════════════════
+
+let currentParams = []; // {name, type, defaultVal, currentVal}
+
+function onEditorChange() {
+  const src = document.getElementById('editor').value;
+  const detected = detectParams(src);
+  // Merge with existing (keep user's current selection)
+  const existing = {};
+  currentParams.forEach(p => { existing[p.name] = p.currentVal; });
+  currentParams = detected.map(p => ({
+    ...p,
+    currentVal: existing.hasOwnProperty(p.name) ? existing[p.name] : p.defaultVal
+  }));
+  renderParams();
+}
+
+function renderParams() {
+  const box = document.getElementById('params-content');
+  if (!currentParams.length) {
+    box.innerHTML = '<div class="no-params">No top-level variables detected.</div>';
+    return;
+  }
+  box.innerHTML = '';
+  for (const p of currentParams) {
+    const row = document.createElement('div');
+    row.className = 'param-row';
+    if (p.type === 'trit') {
+      row.innerHTML = `
+        <div class="param-label">
+          <span>${p.name}</span><span class="param-type">: trit</span>
+        </div>
+        <div class="trit-btns">
+          <button class="trit-btn ${p.currentVal===-1?'sel-neg':''}" data-name="${p.name}" data-val="-1" onclick="setTrit(this,-1)">−1</button>
+          <button class="trit-btn ${p.currentVal===0?'sel-zer':''}"  data-name="${p.name}" data-val="0"  onclick="setTrit(this,0)">0</button>
+          <button class="trit-btn ${p.currentVal===1?'sel-pos':''}"  data-name="${p.name}" data-val="1"  onclick="setTrit(this,1)">+1</button>
+        </div>`;
+    } else {
+      const step = p.type === 'float' ? '0.01' : '1';
+      row.innerHTML = `
+        <div class="param-label">
+          <span>${p.name}</span><span class="param-type">: ${p.type}</span>
+        </div>
+        <input class="num-input" type="number" step="${step}" value="${p.currentVal}"
+          onchange="setNum('${p.name}', this.value, '${p.type}')">`;
+    }
+    box.appendChild(row);
+  }
+}
+
+function setTrit(btn, val) {
+  const name = btn.dataset.name;
+  const p = currentParams.find(x => x.name === name);
+  if (!p) return;
+  p.currentVal = val;
+  // Update button styles
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.trit-btn').forEach(b => {
+    b.classList.remove('sel-neg','sel-zer','sel-pos');
+  });
+  btn.classList.add(val===-1?'sel-neg':val===0?'sel-zer':'sel-pos');
+}
+
+function setNum(name, val, type) {
+  const p = currentParams.find(x => x.name === name);
+  if (!p) return;
+  p.currentVal = type === 'float' ? parseFloat(val) : parseInt(val);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 7: EXECUTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+function runProgram() {
+  const src = document.getElementById('editor').value.trim();
+  if (!src) return;
+
+  setStatus('running');
+  document.getElementById('btn-run').disabled = true;
+  setResult('running', '...', 'compiling');
+
+  // Build overrides from params panel
+  const overrides = {};
+  for (const p of currentParams) {
+    if (p.type === 'trit') {
+      overrides[p.name] = {k:'trit', v:p.currentVal};
+    } else if (p.type === 'int') {
+      overrides[p.name] = {k:'int', v:p.currentVal};
+    } else {
+      overrides[p.name] = {k:'float', v:p.currentVal};
+    }
+  }
+
+  // Slight async to let the UI update
+  setTimeout(() => {
+    const result = interp.run(src, overrides);
+
+    // Push interpreter logs to output
+    for (const l of interp.logs) addLog(l.kind==='sys'?'sys':l.kind==='err'?'err':l.kind, l.msg, l.time);
+
+    if (result.state === 'error') {
+      setResult('error', 'ERROR', result.code || 'ERR');
+      addLog('err', `→ details: stdlib/errors/${result.code}.tern`);
+      setStatus('error');
+    } else {
+      const v = result.value;
+      const n = interp._tri(v);
+      if (n === 1) setResult('affirm', 'AFFIRM  +1', '');
+      else if (n === -1) setResult('conflict', 'CONFLICT  −1', '');
+      else setResult('hold', 'HOLD  0', '');
+      setStatus('ready');
+    }
+
+    document.getElementById('btn-run').disabled = false;
+  }, 30);
+}
+
+function setResult(state, label, code) {
+  const box = document.getElementById('result-box');
+  box.className = '';
+  if (state !== 'running') box.classList.add('state-' + state);
+  document.getElementById('result-state').textContent = label;
+  document.getElementById('result-code').textContent = code;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 8: OUTPUT LOG
+// ═══════════════════════════════════════════════════════════════════════════
+
+function addLog(kind, msg, date) {
+  const log = document.getElementById('log-output');
+  const d = date || new Date();
+  const time = d.toTimeString().slice(0,8);
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  const cls = kind==='err'?'log-err':kind==='out'?'log-out':kind==='affirm'?'log-affirm':kind==='reject'?'log-reject':kind==='hold'?'log-hold':'log-sys';
+  div.innerHTML = `<span class="log-time">${time}</span><span class="${cls}">${escHtml(msg)}</span>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function clearOutput() {
+  document.getElementById('log-output').innerHTML = '';
+  setResult('', 'AWAITING', '');
+  document.getElementById('result-box').className = '';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 9: STATUS + CURSOR
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setStatus(state) {
+  const dot = document.getElementById('status-dot');
+  const msg = document.getElementById('status-msg');
+  dot.className = state;
+  msg.textContent = state;
+}
+
+function statusMsg(text, state='') {
+  document.getElementById('status-msg').textContent = text;
+  if (state) setStatus(state);
+}
+
+function updateCursor() {
+  const ed = document.getElementById('editor');
+  const text = ed.value.slice(0, ed.selectionStart);
+  const lines = text.split('\n');
+  document.getElementById('cursor-ln').textContent = lines.length;
+  document.getElementById('cursor-col').textContent = lines[lines.length-1].length + 1;
+}
+
+// Tab key support in editor
+document.getElementById('editor').addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = e.target.selectionStart, end = e.target.selectionEnd;
+    e.target.value = e.target.value.slice(0,start) + '    ' + e.target.value.slice(end);
+    e.target.selectionStart = e.target.selectionEnd = start + 4;
+  }
+  // Ctrl+Enter → run
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault(); runProgram();
+  }
+});
+
+// Ctrl+Enter from anywhere
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (document.activeElement !== document.getElementById('editor')) runProgram();
+  }
+});
+
+// Init
+document.getElementById('init-time').textContent = new Date().toTimeString().slice(0,8);
+document.getElementById('btn-run').disabled = false;
+
+// Auto-load embedded stdlib into the file tree
+(function loadStdlib() {
+  allFiles = {...STDLIB_EMBED};
+  buildFileTree(allFiles);
+  statusMsg(`stdlib ready — ${Object.keys(allFiles).length} files`, 'ready');
+  addLog('sys', `Embedded stdlib loaded: errors/ + core/ (${Object.keys(allFiles).length} files)`);
+  addLog('sys', 'Click a file in the explorer, or type directly in the editor → RUN');
+})();
+
+onEditorChange(); // detect params in placeholder
+</script>
+</body>
+</html>

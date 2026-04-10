@@ -158,6 +158,8 @@ impl BetVm {
                         }
                         (Value::Int(av), Value::Int(bv)) => self.stack.push(Value::Int(av + bv)),
                         (Value::Float(av), Value::Float(bv)) => self.stack.push(Value::Float(av + bv)),
+                        (Value::Int(av), Value::Trit(bv)) => self.stack.push(Value::Int(av + bv as i64)),
+                        (Value::Trit(av), Value::Int(bv)) => self.stack.push(Value::Int(av as i64 + bv)),
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
@@ -168,6 +170,8 @@ impl BetVm {
                         (Value::Trit(av), Value::Trit(bv)) => self.stack.push(Value::Trit(av * bv)),
                         (Value::Int(av), Value::Int(bv)) => self.stack.push(Value::Int(av * bv)),
                         (Value::Float(av), Value::Float(bv)) => self.stack.push(Value::Float(av * bv)),
+                        (Value::Int(av), Value::Trit(bv)) => self.stack.push(Value::Int(av * bv as i64)),
+                        (Value::Trit(av), Value::Int(bv)) => self.stack.push(Value::Int(av as i64 * bv)),
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
@@ -266,6 +270,16 @@ impl BetVm {
                             let r = if x < y { Trit::Affirm } else if (x - y).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
+                        (Value::Int(x), Value::Trit(y)) => {
+                            let bv = y as i64;
+                            let r = if x < bv { Trit::Affirm } else if x == bv { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Trit(x), Value::Int(y)) => {
+                            let av = x as i64;
+                            let r = if av < y { Trit::Affirm } else if av == y { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
                         _ => return Err(VmError::TypeMismatch { expected: "Int or Float".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
@@ -281,13 +295,29 @@ impl BetVm {
                             let r = if x > y { Trit::Affirm } else if (x - y).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
+                        (Value::Int(x), Value::Trit(y)) => {
+                            let bv = y as i64;
+                            let r = if x > bv { Trit::Affirm } else if x == bv { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Trit(x), Value::Int(y)) => {
+                            let av = x as i64;
+                            let r = if av > y { Trit::Affirm } else if av == y { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
                         _ => return Err(VmError::TypeMismatch { expected: "Int or Float".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
                 0x16 => { // Teq
                     let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    let r = if a == b { Trit::Affirm } else { Trit::Reject };
+                    let is_eq = match (a.clone(), b.clone()) {
+                        (Value::Int(av), Value::Trit(bv)) => av == bv as i64,
+                        (Value::Trit(av), Value::Int(bv)) => av as i64 == bv,
+                        (Value::Float(av), Value::Float(bv)) => (av - bv).abs() < f64::EPSILON,
+                        _ => a == b,
+                    };
+                    let r = if is_eq { Trit::Affirm } else { Trit::Reject };
                     self.stack.push(Value::Trit(r));
                 }
                 0x17 => { // TpushInt
@@ -307,6 +337,17 @@ impl BetVm {
                     let mut b = [0u8; 8];
                     for i in 0..8 { b[i] = self.read_u8()?; }
                     self.stack.push(Value::Float(f64::from_le_bytes(b)));
+                }
+                0x20 => { // Tprint
+                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    match val {
+                        Value::Trit(t) => println!("{:?}", t),
+                        Value::Int(i) => println!("{}", i),
+                        Value::Float(f) => println!("{}", f),
+                        Value::String(s) => println!("{}", s),
+                        Value::TensorRef(idx) => println!("TensorRef({})", idx),
+                        Value::AgentRef(idx, addr) => println!("AgentRef({}, {:?})", idx, addr),
+                    }
                 }
                 0x22 => { // Tidx
                     let col = self.stack.pop().ok_or(VmError::StackUnderflow)?;
