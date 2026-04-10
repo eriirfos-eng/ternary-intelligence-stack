@@ -2,6 +2,7 @@
 pub enum Expr {
     TritLiteral(i8),
     IntLiteral(i64),
+    FloatLiteral(f64),
     StringLiteral(String),
     Ident(String),
     BinaryOp {
@@ -52,6 +53,8 @@ pub enum Expr {
     Propagate {
         expr: Box<Expr>,
     },
+    /// [1, 0, -1]
+    TritTensorLiteral(Vec<i8>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -137,6 +140,11 @@ pub enum Stmt {
         col: Expr,
         value: Expr,
     },
+    /// ident = value;
+    Set {
+        name: String,
+        value: Expr,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -159,6 +167,7 @@ pub struct Function {
     pub params: Vec<(String, Type)>,
     pub return_type: Type,
     pub body: Vec<Stmt>,
+    pub directive: Option<String>,
 }
 
 /// Top-level struct definition: `struct Name { field: type, ... }`

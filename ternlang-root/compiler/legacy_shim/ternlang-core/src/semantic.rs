@@ -310,6 +310,15 @@ impl SemanticAnalyzer {
                 self.infer_expr_type(value)?;
                 Ok(())
             }
+
+            Stmt::Set { name, value } => {
+                let var_ty = self.lookup_var(name)?;
+                let val_ty = self.infer_expr_type(value)?;
+                if var_ty != val_ty && !matches!(value, Expr::Cast { .. }) {
+                    return Err(SemanticError::TypeMismatch { expected: var_ty, found: val_ty });
+                }
+                Ok(())
+            }
         }
     }
 
@@ -319,6 +328,7 @@ impl SemanticAnalyzer {
         match expr {
             Expr::TritLiteral(_)   => Ok(Type::Trit),
             Expr::IntLiteral(_)    => Ok(Type::Int),
+            Expr::FloatLiteral(_)  => Ok(Type::Float),
             Expr::StringLiteral(_) => Ok(Type::String),
             Expr::Ident(name)      => self.lookup_var(name),
 
@@ -390,6 +400,10 @@ impl SemanticAnalyzer {
                     return Err(SemanticError::PropagateOnNonTrit { found: inner });
                 }
                 Ok(Type::Trit)
+            }
+
+            Expr::TritTensorLiteral(vals) => {
+                Ok(Type::TritTensor { dims: vec![vals.len()] })
             }
 
             Expr::FieldAccess { object, field } => {

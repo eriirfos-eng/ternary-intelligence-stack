@@ -4,10 +4,13 @@ use logos::Logos;
 #[logos(skip r"[ \t\n\f]+")] // Skip whitespace
 #[logos(skip(r"//[^\n]*", allow_greedy = true))]   // Skip line comments
 pub enum Token {
+    #[regex(r"[0-9]+\.[0-9]+", |lex| lex.slice().parse::<f64>().ok(), priority = 100)]
+    Float(f64),
+
     // Ternary Specific
-    #[token("-1")]
-    #[token("0")]
-    #[token("1")]
+    #[token("-1", priority = 2)]
+    #[token("0", priority = 2)]
+    #[token("1", priority = 2)]
     TritLiteral,
 
     // Ternary semantic keywords — first-class trit values

@@ -45,10 +45,11 @@ impl fmt::Display for VmError {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Trit(Trit),
     Int(i64),
+    Float(f64),
     String(String),
     TensorRef(usize),
     AgentRef(usize, Option<String>),
@@ -141,24 +142,28 @@ impl BetVm {
                             self.stack.push(Value::Trit(sum));
                             self.carry_reg = carry;
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "Trit".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Int(av), Value::Int(bv)) => self.stack.push(Value::Int(av + bv)),
+                        (Value::Float(av), Value::Float(bv)) => self.stack.push(Value::Float(av + bv)),
+                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
                 0x03 => { // Tmul
                     let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     match (a.clone(), b.clone()) {
-                        (Value::Trit(av), Value::Trit(bv)) => {
-                            self.stack.push(Value::Trit(av * bv));
-                        }
-                        _ => return Err(VmError::TypeMismatch { expected: "Trit".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Trit(av), Value::Trit(bv)) => self.stack.push(Value::Trit(av * bv)),
+                        (Value::Int(av), Value::Int(bv)) => self.stack.push(Value::Int(av * bv)),
+                        (Value::Float(av), Value::Float(bv)) => self.stack.push(Value::Float(av * bv)),
+                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
                 0x04 => { // Tneg
                     let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     match a.clone() {
                         Value::Trit(av) => self.stack.push(Value::Trit(-av)),
-                        _ => return Err(VmError::TypeMismatch { expected: "Trit".into(), found: format!("{:?}", a) }),
+                        Value::Int(av) => self.stack.push(Value::Int(-av)),
+                        Value::Float(av) => self.stack.push(Value::Float(-av)),
+                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", a) }),
                     }
                 }
                 0x05 => { // TjmpPos
@@ -243,7 +248,11 @@ impl BetVm {
                             let r = if x < y { Trit::Affirm } else if x == y { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "Int".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Float(x), Value::Float(y)) => {
+                            let r = if x < y { Trit::Affirm } else if (x - y).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Int or Float".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
                 0x15 => { // Tgreater
@@ -254,7 +263,11 @@ impl BetVm {
                             let r = if x > y { Trit::Affirm } else if x == y { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "Int".into(), found: format!("{:?}", (a, b)) }),
+                        (Value::Float(x), Value::Float(y)) => {
+                            let r = if x > y { Trit::Affirm } else if (x - y).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Int or Float".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
                 0x16 => { // Teq
@@ -275,6 +288,11 @@ impl BetVm {
                         (Value::Int(x), Value::Int(y)) => self.stack.push(Value::Int(x + y)),
                         _ => return Err(VmError::TypeMismatch { expected: "Int".into(), found: format!("{:?}", (a, b)) }),
                     }
+                }
+                0x19 => { // TpushFloat
+                    let mut b = [0u8; 8];
+                    for i in 0..8 { b[i] = self.read_u8()?; }
+                    self.stack.push(Value::Float(f64::from_le_bytes(b)));
                 }
                 0x22 => { // Tidx
                     let col = self.stack.pop().ok_or(VmError::StackUnderflow)?;
@@ -299,7 +317,7 @@ impl BetVm {
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
                     let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
-                    match (rf, val) {
+                    match (rf.clone(), val.clone()) {
                         (Value::TensorRef(idx), Value::Trit(t)) => {
                             let len = self.tensors[idx].len();
                             let n = (len as f64).sqrt() as usize;
@@ -322,6 +340,41 @@ impl BetVm {
                             self.stack.push(Value::Int(1));
                         }
                     } else { return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) }); }
+                }
+                0x30 => { // Tspawn — (type_id) → AgentRef
+                    let type_id = self.read_u16()?;
+                    if let Some(&handler_addr) = self.agent_types.get(&type_id) {
+                        let id = self.agents.len();
+                        self.agents.push(AgentInstance { handler_addr, mailbox: Default::default() });
+                        self.stack.push(Value::AgentRef(id, None));
+                    } else { return Err(VmError::InvalidOpcode(0x30)); }
+                }
+                0x31 => { // Tsend — msg, target → void
+                    let msg = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let target = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let Value::AgentRef(id, None) = target {
+                        if id < self.agents.len() {
+                            self.agents[id].mailbox.push_back(msg);
+                        } else { return Err(VmError::TypeMismatch { expected: "Valid AgentRef".into(), found: format!("{:?}", id) }); }
+                    } else { return Err(VmError::TypeMismatch { expected: "Local AgentRef".into(), found: format!("{:?}", target) }); }
+                }
+                0x32 => { // Tawait — target → result
+                    let target = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let Value::AgentRef(id, None) = target {
+                        if id < self.agents.len() {
+                            let handler_addr = self.agents[id].handler_addr;
+                            let msg = self.agents[id].mailbox.pop_front().unwrap_or(Value::default());
+                            
+                            // Synchronous call to handler
+                            self.register_stack.push(self.registers.clone());
+                            self.call_stack.push(self.pc);
+                            self.pc = handler_addr;
+                            self.stack.push(msg); // Push msg as param
+                            // After PC jump, loop continues in handler.
+                            // But wait, Tawait needs to wait for TRET.
+                            // The current loop structure is fine, just like TCALL.
+                        } else { return Err(VmError::TypeMismatch { expected: "Valid AgentRef".into(), found: format!("{:?}", id) }); }
+                    } else { return Err(VmError::TypeMismatch { expected: "Local AgentRef".into(), found: format!("{:?}", target) }); }
                 }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
