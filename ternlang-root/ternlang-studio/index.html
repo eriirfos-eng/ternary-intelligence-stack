@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TernStudio — Ternary Intelligence Stack</title>
   <style>
-    /* ─── Reset + Base ─────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
     body {
@@ -18,7 +17,7 @@
       transition: background 0.2s, color 0.2s;
     }
 
-    /* ─── Color vars — Dark (default) ──────────────────────────────────── */
+    /* ─── Color vars — Dark (default) ─────────────────────────────── */
     :root {
       --bg:        #080b10;
       --bg1:       #0d1219;
@@ -34,9 +33,11 @@
       --muted:     #4a5a6a;
       --muted2:    #2a3a4a;
       --active-file-bg: #0d1e2e;
+      --sidebar-w: 220px;
+      --output-h:  220px;
     }
 
-    /* ─── Color vars — Light ────────────────────────────────────────────── */
+    /* ─── Color vars — Light ───────────────────────────────────────── */
     html[data-theme="light"] {
       --bg:        #f0f2f5;
       --bg1:       #ffffff;
@@ -65,1041 +66,906 @@
     html[data-theme="light"] .error-output { background: #fff8f8; border-color: #f0b0b0; }
     html[data-theme="light"] .meta-item { background: var(--bg2); border-color: var(--border); }
     html[data-theme="light"] #statusbar { background: #e0e4e8; }
+    html[data-theme="light"] .dash-card { background: var(--bg1); border-color: var(--border); }
+    html[data-theme="light"] .activity-bar { background: #e8ebef; border-color: var(--border); }
 
-    /* ─── Topbar ────────────────────────────────────────────────────────── */
+    /* ─── Topbar ───────────────────────────────────────────────────── */
     #topbar {
-      height: 42px;
-      min-height: 42px;
+      height: 42px; min-height: 42px;
       background: var(--bg1);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 0;
-      padding: 0;
-      z-index: 100;
+      display: flex; align-items: center; gap: 0;
+      z-index: 100; flex-shrink: 0;
     }
-
     .tb-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 16px;
-      border-right: 1px solid var(--border);
-      height: 100%;
-      color: var(--cyan);
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      user-select: none;
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 16px; border-right: 1px solid var(--border);
+      height: 100%; color: var(--cyan);
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase; user-select: none;
     }
-    .tb-logo .logo-mark {
-      font-size: 20px;
-      line-height: 1;
-    }
-    .tb-logo .logo-sub {
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 0.08em;
-    }
-
+    .tb-logo .logo-mark { font-size: 20px; line-height: 1; }
+    .tb-logo .logo-sub { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; }
     .tb-spacer { flex: 1; }
-
-    .tb-run {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 18px;
-      height: 100%;
-      background: var(--green);
-      color: #050a06;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.1s;
+    .tb-btn {
+      height: 28px; padding: 0 12px;
+      background: var(--bg2); border: 1px solid var(--border2);
+      color: var(--text); font-family: inherit; font-size: 11px;
+      cursor: pointer; border-radius: 4px; display: flex; align-items: center;
+      gap: 5px; margin-right: 6px; transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
     }
-    .tb-run:hover { opacity: 0.85; }
-    .tb-run:active { opacity: 0.7; }
-    .tb-run.running { background: var(--amber); }
-    .tb-run .kbd {
-      font-size: 10px;
-      opacity: 0.6;
-      font-weight: 400;
+    .tb-btn:hover { background: var(--bg3); border-color: var(--cyan); color: var(--cyan); }
+    .tb-btn.run-btn {
+      background: #0a2010; border-color: var(--green); color: var(--green); font-weight: 700;
     }
-
-    .tb-divider {
-      width: 1px;
-      height: 100%;
-      background: var(--border);
+    .tb-btn.run-btn:hover { background: #0d2c18; }
+    .tb-btn.run-btn.running { background: #1a1000; border-color: var(--amber); color: var(--amber); }
+    .tb-btn.upskill-btn {
+      background: #120a00; border-color: var(--amber); color: var(--amber); font-weight: 600;
     }
-
-    .tb-section {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 14px;
-      height: 100%;
-      border-right: 1px solid var(--border);
+    .tb-btn.upskill-btn:hover { background: #1c1200; }
+    .kbd { font-size: 9px; color: var(--muted); background: var(--bg3); padding: 1px 4px; border-radius: 3px; }
+    .tb-sep { width: 1px; background: var(--border); height: 22px; margin: 0 4px; }
+    .tb-key-wrap {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0 12px; border-left: 1px solid var(--border); height: 100%;
     }
-
-    .tb-label {
-      color: var(--muted);
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
+    .tb-key-wrap label { font-size: 10px; color: var(--muted); white-space: nowrap; }
     .tb-key-input {
-      background: var(--bg2);
-      border: 1px solid var(--border2);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 11px;
-      padding: 4px 8px;
-      width: 160px;
-      outline: none;
-      transition: border-color 0.15s;
+      background: var(--bg2); border: 1px solid var(--border2);
+      color: var(--text); font-family: inherit; font-size: 11px;
+      padding: 3px 8px; border-radius: 4px; width: 180px; outline: none;
     }
     .tb-key-input:focus { border-color: var(--cyan); }
-    .tb-key-input::placeholder { color: var(--muted); }
-
     .tb-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 7px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+      font-size: 10px; padding: 2px 8px; border-radius: 3px;
+      border: 1px solid var(--border2); background: var(--bg2);
+      color: var(--muted); white-space: nowrap; margin-left: 4px;
     }
-    .badge-free  { background: var(--muted2); color: var(--muted); border: 1px solid var(--border); }
-    .badge-t2    { background: #0a2030; color: var(--cyan); border: 1px solid #1a4060; }
-    .badge-t3    { background: #201000; color: var(--amber); border: 1px solid #503000; }
-    .badge-t4    { background: #200010; color: #ff80c0; border: 1px solid #500030; }
+    .badge-free { background: var(--bg2); border-color: var(--border2); color: var(--muted); }
+    .badge-t2   { background: #0a1a2e; border-color: #1a4a8a; color: #60a8ff; }
+    .badge-t3   { background: #1a1000; border-color: #604000; color: var(--amber); }
+    .badge-t4   { background: #100a00; border-color: var(--amber); color: var(--amber); font-weight: 700; }
 
-    .tb-endpoint-input {
-      background: var(--bg2);
-      border: 1px solid var(--border2);
-      color: var(--muted);
-      font-family: inherit;
-      font-size: 10px;
-      padding: 4px 8px;
-      width: 200px;
-      outline: none;
+    /* ─── View bar ─────────────────────────────────────────────────── */
+    #viewbar {
+      height: 36px; min-height: 36px; flex-shrink: 0;
+      background: var(--bg1); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 2px; padding: 0 8px;
+      z-index: 99;
     }
-    .tb-endpoint-input:focus { border-color: var(--border2); color: var(--text); }
+    .view-tab {
+      height: 28px; padding: 0 14px;
+      background: transparent; border: 1px solid transparent;
+      color: var(--muted); font-family: inherit; font-size: 11px;
+      cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 5px;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); background: var(--bg2); }
+    .view-tab.active { color: var(--cyan); background: var(--bg2); border-color: var(--border2); }
 
-    /* ─── Main layout ───────────────────────────────────────────────────── */
-    #main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 240px 1fr 340px;
-      grid-template-rows: 1fr;
-      overflow: hidden;
-    }
+    /* ─── Views ────────────────────────────────────────────────────── */
+    .view { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .view.active { display: flex; }
 
-    /* ─── Sidebar ───────────────────────────────────────────────────────── */
-    #sidebar {
-      background: var(--bg1);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+    /* ─── Dashboard view ───────────────────────────────────────────── */
+    #view-dashboard { overflow-y: auto; padding: 20px; gap: 16px; }
+    .dash-section-title {
+      font-size: 10px; color: var(--muted); letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 10px;
     }
-
-    .panel-header {
-      height: 32px;
-      min-height: 32px;
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-weight: 600;
-      gap: 6px;
+    .dash-grid {
+      display: grid; gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      margin-bottom: 20px;
     }
-    .panel-header .ph-dot {
-      width: 5px; height: 5px;
-      background: var(--cyan);
-      border-radius: 50%;
+    .dash-card {
+      background: var(--bg1); border: 1px solid var(--border);
+      border-radius: 6px; padding: 16px;
     }
-
-    #file-tree {
-      flex: 1;
-      overflow-y: auto;
-      padding: 6px 0;
+    .dash-card-title {
+      font-size: 10px; color: var(--muted); letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 12px;
     }
-    #file-tree::-webkit-scrollbar { width: 4px; }
-    #file-tree::-webkit-scrollbar-track { background: transparent; }
-    #file-tree::-webkit-scrollbar-thumb { background: var(--border2); }
-
-    .tree-section { margin-bottom: 4px; }
-    .tree-dir {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      color: var(--cyan);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      user-select: none;
+    .dash-stat { font-size: 28px; font-weight: 700; color: var(--cyan); line-height: 1; margin-bottom: 4px; }
+    .dash-stat-sub { font-size: 10px; color: var(--muted); }
+    .dash-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; padding: 4px 10px; border-radius: 4px;
+      border: 1px solid var(--border2); background: var(--bg2);
     }
-    .tree-dir:hover { background: var(--bg3); }
-    .tree-dir .arrow { transition: transform 0.15s; display: inline-block; color: var(--muted); font-size: 9px; }
-    .tree-dir.collapsed .arrow { transform: rotate(-90deg); }
-
-    .tree-files { }
-    .tree-files.hidden { display: none; }
-
-    .tree-file {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 12px 3px 24px;
-      color: var(--text);
-      font-size: 11px;
-      cursor: pointer;
-      user-select: none;
-      border-left: 2px solid transparent;
-      transition: background 0.1s, border-color 0.1s;
+    .dash-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .dash-pill .dot.err { background: var(--red); }
+    .dash-pill .dot.warn { background: var(--amber); }
+    .dash-quick-btns { display: flex; flex-direction: column; gap: 6px; }
+    .dash-quick-btn {
+      background: var(--bg2); border: 1px solid var(--border2);
+      color: var(--text); font-family: inherit; font-size: 11px;
+      padding: 7px 12px; border-radius: 4px; cursor: pointer;
+      text-align: left; transition: all 0.15s;
     }
-    .tree-file:hover { background: var(--bg3); }
-    .tree-file.active {
-      background: #0d1e2e;
-      border-left-color: var(--cyan);
-      color: var(--cyan);
+    .dash-quick-btn:hover { background: var(--bg3); border-color: var(--cyan); color: var(--cyan); }
+    .dash-run-list { display: flex; flex-direction: column; gap: 4px; }
+    .dash-run-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; padding: 5px 8px;
+      background: var(--bg2); border-radius: 3px;
     }
-    .tree-file .tier-dot {
-      width: 5px; height: 5px; border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .t1 { background: var(--muted); }
-    .t2 { background: var(--cyan); }
-    .t3 { background: var(--amber); }
-
-    /* ─── Editor pane ───────────────────────────────────────────────────── */
-    #editor-pane {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .editor-tabs {
-      height: 32px;
-      min-height: 32px;
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: flex-end;
-      padding: 0 0;
-      overflow-x: auto;
-    }
-    .editor-tabs::-webkit-scrollbar { display: none; }
-
-    .tab {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 14px;
-      height: 30px;
-      color: var(--muted);
-      font-size: 11px;
-      cursor: pointer;
-      border-top: 2px solid transparent;
-      border-right: 1px solid var(--border);
-      white-space: nowrap;
-      transition: color 0.1s;
-    }
-    .tab:hover { color: var(--text); }
-    .tab.active {
-      background: var(--bg);
-      color: var(--text);
-      border-top-color: var(--cyan);
-    }
-
-    #monaco-container {
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .editor-toolbar {
-      height: 34px;
-      min-height: 34px;
-      background: var(--bg2);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 12px;
-    }
-
-    .tool-btn {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 11px;
-      cursor: pointer;
-      transition: border-color 0.1s, color 0.1s;
-    }
-    .tool-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-    .tool-btn .icon { font-style: normal; }
-
-    .tool-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
-
-    .cursor-pos {
-      margin-left: auto;
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    /* ─── Output pane ───────────────────────────────────────────────────── */
-    #output-pane {
-      background: var(--bg1);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .output-tabs {
-      height: 32px;
-      min-height: 32px;
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-    }
-    .out-tab {
-      padding: 0 14px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      color: var(--muted);
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-    .out-tab.active { color: var(--text); border-bottom-color: var(--cyan); }
-    .out-tab:hover { color: var(--text); }
-
-    .out-panel { flex: 1; overflow-y: auto; padding: 12px; display: none; }
-    .out-panel.visible { display: block; }
-    .out-panel::-webkit-scrollbar { width: 4px; }
-    .out-panel::-webkit-scrollbar-thumb { background: var(--border2); }
-
-    /* VM output */
-    .vm-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .status-idle    { background: var(--muted2); color: var(--muted); border: 1px solid var(--border); }
-    .status-ok      { background: #051a0d; color: var(--green); border: 1px solid #0a4020; }
-    .status-error   { background: #1a0508; color: var(--red); border: 1px solid #4a0a15; }
-    .status-running { background: #1a1000; color: var(--amber); border: 1px solid #4a3000; }
-
-    .vm-section {
-      margin-bottom: 16px;
-    }
-    .vm-section-title {
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .print-output {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 10px;
-      font-size: 12px;
-      line-height: 1.6;
-      color: var(--green);
-      min-height: 40px;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .print-output.empty { color: var(--muted); font-style: italic; }
-
-    .error-output {
-      background: #0d0306;
-      border: 1px solid #3a0a15;
-      padding: 10px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--red);
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    .reg-table { width: 100%; border-collapse: collapse; }
-    .reg-table td {
-      padding: 3px 6px;
-      font-size: 11px;
-      border-bottom: 1px solid var(--border);
-    }
-    .reg-table td:first-child { color: var(--muted); width: 28px; }
-    .reg-table td:last-child { color: var(--cyan); font-size: 11px; }
-    .reg-row-affirm td:last-child { color: var(--green); }
-    .reg-row-reject td:last-child { color: var(--red); }
-    .reg-row-zero td:last-child { color: var(--amber); }
-
-    .meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .meta-item {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      padding: 8px;
-    }
-    .meta-label {
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .meta-value {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--cyan);
-    }
-
-    /* ─── API Explorer tab ──────────────────────────────────────────────── */
-    .api-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .api-method {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      min-width: 40px;
-      text-align: center;
-    }
-    .method-post { background: #0a2030; color: var(--cyan); border: 1px solid #1a4060; }
-    .method-get  { background: #051a0d; color: var(--green); border: 1px solid #0a4020; }
-    .api-path { font-size: 11px; color: var(--text); }
-    .api-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
-    .api-try {
-      margin-left: auto;
-      padding: 2px 8px;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      color: var(--muted);
-      font-family: inherit;
-      font-size: 10px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .api-try:hover { border-color: var(--cyan); color: var(--cyan); }
-
-    /* ─── Status bar ────────────────────────────────────────────────────── */
-    #statusbar {
-      height: 22px;
-      min-height: 22px;
-      background: #040608;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      gap: 16px;
-      color: var(--muted);
-      font-size: 10px;
-      letter-spacing: 0.04em;
-    }
-    #statusbar .sb-item { display: flex; align-items: center; gap: 5px; }
-    #statusbar .sb-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
-    #statusbar .sb-dot.warn { background: var(--amber); }
-    #statusbar .sb-dot.err  { background: var(--red); }
-    #statusbar .sb-sep { width: 1px; height: 14px; background: var(--border); }
-    #statusbar .sb-right { margin-left: auto; }
-
-    /* ─── Usage panel ──────────────────────────────────────────────────── */
-    .usage-key-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-    }
-    .usage-key-display {
-      font-size: 11px;
-      color: var(--text);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 160px;
-    }
-    .usage-numbers {
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      margin: 8px 0 6px;
-    }
-    .usage-numbers #usageUsed { font-size: 22px; font-weight: 700; color: var(--cyan); }
-    .usage-sep { color: var(--muted); font-size: 14px; }
-    .usage-numbers #usageLimit { font-size: 14px; color: var(--text); }
-    .usage-unit { font-size: 11px; color: var(--muted); margin-left: 4px; }
-    .usage-bar-track {
-      height: 4px;
-      background: var(--border2);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: 6px;
-    }
-    .usage-bar-fill {
-      height: 100%;
-      background: var(--cyan);
-      border-radius: 2px;
-      transition: width 0.4s ease;
-    }
+    .dash-run-item .run-name { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dash-run-item .run-status { font-size: 10px; }
+    .run-ok   { color: var(--green); }
+    .run-err  { color: var(--red); }
+    .dash-run-empty { font-size: 11px; color: var(--muted); font-style: italic; }
+    .usage-bar-wrap { background: var(--bg3); border-radius: 3px; height: 6px; margin: 8px 0 4px; }
+    .usage-bar-fill { height: 6px; border-radius: 3px; background: var(--cyan); transition: width 0.4s; }
     .usage-bar-fill.warn { background: var(--amber); }
     .usage-bar-fill.crit { background: var(--red); }
-    .usage-meta { font-size: 11px; color: var(--muted); }
-    .tier-benefits { margin-bottom: 12px; }
-    .tier-benefit { font-size: 11px; color: var(--text); padding: 2px 0; }
-    .t1-benefit { color: var(--cyan); font-weight: 600; margin-bottom: 2px; }
-    .muted-benefit { color: var(--muted); }
-    .upgrade-btn {
-      display: inline-block;
-      padding: 6px 12px;
-      background: var(--bg2);
-      border: 1px solid var(--border2);
-      color: var(--cyan);
-      font-family: inherit;
-      font-size: 11px;
-      text-decoration: none;
-      transition: border-color 0.1s, background 0.1s;
-    }
-    .upgrade-btn:hover { border-color: var(--cyan); background: var(--bg3); }
 
-    /* ─── Upgrade modal ────────────────────────────────────────────────── */
-    #upgradeModal {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.72);
+    /* ─── Editor view ──────────────────────────────────────────────── */
+    #view-editor {
+      flex: 1; display: none; overflow: hidden;
+      flex-direction: row;
+    }
+    #view-editor.active { display: flex; }
+
+    /* Activity bar */
+    .activity-bar {
+      width: 40px; min-width: 40px; background: var(--bg1);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 6px 0; gap: 2px; z-index: 10;
+    }
+    .act-btn {
+      width: 32px; height: 32px; border-radius: 4px;
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); font-size: 15px;
       display: flex; align-items: center; justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(3px);
+      transition: all 0.15s;
     }
-    #upgradeCard {
-      background: var(--bg1);
-      border: 1px solid var(--border2);
-      width: 860px;
-      max-width: 96vw;
-      max-height: 92vh;
-      overflow-y: auto;
-      padding: 0;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-    }
-    .modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 24px 14px;
-      border-bottom: 1px solid var(--border);
-    }
-    .modal-title { font-size: 14px; font-weight: 700; color: var(--cyan); letter-spacing: 0.04em; }
-    .modal-close {
-      background: none; border: none; color: var(--muted); font-size: 14px;
-      cursor: pointer; padding: 4px 8px; transition: color 0.1s;
-    }
-    .modal-close:hover { color: var(--text); }
-    .modal-sub { padding: 12px 24px 4px; color: var(--muted); font-size: 11px; }
-    .plan-grid {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 1px;
-      background: var(--border); margin: 16px 24px;
-    }
-    .plan-card {
-      background: var(--bg2); padding: 20px; position: relative;
-      display: flex; flex-direction: column;
-    }
-    .plan-card-highlight { background: #080f18; }
-    .plan-badge-top {
-      position: absolute; top: -1px; right: 16px;
-      background: var(--cyan); color: #000; font-size: 9px; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px;
-    }
-    .plan-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-    .plan-price { font-size: 26px; font-weight: 700; color: var(--cyan); margin: 6px 0 14px; }
-    .plan-period { font-size: 12px; color: var(--muted); font-weight: 400; }
-    .plan-features { list-style: none; margin-bottom: 16px; flex: 1; }
-    .plan-features li { font-size: 11px; color: var(--text); padding: 3px 0; line-height: 1.4; }
-    .plan-features .feat-muted { color: var(--muted); }
-    .plan-btn {
-      display: block; padding: 9px 0; text-align: center;
-      background: var(--bg3); border: 1px solid var(--border2);
-      color: var(--text); font-family: inherit; font-size: 11px; font-weight: 700;
-      text-decoration: none; letter-spacing: 0.04em;
-      transition: border-color 0.1s, color 0.1s, background 0.1s;
-      cursor: pointer;
-    }
-    .plan-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-    .plan-btn-primary { border-color: var(--cyan); color: var(--cyan); }
-    .plan-btn-primary:hover { background: #0a1e30; }
-    .plan-btn-highlight { background: var(--cyan); color: #050a06; border-color: var(--cyan); }
-    .plan-btn-highlight:hover { opacity: 0.85; color: #050a06; }
-    .modal-footer { padding: 12px 24px 20px; color: var(--muted); font-size: 10px; }
+    .act-btn:hover { background: var(--bg2); color: var(--text); }
+    .act-btn.active { background: var(--bg2); color: var(--cyan); }
 
-    html[data-theme="light"] #upgradeCard { box-shadow: 0 24px 80px rgba(0,0,0,0.25); }
-    html[data-theme="light"] .plan-card-highlight { background: #eef6ff; }
-    html[data-theme="light"] .plan-btn-highlight { color: #fff; }
-
-    /* ─── Theme toggle ──────────────────────────────────────────────────── */
-    .tb-theme {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 42px;
-      height: 100%;
-      background: none;
-      border: none;
-      border-left: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 14px;
-      cursor: pointer;
-      transition: color 0.15s, background 0.15s;
+    /* Sidebar */
+    #editor-sidebar {
+      width: var(--sidebar-w);
+      min-width: 120px; max-width: 400px;
+      background: var(--bg1); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
       flex-shrink: 0;
     }
-    .tb-theme:hover { color: var(--text); background: var(--bg3); }
+    #editor-sidebar.collapsed { width: 0 !important; min-width: 0; border: none; }
+    .sidebar-panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .sidebar-panel.active { display: flex; }
+    .sidebar-header {
+      padding: 8px 12px 6px; border-bottom: 1px solid var(--border);
+      font-size: 10px; color: var(--muted); letter-spacing: 0.1em;
+      text-transform: uppercase; display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-new-btn {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 14px; line-height: 1; padding: 0 2px;
+    }
+    .sidebar-new-btn:hover { color: var(--cyan); }
+    #file-tree { flex: 1; overflow-y: auto; padding: 4px 0; }
+    .tree-section { margin-bottom: 2px; }
+    .tree-dir {
+      padding: 4px 12px; font-size: 11px; color: var(--muted);
+      cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px;
+    }
+    .tree-dir:hover { color: var(--text); }
+    .tree-dir .arrow { font-size: 10px; transition: transform 0.15s; }
+    .tree-dir.collapsed .arrow { transform: rotate(-90deg); }
+    .tree-files.hidden { display: none; }
+    .tree-file {
+      padding: 3px 12px 3px 24px; font-size: 11px; color: var(--muted);
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      border-radius: 0 3px 3px 0; transition: background 0.1s, color 0.1s;
+    }
+    .tree-file:hover { background: var(--bg2); color: var(--text); }
+    .tree-file.active { background: var(--active-file-bg); color: var(--cyan); }
+    .tier-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .tier-dot.t1 { background: var(--muted2); }
+    .tier-dot.t2 { background: #4080c0; }
+    .tier-dot.t3 { background: var(--amber); }
 
-    /* ─── Scrollbar global ──────────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    /* Run history panel */
+    #history-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+    .hist-item {
+      padding: 6px 12px; font-size: 11px; cursor: pointer;
+      border-bottom: 1px solid var(--border); transition: background 0.1s;
+    }
+    .hist-item:hover { background: var(--bg2); }
+    .hist-item .hist-name { color: var(--text); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hist-item .hist-meta { font-size: 10px; color: var(--muted); display: flex; gap: 8px; }
+    .hist-item .hist-ok { color: var(--green); }
+    .hist-item .hist-err { color: var(--red); }
+
+    /* Sidebar resize handle */
+    #sidebar-resize {
+      width: 4px; cursor: col-resize; background: transparent;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    #sidebar-resize:hover { background: var(--cyan); }
+
+    /* Editor main area */
+    #editor-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+    /* Tabs bar */
+    #editorTabsBar {
+      height: 34px; min-height: 34px; background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; overflow-x: auto; flex-shrink: 0;
+    }
+    #editorTabsBar::-webkit-scrollbar { height: 0; }
+    #editorTabs { display: flex; height: 100%; }
+    .tab {
+      padding: 0 14px; height: 100%; display: flex; align-items: center;
+      font-size: 11px; color: var(--muted); cursor: pointer; white-space: nowrap;
+      border-right: 1px solid var(--border); transition: all 0.1s;
+    }
+    .tab:hover { color: var(--text); background: var(--bg2); }
+    .tab.active { color: var(--text); background: var(--bg); border-bottom: 2px solid var(--cyan); }
+    .tabs-new-btn {
+      width: 34px; height: 100%; display: flex; align-items: center; justify-content: center;
+      background: none; border: none; border-right: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; font-size: 16px; flex-shrink: 0;
+    }
+    .tabs-new-btn:hover { color: var(--cyan); background: var(--bg2); }
+
+    /* Monaco container */
+    #monaco-container { flex: 1; min-height: 0; }
+
+    /* Output panel resize handle */
+    #output-resize {
+      height: 4px; cursor: row-resize; background: transparent;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    #output-resize:hover { background: var(--cyan); }
+
+    /* Output panel */
+    #output-panel {
+      height: var(--output-h); min-height: 80px; max-height: 60vh;
+      background: var(--bg1); border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+    }
+    .out-tabs-bar {
+      height: 32px; background: var(--bg1); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0; padding: 0 4px; flex-shrink: 0;
+    }
+    .out-tab {
+      height: 100%; padding: 0 12px; font-size: 11px; color: var(--muted);
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; gap: 5px;
+      border-bottom: 2px solid transparent; transition: all 0.1s;
+    }
+    .out-tab:hover { color: var(--text); }
+    .out-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .out-tab-spacer { flex: 1; }
+    .out-clear-btn {
+      height: 22px; padding: 0 8px; font-size: 10px; font-family: inherit;
+      background: var(--bg2); border: 1px solid var(--border2); color: var(--muted);
+      border-radius: 3px; cursor: pointer;
+    }
+    .out-clear-btn:hover { color: var(--text); border-color: var(--text); }
+    .out-panels { flex: 1; overflow: hidden; }
+    .out-panel { display: none; height: 100%; overflow-y: auto; padding: 10px 14px; }
+    .out-panel.visible { display: block; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; padding: 3px 10px; border-radius: 3px; border: 1px solid;
+    }
+    .status-idle    { background: var(--bg2); color: var(--muted); border-color: var(--border); }
+    .status-running { background: #1a1000; color: var(--amber); border-color: #604000; }
+    .status-ok      { background: #0a2010; color: var(--green); border-color: #1a5030; }
+    .status-error   { background: #200008; color: var(--red);   border-color: #600020; }
+    .print-output {
+      font-family: inherit; font-size: 12px; white-space: pre-wrap;
+      padding: 10px; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--bg2); color: var(--text); margin: 8px 0;
+    }
+    .print-output.empty { color: var(--muted); font-style: italic; }
+    .error-output {
+      font-family: inherit; font-size: 12px; white-space: pre-wrap;
+      padding: 10px; border-radius: 4px; border: 1px solid #400010;
+      background: #150005; color: var(--red); margin: 8px 0;
+    }
+    .meta-grid { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+    .meta-item {
+      font-size: 11px; padding: 4px 10px; border-radius: 3px;
+      background: var(--bg2); border: 1px solid var(--border);
+    }
+    .meta-item .mi-label { color: var(--muted); margin-right: 4px; }
+    .reg-table { width: 100%; border-collapse: collapse; font-size: 11px; margin: 6px 0; }
+    .reg-table td { padding: 2px 8px; border-bottom: 1px solid var(--border); }
+    .reg-table td:first-child { color: var(--muted); width: 40px; }
+    .reg-row-affirm td { color: var(--green); }
+    .reg-row-reject td { color: var(--red); }
+    .reg-row-zero   td { color: var(--amber); }
+    .out-section-title { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin: 12px 0 6px; }
+
+    /* API panel */
+    .api-block { margin-bottom: 14px; }
+    .api-route {
+      font-size: 11px; padding: 5px 10px; border-radius: 3px;
+      background: var(--bg2); border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+    }
+    .api-method { font-weight: 700; font-size: 10px; color: var(--green); }
+    .api-path   { color: var(--cyan); }
+    .api-desc   { color: var(--muted); font-size: 10px; }
+    .api-try-btn {
+      margin-left: auto; height: 20px; padding: 0 8px; font-size: 10px;
+      font-family: inherit; background: var(--bg3); border: 1px solid var(--border2);
+      color: var(--muted); cursor: pointer; border-radius: 3px;
+    }
+    .api-try-btn:hover { color: var(--cyan); border-color: var(--cyan); }
+    .api-response {
+      font-size: 11px; white-space: pre; padding: 8px 10px; border-radius: 3px;
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); overflow-x: auto; max-height: 140px;
+    }
+
+    /* Usage panel */
+    .usage-label { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+    .usage-value { font-size: 12px; color: var(--text); }
+    .usage-meta  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .usage-unlimited { font-size: 12px; color: var(--green); }
+    .tier-benefit { font-size: 11px; padding: 3px 0; color: var(--text); }
+    .tier-benefit.muted-benefit { color: var(--muted); }
+    .upskill-inline-btn {
+      margin-top: 10px; padding: 6px 14px; background: #120a00;
+      border: 1px solid var(--amber); color: var(--amber); font-family: inherit;
+      font-size: 11px; font-weight: 600; cursor: pointer; border-radius: 4px;
+    }
+    .upskill-inline-btn:hover { background: #1c1200; }
+    .err-box { background: #150005; border: 1px solid #400010; color: var(--red); font-size: 11px; padding: 6px 10px; border-radius: 3px; }
+
+    /* Ref panel */
+    .ref-section { margin-bottom: 16px; }
+    .ref-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .ref-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .ref-table td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
+    .ref-table td:first-child { color: var(--cyan); font-weight: 700; width: 80px; }
+    .ref-table td:nth-child(2) { color: var(--amber); width: 90px; }
+    .ref-table td:nth-child(3) { color: var(--muted); }
+
+    /* ─── Settings view ────────────────────────────────────────────── */
+    #view-settings { overflow-y: auto; padding: 24px 32px; gap: 0; }
+    .settings-section { margin-bottom: 28px; }
+    .settings-section-title {
+      font-size: 10px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 14px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .settings-row {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .settings-label { font-size: 11px; color: var(--text); width: 160px; flex-shrink: 0; }
+    .settings-input {
+      background: var(--bg2); border: 1px solid var(--border2);
+      color: var(--text); font-family: inherit; font-size: 11px;
+      padding: 5px 10px; border-radius: 4px; outline: none; min-width: 200px;
+    }
+    .settings-input:focus { border-color: var(--cyan); }
+    .settings-select {
+      background: var(--bg2); border: 1px solid var(--border2);
+      color: var(--text); font-family: inherit; font-size: 11px;
+      padding: 5px 10px; border-radius: 4px; outline: none; cursor: pointer;
+    }
+    .settings-checkbox { width: 14px; height: 14px; accent-color: var(--cyan); cursor: pointer; }
+    .settings-btn {
+      padding: 5px 14px; background: var(--bg2); border: 1px solid var(--border2);
+      color: var(--text); font-family: inherit; font-size: 11px;
+      border-radius: 4px; cursor: pointer;
+    }
+    .settings-btn:hover { background: var(--bg3); border-color: var(--cyan); color: var(--cyan); }
+    .settings-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .key-display {
+      font-size: 11px; color: var(--text); padding: 5px 10px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 4px; font-family: inherit; letter-spacing: 0.04em;
+    }
+
+    /* ─── Statusbar ────────────────────────────────────────────────── */
+    #statusbar {
+      height: 22px; min-height: 22px; background: var(--bg1);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0;
+      font-size: 10px; color: var(--muted); flex-shrink: 0;
+    }
+    .sb-item { padding: 0 10px; display: flex; align-items: center; gap: 5px; border-right: 1px solid var(--border); height: 100%; }
+    .sb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .sb-dot.err  { background: var(--red); }
+    .sb-dot.warn { background: var(--amber); }
+
+    /* ─── Modal ────────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-box {
+      background: var(--bg1); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 28px 32px; max-width: 520px; width: 90%;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 16px; color: var(--cyan); font-weight: 700; margin-bottom: 6px; }
+    .modal-sub   { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    .modal-close {
+      float: right; background: none; border: none; color: var(--muted);
+      font-size: 18px; cursor: pointer; line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .plan-card {
+      border: 1px solid var(--border2); border-radius: 6px; padding: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .plan-card.highlight { border-color: var(--amber); background: #100a00; }
+    .plan-name  { font-size: 13px; font-weight: 700; color: var(--text); }
+    .plan-price { font-size: 20px; font-weight: 700; color: var(--cyan); }
+    .plan-price span { font-size: 11px; color: var(--muted); }
+    .plan-features { font-size: 11px; color: var(--muted); line-height: 1.7; }
+    .plan-btn {
+      margin-top: auto; padding: 8px 0; text-align: center; text-decoration: none;
+      border-radius: 4px; font-size: 12px; font-weight: 600; font-family: inherit;
+      cursor: pointer; border: none; display: block;
+    }
+    .plan-btn-std { background: #0a1e38; color: #60a8ff; border: 1px solid #1a4a8a; }
+    .plan-btn-std:hover { background: #0d2848; }
+    .plan-btn-pro { background: #1a1000; color: var(--amber); border: 1px solid #604000; }
+    .plan-btn-pro:hover { background: #241600; }
+    .plan-btn-ent {
+      background: var(--bg2); color: var(--muted); border: 1px solid var(--border2);
+      font-size: 11px;
+    }
+    .plan-note { font-size: 10px; color: var(--muted); text-align: center; }
+
+    /* ─── Toast ────────────────────────────────────────────────────── */
+    #toast-container {
+      position: fixed; bottom: 32px; right: 16px; z-index: 2000;
+      display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+    }
+    .toast {
+      background: var(--bg1); border: 1px solid var(--border2);
+      color: var(--text); font-size: 11px; padding: 8px 14px;
+      border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      animation: toast-in 0.2s ease;
+    }
+    .toast.ok  { border-color: var(--green); }
+    .toast.err { border-color: var(--red); }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
 
-<!-- ═══════════ TOPBAR ═══════════════════════════════════════════════════════ -->
+<!-- ═══ TOPBAR ═══════════════════════════════════════════════════════════════ -->
 <div id="topbar">
   <div class="tb-logo">
-    <span class="logo-mark">◈</span>
+    <span class="logo-mark">⊕</span>
     <div>
       <div>TernStudio</div>
-      <div class="logo-sub">Ternary Intelligence Stack</div>
+      <div class="logo-sub">v0.3.0</div>
     </div>
   </div>
 
-  <div class="tb-section">
-    <span class="tb-label">API</span>
-    <input class="tb-endpoint-input" id="apiEndpoint"
-           value="https://ternlang-api.fly.dev"
-           placeholder="https://ternlang-api.fly.dev" />
+  <div style="padding: 0 8px; display: flex; gap: 6px; align-items: center; border-right: 1px solid var(--border); height: 100%;">
+    <button class="tb-btn" onclick="shareCode()" title="Share code via URL">⬆ Share</button>
+    <button class="tb-btn" onclick="downloadCode()" title="Download as .tern file">↓ Download</button>
   </div>
 
-  <div class="tb-section">
-    <span class="tb-label">Key</span>
-    <input class="tb-key-input" id="apiKey"
-           type="password" placeholder="tern_xxxx… (optional)" />
-    <span class="tb-badge badge-free" id="tierBadge">Tier 1</span>
+  <div style="padding: 0 8px; display: flex; gap: 6px; align-items: center; border-right: 1px solid var(--border); height: 100%;">
+    <button class="tb-btn run-btn" id="runBtn" onclick="runCode()">
+      <span>▶ Run</span><span class="kbd">Ctrl+↵</span>
+    </button>
   </div>
 
   <div class="tb-spacer"></div>
 
-  <button id="topbarUpgradeBtn" onclick="openUpgradeModal()" style="
-    display:none; align-items:center; gap:5px; padding:0 14px; height:100%;
-    background:none; border:none; border-left:1px solid var(--border);
-    color:var(--amber); font-family:inherit; font-size:11px; font-weight:700;
-    letter-spacing:0.05em; cursor:pointer; transition:color 0.1s,background 0.1s;
-    text-transform:uppercase;
-  " onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background='none'">
-    ↑ Upgrade
-  </button>
+  <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme" style="margin-right: 4px;">●</button>
 
-  <button class="tb-theme" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">●</button>
-
-  <button class="tb-run" id="runBtn" onclick="runCode()">
-    <span>▶ Run</span>
-    <span class="kbd">Ctrl+↵</span>
-  </button>
-</div>
-
-<!-- ═══════════ MAIN ══════════════════════════════════════════════════════════ -->
-<div id="main">
-
-  <!-- ── SIDEBAR ──────────────────────────────────────────────────────────── -->
-  <div id="sidebar">
-    <div class="panel-header">
-      <span class="ph-dot"></span>
-      Explorer
-    </div>
-    <div id="file-tree"></div>
+  <div class="tb-key-wrap">
+    <label for="apiKey">API Key</label>
+    <input class="tb-key-input" id="apiKey" type="password" placeholder="tern_…" autocomplete="off" />
+    <span id="tierBadge" class="tb-badge badge-free">Tier 1</span>
   </div>
 
-  <!-- ── EDITOR ───────────────────────────────────────────────────────────── -->
-  <div id="editor-pane">
-    <div class="editor-tabs" id="editorTabs"></div>
+  <div style="padding: 0 8px; height: 100%; display: flex; align-items: center;">
+    <button class="tb-btn upskill-btn" id="topbarUpskillBtn" onclick="openUpskillModal()">⬆ Upskill</button>
+  </div>
+
+  <div style="padding: 0 10px; height: 100%; display: flex; align-items: center; border-left: 1px solid var(--border);">
+    <input type="hidden" id="apiEndpoint" value="https://ternlang.com" />
+    <span id="vmStatus" class="status-pill status-idle">● Idle</span>
+  </div>
+</div>
+
+<!-- ═══ VIEW BAR ══════════════════════════════════════════════════════════════ -->
+<div id="viewbar">
+  <button class="view-tab active" id="vt-dashboard" onclick="switchView('dashboard')">📊 Dashboard</button>
+  <button class="view-tab"        id="vt-editor"    onclick="switchView('editor')">💻 Editor</button>
+  <button class="view-tab"        id="vt-settings"  onclick="switchView('settings')">⚙ Settings</button>
+</div>
+
+<!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
+<div class="view active" id="view-dashboard">
+
+  <div class="dash-section-title">Overview</div>
+  <div class="dash-grid">
+
+    <!-- VM Status -->
+    <div class="dash-card">
+      <div class="dash-card-title">VM Status</div>
+      <div id="dash-vm-stat" class="dash-pill"><span class="dot" id="dashVmDot"></span><span id="dashVmLabel">Checking…</span></div>
+      <div style="margin-top: 10px; font-size: 10px; color: var(--muted);">
+        Endpoint: <span id="dashEndpoint" style="color: var(--cyan);">ternlang.com</span>
+      </div>
+      <button class="dash-quick-btn" style="margin-top: 10px;" onclick="checkConnection(); showToast('Connection check triggered', 'ok')">↺ Recheck</button>
+    </div>
+
+    <!-- Tier / Quota -->
+    <div class="dash-card">
+      <div class="dash-card-title">Plan &amp; Quota</div>
+      <div id="dashTierBadge" class="tb-badge badge-free" style="margin-bottom: 8px; display: inline-block;">Tier 1 — Free</div>
+      <div id="dash-quota-wrap">
+        <div class="usage-label">Calls this month</div>
+        <div class="usage-bar-wrap"><div class="usage-bar-fill" id="dashUsageBar" style="width:0%"></div></div>
+        <div class="usage-meta" id="dashUsageMeta">Enter API key to see quota</div>
+      </div>
+      <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="dash-card">
+      <div class="dash-card-title">Quick Actions</div>
+      <div class="dash-quick-btns">
+        <button class="dash-quick-btn" onclick="switchView('editor'); newFile()">+ New scratch file</button>
+        <button class="dash-quick-btn" onclick="switchView('editor'); openFile('examples/hello_trit.tern')">▶ Run Hello Trit</button>
+        <button class="dash-quick-btn" onclick="switchView('editor')">💻 Open Editor</button>
+        <button class="dash-quick-btn" onclick="switchView('settings')">⚙ Settings</button>
+      </div>
+    </div>
+
+    <!-- Recent Runs -->
+    <div class="dash-card">
+      <div class="dash-card-title">Recent Runs</div>
+      <div class="dash-run-list" id="dashRunList">
+        <div class="dash-run-empty">No runs yet this session</div>
+      </div>
+    </div>
+
+    <!-- Stdlib Coverage -->
+    <div class="dash-card">
+      <div class="dash-card-title">Stdlib Coverage</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; font-size: 11px;">
+        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">core/</span><span style="color:var(--green)">1 module</span></div>
+        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">math/</span><span style="color:var(--green)">2 modules</span></div>
+        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">safety/</span><span style="color:var(--cyan)">2 modules</span></div>
+        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">nn/</span><span style="color:var(--amber)">3 modules</span></div>
+        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">qnn/</span><span style="color:var(--muted)">planned</span></div>
+        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">errors/</span><span style="color:var(--green)">2 modules</span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-card">
+      <div class="dash-card-title">Session Stats</div>
+      <div style="display:flex; gap: 20px;">
+        <div>
+          <div class="dash-stat" id="statRuns">0</div>
+          <div class="dash-stat-sub">runs</div>
+        </div>
+        <div>
+          <div class="dash-stat" id="statOk" style="color: var(--green);">0</div>
+          <div class="dash-stat-sub">ok</div>
+        </div>
+        <div>
+          <div class="dash-stat" id="statErr" style="color: var(--red);">0</div>
+          <div class="dash-stat-sub">errors</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ EDITOR VIEW ═══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-editor">
+
+  <!-- Activity Bar -->
+  <div class="activity-bar">
+    <button class="act-btn active" id="act-explorer" title="Explorer" onclick="switchSidebarPanel('explorer')">☰</button>
+    <button class="act-btn"        id="act-history"  title="Run History" onclick="switchSidebarPanel('history')">⏱</button>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="editor-sidebar">
+
+    <!-- Explorer panel -->
+    <div class="sidebar-panel active" id="panel-explorer">
+      <div class="sidebar-header">
+        Explorer
+        <button class="sidebar-new-btn" onclick="newFile()" title="New file">+</button>
+      </div>
+      <div id="file-tree"></div>
+    </div>
+
+    <!-- History panel -->
+    <div class="sidebar-panel" id="panel-history">
+      <div class="sidebar-header">
+        Run History
+        <button class="sidebar-new-btn" onclick="clearHistory()" title="Clear history">✕</button>
+      </div>
+      <div id="history-list"><div style="padding:12px; font-size:11px; color:var(--muted); font-style:italic;">No runs yet</div></div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar resize handle -->
+  <div id="sidebar-resize" onmousedown="startSidebarResize(event)"></div>
+
+  <!-- Editor main -->
+  <div id="editor-main">
+
+    <!-- Tabs -->
+    <div id="editorTabsBar">
+      <button class="tabs-new-btn" onclick="newFile()" title="New file">+</button>
+      <div id="editorTabs"></div>
+    </div>
+
+    <!-- Monaco -->
     <div id="monaco-container"></div>
-    <div class="editor-toolbar">
-      <button class="tool-btn" onclick="runCode()"><i class="icon">▶</i> Run</button>
-      <button class="tool-btn" onclick="clearOutput()"><i class="icon">✕</i> Clear</button>
-      <button class="tool-btn" onclick="newFile()"><i class="icon">+</i> New</button>
-      <div class="tool-sep"></div>
-      <button class="tool-btn" onclick="insertTemplate('hello')">Hello Trit</button>
-      <button class="tool-btn" onclick="insertTemplate('match')">Match</button>
-      <button class="tool-btn" onclick="insertTemplate('ema')">EMA Gate</button>
-      <div class="tool-sep"></div>
-      <span class="cursor-pos" id="cursorPos">Ln 1, Col 1</span>
-    </div>
-  </div>
 
-  <!-- ── OUTPUT ───────────────────────────────────────────────────────────── -->
-  <div id="output-pane">
-    <div class="output-tabs">
-      <div class="out-tab active" onclick="switchOutTab('vm', this)">VM Output</div>
-      <div class="out-tab" onclick="switchOutTab('usage', this)" id="usageTab">Usage</div>
-      <div class="out-tab" onclick="switchOutTab('api', this)">API</div>
-      <div class="out-tab" onclick="switchOutTab('docs', this)">Ref</div>
-    </div>
+    <!-- Output panel resize handle -->
+    <div id="output-resize" onmousedown="startOutputResize(event)"></div>
 
-    <!-- VM Output -->
-    <div class="out-panel visible" id="panel-vm">
-      <div class="vm-status">
-        <span class="status-pill status-idle" id="vmStatus">● Idle</span>
+    <!-- Output panel -->
+    <div id="output-panel">
+      <div class="out-tabs-bar">
+        <button class="out-tab active" onclick="switchOutTab('output', this)">Output</button>
+        <button class="out-tab"        onclick="switchOutTab('usage', this)" id="usageTab">Usage</button>
+        <button class="out-tab"        onclick="switchOutTab('api', this)">API</button>
+        <button class="out-tab"        onclick="switchOutTab('ref', this)">Reference</button>
+        <div class="out-tab-spacer"></div>
+        <button class="out-clear-btn" onclick="clearOutput()">Clear</button>
       </div>
+      <div class="out-panels">
 
-      <div class="vm-section" id="section-meta" style="display:none">
-        <div class="vm-section-title">Execution</div>
-        <div class="meta-grid">
-          <div class="meta-item">
-            <div class="meta-label">Bytecode</div>
-            <div class="meta-value" id="metaBytes">—</div>
+        <!-- Output tab -->
+        <div class="out-panel visible" id="panel-output">
+          <div id="section-meta" style="display:none;">
+            <div class="meta-grid">
+              <div class="meta-item"><span class="mi-label">bytes</span><span id="metaBytes">—</span></div>
+              <div class="meta-item"><span class="mi-label">status</span><span id="metaStatus">—</span></div>
+            </div>
           </div>
-          <div class="meta-item">
-            <div class="meta-label">Status</div>
-            <div class="meta-value" id="metaStatus" style="font-size:12px">—</div>
+          <pre id="printOutput" class="print-output empty">— no output —</pre>
+          <div id="section-regs" style="display:none;">
+            <div class="out-section-title">Registers</div>
+            <table class="reg-table"><tbody id="regTable"></tbody></table>
+          </div>
+          <div id="section-error" style="display:none;">
+            <div class="out-section-title">Error</div>
+            <pre id="errorOutput" class="error-output"></pre>
           </div>
         </div>
-      </div>
 
-      <div class="vm-section" id="section-print">
-        <div class="vm-section-title">Print Output</div>
-        <div class="print-output empty" id="printOutput">— no output —</div>
-      </div>
+        <!-- Usage tab -->
+        <div class="out-panel" id="panel-usage">
+          <div id="usageError" class="err-box" style="display:none; margin-bottom:10px;"><span id="usageErrorMsg"></span></div>
+          <div class="usage-label">Key</div>
+          <div class="usage-value" id="usageKeyDisplay">No key — anonymous access</div>
+          <span id="usageTierBadge" class="tb-badge badge-free" style="margin: 6px 0 10px; display:inline-block;">Tier 1</span>
+          <div id="usage-quota-section" style="display:none;">
+            <div class="usage-label">Calls: <span id="usageUsed">0</span> / <span id="usageLimit">0</span></div>
+            <div class="usage-bar-wrap"><div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div></div>
+            <div class="usage-meta" id="usageMeta"></div>
+          </div>
+          <div id="usage-unlimited-section" style="display:none;">
+            <div class="usage-unlimited">∞ Unlimited calls</div>
+          </div>
+          <div class="out-section-title" style="margin-top:14px;">Plan Features</div>
+          <div id="tierBenefitsList"></div>
+          <button class="upskill-inline-btn" id="upgradeBtn" onclick="openUpskillModal()">⬆ Upskill</button>
+        </div>
 
-      <div class="vm-section" id="section-regs" style="display:none">
-        <div class="vm-section-title">Register State (r0 – r9)</div>
-        <table class="reg-table" id="regTable"></table>
-      </div>
+        <!-- API tab -->
+        <div class="out-panel" id="panel-api">
+          <div class="api-block">
+            <div class="usage-label" style="margin-bottom: 6px;">Endpoint: <span id="apiEndpointBase" style="color:var(--cyan);">https://ternlang.com</span></div>
+            <div class="api-route">
+              <span class="api-method">GET</span>
+              <span class="api-path">/health</span>
+              <span class="api-desc">VM health check</span>
+              <button class="api-try-btn" onclick="tryHealth()">Try</button>
+            </div>
+            <div class="api-route">
+              <span class="api-method">POST</span>
+              <span class="api-path">/api/run</span>
+              <span class="api-desc">Execute .tern code</span>
+              <button class="api-try-btn" onclick="tryApiRun()">Try</button>
+            </div>
+            <div class="api-route">
+              <span class="api-method">GET</span>
+              <span class="api-path">/api/usage</span>
+              <span class="api-desc">Key quota</span>
+              <button class="api-try-btn" onclick="tryApiUsage()">Try</button>
+            </div>
+          </div>
+          <pre class="api-response" id="apiResponse">// Click Try to test an endpoint</pre>
+        </div>
 
-      <div class="vm-section" id="section-error" style="display:none">
-        <div class="vm-section-title">Error</div>
-        <div class="error-output" id="errorOutput"></div>
+        <!-- Reference tab -->
+        <div class="out-panel" id="panel-ref">
+          <div class="ref-section">
+            <div class="ref-title">Builtins</div>
+            <table class="ref-table">
+              <tr><td>truth()</td><td>→ trit(+1)</td><td>Affirm signal</td></tr>
+              <tr><td>hold()</td><td>→ trit(0)</td><td>Neutral / pending</td></tr>
+              <tr><td>conflict()</td><td>→ trit(-1)</td><td>Reject signal</td></tr>
+              <tr><td>consensus(a,b)</td><td>→ trit</td><td>Ternary AND merge</td></tr>
+              <tr><td>print(v)</td><td></td><td>Print to output</td></tr>
+              <tr><td>println(v)</td><td></td><td>Print + newline</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">Types</div>
+            <table class="ref-table">
+              <tr><td>trit</td><td>-1 / 0 / 1</td><td>Balanced ternary value</td></tr>
+              <tr><td>int</td><td>i64</td><td>Integer</td></tr>
+              <tr><td>float</td><td>f64</td><td>Floating point</td></tr>
+              <tr><td>trittensor</td><td>N×M</td><td>Trit tensor (Tier 2+)</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">VM Error Codes</div>
+            <table class="ref-table">
+              <tr><td>BET-001</td><td>StackUnderflow</td><td>Missing return push</td></tr>
+              <tr><td>BET-007</td><td>TypeMismatch</td><td>Wrong type for op</td></tr>
+              <tr><td>BET-010</td><td>DivByZero</td><td>Integer divide by zero</td></tr>
+              <tr><td>BET-013</td><td>OutOfBounds</td><td>Register / tensor OOB</td></tr>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
-
-    <!-- Usage Dashboard -->
-    <div class="out-panel" id="panel-usage">
-      <div class="vm-section">
-        <div class="vm-section-title">Account</div>
-        <div class="usage-key-row">
-          <span class="usage-key-display" id="usageKeyDisplay">No key — anonymous access</span>
-          <span class="tb-badge badge-free" id="usageTierBadge">Tier 1</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-          <input type="checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" style="accent-color:var(--cyan)">
-          <label for="saveKeyCheck" style="color:var(--muted);font-size:11px;cursor:pointer">Remember key (localStorage)</label>
-        </div>
-      </div>
-
-      <div class="vm-section" id="usage-quota-section" style="display:none">
-        <div class="vm-section-title">Quota — This Month</div>
-        <div class="usage-numbers">
-          <span id="usageUsed">—</span>
-          <span class="usage-sep">/</span>
-          <span id="usageLimit">—</span>
-          <span class="usage-unit">calls</span>
-        </div>
-        <div class="usage-bar-track">
-          <div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div>
-        </div>
-        <div class="usage-meta" id="usageMeta">—</div>
-      </div>
-
-      <div class="vm-section" id="usage-unlimited-section" style="display:none">
-        <div class="vm-section-title">Quota</div>
-        <div style="color:var(--green);font-size:13px;font-weight:700;padding:8px 0">∞ Unlimited</div>
-        <div class="usage-meta">Enterprise tier — no monthly cap</div>
-      </div>
-
-      <div class="vm-section">
-        <div class="vm-section-title">Tier Benefits</div>
-        <div id="tierBenefitsList" class="tier-benefits">
-          <div class="tier-benefit t1-benefit">● Tier 1 — Open Core (free)</div>
-          <div class="tier-benefit">  /api/run — execute .tern programs</div>
-          <div class="tier-benefit muted-benefit">○ /api/trit_decide, /api/trit_vector (Tier 2+)</div>
-          <div class="tier-benefit muted-benefit">○ MoE-13 orchestrator (Tier 2+)</div>
-          <div class="tier-benefit muted-benefit">○ Deliberation engine (Tier 2+)</div>
-        </div>
-        <button class="upgrade-btn" id="upgradeBtn" onclick="openUpgradeModal()" style="border:none;cursor:pointer;width:100%;text-align:left">
-          ↑ Upgrade plan →
-        </button>
-      </div>
-
-      <div class="vm-section">
-        <div class="vm-section-title">Actions</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="tool-btn" onclick="fetchUsage()" style="font-size:11px">↻ Refresh</button>
-          <button class="tool-btn" onclick="copyKey()" style="font-size:11px">⎘ Copy Key</button>
-          <button class="tool-btn" onclick="clearKey()" style="font-size:11px;color:var(--red)">✕ Clear Key</button>
-        </div>
-      </div>
-
-      <div id="usageError" style="display:none;margin-top:8px">
-        <div class="error-output" id="usageErrorMsg"></div>
-      </div>
-    </div>
-
-    <!-- API Explorer -->
-    <div class="out-panel" id="panel-api">
-      <div class="vm-section-title" style="margin-bottom:12px">Live Endpoints</div>
-      <div id="apiEndpointBase" style="color:var(--muted);font-size:11px;margin-bottom:14px">—</div>
-
-      <div class="api-row">
-        <span class="api-method method-post">POST</span>
-        <div>
-          <div class="api-path">/api/run</div>
-          <div class="api-desc">Execute .tern source — returns print output + registers</div>
-        </div>
-        <button class="api-try" onclick="tryApiRun()">Try</button>
-      </div>
-      <div class="api-row">
-        <span class="api-method method-post">POST</span>
-        <div>
-          <div class="api-path">/api/trit_decide</div>
-          <div class="api-desc">Scalar ternary decision from evidence vector</div>
-        </div>
-      </div>
-      <div class="api-row">
-        <span class="api-method method-post">POST</span>
-        <div>
-          <div class="api-path">/api/trit_vector</div>
-          <div class="api-desc">Multi-dimensional evidence aggregation</div>
-        </div>
-      </div>
-      <div class="api-row">
-        <span class="api-method method-post">POST</span>
-        <div>
-          <div class="api-path">/api/trit_consensus</div>
-          <div class="api-desc">consensus(a, b) — logical merge</div>
-        </div>
-      </div>
-      <div class="api-row">
-        <span class="api-method method-post">POST</span>
-        <div>
-          <div class="api-path">/api/moe/orchestrate</div>
-          <div class="api-desc">MoE-13 full pass — requires API key Tier 2+</div>
-        </div>
-      </div>
-      <div class="api-row">
-        <span class="api-method method-get">GET</span>
-        <div>
-          <div class="api-path">/api/usage</div>
-          <div class="api-desc">Your current call count + tier limits</div>
-        </div>
-        <button class="api-try" onclick="tryApiUsage()">Try</button>
-      </div>
-      <div class="api-row">
-        <span class="api-method method-get">GET</span>
-        <div>
-          <div class="api-path">/health</div>
-          <div class="api-desc">API health check</div>
-        </div>
-        <button class="api-try" onclick="tryHealth()">Try</button>
-      </div>
-
-      <div style="margin-top:16px;padding:10px;background:var(--bg2);border:1px solid var(--border)">
-        <div class="vm-section-title" style="margin-bottom:8px">Response</div>
-        <pre id="apiResponse" style="font-size:11px;color:var(--green);white-space:pre-wrap;word-break:break-all">—</pre>
-      </div>
-    </div>
-
-    <!-- Quick Ref -->
-    <div class="out-panel" id="panel-docs">
-      <div class="vm-section-title" style="margin-bottom:12px">Ternlang Quick Reference</div>
-      <pre style="font-size:11px;color:var(--text);line-height:1.7;white-space:pre-wrap">
-<span style="color:var(--cyan)">// Types</span>
-trit           // -1 | 0 | +1
-int            // integer
-float          // float
-trit[]         // 1D array
-trittensor&lt;N&gt;  // N-dim tensor
-
-<span style="color:var(--cyan)">// Trit literals</span>
-let a: trit = 1;   // +1 affirm
-let b: trit = 0;   // 0  hold
-let c: trit = -1;  // -1 reject
-
-<span style="color:var(--cyan)">// Built-ins</span>
-truth()          // +1
-hold()           // 0
-conflict()       // -1
-consensus(a, b)  // logical merge
-
-<span style="color:var(--cyan)">// Functions</span>
-fn f(x: trit, n: int) -&gt; trit {
-    return truth();
-}
-
-<span style="color:var(--cyan)">// Match — all 3 arms required</span>
-match v {
-    -1 =&gt; { return conflict(); }
-     0 =&gt; { return hold();    }
-     1 =&gt; { return truth();   }
-}
-
-<span style="color:var(--cyan)">// Directives (Tier 2+)</span>
-@sparseskip
-fn sparse_layer(w: trit[], x: trit[]) -&gt; trit {
-    return consensus(w[0], x[0]);
-}
-
-<span style="color:var(--cyan)">// Propagation operator</span>
-let r: trit = risky_fn()?;
-// returns conflict() if r == -1
-
-<span style="color:var(--cyan)">// Exit codes</span>
-return truth();    // ✓ affirm  (+1)
-return hold();     // ~ hold    (0)
-return conflict(); // ✗ reject  (-1)
-
-<span style="color:var(--cyan)">// Print</span>
-print("hello");
-println(42);
-</pre>
-    </div>
-  </div>
-
-</div><!-- /main -->
-
-<!-- ═══════════ UPGRADE MODAL ════════════════════════════════════════════════ -->
-<div id="upgradeModal" style="display:none" onclick="if(event.target===this)closeUpgradeModal()">
-  <div id="upgradeCard">
-    <div class="modal-header">
-      <span class="modal-title">◈ Upgrade TernStudio</span>
-      <button class="modal-close" onclick="closeUpgradeModal()">✕</button>
-    </div>
-
-    <p class="modal-sub">Choose your tier. API key delivered by email within 60 seconds after payment.</p>
-
-    <div class="plan-grid">
-      <!-- Tier 2 -->
-      <div class="plan-card">
-        <div class="plan-name">Pro Standard</div>
-        <div class="plan-price">€99<span class="plan-period">/month</span></div>
-        <ul class="plan-features">
-          <li>✓ 10,000 API calls/month</li>
-          <li>✓ /api/trit_decide, /api/trit_vector</li>
-          <li>✓ /api/trit_consensus, /api/trit_gate</li>
-          <li>✓ MoE-13 orchestrator</li>
-          <li>✓ Deliberation + coalition engine</li>
-          <li>✓ Scalar temperature + hallucination score</li>
-          <li class="feat-muted">○ Industrial endpoints (Tier 3)</li>
-        </ul>
-        <a class="plan-btn plan-btn-primary" href="https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608" target="_blank" onclick="closeUpgradeModal()">
-          Get Pro — €99/mo
-        </a>
-      </div>
-
-      <!-- Tier 3 -->
-      <div class="plan-card plan-card-highlight">
-        <div class="plan-badge-top">Most powerful</div>
-        <div class="plan-name">Industrial</div>
-        <div class="plan-price">€349<span class="plan-period">/month</span></div>
-        <ul class="plan-features">
-          <li>✓ Everything in Pro</li>
-          <li>✓ 100,000 API calls/month</li>
-          <li>✓ /api/v1/taas/infer</li>
-          <li>✓ SSE streaming endpoints</li>
-          <li>✓ Sparse benchmark + weight quantization</li>
-          <li>✓ Priority support</li>
-          <li class="feat-muted">○ Enterprise SLA (Tier 4)</li>
-        </ul>
-        <a class="plan-btn plan-btn-highlight" href="https://buy.stripe.com/eVq7sNfle0bl86937a7N609" target="_blank" onclick="closeUpgradeModal()">
-          Get Industrial — €349/mo
-        </a>
-      </div>
-
-      <!-- Tier 4 -->
-      <div class="plan-card">
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-price" style="font-size:16px;margin:8px 0 12px">Custom</div>
-        <ul class="plan-features">
-          <li>✓ Unlimited calls</li>
-          <li>✓ All endpoints</li>
-          <li>✓ Dedicated SLA</li>
-          <li>✓ Private deployment</li>
-          <li>✓ Custom rate limits</li>
-          <li>✓ From €2,500/year</li>
-        </ul>
-        <a class="plan-btn" href="mailto:rfi.irfos@gmail.com?subject=TIS%20Enterprise%20Inquiry" target="_blank" onclick="closeUpgradeModal()">
-          Contact Sales
-        </a>
-      </div>
-    </div>
-
-    <p class="modal-footer">
-      Payments processed by Stripe. Key delivered to the email used at checkout.
-      <a href="https://ternlang.com/pricing" target="_blank" style="color:var(--cyan)">Full pricing page →</a>
-    </p>
   </div>
 </div>
 
-<!-- ═══════════ STATUSBAR ════════════════════════════════════════════════════ -->
+<!-- ═══ SETTINGS VIEW ════════════════════════════════════════════════════════ -->
+<div class="view" id="view-settings">
+
+  <div class="settings-section">
+    <div class="settings-section-title">API Connection</div>
+    <div class="settings-row">
+      <div class="settings-label">Endpoint URL</div>
+      <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" />
+      <button class="settings-btn" onclick="applyEndpoint()">Apply</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">API Key</div>
+      <div class="key-display" id="settingsKeyDisplay">—</div>
+      <button class="settings-btn" onclick="copyKey()">Copy</button>
+      <button class="settings-btn" onclick="clearKey()">Clear</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Save key locally</div>
+      <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" />
+      <div class="settings-desc">Stored in localStorage — never sent anywhere except the API endpoint</div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Editor</div>
+    <div class="settings-row">
+      <div class="settings-label">Font size</div>
+      <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()">
+        <option value="11">11px</option>
+        <option value="12">12px</option>
+        <option value="13" selected>13px</option>
+        <option value="14">14px</option>
+        <option value="16">16px</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Minimap</div>
+      <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()">
+        <option value="false" selected>Off</option>
+        <option value="true">On</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Word wrap</div>
+      <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()">
+        <option value="off" selected>Off</option>
+        <option value="on">On</option>
+        <option value="wordWrapColumn">At column</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Theme</div>
+      <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()">
+        <option value="dark" selected>Dark</option>
+        <option value="light">Light</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">About</div>
+    <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
+      TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
+      Runtime: BET VM (27 registers · balanced ternary)<br/>
+      License: LGPL-3.0-or-later<br/>
+      <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ STATUSBAR ════════════════════════════════════════════════════════════ -->
 <div id="statusbar">
   <div class="sb-item">
     <span class="sb-dot" id="connDot"></span>
     <span id="connLabel">Connecting…</span>
   </div>
-  <div class="sb-sep"></div>
-  <div class="sb-item">BET VM v0.2</div>
-  <div class="sb-sep"></div>
-  <div class="sb-item" id="sbFile">scratch.tern</div>
-  <div class="sb-right" style="display:flex;gap:16px;align-items:center">
-    <span id="sbTier" style="color:var(--muted)">Tier 1 — Open Core</span>
-    <span>ternlang.com</span>
+  <div class="sb-item">⊕ Ternlang</div>
+  <div class="sb-item" id="sbFile">hello_trit.tern</div>
+  <div class="sb-item" id="sbTier">Tier 1 — Open Core</div>
+  <div class="sb-item" id="cursorPos">Ln 1, Col 1</div>
+</div>
+
+<!-- ═══ UPSKILL MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeUpskillModal()">✕</button>
+    <div class="modal-title">⬆ Upskill your plan</div>
+    <div class="modal-sub">Unlock higher quotas, advanced endpoints, and industrial-grade TaaS.</div>
+    <div class="plan-grid">
+      <div class="plan-card">
+        <div class="plan-name">Pro Standard</div>
+        <div class="plan-price">€99<span>/mo</span></div>
+        <div class="plan-features">
+          ● 50,000 calls/mo<br/>
+          ● Trit decision endpoints<br/>
+          ● MoE-13 orchestrator<br/>
+          ● Deliberation engine<br/>
+          ● EMA gate + coalition API
+        </div>
+        <a class="plan-btn plan-btn-std" href="https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608" target="_blank">Get Pro Standard →</a>
+      </div>
+      <div class="plan-card highlight">
+        <div class="plan-name">Industrial</div>
+        <div class="plan-price">€349<span>/mo</span></div>
+        <div class="plan-features">
+          ● Unlimited calls<br/>
+          ● All Pro endpoints<br/>
+          ● TaaS /api/v1/taas/infer<br/>
+          ● SSE streaming<br/>
+          ● Sparse benchmark + quantization
+        </div>
+        <a class="plan-btn plan-btn-pro" href="https://buy.stripe.com/eVq7sNfle0bl86937a7N609" target="_blank">Get Industrial →</a>
+      </div>
+    </div>
+    <div style="text-align:center; margin-bottom: 12px;">
+      <a class="plan-btn plan-btn-ent" href="mailto:licensing@ternlang.com" style="display:inline-block; padding: 8px 24px; text-decoration:none;">Enterprise — contact licensing@ternlang.com</a>
+    </div>
+    <div class="plan-note">After payment you will receive an API key by email. Enter it in the key field.</div>
   </div>
 </div>
 
-<!-- ═══════════ MONACO + APP LOGIC ══════════════════════════════════════════ -->
+<!-- ═══ TOAST CONTAINER ══════════════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ═══ MONACO + APP LOGIC ══════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
 <script>
 // ─── Embedded stdlib files ────────────────────────────────────────────────────
@@ -1365,11 +1231,11 @@ match result {
 
 // ─── File tree config ──────────────────────────────────────────────────────────
 const TREE = [
-  { dir: "▸ Examples",       prefix: "examples/", tier: 1 },
-  { dir: "▸ stdlib/core",    prefix: "stdlib/core/", tier: 1 },
-  { dir: "▸ stdlib/math",    prefix: "stdlib/math/", tier: 1 },
-  { dir: "▸ stdlib/safety",  prefix: "stdlib/safety/", tier: 2 },
-  { dir: "▸ stdlib/errors",  prefix: "stdlib/errors/", tier: 1 },
+  { dir: "▸ Examples",       prefix: "examples/",       tier: 1 },
+  { dir: "▸ stdlib/core",    prefix: "stdlib/core/",    tier: 1 },
+  { dir: "▸ stdlib/math",    prefix: "stdlib/math/",    tier: 1 },
+  { dir: "▸ stdlib/safety",  prefix: "stdlib/safety/",  tier: 2 },
+  { dir: "▸ stdlib/errors",  prefix: "stdlib/errors/",  tier: 1 },
 ];
 
 const TIER_CLASS = { 1: "t1", 2: "t2", 3: "t3" };
@@ -1427,19 +1293,30 @@ let activeFile = "examples/hello_trit.tern";
 let tabs = [{ name: "hello_trit.tern", path: "examples/hello_trit.tern" }];
 let fileBuffers = { "examples/hello_trit.tern": STDLIB["examples/hello_trit.tern"] };
 let scratchCounter = 1;
+let runHistory = [];
+let sessionRuns = 0, sessionOk = 0, sessionErr = 0;
+
+// ─── View switching ───────────────────────────────────────────────────────────
+function switchView(name) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("view-" + name).classList.add("active");
+  document.getElementById("vt-" + name).classList.add("active");
+  if (name === "editor" && monacoEditor) {
+    setTimeout(() => monacoEditor.layout(), 50);
+  }
+  if (name === "settings") syncSettingsUI();
+}
 
 // ─── Build file tree ──────────────────────────────────────────────────────────
 function buildFileTree() {
   const tree = document.getElementById("file-tree");
   tree.innerHTML = "";
-
   TREE.forEach(({ dir, prefix, tier }) => {
     const files = Object.keys(STDLIB).filter(k => k.startsWith(prefix));
     if (files.length === 0) return;
-
     const sec = document.createElement("div");
     sec.className = "tree-section";
-
     const dirEl = document.createElement("div");
     dirEl.className = "tree-dir";
     dirEl.innerHTML = `<span class="arrow">▾</span> ${dir.replace("▸ ", "")}`;
@@ -1447,20 +1324,17 @@ function buildFileTree() {
       const collapsed = dirEl.classList.toggle("collapsed");
       filesEl.classList.toggle("hidden", collapsed);
     };
-
     const filesEl = document.createElement("div");
     filesEl.className = "tree-files";
-
     files.forEach(path => {
       const name = path.split("/").pop();
       const fileEl = document.createElement("div");
       fileEl.className = "tree-file";
       fileEl.dataset.path = path;
       fileEl.innerHTML = `<span class="tier-dot ${TIER_CLASS[tier] || 't1'}"></span>${name}`;
-      fileEl.onclick = () => openFile(path);
+      fileEl.onclick = () => { openFile(path); switchView('editor'); };
       filesEl.appendChild(fileEl);
     });
-
     sec.appendChild(dirEl);
     sec.appendChild(filesEl);
     tree.appendChild(sec);
@@ -1487,37 +1361,21 @@ function renderTabs() {
 }
 
 function switchToTab(path) {
-  if (monacoEditor) {
-    fileBuffers[activeFile] = monacoEditor.getValue();
-  }
+  if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
   activeFile = path;
-  if (monacoEditor) {
-    monacoEditor.setValue(fileBuffers[path] || "");
-  }
+  if (monacoEditor) monacoEditor.setValue(fileBuffers[path] || "");
   renderTabs();
   refreshTreeHighlight();
   document.getElementById("sbFile").textContent = path.split("/").pop();
 }
 
 function openFile(path) {
-  if (monacoEditor) {
-    fileBuffers[activeFile] = monacoEditor.getValue();
-  }
-
+  if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
   const existing = tabs.find(t => t.path === path);
-  if (!existing) {
-    tabs.push({ name: path.split("/").pop(), path });
-  }
-
+  if (!existing) tabs.push({ name: path.split("/").pop(), path });
   activeFile = path;
-  if (!fileBuffers[path]) {
-    fileBuffers[path] = STDLIB[path] || "";
-  }
-
-  if (monacoEditor) {
-    monacoEditor.setValue(fileBuffers[path]);
-  }
-
+  if (!fileBuffers[path]) fileBuffers[path] = STDLIB[path] || "";
+  if (monacoEditor) monacoEditor.setValue(fileBuffers[path]);
   renderTabs();
   refreshTreeHighlight();
   document.getElementById("sbFile").textContent = path.split("/").pop();
@@ -1532,9 +1390,53 @@ function newFile() {
 }
 
 function insertTemplate(key) {
-  if (monacoEditor) {
-    monacoEditor.setValue(TEMPLATES[key] || "");
-  }
+  if (monacoEditor) monacoEditor.setValue(TEMPLATES[key] || "");
+}
+
+// ─── Sidebar panel switching ──────────────────────────────────────────────────
+function switchSidebarPanel(name) {
+  document.querySelectorAll(".sidebar-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".act-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("panel-" + name).classList.add("active");
+  document.getElementById("act-" + name).classList.add("active");
+}
+
+// ─── Sidebar resize ───────────────────────────────────────────────────────────
+function startSidebarResize(e) {
+  e.preventDefault();
+  const sidebar = document.getElementById("editor-sidebar");
+  const startX = e.clientX;
+  const startW = sidebar.offsetWidth;
+  const onMove = ev => {
+    const newW = Math.max(120, Math.min(400, startW + ev.clientX - startX));
+    document.documentElement.style.setProperty("--sidebar-w", newW + "px");
+    if (monacoEditor) monacoEditor.layout();
+  };
+  const onUp = () => {
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+  };
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
+}
+
+// ─── Output resize ────────────────────────────────────────────────────────────
+function startOutputResize(e) {
+  e.preventDefault();
+  const panel = document.getElementById("output-panel");
+  const startY = e.clientY;
+  const startH = panel.offsetHeight;
+  const onMove = ev => {
+    const newH = Math.max(80, Math.min(window.innerHeight * 0.6, startH + startY - ev.clientY));
+    document.documentElement.style.setProperty("--output-h", newH + "px");
+    if (monacoEditor) monacoEditor.layout();
+  };
+  const onUp = () => {
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+  };
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
 }
 
 // ─── Output tabs ──────────────────────────────────────────────────────────────
@@ -1543,7 +1445,6 @@ function switchOutTab(id, el) {
   document.querySelectorAll(".out-panel").forEach(p => p.classList.remove("visible"));
   el.classList.add("active");
   document.getElementById("panel-" + id).classList.add("visible");
-
   if (id === "api") {
     document.getElementById("apiEndpointBase").textContent =
       document.getElementById("apiEndpoint").value;
@@ -1555,7 +1456,6 @@ function setStatus(type, text) {
   const el = document.getElementById("vmStatus");
   el.className = "status-pill status-" + type;
   el.textContent = text;
-
   const dot = document.getElementById("connDot");
   dot.className = "sb-dot" + (type === "error" ? " err" : type === "running" ? " warn" : "");
 }
@@ -1573,14 +1473,11 @@ function showResult(data) {
   const ok = data.status === "ok";
   setStatus(ok ? "ok" : "error", ok ? "✓ OK" : "✕ Error");
 
-  // Meta
-  const metaSec = document.getElementById("section-meta");
-  metaSec.style.display = "block";
+  document.getElementById("section-meta").style.display = "block";
   document.getElementById("metaBytes").textContent = data.bytecode_bytes != null ? data.bytecode_bytes + "B" : "—";
   document.getElementById("metaStatus").textContent = ok ? "exited ok" : "vm error";
   document.getElementById("metaStatus").style.color = ok ? "var(--green)" : "var(--red)";
 
-  // Print output
   const printEl = document.getElementById("printOutput");
   if (data.output && data.output.length > 0) {
     printEl.textContent = data.output.join("\n");
@@ -1590,17 +1487,15 @@ function showResult(data) {
     printEl.className = "print-output empty";
   }
 
-  // Registers
   if (data.registers && data.registers.length > 0) {
-    const regSec = document.getElementById("section-regs");
-    regSec.style.display = "block";
+    document.getElementById("section-regs").style.display = "block";
     const table = document.getElementById("regTable");
     table.innerHTML = "";
     data.registers.forEach((val, i) => {
       const tr = document.createElement("tr");
       const valStr = String(val);
       let rowClass = "";
-      if (valStr.includes("Affirm") || valStr.includes("Truth")) rowClass = "reg-row-affirm";
+      if (valStr.includes("Affirm") || valStr.includes("Truth"))   rowClass = "reg-row-affirm";
       else if (valStr.includes("Reject") || valStr.includes("Conflict")) rowClass = "reg-row-reject";
       else if (valStr.includes("Tend") || valStr === "Trit(Tend)") rowClass = "reg-row-zero";
       tr.className = rowClass;
@@ -1609,7 +1504,6 @@ function showResult(data) {
     });
   }
 
-  // Error
   const errSec = document.getElementById("section-error");
   if (!ok && data.error) {
     errSec.style.display = "block";
@@ -1626,36 +1520,164 @@ async function runCode() {
   const code = monacoEditor.getValue();
   if (!code.trim()) return;
 
+  // Switch to editor view if on dashboard
+  if (!document.getElementById("view-editor").classList.contains("active")) {
+    switchView("editor");
+  }
+
+  // Switch to output tab
+  document.querySelectorAll(".out-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".out-panel").forEach(p => p.classList.remove("visible"));
+  document.querySelector(".out-tab").classList.add("active");
+  document.getElementById("panel-output").classList.add("visible");
+
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
   const key = document.getElementById("apiKey").value.trim();
-
   const runBtn = document.getElementById("runBtn");
   runBtn.classList.add("running");
   runBtn.textContent = "● Running…";
   setStatus("running", "● Running…");
 
+  const startTime = Date.now();
+
   try {
     const body = { code };
     if (key) body.key = key;
-
     const res = await fetch(endpoint + "/api/run", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      showResult({ status: "error", error: `HTTP ${res.status}: ${txt}`, output: [], bytecode_bytes: 0 });
-    } else {
-      const data = await res.json();
-      showResult(data);
-    }
+    const data = res.ok ? await res.json() : { status: "error", error: `HTTP ${res.status}: ${await res.text()}`, output: [], bytecode_bytes: 0 };
+    showResult(data);
+    addRunToHistory(activeFile, data.status === "ok", Date.now() - startTime, data);
   } catch (err) {
-    showResult({ status: "error", error: String(err), output: [], bytecode_bytes: 0 });
+    const data = { status: "error", error: String(err), output: [], bytecode_bytes: 0 };
+    showResult(data);
+    addRunToHistory(activeFile, false, Date.now() - startTime, data);
   } finally {
     runBtn.classList.remove("running");
     runBtn.innerHTML = '<span>▶ Run</span><span class="kbd">Ctrl+↵</span>';
+  }
+}
+
+// ─── Run history ──────────────────────────────────────────────────────────────
+function addRunToHistory(path, ok, ms, data) {
+  sessionRuns++;
+  if (ok) sessionOk++; else sessionErr++;
+  document.getElementById("statRuns").textContent = sessionRuns;
+  document.getElementById("statOk").textContent   = sessionOk;
+  document.getElementById("statErr").textContent  = sessionErr;
+
+  const entry = {
+    path, ok, ms, ts: new Date().toLocaleTimeString(),
+    code: monacoEditor ? monacoEditor.getValue() : "",
+    data,
+  };
+  runHistory.unshift(entry);
+  if (runHistory.length > 20) runHistory.pop();
+  renderHistory();
+  updateDashboardRuns();
+}
+
+function renderHistory() {
+  const el = document.getElementById("history-list");
+  if (runHistory.length === 0) {
+    el.innerHTML = '<div style="padding:12px; font-size:11px; color:var(--muted); font-style:italic;">No runs yet</div>';
+    return;
+  }
+  el.innerHTML = runHistory.map((e, i) => `
+    <div class="hist-item" onclick="restoreRun(${i})">
+      <div class="hist-name">${e.path.split("/").pop()}</div>
+      <div class="hist-meta">
+        <span class="${e.ok ? 'hist-ok' : 'hist-err'}">${e.ok ? "✓ ok" : "✕ err"}</span>
+        <span>${e.ts}</span>
+        <span>${e.ms}ms</span>
+      </div>
+    </div>`).join("");
+}
+
+function restoreRun(i) {
+  const e = runHistory[i];
+  if (!e) return;
+  if (!tabs.find(t => t.path === e.path)) tabs.push({ name: e.path.split("/").pop(), path: e.path });
+  activeFile = e.path;
+  fileBuffers[e.path] = e.code;
+  if (monacoEditor) monacoEditor.setValue(e.code);
+  renderTabs();
+  refreshTreeHighlight();
+  showResult(e.data);
+  switchView("editor");
+}
+
+function clearHistory() {
+  runHistory = [];
+  renderHistory();
+}
+
+function updateDashboardRuns() {
+  const el = document.getElementById("dashRunList");
+  if (runHistory.length === 0) {
+    el.innerHTML = '<div class="dash-run-empty">No runs yet this session</div>';
+    return;
+  }
+  el.innerHTML = runHistory.slice(0, 5).map(e => `
+    <div class="dash-run-item">
+      <span class="run-status ${e.ok ? 'run-ok' : 'run-err'}">${e.ok ? "✓" : "✕"}</span>
+      <span class="run-name">${e.path.split("/").pop()}</span>
+      <span style="font-size:10px; color:var(--muted);">${e.ts}</span>
+    </div>`).join("");
+}
+
+// ─── Share + Download ────────────────────────────────────────────────────────
+function shareCode() {
+  if (!monacoEditor) return;
+  const code = monacoEditor.getValue();
+  const hash = "#code=" + btoa(encodeURIComponent(code));
+  const url = location.origin + location.pathname + hash;
+  navigator.clipboard.writeText(url).then(() => showToast("Share URL copied to clipboard", "ok")).catch(() => showToast("Copy failed — check browser permissions", "err"));
+}
+
+function downloadCode() {
+  if (!monacoEditor) return;
+  const code = monacoEditor.getValue();
+  const name = activeFile.split("/").pop() || "scratch.tern";
+  const blob = new Blob([code], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast("Downloaded " + name, "ok");
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg, type = "") {
+  const c = document.getElementById("toast-container");
+  const t = document.createElement("div");
+  t.className = "toast" + (type ? " " + type : "");
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── Load code from URL hash ──────────────────────────────────────────────────
+function loadFromHash() {
+  const hash = location.hash;
+  if (hash.startsWith("#code=")) {
+    try {
+      const code = decodeURIComponent(atob(hash.slice(6)));
+      const path = "scratch/shared.tern";
+      fileBuffers[path] = code;
+      if (!tabs.find(t => t.path === path)) tabs.push({ name: "shared.tern", path });
+      activeFile = path;
+      if (monacoEditor) monacoEditor.setValue(code);
+      renderTabs();
+      refreshTreeHighlight();
+      document.getElementById("sbFile").textContent = "shared.tern";
+      switchView("editor");
+      showToast("Loaded shared code", "ok");
+    } catch (e) { showToast("Failed to decode shared URL", "err"); }
   }
 }
 
@@ -1732,37 +1754,64 @@ document.addEventListener("DOMContentLoaded", () => {
   const keyInput = document.getElementById("apiKey");
   keyInput.addEventListener("change", () => {
     const key = keyInput.value.trim();
-    if (document.getElementById("saveKeyCheck").checked && key) {
+    if (document.getElementById("saveKeyCheck").checked && key)
       localStorage.setItem("ternstudio-key", key);
-    }
-    if (key) {
-      fetchUsage();
-      // Switch to usage tab to show result
-      const usageTabEl = document.getElementById("usageTab");
-      if (usageTabEl) {
-        document.querySelectorAll(".out-tab").forEach(t => t.classList.remove("active"));
-        document.querySelectorAll(".out-panel").forEach(p => p.classList.remove("visible"));
-        usageTabEl.classList.add("active");
-        document.getElementById("panel-usage").classList.add("visible");
-      }
-    } else renderUsageAnon();
+    if (key) { fetchUsage(); } else renderUsageAnon();
+    syncSettingsKeyDisplay();
   });
+  syncSettingsKeyDisplay();
+  loadFromHash();
 });
+
+function syncSettingsKeyDisplay() {
+  const key = document.getElementById("apiKey").value.trim();
+  const masked = key.length > 12 ? key.slice(0, 8) + "…" + key.slice(-4) : (key || "—");
+  document.getElementById("settingsKeyDisplay").textContent = masked;
+}
 
 function copyKey() {
   const key = document.getElementById("apiKey").value.trim();
-  if (key) navigator.clipboard.writeText(key).then(() => {
-    const btn = event.target;
-    const old = btn.textContent;
-    btn.textContent = "✓ Copied";
-    setTimeout(() => btn.textContent = old, 1500);
-  });
+  if (key) navigator.clipboard.writeText(key).then(() => showToast("Key copied", "ok"));
 }
 
 function clearKey() {
   document.getElementById("apiKey").value = "";
   localStorage.removeItem("ternstudio-key");
   renderUsageAnon();
+  syncSettingsKeyDisplay();
+  showToast("Key cleared", "ok");
+}
+
+function applyEndpoint() {
+  const val = document.getElementById("settingsEndpoint").value.trim();
+  if (val) {
+    document.getElementById("apiEndpoint").value = val;
+    checkConnection();
+    showToast("Endpoint updated", "ok");
+  }
+}
+
+function syncSettingsUI() {
+  document.getElementById("settingsEndpoint").value = document.getElementById("apiEndpoint").value;
+  document.getElementById("saveKeyCheck").checked = localStorage.getItem("ternstudio-save-key") === "1";
+  syncSettingsKeyDisplay();
+  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  document.getElementById("settingsTheme").value = theme;
+}
+
+function applyEditorSettings() {
+  if (!monacoEditor) return;
+  const fontSize = parseInt(document.getElementById("settingsFontSize").value);
+  const minimap = document.getElementById("settingsMinimap").value === "true";
+  const wordWrap = document.getElementById("settingsWordWrap").value;
+  monacoEditor.updateOptions({ fontSize, minimap: { enabled: minimap }, wordWrap });
+}
+
+function applyThemeFromSettings() {
+  const val = document.getElementById("settingsTheme").value;
+  localStorage.setItem("ternstudio-theme", val);
+  applyTheme(val);
+  if (monacoEditor) monaco.editor.setTheme(val === "light" ? "ternstudio-light" : "ternstudio-dark");
 }
 
 // ─── Usage dashboard ──────────────────────────────────────────────────────────
@@ -1791,8 +1840,7 @@ function renderTierBenefits(tier) {
   const benefits = TIER_BENEFITS[tier] || TIER_BENEFITS[1];
   list.innerHTML = benefits.map((b, i) => {
     const muted = b.startsWith("○");
-    const first = i === 0;
-    return `<div class="tier-benefit ${first ? "t1-benefit" : ""} ${muted ? "muted-benefit" : ""}">${b}</div>`;
+    return `<div class="tier-benefit ${muted ? "muted-benefit" : ""}">${b}</div>`;
   }).join("");
   const upgradeBtn = document.getElementById("upgradeBtn");
   upgradeBtn.style.display = tier >= 4 ? "none" : "inline-block";
@@ -1803,16 +1851,20 @@ function updateTopbarTier(tier) {
   badge.textContent = TIER_LABELS[tier] || "Tier 1";
   badge.className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
   document.getElementById("sbTier").textContent = TIER_LABELS[tier] || "Tier 1 — Open Core";
-  // Show upgrade button only for free/Tier 1 users
-  const upBtn = document.getElementById("topbarUpgradeBtn");
+  const upBtn = document.getElementById("topbarUpskillBtn");
   if (upBtn) upBtn.style.display = tier <= 1 ? "flex" : "none";
+  // Sync dashboard tier badge
+  const dashBadge = document.getElementById("dashTierBadge");
+  if (dashBadge) {
+    dashBadge.textContent = TIER_LABELS[tier] || "Tier 1 — Free";
+    dashBadge.className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
+  }
 }
 
 async function fetchUsage() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
   const key = document.getElementById("apiKey").value.trim();
   if (!key) { renderUsageAnon(); return; }
-
   try {
     const r = await fetch(endpoint + "/api/usage", {
       headers: { "X-Ternlang-Key": key },
@@ -1826,21 +1878,18 @@ async function fetchUsage() {
     }
     const d = await r.json();
     document.getElementById("usageError").style.display = "none";
-
-    // Key display (masked)
     const masked = key.length > 12 ? key.slice(0, 8) + "…" + key.slice(-4) : key;
     document.getElementById("usageKeyDisplay").textContent = masked;
-
     const tier = d.tier || 1;
     updateTopbarTier(tier);
     document.getElementById("usageTierBadge").textContent = TIER_LABELS[tier] || "Tier 1";
     document.getElementById("usageTierBadge").className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
-
     renderTierBenefits(tier);
-
     if (d.limit === null || d.limit === undefined || tier >= 4) {
       document.getElementById("usage-quota-section").style.display = "none";
       document.getElementById("usage-unlimited-section").style.display = "block";
+      document.getElementById("dash-unlimited-badge").style.display = "block";
+      document.getElementById("dash-quota-wrap").style.display = "none";
     } else {
       document.getElementById("usage-unlimited-section").style.display = "none";
       document.getElementById("usage-quota-section").style.display = "block";
@@ -1855,6 +1904,11 @@ async function fetchUsage() {
       fill.className = "usage-bar-fill" + (pct >= 90 ? " crit" : pct >= 70 ? " warn" : "");
       document.getElementById("usageMeta").textContent =
         `${pct}% used · ${remaining.toLocaleString()} remaining · resets 1st of month`;
+      // Dashboard
+      document.getElementById("dashUsageBar").style.width = pct + "%";
+      document.getElementById("dashUsageBar").className = "usage-bar-fill" + (pct >= 90 ? " crit" : pct >= 70 ? " warn" : "");
+      document.getElementById("dashUsageMeta").textContent =
+        `${used.toLocaleString()} / ${limit.toLocaleString()} · ${pct}%`;
     }
   } catch (e) {
     document.getElementById("usageError").style.display = "block";
@@ -1865,45 +1919,39 @@ async function fetchUsage() {
 // ─── Connection status ────────────────────────────────────────────────────────
 async function checkConnection() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+  const dot = document.getElementById("dashVmDot");
+  const label = document.getElementById("dashVmLabel");
   try {
     const r = await fetch(endpoint + "/health", { signal: AbortSignal.timeout(4000) });
     if (r.ok) {
       document.getElementById("connLabel").textContent = "Connected · " + endpoint.replace("https://", "");
       document.getElementById("connDot").className = "sb-dot";
-    } else {
-      throw new Error("not ok");
-    }
+      if (dot)   dot.className   = "dot";
+      if (label) label.textContent = "Online · " + endpoint.replace("https://", "");
+    } else { throw new Error("not ok"); }
   } catch {
     document.getElementById("connLabel").textContent = "Offline";
     document.getElementById("connDot").className = "sb-dot err";
+    if (dot)   dot.className   = "dot err";
+    if (label) label.textContent = "Offline";
   }
 }
 
-// ─── Upgrade modal ────────────────────────────────────────────────────────────
-function openUpgradeModal() {
-  document.getElementById("upgradeModal").style.display = "flex";
-  document.body.style.overflow = "hidden";
-}
-function closeUpgradeModal() {
-  document.getElementById("upgradeModal").style.display = "none";
-  document.body.style.overflow = "";
-}
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") closeUpgradeModal();
-});
+// ─── Upskill modal ────────────────────────────────────────────────────────────
+function openUpskillModal()  { document.getElementById("upskillModal").style.display = "flex"; document.body.style.overflow = "hidden"; }
+function closeUpskillModal() { document.getElementById("upskillModal").style.display = "none"; document.body.style.overflow = ""; }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeUpskillModal(); });
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 function applyTheme(mode) {
   const html = document.documentElement;
-  const btn = document.getElementById("themeBtn");
+  const btn  = document.getElementById("themeBtn");
   if (mode === "light") {
     html.setAttribute("data-theme", "light");
-    if (btn) btn.textContent = "○";
-    if (btn) btn.title = "Switch to dark mode";
+    if (btn) { btn.textContent = "○"; btn.title = "Switch to dark mode"; }
   } else {
     html.removeAttribute("data-theme");
-    if (btn) btn.textContent = "●";
-    if (btn) btn.title = "Switch to light mode";
+    if (btn) { btn.textContent = "●"; btn.title = "Switch to light mode"; }
   }
 }
 
@@ -1912,12 +1960,9 @@ function toggleTheme() {
   const next = current === "light" ? "dark" : "light";
   localStorage.setItem("ternstudio-theme", next);
   applyTheme(next);
-  if (monacoEditor) {
-    monaco.editor.setTheme(next === "light" ? "ternstudio-light" : "ternstudio-dark");
-  }
+  if (monacoEditor) monaco.editor.setTheme(next === "light" ? "ternstudio-light" : "ternstudio-dark");
 }
 
-// Apply saved theme before Monaco loads (avoids flash)
 (function() {
   const saved = localStorage.getItem("ternstudio-theme") || "dark";
   applyTheme(saved);
@@ -1927,19 +1972,13 @@ function toggleTheme() {
 require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs" } });
 
 require(["vs/editor/editor.main"], function () {
-  // Register Ternlang language
   monaco.languages.register({ id: "ternlang" });
 
   monaco.languages.setMonarchTokensProvider("ternlang", {
-    keywords: [
-      "fn", "let", "return", "match", "if", "else", "while", "for", "in",
-      "break", "continue", "spawn", "send", "await",
-    ],
+    keywords: ["fn", "let", "return", "match", "if", "else", "while", "for", "in", "break", "continue", "spawn", "send", "await"],
     types: ["trit", "int", "float", "bool", "void"],
-    builtins: ["truth", "hold", "conflict", "consensus", "print", "println",
-               "affirm", "reject", "tend"],
+    builtins: ["truth", "hold", "conflict", "consensus", "print", "println", "affirm", "reject", "tend"],
     directives: ["sparseskip", "inline", "export"],
-
     tokenizer: {
       root: [
         [/@[a-zA-Z_]+/, "keyword.directive"],
@@ -1963,72 +2002,70 @@ require(["vs/editor/editor.main"], function () {
   });
 
   monaco.editor.defineTheme("ternstudio-dark", {
-    base: "vs-dark",
-    inherit: true,
+    base: "vs-dark", inherit: true,
     rules: [
-      { token: "comment",              foreground: "3a5060", fontStyle: "italic" },
-      { token: "keyword",              foreground: "00c8ff", fontStyle: "bold" },
-      { token: "keyword.directive",    foreground: "ffaa00", fontStyle: "bold" },
-      { token: "type",                 foreground: "80e8ff" },
-      { token: "support.function",     foreground: "00e87a" },
-      { token: "number.trit.affirm",   foreground: "00e87a", fontStyle: "bold" },
-      { token: "number.trit.reject",   foreground: "ff3b55", fontStyle: "bold" },
-      { token: "number.trit.hold",     foreground: "ffaa00", fontStyle: "bold" },
-      { token: "number.float",         foreground: "a8d8ff" },
-      { token: "number",               foreground: "a8d8ff" },
-      { token: "string",               foreground: "c8f0a0" },
-      { token: "operator",             foreground: "6090b0" },
-      { token: "delimiter",            foreground: "405060" },
-      { token: "identifier",           foreground: "c8d4e0" },
+      { token: "comment",           foreground: "3a5060", fontStyle: "italic" },
+      { token: "keyword",           foreground: "00c8ff", fontStyle: "bold" },
+      { token: "keyword.directive", foreground: "ffaa00", fontStyle: "bold" },
+      { token: "type",              foreground: "80e8ff" },
+      { token: "support.function",  foreground: "00e87a" },
+      { token: "number.trit.affirm",foreground: "00e87a", fontStyle: "bold" },
+      { token: "number.trit.reject",foreground: "ff3b55", fontStyle: "bold" },
+      { token: "number.trit.hold",  foreground: "ffaa00", fontStyle: "bold" },
+      { token: "number.float",      foreground: "a8d8ff" },
+      { token: "number",            foreground: "a8d8ff" },
+      { token: "string",            foreground: "c8f0a0" },
+      { token: "operator",          foreground: "6090b0" },
+      { token: "delimiter",         foreground: "405060" },
+      { token: "identifier",        foreground: "c8d4e0" },
     ],
     colors: {
-      "editor.background":             "#080b10",
-      "editor.foreground":             "#c8d4e0",
-      "editor.lineHighlightBackground":"#0d1219",
-      "editorCursor.foreground":       "#00c8ff",
-      "editor.selectionBackground":    "#0d2040",
-      "editorLineNumber.foreground":   "#2a3a4a",
+      "editor.background":              "#080b10",
+      "editor.foreground":              "#c8d4e0",
+      "editor.lineHighlightBackground": "#0d1219",
+      "editorCursor.foreground":        "#00c8ff",
+      "editor.selectionBackground":     "#0d2040",
+      "editorLineNumber.foreground":    "#2a3a4a",
       "editorLineNumber.activeForeground": "#5a7a9a",
-      "editorIndentGuide.background":  "#1a2530",
-      "editorGutter.background":       "#080b10",
-      "scrollbar.shadow":              "#00000000",
-      "scrollbarSlider.background":    "#1d2835",
-      "scrollbarSlider.hoverBackground": "#253040",
+      "editorIndentGuide.background":   "#1a2530",
+      "editorGutter.background":        "#080b10",
+      "scrollbar.shadow":               "#00000000",
+      "scrollbarSlider.background":     "#1d2835",
+      "scrollbarSlider.hoverBackground":"#253040",
     },
   });
 
   monaco.editor.defineTheme("ternstudio-light", {
-    base: "vs",
-    inherit: true,
+    base: "vs", inherit: true,
     rules: [
-      { token: "comment",              foreground: "7a9aaa", fontStyle: "italic" },
-      { token: "keyword",              foreground: "0060bb", fontStyle: "bold" },
-      { token: "keyword.directive",    foreground: "9a5000", fontStyle: "bold" },
-      { token: "type",                 foreground: "006090" },
-      { token: "support.function",     foreground: "007040" },
-      { token: "number.trit.affirm",   foreground: "007040", fontStyle: "bold" },
-      { token: "number.trit.reject",   foreground: "bb001a", fontStyle: "bold" },
-      { token: "number.trit.hold",     foreground: "9a5000", fontStyle: "bold" },
-      { token: "number.float",         foreground: "005090" },
-      { token: "number",               foreground: "005090" },
-      { token: "string",               foreground: "306820" },
-      { token: "operator",             foreground: "507090" },
-      { token: "delimiter",            foreground: "708090" },
-      { token: "identifier",           foreground: "1a2535" },
+      { token: "comment",           foreground: "7a9aaa", fontStyle: "italic" },
+      { token: "keyword",           foreground: "0060bb", fontStyle: "bold" },
+      { token: "keyword.directive", foreground: "9a5000", fontStyle: "bold" },
+      { token: "type",              foreground: "006090" },
+      { token: "support.function",  foreground: "007040" },
+      { token: "number.trit.affirm",foreground: "007040", fontStyle: "bold" },
+      { token: "number.trit.reject",foreground: "bb001a", fontStyle: "bold" },
+      { token: "number.trit.hold",  foreground: "9a5000", fontStyle: "bold" },
+      { token: "number.float",      foreground: "005090" },
+      { token: "number",            foreground: "005090" },
+      { token: "string",            foreground: "306820" },
+      { token: "operator",          foreground: "507090" },
+      { token: "delimiter",         foreground: "708090" },
+      { token: "identifier",        foreground: "1a2535" },
     ],
     colors: {
-      "editor.background":             "#f8fafc",
-      "editor.foreground":             "#1a2535",
-      "editor.lineHighlightBackground":"#eef2f6",
-      "editorCursor.foreground":       "#0070cc",
-      "editor.selectionBackground":    "#cce0ff",
-      "editorLineNumber.foreground":   "#a0aab5",
+      "editor.background":              "#f8fafc",
+      "editor.foreground":              "#1a2535",
+      "editor.lineHighlightBackground": "#eef2f6",
+      "editorCursor.foreground":        "#0070cc",
+      "editor.selectionBackground":     "#cce0ff",
+      "editorLineNumber.foreground":    "#a0aab5",
       "editorLineNumber.activeForeground": "#607080",
-      "editorIndentGuide.background":  "#d8dde3",
-      "editorGutter.background":       "#f0f2f5",
-      "scrollbar.shadow":              "#00000010",
-      "scrollbarSlider.background":    "#c8ced4",
-      "scrollbarSlider.hoverBackground": "#b0b8c0",
+      "editorIndentGuide.background":   "#d8dde3",
+      "editorGutter.background":        "#f0f2f5",
+      "scrollbar.shadow":               "#00000010",
+      "scrollbarSlider.background":     "#c8ced4",
+      "scrollbarSlider.hoverBackground":"#b0b8c0",
     },
   });
 
@@ -2053,44 +2090,32 @@ require(["vs/editor/editor.main"], function () {
     overviewRulerLanes: 0,
     hideCursorInOverviewRuler: true,
     renderLineHighlight: "gutter",
-    scrollbar: {
-      verticalScrollbarSize: 5,
-      horizontalScrollbarSize: 5,
-    },
+    scrollbar: { verticalScrollbarSize: 5, horizontalScrollbarSize: 5 },
   });
 
-  // Cursor position
   monacoEditor.onDidChangeCursorPosition(e => {
     document.getElementById("cursorPos").textContent =
       `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
   });
 
-  // Auto-resize Monaco when window resizes
   window.addEventListener("resize", () => monacoEditor.layout());
 
-  // Keyboard shortcut: Ctrl+Enter / Cmd+Enter
-  monacoEditor.addCommand(
-    monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-    () => runCode()
-  );
-  monacoEditor.addCommand(
-    monaco.KeyCode.F5,
-    () => runCode()
-  );
+  monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runCode());
+  monacoEditor.addCommand(monaco.KeyCode.F5, () => runCode());
 
-  // Init
   buildFileTree();
   renderTabs();
   refreshTreeHighlight();
   checkConnection();
   setInterval(checkConnection, 30000);
 
-  // Load usage if key is saved
   const savedKey = document.getElementById("apiKey").value.trim();
   if (savedKey) fetchUsage(); else renderUsageAnon();
+
+  // Load from hash after Monaco is ready
+  loadFromHash();
 });
 </script>
-
 
 </body>
 </html>

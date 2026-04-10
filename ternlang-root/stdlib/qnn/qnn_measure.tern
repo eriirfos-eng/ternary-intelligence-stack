@@ -1,0 +1,37 @@
+// stdlib/qnn/qnn_measure.tern
+// Qutrit measurement — collapses ternary superposition to classical outcome.
+// Applies a confidence threshold to determine collapse direction.
+// Tier: 2 — Pro Standard
+
+fn measure_collapse(state: trit, confidence: float) -> trit {
+    // High confidence: state is preserved (measurement confirms)
+    if confidence > 0.8 { return state; }
+    // Low confidence: collapse to neutral (measurement disturbs)
+    if confidence < 0.3 { return hold(); }
+    // Mid confidence: partial collapse — biased toward neutral
+    match state {
+        -1 => { return hold();    }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn born_rule(state: trit) -> trit {
+    // Ternary Born rule proxy: project onto most probable classical value
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let psi: trit   = 1;
+let conf: float = 0.9;
+let outcome: trit = measure_collapse(psi, conf);
+let classical: trit = born_rule(outcome);
+
+match classical {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
