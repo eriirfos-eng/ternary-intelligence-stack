@@ -188,7 +188,7 @@ pub enum Token {
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*", |lex| lex.slice().to_string(), priority = 1)]
     Ident(String),
 
-    #[regex("[0-9]+", |lex| lex.slice().parse::<i64>().ok(), priority = 1)]
+    #[regex("[0-9]+", |lex| lex.slice().parse::<i64>().ok(), priority = 10)]
     Int(i64),
 
     /// Double-quoted string literal: "value"
