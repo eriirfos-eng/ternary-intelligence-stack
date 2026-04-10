@@ -19,23 +19,41 @@ This document tracks historical fixes and new bugs identified during standard li
 ### 9. Decorated Function Parsing
 - **Symptoms:** Compiler failed with `ExpectedToken("Fn", "At")` when encountering `@sparseskip` before a function definition.
 - **Root Cause:** `parse_program` expected `Fn` immediately for functions and didn't handle the `@` (`At`) token. `Function` AST node lacked a `directive` field.
-- **Fix:**
-    - Added `directive: Option<String>` to `Function` struct in `ast.rs`.
-    - Updated `parse_function` in `parser.rs` to handle optional `@` prefix.
-    - Updated `BytecodeEmitter` in `betbc.rs` to handle `Stmt::Decorated` (previously ignored).
-- **Status:** Verified. `@sparseskip` functions now compile and run.
+- **Fix:** Added `directive` to `Function`, updated `parse_function`, and enabled `Stmt::Decorated` in `betbc.rs`.
+- **Status:** Verified.
 
 ### 10. Floating Point Literal and Arithmetic Support
-- **Symptoms:** Using `float` literals like `0.5` caused parser errors (`ExpectedToken("field name", "TritLiteral")`). Numeric operations on floats were not implemented in the VM.
-- **Root Cause:** 
-    - `Lexer` lacked a Float regex; `0.5` was tokenized as `TritLiteral(0)`, `Dot`, `Int(5)`.
-    - `AST` and `Parser` lacked `FloatLiteral` nodes.
-    - `VM` `Value` enum lacked a `Float` variant.
-    - `VM` opcodes for `Add`, `Mul`, etc., were restricted to `Trit` or `Int`.
-- **Fix:**
-    - Added high-priority `Float` regex to `lexer.rs`.
-    - Added `FloatLiteral(f64)` to `Expr` in `ast.rs`.
-    - Implemented polymorphic opcodes in `vm/mod.rs`: `0x02` (Add), `0x03` (Mul), `0x04` (Neg), `0x14` (Less), `0x15` (Greater) now handle `Trit`, `Int`, and `Float`.
-    - Added `0x19` (`TpushFloat`) opcode to VM.
-    - Updated `BytecodeEmitter` to emit `0x19` for float literals.
-- **Status:** Verified. EMA deliberation gates and other float-based logic now work correctly.
+- **Symptoms:** Float literals like `0.5` caused parser errors. Numeric operations on floats were not implemented in the VM.
+- **Root Cause:** Lexer lacked Float regex; AST/Parser lacked nodes; VM lacked Float support in opcodes.
+- **Fix:** Added high-priority Float regex, polymorphic numeric opcodes (`0x02`, `0x03`, `0x04`, `0x14`, `0x15`), and `0x19` (`TpushFloat`).
+- **Status:** Verified.
+
+### 11. While Loop and Continue Support
+- **Symptoms:** `while` loops and `continue` statements were parsed but not emitted to bytecode, causing them to be ignored or crash.
+- **Root Cause:** `betbc.rs` lacked `WhileTernary` and `Continue` logic in `emit_stmt`.
+- **Fix:** Implemented `WhileTernary` with ternary branching and loop-back. Added `continue_patches` to handle nested loops.
+- **Status:** Verified in `ternary_parity.tern`.
+
+### 12. Print/Println Built-ins
+- **Symptoms:** `print()` calls were ignored by the emitter.
+- **Root Cause:** No opcode for printing; `BytecodeEmitter` ignored these calls.
+- **Fix:** Added `0x20` (`Tprint`) opcode to VM. Updated `betbc.rs` to handle `print` and `println` in `Expr::Call`.
+- **Status:** Verified.
+
+### 13. Division and Modulo Operators
+- **Symptoms:** `/` and `%` caused lexer/parser errors.
+- **Root Cause:** Tokens and AST variants were missing.
+- **Fix:** Added `Slash` (`/`) and `Percent` (`%`) tokens to lexer. Added `BinOp::Div` and `BinOp::Mod` to AST and parser. Implemented `0x1e` (`Tdiv`) and `0x1f` (`Tmod`) opcodes in VM.
+- **Status:** Verified in `expert_weight_normalization.tern`.
+
+### 14. Early Exit Postfix '?' Operator
+- **Symptoms:** `expr?` was parsed but didn't actually propagate `reject` signals, causing stack underflows.
+- **Root Cause:** `Expr::Propagate` was not implemented in `betbc.rs`.
+- **Fix:** Implemented `Expr::Propagate` using `TDUP` and conditional return (`TRET`) on `reject` (-1).
+- **Status:** Verified in `safety_veto_propagation.tern`.
+
+### 15. Cross-type Numeric Support (Int vs Trit vs Float)
+- **Symptoms:** Comparing an `Int` variable with a `Trit` literal (e.g., `temp > 1`) caused `BET-007 TypeMismatch` at runtime.
+- **Root Cause:** VM opcodes expected exact type matches for variants.
+- **Fix:** Made `Tadd`, `Tmul`, `Tless`, `Tgreater`, and `Teq` truly polymorphic by coercing `Trit` to `i64` when paired with an `Int`.
+- **Status:** Verified.
