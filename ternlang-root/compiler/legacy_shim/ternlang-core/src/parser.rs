@@ -92,6 +92,18 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_function(&mut self) -> Result<Function, ParseError> {
+        let directive = if let Ok(Token::At) = self.peek_token() {
+            self.next_token()?;
+            let dir = match self.next_token()? {
+                Token::SparseSkip  => "sparseskip".to_string(),
+                Token::Ident(n)    => n,
+                t => return Err(ParseError::ExpectedToken("directive".into(), format!("{:?}", t))),
+            };
+            Some(dir)
+        } else {
+            None
+        };
+
         self.expect(Token::Fn)?;
         let name = match self.next_token()? {
             Token::Ident(n) => n,
@@ -119,7 +131,7 @@ impl<'a> Parser<'a> {
             Stmt::Block(stmts) => stmts,
             _ => unreachable!(),
         };
-        Ok(Function { name, params, return_type, body })
+        Ok(Function { name, params, return_type, body, directive })
     }
 
     fn next_token(&mut self) -> Result<Token, ParseError> {
@@ -258,6 +270,29 @@ impl<'a> Parser<'a> {
                 let expr = self.parse_unary_expr()?;
                 Ok(Expr::UnaryOp { op: UnOp::Neg, expr: Box::new(expr) })
             }
+            Token::LBracket => {
+                let mut vals = Vec::new();
+                loop {
+                    match self.next_token()? {
+                        Token::TritLiteral => {
+                            let s = self.lex.slice();
+                            vals.push(s.parse::<i8>().unwrap_or(0));
+                        }
+                        Token::Int(v) => vals.push(v as i8),
+                        Token::Affirm => vals.push(1),
+                        Token::Tend => vals.push(0),
+                        Token::Reject => vals.push(-1),
+                        t => return Err(ParseError::UnexpectedToken(format!("tensor literal element: {:?}", t))),
+                    }
+                    if self.peek_token()? == Token::Comma {
+                        self.next_token()?;
+                    } else {
+                        break;
+                    }
+                }
+                self.expect(Token::RBracket)?;
+                Ok(Expr::TritTensorLiteral(vals))
+            }
             Token::TritLiteral => {
                 let slice = self.lex.slice();
                 let val = slice.parse::<i8>()
@@ -269,6 +304,7 @@ impl<'a> Parser<'a> {
             Token::Tend   => Ok(Expr::TritLiteral(0)),
             Token::Reject => Ok(Expr::TritLiteral(-1)),
             Token::Int(val) => Ok(Expr::IntLiteral(val)),
+            Token::Float(val) => Ok(Expr::FloatLiteral(val)),
             Token::StringLit(s) => Ok(Expr::StringLiteral(s)),
             Token::Ident(name) => {
                 // cast(expr) built-in: returns Cast node
@@ -538,6 +574,12 @@ impl<'a> Parser<'a> {
                                 self.expect(Token::Semicolon)?;
                                 return Ok(Stmt::IndexSet { object: obj_name, row: *row, col: *col, value });
                             }
+                        }
+                        Expr::Ident(name) => {
+                            self.next_token()?; // consume `=`
+                            let value = self.parse_expr()?;
+                            self.expect(Token::Semicolon)?;
+                            return Ok(Stmt::Set { name, value });
                         }
                         _ => {}
                     }
