@@ -1,0 +1,50 @@
+// stdlib/agents/ema_deliberation.tern
+// Demonstrates: EMA convergence for multi-agent deliberation.
+// Tier: 2 — Pro Standard
+// Implements the deliberation loop: S_r = α·e_r + (1−α)·S_{r−1}
+
+fn ema_converge(current_score: float, new_evidence: float, alpha: float) -> float {
+    return (alpha * new_evidence) + ((1.0 - alpha) * current_score);
+}
+
+fn deliberation_gate(confidence: float) -> trit {
+    if confidence > 0.8 {
+        return 1;
+    }
+    if confidence < 0.2 {
+        return -1;
+    }
+    return 0;
+}
+
+// Initial score: 0.5 (Neutral)
+let score: float = 0.5;
+let alpha: float = 0.3;
+
+// Sequence of evidence from experts
+// Expert 1: 0.8 (Strongly Support)
+score = ema_converge(score, 0.8, alpha);
+println("After Expert 1: ", score);
+
+// Expert 2: 0.9 (Strongly Support)
+score = ema_converge(score, 0.9, alpha);
+println("After Expert 2: ", score);
+
+// Check gate
+let result: trit = deliberation_gate(score);
+match result {
+    1  => { println("Deliberation: Converged to AFFIRM."); }
+    0  => { println("Deliberation: HOLD (Uncertain)."); }
+    -1 => { println("Deliberation: Converged to REJECT."); }
+}
+
+// Expert 3: 0.1 (Strongly Oppose)
+score = ema_converge(score, 0.1, alpha);
+println("After Expert 3: ", score);
+
+let final_result: trit = deliberation_gate(score);
+println("Final Decision: ", final_result);
+
+if final_result == 0 {
+    println("Test Passed: Evidence conflicted, returning to HOLD.");
+}
