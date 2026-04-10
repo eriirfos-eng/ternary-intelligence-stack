@@ -80,6 +80,20 @@ This file tracks all architectural improvements, bug fixes, and feature addition
     - **Fix:** Updated `BetVm` to store explicit `rows` and `cols` in `TensorInstance`. Updated `Talloc` (0x0f) to take 4 immediate bytes (`rows: u16`, `cols: u16`). Updated `betbc.rs` to emit dimensions during allocation.
     - **Status:** Fixed.
 
+18. **TritLiteral Lexer Priority Fix** (2026-04-10)
+    - **Trigger:** Using `1` or `0` literals in `.tern` programs.
+    - **Symptom:** Failing compiler tests (`lexer::tests::test_lexer`) and type mismatches in function calls expecting `trit`.
+    - **Diagnosis:** `TritLiteral` was only defined as `"-1"`, and `Int` had higher priority (10) than the generic digit pattern. `1` and `0` were tokenized as `Int(1)` and `Int(0)`.
+    - **Fix:** Updated `lexer.rs` to define `TritLiteral` as `regex(r"1|0|-1")` with priority 11.
+    - **Status:** Fixed.
+
+19. **Tmod/Tdiv Numeric Polymorphism** (2026-04-10)
+    - **Trigger:** Using `trit` values (like `1`, `0`, `-1`) as operands for `%` or `/`.
+    - **Symptom:** `BET-007` TypeMismatch: expected Int but found Trit.
+    - **Diagnosis:** `Tmod` and `Tdiv` only handled `Int % Int` or `Float / Float`. With `1` and `0` now being trits, they must be allowed in integer math.
+    - **Fix:** Updated `vm/mod.rs` to allow `Trit` operands for `Tmod` and `Tdiv`, treating them as `i64` equivalents.
+    - **Status:** Fixed.
+
 ## Known Limitations / Unresolved (2026-04-10)
 
 ### BUG-L01 — Block comments (`/* */`) are not supported
