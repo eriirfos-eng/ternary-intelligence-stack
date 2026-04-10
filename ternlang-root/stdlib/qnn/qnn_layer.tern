@@ -1,0 +1,36 @@
+// stdlib/qnn/qnn_layer.tern
+// Qutrit neural network layer — single ternary neuron with activation.
+// Computes: consensus of weighted ternary inputs, then applies gate.
+// Tier: 2 — Pro Standard
+
+fn trit_weight(signal: trit, weight: trit) -> trit {
+    // Ternary multiply: sign(signal) * sign(weight)
+    match weight {
+        -1 => {
+            match signal {
+                -1 => { return truth();    }
+                 0 => { return hold();     }
+                 1 => { return conflict(); }
+            }
+        }
+         0 => { return hold(); }
+         1 => { return signal; }
+    }
+}
+
+fn qnn_neuron(x0: trit, x1: trit, x2: trit, w0: trit, w1: trit, w2: trit) -> trit {
+    let a: trit = trit_weight(x0, w0);
+    let b: trit = trit_weight(x1, w1);
+    let c: trit = trit_weight(x2, w2);
+    let ab: trit = consensus(a, b);
+    return consensus(ab, c);
+}
+
+// Example: 3-input qutrit neuron
+let out: trit = qnn_neuron(1, 0, 1, 1, -1, 1);
+
+match out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

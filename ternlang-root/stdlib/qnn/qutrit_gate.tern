@@ -1,0 +1,31 @@
+// stdlib/qnn/qutrit_gate.tern
+// Qutrit single-qudit gate — applies a ternary phase transformation.
+// Maps: -1 → +1 (flip), 0 → 0 (identity), +1 → -1 (flip)
+// Tier: 2 — Pro Standard
+
+fn qutrit_gate(q: trit) -> trit {
+    match q {
+        -1 => { return truth();    }
+         0 => { return hold();    }
+         1 => { return conflict(); }
+    }
+}
+
+// Phase-shift variant: rotate by +1 step in balanced ternary
+fn qutrit_shift(q: trit) -> trit {
+    match q {
+        -1 => { return hold();    }
+         0 => { return truth();   }
+         1 => { return conflict(); }
+    }
+}
+
+let q0: trit = 0;
+let q1: trit = qutrit_gate(q0);
+let q2: trit = qutrit_shift(q1);
+
+match q2 {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

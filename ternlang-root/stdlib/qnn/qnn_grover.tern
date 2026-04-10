@@ -1,0 +1,57 @@
+// stdlib/qnn/qnn_grover.tern
+// Ternary Grover-inspired amplitude amplification.
+// Marks a target trit state, then amplifies it via inversion about mean.
+// Tier: 2 — Pro Standard
+
+// Oracle: marks target state by flipping its sign
+fn oracle(state: trit, target: trit) -> trit {
+    // If state matches target, negate; else preserve
+    match target {
+        -1 => {
+            match state {
+                -1 => { return truth();    }  // flip -1 → +1 (mark)
+                 0 => { return hold();     }
+                 1 => { return truth();    }
+            }
+        }
+         0 => {
+            match state {
+                -1 => { return conflict(); }
+                 0 => { return conflict(); }  // flip 0 → -1 (mark)
+                 1 => { return truth();    }
+            }
+        }
+         1 => {
+            match state {
+                -1 => { return conflict(); }
+                 0 => { return hold();     }
+                 1 => { return conflict(); }  // flip +1 → -1 (mark)
+            }
+        }
+    }
+}
+
+// Diffusion: inversion about average (ternary Hadamard sandwich)
+fn diffuse(state: trit) -> trit {
+    match state {
+        -1 => { return truth();    }
+         0 => { return hold();    }
+         1 => { return conflict(); }
+    }
+}
+
+// One Grover iteration
+fn grover_step(state: trit, target: trit) -> trit {
+    let marked: trit = oracle(state, target);
+    return diffuse(marked);
+}
+
+let initial: trit  = 0;
+let target:  trit  = 1;
+let after1:  trit  = grover_step(initial, target);
+
+match after1 {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

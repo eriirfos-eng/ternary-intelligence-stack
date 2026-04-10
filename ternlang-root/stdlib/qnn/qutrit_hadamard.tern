@@ -1,0 +1,34 @@
+// stdlib/qnn/qutrit_hadamard.tern
+// Ternary analogue of the Hadamard gate — creates balanced superposition.
+// In ternary logic: maps pure states toward the neutral (hold) state.
+// Tier: 2 — Pro Standard
+
+fn hadamard_approx(q: trit) -> trit {
+    // Ternary Hadamard-like: extreme states collapse toward neutral
+    match q {
+        -1 => { return hold();    }  // |-> → |0>
+         0 => { return truth();   }  // |0> → |+>
+         1 => { return hold();    }  // |+> → |0>
+    }
+}
+
+fn inverse_hadamard(q: trit) -> trit {
+    // Inverse: neutral maps to affirm, extremes fold to hold
+    match q {
+        -1 => { return hold();    }
+         0 => { return truth();   }
+         1 => { return conflict(); }
+    }
+}
+
+let psi: trit = 1;
+let psi_h: trit = hadamard_approx(psi);
+let psi_hh: trit = inverse_hadamard(psi_h);
+
+let result: trit = consensus(psi_h, psi_hh);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
