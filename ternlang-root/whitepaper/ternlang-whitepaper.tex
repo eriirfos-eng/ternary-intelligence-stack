@@ -1172,18 +1172,18 @@ Ternlang is implemented in Rust and comprises the following crates:
 \begin{table}[h]
 \centering
 \small
-\caption{Workspace crates, test counts, and brief descriptions (v0.2.0)}
+\caption{Workspace crates, test counts, and brief descriptions (v0.3.0)}
 \label{tab:status}
 \begin{tabular}{p{2.5cm}lp{5.5cm}}
 \toprule
 Crate & Tests & Description \\
 \midrule
-\texttt{ternlang-core}    & 56  & Lexer, parser (+ \texttt{?} propagation), AST, semantic checker, BET VM (51 opcodes), ModuleResolver \\
+\texttt{ternlang-core}    & 43  & Lexer, parser (block comments, top-level stmt wrapping), AST, semantic checker, BET VM (51 opcodes), Tset Int coercion fix \\
 \texttt{ternlang-ml}      & 21  & BitNet quantization, sparse/CSC matmul, deliberation engine, coalition vote, action gate, hallucination score \\
 \texttt{ternlang-moe}     & 24  & MoE-13 orchestrator: dual-key routing, triad synthesis, 3-tier memory, 13 dual-signal agents, introspective hold \\
-\texttt{ternlang-codegen} & 8   & AST-to-C11 transpiler; match/struct/propagation; forward declarations; native-compilable output \\
+\texttt{ternlang-codegen} & 8   & AST-to-C11 transpiler; match/struct/propagation; \texttt{Stmt::Set}, \texttt{BinOp::Div/Mod}, \texttt{Expr::FloatLiteral} coverage \\
 \texttt{ternlang-test}    & 10  & Full-pipeline test framework: \texttt{TernTestCase}, \texttt{assert\_tern!}, parse/semantic/VM error classification \\
-\texttt{ternlang-hdl}     & 21  & Verilog-2001 codegen, BET RTL simulator (\texttt{BetRtlProcessor}), \texttt{ternlang sim --rtl} \\
+\texttt{ternlang-hdl}     & 34  & Verilog-2001 codegen, BET RTL simulator (\texttt{BetRtlProcessor}), \texttt{ternlang sim --rtl} \\
 \texttt{ternlang-runtime} & 4   & Distributed TCP actor runtime (\texttt{TernNode}) \\
 \texttt{ternlang-compat}  & 29  & \texttt{.tasm} assembler (9-trit RISC), Owlet S-expr parser \\
 \texttt{ternpkg}          & 5   & Package manager, GitHub-backed registry \\
@@ -1194,25 +1194,31 @@ Crate & Tests & Description \\
 \end{tabular}
 \end{table}
 
-The full test suite comprises \textbf{177+ tests across 12 crates}, all passing.
+The CI-verified test suite comprises \textbf{138 fast tests across 5 self-contained crates}
+(core: 43, codegen: 8, moe: 24, compat: 29, hdl: 34), all passing; network-bound crates
+(ternlang-runtime, ternpkg, ternlang-lsp, ternlang-ml, ternlang-mcp) are validated locally.
 All crates are published to \texttt{crates.io} under open-core licensing
 (LGPL-3.0-or-later for the compiler and CLI; BSL-1.1 converting to LGPL in
 2030 for the ML engine and MoE orchestrator). The live API is deployed at
 \texttt{https://ternlang.com/mcp} (Fly.io, Frankfurt) with TLS via Let's Encrypt,
 serving both the marketing website and the MCP endpoint from a single Rust
-binary. A companion \texttt{examples/} directory contains 265 executable
+binary. A companion \texttt{stdlib/} directory contains \textbf{275+ executable}
 \texttt{.tern} programs spanning aerospace, medicine, distributed systems,
-hardware pipelines, civic governance, finance, AI agent design, and Qutrit
-Neural Network experiments—each catalogued in \texttt{INDEX.md} with patterns,
-attribution, and cross-references. The repository is publicly available at the
-URL in the author affiliation. Continuous integration via GitHub Actions
-automatically builds, tests, and deploys to Fly.io on every push to main.
+hardware pipelines, civic governance, finance, AI agent design, and ten Qutrit
+Neural Network modules (gates, Hadamard, entanglement, Grover oracle, VQE,
+QAOA)—each catalogued in \texttt{INDEX.md} with patterns, attribution, and
+cross-references. The VS~Code extension (\texttt{ternlang-0.1.0}) is published
+on the Open~VSX Registry under publisher \texttt{rfi-irfos}, providing syntax
+highlighting, LSP diagnostics, and snippet completion to any compatible editor.
+The repository is publicly available at the URL in the author affiliation.
+Continuous integration via GitHub Actions automatically builds, tests, and
+deploys to Fly.io on every push to main.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We have presented Ternlang v0.2.0, a full-stack balanced ternary execution
+We have presented Ternlang v0.3.0, a full-stack balanced ternary execution
 architecture spanning language design, ISA, virtual machine, hardware backend,
 distributed runtime, native C compilation, and AI reasoning infrastructure. Five
 layers of contribution are unified under the same foundational primitive—the
@@ -1248,14 +1254,16 @@ trit $t \in \{-1, 0, +1\}$ with an active neutral state:
         \texttt{https://ternlang.com/mcp} serves 13 MCP tools to any compatible
         AI client; a VS Code extension with LSP, formatter, and REPL provides
         an IDE experience; GitHub Actions CI/CD automatically builds, tests, and
-        deploys on every push; and 177+ tests across 12 crates validate the
-        full stack.
+        deploys on every push; and 138 CI-verified tests across 5 fast crates
+        (275+ \texttt{.tern} stdlib programs) validate the full stack.
 \end{enumerate}
 
-Near-term publication targets include the VS Code Marketplace submission
-(\texttt{ternlang-0.1.0.vsix}) and academic outreach to the USN group
-(Bos \& Gundersen) for joint hardware-software co-design on the memristor
-backend.
+The VS~Code extension (\texttt{ternlang-0.1.0}) has been published on the
+Open~VSX Registry (publisher \texttt{rfi-irfos}), making ternlang tooling
+available to VS~Code, VSCodium, Gitpod, and any editor backed by the Open~VSX
+API. Near-term targets include submission to the VS~Code Marketplace and academic
+outreach to the USN group (Bos \& Gundersen) for joint hardware-software
+co-design on the memristor backend.
 
 Further research directions include:
 
