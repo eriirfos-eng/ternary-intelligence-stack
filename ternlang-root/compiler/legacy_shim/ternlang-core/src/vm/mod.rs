@@ -78,6 +78,12 @@ impl Default for Value {
     }
 }
 
+struct TensorInstance {
+    data: Vec<Trit>,
+    rows: usize,
+    cols: usize,
+}
+
 struct AgentInstance {
     handler_addr: usize,
     mailbox: std::collections::VecDeque<Value>,
@@ -89,7 +95,7 @@ pub struct BetVm {
     carry_reg: Trit,
     stack: Vec<Value>,
     call_stack: Vec<usize>,
-    tensors: Vec<Vec<Trit>>,
+    tensors: Vec<TensorInstance>,
     agents: Vec<AgentInstance>,
     agent_types: std::collections::HashMap<u16, usize>,
     pc: usize,
@@ -274,9 +280,15 @@ impl BetVm {
                     self.stack.push(Value::Trit(result));
                 }
                 0x0f => { // Talloc
-                    let size = self.read_u16()? as usize;
+                    let rows = self.read_u16()? as usize;
+                    let cols = self.read_u16()? as usize;
+                    let size = rows * cols;
                     let idx = self.tensors.len();
-                    self.tensors.push(vec![Trit::Tend; size]);
+                    self.tensors.push(TensorInstance {
+                        data: vec![Trit::Tend; size],
+                        rows,
+                        cols,
+                    });
                     self.stack.push(Value::TensorRef(idx));
                 }
                 0x10 => { // Tcall
@@ -443,13 +455,12 @@ impl BetVm {
                             if idx >= self.tensors.len() {
                                 return Err(VmError::TensorNotAllocated(idx));
                             }
-                            let len = self.tensors[idx].len();
-                            let n = (len as f64).sqrt() as usize;
-                            let pos = if n * n == len { r as usize * n + c as usize } else { r as usize };
-                            if pos >= len {
-                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: len });
+                            let tensor = &self.tensors[idx];
+                            let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
+                            if pos >= tensor.data.len() {
+                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() });
                             }
-                            self.stack.push(Value::Trit(self.tensors[idx][pos]));
+                            self.stack.push(Value::Trit(tensor.data[pos]));
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) }),
                     }
@@ -466,13 +477,12 @@ impl BetVm {
                             if idx >= self.tensors.len() {
                                 return Err(VmError::TensorNotAllocated(idx));
                             }
-                            let len = self.tensors[idx].len();
-                            let n = (len as f64).sqrt() as usize;
-                            let pos = if n * n == len { r as usize * n + c as usize } else { r as usize };
-                            if pos >= len {
-                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: len });
+                            let tensor = &mut self.tensors[idx];
+                            let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
+                            if pos >= tensor.data.len() {
+                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() });
                             }
-                            self.tensors[idx][pos] = t;
+                            tensor.data[pos] = t;
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "TensorRef, Trit".into(), found: format!("{:?}", (rf, val)) }),
                     }
@@ -483,15 +493,9 @@ impl BetVm {
                         if idx >= self.tensors.len() {
                             return Err(VmError::TensorNotAllocated(idx));
                         }
-                        let len = self.tensors[idx].len();
-                        let n = (len as f64).sqrt() as usize;
-                        if n * n == len {
-                            self.stack.push(Value::Int(n as i64));
-                            self.stack.push(Value::Int(n as i64));
-                        } else {
-                            self.stack.push(Value::Int(len as i64));
-                            self.stack.push(Value::Int(1));
-                        }
+                        let tensor = &self.tensors[idx];
+                        self.stack.push(Value::Int(tensor.rows as i64));
+                        self.stack.push(Value::Int(tensor.cols as i64));
                     } else { return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) }); }
                 }
                 0x30 => { // Tspawn — (type_id) → AgentRef

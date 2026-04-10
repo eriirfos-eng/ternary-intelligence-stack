@@ -130,9 +130,11 @@ impl BytecodeEmitter {
                 if let Type::TritTensor { dims } = ty {
                     // Only auto-allocate if size is fixed (>0) and no literal is provided
                     if !dims.is_empty() && !dims.contains(&0) && !matches!(value, Expr::TritTensorLiteral(_)) {
-                        let size: usize = dims.iter().product();
+                        let rows = dims[0];
+                        let cols = if dims.len() > 1 { dims[1] } else { 1 };
                         self.code.push(0x0f);
-                        self.code.extend_from_slice(&(size as u16).to_le_bytes());
+                        self.code.extend_from_slice(&(rows as u16).to_le_bytes());
+                        self.code.extend_from_slice(&(cols as u16).to_le_bytes());
                         handled = true;
                     }
                 }
@@ -488,8 +490,11 @@ impl BytecodeEmitter {
                 self.code.push(0x32); // TAWAIT
             }
             Expr::TritTensorLiteral(vs) => {
-                let size = vs.len();
-                self.code.push(0x0f); self.code.extend_from_slice(&(size as u16).to_le_bytes());
+                let rows = vs.len();
+                let cols = 1;
+                self.code.push(0x0f);
+                self.code.extend_from_slice(&(rows as u16).to_le_bytes());
+                self.code.extend_from_slice(&(cols as u16).to_le_bytes());
                 let tr = self.next_reg; self.next_reg += 1;
                 self.code.push(0x08); self.code.push(tr);
                 for (idx, &v) in vs.iter().enumerate() {

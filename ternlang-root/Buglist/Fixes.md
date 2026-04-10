@@ -73,6 +73,13 @@ This file tracks all architectural improvements, bug fixes, and feature addition
     - Implemented `TjmpEqInt` (0x25) for arbitrary integer pattern matching.
     - Codegen now correctly cleans the stack after match completion or fallthrough.
 
+17. **1D Square Tensor Fix** (2026-04-10)
+    - **Trigger:** Loop over 1D tensor with perfect-square length (e.g., 4, 9, 16).
+    - **Symptom:** `BET-008` TensorIndexOutOfBounds or skipped elements during `for..in` loops.
+    - **Diagnosis:** VM opcodes `TIDX`/`TSET`/`TSHAPE` used `sqrt(len)` to guess if a tensor was 2D. 1D tensors of size 4 were misidentified as 2x2 matrices, causing incorrect index calculation `row * 2 + col`.
+    - **Fix:** Updated `BetVm` to store explicit `rows` and `cols` in `TensorInstance`. Updated `Talloc` (0x0f) to take 4 immediate bytes (`rows: u16`, `cols: u16`). Updated `betbc.rs` to emit dimensions during allocation.
+    - **Status:** Fixed.
+
 ## Known Limitations / Unresolved (2026-04-10)
 
 ### BUG-L01 — Block comments (`/* */`) are not supported

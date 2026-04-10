@@ -64,7 +64,7 @@ All opcodes as of 2026-04-10. Do not add opcodes to .tern files that aren't in t
 | `0x0b` | Tjmp | → | 2 (addr u16) | unconditional jump |
 | `0x0c` | Tpop | a → | — | discard top of stack |
 | `0x0e` | Tcons | a, b → result | — | consensus(a, b): logical merge |
-| `0x0f` | Talloc | size → TensorRef | 4 (size u32) | allocate tensor pool entry |
+| `0x0f` | Talloc | size → TensorRef | 4 (rows u16, cols u16) | allocate tensor pool entry |
 | `0x10` | Tcall | → | 2 (addr u16) | saves registers, pushes return addr |
 | `0x11` | Tret | → | — | restores registers, pops return addr |
 | `0x14` | Tless | a, b → trit | — | a < b → affirm, else reject (polymorphic) |
