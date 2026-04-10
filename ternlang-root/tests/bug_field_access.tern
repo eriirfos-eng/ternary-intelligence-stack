@@ -1,0 +1,15 @@
+// BUG-D: Expr::FieldAccess silently emits nothing
+// Old bug: let v = s.field; — the TSTORE pops wrong stack value
+// Expected: v == the actual field value stored in s
+
+struct Signal {
+    value: trit,
+}
+
+fn main() -> trit {
+    let s: Signal;
+    s.value = affirm;
+    let v: trit = s.value;
+    println(v);
+    return v;
+}

@@ -1,0 +1,25 @@
+// BUG-A & BUG-B: && and || ternary logic
+// Expected: reject && reject = reject  (min(-1,-1) = -1)
+// Old bug:  reject && reject = affirm  (TMUL: -1 * -1 = +1)
+// Expected: affirm || reject = affirm  (max(1,-1) = 1)
+// Old bug:  affirm || reject = tend    (TCONS disagreement = 0)
+
+fn test_and() -> trit {
+    let a: trit = reject;
+    let b: trit = reject;
+    return a && b;
+}
+
+fn test_or() -> trit {
+    let a: trit = affirm;
+    let b: trit = reject;
+    return a || b;
+}
+
+fn main() -> trit {
+    let r1: trit = test_and();
+    let r2: trit = test_or();
+    println(r1);
+    println(r2);
+    return affirm;
+}

@@ -1,0 +1,12 @@
+// BUG-C: for x in tensor — iterates cols times, not rows
+// A 1D tensor [affirm, tend, reject] has rows=3, cols=1
+// Old bug: only loops 1 time (cols=1), prints only first element
+// Expected: loops 3 times, prints all 3 elements
+
+fn main() -> trit {
+    let t: trittensor<3 x 1> = [affirm, tend, reject];
+    for x in t {
+        println(x);
+    }
+    return affirm;
+}

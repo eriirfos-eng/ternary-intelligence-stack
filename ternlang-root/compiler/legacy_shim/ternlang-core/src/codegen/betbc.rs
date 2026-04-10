@@ -275,10 +275,10 @@ impl BytecodeEmitter {
                 let it_reg = self.next_reg; self.next_reg += 1;
                 self.code.push(0x08); self.code.push(it_reg);
                 self.code.push(0x09); self.code.push(it_reg);
-                self.code.push(0x24);
+                self.code.push(0x24); // TSHAPE: pushes rows then cols (cols on top)
+                self.code.push(0x0c); // pop cols — iterate over rows, not cols
                 let r_reg = self.next_reg; self.next_reg += 1;
-                self.code.push(0x08); self.code.push(r_reg);
-                self.code.push(0x0c);
+                self.code.push(0x08); self.code.push(r_reg); // store rows as loop bound
                 let i_reg = self.next_reg; self.next_reg += 1;
                 self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes());
                 self.code.push(0x08); self.code.push(i_reg);
@@ -436,8 +436,8 @@ impl BytecodeEmitter {
                     BinOp::Sub => { self.code.push(0x04); self.code.push(0x02); }
                     BinOp::Equal => self.code.push(0x16),
                     BinOp::NotEqual => { self.code.push(0x16); self.code.push(0x04); }
-                    BinOp::And => self.code.push(0x03),
-                    BinOp::Or => self.code.push(0x0e),
+                    BinOp::And => self.code.push(0x28), // TAND = min(a,b)
+                    BinOp::Or  => self.code.push(0x29), // TOR  = max(a,b)
                     BinOp::Less => self.code.push(0x14),
                     BinOp::Greater => self.code.push(0x15),
                     BinOp::LessEqual => self.code.push(0x26),
@@ -533,6 +533,24 @@ impl BytecodeEmitter {
             Expr::Index { object, row, col } => {
                 self.emit_expr(object); self.emit_expr(row); self.emit_expr(col);
                 self.code.push(0x22);
+            }
+            Expr::FieldAccess { object, field } => {
+                if let Expr::Ident(obj_name) = object.as_ref() {
+                    let key = format!("{}.{}", obj_name, field);
+                    if let Some(&r) = self.symbols.get(&key) {
+                        self.code.push(0x09); self.code.push(r); // TLOAD
+                    }
+                }
+            }
+            Expr::Cast { expr, .. } => {
+                // cast() is a type annotation hint only — pass inner expression through
+                self.emit_expr(expr);
+            }
+            Expr::NodeId => {
+                let bytes = b"127.0.0.1:7373";
+                self.code.push(0x21);
+                self.code.extend_from_slice(&(bytes.len() as u16).to_le_bytes());
+                self.code.extend_from_slice(bytes);
             }
             _ => {}
         }
