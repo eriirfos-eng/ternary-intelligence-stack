@@ -1,0 +1,32 @@
+// stdlib/logic/ternary_nor.tern
+// Demonstrates: Ternary NOR logic (NOT of the maximum).
+// Tier: 1 — Open Core
+
+fn t_nor(a: trit, b: trit) -> trit {
+    let max_val: trit = 0;
+    if a > b { max_val = a; }
+    else { max_val = b; }
+    
+    // Ternary NOT: -1 -> 1, 0 -> 0, 1 -> -1
+    match max_val {
+        -1 => { return 1;  }
+         0 => { return 0;  }
+         1 => { return -1; }
+    }
+}
+
+fn main() -> trit {
+    // Test: nor(1, 1) = NOT(1) = -1
+    if t_nor(1, 1) != -1 { return conflict(); }
+    
+    // Test: nor(-1, -1) = NOT(-1) = 1
+    if t_nor(-1, -1) != 1 { return conflict(); }
+    
+    // Test: nor(0, 1) = NOT(1) = -1
+    if t_nor(0, 1) != -1 { return conflict(); }
+    
+    // Test: nor(0, 0) = NOT(0) = 0
+    if t_nor(0, 0) != 0 { return conflict(); }
+    
+    return truth();
+}
