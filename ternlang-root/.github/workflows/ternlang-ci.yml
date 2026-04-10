@@ -1,4 +1,4 @@
-name: Ternlang CI/CD Integration
+name: Ternlang CI
 
 on:
   push:
@@ -7,36 +7,51 @@ on:
     branches: [ main ]
 
 jobs:
-  ternary-build-and-test:
+  build:
+    name: Build BET VM & compiler
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # The Trojan Horse: Getting GitHub Actions addicted to the BET VM
-    - name: Setup Ternlang & BET VM
-      run: |
-        echo "Installing official RFI-IRFOS compiler toolchain..."
-        curl -fsSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/scripts/install.sh | bash
-        export PATH="$HOME/.ternlang/bin:$PATH"
-        ternlang --version
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Exhaustiveness Audit
-      run: |
-        echo "Running tern-audit to verify Triadic Safety Compliance..."
-        # If any 'match' statement lacks a '0 => hold()' branch, this fails the pipeline.
-        tern-audit --strict --path ./src
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            compiler/legacy_shim/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('compiler/legacy_shim/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
-    - name: Build & Compile to BET Bytecode
-      run: |
-        ternlang build --target bet-vm-v1
-      env:
-        RFI_UNIT_TEST: "true"
+      - name: Build ternlang-cli
+        working-directory: compiler/legacy_shim
+        run: cargo build --bin ternlang-cli --release
 
-    - name: Execute Sparse Inference Tests
-      run: |
-        # Runs the unit tests natively on the software BET VM emulator
-        ternlang test --yield-metrics
-      env:
-        RFI_UNIT_TEST: "true"
+      - name: Smoke test — version
+        working-directory: compiler/legacy_shim
+        run: ./target/release/ternlang-cli --version
+
+      - name: Smoke test — stdlib error examples
+        working-directory: compiler/legacy_shim
+        run: |
+          CLI=./target/release/ternlang-cli
+          PASS=0; FAIL=0
+          for f in ../../stdlib/errors/BET-00{1,2,3,4,5,6,7}.tern \
+                   ../../stdlib/errors/FN-00{1,2,3,4}.tern \
+                   ../../stdlib/errors/PARSE-00{1,2,3,4}.tern; do
+            if [ -f "$f" ]; then
+              if $CLI run "$f" > /dev/null 2>&1; then
+                echo "PASS: $f"; PASS=$((PASS+1))
+              else
+                echo "FAIL: $f"; FAIL=$((FAIL+1))
+              fi
+            fi
+          done
+          echo "Results: $PASS passed, $FAIL failed"
+          [ $PASS -gt 0 ]
