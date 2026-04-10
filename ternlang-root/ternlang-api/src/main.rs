@@ -295,6 +295,8 @@ async fn require_api_key(
         || path == "/.well-known/mcp/server-card.json"
         || path == "/stripe/webhook"
         || path == "/pricing"
+        || path == "/studio"
+        || path == "/api/run"
         || path.starts_with("/admin") {
         return next.run(request).await;
     }
