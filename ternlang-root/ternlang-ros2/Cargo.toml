@@ -6,5 +6,5 @@ license = "LicenseRef-BSL-1.1"
 description = "Ternary-optimized DDS Middleware bridging ROS 2 and PX4. Enforces deterministic collision avoidance for autonomous drones."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.2.0" }
-ternlang-posix = { path = "../ternlang-posix", version = "0.2.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.0" }
+ternlang-posix = { path = "../ternlang-posix", version = "0.3.0" }

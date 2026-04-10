@@ -3,6 +3,7 @@ use logos::Logos;
 #[derive(Logos, Debug, PartialEq, Clone)]
 #[logos(skip r"[ \t\n\f]+")] // Skip whitespace
 #[logos(skip(r"//[^\n]*", allow_greedy = true))]   // Skip line comments
+#[logos(skip(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", allow_greedy = true))]  // Skip block comments /* ... */
 pub enum Token {
     #[regex(r"[0-9]+\.[0-9]+", |lex| lex.slice().parse::<f64>().ok(), priority = 100)]
     Float(f64),

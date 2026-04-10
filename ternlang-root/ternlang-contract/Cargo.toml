@@ -6,5 +6,5 @@ license = "LicenseRef-BSL-1.1"
 description = "Sovereign Smart Contracts for the T-Fi Economy. Self-pausing triadic execution layer bypassing the EVM."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.2.0" }
-ternlang-consensus = { path = "../ternlang-consensus", version = "0.2.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.0" }
+ternlang-consensus = { path = "../ternlang-consensus", version = "0.3.0" }
