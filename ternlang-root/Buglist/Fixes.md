@@ -147,3 +147,11 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 - Updated codegen/betbc.rs to emit opcodes 0x26 and 0x27.
 - Updated vm/mod.rs to implement opcodes 0x26 (TlessEqual) and 0x27 (TgreaterEqual).
 **Status:** Fixed.
+
+## 2026-04-10 — Fix missing agent type registration in CLI
+
+**Trigger:** Attempting to use agents (spawn, send, await).
+**Symptom:** Agent types not found in VM, spawn fails.
+**Diagnosis:** BytecodeEmitter had agent type info, but it was never passed to the BetVm instance in the CLI's Run command.
+**Fix:** Added emitter.register_agents(&mut vm) call in main.rs after VM initialization.
+**Status:** Fixed.
