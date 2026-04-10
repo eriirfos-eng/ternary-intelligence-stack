@@ -1,8 +1,8 @@
 {
   "name": "ternlang",
   "displayName": "Ternlang",
-  "description": "Balanced ternary language support for .tern files — syntax highlighting, snippets, hover docs, and live diagnostics via ternlang-lsp.",
-  "version": "0.2.0",
+  "description": "Balanced ternary language support for .tern files — syntax highlighting, snippets, run command, hover docs, and live diagnostics via ternlang-lsp.",
+  "version": "0.3.0",
   "publisher": "rfi-irfos",
   "license": "LGPL-3.0",
   "keywords": [
@@ -34,9 +34,13 @@
   "categories": [
     "Programming Languages",
     "Snippets",
-    "Linters"
+    "Linters",
+    "Debuggers"
   ],
-  "activationEvents": ["onLanguage:ternlang"],
+  "activationEvents": [
+    "onLanguage:ternlang",
+    "onCommand:ternlang.run"
+  ],
   "main": "./extension.js",
   "contributes": {
     "languages": [
@@ -53,7 +57,89 @@
         "scopeName": "source.ternlang",
         "path": "./syntaxes/ternlang.tmLanguage.json"
       }
-    ]
+    ],
+    "snippets": [
+      {
+        "language": "ternlang",
+        "path": "./snippets/ternlang.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "ternlang.run",
+        "title": "Ternlang: Run File",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ternlang.showStatus",
+        "title": "Ternlang: Show Tier Status"
+      },
+      {
+        "command": "ternlang.inlineTritHints",
+        "title": "Ternlang Pro: Toggle Inline Trit Hints"
+      },
+      {
+        "command": "ternlang.cloudDiagnostics",
+        "title": "Ternlang Pro: Enable Cloud Diagnostics"
+      },
+      {
+        "command": "ternlang.debugBetVm",
+        "title": "Ternlang Industrial: Open BET VM Debugger"
+      },
+      {
+        "command": "ternlang.viewTensor",
+        "title": "Ternlang Industrial: Visualize Tensor"
+      },
+      {
+        "command": "ternlang.sparseskipCoverage",
+        "title": "Ternlang Industrial: @sparseskip Coverage"
+      },
+      {
+        "command": "ternlang.clusterPanel",
+        "title": "Ternlang Enterprise: Cluster Panel"
+      },
+      {
+        "command": "ternlang.agentMonitor",
+        "title": "Ternlang Enterprise: Agent Monitor"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "ternlang.run",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorLangId == ternlang"
+      }
+    ],
+    "configuration": {
+      "title": "Ternlang",
+      "properties": {
+        "ternlang.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Your ternlang.com API key. Unlocks Pro (Tier 2), Industrial (Tier 3), or Enterprise (Tier 4) features. Get a key at [ternlang.com](https://ternlang.com/#pricing).\n\n- `tern_t2_…` → Pro (inline hints, cloud diagnostics)\n- `tern_t3_…` → Industrial (BET VM debugger, tensor viewer)\n- `tern_t4_…` → Enterprise (cluster panel, agent monitor)"
+        },
+        "ternlang.cliPath": {
+          "type": "string",
+          "default": "ternlang-cli",
+          "description": "Path to the ternlang-cli binary. Defaults to 'ternlang-cli' (must be on PATH). Set to an absolute path if needed."
+        },
+        "ternlang.suppressLspWarning": {
+          "type": "boolean",
+          "default": false,
+          "description": "Suppress the 'ternlang-lsp not found' warning message."
+        }
+      }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "ternlang.run",
+          "when": "editorLangId == ternlang",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "package": "vsce package",
