@@ -345,6 +345,14 @@ impl SemanticAnalyzer {
                         Ok(Type::Trit)
                     }
                     _ => {
+                        // Allow cross-type Numeric operations (Int vs Trit)
+                        let is_numeric = |t: &Type| matches!(t, Type::Int | Type::Trit | Type::Float);
+                        if is_numeric(&l) && is_numeric(&r) {
+                            if l == Type::Float || r == Type::Float { return Ok(Type::Float); }
+                            if l == Type::Int || r == Type::Int { return Ok(Type::Int); }
+                            return Ok(Type::Trit);
+                        }
+
                         if l != r {
                             return Err(SemanticError::TypeMismatch { expected: l, found: r });
                         }

@@ -177,7 +177,7 @@ impl<'a> Parser<'a> {
             Token::Equal | Token::NotEqual => 2,
             Token::LAngle | Token::RAngle  => 2, // Comparisons
             Token::Plus  | Token::Minus    => 3,
-            Token::Star                    => 4,
+            Token::Star | Token::Slash | Token::Percent => 4,
             _ => -1,
         }
     }
@@ -187,6 +187,8 @@ impl<'a> Parser<'a> {
             Token::Plus     => BinOp::Add,
             Token::Minus    => BinOp::Sub,
             Token::Star     => BinOp::Mul,
+            Token::Slash    => BinOp::Div,
+            Token::Percent  => BinOp::Mod,
             Token::Equal    => BinOp::Equal,
             Token::NotEqual => BinOp::NotEqual,
             Token::And      => BinOp::And,

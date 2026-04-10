@@ -62,6 +62,8 @@ pub enum BinOp {
     Add,
     Sub,
     Mul,
+    Div,
+    Mod,
     Equal,
     NotEqual,
     Less,

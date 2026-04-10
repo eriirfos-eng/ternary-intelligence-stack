@@ -376,6 +376,8 @@ impl BytecodeEmitter {
                 match op {
                     BinOp::Add => self.code.push(0x02),
                     BinOp::Mul => self.code.push(0x03),
+                    BinOp::Div => self.code.push(0x1e),
+                    BinOp::Mod => self.code.push(0x1f),
                     BinOp::Sub => { self.code.push(0x04); self.code.push(0x02); }
                     BinOp::Equal => self.code.push(0x16),
                     BinOp::NotEqual => { self.code.push(0x16); self.code.push(0x04); }
