@@ -1,5 +1,5 @@
 # GEMINI.md — Ternlang Precision Parameter Sheet
-# RFI-IRFOS · ternlang.com · v1.0 (2026-04-10)
+# RFI-IRFOS · ternlang.com · v1.1 (2026-04-10)
 # Read this at session start. These values are ground truth. Do not guess.
 
 ---
@@ -273,7 +273,7 @@ Do not write a single file until step 1 succeeds.
 ## 13. Known-fail patterns — do not write these
 
 ```tern
-/* this is a block comment */    // BANNED — UnexpectedToken("Slash")
+/* this is a block comment */    // ✓ FIXED (v1.1) — block comments now supported
 
 let x: trittensor;               // BANNED — must specify size
 let x: trittensor<4>;            // OK
@@ -289,8 +289,13 @@ match v {
                                  // FIX: 0 => { let _h: trit = hold(); }
 
 let result: trit = my_fn(x);
-match result { ... }             // ONLY OK if inside fn main()
-                                 // At top level, parser may fail on 'fn' keyword
+match result { ... }             // ✓ FIXED (v1.1) — top-level stmts now work;
+                                 // parser wraps them in synthetic fn main()
+
+// Tset with int index — was broken before v1.1
+tensor[r, c] = int_val;          // ✓ FIXED (v1.1) — Tset (0x23) now accepts Int indices;
+                                 // (Value::TensorRef, Value::Int) arm added in vm/mod.rs
+                                 // FIX #23: coerces Int → i8 → Trit for element storage
 ```
 
 ---
@@ -328,5 +333,13 @@ fn ema(prior: float, signal: float, alpha: float) -> trit {
 @sparseskip
 fn sparse_layer(w: trit[], x: trit[]) -> trit {
     return consensus(w[0], x[0]);
+}
+
+// Tset Int coercion pattern (v1.1+): write int values into tensor cells
+fn fill_tensor(t: trittensor<3>, val: int) -> trit {
+    t[0] = val;
+    t[1] = val;
+    t[2] = val;
+    return truth();
 }
 ```
