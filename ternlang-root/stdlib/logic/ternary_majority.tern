@@ -1,0 +1,29 @@
+// stdlib/logic/ternary_majority.tern
+// Demonstrates: Majority vote for three trits using consensus.
+// Tier: 1 — Open Core
+
+fn t_majority(a: trit, b: trit, c: trit) -> trit {
+    let c1: trit = consensus(a, b);
+    let c2: trit = consensus(b, c);
+    let c3: trit = consensus(a, c);
+    
+    // In ternary consensus, if two agree, that signal wins.
+    // If all three disagree (1, 0, -1), result is 0.
+    return consensus(c1, consensus(c2, c3));
+}
+
+fn main() -> trit {
+    // Test: All affirm -> 1
+    if t_majority(1, 1, 1) != 1 { return conflict(); }
+    
+    // Test: Two reject, one affirm -> -1
+    if t_majority(-1, -1, 1) != -1 { return conflict(); }
+    
+    // Test: Two hold, one affirm -> 1 (Consensus(0,0)=0, Consensus(0,1)=1, Consensus(0,1)=1 -> 1)
+    if t_majority(0, 0, 1) != 1 { return conflict(); }
+    
+    // Test: Split (1, 0, -1) -> 0
+    if t_majority(1, 0, -1) != 0 { return conflict(); }
+    
+    return truth();
+}
