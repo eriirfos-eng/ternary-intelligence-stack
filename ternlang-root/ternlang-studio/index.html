@@ -552,6 +552,67 @@
     #statusbar .sb-sep { width: 1px; height: 14px; background: var(--border); }
     #statusbar .sb-right { margin-left: auto; }
 
+    /* ─── Usage panel ──────────────────────────────────────────────────── */
+    .usage-key-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+    }
+    .usage-key-display {
+      font-size: 11px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 160px;
+    }
+    .usage-numbers {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin: 8px 0 6px;
+    }
+    .usage-numbers #usageUsed { font-size: 22px; font-weight: 700; color: var(--cyan); }
+    .usage-sep { color: var(--muted); font-size: 14px; }
+    .usage-numbers #usageLimit { font-size: 14px; color: var(--text); }
+    .usage-unit { font-size: 11px; color: var(--muted); margin-left: 4px; }
+    .usage-bar-track {
+      height: 4px;
+      background: var(--border2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .usage-bar-fill {
+      height: 100%;
+      background: var(--cyan);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .usage-bar-fill.warn { background: var(--amber); }
+    .usage-bar-fill.crit { background: var(--red); }
+    .usage-meta { font-size: 11px; color: var(--muted); }
+    .tier-benefits { margin-bottom: 12px; }
+    .tier-benefit { font-size: 11px; color: var(--text); padding: 2px 0; }
+    .t1-benefit { color: var(--cyan); font-weight: 600; margin-bottom: 2px; }
+    .muted-benefit { color: var(--muted); }
+    .upgrade-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      color: var(--cyan);
+      font-family: inherit;
+      font-size: 11px;
+      text-decoration: none;
+      transition: border-color 0.1s, background 0.1s;
+    }
+    .upgrade-btn:hover { border-color: var(--cyan); background: var(--bg3); }
+
     /* ─── Theme toggle ──────────────────────────────────────────────────── */
     .tb-theme {
       display: flex;
@@ -645,8 +706,9 @@
   <div id="output-pane">
     <div class="output-tabs">
       <div class="out-tab active" onclick="switchOutTab('vm', this)">VM Output</div>
-      <div class="out-tab" onclick="switchOutTab('api', this)">API Explorer</div>
-      <div class="out-tab" onclick="switchOutTab('docs', this)">Quick Ref</div>
+      <div class="out-tab" onclick="switchOutTab('usage', this)" id="usageTab">Usage</div>
+      <div class="out-tab" onclick="switchOutTab('api', this)">API</div>
+      <div class="out-tab" onclick="switchOutTab('docs', this)">Ref</div>
     </div>
 
     <!-- VM Output -->
@@ -682,6 +744,68 @@
       <div class="vm-section" id="section-error" style="display:none">
         <div class="vm-section-title">Error</div>
         <div class="error-output" id="errorOutput"></div>
+      </div>
+    </div>
+
+    <!-- Usage Dashboard -->
+    <div class="out-panel" id="panel-usage">
+      <div class="vm-section">
+        <div class="vm-section-title">Account</div>
+        <div class="usage-key-row">
+          <span class="usage-key-display" id="usageKeyDisplay">No key — anonymous access</span>
+          <span class="tb-badge badge-free" id="usageTierBadge">Tier 1</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <input type="checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" style="accent-color:var(--cyan)">
+          <label for="saveKeyCheck" style="color:var(--muted);font-size:11px;cursor:pointer">Remember key (localStorage)</label>
+        </div>
+      </div>
+
+      <div class="vm-section" id="usage-quota-section" style="display:none">
+        <div class="vm-section-title">Quota — This Month</div>
+        <div class="usage-numbers">
+          <span id="usageUsed">—</span>
+          <span class="usage-sep">/</span>
+          <span id="usageLimit">—</span>
+          <span class="usage-unit">calls</span>
+        </div>
+        <div class="usage-bar-track">
+          <div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div>
+        </div>
+        <div class="usage-meta" id="usageMeta">—</div>
+      </div>
+
+      <div class="vm-section" id="usage-unlimited-section" style="display:none">
+        <div class="vm-section-title">Quota</div>
+        <div style="color:var(--green);font-size:13px;font-weight:700;padding:8px 0">∞ Unlimited</div>
+        <div class="usage-meta">Enterprise tier — no monthly cap</div>
+      </div>
+
+      <div class="vm-section">
+        <div class="vm-section-title">Tier Benefits</div>
+        <div id="tierBenefitsList" class="tier-benefits">
+          <div class="tier-benefit t1-benefit">● Tier 1 — Open Core (free)</div>
+          <div class="tier-benefit">  /api/run — execute .tern programs</div>
+          <div class="tier-benefit muted-benefit">○ /api/trit_decide, /api/trit_vector (Tier 2+)</div>
+          <div class="tier-benefit muted-benefit">○ MoE-13 orchestrator (Tier 2+)</div>
+          <div class="tier-benefit muted-benefit">○ Deliberation engine (Tier 2+)</div>
+        </div>
+        <a href="https://ternlang.com/#licensing" target="_blank" class="upgrade-btn" id="upgradeBtn">
+          Upgrade at ternlang.com/pricing →
+        </a>
+      </div>
+
+      <div class="vm-section">
+        <div class="vm-section-title">Actions</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="tool-btn" onclick="fetchUsage()" style="font-size:11px">↻ Refresh</button>
+          <button class="tool-btn" onclick="copyKey()" style="font-size:11px">⎘ Copy Key</button>
+          <button class="tool-btn" onclick="clearKey()" style="font-size:11px;color:var(--red)">✕ Clear Key</button>
+        </div>
+      </div>
+
+      <div id="usageError" style="display:none;margin-top:8px">
+        <div class="error-output" id="usageErrorMsg"></div>
       </div>
     </div>
 
@@ -1428,6 +1552,161 @@ async function tryApiRun() {
   }
 }
 
+// ─── Key persistence ──────────────────────────────────────────────────────────
+function initKeyPersistence() {
+  const saved = localStorage.getItem("ternstudio-key");
+  const saveEnabled = localStorage.getItem("ternstudio-save-key") === "1";
+  if (saved && saveEnabled) {
+    document.getElementById("apiKey").value = saved;
+    document.getElementById("saveKeyCheck").checked = true;
+  } else {
+    document.getElementById("saveKeyCheck").checked = saveEnabled;
+  }
+}
+
+function toggleSaveKey() {
+  const checked = document.getElementById("saveKeyCheck").checked;
+  localStorage.setItem("ternstudio-save-key", checked ? "1" : "0");
+  if (checked) {
+    const key = document.getElementById("apiKey").value.trim();
+    if (key) localStorage.setItem("ternstudio-key", key);
+  } else {
+    localStorage.removeItem("ternstudio-key");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initKeyPersistence();
+  const keyInput = document.getElementById("apiKey");
+  keyInput.addEventListener("change", () => {
+    const key = keyInput.value.trim();
+    if (document.getElementById("saveKeyCheck").checked && key) {
+      localStorage.setItem("ternstudio-key", key);
+    }
+    if (key) {
+      fetchUsage();
+      // Switch to usage tab to show result
+      const usageTabEl = document.getElementById("usageTab");
+      if (usageTabEl) {
+        document.querySelectorAll(".out-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".out-panel").forEach(p => p.classList.remove("visible"));
+        usageTabEl.classList.add("active");
+        document.getElementById("panel-usage").classList.add("visible");
+      }
+    } else renderUsageAnon();
+  });
+});
+
+function copyKey() {
+  const key = document.getElementById("apiKey").value.trim();
+  if (key) navigator.clipboard.writeText(key).then(() => {
+    const btn = event.target;
+    const old = btn.textContent;
+    btn.textContent = "✓ Copied";
+    setTimeout(() => btn.textContent = old, 1500);
+  });
+}
+
+function clearKey() {
+  document.getElementById("apiKey").value = "";
+  localStorage.removeItem("ternstudio-key");
+  renderUsageAnon();
+}
+
+// ─── Usage dashboard ──────────────────────────────────────────────────────────
+const TIER_LABELS = { 1: "Tier 1 — Free", 2: "Tier 2 — Pro", 3: "Tier 3 — Industrial", 4: "Tier 4 — Enterprise" };
+const TIER_BADGE_CLASS = { 1: "badge-free", 2: "badge-t2", 3: "badge-t3", 4: "badge-t4" };
+const TIER_BENEFITS = {
+  1: ["● /api/run — execute .tern programs", "● /health, /studio", "○ Trit decisions + vectors (Tier 2+)", "○ MoE-13 orchestrator (Tier 2+)", "○ Deliberation engine (Tier 2+)"],
+  2: ["● /api/run", "● /api/trit_decide, /api/trit_vector", "● /api/trit_consensus, /api/trit_gate", "● /api/moe/orchestrate", "● Deliberation + coalition engine", "○ Industrial endpoints (Tier 3+)"],
+  3: ["● All Tier 2 endpoints", "● /api/v1/taas/infer", "● /api/stream/* SSE endpoints", "● Sparse benchmark + quantization", "○ Enterprise SLA (Tier 4)"],
+  4: ["● All endpoints, unlimited", "● Enterprise SLA + dedicated support", "● Custom rate limits", "● Private deployment options"],
+};
+
+function renderUsageAnon() {
+  document.getElementById("usageKeyDisplay").textContent = "No key — anonymous access";
+  document.getElementById("usageTierBadge").className = "tb-badge badge-free";
+  document.getElementById("usageTierBadge").textContent = "Tier 1";
+  document.getElementById("usage-quota-section").style.display = "none";
+  document.getElementById("usage-unlimited-section").style.display = "none";
+  document.getElementById("usageError").style.display = "none";
+  renderTierBenefits(1);
+  updateTopbarTier(1);
+}
+
+function renderTierBenefits(tier) {
+  const list = document.getElementById("tierBenefitsList");
+  const benefits = TIER_BENEFITS[tier] || TIER_BENEFITS[1];
+  list.innerHTML = benefits.map((b, i) => {
+    const muted = b.startsWith("○");
+    const first = i === 0;
+    return `<div class="tier-benefit ${first ? "t1-benefit" : ""} ${muted ? "muted-benefit" : ""}">${b}</div>`;
+  }).join("");
+  const upgradeBtn = document.getElementById("upgradeBtn");
+  upgradeBtn.style.display = tier >= 4 ? "none" : "inline-block";
+}
+
+function updateTopbarTier(tier) {
+  const badge = document.getElementById("tierBadge");
+  badge.textContent = TIER_LABELS[tier] || "Tier 1";
+  badge.className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
+  document.getElementById("sbTier").textContent = TIER_LABELS[tier] || "Tier 1 — Open Core";
+}
+
+async function fetchUsage() {
+  const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+  const key = document.getElementById("apiKey").value.trim();
+  if (!key) { renderUsageAnon(); return; }
+
+  try {
+    const r = await fetch(endpoint + "/api/usage", {
+      headers: { "X-Ternlang-Key": key },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) {
+      const txt = await r.text();
+      document.getElementById("usageError").style.display = "block";
+      document.getElementById("usageErrorMsg").textContent = `HTTP ${r.status} — ${txt.slice(0, 200)}`;
+      return;
+    }
+    const d = await r.json();
+    document.getElementById("usageError").style.display = "none";
+
+    // Key display (masked)
+    const masked = key.length > 12 ? key.slice(0, 8) + "…" + key.slice(-4) : key;
+    document.getElementById("usageKeyDisplay").textContent = masked;
+
+    const tier = d.tier || 1;
+    updateTopbarTier(tier);
+    document.getElementById("usageTierBadge").textContent = TIER_LABELS[tier] || "Tier 1";
+    document.getElementById("usageTierBadge").className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
+
+    renderTierBenefits(tier);
+
+    if (d.limit === null || d.limit === undefined || tier >= 4) {
+      document.getElementById("usage-quota-section").style.display = "none";
+      document.getElementById("usage-unlimited-section").style.display = "block";
+    } else {
+      document.getElementById("usage-unlimited-section").style.display = "none";
+      document.getElementById("usage-quota-section").style.display = "block";
+      const used = d.calls_this_month || 0;
+      const limit = d.limit || 0;
+      const pct = limit > 0 ? Math.min(100, Math.round(used / limit * 100)) : 0;
+      const remaining = Math.max(0, limit - used);
+      document.getElementById("usageUsed").textContent = used.toLocaleString();
+      document.getElementById("usageLimit").textContent = limit.toLocaleString();
+      const fill = document.getElementById("usageBarFill");
+      fill.style.width = pct + "%";
+      fill.className = "usage-bar-fill" + (pct >= 90 ? " crit" : pct >= 70 ? " warn" : "");
+      document.getElementById("usageMeta").textContent =
+        `${pct}% used · ${remaining.toLocaleString()} remaining · resets 1st of month`;
+    }
+  } catch (e) {
+    document.getElementById("usageError").style.display = "block";
+    document.getElementById("usageErrorMsg").textContent = String(e);
+  }
+}
+
 // ─── Connection status ────────────────────────────────────────────────────────
 async function checkConnection() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
@@ -1637,6 +1916,10 @@ require(["vs/editor/editor.main"], function () {
   refreshTreeHighlight();
   checkConnection();
   setInterval(checkConnection, 30000);
+
+  // Load usage if key is saved
+  const savedKey = document.getElementById("apiKey").value.trim();
+  if (savedKey) fetchUsage(); else renderUsageAnon();
 });
 </script>
 
