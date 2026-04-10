@@ -1,0 +1,23 @@
+// stdlib/classical/ternary_mux.tern
+// Demonstrates: A three-way multiplexer (MUX) using ternary control logic.
+// Tier: 1 — Open Core
+// Selects one of three input signals based on a control trit.
+// - Control = affirm (+1) -> Selects input_a
+// - Control = tend (0)    -> Selects input_b
+// - Control = reject (-1) -> Selects input_c
+
+fn ternary_mux(ctrl: trit, a: int, b: int, c: int) -> int {
+    match ctrl {
+         1 => { return a; }
+         0 => { return b; }
+        -1 => { return c; }
+    }
+}
+
+fn main() -> trit {
+    if ternary_mux(affirm, 10, 20, 30) != 10 { return reject; }
+    if ternary_mux(tend,   10, 20, 30) != 20 { return reject; }
+    if ternary_mux(reject, 10, 20, 30) != 30 { return reject; }
+    
+    return affirm;
+}
