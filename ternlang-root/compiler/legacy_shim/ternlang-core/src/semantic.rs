@@ -77,6 +77,7 @@ impl SemanticAnalyzer {
         // ── std::trit built-ins ────────────────────────────────────────────
         sigs.insert("consensus".into(), FunctionSig::exact(vec![Type::Trit, Type::Trit], Type::Trit));
         sigs.insert("invert".into(),    FunctionSig::exact(vec![Type::Trit],             Type::Trit));
+        sigs.insert("length".into(),    FunctionSig::variadic(Type::Int));
         sigs.insert("truth".into(),     FunctionSig::exact(vec![],                       Type::Trit));
         sigs.insert("hold".into(),      FunctionSig::exact(vec![],                       Type::Trit));
         sigs.insert("conflict".into(),  FunctionSig::exact(vec![],                       Type::Trit));
@@ -197,6 +198,7 @@ impl SemanticAnalyzer {
                 let type_ok = val_ty == *ty
                     || matches!(value, Expr::Cast { .. })
                     || (*ty == Type::Int && val_ty == Type::Trit)
+                    || (*ty == Type::Trit && val_ty == Type::Int)
                     || (matches!(ty, Type::Named(_)) && val_ty == Type::Trit)
                     || (matches!(ty, Type::TritTensor { .. }) && matches!(val_ty, Type::TritTensor { .. }))
                     || (*ty == Type::AgentRef && val_ty == Type::AgentRef);
@@ -214,6 +216,7 @@ impl SemanticAnalyzer {
                     let ok = found == *expected
                         || matches!(expr, Expr::Cast { .. })
                         || (*expected == Type::Int && found == Type::Trit)
+                        || (*expected == Type::Trit && found == Type::Int)
                         || (matches!(expected, Type::TritTensor { .. }) && matches!(found, Type::TritTensor { .. }))
                         || (matches!(expected, Type::Named(_)) && found == Type::Trit);
                     if !ok {
@@ -336,7 +339,8 @@ impl SemanticAnalyzer {
                 let val_ty = self.infer_expr_type(value)?;
                 let ok = var_ty == val_ty
                     || matches!(value, Expr::Cast { .. })
-                    || (var_ty == Type::Int && val_ty == Type::Trit);
+                    || (var_ty == Type::Int && val_ty == Type::Trit)
+                    || (var_ty == Type::Trit && val_ty == Type::Int);
                 if !ok {
                     return Err(SemanticError::TypeMismatch { expected: var_ty, found: val_ty });
                 }
@@ -359,9 +363,10 @@ impl SemanticAnalyzer {
                 let l = self.infer_expr_type(lhs)?;
                 let r = self.infer_expr_type(rhs)?;
                 match op {
-                    BinOp::Less | BinOp::Greater | BinOp::Equal | BinOp::NotEqual | BinOp::And | BinOp::Or => {
+                    BinOp::Less | BinOp::Greater | BinOp::LessEqual | BinOp::GreaterEqual | BinOp::Equal | BinOp::NotEqual | BinOp::And | BinOp::Or => {
                         Ok(Type::Trit)
                     }
+
                     _ => {
                         // Allow cross-type Numeric operations (Int vs Trit)
                         let is_numeric = |t: &Type| matches!(t, Type::Int | Type::Trit | Type::Float);
@@ -400,6 +405,8 @@ impl SemanticAnalyzer {
                         // Allow TritTensor shape flexibility and cast coercion.
                         let ok = found_ty == *expected_ty
                             || matches!(arg, Expr::Cast { .. })
+                            || (expected_ty == &Type::Int && found_ty == Type::Trit)
+                            || (expected_ty == &Type::Trit && found_ty == Type::Int)
                             || (matches!(expected_ty, Type::TritTensor { .. })
                                 && matches!(found_ty, Type::TritTensor { .. }))
                             || (matches!(expected_ty, Type::Named(_)) && found_ty == Type::Trit);
@@ -507,9 +514,9 @@ mod tests {
     }
 
     #[test]
-    fn test_return_wrong_type_caught() {
-        // Returns Int but declared -> trit
-        check_err("fn f() -> trit { let x: int = 42; return x; }");
+    fn test_return_int_in_trit_fn() {
+        // Now allowed via implicit coercion
+        check_ok("fn f() -> trit { let x: int = 42; return x; }");
     }
 
     #[test]
@@ -537,9 +544,9 @@ mod tests {
     // ── Argument type checking ────────────────────────────────────────────────
 
     #[test]
-    fn test_call_wrong_arg_type_caught() {
-        // invert expects trit, passing int literal 42 directly — int is not trit
-        check_err("fn f() -> trit { let x: int = 42; return invert(x); }");
+    fn test_call_int_arg_in_trit_fn() {
+        // Now allowed via implicit coercion
+        check_ok("fn f(a: trit) -> trit { return invert(a); } fn main() -> trit { let x: int = 42; return f(x); }");
     }
 
     #[test]
@@ -562,8 +569,9 @@ mod tests {
     }
 
     #[test]
-    fn test_user_fn_wrong_return_caught() {
-        check_err("fn helper(a: trit) -> trit { let x: int = 1; return x; }");
+    fn test_user_fn_int_return_ok() {
+        // Now allowed
+        check_ok("fn helper(a: trit) -> trit { let x: int = 1; return x; }");
     }
 
     // ── Undefined variable ────────────────────────────────────────────────────

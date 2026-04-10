@@ -328,35 +328,37 @@ impl BytecodeEmitter {
                 let pre_cont = self.continue_patches.len();
 
                 self.emit_expr(condition);
-                self.code.push(0x0a);
+                self.code.push(0x0a); // TDUP
                 let pos_patch = self.code.len() + 1;
-                self.code.push(0x05); self.code.extend_from_slice(&[0, 0]);
-                self.code.push(0x0a);
+                self.code.push(0x05); self.code.extend_from_slice(&[0, 0]); // TJMP_POS
+                self.code.push(0x0a); // TDUP
                 let zero_patch = self.code.len() + 1;
-                self.code.push(0x06); self.code.extend_from_slice(&[0, 0]);
-                self.code.push(0x0c);
+                self.code.push(0x06); self.code.extend_from_slice(&[0, 0]); // TJMP_ZERO
+                
+                // NEG ARM: execute and EXIT (don't loop back)
+                self.code.push(0x0c); // TPOP
                 self.emit_stmt(on_neg);
-                let back_neg = self.code.len() + 1;
-                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
-                self.patch_u16(back_neg, top);
+                let exit_neg = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]); // TJMP to end
 
+                // POS ARM: execute and LOOP BACK
                 let pos_addr = self.code.len() as u16;
                 self.patch_u16(pos_patch, pos_addr);
-                self.code.push(0x0c);
+                self.code.push(0x0c); // TPOP
                 self.emit_stmt(on_pos);
                 let back_pos = self.code.len() + 1;
                 self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
                 self.patch_u16(back_pos, top);
 
+                // ZERO ARM: execute and EXIT (don't loop back)
                 let zero_addr = self.code.len() as u16;
                 self.patch_u16(zero_patch, zero_addr);
-                self.code.push(0x0c);
+                self.code.push(0x0c); // TPOP
                 self.emit_stmt(on_zero);
-                let back_zero = self.code.len() + 1;
-                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
-                self.patch_u16(back_zero, top);
-
+                
                 let end = self.code.len() as u16;
+                self.patch_u16(exit_neg, end);
+
                 let cs: Vec<usize> = self.continue_patches.drain(pre_cont..).collect();
                 for p in cs { self.patch_u16(p, top); }
                 let bs: Vec<usize> = self.break_patches.drain(pre_break..).collect();
@@ -438,6 +440,8 @@ impl BytecodeEmitter {
                     BinOp::Or => self.code.push(0x0e),
                     BinOp::Less => self.code.push(0x14),
                     BinOp::Greater => self.code.push(0x15),
+                    BinOp::LessEqual => self.code.push(0x26),
+                    BinOp::GreaterEqual => self.code.push(0x27),
                 }
             }
             Expr::UnaryOp { op, expr } => {
@@ -456,6 +460,13 @@ impl BytecodeEmitter {
                     "consensus" => {
                         for a in args { self.emit_expr(a); }
                         if args.len() == 2 { self.code.push(0x0e); }
+                    }
+                    "length" => {
+                        if args.len() == 1 {
+                            self.emit_expr(&args[0]);
+                            self.code.push(0x24); // TSHAPE
+                            self.code.push(0x0c); // TPOP (cols)
+                        }
                     }
                     "mul" => {
                         for a in args { self.emit_expr(a); }

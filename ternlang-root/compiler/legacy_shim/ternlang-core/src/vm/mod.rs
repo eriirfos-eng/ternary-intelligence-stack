@@ -570,6 +570,32 @@ impl BetVm {
                     };
                     if is_eq { self.pc = addr as usize; }
                 }
+                0x26 => { // TlessEqual
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let is_le = match (a.clone(), b.clone()) {
+                        (Value::Int(x), Value::Int(y)) => x <= y,
+                        (Value::Float(x), Value::Float(y)) => x <= y || (x - y).abs() < f64::EPSILON,
+                        (Value::Int(x), Value::Trit(y)) => x <= y as i64,
+                        (Value::Trit(x), Value::Int(y)) => (x as i64) <= y,
+                        (Value::Trit(x), Value::Trit(y)) => (x as i64) <= (y as i64),
+                        _ => false,
+                    };
+                    self.stack.push(Value::Trit(if is_le { Trit::Affirm } else { Trit::Reject }));
+                }
+                0x27 => { // TgreaterEqual
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let is_ge = match (a.clone(), b.clone()) {
+                        (Value::Int(x), Value::Int(y)) => x >= y,
+                        (Value::Float(x), Value::Float(y)) => x >= y || (x - y).abs() < f64::EPSILON,
+                        (Value::Int(x), Value::Trit(y)) => x >= y as i64,
+                        (Value::Trit(x), Value::Int(y)) => (x as i64) >= y,
+                        (Value::Trit(x), Value::Trit(y)) => (x as i64) >= (y as i64),
+                        _ => false,
+                    };
+                    self.stack.push(Value::Trit(if is_ge { Trit::Affirm } else { Trit::Reject }));
+                }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
             }

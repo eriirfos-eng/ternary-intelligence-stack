@@ -176,6 +176,7 @@ impl<'a> Parser<'a> {
             Token::And                     => 1,
             Token::Equal | Token::NotEqual => 2,
             Token::LAngle | Token::RAngle  => 2, // Comparisons
+            Token::LessEqual | Token::GreaterEqual => 2,
             Token::Plus  | Token::Minus    => 3,
             Token::Star | Token::Slash | Token::Percent => 4,
             _ => -1,
@@ -195,6 +196,8 @@ impl<'a> Parser<'a> {
             Token::Or       => BinOp::Or,
             Token::LAngle   => BinOp::Less,
             Token::RAngle   => BinOp::Greater,
+            Token::LessEqual => BinOp::LessEqual,
+            Token::GreaterEqual => BinOp::GreaterEqual,
             _ => unreachable!(),
         }
     }
@@ -288,6 +291,12 @@ impl<'a> Parser<'a> {
                             vals.push(v);
                         }
                         Token::Int(v) => vals.push(v as i8),
+                        Token::Minus => {
+                            match self.next_token()? {
+                                Token::Int(v) => vals.push(-(v as i8)),
+                                t => return Err(ParseError::UnexpectedToken(format!("tensor literal element after '-': {:?}", t))),
+                            }
+                        }
                         Token::Affirm => vals.push(1),
                         Token::Tend => vals.push(0),
                         Token::Reject => vals.push(-1),
