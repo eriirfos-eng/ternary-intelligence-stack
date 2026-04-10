@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TernStudio — Ternary Intelligence Stack</title>
+  <style>
+    /* ─── Reset + Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 12px;
+      background: #080b10;
+      color: #c8d4e0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Color vars ────────────────────────────────────────────────────── */
+    :root {
+      --bg:        #080b10;
+      --bg1:       #0d1219;
+      --bg2:       #111820;
+      --bg3:       #161e28;
+      --border:    #1d2835;
+      --border2:   #253040;
+      --cyan:      #00c8ff;
+      --green:     #00e87a;
+      --red:       #ff3b55;
+      --amber:     #ffaa00;
+      --text:      #c8d4e0;
+      --muted:     #4a5a6a;
+      --muted2:    #2a3a4a;
+    }
+
+    /* ─── Topbar ────────────────────────────────────────────────────────── */
+    #topbar {
+      height: 42px;
+      min-height: 42px;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0;
+      z-index: 100;
+    }
+
+    .tb-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      border-right: 1px solid var(--border);
+      height: 100%;
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .tb-logo .logo-mark {
+      font-size: 20px;
+      line-height: 1;
+    }
+    .tb-logo .logo-sub {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+    }
+
+    .tb-spacer { flex: 1; }
+
+    .tb-run {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 18px;
+      height: 100%;
+      background: var(--green);
+      color: #050a06;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.1s;
+    }
+    .tb-run:hover { opacity: 0.85; }
+    .tb-run:active { opacity: 0.7; }
+    .tb-run.running { background: var(--amber); }
+    .tb-run .kbd {
+      font-size: 10px;
+      opacity: 0.6;
+      font-weight: 400;
+    }
+
+    .tb-divider {
+      width: 1px;
+      height: 100%;
+      background: var(--border);
+    }
+
+    .tb-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px;
+      height: 100%;
+      border-right: 1px solid var(--border);
+    }
+
+    .tb-label {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tb-key-input {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 4px 8px;
+      width: 160px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .tb-key-input:focus { border-color: var(--cyan); }
+    .tb-key-input::placeholder { color: var(--muted); }
+
+    .tb-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .badge-free  { background: var(--muted2); color: var(--muted); border: 1px solid var(--border); }
+    .badge-t2    { background: #0a2030; color: var(--cyan); border: 1px solid #1a4060; }
+    .badge-t3    { background: #201000; color: var(--amber); border: 1px solid #503000; }
+    .badge-t4    { background: #200010; color: #ff80c0; border: 1px solid #500030; }
+
+    .tb-endpoint-input {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 10px;
+      padding: 4px 8px;
+      width: 200px;
+      outline: none;
+    }
+    .tb-endpoint-input:focus { border-color: var(--border2); color: var(--text); }
+
+    /* ─── Main layout ───────────────────────────────────────────────────── */
+    #main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 240px 1fr 340px;
+      grid-template-rows: 1fr;
+      overflow: hidden;
+    }
+
+    /* ─── Sidebar ───────────────────────────────────────────────────────── */
+    #sidebar {
+      background: var(--bg1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      height: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      gap: 6px;
+    }
+    .panel-header .ph-dot {
+      width: 5px; height: 5px;
+      background: var(--cyan);
+      border-radius: 50%;
+    }
+
+    #file-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+    #file-tree::-webkit-scrollbar { width: 4px; }
+    #file-tree::-webkit-scrollbar-track { background: transparent; }
+    #file-tree::-webkit-scrollbar-thumb { background: var(--border2); }
+
+    .tree-section { margin-bottom: 4px; }
+    .tree-dir {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      user-select: none;
+    }
+    .tree-dir:hover { background: var(--bg3); }
+    .tree-dir .arrow { transition: transform 0.15s; display: inline-block; color: var(--muted); font-size: 9px; }
+    .tree-dir.collapsed .arrow { transform: rotate(-90deg); }
+
+    .tree-files { }
+    .tree-files.hidden { display: none; }
+
+    .tree-file {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px 3px 24px;
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      user-select: none;
+      border-left: 2px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .tree-file:hover { background: var(--bg3); }
+    .tree-file.active {
+      background: #0d1e2e;
+      border-left-color: var(--cyan);
+      color: var(--cyan);
+    }
+    .tree-file .tier-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .t1 { background: var(--muted); }
+    .t2 { background: var(--cyan); }
+    .t3 { background: var(--amber); }
+
+    /* ─── Editor pane ───────────────────────────────────────────────────── */
+    #editor-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-tabs {
+      height: 32px;
+      min-height: 32px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 0;
+      overflow-x: auto;
+    }
+    .editor-tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px;
+      height: 30px;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      border-top: 2px solid transparent;
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+      transition: color 0.1s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      background: var(--bg);
+      color: var(--text);
+      border-top-color: var(--cyan);
+    }
+
+    #monaco-container {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .editor-toolbar {
+      height: 34px;
+      min-height: 34px;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: border-color 0.1s, color 0.1s;
+    }
+    .tool-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .tool-btn .icon { font-style: normal; }
+
+    .tool-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+    .cursor-pos {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* ─── Output pane ───────────────────────────────────────────────────── */
+    #output-pane {
+      background: var(--bg1);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .output-tabs {
+      height: 32px;
+      min-height: 32px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+    }
+    .out-tab {
+      padding: 0 14px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .out-tab.active { color: var(--text); border-bottom-color: var(--cyan); }
+    .out-tab:hover { color: var(--text); }
+
+    .out-panel { flex: 1; overflow-y: auto; padding: 12px; display: none; }
+    .out-panel.visible { display: block; }
+    .out-panel::-webkit-scrollbar { width: 4px; }
+    .out-panel::-webkit-scrollbar-thumb { background: var(--border2); }
+
+    /* VM output */
+    .vm-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .status-idle    { background: var(--muted2); color: var(--muted); border: 1px solid var(--border); }
+    .status-ok      { background: #051a0d; color: var(--green); border: 1px solid #0a4020; }
+    .status-error   { background: #1a0508; color: var(--red); border: 1px solid #4a0a15; }
+    .status-running { background: #1a1000; color: var(--amber); border: 1px solid #4a3000; }
+
+    .vm-section {
+      margin-bottom: 16px;
+    }
+    .vm-section-title {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .print-output {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--green);
+      min-height: 40px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .print-output.empty { color: var(--muted); font-style: italic; }
+
+    .error-output {
+      background: #0d0306;
+      border: 1px solid #3a0a15;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--red);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .reg-table { width: 100%; border-collapse: collapse; }
+    .reg-table td {
+      padding: 3px 6px;
+      font-size: 11px;
+      border-bottom: 1px solid var(--border);
+    }
+    .reg-table td:first-child { color: var(--muted); width: 28px; }
+    .reg-table td:last-child { color: var(--cyan); font-size: 11px; }
+    .reg-row-affirm td:last-child { color: var(--green); }
+    .reg-row-reject td:last-child { color: var(--red); }
+    .reg-row-zero td:last-child { color: var(--amber); }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .meta-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 8px;
+    }
+    .meta-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .meta-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    /* ─── API Explorer tab ──────────────────────────────────────────────── */
+    .api-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .api-method {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      min-width: 40px;
+      text-align: center;
+    }
+    .method-post { background: #0a2030; color: var(--cyan); border: 1px solid #1a4060; }
+    .method-get  { background: #051a0d; color: var(--green); border: 1px solid #0a4020; }
+    .api-path { font-size: 11px; color: var(--text); }
+    .api-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .api-try {
+      margin-left: auto;
+      padding: 2px 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .api-try:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ─── Status bar ────────────────────────────────────────────────────── */
+    #statusbar {
+      height: 22px;
+      min-height: 22px;
+      background: #040608;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+    #statusbar .sb-item { display: flex; align-items: center; gap: 5px; }
+    #statusbar .sb-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+    #statusbar .sb-dot.warn { background: var(--amber); }
+    #statusbar .sb-dot.err  { background: var(--red); }
+    #statusbar .sb-sep { width: 1px; height: 14px; background: var(--border); }
+    #statusbar .sb-right { margin-left: auto; }
+
+    /* ─── Scrollbar global ──────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ TOPBAR ═══════════════════════════════════════════════════════ -->
+<div id="topbar">
+  <div class="tb-logo">
+    <span class="logo-mark">◈</span>
+    <div>
+      <div>TernStudio</div>
+      <div class="logo-sub">Ternary Intelligence Stack</div>
+    </div>
+  </div>
+
+  <div class="tb-section">
+    <span class="tb-label">API</span>
+    <input class="tb-endpoint-input" id="apiEndpoint"
+           value="https://ternlang-api.fly.dev"
+           placeholder="https://ternlang-api.fly.dev" />
+  </div>
+
+  <div class="tb-section">
+    <span class="tb-label">Key</span>
+    <input class="tb-key-input" id="apiKey"
+           type="password" placeholder="tern_xxxx… (optional)" />
+    <span class="tb-badge badge-free" id="tierBadge">Tier 1</span>
+  </div>
+
+  <div class="tb-spacer"></div>
+
+  <button class="tb-run" id="runBtn" onclick="runCode()">
+    <span>▶ Run</span>
+    <span class="kbd">Ctrl+↵</span>
+  </button>
+</div>
+
+<!-- ═══════════ MAIN ══════════════════════════════════════════════════════════ -->
+<div id="main">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────────────────────── -->
+  <div id="sidebar">
+    <div class="panel-header">
+      <span class="ph-dot"></span>
+      Explorer
+    </div>
+    <div id="file-tree"></div>
+  </div>
+
+  <!-- ── EDITOR ───────────────────────────────────────────────────────────── -->
+  <div id="editor-pane">
+    <div class="editor-tabs" id="editorTabs"></div>
+    <div id="monaco-container"></div>
+    <div class="editor-toolbar">
+      <button class="tool-btn" onclick="runCode()"><i class="icon">▶</i> Run</button>
+      <button class="tool-btn" onclick="clearOutput()"><i class="icon">✕</i> Clear</button>
+      <button class="tool-btn" onclick="newFile()"><i class="icon">+</i> New</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" onclick="insertTemplate('hello')">Hello Trit</button>
+      <button class="tool-btn" onclick="insertTemplate('match')">Match</button>
+      <button class="tool-btn" onclick="insertTemplate('ema')">EMA Gate</button>
+      <div class="tool-sep"></div>
+      <span class="cursor-pos" id="cursorPos">Ln 1, Col 1</span>
+    </div>
+  </div>
+
+  <!-- ── OUTPUT ───────────────────────────────────────────────────────────── -->
+  <div id="output-pane">
+    <div class="output-tabs">
+      <div class="out-tab active" onclick="switchOutTab('vm', this)">VM Output</div>
+      <div class="out-tab" onclick="switchOutTab('api', this)">API Explorer</div>
+      <div class="out-tab" onclick="switchOutTab('docs', this)">Quick Ref</div>
+    </div>
+
+    <!-- VM Output -->
+    <div class="out-panel visible" id="panel-vm">
+      <div class="vm-status">
+        <span class="status-pill status-idle" id="vmStatus">● Idle</span>
+      </div>
+
+      <div class="vm-section" id="section-meta" style="display:none">
+        <div class="vm-section-title">Execution</div>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="meta-label">Bytecode</div>
+            <div class="meta-value" id="metaBytes">—</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Status</div>
+            <div class="meta-value" id="metaStatus" style="font-size:12px">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vm-section" id="section-print">
+        <div class="vm-section-title">Print Output</div>
+        <div class="print-output empty" id="printOutput">— no output —</div>
+      </div>
+
+      <div class="vm-section" id="section-regs" style="display:none">
+        <div class="vm-section-title">Register State (r0 – r9)</div>
+        <table class="reg-table" id="regTable"></table>
+      </div>
+
+      <div class="vm-section" id="section-error" style="display:none">
+        <div class="vm-section-title">Error</div>
+        <div class="error-output" id="errorOutput"></div>
+      </div>
+    </div>
+
+    <!-- API Explorer -->
+    <div class="out-panel" id="panel-api">
+      <div class="vm-section-title" style="margin-bottom:12px">Live Endpoints</div>
+      <div id="apiEndpointBase" style="color:var(--muted);font-size:11px;margin-bottom:14px">—</div>
+
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <div>
+          <div class="api-path">/api/run</div>
+          <div class="api-desc">Execute .tern source — returns print output + registers</div>
+        </div>
+        <button class="api-try" onclick="tryApiRun()">Try</button>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <div>
+          <div class="api-path">/api/trit_decide</div>
+          <div class="api-desc">Scalar ternary decision from evidence vector</div>
+        </div>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <div>
+          <div class="api-path">/api/trit_vector</div>
+          <div class="api-desc">Multi-dimensional evidence aggregation</div>
+        </div>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <div>
+          <div class="api-path">/api/trit_consensus</div>
+          <div class="api-desc">consensus(a, b) — logical merge</div>
+        </div>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <div>
+          <div class="api-path">/api/moe/orchestrate</div>
+          <div class="api-desc">MoE-13 full pass — requires API key Tier 2+</div>
+        </div>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-get">GET</span>
+        <div>
+          <div class="api-path">/api/usage</div>
+          <div class="api-desc">Your current call count + tier limits</div>
+        </div>
+        <button class="api-try" onclick="tryApiUsage()">Try</button>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-get">GET</span>
+        <div>
+          <div class="api-path">/health</div>
+          <div class="api-desc">API health check</div>
+        </div>
+        <button class="api-try" onclick="tryHealth()">Try</button>
+      </div>
+
+      <div style="margin-top:16px;padding:10px;background:var(--bg2);border:1px solid var(--border)">
+        <div class="vm-section-title" style="margin-bottom:8px">Response</div>
+        <pre id="apiResponse" style="font-size:11px;color:var(--green);white-space:pre-wrap;word-break:break-all">—</pre>
+      </div>
+    </div>
+
+    <!-- Quick Ref -->
+    <div class="out-panel" id="panel-docs">
+      <div class="vm-section-title" style="margin-bottom:12px">Ternlang Quick Reference</div>
+      <pre style="font-size:11px;color:var(--text);line-height:1.7;white-space:pre-wrap">
+<span style="color:var(--cyan)">// Types</span>
+trit           // -1 | 0 | +1
+int            // integer
+float          // float
+trit[]         // 1D array
+trittensor&lt;N&gt;  // N-dim tensor
+
+<span style="color:var(--cyan)">// Trit literals</span>
+let a: trit = 1;   // +1 affirm
+let b: trit = 0;   // 0  hold
+let c: trit = -1;  // -1 reject
+
+<span style="color:var(--cyan)">// Built-ins</span>
+truth()          // +1
+hold()           // 0
+conflict()       // -1
+consensus(a, b)  // logical merge
+
+<span style="color:var(--cyan)">// Functions</span>
+fn f(x: trit, n: int) -&gt; trit {
+    return truth();
+}
+
+<span style="color:var(--cyan)">// Match — all 3 arms required</span>
+match v {
+    -1 =&gt; { return conflict(); }
+     0 =&gt; { return hold();    }
+     1 =&gt; { return truth();   }
+}
+
+<span style="color:var(--cyan)">// Directives (Tier 2+)</span>
+@sparseskip
+fn sparse_layer(w: trit[], x: trit[]) -&gt; trit {
+    return consensus(w[0], x[0]);
+}
+
+<span style="color:var(--cyan)">// Propagation operator</span>
+let r: trit = risky_fn()?;
+// returns conflict() if r == -1
+
+<span style="color:var(--cyan)">// Exit codes</span>
+return truth();    // ✓ affirm  (+1)
+return hold();     // ~ hold    (0)
+return conflict(); // ✗ reject  (-1)
+
+<span style="color:var(--cyan)">// Print</span>
+print("hello");
+println(42);
+</pre>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ═══════════ STATUSBAR ════════════════════════════════════════════════════ -->
+<div id="statusbar">
+  <div class="sb-item">
+    <span class="sb-dot" id="connDot"></span>
+    <span id="connLabel">Connecting…</span>
+  </div>
+  <div class="sb-sep"></div>
+  <div class="sb-item">BET VM v0.2</div>
+  <div class="sb-sep"></div>
+  <div class="sb-item" id="sbFile">scratch.tern</div>
+  <div class="sb-right" style="display:flex;gap:16px;align-items:center">
+    <span id="sbTier" style="color:var(--muted)">Tier 1 — Open Core</span>
+    <span>ternlang.com</span>
+  </div>
+</div>
+
+<!-- ═══════════ MONACO + APP LOGIC ══════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
+<script>
+// ─── Embedded stdlib files ────────────────────────────────────────────────────
+const STDLIB = {
+  "examples/hello_trit.tern": `// Hello, Trit!
+// Your first Ternlang program.
+// Tier: 1 — Open Core
+
+fn greet(signal: trit) -> trit {
+    match signal {
+        -1 => { return conflict(); }  // reject
+         0 => { return hold();    }   // wait
+         1 => { return truth();   }   // affirm
+    }
+}
+
+let result: trit = greet(1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "examples/ema_gate.tern": `// stdlib/safety/ema_deliberation_gate.tern
+// Demonstrates: EMA convergence gate for deployment decisions.
+// Tier: 2 — Pro Standard
+
+fn ema_gate(prior: float, evidence: float, alpha: float) -> trit {
+    let smoothed: float = alpha * evidence + (1.0 - alpha) * prior;
+    if smoothed > 0.75 { return truth();    }
+    if smoothed < 0.25 { return conflict(); }
+    return hold();
+}
+
+let result: trit = ema_gate(0.5, 0.8, 0.3);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "examples/three_way_match.tern": `// Three-way match — the foundation of ternary logic.
+// Tier: 1 — Open Core
+
+fn classify(confidence: float) -> trit {
+    if confidence > 0.7 { return truth();    }
+    if confidence < 0.3 { return conflict(); }
+    return hold();
+}
+
+fn describe(t: trit) -> trit {
+    match t {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let signal: trit = classify(0.5);
+let out: trit = describe(signal);
+
+match out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "examples/consensus_chain.tern": `// Consensus chaining — multiple signals merged into one decision.
+// Tier: 1 — Open Core
+
+fn evidence_merge(a: trit, b: trit, c: trit) -> trit {
+    let ab: trit = consensus(a, b);
+    return consensus(ab, c);
+}
+
+let sensor_a: trit = 1;
+let sensor_b: trit = 1;
+let sensor_c: trit = 0;
+
+let decision: trit = evidence_merge(sensor_a, sensor_b, sensor_c);
+
+match decision {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "stdlib/core/ternary_counter.tern": `// stdlib/core/ternary_counter.tern
+// Demonstrates: Balanced ternary counting with trit state.
+// Tier: 1 — Open Core
+
+fn increment(state: trit) -> trit {
+    match state {
+        -1 => { return hold();     }
+         0 => { return truth();    }
+         1 => { return conflict(); }
+    }
+}
+
+fn decrement(state: trit) -> trit {
+    match state {
+        -1 => { return truth();    }
+         0 => { return conflict(); }
+         1 => { return hold();     }
+    }
+}
+
+let s: trit = 0;
+s = increment(s);
+s = increment(s);
+s = decrement(s);
+
+match s {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "stdlib/math/ternary_sign.tern": `// stdlib/math/ternary_sign.tern
+// Demonstrates: Sign function converting integer to ternary trit.
+// Tier: 1 — Open Core
+
+fn ternary_sign(val: int) -> trit {
+    if val > 0 { return truth();    }
+    if val < 0 { return conflict(); }
+    return hold();
+}
+
+let r1: trit = ternary_sign(42);
+let r2: trit = ternary_sign(-7);
+let r3: trit = ternary_sign(0);
+
+let combined: trit = consensus(r1, r2);
+
+match combined {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "stdlib/math/ternary_clamp.tern": `// stdlib/math/ternary_clamp.tern
+// Demonstrates: Clamping a float to a ternary band.
+// Tier: 1 — Open Core
+
+fn clamp_to_trit(val: float, lo: float, hi: float) -> trit {
+    if val > hi { return truth();    }
+    if val < lo { return conflict(); }
+    return hold();
+}
+
+let r: trit = clamp_to_trit(0.5, 0.3, 0.7);
+
+match r {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "stdlib/safety/confidence_gate.tern": `// stdlib/safety/confidence_gate.tern
+// Demonstrates: Confidence gating before committing an action.
+// Tier: 2 — Pro Standard
+
+fn confidence_gate(score: float, threshold_hi: float, threshold_lo: float) -> trit {
+    if score > threshold_hi { return truth();    }
+    if score < threshold_lo { return conflict(); }
+    return hold();
+}
+
+fn safe_act(confidence: float) -> trit {
+    let gate: trit = confidence_gate(confidence, 0.8, 0.2);
+    match gate {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = safe_act(0.85);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "stdlib/safety/ema_deliberation_gate.tern": `// stdlib/safety/ema_deliberation_gate.tern
+// Demonstrates: EMA deliberation engine.
+// Tier: 2 — Pro Standard
+
+fn ema_deliberate(prior: float, current_signal: float, alpha: float) -> trit {
+    let smoothed: float = alpha * current_signal + (1.0 - alpha) * prior;
+    if smoothed > 0.85 { return truth();    }
+    if smoothed < 0.15 { return conflict(); }
+    return hold();
+}
+
+let s1: trit = ema_deliberate(0.5, 0.9, 0.3);
+let s2: trit = ema_deliberate(0.8, 0.95, 0.3);
+let final_signal: trit = consensus(s1, s2);
+
+match final_signal {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "stdlib/errors/BET-001.tern": `// stdlib/errors/BET-001.tern
+// Error: BET-001 — Stack Underflow
+// Tier: 1 — Open Core
+//
+// Every function must push exactly one value onto the stack
+// before TRET, on EVERY code path.
+
+fn gate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn chain(a: trit, b: trit) -> trit {
+    let r1: trit = gate(a);
+    let r2: trit = gate(b);
+    return consensus(r1, r2);
+}
+
+let result: trit = chain(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+
+  "stdlib/errors/BET-007.tern": `// stdlib/errors/BET-007.tern
+// Error: BET-007 — Type Mismatch
+// Tier: 1 — Open Core
+//
+// The VM is strongly typed. Passing an Int where a Trit
+// is expected raises BET-007: TypeMismatch.
+// Always annotate every parameter.
+
+fn signal_gate(input: trit) -> trit {
+    match input {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let t: trit = 1;
+let result: trit = signal_gate(t);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+};
+
+// ─── File tree config ──────────────────────────────────────────────────────────
+const TREE = [
+  { dir: "▸ Examples",       prefix: "examples/", tier: 1 },
+  { dir: "▸ stdlib/core",    prefix: "stdlib/core/", tier: 1 },
+  { dir: "▸ stdlib/math",    prefix: "stdlib/math/", tier: 1 },
+  { dir: "▸ stdlib/safety",  prefix: "stdlib/safety/", tier: 2 },
+  { dir: "▸ stdlib/errors",  prefix: "stdlib/errors/", tier: 1 },
+];
+
+const TIER_CLASS = { 1: "t1", 2: "t2", 3: "t3" };
+
+// ─── Templates ────────────────────────────────────────────────────────────────
+const TEMPLATES = {
+  hello: `// Hello, Trit!
+fn greet(signal: trit) -> trit {
+    match signal {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = greet(1);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+  match: `fn classify(x: int) -> trit {
+    if x > 0 { return truth();    }
+    if x < 0 { return conflict(); }
+    return hold();
+}
+
+let r: trit = classify(5);
+
+match r {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+  ema: `fn ema_gate(prior: float, evidence: float, alpha: float) -> trit {
+    let smoothed: float = alpha * evidence + (1.0 - alpha) * prior;
+    if smoothed > 0.75 { return truth();    }
+    if smoothed < 0.25 { return conflict(); }
+    return hold();
+}
+
+let result: trit = ema_gate(0.5, 0.8, 0.3);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}`,
+};
+
+// ─── App state ────────────────────────────────────────────────────────────────
+let monacoEditor = null;
+let activeFile = "examples/hello_trit.tern";
+let tabs = [{ name: "hello_trit.tern", path: "examples/hello_trit.tern" }];
+let fileBuffers = { "examples/hello_trit.tern": STDLIB["examples/hello_trit.tern"] };
+let scratchCounter = 1;
+
+// ─── Build file tree ──────────────────────────────────────────────────────────
+function buildFileTree() {
+  const tree = document.getElementById("file-tree");
+  tree.innerHTML = "";
+
+  TREE.forEach(({ dir, prefix, tier }) => {
+    const files = Object.keys(STDLIB).filter(k => k.startsWith(prefix));
+    if (files.length === 0) return;
+
+    const sec = document.createElement("div");
+    sec.className = "tree-section";
+
+    const dirEl = document.createElement("div");
+    dirEl.className = "tree-dir";
+    dirEl.innerHTML = `<span class="arrow">▾</span> ${dir.replace("▸ ", "")}`;
+    dirEl.onclick = () => {
+      const collapsed = dirEl.classList.toggle("collapsed");
+      filesEl.classList.toggle("hidden", collapsed);
+    };
+
+    const filesEl = document.createElement("div");
+    filesEl.className = "tree-files";
+
+    files.forEach(path => {
+      const name = path.split("/").pop();
+      const fileEl = document.createElement("div");
+      fileEl.className = "tree-file";
+      fileEl.dataset.path = path;
+      fileEl.innerHTML = `<span class="tier-dot ${TIER_CLASS[tier] || 't1'}"></span>${name}`;
+      fileEl.onclick = () => openFile(path);
+      filesEl.appendChild(fileEl);
+    });
+
+    sec.appendChild(dirEl);
+    sec.appendChild(filesEl);
+    tree.appendChild(sec);
+  });
+}
+
+function refreshTreeHighlight() {
+  document.querySelectorAll(".tree-file").forEach(el => {
+    el.classList.toggle("active", el.dataset.path === activeFile);
+  });
+}
+
+// ─── Tab management ───────────────────────────────────────────────────────────
+function renderTabs() {
+  const container = document.getElementById("editorTabs");
+  container.innerHTML = "";
+  tabs.forEach(({ name, path }) => {
+    const tab = document.createElement("div");
+    tab.className = "tab" + (path === activeFile ? " active" : "");
+    tab.textContent = name;
+    tab.onclick = () => switchToTab(path);
+    container.appendChild(tab);
+  });
+}
+
+function switchToTab(path) {
+  if (monacoEditor) {
+    fileBuffers[activeFile] = monacoEditor.getValue();
+  }
+  activeFile = path;
+  if (monacoEditor) {
+    monacoEditor.setValue(fileBuffers[path] || "");
+  }
+  renderTabs();
+  refreshTreeHighlight();
+  document.getElementById("sbFile").textContent = path.split("/").pop();
+}
+
+function openFile(path) {
+  if (monacoEditor) {
+    fileBuffers[activeFile] = monacoEditor.getValue();
+  }
+
+  const existing = tabs.find(t => t.path === path);
+  if (!existing) {
+    tabs.push({ name: path.split("/").pop(), path });
+  }
+
+  activeFile = path;
+  if (!fileBuffers[path]) {
+    fileBuffers[path] = STDLIB[path] || "";
+  }
+
+  if (monacoEditor) {
+    monacoEditor.setValue(fileBuffers[path]);
+  }
+
+  renderTabs();
+  refreshTreeHighlight();
+  document.getElementById("sbFile").textContent = path.split("/").pop();
+}
+
+function newFile() {
+  const name = `scratch_${scratchCounter++}.tern`;
+  const path = `scratch/${name}`;
+  fileBuffers[path] = TEMPLATES.hello;
+  tabs.push({ name, path });
+  switchToTab(path);
+}
+
+function insertTemplate(key) {
+  if (monacoEditor) {
+    monacoEditor.setValue(TEMPLATES[key] || "");
+  }
+}
+
+// ─── Output tabs ──────────────────────────────────────────────────────────────
+function switchOutTab(id, el) {
+  document.querySelectorAll(".out-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".out-panel").forEach(p => p.classList.remove("visible"));
+  el.classList.add("active");
+  document.getElementById("panel-" + id).classList.add("visible");
+
+  if (id === "api") {
+    document.getElementById("apiEndpointBase").textContent =
+      document.getElementById("apiEndpoint").value;
+  }
+}
+
+// ─── VM Output helpers ────────────────────────────────────────────────────────
+function setStatus(type, text) {
+  const el = document.getElementById("vmStatus");
+  el.className = "status-pill status-" + type;
+  el.textContent = text;
+
+  const dot = document.getElementById("connDot");
+  dot.className = "sb-dot" + (type === "error" ? " err" : type === "running" ? " warn" : "");
+}
+
+function clearOutput() {
+  setStatus("idle", "● Idle");
+  document.getElementById("printOutput").textContent = "— no output —";
+  document.getElementById("printOutput").className = "print-output empty";
+  document.getElementById("section-meta").style.display = "none";
+  document.getElementById("section-regs").style.display = "none";
+  document.getElementById("section-error").style.display = "none";
+}
+
+function showResult(data) {
+  const ok = data.status === "ok";
+  setStatus(ok ? "ok" : "error", ok ? "✓ OK" : "✕ Error");
+
+  // Meta
+  const metaSec = document.getElementById("section-meta");
+  metaSec.style.display = "block";
+  document.getElementById("metaBytes").textContent = data.bytecode_bytes != null ? data.bytecode_bytes + "B" : "—";
+  document.getElementById("metaStatus").textContent = ok ? "exited ok" : "vm error";
+  document.getElementById("metaStatus").style.color = ok ? "var(--green)" : "var(--red)";
+
+  // Print output
+  const printEl = document.getElementById("printOutput");
+  if (data.output && data.output.length > 0) {
+    printEl.textContent = data.output.join("\n");
+    printEl.className = "print-output";
+  } else {
+    printEl.textContent = "— no print output —";
+    printEl.className = "print-output empty";
+  }
+
+  // Registers
+  if (data.registers && data.registers.length > 0) {
+    const regSec = document.getElementById("section-regs");
+    regSec.style.display = "block";
+    const table = document.getElementById("regTable");
+    table.innerHTML = "";
+    data.registers.forEach((val, i) => {
+      const tr = document.createElement("tr");
+      const valStr = String(val);
+      let rowClass = "";
+      if (valStr.includes("Affirm") || valStr.includes("Truth")) rowClass = "reg-row-affirm";
+      else if (valStr.includes("Reject") || valStr.includes("Conflict")) rowClass = "reg-row-reject";
+      else if (valStr.includes("Tend") || valStr === "Trit(Tend)") rowClass = "reg-row-zero";
+      tr.className = rowClass;
+      tr.innerHTML = `<td>r${i}</td><td>${valStr}</td>`;
+      table.appendChild(tr);
+    });
+  }
+
+  // Error
+  const errSec = document.getElementById("section-error");
+  if (!ok && data.error) {
+    errSec.style.display = "block";
+    document.getElementById("errorOutput").textContent = data.error;
+  } else {
+    errSec.style.display = "none";
+  }
+}
+
+// ─── Run ──────────────────────────────────────────────────────────────────────
+async function runCode() {
+  if (!monacoEditor) return;
+  fileBuffers[activeFile] = monacoEditor.getValue();
+  const code = monacoEditor.getValue();
+  if (!code.trim()) return;
+
+  const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+  const key = document.getElementById("apiKey").value.trim();
+
+  const runBtn = document.getElementById("runBtn");
+  runBtn.classList.add("running");
+  runBtn.textContent = "● Running…";
+  setStatus("running", "● Running…");
+
+  try {
+    const body = { code };
+    if (key) body.key = key;
+
+    const res = await fetch(endpoint + "/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      showResult({ status: "error", error: `HTTP ${res.status}: ${txt}`, output: [], bytecode_bytes: 0 });
+    } else {
+      const data = await res.json();
+      showResult(data);
+    }
+  } catch (err) {
+    showResult({ status: "error", error: String(err), output: [], bytecode_bytes: 0 });
+  } finally {
+    runBtn.classList.remove("running");
+    runBtn.innerHTML = '<span>▶ Run</span><span class="kbd">Ctrl+↵</span>';
+  }
+}
+
+// ─── API Explorer try buttons ─────────────────────────────────────────────────
+async function tryHealth() {
+  const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+  try {
+    const r = await fetch(endpoint + "/health");
+    const d = await r.json();
+    document.getElementById("apiResponse").textContent = JSON.stringify(d, null, 2);
+  } catch (e) {
+    document.getElementById("apiResponse").textContent = String(e);
+  }
+}
+
+async function tryApiUsage() {
+  const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+  const key = document.getElementById("apiKey").value.trim();
+  try {
+    const r = await fetch(endpoint + "/api/usage", {
+      headers: key ? { "X-Ternlang-Key": key } : {},
+    });
+    const d = await r.json();
+    document.getElementById("apiResponse").textContent = JSON.stringify(d, null, 2);
+  } catch (e) {
+    document.getElementById("apiResponse").textContent = String(e);
+  }
+}
+
+async function tryApiRun() {
+  const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+  const key = document.getElementById("apiKey").value.trim();
+  const code = monacoEditor ? monacoEditor.getValue() : "";
+  const body = { code };
+  if (key) body.key = key;
+  try {
+    const r = await fetch(endpoint + "/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    document.getElementById("apiResponse").textContent = JSON.stringify(d, null, 2);
+  } catch (e) {
+    document.getElementById("apiResponse").textContent = String(e);
+  }
+}
+
+// ─── Connection status ────────────────────────────────────────────────────────
+async function checkConnection() {
+  const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+  try {
+    const r = await fetch(endpoint + "/health", { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      document.getElementById("connLabel").textContent = "Connected · " + endpoint.replace("https://", "");
+      document.getElementById("connDot").className = "sb-dot";
+    } else {
+      throw new Error("not ok");
+    }
+  } catch {
+    document.getElementById("connLabel").textContent = "Offline";
+    document.getElementById("connDot").className = "sb-dot err";
+  }
+}
+
+// ─── Monaco init ──────────────────────────────────────────────────────────────
+require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs" } });
+
+require(["vs/editor/editor.main"], function () {
+  // Register Ternlang language
+  monaco.languages.register({ id: "ternlang" });
+
+  monaco.languages.setMonarchTokensProvider("ternlang", {
+    keywords: [
+      "fn", "let", "return", "match", "if", "else", "while", "for", "in",
+      "break", "continue", "spawn", "send", "await",
+    ],
+    types: ["trit", "int", "float", "bool", "void"],
+    builtins: ["truth", "hold", "conflict", "consensus", "print", "println",
+               "affirm", "reject", "tend"],
+    directives: ["sparseskip", "inline", "export"],
+
+    tokenizer: {
+      root: [
+        [/@[a-zA-Z_]+/, "keyword.directive"],
+        [/\/\/.*$/, "comment"],
+        [/\b(fn|let|return|match|if|else|while|for|in|break|continue|spawn|send|await)\b/, "keyword"],
+        [/\b(trit|int|float|trittensor|void)\b/, "type"],
+        [/\b(truth|hold|conflict|consensus|print|println|affirm|reject|tend)\b/, "support.function"],
+        [/-1\b/, "number.trit.reject"],
+        [/\b0\b/, "number.trit.hold"],
+        [/\b1\b/, "number.trit.affirm"],
+        [/\b\d+\.\d+\b/, "number.float"],
+        [/\b\d+\b/, "number"],
+        [/"([^"\\]|\\.)*"/, "string"],
+        [/->/, "operator"],
+        [/=>/, "operator"],
+        [/[+\-*\/=!<>?%]/, "operator"],
+        [/[{}()\[\];,:]/, "delimiter"],
+        [/[a-zA-Z_]\w*/, "identifier"],
+      ],
+    },
+  });
+
+  monaco.editor.defineTheme("ternstudio", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [
+      { token: "comment",              foreground: "3a5060", fontStyle: "italic" },
+      { token: "keyword",              foreground: "00c8ff", fontStyle: "bold" },
+      { token: "keyword.directive",    foreground: "ffaa00", fontStyle: "bold" },
+      { token: "type",                 foreground: "80e8ff" },
+      { token: "support.function",     foreground: "00e87a" },
+      { token: "number.trit.affirm",   foreground: "00e87a", fontStyle: "bold" },
+      { token: "number.trit.reject",   foreground: "ff3b55", fontStyle: "bold" },
+      { token: "number.trit.hold",     foreground: "ffaa00", fontStyle: "bold" },
+      { token: "number.float",         foreground: "a8d8ff" },
+      { token: "number",               foreground: "a8d8ff" },
+      { token: "string",               foreground: "c8f0a0" },
+      { token: "operator",             foreground: "6090b0" },
+      { token: "delimiter",            foreground: "405060" },
+      { token: "identifier",           foreground: "c8d4e0" },
+    ],
+    colors: {
+      "editor.background":            "#080b10",
+      "editor.foreground":            "#c8d4e0",
+      "editor.lineHighlightBackground": "#0d1219",
+      "editorCursor.foreground":      "#00c8ff",
+      "editor.selectionBackground":   "#0d2040",
+      "editorLineNumber.foreground":  "#2a3a4a",
+      "editorLineNumber.activeForeground": "#5a7a9a",
+      "editorIndentGuide.background": "#1a2530",
+      "editorGutter.background":      "#080b10",
+      "scrollbar.shadow":             "#00000000",
+      "scrollbarSlider.background":   "#1d2835",
+      "scrollbarSlider.hoverBackground": "#253040",
+    },
+  });
+
+  monacoEditor = monaco.editor.create(document.getElementById("monaco-container"), {
+    value: fileBuffers[activeFile],
+    language: "ternlang",
+    theme: "ternstudio",
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
+    fontSize: 13,
+    lineHeight: 20,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    renderWhitespace: "boundary",
+    bracketPairColorization: { enabled: true },
+    guides: { bracketPairs: true },
+    suggest: { showWords: false },
+    quickSuggestions: false,
+    padding: { top: 12, bottom: 12 },
+    overviewRulerLanes: 0,
+    hideCursorInOverviewRuler: true,
+    renderLineHighlight: "gutter",
+    scrollbar: {
+      verticalScrollbarSize: 5,
+      horizontalScrollbarSize: 5,
+    },
+  });
+
+  // Cursor position
+  monacoEditor.onDidChangeCursorPosition(e => {
+    document.getElementById("cursorPos").textContent =
+      `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+  });
+
+  // Auto-resize Monaco when window resizes
+  window.addEventListener("resize", () => monacoEditor.layout());
+
+  // Keyboard shortcut: Ctrl+Enter / Cmd+Enter
+  monacoEditor.addCommand(
+    monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+    () => runCode()
+  );
+  monacoEditor.addCommand(
+    monaco.KeyCode.F5,
+    () => runCode()
+  );
+
+  // Init
+  buildFileTree();
+  renderTabs();
+  refreshTreeHighlight();
+  checkConnection();
+  setInterval(checkConnection, 30000);
+});
+</script>
+
+
+</body>
+</html>

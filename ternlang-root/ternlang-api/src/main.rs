@@ -370,6 +370,11 @@ async fn require_admin_key(
 
 static INDEX_HTML:   &str = include_str!("../../ternlang-web/index.html");
 static PRICING_HTML: &str = include_str!("../../ternlang-web/pricing.html");
+static STUDIO_HTML:  &str = include_str!("../../ternlang-studio/index.html");
+
+async fn studio_page() -> Html<&'static str> {
+    Html(STUDIO_HTML)
+}
 
 async fn pricing_page() -> Html<&'static str> {
     Html(PRICING_HTML)
@@ -2926,6 +2931,82 @@ pub async fn taas_infer(
     })
 }
 
+// ─── /api/run — execute arbitrary .tern source (TernStudio) ──────────────────
+
+/// POST /api/run
+/// Body: { "code": "...", "key": "tern_xxx" }   (key may also be in X-Ternlang-Key header)
+/// Response: { "status": "ok"|"error", "output": [...], "registers": [...],
+///             "bytecode_bytes": N, "instructions": N, "error": null|"..." }
+async fn run_program(headers: HeaderMap, Json(body): Json<Value>) -> Response {
+    // Accept key from body OR header (studio sends it in the body for simplicity)
+    let _key = body["key"].as_str()
+        .map(|s| s.to_string())
+        .or_else(|| headers.get("x-ternlang-key").and_then(|v| v.to_str().ok()).map(|s| s.to_string()));
+
+    let code = match body["code"].as_str() {
+        Some(c) => c.to_string(),
+        None => return (StatusCode::BAD_REQUEST, Json(json!({ "status": "error", "error": "code field required" }))).into_response(),
+    };
+
+    // Parse
+    let mut parser = Parser::new(&code);
+    let mut emitter = BytecodeEmitter::new();
+    match parser.parse_program() {
+        Ok(prog) => emitter.emit_program(&prog),
+        Err(_) => {
+            // Fallback: statement-by-statement parse
+            let mut p2 = Parser::new(&code);
+            loop {
+                match p2.parse_stmt() {
+                    Ok(stmt) => emitter.emit_stmt(&stmt),
+                    Err(e) => {
+                        let msg = format!("{:?}", e);
+                        if msg.contains("EOF") { break; }
+                        return (StatusCode::OK, Json(json!({
+                            "status": "error",
+                            "error": format!("parse error: {}", msg),
+                            "output": [],
+                            "registers": [],
+                            "bytecode_bytes": 0,
+                            "instructions": 0,
+                        }))).into_response();
+                    }
+                }
+            }
+        }
+    }
+
+    let bytecode = emitter.finalize();
+    let bytecode_len = bytecode.len();
+    let mut vm = BetVm::new(bytecode);
+
+    match vm.run() {
+        Ok(()) => {
+            let output = vm.take_output();
+            let registers: Vec<Value> = (0..10)
+                .map(|i| format!("{:?}", vm.get_register(i)).into())
+                .collect();
+            (StatusCode::OK, Json(json!({
+                "status": "ok",
+                "output": output,
+                "registers": registers,
+                "bytecode_bytes": bytecode_len,
+                "error": null,
+            }))).into_response()
+        }
+        Err(e) => {
+            let output = vm.take_output();
+            (StatusCode::OK, Json(json!({
+                "status": "error",
+                "error": format!("{}", e),
+                "output": output,
+                "registers": [],
+                "bytecode_bytes": bytecode_len,
+            }))).into_response()
+        }
+    }
+}
+
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 
 async fn not_found() -> Response {
@@ -3026,7 +3107,9 @@ async fn main() {
         .route("/.well-known/mcp/server-card.json", get(mcp_server_card))
         .route("/stripe/webhook", post(stripe_webhook))
         .route("/pricing",        get(pricing_page))
+        .route("/studio",         get(studio_page))
         .route("/api/usage",      get(api_usage))
+        .route("/api/run",        post(run_program))
         // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))
         .route("/api/trit_vector",       post(trit_vector))
