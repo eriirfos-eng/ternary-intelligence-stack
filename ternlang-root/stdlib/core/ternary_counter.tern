@@ -1,0 +1,30 @@
+// stdlib/core/ternary_counter.tern
+// Demonstrates: A stateful counter driven by ternary signals.
+// Tier: 1 — Open Core
+// This proves basic control flow using all three trit states.
+
+fn process_signal(current: int, signal: trit) -> int {
+    match signal {
+        1  => { return current + 1; }
+        -1 => { return current - 1; }
+        0  => { return current;     }
+    }
+}
+
+let count: int = 0;
+
+// Sequence of signals: [Affirm, Affirm, Hold, Reject, Affirm]
+// Expected counts: 0 -> 1 -> 2 -> 2 -> 1 -> 2
+count = process_signal(count, 1);
+count = process_signal(count, 1);
+count = process_signal(count, 0);
+count = process_signal(count, -1);
+count = process_signal(count, 1);
+
+println("Final Counter Value: ", count);
+
+if count == 2 {
+    println("Counter Test Passed.");
+} else {
+    println("Counter Test Failed.");
+}
