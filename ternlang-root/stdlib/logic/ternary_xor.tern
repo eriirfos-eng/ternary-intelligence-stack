@@ -1,0 +1,45 @@
+// stdlib/logic/ternary_xor.tern
+// Demonstrates: Balanced ternary cyclic XOR (sum part of balanced ternary addition).
+// Tier: 1 — Open Core
+
+fn t_xor(a: trit, b: trit) -> trit {
+    match a {
+        -1 => {
+            match b {
+                -1 => { return 1;  }
+                 0 => { return -1; }
+                 1 => { return 0;  }
+            }
+        }
+         0 => {
+            match b {
+                -1 => { return -1; }
+                 0 => { return 0;  }
+                 1 => { return 1;  }
+            }
+        }
+         1 => {
+            match b {
+                -1 => { return 0;  }
+                 0 => { return 1;  }
+                 1 => { return -1; }
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    // Test: 1 ⊕ 1 = -1
+    let r1: trit = t_xor(1, 1);
+    if r1 != -1 { return conflict(); }
+    
+    // Test: -1 ⊕ -1 = 1
+    let r2: trit = t_xor(-1, -1);
+    if r2 != 1 { return conflict(); }
+    
+    // Test: 0 ⊕ 1 = 1
+    let r3: trit = t_xor(0, 1);
+    if r3 != 1 { return conflict(); }
+    
+    return truth();
+}
