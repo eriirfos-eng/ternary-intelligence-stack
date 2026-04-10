@@ -1,0 +1,37 @@
+// stdlib/astro/launch_window_gate.tern
+// Demonstrates: Launch window go/no-go decision gate.
+// Tier: 2 — Pro Standard
+// Three independent checks must all affirm before launch proceeds.
+// hold = window exists but conditions marginal — recycle to next slot.
+
+fn weather_gate(wind_ok: trit, visibility_ok: trit) -> trit {
+    return consensus(wind_ok, visibility_ok);
+}
+
+fn vehicle_gate(propulsion: trit, avionics: trit, structure: trit) -> trit {
+    let pa: trit = consensus(propulsion, avionics);
+    return consensus(pa, structure);
+}
+
+fn range_safety_gate(corridor_clear: trit, fts_armed: trit) -> trit {
+    match fts_armed {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return corridor_clear; }
+    }
+}
+
+fn main() -> trit {
+    let weather: trit  = weather_gate(1, 1);
+    let vehicle: trit  = vehicle_gate(1, 1, 0);
+    let safety: trit   = range_safety_gate(1, 1);
+
+    let wp: trit = consensus(weather, vehicle);
+    let verdict: trit = consensus(wp, safety);
+
+    match verdict {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

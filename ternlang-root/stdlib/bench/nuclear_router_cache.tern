@@ -1,7 +1,0 @@
-// Module: stdlib/bench/nuclear_router_cache.tern
-// Purpose: State caching layer for nuclear_router
-// Author: RFI-IRFOS
-
-fn execute_nuclear_router_cache() -> trit {
-    return tend;
-}

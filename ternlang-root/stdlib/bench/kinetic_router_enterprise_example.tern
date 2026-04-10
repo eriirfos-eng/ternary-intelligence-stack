@@ -1,7 +1,0 @@
-// Module: stdlib/bench/kinetic_router_enterprise_example.tern
-// Purpose: Enterprise scale example for kinetic_router
-// Author: RFI-IRFOS
-
-fn execute_kinetic_router_enterprise_example() -> trit {
-    return tend;
-}

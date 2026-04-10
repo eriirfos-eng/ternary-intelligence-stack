@@ -1,7 +1,0 @@
-// Module: stdlib/bench/optical_model_production_example.tern
-// Purpose: Production deployment example for optical_model
-// Author: RFI-IRFOS
-
-fn execute_optical_model_production_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/bench/optical_analyzer_production_example.tern
-// Purpose: Production deployment example for optical_analyzer
-// Author: RFI-IRFOS
-
-fn execute_optical_analyzer_production_example() -> trit {
-    return tend;
-}

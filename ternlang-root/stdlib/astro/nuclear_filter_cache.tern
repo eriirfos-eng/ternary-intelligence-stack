@@ -1,7 +1,0 @@
-// Module: stdlib/astro/nuclear_filter_cache.tern
-// Purpose: State caching layer for nuclear_filter
-// Author: RFI-IRFOS
-
-fn execute_nuclear_filter_cache() -> trit {
-    return tend;
-}

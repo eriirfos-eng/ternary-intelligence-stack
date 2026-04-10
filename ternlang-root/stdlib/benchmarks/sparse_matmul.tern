@@ -1,23 +1,41 @@
-// Module: sparse_matmul.tern
-// Purpose: Benchmarking Dense vs Sparse MatMul speedup
-// Author: RFI-IRFOS
+// stdlib/benchmarks/sparse_matmul.tern
+// Demonstrates: @sparseskip sparsity efficiency gate — logical benchmark.
+// Tier: 2 — Pro Standard
+// At 60%+ sparsity (BitNet b1.58 range), @sparseskip skips most mul-accumulates.
+// This file measures the logical benefit: how many weights contribute vs skip.
 
-// Benchmarks the performance gain of '@sparseskip' on sparse tensors.
-
-fn run_benchmark(size: int, sparsity: float) {
-    // 1. Create tensors of 'size'
-    // 2. Measure dense matmul (without @sparseskip - simulated)
-    // 3. Measure sparse matmul (with @sparseskip)
-    
-    // Example: 16x16: 61.2% sparse -> 2.58x fewer multiply ops
-    if size == 16 {
-        print("16x16 Benchmark: 61.2% sparse -> 2.58x fewer multiply ops");
-    }
+@sparseskip
+fn sparse_layer(w: trit, x: trit) -> trit {
+    return consensus(w, x);
 }
 
-fn main() {
-    print("--- TERNARY BENCHMARK: SPARSE MATMUL ---");
-    run_benchmark(4, 0.5);
-    run_benchmark(8, 0.6);
-    run_benchmark(16, 0.612);
+fn count_active(w0: trit, w1: trit, w2: trit, w3: trit) -> int {
+    let n: int = 0;
+    match w0 { -1 => { n = n + 1; } 0 => { n = n + 0; } 1 => { n = n + 1; } }
+    match w1 { -1 => { n = n + 1; } 0 => { n = n + 0; } 1 => { n = n + 1; } }
+    match w2 { -1 => { n = n + 1; } 0 => { n = n + 0; } 1 => { n = n + 1; } }
+    match w3 { -1 => { n = n + 1; } 0 => { n = n + 0; } 1 => { n = n + 1; } }
+    return n;
+}
+
+fn sparsity_gate(active: int) -> trit {
+    if active < 2 { return truth();    }
+    if active > 3 { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let active1: int = count_active(0, 0, 0, 1);
+    let verdict1: trit = sparsity_gate(active1);
+
+    let active2: int = count_active(1, 0, -1, 0);
+    let verdict2: trit = sparsity_gate(active2);
+
+    let combined: trit = consensus(verdict1, verdict2);
+
+    match combined {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
 }
