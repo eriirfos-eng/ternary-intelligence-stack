@@ -1,0 +1,40 @@
+// stdlib/logic/ternary_not.tern
+// Demonstrates: Standard ternary negation (NOT) operator.
+// Tier: 1 — Open Core
+
+fn ternary_not(p: trit) -> trit {
+    match p {
+        -1 => { return truth();    }
+         0 => { return hold();     }
+         1 => { return conflict(); }
+    }
+}
+
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = 0;
+    let c: trit = -1;
+
+    let not_a: trit = ternary_not(a); // Expected: -1
+    let not_b: trit = ternary_not(b); // Expected: 0
+    let not_c: trit = ternary_not(c); // Expected: 1
+
+    // Verify results via match
+    match not_a {
+        -1 => { 
+            match not_b {
+                0 => {
+                    match not_c {
+                        1 => { return truth(); }
+                        0 => { return conflict(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                1 => { return conflict(); }
+                -1 => { return conflict(); }
+            }
+        }
+        0 => { return conflict(); }
+        1 => { return conflict(); }
+    }
+}
