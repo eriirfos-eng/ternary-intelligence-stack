@@ -97,6 +97,7 @@ pub struct BetVm {
     node_id: String,
     remote: Option<Arc<dyn RemoteTransport>>,
     instructions_count: u64,
+    pub print_log: Vec<String>,
 }
 
 impl BetVm {
@@ -115,7 +116,13 @@ impl BetVm {
             node_id: "127.0.0.1:7373".to_string(),
             remote: None,
             instructions_count: 0,
+            print_log: Vec::new(),
         }
+    }
+
+    /// Drain all lines printed by `print()`/`println()` during execution.
+    pub fn take_output(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.print_log)
     }
 
     pub fn set_node_id(&mut self, node_id: String) {
@@ -381,14 +388,16 @@ impl BetVm {
                 }
                 0x20 => { // Tprint
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    match val {
-                        Value::Trit(t) => println!("{:?}", t),
-                        Value::Int(i) => println!("{}", i),
-                        Value::Float(f) => println!("{}", f),
-                        Value::String(s) => println!("{}", s),
-                        Value::TensorRef(idx) => println!("TensorRef({})", idx),
-                        Value::AgentRef(idx, addr) => println!("AgentRef({}, {:?})", idx, addr),
-                    }
+                    let line = match &val {
+                        Value::Trit(t) => format!("{:?}", t),
+                        Value::Int(i) => format!("{}", i),
+                        Value::Float(f) => format!("{}", f),
+                        Value::String(s) => s.clone(),
+                        Value::TensorRef(idx) => format!("TensorRef({})", idx),
+                        Value::AgentRef(idx, addr) => format!("AgentRef({}, {:?})", idx, addr),
+                    };
+                    println!("{}", line);
+                    self.print_log.push(line);
                 }
                 0x21 => { // TpushString
                     let len = self.read_u16()? as usize;

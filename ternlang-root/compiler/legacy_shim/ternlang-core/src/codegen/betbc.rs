@@ -6,6 +6,7 @@ pub struct BytecodeEmitter {
     code: Vec<u8>,
     symbols: std::collections::HashMap<String, u8>,
     func_addrs: std::collections::HashMap<String, u16>,
+    function_patches: std::collections::HashMap<String, Vec<usize>>,
     break_patches: Vec<usize>,
     continue_patches: Vec<usize>,
     next_reg: u8,
@@ -20,6 +21,7 @@ impl BytecodeEmitter {
             code: Vec::new(),
             symbols: std::collections::HashMap::new(),
             func_addrs: std::collections::HashMap::new(),
+            function_patches: std::collections::HashMap::new(),
             break_patches: Vec::new(),
             continue_patches: Vec::new(),
             next_reg: 0,
@@ -97,6 +99,11 @@ impl BytecodeEmitter {
     pub fn emit_function(&mut self, func: &Function) {
         let func_addr = self.code.len() as u16;
         self.func_addrs.insert(func.name.clone(), func_addr);
+        if let Some(patches) = self.function_patches.remove(&func.name) {
+            for p in patches {
+                self.code[p..p + 2].copy_from_slice(&func_addr.to_le_bytes());
+            }
+        }
         let parent_symbols = self.symbols.clone();
         let parent_next_reg = self.next_reg;
         self.next_reg = 0;
@@ -419,10 +426,13 @@ impl BytecodeEmitter {
                     "conflict" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Reject])); }
                     _ => {
                         for a in args { self.emit_expr(a); }
+                        self.code.push(0x10); // TCALL
                         if let Some(&addr) = self.func_addrs.get(callee) {
-                            self.code.push(0x10); self.code.extend_from_slice(&addr.to_le_bytes());
+                            self.code.extend_from_slice(&addr.to_le_bytes());
                         } else {
-                            self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
+                            let patch = self.code.len();
+                            self.code.extend_from_slice(&[0, 0]);
+                            self.function_patches.entry(callee.to_string()).or_default().push(patch);
                         }
                     }
                 }

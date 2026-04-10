@@ -456,6 +456,10 @@ impl<'a> Parser<'a> {
                             let slice = self.lex.slice();
                             slice.parse::<i8>().map_err(|_| ParseError::InvalidTrit(slice.to_string()))?
                         }
+                        Token::Int(v) => {
+                            if v >= -1 && v <= 1 { v as i8 }
+                            else { return Err(ParseError::InvalidTrit(format!("{}", v))); }
+                        }
                         Token::Affirm => 1,
                         Token::Tend   => 0,
                         Token::Reject => -1,
