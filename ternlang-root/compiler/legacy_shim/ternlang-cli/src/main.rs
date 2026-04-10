@@ -101,12 +101,14 @@ fn main() {
             let input = fs::read_to_string(file).expect("Failed to read file");
             let mut parser = Parser::new(&input);
             let mut emitter = BytecodeEmitter::new();
+            let header_patch = emitter.emit_header_jump();
 
             // Try parsing as a program first
             match parser.parse_program() {
                 Ok(mut prog) => {
                     StdlibLoader::resolve(&mut prog);
                     emitter.emit_program(&prog);
+                    emitter.patch_header_jump(header_patch);
                     emitter.emit_entry_call("main");
                 }
                 Err(e) => {
@@ -116,6 +118,7 @@ fn main() {
                     if error_str.contains("ExpectedToken(\"Fn\"") || error_str.contains("UnexpectedToken(\"Let\"") {
                         // Fallback: Reset and try parsing statements (for snippets without 'fn')
                         let mut parser = Parser::new(&input);
+                        emitter.patch_header_jump(header_patch);
                         loop {
                             match parser.parse_stmt() {
                                 Ok(stmt) => emitter.emit_stmt(&stmt),
@@ -171,6 +174,7 @@ fn main() {
                         match val {
                             Value::Trit(t) => println!("Reg {}: trit({})", i, t),
                             Value::Int(v) => println!("Reg {}: int({})", i, v),
+                            Value::Float(f) => println!("Reg {}: float({})", i, f),
                             Value::TensorRef(r) => println!("Reg {}: tensor_ref({})", i, r),
                             Value::AgentRef(a, _)  => println!("Reg {}: agent_ref({})", i, a),
                             Value::String(s) => println!("Reg {}: string({:?})", i, s),
@@ -384,6 +388,7 @@ fn run_repl() {
                         match result {
                             Value::Trit(t) => println!("  → {}", t),
                             Value::Int(v)  => println!("  → {}", v),
+                            Value::Float(f) => println!("  → {}", f),
                             Value::TensorRef(r) => println!("  → tensor_ref({})", r),
                             Value::AgentRef(a, _)  => println!("  → agent_ref({})", a),
                             Value::String(s) => println!("  → {:?}", s),
