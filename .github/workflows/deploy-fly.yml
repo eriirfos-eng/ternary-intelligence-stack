@@ -23,6 +23,6 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy
-        run: flyctl deploy --remote-only --config ternlang-root/fly.toml --dockerfile ternlang-root/Dockerfile
+        run: cd ternlang-root && flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
