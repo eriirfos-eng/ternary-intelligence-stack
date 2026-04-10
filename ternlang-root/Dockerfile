@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/li
 WORKDIR /build
 
 # Copy workspace manifest + all member Cargo.tomls first (layer cache)
-COPY Cargo.toml.bak ./Cargo.toml
+COPY Cargo.toml ./Cargo.toml
 COPY Cargo.lock ./
 COPY compiler/legacy_shim/ternlang-core/Cargo.toml    compiler/legacy_shim/ternlang-core/Cargo.toml
 COPY compiler/legacy_shim/ternlang-codegen/Cargo.toml compiler/legacy_shim/ternlang-codegen/Cargo.toml
@@ -40,8 +40,9 @@ COPY compiler/legacy_shim/ternlang-core/src      compiler/legacy_shim/ternlang-c
 COPY compiler/legacy_shim/ternlang-core/stdlib   compiler/legacy_shim/ternlang-core/stdlib
 COPY ternlang-ml/src        ternlang-ml/src
 COPY ternlang-api/src       ternlang-api/src
-COPY ternlang-web/index.html   ternlang-web/index.html
-COPY ternlang-web/pricing.html ternlang-web/pricing.html
+COPY ternlang-web/index.html      ternlang-web/index.html
+COPY ternlang-web/pricing.html    ternlang-web/pricing.html
+COPY ternlang-studio/index.html   ternlang-studio/index.html
 COPY ternlang-mcp/src       ternlang-mcp/src
 COPY ternlang-moe/src       ternlang-moe/src
 COPY ternlang-test/src      ternlang-test/src
