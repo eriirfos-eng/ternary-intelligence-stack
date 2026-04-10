@@ -227,6 +227,29 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 
 ---
 
+## 🚧 Pending Action Items (as of 2026-04-10)
+
+### High Priority
+- [ ] **TernStudio full rewrite** — SAP-style dashboard view + Editor view (activity bar, Explorer, History, resizable panels) + Settings view. "Upskill" replaces "Upgrade". Share button (btoa hash), Download button, run history (last 20), toast notifications, expanded stdlib tree. Monaco layout() on view switch. Design locked, not yet written.
+- [ ] **BUG-L01 compiler fix** — Add `/* */` block comment rule to lexer (`ternlang-core/src/lexer.rs`). Currently unsupported — `/` tokenized as divide, causes 3-byte silent failure. High impact on all stdlib files using block comments.
+- [ ] **BUG-L02 compiler fix** — `parse_program()` fallback fails on `fn` at top level. Affects `stdlib/math/ternary_median.tern` and any file where program fails to parse in full-program mode.
+- [ ] **stdlib/qnn/ populate** — 10 planned Qutrit Neural Network modules (qutrit_gate, qutrit_hadamard, qutrit_entangle, qnn_layer, qnn_measure, qnn_inference, qutrit_teleport, qnn_grover, qnn_vqe, qnn_qaoa). Tier 3. ROADMAP.md stub exists.
+
+### Medium Priority
+- [ ] **GEMINI.md v1.1** — Add Tset Int coercion note (fix #23). Add Tset error message fix. Update known-good patterns.
+- [ ] **Whitepaper update** — stdlib count now 27,000+ files, 267 examples in root + 2,090 total. Update Section 10 implementation status table.
+- [ ] **crates.io republish** — After BUG-L01/L02 fixes in `ternlang-core`, bump version and republish. Badge count "212+ tests" needs update post-ternlang-compat compile error fix.
+- [ ] **VS Code Marketplace publish** — needs publisher PAT token. `ternlang-0.1.0.vsix` built and ready.
+- [ ] **MCP registry / Smithery submission** — HTTP transport live at ternlang.com/mcp. Submission pending.
+- [ ] **Phase 7C: Academic outreach** — USN group (Bos & Gundersen) for co-authorship.
+
+### Low Priority / Nice to Have
+- [ ] **README example count update** — Table says "300+ `.tern` programs" but actual count is 2,090 in examples/ (267 root + subdirs). Update to "2,000+".
+- [ ] **Benchmark blog post** — Document 2.3×–122× sparse matmul results vs float32.
+- [ ] **Gemini stdlib sessions** — Continue breadth-first population per STDLIB_AGENT.md v2.5. Use AGENT_SESSIONS.md cooldown log. Target: 50 new files per session, avoid math/logic/safety (recently covered).
+
+---
+
 ## 📝 Session Log
 | Date | What was done |
 |------|---------------|
@@ -266,3 +289,6 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 | 2026-04-10 | **[3/5] CI/CD overhaul.** `.github/workflows/ternlang-ci.yml`: replaced hallucinated workflow (called nonexistent `tern-audit`, `scripts/install.sh`, `ternlang build --target bet-vm-v1`) with real Rust CI — installs stable Rust via dtolnay/rust-toolchain, caches cargo, builds `ternlang-cli --release`, smoke tests version + 11 stdlib error examples. `.github/workflows/deploy-fly.yml`: new Fly.io deployment workflow — triggers on push to main when `ternlang-web/`, `ternlang-api/`, `Dockerfile`, or `fly.toml` change; uses `FLY_API_TOKEN` secret (now set). |
 | 2026-04-10 | **[4/5] Index.html polish — lab copy + nav.** All 6 lab descriptions in TernGround now have two tiers: a muted context paragraph (what the underlying problem is + why this approach matters) above the existing bold interaction guide. Labs covered: MoE routing rationale, L1/L2/L3 memory layers, EMA deliberation and trit=0 as correct output, ternary BitNet zero-skip source of 60% power savings, BET VM as native ternary (not converted), ternary truth table semantics. Nav product items unified: all 7 products now `text-t_text hover:text-t_teal` — teal reserved for hover and badge accents (CLI, PLAY) only. |
 | 2026-04-10 | **[5/5] Production deploy.** `fly deploy` triggered from local after FLY_API_TOKEN added to GitHub secrets. Both Fly.io machines updated (rolling deploy), health checks passed. ternlang.com live with all 2026-04-10 changes. Auto-deploy via GitHub Actions now active — future pushes to `ternlang-web/` trigger deploy automatically. |
+| 2026-04-10 | **[Gemini stdlib session] STDLIB agent overhaul + VM fix.** STDLIB_AGENT.md rewritten to v2.5: weakness scan, 5-batch × 10-file sessions, anti-overlap via AGENT_SESSIONS.md log (3-session cooldown). GEMINI.md hardcoded parameter sheet committed to repo. Purged 3,000+ hallucinated files from `stdlib/astro/`, `stdlib/bench/`, `stdlib/benchmarks/` (10 concept × 150 suffix variant pattern). Seeded with 6 real, tested files: `launch_window_gate.tern`, `reentry_heat_gate.tern`, `telemetry_anomaly.tern` (astro); `opcode_coverage.tern`, `inference_latency_gate.tern` (bench); `sparse_matmul.tern` (benchmarks, rewrite). `confidence_gate.tern` fixed: removed block comment (BUG-L01), rewrote with `fn main()` entry + helper pattern. Buglist/Fixes.md entries 20–22 committed (from prior uncommitted Gemini diff). AGENT_SESSIONS.md bootstrap log created. |
+| 2026-04-10 | **[VM fix] Tset (0x23) Int polymorphism.** `vm/mod.rs`: added `(Value::TensorRef, Value::Int)` arm to Tset dispatch — integer values now silently coerce to `Trit::from(v as i8)` on tensor write. Fixed row mismatch error message (was printing `col` in row branch). Fixes BET-007 TypeMismatch on `stdlib/nn/ternary_relu.tern` and any stdlib file that stores integer loop results into tensor slots. Fixes.md entry #23 added. Debug `println(i)` removed from `ternary_relu.tern`. |
+| 2026-04-10 | **[Infra] stdlib/qnn/ placeholder created.** README referenced `stdlib/qnn/` (dead link — directory absent). Created with ROADMAP.md listing 10 planned QNN module stubs. Actual QNN programs (251–265) remain in `examples/`. QNN stdlib population deferred to Gemini next session (excluded from today's cooldown list). |
