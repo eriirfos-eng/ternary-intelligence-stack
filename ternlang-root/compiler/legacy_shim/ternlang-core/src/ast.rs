@@ -68,6 +68,8 @@ pub enum BinOp {
     NotEqual,
     Less,
     Greater,
+    LessEqual,
+    GreaterEqual,
     And,
     Or,
 }

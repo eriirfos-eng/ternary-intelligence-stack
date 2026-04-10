@@ -133,3 +133,17 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Workaround:** Ensure all function-containing files parse cleanly with `parse_program()`. Use `fn main() -> trit { ... }` as the entry point. Avoid top-level code mixed with function definitions if parse errors occur.
 **Status:** Unresolved — affects `stdlib/math/ternary_median.tern` (pre-existing).
 
+
+## 2026-04-10 — Add LessEqual (<=) and GreaterEqual (>=) operators
+
+**Trigger:** Writing stdlib/safety/confirmation_gate.tern which required count >= required.
+**Symptom:** Parse error: UnexpectedToken("Assign") because >= was tokenized as > followed by =.
+**Diagnosis:** Lexer and Parser lacked support for double-character comparison operators.
+**Fix:** 
+- Updated ast.rs to add LessEqual and GreaterEqual to BinOp.
+- Updated lexer.rs to add Token::LessEqual (<=) and Token::GreaterEqual (>=).
+- Updated parser.rs to handle these tokens in precedence and binop conversion.
+- Updated semantic.rs to recognize these as returning Type::Trit.
+- Updated codegen/betbc.rs to emit opcodes 0x26 and 0x27.
+- Updated vm/mod.rs to implement opcodes 0x26 (TlessEqual) and 0x27 (TgreaterEqual).
+**Status:** Fixed.

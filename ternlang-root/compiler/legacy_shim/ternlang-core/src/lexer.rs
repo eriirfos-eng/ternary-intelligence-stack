@@ -8,10 +8,6 @@ pub enum Token {
     Float(f64),
 
     // Ternary Specific
-    #[regex(r"1|0|-1", priority = 11)]
-    TritLiteral,
-
-    // Ternary semantic keywords — first-class trit values
     #[token("affirm", priority = 4)]
     Affirm,
 
@@ -170,6 +166,12 @@ pub enum Token {
     #[token(">", priority = 3)]
     RAngle,
 
+    #[token("<=", priority = 4)]
+    LessEqual,
+
+    #[token(">=", priority = 4)]
+    GreaterEqual,
+
     #[token(",", priority = 3)]
     Comma,
 
@@ -201,6 +203,10 @@ pub enum Token {
         Some(s[1..s.len()-1].to_string())
     }, priority = 2)]
     StringLit(String),
+
+    // Unused but kept for variant compatibility
+    #[token("___TRIT_LITERAL_UNUSED___")]
+    TritLiteral,
 }
 
 #[cfg(test)]
@@ -217,14 +223,14 @@ mod tests {
         assert_eq!(lex.next(), Some(Ok(Token::Colon)));
         assert_eq!(lex.next(), Some(Ok(Token::TritType)));
         assert_eq!(lex.next(), Some(Ok(Token::Assign)));
-        assert_eq!(lex.next(), Some(Ok(Token::TritLiteral)));
+        assert_eq!(lex.next(), Some(Ok(Token::Int(1))));
         assert_eq!(lex.next(), Some(Ok(Token::Semicolon)));
         assert_eq!(lex.next(), Some(Ok(Token::If)));
         assert_eq!(lex.next(), Some(Ok(Token::Ident("x".to_string()))));
         assert_eq!(lex.next(), Some(Ok(Token::UncertainBranch)));
         assert_eq!(lex.next(), Some(Ok(Token::LBrace)));
         assert_eq!(lex.next(), Some(Ok(Token::Return)));
-        assert_eq!(lex.next(), Some(Ok(Token::TritLiteral)));
+        assert_eq!(lex.next(), Some(Ok(Token::Int(0))));
         assert_eq!(lex.next(), Some(Ok(Token::Semicolon)));
         assert_eq!(lex.next(), Some(Ok(Token::RBrace)));
     }
