@@ -390,6 +390,13 @@ impl BetVm {
                         Value::AgentRef(idx, addr) => println!("AgentRef({}, {:?})", idx, addr),
                     }
                 }
+                0x21 => { // TpushString
+                    let len = self.read_u16()? as usize;
+                    let mut bytes = vec![0u8; len];
+                    for i in 0..len { bytes[i] = self.read_u8()?; }
+                    let s = String::from_utf8(bytes).map_err(|_| VmError::RuntimeError("Invalid UTF-8 string".into()))?;
+                    self.stack.push(Value::String(s));
+                }
                 0x22 => { // Tidx
                     let col = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let row = self.stack.pop().ok_or(VmError::StackUnderflow)?;

@@ -1,0 +1,46 @@
+// stdlib/safety/critical_safety_chain.tern
+// Demonstrates: Safety-critical propagation using the ? operator.
+// Tier: 2 — Pro Standard
+// This shows how a REJECT (-1) state can be propagated up the stack instantly.
+
+fn check_hardware() -> trit {
+    // Simulated hardware check: Returns Reject (-1) to signal failure.
+    return conflict();
+}
+
+fn check_subsystem() -> trit {
+    // The ? operator will cause an immediate return of -1
+    // if check_hardware() returns -1.
+    let status: trit = check_hardware()?;
+    
+    // This code should NEVER run if check_hardware() is -1
+    println("This message should NEVER appear.");
+    return truth();
+}
+
+fn system_gate() -> trit {
+    let result: trit = check_subsystem()?;
+    
+    println("This message should ALSO NEVER appear.");
+    return result;
+}
+
+fn main() -> trit {
+    println("Starting critical safety chain check...");
+    let final_status: trit = system_gate();
+
+    match final_status {
+        -1 => { println("System Gate: EMERGENCY SHUTDOWN triggered."); }
+         0 => { println("System Gate: HOLD for further checks."); }
+         1 => { println("System Gate: ALL SYSTEMS GO."); }
+    }
+
+    // Test verification
+    if final_status == -1 {
+        println("Safety Propagation Test Passed.");
+        return truth();
+    }
+    
+    println("Safety Propagation Test Failed.");
+    return conflict();
+}
