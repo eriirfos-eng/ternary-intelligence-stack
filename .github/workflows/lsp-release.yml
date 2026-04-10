@@ -1,0 +1,118 @@
+name: Build & Release LSP Binaries
+
+# Triggered by a vscode-v* tag: git tag vscode-v0.4.0 && git push --tags
+# Also available via workflow_dispatch for manual runs.
+
+on:
+  push:
+    tags:
+      - 'vscode-v*'
+  workflow_dispatch:
+
+jobs:
+  build-lsp:
+    name: ternlang-lsp (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-x64
+            binary: ternlang-lsp
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            name: linux-arm64
+            binary: ternlang-lsp
+            use_cross: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: darwin-x64
+            binary: ternlang-lsp
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: win32-x64
+            binary: ternlang-lsp.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ternlang-root
+
+      - name: Install cross (Linux ARM64 only)
+        if: matrix.use_cross == true
+        run: cargo install cross --locked
+
+      - name: Build — native
+        if: matrix.use_cross != true
+        run: cargo build --release -p ternlang-lsp --target ${{ matrix.target }}
+        working-directory: ternlang-root
+        shell: bash
+
+      - name: Build — cross (ARM64)
+        if: matrix.use_cross == true
+        run: cross build --release -p ternlang-lsp --target ${{ matrix.target }}
+        working-directory: ternlang-root
+        shell: bash
+
+      - name: Stage binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p dist
+          cp ternlang-root/target/${{ matrix.target }}/release/ternlang-lsp \
+             dist/ternlang-lsp-${{ matrix.name }}
+        shell: bash
+
+      - name: Stage binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir -p dist
+          cp ternlang-root/target/${{ matrix.target }}/release/ternlang-lsp.exe \
+             dist/ternlang-lsp-${{ matrix.name }}.exe
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lsp-${{ matrix.name }}
+          path: dist/
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: build-lsp
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: List dist
+        run: ls -lh dist/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: "ternlang-lsp ${{ github.ref_name }}"
+          body: |
+            Pre-built `ternlang-lsp` binaries for all platforms.
+
+            The VS Code extension downloads the correct binary automatically on first activation.
+
+            | Platform | File |
+            |----------|------|
+            | Linux x64  | `ternlang-lsp-linux-x64` |
+            | Linux ARM64 | `ternlang-lsp-linux-arm64` |
+            | macOS x64  | `ternlang-lsp-darwin-x64` |
+            | Windows x64 | `ternlang-lsp-win32-x64.exe` |
+          files: dist/*
+          generate_release_notes: false

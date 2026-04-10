@@ -37,6 +37,10 @@ enum Commands {
         /// Pre-connect to a peer node before running (can be specified multiple times)
         #[arg(long, value_name = "ADDR")]
         peer: Vec<String>,
+        /// Emit variable→register symbol map to stderr as TERN_SYMBOLS:name=reg,...
+        /// Used by the VS Code extension to map register dumps back to source variable names.
+        #[arg(long)]
+        emit_symbols: bool,
     },
     /// Compile a .tern file to bytecode
     Build {
@@ -97,7 +101,7 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Run { file, node_addr, peer } => {
+        Commands::Run { file, node_addr, peer, emit_symbols } => {
             let input = fs::read_to_string(file).expect("Failed to read file");
             let mut parser = Parser::new(&input);
             let mut emitter = BytecodeEmitter::new();
@@ -157,6 +161,24 @@ fn main() {
                         eprintln!("Parse program error: {:?}", e);
                         std::process::exit(1);
                     }
+                }
+            }
+
+            // Emit variable→register map to stderr before VM runs.
+            // Format: TERN_SYMBOLS:varname=regnum,varname=regnum,...
+            // Uses the per-function snapshot from "main" so local variables are captured.
+            // Filtered: skip compound keys like "obj.field" (internal struct slots).
+            if *emit_symbols {
+                let sym_map = emitter.get_function_symbols("main")
+                    .or_else(|| Some(emitter.get_symbols()));
+                if let Some(map) = sym_map {
+                    let mut parts: Vec<String> = map
+                        .iter()
+                        .filter(|(k, _)| !k.contains('.') && !k.contains('['))
+                        .map(|(k, v)| format!("{}={}", k, v))
+                        .collect();
+                    parts.sort();
+                    eprintln!("TERN_SYMBOLS:{}", parts.join(","));
                 }
             }
 

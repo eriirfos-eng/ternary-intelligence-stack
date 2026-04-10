@@ -1,5 +1,30 @@
 # Ternlang Extension Changelog
 
+## 0.4.0 — 2026-04-10
+
+### Tier 1 — LSP auto-download (cross-platform)
+- Extension detects platform+arch at activation and resolves the correct `ternlang-lsp` binary
+- Resolution order: bundled binary → cached in globalStorageUri → download from GitHub Releases
+- Progress notification while downloading; single dismissible warning on failure
+- `ternlang.suppressLspWarning` still available
+- GitHub Actions workflow `.github/workflows/lsp-release.yml`: build matrix for
+  `linux-x64`, `linux-arm64`, `darwin-x64`, `win32-x64` — triggered by `vscode-v*` tags
+
+### Tier 2 — Inline trit ghost decorations (live after run)
+- Press `Ctrl+Shift+R` — after the run completes, every `let` binding in the source gets a ghost annotation showing its resolved trit state:
+  - `→ Affirm` in teal
+  - `→ Tend` in amber
+  - `→ Reject` in red
+- Requires `ternlang.apiKey` starting with `tern_t2_`
+- Implemented via `--emit-symbols` flag added to `ternlang-cli run` (compiler change)
+- `TERN_SYMBOLS:varname=reg,...` emitted to stderr; `Reg N: trit(...)` from stdout — correlated to produce variable→trit map
+- Decorations cleared automatically when switching files
+
+### Compiler: `--emit-symbols` flag
+- `ternlang-cli run --emit-symbols <file>` emits `TERN_SYMBOLS:...` to stderr
+- `BytecodeEmitter::get_function_symbols("main")` — new public API; snapshots local symbol table per function before scope restore
+- `BytecodeEmitter::get_function_symbols()` — added `function_symbols` field to emitter struct
+
 ## 0.3.0 — 2026-04-10
 
 ### Tier architecture introduced

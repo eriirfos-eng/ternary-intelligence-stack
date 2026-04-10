@@ -1,8 +1,8 @@
 {
   "name": "ternlang",
   "displayName": "Ternlang",
-  "description": "Balanced ternary language support for .tern files — syntax highlighting, snippets, run command, hover docs, and live diagnostics via ternlang-lsp.",
-  "version": "0.3.0",
+  "description": "Balanced ternary language support for .tern files — syntax highlighting, snippets, run command, inline trit ghost annotations (Tier 2), hover docs, and live diagnostics via auto-downloaded ternlang-lsp.",
+  "version": "0.4.0",
   "publisher": "rfi-irfos",
   "license": "LGPL-3.0",
   "keywords": [
