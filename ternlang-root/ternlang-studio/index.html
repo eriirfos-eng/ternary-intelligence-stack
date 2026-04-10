@@ -11,13 +11,14 @@
     body {
       font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
       font-size: 12px;
-      background: #080b10;
-      color: #c8d4e0;
+      background: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
+      transition: background 0.2s, color 0.2s;
     }
 
-    /* ─── Color vars ────────────────────────────────────────────────────── */
+    /* ─── Color vars — Dark (default) ──────────────────────────────────── */
     :root {
       --bg:        #080b10;
       --bg1:       #0d1219;
@@ -32,7 +33,38 @@
       --text:      #c8d4e0;
       --muted:     #4a5a6a;
       --muted2:    #2a3a4a;
+      --active-file-bg: #0d1e2e;
     }
+
+    /* ─── Color vars — Light ────────────────────────────────────────────── */
+    html[data-theme="light"] {
+      --bg:        #f0f2f5;
+      --bg1:       #ffffff;
+      --bg2:       #e8ebef;
+      --bg3:       #dde0e5;
+      --border:    #cdd2d8;
+      --border2:   #b8bec6;
+      --cyan:      #0070cc;
+      --green:     #1a7f4b;
+      --red:       #c8001a;
+      --amber:     #b85c00;
+      --text:      #1a2535;
+      --muted:     #6a7888;
+      --muted2:    #d0d5db;
+      --active-file-bg: #dceeff;
+    }
+    html[data-theme="light"] body { background: var(--bg); }
+    html[data-theme="light"] .tree-file.active { background: var(--active-file-bg); }
+    html[data-theme="light"] .badge-t2 { background: #dceeff; border-color: #a0c8f0; }
+    html[data-theme="light"] .badge-t3 { background: #fff0d8; border-color: #f0c080; }
+    html[data-theme="light"] .status-ok { background: #d8f5e8; color: var(--green); border-color: #90d8b0; }
+    html[data-theme="light"] .status-error { background: #fde8eb; color: var(--red); border-color: #f0a0a8; }
+    html[data-theme="light"] .status-running { background: #fff3d8; color: var(--amber); border-color: #f0c878; }
+    html[data-theme="light"] .status-idle { background: var(--bg2); color: var(--muted); border-color: var(--border); }
+    html[data-theme="light"] .print-output { background: #f8fff8; border-color: #b0d8b0; }
+    html[data-theme="light"] .error-output { background: #fff8f8; border-color: #f0b0b0; }
+    html[data-theme="light"] .meta-item { background: var(--bg2); border-color: var(--border); }
+    html[data-theme="light"] #statusbar { background: #e0e4e8; }
 
     /* ─── Topbar ────────────────────────────────────────────────────────── */
     #topbar {
@@ -520,6 +552,24 @@
     #statusbar .sb-sep { width: 1px; height: 14px; background: var(--border); }
     #statusbar .sb-right { margin-left: auto; }
 
+    /* ─── Theme toggle ──────────────────────────────────────────────────── */
+    .tb-theme {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 100%;
+      background: none;
+      border: none;
+      border-left: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .tb-theme:hover { color: var(--text); background: var(--bg3); }
+
     /* ─── Scrollbar global ──────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -553,6 +603,8 @@
   </div>
 
   <div class="tb-spacer"></div>
+
+  <button class="tb-theme" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">●</button>
 
   <button class="tb-run" id="runBtn" onclick="runCode()">
     <span>▶ Run</span>
@@ -1393,6 +1445,37 @@ async function checkConnection() {
   }
 }
 
+// ─── Theme toggle ─────────────────────────────────────────────────────────────
+function applyTheme(mode) {
+  const html = document.documentElement;
+  const btn = document.getElementById("themeBtn");
+  if (mode === "light") {
+    html.setAttribute("data-theme", "light");
+    if (btn) btn.textContent = "○";
+    if (btn) btn.title = "Switch to dark mode";
+  } else {
+    html.removeAttribute("data-theme");
+    if (btn) btn.textContent = "●";
+    if (btn) btn.title = "Switch to light mode";
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  const next = current === "light" ? "dark" : "light";
+  localStorage.setItem("ternstudio-theme", next);
+  applyTheme(next);
+  if (monacoEditor) {
+    monaco.editor.setTheme(next === "light" ? "ternstudio-light" : "ternstudio-dark");
+  }
+}
+
+// Apply saved theme before Monaco loads (avoids flash)
+(function() {
+  const saved = localStorage.getItem("ternstudio-theme") || "dark";
+  applyTheme(saved);
+})();
+
 // ─── Monaco init ──────────────────────────────────────────────────────────────
 require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs" } });
 
@@ -1432,7 +1515,7 @@ require(["vs/editor/editor.main"], function () {
     },
   });
 
-  monaco.editor.defineTheme("ternstudio", {
+  monaco.editor.defineTheme("ternstudio-dark", {
     base: "vs-dark",
     inherit: true,
     rules: [
@@ -1452,25 +1535,63 @@ require(["vs/editor/editor.main"], function () {
       { token: "identifier",           foreground: "c8d4e0" },
     ],
     colors: {
-      "editor.background":            "#080b10",
-      "editor.foreground":            "#c8d4e0",
-      "editor.lineHighlightBackground": "#0d1219",
-      "editorCursor.foreground":      "#00c8ff",
-      "editor.selectionBackground":   "#0d2040",
-      "editorLineNumber.foreground":  "#2a3a4a",
+      "editor.background":             "#080b10",
+      "editor.foreground":             "#c8d4e0",
+      "editor.lineHighlightBackground":"#0d1219",
+      "editorCursor.foreground":       "#00c8ff",
+      "editor.selectionBackground":    "#0d2040",
+      "editorLineNumber.foreground":   "#2a3a4a",
       "editorLineNumber.activeForeground": "#5a7a9a",
-      "editorIndentGuide.background": "#1a2530",
-      "editorGutter.background":      "#080b10",
-      "scrollbar.shadow":             "#00000000",
-      "scrollbarSlider.background":   "#1d2835",
+      "editorIndentGuide.background":  "#1a2530",
+      "editorGutter.background":       "#080b10",
+      "scrollbar.shadow":              "#00000000",
+      "scrollbarSlider.background":    "#1d2835",
       "scrollbarSlider.hoverBackground": "#253040",
     },
   });
 
+  monaco.editor.defineTheme("ternstudio-light", {
+    base: "vs",
+    inherit: true,
+    rules: [
+      { token: "comment",              foreground: "7a9aaa", fontStyle: "italic" },
+      { token: "keyword",              foreground: "0060bb", fontStyle: "bold" },
+      { token: "keyword.directive",    foreground: "9a5000", fontStyle: "bold" },
+      { token: "type",                 foreground: "006090" },
+      { token: "support.function",     foreground: "007040" },
+      { token: "number.trit.affirm",   foreground: "007040", fontStyle: "bold" },
+      { token: "number.trit.reject",   foreground: "bb001a", fontStyle: "bold" },
+      { token: "number.trit.hold",     foreground: "9a5000", fontStyle: "bold" },
+      { token: "number.float",         foreground: "005090" },
+      { token: "number",               foreground: "005090" },
+      { token: "string",               foreground: "306820" },
+      { token: "operator",             foreground: "507090" },
+      { token: "delimiter",            foreground: "708090" },
+      { token: "identifier",           foreground: "1a2535" },
+    ],
+    colors: {
+      "editor.background":             "#f8fafc",
+      "editor.foreground":             "#1a2535",
+      "editor.lineHighlightBackground":"#eef2f6",
+      "editorCursor.foreground":       "#0070cc",
+      "editor.selectionBackground":    "#cce0ff",
+      "editorLineNumber.foreground":   "#a0aab5",
+      "editorLineNumber.activeForeground": "#607080",
+      "editorIndentGuide.background":  "#d8dde3",
+      "editorGutter.background":       "#f0f2f5",
+      "scrollbar.shadow":              "#00000010",
+      "scrollbarSlider.background":    "#c8ced4",
+      "scrollbarSlider.hoverBackground": "#b0b8c0",
+    },
+  });
+
+  const initTheme = localStorage.getItem("ternstudio-theme") || "dark";
+  applyTheme(initTheme);
+
   monacoEditor = monaco.editor.create(document.getElementById("monaco-container"), {
     value: fileBuffers[activeFile],
     language: "ternlang",
-    theme: "ternstudio",
+    theme: initTheme === "light" ? "ternstudio-light" : "ternstudio-dark",
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
     fontSize: 13,
     lineHeight: 20,
