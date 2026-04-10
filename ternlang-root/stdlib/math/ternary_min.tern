@@ -1,0 +1,21 @@
+// stdlib/math/ternary_min.tern
+// Demonstrates: Minimum of two trits (lower signal wins).
+// Tier: 1 — Open Core
+
+fn t_min(a: trit, b: trit) -> trit {
+    if a < b { return a; }
+    return b;
+}
+
+fn main() -> trit {
+    // Test: min(-1, 0) = -1
+    if t_min(-1, 0) != -1 { return conflict(); }
+    
+    // Test: min(1, 0) = 0
+    if t_min(1, 0) != 0 { return conflict(); }
+    
+    // Test: min(1, 1) = 1
+    if t_min(1, 1) != 1 { return conflict(); }
+    
+    return truth();
+}
