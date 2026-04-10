@@ -1,0 +1,45 @@
+// stdlib/logic/ternary_xnor.tern
+// Demonstrates: Ternary XNOR (negated balanced XOR).
+// Tier: 1 — Open Core
+
+fn t_xnor(a: trit, b: trit) -> trit {
+    match a {
+        -1 => {
+            match b {
+                -1 => { return -1; }
+                 0 => { return 1;  }
+                 1 => { return 0;  }
+            }
+        }
+         0 => {
+            match b {
+                -1 => { return 1;  }
+                 0 => { return 0;  }
+                 1 => { return -1; }
+            }
+        }
+         1 => {
+            match b {
+                -1 => { return 0;  }
+                 0 => { return -1; }
+                 1 => { return 1;  }
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let result: trit = t_xnor(1, 1);
+    match result {
+        1 => {
+            let r2: trit = t_xnor(-1, 0);
+            match r2 {
+                1 => { return truth(); }
+                -1 => { return conflict(); }
+                0 => { return conflict(); }
+            }
+        }
+        -1 => { return conflict(); }
+        0 => { return conflict(); }
+    }
+}
