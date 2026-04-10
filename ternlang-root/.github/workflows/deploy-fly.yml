@@ -1,0 +1,28 @@
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ternlang-web/**'
+      - 'ternlang-api/**'
+      - 'Dockerfile'
+      - 'fly.toml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy ternlang-api to Fly.io
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
