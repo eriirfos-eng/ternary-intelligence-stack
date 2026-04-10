@@ -1,0 +1,37 @@
+// stdlib/bench/inference_latency_gate.tern
+// Demonstrates: Inference latency SLA gate — deploy/hold/rollback decision.
+// Tier: 2 — Pro Standard
+// hold = latency elevated but within SLO grace window — investigate before rollback.
+
+fn p50_gate(ms: float) -> trit {
+    if ms < 50.0  { return truth();    }
+    if ms > 200.0 { return conflict(); }
+    return hold();
+}
+
+fn p99_gate(ms: float) -> trit {
+    if ms < 200.0 { return truth();    }
+    if ms > 800.0 { return conflict(); }
+    return hold();
+}
+
+fn error_rate_gate(pct: float) -> trit {
+    if pct < 0.1  { return truth();    }
+    if pct > 1.0  { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let p50: trit  = p50_gate(38.0);
+    let p99: trit  = p99_gate(190.0);
+    let errs: trit = error_rate_gate(0.05);
+
+    let perf: trit   = consensus(p50, p99);
+    let verdict: trit = consensus(perf, errs);
+
+    match verdict {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

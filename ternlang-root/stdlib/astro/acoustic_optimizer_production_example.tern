@@ -1,7 +1,0 @@
-// Module: stdlib/astro/acoustic_optimizer_production_example.tern
-// Purpose: Production deployment example for acoustic_optimizer
-// Author: RFI-IRFOS
-
-fn execute_acoustic_optimizer_production_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/bench/kinetic_solver_production_example.tern
-// Purpose: Production deployment example for kinetic_solver
-// Author: RFI-IRFOS
-
-fn execute_kinetic_solver_production_example() -> trit {
-    return tend;
-}

@@ -1,0 +1,38 @@
+// stdlib/astro/telemetry_anomaly.tern
+// Demonstrates: Spacecraft telemetry anomaly triage.
+// Tier: 2 — Pro Standard
+// hold = anomaly detected but within safe bounds — increase polling cadence.
+// conflict = safe-mode transition required.
+
+fn power_subsystem(bus_voltage: float, battery_pct: float) -> trit {
+    if bus_voltage < 24.0 { return conflict(); }
+    if battery_pct < 20.0 { return hold();    }
+    return truth();
+}
+
+fn thermal_subsystem(temp_c: float) -> trit {
+    if temp_c > 80.0  { return conflict(); }
+    if temp_c > 60.0  { return hold();    }
+    return truth();
+}
+
+fn comms_subsystem(snr_db: float, packet_loss_pct: float) -> trit {
+    if packet_loss_pct > 30.0 { return conflict(); }
+    if snr_db < 10.0           { return hold();    }
+    return truth();
+}
+
+fn main() -> trit {
+    let power: trit = power_subsystem(28.4, 65.0);
+    let thermal: trit = thermal_subsystem(52.0);
+    let comms: trit   = comms_subsystem(18.5, 4.0);
+
+    let pt: trit = consensus(power, thermal);
+    let verdict: trit = consensus(pt, comms);
+
+    match verdict {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

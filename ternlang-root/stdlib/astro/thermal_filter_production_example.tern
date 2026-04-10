@@ -1,7 +1,0 @@
-// Module: stdlib/astro/thermal_filter_production_example.tern
-// Purpose: Production deployment example for thermal_filter
-// Author: RFI-IRFOS
-
-fn execute_thermal_filter_production_example() -> trit {
-    return tend;
-}

@@ -1,0 +1,43 @@
+// stdlib/bench/opcode_coverage.tern
+// Demonstrates: VM opcode coverage stress test — exercises all core opcodes.
+// Tier: 1 — Open Core
+// Each fn exercises a different opcode group. Pass = all paths reach truth().
+
+fn arith_bench(a: int, b: int) -> trit {
+    let sum: int  = a + b;
+    let prod: int = a * b;
+    if sum > 0  { return truth();    }
+    if prod < 0 { return conflict(); }
+    return hold();
+}
+
+fn float_bench(x: float, y: float) -> trit {
+    let div: float = x / y;
+    if div > 1.0 { return truth();    }
+    if div < 0.0 { return conflict(); }
+    return hold();
+}
+
+fn trit_logic_bench(a: trit, b: trit) -> trit {
+    let c: trit = consensus(a, b);
+    match c {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn main() -> trit {
+    let r1: trit = arith_bench(3, 4);
+    let r2: trit = float_bench(3.0, 2.0);
+    let r3: trit = trit_logic_bench(1, 1);
+
+    let r12: trit = consensus(r1, r2);
+    let verdict: trit = consensus(r12, r3);
+
+    match verdict {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
