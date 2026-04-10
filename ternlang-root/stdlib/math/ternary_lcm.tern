@@ -1,0 +1,38 @@
+// stdlib/math/ternary_lcm.tern
+// Demonstrates: Least Common Multiple using GCD.
+// Tier: 1 — Open Core
+
+fn t_gcd(a: int, b: int) -> int {
+    let x: int = a;
+    let y: int = b;
+    if x < 0 { x = -x; }
+    if y < 0 { y = -y; }
+    while y != 0 {
+        let t: int = y;
+        y = x % y;
+        x = t;
+    }
+    return x;
+}
+
+fn t_lcm(a: int, b: int) -> int {
+    if a == 0 { return 0; }
+    if b == 0 { return 0; }
+    let g: int = t_gcd(a, b);
+    let prod: int = a * b;
+    if prod < 0 { prod = -prod; }
+    return prod / g;
+}
+
+fn main() -> trit {
+    let result: int = t_lcm(4, 6);
+    // lcm(4, 6) = 12
+    if result == 12 {
+        let r2: int = t_lcm(21, 6);
+        // lcm(21, 6) = 42
+        if r2 == 42 {
+            return truth();
+        }
+    }
+    return conflict();
+}
