@@ -1,0 +1,144 @@
+{
+  "Function Declaration": {
+    "prefix": "fn",
+    "body": [
+      "fn ${1:name}(${2:param}: ${3:trit}) -> ${4:trit} {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "Declare a function"
+  },
+  "Main Entry Point": {
+    "prefix": "fnmain",
+    "body": [
+      "fn main() -> trit {",
+      "\t${0}",
+      "\treturn affirm;",
+      "}"
+    ],
+    "description": "fn main() entry point"
+  },
+  "Let Binding": {
+    "prefix": "let",
+    "body": "let ${1:name}: ${2:trit} = ${0};",
+    "description": "Immutable let binding"
+  },
+  "Mutable Let": {
+    "prefix": "letmut",
+    "body": "let mut ${1:name}: ${2:trit} = ${0};",
+    "description": "Mutable let binding"
+  },
+  "3-Way Match": {
+    "prefix": "match",
+    "body": [
+      "match ${1:expr} {",
+      "\t-1 => { ${2:reject_branch} }",
+      "\t 0 => { ${3:tend_branch} }",
+      "\t 1 => { ${4:affirm_branch} }",
+      "}"
+    ],
+    "description": "Exhaustive 3-arm match on trit value"
+  },
+  "If / Else": {
+    "prefix": "if",
+    "body": [
+      "if ${1:cond} {",
+      "\t${2}",
+      "} else {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "If-else block"
+  },
+  "For-In Loop": {
+    "prefix": "for",
+    "body": [
+      "for ${1:i} in ${2:tensor} {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "For-in loop over tensor rows"
+  },
+  "While Loop": {
+    "prefix": "while",
+    "body": [
+      "while ${1:cond} {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "While loop"
+  },
+  "Infinite Loop": {
+    "prefix": "loop",
+    "body": [
+      "loop {",
+      "\t${0}",
+      "\tbreak;",
+      "}"
+    ],
+    "description": "Infinite loop with break"
+  },
+  "Struct Definition": {
+    "prefix": "struct",
+    "body": [
+      "struct ${1:Name} {",
+      "\t${2:field}: ${3:trit}",
+      "}"
+    ],
+    "description": "Struct definition"
+  },
+  "Agent Definition": {
+    "prefix": "agent",
+    "body": [
+      "agent ${1:Name} {",
+      "\tfn handle(msg: ${2:trit}) -> ${3:trit} {",
+      "\t\t${0}",
+      "\t}",
+      "}"
+    ],
+    "description": "Actor-model agent definition"
+  },
+  "Spawn Agent": {
+    "prefix": "spawn",
+    "body": "let ${1:ref}: agentref = spawn ${2:AgentName};",
+    "description": "Spawn an agent and get a reference"
+  },
+  "Send + Await": {
+    "prefix": "sendawait",
+    "body": [
+      "send ${1:ref} ${2:msg};",
+      "let ${3:result}: trit = await ${1:ref};"
+    ],
+    "description": "Send message and await response"
+  },
+  "Sparse Skip Matmul": {
+    "prefix": "sparseskip",
+    "body": "@sparseskip let ${1:result}: trittensor<${2:8} x ${3:8}> = matmul(${4:input}, ${5:weights});",
+    "description": "@sparseskip matrix multiply — zero weights skipped at VM level"
+  },
+  "Trittensor Declaration": {
+    "prefix": "tensor",
+    "body": "let ${1:name}: trittensor<${2:4} x ${3:4}> = ${0};",
+    "description": "Declare a trittensor with dimensions"
+  },
+  "Cast Expression": {
+    "prefix": "cast",
+    "body": "cast(${1:expr} as ${2:int})",
+    "description": "Type cast"
+  },
+  "Consensus": {
+    "prefix": "consensus",
+    "body": "consensus(${1:a}, ${2:b})",
+    "description": "Balanced ternary consensus: Affirm+Reject=Tend"
+  },
+  "Invert": {
+    "prefix": "invert",
+    "body": "invert(${1:expr})",
+    "description": "Ternary invert: Affirm↔Reject, Tend unchanged"
+  },
+  "Use Statement": {
+    "prefix": "use",
+    "body": "use ${1:std}::${2:trit};",
+    "description": "Import from standard library"
+  }
+}
