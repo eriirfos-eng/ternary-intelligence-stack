@@ -1,0 +1,59 @@
+// stdlib/errors/BET-003.tern
+// Error: BET-003 — Clean Halt (Informational, Not An Error)
+// Tier: 1 — Open Core
+//
+// "Execution reached the end. This is not an error — this is peace.
+//  The VM executed your program completely and stopped cleanly."
+//
+// ─── What happened ───────────────────────────────────────────────────────────
+//
+// The VM encountered the THALT opcode or reached the end of the bytecode buffer
+// with no pending instructions. This is the expected, successful termination
+// of any Ternlang program.
+//
+// BET-003 appears as an informational message, not an error.
+// "Program exited successfully." in the CLI output means BET-003 fired cleanly.
+//
+// ─── When BET-003 might be unexpected ─────────────────────────────────────────
+//
+// If your program halts before you expected it to, check for:
+//
+//   1. An early 'return' at top level that exits before your main logic runs.
+//   2. A match arm that returns immediately without running the code below it.
+//   3. A function body where the last statement is a 'return' that exits
+//      before subsequent statements (which become dead code).
+//
+// ─── What a complete, clean program looks like ────────────────────────────────
+
+fn deliberate(evidence: trit, context: trit) -> trit {
+    let combined: trit = consensus(evidence, context);
+    match combined {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn policy_gate(decision: trit) -> trit {
+    match decision {
+        -1 => { return conflict(); }   // blocked
+         0 => { return hold();    }   // pending
+         1 => { return truth();   }   // approved
+    }
+}
+
+// Program flow: declare, compute, decide, exit.
+let signal_a: trit = 1;
+let signal_b: trit = 0;
+
+let decision: trit  = deliberate(signal_a, signal_b);
+let outcome:  trit  = policy_gate(decision);
+
+// Final return — program exits cleanly after this. BET-003 fires. Good.
+match outcome {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+
+// "Program exited successfully." ← BET-003. This is the goal.

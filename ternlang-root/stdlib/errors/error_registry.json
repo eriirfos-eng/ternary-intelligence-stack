@@ -1,0 +1,380 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "project": "Ternlang — Ternary Intelligence Stack",
+    "maintainer": "RFI-IRFOS <licensing@ternlang.com>",
+    "description": "Canonical error dictionary for the BET VM and Ternlang compiler. Every code maps to a fun message, a technical explanation, the most common causes, a concrete fix, and a runnable .tern example.",
+    "namespaces": {
+      "PARSE": "Lexer / parser phase — caught before any bytecode is emitted",
+      "TYPE":  "Semantic analysis phase — type-checker caught a mismatch",
+      "SCOPE": "Name resolution — variable or binding not found",
+      "STRUCT":"Struct definition / field access errors",
+      "FN":    "Function signature / call-site errors",
+      "PROP":  "Trit propagation operator errors",
+      "BET":   "BET VM runtime errors — the bytecode is running and something went wrong"
+    }
+  },
+
+  "errors": {
+
+    "PARSE-001": {
+      "code": "PARSE-001",
+      "title": "Unexpected Token",
+      "namespace": "PARSE",
+      "severity": "retryable",
+      "fun_message": "The lexer hit something it didn't expect and entered a hold state. It's not angry — just confused.",
+      "technical": "The tokenizer encountered a character or keyword sequence that does not fit any valid grammar production at this position in the source file.",
+      "common_causes": [
+        "Typo in a keyword (e.g. 'fn' written as 'func' or 'def')",
+        "Using a symbol that doesn't exist in .tern syntax (e.g. '==', '&&', '||')",
+        "Forgetting a semicolon so the next line's token is read as a continuation",
+        "Using a binary language construct (true/false, null, None)"
+      ],
+      "fix": "Read the error location, look at the offending token, and check the syntax reference. Most of the time it is a keyword typo or a missing semicolon on the line above.",
+      "binary_habit_warning": "Coming from Python/JS/Rust? Remember: no 'true'/'false' (use 1/-1), no '&&'/'||' (use 'consensus'), no 'null'/'None' (use 'hold()').",
+      "example_file": "stdlib/errors/PARSE-001.tern",
+      "bad_pattern": "func my_fn() -> trit {  // 'func' is not a keyword in .tern\n    return truth();\n}",
+      "good_pattern": "fn my_fn() -> trit {\n    return truth();\n}"
+    },
+
+    "PARSE-002": {
+      "code": "PARSE-002",
+      "title": "Expected Token Not Found",
+      "namespace": "PARSE",
+      "severity": "retryable",
+      "fun_message": "The grammar was expecting something specific — like a closing brace or a type annotation — and got nothing. The compiler is not a mind reader.",
+      "technical": "The parser was in a state where exactly one token was valid next (e.g. ':' after a variable name, '{' after a match arm) and found something else instead.",
+      "common_causes": [
+        "Missing type annotation on a 'let' declaration (e.g. 'let x = 1;' instead of 'let x: trit = 1;')",
+        "Missing closing brace '}' for a function or match block",
+        "Missing '->' return type in a function signature",
+        "Missing ':' separator in a match arm"
+      ],
+      "fix": "The error message names exactly what was expected. Find the position, add the missing token.",
+      "example_file": "stdlib/errors/PARSE-002.tern",
+      "bad_pattern": "let x = 1;  // missing ': trit' annotation",
+      "good_pattern": "let x: trit = 1;"
+    },
+
+    "PARSE-003": {
+      "code": "PARSE-003",
+      "title": "Invalid Trit Literal",
+      "namespace": "PARSE",
+      "severity": "retryable",
+      "fun_message": "Trits are -1, 0, or +1. There is no trit 2. There is no trit 'true'. The universe has three states. You tried to invent a fourth.",
+      "technical": "A trit literal was parsed but the value was not -1, 0, or +1. This includes using boolean literals ('true'/'false'), integers outside the ternary range, or string representations.",
+      "common_causes": [
+        "Writing 'true' or 'false' where a trit is expected (binary habit)",
+        "Writing '2' or '-2' as a trit value",
+        "Confusing trit literals with int literals in a typed context"
+      ],
+      "fix": "Use exactly -1, 0, or 1 as trit literals. Use the semantic helpers truth(), hold(), conflict() for readability.",
+      "mnemonic": "-1 = reject/conflict, 0 = hold/uncertain, +1 = affirm/truth",
+      "example_file": "stdlib/errors/PARSE-003.tern",
+      "bad_pattern": "let signal: trit = true;   // 'true' is not a trit",
+      "good_pattern": "let signal: trit = 1;      // affirm\nlet signal: trit = truth(); // same thing, more readable"
+    },
+
+    "PARSE-004": {
+      "code": "PARSE-004",
+      "title": "Non-Exhaustive Match",
+      "namespace": "PARSE",
+      "severity": "retryable",
+      "fun_message": "Ternary has three states. You covered two. The compiler isn't being pedantic — the third state WILL occur at runtime. What happens then?",
+      "technical": "A match expression on a trit value did not include handlers for all three possible values (-1, 0, +1). Unlike binary switch-cases, ternary match is always exhaustive — there is no implicit default.",
+      "common_causes": [
+        "Writing only -1 and 1 arms and forgetting the 0 (hold) case",
+        "Treating trit like a boolean and handling only two states",
+        "Copy-pasting a binary if/else pattern as a 2-arm match"
+      ],
+      "fix": "Add the missing arm. Every match must handle -1, 0, and 1. The 0 state is the whole point of ternary — it is not an edge case.",
+      "philosophy": "The hold state (0) is not an error condition. It means 'insufficient evidence to commit.' Ignoring it is the mistake ternary logic was designed to prevent.",
+      "example_file": "stdlib/errors/PARSE-004.tern",
+      "bad_pattern": "match signal {\n    -1 => { return conflict(); }\n     1 => { return truth();   }\n    // missing 0 arm — compiler rejects this\n}",
+      "good_pattern": "match signal {\n    -1 => { return conflict(); }\n     0 => { return hold();    }\n     1 => { return truth();   }\n}"
+    },
+
+    "TYPE-001": {
+      "code": "TYPE-001",
+      "title": "Type Mismatch (Semantic)",
+      "namespace": "TYPE",
+      "severity": "retryable",
+      "fun_message": "You declared one type and handed in another. The type-checker caught it before the VM ever saw it. Consider this a gift.",
+      "technical": "The semantic analysis phase determined that the inferred or declared type of an expression does not match the expected type at this usage site. Caught at compile time, not runtime.",
+      "common_causes": [
+        "Assigning an int literal to a trit variable (e.g. 'let x: trit = 42;')",
+        "Returning a trit from a function declared '-> int'",
+        "Passing a float to a function that expects a trit"
+      ],
+      "fix": "Match the type of the value to the declared type. Use explicit conversion if needed.",
+      "example_file": "stdlib/errors/TYPE-001.tern",
+      "bad_pattern": "let x: trit = 42;   // 42 is an int, not a trit",
+      "good_pattern": "let x: trit = 1;    // valid trit\nlet n: int  = 42;   // valid int"
+    },
+
+    "SCOPE-001": {
+      "code": "SCOPE-001",
+      "title": "Undefined Variable",
+      "namespace": "SCOPE",
+      "severity": "retryable",
+      "fun_message": "Hold state — '{name}' doesn't exist in this scope. You can't use a truth you never declared.",
+      "technical": "The name resolver looked up the identifier in all enclosing scopes and found no declaration. The variable was either never declared, declared in a different scope that has ended, or has a typo.",
+      "common_causes": [
+        "Typo in the variable name",
+        "Using a variable before its 'let' declaration",
+        "Referencing a variable declared inside a match arm from outside it",
+        "Forgetting to pass a value as a function argument"
+      ],
+      "fix": "Declare the variable with 'let' before using it, or check for a typo in the name.",
+      "example_file": "stdlib/errors/SCOPE-001.tern",
+      "bad_pattern": "let result: trit = process(signal);  // 'signal' never declared",
+      "good_pattern": "let signal: trit = 1;\nlet result: trit = process(signal);"
+    },
+
+    "STRUCT-001": {
+      "code": "STRUCT-001",
+      "title": "Undefined Struct",
+      "namespace": "STRUCT",
+      "severity": "retryable",
+      "fun_message": "The type system looked for this struct everywhere and found nothing. A ghost type — it doesn't exist.",
+      "technical": "An identifier was used as a struct type in a declaration or constructor expression, but no struct with that name was defined in scope.",
+      "common_causes": [
+        "Typo in the struct name",
+        "Using a struct from a module that wasn't imported",
+        "Defining the struct after its first use (forward reference)"
+      ],
+      "fix": "Define the struct before using it, or import the module that contains it.",
+      "example_file": "stdlib/errors/STRUCT-001.tern",
+      "bad_pattern": "// using TritSignal without defining it\nlet s: TritSignal = TritSignal { value: 1 };",
+      "good_pattern": "struct TritSignal { value: trit }\nlet s: TritSignal = TritSignal { value: 1 };"
+    },
+
+    "STRUCT-002": {
+      "code": "STRUCT-002",
+      "title": "Undefined Struct Field",
+      "namespace": "STRUCT",
+      "severity": "retryable",
+      "fun_message": "'{struct}' exists, but it has no field called '{field}'. Check your struct definition — maybe the field was renamed or never added.",
+      "technical": "A field access expression (struct.field) referenced a field name that is not present in the struct's definition.",
+      "common_causes": [
+        "Typo in the field name",
+        "The field was removed from the struct definition but access code was not updated",
+        "Confusing two similar struct types"
+      ],
+      "fix": "Check the struct definition and use the correct field name.",
+      "example_file": "stdlib/errors/STRUCT-002.tern",
+      "bad_pattern": "struct Gate { state: trit }\nlet g: Gate = Gate { state: 1 };\nlet v: trit = g.value;  // 'value' doesn't exist, field is 'state'",
+      "good_pattern": "struct Gate { state: trit }\nlet g: Gate = Gate { state: 1 };\nlet v: trit = g.state;  // correct field name"
+    },
+
+    "FN-001": {
+      "code": "FN-001",
+      "title": "Undefined Function",
+      "namespace": "FN",
+      "severity": "retryable",
+      "fun_message": "'{name}' was called but never defined. You can't invoke a function that doesn't exist — even in ternary, three states don't include 'imaginary'.",
+      "technical": "A call expression referenced a function name that has no corresponding 'fn' declaration in scope and is not a built-in.",
+      "common_causes": [
+        "Typo in the function name",
+        "Calling a function before its declaration (forward call without declaration)",
+        "Forgetting to import a module that defines the function",
+        "Renaming a function but not updating all call sites"
+      ],
+      "fix": "Declare the function before calling it, or fix the typo in the call.",
+      "example_file": "stdlib/errors/FN-001.tern",
+      "bad_pattern": "let x: trit = evaluate(1);  // 'evaluate' never defined",
+      "good_pattern": "fn evaluate(v: trit) -> trit {\n    return v;\n}\nlet x: trit = evaluate(1);"
+    },
+
+    "FN-002": {
+      "code": "FN-002",
+      "title": "Return Type Mismatch",
+      "namespace": "FN",
+      "severity": "retryable",
+      "fun_message": "You promised to return a {expected} but handed back a {found}. Ternary contracts are strict. The function signature is a promise.",
+      "technical": "A function declared a return type with '-> TYPE' but one of its return paths returns a value of a different type.",
+      "common_causes": [
+        "A function declared '-> trit' returns an int literal",
+        "A match arm returns a different type than the others",
+        "Forgetting to convert a computed value before returning"
+      ],
+      "fix": "Ensure every return path in the function returns the declared type.",
+      "example_file": "stdlib/errors/FN-002.tern",
+      "bad_pattern": "fn gate(v: trit) -> trit {\n    return 42;  // 42 is int, not trit\n}",
+      "good_pattern": "fn gate(v: trit) -> trit {\n    return v;   // trit in, trit out\n}"
+    },
+
+    "FN-003": {
+      "code": "FN-003",
+      "title": "Argument Count Mismatch",
+      "namespace": "FN",
+      "severity": "retryable",
+      "fun_message": "'{name}' expects {expected} argument(s). You passed {found}. Arity is not optional — not even in hold state.",
+      "technical": "A function call passed a different number of arguments than the function's declaration specifies. Unlike some dynamic languages, Ternlang has no optional arguments or variadics at the call site.",
+      "common_causes": [
+        "Forgetting an argument in a call",
+        "Passing an extra argument not in the signature",
+        "Calling a function after its signature was changed"
+      ],
+      "fix": "Count the parameters in the 'fn' declaration and match them exactly at the call site.",
+      "example_file": "stdlib/errors/FN-003.tern",
+      "bad_pattern": "fn combine(a: trit, b: trit) -> trit {\n    return consensus(a, b);\n}\nlet r: trit = combine(1);  // missing second argument",
+      "good_pattern": "fn combine(a: trit, b: trit) -> trit {\n    return consensus(a, b);\n}\nlet r: trit = combine(1, 0);  // both arguments provided"
+    },
+
+    "FN-004": {
+      "code": "FN-004",
+      "title": "Argument Type Mismatch",
+      "namespace": "FN",
+      "severity": "retryable",
+      "fun_message": "Argument {index} of '{name}' should be a {expected}, but you passed a {found}. Types travel with their values — they don't change at the border.",
+      "technical": "One or more arguments in a function call have a type that does not match the corresponding parameter type in the function's declaration.",
+      "common_causes": [
+        "Passing an int literal where a trit is expected",
+        "Passing a float result to a function expecting trit",
+        "Mixing up argument order between two similar-typed parameters"
+      ],
+      "fix": "Check the function signature, then ensure each argument's type matches its parameter type.",
+      "example_file": "stdlib/errors/FN-004.tern",
+      "bad_pattern": "fn signal(v: trit) -> trit { return v; }\nlet r: trit = signal(99);  // 99 is int, fn expects trit",
+      "good_pattern": "fn signal(v: trit) -> trit { return v; }\nlet r: trit = signal(1);   // 1 is a valid trit"
+    },
+
+    "PROP-001": {
+      "code": "PROP-001",
+      "title": "Propagation on Non-Trit",
+      "namespace": "PROP",
+      "severity": "retryable",
+      "fun_message": "The '?' operator only works on trit-returning expressions. You used it on a {found}. The third state requires a trit — you can't propagate uncertainty from a type that has none.",
+      "technical": "The '?' postfix operator, which propagates a -1 (conflict) result up the call stack early, was applied to an expression whose type is not 'trit'. Only trit-typed expressions carry the three-valued signal needed for propagation.",
+      "common_causes": [
+        "Applying '?' to an int-returning function call",
+        "Applying '?' to a float expression",
+        "Confusing '?' with error propagation in other languages (Rust's '?' works on Result, Ternlang's works on trit)"
+      ],
+      "fix": "Only apply '?' to function calls or expressions that return trit.",
+      "example_file": "stdlib/errors/PROP-001.tern",
+      "bad_pattern": "fn get_count() -> int { return 5; }\nlet x: int = get_count()?;  // '?' on int — not valid",
+      "good_pattern": "fn check() -> trit { return truth(); }\nlet x: trit = check()?;     // '?' on trit — valid"
+    },
+
+    "BET-001": {
+      "code": "BET-001",
+      "title": "Stack Underflow",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "You tried to pop a truth that wasn't there. The VM's stack is empty — like asking someone to give back a hug they never received.",
+      "technical": "A TPOP, TRET, or arithmetic instruction was executed when the VM's operand stack contained zero values. The stack depth went below zero.",
+      "common_causes": [
+        "A function exits without pushing a return value (missing 'return' on a code path)",
+        "A match arm falls through without returning",
+        "A codegen bug emitting more POPs than PUSHes in a loop or branch"
+      ],
+      "fix": "Ensure every code path through every function ends with an explicit 'return'. In match expressions, every arm must return.",
+      "note": "If you are writing .tern code normally and hit this, it almost always means a missing return in a match arm. If you're editing core codegen and hit this, count your TPUSH/TPOP pairs.",
+      "example_file": "stdlib/errors/BET-001.tern",
+      "bad_pattern": "fn gate(v: trit) -> trit {\n    match v {\n        -1 => { return conflict(); }\n         1 => { return truth();   }\n        // 0 arm missing — if v==0, function returns nothing → stack underflow\n    }\n}",
+      "good_pattern": "fn gate(v: trit) -> trit {\n    match v {\n        -1 => { return conflict(); }\n         0 => { return hold();    }\n         1 => { return truth();   }\n    }\n}"
+    },
+
+    "BET-002": {
+      "code": "BET-002",
+      "title": "BET Encoding Fault",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "The 0b00 bit pattern is forbidden in balanced ternary encoding. Only 01 (-1), 10 (0), and 11 (+1) exist. You found the state that shouldn't be — the void.",
+      "technical": "The BET codec encountered the 0b00 two-bit pattern while unpacking a packed trit byte. This pattern is undefined in the BET encoding scheme, where every trit uses 2 bits with values 01, 10, or 11.",
+      "common_causes": [
+        "Memory corruption in the bytecode buffer",
+        "Manually crafted .ternbc bytecode with an invalid trit encoding",
+        "A bug in a custom BET serializer/deserializer"
+      ],
+      "fix": "Recompile from source. If you're working at the bytecode level, use only 01/10/11 patterns for trit encoding. Never write 00.",
+      "encoding_reference": "BET trit encoding: 0b01 = -1 (reject), 0b10 = 0 (hold), 0b11 = +1 (affirm)",
+      "example_file": "stdlib/errors/BET-002.tern"
+    },
+
+    "BET-003": {
+      "code": "BET-003",
+      "title": "Clean Halt",
+      "namespace": "BET",
+      "severity": "informational",
+      "fun_message": "Execution reached the end. This is not an error — this is peace. The VM executed your program completely and stopped cleanly.",
+      "technical": "The VM encountered the THALT opcode or reached the end of the bytecode buffer with no pending instructions. This is the normal, successful termination condition.",
+      "common_causes": [
+        "Program ran to completion successfully"
+      ],
+      "fix": "No fix needed. This is success.",
+      "note": "If BET-003 appears in a context where you expected the program to keep running, check whether your main logic is accidentally being skipped by an early return.",
+      "example_file": "stdlib/errors/BET-003.tern"
+    },
+
+    "BET-004": {
+      "code": "BET-004",
+      "title": "Unknown Opcode",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "The machine is reading your bytecode and hit an instruction it has never seen. This opcode belongs to a future version of the VM — or to a file that got corrupted. Recompile.",
+      "technical": "The VM's instruction dispatch loop encountered a byte value that does not correspond to any opcode in the BET ISA (Instruction Set Architecture). The bytecode is either corrupted, from a different VM version, or manually crafted incorrectly.",
+      "common_causes": [
+        "Stale .ternbc file compiled with an older or newer compiler version",
+        "Manually editing a .ternbc file and introducing an invalid byte",
+        "Encoding mismatch between codegen and VM opcode table"
+      ],
+      "fix": "Delete any cached .ternbc files and recompile from source with 'ternlang-cli'. Always recompile after upgrading the compiler.",
+      "example_file": "stdlib/errors/BET-004.tern"
+    },
+
+    "BET-005": {
+      "code": "BET-005",
+      "title": "Register Out of Range",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "The BET VM has exactly 27 registers — 3³, the only sacred ternary number. You tried to access register {reg}, which doesn't exist. There is no 28th register.",
+      "technical": "An instruction referenced a register index outside the range 0–26. The BET VM's register file is fixed at 27 entries (3³), addressable as indices 0–26.",
+      "common_causes": [
+        "A codegen bug emitting a register index above 26",
+        "Manually crafted bytecode with an out-of-range register operand",
+        "A register allocation bug in an experimental compiler extension"
+      ],
+      "fix": "If you're writing .tern source code, this error is not your fault — it's a compiler bug. Report it. If you're building a codegen extension, clamp all register allocations to 0–26.",
+      "example_file": "stdlib/errors/BET-005.tern"
+    },
+
+    "BET-006": {
+      "code": "BET-006",
+      "title": "PC Out of Bounds",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "The program counter jumped to address {pc} — which is outside the bytecode buffer. You jumped into the void. The universe ends at the last instruction.",
+      "technical": "A jump instruction (TJMP, TJMP_NEG, TJMP_POS, TCALL, etc.) set the program counter to an address that exceeds the length of the loaded bytecode. Execution cannot continue.",
+      "common_causes": [
+        "A stale .ternbc file with jump targets calculated for a different (longer or shorter) bytecode layout",
+        "A codegen bug emitting an incorrect jump offset",
+        "Manually patching bytecode without recalculating jump offsets"
+      ],
+      "fix": "Recompile from source. Jump targets are absolute offsets calculated at compile time — any change to the bytecode invalidates them unless recompiled.",
+      "example_file": "stdlib/errors/BET-006.tern"
+    },
+
+    "BET-007": {
+      "code": "BET-007",
+      "title": "Runtime Type Mismatch",
+      "namespace": "BET",
+      "severity": "retryable",
+      "fun_message": "Square peg, round hole. The VM expected a {expected} on the stack but found a {found}. The types got mixed somewhere between the call site and the instruction.",
+      "technical": "A VM instruction that expects a specific Value variant (e.g., Trit, Int, TensorRef) was executed but found a different variant on the stack. This is the runtime version of TYPE-001 — it slipped past the static checker.",
+      "common_causes": [
+        "A function returning a mixed type depending on the code path (one arm returns trit, another returns int)",
+        "Calling a built-in with the wrong argument type",
+        "A codegen gap where the type annotation was missing and the wrong opcode was emitted"
+      ],
+      "fix": "Trace back to where the mismatched value was produced. Add explicit type annotations to declarations to help the compiler catch this at TYPE-001 instead of here.",
+      "note": "If you see BET-007 where you did not see TYPE-001, it means the type checker missed a path. That is a compiler bug — please report it with the .tern source that triggers it.",
+      "example_file": "stdlib/errors/BET-007.tern",
+      "bad_pattern": "fn mixed(v: trit) -> trit {\n    match v {\n        -1 => { return conflict(); }  // trit ✓\n         0 => { return hold();    }  // trit ✓\n         1 => { return 42;        }  // int! BET-007 at runtime\n    }\n}",
+      "good_pattern": "fn pure(v: trit) -> trit {\n    match v {\n        -1 => { return conflict(); }\n         0 => { return hold();    }\n         1 => { return truth();   }  // trit ✓ — consistent\n    }\n}"
+    }
+
+  }
+}

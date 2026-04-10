@@ -1,0 +1,67 @@
+// stdlib/errors/PARSE-004.tern
+// Error: PARSE-004 — Non-Exhaustive Match
+// Tier: 1 — Open Core
+//
+// "Ternary has three states. You covered two. The compiler isn't being pedantic —
+//  the third state WILL occur at runtime. What happens then?"
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A match expression on a trit did not include all three arms.
+// Unlike binary if/else (which has a natural 'else' catch-all),
+// ternary match requires explicit handling of -1, 0, AND +1.
+//
+// WRONG (will trigger PARSE-004):
+//
+//   match signal {
+//       -1 => { return conflict(); }
+//        1 => { return truth();   }
+//       // the 0 (hold) case is missing — what should happen when signal is 0?
+//   }
+//
+// ─── Why this rule exists ─────────────────────────────────────────────────────
+//
+// The hold state (trit = 0) is NOT an edge case. It is the entire reason
+// ternary logic exists. In binary thinking:
+//
+//   yes → act
+//   no  → don't act
+//
+// In ternary thinking:
+//
+//   affirm (+1) → act
+//   hold   ( 0) → wait for more evidence
+//   reject (-1) → do not act
+//
+// The hold state is the first-class "I don't know yet" signal.
+// Leaving it unhandled means your program has undefined behavior for
+// the most important case — exactly the case ternary logic was designed for.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn route_signal(signal: trit) -> trit {
+    match signal {
+        -1 => { return conflict(); }   // strong reject — escalate
+         0 => { return hold();    }   // uncertain — request more evidence
+         1 => { return truth();   }   // affirmed — proceed
+    }
+}
+
+// Nested match — still exhaustive, always:
+fn arbitrate(a: trit, b: trit) -> trit {
+    let merged: trit = consensus(a, b);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let x: trit = route_signal(0);
+let y: trit = arbitrate(1, -1);
+
+match y {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

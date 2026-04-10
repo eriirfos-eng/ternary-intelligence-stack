@@ -1,0 +1,52 @@
+// stdlib/errors/FN-003.tern
+// Error: FN-003 — Argument Count Mismatch
+// Tier: 1 — Open Core
+//
+// "The function expects N arguments. You passed M. Arity is not optional —
+//  not even in hold state."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A function call passed a different number of arguments than the function
+// declaration's parameter list specifies.
+//
+// WRONG (will trigger FN-003):
+//
+//   fn combine(a: trit, b: trit) -> trit { ... }
+//
+//   let r: trit = combine(1);         // missing second argument
+//   let r: trit = combine(1, 0, -1);  // too many — fn only takes 2
+//   let r: trit = combine();          // missing both arguments
+//
+// ─── Why Ternlang enforces this strictly ─────────────────────────────────────
+//
+// There are no optional parameters, no default values, no variadics at the
+// call site. Every parameter is required. This keeps function contracts
+// explicit and prevents silent undefined behavior.
+//
+// ─── How to count parameters ──────────────────────────────────────────────────
+//
+//   fn f(a: trit, b: trit, c: int) -> trit
+//         ──1──   ──2──    ──3──
+//   → three parameters required at every call site
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn combine(a: trit, b: trit) -> trit {
+    return consensus(a, b);
+}
+
+fn three_way_vote(a: trit, b: trit, c: trit) -> trit {
+    let ab: trit = consensus(a, b);
+    return consensus(ab, c);
+}
+
+// Correct calls — argument count matches parameter count exactly:
+let two_result:   trit = combine(1, 0);        // 2 params, 2 args ✓
+let three_result: trit = three_way_vote(1, 0, -1);  // 3 params, 3 args ✓
+
+match three_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

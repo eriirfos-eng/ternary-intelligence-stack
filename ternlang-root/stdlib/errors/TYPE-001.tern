@@ -1,0 +1,56 @@
+// stdlib/errors/TYPE-001.tern
+// Error: TYPE-001 — Type Mismatch (Semantic Phase)
+// Tier: 1 — Open Core
+//
+// "You declared one type and handed in another. The type-checker caught it
+//  before the VM ever saw it. Consider this a gift."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The semantic analysis pass compared the declared type of a binding or
+// parameter with the actual type of the expression being assigned or passed,
+// and found they differ.
+//
+// WRONG (will trigger TYPE-001):
+//
+//   let x: trit = 42;        // 42 is int, not trit
+//   let x: trit = 3.14;      // 3.14 is float, not trit
+//   let x: int  = truth();   // truth() returns trit, not int
+//
+// ─── Ternlang type system in brief ───────────────────────────────────────────
+//
+//   trit        — -1, 0, or +1. The core ternary value. truth()/hold()/conflict().
+//   int         — signed integer. No trit arithmetic. Use for counts, indices.
+//   float       — floating point. Use for weights, EMA, probabilities.
+//   trit[]      — array of trits. Use for signal vectors.
+//   trittensor<N> — N-dimensional trit tensor. Use for matrix ops.
+//
+// These types do NOT automatically coerce into each other.
+// A trit is not an int. An int is not a trit.
+// This is intentional: the semantics are different.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Each type declared and used correctly:
+let verdict: trit  = truth();     // trit from built-in
+let count:   int   = 0;           // int for counting
+let weight:  float = 0.75;        // float for probability
+
+// Function that enforces types at the boundary:
+fn threshold_gate(score: float, limit: float) -> trit {
+    if score > limit {
+        return truth();
+    }
+    if score < limit {
+        return conflict();
+    }
+    return hold();
+}
+
+let gate_result: trit = threshold_gate(weight, 0.5);
+
+match gate_result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

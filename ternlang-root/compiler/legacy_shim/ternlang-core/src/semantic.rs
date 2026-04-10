@@ -20,23 +20,23 @@ impl std::fmt::Display for SemanticError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::TypeMismatch { expected, found } =>
-                write!(f, "[TYPE-001] Type mismatch: expected {expected:?}, found {found:?}. Binary types don't map cleanly to ternary space."),
+                write!(f, "[TYPE-001] Type mismatch: expected {expected:?}, found {found:?}. A trit is not an int. An int is not a trit. They don't coerce.\n           → details: stdlib/errors/TYPE-001.tern  |  ternlang errors TYPE-001"),
             Self::UndefinedVariable(n) =>
-                write!(f, "[SCOPE-001] '{n}' is undefined. Hold state — declare before use."),
+                write!(f, "[SCOPE-001] '{n}' is undefined — hold state. Declare before use, or check for a typo.\n            → details: stdlib/errors/SCOPE-001.tern  |  ternlang errors SCOPE-001"),
             Self::UndefinedStruct(n) =>
-                write!(f, "[STRUCT-001] Struct '{n}' doesn't exist. The type system can't find it."),
+                write!(f, "[STRUCT-001] Struct '{n}' doesn't exist. A ghost type — the type system can't find it anywhere.\n             → details: stdlib/errors/STRUCT-001.tern  |  ternlang errors STRUCT-001"),
             Self::UndefinedField { struct_name, field } =>
-                write!(f, "[STRUCT-002] Struct '{struct_name}' has no field '{field}'. Check your definition."),
+                write!(f, "[STRUCT-002] Struct '{struct_name}' has no field '{field}'. Check the definition — maybe it was renamed.\n             → details: stdlib/errors/STRUCT-002.tern  |  ternlang errors STRUCT-002"),
             Self::UndefinedFunction(n) =>
-                write!(f, "[FN-001] '{n}' is not defined. Did you forget to declare it or import its module?"),
+                write!(f, "[FN-001] '{n}' was called but never defined. Declare it above the call site, or check for a typo.\n          → details: stdlib/errors/FN-001.tern  |  ternlang errors FN-001"),
             Self::ReturnTypeMismatch { function, expected, found } =>
-                write!(f, "[FN-002] Function '{function}' declared return type {expected:?} but returned {found:?}. Ternary contracts are strict."),
+                write!(f, "[FN-002] '{function}' promised to return {expected:?} but returned {found:?}. Ternary contracts are strict — all paths must match.\n          → details: stdlib/errors/FN-002.tern  |  ternlang errors FN-002"),
             Self::ArgCountMismatch { function, expected, found } =>
-                write!(f, "[FN-003] '{function}' expects {expected} arg(s), got {found}. Arity is not optional."),
+                write!(f, "[FN-003] '{function}' expects {expected} arg(s), got {found}. Arity is not optional — not even in hold state.\n          → details: stdlib/errors/FN-003.tern  |  ternlang errors FN-003"),
             Self::ArgTypeMismatch { function, param_index, expected, found } =>
-                write!(f, "[FN-004] '{function}' arg {param_index}: expected {expected:?}, found {found:?}. Types travel with their values."),
+                write!(f, "[FN-004] '{function}' arg {param_index}: expected {expected:?}, found {found:?}. Types travel with their values — they don't change at the border.\n          → details: stdlib/errors/FN-004.tern  |  ternlang errors FN-004"),
             Self::PropagateOnNonTrit { found } =>
-                write!(f, "[PROP-001] '?' used on a {found:?} expression. Only trit-returning functions can signal conflict. The third state requires a trit."),
+                write!(f, "[PROP-001] '?' used on a {found:?} expression. Only trit-returning functions carry the three-valued signal. The third state requires a trit.\n            → details: stdlib/errors/PROP-001.tern  |  ternlang errors PROP-001"),
         }
     }
 }

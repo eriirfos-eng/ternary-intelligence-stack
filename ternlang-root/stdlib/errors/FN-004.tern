@@ -1,0 +1,64 @@
+// stdlib/errors/FN-004.tern
+// Error: FN-004 — Argument Type Mismatch
+// Tier: 1 — Open Core
+//
+// "Argument N of 'fn' should be a trit, but you passed an int.
+//  Types travel with their values — they don't change at the border."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// One or more arguments in a function call have a type that does not match
+// the corresponding parameter's declared type in the function signature.
+//
+// WRONG (will trigger FN-004):
+//
+//   fn signal(v: trit) -> trit { return v; }
+//
+//   let r: trit = signal(99);    // 99 is int — fn expects trit
+//   let r: trit = signal(3.14);  // 3.14 is float — fn expects trit
+//   let r: trit = signal(truth); // 'truth' is a function ref — call it: truth()
+//
+// ─── Type checklist before calling a function ──────────────────────────────────
+//
+//   Look at the fn signature:   fn f(a: TYPE1, b: TYPE2) -> RETURN
+//   Check your argument types:  f(expr1, expr2)
+//                                  ↑ must be TYPE1  ↑ must be TYPE2
+//
+// ─── Common confusion: int literal vs trit literal ────────────────────────────
+//
+//   In isolation, '1' looks like it could be either.
+//   In a 'let x: trit = 1' context it is a trit.
+//   When passed to fn(v: trit), the literal '1' is also a valid trit.
+//   But when passed to fn(v: int), it becomes an int.
+//   The TYPE ANNOTATION on the parameter decides.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn signal(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn count_signals(n: int) -> trit {
+    // int parameter — must be called with an int:
+    if n > 0 {
+        return truth();
+    }
+    return hold();
+}
+
+// Correct types at call site:
+let trit_in: trit = 1;
+let int_in:  int  = 5;
+
+let trit_out: trit = signal(trit_in);        // trit → trit param ✓
+let int_out:  trit = count_signals(int_in);  // int  → int param  ✓
+
+match trit_out {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

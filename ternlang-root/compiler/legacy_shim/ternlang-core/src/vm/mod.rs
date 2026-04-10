@@ -28,19 +28,19 @@ impl fmt::Display for VmError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             VmError::StackUnderflow =>
-                write!(f, "[BET-001] Stack underflow — you tried to pop a truth that wasn't there."),
+                write!(f, "[BET-001] Stack underflow — you tried to pop a truth that wasn't there.\n          → details: stdlib/errors/BET-001.tern  |  ternlang errors BET-001"),
             VmError::BetFault(fault) =>
-                write!(f, "[BET-002] BET encoding fault: {fault:?}. The 0b00 state is invalid — only -1, 0, +1 exist."),
+                write!(f, "[BET-002] BET encoding fault: {fault:?}. The 0b00 state is forbidden — only 01/10/11 are valid trit bits.\n          → details: stdlib/errors/BET-002.tern  |  ternlang errors BET-002"),
             VmError::Halt =>
-                write!(f, "[BET-003] VM halted cleanly. Execution reached the end."),
+                write!(f, "[BET-003] VM halted cleanly. Execution reached the end. This is not an error — this is peace.\n          → details: stdlib/errors/BET-003.tern  |  ternlang errors BET-003"),
             VmError::InvalidOpcode(op) =>
-                write!(f, "[BET-004] Unknown opcode 0x{op:02x} — the machine doesn't know this instruction. Conflict state."),
+                write!(f, "[BET-004] Unknown opcode 0x{op:02x} — the machine has never seen this instruction. Delete cached .ternbc files and recompile.\n          → details: stdlib/errors/BET-004.tern  |  ternlang errors BET-004"),
             VmError::InvalidRegister(reg) =>
-                write!(f, "[BET-005] Register {reg} is out of range. The BET has 27 registers (0–26)."),
+                write!(f, "[BET-005] Register {reg} is out of range. The BET has exactly 27 registers (0–26). That's 3³. No more.\n          → details: stdlib/errors/BET-005.tern  |  ternlang errors BET-005"),
             VmError::PcOutOfBounds(pc) =>
-                write!(f, "[BET-006] PC {pc} is out of bounds — you jumped outside the known universe. Recompile."),
+                write!(f, "[BET-006] PC {pc} is out of bounds — you jumped outside the known universe. Recompile from source.\n          → details: stdlib/errors/BET-006.tern  |  ternlang errors BET-006"),
             VmError::TypeMismatch { expected, found } =>
-                write!(f, "[BET-007] Runtime type mismatch — expected {expected} but found {found}."),
+                write!(f, "[BET-007] Runtime type mismatch — expected {expected} but found {found}. Square peg, round hole.\n          → details: stdlib/errors/BET-007.tern  |  ternlang errors BET-007"),
         }
     }
 }

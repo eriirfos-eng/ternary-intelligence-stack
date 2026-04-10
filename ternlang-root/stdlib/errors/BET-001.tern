@@ -1,0 +1,65 @@
+// stdlib/errors/BET-001.tern
+// Error: BET-001 — Stack Underflow
+// Tier: 1 — Open Core
+//
+// "You tried to pop a truth that wasn't there.
+//  The VM's stack is empty — like asking someone to give back a hug they never received."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The BET VM uses an operand stack to pass values between instructions.
+// Every 'return' in a function pushes a value onto the stack before TRET.
+// If a code path exits without pushing a value, the VM tries to pop nothing.
+//
+// WRONG (will trigger BET-001 at runtime):
+//
+//   fn gate(v: trit) -> trit {
+//       match v {
+//           -1 => { return conflict(); }
+//            1 => { return truth();   }
+//           // 0 arm is MISSING.
+//           // When v == 0 at runtime, no return executes.
+//           // The function ends without pushing a value.
+//           // TRET pops the stack → stack underflow → BET-001.
+//       }
+//   }
+//
+// ─── Why PARSE-004 and BET-001 are related ────────────────────────────────────
+//
+// PARSE-004 catches non-exhaustive match at compile time.
+// BET-001 catches missing returns at runtime (when the compiler can't prove it).
+//
+// If you see BET-001 and NOT PARSE-004, the missing return is on a code path
+// that the compiler couldn't verify statically — for example inside a loop
+// or conditional that the type system couldn't evaluate.
+//
+// ─── The invariant ────────────────────────────────────────────────────────────
+//
+// Every function must push exactly one value onto the stack before TRET,
+// on EVERY code path. Every match arm, every if branch, every loop exit.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn gate(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }   // ← pushes conflict(), then TRET
+         0 => { return hold();    }   // ← pushes hold(), then TRET
+         1 => { return truth();   }   // ← pushes truth(), then TRET
+    }
+    // Every arm returns — the stack always has a value when TRET executes.
+}
+
+fn chain(a: trit, b: trit) -> trit {
+    let r1: trit = gate(a);
+    let r2: trit = gate(b);
+    return consensus(r1, r2);
+    // Exactly one value on the stack when this TRET executes.
+}
+
+let result: trit = chain(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

@@ -1,0 +1,63 @@
+// stdlib/errors/PARSE-003.tern
+// Error: PARSE-003 — Invalid Trit Literal
+// Tier: 1 — Open Core
+//
+// "Trits are -1, 0, or +1. There is no trit 2. There is no trit 'true'.
+//  The universe has three states. You tried to invent a fourth."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A value was used as a trit literal but falls outside the valid range:
+// exactly -1, 0, or +1. Nothing else is a trit.
+//
+// WRONG (will trigger PARSE-003):
+//
+//   let x: trit = true;    // 'true' is a boolean — not in .tern
+//   let x: trit = false;   // 'false' is a boolean — not in .tern
+//   let x: trit = 2;       // 2 is out of range
+//   let x: trit = -2;      // -2 is out of range
+//   let x: trit = 1.0;     // 1.0 is a float, not a trit
+//
+// ─── The three valid trit literals ───────────────────────────────────────────
+//
+//   -1    reject / conflict — "no, with certainty"
+//    0    hold  / uncertain — "not enough evidence to decide"
+//    1    affirm / truth    — "yes, with certainty"
+//
+// ─── Semantic helpers (preferred for readability) ─────────────────────────────
+//
+//   truth()     returns +1   — use in logic that asserts certainty
+//   hold()      returns  0   — use when evidence is insufficient
+//   conflict()  returns -1   — use when the signal is definitively rejected
+//
+// These are functions, not literals, but they read better in complex logic.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+// Explicit literals:
+let affirm:  trit = 1;
+let neutral: trit = 0;
+let reject:  trit = -1;
+
+// Semantic helpers — same values, clearer intent:
+let confirmed: trit = truth();
+let uncertain: trit = hold();
+let blocked:   trit = conflict();
+
+// They are interchangeable — helpers are just named returns:
+fn check_affirmation(a: trit, b: trit) -> trit {
+    let merged: trit = consensus(a, b);
+    match merged {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+let result: trit = check_affirmation(affirm, neutral);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}

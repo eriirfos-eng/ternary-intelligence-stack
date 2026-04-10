@@ -1,0 +1,76 @@
+// stdlib/errors/PROP-001.tern
+// Error: PROP-001 — Propagation on Non-Trit
+// Tier: 1 — Open Core
+//
+// "The '?' operator only works on trit-returning expressions.
+//  The third state requires a trit — you can't propagate uncertainty from a type that has none."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The '?' postfix operator was applied to an expression whose type is not 'trit'.
+// Only trit-returning expressions carry the three-valued signal that '?' needs.
+//
+// WRONG (will trigger PROP-001):
+//
+//   fn get_count() -> int { return 5; }
+//   let x: int = get_count()?;         // '?' on int — invalid
+//
+//   fn get_score() -> float { return 0.9; }
+//   let s: float = get_score()?;       // '?' on float — invalid
+//
+// ─── How '?' works in Ternlang ───────────────────────────────────────────────
+//
+// The '?' operator is the trit propagation shorthand.
+// It means: "if the result is -1 (conflict), return conflict() immediately;
+//             otherwise continue execution with the value."
+//
+// It is inspired by Rust's '?' for Result, but works on the ternary signal
+// rather than an error type. Only trit values carry this three-state meaning.
+//
+// Equivalent expansion:
+//
+//   let r: trit = some_fn()?;
+//
+//   // expands to:
+//   let __tmp: trit = some_fn();
+//   match __tmp {
+//       -1 => { return conflict(); }   // propagate conflict up
+//        _ => { }                      // continue
+//   }
+//   let r: trit = __tmp;
+//
+// ─── When to use '?' ──────────────────────────────────────────────────────────
+//
+//   Use '?' to short-circuit a chain of trit-returning checks:
+//
+//   fn validate_pipeline(a: trit, b: trit, c: trit) -> trit {
+//       let step1: trit = check_a(a)?;   // stops here if -1
+//       let step2: trit = check_b(b)?;   // stops here if -1
+//       let step3: trit = check_c(c)?;   // stops here if -1
+//       return truth();
+//   }
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn check(v: trit) -> trit {
+    match v {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn validate(a: trit, b: trit) -> trit {
+    // '?' only on trit-returning functions — correct:
+    let ra: trit = check(a)?;
+    let rb: trit = check(b)?;
+    return consensus(ra, rb);
+}
+
+let result: trit = validate(1, 0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
