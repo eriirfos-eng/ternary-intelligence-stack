@@ -1,0 +1,45 @@
+// stdlib/ml/sparse_dot_product.tern
+// Demonstrates: Patent-pending @sparseskip optimization (RFI-IRFOS).
+// Tier: 2 — Pro Standard
+// This function tells the BET VM to skip MAC cycles when weight == 0.
+
+@sparseskip
+fn sparse_dot_product(weights: trit[], inputs: float[]) -> float {
+    let result: float = 0.0;
+    let i: int = 0;
+    
+    // Manual loop for a vector of size 10
+    while i < 10 {
+        let w: trit = weights[i];
+        let x: float = inputs[i];
+        
+        // Logical check: If weight is 0, we effectively skip
+        // In the actual VM, @sparseskip elides this entirely at the bytecode level.
+        if w != 0 {
+            result = result + (w * x);
+        }
+        
+        i = i + 1;
+    }
+    
+    return result;
+}
+
+// Weights with 60% sparsity (6 zeros out of 10)
+let weights: trit[] = [1, 0, 0, -1, 0, 1, 0, 0, 0, 1];
+let inputs: float[] = [0.5, 0.2, 0.8, 1.2, 0.4, 0.6, 0.9, 1.1, 0.3, 0.7];
+
+// Expected calculation:
+// (1 * 0.5) + (-1 * 1.2) + (1 * 0.6) + (1 * 0.7)
+// = 0.5 - 1.2 + 0.6 + 0.7 = 0.6
+let dot: float = sparse_dot_product(weights, inputs);
+
+println("Sparse Weights: [1, 0, 0, -1, 0, 1, 0, 0, 0, 1]");
+println("Dot Product: ", dot);
+
+// Check if roughly 0.6 (account for floating point precision if needed, though exact here)
+if dot > 0.59 {
+    if dot < 0.61 {
+        println("Sparse Dot Product Test Passed.");
+    }
+}
