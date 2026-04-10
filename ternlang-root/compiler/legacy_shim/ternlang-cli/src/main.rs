@@ -116,20 +116,42 @@ fn main() {
                     // If it's a parse error in a real program, we should probably report it and stop.
                     let error_str = format!("{:?}", e);
                     if error_str.contains("ExpectedToken(\"Fn\"") || error_str.contains("UnexpectedToken(\"Let\"") {
-                        // Fallback: Reset and try parsing statements (for snippets without 'fn')
+                        // Fallback: Reset and try parsing statements (for snippets without 'fn').
+                        // BUG-L02 fix: if parse_stmt() returns UnexpectedToken("Fn"), the token
+                        // was not consumed (peek_token branch in parse_stmt), so we can call
+                        // parse_function() to parse it correctly.
                         let mut parser = Parser::new(&input);
                         emitter.patch_header_jump(header_patch);
+                        let mut found_functions = false;
                         loop {
                             match parser.parse_stmt() {
                                 Ok(stmt) => emitter.emit_stmt(&stmt),
                                 Err(e) => {
-                                    if format!("{:?}", e).contains("EOF") {
+                                    let e_str = format!("{:?}", e);
+                                    if e_str.contains("EOF") {
                                         break;
                                     }
-                                    eprintln!("Parse stmt error: {:?}", e);
-                                    break;
+                                    // BUG-L02: fn keyword at statement level — parse as function
+                                    if e_str.contains("UnexpectedToken(\"Fn\")") {
+                                        match parser.parse_function() {
+                                            Ok(func) => {
+                                                emitter.emit_function(&func);
+                                                found_functions = true;
+                                            }
+                                            Err(e2) => {
+                                                eprintln!("Parse fn error: {:?}", e2);
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        eprintln!("Parse stmt error: {:?}", e);
+                                        break;
+                                    }
                                 }
                             }
+                        }
+                        if found_functions {
+                            emitter.emit_entry_call("main");
                         }
                     } else {
                         eprintln!("Parse program error: {:?}", e);
