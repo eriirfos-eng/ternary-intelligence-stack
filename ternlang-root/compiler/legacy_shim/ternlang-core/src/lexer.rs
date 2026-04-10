@@ -120,6 +120,12 @@ pub enum Token {
     #[token("*")]
     Star,
 
+    #[token("/")]
+    Slash,
+
+    #[token("%")]
+    Percent,
+
     #[token("=")]
     Assign,
 

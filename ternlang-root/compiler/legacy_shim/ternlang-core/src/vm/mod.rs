@@ -28,6 +28,7 @@ pub enum VmError {
     // ── Agent errors ─────────────────────────────────────────────────────────
     AgentTypeNotRegistered(u16),
     AgentIdInvalid(usize),
+    RuntimeError(String),
 }
 
 impl fmt::Display for VmError {
@@ -55,6 +56,8 @@ impl fmt::Display for VmError {
                 write!(f, "[BET-010] Agent type_id 0x{type_id:04x} was never registered. You can't spawn what was never declared.\n          → details: stdlib/errors/BET-010.tern  |  ternlang errors BET-010"),
             VmError::AgentIdInvalid(id) =>
                 write!(f, "[BET-011] Agent #{id} doesn't exist — no agent was spawned at this ID. TSEND and TAWAIT require a live agent.\n          → details: stdlib/errors/BET-011.tern  |  ternlang errors BET-011"),
+            VmError::RuntimeError(msg) =>
+                write!(f, "[BET-012] Runtime error: {msg}"),
         }
     }
 }
@@ -349,6 +352,32 @@ impl BetVm {
                     let mut b = [0u8; 8];
                     for i in 0..8 { b[i] = self.read_u8()?; }
                     self.stack.push(Value::Float(f64::from_le_bytes(b)));
+                }
+                0x1e => { // Tdiv
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    match (a.clone(), b.clone()) {
+                        (Value::Int(av), Value::Int(bv)) => {
+                            if bv == 0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Int(av / bv));
+                        }
+                        (Value::Float(av), Value::Float(bv)) => {
+                            if bv == 0.0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Float(av / bv));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
+                    }
+                }
+                0x1f => { // Tmod
+                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    match (a.clone(), b.clone()) {
+                        (Value::Int(av), Value::Int(bv)) => {
+                            if bv == 0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                            self.stack.push(Value::Int(av % bv));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "Int".into(), found: format!("{:?}", (a, b)) }),
+                    }
                 }
                 0x20 => { // Tprint
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
