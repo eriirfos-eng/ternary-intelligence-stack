@@ -1,0 +1,34 @@
+// stdlib/math/ternary_inc_dec.tern
+// Demonstrates: Increment and Decrement logic for single trits.
+// Tier: 1 — Open Core
+// Implements balanced ternary increment/decrement rules.
+// Increment: -1 -> 0, 0 -> 1, 1 -> -1 (with carry)
+// Decrement: 1 -> 0, 0 -> -1, -1 -> 1 (with carry)
+
+fn t_inc(val: trit) -> trit {
+    match val {
+        -1 => { return tend;   }
+         0 => { return affirm; }
+         1 => { return reject; }
+    }
+}
+
+fn t_dec(val: trit) -> trit {
+    match val {
+         1 => { return tend;   }
+         0 => { return reject; }
+        -1 => { return affirm; }
+    }
+}
+
+fn main() -> trit {
+    if t_inc(reject) != tend   { return reject; }
+    if t_inc(tend)   != affirm { return reject; }
+    if t_inc(affirm) != reject { return reject; }
+    
+    if t_dec(affirm) != tend   { return reject; }
+    if t_dec(tend)   != reject { return reject; }
+    if t_dec(reject) != affirm { return reject; }
+
+    return affirm;
+}
