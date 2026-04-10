@@ -1,0 +1,41 @@
+// stdlib/bio/codon_consensus.tern
+// Demonstrates: Aggregating 3 DNA base pairs (codon) into a single ternary signal.
+// Tier: 3 — Industrial
+
+fn base_to_trit(base: int) -> trit {
+    // Mapping: A=1, T=-1, C=0, G=1 (Standard RFI-IRFOS DNA mapping)
+    match base {
+        65 => { return truth();    } // A
+        84 => { return conflict(); } // T
+        67 => { return hold();     } // C
+        71 => { return truth();    } // G
+    }
+    return hold(); // Fallback
+}
+
+fn codon_consensus(b1: int, b2: int, b3: int) -> trit {
+    let t1: trit = base_to_trit(b1);
+    let t2: trit = base_to_trit(b2);
+    let t3: trit = base_to_trit(b3);
+    
+    // Aggregation: Consensus of the three trits
+    return consensus(consensus(t1, t2), t3);
+}
+
+fn main() -> trit {
+    // Codon: ATG (Start) -> 1, -1, 1
+    // consensus(1, -1) -> 0 (balanced), consensus(0, 1) -> 1
+    let start_codon: trit = codon_consensus(65, 84, 71); // A, T, G
+    
+    if start_codon != 1 { return conflict(); }
+    
+    // Codon: TTT (Phenylalanine) -> -1, -1, -1
+    let ttt_codon: trit = codon_consensus(84, 84, 84); // T, T, T
+    if ttt_codon != -1 { return conflict(); }
+    
+    // Codon: CCC (Proline) -> 0, 0, 0
+    let ccc_codon: trit = codon_consensus(67, 67, 67); // C, C, C
+    if ccc_codon != 0 { return conflict(); }
+    
+    return truth();
+}
