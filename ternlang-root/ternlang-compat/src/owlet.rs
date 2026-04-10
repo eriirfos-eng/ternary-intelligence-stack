@@ -248,6 +248,7 @@ impl OwletParser {
                 params:      vec![],
                 return_type: Type::Trit,
                 body:        main_body,
+                directive:   None,
             });
         }
 
@@ -278,6 +279,7 @@ fn parse_fn_def(items: &[Sexp]) -> Result<Function, String> {
         params,
         return_type: Type::Trit,
         body: vec![Stmt::Return(body_expr)],
+        directive: None,
     })
 }
 

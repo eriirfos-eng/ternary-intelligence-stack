@@ -226,6 +226,10 @@ impl CTranspiler {
                 let val = self.emit_expr(value);
                 self.push(&format!("{object}[{r}][{c}] = {val};\n"));
             }
+            Stmt::Set { name, value } => {
+                let val = self.emit_expr(value);
+                self.push(&format!("{name} = {val};\n"));
+            }
         }
     }
 
@@ -249,8 +253,12 @@ impl CTranspiler {
                     BinOp::NotEqual => format!("trit_neg(trit_consensus({l}, {r}))"),
                     BinOp::And      => format!("trit_mul({l}, {r})"),
                     BinOp::Or       => format!("trit_consensus({l}, {r})"),
-                    BinOp::Less     => format!("(({l}) < ({r}) ? 1 : (({l}) == ({r}) ? 0 : -1))"),
-                    BinOp::Greater  => format!("(({l}) > ({r}) ? 1 : (({l}) == ({r}) ? 0 : -1))"),
+                    BinOp::Less        => format!("(({l}) < ({r}) ? 1 : (({l}) == ({r}) ? 0 : -1))"),
+                    BinOp::Greater     => format!("(({l}) > ({r}) ? 1 : (({l}) == ({r}) ? 0 : -1))"),
+                    BinOp::LessEqual   => format!("(({l}) <= ({r}) ? 1 : -1)"),
+                    BinOp::GreaterEqual=> format!("(({l}) >= ({r}) ? 1 : -1)"),
+                    BinOp::Div         => format!("(({l}) / ({r}))"),
+                    BinOp::Mod         => format!("(({l}) % ({r}))"),
                 }
             }
 
@@ -306,6 +314,11 @@ impl CTranspiler {
                 let r = self.emit_expr(row);
                 let c = self.emit_expr(col);
                 format!("{obj}[{r}][{c}]")
+            }
+            Expr::FloatLiteral(v) => format!("{v}"),
+            Expr::TritTensorLiteral(elems) => {
+                let parts: Vec<String> = elems.iter().map(|e| e.to_string()).collect();
+                format!("/* trittensor{{{}}} */ 0", parts.join(", "))
             }
         }
     }
