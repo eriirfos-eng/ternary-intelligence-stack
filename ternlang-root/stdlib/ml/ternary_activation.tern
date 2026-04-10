@@ -1,0 +1,30 @@
+// stdlib/ml/ternary_activation.tern
+// Demonstrates: Ternary activation functions for neural networks.
+// Tier: 2 — Pro Standard
+// Implements a Ternary Step function: maps floats to trits based on confidence.
+// This matches the BitNet b1.58 quantization strategy where values are
+// coerced into the {-1, 0, 1} set.
+
+fn ternary_step(x: float) -> trit {
+    if x > 0.5 {
+        return affirm;
+    }
+    if x < -0.5 {
+        return reject;
+    }
+    return tend;
+}
+
+fn main() -> trit {
+    // High confidence positive
+    if ternary_step(0.8)  != affirm { return reject; }
+    
+    // High confidence negative
+    if ternary_step(-0.7) != reject { return reject; }
+    
+    // Low confidence (uncertainty zone)
+    if ternary_step(0.1)  != tend   { return reject; }
+    if ternary_step(-0.2) != tend   { return reject; }
+    
+    return affirm;
+}
