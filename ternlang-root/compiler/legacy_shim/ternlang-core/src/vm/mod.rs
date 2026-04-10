@@ -194,19 +194,19 @@ impl BetVm {
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", a) }),
                     }
                 }
-                0x05 => { // TjmpPos
+                0x05 => { // TjmpPos — jumps if top is +1
                     let addr = self.read_u16()?;
-                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
                     let is_pos = match val {
                         Value::Trit(Trit::Affirm) => true,
-                        Value::Int(v) if v > 0 => true,
+                        Value::Int(1) => true,
                         _ => false,
                     };
                     if is_pos { self.pc = addr as usize; }
                 }
-                0x06 => { // TjmpZero
+                0x06 => { // TjmpZero — jumps if top is 0
                     let addr = self.read_u16()?;
-                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
                     let is_zero = match val {
                         Value::Trit(Trit::Tend) => true,
                         Value::Int(0) => true,
@@ -214,12 +214,12 @@ impl BetVm {
                     };
                     if is_zero { self.pc = addr as usize; }
                 }
-                0x07 => { // TjmpNeg
+                0x07 => { // TjmpNeg — jumps if top is -1
                     let addr = self.read_u16()?;
-                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
                     let is_neg = match val {
                         Value::Trit(Trit::Reject) => true,
-                        Value::Int(v) if v < 0 => true,
+                        Value::Int(-1) => true,
                         _ => false,
                     };
                     if is_neg { self.pc = addr as usize; }
@@ -534,6 +534,19 @@ impl BetVm {
                     } else {
                         return Err(VmError::TypeMismatch { expected: "Local AgentRef".into(), found: format!("{:?}", target) });
                     }
+                }
+                0x25 => { // TjmpEqInt — imm_int, imm_addr → peek, jumps if eq
+                    let mut b = [0u8; 8];
+                    for i in 0..8 { b[i] = self.read_u8()?; }
+                    let target_val = i64::from_le_bytes(b);
+                    let addr = self.read_u16()?;
+                    let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
+                    let is_eq = match val {
+                        Value::Int(v) => *v == target_val,
+                        Value::Trit(t) => (*t as i8) as i64 == target_val,
+                        _ => false,
+                    };
+                    if is_eq { self.pc = addr as usize; }
                 }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),

@@ -195,39 +195,78 @@ impl BytecodeEmitter {
             Stmt::Match { condition, arms } => {
                 self.emit_expr(condition);
                 let cond_reg = self.next_reg; self.next_reg += 1;
-                self.code.push(0x08); self.code.push(cond_reg);
+                self.code.push(0x08); self.code.push(cond_reg); // Tstore
+
                 let mut end_patches = Vec::new();
-                let mut next_arm = None;
+                let mut next_arm_patch = None;
+
                 for (val, stmt) in arms {
-                    if let Some(p) = next_arm {
+                    if let Some(p) = next_arm_patch {
                         let addr = self.code.len() as u16;
                         self.patch_u16(p, addr);
                     }
-                    self.code.push(0x09); self.code.push(cond_reg);
-                    let m_patch = self.code.len() + 1;
+
+                    // Load condition for this arm
+                    self.code.push(0x09); self.code.push(cond_reg); // Tload
+
+                    let match_patch;
                     match val {
-                        1 => self.code.push(0x05),
-                        0 => self.code.push(0x06),
-                        -1 => self.code.push(0x07),
-                        _ => unreachable!(),
+                        1 => {
+                            self.code.push(0x05); // TjmpPos (peeks)
+                            match_patch = self.code.len();
+                            self.code.extend_from_slice(&[0, 0]);
+                        }
+                        0 => {
+                            self.code.push(0x06); // TjmpZero (peeks)
+                            match_patch = self.code.len();
+                            self.code.extend_from_slice(&[0, 0]);
+                        }
+                        -1 => {
+                            self.code.push(0x07); // TjmpNeg (peeks)
+                            match_patch = self.code.len();
+                            self.code.extend_from_slice(&[0, 0]);
+                        }
+                        v => {
+                            self.code.push(0x25); // TjmpEqInt (peeks)
+                            self.code.extend_from_slice(&v.to_le_bytes());
+                            match_patch = self.code.len();
+                            self.code.extend_from_slice(&[0, 0]);
+                        }
                     }
-                    self.code.extend_from_slice(&[0, 0]);
-                    let skip = self.code.len() + 1;
+
+                    // Mismatch: Jump past body to the next arm's check
+                    let skip_patch = self.code.len() + 1;
                     self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
-                    next_arm = Some(skip);
-                    let body = self.code.len() as u16;
-                    self.patch_u16(m_patch, body);
+                    next_arm_patch = Some(skip_patch);
+
+                    // Match found: execute body
+                    let body_addr = self.code.len() as u16;
+                    self.patch_u16(match_patch, body_addr);
+                    
+                    // Body: first pop the condition we were peeking at
+                    self.code.push(0x0c); // Tpop
                     self.emit_stmt(stmt);
-                    let end = self.code.len() + 1;
+                    
+                    // After body, jump to end of match
+                    let end_patch = self.code.len() + 1;
                     self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
-                    end_patches.push(end);
+                    end_patches.push(end_patch);
                 }
-                if let Some(p) = next_arm {
+
+                if let Some(p) = next_arm_patch {
                     let addr = self.code.len() as u16;
                     self.patch_u16(p, addr);
                 }
-                let end = self.code.len() as u16;
-                for p in end_patches { self.patch_u16(p, end); }
+                
+                // If no arms matched, we still have one Tload on stack from the last failed arm check
+                // unless arms was empty (but semantic enforces it isn't for Trit, and for Int it might be)
+                if !arms.is_empty() {
+                    self.code.push(0x0c); // Tpop
+                }
+
+                let end_addr = self.code.len() as u16;
+                for p in end_patches { self.patch_u16(p, end_addr); }
+                self.next_reg -= 1;
             }
             Stmt::ForIn { var, iter, body } => {
                 self.emit_expr(iter);

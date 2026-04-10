@@ -92,7 +92,7 @@ pub enum Stmt {
     },
     Match {
         condition: Expr,
-        arms: Vec<(i8, Stmt)>,
+        arms: Vec<(i64, Stmt)>,
     },
     /// for <var> in <iter_expr> { body }
     ForIn {
