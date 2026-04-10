@@ -126,24 +126,23 @@ impl BytecodeEmitter {
     pub fn emit_stmt(&mut self, stmt: &Stmt) {
         match stmt {
             Stmt::Let { name, ty, value } => {
-                match ty {
-                    Type::TritTensor { dims } => {
+                let mut handled = false;
+                if let Type::TritTensor { dims } = ty {
+                    // Only auto-allocate if size is fixed (>0) and no literal is provided
+                    if !dims.is_empty() && !dims.contains(&0) && !matches!(value, Expr::TritTensorLiteral(_)) {
                         let size: usize = dims.iter().product();
                         self.code.push(0x0f);
                         self.code.extend_from_slice(&(size as u16).to_le_bytes());
-                        let reg = self.next_reg;
-                        self.symbols.insert(name.clone(), reg);
-                        self.next_reg += 1;
-                        self.code.push(0x08); self.code.push(reg);
-                    }
-                    _ => {
-                        self.emit_expr(value);
-                        let reg = self.next_reg;
-                        self.symbols.insert(name.clone(), reg);
-                        self.next_reg += 1;
-                        self.code.push(0x08); self.code.push(reg);
+                        handled = true;
                     }
                 }
+                if !handled {
+                    self.emit_expr(value);
+                }
+                let reg = self.next_reg;
+                self.symbols.insert(name.clone(), reg);
+                self.next_reg += 1;
+                self.code.push(0x08); self.code.push(reg); // TSTORE
             }
             Stmt::Set { name, value } => {
                 self.emit_expr(value);

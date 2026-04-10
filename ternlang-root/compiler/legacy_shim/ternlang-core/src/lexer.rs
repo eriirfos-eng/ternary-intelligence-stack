@@ -9,8 +9,6 @@ pub enum Token {
 
     // Ternary Specific
     #[token("-1", priority = 11)]
-    #[token("0", priority = 11)]
-    #[token("1", priority = 11)]
     TritLiteral,
 
     // Ternary semantic keywords — first-class trit values

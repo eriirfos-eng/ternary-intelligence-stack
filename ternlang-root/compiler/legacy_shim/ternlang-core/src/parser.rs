@@ -215,10 +215,16 @@ impl<'a> Parser<'a> {
                 Token::LBracket => {
                     self.next_token()?; // consume `[`
                     let row = self.parse_expr()?;
-                    self.expect(Token::Comma)?;
-                    let col = self.parse_expr()?;
-                    self.expect(Token::RBracket)?;
-                    expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(col) };
+                    if let Ok(Token::Comma) = self.peek_token() {
+                        self.next_token()?; // consume `,`
+                        let col = self.parse_expr()?;
+                        self.expect(Token::RBracket)?;
+                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(col) };
+                    } else {
+                        self.expect(Token::RBracket)?;
+                        // Use row as the single index, 0 as column (for 1D logic in VM)
+                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(Expr::IntLiteral(0)) };
+                    }
                 }
                 Token::UncertainBranch => {
                     // Postfix `?` — ternary error propagation.
@@ -278,7 +284,8 @@ impl<'a> Parser<'a> {
                     match self.next_token()? {
                         Token::TritLiteral => {
                             let s = self.lex.slice();
-                            vals.push(s.parse::<i8>().unwrap_or(0));
+                            let v = s.parse::<i8>().unwrap_or(0);
+                            vals.push(v);
                         }
                         Token::Int(v) => vals.push(v as i8),
                         Token::Affirm => vals.push(1),
@@ -305,13 +312,7 @@ impl<'a> Parser<'a> {
             Token::Affirm => Ok(Expr::TritLiteral(1)),
             Token::Tend   => Ok(Expr::TritLiteral(0)),
             Token::Reject => Ok(Expr::TritLiteral(-1)),
-            Token::Int(val) => {
-                if val == 1 || val == 0 || val == -1 {
-                    Ok(Expr::TritLiteral(val as i8))
-                } else {
-                    Ok(Expr::IntLiteral(val))
-                }
-            }
+            Token::Int(val) => Ok(Expr::IntLiteral(val)),
             Token::Float(val) => Ok(Expr::FloatLiteral(val)),
             Token::StringLit(s) => Ok(Expr::StringLiteral(s)),
             Token::Ident(name) => {
@@ -617,7 +618,15 @@ impl<'a> Parser<'a> {
     fn parse_type(&mut self) -> Result<Type, ParseError> {
         let token = self.next_token()?;
         match token {
-            Token::TritType   => Ok(Type::Trit),
+            Token::TritType   => {
+                if let Ok(Token::LBracket) = self.peek_token() {
+                    self.next_token()?;
+                    self.expect(Token::RBracket)?;
+                    Ok(Type::TritTensor { dims: vec![0] })
+                } else {
+                    Ok(Type::Trit)
+                }
+            }
             Token::AgentRef   => Ok(Type::AgentRef),
             Token::TritTensor => {
                 self.expect(Token::LAngle)?;
