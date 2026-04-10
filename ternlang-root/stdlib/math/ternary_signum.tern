@@ -1,0 +1,25 @@
+// stdlib/math/ternary_signum.tern
+// Demonstrates: Signum function mapping int to trit.
+// Tier: 1 — Open Core
+
+fn signum(v: int) -> trit {
+    match v {
+        0 => { return 0;  }
+    }
+    if v > 0 { return 1;  }
+    if v < 0 { return -1; }
+    return 0;
+}
+
+fn main() -> trit {
+    // Test: positive -> 1
+    if signum(100) != 1 { return conflict(); }
+    
+    // Test: negative -> -1
+    if signum(-50) != -1 { return conflict(); }
+    
+    // Test: zero -> 0
+    if signum(0) != 0 { return conflict(); }
+    
+    return truth();
+}
