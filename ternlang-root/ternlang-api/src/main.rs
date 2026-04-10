@@ -1309,7 +1309,7 @@ async fn mcp_server_card() -> Json<Value> {
             "properties": {
                 "apiKey": {
                     "type": "string",
-                    "title": "Ternlang API Key (optional — Tier 2 €24.99/mo · Tier 3 €49.99/mo)",
+                    "title": "Ternlang API Key (optional — Tier 2 €99/mo · Tier 3 €349/mo)",
                     "description": "Core 10 MCP tools are free with no key. Premium key unlocks 10 additional tools: server-side three-layer memory with ternary attention, ternary context compression, full MoE-13 deliberation, ternary planning/triage/factcheck, and 10k REST API calls/month. Get a key at https://ternlang.com/pricing"
                 }
             },
@@ -1334,7 +1334,7 @@ async fn mcp_server_card() -> Json<Value> {
 async fn mcp_info() -> Json<Value> {
     Json(json!({
         "name":        "ternlang-mcp",
-        "version":     "0.2.0",
+        "version":     "0.3.0",
         "protocol":    "2024-11-05",
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
@@ -1342,7 +1342,7 @@ async fn mcp_info() -> Json<Value> {
         "tools":       20,
         "free_tools":  10,
         "premium_tools": 10,
-        "auth":        "free: no key required | Tier 2 €24.99/mo (10k/mo) | Tier 3 €49.99/mo (20k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
+        "auth":        "free: no key required | Tier 2 €99/mo (10k/mo) | Tier 3 €349/mo (50k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
         "highlight":   "server-side 3-layer memory (working/session/core) + ternary attention + MoE-13 deliberation + ternary compression",
         "upgrade":     "https://ternlang.com/pricing",
     }))
@@ -3087,7 +3087,7 @@ async fn main() {
     let state = Arc::new(AppState {
         admin_key,
         keys,
-        version: "0.1.0",
+        version: "0.3.0",
         stripe_webhook_secret,
         resend_api_key,
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
