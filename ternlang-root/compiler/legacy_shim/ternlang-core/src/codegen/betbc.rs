@@ -548,7 +548,7 @@ impl BytecodeEmitter {
         self.agent_handlers.iter().map(|&(id, addr)| (id, addr as usize)).collect()
     }
 
-    pub fn finalize(self) -> Vec<u8> { self.code }
+    pub fn finalize(&mut self) -> Vec<u8> { std::mem::take(&mut self.code) }
 
     fn patch_u16(&mut self, pos: usize, val: u16) {
         let b = val.to_le_bytes();

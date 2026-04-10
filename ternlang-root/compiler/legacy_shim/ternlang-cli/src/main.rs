@@ -141,6 +141,7 @@ fn main() {
             let code = emitter.finalize();
             println!("Emitted {} bytes of bytecode", code.len());
             let mut vm = BetVm::new(code);
+            emitter.register_agents(&mut vm);
 
             // Phase 5.1: Distributed runtime setup
             if let Some(addr) = node_addr {
@@ -382,6 +383,7 @@ fn run_repl() {
                 emitter.emit_program(&prog);
                 let code = emitter.finalize();
                 let mut vm = BetVm::new(code);
+            emitter.register_agents(&mut vm);
                 match vm.run() {
                     Ok(_) => {
                         let result = vm.get_register(0);
@@ -653,6 +655,7 @@ fn run_tests(path: &std::path::PathBuf) {
 
                 let code = emitter.finalize();
                 let mut vm = BetVm::new(code);
+            emitter.register_agents(&mut vm);
                 match vm.run() {
                     Ok(_) => {
                         let result = vm.peek_stack(); // tests should leave result on stack top
