@@ -196,6 +196,7 @@ impl SemanticAnalyzer {
                 let val_ty = self.infer_expr_type(value)?;
                 let type_ok = val_ty == *ty
                     || matches!(value, Expr::Cast { .. })
+                    || (*ty == Type::Int && val_ty == Type::Trit)
                     || (matches!(ty, Type::Named(_)) && val_ty == Type::Trit)
                     || (matches!(ty, Type::TritTensor { .. }) && matches!(val_ty, Type::TritTensor { .. }))
                     || (*ty == Type::AgentRef && val_ty == Type::AgentRef);
@@ -212,6 +213,7 @@ impl SemanticAnalyzer {
                     // Allow TritTensor shape flexibility and AgentRef, cast
                     let ok = found == *expected
                         || matches!(expr, Expr::Cast { .. })
+                        || (*expected == Type::Int && found == Type::Trit)
                         || (matches!(expected, Type::TritTensor { .. }) && matches!(found, Type::TritTensor { .. }))
                         || (matches!(expected, Type::Named(_)) && found == Type::Trit);
                     if !ok {
@@ -314,7 +316,10 @@ impl SemanticAnalyzer {
             Stmt::Set { name, value } => {
                 let var_ty = self.lookup_var(name)?;
                 let val_ty = self.infer_expr_type(value)?;
-                if var_ty != val_ty && !matches!(value, Expr::Cast { .. }) {
+                let ok = var_ty == val_ty
+                    || matches!(value, Expr::Cast { .. })
+                    || (var_ty == Type::Int && val_ty == Type::Trit);
+                if !ok {
                     return Err(SemanticError::TypeMismatch { expected: var_ty, found: val_ty });
                 }
                 Ok(())

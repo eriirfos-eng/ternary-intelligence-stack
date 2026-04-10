@@ -182,16 +182,16 @@
               <a href="#" onclick="navTo(3)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">TernAudit</div></a>
               <a href="#" onclick="navTo(4)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">Logic Library</div></a>
               <a href="#" onclick="navTo(5)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">MCP Server</div></a>
-              <a href="#" onclick="navTo(7)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_teal uppercase">BET VM & Compiler</div></a>
+              <a href="#" onclick="navTo(7)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">BET VM & Compiler</div></a>
               <div class="h-px bg-t_border mx-3 my-1"></div>
-              <a href="#" onclick="navTo(9)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_teal uppercase flex items-center gap-2">TernGround <span class="text-[8px] bg-t_teal/20 text-t_teal px-1.5 py-0.5 rounded align-middle">PLAY</span></div></a>
+              <a href="#" onclick="navTo(9)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase flex items-center gap-2">TernGround <span class="text-[8px] bg-t_teal/20 text-t_teal px-1.5 py-0.5 rounded align-middle">PLAY</span></div></a>
             </div>
           </div>
           <a href="#" onclick="navTo(0); setTimeout(()=>document.getElementById('quickstart').scrollIntoView({behavior:'smooth'}),300)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Quickstart</a>
           <a href="#" onclick="navTo(6)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Benchmarks</a>
           <a href="#" onclick="navTo(7)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Architecture</a>
           <a href="#" onclick="navTo(8)" class="text-xs font-bold text-t_muted hover:text-t_text uppercase tracking-widest transition-colors">Pricing</a>
-          <a href="#" onclick="navTo(9)" class="text-xs font-bold text-t_teal hover:text-t_text uppercase tracking-widest transition-colors border border-t_teal/30 px-3 py-1 rounded hover:bg-t_teal/10">TernGround</a>
+          <a href="#" onclick="navTo(9)" class="text-xs font-bold text-t_text hover:text-t_teal uppercase tracking-widest transition-colors border border-t_border px-3 py-1 rounded hover:border-t_teal/50 hover:bg-t_teal/10">TernGround <span class="text-[8px] bg-t_teal/20 text-t_teal px-1.5 py-0.5 rounded align-middle ml-1">PLAY</span></a>
         </div>
       </div>
       <div class="flex items-center gap-4">
@@ -221,8 +221,8 @@
       <a href="#" onclick="navTo(3)" class="text-t_text hover:text-t_teal transition-colors pl-4">TernAudit</a>
       <a href="#" onclick="navTo(4)" class="text-t_text hover:text-t_teal transition-colors pl-4">Logic Library</a>
       <a href="#" onclick="navTo(5)" class="text-t_text hover:text-t_teal transition-colors pl-4">MCP Server</a>
-      <a href="#" onclick="navTo(7)" class="text-t_teal hover:text-t_text transition-colors pl-4">BET VM & Compiler</a>
-      <a href="#" onclick="navTo(9)" class="text-t_teal font-black hover:text-t_text transition-colors pl-4">TernGround ▸</a>
+      <a href="#" onclick="navTo(7)" class="text-t_text hover:text-t_teal transition-colors pl-4">BET VM & Compiler</a>
+      <a href="#" onclick="navTo(9)" class="text-t_text hover:text-t_teal transition-colors pl-4">TernGround <span class="text-[8px] bg-t_teal/20 text-t_teal px-1.5 py-0.5 rounded align-middle ml-1">PLAY</span></a>
 
       <div class="h-px w-full bg-t_border/50"></div>
       <p class="text-[10px] text-t_muted">Ecosystem</p>
@@ -1012,7 +1012,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_blue text-[10px] font-black uppercase tracking-[0.2em] border border-t_blue/50 px-3 py-1 rounded-full bg-t_blue/10">Lab 01</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">13 Experts. <span class="text-t_blue">One Answer.</span></h3>
             </div>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_blue">Inject Query</strong> to send a decision to 13 specialist agents. Each votes independently via weighted EMA. If Safety or MetaSafety fires a −1 at confidence &gt; 0.90, the entire chain terminates — no majority vote can override it.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">LLMs process every query through the same weights regardless of what you're asking. Mixture-of-Experts routes each query only to the specialist that's relevant — isolating failure domains and cutting compute. In ternary, each expert votes {−1, 0, +1}: reject, hold, or affirm. No majority vote can override a Safety veto.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_blue">Inject Query</strong> to fire a decision through 13 specialist agents. Each votes independently via weighted EMA convergence. If Safety or MetaSafety returns −1 at confidence &gt; 0.90, the entire chain terminates unconditionally — right there, before any action executes.</p>
           </div>
           <div class="glass-card rounded-[2rem] border border-t_border p-8 grid lg:grid-cols-12 gap-8 shadow-2xl">
             <div class="lg:col-span-8 bg-t_bg2 rounded-xl border border-t_border p-6 relative">
@@ -1047,6 +1048,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 02</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Your Memory Stack <span class="text-t_teal">Just Said No.</span></h3>
             </div>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Binary AI treats all memory as equal weight — a new instruction can silently overwrite a safety rule. Ternlang structures memory in three layers: L1 is hot working context (ephemeral), L2 holds ternary-compressed session patterns, L3 is immutable identity anchors that cannot be overridden. When L1 tries to promote something that contradicts an L3 veto, the system says no — loudly, traceably, never silently.</p>
             <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_teal">Promote to L2</strong> to push a working-memory item up the stack. When it conflicts with a Core Identity Veto anchor in L3, the system doesn't crash — it rejects cleanly and logs exactly why.</p>
           </div>
           <div class="grid md:grid-cols-3 gap-6 font-mono text-xs">
@@ -1099,7 +1101,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 03</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">It Doesn't Guess. <span class="text-t_teal">It Waits.</span></h3>
             </div>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Pick a scenario. Press <strong class="text-t_teal">Deliberate</strong>. Watch confidence accumulate round by round via <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">S_r = 0.3·e + 0.7·S_{prev}</code>. It only commits to +1 or −1 when it's confident enough. Until then: <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">trit=0</code>. Waiting is the correct answer.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Binary inference must return an answer on every call — even when the evidence isn't there yet. The deliberation engine fixes this: it accumulates confidence across multiple rounds using an exponential moving average, and only commits once it crosses a threshold. Below that threshold it returns <code class="font-mono text-t_teal">trit=0</code> — "I need more data." That's not a failure state. That's the correct machine output under uncertainty.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Pick a scenario. Press <strong class="text-t_teal">Deliberate</strong>. Watch confidence accumulate round by round via <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">S_r = 0.3·e + 0.7·S_{prev}</code>. It only commits to +1 or −1 when confident enough. Until then: <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">trit=0</code>. Waiting is the correct answer.</p>
           </div>
           <div class="glass-card rounded-xl p-6 md:p-10 border border-t_border shadow-2xl max-w-5xl mx-auto">
             <div class="mb-8">
@@ -1154,7 +1157,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 04</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Zero Means <span class="text-t_teal">Don't Bother.</span></h3>
             </div>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Click any <strong class="text-t_blue">+1</strong> or <strong class="text-t_red">−1</strong> weight to zero it out. Every zero weight is a multiply-accumulate the BET VM skips entirely — no branch, no masking, just absent. BitNet b1.58 puts ~60% of weights in this range. Watch power drop in real time.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Neural networks burn most of their power on matrix multiplications — billions of weight × activation multiplies per inference pass. In ternary BitNet, every weight is constrained to {−1, 0, +1}. A weight of zero requires no multiply at all: the BET VM skips it at the instruction level, no branch needed, no masking overhead. BitNet b1.58 puts roughly 60% of weights here by design. This is where the 60% power reduction comes from.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Click any <strong class="text-t_blue">+1</strong> or <strong class="text-t_red">−1</strong> weight to prune it to zero. Every zero is a multiply-accumulate the BET VM skips entirely — no branch, no masking, just gone. Watch active compute and power consumption drop in real time as you prune.</p>
           </div>
           <div class="glass-card rounded-[3rem] overflow-hidden shadow-2xl p-8 grid lg:grid-cols-2 gap-12 bg-t_bg2">
             <div>
@@ -1192,7 +1196,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_red text-[10px] font-black uppercase tracking-[0.2em] border border-t_red/50 px-3 py-1 rounded-full bg-t_red/10">Lab 05</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Real Code. <span class="text-t_red">Actually Running.</span></h3>
             </div>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Select a <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">.tern</code> program, press <strong class="text-t_red">RUN</strong>. Five real BET VM programs simulated instruction by instruction — classifier, pipeline gate, sparse neural inference, MoE voting, and medical uncertainty resolution.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">The BET VM is a balanced ternary virtual machine — its registers, stack, and arithmetic all operate natively on {−1, 0, +1}. There is no binary-to-ternary conversion layer. <code class="font-mono text-t_teal">trit=0</code> is a first-class value that can suspend execution (THOLD), gate a branch, or propagate uncertainty up the call stack via the <code class="font-mono text-t_teal">?</code> operator. This is what makes ternary a runtime property, not just a data type.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Select a <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">.tern</code> program and press <strong class="text-t_red">RUN</strong>. Five programs execute instruction by instruction in the BET VM — classifier, pipeline gate, sparse neural inference, MoE voting, and medical uncertainty resolution. Watch the opcodes fire.</p>
           </div>
           <div class="term-window max-w-5xl mx-auto shadow-2xl">
             <div class="term-titlebar">
@@ -1215,7 +1220,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_blue text-[10px] font-black uppercase tracking-[0.2em] border border-t_blue/50 px-3 py-1 rounded-full bg-t_blue/10">Lab 06</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Three States. <span class="text-t_blue">Nine Outcomes.</span></h3>
             </div>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Binary logic has a 2×2 truth table. Ternary has a 3×3. Pick an operation — TMAX is the OR analog, TMIN is AND, TADD is addition, TMUL is multiplication. Click any cell to see the exact inputs and result explained.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Every logic operation you know assumes two states: true or false. Adding a third state — unknown, withheld, uncertain — changes the entire truth table. The OR analog doesn't just return true or false anymore; it has to decide what to do when one input is uncertain. So does AND. So does addition. Ternary arithmetic has consistent, non-arbitrary rules for all of it.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Binary has a 2×2 truth table. Ternary has a 3×3. Pick an operation — TMAX is the OR analog, TMIN is AND, TADD is addition, TMUL is multiplication. Click any cell to see the exact inputs, the result, and the rule behind it explained in plain language.</p>
           </div>
           <div class="glass-card rounded-[2rem] p-8 md:p-12 border border-t_border shadow-xl max-w-3xl mx-auto">
             <div class="flex flex-wrap gap-3 mb-8" id="truth-op-btns">

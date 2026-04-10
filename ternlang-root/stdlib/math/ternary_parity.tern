@@ -1,0 +1,32 @@
+// stdlib/math/ternary_parity.tern
+// Demonstrates: Foundational integer parity in ternary.
+// Tier: 1 — Open Core
+// Returns affirm (1) for even numbers, reject (-1) for odd numbers.
+
+fn ternary_parity(val: int) -> trit {
+    let temp: int = val;
+    if temp < 0 {
+        temp = -temp;
+    }
+    
+    while temp > 1 {
+        temp = temp - 2;
+    }
+    
+    if temp == 0 {
+        return affirm; // Even
+    }
+    return reject; // Odd
+}
+
+fn main() -> trit {
+    if ternary_parity(2)  != affirm { return reject; }
+    if ternary_parity(4)  != affirm { return reject; }
+    if ternary_parity(3)  != reject { return reject; }
+    if ternary_parity(1)  != reject { return reject; }
+    if ternary_parity(0)  != affirm { return reject; }
+    if ternary_parity(-2) != affirm { return reject; }
+    if ternary_parity(-3) != reject { return reject; }
+
+    return affirm;
+}
