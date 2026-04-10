@@ -1,7 +1,7 @@
 # Ternlang Roadmap: Bridging the Ternary Software Deficit
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
-**Current Version:** v0.2.0
-**Last Updated:** 2026-04-09
+**Current Version:** v0.3.0
+**Last Updated:** 2026-04-10
 **Repo:** https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-
 **Local:** ~/Desktop/Ternary Intelligence Stack (TIS)/
 
@@ -145,7 +145,7 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 
 ## 🛠 Developer Tooling — COMPLETE ✅
 - [x] **LSP**: `ternlang-lsp` crate — JSON-RPC 2.0 over stdio, diagnostics, hover, completion (19 snippets)
-- [x] **VS Code extension**: `ternlang-vscode/` — TextMate grammar, .tern file association, LSP client
+- [x] **VS Code extension v0.3.0**: `ternlang-vscode/` — TextMate grammar, 19 snippets, `Ctrl+Shift+R` run command, graceful LSP, status bar, 4-tier API key gating. Published to Open VSX (`rfi-irfos/ternlang`).
 - [x] **Formatter**: `ternlang fmt [--write]` — canonical style for 3-way match arms
 - [x] **REPL**: `ternlang repl` — interactive trit expression evaluation via BET VM
 - [x] **Package manager (ternpkg)**: `ternlang.toml`, `ternpkg install [PKG]`, GitHub-backed registry
@@ -231,8 +231,8 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 
 ### High Priority
 - [ ] **TernStudio full rewrite** — SAP-style dashboard view + Editor view (activity bar, Explorer, History, resizable panels) + Settings view. "Upskill" replaces "Upgrade". Share button (btoa hash), Download button, run history (last 20), toast notifications, expanded stdlib tree. Monaco layout() on view switch. Design locked, not yet written.
-- [ ] **BUG-L01 compiler fix** — Add `/* */` block comment rule to lexer (`ternlang-core/src/lexer.rs`). Currently unsupported — `/` tokenized as divide, causes 3-byte silent failure. High impact on all stdlib files using block comments.
-- [ ] **BUG-L02 compiler fix** — `parse_program()` fallback fails on `fn` at top level. Affects `stdlib/math/ternary_median.tern` and any file where program fails to parse in full-program mode.
+- [x] **BUG-L01 FIXED** — Block comment skip rule was already in `lexer.rs` line 6. Documentation error corrected. Verified 2026-04-10.
+- [x] **BUG-L02 FIXED** — `parse_stmt()` now has explicit `Token::Fn` arm (no-consume); fallback loop in `main.rs` routes to `parse_function()` + `emit_entry_call("main")`. +6 lines parser, +22 lines CLI. 2026-04-10.
 - [ ] **stdlib/qnn/ populate** — 10 planned Qutrit Neural Network modules (qutrit_gate, qutrit_hadamard, qutrit_entangle, qnn_layer, qnn_measure, qnn_inference, qutrit_teleport, qnn_grover, qnn_vqe, qnn_qaoa). Tier 3. ROADMAP.md stub exists.
 
 ### Medium Priority
@@ -251,8 +251,253 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 
 ---
 
-## 📝 Session Log
-| Date | What was done |
+## 🗺 Strategic Vision: 2026 — The Year Ternlang Ships to the World
+
+> *"What's best for humans is often not what's best for everybody."*
+> — the design principle behind EcoCore
+
+The core stack is complete and deployed. Phase 10 onward is about making it real for people who aren't us: distributable, debuggable, discoverable, and philosophically coherent.
+
+---
+
+## ⚡ Phase 10: Extension Maturity — IMMEDIATE PRIORITY
+
+These two items ship before any other new feature. Without them, the extension is syntax highlighting with a marketing page.
+
+### 10A — Pre-Built LSP Binary (GitHub Actions CI)
+**Why:** Users who install from Open VSX cannot build `ternlang-lsp` from source. Hover docs and live diagnostics are dead on arrival without this. Every serious language extension ships pre-built binaries (rust-analyzer, clangd, gopls).
+
+- [ ] GitHub Actions workflow: on `v*` tag, build `ternlang-lsp` for 4 targets:
+  - `x86_64-unknown-linux-gnu`
+  - `aarch64-unknown-linux-gnu`
+  - `x86_64-apple-darwin`
+  - `x86_64-pc-windows-msvc`
+- [ ] Extension `activate()`: detect host platform, unpack correct binary to `bin/ternlang-lsp`
+- [ ] VSIX manifest: bundle all 4 binaries or use a post-install step
+- [ ] Remove the "build it yourself" requirement from README
+
+### 10B — Tier 2: Inline Trit Value Hints (Ghost Decorations)
+**Why:** This is the visual proof-of-concept that makes ternlang click for everyone who sees it. A ghost annotation after every `let` binding showing its resolved trit state. No other language does this. It's the demo that gets shared.
+
+- [ ] Parse VM stdout after `ternlang.run` — extract `Reg N: trit(...)` lines
+- [ ] Map registers back to source variable names via symbol table export in CLI (`--emit-symbols`)
+- [ ] VS Code `DecorationProvider`: render `// → Affirm` / `// → Tend` / `// → Reject` after each binding
+  - Affirm: green ghost text
+  - Tend: amber/yellow ghost text
+  - Reject: red ghost text
+- [ ] Activate on file save (if key is `tern_t2_*`) or on explicit run
+- [ ] `ternlang.inlineTritHints` command wired from stub → real implementation
+- [ ] Extension v0.4.0 — bump + publish to Open VSX
+
+### 10C — Dogfood the MCP
+- [ ] Add ternlang MCP to this development environment:
+  ```
+  smithery mcp add rfi-irfos/ternlang
+  ```
+- [ ] Use `trit_decide` and `moe_orchestrate` in real daily decision-making
+- [ ] Every friction point found becomes a bug report → next release
+
+---
+
+## 🧠 Phase 11: MCP Intelligence Upgrade — 5 New Tools + EcoCore
+
+### 11A — 5 New MCP Tools
+
+**`trit_debate`** (Free tier)
+> Give it two competing claims. Get a structured 3-way verdict: evidence for each side, and what's genuinely uncertain (Tend). This is the tool that gets shared on social media — it's instantly legible to anyone who sees the output.
+
+- [ ] Input: `{ "claim_a": string, "claim_b": string, "context"?: string }`
+- [ ] MoE routes both claims through FactCheck + DeductiveReason + AmbiguityRes experts
+- [ ] Output: `{ "for_a": trit, "for_b": trit, "tension": float, "synthesis": string, "hold_reason"?: string }`
+
+**`trit_uncertainty_map`** (Free tier)
+> Paste in any text — meeting notes, a medical report, a legal clause. Returns every claim annotated with Affirm/Tend/Reject and a confidence score. Compliance teams, lawyers, analysts — this is immediately useful to non-technical users.
+
+- [ ] Input: `{ "text": string, "granularity": "sentence" | "paragraph" }`
+- [ ] Split text into claims, run each through FactCheck + MetaSafety
+- [ ] Output: array of `{ "claim": string, "trit": int, "confidence": float, "reason": string }`
+
+**`trit_calibrate`** (Free tier)
+> Given a log of an AI agent's recent outputs, score how binary its decision-making is. Returns a calibration report: how often did it force yes/no when it should have held? This is the meta-tool — it makes the AI using ternlang better at using ternlang.
+
+- [ ] Input: `{ "decisions": [{ "input": string, "output": string, "confidence"?: float }] }`
+- [ ] Score binary_ratio: fraction of outputs that were forced yes/no with >0.9 confidence
+- [ ] Output: `{ "binary_ratio": float, "hold_opportunities": int, "calibration_score": trit, "recommendations": string[] }`
+
+**`trit_translate`** (Pro — Tier 2)
+> Input a Python `if/elif/else`, a SQL `CASE WHEN`, or a JSON rule set. Output: equivalent `.tern` program with the ternary hold zone inserted where the original code had no coverage. This is the onramp for existing codebases.
+
+- [ ] Input: `{ "code": string, "language": "python" | "sql" | "json_rules" }`
+- [ ] Pattern-match binary branches, identify the "else" gap, insert Tend arm
+- [ ] Output: `{ "tern_code": string, "hold_zones_added": int, "explanation": string }`
+
+**`trit_eco_check`** (Free tier — see 11B for full context)
+> Given a proposed action or decision, returns two trit scores: one from a human-centric perspective and one from an ecocentric perspective. When they diverge, the synthesis is Tend — "this needs more consideration before acting." The first MCP tool that asks "but is this good for everything, not just us?"
+
+- [ ] Input: `{ "action": string, "context"?: string, "scope"?: "local" | "regional" | "global" }`
+- [ ] Human score: standard MoE-13 orchestration
+- [ ] Eco score: EcoCore expert (see 11B)
+- [ ] When `human_trit != eco_trit`: synthesis → Tend, flag tension
+- [ ] Output: `{ "human_trit": int, "eco_trit": int, "synthesis": int, "tension": bool, "eco_reasoning": string }`
+
+### 11B — EcoCore: Ecocentric Reasoning Parameter for MoE-13
+
+The philosophical premise: MoE-13 currently deliberates from a human-optimal perspective. Every expert evaluates "is this good?" meaning "good for the user / the task / human interests." EcoCore adds a 14th lens — not a 14th expert that votes, but a post-synthesis modifier that asks: **what would the whole system say?**
+
+The key insight is ternary: when human-optimal is Affirm and eco-optimal is Reject, the right answer isn't a compromise — it's **Tend** (hold, reconsider, find a path that serves both). Ternary logic handles this naturally. Binary systems can't — they either ignore the tension or average it away.
+
+- [ ] New `EcoExpert` in `ternlang-moe`: competence vector emphasizes `safety` + a new `systemic_impact` dimension (add to 6D → 7D, backwards compatible)
+- [ ] `EcoCentric` flag on `TernMoeOrchestrator` config (`eco_mode: bool`)
+- [ ] When `eco_mode: true`:
+  1. Run standard 9-step MoE pipeline → `human_result`
+  2. Run EcoExpert independently → `eco_result`
+  3. Compute `eco_tension = |human_result.trit - eco_result.trit|`
+  4. If `eco_tension > 0`: override synthesis → Tend, add `eco_reasoning` to `OrchestrationResult`
+  5. If `eco_tension == 0`: pass through unchanged — agreement means the action is coherent
+- [ ] MoE conversation weighting: `ConversationContext` struct — user's prior messages influence expert weights dynamically. A user who consistently pushes for fast answers gets `AmbiguityRes` weighted higher; a user who asks ecological questions gets `EcoExpert` weighted higher
+- [ ] `EcoCoreConfig`: `{ "enabled": bool, "scope": "local"|"regional"|"global", "hard_veto_on_eco_reject": bool }`
+  - `hard_veto_on_eco_reject: true` → if eco score is Reject AND confidence > 0.85, block the action entirely (the safety gate analog, but for ecological harm)
+- [ ] 8 new tests: eco_tension detection, hard veto, conversation weighting, trit_eco_check MCP tool
+
+---
+
+## 🌐 Phase 12: WASM Runtime — Make TernGround Real
+
+**Why this matters:** TernGround Lab 05 currently runs `.tern` in a hand-written JS interpreter. The semantics drift from the real compiler. When someone finds a discrepancy, they lose trust. The fix is to compile `ternlang-core` to WebAssembly — the real BET VM, running in the browser, no installation.
+
+This is also the Hacker News launch vehicle. "Try the first balanced ternary language in your browser" with a live WASM runtime is a compelling demo.
+
+- [ ] `cargo build --target wasm32-unknown-unknown -p ternlang-core` — verify it compiles (no OS deps)
+- [ ] `wasm-bindgen` wrapper: expose `run_tern(source: &str) -> String` (returns stdout + register dump)
+- [ ] Replace `playground/index.html` JS interpreter with WASM call
+- [ ] TernGround Lab 05: "Real BET VM, actually running" — accurate, not approximate
+- [ ] Performance: BET VM in WASM should be fast enough for the 5 demo programs instantly
+- [ ] CI: build WASM artifact on release, embed in `ternlang-api` static assets or serve from CDN
+
+---
+
+## 🔍 Phase 13: TernAudit — The Killer App
+
+TernAudit is the commercial case made tangible. It answers the question "why would an enterprise buy ternlang?" with a specific, auditable, EU-AI-Act-compliant answer: *because our AI's decisions are now trit-annotated and you can prove it to a regulator.*
+
+**What it does:** Takes any AI system's decision log, LLM output batch, or classifier result set and returns a trit-annotated audit trail. Every claim: Affirm (evidence present, high confidence), Tend (uncertain, needs more data), or Reject (contradicted). The Tend cases are the ones the AI should have flagged as "I don't know" but didn't — that's the audit finding.
+
+- [ ] `ternlang audit <input.json>` CLI command
+  - Input: JSON array of `{ "input": string, "output": string, "confidence"?: float }`
+  - Output: `audit_report.json` + `audit_report.html` (human-readable)
+- [ ] `POST /api/audit` REST endpoint (Tier 2+)
+- [ ] Audit report format:
+  ```json
+  {
+    "total_decisions": N,
+    "affirm_count": N, "tend_count": N, "reject_count": N,
+    "forced_binary_ratio": 0.73,
+    "eu_ai_act": { "article_13": "pass|warn|fail", "article_14": "pass|warn|fail" },
+    "flagged": [{ "input": "...", "output": "...", "trit": 0, "reason": "..." }]
+  }
+  ```
+- [ ] VS Code command: `Ternlang Pro: Audit Selection` — select any block of AI outputs, get inline annotations
+- [ ] `trit_audit` MCP tool (wraps the REST endpoint)
+- [ ] Marketing: "The only tool that finds the decisions your AI should have held"
+
+---
+
+## 🔄 Phase 14: TernTranslator — The Bridge Into the Existing World
+
+Most potential users have binary decision trees they've been running for years. TernTranslator is the onramp: give it your Python `if/elif/else` or SQL `CASE WHEN` and it outputs `.tern` with the ternary hold zone added where the original code had no coverage.
+
+- [ ] `ternlang translate <input.py>` CLI command
+  - Parses Python if/elif/else, SQL CASE WHEN, JSON rule arrays
+  - Identifies "else: default" patterns — these are the hold zones in disguise
+  - Outputs `.tern` equivalent with explicit Tend arm + comment explaining the gap
+- [ ] `POST /api/translate` REST endpoint (Tier 2+)
+- [ ] VS Code command: `Ternlang Pro: Translate Selection to Ternary` (Tier 2)
+  - Select any if/else block → get `.tern` equivalent in a side panel
+- [ ] `trit_translate` MCP tool (already planned in Phase 11A)
+- [ ] Target languages for v1: Python, SQL, JSON rule sets
+- [ ] Target languages for v2: JavaScript, TypeScript, YAML (Kubernetes policy rules)
+
+---
+
+## 📚 Phase 15: Distribution, Academia, Community
+
+### 15A — Jupyter Kernel
+- [ ] `ternlang-jupyter`: ZeroMQ-based Jupyter kernel wrapping `ternlang-cli`
+- [ ] `.tern` cells in Jupyter notebooks — execute, display trit state of all variables
+- [ ] Rich output: trittensor visualized as colored grid (Affirm=green, Tend=amber, Reject=red)
+- [ ] Install: `pip install ternlang-jupyter && python -m ternlang_jupyter.install`
+- [ ] Target: AI safety researchers, ML students, anyone working on uncertainty quantification
+
+### 15B — ternpkg Curated Registry
+- [ ] Move beyond GitHub-backed install — add a curated `registry.ternlang.com` index
+- [ ] Quality gate: every registered package must pass `ternlang-cli run` with exit 0
+- [ ] `ternpkg search <keyword>` — search the registry
+- [ ] `ternpkg publish` — submit a package (authenticated, rate-limited)
+- [ ] Seed with: stdlib bundles (core, ml, safety), TernAudit rules, community agents
+
+### 15C — Academic Outreach
+- [ ] Contact USN group (Bos & Gundersen) — joint whitepaper on ternary ISA + inference
+- [ ] Submit to arXiv: "BET-ISA: A Balanced Ternary Execution Architecture for Sparse Neural Inference"
+- [ ] Target venues: NeurIPS workshop on efficiency, ISCA, DATE conference (hardware)
+- [ ] DOI registration for all RFI-IRFOS papers — already started (OSF)
+
+### 15D — Community
+- [ ] Discord server: `#ternlang` — language, `#bet-vm` — compiler, `#mcp` — AI integration, `#research`
+- [ ] GitHub Discussions: enabled on the repo
+- [ ] Hacker News launch: coordinate WASM playground (Phase 12) + curated stdlib showcase
+  - Headline: "Ternlang: a programming language where 'I don't know' is a first-class value [try in browser]"
+- [ ] Weekly changelog post
+
+---
+
+## 🏗 Phase 16: TernStudio v1.0 — The Full IDE
+
+The arc of the VS Code extension ends at v1.0.0 / TernStudio. This is the complete developer environment for ternary systems programming.
+
+### VS Code Extension Milestones
+| Version | Key Feature |
+|---------|-------------|
+| v0.4.0 | Inline trit hints live (Phase 10B), pre-built LSP binary (Phase 10A) |
+| v0.5.0 | BET VM step debugger (Tier 3): breakpoints on trit values, register watch panel, step through opcodes |
+| v0.6.0 | Tensor visualizer (Tier 3): trittensor rendered as colored grid inline; `@sparseskip` coverage overlay |
+| v0.7.0 | TernAudit inline (Tier 2): annotate selected AI output block with trit verdicts |
+| v0.8.0 | TernTranslator panel (Tier 2): translate selected if/else to .tern in side panel |
+| v1.0.0 | Stable API, all tiers fully implemented, Enterprise cluster panel + agent monitor |
+
+### TernStudio Web IDE
+The standalone web IDE — Monaco editor + real BET VM (WASM, Phase 12) + integrated TernAudit + project management.
+
+- [ ] SAP-style layout: Activity Bar → Explorer / Editor / History / Settings panes
+- [ ] File tree: project-aware, stdlib browser, `ternpkg.toml` aware
+- [ ] Run panel: real BET VM output, inline trit annotations on variables
+- [ ] TernAudit tab: paste any AI output, get trit audit instantly
+- [ ] TernTranslator tab: paste Python/SQL, get .tern output
+- [ ] Share button: `btoa` hash → shareable URL with full program state
+- [ ] Download button: save current project as `.ternproj` bundle
+- [ ] Run history: last 20 executions with trit state snapshots
+
+---
+
+## 📊 2026 Priority Matrix
+
+| Quarter | Deliverable | Impact | Effort |
+|---------|------------|--------|--------|
+| Q2 2026 | Pre-built LSP binary (Phase 10A) | 🔴 Critical | Medium |
+| Q2 2026 | Inline trit hints v0.4.0 (Phase 10B) | 🔴 Critical | Medium |
+| Q2 2026 | 5 new MCP tools (Phase 11A) | 🟠 High | Medium |
+| Q2 2026 | EcoCore in MoE-13 (Phase 11B) | 🟠 High | High |
+| Q2 2026 | WASM runtime (Phase 12) | 🟠 High | Medium |
+| Q3 2026 | TernAudit CLI + REST (Phase 13) | 🔴 Critical (commercial) | High |
+| Q3 2026 | TernTranslator (Phase 14) | 🟠 High | Medium |
+| Q3 2026 | Jupyter kernel (Phase 15A) | 🟡 Medium | Medium |
+| Q3 2026 | Hacker News launch (Phase 15D) | 🔴 Critical (distribution) | Low |
+| Q4 2026 | VS Code extension v0.5.0 — BET debugger (Phase 16) | 🟠 High | High |
+| Q4 2026 | TernStudio v1.0 (Phase 16) | 🟠 High | Very High |
+| Q4 2026 | arXiv paper submission (Phase 15C) | 🟡 Medium | Medium |
+
+---
+
+
 |------|---------------|
 | 2026-04-02 | Initial repo setup. Phase 1+2 confirmed complete. Git initialized, pushed to GitHub. Credential store configured. 4 failing tests identified (DimSeparator bug). Phase 3 plan defined. |
 | 2026-04-02 | Fixed DimSeparator/Ident collision in lexer. Fixed betbc test import. 11/11 tests passing. Next: TCALL/TRET function dispatch + tensor VM opcodes. |
