@@ -39,6 +39,8 @@ impl<'a> Parser<'a> {
         let mut structs = Vec::new();
         let mut agents = Vec::new();
         let mut functions = Vec::new();
+        let mut toplevel_stmts: Vec<Stmt> = Vec::new();
+
         while self.peek_token().is_ok() {
             match self.peek_token()? {
                 Token::Use => {
@@ -48,9 +50,24 @@ impl<'a> Parser<'a> {
                 }
                 Token::Struct => structs.push(self.parse_struct_def()?),
                 Token::Agent  => agents.push(self.parse_agent_def()?),
-                _             => functions.push(self.parse_function()?),
+                Token::Fn | Token::At => functions.push(self.parse_function()?),
+                // Top-level statements (scripts / snippets without explicit fn main)
+                _ => toplevel_stmts.push(self.parse_stmt()?),
             }
         }
+
+        // Wrap any top-level statements in a synthetic fn main() -> trit { ... }
+        // only when no explicit main function is defined.
+        if !toplevel_stmts.is_empty() && !functions.iter().any(|f| f.name == "main") {
+            functions.push(Function {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::Trit,
+                body: toplevel_stmts,
+                directive: None,
+            });
+        }
+
         Ok(Program { imports, structs, agents, functions })
     }
 
