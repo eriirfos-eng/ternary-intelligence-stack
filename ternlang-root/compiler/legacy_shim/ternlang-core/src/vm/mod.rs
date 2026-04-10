@@ -197,17 +197,32 @@ impl BetVm {
                 0x05 => { // TjmpPos
                     let addr = self.read_u16()?;
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    if let Value::Trit(Trit::Affirm) = val { self.pc = addr as usize; }
+                    let is_pos = match val {
+                        Value::Trit(Trit::Affirm) => true,
+                        Value::Int(v) if v > 0 => true,
+                        _ => false,
+                    };
+                    if is_pos { self.pc = addr as usize; }
                 }
                 0x06 => { // TjmpZero
                     let addr = self.read_u16()?;
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    if let Value::Trit(Trit::Tend) = val { self.pc = addr as usize; }
+                    let is_zero = match val {
+                        Value::Trit(Trit::Tend) => true,
+                        Value::Int(0) => true,
+                        _ => false,
+                    };
+                    if is_zero { self.pc = addr as usize; }
                 }
                 0x07 => { // TjmpNeg
                     let addr = self.read_u16()?;
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    if let Value::Trit(Trit::Reject) = val { self.pc = addr as usize; }
+                    let is_neg = match val {
+                        Value::Trit(Trit::Reject) => true,
+                        Value::Int(v) if v < 0 => true,
+                        _ => false,
+                    };
+                    if is_neg { self.pc = addr as usize; }
                 }
                 0x08 => { // Tstore
                     let reg = self.read_u8()?;
@@ -231,21 +246,32 @@ impl BetVm {
                     self.stack.pop().ok_or(VmError::StackUnderflow)?;
                 }
                 0x0e => { // Tcons
-                    let b = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    let a = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    match (a.clone(), b.clone()) {
-                        (Value::Trit(av), Value::Trit(bv)) => {
-                            let result = match (av, bv) {
-                                (Trit::Affirm, Trit::Affirm) => Trit::Affirm,
-                                (Trit::Reject, Trit::Reject) => Trit::Reject,
-                                (Trit::Tend, x) => x,
-                                (x, Trit::Tend) => x,
-                                _ => Trit::Tend,
-                            };
-                            self.stack.push(Value::Trit(result));
-                        }
-                        _ => return Err(VmError::TypeMismatch { expected: "Trit".into(), found: format!("{:?}", (a, b)) }),
-                    }
+                    let b_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    
+                    let a = match a_val {
+                        Value::Trit(t) => t,
+                        Value::Int(v) if v == 1 => Trit::Affirm,
+                        Value::Int(v) if v == 0 => Trit::Tend,
+                        Value::Int(v) if v == -1 => Trit::Reject,
+                        _ => return Err(VmError::TypeMismatch { expected: "Trit or Int(-1..1)".into(), found: format!("{:?}", a_val) }),
+                    };
+                    let b = match b_val {
+                        Value::Trit(t) => t,
+                        Value::Int(v) if v == 1 => Trit::Affirm,
+                        Value::Int(v) if v == 0 => Trit::Tend,
+                        Value::Int(v) if v == -1 => Trit::Reject,
+                        _ => return Err(VmError::TypeMismatch { expected: "Trit or Int(-1..1)".into(), found: format!("{:?}", b_val) }),
+                    };
+
+                    let result = match (a, b) {
+                        (Trit::Affirm, Trit::Affirm) => Trit::Affirm,
+                        (Trit::Reject, Trit::Reject) => Trit::Reject,
+                        (Trit::Tend, x) => x,
+                        (x, Trit::Tend) => x,
+                        _ => Trit::Tend,
+                    };
+                    self.stack.push(Value::Trit(result));
                 }
                 0x0f => { // Talloc
                     let size = self.read_u16()? as usize;

@@ -1,0 +1,62 @@
+// stdlib/crypto/ternary_tamper_gate.tern
+// Demonstrates: Cryptographic validity gate with hold-on-partial state.
+// Tier: 3 — Industrial
+// This proofs advanced decision flow for security-critical trit streams.
+
+fn calculate_parity(data: trit[]) -> trit {
+    let p: trit = 0;
+    let i: int = 0;
+    while i < 10 {
+        // Simple XOR-like parity in balanced ternary
+        p = consensus(p, data[i]);
+        i = i + 1;
+    }
+    return p;
+}
+
+fn verify_stream(data: trit[], expected_parity: trit, confidence: float) -> trit {
+    let actual_parity: trit = calculate_parity(data);
+    
+    if actual_parity != expected_parity {
+        // Immediate rejection on tamper detected
+        return conflict();
+    }
+    
+    if confidence < 0.7 {
+        // Parity matches but confidence is low (e.g. noise)
+        return hold();
+    }
+    
+    return truth();
+}
+
+fn main() -> trit {
+    // 10-trit stream
+    let stream: trit[] = [1, 0, -1, 1, 1, 0, 0, -1, 1, -1];
+    let expected: trit = calculate_parity(stream);
+    
+    println("Stream Parity: ", expected);
+    
+    // Case 1: Perfect Match, High Confidence
+    let res1: trit = verify_stream(stream, expected, 0.9);
+    println("Result (High Conf): ", res1);
+    
+    // Case 2: Tamper Detected (wrong expected parity)
+    let res2: trit = verify_stream(stream, 1, 0.9);
+    println("Result (Tampered): ", res2);
+    
+    // Case 3: Match, but Low Confidence (Hold)
+    let res3: trit = verify_stream(stream, expected, 0.5);
+    println("Result (Low Conf): ", res3);
+
+    if res1 == 1 {
+        if res2 == -1 {
+            if res3 == 0 {
+                println("Tamper Gate Test Passed.");
+                return truth();
+            }
+        }
+    }
+    
+    return conflict();
+}
