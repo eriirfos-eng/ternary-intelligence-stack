@@ -362,12 +362,18 @@ impl BytecodeEmitter {
                 self.code.push(0x17);
                 self.code.extend_from_slice(&v.to_le_bytes());
             }
-            Expr::FloatLiteral(v) => {
+            Expr::FloatLiteral(val) => {
                 self.code.push(0x19);
-                self.code.extend_from_slice(&v.to_le_bytes());
+                self.code.extend_from_slice(&val.to_le_bytes());
             }
-            Expr::Ident(n) => {
-                if let Some(&r) = self.symbols.get(n) {
+            Expr::StringLiteral(val) => {
+                self.code.push(0x21); // TPUSH_STRING
+                let bytes = val.as_bytes();
+                self.code.extend_from_slice(&(bytes.len() as u16).to_le_bytes());
+                self.code.extend_from_slice(bytes);
+            }
+            Expr::Ident(name) => {
+                if let Some(&r) = self.symbols.get(name) {
                     self.code.push(0x09); self.code.push(r);
                 }
             }

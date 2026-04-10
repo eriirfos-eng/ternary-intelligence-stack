@@ -1,59 +1,65 @@
-# Ternlang Compiler & VM Buglist / Fixes
-# RFI-IRFOS · 2026
+# Ternlang Compiler & VM Fixes Ledger
 
-This document tracks historical fixes and new bugs identified during standard library development.
+This file tracks all architectural improvements, bug fixes, and feature additions to the Ternlang core crates (compiler and VM).
 
-## Historical Fixes (Pre-April 2026)
+## Known Fixes (Legacy)
 
-1. **Register isolation** — VM has a `register_stack`. `TCALL` saves current registers, `TRET` restores them. Caller registers are no longer clobbered by called functions.
-2. **Integer literal support** — opcode `0x17` (`TPUSH_INT`) and `0x18` (`TADD_INT`) are implemented. The compiler can emit integer constants.
-3. **1D Tensor (Trittensor) logic** — `TSHAPE`, `TIDX`, `TSET` detect 1D tensors correctly (no sqrt on length). DNA/NLP 1D arrays work.
-4. **Match/loop codegen stability** — `TDUP` is emitted before conditional jumps. Match and `for..in` no longer cause stack underflows.
-5. **Agent opcodes** — `spawn`, `send`, `await` are enabled. Agent `type_id`s are registered in the CLI.
-6. **Variable reassignment** — `var = value;` (Set variant) is parsed and handled. Re-assigning a `let` variable works.
-7. **Error reporting** — `TypeMismatch` ([BET-007]) returns the full descriptive string (e.g., "Expected Trit but found Int(15)") instead of a blank error.
-8. **Consensus logic** — `consensus(a, b)` uses logical merge (1+1=1), not balanced ternary arithmetic (1+1=−1 with carry).
+1. **Register Isolation** (2026-04-10)
+   - VM now uses a `register_stack`.
+   - `TCALL` saves current registers; `TRET` restores them.
+   - Prevents caller registers from being clobbered by called functions.
 
-## New Fixes (April 10, 2026)
+2. **Integer Literal Support** (2026-04-10)
+   - Implemented Opcode `0x17` (`TPUSH_INT`) and `0x18` (`TADD_INT`).
+   - Compiler now correctly emits integer constants.
 
-### 9. Decorated Function Parsing
-- **Symptoms:** Compiler failed with `ExpectedToken("Fn", "At")` when encountering `@sparseskip` before a function definition.
-- **Root Cause:** `parse_program` expected `Fn` immediately for functions and didn't handle the `@` (`At`) token. `Function` AST node lacked a `directive` field.
-- **Fix:** Added `directive` to `Function`, updated `parse_function`, and enabled `Stmt::Decorated` in `betbc.rs`.
-- **Status:** Verified.
+3. **1D Tensor (Trittensor) Logic** (2026-04-10)
+   - `TSHAPE`, `TIDX`, `TSET` now detect 1D tensors correctly.
+   - Fixed length calculation (removed incorrect square root on 1D length).
+   - Enables DNA and NLP 1D array processing.
 
-### 10. Floating Point Literal and Arithmetic Support
-- **Symptoms:** Float literals like `0.5` caused parser errors. Numeric operations on floats were not implemented in the VM.
-- **Root Cause:** Lexer lacked Float regex; AST/Parser lacked nodes; VM lacked Float support in opcodes.
-- **Fix:** Added high-priority Float regex, polymorphic numeric opcodes (`0x02`, `0x03`, `0x04`, `0x14`, `0x15`), and `0x19` (`TpushFloat`).
-- **Status:** Verified.
+4. **Match/Loop Codegen Stability** (2026-04-10)
+   - `TDUP` is now emitted before conditional jumps.
+   - Resolved stack underflows in `match` and `for..in` blocks.
 
-### 11. While Loop and Continue Support
-- **Symptoms:** `while` loops and `continue` statements were parsed but not emitted to bytecode, causing them to be ignored or crash.
-- **Root Cause:** `betbc.rs` lacked `WhileTernary` and `Continue` logic in `emit_stmt`.
-- **Fix:** Implemented `WhileTernary` with ternary branching and loop-back. Added `continue_patches` to handle nested loops.
-- **Status:** Verified in `ternary_parity.tern`.
+5. **Agent Opcodes** (2026-04-10)
+   - Enabled `spawn`, `send`, and `await`.
+   - Agent `type_id`s are now registered in the CLI.
 
-### 12. Print/Println Built-ins
-- **Symptoms:** `print()` calls were ignored by the emitter.
-- **Root Cause:** No opcode for printing; `BytecodeEmitter` ignored these calls.
-- **Fix:** Added `0x20` (`Tprint`) opcode to VM. Updated `betbc.rs` to handle `print` and `println` in `Expr::Call`.
-- **Status:** Verified.
+6. **Variable Reassignment** (2026-04-10)
+   - `Set` variant implemented in the parser and codegen.
+   - Re-assigning `let` variables (acting as mutable by default in current VM) now works: `x = value;`.
 
-### 13. Division and Modulo Operators
-- **Symptoms:** `/` and `%` caused lexer/parser errors.
-- **Root Cause:** Tokens and AST variants were missing.
-- **Fix:** Added `Slash` (`/`) and `Percent` (`%`) tokens to lexer. Added `BinOp::Div` and `BinOp::Mod` to AST and parser. Implemented `0x1e` (`Tdiv`) and `0x1f` (`Tmod`) opcodes in VM.
-- **Status:** Verified in `expert_weight_normalization.tern`.
+7. **Error Reporting Improvement** (2026-04-10)
+   - `TypeMismatch` ([BET-007]) now returns descriptive strings (e.g., "Expected Trit but found Int(15)").
 
-### 14. Early Exit Postfix '?' Operator
-- **Symptoms:** `expr?` was parsed but didn't actually propagate `reject` signals, causing stack underflows.
-- **Root Cause:** `Expr::Propagate` was not implemented in `betbc.rs`.
-- **Fix:** Implemented `Expr::Propagate` using `TDUP` and conditional return (`TRET`) on `reject` (-1).
-- **Status:** Verified in `safety_veto_propagation.tern`.
+8. **Consensus Logic** (2026-04-10)
+   - `consensus(a, b)` implemented as logical merge (max signal wins: 1+1=1), not arithmetic addition.
 
-### 15. Cross-type Numeric Support (Int vs Trit vs Float)
-- **Symptoms:** Comparing an `Int` variable with a `Trit` literal (e.g., `temp > 1`) caused `BET-007 TypeMismatch` at runtime.
-- **Root Cause:** VM opcodes expected exact type matches for variants.
-- **Fix:** Made `Tadd`, `Tmul`, `Tless`, `Tgreater`, and `Teq` truly polymorphic by coercing `Trit` to `i64` when paired with an `Int`.
-- **Status:** Verified.
+## Recent Fixes (Batch 2 - 2026-04-10)
+
+9. **Numeric Polymorphism**
+   - Opcodes `0x02` (Add), `0x03` (Mul), `0x04` (Neg), `0x14` (Less), `0x15` (Greater), `0x16` (Eq) are now fully polymorphic across `Trit`, `Int`, and `Float`.
+
+10. **New Opcodes for Math & IO**
+    - `0x19` (`TpushFloat`): Support for floating-point literals.
+    - `0x1e` (`Tdiv`): Floating-point and integer division.
+    - `0x1f` (`Tmod`): Modulo operator support.
+    - `0x20` (`Tprint`): Native printing support for `print()` and `println()`.
+
+11. **Lexer Priority Disambiguation**
+    - Resolved digit conflicts by setting token priorities: `Float` (100), `Int` (10), `TritLiteral` (2).
+
+12. **While Loop & Continue**
+    - Implemented `WhileTernary` and `Continue` in `betbc.rs` and the VM.
+    - `while` loops now handle ternary conditions (executing on `1`, exiting on `0` or `-1` or via `break`).
+
+13. **Postfix Propagation (?) Operator**
+    - Implemented early-exit behavior for the `?` operator.
+    - Automatically returns `conflict()` (-1) if the expression evaluates to `-1`.
+
+14. **Directive Support (@)**
+    - Parser and AST updated to handle `@` decorated functions (e.g., `@sparseskip`).
+
+15. **Stack Management for Early Exits**
+    - Fixed stack depth tracking in the emitter to ensure `?` and `return` don't leave dangling values on the VM stack during nested calls.
