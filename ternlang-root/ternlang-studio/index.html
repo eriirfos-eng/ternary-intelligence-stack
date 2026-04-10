@@ -613,6 +613,75 @@
     }
     .upgrade-btn:hover { border-color: var(--cyan); background: var(--bg3); }
 
+    /* ─── Upgrade modal ────────────────────────────────────────────────── */
+    #upgradeModal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+    #upgradeCard {
+      background: var(--bg1);
+      border: 1px solid var(--border2);
+      width: 860px;
+      max-width: 96vw;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 0;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-title { font-size: 14px; font-weight: 700; color: var(--cyan); letter-spacing: 0.04em; }
+    .modal-close {
+      background: none; border: none; color: var(--muted); font-size: 14px;
+      cursor: pointer; padding: 4px 8px; transition: color 0.1s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-sub { padding: 12px 24px 4px; color: var(--muted); font-size: 11px; }
+    .plan-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 1px;
+      background: var(--border); margin: 16px 24px;
+    }
+    .plan-card {
+      background: var(--bg2); padding: 20px; position: relative;
+      display: flex; flex-direction: column;
+    }
+    .plan-card-highlight { background: #080f18; }
+    .plan-badge-top {
+      position: absolute; top: -1px; right: 16px;
+      background: var(--cyan); color: #000; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px;
+    }
+    .plan-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .plan-price { font-size: 26px; font-weight: 700; color: var(--cyan); margin: 6px 0 14px; }
+    .plan-period { font-size: 12px; color: var(--muted); font-weight: 400; }
+    .plan-features { list-style: none; margin-bottom: 16px; flex: 1; }
+    .plan-features li { font-size: 11px; color: var(--text); padding: 3px 0; line-height: 1.4; }
+    .plan-features .feat-muted { color: var(--muted); }
+    .plan-btn {
+      display: block; padding: 9px 0; text-align: center;
+      background: var(--bg3); border: 1px solid var(--border2);
+      color: var(--text); font-family: inherit; font-size: 11px; font-weight: 700;
+      text-decoration: none; letter-spacing: 0.04em;
+      transition: border-color 0.1s, color 0.1s, background 0.1s;
+      cursor: pointer;
+    }
+    .plan-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .plan-btn-primary { border-color: var(--cyan); color: var(--cyan); }
+    .plan-btn-primary:hover { background: #0a1e30; }
+    .plan-btn-highlight { background: var(--cyan); color: #050a06; border-color: var(--cyan); }
+    .plan-btn-highlight:hover { opacity: 0.85; color: #050a06; }
+    .modal-footer { padding: 12px 24px 20px; color: var(--muted); font-size: 10px; }
+
+    html[data-theme="light"] #upgradeCard { box-shadow: 0 24px 80px rgba(0,0,0,0.25); }
+    html[data-theme="light"] .plan-card-highlight { background: #eef6ff; }
+    html[data-theme="light"] .plan-btn-highlight { color: #fff; }
+
     /* ─── Theme toggle ──────────────────────────────────────────────────── */
     .tb-theme {
       display: flex;
@@ -664,6 +733,16 @@
   </div>
 
   <div class="tb-spacer"></div>
+
+  <button id="topbarUpgradeBtn" onclick="openUpgradeModal()" style="
+    display:none; align-items:center; gap:5px; padding:0 14px; height:100%;
+    background:none; border:none; border-left:1px solid var(--border);
+    color:var(--amber); font-family:inherit; font-size:11px; font-weight:700;
+    letter-spacing:0.05em; cursor:pointer; transition:color 0.1s,background 0.1s;
+    text-transform:uppercase;
+  " onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background='none'">
+    ↑ Upgrade
+  </button>
 
   <button class="tb-theme" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">●</button>
 
@@ -790,9 +869,9 @@
           <div class="tier-benefit muted-benefit">○ MoE-13 orchestrator (Tier 2+)</div>
           <div class="tier-benefit muted-benefit">○ Deliberation engine (Tier 2+)</div>
         </div>
-        <a href="https://ternlang.com/#licensing" target="_blank" class="upgrade-btn" id="upgradeBtn">
-          Upgrade at ternlang.com/pricing →
-        </a>
+        <button class="upgrade-btn" id="upgradeBtn" onclick="openUpgradeModal()" style="border:none;cursor:pointer;width:100%;text-align:left">
+          ↑ Upgrade plan →
+        </button>
       </div>
 
       <div class="vm-section">
@@ -930,6 +1009,79 @@ println(42);
   </div>
 
 </div><!-- /main -->
+
+<!-- ═══════════ UPGRADE MODAL ════════════════════════════════════════════════ -->
+<div id="upgradeModal" style="display:none" onclick="if(event.target===this)closeUpgradeModal()">
+  <div id="upgradeCard">
+    <div class="modal-header">
+      <span class="modal-title">◈ Upgrade TernStudio</span>
+      <button class="modal-close" onclick="closeUpgradeModal()">✕</button>
+    </div>
+
+    <p class="modal-sub">Choose your tier. API key delivered by email within 60 seconds after payment.</p>
+
+    <div class="plan-grid">
+      <!-- Tier 2 -->
+      <div class="plan-card">
+        <div class="plan-name">Pro Standard</div>
+        <div class="plan-price">€99<span class="plan-period">/month</span></div>
+        <ul class="plan-features">
+          <li>✓ 10,000 API calls/month</li>
+          <li>✓ /api/trit_decide, /api/trit_vector</li>
+          <li>✓ /api/trit_consensus, /api/trit_gate</li>
+          <li>✓ MoE-13 orchestrator</li>
+          <li>✓ Deliberation + coalition engine</li>
+          <li>✓ Scalar temperature + hallucination score</li>
+          <li class="feat-muted">○ Industrial endpoints (Tier 3)</li>
+        </ul>
+        <a class="plan-btn plan-btn-primary" href="https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608" target="_blank" onclick="closeUpgradeModal()">
+          Get Pro — €99/mo
+        </a>
+      </div>
+
+      <!-- Tier 3 -->
+      <div class="plan-card plan-card-highlight">
+        <div class="plan-badge-top">Most powerful</div>
+        <div class="plan-name">Industrial</div>
+        <div class="plan-price">€349<span class="plan-period">/month</span></div>
+        <ul class="plan-features">
+          <li>✓ Everything in Pro</li>
+          <li>✓ 100,000 API calls/month</li>
+          <li>✓ /api/v1/taas/infer</li>
+          <li>✓ SSE streaming endpoints</li>
+          <li>✓ Sparse benchmark + weight quantization</li>
+          <li>✓ Priority support</li>
+          <li class="feat-muted">○ Enterprise SLA (Tier 4)</li>
+        </ul>
+        <a class="plan-btn plan-btn-highlight" href="https://buy.stripe.com/eVq7sNfle0bl86937a7N609" target="_blank" onclick="closeUpgradeModal()">
+          Get Industrial — €349/mo
+        </a>
+      </div>
+
+      <!-- Tier 4 -->
+      <div class="plan-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price" style="font-size:16px;margin:8px 0 12px">Custom</div>
+        <ul class="plan-features">
+          <li>✓ Unlimited calls</li>
+          <li>✓ All endpoints</li>
+          <li>✓ Dedicated SLA</li>
+          <li>✓ Private deployment</li>
+          <li>✓ Custom rate limits</li>
+          <li>✓ From €2,500/year</li>
+        </ul>
+        <a class="plan-btn" href="mailto:rfi.irfos@gmail.com?subject=TIS%20Enterprise%20Inquiry" target="_blank" onclick="closeUpgradeModal()">
+          Contact Sales
+        </a>
+      </div>
+    </div>
+
+    <p class="modal-footer">
+      Payments processed by Stripe. Key delivered to the email used at checkout.
+      <a href="https://ternlang.com/pricing" target="_blank" style="color:var(--cyan)">Full pricing page →</a>
+    </p>
+  </div>
+</div>
 
 <!-- ═══════════ STATUSBAR ════════════════════════════════════════════════════ -->
 <div id="statusbar">
@@ -1651,6 +1803,9 @@ function updateTopbarTier(tier) {
   badge.textContent = TIER_LABELS[tier] || "Tier 1";
   badge.className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
   document.getElementById("sbTier").textContent = TIER_LABELS[tier] || "Tier 1 — Open Core";
+  // Show upgrade button only for free/Tier 1 users
+  const upBtn = document.getElementById("topbarUpgradeBtn");
+  if (upBtn) upBtn.style.display = tier <= 1 ? "flex" : "none";
 }
 
 async function fetchUsage() {
@@ -1723,6 +1878,19 @@ async function checkConnection() {
     document.getElementById("connDot").className = "sb-dot err";
   }
 }
+
+// ─── Upgrade modal ────────────────────────────────────────────────────────────
+function openUpgradeModal() {
+  document.getElementById("upgradeModal").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+function closeUpgradeModal() {
+  document.getElementById("upgradeModal").style.display = "none";
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeUpgradeModal();
+});
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 function applyTheme(mode) {
