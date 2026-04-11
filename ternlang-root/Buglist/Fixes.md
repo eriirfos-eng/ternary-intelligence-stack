@@ -142,7 +142,14 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 ---
 
-## 2026-04-10 — Add LessEqual (<=) and GreaterEqual (>=) operators
+## 2026-04-11 — Full Numeric Polymorphism (Float/Trit and Float/Int)
+
+**Trigger:** Performing arithmetic or comparison between `Float` and `Trit` or `Float` and `Int`.
+**Symptom:** `BET-007` Runtime type mismatch — expected Numeric but found (Trit, Float) or similar.
+**Diagnosis:** Opcodes `0x02` (Add), `0x03` (Mul), `0x14` (Less), `0x15` (Greater), `0x16` (Eq), `0x1e` (Div), and `0x1f` (Mod) only supported same-type or Trit/Int cross-types. Float cross-types were missing from the VM dispatch.
+**Fix:** Added missing match arms to all affected opcodes in `vm/mod.rs` to handle all combinations of `Trit`, `Int`, and `Float`.
+**Status:** Fixed.
+
 
 **Trigger:** Writing stdlib/safety/confirmation_gate.tern which required count >= required.
 **Symptom:** Parse error: UnexpectedToken("Assign") because >= was tokenized as > followed by =.

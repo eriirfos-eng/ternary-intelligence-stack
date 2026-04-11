@@ -176,6 +176,10 @@ impl BetVm {
                         (Value::Float(av), Value::Float(bv)) => self.stack.push(Value::Float(av + bv)),
                         (Value::Int(av), Value::Trit(bv)) => self.stack.push(Value::Int(av + bv as i64)),
                         (Value::Trit(av), Value::Int(bv)) => self.stack.push(Value::Int(av as i64 + bv)),
+                        (Value::Float(av), Value::Trit(bv)) => self.stack.push(Value::Float(av + (bv as i8 as f64))),
+                        (Value::Trit(av), Value::Float(bv)) => self.stack.push(Value::Float((av as i8 as f64) + bv)),
+                        (Value::Float(av), Value::Int(bv)) => self.stack.push(Value::Float(av + (bv as f64))),
+                        (Value::Int(av), Value::Float(bv)) => self.stack.push(Value::Float((av as f64) + bv)),
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
@@ -188,6 +192,10 @@ impl BetVm {
                         (Value::Float(av), Value::Float(bv)) => self.stack.push(Value::Float(av * bv)),
                         (Value::Int(av), Value::Trit(bv)) => self.stack.push(Value::Int(av * bv as i64)),
                         (Value::Trit(av), Value::Int(bv)) => self.stack.push(Value::Int(av as i64 * bv)),
+                        (Value::Float(av), Value::Trit(bv)) => self.stack.push(Value::Float(av * (bv as i8 as f64))),
+                        (Value::Trit(av), Value::Float(bv)) => self.stack.push(Value::Float((av as i8 as f64) * bv)),
+                        (Value::Float(av), Value::Int(bv)) => self.stack.push(Value::Float(av * (bv as f64))),
+                        (Value::Int(av), Value::Float(bv)) => self.stack.push(Value::Float((av as f64) * bv)),
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
@@ -328,6 +336,26 @@ impl BetVm {
                             let r = if av < y { Trit::Affirm } else if av == y { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
+                        (Value::Int(av), Value::Float(bv)) => {
+                            let a_val = av as f64;
+                            let r = if a_val < bv { Trit::Affirm } else if (a_val - bv).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Float(av), Value::Int(bv)) => {
+                            let b_val = bv as f64;
+                            let r = if av < b_val { Trit::Affirm } else if (av - b_val).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Trit(av), Value::Float(bv)) => {
+                            let a_val = av as i8 as f64;
+                            let r = if a_val < bv { Trit::Affirm } else if (a_val - bv).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Float(av), Value::Trit(bv)) => {
+                            let b_val = bv as i8 as f64;
+                            let r = if av < b_val { Trit::Affirm } else if (av - b_val).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
                         (Value::Trit(x), Value::Trit(y)) => {
                             let av = x as i64;
                             let bv = y as i64;
@@ -359,6 +387,26 @@ impl BetVm {
                             let r = if av > y { Trit::Affirm } else if av == y { Trit::Tend } else { Trit::Reject };
                             self.stack.push(Value::Trit(r));
                         }
+                        (Value::Int(av), Value::Float(bv)) => {
+                            let a_val = av as f64;
+                            let r = if a_val > bv { Trit::Affirm } else if (a_val - bv).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Float(av), Value::Int(bv)) => {
+                            let b_val = bv as f64;
+                            let r = if av > b_val { Trit::Affirm } else if (av - b_val).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Trit(av), Value::Float(bv)) => {
+                            let a_val = av as i8 as f64;
+                            let r = if a_val > bv { Trit::Affirm } else if (a_val - bv).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
+                        (Value::Float(av), Value::Trit(bv)) => {
+                            let b_val = bv as i8 as f64;
+                            let r = if av > b_val { Trit::Affirm } else if (av - b_val).abs() < f64::EPSILON { Trit::Tend } else { Trit::Reject };
+                            self.stack.push(Value::Trit(r));
+                        }
                         (Value::Trit(x), Value::Trit(y)) => {
                             let av = x as i64;
                             let bv = y as i64;
@@ -375,6 +423,10 @@ impl BetVm {
                         (Value::Int(av), Value::Trit(bv)) => av == bv as i64,
                         (Value::Trit(av), Value::Int(bv)) => av as i64 == bv,
                         (Value::Float(av), Value::Float(bv)) => (av - bv).abs() < f64::EPSILON,
+                        (Value::Float(av), Value::Trit(bv)) => (av - (bv as i8 as f64)).abs() < f64::EPSILON,
+                        (Value::Trit(av), Value::Float(bv)) => ((av as i8 as f64) - bv).abs() < f64::EPSILON,
+                        (Value::Float(av), Value::Int(bv)) => (av - (bv as f64)).abs() < f64::EPSILON,
+                        (Value::Int(av), Value::Float(bv)) => ((av as f64) - bv).abs() < f64::EPSILON,
                         _ => a == b,
                     };
                     let r = if is_eq { Trit::Affirm } else { Trit::Reject };
@@ -419,6 +471,24 @@ impl BetVm {
                             if bv == 0 { return Err(VmError::RuntimeError("Division by zero".into())); }
                             self.stack.push(Value::Int(av as i64 / bv));
                         }
+                        (Value::Float(av), Value::Trit(bv)) => {
+                            let b = bv as i8 as f64;
+                            if b == 0.0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Float(av / b));
+                        }
+                        (Value::Trit(av), Value::Float(bv)) => {
+                            if bv == 0.0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Float(av as i8 as f64 / bv));
+                        }
+                        (Value::Float(av), Value::Int(bv)) => {
+                            let b = bv as f64;
+                            if b == 0.0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Float(av / b));
+                        }
+                        (Value::Int(av), Value::Float(bv)) => {
+                            if bv == 0.0 { return Err(VmError::RuntimeError("Division by zero".into())); }
+                            self.stack.push(Value::Float(av as f64 / bv));
+                        }
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a_val, b_val)) }),
                     }
                 }
@@ -438,6 +508,28 @@ impl BetVm {
                         (Value::Trit(av), Value::Int(bv)) => {
                             if bv == 0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
                             self.stack.push(Value::Int(av as i64 % bv));
+                        }
+                        (Value::Float(av), Value::Float(bv)) => {
+                             if bv == 0.0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                             self.stack.push(Value::Float(av % bv));
+                        }
+                        (Value::Float(av), Value::Trit(bv)) => {
+                             let b = bv as i8 as f64;
+                             if b == 0.0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                             self.stack.push(Value::Float(av % b));
+                        }
+                        (Value::Trit(av), Value::Float(bv)) => {
+                             if bv == 0.0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                             self.stack.push(Value::Float(av as i8 as f64 % bv));
+                        }
+                        (Value::Float(av), Value::Int(bv)) => {
+                             let b = bv as f64;
+                             if b == 0.0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                             self.stack.push(Value::Float(av % b));
+                        }
+                        (Value::Int(av), Value::Float(bv)) => {
+                             if bv == 0.0 { return Err(VmError::RuntimeError("Modulo by zero".into())); }
+                             self.stack.push(Value::Float(av as f64 % bv));
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", (a_val, b_val)) }),
                     }
