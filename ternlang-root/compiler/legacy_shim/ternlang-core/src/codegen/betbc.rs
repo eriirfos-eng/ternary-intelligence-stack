@@ -538,7 +538,7 @@ impl BytecodeEmitter {
                                 // To get the correct field order, we'd need the struct name.
                                 // Let's try to find which struct layout matches the existing mangled keys.
                                 let mut fields_found = Vec::new();
-                                for (s_name, s_fields) in &self.struct_layouts {
+                                for (_s_name, s_fields) in &self.struct_layouts {
                                     let mut all_present = true;
                                     let mut current_regs = Vec::new();
                                     for f in s_fields {
@@ -652,7 +652,6 @@ impl BytecodeEmitter {
                 self.code.extend_from_slice(&(bytes.len() as u16).to_le_bytes());
                 self.code.extend_from_slice(bytes);
             }
-            _ => {}
         }
     }
 

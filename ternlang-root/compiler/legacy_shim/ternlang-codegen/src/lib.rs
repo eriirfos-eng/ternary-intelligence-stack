@@ -320,6 +320,12 @@ impl CTranspiler {
                 let parts: Vec<String> = elems.iter().map(|e| e.to_string()).collect();
                 format!("/* trittensor{{{}}} */ 0", parts.join(", "))
             }
+            Expr::StructLiteral { name, fields } => {
+                let f: Vec<String> = fields.iter()
+                    .map(|(fname, val)| format!(".{fname} = {}", self.emit_expr(val)))
+                    .collect();
+                format!("({}){{ {} }}", name, f.join(", "))
+            }
         }
     }
 
