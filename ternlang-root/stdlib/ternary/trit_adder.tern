@@ -1,0 +1,35 @@
+// stdlib/ternary/trit_adder.tern
+// Demonstrates: balanced ternary half-adder logic
+// Tier: 1 — Open Core
+
+fn half_adder_sum(a: trit, b: trit) -> trit {
+    let s: int = a + b;
+    if s > 1 { return conflict(); }   // sum = -1 (reject)
+    if s < -1 { return truth(); }     // sum = 1  (affirm)
+    return cast(s);
+}
+
+fn half_adder_carry(a: trit, b: trit) -> trit {
+    let s: int = a + b;
+    if s > 1 { return truth(); }
+    if s < -1 { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let s1: trit = half_adder_sum(1, 1);   // -1
+    let c1: trit = half_adder_carry(1, 1); // 1
+    
+    let s2: trit = half_adder_sum(-1, -1); // 1
+    let c2: trit = half_adder_carry(-1, -1); // -1
+    
+    if s1 == -1 && c1 == 1 && s2 == 1 && c2 == -1 {
+        return truth();
+    }
+    
+    match s1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
