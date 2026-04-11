@@ -1,0 +1,22 @@
+// stdlib/showcase/logic_visualizer.tern
+// Demonstrates: truth table visualization for balanced ternary AND (&&)
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let a: int = 1;
+    let b: int = 1;
+    
+    // Iterate from 1 down to -1
+    while a >= -1 {
+        b = 1;
+        while b >= -1 {
+            let res: trit = cast(a) && cast(b);
+            // Print visualization: "a && b = res"
+            println(res);
+            b = b - 1;
+        }
+        a = a - 1;
+    }
+    
+    return truth();
+}
