@@ -1,0 +1,23 @@
+// stdlib/benchmarks/agent_throughput_bench.tern
+// Demonstrates: Evaluating mock agent communication throughput
+// Tier: 1 — Open Core
+
+fn benchmark_throughput(messages: int) -> int {
+    let count: int = 0;
+    while count < messages {
+        // Mock agent logic: in real use, spawn/send/await would be here
+        count = count + 1;
+    }
+    return count;
+}
+
+fn main() -> trit {
+    let total: int = 5000;
+    let result: int = benchmark_throughput(total);
+    
+    if result == 5000 {
+        return truth();
+    }
+    
+    return conflict();
+}
