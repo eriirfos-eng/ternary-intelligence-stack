@@ -174,6 +174,7 @@ impl<'a> Parser<'a> {
         let mut lhs = self.parse_unary_expr()?;
         loop {
             let Ok(op_token) = self.peek_token() else { break };
+            if op_token == Token::RBrace || op_token == Token::Comma || op_token == Token::RParen || op_token == Token::Semicolon || op_token == Token::Return { break; }
             let prec = self.get_precedence(&op_token);
             if prec < min_prec { break; }
             self.next_token()?;
@@ -372,24 +373,38 @@ impl<'a> Parser<'a> {
                     Ok(Expr::Call { callee: name, args })
                 } else if let Ok(Token::LBrace) = self.peek_token() {
                     // Struct literal: Name { field: val, ... }
-                    self.next_token()?; // consume `{`
-                    let mut fields = Vec::new();
-                    while self.peek_token()? != Token::RBrace {
-                        let f_name = match self.next_token()? {
-                            Token::Ident(n) => n,
-                            t => return Err(ParseError::ExpectedToken("field name".into(), format!("{:?}", t))),
-                        };
-                        self.expect(Token::Colon)?;
-                        let f_val = self.parse_expr()?;
-                        fields.push((f_name, f_val));
-                        if let Ok(Token::Comma) = self.peek_token() {
-                            self.next_token()?;
-                        } else {
-                            break;
+                    // Disambiguate from: if x { ... } or match x { ... }
+                    // Peek ahead: after '{', is it an 'ident :'?
+                    let mut lookahead = self.lex.clone();
+                    let _ = lookahead.next(); // consume '{'
+                    let maybe_ident = lookahead.next();
+                    let maybe_colon = lookahead.next();
+
+                    let is_struct_literal = matches!(maybe_ident, Some(Ok(Token::Ident(_)))) &&
+                                            matches!(maybe_colon, Some(Ok(Token::Colon)));
+
+                    if is_struct_literal {
+                        self.next_token()?; // consume `{`
+                        let mut fields = Vec::new();
+                        while self.peek_token()? != Token::RBrace {
+                            let f_name = match self.next_token()? {
+                                Token::Ident(n) => n,
+                                t => return Err(ParseError::ExpectedToken("field name".into(), format!("{:?}", t))),
+                            };
+                            self.expect(Token::Colon)?;
+                            let f_val = self.parse_expr()?;
+                            fields.push((f_name, f_val));
+                            if let Ok(Token::Comma) = self.peek_token() {
+                                self.next_token()?;
+                            } else {
+                                break;
+                            }
                         }
+                        self.expect(Token::RBrace)?;
+                        Ok(Expr::StructLiteral { name, fields })
+                    } else {
+                        Ok(Expr::Ident(name))
                     }
-                    self.expect(Token::RBrace)?;
-                    Ok(Expr::StructLiteral { name, fields })
                 } else {
                     Ok(Expr::Ident(name))
                 }
