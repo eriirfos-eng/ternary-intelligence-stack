@@ -18,7 +18,7 @@
         "name": "Restricted API (BSL 1.1)"
       },
       "description": "The definitive system programming paradigm and compiler for the Ternary Intelligence Stack and the BET VM. Optimized for Post-Quantum security and 60% power reduction via Native Sparsity.",
-      "softwareVersion": "0.2.0",
+      "softwareVersion": "0.3.0",
       "publisher": {
         "@type": "Organization",
         "name": "RFI-IRFOS",
@@ -337,6 +337,10 @@
                 <span class="text-t_muted block mb-1"># 4. Boot the MCP Server (stdio)</span>
                 <span class="text-t_red">./target/release/ternlang-mcp</span>
               </div>
+              <div>
+                <span class="text-t_muted block mb-1"># 5. Audit a decision log for binary habituation (EU AI Act Art.13/14)</span>
+                <span class="text-t_blue">cargo</span> run --bin ternlang -- audit decisions.json --html
+              </div>
             </div>
           </div>
         </div>
@@ -590,9 +594,11 @@
               <div class="text-t_muted font-bold uppercase tracking-widest pb-2 border-b border-t_border/30 mb-2">AI Reasoning (Phase 8)</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_deliberate</span></div><span class="text-t_muted font-medium">EMA convergence</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_gate</span></div><span class="text-t_muted font-medium">safety hard veto</span></div>
-              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.3.0</div>
+              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.3.0 · 19 tools</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/mcp</span></div><span class="text-t_muted font-medium">JSON-RPC 2.0</span></div>
-              <div class="flex justify-between py-1 border-b border-t_border/50"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">/mcp + Header</span></div><span class="text-t_muted font-medium">3-layer memory</span></div>
+              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">/mcp + Header</span></div><span class="text-t_muted font-medium">3-layer memory</span></div>
+              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">trit_debate / trit_calibrate</span></div><span class="text-t_muted font-medium">Phase 11A</span></div>
+              <div class="flex justify-between py-1 border-b border-t_border/50"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">trit_audit</span></div><span class="text-t_muted font-medium">EU AI Act Art.13/14</span></div>
               <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">Live Streams (SSE)</div>
               <div class="flex justify-between py-1"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">GET</span><span class="text-t_text font-medium">/api/stream/moe</span></div><span class="text-t_muted font-medium">live MoE routing</span></div>
             </div>
@@ -837,7 +843,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mcp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mcp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">13-tool MCP server over stdio + HTTP. JSON-RPC 2.0. Connects Claude Desktop, Cursor, or any MCP client to the ternary decision engine.</span>
+                <span class="text-xs text-t_muted leading-relaxed">19-tool MCP server over stdio + HTTP. JSON-RPC 2.0. Connects Claude Desktop, Cursor, or any MCP client to the ternary decision engine. Includes TernAudit (EU AI Act Art.13/14).</span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-api" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-api</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
@@ -953,7 +959,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
             <p class="text-t_teal text-xs font-mono font-bold mb-6">BSL 1.1 (→ Apache 2030)</p>
             <div class="text-3xl font-black text-t_text mb-8 uppercase tracking-tighter italic">€99<span class="text-t_muted text-sm font-bold">/MO</span></div>
             <ul class="space-y-3 mb-10 flex-grow text-sm text-t_text font-bold leading-relaxed">
-              <li class="flex items-center gap-3 text-t_teal">★ 13 MCP tools — full API surface</li>
+              <li class="flex items-center gap-3 text-t_teal">★ 19 MCP tools — full API surface</li>
               <li class="flex items-center gap-3">✓ 10,000 API calls/month</li>
               <li class="flex items-center gap-3">✓ Server-side 3-layer memory</li>
               <li class="flex items-center gap-3">✓ MoE-13 orchestration</li>
