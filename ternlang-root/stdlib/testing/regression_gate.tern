@@ -1,0 +1,31 @@
+// stdlib/testing/regression_gate.tern
+// Demonstrates: behavior-matching regression gate
+// Tier: 1 — Open Core
+
+fn get_behavior(input: trit) -> trit {
+    // Current behavior logic
+    return -input;
+}
+
+fn regression_gate(input: trit, expected: trit) -> trit {
+    let actual: trit = get_behavior(input);
+    if actual == expected {
+        return truth();
+    }
+    return conflict();
+}
+
+fn main() -> trit {
+    let r1: trit = regression_gate(1, -1);
+    let r2: trit = regression_gate(-1, 1);
+    
+    if r1 == 1 && r2 == 1 {
+        return truth();
+    }
+    
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
