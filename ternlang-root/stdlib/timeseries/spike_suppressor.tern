@@ -1,0 +1,31 @@
+// stdlib/timeseries/spike_suppressor.tern
+// Demonstrates: filtering out single-point outliers
+// Tier: 3
+
+fn suppress(prev: trit, curr: trit, next: trit) -> trit {
+    // If curr is different from both prev and next, it's a spike
+    // [1, -1, 1] -> -1 is a spike, return 1
+    // [-1, 1, -1] -> 1 is a spike, return -1
+    
+    if prev == next {
+        if curr != prev {
+            return prev; // Suppress spike
+        }
+    }
+    
+    return curr; // Not a spike or consensus matches
+}
+
+fn main() -> trit {
+    let p: trit = 1;
+    let c: trit = -1;
+    let n: trit = 1;
+    
+    let filtered: trit = suppress(p, c, n);
+    
+    if filtered == 1 {
+        return 1;
+    } else {
+        return -1;
+    }
+}
