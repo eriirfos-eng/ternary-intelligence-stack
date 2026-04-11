@@ -1,0 +1,24 @@
+// stdlib/graphics/ray_cast_hit.tern
+// Demonstrates: ray-cast hit detection in ternary space
+// Tier: 3 — Industrial
+
+fn check_hit(dist: float, max_dist: float) -> trit {
+    if dist < 0.0 { return conflict(); } // Error
+    if dist <= max_dist { return truth(); } // Hit
+    return hold(); // Miss / Out of range
+}
+
+fn main() -> trit {
+    let hit: trit = check_hit(5.5, 10.0); // 1
+    let miss: trit = check_hit(15.0, 10.0); // 0
+    
+    if hit == 1 && miss == 0 {
+        return truth();
+    }
+    
+    match hit {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
