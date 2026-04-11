@@ -1,0 +1,26 @@
+// stdlib/showcase/vote_collector.tern
+// Demonstrates: vote collector with consensus logic
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let votes: trit[] = [1, 0, 1, 1, -1];
+    let result: trit = 0;
+    
+    for v in votes {
+        result = consensus(result, v);
+    }
+    
+    // consensus(0, 1) = 1
+    // consensus(1, 1) = 1
+    // consensus(1, -1) = 0
+    // After all votes: result = 0 (consensus on uncertainty due to conflict)
+    if result == 0 {
+        return truth();
+    }
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
