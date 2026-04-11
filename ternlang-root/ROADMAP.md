@@ -273,10 +273,9 @@ These two items ship before any other new feature. Without them, the extension i
 - [x] Activated only when apiKey starts with `tern_t2_`
 - [x] Extension v0.4.0 published to Open VSX as rfi-irfos/ternlang
 
-### 10C — Dogfood the MCP
-- [ ] Add ternlang MCP to this development environment: `smithery mcp add rfi-irfos/ternlang`
-- [ ] Use `trit_decide` and `moe_orchestrate` in real daily decision-making
-- [ ] Every friction point found becomes a bug report → next release
+### 10C — Dogfood the MCP ✅ COMPLETE (2026-04-11)
+- [x] ternlang-mcp added to Claude Code local config via `claude mcp add` — 19 tools live in this session
+- [ ] Log friction points found during use → next release
 
 ---
 
@@ -299,7 +298,7 @@ Contacts: garydinmore@tern.ac | adrianfontanilla@tern.ac
 
 ## 🧠 Phase 11: MCP Intelligence Upgrade — 5 New Tools + EcoCore
 
-### 11A — 5 New MCP Tools
+### 11A — 5 New MCP Tools ✅ COMPLETE (2026-04-11)
 
 **`trit_debate`** (Free tier)
 > Give it two competing claims. Get a structured 3-way verdict: evidence for each side, and what's genuinely uncertain (Tend). This is the tool that gets shared on social media — it's instantly legible to anyone who sees the output.
@@ -439,15 +438,13 @@ This is also the Hacker News launch vehicle. "Try the first balanced ternary lan
 
 ---
 
-## 🔍 Phase 13: TernAudit — The Killer App
+## 🔍 Phase 13: TernAudit — The Killer App ✅ PARTIAL (2026-04-11)
 
 TernAudit is the commercial case made tangible. It answers the question "why would an enterprise buy ternlang?" with a specific, auditable, EU-AI-Act-compliant answer: *because our AI's decisions are now trit-annotated and you can prove it to a regulator.*
 
 **What it does:** Takes any AI system's decision log, LLM output batch, or classifier result set and returns a trit-annotated audit trail. Every claim: Affirm (evidence present, high confidence), Tend (uncertain, needs more data), or Reject (contradicted). The Tend cases are the ones the AI should have flagged as "I don't know" but didn't — that's the audit finding.
 
-- [ ] `ternlang audit <input.json>` CLI command
-  - Input: JSON array of `{ "input": string, "output": string, "confidence"?: float }`
-  - Output: `audit_report.json` + `audit_report.html` (human-readable)
+- [x] `ternlang audit <input.json>` CLI command — reads JSON, prints coloured summary, writes `audit_report.json` + optional `audit_report.html` (`--html` flag)
 - [ ] `POST /api/audit` REST endpoint (Tier 2+)
 - [ ] Audit report format:
   ```json
@@ -460,7 +457,7 @@ TernAudit is the commercial case made tangible. It answers the question "why wou
   }
   ```
 - [ ] VS Code command: `Ternlang Pro: Audit Selection` — select any block of AI outputs, get inline annotations
-- [ ] `trit_audit` MCP tool (wraps the REST endpoint)
+- [x] `trit_audit` MCP tool — full audit logic inline, 19th tool in ternlang-mcp v0.3.0
 - [ ] Marketing: "The only tool that finds the decisions your AI should have held"
 
 ---
