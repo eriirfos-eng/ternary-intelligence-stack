@@ -1,0 +1,26 @@
+// stdlib/ternary/majority_gate.tern
+// Demonstrates: 3-input majority gate via summation
+// Tier: 1 — Open Core
+
+fn majority(a: trit, b: trit, c: trit) -> trit {
+    let sum: int = a + b + c;
+    if sum > 0 { return truth(); }
+    if sum < 0 { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let r1: trit = majority(1, 1, -1);  // should be 1
+    let r2: trit = majority(-1, -1, 0); // should be -1
+    let r3: trit = majority(1, 0, -1);  // should be 0
+    
+    if r1 == 1 && r2 == -1 && r3 == 0 {
+        return truth();
+    }
+    
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
