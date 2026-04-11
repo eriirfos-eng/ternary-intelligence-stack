@@ -1,0 +1,27 @@
+// stdlib/core/logical_ops.tern
+// Demonstrates: balanced ternary logical AND (&&) and OR (||)
+// Tier: 1 — Open Core
+
+fn logic_and(a: trit, b: trit) -> trit {
+    return a && b;
+}
+
+fn logic_or(a: trit, b: trit) -> trit {
+    return a || b;
+}
+
+fn main() -> trit {
+    let r1: trit = logic_and(1, -1);  // 1 && -1 = -1 (min)
+    let r2: trit = logic_or(1, -1);   // 1 || -1 = 1  (max)
+    let r3: trit = logic_or(0, -1);   // 0 || -1 = 0  (max)
+    
+    if r1 == -1 && r2 == 1 && r3 == 0 {
+        return truth();
+    }
+    
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
