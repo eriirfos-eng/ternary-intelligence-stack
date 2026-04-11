@@ -1,0 +1,24 @@
+// stdlib/ternary/consensus_chain.tern
+// Demonstrates: chained consensus operations
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = 0;
+    let c: trit = -1;
+    
+    // consensus(1, 0) = 1
+    // consensus(1, -1) = 0 (conflict resolution)
+    let r1: trit = consensus(a, b);
+    let r2: trit = consensus(r1, c);
+    
+    if r2 == 0 {
+        return truth();
+    }
+    
+    match r2 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
