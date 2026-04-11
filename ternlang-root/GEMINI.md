@@ -1,5 +1,5 @@
 # GEMINI.md — Ternlang Precision Parameter Sheet
-# RFI-IRFOS · ternlang.com · v1.1 (2026-04-10)
+# RFI-IRFOS · ternlang.com · v1.2 (2026-04-11)
 # Read this at session start. These values are ground truth. Do not guess.
 
 ---
@@ -277,8 +277,11 @@ done | sort -n | head -20
 git status --short | head -10
 ```
 
-After the weakness scan: your 5 session batches must target the FIRST 5 directories
+After the weakness scan: your 4 standard batches must target the FIRST 4 directories
 in the sorted output that are NOT already in your last 3 session logs.
+
+Your 5 complex programs go in stdlib/programs/ — always from this category regardless
+of the weakness scan. Write them LAST, after the 20 standard files pass.
 
 Do not write a single file until step 1 succeeds.
 
@@ -296,6 +299,37 @@ Do not write a single file until step 1 succeeds.
 | `ternlang-cli/src/main.rs` | Agent type_id registrations ONLY | Everything else |
 
 **Line count rule:** your edit must not reduce the file by more than 10 lines. Run `wc -l <file>` before and after. If count drops > 10, you deleted features. Revert and re-approach.
+
+---
+
+## 13. Session structure — REQUIRED FORMAT (v1.2)
+
+Every session produces exactly **25 files**: 20 standard + 5 complex.
+
+### Standard files (20): 4 batches of 5
+- Each batch targets one stdlib category from your weakness scan (emptiest directories first)
+- One file per concept, named after the concept (e.g. `signal_threshold.tern`)
+- Template: use the canonical file template (Section 6). 1-3 helper functions + fn main().
+- Bytecode target: 80–250 bytes
+
+### Complex programs (5): placed in stdlib/programs/
+- Each must contain **5 or more functions** that call each other
+- Must use **at least 3 different types** (e.g. trit + int + float + tensor)
+- Must implement a **real algorithm or system** — not just a signal gate
+- Must be > 300 bytes of bytecode
+- Named descriptively: e.g. `stdlib/programs/ternary_sort.tern`, `stdlib/programs/consensus_pipeline.tern`
+
+**Good complex program ideas:**
+- Ternary bubble sort (tensor in, sorted tensor out, uses loops + swaps)
+- Signal processing pipeline (EMA → threshold gate → consensus → output)
+- Multi-agent voting system (spawn 3 agents, collect votes, consensus result)
+- Ternary neural MLP forward pass (input tensor → hidden layer → output trit)
+- Weighted consensus aggregator (n signals, weights as floats, threshold as float)
+- Fault-tolerant gate chain (primary + backup + fallback with priority override)
+- Ternary binary search on a tensor (loop-based, returns index as int)
+- Deliberation engine (prior float + evidence trit stream → posterior trit via EMA)
+
+**DO NOT write imports between files.** `use` is parsed but not linked — all code for one program must be in one file.
 
 ---
 
@@ -331,6 +365,16 @@ let either: trit = consensus(a, b); // WRONG for OR. Use a || b
 
 // for x in tensor — iterates ALL rows correctly now (FIXED 2026-04-10):
 for x in t { ... }               // ✓ FIXED — loops rows times, not cols times
+
+// BANNED keywords (not implemented in parser/VM):
+pub fn my_fn() -> trit { }       // BANNED — `pub` modifier → UnexpectedToken("Pub")
+fn f(x: bool) -> trit { }        // BANNED — `bool` is not a ternlang type, use trit
+let mut x: int = 0;              // BANNED — `mut` keyword → UnexpectedToken
+fn f(a: trit) -> (trit, trit) {} // BANNED — tuple return types → UnexpectedToken("LParen")
+/** doc comment */               // BANNED — Javadoc-style block comments → parse error
+use stdlib::core::something;     // NOT FUNCTIONAL — `use` is parsed but linker not wired.
+                                 //   All code for one file must be in that file.
+                                 //   Do NOT write import-dependent files.
 ```
 
 ---
@@ -442,3 +486,4 @@ These bugs are fixed. Do not write workarounds. Do not re-investigate.
 | 19 | **BUG-C: for..in count** | betbc.rs | Looped cols times not rows | Swapped TPOP/TSTORE order after TSHAPE |
 | 20 | **BUG-D: FieldAccess expr** | betbc.rs | `s.field` as expression emitted nothing | Added explicit TLOAD from mangled symbol key |
 | 21 | **BUG-E: Cast expr** | betbc.rs | `cast(expr)` dropped inner expression | Pass-through arm in emit_expr |
+| 22 | **Float polymorphism** | vm/mod.rs | Float×Trit and Float×Int cross-types crashed (BET-007) on Tadd/Tmul/Tless/Tgreater/Teq/Tdiv/Tmod | Added all missing Float cross-type arms to all 7 opcodes. Fixed 2026-04-11. |
