@@ -1,0 +1,23 @@
+// stdlib/net/connection_retry_policy.tern
+// Demonstrates: exponential backoff strategy
+// Tier: 2
+
+fn get_backoff(retry_count: int, base_ms: int) -> int {
+    let delay: int = base_ms;
+    let i: int = 0;
+    while i < retry_count {
+        delay = delay * 2;
+        i = i + 1;
+    }
+    return delay;
+}
+
+fn main() -> trit {
+    let retry_3: int = get_backoff(3, 100); // 100 -> 200 -> 400 -> 800
+    
+    if retry_3 == 800 {
+        return 1;
+    } else {
+        return -1;
+    }
+}

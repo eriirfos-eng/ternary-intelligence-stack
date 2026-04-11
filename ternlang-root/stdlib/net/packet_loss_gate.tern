@@ -1,0 +1,44 @@
+// stdlib/net/packet_loss_gate.tern
+// Demonstrates: signal quality gate based on loss percentage
+// Tier: 2
+
+fn evaluate_loss(packets_sent: int, packets_received: int) -> trit {
+    if packets_sent <= 0 { return 0; }
+    
+    let loss: float = cast(packets_sent - packets_received) / cast(packets_sent);
+    
+    // Thresholds:
+    // < 1% loss = Affirm
+    // < 5% loss = Hold
+    // >= 5% loss = Reject
+    
+    if loss < 0.01 {
+        return 1;
+    } else {
+        if loss < 0.05 {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+}
+
+fn main() -> trit {
+    // 995/1000 = 0.5% loss -> Affirm
+    let s1: trit = evaluate_loss(1000, 995);
+    
+    // 970/1000 = 3% loss -> Hold
+    let s2: trit = evaluate_loss(1000, 970);
+    
+    // 900/1000 = 10% loss -> Reject
+    let s3: trit = evaluate_loss(1000, 900);
+    
+    if s1 == 1 {
+        if s2 == 0 {
+            if s3 == -1 {
+                return 1;
+            }
+        }
+    }
+    return -1;
+}
