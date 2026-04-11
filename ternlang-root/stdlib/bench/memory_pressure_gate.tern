@@ -1,0 +1,30 @@
+// stdlib/bench/memory_pressure_gate.tern
+// Demonstrates: Evaluating system memory usage against thresholds to return a ternary health signal
+// Tier: 1 — Open Core
+
+fn evaluate_memory(current_usage: float, max_capacity: float) -> trit {
+    let ratio: float = current_usage / max_capacity;
+    
+    if ratio > 0.90 {
+        return conflict(); // Critical pressure
+    }
+    
+    if ratio > 0.70 {
+        return hold(); // Warning level
+    }
+    
+    return truth(); // Safe zone
+}
+
+fn main() -> trit {
+    let usage: float = 850.0;
+    let total: float = 1000.0;
+    
+    let status: trit = evaluate_memory(usage, total);
+    
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
