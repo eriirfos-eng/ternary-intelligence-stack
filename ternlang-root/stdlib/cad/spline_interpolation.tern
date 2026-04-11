@@ -1,0 +1,34 @@
+// stdlib/cad/spline_interpolation.tern
+// Demonstrates: A simple linear interpolation with ternary precision check.
+// Tier: 3 — Industrial
+
+fn lerp(a: float, b: float, t: float) -> float {
+    return a + (b - a) * t;
+}
+
+fn check_precision(expected: float, actual: float, eps: float) -> trit {
+    let diff: float = expected - actual;
+    if diff < 0.0 { 
+        diff = -diff; 
+    }
+    
+    if diff < eps {
+        return truth();
+    }
+    return hold();
+}
+
+fn main() -> trit {
+    let a: float = 0.0;
+    let b: float = 10.0;
+    let t: float = 0.5;
+    
+    let val: float = lerp(a, b, t);
+    let result: trit = check_precision(5.0, val, 0.001);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
