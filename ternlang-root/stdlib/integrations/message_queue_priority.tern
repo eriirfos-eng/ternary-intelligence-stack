@@ -1,0 +1,30 @@
+// stdlib/integrations/message_queue_priority.tern
+// Demonstrates: Priority-based message queue processing decision.
+// Tier: 2 — Pro Standard
+
+fn should_process(priority: trit, queue_depth: int) -> trit {
+    match priority {
+        -1 => { return conflict(); } // Revoked message
+         1 => { return truth();    } // High priority, process always
+         0 => {
+            if queue_depth < 50 {
+                return truth();
+            } else {
+                return hold(); // Queue full, wait
+            }
+         }
+    }
+}
+
+fn main() -> trit {
+    let p: trit = 0;
+    let depth: int = 60;
+    
+    let result: trit = should_process(p, depth);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
