@@ -1,0 +1,30 @@
+// stdlib/scientific/vector_normalize.tern
+// Demonstrates: normalization of 3D trit vectors
+// Tier: 3 — Industrial
+
+fn normalize_component(val: int) -> trit {
+    if val > 0 { return truth();    }
+    if val < 0 { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    // Vector [2, -5, 0] normalized to [1, -1, 0]
+    let v1: int = 2;
+    let v2: int = -5;
+    let v3: int = 0;
+    
+    let n1: trit = normalize_component(v1);
+    let n2: trit = normalize_component(v2);
+    let n3: trit = normalize_component(v3);
+    
+    if n1 == 1 && n2 == -1 && n3 == 0 {
+        return truth();
+    }
+    
+    match n1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
