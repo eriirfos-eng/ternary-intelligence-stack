@@ -1,0 +1,20 @@
+// stdlib/gametheory/tit_for_tat.tern
+// Demonstrates: Tit-for-tat strategy logic (copy previous move)
+// Tier: 3
+
+fn tit_for_tat(opponent_last_move: trit) -> trit {
+    match opponent_last_move {
+        reject => { return reject; } // retaliate
+        tend   => { return tend;   } // mirror neutrality
+        affirm => { return affirm; } // cooperate
+    }
+}
+
+fn main() -> trit {
+    let next_move: trit = tit_for_tat(reject);
+    match next_move {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
