@@ -1,0 +1,31 @@
+// stdlib/bench/sparsity_efficiency.tern
+// Demonstrates: Evaluating if a matrix is sparse enough for @sparseskip optimization
+// Tier: 1 — Open Core
+
+fn evaluate_sparsity(zero_count: int, total_elements: int) -> trit {
+    // Multiply by 1.0 to force float division
+    let zero_ratio: float = 1.0 * cast(zero_count) / cast(total_elements);
+    
+    if zero_ratio > 0.85 {
+        return truth(); // Highly efficient for @sparseskip
+    }
+    
+    if zero_ratio > 0.50 {
+        return hold(); // Moderate efficiency gains
+    }
+    
+    return conflict(); // Dense, skip optimization
+}
+
+fn main() -> trit {
+    let zeros: int = 90;
+    let total: int = 100;
+    
+    let result: trit = evaluate_sparsity(zeros, total);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
