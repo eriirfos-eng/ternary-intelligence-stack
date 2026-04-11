@@ -1,0 +1,28 @@
+// stdlib/bench/throughput_decision.tern
+// Demonstrates: Deciding if current processing throughput meets business SLAs
+// Tier: 1 — Open Core
+
+fn check_throughput(ops_per_sec: float, target_sla: float) -> trit {
+    if ops_per_sec >= target_sla {
+        return truth(); // Goal met
+    }
+    
+    if ops_per_sec < (target_sla * 0.5) {
+        return conflict(); // Critical failure
+    }
+    
+    return hold(); // Near-miss
+}
+
+fn main() -> trit {
+    let current: float = 450.0;
+    let target: float = 500.0;
+    
+    let result: trit = check_throughput(current, target);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
