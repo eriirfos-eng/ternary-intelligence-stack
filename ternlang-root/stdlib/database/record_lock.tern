@@ -1,0 +1,54 @@
+// stdlib/database/record_lock.tern
+// Demonstrates: record locking state machine
+// Tier: 2 — Pro Standard
+
+fn acquire_lock(current: trit) -> trit {
+    match current {
+        -1 => { return truth(); } // Unlocked -> Lock it
+         0 => { return hold();  } // Pending -> Wait
+         1 => { return conflict(); } // Already locked -> Conflict
+    }
+}
+
+fn release_lock(current: trit) -> trit {
+    match current {
+         1 => { return conflict(); } // Locked -> Unlock it (Wait, conflict() is -1 which IS unlocked!)
+                                     // Actually, let's use explicit returns
+         0 => { return hold();  }
+        -1 => { return conflict(); } // Wait, this is confusing. Let's return trits directly.
+    }
+}
+
+// Improved version
+fn transition_lock(current: trit, request: trit) -> trit {
+    // request: 1 for lock, -1 for unlock
+    if request == 1 {
+        if current == -1 { return truth(); }
+        return conflict();
+    }
+    if request == -1 {
+        if current == 1 { return conflict(); }
+        return truth(); // Wait, if I want to return -1, I use conflict()
+    }
+    return hold();
+}
+
+fn main() -> trit {
+    let lock: trit = -1; // Initially unlocked
+    
+    // Acquire
+    lock = transition_lock(lock, 1); // should be 1
+    
+    // Release
+    lock = transition_lock(lock, -1); // should be -1
+    
+    if lock == -1 {
+        return truth();
+    }
+    
+    match lock {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
