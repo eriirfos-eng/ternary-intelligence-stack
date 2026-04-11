@@ -1,0 +1,22 @@
+// stdlib/graphics/pixel_shader.tern
+// Demonstrates: simple pixel shader logic via trit color components
+// Tier: 3 — Industrial
+
+fn shade_pixel(r: trit, g: trit, b: trit) -> trit {
+    // If any component is affirm, the pixel is "on"
+    return r || g || b;
+}
+
+fn main() -> trit {
+    let result: trit = shade_pixel(1, 0, -1); // 1
+    
+    if result == 1 {
+        return truth();
+    }
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
