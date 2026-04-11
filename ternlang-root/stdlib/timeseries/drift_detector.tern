@@ -1,0 +1,31 @@
+// stdlib/timeseries/drift_detector.tern
+// Demonstrates: detecting gradual shift in mean values
+// Tier: 3
+
+fn check_drift(initial_mean: float, current_mean: float, threshold: float) -> trit {
+    let diff: float = current_mean - initial_mean;
+    
+    if diff > threshold {
+        return 1; // Significant upward drift
+    } else {
+        if diff < (0.0 - threshold) {
+            return -1; // Significant downward drift
+        } else {
+            return 0; // Stable
+        }
+    }
+}
+
+fn main() -> trit {
+    let base: float = 100.0;
+    let now: float = 105.0;
+    let limit: float = 3.0;
+    
+    let drift: trit = check_drift(base, now, limit);
+    
+    if drift == 1 {
+        return 1;
+    } else {
+        return -1;
+    }
+}
