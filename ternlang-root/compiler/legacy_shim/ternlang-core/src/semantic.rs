@@ -307,6 +307,7 @@ impl SemanticAnalyzer {
             Stmt::Break           => Ok(()),
             Stmt::Continue        => Ok(()),
             Stmt::Use { .. }      => Ok(()),
+            Stmt::FromImport { .. } => Ok(()),
 
             Stmt::Send { target, message } => {
                 self.infer_expr_type(target)?;

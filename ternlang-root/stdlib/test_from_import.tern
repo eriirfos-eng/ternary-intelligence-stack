@@ -1,0 +1,12 @@
+// Test: from ... import ... syntax
+// Named import from stdlib module
+from stdlib::stats import arithmetic_mean_gate;
+from stdlib::net import packet_loss_gate, latency_threshold_check;
+
+fn main() -> trit {
+    // Use functions pulled in by named import
+    let signal: trit = arithmetic_mean_gate(1, 1, -1);
+    let net_ok: trit = packet_loss_gate(5);
+    let lat_ok: trit = latency_threshold_check(80);
+    return signal;
+}

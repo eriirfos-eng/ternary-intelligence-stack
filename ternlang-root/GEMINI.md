@@ -329,7 +329,7 @@ Every session produces exactly **25 files**: 20 standard + 5 complex.
 - Ternary binary search on a tensor (loop-based, returns index as int)
 - Deliberation engine (prior float + evidence trit stream → posterior trit via EMA)
 
-**DO NOT write imports between files.** `use` is parsed but not linked — all code for one program must be in one file.
+**Imports between files ARE now supported** (see Section 13a). Complex programs may use `from "file.tern" import fn1, fn2;` to pull helpers from other `.tern` files, or `from std::trit import *;` for stdlib. All code still compiles to a single bytecode unit — imports are resolved at parse time, not runtime.
 
 ---
 
@@ -372,10 +372,42 @@ fn f(x: bool) -> trit { }        // BANNED — `bool` is not a ternlang type, us
 let mut x: int = 0;              // BANNED — `mut` keyword → UnexpectedToken
 fn f(a: trit) -> (trit, trit) {} // BANNED — tuple return types → UnexpectedToken("LParen")
 /** doc comment */               // BANNED — Javadoc-style block comments → parse error
-use stdlib::core::something;     // NOT FUNCTIONAL — `use` is parsed but linker not wired.
-                                 //   All code for one file must be in that file.
-                                 //   Do NOT write import-dependent files.
+use stdlib::core::something;     // LEGACY — still parsed, prefer `from stdlib::core import *;`
 ```
+
+---
+
+## 13a. Import system — FULLY FUNCTIONAL (wired 2026-04-11)
+
+Two import forms work end-to-end. The old rule "all code must be in one file" is **REMOVED**.
+
+### Form 1 — stdlib module (double-colon path)
+```tern
+from std::trit import abs, min, max;     // named import
+from ml::inference import linear, decide;
+from std::trit import *;                 // wildcard: pulls everything
+```
+Paths map to `stdlib/<category>/<name>.tern` (e.g. `std::trit` → `stdlib/std/trit.tern`).
+
+### Form 2 — local .tern file (relative path)
+```tern
+from "helpers.tern" import my_fn, other_fn;    // relative to importing file's directory
+from "utils/math.tern" import *;
+```
+Absolute paths also work. Library files do NOT need `fn main()`.
+
+### Cross-language (Python, Rust, etc.)
+```tern
+from "model.py" import something;   // NOT YET SUPPORTED — MOD-003 warning printed, skipped.
+```
+Phase 13 (TernTranslator) will add cross-language FFI. For now: rewrite logic in .tern.
+
+### Rules
+- Imported functions are prepended before codegen — fully available to call.
+- Named imports (`import foo, bar`) pull only those functions; `import *` pulls everything.
+- Duplicates deduplicated automatically — safe to import overlapping modules.
+- `pub fn` is still BANNED — all functions are implicitly public, no modifier needed.
+- Circular imports are not detected — avoid them.
 
 ---
 

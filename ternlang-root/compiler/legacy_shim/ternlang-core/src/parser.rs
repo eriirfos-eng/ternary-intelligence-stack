@@ -36,6 +36,7 @@ impl<'a> Parser<'a> {
 
     pub fn parse_program(&mut self) -> Result<Program, ParseError> {
         let mut imports = Vec::new();
+        let mut import_specs = Vec::new();
         let mut structs = Vec::new();
         let mut agents = Vec::new();
         let mut functions = Vec::new();
@@ -46,6 +47,11 @@ impl<'a> Parser<'a> {
                 Token::Use => {
                     if let Stmt::Use { path } = self.parse_stmt()? {
                         imports.push(path);
+                    }
+                }
+                Token::From => {
+                    if let Stmt::FromImport { spec } = self.parse_stmt()? {
+                        import_specs.push(spec);
                     }
                 }
                 Token::Struct => structs.push(self.parse_struct_def()?),
@@ -68,7 +74,7 @@ impl<'a> Parser<'a> {
             });
         }
 
-        Ok(Program { imports, structs, agents, functions })
+        Ok(Program { imports, import_specs, structs, agents, functions })
     }
 
     fn parse_agent_def(&mut self) -> Result<AgentDef, ParseError> {
@@ -452,6 +458,59 @@ impl<'a> Parser<'a> {
                 }
                 self.expect(Token::Semicolon)?;
                 Ok(Stmt::Use { path })
+            }
+
+            // from <module::path | "file.tern"> import <name, name2 | *>;
+            Token::From => {
+                self.next_token()?;
+                // Determine source: string literal = file path, else module path
+                let source = match self.peek_token()? {
+                    Token::StringLit(_) => {
+                        if let Token::StringLit(s) = self.next_token()? {
+                            ImportSource::File(s)
+                        } else { unreachable!() }
+                    }
+                    _ => {
+                        let mut path = Vec::new();
+                        loop {
+                            let segment = match self.next_token()? {
+                                Token::Ident(n)   => n,
+                                Token::TritType   => "trit".to_string(),
+                                Token::TritTensor => "trittensor".to_string(),
+                                t => return Err(ParseError::ExpectedToken("module path segment".into(), format!("{:?}", t))),
+                            };
+                            path.push(segment);
+                            if let Ok(Token::DoubleColon) = self.peek_token() {
+                                self.next_token()?;
+                            } else {
+                                break;
+                            }
+                        }
+                        ImportSource::Module(path)
+                    }
+                };
+                self.expect(Token::Import)?;
+                // Parse names: `*` or comma-separated identifiers
+                let names = if let Ok(Token::Star) = self.peek_token() {
+                    self.next_token()?;
+                    ImportNames::Wildcard
+                } else {
+                    let mut named = Vec::new();
+                    loop {
+                        match self.next_token()? {
+                            Token::Ident(n) => named.push(n),
+                            t => return Err(ParseError::ExpectedToken("import name".into(), format!("{:?}", t))),
+                        }
+                        if let Ok(Token::Comma) = self.peek_token() {
+                            self.next_token()?;
+                        } else {
+                            break;
+                        }
+                    }
+                    ImportNames::Named(named)
+                };
+                self.expect(Token::Semicolon)?;
+                Ok(Stmt::FromImport { spec: ImportSpec { source, names } })
             }
 
             Token::Let => {

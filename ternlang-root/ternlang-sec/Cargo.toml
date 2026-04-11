@@ -6,5 +6,5 @@ license = "LicenseRef-BSL-1.1"
 description = "Ternary Security Enforcement. Hardened hardware-level safety gates and MoE-13 Veto logic for mission-critical authorization."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.0" }
-ternlang-crypto = { path = "../ternlang-crypto", version = "0.3.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.1" }
+ternlang-crypto = { path = "../ternlang-crypto", version = "0.3.1" }

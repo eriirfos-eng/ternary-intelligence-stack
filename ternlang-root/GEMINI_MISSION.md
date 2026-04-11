@@ -90,11 +90,26 @@ send w affirm;
 let result: trit = await w;
 ```
 
-### Modules
+### Modules — FULLY FUNCTIONAL (2026-04-11)
 ```tern
+// Import named functions from a stdlib module:
+from std::trit import abs, min, max;
+from ml::inference import linear, decide;
+from std::trit import *;            // wildcard — pulls everything
+
+// Import from a local .tern file (relative path):
+from "helpers.tern" import my_fn;
+from "utils/math.tern" import *;
+
+// Legacy form (still works, prefer `from` above):
 use std::trit;
 use ml::layers;
 ```
+- Named imports (`import foo, bar`) pull only those functions.
+- Wildcard (`import *`) pulls everything — equivalent to legacy `use`.
+- Library files do NOT need `fn main()`.
+- Cross-language imports (`.py`, `.rs`) are NOT yet supported (Phase 13).
+- `pub fn` is BANNED — all functions are implicitly exported.
 
 ### Directives
 ```tern

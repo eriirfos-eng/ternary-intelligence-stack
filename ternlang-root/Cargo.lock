@@ -1690,7 +1690,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-api"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "axum",
  "chrono",
@@ -1712,7 +1712,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-cli"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "clap",
  "colored",
@@ -1733,14 +1733,14 @@ dependencies = [
 
 [[package]]
 name = "ternlang-compat"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-compress"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1759,7 +1759,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-core"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ariadne",
  "logos",
@@ -1769,11 +1769,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-hdl"
-version = "0.3.0"
+version = "0.3.1"
 
 [[package]]
 name = "ternlang-lsp"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -1782,7 +1782,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-mcp"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -1793,7 +1793,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ml"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "rayon",
  "ternlang-core",
@@ -1801,7 +1801,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-moe"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -1811,7 +1811,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-runtime"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "reqwest",
  "serde",
@@ -1828,7 +1828,7 @@ dependencies = [
 
 [[package]]
 name = "ternpkg"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "serde",
  "serde_json",

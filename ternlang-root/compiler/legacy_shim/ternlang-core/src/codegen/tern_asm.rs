@@ -364,6 +364,7 @@ impl TernAsmEmitter {
 
             Stmt::Decorated { stmt, .. } => self.emit_stmt(stmt, ra),
             Stmt::Use { .. } => {}
+            Stmt::FromImport { .. } => {}
         }
     }
 

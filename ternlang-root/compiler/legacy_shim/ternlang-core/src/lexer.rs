@@ -74,6 +74,12 @@ pub enum Token {
     #[token("use", priority = 3)]
     Use,
 
+    #[token("from", priority = 3)]
+    From,
+
+    #[token("import", priority = 3)]
+    Import,
+
     #[token("module", priority = 3)]
     Module,
 

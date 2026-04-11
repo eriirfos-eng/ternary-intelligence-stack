@@ -6,7 +6,7 @@
 ///
 /// Use `StdlibLoader::resolve()` for quick stdlib-only resolution (backwards-compat API).
 /// Use `ModuleResolver::from_source_file(path).resolve(program)` for full module support.
-use crate::ast::{Function, Program, Stmt};
+use crate::ast::{Function, Program, Stmt, ImportSource, ImportNames};
 use crate::parser::Parser;
 
 // ─── Built-in stdlib sources (compile-time embedded) ─────────────────────────
@@ -289,11 +289,30 @@ fn collect_use_paths(stmts: &[Stmt]) -> Vec<Vec<String>> {
 }
 
 /// Parse source string and extract its functions; deduplicate against `known`.
+/// If `filter` is Some, only return functions whose names are in the set.
 fn parse_and_extract(src: &str, key: &str, known: &mut std::collections::HashSet<String>) -> Vec<Function> {
+    parse_and_extract_filtered(src, key, known, None)
+}
+
+fn parse_and_extract_filtered(
+    src: &str,
+    key: &str,
+    known: &mut std::collections::HashSet<String>,
+    filter: Option<&std::collections::HashSet<String>>,
+) -> Vec<Function> {
     let mut parser = Parser::new(src);
     match parser.parse_program() {
-        Ok(prog) => prog.functions.into_iter().filter(|f| known.insert(f.name.clone())).collect(),
-        Err(e)   => { eprintln!("[MOD-000] Failed to parse module '{key}': {e}"); vec![] }
+        Ok(prog) => prog.functions.into_iter()
+            .filter(|f| {
+                if let Some(names) = filter {
+                    names.contains(&f.name)
+                } else {
+                    true
+                }
+            })
+            .filter(|f| known.insert(f.name.clone()))
+            .collect(),
+        Err(e) => { eprintln!("[MOD-000] Failed to parse module '{key}': {e}"); vec![] }
     }
 }
 
@@ -325,6 +344,7 @@ where
 
     let mut injected: Vec<Function> = Vec::new();
 
+    // ── legacy `use` paths (wildcard import, no filtering) ──────────────────
     for path in &all_paths {
         let key = path.join("::");
         if let Some(src) = stdlib_source_for(path) {
@@ -333,6 +353,53 @@ where
             injected.extend(parse_and_extract(&src, &key, &mut known));
         } else {
             eprintln!("[MOD-001] Unknown module '{key}' — no stdlib match and no file found. Did you mean std::trit?");
+        }
+    }
+
+    // ── new `from ... import ...` specs ─────────────────────────────────────
+    let specs = program.import_specs.clone();
+    for spec in &specs {
+        let filter: Option<std::collections::HashSet<String>> = match &spec.names {
+            ImportNames::Wildcard => None,
+            ImportNames::Named(names) => Some(names.iter().cloned().collect()),
+        };
+        let filter_ref = filter.as_ref();
+
+        match &spec.source {
+            ImportSource::Module(path) => {
+                let key = path.join("::");
+                if let Some(src) = stdlib_source_for(path) {
+                    injected.extend(parse_and_extract_filtered(src, &key, &mut known, filter_ref));
+                } else if let Some(src) = extra_source(path) {
+                    injected.extend(parse_and_extract_filtered(&src, &key, &mut known, filter_ref));
+                } else {
+                    eprintln!("[MOD-002] Unknown module '{key}' in `from` import — no stdlib match and no file found.");
+                }
+            }
+            ImportSource::File(file_path) => {
+                // Foreign language files (non-.tern) are not yet supported
+                if !file_path.ends_with(".tern") {
+                    let ext = std::path::Path::new(file_path)
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .unwrap_or("unknown");
+                    eprintln!(
+                        "[MOD-003] Foreign import '{file_path}' (.{ext}) — cross-language FFI is not yet supported. \
+                         Coming in Phase 13 (TernTranslator). For now, rewrite the logic in .tern."
+                    );
+                    continue;
+                }
+                // .tern file path: resolved by extra_source (ModuleResolver handles disk reads)
+                // We encode the file path as a single-element "path" and let the resolver handle it.
+                // But extra_source only accepts Vec<String> module paths — pass the raw string
+                // through a special sentinel so ModuleResolver can detect it.
+                let sentinel = vec!["__file__".to_string(), file_path.clone()];
+                if let Some(src) = extra_source(&sentinel) {
+                    injected.extend(parse_and_extract_filtered(&src, file_path, &mut known, filter_ref));
+                } else {
+                    eprintln!("[MOD-004] Could not load file '{file_path}' — file not found or not readable.");
+                }
+            }
         }
     }
 
@@ -382,9 +449,26 @@ impl ModuleResolver {
         Self { base_dir: None }
     }
 
-    /// Attempt to load `path` (e.g. `["mymod", "utils"]`) as `base_dir/mymod/utils.tern`.
+    /// Attempt to load a module path or a `__file__` sentinel.
+    ///
+    /// - `["__file__", "path/to/file.tern"]` — load that file relative to base_dir
+    /// - `["mymod", "utils"]` — load as `base_dir/mymod/utils.tern`
     fn load_user_module(&self, path: &[String]) -> Option<String> {
         let base = self.base_dir.as_ref()?;
+
+        // Special sentinel from `from "file.tern" import ...`
+        if path.len() == 2 && path[0] == "__file__" {
+            let raw = &path[1];
+            // Absolute path: use as-is; relative: resolve from base_dir
+            let file_path = if std::path::Path::new(raw).is_absolute() {
+                std::path::PathBuf::from(raw)
+            } else {
+                base.join(raw)
+            };
+            return std::fs::read_to_string(&file_path).ok();
+        }
+
+        // Standard module path: base_dir/seg1/seg2/.../last.tern
         let mut file_path = base.clone();
         for (i, segment) in path.iter().enumerate() {
             if i == path.len() - 1 {
@@ -393,10 +477,7 @@ impl ModuleResolver {
                 file_path = file_path.join(segment);
             }
         }
-        match std::fs::read_to_string(&file_path) {
-            Ok(src) => Some(src),
-            Err(_)  => None,
-        }
+        std::fs::read_to_string(&file_path).ok()
     }
 
     /// Resolve all `use` statements: stdlib first, then user files.
