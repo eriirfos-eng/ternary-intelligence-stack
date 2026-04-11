@@ -1,0 +1,32 @@
+// stdlib/physical/thermal_equilibrium.tern
+// Demonstrates: A simple thermal equilibrium check using temperature gradients.
+// Tier: 3 — Industrial
+
+fn check_equilibrium(t1: float, t2: float, tolerance: float) -> trit {
+    let diff: float = t1 - t2;
+    if diff < 0.0 { 
+        diff = -diff; 
+    }
+    
+    if diff < tolerance {
+        return truth(); // Balanced
+    }
+    if diff < tolerance * 5.0 {
+        return hold(); // Near-balanced
+    }
+    return conflict(); // Gradient detected
+}
+
+fn main() -> trit {
+    let t1: float = 300.1; // Kelvin
+    let t2: float = 300.0;
+    let tolerance: float = 0.5;
+    
+    let state: trit = check_equilibrium(t1, t2, tolerance);
+    
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
