@@ -1,0 +1,26 @@
+// stdlib/testing/bench_mark.tern
+// Demonstrates: simple execution time benchmarking via loop iterations
+// Tier: 1 — Open Core
+
+fn run_workload(iterations: int) -> int {
+    let count: int = 0;
+    while count < iterations {
+        count = count + 1;
+    }
+    return count;
+}
+
+fn main() -> trit {
+    let result: int = run_workload(1000);
+    
+    let status: trit = 0;
+    if result == 1000 {
+        status = 1;
+    }
+    
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
