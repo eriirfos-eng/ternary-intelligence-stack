@@ -1,0 +1,27 @@
+// stdlib/core/arithmetic_ops.tern
+// Demonstrates: arithmetic operations across trit and int
+// Tier: 1 — Open Core
+
+fn add_trit_int(t: trit, n: int) -> int {
+    return t + n;
+}
+
+fn mul_trit_float(t: trit, f: float) -> float {
+    return t * f;
+}
+
+fn main() -> trit {
+    let a: int = add_trit_int(1, 5);    // 1 + 5 = 6
+    let b: float = mul_trit_float(-1, 2.5); // -1 * 2.5 = -2.5
+    
+    let check: trit = 0;
+    if a == 6 && b == -2.5 {
+        check = 1;
+    }
+    
+    match check {
+        1 => { return truth(); }
+        0 => { return hold(); }
+       -1 => { return conflict(); }
+    }
+}
