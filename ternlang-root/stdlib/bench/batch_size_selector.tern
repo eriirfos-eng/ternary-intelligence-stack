@@ -1,0 +1,33 @@
+// stdlib/bench/batch_size_selector.tern
+// Demonstrates: Selecting an optimal batch size based on latency feedback
+// Tier: 1 — Open Core
+
+fn select_batch(latency_trit: trit, current_batch: int) -> int {
+    match latency_trit {
+        -1 => { 
+            // Latency too high, reduce batch size
+            return current_batch / 2;
+        }
+         0 => { 
+            // Latency within range, keep batch size
+            return current_batch;
+        }
+         1 => { 
+            // Latency low, increase batch size
+            return current_batch + 16;
+        }
+    }
+}
+
+fn main() -> trit {
+    let latency: trit = 1;
+    let size: int = 32;
+    
+    let next_size: int = select_batch(latency, size);
+    
+    if next_size > 32 {
+        return truth();
+    }
+    
+    return hold();
+}
