@@ -1,0 +1,65 @@
+// stdlib/programs/resource_allocation_optimizer.tern
+// Demonstrates: A resource allocation optimizer using ternary weights.
+// Tier: 3 — Industrial
+
+fn calculate_priority(importance: float, urgency: float) -> float {
+    return importance * 0.7 + urgency * 0.3;
+}
+
+fn threshold_gate(val: float, limit: float) -> trit {
+    if val > limit { 
+        return 1; 
+    }
+    if val < limit * 0.5 { 
+        return -1; 
+    }
+    return 0;
+}
+
+fn allocate_resource(id: int, weight: trit) -> string {
+    match weight {
+        -1 => { 
+            return "Rejected"; 
+        }
+         0 => { 
+            return "Deferred"; 
+        }
+         1 => { 
+            return "Allocated"; 
+        }
+    }
+}
+
+fn log_allocation(id: int, status: string) -> int {
+    println(status);
+    return id;
+}
+
+fn check_budget(total: float, used: float) -> trit {
+    if used < total { 
+        return 1; 
+    }
+    return -1;
+}
+
+fn process_allocation(id: int, imp: float, urg: float, limit: float, budget_ok: trit) -> trit {
+    if budget_ok == 1 {
+        let p: float = calculate_priority(imp, urg);
+        let w: trit = threshold_gate(p, limit);
+        let status: string = allocate_resource(id, w);
+        let _id: int = log_allocation(id, status);
+        return w;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let budget_ok: trit = check_budget(1000.0, 50.0);
+    let res: trit = process_allocation(1, 0.8, 0.9, 0.5, budget_ok);
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
