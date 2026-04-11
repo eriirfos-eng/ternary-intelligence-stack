@@ -1,0 +1,34 @@
+// stdlib/societal/conflict_resolution_mediator.tern
+// Demonstrates: mediation between two conflicting agents
+// Tier: 2
+
+fn mediate(party_a: trit, party_b: trit) -> trit {
+    // If they agree, return their agreement
+    if party_a == party_b {
+        return party_a;
+    }
+    
+    // If one is neutral, go with the other
+    if party_a == 0 {
+        return party_b;
+    }
+    if party_b == 0 {
+        return party_a;
+    }
+    
+    // If they directly conflict (1 vs -1), mediator returns 0 (compromise/hold)
+    return 0;
+}
+
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = -1;
+    
+    let result: trit = mediate(a, b);
+    
+    match result {
+        1  => { return -1; } // Error: should not affirm conflict
+        0  => { return 1;  } // Success: mediation held
+        -1 => { return -1; } // Error: should not reject
+    }
+}

@@ -1,0 +1,31 @@
+// stdlib/societal/reputation_score.tern
+// Demonstrates: weighted reputation update based on interaction outcomes
+// Tier: 2
+
+fn calculate_update(current: float, outcome: trit, weight: float) -> float {
+    let multiplier: float = 0.0;
+    match outcome {
+        1  => { multiplier = 1.0; }
+        0  => { multiplier = 0.1; }
+        -1 => { multiplier = -1.0; }
+    }
+    return current + (multiplier * weight);
+}
+
+fn main() -> trit {
+    let rep: float = 0.5;
+    let interaction: trit = 1;
+    let weight: float = 0.05;
+    
+    let new_rep: float = calculate_update(rep, interaction, weight);
+    
+    if new_rep > rep {
+        return 1;
+    } else {
+        match interaction {
+            1 => { return -1; } // Should not happen
+            0 => { return 0; }
+            -1 => { return -1; }
+        }
+    }
+}
