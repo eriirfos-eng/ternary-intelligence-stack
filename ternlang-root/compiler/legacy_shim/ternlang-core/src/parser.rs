@@ -370,6 +370,26 @@ impl<'a> Parser<'a> {
                     }
                     self.expect(Token::RParen)?;
                     Ok(Expr::Call { callee: name, args })
+                } else if let Ok(Token::LBrace) = self.peek_token() {
+                    // Struct literal: Name { field: val, ... }
+                    self.next_token()?; // consume `{`
+                    let mut fields = Vec::new();
+                    while self.peek_token()? != Token::RBrace {
+                        let f_name = match self.next_token()? {
+                            Token::Ident(n) => n,
+                            t => return Err(ParseError::ExpectedToken("field name".into(), format!("{:?}", t))),
+                        };
+                        self.expect(Token::Colon)?;
+                        let f_val = self.parse_expr()?;
+                        fields.push((f_name, f_val));
+                        if let Ok(Token::Comma) = self.peek_token() {
+                            self.next_token()?;
+                        } else {
+                            break;
+                        }
+                    }
+                    self.expect(Token::RBrace)?;
+                    Ok(Expr::StructLiteral { name, fields })
                 } else {
                     Ok(Expr::Ident(name))
                 }

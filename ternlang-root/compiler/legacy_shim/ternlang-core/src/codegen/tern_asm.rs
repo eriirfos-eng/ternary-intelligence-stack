@@ -179,10 +179,23 @@ impl TernAsmEmitter {
     fn emit_stmt(&mut self, stmt: &Stmt, ra: &mut RegAlloc) {
         match stmt {
             Stmt::Let { name, value, .. } => {
-                let dest = ra.alloc(name);
-                let src = self.emit_expr(value, ra);
-                if src != dest {
-                    self.emit(&format!("tadd  {}, {}, zero   ; {} = {}", reg(dest), reg(src), name, name));
+                if let Expr::StructLiteral { fields, .. } = value {
+                    for (f_name, f_val) in fields {
+                        let f_dest = ra.alloc(&format!("{}.{}", name, f_name));
+                        let f_src = self.emit_expr(f_val, ra);
+                        if f_src != f_dest {
+                            self.emit(&format!("tadd  {}, {}, zero   ; struct field init", reg(f_dest), reg(f_src)));
+                        }
+                    }
+                    // The main variable is just a dummy
+                    let dest = ra.alloc(name);
+                    self.emit(&format!("tldi  {}, 0           ; struct root dummy", reg(dest)));
+                } else {
+                    let dest = ra.alloc(name);
+                    let src = self.emit_expr(value, ra);
+                    if src != dest {
+                        self.emit(&format!("tadd  {}, {}, zero   ; {} = {}", reg(dest), reg(src), name, name));
+                    }
                 }
                 // else value was emitted directly into dest
             }
@@ -501,6 +514,12 @@ impl TernAsmEmitter {
             Expr::NodeId => {
                 let r = ra.scratch();
                 self.emit(&format!("tnodeid {}", reg(r)));
+                r
+            }
+
+            Expr::StructLiteral { .. } => {
+                let r = ra.scratch();
+                self.emit(&format!("tldi  {}, 0           ; struct literal (dummy)", reg(r)));
                 r
             }
         }
