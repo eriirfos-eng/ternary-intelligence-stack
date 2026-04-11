@@ -1,0 +1,26 @@
+// stdlib/integrations/external_service_health.tern
+// Demonstrates: Health monitoring for an external service with retry logic hints.
+// Tier: 2 — Pro Standard
+
+fn monitor_service(latency: float, error_rate: float) -> trit {
+    if error_rate > 0.1 {
+        return conflict(); // Service down/broken
+    }
+    if latency > 1.0 {
+        return hold(); // Slow, maybe retry
+    }
+    return truth(); // Healthy
+}
+
+fn main() -> trit {
+    let latency: float = 1.2;
+    let errors: float = 0.02;
+    
+    let status: trit = monitor_service(latency, errors);
+    
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
