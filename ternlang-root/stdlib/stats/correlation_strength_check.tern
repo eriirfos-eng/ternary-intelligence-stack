@@ -1,0 +1,34 @@
+// stdlib/stats/correlation_strength_check.tern
+// Demonstrates: assessing strength of ternary correlation
+// Tier: 3
+
+fn evaluate_correlation(corr: float) -> trit {
+    // 1.0 = perfect positive correlation
+    // 0.0 = no correlation
+    // -1.0 = perfect negative correlation
+    
+    if corr > 0.7 {
+        return 1; // Strong positive
+    } else {
+        if corr < -0.7 {
+            return -1; // Strong negative
+        } else {
+            return 0; // Weak/None
+        }
+    }
+}
+
+fn main() -> trit {
+    let strong: float = 0.85;
+    let weak: float = 0.1;
+    
+    let s1: trit = evaluate_correlation(strong);
+    let s2: trit = evaluate_correlation(weak);
+    
+    if s1 == 1 {
+        if s2 == 0 {
+            return 1;
+        }
+    }
+    return -1;
+}
