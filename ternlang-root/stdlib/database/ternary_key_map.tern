@@ -1,0 +1,28 @@
+// stdlib/database/ternary_key_map.tern
+// Demonstrates: simple KV map indexed by ternary keys (trit)
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    // 3 keys: -1, 0, 1
+    let store: trittensor<3> = [0, 0, 0];
+    
+    // Store values (coerced from int)
+    store[0] = 1; // Key -1 -> 1
+    store[1] = 0; // Key 0  -> 0
+    store[2] = -1; // Key 1 -> -1
+    
+    // Retrieve
+    let val_neg: trit = store[0];
+    let val_zero: trit = store[1];
+    let val_pos: trit = store[2];
+    
+    if val_neg == 1 && val_zero == 0 && val_pos == -1 {
+        return truth();
+    }
+    
+    match val_neg {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
