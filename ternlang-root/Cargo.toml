@@ -5,6 +5,7 @@ members = [
     "compiler/legacy_shim/ternlang-runtime",
     "compiler/legacy_shim/ternlang-cli",
     "ternlang-ml",
+    "ternlang-compress",
     "ternlang-api",
     "ternlang-test",
     "ternlang-mcp",

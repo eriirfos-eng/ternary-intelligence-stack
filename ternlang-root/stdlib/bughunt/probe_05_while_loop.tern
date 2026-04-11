@@ -1,0 +1,13 @@
+// bughunt/probe_05_while_loop.tern
+// Probe: while loop with counter, accumulator
+
+fn main() -> trit {
+    let i: int = 0;
+    let sum: int = 0;
+    while i < 5 {
+        sum = sum + i;
+        i = i + 1;
+    }
+    if sum > 9 { return truth(); }
+    return conflict();
+}

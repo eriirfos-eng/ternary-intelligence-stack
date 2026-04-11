@@ -1,0 +1,10 @@
+// bughunt/probe_08_string_print.tern
+// Probe: string literal, print, mixed print types
+
+fn main() -> trit {
+    let s: string = "bughunt probe 08";
+    print(s);
+    let n: int = 42;
+    print(n);
+    return truth();
+}

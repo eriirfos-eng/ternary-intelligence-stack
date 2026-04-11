@@ -1,0 +1,18 @@
+// bughunt/probe_10_comparison_ops.tern
+// Probe: <, >, ==, <=, >= operators, trit result
+
+fn main() -> trit {
+    let a: int = 10;
+    let b: int = 5;
+    let lt: trit = b < a;
+    let gt: trit = a > b;
+    let eq: trit = a == a;
+    let le: trit = b <= a;
+    let ge: trit = a >= b;
+    let all: trit = consensus(lt, gt);
+    match all {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

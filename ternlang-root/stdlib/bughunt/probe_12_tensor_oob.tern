@@ -1,0 +1,9 @@
+// bughunt/probe_12_tensor_oob.tern
+// Probe: tensor index out of bounds — expect BET-008
+
+fn main() -> trit {
+    let t: trittensor<3>;
+    t[0] = 1;
+    let v: trit = t[5];
+    return truth();
+}

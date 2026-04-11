@@ -1,0 +1,18 @@
+// bughunt/probe_19_chained_consensus.tern
+// Probe: chained consensus across 5 signals (voting pattern)
+
+fn vote(a: trit, b: trit, c: trit, d: trit, e: trit) -> trit {
+    let ab: trit = consensus(a, b);
+    let cd: trit = consensus(c, d);
+    let abcd: trit = consensus(ab, cd);
+    return consensus(abcd, e);
+}
+
+fn main() -> trit {
+    let result: trit = vote(truth(), truth(), truth(), hold(), conflict());
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

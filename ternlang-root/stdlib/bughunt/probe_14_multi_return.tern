@@ -1,0 +1,22 @@
+// bughunt/probe_14_multi_return.tern
+// Probe: multiple early returns in a function body
+
+fn check(a: int, b: int, c: int) -> trit {
+    if a < 0 { return conflict(); }
+    if b < 0 { return conflict(); }
+    if c < 0 { return conflict(); }
+    if a > 100 { return hold(); }
+    if b > 100 { return hold(); }
+    return truth();
+}
+
+fn main() -> trit {
+    let r1: trit = check(1, 2, 3);
+    let r2: trit = check(-1, 2, 3);
+    let r3: trit = check(1, 200, 3);
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

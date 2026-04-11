@@ -1,0 +1,11 @@
+// bughunt/probe_04_recursion.tern
+// Probe: recursive function with int counter
+
+fn countdown(n: int) -> trit {
+    if n < 1 { return truth(); }
+    return countdown(n - 1);
+}
+
+fn main() -> trit {
+    return countdown(10);
+}

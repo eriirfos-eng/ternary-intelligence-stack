@@ -1,0 +1,11 @@
+// bughunt/probe_17_negative_int.tern
+// Probe: negative int literals, subtraction, negative comparison
+
+fn main() -> trit {
+    let a: int = -5;
+    let b: int = -3;
+    let c: int = a + b;
+    let d: int = c * -1;
+    if d > 7 { return truth(); }
+    return conflict();
+}

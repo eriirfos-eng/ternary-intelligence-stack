@@ -378,6 +378,71 @@ The key insight is ternary: when human-optimal is Affirm and eco-optimal is Reje
 
 ---
 
+## 🗜️ Phase 11.5: ternlang-compress — Float LLM → Ternary Compression Pipeline
+
+**The idea:** Download any Ollama model → feed it through `ternpress` → get back a `.tern` file
+that is 3-10× smaller and runs on `ternlang-ml`'s sparse kernel with no GPU required.
+
+**Why it's real:** Post-training ternary quantization (PTQ) is proven. BitNet b1.58 shows that
+weight-only ternary quantization to {-1, 0, +1} preserves most model quality. Our sparse matmul
+kernel already skips zero weights (86× at 60% sparsity). The missing piece was a front-end
+pipeline to convert existing models — that's what this phase builds.
+
+**Architecture:**
+```
+GGUF / safetensors
+      │
+  GgufLoader / SafeTensorsLoader  (format.rs — dequant to f32)
+      │
+  PerLayerQuant::quantize()        (quantize.rs — PTQ, BitNet threshold)
+      │  scale α = mean(|W|), trits = round_clamp(W/α)
+      │
+  SparseIndex (CSR) or packed dense  (sparse.rs / model.rs)
+      │  auto-chosen: CSR if sparsity ≥ 75%, else 2-bit packed
+      │
+  TernModel { layers, scales, metadata }  (model.rs)
+      │
+  .tern file (bincode)             (format.rs — write_tern)
+      │
+  ternlang-ml sparse_matmul()      (existing kernel — zero weights skipped)
+```
+
+**New crate: `ternlang-compress`** — workspace member, foundations complete as of 2026-04-11.
+
+### Phase 11.5A — Foundations (COMPLETE 2026-04-11) ✅
+- [x] `ternlang-compress` crate scaffolded, added to workspace
+- [x] `quantize.rs` — `PerLayerQuant::quantize()`, BitNet threshold, MSE measurement, parallel path
+- [x] `sparse.rs` — `SparseIndex` (CSR), roundtrip test, memory efficiency calc
+- [x] `model.rs` — `TernModel`, `TernLayer`, `LayerStorage` (Dense/Sparse), summary(), compression ratio
+- [x] `pipeline.rs` — `compress()`, `CompressConfig`, 2-bit packing, layer dim inference
+- [x] `format.rs` — `.tern` writer/reader (bincode), GGUF/safetensors stubs with impl guide
+- [x] `main.rs` — `ternpress` CLI: `--info`, `--synthetic`, `--verbose`
+- [x] End-to-end unit test: synthetic 4-layer model compresses and saves/loads correctly
+
+### Phase 11.5B — Llama 3.2 1B Integration (ZBook, no GPU)
+- [ ] Implement `load_gguf()` in `format.rs` using candle's GGUF reader
+  - Dequantize existing quant types (Q4_0, Q4_1, F16) to f32
+  - Re-quantize to ternary via `PerLayerQuant::quantize()`
+- [ ] Test on `llama3.2:1b` GGUF from `~/.ollama/models/`
+  - Measure: sparsity per layer, MSE per layer, total compressed size
+  - Target: >50% sparsity average (typical for LLM weight distributions)
+- [ ] Validate output with a simple text generation test (token-by-token decode with ternlang-ml)
+- [ ] `ternpress --input ~/.ollama/models/llama3.2-1b.gguf --output llama32-1b.tern --verbose`
+
+### Phase 11.5C — QLoRA Recovery (ZBook, CPU fine-tune)
+- [ ] After PTQ, run a short LoRA fine-tune on a small calibration dataset to recover accuracy
+- [ ] Target: 1000-step fine-tune on C4 subset, ZBook ZG G9 (14-core, 32 GB RAM), ~2-4 hours
+- [ ] Measure: perplexity before/after PTQ, perplexity after QLoRA recovery
+- [ ] `ternpress fine-tune --model llama32-1b.tern --data calibration.jsonl --steps 1000`
+
+### Phase 11.5D — GGUF Export (Ollama compatibility)
+- [ ] Register a new GGUF quantization type: `GGML_TYPE_TERNARY` (extend llama.cpp type enum)
+  - Or: export as GGUF with Q2_K packing as the nearest standard type
+- [ ] Write `write_gguf()` in `format.rs` so the output is loadable by `ollama serve`
+- [ ] If upstream ternary quant lands in llama.cpp — this becomes a direct integration point
+
+---
+
 ## 🌐 Phase 12: WASM Runtime — Make TernGround Real
 
 **Why this matters:** TernGround Lab 05 currently runs `.tern` in a hand-written JS interpreter. The semantics drift from the real compiler. When someone finds a discrepancy, they lose trust. The fix is to compile `ternlang-core` to WebAssembly — the real BET VM, running in the browser, no installation.
