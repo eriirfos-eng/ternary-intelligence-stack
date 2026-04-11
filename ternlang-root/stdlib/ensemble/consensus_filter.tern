@@ -1,0 +1,27 @@
+// stdlib/ensemble/consensus_filter.tern
+// Demonstrates: Only allow signals that meet a minimum consensus threshold
+// Tier: 2
+
+fn filter_consensus(signals: trittensor<4>, threshold: int) -> trit {
+    let count: int = 0;
+    for s in signals {
+        if s == affirm {
+            count = count + 1;
+        }
+    }
+    
+    if count >= threshold {
+        return affirm;
+    }
+    return reject;
+}
+
+fn main() -> trit {
+    let sigs: trittensor<4> = [1, 1, 0, -1];
+    let result: trit = filter_consensus(sigs, 2);
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
