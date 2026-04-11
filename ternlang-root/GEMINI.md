@@ -1,6 +1,7 @@
 # GEMINI.md — Ternlang Precision Parameter Sheet
-# RFI-IRFOS · ternlang.com · v1.2 (2026-04-11)
+# RFI-IRFOS · ternlang.com · v1.3 (2026-04-11)
 # Read this at session start. These values are ground truth. Do not guess.
+# Current workspace version: 0.3.1 (published to crates.io 2026-04-11)
 
 ---
 
@@ -400,7 +401,10 @@ Absolute paths also work. Library files do NOT need `fn main()`.
 ```tern
 from "model.py" import something;   // NOT YET SUPPORTED — MOD-003 warning printed, skipped.
 ```
-Phase 13 (TernTranslator) will add cross-language FFI. For now: rewrite logic in .tern.
+Phase 13 (TernTranslator) is PARTIALLY DONE (2026-04-11):
+- `trit_translate` MCP tool converts Python if/elif/else, SQL CASE WHEN, JSON rules → .tern.
+- Native cross-language import (`from "file.py" import ...`) is still NOT supported in the VM.
+  For now: rewrite logic in .tern or use `trit_translate` to generate the .tern equivalent.
 
 ### Rules
 - Imported functions are prepended before codegen — fully available to call.

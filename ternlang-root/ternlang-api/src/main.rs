@@ -1294,7 +1294,7 @@ async fn mcp_server_card() -> Json<Value> {
     Json(json!({
         "name":        "ternlang",
         "displayName": "Ternlang — Ternary Intelligence Stack",
-        "version":     "0.3.0",
+        "version":     "0.3.1",
         "description": "The most principled AI reasoning server on MCP. Ternlang adds a third logical state — hold (trit=0) — that binary agents cannot express. Where others force yes/no, Ternlang surfaces 'I need more data' as a first-class outcome. Includes: 20 tools across free + premium tiers; 13-expert MoE deliberation (Mixture-of-Experts with dual-key synergistic routing); server-side three-layer memory (working → session → core) with ternary attention and automatic MoE-backed consolidation; ternary context compression (strip tend-noise, keep signal); live BET VM that runs .tern programs in balanced ternary; BitNet-style weight quantizer; multi-dimensional safety gate; and ternary fact-check, plan, and triage tools. First programming language + MCP server to ship a native ISO-registered ternary ISA (BET-ISA-SPEC). GitHub Linguist language detection live.",
         "homepage":    "https://ternlang.com",
         "icon":        "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack--tis-/main/ternlang-root/ternlang-web/favicon.svg",
@@ -1334,7 +1334,7 @@ async fn mcp_server_card() -> Json<Value> {
 async fn mcp_info() -> Json<Value> {
     Json(json!({
         "name":        "ternlang-mcp",
-        "version":     "0.3.0",
+        "version":     "0.3.1",
         "protocol":    "2024-11-05",
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
@@ -1406,7 +1406,7 @@ async fn mcp_handler(
                 "capabilities": { "tools": {} },
                 "serverInfo": {
                     "name":        "ternlang-mcp",
-                    "version":     "0.3.0",
+                    "version":     "0.3.1",
                     "description": "Ternlang — 20 MCP tools across free + premium tiers. Adds hold (trit=0) as a first-class AI decision outcome. Server-side 3-layer memory with ternary attention, MoE-13 deliberation, ternary compression, live BET VM, and multi-dimensional safety gate.",
                     "homepage":    "https://ternlang.com",
                     "pricing":     "https://ternlang.com/pricing",
