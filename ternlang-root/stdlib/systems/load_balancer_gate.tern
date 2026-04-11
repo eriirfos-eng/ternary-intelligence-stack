@@ -1,0 +1,23 @@
+// stdlib/systems/load_balancer_gate.tern
+// Demonstrates: A simple load balancer gate using ternary consensus.
+// Tier: 2 — Pro Standard
+
+fn balance_load(node_a: trit, node_b: trit) -> trit {
+    // Both must agree to affirm for a clear pass (min(a, b)).
+    // If one rejects (-1), the result is -1.
+    // If one is tend (0) and other is affirm (1), result is 0.
+    return node_a && node_b;
+}
+
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = 0;
+    
+    let decision: trit = balance_load(a, b);
+    
+    match decision {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
