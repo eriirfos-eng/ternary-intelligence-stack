@@ -1,0 +1,29 @@
+// stdlib/grid/task_distributor.tern
+// Demonstrates: task distribution across available nodes
+// Tier: 2 — Pro Standard
+
+fn distribute(task_id: int, node_health: trit[]) -> int {
+    let i: int = 0;
+    while i < 4 {
+        if node_health[i] == 1 {
+            return i; // Assign to first healthy node
+        }
+        i = i + 1;
+    }
+    return -1; // No healthy nodes
+}
+
+fn main() -> trit {
+    let health: trit[] = [-1, 0, 1, 1];
+    let assigned: int = distribute(101, health); // Should be 2
+    
+    if assigned == 2 {
+        return truth();
+    }
+    
+    match cast(assigned) {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
