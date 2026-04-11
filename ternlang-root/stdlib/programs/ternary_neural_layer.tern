@@ -1,0 +1,70 @@
+// stdlib/programs/ternary_neural_layer.tern
+// Demonstrates: A single ternary neural network layer with weight clipping and activation.
+// Tier: 3 — Industrial
+
+fn relu_ternary(x: float) -> trit {
+    if x > 0.5 { 
+        return truth(); 
+    }
+    if x < -0.5 { 
+        return conflict(); 
+    }
+    return hold();
+}
+
+fn count_active(i1: trit, i2: trit, i3: trit) -> int {
+    let count: int = 0;
+    if i1 == 1 { 
+        count = count + 1; 
+    }
+    if i2 == 1 { 
+        count = count + 1; 
+    }
+    if i3 == 1 { 
+        count = count + 1; 
+    }
+    return count;
+}
+
+fn weighted_sum(i1: trit, i2: trit, i3: trit, w1: float, w2: float, w3: float) -> float {
+    let s1: float = cast(i1) * w1;
+    let s2: float = cast(i2) * w2;
+    let s3: float = cast(i3) * w3;
+    return s1 + s2 + s3;
+}
+
+fn apply_bias(val: float, bias: float) -> float {
+    return val + bias;
+}
+
+fn process_layer(i1: trit, i2: trit, i3: trit, w1: float, w2: float, w3: float, bias: float) -> trit {
+    let sum: float = weighted_sum(i1, i2, i3, w1, w2, w3);
+    let biased: float = apply_bias(sum, bias);
+    return relu_ternary(biased);
+}
+
+fn main() -> trit {
+    let i1: trit = 1;
+    let i2: trit = 0;
+    let i3: trit = -1;
+    
+    let active: int = count_active(i1, i2, i3);
+    
+    let w1: float = 0.8;
+    let w2: float = 0.5;
+    let w3: float = -0.2;
+    let bias: float = -0.1;
+    
+    let output: trit = process_layer(i1, i2, i3, w1, w2, w3, bias);
+    
+    // Check if we have at least one active input and output is affirm
+    if active > 0 {
+        match output {
+            -1 => { return conflict(); }
+             0 => { return hold();    }
+             1 => { return truth();   }
+        }
+    }
+    
+    return hold();
+}
