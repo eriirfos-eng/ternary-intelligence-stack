@@ -230,17 +230,16 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 ## 🚧 Pending Action Items (as of 2026-04-10)
 
 ### High Priority
-- [ ] **TernStudio full rewrite** — SAP-style dashboard view + Editor view (activity bar, Explorer, History, resizable panels) + Settings view. "Upskill" replaces "Upgrade". Share button (btoa hash), Download button, run history (last 20), toast notifications, expanded stdlib tree. Monaco layout() on view switch. Design locked, not yet written.
+- [x] **TernStudio full rewrite** — SAP-style dashboard view + Editor view (activity bar, Explorer, History, resizable panels) + Settings view. "Upskill" replaces "Upgrade". Share button (btoa hash), Download button, run history (last 20), toast notifications, expanded stdlib tree. Monaco layout() on view switch. Done 2026-04-10.
 - [x] **BUG-L01 FIXED** — Block comment skip rule was already in `lexer.rs` line 6. Documentation error corrected. Verified 2026-04-10.
 - [x] **BUG-L02 FIXED** — `parse_stmt()` now has explicit `Token::Fn` arm (no-consume); fallback loop in `main.rs` routes to `parse_function()` + `emit_entry_call("main")`. +6 lines parser, +22 lines CLI. 2026-04-10.
-- [ ] **stdlib/qnn/ populate** — 10 planned Qutrit Neural Network modules (qutrit_gate, qutrit_hadamard, qutrit_entangle, qnn_layer, qnn_measure, qnn_inference, qutrit_teleport, qnn_grover, qnn_vqe, qnn_qaoa). Tier 3. ROADMAP.md stub exists.
+- [x] **stdlib/qnn/ populate** — 10 Qutrit Neural Network modules done: qutrit_gate, qutrit_hadamard, qutrit_entangle, qnn_layer, qnn_measure, qnn_inference, qutrit_teleport, qnn_grover, qnn_vqe, qnn_qaoa. Done 2026-04-10.
 
 ### Medium Priority
-- [ ] **GEMINI.md v1.1** — Add Tset Int coercion note (fix #23). Add Tset error message fix. Update known-good patterns.
+- [x] **GEMINI.md v1.2** — Tset Int coercion note added, known-good patterns updated, import system (Section 13a) documented. STDLIB_AGENT.md updated to v3.1.
 - [ ] **Whitepaper update** — stdlib count now 27,000+ files, 267 examples in root + 2,090 total. Update Section 10 implementation status table.
 - [ ] **crates.io republish** — After BUG-L01/L02 fixes in `ternlang-core`, bump version and republish. Badge count "212+ tests" needs update post-ternlang-compat compile error fix.
-- [x] **Open VSX publish** — `ternlang-0.2.0.vsix` published to open-vsx.org (rfi-irfos/ternlang). v0.2.0: affirm/tend/reject highlighting, <=/>= operators added to grammar.
-- [ ] **VS Code Marketplace publish** — BLOCKED: credit card not accepted by publisher portal. `ternlang-0.2.0.vsix` built and ready when resolved.
+- [x] **Open VSX publish** — `ternlang-0.2.0.vsix` published to open-vsx.org (rfi-irfos/ternlang). v0.2.0: affirm/tend/reject highlighting, <=/>= operators added to grammar. Multiple downloads live.
 - [x] **MCP registry / Smithery** — listed as `rfi-irfos/ternlang` at smithery.ai. Description + icon updated to v0.3.0 via API. Tools auto-scanned from live server.
 - [ ] **Phase 7C: Academic outreach** — USN group (Bos & Gundersen) for co-authorship.
 
@@ -264,36 +263,18 @@ The core stack is complete and deployed. Phase 10 onward is about making it real
 
 These two items ship before any other new feature. Without them, the extension is syntax highlighting with a marketing page.
 
-### 10A — Pre-Built LSP Binary (GitHub Actions CI)
-**Why:** Users who install from Open VSX cannot build `ternlang-lsp` from source. Hover docs and live diagnostics are dead on arrival without this. Every serious language extension ships pre-built binaries (rust-analyzer, clangd, gopls).
+### 10A — Pre-Built LSP Binary (GitHub Actions CI) ✅ COMPLETE
+- [x] `.github/workflows/lsp-release.yml`: build matrix (ubuntu/macos/windows + cross for ARM64); triggered by `vscode-v*` tags; publishes to GitHub Releases
+- [x] Extension `activate()`: platform-aware binary resolution (linux-x64/arm64, darwin-x64, win32-x64); resolution order: bundled → globalStoragePath cache → GitHub Releases download with progress notification; graceful failure with suppress option
 
-- [ ] GitHub Actions workflow: on `v*` tag, build `ternlang-lsp` for 4 targets:
-  - `x86_64-unknown-linux-gnu`
-  - `aarch64-unknown-linux-gnu`
-  - `x86_64-apple-darwin`
-  - `x86_64-pc-windows-msvc`
-- [ ] Extension `activate()`: detect host platform, unpack correct binary to `bin/ternlang-lsp`
-- [ ] VSIX manifest: bundle all 4 binaries or use a post-install step
-- [ ] Remove the "build it yourself" requirement from README
-
-### 10B — Tier 2: Inline Trit Value Hints (Ghost Decorations)
-**Why:** This is the visual proof-of-concept that makes ternlang click for everyone who sees it. A ghost annotation after every `let` binding showing its resolved trit state. No other language does this. It's the demo that gets shared.
-
-- [ ] Parse VM stdout after `ternlang.run` — extract `Reg N: trit(...)` lines
-- [ ] Map registers back to source variable names via symbol table export in CLI (`--emit-symbols`)
-- [ ] VS Code `DecorationProvider`: render `// → Affirm` / `// → Tend` / `// → Reject` after each binding
-  - Affirm: green ghost text
-  - Tend: amber/yellow ghost text
-  - Reject: red ghost text
-- [ ] Activate on file save (if key is `tern_t2_*`) or on explicit run
-- [ ] `ternlang.inlineTritHints` command wired from stub → real implementation
-- [ ] Extension v0.4.0 — bump + publish to Open VSX
+### 10B — Tier 2: Inline Trit Value Hints (Ghost Decorations) ✅ COMPLETE
+- [x] `--emit-symbols` flag on CLI Run command; emits `TERN_SYMBOLS:var=reg,...` to stderr using main() scope snapshot
+- [x] VS Code `DecorationProvider`: ghost annotations after every `let` binding (→ Affirm teal / → Tend amber / → Reject red); parses TERN_SYMBOLS from stderr + `Reg N: trit(...)` from stdout; cleared on file switch
+- [x] Activated only when apiKey starts with `tern_t2_`
+- [x] Extension v0.4.0 published to Open VSX as rfi-irfos/ternlang
 
 ### 10C — Dogfood the MCP
-- [ ] Add ternlang MCP to this development environment:
-  ```
-  smithery mcp add rfi-irfos/ternlang
-  ```
+- [ ] Add ternlang MCP to this development environment: `smithery mcp add rfi-irfos/ternlang`
 - [ ] Use `trit_decide` and `moe_orchestrate` in real daily decision-making
 - [ ] Every friction point found becomes a bug report → next release
 
