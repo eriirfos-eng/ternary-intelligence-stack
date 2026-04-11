@@ -1,0 +1,23 @@
+// bughunt/probe_20_propagation_op.tern
+// Probe: ? propagation operator — should early-return on conflict
+
+fn risky(x: int) -> trit {
+    if x < 0 { return conflict(); }
+    return truth();
+}
+
+fn pipeline(a: int, b: int) -> trit {
+    let r1: trit = risky(a)?;
+    let r2: trit = risky(b)?;
+    return consensus(r1, r2);
+}
+
+fn main() -> trit {
+    let ok: trit = pipeline(5, 3);
+    let fail: trit = pipeline(-1, 3);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

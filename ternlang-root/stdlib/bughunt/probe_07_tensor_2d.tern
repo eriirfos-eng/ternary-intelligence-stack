@@ -1,0 +1,16 @@
+// bughunt/probe_07_tensor_2d.tern
+// Probe: 2D tensor (4x4), write/read by flat index
+
+fn main() -> trit {
+    let m: trittensor<4 x 4>;
+    m[0] = 1;
+    m[5] = -1;
+    m[10] = 0;
+    m[15] = 1;
+    let corner: trit = m[15];
+    match corner {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

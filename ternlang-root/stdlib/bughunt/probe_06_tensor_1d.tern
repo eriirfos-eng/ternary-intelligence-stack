@@ -1,0 +1,17 @@
+// bughunt/probe_06_tensor_1d.tern
+// Probe: 1D tensor alloc, write, read
+
+fn main() -> trit {
+    let t: trittensor<5>;
+    t[0] = 1;
+    t[1] = 0;
+    t[2] = -1;
+    t[3] = 1;
+    t[4] = 0;
+    let v: trit = t[2];
+    match v {
+        -1 => { return truth(); }
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}

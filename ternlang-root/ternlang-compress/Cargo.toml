@@ -1,0 +1,60 @@
+[package]
+name        = "ternlang-compress"
+description = "LLM-to-ternary compression pipeline — quantize float models to {-1,0,+1}, build sparse zero-index, export .tern files for ternlang-ml inference."
+readme      = "README.md"
+version.workspace   = true
+edition.workspace   = true
+license          = "LicenseRef-BSL-1.1"
+repository.workspace = true
+homepage.workspace  = true
+authors.workspace   = true
+keywords    = ["ternary", "quantization", "llm", "compression", "bitnet"]
+categories  = ["science", "algorithms"]
+
+[dependencies]
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.0" }
+ternlang-ml   = { path = "../ternlang-ml", version = "0.3.0" }
+
+# Serialization
+serde       = { version = "1", features = ["derive"] }
+serde_json  = "1"
+bincode     = "1"
+
+# Error handling
+thiserror   = "1"
+anyhow      = "1"
+
+# Logging
+tracing     = "0.1"
+
+# Memory-mapped file I/O for large model files (optional, on by default)
+memmap2     = { version = "0.9", optional = true }
+
+# Half-precision float (f16 weights are common in modern LLMs)
+half        = "2"
+
+# Progress bars for CLI pipeline runs
+indicatif   = { version = "0.17", optional = true }
+
+# Rayon for parallel per-layer quantization
+rayon       = { version = "1", optional = true }
+
+[dev-dependencies]
+tempfile    = "3"
+
+[features]
+default  = ["mmap", "progress", "parallel"]
+mmap     = ["dep:memmap2"]
+progress = ["dep:indicatif"]
+parallel = ["dep:rayon"]
+
+# GGUF format support (for Ollama-compatible models)
+# Requires the `gguf` crate or candle's GGUF reader — enable when integrating
+gguf     = []
+
+# SafeTensors format support (HuggingFace)
+safetensors = []
+
+[[bin]]
+name = "ternpress"
+path = "src/main.rs"

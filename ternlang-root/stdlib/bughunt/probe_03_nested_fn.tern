@@ -1,0 +1,23 @@
+// bughunt/probe_03_nested_fn.tern
+// Probe: nested function calls, register save/restore
+
+fn classify(x: int) -> trit {
+    if x > 0 { return truth(); }
+    if x < 0 { return conflict(); }
+    return hold();
+}
+
+fn double_classify(a: int, b: int) -> trit {
+    let ta: trit = classify(a);
+    let tb: trit = classify(b);
+    return consensus(ta, tb);
+}
+
+fn main() -> trit {
+    let result: trit = double_classify(5, 3);
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

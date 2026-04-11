@@ -1,0 +1,12 @@
+// bughunt/probe_02_float_ops.tern
+// Probe: float arithmetic, comparison, EMA-style computation
+
+fn main() -> trit {
+    let a: float = 0.75;
+    let b: float = 0.25;
+    let sum: float = a + b;
+    let prod: float = a * b;
+    let diff: float = a - b;
+    if sum > 0.99 { return truth(); }
+    return conflict();
+}

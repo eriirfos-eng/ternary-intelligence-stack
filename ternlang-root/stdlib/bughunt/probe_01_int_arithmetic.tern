@@ -1,0 +1,12 @@
+// bughunt/probe_01_int_arithmetic.tern
+// Probe: int arithmetic, large numbers, result comparison
+
+fn main() -> trit {
+    let a: int = 1000;
+    let b: int = 999;
+    let c: int = a * b;
+    let d: int = c / 999;
+    let e: int = d % 500;
+    if e > 499 { return truth(); }
+    return conflict();
+}

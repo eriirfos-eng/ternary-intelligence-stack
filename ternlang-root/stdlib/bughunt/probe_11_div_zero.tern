@@ -1,0 +1,9 @@
+// bughunt/probe_11_div_zero.tern
+// Probe: division by zero — expect VM error, not panic
+
+fn main() -> trit {
+    let a: int = 10;
+    let b: int = 0;
+    let c: int = a / b;
+    return truth();
+}

@@ -1,0 +1,10 @@
+/* bughunt/probe_18_block_comments.tern
+   Probe: block comment support (BUG-L01 fixed in v1.1)
+   This entire header is a block comment. */
+
+fn main() -> trit {
+    /* inline block comment */
+    let x: int = 42; /* trailing comment */
+    if x > 0 { return truth(); }
+    return conflict();
+}

@@ -1,0 +1,21 @@
+// bughunt/probe_13_int_match.tern
+// Probe: match on int values (not just -1/0/1), TjmpEqInt
+
+fn score(n: int) -> trit {
+    match n {
+        0 => { return conflict(); }
+        1 => { return hold(); }
+        2 => { return truth(); }
+        3 => { return truth(); }
+        4 => { return truth(); }
+    }
+}
+
+fn main() -> trit {
+    let r: trit = score(3);
+    match r {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

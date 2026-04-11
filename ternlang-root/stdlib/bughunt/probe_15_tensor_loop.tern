@@ -1,0 +1,19 @@
+// bughunt/probe_15_tensor_loop.tern
+// Probe: fill tensor with while loop, then sum all elements
+
+fn main() -> trit {
+    let t: trittensor<6>;
+    let i: int = 0;
+    while i < 6 {
+        t[i] = 1;
+        i = i + 1;
+    }
+    let v0: trit = t[0];
+    let v5: trit = t[5];
+    let both: trit = consensus(v0, v5);
+    match both {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}

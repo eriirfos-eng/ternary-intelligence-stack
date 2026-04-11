@@ -1,0 +1,19 @@
+// bughunt/probe_16_float_trit_boundary.tern
+// Probe: float EMA boundary conditions (0.25 and 0.75 thresholds)
+
+fn classify_signal(s: float) -> trit {
+    if s > 0.75 { return truth(); }
+    if s < 0.25 { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let r1: trit = classify_signal(0.9);
+    let r2: trit = classify_signal(0.5);
+    let r3: trit = classify_signal(0.1);
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
