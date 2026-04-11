@@ -1,0 +1,50 @@
+// stdlib/programs/resource_grid_optimizer.tern
+// Demonstrates: A resource grid optimizer using structs and ternary logic.
+// Tier: 3 — Industrial
+
+struct Resource {
+    id: int,
+    available: float,
+    needed: float,
+}
+
+fn main() -> trit {
+    let r1: Resource = Resource { id: 1, available: 100.0, needed: 80.0 };
+    let r2: Resource = Resource { id: 2, available: 50.0, needed: 70.0 };
+    let r3: Resource = Resource { id: 3, available: 200.0, needed: 50.0 };
+    
+    let diff1: float = r1.available - r1.needed;
+    let diff2: float = r2.available - r2.needed;
+    let diff3: float = r3.available - r3.needed;
+    
+    let s1: trit = 0;
+    if diff1 > 10.0 { s1 = 1; }
+    if diff1 < 0.0 { s1 = -1; }
+    
+    let s2: trit = 0;
+    if diff2 > 10.0 { s2 = 1; }
+    if diff2 < 0.0 { s2 = -1; }
+    
+    let s3: trit = 0;
+    if diff3 > 10.0 { s3 = 1; }
+    if diff3 < 0.0 { s3 = -1; }
+    
+    let surplus_count: int = 0;
+    if s1 == 1 { surplus_count = surplus_count + 1; }
+    if s2 == 1 { surplus_count = surplus_count + 1; }
+    if s3 == 1 { surplus_count = surplus_count + 1; }
+    
+    let total_surplus: float = 0.0;
+    if s1 == 1 { total_surplus = total_surplus + diff1; }
+    if s2 == 1 { total_surplus = total_surplus + diff2; }
+    if s3 == 1 { total_surplus = total_surplus + diff3; }
+    
+    println(surplus_count);
+    println(total_surplus);
+    
+    let grid_health: trit = consensus(s1, consensus(s2, s3));
+    
+    if grid_health == 1 { return 1; }
+    if grid_health == -1 { return -1; }
+    return 0;
+}

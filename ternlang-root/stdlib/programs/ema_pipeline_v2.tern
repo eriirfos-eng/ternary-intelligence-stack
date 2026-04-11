@@ -1,0 +1,39 @@
+// stdlib/programs/ema_pipeline_v2.tern
+// Demonstrates: A signal processing pipeline using EMA and struct metadata in main.
+// Tier: 2 — Pro Standard
+
+struct Meta {
+    id: int,
+    conf: float,
+}
+
+fn main() -> trit {
+    let alpha: float = 0.3;
+    let m1: Meta = Meta { id: 1, conf: 0.8 };
+    let m2: Meta = Meta { id: 2, conf: 0.4 };
+    
+    let s1: float = alpha * 0.8 + (1.0 - alpha) * 0.5;
+    let s2: float = alpha * 0.2 + (1.0 - alpha) * 0.5;
+    
+    let d1: trit = 0;
+    if s1 > 0.6 { d1 = 1; }
+    let d2: trit = 0;
+    if s2 < 0.4 { d2 = -1; }
+    
+    let c1: float = m1.conf;
+    let c2: float = m2.conf;
+    
+    let r1: trit = d1;
+    if c1 < 0.5 { r1 = 0; }
+    let r2: trit = d2;
+    if c2 < 0.5 { r2 = 0; }
+    
+    println(m1.id);
+    println(m2.id);
+    
+    let final_res: trit = consensus(r1, r2);
+    
+    if final_res == 1 { return 1; }
+    if final_res == -1 { return -1; }
+    return 0;
+}
