@@ -1,0 +1,24 @@
+// stdlib/ensemble/dropout_ensemble_gate.tern
+// Demonstrates: Dropout-style signal masking in an ensemble
+// Tier: 2
+
+fn apply_dropout(signal: trit, mask: trit) -> trit {
+    // If mask is -1 (reject), we drop the signal (return tend)
+    // If mask is 1 (affirm), we keep the signal
+    if mask == reject {
+        return tend;
+    }
+    return signal;
+}
+
+fn main() -> trit {
+    let s: trit = affirm;
+    let m: trit = reject;
+    let result: trit = apply_dropout(s, m);
+    
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
