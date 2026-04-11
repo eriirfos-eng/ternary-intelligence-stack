@@ -1,0 +1,27 @@
+// stdlib/ternary/balanced_mux.tern
+// Demonstrates: balanced ternary 3-to-1 multiplexer
+// Tier: 1 — Open Core
+
+fn mux3(sel: trit, in_neg: trit, in_zero: trit, in_pos: trit) -> trit {
+    match sel {
+        -1 => { return in_neg;  }
+         0 => { return in_zero; }
+         1 => { return in_pos;  }
+    }
+}
+
+fn main() -> trit {
+    let result1: trit = mux3(-1, 1, 0, -1); // 1
+    let result2: trit = mux3(0, 1, 0, -1);  // 0
+    let result3: trit = mux3(1, 1, 0, -1);  // -1
+    
+    if result1 == 1 && result2 == 0 && result3 == -1 {
+        return truth();
+    }
+    
+    match result1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
