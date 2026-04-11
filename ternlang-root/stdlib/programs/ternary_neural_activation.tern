@@ -1,0 +1,42 @@
+// stdlib/programs/ternary_neural_activation.tern
+// Demonstrates: Ternary activation function (Tanh-like quantization)
+// Tier: 3
+
+fn quantize_trit(v: float) -> trit {
+    if v > 0.3 {
+        return affirm;
+    }
+    if v < -0.3 {
+        return reject;
+    }
+    return tend;
+}
+
+fn forward_layer(inputs: trittensor<3>, weights: trittensor<3>, bias: float) -> trit {
+    let sum: float = bias;
+    let i: int = 0;
+    while i < 3 {
+        let x: float = 0.0;
+        if inputs[i] == affirm { x = 1.0; }
+        if inputs[i] == reject { x = -1.0; }
+        
+        let w: float = 0.0;
+        if weights[i] == affirm { w = 1.0; }
+        if weights[i] == reject { w = -1.0; }
+        
+        sum = sum + (x * w);
+        i = i + 1;
+    }
+    return quantize_trit(sum);
+}
+
+fn main() -> trit {
+    let inputs: trittensor<3> = [1, -1, 0];
+    let weights: trittensor<3> = [1, 1, -1];
+    let result: trit = forward_layer(inputs, weights, 0.1);
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
