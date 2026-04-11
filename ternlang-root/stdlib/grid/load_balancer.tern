@@ -1,0 +1,33 @@
+// stdlib/grid/load_balancer.tern
+// Demonstrates: simple load balancer selecting node with minimum load
+// Tier: 2 — Pro Standard
+
+fn select_node(loads: trit[]) -> int {
+    let min_load: trit = 1; // max
+    let selected: int = -1;
+    let i: int = 0;
+    
+    while i < 3 {
+        if loads[i] < min_load {
+            min_load = loads[i];
+            selected = i;
+        }
+        i = i + 1;
+    }
+    return selected;
+}
+
+fn main() -> trit {
+    let current_loads: trit[] = [1, -1, 0]; // Node 1 is least loaded (-1)
+    let node: int = select_node(current_loads);
+    
+    if node == 1 {
+        return truth();
+    }
+    
+    match cast(node) {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
