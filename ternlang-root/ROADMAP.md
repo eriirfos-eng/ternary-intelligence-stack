@@ -299,6 +299,23 @@ These two items ship before any other new feature. Without them, the extension i
 
 ---
 
+## 🤝 Phase 10.5: Tern Systems Ecosystem Collaboration
+
+**Tern Computer (https://github.com/Tern-Computer)** is the other ternary computing org — they have BTMC (Balanced Ternary Machine Code) and TERN assembly (RISC-V-inspired, G language compiles to it). We are in the same uncrowded field. Collaboration beats competition.
+
+- [x] Opened collaboration issue: **Tern-Computer/.github#8** — intro, ecosystem alignment, TERN-ASM offer
+- [x] `ternlang-core/codegen/tern_asm.rs` — TERN-compatible ASM emitter (all AST nodes covered)
+- [x] `ternlang build --emit-tern` CLI flag → outputs `.tern.asm` RISC-V-inspired balanced ternary assembly
+- [ ] **Awaiting Tern Systems response** — once they share TERN spec, align register naming / instruction semantics
+- [ ] Contribute to their `coding-guidelines.md` — add joint trit encoding standard section
+- [ ] Add BTMC serialisation target to `ternlang-hdl` (their binary format ↔ our Verilog pipeline)
+- [ ] Cross-link: their README links ternlang, our README links BTMC/TERN
+- [ ] Academic co-positioning: shared "ternary ecosystem" framing for arXiv submission (Phase 15C)
+
+Contacts: garydinmore@tern.ac | adrianfontanilla@tern.ac
+
+---
+
 ## 🧠 Phase 11: MCP Intelligence Upgrade — 5 New Tools + EcoCore
 
 ### 11A — 5 New MCP Tools
@@ -539,3 +556,4 @@ The standalone web IDE — Monaco editor + real BET VM (WASM, Phase 12) + integr
 | 2026-04-10 | **[VM fix] Tset (0x23) Int polymorphism.** `vm/mod.rs`: added `(Value::TensorRef, Value::Int)` arm to Tset dispatch — integer values now silently coerce to `Trit::from(v as i8)` on tensor write. Fixed row mismatch error message (was printing `col` in row branch). Fixes BET-007 TypeMismatch on `stdlib/nn/ternary_relu.tern` and any stdlib file that stores integer loop results into tensor slots. Fixes.md entry #23 added. Debug `println(i)` removed from `ternary_relu.tern`. |
 | 2026-04-10 | **[Infra] stdlib/qnn/ placeholder created.** README referenced `stdlib/qnn/` (dead link — directory absent). Created with ROADMAP.md listing 10 planned QNN module stubs. Actual QNN programs (251–265) remain in `examples/`. QNN stdlib population deferred to Gemini next session (excluded from today's cooldown list). |
 | 2026-04-10 | **[VS Code extension] v0.2.0 — grammar upgrade + Open VSX publish.** `ternlang.tmLanguage.json`: added `affirm\|tend\|reject` as `constant.language.trit.ternlang`; added `<=\|>=` to operators pattern. `package.json` bumped 0.1.0 → 0.2.0. VSIX rebuilt (442 KB, 11 files). Published to Open VSX registry as `rfi-irfos/ternlang v0.2.0`. `ternlang-root/README.md`: Open VSX badge added to badge row; full "VS Code Extension" section added after quick-start (install instructions, feature table, LSP wiring, marketplace note). Bughunt: 5 compiler/VM bugs fixed (AND/OR logic BUG-A/B, for-in loop count BUG-C, FieldAccess BUG-D, Cast BUG-E) — all documented in Buglist/Fixes.md. GEMINI.md v1.2: all fixes hardcoded, opcodes 0x28/0x29 (Tand/Tor) added to table, §15 fix ledger. Fly.io CI: FLY_API_TOKEN refreshed (100-year Macaroon), deploy-fly.yml moved to repo root `.github/workflows/`. |
+| 2026-04-11 | **[Ecosystem] Tern Systems collaboration outreach + TERN-ASM emitter.** Discovered Tern-Computer GitHub org (Tern Systems) — building BTMC (Balanced Ternary Machine Code) and TERN assembly language (RISC-V-inspired) in the same ternary computing space. Opened collaboration issue: Tern-Computer/.github#8 (formal intro, ecosystem alignment proposal, offer to share BET ISA spec + contribute to their docs). Added `ternlang-core/codegen/tern_asm.rs` — full RISC-V-inspired balanced ternary ASM emitter covering all AST nodes (arithmetic, comparison, control flow, tensor ops, actors, error propagation). Wired into CLI as `ternlang build --emit-tern` → writes `.tern.asm` file. Smoke tested on multi-function programs — output is valid TERN-compatible assembly with correct register allocation, label generation, and 3-way branch dispatch. |
