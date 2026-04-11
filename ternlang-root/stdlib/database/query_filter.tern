@@ -1,0 +1,33 @@
+// stdlib/database/query_filter.tern
+// Demonstrates: filtering records via trit conditions
+// Tier: 2 — Pro Standard
+
+fn filter(records: trit[], threshold: trit) -> int {
+    let count: int = 0;
+    for r in records {
+        if r >= threshold {
+            count = count + 1;
+        }
+    }
+    return count;
+}
+
+fn main() -> trit {
+    let data: trit[] = [1, 0, -1, 1, 0];
+    
+    // Filter >= 1 (only 1s)
+    let r1: int = filter(data, 1); // 2
+    
+    // Filter >= 0 (0s and 1s)
+    let r2: int = filter(data, 0); // 4
+    
+    if r1 == 2 && r2 == 4 {
+        return truth();
+    }
+    
+    match cast(r1) {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
