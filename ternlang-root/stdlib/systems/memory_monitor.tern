@@ -1,0 +1,28 @@
+// stdlib/systems/memory_monitor.tern
+// Demonstrates: A memory health monitor using float thresholds and ternary logic.
+// Tier: 2 — Pro Standard
+
+fn monitor_memory(used: float, total: float) -> trit {
+    let ratio: float = used / total;
+    
+    if ratio > 0.9 {
+        return conflict(); // Critical
+    }
+    if ratio > 0.7 {
+        return hold(); // Warning
+    }
+    return truth(); // OK
+}
+
+fn main() -> trit {
+    let used: float = 750.0;
+    let total: float = 1024.0;
+    
+    let status: trit = monitor_memory(used, total);
+    
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
