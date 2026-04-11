@@ -1,0 +1,21 @@
+// stdlib/core/constant_set.tern
+// Demonstrates: variable reassignment (mutable let)
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let x: int = 10;
+    x = 20;
+    
+    let y: trit = 1;
+    y = 0;
+    
+    if x == 20 && y == 0 {
+        return truth();
+    }
+    
+    match y {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
