@@ -177,3 +177,10 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** The parser supports struct definitions but does not yet have a branch for struct literals/initialization in `parse_primary_expr`.
 **Fix:** Unresolved — worked around by using individual variables and strings in stdlib/programs/ternary_search_tree.tern.
 **Status:** Unresolved
+
+## 2026-04-11 — Struct initialization literal fix
+**Trigger:** Attempting to initialize a struct via literal: `let n: Node = Node { val: 1, ... };`
+**Symptom:** `Parse program error: ExpectedToken("Semicolon", "LBrace")`
+**Diagnosis:** The parser supported struct definitions but lacked a branch for struct literals/initialization in `parse_primary_expr`.
+**Fix:** Implemented `Expr::StructLiteral` in AST, Parser, and Codegen. Added struct field flattening into mangled registers in `betbc.rs` and `tern_asm.rs`.
+**Status:** Fixed (Initialization and Field Access verified; returning/passing structs as parameters hit secondary VM stack issues but workaround via intermediate vars is stable).

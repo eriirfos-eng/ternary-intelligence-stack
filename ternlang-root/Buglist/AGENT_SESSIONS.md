@@ -96,3 +96,13 @@
 
 **Compiler fixes this session:** none
 **VM errors encountered:** none (one parse error documented in Fixes.md)
+
+## 2026-04-11 16:00 — 5 complex programs committed (Batch 2)
+
+**Batches:**
+- Batch 6: stdlib/programs/ — struct_init_verification, consensus_orchestrator, ema_pipeline_v2, agent_mesh_simulation, resource_grid_optimizer (5 complex programs)
+
+**Do not work in these categories next session:** systems, cad, physical, integrations, programs
+
+**Compiler fixes this session:** Implemented Struct Literal initialization and field-level register flattening in codegen.
+**VM errors encountered:** BET-001 (Stack underflow when returning/passing structs due to multi-pop logic mismatch — resolved by using intermediate field variables).
