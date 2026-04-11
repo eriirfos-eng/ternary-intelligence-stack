@@ -1,0 +1,31 @@
+// stdlib/societal/governance/consensus_vote.tern
+// Demonstrates: consensus-based voting mechanism
+// Tier: 2 — Pro Standard
+
+fn collect_consensus(votes: trit[]) -> trit {
+    let result: trit = 0;
+    for v in votes {
+        result = consensus(result, v);
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let pass_votes: trit[] = [1, 1, 0, 1];   // consensus = 1
+    let fail_votes: trit[] = [-1, -1, 0];    // consensus = -1
+    let split_votes: trit[] = [1, -1, 0];    // consensus = 0
+    
+    let r1: trit = collect_consensus(pass_votes);
+    let r2: trit = collect_consensus(fail_votes);
+    let r3: trit = collect_consensus(split_votes);
+    
+    if r1 == 1 && r2 == -1 && r3 == 0 {
+        return truth();
+    }
+    
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
