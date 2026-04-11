@@ -1,0 +1,43 @@
+// stdlib/programs/consensus_voting_aggregator.tern
+// Demonstrates: Weighted voting from multiple signals with threshold consensus
+// Tier: 2
+
+fn calculate_score(votes: trittensor<5>, weights: trittensor<5>) -> float {
+    let score: float = 0.0;
+    let i: int = 0;
+    while i < 5 {
+        let v: float = 0.0;
+        if votes[i] == affirm { v = 1.0; }
+        if votes[i] == reject { v = -1.0; }
+        
+        let w: float = 0.5; // default weight
+        // In real use, weights[i] would be cast or mapped
+        score = score + (v * w);
+        i = i + 1;
+    }
+    return score;
+}
+
+fn aggregate_consensus(score: float, threshold: float) -> trit {
+    if score > threshold {
+        return affirm;
+    }
+    if score < -threshold {
+        return reject;
+    }
+    return tend;
+}
+
+fn main() -> trit {
+    let votes: trittensor<5> = [1, 1, 1, -1, 0];
+    let weights: trittensor<5> = [1, 1, 1, 1, 1];
+    
+    let score: float = calculate_score(votes, weights);
+    let result: trit = aggregate_consensus(score, 0.75);
+    
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
