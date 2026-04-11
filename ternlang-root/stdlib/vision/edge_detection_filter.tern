@@ -1,0 +1,24 @@
+// stdlib/vision/edge_detection_filter.tern
+// Demonstrates: Simple 1D edge detection via gradient threshold
+// Tier: 3
+
+fn detect_edge(p1: int, p2: int, threshold: int) -> trit {
+    let diff: int = p1 - p2;
+    if diff < 0 {
+        diff = -diff;
+    }
+    
+    if diff > threshold {
+        return affirm; // edge detected
+    }
+    return reject; // smooth area
+}
+
+fn main() -> trit {
+    let result: trit = detect_edge(200, 50, 100);
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
