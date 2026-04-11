@@ -1,0 +1,39 @@
+// stdlib/stats/standard_deviation_mask.tern
+// Demonstrates: masking values that are outside a standard deviation bound
+// Tier: 3
+
+// Note: No sqrt() yet, so we use variance threshold.
+fn is_outlier(val: trit, mean: float, variance: float) -> trit {
+    let v: float = 0.0;
+    match val {
+        1  => { v = 1.0; }
+        0  => { v = 0.0; }
+        -1 => { v = -1.0; }
+    }
+    
+    let diff: float = v - mean;
+    let diff_sq: float = diff * diff;
+    
+    // If (v - mean)^2 > variance * k, it's an outlier
+    // Using k=1.0 for this demo
+    if diff_sq > variance {
+        return 1;
+    } else {
+        return -1;
+    }
+}
+
+fn main() -> trit {
+    let m: float = 0.5;
+    let var: float = 0.25;
+    
+    let out1: trit = is_outlier(-1, m, var); // (-1 - 0.5)^2 = 2.25 > 0.25 -> Outlier
+    let out2: trit = is_outlier(1, m, var);  // (1 - 0.5)^2 = 0.25 <= 0.25 -> Not outlier
+    
+    if out1 == 1 {
+        if out2 == -1 {
+            return 1;
+        }
+    }
+    return -1;
+}

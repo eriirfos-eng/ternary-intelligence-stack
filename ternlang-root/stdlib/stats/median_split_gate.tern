@@ -1,0 +1,39 @@
+// stdlib/stats/median_split_gate.tern
+// Demonstrates: splitting signals based on a median analog
+// Tier: 3
+
+fn median_approx(data: trit[]) -> trit {
+    // For trits, median is just the most frequent trit if sorted
+    // but here we just count.
+    let pos: int = 0;
+    let neg: int = 0;
+    let zer: int = 0;
+    
+    for x in data {
+        match x {
+            1  => { pos = pos + 1; }
+            0  => { zer = zer + 1; }
+            -1 => { neg = neg + 1; }
+        }
+    }
+    
+    if pos > neg {
+        if pos > zer { return 1; }
+        return 0;
+    } else {
+        if neg > zer { return -1; }
+        return 0;
+    }
+}
+
+fn main() -> trit {
+    let signals: trit[] = [1, 1, 0, -1, -1, -1]; // more -1
+    
+    let m: trit = median_approx(signals);
+    
+    if m == -1 {
+        return 1;
+    } else {
+        return -1;
+    }
+}

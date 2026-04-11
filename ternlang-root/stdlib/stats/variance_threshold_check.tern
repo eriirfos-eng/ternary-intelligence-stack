@@ -1,0 +1,44 @@
+// stdlib/stats/variance_threshold_check.tern
+// Demonstrates: signal variance assessment
+// Tier: 3
+
+fn variance(data: trit[]) -> float {
+    let sum: float = 0.0;
+    let sum_sq: float = 0.0;
+    let count: int = 0;
+    
+    for x in data {
+        let v: float = 0.0;
+        match x {
+            1  => { v = 1.0; }
+            0  => { v = 0.0; }
+            -1 => { v = -1.0; }
+        }
+        sum = sum + v;
+        sum_sq = sum_sq + (v * v);
+        count = count + 1;
+    }
+    
+    if count > 0 {
+        let mean: float = sum / cast(count);
+        // Variance = E[X^2] - (E[X])^2
+        return (sum_sq / cast(count)) - (mean * mean);
+    } else {
+        return 0.0;
+    }
+}
+
+fn main() -> trit {
+    let stable: trit[] = [1, 1, 1, 1, 1]; // Var = 0
+    let noisy: trit[] = [1, -1, 1, -1, 0]; // Var high
+    
+    let v1: float = variance(stable);
+    let v2: float = variance(noisy);
+    
+    if v1 < 0.1 {
+        if v2 > 0.5 {
+            return 1;
+        }
+    }
+    return -1;
+}
