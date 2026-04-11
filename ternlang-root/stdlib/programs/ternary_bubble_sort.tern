@@ -1,0 +1,40 @@
+// stdlib/programs/ternary_bubble_sort.tern
+// Demonstrates: Bubble sort on a 1D trit tensor
+// Tier: 2
+
+fn swap(t: trittensor<5>, i: int, j: int) -> trit {
+    let temp: trit = t[i];
+    t[i] = t[j];
+    t[j] = temp;
+    return affirm;
+}
+
+fn sort_tensor(t: trittensor<5>) -> trit {
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        let j: int = 0;
+        let limit: int = n - i;
+        limit = limit - 1;
+        while j < limit {
+            let next_j: int = j + 1;
+            if t[j] > t[next_j] {
+                let _s: trit = swap(t, j, next_j);
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return affirm;
+}
+
+fn main() -> trit {
+    let t: trittensor<5> = [1, -1, 0, 1, -1];
+    let _ok: trit = sort_tensor(t);
+    
+    // Verify sorted: -1, -1, 0, 1, 1
+    if t[0] == -1 && t[1] == -1 && t[2] == 0 && t[3] == 1 && t[4] == 1 {
+        return affirm;
+    }
+    return reject;
+}
