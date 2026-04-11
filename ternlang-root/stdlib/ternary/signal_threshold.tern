@@ -1,0 +1,25 @@
+// stdlib/ternary/signal_threshold.tern
+// Demonstrates: signal thresholding for trit conversion
+// Tier: 1 — Open Core
+
+fn threshold(val: float, high: float, low: float) -> trit {
+    if val >= high { return truth();    }
+    if val <= low  { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let r1: trit = threshold(0.8, 0.7, 0.3);  // 1
+    let r2: trit = threshold(0.2, 0.7, 0.3);  // -1
+    let r3: trit = threshold(0.5, 0.7, 0.3);  // 0
+    
+    if r1 == 1 && r2 == -1 && r3 == 0 {
+        return truth();
+    }
+    
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
