@@ -1,0 +1,30 @@
+// stdlib/graphics/frame_buffer_lock.tern
+// Demonstrates: frame buffer region locking via trit states
+// Tier: 3 — Industrial
+
+fn lock_region(buffer: trittensor<4>, idx: int) -> trit {
+    let state: trit = buffer[idx];
+    if state == -1 {
+        // -1 = unlocked, set to 1 (locked)
+        buffer[idx] = 1;
+        return truth();
+    }
+    return conflict();
+}
+
+fn main() -> trit {
+    let fb: trittensor<4> = [-1, -1, -1, -1];
+    
+    let ok: trit = lock_region(fb, 0); // 1
+    let fail: trit = lock_region(fb, 0); // -1
+    
+    if ok == 1 && fail == -1 {
+        return truth();
+    }
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
