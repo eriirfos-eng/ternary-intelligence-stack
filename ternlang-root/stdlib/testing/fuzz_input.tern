@@ -1,0 +1,35 @@
+// stdlib/testing/fuzz_input.tern
+// Demonstrates: simple fuzzer iterating through 3-trit combinations
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let a: int = -1;
+    let b: int = -1;
+    let c: int = -1;
+    
+    let count: int = 0;
+    
+    while a <= 1 {
+        b = -1;
+        while b <= 1 {
+            c = -1;
+            while c <= 1 {
+                count = count + 1;
+                c = c + 1;
+            }
+            b = b + 1;
+        }
+        a = a + 1;
+    }
+    
+    // 3^3 = 27
+    if count == 27 {
+        return truth();
+    }
+    
+    match cast(count) {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
