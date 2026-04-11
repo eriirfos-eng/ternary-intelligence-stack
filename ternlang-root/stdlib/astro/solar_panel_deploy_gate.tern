@@ -1,0 +1,28 @@
+// stdlib/astro/solar_panel_deploy_gate.tern
+// Demonstrates: Deciding to deploy solar panels based on environmental factors
+// Tier: 1 — Open Core
+
+fn evaluate_deployment(light_intensity: float, altitude_km: float) -> trit {
+    if altitude_km < 100.0 {
+        return conflict(); // Atmospheric drag too high, keep retracted
+    }
+    
+    if light_intensity < 50.0 {
+        return hold(); // Insufficient light for effective power generation
+    }
+    
+    return truth(); // Optimal deployment conditions
+}
+
+fn main() -> trit {
+    let light: float = 1361.0; // solar constant at earth distance
+    let alt: float = 400.0; // ISS altitude roughly
+    
+    let action: trit = evaluate_deployment(light, alt);
+    
+    match action {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
