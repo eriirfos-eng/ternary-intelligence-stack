@@ -1,0 +1,32 @@
+// stdlib/showcase/threshold_detector.tern
+// Demonstrates: signal sequence threshold detector
+// Tier: 1 — Open Core
+
+fn check_threshold(signals: trit[], required: int) -> trit {
+    let count: int = 0;
+    for s in signals {
+        if s == 1 {
+            count = count + 1;
+        }
+    }
+    
+    if count >= required {
+        return truth();
+    }
+    return conflict();
+}
+
+fn main() -> trit {
+    let signals: trit[] = [1, 0, 1, -1, 0, 1]; // 3 affirm
+    let result: trit = check_threshold(signals, 3);
+    
+    if result == 1 {
+        return truth();
+    }
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
