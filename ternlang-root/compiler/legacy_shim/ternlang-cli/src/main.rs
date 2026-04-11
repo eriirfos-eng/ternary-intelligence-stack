@@ -4,6 +4,7 @@
 // Open-core compiler. See LICENSE-LGPL in the repository root.
 
 use clap::{Parser as ClapParser, Subcommand};
+use serde_json;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -11,7 +12,7 @@ use ternlang_core::parser::Parser;
 use ternlang_core::codegen::betbc::BytecodeEmitter;
 use ternlang_core::codegen::tern_asm::emit_tern_asm;
 use ternlang_core::vm::{BetVm, Value};
-use ternlang_core::StdlibLoader;
+use ternlang_core::ModuleResolver;
 use ternlang_ml::{TritMatrix, bitnet_threshold, benchmark};
 use ternlang_hdl::{BetSimEmitter, BetRtlProcessor};
 use ternlang_runtime::TernNode;
@@ -96,6 +97,19 @@ enum Commands {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
+    /// Audit an AI decision log for binary habituation and EU AI Act compliance
+    Audit {
+        /// Path to a JSON file: array of {input: string, output: string, confidence?: float}
+        /// Omit to read from stdin.
+        #[arg(value_name = "FILE")]
+        file: Option<PathBuf>,
+        /// Write JSON report to this path (default: audit_report.json)
+        #[arg(short, long, value_name = "OUT")]
+        output: Option<PathBuf>,
+        /// Also write a human-readable HTML report alongside the JSON
+        #[arg(long)]
+        html: bool,
+    },
     /// [hidden] You already know what this does
     #[command(hide = true)]
     Enlighten,
@@ -114,7 +128,7 @@ fn main() {
             // Try parsing as a program first
             match parser.parse_program() {
                 Ok(mut prog) => {
-                    StdlibLoader::resolve(&mut prog);
+                    ModuleResolver::from_source_file(file).resolve(&mut prog);
                     emitter.emit_program(&prog);
                     emitter.patch_header_jump(header_patch);
                     emitter.emit_entry_call("main");
@@ -255,6 +269,9 @@ fn main() {
         Commands::Test { path } => {
             run_tests(path);
         }
+        Commands::Audit { file, output, html } => {
+            run_audit(file.as_deref(), output.as_deref(), *html);
+        }
         Commands::Enlighten => {
             enlighten();
         }
@@ -262,7 +279,8 @@ fn main() {
             let input = fs::read_to_string(file).expect("Failed to read file");
             let mut parser = Parser::new(&input);
 
-            let prog_result = parser.parse_program().map(|mut p| { StdlibLoader::resolve(&mut p); p });
+            let resolver = ModuleResolver::from_source_file(file);
+            let prog_result = parser.parse_program().map(|mut p| { resolver.resolve(&mut p); p });
 
             if *emit_tern {
                 // ── TERN-ASM output ──────────────────────────────────────────
@@ -312,7 +330,7 @@ fn run_rtl_sim(file: &std::path::PathBuf, max_cycles: u64) {
     let mut emitter = BytecodeEmitter::new();
 
     match parser.parse_program() {
-        Ok(mut prog) => { StdlibLoader::resolve(&mut prog); emitter.emit_program(&prog); }
+        Ok(mut prog) => { ModuleResolver::from_source_file(file).resolve(&mut prog); emitter.emit_program(&prog); }
         Err(_) => {
             let mut parser = Parser::new(&input);
             while let Ok(stmt) = parser.parse_stmt() { emitter.emit_stmt(&stmt); }
@@ -369,7 +387,7 @@ fn run_sim(file: &std::path::PathBuf, output: Option<&std::path::Path>, run: boo
 
     match parser.parse_program() {
         Ok(mut prog) => {
-            StdlibLoader::resolve(&mut prog);
+            ModuleResolver::from_source_file(file).resolve(&mut prog);
             emitter.emit_program(&prog);
         }
         Err(e) => {
@@ -604,6 +622,171 @@ fn run_hdl_synth(output: Option<&std::path::Path>, run_yosys: bool) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase III Milestone — hidden in plain sight
+// ─── ternlang audit ──────────────────────────────────────────────────────────
+
+fn run_audit(input_file: Option<&std::path::Path>, output_path: Option<&std::path::Path>, write_html: bool) {
+    use serde_json::Value;
+
+    // Read input JSON
+    let raw = if let Some(path) = input_file {
+        match fs::read_to_string(path) {
+            Ok(s) => s,
+            Err(e) => { eprintln!("{} {}", "Error reading input file:".red(), e); std::process::exit(1); }
+        }
+    } else {
+        let mut buf = String::new();
+        use std::io::Read;
+        std::io::stdin().read_to_string(&mut buf).expect("failed to read stdin");
+        buf
+    };
+
+    let decisions: Vec<Value> = match serde_json::from_str(&raw) {
+        Ok(v) => v,
+        Err(e) => { eprintln!("{} {}", "Error parsing JSON:".red(), e); std::process::exit(1); }
+    };
+
+    if decisions.is_empty() {
+        eprintln!("{}", "Error: decisions array is empty.".red());
+        std::process::exit(1);
+    }
+
+    // Audit logic (mirrors trit_audit MCP tool)
+    let binary_words  = ["yes","no","true","false","accept","reject","allow","deny",
+                         "approve","block","pass","fail","correct","incorrect","valid","invalid"];
+    let hold_words    = ["maybe","uncertain","unclear","depends","possibly","insufficient",
+                         "further review","hold","tend","need more","context-dependent"];
+    let high_conf_pat = ["definitely","certainly","always","never","absolutely","guaranteed","100%"];
+
+    let mut affirm_n = 0usize;
+    let mut tend_n   = 0usize;
+    let mut reject_n = 0usize;
+    let mut forced   = 0usize;
+    let mut flagged: Vec<Value> = Vec::new();
+
+    for d in &decisions {
+        let output     = d["output"].as_str().unwrap_or("").to_lowercase();
+        let confidence = d["confidence"].as_f64().unwrap_or(-1.0);
+        let input_text = d["input"].as_str().unwrap_or("");
+
+        let is_binary = binary_words.iter().any(|w| output.split_whitespace()
+            .any(|tok| tok.trim_matches(|c: char| !c.is_alphabetic()) == *w));
+        let has_hedge = hold_words.iter().any(|w| output.contains(*w));
+        let is_forced = high_conf_pat.iter().any(|w| output.contains(*w))
+            || (confidence >= 0.0 && confidence > 0.9);
+
+        if has_hedge               { tend_n   += 1; }
+        else if output.contains("reject") || output.contains("deny")
+             || output.contains(" no ") || output.contains("false") { reject_n += 1; }
+        else                       { affirm_n += 1; }
+
+        if is_binary && !has_hedge && is_forced {
+            forced += 1;
+            flagged.push(serde_json::json!({
+                "input":      input_text,
+                "output":     d["output"].as_str().unwrap_or(""),
+                "confidence": if confidence >= 0.0 { serde_json::json!(confidence) } else { Value::Null },
+                "trit":       0,
+                "reason":     "Forced high-confidence binary decision — tend zone may have been appropriate."
+            }));
+        }
+    }
+
+    let n = decisions.len() as f32;
+    let binary_ratio = forced as f32 / n;
+    let tend_ratio   = tend_n as f32 / n;
+    let art13 = if tend_ratio   > 0.1 { "pass" } else { "warn" };
+    let art14 = if binary_ratio < 0.3 { "pass" } else { "fail" };
+    let cal_score = if binary_ratio < 0.2 { "good" } else if binary_ratio < 0.5 { "warn" } else { "poor" };
+
+    let report = serde_json::json!({
+        "total_decisions":      decisions.len(),
+        "affirm_count":         affirm_n,
+        "tend_count":           tend_n,
+        "reject_count":         reject_n,
+        "forced_binary_ratio":  (binary_ratio * 100.0).round() / 100.0,
+        "tend_ratio":           (tend_ratio   * 100.0).round() / 100.0,
+        "eu_ai_act": {
+            "article_13_transparency":    art13,
+            "article_14_human_oversight": art14,
+            "note": "Heuristic assessment only — not a substitute for legal compliance review."
+        },
+        "calibration": {
+            "score":  cal_score,
+            "advice": if binary_ratio < 0.2 {
+                "Calibration looks healthy — the agent is using the full ternary range."
+            } else if binary_ratio < 0.5 {
+                "Moderate binary habituation. Add confidence thresholds to route uncertain outputs to tend."
+            } else {
+                "High binary habituation. The agent is collapsing ambiguity instead of surfacing it."
+            }
+        },
+        "flagged": flagged,
+        "generated_by": "ternlang audit — RFI-IRFOS TernAudit Phase 13"
+    });
+
+    // Print summary to stdout
+    println!("\n{}", "══ TernAudit Report ══════════════════════════════════".bold());
+    println!("  Total decisions : {}", decisions.len());
+    println!("  Affirm          : {}  Tend : {}  Reject : {}", affirm_n, tend_n, reject_n);
+    println!("  Binary ratio    : {:.0}%   Calibration : {}", binary_ratio * 100.0,
+             match cal_score { "good" => cal_score.green().to_string(), "warn" => cal_score.yellow().to_string(), _ => cal_score.red().to_string() });
+    println!("  EU AI Act  Art.13 transparency : {}   Art.14 oversight : {}",
+             if art13 == "pass" { "pass".green().to_string() } else { "warn".yellow().to_string() },
+             if art14 == "pass" { "pass".green().to_string() } else { "fail".red().to_string() });
+    if !flagged.is_empty() {
+        println!("  {} flagged decisions (see report for details)", flagged.len().to_string().yellow());
+    }
+
+    // Write JSON report
+    let json_path = output_path.map(|p| p.to_path_buf())
+        .unwrap_or_else(|| std::path::PathBuf::from("audit_report.json"));
+    match fs::write(&json_path, serde_json::to_string_pretty(&report).unwrap_or_default()) {
+        Ok(_)  => println!("\n  {} {}", "JSON report →".green(), json_path.display()),
+        Err(e) => eprintln!("  {} {}", "Failed to write JSON report:".red(), e),
+    }
+
+    // Optionally write HTML report
+    if write_html {
+        let html_path = json_path.with_extension("html");
+        let flagged_rows: String = report["flagged"].as_array().map(|f| f.iter().map(|d| {
+            format!("<tr><td>{}</td><td>{}</td><td>{}</td></tr>",
+                d["input"].as_str().unwrap_or(""),
+                d["output"].as_str().unwrap_or(""),
+                d["reason"].as_str().unwrap_or(""))
+        }).collect::<Vec<_>>().join("\n")).unwrap_or_default();
+
+        let html = format!(r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>TernAudit Report — RFI-IRFOS</title>
+<style>body{{font-family:sans-serif;max-width:900px;margin:40px auto;padding:0 20px}}
+h1{{color:#2d2d2d}}table{{width:100%;border-collapse:collapse}}
+th,td{{border:1px solid #ccc;padding:8px;text-align:left;vertical-align:top}}
+th{{background:#f5f5f5}}.good{{color:green}}.warn{{color:orange}}.fail{{color:red}}</style></head>
+<body><h1>TernAudit Report</h1>
+<h2>Summary</h2><table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total decisions</td><td>{total}</td></tr>
+<tr><td>Affirm / Tend / Reject</td><td>{affirm} / {tend} / {reject}</td></tr>
+<tr><td>Forced binary ratio</td><td>{ratio:.0}%</td></tr>
+<tr><td>Calibration</td><td class="{cal}">{cal}</td></tr>
+<tr><td>EU AI Act — Art. 13 transparency</td><td class="{art13}">{art13}</td></tr>
+<tr><td>EU AI Act — Art. 14 human oversight</td><td class="{art14}">{art14}</td></tr>
+</table>
+<h2>Flagged Decisions ({flagged_n})</h2>
+<table><tr><th>Input</th><th>Output</th><th>Reason</th></tr>{rows}</table>
+<p style="color:#888;font-size:0.85em">Generated by ternlang audit · RFI-IRFOS TernAudit Phase 13 · ternlang.com</p>
+</body></html>"#,
+            total=decisions.len(), affirm=affirm_n, tend=tend_n, reject=reject_n,
+            ratio=binary_ratio*100.0, cal=cal_score, art13=art13, art14=art14,
+            flagged_n=report["flagged"].as_array().map(|f|f.len()).unwrap_or(0),
+            rows=flagged_rows);
+
+        match fs::write(&html_path, html) {
+            Ok(_)  => println!("  {} {}", "HTML report →".green(), html_path.display()),
+            Err(e) => eprintln!("  {} {}", "Failed to write HTML report:".red(), e),
+        }
+    }
+}
+
 // Trigger: ternlang enlighten
 // ─────────────────────────────────────────────────────────────────────────────
 fn enlighten() {
@@ -699,7 +882,7 @@ fn run_tests(path: &std::path::PathBuf) {
 
                 match parser.parse_program() {
                     Ok(mut prog) => {
-                        ternlang_core::StdlibLoader::resolve(&mut prog);
+                        ternlang_core::ModuleResolver::stdlib_only().resolve(&mut prog);
                         emitter.emit_program(&prog);
                         // If there is a main function, we need to call it.
                         if prog.functions.iter().any(|f| f.name == "main") {
