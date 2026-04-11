@@ -170,3 +170,10 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** BytecodeEmitter had agent type info, but it was never passed to the BetVm instance in the CLI's Run command.
 **Fix:** Added emitter.register_agents(&mut vm) call in main.rs after VM initialization.
 **Status:** Fixed.
+
+## 2026-04-11 — Struct initialization literal failure
+**Trigger:** Attempting to initialize a struct via literal: `let n: Node = Node { val: 1, ... };`
+**Symptom:** `Parse program error: ExpectedToken("Semicolon", "LBrace")`
+**Diagnosis:** The parser supports struct definitions but does not yet have a branch for struct literals/initialization in `parse_primary_expr`.
+**Fix:** Unresolved — worked around by using individual variables and strings in stdlib/programs/ternary_search_tree.tern.
+**Status:** Unresolved
