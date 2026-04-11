@@ -1,0 +1,24 @@
+// stdlib/integrations/api_response_consensus.tern
+// Demonstrates: A consensus aggregator for multiple API response signals.
+// Tier: 2 — Pro Standard
+
+fn aggregate_signals(s1: trit, s2: trit, s3: trit) -> trit {
+    // If all affirm, affirm.
+    // If any reject, reject.
+    // Otherwise tend (min consensus).
+    return s1 && s2 && s3;
+}
+
+fn main() -> trit {
+    let s1: trit = 1;
+    let s2: trit = 1;
+    let s3: trit = 0;
+    
+    let result: trit = aggregate_signals(s1, s2, s3);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
