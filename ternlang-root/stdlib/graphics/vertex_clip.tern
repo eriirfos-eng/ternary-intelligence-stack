@@ -1,0 +1,24 @@
+// stdlib/graphics/vertex_clip.tern
+// Demonstrates: vertex clipping in normalized coordinate space
+// Tier: 3 — Industrial
+
+fn is_visible(x: float, y: float) -> trit {
+    if x < -1.0 || x > 1.0 { return conflict(); }
+    if y < -1.0 || y > 1.0 { return conflict(); }
+    return truth();
+}
+
+fn main() -> trit {
+    let result1: trit = is_visible(0.5, -0.8); // 1
+    let result2: trit = is_visible(1.2, 0.0);  // -1
+    
+    if result1 == 1 && result2 == -1 {
+        return truth();
+    }
+    
+    match result1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
