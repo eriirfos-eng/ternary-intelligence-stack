@@ -1,0 +1,26 @@
+// stdlib/showcase/balanced_counter.tern
+// Demonstrates: balanced ternary counter increment/decrement
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let count: int = 0;
+    
+    // Increment on 1
+    count = count + 1;
+    
+    // Decrement on -1
+    count = count - 1;
+    
+    // Hold on 0 (no-op)
+    count = count + 0;
+    
+    if count == 0 {
+        return truth();
+    }
+    
+    match cast(count) {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
