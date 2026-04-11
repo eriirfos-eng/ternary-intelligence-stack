@@ -1,26 +1,23 @@
-// Module: encoding_efficiency.tern
-// Purpose: Comparing Binary Encoding vs 2-bit Trit Packing
-// Author: RFI-IRFOS
+// stdlib/benchmarks/encoding_efficiency.tern
+// Demonstrates: Evaluating the efficiency of packed trit encoding (2-bit per trit)
+// Tier: 1 — Open Core
 
-// Benchmarks the storage and information density of ternary.
-
-fn compare_encoding() {
-    // 1. 64 trits can represent 3^64 unique states.
-    // 2. 64 binary bits can represent 2^64 unique states.
+fn calculate_efficiency(trit_count: int, bytes_used: int) -> float {
+    let raw_bits: float = cast(trit_count) * 1.58; // theoretical bits per trit
+    let actual_bits: float = cast(bytes_used) * 8.0;
     
-    // 3^64 is ~3.4 x 10^30
-    // 2^64 is ~1.8 x 10^19
-    
-    // Ternary (3-state) has ~1.58 bits of information per trit.
-    // Packed as 2-bit BET (Binary-Encoded Ternary), 64 trits need 128 bits.
-    
-    print("--- TERNARY VS BINARY INFORMATION DENSITY ---");
-    print("64 units: Binary states = 1.84e19");
-    print("64 units: Ternary states = 3.43e30");
-    print("Ternary information advantage: 1.86e11x more states.");
-    print("BET Packing: 128 bits for 3x the logical depth.");
+    return raw_bits / actual_bits;
 }
 
-fn main() {
-    compare_encoding();
+fn main() -> trit {
+    let trits: int = 1000;
+    let bytes: int = 250; // 4 trits per byte (2 bits each)
+    
+    let efficiency: float = calculate_efficiency(trits, bytes);
+    
+    if efficiency > 0.75 {
+        return truth();
+    }
+    
+    return hold();
 }
