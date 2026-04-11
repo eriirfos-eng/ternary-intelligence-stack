@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use ternlang_core::parser::Parser;
 use ternlang_core::codegen::betbc::BytecodeEmitter;
+use ternlang_core::codegen::tern_asm::emit_tern_asm;
 use ternlang_core::vm::{BetVm, Value};
 use ternlang_core::StdlibLoader;
 use ternlang_ml::{TritMatrix, bitnet_threshold, benchmark};
@@ -42,13 +43,16 @@ enum Commands {
         #[arg(long)]
         emit_symbols: bool,
     },
-    /// Compile a .tern file to bytecode
+    /// Compile a .tern file to bytecode or TERN assembly
     Build {
         /// Path to the .tern file
         file: PathBuf,
         /// Output file path
         #[arg(short, long)]
         output: Option<PathBuf>,
+        /// Emit TERN-compatible assembly (RISC-V-inspired balanced ternary ASM) instead of BET bytecode
+        #[arg(long)]
+        emit_tern: bool,
     },
     /// Interactive REPL for trit expression evaluation
     Repl,
@@ -254,33 +258,47 @@ fn main() {
         Commands::Enlighten => {
             enlighten();
         }
-        Commands::Build { file, output } => {
+        Commands::Build { file, output, emit_tern } => {
             let input = fs::read_to_string(file).expect("Failed to read file");
             let mut parser = Parser::new(&input);
-            let mut emitter = BytecodeEmitter::new();
 
-            match parser.parse_program() {
-                Ok(mut prog) => {
-                    StdlibLoader::resolve(&mut prog);
-                    emitter.emit_program(&prog);
-                }
-                Err(_) => {
-                    let mut parser = Parser::new(&input);
-                    while let Ok(stmt) = parser.parse_stmt() {
-                        emitter.emit_stmt(&stmt);
+            let prog_result = parser.parse_program().map(|mut p| { StdlibLoader::resolve(&mut p); p });
+
+            if *emit_tern {
+                // ── TERN-ASM output ──────────────────────────────────────────
+                let prog = match prog_result {
+                    Ok(p) => p,
+                    Err(e) => { eprintln!("Parse error: {:?}", e); std::process::exit(1); }
+                };
+                let asm = emit_tern_asm(&prog);
+                let out_path = output.clone().unwrap_or_else(|| {
+                    let mut path = file.clone();
+                    path.set_extension("tern.asm");
+                    path
+                });
+                fs::write(&out_path, &asm).expect("Failed to write TERN assembly");
+                println!("TERN assembly written to {}", out_path.display());
+            } else {
+                // ── BET bytecode output ──────────────────────────────────────
+                let mut emitter = BytecodeEmitter::new();
+                match prog_result {
+                    Ok(prog) => { emitter.emit_program(&prog); }
+                    Err(_) => {
+                        let mut parser = Parser::new(&input);
+                        while let Ok(stmt) = parser.parse_stmt() {
+                            emitter.emit_stmt(&stmt);
+                        }
                     }
                 }
+                let code = emitter.finalize();
+                let out_path = output.clone().unwrap_or_else(|| {
+                    let mut path = file.clone();
+                    path.set_extension("tbc");
+                    path
+                });
+                fs::write(&out_path, code).expect("Failed to write bytecode");
+                println!("Compiled to {}", out_path.display());
             }
-
-            let code = emitter.finalize();
-            let out_path = output.clone().unwrap_or_else(|| {
-                let mut path = file.clone();
-                path.set_extension("tbc");
-                path
-            });
-
-            fs::write(out_path, code).expect("Failed to write bytecode");
-            println!("Compiled to {:?}", file);
         }
     }
 }
