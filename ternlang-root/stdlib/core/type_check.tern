@@ -1,0 +1,31 @@
+// stdlib/core/type_check.tern
+// Demonstrates: explicit type checking and coercion between int and trit
+// Tier: 1 — Open Core
+
+fn check_trit_type(val: trit) -> trit {
+    match val {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn check_int_coercion(n: int) -> trit {
+    // Implicit coercion should occur if passed to check_trit_type
+    let result: trit = check_trit_type(cast(n));
+    return result;
+}
+
+fn main() -> trit {
+    let t: trit = 1;
+    let i: int = 0;
+    
+    let result1: trit = check_trit_type(t);
+    let result2: trit = check_int_coercion(i);
+    
+    match result1 && result2 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
