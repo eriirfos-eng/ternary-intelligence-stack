@@ -1,0 +1,22 @@
+// stdlib/physical/gravity_vector.tern
+// Demonstrates: Calculation of gravity vector magnitude with ternary safety.
+// Tier: 3 — Industrial
+
+fn gravity_magnitude(m1: float, m2: float, r: float) -> float {
+    let G: float = 0.00000000006674;
+    return G * (m1 * m2) / (r * r);
+}
+
+fn main() -> trit {
+    let m1: float = 1000.0;
+    let m2: float = 1000.0;
+    let r: float = 1.0;
+    
+    let F: float = gravity_magnitude(m1, m2, r);
+    
+    // Check if gravity is positive
+    if F > 0.0 {
+        return truth();
+    }
+    return conflict();
+}
