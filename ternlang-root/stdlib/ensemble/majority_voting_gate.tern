@@ -1,0 +1,31 @@
+// stdlib/ensemble/majority_voting_gate.tern
+// Demonstrates: Majority vote across 5 signals
+// Tier: 2
+
+fn majority_vote(s1: trit, s2: trit, s3: trit, s4: trit, s5: trit) -> trit {
+    let sum: int = 0;
+    
+    if s1 == affirm { sum = sum + 1; }
+    if s1 == reject { sum = sum + (-1); }
+    if s2 == affirm { sum = sum + 1; }
+    if s2 == reject { sum = sum + (-1); }
+    if s3 == affirm { sum = sum + 1; }
+    if s3 == reject { sum = sum + (-1); }
+    if s4 == affirm { sum = sum + 1; }
+    if s4 == reject { sum = sum + (-1); }
+    if s5 == affirm { sum = sum + 1; }
+    if s5 == reject { sum = sum + (-1); }
+    
+    if sum > 0 { return affirm; }
+    if sum < 0 { return reject; }
+    return tend;
+}
+
+fn main() -> trit {
+    let result: trit = majority_vote(affirm, affirm, reject, tend, affirm);
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
