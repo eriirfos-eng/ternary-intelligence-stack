@@ -1,0 +1,29 @@
+// stdlib/showcase/signal_aggregator.tern
+// Demonstrates: signal aggregation via trit summation
+// Tier: 1 — Open Core
+
+fn aggregate(signals: trit[]) -> trit {
+    let sum: int = 0;
+    for s in signals {
+        sum = sum + s;
+    }
+    
+    if sum > 0 { return truth();    }
+    if sum < 0 { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let signals: trit[] = [1, 1, 0, -1, 1]; // sum = 2
+    let result: trit = aggregate(signals);
+    
+    if result == 1 {
+        return truth();
+    }
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
