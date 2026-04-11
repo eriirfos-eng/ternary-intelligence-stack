@@ -55,6 +55,11 @@ pub enum Expr {
     },
     /// [1, 0, -1]
     TritTensorLiteral(Vec<i8>),
+    /// Struct initialization: `Name { field: value, ... }`
+    StructLiteral {
+        name: String,
+        fields: Vec<(String, Expr)>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

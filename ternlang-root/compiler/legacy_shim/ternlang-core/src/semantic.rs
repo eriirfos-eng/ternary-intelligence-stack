@@ -197,6 +197,7 @@ impl SemanticAnalyzer {
                 let val_ty = self.infer_expr_type(value)?;
                 let type_ok = val_ty == *ty
                     || matches!(value, Expr::Cast { .. })
+                    || matches!(value, Expr::StructLiteral { .. }) // Struct literals checked in infer_expr_type
                     || (*ty == Type::Int && val_ty == Type::Trit)
                     || (*ty == Type::Trit && val_ty == Type::Int)
                     || (matches!(ty, Type::Named(_)) && val_ty == Type::Trit)
@@ -215,6 +216,7 @@ impl SemanticAnalyzer {
                     // Allow TritTensor shape flexibility and AgentRef, cast
                     let ok = found == *expected
                         || matches!(expr, Expr::Cast { .. })
+                        || matches!(expr, Expr::StructLiteral { .. })
                         || (*expected == Type::Int && found == Type::Trit)
                         || (*expected == Type::Trit && found == Type::Int)
                         || (matches!(expected, Type::TritTensor { .. }) && matches!(found, Type::TritTensor { .. }))
@@ -442,6 +444,38 @@ impl SemanticAnalyzer {
 
             Expr::TritTensorLiteral(vals) => {
                 Ok(Type::TritTensor { dims: vec![vals.len()] })
+            }
+
+            Expr::StructLiteral { name, fields } => {
+                // Verify struct exists and fields match
+                let def = self.struct_defs.get(name)
+                    .ok_or_else(|| SemanticError::UndefinedStruct(name.clone()))?;
+                
+                if fields.len() != def.len() {
+                    return Err(SemanticError::ArgCountMismatch { 
+                        function: name.clone(), 
+                        expected: def.len(), 
+                        found: fields.len() 
+                    });
+                }
+
+                for (f_name, f_val) in fields {
+                    let expected_f_ty = def.iter()
+                        .find(|(n, _)| n == f_name)
+                        .ok_or_else(|| SemanticError::UndefinedField { 
+                            struct_name: name.clone(), 
+                            field: f_name.clone() 
+                        })?
+                        .1.clone();
+                    let found_f_ty = self.infer_expr_type(f_val)?;
+                    if found_f_ty != expected_f_ty {
+                        return Err(SemanticError::TypeMismatch { 
+                            expected: expected_f_ty, 
+                            found: found_f_ty 
+                        });
+                    }
+                }
+                Ok(Type::Named(name.clone()))
             }
 
             Expr::FieldAccess { object, field } => {

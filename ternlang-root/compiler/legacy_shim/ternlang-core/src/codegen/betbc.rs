@@ -94,6 +94,7 @@ impl BytecodeEmitter {
         for func in &program.functions {
             let addr = base_addr + self.code.len() as u16;
             self.func_addrs.insert(func.name.clone(), addr);
+            // Ensure any global symbols or previous definitions are visible
             self.emit_function(func);
         }
 
@@ -126,7 +127,29 @@ impl BytecodeEmitter {
         // If function has @sparseskip, we could emit a special header here.
         // For now, it's just a marker in the AST.
 
-        for (name, _) in func.params.iter().rev() {
+        for (name, ty) in func.params.iter().rev() {
+            if let Type::Named(s_name) = ty {
+                if let Some(fields) = self.struct_layouts.get(s_name).cloned() {
+                    // Structs are passed as a bundle: [field1, field2, ..., root_dummy]
+                    // We must pop root dummy first, then fields.
+                    
+                    // Pop root dummy
+                    let root_reg = self.next_reg;
+                    self.symbols.insert(name.clone(), root_reg);
+                    self.next_reg += 1;
+                    self.code.push(0x08); self.code.push(root_reg);
+
+                    // Pop fields in reverse order of how they were pushed
+                    for f_name in fields.iter().rev() {
+                        let f_reg = self.next_reg;
+                        let key = format!("{}.{}", name, f_name);
+                        self.symbols.insert(key, f_reg);
+                        self.next_reg += 1;
+                        self.code.push(0x08); self.code.push(f_reg);
+                    }
+                    continue;
+                }
+            }
             let reg = self.next_reg;
             self.symbols.insert(name.clone(), reg);
             self.next_reg += 1;
@@ -153,6 +176,19 @@ impl BytecodeEmitter {
                         self.code.extend_from_slice(&(rows as u16).to_le_bytes());
                         self.code.extend_from_slice(&(cols as u16).to_le_bytes());
                         handled = true;
+                    }
+                } else if let Type::Named(_) = ty {
+                    if let Expr::StructLiteral { fields, .. } = value {
+                        // Flatten struct fields into mangled registers
+                        for (f_name, f_val) in fields {
+                            self.emit_expr(f_val);
+                            let reg = self.next_reg;
+                            let key = format!("{}.{}", name, f_name);
+                            self.symbols.insert(key, reg);
+                            self.next_reg += 1;
+                            self.code.push(0x08); self.code.push(reg);
+                        }
+                        // Now we let the normal path emit the root variable's dummy value
                     }
                 }
                 if !handled {
@@ -493,7 +529,49 @@ impl BytecodeEmitter {
                     "hold" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); }
                     "conflict" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Reject])); }
                     _ => {
-                        for a in args { self.emit_expr(a); }
+                        for a in args {
+                            // If argument is a struct, we need to push all its flattened fields + root dummy
+                            let mut pushed_as_struct = false;
+                            if let Expr::Ident(name) = a {
+                                // We don't have the variable type here, but we can try to find if it's a struct
+                                // by looking for any mangled keys starting with "name.".
+                                // To get the correct field order, we'd need the struct name.
+                                // Let's try to find which struct layout matches the existing mangled keys.
+                                let mut fields_found = Vec::new();
+                                for (s_name, s_fields) in &self.struct_layouts {
+                                    let mut all_present = true;
+                                    let mut current_regs = Vec::new();
+                                    for f in s_fields {
+                                        let key = format!("{}.{}", name, f);
+                                        if let Some(&r) = self.symbols.get(&key) {
+                                            current_regs.push(r);
+                                        } else {
+                                            all_present = false;
+                                            break;
+                                        }
+                                    }
+                                    if all_present && !s_fields.is_empty() {
+                                        fields_found = current_regs;
+                                        break;
+                                    }
+                                }
+
+                                if !fields_found.is_empty() {
+                                    for reg in fields_found {
+                                        self.code.push(0x09); self.code.push(reg); // TLOAD field
+                                    }
+                                    // Push root dummy
+                                    if let Some(&reg) = self.symbols.get(name) {
+                                        self.code.push(0x09); self.code.push(reg); // TLOAD root
+                                    }
+                                    pushed_as_struct = true;
+                                }
+                            }
+                            
+                            if !pushed_as_struct {
+                                self.emit_expr(a);
+                            }
+                        }
                         self.code.push(0x10); // TCALL
                         if let Some(&addr) = self.func_addrs.get(callee) {
                             self.code.extend_from_slice(&addr.to_le_bytes());
@@ -533,6 +611,11 @@ impl BytecodeEmitter {
                     self.code.push(0x23);
                 }
                 self.code.push(0x09); self.code.push(tr);
+            }
+            Expr::StructLiteral { .. } => {
+                // Struct literals are largely handled by Stmt::Let by flattening.
+                // We push a dummy hold so Return(struct_lit) or Let works consistently.
+                self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
             }
             Expr::Propagate { expr } => {
                 self.emit_expr(expr);
