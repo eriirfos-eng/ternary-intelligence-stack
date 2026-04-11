@@ -1,0 +1,42 @@
+// stdlib/distributed/quorum_consensus.tern
+// Demonstrates: Majority-based quorum logic for distributed state
+// Tier: 2
+
+fn check_quorum(n1: trit, n2: trit, n3: trit) -> trit {
+    let sum: int = 0;
+
+    match n1 {
+        -1 => { sum = sum + (-1); }
+         0 => { let _h: trit = hold(); }
+         1 => { sum = sum + 1; }
+    }
+
+    match n2 {
+        -1 => { sum = sum + (-1); }
+         0 => { let _h: trit = hold(); }
+         1 => { sum = sum + 1; }
+    }
+
+    match n3 {
+        -1 => { sum = sum + (-1); }
+         0 => { let _h: trit = hold(); }
+         1 => { sum = sum + 1; }
+    }
+
+    if sum > 0 {
+        return truth();
+    }
+    if sum < 0 {
+        return conflict();
+    }
+    return hold();
+}
+
+fn main() -> trit {
+    let q: trit = check_quorum(1, 1, -1);
+    match q {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
