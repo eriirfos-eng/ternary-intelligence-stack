@@ -1,0 +1,24 @@
+// stdlib/gametheory/pareto_frontier_check.tern
+// Demonstrates: Simple Pareto dominance check between two allocations
+// Tier: 3
+
+fn is_pareto_dominated(a1: int, a2: int, b1: int, b2: int) -> trit {
+    // Allocation b dominates a if it's better in one and not worse in the other
+    if b1 >= a1 && b2 >= a2 {
+        if b1 > a1 || b2 > a2 {
+            return affirm; // b dominates a
+        }
+        return tend; // allocations are equal
+    }
+    
+    return reject; // b does not dominate a
+}
+
+fn main() -> trit {
+    let result: trit = is_pareto_dominated(10, 5, 10, 6);
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
