@@ -1,0 +1,17 @@
+// stdlib/vision/pixel_consensus_mask.tern
+// Demonstrates: Multi-channel pixel consensus (e.g. RGB mask)
+// Tier: 3
+
+fn pixel_mask(r: trit, g: trit, b: trit) -> trit {
+    // Only affirm if all channels satisfy their individual gates
+    return r && g && b;
+}
+
+fn main() -> trit {
+    let result: trit = pixel_mask(affirm, affirm, affirm);
+    match result {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
