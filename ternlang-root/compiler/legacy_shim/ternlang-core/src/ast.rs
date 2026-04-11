@@ -131,6 +131,10 @@ pub enum Stmt {
     Use {
         path: Vec<String>,
     },
+    /// from <source> import <names>;
+    FromImport {
+        spec: ImportSpec,
+    },
     /// send <agentref_expr> <message_expr>;
     Send {
         target: Expr,
@@ -194,9 +198,37 @@ pub struct AgentDef {
     pub methods: Vec<Function>,
 }
 
+/// Source of a `from ... import` statement.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ImportSource {
+    /// `from stdlib::net` — double-colon module path (stdlib or relative .tern)
+    Module(Vec<String>),
+    /// `from "path/to/file.tern"` — explicit file path (string literal)
+    File(String),
+}
+
+/// What to pull out of the import source.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ImportNames {
+    /// `import *` — everything (same as legacy `use`)
+    Wildcard,
+    /// `import foo, bar` — only these named symbols
+    Named(Vec<String>),
+}
+
+/// A `from <source> import <names>` statement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ImportSpec {
+    pub source: ImportSource,
+    pub names: ImportNames,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Program {
+    /// Legacy `use std::trit;` paths (kept for backward compat)
     pub imports: Vec<Vec<String>>,
+    /// New `from ... import ...` statements
+    pub import_specs: Vec<ImportSpec>,
     pub structs: Vec<StructDef>,
     pub agents: Vec<AgentDef>,
     pub functions: Vec<Function>,

@@ -6,5 +6,5 @@ license = "LicenseRef-BSL-1.1"
 description = "Biologically Native Programming Middleware. Maps EEG/EMG neural signals directly to the TIS Trit data type for Brain-Computer Interfaces."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.0" }
-ternlang-bio = { path = "../ternlang-bio", version = "0.3.0" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.1" }
+ternlang-bio = { path = "../ternlang-bio", version = "0.3.1" }
