@@ -1,0 +1,28 @@
+// stdlib/bench/vm_stack_depth.tern
+// Demonstrates: Evaluating recursion depth safety
+// Tier: 1 — Open Core
+
+fn check_recursion_safety(current_depth: int, max_limit: int) -> trit {
+    if current_depth >= max_limit {
+        return conflict(); // Stack overflow risk
+    }
+    
+    if current_depth > (max_limit / 2) {
+        return hold(); // High usage warning
+    }
+    
+    return truth(); // Safe
+}
+
+fn main() -> trit {
+    let depth: int = 42;
+    let limit: int = 100;
+    
+    let safety: trit = check_recursion_safety(depth, limit);
+    
+    match safety {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
