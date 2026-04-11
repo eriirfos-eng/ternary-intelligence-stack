@@ -1,0 +1,28 @@
+// stdlib/core/match_exhaust.tern
+// Demonstrates: exhaustive match patterns for trit values
+// Tier: 1 — Open Core
+
+fn exhaust_check(val: trit) -> int {
+    match val {
+        -1 => { return -1; }
+         0 => { return 0;  }
+         1 => { return 1;  }
+    }
+}
+
+fn main() -> trit {
+    let result1: int = exhaust_check(-1);
+    let result2: int = exhaust_check(0);
+    let result3: int = exhaust_check(1);
+    
+    // Check if all results match inputs
+    if result1 == -1 && result2 == 0 && result3 == 1 {
+        return truth();
+    }
+    
+    match result1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
