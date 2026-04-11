@@ -1,0 +1,32 @@
+// stdlib/kernel/interrupt_priority_mask.tern
+// Demonstrates: interrupt masking based on priority level
+// Tier: 2
+
+fn should_service(interrupt_level: int, mask_level: int) -> trit {
+    if interrupt_level > mask_level {
+        return 1;
+    } else {
+        if interrupt_level == mask_level {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+}
+
+fn main() -> trit {
+    let mask: int = 5;
+    
+    // High priority (7) should be serviced
+    let s1: trit = should_service(7, mask);
+    
+    // Low priority (3) should NOT be serviced
+    let s2: trit = should_service(3, mask);
+    
+    if s1 == 1 {
+        if s2 == -1 {
+            return 1;
+        }
+    }
+    return -1;
+}

@@ -1,0 +1,35 @@
+// stdlib/kernel/resource_mutex_lock.tern
+// Demonstrates: mutual exclusion state logic
+// Tier: 2
+
+struct Mutex {
+    locked: trit,
+    owner_id: int,
+}
+
+fn try_lock(m: Mutex, requester_id: int) -> trit {
+    if m.locked == 1 {
+        if m.owner_id == requester_id {
+            return 1; // Already owned (re-entrant)
+        }
+        return -1; // Busy
+    }
+    return 1; // Free
+}
+
+fn main() -> trit {
+    let m1: Mutex = Mutex { locked: 1, owner_id: 101 };
+    
+    // Request by same owner
+    let ok1: trit = try_lock(m1, 101);
+    
+    // Request by different owner
+    let ok2: trit = try_lock(m1, 202);
+    
+    if ok1 == 1 {
+        if ok2 == -1 {
+            return 1;
+        }
+    }
+    return -1;
+}
