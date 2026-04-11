@@ -1,0 +1,33 @@
+// stdlib/distributed/byzantine_fault_detector.tern
+// Demonstrates: Detection of inconsistent node reporting (Byzantine)
+// Tier: 2
+
+fn detect_fault(v1: trit, v2: trit, v3: trit) -> trit {
+    // If all three are different, or two are opposite and one is neutral
+    // we have a high-entropy inconsistent state.
+    if v1 != v2 && v2 != v3 && v1 != v3 {
+        return reject; // Potential byzantine behavior
+    }
+    
+    // Majority consensus
+    let sum: int = 0;
+    if v1 == affirm { sum = sum + 1; }
+    if v1 == reject { sum = sum + (-1); }
+    if v2 == affirm { sum = sum + 1; }
+    if v2 == reject { sum = sum + (-1); }
+    if v3 == affirm { sum = sum + 1; }
+    if v3 == reject { sum = sum + (-1); }
+
+    if sum > 0 { return affirm; }
+    if sum < 0 { return reject; }
+    return tend;
+}
+
+fn main() -> trit {
+    let f: trit = detect_fault(affirm, reject, tend);
+    match f {
+        reject => { return conflict(); }
+        tend   => { return hold();    }
+        affirm => { return truth();   }
+    }
+}
