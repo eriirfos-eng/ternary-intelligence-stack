@@ -1,0 +1,29 @@
+// stdlib/cad/vertex_transform.tern
+// Demonstrates: A simple vertex translation and validation using ternary checks.
+// Tier: 3 — Industrial
+
+fn transform_vertex(v: float, delta: float, limit: float) -> trit {
+    let new_v: float = v + delta;
+    
+    if new_v > limit {
+        return conflict(); // Out of bounds
+    }
+    if new_v < -limit {
+        return conflict();
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let v: float = 5.0;
+    let delta: float = 2.0;
+    let limit: float = 10.0;
+    
+    let result: trit = transform_vertex(v, delta, limit);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
