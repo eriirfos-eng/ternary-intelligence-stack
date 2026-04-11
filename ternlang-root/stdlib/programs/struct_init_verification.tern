@@ -1,0 +1,26 @@
+// stdlib/programs/struct_init_verification.tern
+// Demonstrates: Verification of the newly implemented struct initialization.
+// Tier: 2 — Pro Standard
+
+struct Point {
+    px: int,
+    py: int,
+}
+
+fn create_point(x: int, y: int) -> Point {
+    let p: Point = Point { px: x, py: y };
+    return p;
+}
+
+fn get_x(p: Point) -> int {
+    return p.px;
+}
+
+fn main() -> trit {
+    let p: Point = create_point(10, 20);
+    let val: int = get_x(p);
+    if val == 10 {
+        return truth();
+    }
+    return conflict();
+}
