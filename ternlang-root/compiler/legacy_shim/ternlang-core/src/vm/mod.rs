@@ -102,7 +102,7 @@ pub struct BetVm {
     code: Vec<u8>,
     node_id: String,
     remote: Option<Arc<dyn RemoteTransport>>,
-    instructions_count: u64,
+    _instructions_count: u64,
     pub print_log: Vec<String>,
 }
 
@@ -119,12 +119,13 @@ impl BetVm {
             agent_types: std::collections::HashMap::new(),
             pc: 0,
             code,
-            node_id: "127.0.0.1:7373".to_string(),
+            node_id: "127.0.0.1".into(),
             remote: None,
-            instructions_count: 0,
+            _instructions_count: 0,
             print_log: Vec::new(),
         }
     }
+
 
     /// Drain all lines printed by `print()`/`println()` during execution.
     pub fn take_output(&mut self) -> Vec<String> {
