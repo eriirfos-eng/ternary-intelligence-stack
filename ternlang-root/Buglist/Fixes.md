@@ -185,3 +185,15 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** The parser's `parse_primary_expr` for `Token::Ident` was too greedy: if an identifier was followed by `{`, it always assumed it was a `StructLiteral`, consuming the `{` and failing when the block contents didn't look like `field: value` pairs.
 **Fix:** Added lookahead in `parse_primary_expr` to check if `{` is followed by `ident :`. If it is, it's a `StructLiteral`. Otherwise, it's treated as a simple `Expr::Ident`, leaving the `{` for the enclosing statement's block.
 **Status:** Fixed.
+
+## 2026-04-11 — Codegen Match Exhaustiveness & VM Warning Cleanup
+
+**Trigger:** `cargo test -p ternlang-codegen` or building `ternlang-codegen` after adding `Expr::StructLiteral` to `ternlang-core`.
+**Symptom:** `error[E0004]: non-exhaustive patterns: &ternlang_core::Expr::StructLiteral { .. } not covered`. Also multiple compiler warnings about unreachable patterns and unused variables in `ternlang-core`.
+**Diagnosis:** `CTranspiler` in `ternlang-codegen` was missing a match arm for the newly added `StructLiteral` expression type. In `ternlang-core`, recent additive changes left some old wildcard arms (`_ => {}`) unreachable and some loop variables unused.
+**Fix:** 
+- Added `Expr::StructLiteral` implementation to `CTranspiler::emit_expr` using C compound literal syntax: `(Type){ .field = value }`.
+- Removed unreachable wildcard match arm in `betbc.rs`.
+- Renamed unused `s_name` to `_s_name` in `betbc.rs`.
+- Prefixed unused `instructions_count` field with `_` in `BetVm` struct and constructor.
+**Status:** Fixed.

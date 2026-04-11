@@ -105,3 +105,22 @@
 
 **Compiler fixes this session:** Implemented Struct Literal initialization and field-level register flattening in codegen.
 **VM errors encountered:** BET-001 (Stack underflow when returning/passing structs due to multi-pop logic mismatch — resolved by using intermediate field variables).
+
+---
+
+## 2026-04-11 20:00 — 25 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: stdlib/societal/ — reputation_score, community_trust_gate, fair_resource_split, conflict_resolution_mediator, social_stability_index (5 files)
+- Batch 2: stdlib/net/ — packet_loss_gate, latency_threshold_check, bandwidth_throttle, connection_retry_policy, network_partition_detector (5 files)
+- Batch 3: stdlib/timeseries/ — moving_average_gate, exponential_smoothing_gate, drift_detector, trend_reversal_check, spike_suppressor (5 files)
+- Batch 4: stdlib/kernel/ — syscall_gate, process_state_manager, interrupt_priority_mask, resource_mutex_lock, scheduler_tick_quantum (5 files)
+- Batch 5: stdlib/stats/ — arithmetic_mean_gate, variance_threshold_check, median_split_gate, standard_deviation_mask, correlation_strength_check (5 files)
+
+**Do not work in these categories next session:** societal, net, timeseries, kernel, stats
+
+**Compiler fixes this session:**
+- `ternlang-codegen`: Fixed non-exhaustive patterns error for `Expr::StructLiteral` in C codegen.
+- `ternlang-core`: Silenced multiple compiler warnings (unreachable pattern in betbc.rs, unused variable, unused field in BetVm).
+
+**VM errors encountered:** none. Verified that register restoration on TRET is the reason for "all-tend" register dumps in the CLI.
