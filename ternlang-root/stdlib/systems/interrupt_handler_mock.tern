@@ -1,0 +1,33 @@
+// stdlib/systems/interrupt_handler_mock.tern
+// Demonstrates: A mock interrupt handler using ternary priority.
+// Tier: 2 — Pro Standard
+
+fn handle_interrupt(irq: int, priority: trit) -> trit {
+    // High priority (1) always handled.
+    // Medium priority (0) handled if irq is low (< 10).
+    // Low priority (-1) never handled.
+    match priority {
+        -1 => { return conflict(); }
+         1 => { return truth();    }
+         0 => {
+            if irq < 10 {
+                return truth();
+            } else {
+                return hold();
+            }
+         }
+    }
+}
+
+fn main() -> trit {
+    let irq: int = 5;
+    let priority: trit = 0;
+    
+    let result: trit = handle_interrupt(irq, priority);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
