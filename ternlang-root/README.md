@@ -6,8 +6,8 @@
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
-[![MCP](https://img.shields.io/badge/MCP-13%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
-[![VS Code](https://img.shields.io/badge/VS%20Code-Open%20VSX%20v0.2.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
+[![MCP](https://img.shields.io/badge/MCP-19%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
+[![VS Code](https://img.shields.io/badge/VS%20Code-Open%20VSX%20v0.4.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
 [![Linguist PR](https://img.shields.io/badge/GitHub%20Linguist-PR%20pending-yellow)](https://github.com/github/linguist/pulls)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 [![Human Oversight](https://img.shields.io/badge/Human%20Oversight-Article%2014%20Ready-003399)](https://ternlang.com/compliance)
@@ -100,6 +100,7 @@ ternlang run examples/03_rocket_launch.tern
 ternlang build my_program.tern --output my_program.bet
 ternlang repl
 ternlang fmt my_program.tern --write
+ternlang audit decisions.json [--output report.json] [--html]
 ```
 
 **Or build from source:**
@@ -115,7 +116,7 @@ cargo build --release
 
 ## VS Code Extension
 
-[![Open VSX](https://img.shields.io/badge/Open%20VSX-rfi--irfos.ternlang%20v0.2.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
+[![Open VSX](https://img.shields.io/badge/Open%20VSX-rfi--irfos.ternlang%20v0.4.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
 
 Install from the [Open VSX Registry](https://open-vsx.org/extension/rfi-irfos/ternlang) (works in VS Code, VSCodium, Gitpod, and any Open VSX-compatible editor):
 
@@ -126,7 +127,7 @@ ext install rfi-irfos.ternlang
 Or install the VSIX directly:
 
 ```bash
-code --install-extension ternlang-vscode/ternlang-0.2.0.vsix
+code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 ```
 
 **What you get:**
@@ -136,21 +137,12 @@ code --install-extension ternlang-vscode/ternlang-0.2.0.vsix
 | Syntax highlighting | All keywords, types, trit literals (`affirm`/`tend`/`reject`), operators (`&&` `\|\|` `<=` `>=`), `@sparseskip` directive |
 | `.tern` file association | Opens as Ternlang automatically |
 | LSP diagnostics | Hover, completions, and error underlining via `ternlang-lsp` |
+| Inline trit value hints | Ghost decorations on `let` bindings show current trit state while editing |
 | Language configuration | Auto-close brackets/braces, comment toggle (`Ctrl+/`) |
 
-**LSP setup** (diagnostics require the language server binary):
+**LSP setup** — the language server binary is bundled inside the extension and auto-downloaded on install. No manual build step is required. Diagnostics activate automatically when you open any `.tern` file.
 
-```bash
-# Build ternlang-lsp first
-cd ternlang-root && cargo build --release --bin ternlang-lsp
-
-# Copy binary into the extension's bin/ folder
-cp target/release/ternlang-lsp ../ternlang-vscode/bin/
-```
-
-Once the binary is in place, diagnostics activate automatically when you open any `.tern` file.
-
-> **VS Code Marketplace:** submission pending publisher verification. Use Open VSX or the VSIX in the meantime — both are identical.
+> **Published on Open VSX** — multiple downloads live. Works in VS Code, VSCodium, Cursor, and any Open VSX-compatible editor.
 
 ---
 
@@ -269,13 +261,24 @@ For inquiries: `enterprise@rfi-irfos.org`
 
 **API key:** [ternlang.com/pricing](https://ternlang.com/pricing) · Tier 2 (€24/month): 10,000 calls/month, calendar-month reset
 
-### MCP Server — v0.3.0 (13 tools)
+### MCP Server — v0.3.0 (19 tools)
 
 The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, and any HTTP MCP client.
 
 **10 free tools (no key):** `trit_decide` · `trit_consensus` · `trit_eval` · `ternlang_run` · `quantize_weights` · `sparse_benchmark` · `moe_orchestrate` · `moe_deliberate` · `trit_action_gate` · `trit_upgrade`
 
-**3 premium tools (X-Ternlang-Key):** `trit_mem_write` · `trit_mem_read` · `trit_mem_consolidate`
+**9 premium tools (X-Ternlang-Key):** `trit_mem_write` · `trit_mem_read` · `trit_mem_consolidate` · `trit_debate` · `trit_uncertainty_map` · `trit_calibrate` · `trit_translate` · `trit_eco_check` · `trit_audit`
+
+**New in v0.3.0 — Phase 11A & Phase 13 tools:**
+
+| Tool | What it does |
+|------|-------------|
+| `trit_debate` | Routes two claims through MoE-13, compares trits, returns tension score and synthesis |
+| `trit_uncertainty_map` | Scans text sentence-by-sentence, annotates each claim as affirm/tend/reject |
+| `trit_calibrate` | Analyzes a decision log for binary habituation — surfaces over-confident yes/no patterns |
+| `trit_translate` | Converts Python `if/elif/else`, SQL `CASE WHEN`, or JSON rules into `.tern` with `tend` arms |
+| `trit_eco_check` | Compares human decision trit against environmental signal — returns tension and synthesis |
+| `trit_audit` | Full TernAudit: binary habituation ratio + EU AI Act Art.13/14 compliance heuristic |
 
 #### Three-Layer AI Memory (v0.3.0 flagship)
 
@@ -348,7 +351,7 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-ml`](ternlang-ml/) | BSL-1.1 | Sparse matmul, BitNet quantization, TernaryMLP, deliberation engine, coalition vote, action gate |
 | [`ternlang-moe`](ternlang-moe/) | BSL-1.1 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, AgentHarness |
 | [`ternlang-api`](ternlang-api/) | BSL-1.1 | REST + SSE API, multi-tenant key management, all reasoning endpoints |
-| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 13 tools (10 free + 3 premium), stdio + HTTP transport, server-side 3-layer memory |
+| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 19 tools (10 free + 9 premium), stdio + HTTP transport, server-side 3-layer memory, TernAudit |
 | [`ternlang-mkl`](ternlang-mkl/) | BSL-1.1 | **cuTern**: Math Kernel Library with native sparsity bypass |
 | [`ternlang-sql`](ternlang-sql/) | BSL-1.1 | Native Ternary Graph Database driver (50% speedup) |
 | [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The Seamless Migration Layer) |
@@ -433,7 +436,7 @@ On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimite
 │  Free to use, modify, and distribute under LGPL.                │
 ├─────────────────────────────────────────────────────────────────┤
 │  TIER 2 — Pro Standard (BSL-1.1)                  €99/mo        │
-│  ★ 13 MCP tools (full stack)                                    │
+│  ★ 19 MCP tools (full stack)                                    │
 │  ✓ 10,000 API calls/month · @sparseskip inference               │
 │  ✓ Server-side 3-layer memory · MoE-13 consolidation            │
 │  Auto-converts to Apache-2.0 on 2030-04-03.                     │
@@ -498,7 +501,7 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 |-------------------|--------------------------|
 | **Art. 9 — Risk Management** | MoE-13 Safety hard gate: Axis-6 veto fires unconditionally when Safety confidence > 0.90. Every veto is permanently logged to AxisMemory. |
 | **Art. 11 — Technical Documentation** | BET-ISA-SPEC.md, ternlang-whitepaper.tex (DOI: 10.17605/OSF.IO/TZ7DC), RFI-IRFOS protocol specifications (spec/standards/). |
-| **Art. 12 — Record-Keeping** | TernAudit: every trit=0 hold and trit=−1 veto is timestamped, logged, and queryable. Persistent AxisMemory. |
+| **Art. 12 — Record-Keeping** | TernAudit: every trit=0 hold and trit=−1 veto is timestamped, logged, and queryable. Persistent AxisMemory. CLI: `ternlang audit decisions.json [--html]`. MCP: `trit_audit` tool. |
 | **Art. 13 — Transparency** | `trit` type is an explicit uncertainty carrier. Every decision includes a confidence score and a `hint` field explaining the outcome in plain text. |
 | **Art. 14 — Human Oversight** | `trit = 0` (hold) is a first-class routing signal to human review queues. The system cannot be forced to commit — it blocks until evidence threshold is met or a human resolves the hold. |
 | **Art. 15 — Accuracy & Robustness** | Compile-time exhaustive 3-way match enforcement. Non-exhaustive matches are a compile error. EMA convergence loop prevents single-round snap decisions. |
