@@ -1,0 +1,25 @@
+// stdlib/testing/unit_runner.tern
+// Demonstrates: simple unit test runner with consensus aggregation
+// Tier: 1 — Open Core
+
+fn test_one() -> trit {
+    return truth();
+}
+
+fn test_two() -> trit {
+    return truth();
+}
+
+fn main() -> trit {
+    let r1: trit = test_one();
+    let r2: trit = test_two();
+    
+    // Aggregate via logical AND: all must pass
+    let result: trit = r1 && r2;
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
