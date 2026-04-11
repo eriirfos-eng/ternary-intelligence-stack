@@ -1,0 +1,29 @@
+// stdlib/cad/bounding_box_check.tern
+// Demonstrates: A 2D axis-aligned bounding box (AABB) intersection check.
+// Tier: 3 — Industrial
+
+fn check_aabb(ax1: float, ay1: float, ax2: float, ay2: float, bx1: float, by1: float, bx2: float, by2: float) -> trit {
+    if ax1 > bx2 { 
+        return conflict(); 
+    }
+    if ax2 < bx1 { 
+        return conflict(); 
+    }
+    if ay1 > by2 { 
+        return conflict(); 
+    }
+    if ay2 < by1 { 
+        return conflict(); 
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let result: trit = check_aabb(0.0, 0.0, 10.0, 10.0, 5.0, 5.0, 15.0, 15.0);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
