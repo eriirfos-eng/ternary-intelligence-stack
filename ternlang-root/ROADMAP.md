@@ -238,7 +238,7 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 ### Medium Priority
 - [x] **GEMINI.md v1.2** — Tset Int coercion note added, known-good patterns updated, import system (Section 13a) documented. STDLIB_AGENT.md updated to v3.1.
 - [ ] **Whitepaper update** — stdlib count now 27,000+ files, 267 examples in root + 2,090 total. Update Section 10 implementation status table.
-- [ ] **crates.io republish** — After BUG-L01/L02 fixes in `ternlang-core`, bump version and republish. Badge count "212+ tests" needs update post-ternlang-compat compile error fix.
+- [x] **crates.io republish** — v0.3.1 published 2026-04-12: ternlang-core, ternlang-hdl, ternlang-ml, ternlang-moe, ternlang-compat, ternlang-lsp, ternlang-runtime, ternlang-cli, ternlang-mcp all at v0.3.1.
 - [x] **Open VSX publish** — `ternlang-0.2.0.vsix` published to open-vsx.org (rfi-irfos/ternlang). v0.2.0: affirm/tend/reject highlighting, <=/>= operators added to grammar. Multiple downloads live.
 - [x] **MCP registry / Smithery** — listed as `rfi-irfos/ternlang` at smithery.ai. Description + icon updated to v0.3.0 via API. Tools auto-scanned from live server.
 - [ ] **Phase 7C: Academic outreach** — USN group (Bos & Gundersen) for co-authorship.
@@ -429,7 +429,7 @@ GGUF / safetensors
 
 This is also the Hacker News launch vehicle. "Try the first balanced ternary language in your browser" with a live WASM runtime is a compelling demo.
 
-- [ ] `cargo build --target wasm32-unknown-unknown -p ternlang-core` — verify it compiles (no OS deps)
+- [x] `cargo build --target wasm32-unknown-unknown -p ternlang-core` — **VERIFIED** compiles with zero errors (2026-04-12). ternlang-core has no OS deps, pure Rust. WASM target added via `rustup target add wasm32-unknown-unknown`.
 - [ ] `wasm-bindgen` wrapper: expose `run_tern(source: &str) -> String` (returns stdout + register dump)
 - [ ] Replace `playground/index.html` JS interpreter with WASM call
 - [ ] TernGround Lab 05: "Real BET VM, actually running" — accurate, not approximate
@@ -438,44 +438,32 @@ This is also the Hacker News launch vehicle. "Try the first balanced ternary lan
 
 ---
 
-## 🔍 Phase 13: TernAudit — The Killer App ✅ PARTIAL (2026-04-11)
+## 🔍 Phase 13: TernAudit — The Killer App ✅ COMPLETE (CLI + REST + MCP) (2026-04-12)
 
 TernAudit is the commercial case made tangible. It answers the question "why would an enterprise buy ternlang?" with a specific, auditable, EU-AI-Act-compliant answer: *because our AI's decisions are now trit-annotated and you can prove it to a regulator.*
 
 **What it does:** Takes any AI system's decision log, LLM output batch, or classifier result set and returns a trit-annotated audit trail. Every claim: Affirm (evidence present, high confidence), Tend (uncertain, needs more data), or Reject (contradicted). The Tend cases are the ones the AI should have flagged as "I don't know" but didn't — that's the audit finding.
 
 - [x] `ternlang audit <input.json>` CLI command — reads JSON, prints coloured summary, writes `audit_report.json` + optional `audit_report.html` (`--html` flag)
-- [ ] `POST /api/audit` REST endpoint (Tier 2+)
-- [ ] Audit report format:
-  ```json
-  {
-    "total_decisions": N,
-    "affirm_count": N, "tend_count": N, "reject_count": N,
-    "forced_binary_ratio": 0.73,
-    "eu_ai_act": { "article_13": "pass|warn|fail", "article_14": "pass|warn|fail" },
-    "flagged": [{ "input": "...", "output": "...", "trit": 0, "reason": "..." }]
-  }
-  ```
+- [x] `POST /api/audit` REST endpoint — live at `https://ternlang.com/api/audit` (Tier 2+, deployed 2026-04-12)
+- [x] Audit report format: `total_decisions`, `affirm/tend/reject_count`, `forced_binary_ratio`, `eu_ai_act.article_13/14`, `flagged[]`
 - [ ] VS Code command: `Ternlang Pro: Audit Selection` — select any block of AI outputs, get inline annotations
-- [x] `trit_audit` MCP tool — full audit logic inline, 19th tool in ternlang-mcp v0.3.0
-- [ ] Marketing: "The only tool that finds the decisions your AI should have held"
+- [x] `trit_audit` MCP tool — 26th tool in ternlang-api v0.3.1 (10 free + 16 premium)
+- [x] Marketing: "The only tool that finds the decisions your AI should have held"
 
 ---
 
-## 🔄 Phase 14: TernTranslator — The Bridge Into the Existing World
+## 🔄 Phase 14: TernTranslator — The Bridge Into the Existing World ✅ PARTIAL (2026-04-12)
 
 Most potential users have binary decision trees they've been running for years. TernTranslator is the onramp: give it your Python `if/elif/else` or SQL `CASE WHEN` and it outputs `.tern` with the ternary hold zone added where the original code had no coverage.
 
-- [ ] `ternlang translate <input.py>` CLI command
-  - Parses Python if/elif/else, SQL CASE WHEN, JSON rule arrays
-  - Identifies "else: default" patterns — these are the hold zones in disguise
-  - Outputs `.tern` equivalent with explicit Tend arm + comment explaining the gap
-- [ ] `POST /api/translate` REST endpoint (Tier 2+)
+- [x] `ternlang translate <input.py>` CLI command — Python, SQL, JSON rules → .tern with tend arms (2026-04-12)
+- [x] `POST /api/translate` REST endpoint — live at `https://ternlang.com/api/translate` (Tier 2+, deployed 2026-04-12)
 - [ ] VS Code command: `Ternlang Pro: Translate Selection to Ternary` (Tier 2)
   - Select any if/else block → get `.tern` equivalent in a side panel
-- [ ] `trit_translate` MCP tool (already planned in Phase 11A)
-- [ ] Target languages for v1: Python, SQL, JSON rule sets
-- [ ] Target languages for v2: JavaScript, TypeScript, YAML (Kubernetes policy rules)
+- [x] `trit_translate` MCP tool — done in Phase 11A (2026-04-11)
+- [x] Target languages v1: Python, SQL, JSON rule sets — all done
+- [ ] Target languages v2: JavaScript, TypeScript, YAML (Kubernetes policy rules)
 
 ---
 

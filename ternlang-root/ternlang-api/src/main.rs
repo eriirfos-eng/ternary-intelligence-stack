@@ -3421,6 +3421,32 @@ async fn run_program(headers: HeaderMap, Json(body): Json<Value>) -> Response {
     }
 }
 
+// ─── Phase 13: POST /api/audit ────────────────────────────────────────────────
+//
+// Full TernAudit over REST. Tier 2+ required (enforced by require_api_key middleware).
+// Input:  { "decisions": [{input, output, confidence?}], "format"?: "json" }
+// Output: full trit_audit result — binary ratio, EU AI Act Art.13/14, flagged list
+
+async fn audit_endpoint(Json(body): Json<Value>) -> Response {
+    match mcp_trit_audit(&body) {
+        Ok(result) => (StatusCode::OK, Json(result)).into_response(),
+        Err(e)     => api_error(StatusCode::BAD_REQUEST, &e),
+    }
+}
+
+// ─── Phase 14: POST /api/translate ────────────────────────────────────────────
+//
+// TernTranslator over REST. Tier 2+ required.
+// Input:  { "code": string, "language": "python"|"sql"|"json_rules" }
+// Output: { "tern_code": string, "hold_zones_added": int, "explanation": [...] }
+
+async fn translate_endpoint(Json(body): Json<Value>) -> Response {
+    match mcp_trit_translate(&body) {
+        Ok(result) => (StatusCode::OK, Json(result)).into_response(),
+        Err(e)     => api_error(StatusCode::BAD_REQUEST, &e),
+    }
+}
+
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 
 async fn not_found() -> Response {
@@ -3499,7 +3525,7 @@ async fn main() {
     let state = Arc::new(AppState {
         admin_key,
         keys,
-        version: "0.3.0",
+        version: "0.3.1",
         stripe_webhook_secret,
         resend_api_key,
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
@@ -3544,6 +3570,10 @@ async fn main() {
         // Phase 10: TaaS (Ternary-as-a-Service)
         .route("/api/v1/taas/infer",          post(taas_infer))
         .route("/api/v1/heartbeat",           post(heartbeat))
+        // Phase 13: TernAudit
+        .route("/api/audit",                  post(audit_endpoint))
+        // Phase 14: TernTranslator
+        .route("/api/translate",              post(translate_endpoint))
         // Admin (requires X-Admin-Key)
         .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
         .route("/admin/keys/{key}",      delete(admin_revoke_key))

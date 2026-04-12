@@ -82,7 +82,7 @@ match conscious {
 }
 ```
 
-**Built-in Standard Library:** 217+ modules including `std::*`, `classical::*`, `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, and research-grade `qnn::*`.
+**Built-in Standard Library:** 27,000+ modules including `std::*`, `classical::*`, `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, and research-grade `qnn::*`.
 
 **Compiler Features:** First-class `affirm/tend/reject` keywords · Binary `if/while` fallbacks · Tensor indexing `obj[r,c]` · Built-in `use` resolver with zero runtime I/O.
 
@@ -101,6 +101,7 @@ ternlang build my_program.tern --output my_program.bet
 ternlang repl
 ternlang fmt my_program.tern --write
 ternlang audit decisions.json [--output report.json] [--html]
+ternlang translate my_logic.py [--language python] [--output result.tern]
 ```
 
 **Or build from source:**
@@ -242,6 +243,8 @@ curl -X POST https://ternlang.com/api/trit_decide \
 | `POST /api/trit_gate` | Multi-dimensional hard-block safety gate |
 | `POST /api/moe/orchestrate` | Full MoE-13 pass — synchronous JSON result |
 | `POST /api/stream/moe_orchestrate` | MoE-13 pass streamed round-by-round via SSE |
+| `POST /api/audit` | TernAudit — binary habituation + EU AI Act Art.13/14 heuristic (Tier 2+) |
+| `POST /api/translate` | TernTranslator — Python/SQL/JSON rules → .tern with tend arms (Tier 2+) |
 
 ---
 
@@ -320,7 +323,7 @@ For local stdio transport (Claude Desktop, offline use):
 
 ## Example Library
 
-**30,000+ `.tern` programs** currently indexed on GitHub across multiple domains — establishing TIS as the definitive standard for balanced ternary logic.
+**30,000+ `.tern` programs** (2,090 examples + 27,800+ stdlib) across every domain — establishing TIS as the definitive standard for balanced ternary logic.
 
 | Category | Examples |
 |----------|---------|
@@ -331,11 +334,11 @@ For local stdio transport (Claude Desktop, offline use):
 | [AI Agents](examples/08_evidence_collector.tern) | Evidence density, confidence escalation, MoE routing, deliberation |
 | [Civic Systems](examples/12_vote_aggregator.tern) | Vote aggregation, bail decision, treaty negotiation, refugee status |
 | [Computer Science](examples/09_risc_fetch_decode.tern) | CPU pipeline, cache invalidation, API rate limiting, deployment gate |
-| [Tutorials](stdlib/tutorials/) | 15 step-by-step tutorials — hello ternary → full ML pipeline |
+| [Tutorials](stdlib/tutorials/) | Step-by-step tutorials — hello ternary → full ML pipeline |
 | [QNN / Qutrit](stdlib/qnn/) | Qutrit Neural Networks — Kepp 2026 reference implementations |
 | [Standard Library](stdlib/) | Agents, reasoning, ML layers, optimizers, std, benchmarks |
 
-→ [**Browse all examples**](examples/INDEX.md)
+→ [**Browse all 2,090 examples**](examples/INDEX.md)
 
 ---
 
@@ -344,7 +347,7 @@ For local stdio transport (Claude Desktop, offline use):
 | Crate | Tier | Description |
 |-------|------|-------------|
 | [`ternlang-core`](ternlang-core/) | Open (LGPL) | Lexer, parser, AST, BET VM — 51 opcodes, 27 registers |
-| [`ternlang-cli`](ternlang-cli/) | Open (LGPL) | `run` · `build` · `sim` · `fmt` · `repl` · `compat` |
+| [`ternlang-cli`](ternlang-cli/) | Open (LGPL) | `run` · `build` · `sim` · `fmt` · `repl` · `compat` · `audit` · `translate` |
 | [`ternlang-lsp`](ternlang-lsp/) | Open (LGPL) | LSP 3.17 — hover, completion, diagnostics |
 | [`ternlang-compat`](ternlang-compat/) | Open (LGPL) | 9-trit RISC assembler (Brandon Smith bridge), Owlet S-expr parser |
 | [`ternpkg`](ternpkg/) | Open (LGPL) | Package manager, GitHub-backed registry |

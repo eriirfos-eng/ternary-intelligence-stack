@@ -110,6 +110,19 @@ enum Commands {
         #[arg(long)]
         html: bool,
     },
+    /// Translate Python, SQL, or JSON rule sets into .tern code with explicit tend arms
+    Translate {
+        /// Source file to translate (Python, SQL, or JSON rules).
+        /// Omit to read from stdin.
+        #[arg(value_name = "FILE")]
+        file: Option<PathBuf>,
+        /// Source language: python, sql, json_rules (default: python)
+        #[arg(short, long, default_value = "python")]
+        language: String,
+        /// Write output to this .tern file (default: prints to stdout)
+        #[arg(short, long, value_name = "OUT")]
+        output: Option<PathBuf>,
+    },
     /// [hidden] You already know what this does
     #[command(hide = true)]
     Enlighten,
@@ -268,6 +281,9 @@ fn main() {
         }
         Commands::Test { path } => {
             run_tests(path);
+        }
+        Commands::Translate { file, language, output } => {
+            run_translate(file.as_deref(), language, output.as_deref());
         }
         Commands::Audit { file, output, html } => {
             run_audit(file.as_deref(), output.as_deref(), *html);
@@ -621,6 +637,157 @@ fn run_hdl_synth(output: Option<&std::path::Path>, run_yosys: bool) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ─── ternlang translate ───────────────────────────────────────────────────────
+
+fn run_translate(input_file: Option<&std::path::Path>, language: &str, output_path: Option<&std::path::Path>) {
+    let code = if let Some(path) = input_file {
+        fs::read_to_string(path).unwrap_or_else(|e| {
+            eprintln!("[translate] Cannot read {:?}: {}", path, e);
+            std::process::exit(1);
+        })
+    } else {
+        use std::io::Read;
+        let mut buf = String::new();
+        std::io::stdin().read_to_string(&mut buf).expect("failed to read stdin");
+        buf
+    };
+
+    // Translation logic mirrors trit_translate MCP tool
+    let mut hold_zones = 0usize;
+    let mut tern_lines: Vec<String> = Vec::new();
+    let mut explanation_notes: Vec<String> = Vec::new();
+
+    tern_lines.push(format!("// Translated from {} by ternlang translate — RFI-IRFOS v0.3.1", language));
+    tern_lines.push(format!("// Original: {} lines", code.lines().count()));
+    tern_lines.push(String::new());
+
+    match language {
+        "python" => {
+            let mut in_chain = false;
+            let mut has_else = false;
+            for line in code.lines() {
+                let trimmed = line.trim();
+                if trimmed.starts_with("if ") && trimmed.ends_with(':') {
+                    in_chain = true; has_else = false;
+                    let cond = &trimmed[3..trimmed.len()-1];
+                    tern_lines.push(format!("let condition: trit = cast({});", cond));
+                    tern_lines.push("match condition {".to_string());
+                    tern_lines.push("     1 => {".to_string());
+                } else if trimmed.starts_with("elif ") && trimmed.ends_with(':') {
+                    let cond = &trimmed[5..trimmed.len()-1];
+                    tern_lines.push("    }".to_string());
+                    tern_lines.push(format!("    // elif {}", cond));
+                    tern_lines.push("    -1 => {".to_string());
+                } else if trimmed == "else:" {
+                    has_else = true;
+                    tern_lines.push("    }".to_string());
+                    tern_lines.push("     0 => {".to_string());
+                } else if trimmed.starts_with("return ") {
+                    let val = &trimmed[7..];
+                    let trit_val = if val.contains("True") || val.contains("1") { "truth()" }
+                                   else if val.contains("False") || val.contains("0") { "conflict()" }
+                                   else { "hold()" };
+                    tern_lines.push(format!("        return {};", trit_val));
+                } else if !trimmed.is_empty() {
+                    tern_lines.push(format!("        // {}", trimmed));
+                }
+            }
+            if in_chain {
+                if !has_else {
+                    tern_lines.push("    }".to_string());
+                    tern_lines.push("     0 => {".to_string());
+                    tern_lines.push("        // HOLD ZONE — original had no else branch".to_string());
+                    tern_lines.push("        return hold();".to_string());
+                    hold_zones += 1;
+                    explanation_notes.push("Injected tend arm: original if/elif had no else branch.".into());
+                }
+                tern_lines.push("    }".to_string());
+                tern_lines.push("}".to_string());
+            }
+        }
+        "sql" => {
+            tern_lines.push("fn evaluate(signal: trit) -> trit {".to_string());
+            let mut in_case = false;
+            for line in code.lines() {
+                let upper = line.trim().to_uppercase();
+                if upper.starts_with("CASE") {
+                    in_case = true; tern_lines.push("    match signal {".to_string());
+                } else if upper.starts_with("WHEN") {
+                    tern_lines.push(format!("         1 => {{ // WHEN {}", line.trim()[4..].trim()));
+                } else if upper.starts_with("THEN") {
+                    tern_lines.push(format!("            return truth(); // THEN {}", line.trim()[4..].trim()));
+                    tern_lines.push("        }".to_string());
+                } else if upper.starts_with("ELSE") {
+                    tern_lines.push(format!("        -1 => {{ return conflict(); }} // ELSE {}", line.trim()[4..].trim()));
+                } else if upper.starts_with("END") && in_case {
+                    tern_lines.push("         0 => { return hold(); } // NULL/unknown → hold".to_string());
+                    tern_lines.push("    }".to_string());
+                    hold_zones += 1; in_case = false;
+                    explanation_notes.push("Injected tend arm: SQL CASE had no NULL/unknown branch.".into());
+                }
+            }
+            tern_lines.push("}".to_string());
+        }
+        "json_rules" => {
+            match serde_json::from_str::<serde_json::Value>(&code) {
+                Ok(rules) if rules.is_array() => {
+                    tern_lines.push("fn apply_rules(signal: trit) -> trit {".to_string());
+                    tern_lines.push("    match signal {".to_string());
+                    for rule in rules.as_array().unwrap() {
+                        let cond = rule["if"].as_str().unwrap_or("condition");
+                        let then = rule["then"].as_str().unwrap_or("pass");
+                        let tval = if then.contains("pass") || then.contains("allow") { "truth()" }
+                                   else if then.contains("deny") || then.contains("block") { "conflict()" }
+                                   else { "hold()" };
+                        tern_lines.push(format!("         1 => {{ return {}; }} // if: {}", tval, cond));
+                    }
+                    tern_lines.push("         0 => { return hold(); } // HOLD ZONE".to_string());
+                    tern_lines.push("        -1 => { return conflict(); }".to_string());
+                    tern_lines.push("    }".to_string());
+                    tern_lines.push("}".to_string());
+                    hold_zones += 1;
+                    explanation_notes.push("Injected tend arm for unmatched inputs.".into());
+                }
+                _ => {
+                    eprintln!("[translate] json_rules: code must be a valid JSON array.");
+                    std::process::exit(1);
+                }
+            }
+        }
+        other => {
+            eprintln!("[translate] unsupported language '{}'. Use: python, sql, json_rules", other);
+            std::process::exit(1);
+        }
+    }
+
+    tern_lines.push(String::new());
+    tern_lines.push("fn main() -> trit { return hold(); }".to_string());
+
+    let tern_code = tern_lines.join("\n");
+
+    // Print summary
+    println!("{}", "══ TernTranslator ═══════════════════════════════════".bold());
+    println!("  Language:    {}", language.cyan());
+    println!("  Hold zones:  {}", hold_zones.to_string().green());
+    if !explanation_notes.is_empty() {
+        println!("  Notes:");
+        for note in &explanation_notes {
+            println!("    • {}", note);
+        }
+    }
+    println!();
+
+    if let Some(out) = output_path {
+        fs::write(out, &tern_code).unwrap_or_else(|e| {
+            eprintln!("[translate] Cannot write {:?}: {}", out, e);
+            std::process::exit(1);
+        });
+        println!("{} Written to {}", "✓".green().bold(), out.display());
+    } else {
+        println!("{}", tern_code);
+    }
+}
+
 // Phase III Milestone — hidden in plain sight
 // ─── ternlang audit ──────────────────────────────────────────────────────────
 
