@@ -1,0 +1,34 @@
+// stdlib/graphics/normal_mapping_filter.tern
+// Demonstrates: Surface normal orientation check for lighting calculations.
+// Tier: 3 — Industrial
+
+fn check_normal(nx: float, ny: float, nz: float) -> trit {
+    // Normal must be normalized (within epsilon)
+    let magnitude_sq: float = nx * nx + ny * ny + nz * nz;
+    if magnitude_sq > 1.05 {
+        return conflict(); // Denormalized, error
+    }
+    if magnitude_sq < 0.95 {
+        return conflict(); // Denormalized, error
+    }
+    
+    // Check if facing the light source (simplified)
+    if nz > 0.0 {
+        return truth(); // Facing positive-z light
+    }
+    return hold(); // Side-lit or grazing
+}
+
+fn main() -> trit {
+    let nx: float = 0.0;
+    let ny: float = 0.0;
+    let nz: float = 1.0;
+    
+    let result: trit = check_normal(nx, ny, nz);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
