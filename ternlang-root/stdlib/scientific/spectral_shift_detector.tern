@@ -1,0 +1,26 @@
+// stdlib/scientific/spectral_shift_detector.tern
+// Demonstrates: Redshift/blueshift signal check for astronomical or acoustic doppler.
+// Tier: 3 — Industrial
+
+fn detect_shift(observed_f: float, source_f: float) -> trit {
+    if observed_f < source_f {
+        return conflict(); // Redshift (longer wavelength)
+    }
+    if observed_f > source_f {
+        return truth(); // Blueshift (shorter wavelength)
+    }
+    return hold(); // No shift / within noise
+}
+
+fn main() -> trit {
+    let obs_f: float = 400.0;
+    let src_f: float = 500.0;
+    
+    let shift: trit = detect_shift(obs_f, src_f);
+    
+    match shift {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
