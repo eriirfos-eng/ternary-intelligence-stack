@@ -1,0 +1,27 @@
+// stdlib/cad/part_interference_mask.tern
+// Demonstrates: checking if two bounding boxes interfere in 1D
+// Tier: 3 — Industrial
+
+fn check_interference(min_a: float, max_a: float, min_b: float, max_b: float) -> trit {
+    if max_a < min_b { return truth(); } // No interference
+    if max_b < min_a { return truth(); } // No interference
+    
+    // They overlap
+    return conflict();
+}
+
+fn main() -> trit {
+    // Part A: [0.0, 5.0]
+    // Part B: [4.5, 10.0]
+    let min1: float = 0.0;
+    let max1: float = 5.0;
+    let min2: float = 4.5;
+    let max2: float = 10.0;
+    
+    let res: trit = check_interference(min1, max1, min2, max2);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
