@@ -1,0 +1,21 @@
+// stdlib/kernel/interrupt_vector_mask.tern
+// Demonstrates: masking specific interrupt vectors based on system state
+// Tier: 3 — Industrial
+
+fn check_vector(vector: int, current_mask: trit) -> trit {
+    if current_mask == -1 { return conflict(); } // All masked
+    if vector == 0 { return truth(); } // Non-maskable
+    return current_mask;
+}
+
+fn main() -> trit {
+    let v: int = 15;
+    let m: trit = 0; // Hold / Deferred
+    
+    let res: trit = check_vector(v, m);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
