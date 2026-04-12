@@ -1,0 +1,30 @@
+// stdlib/qnn/precision_aware_consensus.tern
+// Demonstrates: Weighting trit signals by floating-point precision
+// Tier: 3 — Industrial
+
+fn precision_consensus(s1: trit, p1: float, s2: trit, p2: float) -> trit {
+    if p1 > (p2 * 2.0) {
+        return s1; // p1 is much more reliable
+    }
+    if p2 > (p1 * 2.0) {
+        return s2; // p2 is much more reliable
+    }
+    
+    // Balanced reliability — use consensus
+    return consensus(s1, s2);
+}
+
+fn main() -> trit {
+    let sig1: trit = 1;
+    let prec1: float = 0.95;
+    let sig2: trit = -1;
+    let prec2: float = 0.40;
+    
+    let ok: trit = precision_consensus(sig1, prec1, sig2, prec2);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
