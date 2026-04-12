@@ -1,0 +1,55 @@
+// stdlib/programs/fault_tolerant_state_machine.tern
+// Demonstrates: state machine with health-based redundancy and imports
+// Tier: 2 — Pro Standard
+
+from "state_utils.tern" import next_state, is_final, clamp_state;
+
+fn evaluate_health(h: float) -> trit {
+    if h > 0.75 { return truth();    }
+    if h < 0.25 { return conflict(); }
+    return hold();
+}
+
+fn redundancy_consensus(s1: trit, s2: trit, h1: float, h2: float) -> trit {
+    let stat1: trit = evaluate_health(h1);
+    let stat2: trit = evaluate_health(h2);
+    
+    // Weighted consensus: healthy signals override others
+    match stat1 {
+        1 => { return s1; }
+        0 => { return consensus(s1, s2); }
+        -1 => { return s2; }
+    }
+}
+
+fn step_system(cur: int, sig1: trit, sig2: trit, h1: float, h2: float) -> int {
+    let consensus_sig: trit = redundancy_consensus(sig1, sig2, h1, h2);
+    let n: int = next_state(cur, consensus_sig);
+    return clamp_state(n, 0, 5);
+}
+
+fn run_mission(target: int) -> trit {
+    let state: int = 0;
+    let i: int = 0;
+    
+    while i < 10 {
+        // Mock signals and health
+        let s1: trit = 1;
+        let s2: trit = 0;
+        let h1: float = 0.8; // Primary healthy
+        let h2: float = 0.9; // Backup healthy
+        
+        state = step_system(state, s1, s2, h1, h2);
+        if is_final(state, target) == 1 { return truth(); }
+        i = i + 1;
+    }
+    return conflict();
+}
+
+fn main() -> trit {
+    match run_mission(3) {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
