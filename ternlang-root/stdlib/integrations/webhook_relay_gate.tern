@@ -1,27 +1,21 @@
 // stdlib/integrations/webhook_relay_gate.tern
-// Demonstrates: A webhook relay gate that validates secret tokens via ternary logic.
-// Tier: 2 — Pro Standard
+// Demonstrates: gating webhook relays based on signature and load
+// Tier: 3 — Industrial
 
-fn validate_webhook(token: int, expected: int, payload_size: int) -> trit {
-    if token != expected {
-        return conflict();
-    }
-    if payload_size > 1024 {
-        return hold(); // Too large, need manual review
-    }
+fn should_relay(signed: trit, system_load: float) -> trit {
+    if signed != 1 { return conflict(); }
+    if system_load > 0.9 { return hold(); }
     return truth();
 }
 
 fn main() -> trit {
-    let token: int = 12345;
-    let expected: int = 12345;
-    let size: int = 500;
+    let ok: trit = 1;
+    let load: float = 0.45;
     
-    let result: trit = validate_webhook(token, expected, size);
-    
-    match result {
+    let res: trit = should_relay(ok, load);
+    match res {
         -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
