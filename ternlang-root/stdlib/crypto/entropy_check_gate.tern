@@ -1,0 +1,26 @@
+// stdlib/crypto/entropy_check_gate.tern
+// Demonstrates: Health monitoring for random entropy sources
+// Tier: 3 — Industrial
+
+fn check_entropy(samples: int, unique_count: int) -> trit {
+    if unique_count < (samples / 10) {
+        return conflict(); // Source failed randomness test
+    }
+    if unique_count < (samples / 2) {
+        return hold();     // Weak entropy, wait for more gathering
+    }
+    return truth();        // Healthy entropy source
+}
+
+fn main() -> trit {
+    let s: int = 100;
+    let u: int = 65;
+    
+    let ok: trit = check_entropy(s, u);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
