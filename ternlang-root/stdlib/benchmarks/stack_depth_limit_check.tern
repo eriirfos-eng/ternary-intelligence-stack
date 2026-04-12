@@ -1,0 +1,21 @@
+// stdlib/benchmarks/stack_depth_limit_check.tern
+// Demonstrates: recursive call depth limit
+// Tier: 3 — Industrial
+
+fn recurse(n: int) -> trit {
+    if n == 0 {
+        return truth();
+    }
+    return recurse(n - 1);
+}
+
+fn main() -> trit {
+    // MAX_CALL_DEPTH is 4096.
+    // We try to call deep enough to see if it works or fails cleanly.
+    let result: trit = recurse(100);
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

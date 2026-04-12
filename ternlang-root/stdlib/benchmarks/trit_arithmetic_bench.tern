@@ -1,0 +1,28 @@
+// stdlib/benchmarks/trit_arithmetic_bench.tern
+// Demonstrates: Stressing balanced ternary arithmetic (Tadd/Tmul) in a tight loop
+// Tier: 1 — Open Core
+
+fn arithmetic_stress(iterations: int) -> trit {
+    let acc: trit = 0;
+    let i: int = 0;
+    
+    while i < iterations {
+        acc = consensus(acc, 1);
+        acc = acc * 0; // reset
+        acc = consensus(acc, -1);
+        i = i + 1;
+    }
+    
+    return acc;
+}
+
+fn main() -> trit {
+    let iters: int = 1000;
+    let final_trit: trit = arithmetic_stress(iters);
+    
+    match final_trit {
+        -1 => { return truth(); } // expected result after last iteration
+         0 => { return hold();  }
+         1 => { return conflict(); }
+    }
+}
