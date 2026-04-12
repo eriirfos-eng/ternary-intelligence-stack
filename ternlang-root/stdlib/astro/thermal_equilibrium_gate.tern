@@ -1,0 +1,30 @@
+// stdlib/astro/thermal_equilibrium_gate.tern
+// Demonstrates: Spacecraft thermal balance monitoring
+// Tier: 3 — Industrial
+
+fn check_thermal_balance(temp: float, target: float, margin: float) -> trit {
+    let upper: float = target + margin;
+    let lower: float = target - margin;
+    
+    if temp > upper {
+        return conflict(); // Overheating — deploy radiators
+    }
+    if temp < lower {
+        return hold();     // Too cold — engage internal heaters
+    }
+    return truth();        // Thermal equilibrium maintained
+}
+
+fn main() -> trit {
+    let t: float = 295.0;     // Kelvin
+    let target: float = 300.0;
+    let margin: float = 10.0;
+    
+    let ok: trit = check_thermal_balance(t, target, margin);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
