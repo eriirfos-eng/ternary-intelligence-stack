@@ -1,0 +1,28 @@
+// stdlib/rl/q_value_consensus.tern
+// Demonstrates: merging Q-values from multiple agents for a single action
+// Tier: 2 — Pro Standard
+
+fn q_consensus(q1: float, q2: float, q3: float, threshold: float) -> trit {
+    let count: int = 0;
+    if q1 > threshold { count = count + 1; }
+    if q2 > threshold { count = count + 1; }
+    if q3 > threshold { count = count + 1; }
+    
+    if count >= 2 { return truth(); }
+    if count == 1 { return hold(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let v1: float = 0.8;
+    let v2: float = 0.75;
+    let v3: float = 0.4;
+    let t: float = 0.7;
+    
+    let result: trit = q_consensus(v1, v2, v3, t);
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
