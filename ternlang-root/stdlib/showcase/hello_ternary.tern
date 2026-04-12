@@ -1,0 +1,7 @@
+// stdlib/showcase/hello_ternary.tern
+// Demonstrates: the simplest possible ternary program
+// Tier: 1 — Community
+
+fn main() -> trit {
+    return truth();
+}
