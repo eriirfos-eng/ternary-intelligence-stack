@@ -1,29 +1,19 @@
-// Module:  stdlib/rl/actor_critic.tern
-// Purpose: Actor-Critic RL Methods
-// Author:  RFI-IRFOS
-// Ref:     https://ternlang.com
+// stdlib/rl/actor_critic.tern
+// Demonstrates: Ternary logic for actor_critic
+// Tier: 2
 
-// Balances policy (Actor) and value (Critic) updates.
-
-struct ActorCritic {
-    actor: trittensor<4 x 4>,
-    critic: trittensor<4 x 4>
+fn actor_critic_process(a: trit, b: trit) -> trit {
+    let state: trit = consensus(a, b);
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
 }
 
-fn actor_forward_trit(model: ActorCritic, state: trittensor<4 x 1>) -> trit {
-    @sparseskip
-    let out: trittensor<4 x 1> = model.actor * state;
-    return out[0, 0];
-}
-
-fn critic_forward_trit(model: ActorCritic, state: trittensor<4 x 1>) -> trit {
-    @sparseskip
-    let out: trittensor<4 x 1> = model.critic * state;
-    return out[0, 0];
-}
-
-fn ac_update_trit(actor_loss: trit, critic_loss: trit) -> trit {
-    if actor_loss == tend { return tend; }
-    if critic_loss == tend { return tend; }
-    return affirm;
+fn main() -> trit {
+    let val1: trit = 1;
+    let val2: trit = 0;
+    let res: trit = actor_critic_process(val1, val2);
+    return truth();
 }
