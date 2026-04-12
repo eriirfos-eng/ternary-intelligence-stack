@@ -1,0 +1,35 @@
+// stdlib/graphics/texture_wrap_consensus.tern
+// Demonstrates: Coordinate clamping/wrapping logic for texture sampling.
+// Tier: 3 — Industrial
+
+fn wrap_coordinate(u: float, wrap_mode: trit) -> float {
+    match wrap_mode {
+        1 => { // Repeat
+            if u > 1.0 { return u - 1.0; }
+            if u < 0.0 { return u + 1.0; }
+            return u;
+        }
+        0 => { // Clamp
+            if u > 1.0 { return 1.0; }
+            if u < 0.0 { return 0.0; }
+            return u;
+        }
+        -1 => { // Mirror (simplified)
+            if u > 1.0 { return 1.0 - (u - 1.0); }
+            if u < 0.0 { return -u; }
+            return u;
+        }
+    }
+}
+
+fn main() -> trit {
+    let u_coord: float = 1.2;
+    let mode: trit = 0; // Clamp
+    
+    let wrapped: float = wrap_coordinate(u_coord, mode);
+    
+    if wrapped == 1.0 {
+        return truth();
+    }
+    return conflict();
+}
