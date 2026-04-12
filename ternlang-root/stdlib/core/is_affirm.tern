@@ -1,0 +1,19 @@
+// stdlib/core/is_affirm.tern
+// Demonstrates: Check if a trit is affirm (1)
+// Tier: 1 - Open Core
+
+fn is_affirm(v: trit) -> trit {
+    if v == 1 { return truth(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let v: trit = 1;
+    let res: trit = is_affirm(v);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
