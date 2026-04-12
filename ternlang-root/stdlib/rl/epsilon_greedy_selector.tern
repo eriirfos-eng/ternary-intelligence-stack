@@ -1,0 +1,24 @@
+// stdlib/rl/epsilon_greedy_selector.tern
+// Demonstrates: selecting between exploration and exploitation based on epsilon
+// Tier: 2 — Pro Standard
+
+fn select_action(epsilon: float, roll: float, best_action: trit, random_action: trit) -> trit {
+    if roll > epsilon {
+        return best_action; // Exploit
+    }
+    return random_action; // Explore
+}
+
+fn main() -> trit {
+    let eps: float = 0.1;
+    let r: float = 0.5;
+    let best: trit = 1;
+    let rand: trit = 0;
+    
+    let action: trit = select_action(eps, r, best, rand);
+    match action {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
