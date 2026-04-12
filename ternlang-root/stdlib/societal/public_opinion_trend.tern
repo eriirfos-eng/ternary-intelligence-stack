@@ -1,0 +1,42 @@
+// stdlib/societal/public_opinion_trend.tern
+// Demonstrates: tracking public sentiment trends (Improving/Declining/Stable)
+// Tier: 2
+
+fn evaluate_trend(current: float, previous: float, noise: float) -> trit {
+    let delta: float = current - previous;
+    
+    if delta > noise {
+        return truth();   // Positive trend (Improving)
+    }
+    if delta < -noise {
+        return conflict(); // Negative trend (Declining)
+    }
+    return hold();        // Stable/Stagnant within noise
+}
+
+fn main() -> trit {
+    // Opinion shift: 0.5 to 0.7
+    let res1: trit = evaluate_trend(0.7, 0.5, 0.05); // 1
+    // Opinion shift: 0.8 to 0.4
+    let res2: trit = evaluate_trend(0.4, 0.8, 0.1);  // -1
+    // Opinion shift: 0.5 to 0.51
+    let res3: trit = evaluate_trend(0.51, 0.5, 0.05); // 0
+
+    match res1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => {
+             match res2 {
+                 -1 => {
+                     match res3 {
+                         -1 => { return conflict(); }
+                          0 => { return truth(); }
+                          1 => { return conflict(); }
+                     }
+                 }
+                 0 => { return hold(); }
+                 1 => { return conflict(); }
+             }
+         }
+    }
+}
