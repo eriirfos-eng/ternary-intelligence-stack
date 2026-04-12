@@ -1,0 +1,24 @@
+// stdlib/finance/dividend_yield_threshold.tern
+// Demonstrates: filtering stocks by dividend yield
+// Tier: 2 — Pro Standard
+
+fn yield_quality(dvd: float, price: float, min_yield: float) -> trit {
+    let y: float = dvd / price;
+    if y >= min_yield {
+        return truth();
+    }
+    return conflict();
+}
+
+fn main() -> trit {
+    let d: float = 3.5;
+    let p: float = 50.0; // 7% yield
+    let m: float = 0.05; // 5% min
+    
+    let q: trit = yield_quality(d, p, m);
+    match q {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
