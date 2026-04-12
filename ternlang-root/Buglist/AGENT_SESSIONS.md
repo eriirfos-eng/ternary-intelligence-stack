@@ -51,7 +51,26 @@
 
 ---
 
-## 2026-04-11 18:30 — 25 files committed (Gemini session)
+## 2026-04-12 10:00 — 31 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: stdlib/benchmarks/ — match_branch_latency, tensor_access_throughput, agent_spawn_efficiency, float_arithmetic_bench, stack_depth_limit_check, trit_arithmetic_bench (6 files)
+- Batch 2: stdlib/bench/ — loop_iteration_latency, consensus_overhead_bench, agent_message_latency, string_allocation_bench, trit_packing_efficiency (5 files)
+- Batch 3: stdlib/finance/ — stop_loss_gate, margin_call_trigger, portfolio_rebalance_mask, dividend_yield_threshold, option_greek_consensus (5 files)
+- Batch 4: stdlib/ml/ — input_clamping_gate, layer_normalization_gate, attention_score_threshold, gradient_clip_mask, embedding_similarity_gate (5 files)
+- Batch 5: stdlib/programs/ — ternary_bubble_sort, fault_tolerant_state_machine, molecular_collision_sim, ternary_spectral_analyzer, consensus_pipeline (5 complex programs)
+- Helpers: stdlib/programs/sort_utils, stdlib/programs/state_utils, stdlib/programs/math_utils, stdlib/programs/signal_utils, stdlib/testing/sanity_check (5 files)
+
+**Do not work in these categories next session:** benchmarks, bench, finance, ml, programs, testing, distributed, gametheory, ensemble, vision
+
+**Compiler fixes this session:** 
+- `betbc.rs`: Fixed usize to u8 conversion for register indices in `Expr::TritTensorLiteral` arm of `emit_expr`. (BUG-2026-04-12)
+- Sync: Committed pending core upgrades (dynamic registers, call stack limits, improved imports) to clean the workspace.
+
+**VM errors encountered:** 
+- `BET-007` (TypeMismatch on `length(string)`) — verified that `length` built-in only supports `TensorRef`.
+- `BET-001` (Stack underflow on `send x to a`) — fixed by using correct `send target message` syntax.
+- `Parse program error: UnexpectedToken("TritTensor")` — fixed by correctly using only the declaration for tensors.
 
 **Batches:**
 - Batch 1: stdlib/distributed/ — quorum_consensus, liveness_probe, byzantine_fault_detector, vector_clock_sync, load_shedder (5 files)
