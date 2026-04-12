@@ -1,0 +1,19 @@
+// stdlib/core/max_trit.tern
+// Demonstrates: Maximum of two trits (Logical OR)
+// Tier: 1 - Open Core
+
+fn max(a: trit, b: trit) -> trit {
+    return a || b;
+}
+
+fn main() -> trit {
+    let a: trit = 0;
+    let b: trit = 1;
+    let res: trit = max(a, b);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
