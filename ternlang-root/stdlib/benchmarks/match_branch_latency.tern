@@ -1,0 +1,29 @@
+// stdlib/benchmarks/match_branch_latency.tern
+// Demonstrates: latency of match branching across many arms
+// Tier: 3 — Industrial
+
+fn match_stress(x: int) -> trit {
+    match x {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+         2 => { return truth();    }
+         3 => { return truth();    }
+         4 => { return truth();    }
+         5 => { return truth();    }
+         6 => { return truth();    }
+         7 => { return truth();    }
+         8 => { return truth();    }
+         9 => { return truth();    }
+    }
+    return hold();
+}
+
+fn main() -> trit {
+    let result: trit = match_stress(5);
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
