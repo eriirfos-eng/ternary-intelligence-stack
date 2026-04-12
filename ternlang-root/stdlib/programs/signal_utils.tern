@@ -1,0 +1,21 @@
+// stdlib/programs/signal_utils.tern
+// Helper functions for signal processing and spectral analysis
+// Tier: 3 — Industrial
+
+fn window_f(val: float, weight: float) -> float {
+    return val * weight;
+}
+
+fn threshold_f(val: float, t: float) -> trit {
+    if val > t { return truth(); }
+    if val < -t { return conflict(); }
+    return hold();
+}
+
+fn accumulate_trit(acc: int, s: trit) -> int {
+    match s {
+        1 => { return acc + 1; }
+        0 => { return acc;     }
+        -1 => { return acc - 1; }
+    }
+}
