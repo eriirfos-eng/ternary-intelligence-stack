@@ -1,0 +1,28 @@
+// stdlib/shadow_tern/ternary_entropy_gate.tern
+// Demonstrates: Ternary signal entropy (diversity) threshold gate
+// Tier: 3 - Industrial
+
+fn calculate_diversity(t: trittensor<5>) -> float {
+    let counts: float = 0.0;
+    let prev: trit = 0;
+    let changes: float = 0.0;
+    
+    // Simple diversity: count transitions between trits
+    for x in t {
+        if x != prev {
+            changes = changes + 1.0;
+        }
+        prev = x;
+        counts = counts + 1.0;
+    }
+    
+    return changes / counts;
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [1, 0, -1, 1, 0];
+    let diversity: float = calculate_diversity(data);
+
+    if diversity > 0.5 { return truth(); }
+    return hold();
+}
