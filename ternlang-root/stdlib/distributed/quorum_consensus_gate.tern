@@ -1,0 +1,31 @@
+// stdlib/distributed/quorum_consensus_gate.tern
+// Demonstrates: reaching quorum consensus among multiple distributed nodes
+// Tier: 2 — Pro Standard
+
+fn check_quorum(v1: trit, v2: trit, v3: trit, v4: trit, v5: trit) -> trit {
+    let count: int = 0;
+    if v1 == 1 { count = count + 1; }
+    if v2 == 1 { count = count + 1; }
+    if v3 == 1 { count = count + 1; }
+    if v4 == 1 { count = count + 1; }
+    if v5 == 1 { count = count + 1; }
+    
+    if count >= 3 { return truth(); } // Simple majority quorum
+    if count >= 1 { return hold(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let n1: trit = 1;
+    let n2: trit = 1;
+    let n3: trit = 0;
+    let n4: trit = -1;
+    let n5: trit = 0;
+    
+    let ok: trit = check_quorum(n1, n2, n3, n4, n5);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
