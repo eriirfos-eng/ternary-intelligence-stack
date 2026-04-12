@@ -1,28 +1,22 @@
 // stdlib/integrations/database_sync_check.tern
-// Demonstrates: A database synchronization check using row counts and checksums.
-// Tier: 2 — Pro Standard
+// Demonstrates: checking sync status between primary and secondary databases
+// Tier: 3 — Industrial
 
-fn check_sync(rows1: int, rows2: int, hash1: int, hash2: int) -> trit {
-    if rows1 != rows2 {
-        return conflict();
-    }
-    if hash1 != hash2 {
-        return hold(); // Potential data drift
-    }
+fn check_sync(p_version: int, s_version: int, latency: float) -> trit {
+    if p_version != s_version { return hold(); }
+    if latency > 1.0 { return hold(); }
     return truth();
 }
 
 fn main() -> trit {
-    let r1: int = 1000;
-    let r2: int = 1000;
-    let h1: int = 98765;
-    let h2: int = 98764; // Slight drift
+    let pv: int = 1005;
+    let sv: int = 1005;
+    let lat: float = 0.05;
     
-    let result: trit = check_sync(r1, r2, h1, h2);
-    
-    match result {
+    let ok: trit = check_sync(pv, sv, lat);
+    match ok {
         -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
