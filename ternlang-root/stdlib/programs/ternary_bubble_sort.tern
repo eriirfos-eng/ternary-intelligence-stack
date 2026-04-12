@@ -1,40 +1,58 @@
 // stdlib/programs/ternary_bubble_sort.tern
-// Demonstrates: Bubble sort on a 1D trit tensor
-// Tier: 2
+// Demonstrates: bubble sort on a 1D trit tensor using imported helpers
+// Tier: 1 — Open Core
 
-fn swap(t: trittensor<5>, i: int, j: int) -> trit {
-    let temp: trit = t[i];
-    t[i] = t[j];
-    t[j] = temp;
-    return affirm;
-}
+from "sort_utils.tern" import swap_t, compare_t;
 
-fn sort_tensor(t: trittensor<5>) -> trit {
-    let n: int = 5;
+fn bubble_pass(t: trittensor<10>, len: int) -> int {
+    let swaps: int = 0;
     let i: int = 0;
-    while i < n {
-        let j: int = 0;
-        let limit: int = n - i;
-        limit = limit - 1;
-        while j < limit {
-            let next_j: int = j + 1;
-            if t[j] > t[next_j] {
-                let _s: trit = swap(t, j, next_j);
-            }
-            j = j + 1;
+    while i < (len - 1) {
+        if compare_t(t[i], t[i+1]) == 1 {
+            swap_t(t, i, i+1);
+            swaps = swaps + 1;
         }
         i = i + 1;
     }
-    return affirm;
+    return swaps;
+}
+
+fn sort_tensor(t: trittensor<10>) -> trit {
+    let n: int = 10;
+    let total_swaps: int = 0;
+    let i: int = 0;
+    while i < n {
+        let s: int = bubble_pass(t, n - i);
+        total_swaps = total_swaps + s;
+        if s == 0 { return truth(); } // Early exit
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn fill_unsorted(t: trittensor<10>) -> trit {
+    t[0] = 1; t[1] = -1; t[2] = 0; t[3] = 1; t[4] = -1;
+    t[5] = 0; t[6] = 1; t[7] = -1; t[8] = 0; t[9] = 1;
+    return truth();
+}
+
+fn check_sorted(t: trittensor<10>) -> trit {
+    let i: int = 0;
+    while i < 9 {
+        if t[i] > t[i+1] { return conflict(); }
+        i = i + 1;
+    }
+    return truth();
 }
 
 fn main() -> trit {
-    let t: trittensor<5> = [1, -1, 0, 1, -1];
-    let _ok: trit = sort_tensor(t);
+    let t: trittensor<10>;
+    fill_unsorted(t);
+    sort_tensor(t);
     
-    // Verify sorted: -1, -1, 0, 1, 1
-    if t[0] == -1 && t[1] == -1 && t[2] == 0 && t[3] == 1 && t[4] == 1 {
-        return affirm;
+    match check_sorted(t) {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
-    return reject;
 }
