@@ -1,0 +1,26 @@
+// stdlib/crypto/signature_verify_gate.tern
+// Demonstrates: Basic signature or hash verification gate
+// Tier: 3 — Industrial
+
+fn verify_hash(received: int, expected: int) -> trit {
+    if received == expected {
+        return truth();    // Signature valid
+    }
+    if received == 0 {
+        return hold();     // Missing or incomplete signature
+    }
+    return conflict();     // Tampering detected
+}
+
+fn main() -> trit {
+    let r_hash: int = 123456789;
+    let e_hash: int = 123456789;
+    
+    let ok: trit = verify_hash(r_hash, e_hash);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
