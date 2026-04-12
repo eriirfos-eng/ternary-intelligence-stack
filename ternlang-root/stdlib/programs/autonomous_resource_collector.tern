@@ -1,0 +1,54 @@
+// stdlib/programs/autonomous_resource_collector.tern
+// Demonstrates: A simple stateful agent for resource collection
+// Tier: 2 — Pro Standard
+
+from "state_utils.tern" import next_state, clamp_state;
+
+fn energy_monitor(e: float, min_e: float) -> trit {
+    if e < min_e { return conflict(); } // Battery low, abort
+    if e < (min_e * 2.0) { return hold(); } // Battery caution
+    return truth();
+}
+
+fn move_step(pos: int, target: int) -> int {
+    if pos < target { return next_state(pos, 1); }
+    if pos > target { return next_state(pos, -1); }
+    return pos;
+}
+
+fn harvest_resource(e: float, r_val: int) -> float {
+    // Each harvest costs 5.5 energy but gains resource potential
+    return e - 5.5;
+}
+
+fn task_status(pos: int, target: int, energy_ok: trit) -> trit {
+    if energy_ok == -1 { return conflict(); }
+    if pos == target { return truth(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let current_pos: int = 0;
+    let target_pos: int = 10;
+    let energy: float = 100.0;
+    let min_safe_energy: float = 20.0;
+    
+    // Simulate 3 steps
+    current_pos = move_step(current_pos, target_pos);
+    energy = harvest_resource(energy, 5);
+    
+    current_pos = move_step(current_pos, target_pos);
+    energy = harvest_resource(energy, 5);
+    
+    current_pos = move_step(current_pos, target_pos);
+    energy = harvest_resource(energy, 5);
+    
+    let e_ok: trit = energy_monitor(energy, min_safe_energy);
+    let status: trit = task_status(current_pos, target_pos, e_ok);
+    
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
