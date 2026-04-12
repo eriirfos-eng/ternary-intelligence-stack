@@ -1,0 +1,30 @@
+// stdlib/models/layer_norm_gate.tern
+// Demonstrates: Layer normalization threshold gate
+// Tier: 2 — Pro Standard
+
+fn check_norm(val: float, mean: float, std: float) -> trit {
+    let diff: float = val - mean;
+    if diff < 0.0 { diff = -diff; } // Abs
+    
+    if diff <= std {
+        return truth();    // Within 1 sigma
+    }
+    if diff <= (2.0 * std) {
+        return hold();     // Within 2 sigma
+    }
+    return conflict();     // Outlier (> 2 sigma)
+}
+
+fn main() -> trit {
+    let v: float = 1.5;
+    let m: float = 0.0;
+    let s: float = 1.0;
+    
+    let ok: trit = check_norm(v, m, s);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
