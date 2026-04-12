@@ -1,0 +1,33 @@
+// stdlib/integrations/grpc_unary_gate.tern
+// Demonstrates: gRPC unary call safety gate
+// Tier: 2 - Pro Standard
+
+fn validate_grpc_status(status_code: int) -> trit {
+    if status_code == 0 { return truth(); }     // OK
+    if status_code == 1 { return conflict(); }  // CANCELLED
+    if status_code == 4 { return hold(); }      // DEADLINE_EXCEEDED
+    return conflict();
+}
+
+fn deadline_check(elapsed_ms: int, timeout_ms: int) -> trit {
+    if elapsed_ms >= timeout_ms { return conflict(); }
+    if elapsed_ms > (timeout_ms * 8 / 10) { return hold(); }
+    return truth();
+}
+
+fn grpc_gate(status: trit, deadline: trit) -> trit {
+    return consensus(status, deadline);
+}
+
+fn main() -> trit {
+    let s: trit = validate_grpc_status(0);
+    let d: trit = deadline_check(150, 200);
+
+    let result: trit = grpc_gate(s, d);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
