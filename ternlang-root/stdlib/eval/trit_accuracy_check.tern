@@ -1,0 +1,21 @@
+// stdlib/eval/trit_accuracy_check.tern
+// Demonstrates: evaluating accuracy of trit predictions against ground truth
+// Tier: 2 — Pro Standard
+
+fn eval_accuracy(pred: trit, truth: trit) -> trit {
+    if pred == truth { return truth(); }
+    if pred == 0 { return hold(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let p: trit = 1;
+    let t: trit = 1;
+    
+    let result: trit = eval_accuracy(p, t);
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
