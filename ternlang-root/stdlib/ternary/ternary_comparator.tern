@@ -1,0 +1,26 @@
+// stdlib/ternary/ternary_comparator.tern
+// Demonstrates: Comparison of two-trit balanced ternary numbers
+// Tier: 1 - Open Core
+
+fn compare_two_trit(a1: trit, a0: trit, b1: trit, b0: trit) -> trit {
+    // Compare most significant trit first
+    if a1 > b1 { return truth(); }
+    if a1 < b1 { return conflict(); }
+    
+    // a1 == b1, so compare least significant trit
+    if a0 > b0 { return truth(); }
+    if a0 < b0 { return conflict(); }
+    
+    return hold(); // Equal
+}
+
+fn main() -> trit {
+    // 10 (3) vs 01 (1) -> 1
+    let res: trit = compare_two_trit(1, 0, 0, 1);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
