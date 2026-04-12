@@ -1,0 +1,28 @@
+// stdlib/systems/interrupt_handling_consensus.tern
+// Demonstrates: determining if an interrupt should preempt the current process
+// Tier: 3 — Industrial
+
+fn should_preempt(curr_priority: int, int_priority: int, in_critical_section: trit) -> trit {
+    if in_critical_section == 1 {
+        // Only NMI (Non-Maskable Interrupts) with priority 99 bypass critical sections
+        if int_priority == 99 { return truth(); }
+        return conflict(); // Defer interrupt
+    }
+    
+    if int_priority > curr_priority { return truth(); }
+    if int_priority == curr_priority { return hold(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let cp: int = 5;
+    let ip: int = 7;
+    let crit: trit = 0;
+    
+    let preempt: trit = should_preempt(cp, ip, crit);
+    match preempt {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
