@@ -1,0 +1,19 @@
+// stdlib/hardware/branch_prediction.tern
+// Demonstrates: Ternary logic for branch_prediction
+// Tier: 3
+
+fn branch_prediction_process(a: trit, b: trit) -> trit {
+    let state: trit = consensus(a, b);
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
+
+fn main() -> trit {
+    let val1: trit = 1;
+    let val2: trit = 0;
+    let res: trit = branch_prediction_process(val1, val2);
+    return truth();
+}
