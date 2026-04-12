@@ -1,0 +1,29 @@
+// stdlib/crypto/key_rotation_gate.tern
+// Demonstrates: Cryptographic key expiration and rotation logic
+// Tier: 3 — Industrial
+
+fn check_key_age(age: int, max_age: int) -> trit {
+    if age >= max_age {
+        return conflict(); // Key expired, must rotate
+    }
+    
+    let warning_threshold: int = max_age - 100;
+    if age >= warning_threshold {
+        return hold();     // Approaching expiration, prepare rotation
+    }
+    
+    return truth();        // Key is fresh
+}
+
+fn main() -> trit {
+    let current_age: int = 950;
+    let max_allowed: int = 1000;
+    
+    let status: trit = check_key_age(current_age, max_allowed);
+    
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
