@@ -1,0 +1,26 @@
+// stdlib/scientific/quantum_state_coherence.tern
+// Demonstrates: Decoherence threshold gate for quantum simulation stability.
+// Tier: 3 — Industrial
+
+fn evaluate_coherence(phase_error: float, threshold: float) -> trit {
+    if phase_error < (threshold * 0.1) {
+        return truth(); // High coherence
+    }
+    if phase_error < threshold {
+        return hold(); // Marginal coherence
+    }
+    return conflict(); // Decohered
+}
+
+fn main() -> trit {
+    let error: float = 0.05;
+    let limit: float = 0.1;
+    
+    let state: trit = evaluate_coherence(error, limit);
+    
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
