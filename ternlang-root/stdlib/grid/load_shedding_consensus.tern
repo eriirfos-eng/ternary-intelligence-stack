@@ -1,0 +1,28 @@
+// stdlib/grid/load_shedding_consensus.tern
+// Demonstrates: determining if load shedding is required to maintain grid frequency
+// Tier: 3 — Industrial
+
+fn should_shed_load(freq: float, nominal_freq: float, droop_limit: float) -> trit {
+    let diff: float = nominal_freq - freq;
+    
+    if diff > droop_limit {
+        return truth(); // Must shed load
+    }
+    if diff > (droop_limit * 0.8) {
+        return hold(); // Prepare to shed
+    }
+    return conflict(); // No shedding needed
+}
+
+fn main() -> trit {
+    let current_f: float = 49.85; // Hz
+    let nom_f: float = 50.0;      // Hz
+    let limit: float = 0.2;       // Hz drop allowed
+    
+    let shed: trit = should_shed_load(current_f, nom_f, limit);
+    match shed {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
