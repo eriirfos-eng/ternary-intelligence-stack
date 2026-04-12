@@ -1,0 +1,26 @@
+// stdlib/crypto/access_control_mask.tern
+// Demonstrates: Ternary RBAC (Role-Based Access Control) mask
+// Tier: 3 — Industrial
+
+fn check_access(role: int, level: int) -> trit {
+    if role > level {
+        return truth();    // Sufficient privileges
+    }
+    if role == level {
+        return hold();     // Escalation or secondary check required
+    }
+    return conflict();     // Access denied
+}
+
+fn main() -> trit {
+    let u_role: int = 5;
+    let s_level: int = 3;
+    
+    let ok: trit = check_access(u_role, s_level);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
