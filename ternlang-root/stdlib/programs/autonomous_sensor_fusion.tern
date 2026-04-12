@@ -1,0 +1,66 @@
+// stdlib/programs/autonomous_sensor_fusion.tern
+// Demonstrates: Autonomous sensor fusion and obstacle avoidance
+// Tier: 2 - Pro Standard
+
+from std::trit import min, max, consensus;
+
+fn lidar_filter(dist: float) -> trit {
+    if dist < 2.0 { return -1; } // Danger
+    if dist < 5.0 { return 0; }  // Warning
+    return 1; // Clear
+}
+
+fn sonar_filter(dist: float) -> trit {
+    if dist < 1.0 { return -1; } // Critical
+    if dist < 3.0 { return 0; }
+    return 1;
+}
+
+fn camera_consensus(objs: trittensor<4>) -> trit {
+    let combined: trit = 1;
+    for o in objs {
+        combined = combined && o;
+    }
+    return combined;
+}
+
+fn fusion_logic(l: trit, s: trit, c: trit) -> trit {
+    // Fused result: if ANY sensor says danger (-1), it's danger
+    // Otherwise take consensus
+    let critical: trit = min(l, min(s, c));
+    match critical {
+        -1 => { return -1; }
+         0 => { return consensus(l, consensus(s, c)); }
+         1 => { return 1; }
+    }
+}
+
+fn navigator(fused: trit) -> string {
+    match fused {
+        -1 => { return "ACTION: STOP AND BRAKE"; }
+         0 => { return "ACTION: SLOW DOWN"; }
+         1 => { return "ACTION: PROCEED"; }
+    }
+}
+
+fn main() -> trit {
+    let lidar_dist: float = 4.5;
+    let sonar_dist: float = 2.5;
+    
+    let cam_data: trittensor<4> = [1, 1, 0, 1];
+    
+    let l_trit: trit = lidar_filter(lidar_dist);
+    let s_trit: trit = sonar_filter(sonar_dist);
+    let c_trit: trit = camera_consensus(cam_data);
+    
+    let fused: trit = fusion_logic(l_trit, s_trit, c_trit);
+    
+    let command: string = navigator(fused);
+    println(command);
+
+    match fused {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
