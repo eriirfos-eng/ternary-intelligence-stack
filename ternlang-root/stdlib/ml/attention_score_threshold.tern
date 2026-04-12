@@ -1,0 +1,22 @@
+// stdlib/ml/attention_score_threshold.tern
+// Demonstrates: filtering attention weights to keep only strong signals
+// Tier: 2 — Pro Standard
+
+fn attention_filter(score: float, threshold: float) -> trit {
+    if score > threshold {
+        return truth();
+    }
+    return hold(); // Silence weak attention
+}
+
+fn main() -> trit {
+    let s: float = 0.85;
+    let t: float = 0.5;
+    
+    let res: trit = attention_filter(s, t);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
