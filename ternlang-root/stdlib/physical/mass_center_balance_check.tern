@@ -1,0 +1,27 @@
+// stdlib/physical/mass_center_balance_check.tern
+// Demonstrates: checking if the center of mass is within a stable base
+// Tier: 3 — Industrial
+
+fn check_balance(cm_x: float, base_min_x: float, base_max_x: float) -> trit {
+    if cm_x < base_min_x { return conflict(); } // Toppling left
+    if cm_x > base_max_x { return conflict(); } // Toppling right
+    
+    let margin: float = (base_max_x - base_min_x) * 0.1;
+    if cm_x < (base_min_x + margin) { return hold(); } // Near edge
+    if cm_x > (base_max_x - margin) { return hold(); } // Near edge
+    
+    return truth(); // Stable
+}
+
+fn main() -> trit {
+    let cm: float = 2.5;
+    let b_min: float = 0.0;
+    let b_max: float = 4.0;
+    
+    let is_stable: trit = check_balance(cm, b_min, b_max);
+    match is_stable {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
