@@ -1,0 +1,21 @@
+// stdlib/premium/premium_support_threshold.tern
+// Demonstrates: prioritizing support requests for premium users
+// Tier: 4 — Enterprise
+
+fn get_priority(tier: int, wait_time: float) -> trit {
+    if tier >= 3 { return truth(); } // High priority for Industrial/Enterprise
+    if wait_time > 3600.0 { return hold(); } // Escalated based on wait
+    return conflict(); // Standard priority
+}
+
+fn main() -> trit {
+    let t: int = 1; // Community
+    let w: float = 4000.0;
+    
+    let res: trit = get_priority(t, w);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
