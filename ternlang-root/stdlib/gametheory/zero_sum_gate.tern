@@ -1,27 +1,20 @@
 // stdlib/gametheory/zero_sum_gate.tern
-// Demonstrates: Zero-sum outcome validation between two players
-// Tier: 3
+// Demonstrates: checking if two agent outcomes sum to zero
+// Tier: 2 — Pro Standard
 
-fn validate_zero_sum(gain_a: float, loss_b: float) -> trit {
-    let diff: float = gain_a - loss_b;
-    
-    // epsilon-based zero check
-    if diff < 0.001 && diff > -0.001 {
-        return affirm; // matches perfectly
-    }
-    
-    if diff > 0.0 {
-        return tend; // a gained more than b lost
-    }
-    
-    return reject; // b lost more than a gained
+fn is_zero_sum(p1: int, p2: int) -> trit {
+    if (p1 + p2) == 0 { return truth(); }
+    return conflict();
 }
 
 fn main() -> trit {
-    let valid: trit = validate_zero_sum(100.0, 100.0);
-    match valid {
-        reject => { return conflict(); }
-        tend   => { return hold();    }
-        affirm => { return truth();   }
+    let pay1: int = 10;
+    let pay2: int = -10;
+    
+    let ok: trit = is_zero_sum(pay1, pay2);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
