@@ -1,0 +1,15 @@
+// stdlib/showcase/loop_showcase.tern
+// Demonstrates: while loops and iterative logic
+// Tier: 1 — Community
+
+fn main() -> trit {
+    let i: int = 0;
+    let sum: int = 0;
+    while i < 10 {
+        sum = sum + i;
+        i = i + 1;
+    }
+    
+    if sum == 45 { return truth(); }
+    return conflict();
+}
