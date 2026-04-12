@@ -1,0 +1,26 @@
+// stdlib/physical/fluid_viscosity_consensus.tern
+// Demonstrates: checking if a fluid's viscosity is within operational range
+// Tier: 3 — Industrial
+
+fn check_viscosity(viscosity: float, min_op: float, max_op: float) -> trit {
+    if viscosity < min_op { return conflict(); } // Too thin, poor lubrication
+    if viscosity > max_op { return conflict(); } // Too thick, cannot flow
+    
+    if viscosity < (min_op * 1.1) { return hold(); } // Near min
+    if viscosity > (max_op * 0.9) { return hold(); } // Near max
+    
+    return truth(); // Optimal range
+}
+
+fn main() -> trit {
+    let current_v: float = 45.0; // cSt
+    let min_v: float = 30.0;
+    let max_v: float = 100.0;
+    
+    let is_ok: trit = check_viscosity(current_v, min_v, max_v);
+    match is_ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
