@@ -190,3 +190,32 @@
 - `ternlang-core`: Silenced multiple compiler warnings (unreachable pattern in betbc.rs, unused variable, unused field in BetVm).
 
 **VM errors encountered:** none. Verified that register restoration on TRET is the reason for "all-tend" register dumps in the CLI.
+
+## 2026-04-12 12:00 — 25 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: stdlib/astro/ — radiation_shield_gate, thruster_pressure_gate, reentry_angle_gate, thermal_equilibrium_gate, fuel_level_gate (5 files)
+- Batch 2: stdlib/crypto/ — key_rotation_gate, signature_verify_gate, entropy_check_gate, access_control_mask, zero_knowledge_trit (5 files)
+- Batch 3: stdlib/models/ — attention_gate, dropout_mask, layer_norm_gate, residual_link, embedding_lookup (5 files)
+- Batch 4: stdlib/qnn/ — quantize_float_gate, ternary_activation_mask, bitnet_inference_gate, pruning_threshold_gate, precision_aware_consensus (5 files)
+- Batch 5: stdlib/programs/ — ternary_kalman_filter, weighted_ensemble_voter, sensor_fusion_grid, autonomous_resource_collector, network_load_balancer_simulation (5 complex programs)
+
+**Do not work in these categories next session:** astro, crypto, models, qnn, programs, distributed, gametheory, ensemble, vision
+
+**Compiler fixes this session:** none (one Reject state CLI behavior verified)
+**VM errors encountered:** none (conflict() in main confirmed as 'Program exited with error (Reject state)' in CLI)
+
+## 2026-04-12 21:00 — 25 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: stdlib/graphics/ — perspective_projection_gate, luminance_gate, specular_reflection_consensus, aliasing_detector_gate, motion_vector_consensus (5 files)
+- Batch 2: stdlib/scientific/ — thermodynamic_equilibrium_gate, seismic_magnitude_gate, enzyme_saturation_gate, orbital_stability_consensus, fluid_viscosity_consensus (5 files)
+- Batch 3: stdlib/societal/ — consensus_voting_gate, emergency_priority_gate, public_opinion_trend, policy_impact_consensus, reputation_decay_gate (5 files)
+- Batch 4: stdlib/systems/ — garbage_collection_consensus, cache_hit_rate_gate, zombie_process_gate, cpu_throttling_consensus, network_congestion_gate (5 files)
+- Batch 5: stdlib/programs/ — smart_city_traffic_orchestrator, visual_drone_navigator, quantum_stabilizer_system, global_governance_simulator, industrial_process_monitor (5 complex programs)
+
+**Do not work in these categories next session:** graphics, scientific, societal, systems, programs, astro, crypto, models
+
+**Compiler fixes this session:** none (clean run, relative imports verified with .tern extension)
+**VM errors encountered:** none (Module error resolved by switching from stdlib:: to relative paths)
+
