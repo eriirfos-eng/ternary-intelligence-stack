@@ -1,0 +1,29 @@
+// stdlib/premium/resource_quota_mask.tern
+// Demonstrates: Tenant-level quota management and resource allocation masking.
+// Tier: 4 — Enterprise
+
+fn check_quota(used: int, total: int, priority: trit) -> trit {
+    if used < total {
+        return truth();
+    }
+    
+    match priority {
+        1 => { return hold();     } // High priority, wait for resources
+        0 => { return conflict(); } // Normal priority, reject
+       -1 => { return conflict(); } // Low priority, reject
+    }
+}
+
+fn main() -> trit {
+    let used_slots: int = 50;
+    let total_slots: int = 50;
+    let req_priority: trit = 1; // High priority
+    
+    let can_allocate: trit = check_quota(used_slots, total_slots, req_priority);
+    
+    match can_allocate {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
