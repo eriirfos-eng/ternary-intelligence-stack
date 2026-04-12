@@ -1,0 +1,19 @@
+// stdlib/control/lyapunov_stability.tern
+// Demonstrates: Ternary logic for lyapunov_stability
+// Tier: 2
+
+fn lyapunov_stability_process(a: trit, b: trit) -> trit {
+    let state: trit = consensus(a, b);
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
+
+fn main() -> trit {
+    let val1: trit = 1;
+    let val2: trit = 0;
+    let res: trit = lyapunov_stability_process(val1, val2);
+    return truth();
+}
