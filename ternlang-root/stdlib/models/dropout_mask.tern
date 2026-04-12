@@ -1,0 +1,26 @@
+// stdlib/models/dropout_mask.tern
+// Demonstrates: Ternary dropout mask logic
+// Tier: 2 — Pro Standard
+
+fn apply_dropout(rand: int, p: int) -> trit {
+    if rand > p {
+        return truth();    // Keep neuron
+    }
+    if rand == p {
+        return hold();     // Uncertain, could be kept with scaling
+    }
+    return conflict();     // Drop neuron
+}
+
+fn main() -> trit {
+    let r: int = 75;
+    let threshold: int = 50; // 50% dropout
+    
+    let ok: trit = apply_dropout(r, threshold);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
