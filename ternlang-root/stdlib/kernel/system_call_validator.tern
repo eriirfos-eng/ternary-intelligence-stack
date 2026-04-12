@@ -1,0 +1,23 @@
+// stdlib/kernel/system_call_validator.tern
+// Demonstrates: validating system call arguments for security
+// Tier: 3 — Industrial
+
+fn validate_syscall(addr: int, size: int, mode: int) -> trit {
+    if addr < 1024 { return conflict(); } // Protected region
+    if size > 16384 { return hold(); }   // Large allocation audit
+    if mode == 7 { return conflict(); }   // Write+Exec forbidden
+    return truth();
+}
+
+fn main() -> trit {
+    let a: int = 4096;
+    let s: int = 2048;
+    let m: int = 1; // Read only
+    
+    let ok: trit = validate_syscall(a, s, m);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
