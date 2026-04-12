@@ -1,0 +1,31 @@
+// stdlib/cad/geometric_tolerance_check.tern
+// Demonstrates: checking if part dimensions fall within tolerance bounds
+// Tier: 3 — Industrial
+
+fn check_tolerance(dim: float, nominal: float, tol_plus: float, tol_minus: float) -> trit {
+    let max_val: float = nominal + tol_plus;
+    let min_val: float = nominal - tol_minus;
+    
+    if dim > max_val { return conflict(); }
+    if dim < min_val { return conflict(); }
+    
+    // If it's very close to boundary, hold for manual inspection
+    if dim > (max_val - (tol_plus * 0.1)) { return hold(); }
+    if dim < (min_val + (tol_minus * 0.1)) { return hold(); }
+    
+    return truth();
+}
+
+fn main() -> trit {
+    let d: float = 10.02;
+    let n: float = 10.0;
+    let tp: float = 0.05;
+    let tm: float = 0.05;
+    
+    let res: trit = check_tolerance(d, n, tp, tm);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
