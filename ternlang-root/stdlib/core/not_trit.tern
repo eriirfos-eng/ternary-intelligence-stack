@@ -1,0 +1,18 @@
+// stdlib/core/not_trit.tern
+// Demonstrates: Ternary negation (Tneg operator -)
+// Tier: 1 - Open Core
+
+fn not(v: trit) -> trit {
+    return -v;
+}
+
+fn main() -> trit {
+    let v: trit = 1;
+    let res: trit = not(v);
+
+    match res {
+        -1 => { return truth(); } // Correct for -1 = affirm (returning 1)
+         0 => { return hold();  }
+         1 => { return hold();  }
+    }
+}
