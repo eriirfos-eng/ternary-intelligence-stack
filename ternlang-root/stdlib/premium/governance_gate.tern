@@ -1,0 +1,35 @@
+// stdlib/premium/governance_gate.tern
+// Demonstrates: Enterprise governance override and policy enforcement.
+// Tier: 4 — Enterprise
+
+fn check_policy(signal: trit, override_gate: trit) -> trit {
+    match override_gate {
+        -1 => { return conflict(); } // Governance veto
+         0 => { return signal;     } // Normal operation
+         1 => { return truth();    } // Governance affirm override
+    }
+}
+
+fn enforce_quota(usage: float, limit: float) -> trit {
+    if usage > limit {
+        return conflict();
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let raw_signal: trit = 1;
+    let gov_override: trit = 0;
+    
+    let result: trit = check_policy(raw_signal, gov_override);
+    
+    let usage: float = 85.0;
+    let limit: float = 100.0;
+    let quota_ok: trit = enforce_quota(usage, limit);
+    
+    match result && quota_ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
