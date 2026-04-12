@@ -1,0 +1,22 @@
+// stdlib/systems/memory_allocation_check.tern
+// Demonstrates: checking availability of continuous memory blocks
+// Tier: 3 — Industrial
+
+fn can_allocate(free_blocks: int, required_blocks: int, is_fragmented: trit) -> trit {
+    if free_blocks < required_blocks { return conflict(); }
+    if is_fragmented == 1 { return hold(); }
+    return truth();
+}
+
+fn main() -> trit {
+    let free: int = 100;
+    let req: int = 50;
+    let frag: trit = 1;
+    
+    let res: trit = can_allocate(free, req, frag);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
