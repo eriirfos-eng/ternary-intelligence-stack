@@ -1,0 +1,22 @@
+// stdlib/distributed/liveness_probe_mask.tern
+// Demonstrates: masking nodes that fail liveness probes
+// Tier: 2 — Pro Standard
+
+fn is_live(last_seen: float, now: float, timeout: float) -> trit {
+    if (now - last_seen) > timeout { return conflict(); }
+    if (now - last_seen) > (timeout * 0.5) { return hold(); }
+    return truth();
+}
+
+fn main() -> trit {
+    let last: float = 100.0;
+    let curr: float = 105.0;
+    let limit: float = 10.0;
+    
+    let res: trit = is_live(last, curr, limit);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
