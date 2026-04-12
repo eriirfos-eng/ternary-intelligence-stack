@@ -1,0 +1,20 @@
+// stdlib/bench/loop_iteration_latency.tern
+// Demonstrates: overhead of while loop iterations
+// Tier: 3 — Industrial
+
+fn loop_stress(count: int) -> int {
+    let i: int = 0;
+    while i < count {
+        i = i + 1;
+    }
+    return i;
+}
+
+fn main() -> trit {
+    let count: int = 1000;
+    let res: int = loop_stress(count);
+    if res == count {
+        return truth();
+    }
+    return conflict();
+}
