@@ -1,0 +1,19 @@
+// stdlib/rl/policy_gradient.tern
+// Demonstrates: Ternary logic for policy_gradient
+// Tier: 2
+
+fn policy_gradient_process(a: trit, b: trit) -> trit {
+    let state: trit = consensus(a, b);
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
+
+fn main() -> trit {
+    let val1: trit = 1;
+    let val2: trit = 0;
+    let res: trit = policy_gradient_process(val1, val2);
+    return truth();
+}
