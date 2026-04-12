@@ -1,0 +1,24 @@
+// stdlib/cad/structural_stress_gate.tern
+// Demonstrates: checking if calculated stress is within material limits
+// Tier: 3 — Industrial
+
+fn evaluate_stress(stress: float, yield_strength: float, safety_factor: float) -> trit {
+    let max_allowable: float = yield_strength / safety_factor;
+    
+    if stress > max_allowable { return conflict(); }
+    if stress > (max_allowable * 0.9) { return hold(); }
+    return truth();
+}
+
+fn main() -> trit {
+    let applied: float = 120.0;
+    let yield_str: float = 250.0;
+    let sf: float = 2.0;
+    
+    let ok: trit = evaluate_stress(applied, yield_str, sf);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
