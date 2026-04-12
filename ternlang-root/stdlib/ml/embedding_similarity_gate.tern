@@ -1,0 +1,23 @@
+// stdlib/ml/embedding_similarity_gate.tern
+// Demonstrates: cosine-like similarity thresholding for embeddings
+// Tier: 2 — Pro Standard
+
+fn similarity_3(a1: float, a2: float, a3: float, b1: float, b2: float, b3: float) -> float {
+    return (a1 * b1) + (a2 * b2) + (a3 * b3);
+}
+
+fn main() -> trit {
+    let a1: float = 0.5;
+    let a2: float = 0.5;
+    let a3: float = 0.5;
+    
+    let b1: float = 1.0;
+    let b2: float = 0.0;
+    let b3: float = 1.0;
+    
+    let score: float = similarity_3(a1, a2, a3, b1, b2, b3);
+    if score > 0.8 {
+        return truth(); // Expected 1.0
+    }
+    return conflict();
+}

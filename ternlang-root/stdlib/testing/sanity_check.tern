@@ -1,0 +1,6 @@
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = -1;
+    let result: trit = a && b; // should be -1
+    return result;
+}
