@@ -1,30 +1,24 @@
 // stdlib/astro/debris_collision_gate.tern
-// Demonstrates: Vetoing launch/maneuver based on space debris density
-// Tier: 1 — Open Core
+// Demonstrates: collision avoidance logic for orbital debris
+// Tier: 3 — Industrial
 
-fn evaluate_risk(debris_count: int, area_km2: float) -> trit {
-    let density: float = cast(debris_count) * 1.0 / area_km2;
-    
-    if density > 10.0 {
-        return conflict(); // Collision risk too high
+fn collision_risk(dist: float, relative_vel: float) -> trit {
+    if dist < 1.0 { return conflict(); } // Critical
+    if dist < 5.0 {
+        if relative_vel > 10.0 { return conflict(); }
+        return hold();
     }
-    
-    if density > 1.0 {
-        return hold(); // High density warning, maneuver with caution
-    }
-    
-    return truth(); // Safe passage
+    return truth();
 }
 
 fn main() -> trit {
-    let count: int = 500;
-    let area: float = 1000.0;
+    let d: float = 3.5;
+    let v: float = 12.0;
     
-    let risk: trit = evaluate_risk(count, area);
-    
+    let risk: trit = collision_risk(d, v);
     match risk {
         -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
