@@ -1,0 +1,54 @@
+// stdlib/programs/molecular_collision_sim.tern
+// Demonstrates: 1D particle collision simulation using float math and trit status
+// Tier: 3 — Industrial
+
+from "math_utils.tern" import abs_f, clamp_f;
+
+fn calculate_distance(p1: float, p2: float) -> float {
+    return abs_f(p1 - p2);
+}
+
+fn check_collision(dist: float, radius: float) -> trit {
+    if dist < radius {
+        return conflict(); // Collision
+    }
+    if dist < radius * 2.0 {
+        return hold();     // Near miss / warning
+    }
+    return truth();        // Safe
+}
+
+fn simulate_step(p1: float, v1: float, p2: float, v2: float, dt: float) -> trit {
+    let next_p1: float = p1 + v1 * dt;
+    let next_p2: float = p2 + v2 * dt;
+    
+    let dist: float = calculate_distance(next_p1, next_p2);
+    return check_collision(dist, 0.5);
+}
+
+fn run_simulation() -> trit {
+    let pos1: float = 0.0;
+    let vel1: float = 2.0;
+    let pos2: float = 10.0;
+    let vel2: float = -1.5;
+    let time_step: float = 0.1;
+    
+    let i: int = 0;
+    while i < 20 {
+        let status: trit = simulate_step(pos1, vel1, pos2, vel2, time_step);
+        if status == -1 { return conflict(); }
+        
+        pos1 = pos1 + vel1 * time_step;
+        pos2 = pos2 + vel2 * time_step;
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    match run_simulation() {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
