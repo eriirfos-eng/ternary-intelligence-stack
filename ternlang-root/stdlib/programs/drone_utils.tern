@@ -1,0 +1,24 @@
+// stdlib/programs/drone_utils.tern
+// Helper functions for drone navigation and obstacle avoidance
+// Tier: 2 — Pro Standard
+
+fn dist_f(x1: float, y1: float, x2: float, y2: float) -> float {
+    let dx: float = x2 - x1;
+    let dy: float = y2 - y1;
+    // Approximation: Manhattan distance for simplicity in ternary
+    if dx < 0.0 { dx = -dx; }
+    if dy < 0.0 { dy = -dy; }
+    return dx + dy;
+}
+
+fn obstacle_gate(dist: float, threshold: float) -> trit {
+    if dist < threshold { return conflict(); }
+    if dist < (threshold * 2.0) { return hold(); }
+    return truth();
+}
+
+fn battery_check(level: float) -> trit {
+    if level < 0.1 { return conflict(); }
+    if level < 0.3 { return hold(); }
+    return truth();
+}
