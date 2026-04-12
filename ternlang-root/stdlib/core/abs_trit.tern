@@ -1,0 +1,22 @@
+// stdlib/core/abs_trit.tern
+// Demonstrates: Absolute value of a trit
+// Tier: 1 - Open Core
+
+fn abs(v: trit) -> trit {
+    match v {
+        -1 => { return truth(); }
+         0 => { return hold();  }
+         1 => { return truth(); }
+    }
+}
+
+fn main() -> trit {
+    let v: trit = -1;
+    let res: trit = abs(v);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
