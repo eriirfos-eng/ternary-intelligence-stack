@@ -1,0 +1,22 @@
+// stdlib/astro/orbital_insertion.tern
+// Demonstrates: checking velocity and altitude for stable orbit
+// Tier: 3 — Industrial
+
+fn orbital_check(alt: float, vel: float) -> trit {
+    if alt < 160.0 { return conflict(); } // Re-entry danger
+    if vel < 7.5 { return hold(); }       // Velocity too low
+    if vel > 8.5 { return hold(); }       // Too fast for circular orbit
+    return truth();
+}
+
+fn main() -> trit {
+    let altitude: float = 200.0;
+    let velocity: float = 7.8;
+    
+    let ok: trit = orbital_check(altitude, velocity);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
