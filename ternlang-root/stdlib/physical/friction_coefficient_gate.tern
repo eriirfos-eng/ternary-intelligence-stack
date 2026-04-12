@@ -1,0 +1,25 @@
+// stdlib/physical/friction_coefficient_gate.tern
+// Demonstrates: checking if static friction is sufficient to prevent sliding
+// Tier: 3 — Industrial
+
+fn check_sliding(applied_force: float, normal_force: float, mu_static: float) -> trit {
+    let max_friction: float = normal_force * mu_static;
+    
+    if applied_force > max_friction { return conflict(); } // Object will slide
+    
+    if applied_force > (max_friction * 0.9) { return hold(); } // Near threshold
+    return truth(); // Safe, no sliding
+}
+
+fn main() -> trit {
+    let app_f: float = 150.0; // Newtons
+    let norm_f: float = 400.0; // Newtons
+    let mu_s: float = 0.4;
+    
+    let state: trit = check_sliding(app_f, norm_f, mu_s);
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
