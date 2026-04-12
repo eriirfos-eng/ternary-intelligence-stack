@@ -1,0 +1,25 @@
+// stdlib/systems/context_switch_latency_eval.tern
+// Demonstrates: evaluating context switch overhead against performance SLA
+// Tier: 3 — Industrial
+
+fn eval_switch_time(t1: float, t2: float, max_latency: float) -> trit {
+    let latency: float = t2 - t1;
+    if latency < 0.0 { latency = -latency; } // Absolute time diff
+    
+    if latency > max_latency { return conflict(); }
+    if latency > (max_latency * 0.8) { return hold(); }
+    return truth();
+}
+
+fn main() -> trit {
+    let switch_start: float = 100.5;
+    let switch_end: float = 102.1;
+    let limit: float = 2.0; // SLA constraint
+    
+    let res: trit = eval_switch_time(switch_start, switch_end, limit);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
