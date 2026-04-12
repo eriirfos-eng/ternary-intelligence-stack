@@ -1,0 +1,24 @@
+// stdlib/rl/discounted_reward_eval.tern
+// Demonstrates: evaluating future rewards with a discount factor
+// Tier: 2 — Pro Standard
+
+fn eval_discounted(r1: float, r2: float, gamma: float, threshold: float) -> trit {
+    let total: float = r1 + gamma * r2;
+    if total > threshold { return truth(); }
+    if total > (threshold * 0.5) { return hold(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let current_r: float = 0.5;
+    let next_r: float = 1.0;
+    let g: float = 0.9;
+    let t: float = 1.2;
+    
+    let res: trit = eval_discounted(current_r, next_r, g, t);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
