@@ -1,0 +1,53 @@
+// stdlib/programs/smart_city_traffic_orchestrator.tern
+// Demonstrates: A smart city traffic light orchestrator with emergency priority
+// Tier: 2 — Pro Standard
+
+from "network_utils.tern" import aggregate_votes;
+from "../societal/emergency_priority_gate.tern" import check_priority;
+from "../scientific/fluid_viscosity_consensus.tern" import categorize_flow;
+
+fn decide_light_state(traffic_fluidity: trit, emergency_status: trit) -> trit {
+    // If emergency is present (1), light must be Green (1)
+    if emergency_status == 1 {
+        return truth();
+    }
+    
+    // If traffic is turbulent (1) [high density], favor Green (1)
+    if traffic_fluidity == 1 {
+        return truth();
+    }
+    
+    // If traffic is laminar (-1) [low density], favor Red (-1) or Neutral (0)
+    if traffic_fluidity == -1 {
+        return conflict();
+    }
+    
+    return hold();
+}
+
+fn main() -> trit {
+    // Sensor inputs for 3 lanes
+    let lane1_flow: float = 5000.0; // Turbulent
+    let lane2_flow: float = 500.0;  // Laminar
+    let lane3_flow: float = 3000.0; // Transitional
+    
+    let f1: trit = categorize_flow(lane1_flow);
+    let f2: trit = categorize_flow(lane2_flow);
+    let f3: trit = categorize_flow(lane3_flow);
+    
+    // Overall traffic fluidity
+    let overall_fluidity: trit = aggregate_votes(f1, f2, f3);
+    
+    // Emergency sensors
+    let urgency: int = 10;
+    let severity: int = 10;
+    let emergency_sig: trit = check_priority(urgency, severity);
+    
+    let state: trit = decide_light_state(overall_fluidity, emergency_sig);
+    
+    match state {
+        1 => { return truth(); }
+        -1 => { return conflict(); }
+        0 => { return hold(); }
+    }
+}
