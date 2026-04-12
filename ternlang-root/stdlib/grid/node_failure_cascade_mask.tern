@@ -1,0 +1,25 @@
+// stdlib/grid/node_failure_cascade_mask.tern
+// Demonstrates: checking if a single node failure will cascade to neighbors
+// Tier: 3 — Industrial
+
+fn cascade_risk(failed_capacity: float, neighbor_margin: float) -> trit {
+    if failed_capacity > neighbor_margin {
+        return conflict(); // Neighbor will overload
+    }
+    if failed_capacity > (neighbor_margin * 0.8) {
+        return hold(); // High risk
+    }
+    return truth(); // Safe to absorb
+}
+
+fn main() -> trit {
+    let failed_load: float = 120.0;
+    let margin: float = 150.0;
+    
+    let res: trit = cascade_risk(failed_load, margin);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
