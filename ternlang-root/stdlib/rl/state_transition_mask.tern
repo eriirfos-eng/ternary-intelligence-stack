@@ -1,0 +1,24 @@
+// stdlib/rl/state_transition_mask.tern
+// Demonstrates: masking valid/invalid state transitions
+// Tier: 2 — Pro Standard
+
+fn is_valid_transition(from_s: int, to_s: int, max_diff: int) -> trit {
+    let diff: int = to_s - from_s;
+    if diff < 0 { diff = -diff; }
+    
+    if diff <= max_diff { return truth(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let s1: int = 1;
+    let s2: int = 3;
+    let limit: int = 1;
+    
+    let ok: trit = is_valid_transition(s1, s2, limit);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
