@@ -1,0 +1,21 @@
+// stdlib/societal/reputation_score_gate.tern
+// Demonstrates: gating social interaction based on reputation score
+// Tier: 2 — Pro Standard
+
+fn reputation_gate(score: float, threshold: float) -> trit {
+    if score > threshold { return truth(); }
+    if score > (threshold * 0.8) { return hold(); }
+    return conflict();
+}
+
+fn main() -> trit {
+    let s: float = 85.0;
+    let t: float = 80.0;
+    
+    let res: trit = reputation_gate(s, t);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
