@@ -1,0 +1,21 @@
+// stdlib/premium/license_key_gate.tern
+// Demonstrates: validating premium license keys
+// Tier: 4 — Enterprise
+
+fn validate_license(key: int, secret: int) -> trit {
+    if key == secret { return truth(); }
+    if key == (secret + 1) { return hold(); } // Trial key
+    return conflict();
+}
+
+fn main() -> trit {
+    let k: int = 12345;
+    let s: int = 12345;
+    
+    let res: trit = validate_license(k, s);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
