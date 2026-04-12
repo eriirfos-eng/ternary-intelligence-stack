@@ -1,0 +1,28 @@
+// stdlib/grid/renewable_curtailment_eval.tern
+// Demonstrates: determining if renewable generation should be curtailed
+// Tier: 3 — Industrial
+
+fn eval_curtailment(grid_demand: float, total_generation: float, battery_capacity: float) -> trit {
+    let excess: float = total_generation - grid_demand;
+    if excess <= 0.0 { return conflict(); } // No excess
+    
+    if excess > battery_capacity {
+        return truth(); // Must curtail
+    }
+    
+    // Can absorb into battery
+    return hold(); 
+}
+
+fn main() -> trit {
+    let demand: float = 500.0;
+    let gen: float = 600.0;
+    let batt: float = 50.0;
+    
+    let curtail: trit = eval_curtailment(demand, gen, batt);
+    match curtail {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
