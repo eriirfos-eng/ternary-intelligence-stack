@@ -1,0 +1,25 @@
+// stdlib/bench/string_allocation_bench.tern
+// Demonstrates: overhead of string literal allocation and passing
+// Tier: 3 — Industrial
+
+fn pass_string(s: string) -> string {
+    return s;
+}
+
+fn string_stress(count: int) -> string {
+    let last: string = "";
+    let i: int = 0;
+    while i < count {
+        last = pass_string("a reasonably long string to test allocation overhead in the VM");
+        i = i + 1;
+    }
+    return last;
+}
+
+fn main() -> trit {
+    let s: string = string_stress(100);
+    if s == "a reasonably long string to test allocation overhead in the VM" {
+        return truth();
+    }
+    return conflict();
+}
