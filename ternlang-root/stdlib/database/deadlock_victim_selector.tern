@@ -1,0 +1,28 @@
+// stdlib/database/deadlock_victim_selector.tern
+// Demonstrates: selecting a transaction victim to resolve a database deadlock
+// Tier: 3 — Industrial
+
+fn select_victim(tx1_cost: float, tx2_cost: float, tx1_priority: trit, tx2_priority: trit) -> trit {
+    if tx1_priority > tx2_priority { return 1; } // Keep tx1
+    if tx2_priority > tx1_priority { return -1; } // Keep tx2
+    
+    // Priorities equal, use cost
+    if tx1_cost > tx2_cost { return 1; } // Keep tx1 (higher cost means more work lost)
+    if tx2_cost > tx1_cost { return -1; } // Keep tx2
+    
+    return 0; // Both equal, system decides
+}
+
+fn main() -> trit {
+    let cost1: float = 500.5;
+    let cost2: float = 200.0;
+    let pri1: trit = 0;
+    let pri2: trit = 0;
+    
+    let victim: trit = select_victim(cost1, cost2, pri1, pri2);
+    match victim {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
