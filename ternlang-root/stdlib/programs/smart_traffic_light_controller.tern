@@ -1,0 +1,38 @@
+// stdlib/programs/smart_traffic_light_controller.tern
+// Demonstrates: traffic light management using density and priority
+// Tier: 2 — Pro Standard
+
+from "traffic_utils.tern" import car_density, signal_priority, needs_change;
+
+fn evaluate_intersection(c1: int, c2: int, w1: float, w2: float) -> trit {
+    let d1: float = car_density(c1, 50);
+    let d2: float = car_density(c2, 50);
+    
+    let p1: trit = signal_priority(d1, w1);
+    let p2: trit = signal_priority(d2, w2);
+    
+    // Should we switch green from road 1 to road 2?
+    return needs_change(p1, p2);
+}
+
+fn handle_signal(change: trit) -> trit {
+    match change {
+        1 => { return truth(); } // SWITCH
+        0 => { return hold(); }  // YELLOW / PREPARE
+        -1 => { return conflict(); } // STAY
+    }
+}
+
+fn main() -> trit {
+    let count1: int = 10;
+    let count2: int = 45;
+    let wait1: float = 30.0;
+    let wait2: float = 10.0;
+    
+    let switch: trit = evaluate_intersection(count1, count2, wait1, wait2);
+    match handle_signal(switch) {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
