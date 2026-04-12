@@ -197,3 +197,11 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 - Renamed unused `s_name` to `_s_name` in `betbc.rs`.
 - Prefixed unused `instructions_count` field with `_` in `BetVm` struct and constructor.
 **Status:** Fixed.
+
+## 2026-04-12 — Register index u8 conversion fix in betbc.rs
+
+**Trigger:** Building `ternlang-core` after `next_reg` was changed from `u8` to `usize`.
+**Symptom:** `error[E0308]: mismatched types` — expected `u8`, found `usize` in `self.code.push(tr)`.
+**Diagnosis:** The `Tstore` and `Tload` opcodes take a 1-byte immediate for the register index. When `next_reg` (and thus `tr`) became `usize`, the direct push to the `Vec<u8>` failed.
+**Fix:** Added `.try_into().unwrap()` to `tr` before pushing to `self.code` in `Expr::TritTensorLiteral` arm of `emit_expr`.
+**Status:** Fixed.

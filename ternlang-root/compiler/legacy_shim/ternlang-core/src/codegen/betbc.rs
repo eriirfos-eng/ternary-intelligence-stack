@@ -9,7 +9,7 @@ pub struct BytecodeEmitter {
     function_patches: std::collections::HashMap<String, Vec<usize>>,
     break_patches: Vec<usize>,
     continue_patches: Vec<usize>,
-    next_reg: u8,
+    next_reg: usize,
     struct_layouts: std::collections::HashMap<String, Vec<String>>,
     agent_type_ids: std::collections::HashMap<String, u16>,
     agent_handlers: Vec<(u16, u16)>,
@@ -134,25 +134,22 @@ impl BytecodeEmitter {
                     // We must pop root dummy first, then fields.
                     
                     // Pop root dummy
-                    let root_reg = self.next_reg;
+                    let root_reg = self.alloc_reg();
                     self.symbols.insert(name.clone(), root_reg);
-                    self.next_reg += 1;
                     self.code.push(0x08); self.code.push(root_reg);
 
                     // Pop fields in reverse order of how they were pushed
                     for f_name in fields.iter().rev() {
-                        let f_reg = self.next_reg;
+                        let f_reg = self.alloc_reg();
                         let key = format!("{}.{}", name, f_name);
                         self.symbols.insert(key, f_reg);
-                        self.next_reg += 1;
                         self.code.push(0x08); self.code.push(f_reg);
                     }
                     continue;
                 }
             }
-            let reg = self.next_reg;
+            let reg = self.alloc_reg();
             self.symbols.insert(name.clone(), reg);
-            self.next_reg += 1;
             self.code.push(0x08); self.code.push(reg);
         }
         for stmt in &func.body { self.emit_stmt(stmt); }
@@ -182,10 +179,9 @@ impl BytecodeEmitter {
                         // Flatten struct fields into mangled registers
                         for (f_name, f_val) in fields {
                             self.emit_expr(f_val);
-                            let reg = self.next_reg;
+                            let reg = self.alloc_reg();
                             let key = format!("{}.{}", name, f_name);
                             self.symbols.insert(key, reg);
-                            self.next_reg += 1;
                             self.code.push(0x08); self.code.push(reg);
                         }
                         // Now we let the normal path emit the root variable's dummy value
@@ -194,9 +190,8 @@ impl BytecodeEmitter {
                 if !handled {
                     self.emit_expr(value);
                 }
-                let reg = self.next_reg;
+                let reg = self.alloc_reg();
                 self.symbols.insert(name.clone(), reg);
-                self.next_reg += 1;
                 self.code.push(0x08); self.code.push(reg); // TSTORE
             }
             Stmt::Set { name, value } => {
@@ -249,7 +244,7 @@ impl BytecodeEmitter {
             }
             Stmt::Match { condition, arms } => {
                 self.emit_expr(condition);
-                let cond_reg = self.next_reg; self.next_reg += 1;
+                let cond_reg = self.alloc_reg();
                 self.code.push(0x08); self.code.push(cond_reg); // Tstore
 
                 let mut end_patches = Vec::new();
@@ -324,18 +319,23 @@ impl BytecodeEmitter {
                 self.next_reg -= 1;
             }
             Stmt::ForIn { var, iter, body } => {
+                // Save next_reg so loop-internal registers are freed after the loop ends.
+                // Without this, each for-in permanently consumes 4 registers, exhausting
+                // the register file after 6-7 loops in a single function.
+                let pre_loop_reg = self.next_reg;
+
                 self.emit_expr(iter);
-                let it_reg = self.next_reg; self.next_reg += 1;
+                let it_reg = self.alloc_reg();
                 self.code.push(0x08); self.code.push(it_reg);
                 self.code.push(0x09); self.code.push(it_reg);
                 self.code.push(0x24); // TSHAPE: pushes rows then cols (cols on top)
                 self.code.push(0x0c); // pop cols — iterate over rows, not cols
-                let r_reg = self.next_reg; self.next_reg += 1;
+                let r_reg = self.alloc_reg();
                 self.code.push(0x08); self.code.push(r_reg); // store rows as loop bound
-                let i_reg = self.next_reg; self.next_reg += 1;
+                let i_reg = self.alloc_reg();
                 self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes());
                 self.code.push(0x08); self.code.push(i_reg);
-                
+
                 let top = self.code.len() as u16;
                 let pre_break = self.break_patches.len();
                 let pre_cont = self.continue_patches.len();
@@ -354,11 +354,11 @@ impl BytecodeEmitter {
                 self.code.push(0x09); self.code.push(i_reg);
                 self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes());
                 self.code.push(0x22);
-                let v_reg = self.next_reg; self.next_reg += 1;
+                let v_reg = self.alloc_reg();
                 self.symbols.insert(var.clone(), v_reg);
                 self.code.push(0x08); self.code.push(v_reg);
                 self.emit_stmt(body);
-                
+
                 let cont_addr = self.code.len() as u16;
                 let cs: Vec<usize> = self.continue_patches.drain(pre_cont..).collect();
                 for p in cs { self.patch_u16(p, cont_addr); }
@@ -374,6 +374,11 @@ impl BytecodeEmitter {
                 self.patch_u16(neg, end); self.patch_u16(zero, end);
                 let bs: Vec<usize> = self.break_patches.drain(pre_break..).collect();
                 for p in bs { self.patch_u16(p, end); }
+
+                // Free loop registers: loop variable is out of scope, and the 4
+                // internal registers (it, r, i, v) are no longer needed.
+                self.symbols.remove(var);
+                self.next_reg = pre_loop_reg;
             }
             Stmt::WhileTernary { condition, on_pos, on_zero, on_neg } => {
                 let top = self.code.len() as u16;
@@ -602,15 +607,15 @@ impl BytecodeEmitter {
                 self.code.extend_from_slice(&(rows as u16).to_le_bytes());
                 self.code.extend_from_slice(&(cols as u16).to_le_bytes());
                 let tr = self.next_reg; self.next_reg += 1;
-                self.code.push(0x08); self.code.push(tr);
+                self.code.push(0x08); self.code.push(tr.try_into().unwrap());
                 for (idx, &v) in vs.iter().enumerate() {
-                    self.code.push(0x09); self.code.push(tr);
+                    self.code.push(0x09); self.code.push(tr.try_into().unwrap());
                     self.code.push(0x17); self.code.extend_from_slice(&(idx as i64).to_le_bytes());
                     self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes());
                     self.code.push(0x01); self.code.extend(pack_trits(&[Trit::from(v)]));
                     self.code.push(0x23);
                 }
-                self.code.push(0x09); self.code.push(tr);
+                self.code.push(0x09); self.code.push(tr.try_into().unwrap());
             }
             Expr::StructLiteral { .. } => {
                 // Struct literals are largely handled by Stmt::Let by flattening.
@@ -659,6 +664,22 @@ impl BytecodeEmitter {
         if let Some(&addr) = self.func_addrs.get(name) {
             self.code.push(0x10); self.code.extend_from_slice(&addr.to_le_bytes());
         }
+    }
+
+    /// Allocate the next register, returning its index as `u8` (the bytecode register width).
+    /// Emits a stderr diagnostic if the function requires more than 255 registers — programs
+    /// that hit this have much bigger structural problems anyway.
+    fn alloc_reg(&mut self) -> u8 {
+        let r = self.next_reg;
+        self.next_reg += 1;
+        if r > 255 {
+            eprintln!(
+                "[CODEGEN] Warning: register #{r} exceeds u8 range — \
+                 this function has too many local variables (max 255). \
+                 Split the function or reduce scope depth."
+            );
+        }
+        r as u8
     }
 
     pub fn get_agent_handlers(&self) -> Vec<(u16, usize)> {
