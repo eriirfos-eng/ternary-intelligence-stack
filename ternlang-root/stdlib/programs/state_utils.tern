@@ -1,0 +1,24 @@
+// stdlib/programs/state_utils.tern
+// Helper functions for state machine logic.
+// Tier: 2 — Pro Standard
+
+fn next_state(current: int, signal: trit) -> int {
+    match signal {
+        1 => { return current + 1; }
+        0 => { return current;     }
+        -1 => { return current - 1; }
+    }
+}
+
+fn is_final(state: int, target: int) -> trit {
+    if state >= target {
+        return truth();
+    }
+    return conflict();
+}
+
+fn clamp_state(state: int, min_s: int, max_s: int) -> int {
+    if state < min_s { return min_s; }
+    if state > max_s { return max_s; }
+    return state;
+}
