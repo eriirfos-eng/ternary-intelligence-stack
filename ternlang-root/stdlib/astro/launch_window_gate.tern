@@ -1,37 +1,23 @@
 // stdlib/astro/launch_window_gate.tern
-// Demonstrates: Launch window go/no-go decision gate.
-// Tier: 2 — Pro Standard
-// Three independent checks must all affirm before launch proceeds.
-// hold = window exists but conditions marginal — recycle to next slot.
+// Demonstrates: checking environmental conditions for a rocket launch
+// Tier: 3 — Industrial
 
-fn weather_gate(wind_ok: trit, visibility_ok: trit) -> trit {
-    return consensus(wind_ok, visibility_ok);
-}
-
-fn vehicle_gate(propulsion: trit, avionics: trit, structure: trit) -> trit {
-    let pa: trit = consensus(propulsion, avionics);
-    return consensus(pa, structure);
-}
-
-fn range_safety_gate(corridor_clear: trit, fts_armed: trit) -> trit {
-    match fts_armed {
-        -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return corridor_clear; }
-    }
+fn launch_check(wind_speed: float, humidity: float, visibility: float) -> trit {
+    if wind_speed > 30.0 { return conflict(); } // Reject
+    if humidity > 0.9 { return hold(); }       // Hold / Warning
+    if visibility < 5.0 { return conflict(); }  // Reject
+    return truth(); // Affirm
 }
 
 fn main() -> trit {
-    let weather: trit  = weather_gate(1, 1);
-    let vehicle: trit  = vehicle_gate(1, 1, 0);
-    let safety: trit   = range_safety_gate(1, 1);
-
-    let wp: trit = consensus(weather, vehicle);
-    let verdict: trit = consensus(wp, safety);
-
-    match verdict {
+    let w: float = 12.5;
+    let h: float = 0.45;
+    let v: float = 10.0;
+    
+    let result: trit = launch_check(w, h, v);
+    match result {
         -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
