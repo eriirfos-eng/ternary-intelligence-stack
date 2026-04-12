@@ -1,0 +1,27 @@
+// stdlib/astro/reentry_angle_gate.tern
+// Demonstrates: Atmospheric reentry angle window check
+// Tier: 3 — Industrial
+
+fn check_entry_angle(angle: float, min: float, max: float) -> trit {
+    if angle > max {
+        return conflict(); // Too steep — will burn up
+    }
+    if angle < min {
+        return hold();     // Too shallow — will skip off atmosphere
+    }
+    return truth();        // Optimal window
+}
+
+fn main() -> trit {
+    let angle: float = 6.2;
+    let min_safe: float = 5.5;
+    let max_safe: float = 7.1;
+    
+    let ok: trit = check_entry_angle(angle, min_safe, max_safe);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
