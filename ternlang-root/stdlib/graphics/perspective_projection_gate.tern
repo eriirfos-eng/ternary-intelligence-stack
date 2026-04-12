@@ -1,0 +1,50 @@
+// stdlib/graphics/perspective_projection_gate.tern
+// Demonstrates: perspective projection matrix-like logic for 3D to 2D
+// Tier: 3 — Industrial
+
+fn project(x: float, y: float, z: float, fov: float) -> trit {
+    // If z is too close or behind, reject (clip)
+    if z < 0.1 {
+        return conflict();
+    }
+
+    let projected_x: float = x / z;
+    let projected_y: float = y / z;
+
+    // Check if within normalized screen space after projection
+    if projected_x < -fov || projected_x > fov {
+        return conflict();
+    }
+    if projected_y < -fov || projected_y > fov {
+        return conflict();
+    }
+
+    return truth();
+}
+
+fn main() -> trit {
+    // Close object, centered
+    let result1: trit = project(0.0, 0.0, 1.0, 1.0);
+    // Object behind camera
+    let result2: trit = project(0.0, 0.0, -1.0, 1.0);
+    // Far object, off-center
+    let result3: trit = project(10.0, 10.0, 5.0, 1.0);
+
+    match result1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => {
+             match result2 {
+                 -1 => {
+                     match result3 {
+                         -1 => { return truth(); } // Correct: res1=1, res2=-1, res3=-1
+                          0 => { return hold(); }
+                          1 => { return conflict(); }
+                     }
+                 }
+                 0 => { return hold(); }
+                 1 => { return conflict(); }
+             }
+         }
+    }
+}
