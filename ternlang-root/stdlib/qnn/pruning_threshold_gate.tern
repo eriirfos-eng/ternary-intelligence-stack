@@ -1,0 +1,29 @@
+// stdlib/qnn/pruning_threshold_gate.tern
+// Demonstrates: Weight pruning gate for sparse neural networks
+// Tier: 3 — Industrial
+
+fn check_pruning(weight: float, threshold: float) -> trit {
+    let mag: float = weight;
+    if mag < 0.0 { mag = -mag; } // Abs
+    
+    if mag < threshold {
+        return conflict(); // Weight is pruned (set to 0)
+    }
+    if mag < (threshold * 1.5) {
+        return hold();     // Weight is near threshold, potentially prune later
+    }
+    return truth();        // Keep weight
+}
+
+fn main() -> trit {
+    let w: float = 0.25;
+    let t: float = 0.1;
+    
+    let ok: trit = check_pruning(w, t);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
