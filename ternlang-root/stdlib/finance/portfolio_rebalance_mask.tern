@@ -1,0 +1,37 @@
+// stdlib/finance/portfolio_rebalance_mask.tern
+// Demonstrates: using a tensor to flag assets needing rebalancing
+// Tier: 2 — Pro Standard
+
+fn check_drift(current: float, target: float, drift_max: float) -> trit {
+    let diff: float = current - target;
+    if diff > drift_max {
+        return conflict(); // Overweight
+    }
+    if diff < -drift_max {
+        return truth();    // Underweight
+    }
+    return hold();         // Balanced
+}
+
+fn main() -> trit {
+    let c1: float = 0.4;
+    let c2: float = 0.25;
+    let c3: float = 0.35;
+    
+    let t1: float = 0.33;
+    let t2: float = 0.33;
+    let t3: float = 0.33;
+    
+    let drift_limit: float = 0.05;
+    
+    // Mask results for 3 assets
+    let m1: trit = check_drift(c1, t1, drift_limit);
+    let m2: trit = check_drift(c2, t2, drift_limit);
+    let m3: trit = check_drift(c3, t3, drift_limit);
+    
+    // Summary: do any need rebalance?
+    if m1 != 0 || m2 != 0 || m3 != 0 {
+        return truth();
+    }
+    return hold();
+}
