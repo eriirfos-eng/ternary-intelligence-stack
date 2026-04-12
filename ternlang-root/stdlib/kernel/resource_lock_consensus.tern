@@ -1,0 +1,21 @@
+// stdlib/kernel/resource_lock_consensus.tern
+// Demonstrates: determining lock ownership through priority consensus
+// Tier: 3 — Industrial
+
+fn get_lock(p1_priority: int, p2_priority: int) -> trit {
+    if p1_priority > p2_priority { return 1; }
+    if p2_priority > p1_priority { return -1; }
+    return 0; // Contention / Hold
+}
+
+fn main() -> trit {
+    let p1: int = 10;
+    let p2: int = 10;
+    
+    let res: trit = get_lock(p1, p2);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
