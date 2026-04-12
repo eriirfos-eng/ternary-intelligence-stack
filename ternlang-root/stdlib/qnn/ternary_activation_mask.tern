@@ -1,0 +1,25 @@
+// stdlib/qnn/ternary_activation_mask.tern
+// Demonstrates: Sum-based ternary activation function
+// Tier: 3 — Industrial
+
+fn activate(sum: int) -> trit {
+    if sum > 0 {
+        return truth();    // Positive activation
+    }
+    if sum < 0 {
+        return conflict(); // Negative activation
+    }
+    return hold();        // Zero activation
+}
+
+fn main() -> trit {
+    let s: int = 5;
+    
+    let res: trit = activate(s);
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
