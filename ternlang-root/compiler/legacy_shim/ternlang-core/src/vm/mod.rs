@@ -13,6 +13,11 @@ pub trait RemoteTransport: Send + Sync {
     fn remote_await(&self, node_addr: &str, agent_id: usize) -> std::io::Result<i8>;
 }
 
+/// Maximum call depth before the VM returns a `CallStackOverflow` error.
+/// Prevents OOM/freeze when programs contain unbounded recursion or
+/// mutual recursion across imported modules.
+const MAX_CALL_DEPTH: usize = 4096;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum VmError {
     StackUnderflow,
@@ -29,6 +34,7 @@ pub enum VmError {
     AgentTypeNotRegistered(u16),
     AgentIdInvalid(usize),
     RuntimeError(String),
+    CallStackOverflow,
 }
 
 impl fmt::Display for VmError {
@@ -58,6 +64,8 @@ impl fmt::Display for VmError {
                 write!(f, "[BET-011] Agent #{id} doesn't exist — no agent was spawned at this ID. TSEND and TAWAIT require a live agent.\n          → details: stdlib/errors/BET-011.tern  |  ternlang errors BET-011"),
             VmError::RuntimeError(msg) =>
                 write!(f, "[BET-012] Runtime error: {msg}"),
+            VmError::CallStackOverflow =>
+                write!(f, "[BET-013] Call stack overflow — max depth ({MAX_CALL_DEPTH}) exceeded. Infinite recursion or unbounded cross-module mutual calls detected.\n          → details: stdlib/errors/BET-013.tern  |  ternlang errors BET-013"),
         }
     }
 }
@@ -90,8 +98,10 @@ struct AgentInstance {
 }
 
 pub struct BetVm {
-    registers: [Value; 27],
-    register_stack: Vec<[Value; 27]>,
+    /// Dynamic register file — grows on demand so programs with > 27 locals work correctly
+    /// instead of silently dropping stores and returning zero on reads.
+    registers: Vec<Value>,
+    register_stack: Vec<Vec<Value>>,
     carry_reg: Trit,
     stack: Vec<Value>,
     call_stack: Vec<usize>,
@@ -109,7 +119,7 @@ pub struct BetVm {
 impl BetVm {
     pub fn new(code: Vec<u8>) -> Self {
         Self {
-            registers: std::array::from_fn(|_| Value::default()),
+            registers: vec![Value::default(); 27],
             register_stack: Vec::new(),
             carry_reg: Trit::Tend,
             stack: Vec::new(),
@@ -149,7 +159,7 @@ impl BetVm {
     }
 
     pub fn get_register(&self, reg: u8) -> Value {
-        if reg < 27 { self.registers[reg as usize].clone() } else { Value::default() }
+        self.registers.get(reg as usize).cloned().unwrap_or_default()
     }
 
     pub fn run(&mut self) -> Result<(), VmError> {
@@ -240,14 +250,15 @@ impl BetVm {
                     if is_neg { self.pc = addr as usize; }
                 }
                 0x08 => { // Tstore
-                    let reg = self.read_u8()?;
+                    let reg = self.read_u8()? as usize;
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    if reg < 27 { self.registers[reg as usize] = val; }
+                    if reg >= self.registers.len() { self.registers.resize(reg + 1, Value::default()); }
+                    self.registers[reg] = val;
                 }
                 0x09 => { // Tload
-                    let reg = self.read_u8()?;
-                    if reg < 27 { self.stack.push(self.registers[reg as usize].clone()); }
-                    else { self.stack.push(Value::default()); }
+                    let reg = self.read_u8()? as usize;
+                    if reg >= self.registers.len() { self.registers.resize(reg + 1, Value::default()); }
+                    self.stack.push(self.registers[reg].clone());
                 }
                 0x0a => { // Tdup
                     let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
@@ -301,6 +312,9 @@ impl BetVm {
                     self.stack.push(Value::TensorRef(idx));
                 }
                 0x10 => { // Tcall
+                    if self.call_stack.len() >= MAX_CALL_DEPTH {
+                        return Err(VmError::CallStackOverflow);
+                    }
                     let addr = self.read_u16()? as usize;
                     self.register_stack.push(self.registers.clone());
                     self.call_stack.push(self.pc);
@@ -639,6 +653,9 @@ impl BetVm {
                     let target = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     if let Value::AgentRef(id, None) = target {
                         if id < self.agents.len() {
+                            if self.call_stack.len() >= MAX_CALL_DEPTH {
+                                return Err(VmError::CallStackOverflow);
+                            }
                             let handler_addr = self.agents[id].handler_addr;
                             let msg = self.agents[id].mailbox.pop_front().unwrap_or(Value::default());
                             // Synchronous handler dispatch — identical to TCALL
