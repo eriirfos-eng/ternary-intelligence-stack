@@ -1,0 +1,27 @@
+// stdlib/ternary/ternary_decoder_1to3.tern
+// Demonstrates: 1-trit to 3-output decoder
+// Tier: 1 - Open Core
+
+fn decode_trit(v: trit) -> trit[] {
+    let out: trit[] = [0, 0, 0];
+    
+    match v {
+        -1 => { out[0] = truth(); }
+         0 => { out[1] = truth(); }
+         1 => { out[2] = truth(); }
+    }
+    
+    return out;
+}
+
+fn main() -> trit {
+    let v: trit = 0;
+    let res: trit[] = decode_trit(v);
+
+    // Check if res[1] is truth
+    match res[1] {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
