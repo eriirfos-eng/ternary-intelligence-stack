@@ -1,0 +1,19 @@
+// stdlib/gametheory/tit_for_tat_strategy.tern
+// Demonstrates: implementing a tit-for-tat response strategy
+// Tier: 2 — Pro Standard
+
+fn next_move(opponent_last_move: trit) -> trit {
+    if opponent_last_move == 0 { return truth(); } // Start with Affirm
+    return opponent_last_move;
+}
+
+fn main() -> trit {
+    let last: trit = -1; // Opponent defected
+    
+    let res: trit = next_move(last);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
