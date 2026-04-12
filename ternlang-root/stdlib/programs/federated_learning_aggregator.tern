@@ -1,0 +1,48 @@
+// stdlib/programs/federated_learning_aggregator.tern
+// Demonstrates: aggregating updates from multiple clients in federated learning
+// Tier: 2 — Pro Standard
+
+from "ml_utils.tern" import weighted_avg_3, delta_check, participation_gate;
+
+fn aggregate_updates(u1: float, u2: float, u3: float, s1: int, s2: int, s3: int) -> float {
+    let w1: float = s1 * 1.0;
+    let w2: float = s2 * 1.0;
+    let w3: float = s3 * 1.0;
+    
+    return weighted_avg_3(u1, u2, u3, w1, w2, w3);
+}
+
+fn validate_global_update(old_v: float, new_v: float, max_d: float) -> trit {
+    return delta_check(old_v, new_v, max_d);
+}
+
+fn check_client_readiness(s: int, min_s: int) -> trit {
+    return participation_gate(s, min_s);
+}
+
+fn main() -> trit {
+    let samples1: int = 100;
+    let samples2: int = 150;
+    let samples3: int = 20;
+    
+    let update1: float = 0.05;
+    let update2: float = 0.04;
+    let update3: float = 0.15; // Possible outlier
+    
+    let r1: trit = check_client_readiness(samples1, 50);
+    let r2: trit = check_client_readiness(samples2, 50);
+    let r3: trit = check_client_readiness(samples3, 50);
+    
+    // Only aggregate ready clients
+    let final_u: float = 0.0;
+    if r1 == 1 && r2 == 1 {
+        final_u = aggregate_updates(update1, update2, 0.0, samples1, samples2, 0);
+    }
+    
+    let ok: trit = validate_global_update(0.0, final_u, 0.1);
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
