@@ -1,0 +1,30 @@
+// stdlib/bench/agent_message_latency.tern
+// Demonstrates: latency of sending many messages to one agent
+// Tier: 3 — Industrial
+
+agent Receiver {
+    fn handle(msg: trit) -> trit {
+        return msg;
+    }
+}
+
+fn message_stress(a: agentref, count: int) -> trit {
+    let i: int = 0;
+    let last: trit = 0;
+    while i < count {
+        send a 1;
+        last = await a;
+        i = i + 1;
+    }
+    return last;
+}
+
+fn main() -> trit {
+    let a: agentref = spawn Receiver;
+    let res: trit = message_stress(a, 100);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
