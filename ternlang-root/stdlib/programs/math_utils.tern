@@ -1,0 +1,18 @@
+// stdlib/programs/math_utils.tern
+// Mathematical helper functions for complex programs.
+// Tier: 1 — Open Core
+
+fn abs_f(x: float) -> float {
+    if x < 0.0 { return -x; }
+    return x;
+}
+
+fn clamp_f(x: float, min_val: float, max_val: float) -> float {
+    if x < min_val { return min_val; }
+    if x > max_val { return max_val; }
+    return x;
+}
+
+fn lerp(a: float, b: float, t: float) -> float {
+    return a + t * (b - a);
+}
