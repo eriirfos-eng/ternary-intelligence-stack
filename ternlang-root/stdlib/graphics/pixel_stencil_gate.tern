@@ -1,0 +1,33 @@
+// stdlib/graphics/pixel_stencil_gate.tern
+// Demonstrates: Stencil buffer masking for complex geometry clipping.
+// Tier: 3 — Industrial
+
+fn stencil_test(ref: int, buffer_val: int, mask: int) -> trit {
+    // Basic EQUAL test with mask
+    let masked_ref: int = ref % mask;
+    let masked_buf: int = buffer_val % mask;
+    
+    if masked_ref == masked_buf {
+        return truth(); // Pass
+    }
+    
+    if masked_ref > masked_buf {
+        return hold(); // Potential fuzzy match / gradient
+    }
+    
+    return conflict(); // Fail
+}
+
+fn main() -> trit {
+    let s_ref: int = 128;
+    let s_buf: int = 128;
+    let s_mask: int = 255;
+    
+    let result: trit = stencil_test(s_ref, s_buf, s_mask);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
