@@ -1,0 +1,45 @@
+// stdlib/systems/cache_hit_rate_gate.tern
+// Demonstrates: cache performance categorization via hit-rate
+// Tier: 3 — Industrial
+
+fn evaluate_cache(hits: int, misses: int) -> trit {
+    let total: int = hits + misses;
+    if total == 0 { return hold(); }
+    
+    // Hit rate > 95%
+    if hits * 100 > total * 95 {
+        return truth();
+    }
+    // Hit rate < 50%
+    if hits * 100 < total * 50 {
+        return conflict();
+    }
+    return hold();
+}
+
+fn main() -> trit {
+    // 98% hit rate
+    let res1: trit = evaluate_cache(98, 2); // 1
+    // 10% hit rate
+    let res2: trit = evaluate_cache(10, 90); // -1
+    // 75% hit rate
+    let res3: trit = evaluate_cache(75, 25); // 0
+
+    match res1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => {
+             match res2 {
+                 -1 => {
+                     match res3 {
+                         -1 => { return conflict(); }
+                          0 => { return truth(); }
+                          1 => { return conflict(); }
+                     }
+                 }
+                 0 => { return hold(); }
+                 1 => { return conflict(); }
+             }
+         }
+    }
+}
