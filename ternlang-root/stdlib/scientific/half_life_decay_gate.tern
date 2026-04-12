@@ -1,0 +1,33 @@
+// stdlib/scientific/half_life_decay_gate.tern
+// Demonstrates: Radioactive decay simulation with time-step probability.
+// Tier: 3 — Industrial
+
+fn check_decay(current_count: int, time_step: float, half_life: float) -> trit {
+    // Probability of decay in this step (simplified)
+    let lambda: float = 0.693 / half_life;
+    let p_decay: float = lambda * time_step;
+    
+    if p_decay > 0.05 {
+        return truth(); // Significant decay event expected
+    }
+    
+    if p_decay > 0.01 {
+        return hold(); // Potential decay, observation needed
+    }
+    
+    return conflict(); // Stable in this time step
+}
+
+fn main() -> trit {
+    let count: int = 1000;
+    let dt: float = 1.0;
+    let h_life: float = 100.0;
+    
+    let result: trit = check_decay(count, dt, h_life);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
