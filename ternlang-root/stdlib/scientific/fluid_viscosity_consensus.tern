@@ -1,0 +1,40 @@
+// stdlib/scientific/fluid_viscosity_consensus.tern
+// Demonstrates: fluid flow regime categorization via Reynolds number
+// Tier: 3 — Industrial
+
+fn categorize_flow(reynolds_number: float) -> trit {
+    if reynolds_number > 4000.0 {
+        return truth();   // Turbulent
+    }
+    if reynolds_number < 2300.0 {
+        return conflict(); // Laminar
+    }
+    return hold();        // Transitional
+}
+
+fn main() -> trit {
+    // High speed pipe flow
+    let res1: trit = categorize_flow(5000.0); // 1
+    // Slow oil flow
+    let res2: trit = categorize_flow(500.0);  // -1
+    // Unstable region
+    let res3: trit = categorize_flow(3000.0); // 0
+
+    match res1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => {
+             match res2 {
+                 -1 => {
+                     match res3 {
+                         -1 => { return conflict(); }
+                          0 => { return truth(); }
+                          1 => { return conflict(); }
+                     }
+                 }
+                 0 => { return hold(); }
+                 1 => { return conflict(); }
+             }
+         }
+    }
+}
