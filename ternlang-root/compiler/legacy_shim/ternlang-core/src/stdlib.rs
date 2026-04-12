@@ -288,78 +288,78 @@ fn collect_use_paths(stmts: &[Stmt]) -> Vec<Vec<String>> {
     paths
 }
 
-/// Parse source string and extract its functions; deduplicate against `known`.
-/// If `filter` is Some, only return functions whose names are in the set.
-fn parse_and_extract(src: &str, key: &str, known: &mut std::collections::HashSet<String>) -> Vec<Function> {
-    parse_and_extract_filtered(src, key, known, None)
-}
-
-fn parse_and_extract_filtered(
+/// Parse source into a Program, extract functions (with optional name filter),
+/// and return both the functions AND the module's own import paths so the caller
+/// can resolve them transitively.
+fn parse_extract_and_discover(
     src: &str,
     key: &str,
     known: &mut std::collections::HashSet<String>,
     filter: Option<&std::collections::HashSet<String>>,
-) -> Vec<Function> {
+) -> (Vec<Function>, Vec<Vec<String>>) {
     let mut parser = Parser::new(src);
     match parser.parse_program() {
-        Ok(prog) => prog.functions.into_iter()
-            .filter(|f| {
-                if let Some(names) = filter {
-                    names.contains(&f.name)
-                } else {
-                    true
-                }
-            })
-            .filter(|f| known.insert(f.name.clone()))
-            .collect(),
-        Err(e) => { eprintln!("[MOD-000] Failed to parse module '{key}': {e}"); vec![] }
+        Ok(prog) => {
+            // Collect this module's own top-level `use` paths so they can be
+            // queued for transitive resolution by the caller.
+            let mut discovered: Vec<Vec<String>> = prog.imports.clone();
+            for f in &prog.functions {
+                discovered.extend(collect_use_paths(&f.body));
+            }
+            let funcs = prog.functions.into_iter()
+                .filter(|f| filter.map_or(true, |names| names.contains(&f.name)))
+                .filter(|f| known.insert(f.name.clone()))
+                .collect();
+            (funcs, discovered)
+        }
+        Err(e) => { eprintln!("[MOD-000] Failed to parse module '{key}': {e}"); (vec![], vec![]) }
     }
 }
 
 /// Resolve all `use` paths, injecting matching functions into `program`.
 /// `extra_source` is called for paths not found in the stdlib — returns `Option<String>`.
+///
+/// Uses BFS with a visited set so transitive imports (modules that themselves
+/// `use` other modules) are fully resolved, and circular imports don't loop.
 fn resolve_with<F>(program: &mut Program, extra_source: F)
 where
     F: Fn(&[String]) -> Option<String>,
 {
-    let mut known: std::collections::HashSet<String> =
+    use std::collections::{HashSet, VecDeque};
+
+    let mut known: HashSet<String> =
         program.functions.iter().map(|f| f.name.clone()).collect();
+    let mut visited: HashSet<String> = HashSet::new();
+    let mut queue: VecDeque<Vec<String>> = VecDeque::new();
 
-    let mut all_paths: Vec<Vec<String>> = program.imports.clone();
+    // ── Seed the BFS queue from the main program's imports ──────────────────
 
-    // Collect from regular functions
-    for f in &program.functions {
-        all_paths.extend(collect_use_paths(&f.body));
+    for path in &program.imports {
+        let key = path.join("::");
+        if visited.insert(key) { queue.push_back(path.clone()); }
     }
-
-    // Collect from agents
-    for agent in &program.agents {
-        for method in &agent.methods {
-            all_paths.extend(collect_use_paths(&method.body));
+    for f in &program.functions {
+        for path in collect_use_paths(&f.body) {
+            let key = path.join("::");
+            if visited.insert(key) { queue.push_back(path); }
         }
     }
-
-    all_paths.sort();
-    all_paths.dedup();
+    for agent in &program.agents {
+        for method in &agent.methods {
+            for path in collect_use_paths(&method.body) {
+                let key = path.join("::");
+                if visited.insert(key) { queue.push_back(path); }
+            }
+        }
+    }
 
     let mut injected: Vec<Function> = Vec::new();
 
-    // ── legacy `use` paths (wildcard import, no filtering) ──────────────────
-    for path in &all_paths {
-        let key = path.join("::");
-        if let Some(src) = stdlib_source_for(path) {
-            injected.extend(parse_and_extract(src, &key, &mut known));
-        } else if let Some(src) = extra_source(path) {
-            injected.extend(parse_and_extract(&src, &key, &mut known));
-        } else {
-            eprintln!("[MOD-001] Unknown module '{key}' — no stdlib match and no file found. Did you mean std::trit?");
-        }
-    }
-
-    // ── new `from ... import ...` specs ─────────────────────────────────────
+    // ── `from ... import ...` specs (filtered, file or module) ──────────────
+    // Process these first so their transitive `use` paths also land in the queue.
     let specs = program.import_specs.clone();
     for spec in &specs {
-        let filter: Option<std::collections::HashSet<String>> = match &spec.names {
+        let filter: Option<HashSet<String>> = match &spec.names {
             ImportNames::Wildcard => None,
             ImportNames::Named(names) => Some(names.iter().cloned().collect()),
         };
@@ -368,16 +368,21 @@ where
         match &spec.source {
             ImportSource::Module(path) => {
                 let key = path.join("::");
-                if let Some(src) = stdlib_source_for(path) {
-                    injected.extend(parse_and_extract_filtered(src, &key, &mut known, filter_ref));
-                } else if let Some(src) = extra_source(path) {
-                    injected.extend(parse_and_extract_filtered(&src, &key, &mut known, filter_ref));
-                } else {
-                    eprintln!("[MOD-002] Unknown module '{key}' in `from` import — no stdlib match and no file found.");
+                let src_opt = stdlib_source_for(path).map(|s| s.to_string())
+                    .or_else(|| extra_source(path));
+                match src_opt {
+                    Some(src) => {
+                        let (funcs, trans) = parse_extract_and_discover(&src, &key, &mut known, filter_ref);
+                        injected.extend(funcs);
+                        for p in trans {
+                            let k = p.join("::");
+                            if visited.insert(k) { queue.push_back(p); }
+                        }
+                    }
+                    None => eprintln!("[MOD-002] Unknown module '{key}' in `from` import — no stdlib match and no file found."),
                 }
             }
             ImportSource::File(file_path) => {
-                // Foreign language files (non-.tern) are not yet supported
                 if !file_path.ends_with(".tern") {
                     let ext = std::path::Path::new(file_path)
                         .extension()
@@ -389,16 +394,38 @@ where
                     );
                     continue;
                 }
-                // .tern file path: resolved by extra_source (ModuleResolver handles disk reads)
-                // We encode the file path as a single-element "path" and let the resolver handle it.
-                // But extra_source only accepts Vec<String> module paths — pass the raw string
-                // through a special sentinel so ModuleResolver can detect it.
                 let sentinel = vec!["__file__".to_string(), file_path.clone()];
-                if let Some(src) = extra_source(&sentinel) {
-                    injected.extend(parse_and_extract_filtered(&src, file_path, &mut known, filter_ref));
-                } else {
-                    eprintln!("[MOD-004] Could not load file '{file_path}' — file not found or not readable.");
+                match extra_source(&sentinel) {
+                    Some(src) => {
+                        let (funcs, trans) = parse_extract_and_discover(&src, file_path, &mut known, filter_ref);
+                        injected.extend(funcs);
+                        for p in trans {
+                            let k = p.join("::");
+                            if visited.insert(k) { queue.push_back(p); }
+                        }
+                    }
+                    None => eprintln!("[MOD-004] Could not load file '{file_path}' — file not found or not readable."),
                 }
+            }
+        }
+    }
+
+    // ── BFS: resolve queued `use` paths, follow transitive imports ───────────
+    while let Some(path) = queue.pop_front() {
+        let key = path.join("::");
+        let src_opt = stdlib_source_for(&path).map(|s| s.to_string())
+            .or_else(|| extra_source(&path));
+        match src_opt {
+            Some(src) => {
+                let (funcs, trans) = parse_extract_and_discover(&src, &key, &mut known, None);
+                injected.extend(funcs);
+                for p in trans {
+                    let k = p.join("::");
+                    if visited.insert(k) { queue.push_back(p); }
+                }
+            }
+            None => {
+                eprintln!("[MOD-001] Unknown module '{key}' — no stdlib match and no file found. Did you mean std::trit?");
             }
         }
     }
