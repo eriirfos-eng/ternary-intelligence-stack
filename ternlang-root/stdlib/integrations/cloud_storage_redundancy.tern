@@ -1,0 +1,32 @@
+// stdlib/integrations/cloud_storage_redundancy.tern
+// Demonstrates: Cloud storage redundancy consensus
+// Tier: 2 - Pro Standard
+
+fn evaluate_region(availability: float, latency: int) -> trit {
+    if availability < 0.99 { return conflict(); }
+    if latency > 200 { return hold(); }
+    return truth();
+}
+
+fn redundancy_gate(r1: trit, r2: trit, r3: trit) -> trit {
+    // 2 out of 3 consensus
+    let c1: trit = r1 && r2;
+    let c2: trit = r2 && r3;
+    let c3: trit = r1 && r3;
+    
+    return c1 || c2 || c3;
+}
+
+fn main() -> trit {
+    let region_a: trit = evaluate_region(0.999, 50);
+    let region_b: trit = evaluate_region(0.995, 120);
+    let region_c: trit = evaluate_region(0.98, 45);
+
+    let final_status: trit = redundancy_gate(region_a, region_b, region_c);
+
+    match final_status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
