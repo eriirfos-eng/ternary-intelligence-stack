@@ -1,0 +1,23 @@
+// stdlib/finance/stop_loss_gate.tern
+// Demonstrates: hard exit signal when price falls below threshold
+// Tier: 2 — Pro Standard
+
+fn stop_loss(price: float, threshold: float) -> trit {
+    if price < threshold {
+        return conflict(); // Reject / Sell
+    }
+    return truth(); // Affirm / Hold position
+}
+
+fn main() -> trit {
+    let current_price: float = 95.5;
+    let sl_threshold: float = 100.0;
+    
+    let decision: trit = stop_loss(current_price, sl_threshold);
+    
+    match decision {
+        -1 => { return conflict(); } // Trigger sale
+         0 => { return hold();     }
+         1 => { return truth();    } // Stay in
+    }
+}
