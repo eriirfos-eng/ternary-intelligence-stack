@@ -1,0 +1,55 @@
+// stdlib/programs/sensor_fusion_grid.tern
+// Demonstrates: Iterating over a 2D sensor grid for consensus fusion
+// Tier: 3 — Industrial
+
+from "signal_utils.tern" import accumulate_trit;
+
+fn sum_grid(grid: trittensor<3 x 3>) -> int {
+    let sum: int = 0;
+    for x in grid {
+        sum = accumulate_trit(sum, x);
+    }
+    return sum;
+}
+
+fn determine_fusion(sum: int, size: int) -> trit {
+    let half: int = size / 2;
+    if sum > half {
+        return truth();
+    }
+    if sum < -half {
+        return conflict();
+    }
+    return hold();
+}
+
+fn initialize_grid(grid: trittensor<3 x 3>, val: trit) -> trit {
+    grid[0, 0] = val;
+    grid[0, 1] = val;
+    grid[0, 2] = val;
+    grid[1, 0] = val;
+    grid[1, 1] = val;
+    grid[1, 2] = val;
+    grid[2, 0] = val;
+    grid[2, 1] = val;
+    grid[2, 2] = val;
+    return truth();
+}
+
+fn main() -> trit {
+    let grid: trittensor<3 x 3>;
+    let _init: trit = initialize_grid(grid, 1);
+    
+    // Inject some noise
+    grid[1, 1] = -1;
+    grid[0, 2] = 0;
+    
+    let total: int = sum_grid(grid);
+    let result: trit = determine_fusion(total, 9);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
