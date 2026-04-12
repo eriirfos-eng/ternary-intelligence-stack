@@ -1,0 +1,26 @@
+// stdlib/graphics/z_buffer_gate.tern
+// Demonstrates: Depth testing (Z-buffer) logic for occlusion handling.
+// Tier: 3 — Industrial
+
+fn depth_test(incoming_z: float, current_z: float) -> trit {
+    if incoming_z < current_z {
+        return truth(); // Visible, update buffer
+    }
+    if incoming_z == current_z {
+        return hold(); // Co-planar, z-fighting potential
+    }
+    return conflict(); // Occluded, discard pixel
+}
+
+fn main() -> trit {
+    let new_pixel_z: float = 0.5;
+    let existing_z: float = 0.8;
+    
+    let result: trit = depth_test(new_pixel_z, existing_z);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
