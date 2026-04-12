@@ -1,0 +1,40 @@
+// stdlib/graphics/luminance_gate.tern
+// Demonstrates: luminance-based pixel categorization (bright/neutral/dark)
+// Tier: 3 — Industrial
+
+fn categorize_luminance(r: float, g: float, b: float) -> trit {
+    // Simple weighted luminance formula
+    let L: float = 0.299 * r + 0.587 * g + 0.114 * b;
+
+    if L > 0.7 {
+        return truth();   // Bright
+    }
+    if L < 0.3 {
+        return conflict(); // Dark
+    }
+    return hold();        // Neutral
+}
+
+fn main() -> trit {
+    let bright: trit = categorize_luminance(1.0, 0.9, 0.8);  // 1
+    let dark: trit = categorize_luminance(0.1, 0.2, 0.05);   // -1
+    let neutral: trit = categorize_luminance(0.5, 0.5, 0.5); // 0
+
+    match bright {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => {
+             match dark {
+                 -1 => {
+                     match neutral {
+                         -1 => { return conflict(); }
+                          0 => { return truth(); } // Correct result
+                          1 => { return conflict(); }
+                     }
+                 }
+                 0 => { return hold(); }
+                 1 => { return conflict(); }
+             }
+         }
+    }
+}
