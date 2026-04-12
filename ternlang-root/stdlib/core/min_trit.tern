@@ -1,0 +1,19 @@
+// stdlib/core/min_trit.tern
+// Demonstrates: Minimum of two trits (Logical AND)
+// Tier: 1 - Open Core
+
+fn min(a: trit, b: trit) -> trit {
+    return a && b;
+}
+
+fn main() -> trit {
+    let a: trit = 0;
+    let b: trit = 1;
+    let res: trit = min(a, b);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return truth();    } // Expect 0 (hold)
+         1 => { return conflict(); }
+    }
+}
