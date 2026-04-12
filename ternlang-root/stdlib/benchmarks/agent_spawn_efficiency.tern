@@ -1,0 +1,28 @@
+// stdlib/benchmarks/agent_spawn_efficiency.tern
+// Demonstrates: overhead of spawning and awaiting many agents
+// Tier: 3 — Industrial
+
+agent Worker {
+    fn run(x: trit) -> trit {
+        return x;
+    }
+}
+
+fn spawn_and_wait(x: trit) -> trit {
+    let a: agentref = spawn Worker;
+    send a x;
+    let res: trit = await a;
+    return res;
+}
+
+fn main() -> trit {
+    let s1: trit = spawn_and_wait(1);
+    let s2: trit = spawn_and_wait(0);
+    let s3: trit = spawn_and_wait(-1);
+
+    match consensus(s1, consensus(s2, s3)) {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
