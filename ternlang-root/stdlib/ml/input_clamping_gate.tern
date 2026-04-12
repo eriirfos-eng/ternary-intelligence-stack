@@ -1,0 +1,21 @@
+// stdlib/ml/input_clamping_gate.tern
+// Demonstrates: clamping input values to a valid range before processing
+// Tier: 2 — Pro Standard
+
+fn clamp(val: float, min_v: float, max_v: float) -> float {
+    if val < min_v { return min_v; }
+    if val > max_v { return max_v; }
+    return val;
+}
+
+fn main() -> trit {
+    let input: float = 1.5;
+    let low: float = -1.0;
+    let high: float = 1.0;
+    
+    let clamped: float = clamp(input, low, high);
+    if clamped == high {
+        return truth();
+    }
+    return conflict();
+}
