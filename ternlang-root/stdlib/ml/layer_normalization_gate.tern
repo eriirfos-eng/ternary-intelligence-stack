@@ -1,0 +1,20 @@
+// stdlib/ml/layer_normalization_gate.tern
+// Demonstrates: stabilizing activations by normalizing against mean
+// Tier: 2 — Pro Standard
+
+fn normalize_3(a: float, b: float, c: float) -> float {
+    let mean: float = (a + b + c) / 3.0;
+    return (a - mean); // Zero-centered a
+}
+
+fn main() -> trit {
+    let x: float = 10.0;
+    let y: float = 20.0;
+    let z: float = 30.0;
+    
+    let norm_x: float = normalize_3(x, y, z);
+    if norm_x < 0.0 {
+        return truth(); // Expected -10.0
+    }
+    return conflict();
+}
