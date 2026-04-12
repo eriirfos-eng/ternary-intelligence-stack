@@ -1,0 +1,36 @@
+// stdlib/apps/search_rank_adjuster.tern
+// Demonstrates: Dynamic weighting and rank adjustment for search results.
+// Tier: 2 — Pro Standard
+
+fn adjust_rank(relevance: float, recency: float, boost_flag: trit) -> trit {
+    let score: float = relevance * 0.7 + recency * 0.3;
+    
+    match boost_flag {
+        1 => { // Manual boost
+            if score > 0.4 { return truth(); }
+            return hold();
+        }
+        0 => { // Default logic
+            if score > 0.7 { return truth(); }
+            if score > 0.3 { return hold(); }
+            return conflict();
+        }
+        -1 => { // Suppression
+            return conflict();
+        }
+    }
+}
+
+fn main() -> trit {
+    let rel: float = 0.6;
+    let rec: float = 0.8;
+    let boost: trit = 0;
+    
+    let result: trit = adjust_rank(rel, rec, boost);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
