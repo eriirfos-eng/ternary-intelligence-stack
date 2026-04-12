@@ -1,0 +1,27 @@
+// stdlib/systems/deadlock_detection_mask.tern
+// Demonstrates: checking process waiting state for deadlock potential
+// Tier: 3 — Industrial
+
+fn check_deadlock(p1_waiting: trit, p2_waiting: trit, shared_resource_locked: trit) -> trit {
+    if shared_resource_locked == 1 {
+        if p1_waiting == 1 {
+            if p2_waiting == 1 { return conflict(); } // Both waiting on locked resource
+            return hold(); // One is waiting
+        }
+        if p2_waiting == 1 { return hold(); }
+    }
+    return truth(); // No deadlock
+}
+
+fn main() -> trit {
+    let p1_wait: trit = 1;
+    let p2_wait: trit = 1;
+    let locked: trit = 1;
+    
+    let state: trit = check_deadlock(p1_wait, p2_wait, locked);
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
