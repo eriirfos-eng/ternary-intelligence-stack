@@ -1,0 +1,15 @@
+// stdlib/showcase/consensus_demo.tern
+// Demonstrates: using the consensus() built-in for multi-agent agreement
+// Tier: 1 — Community
+
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = 0;
+    let c: trit = -1;
+    
+    let res1: trit = consensus(a, b); // 1
+    let res2: trit = consensus(a, c); // 0
+    let res3: trit = consensus(b, c); // -1
+    
+    return res2;
+}
