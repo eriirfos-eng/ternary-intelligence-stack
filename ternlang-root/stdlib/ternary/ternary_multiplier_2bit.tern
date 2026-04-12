@@ -1,0 +1,20 @@
+// stdlib/ternary/ternary_multiplier_2bit.tern
+// Demonstrates: 1-trit balanced ternary multiplier using built-in *
+// Tier: 1 - Open Core
+
+fn multiply_trits(a: trit, b: trit) -> trit {
+    return a * b;
+}
+
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = -1;
+
+    let res: trit = multiply_trits(a, b);
+
+    match res {
+        -1 => { return truth(); } // Correct for 1 * -1 = -1
+         0 => { return hold();  }
+         1 => { return hold();  }
+    }
+}
