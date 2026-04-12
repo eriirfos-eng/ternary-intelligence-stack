@@ -1,0 +1,19 @@
+// stdlib/showcase/match_exhaustive_demo.tern
+// Demonstrates: exhaustive match statements required by Ternlang
+// Tier: 1 — Community
+
+fn process_trit(t: trit) -> int {
+    match t {
+        1 => { return 100; }
+        0 => { return 0; }
+        -1 => { return -100; }
+    }
+}
+
+fn main() -> trit {
+    let t: trit = 0;
+    let res: int = process_trit(t);
+    
+    if res == 0 { return truth(); }
+    return conflict();
+}
