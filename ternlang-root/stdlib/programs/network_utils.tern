@@ -1,0 +1,18 @@
+// stdlib/programs/network_utils.tern
+// Helper functions for consensus nodes and networking
+// Tier: 2 — Pro Standard
+
+fn verify_signature(msg: int, sig: int) -> trit {
+    if msg == sig { return truth(); }
+    return conflict();
+}
+
+fn node_weight(reputation: float) -> float {
+    if reputation > 0.8 { return 1.0; }
+    if reputation > 0.5 { return 0.5; }
+    return 0.1;
+}
+
+fn aggregate_votes(v1: trit, v2: trit, v3: trit) -> trit {
+    return consensus(v1, consensus(v2, v3));
+}
