@@ -1,0 +1,85 @@
+// stdlib/programs/smart_grid_orchestrator.tern
+// Demonstrates: Smart grid energy distribution orchestrator
+// Tier: 2 - Pro Standard
+
+from std::trit import consensus;
+
+fn monitor_load(load: float, capacity: float) -> trit {
+    let ratio: float = load / capacity;
+    if ratio > 0.9 { return -1; } // Overload
+    if ratio > 0.7 { return 0; }  // High load
+    return 1; // Normal
+}
+
+fn renewables_status(solar: float, wind: float) -> trit {
+    if solar < 0.2 && wind < 0.2 { return -1; } // Low generation
+    if solar > 0.5 || wind > 0.5 { return 1; }  // Good generation
+    return 0;
+}
+
+fn distribution_logic(load_trit: trit, gen_trit: trit) -> trit {
+    // If load is critical (-1), we need generation to be high (1)
+    match load_trit {
+        -1 => {
+            if gen_trit == 1 { return 0; } // Manageable with high gen
+            return -1; // Critical
+        }
+         0 => {
+            return gen_trit; // Follow generation signal
+         }
+         1 => {
+            return 1; // All good
+         }
+    }
+}
+
+fn emergency_override(critical_fault: trit) -> trit {
+    match critical_fault {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn orchestrator_loop(loads: trittensor<3>, gen: trit) -> trit {
+    let combined_load: trit = 1;
+    for l in loads {
+        combined_load = combined_load && l;
+    }
+    
+    let base_decision: trit = distribution_logic(combined_load, gen);
+    return base_decision;
+}
+
+fn local_edge_detect(curr: trit, prev: trit) -> trit {
+    if curr == prev { return 0; }
+    return 1;
+}
+
+fn main() -> trit {
+    let current_load: float = 850.0;
+    let grid_capacity: float = 1000.0;
+    let solar_gen: float = 0.6;
+    let wind_gen: float = 0.3;
+    
+    let load_trit: trit = monitor_load(current_load, grid_capacity);
+    let gen_trit: trit = renewables_status(solar_gen, wind_gen);
+    
+    let loads_tensor: trittensor<3> = [0, 0, 0];
+    loads_tensor[0] = load_trit;
+    loads_tensor[1] = 0;
+    loads_tensor[2] = 1;
+    let decision: trit = orchestrator_loop(loads_tensor, gen_trit);
+    
+    // Check for edge case transitions
+    let prev_state: trit = 0;
+    let change: trit = local_edge_detect(decision, prev_state);
+    
+    let final_status: trit = emergency_override(decision);
+
+    match final_status {
+        -1 => { println("GRID CRITICAL: Shedding load."); return -1; }
+         0 => { println("GRID WARNING: Balancing."); return 0; }
+         1 => { println("GRID STABLE: Normal operation."); return 1; }
+    }
+}
