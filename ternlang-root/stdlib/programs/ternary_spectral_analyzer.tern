@@ -1,0 +1,40 @@
+// stdlib/programs/ternary_spectral_analyzer.tern
+// Demonstrates: spectral analysis pipeline with windowing and thresholding
+// Tier: 3 — Industrial
+
+from "signal_utils.tern" import window_f, threshold_f, accumulate_trit;
+
+fn process_bin(raw: float, w: float, t: float) -> trit {
+    let windowed: float = window_f(raw, w);
+    return threshold_f(windowed, t);
+}
+
+fn scan_spectrum(t: float, count: int) -> int {
+    let score: int = 0;
+    let i: int = 0;
+    while i < count {
+        // Mock spectrum bins
+        let val: float = 0.8;
+        if i % 2 == 0 { val = -0.5; }
+        
+        let s: trit = process_bin(val, 0.9, t);
+        score = accumulate_trit(score, s);
+        i = i + 1;
+    }
+    return score;
+}
+
+fn analyze_result(score: int) -> trit {
+    if score > 2 { return truth(); }
+    if score < -2 { return conflict(); }
+    return hold();
+}
+
+fn main() -> trit {
+    let s: int = scan_spectrum(0.4, 10);
+    match analyze_result(s) {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
