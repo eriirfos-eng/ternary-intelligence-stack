@@ -1,0 +1,24 @@
+// stdlib/bench/consensus_overhead_bench.tern
+// Demonstrates: latency of the consensus opcode across iterations
+// Tier: 3 — Industrial
+
+fn consensus_stress(count: int) -> trit {
+    let res: trit = 0;
+    let i: int = 0;
+    while i < count {
+        res = consensus(res, 1);
+        res = consensus(res, -1);
+        res = consensus(res, 0);
+        i = i + 1;
+    }
+    return res;
+}
+
+fn main() -> trit {
+    let result: trit = consensus_stress(500);
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
