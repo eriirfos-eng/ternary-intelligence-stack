@@ -1,29 +1,23 @@
 // stdlib/net/network_partition_detector.tern
-// Demonstrates: partition detection based on node visibility
-// Tier: 2
+// Demonstrates: detecting network partitions from connectivity signals
+// Tier: 3 — Industrial
 
-fn is_partitioned(visible_nodes: int, total_nodes: int) -> trit {
-    let majority: int = (total_nodes / 2) + 1;
-    
-    if visible_nodes >= majority {
-        return -1; // Not partitioned (in majority) -> Reject partitioned state
-    } else {
-        if visible_nodes > 0 {
-            return 1; // Partitioned (in minority) -> Affirm partitioned state
-        } else {
-            return 0; // Unknown/Isolated
-        }
-    }
+fn check_partition(c1: trit, c2: trit, c3: trit) -> trit {
+    let agg: trit = consensus(c1, consensus(c2, c3));
+    if agg == -1 { return truth(); } // Partition detected
+    if agg == 0 { return hold(); }  // Uncertain
+    return conflict(); // No partition
 }
 
 fn main() -> trit {
-    // 5 total nodes. Majority = 3.
-    // Seeing 2 nodes -> minority -> partitioned
-    let state: trit = is_partitioned(2, 5);
+    let s1: trit = -1;
+    let s2: trit = -1;
+    let s3: trit = 0;
     
-    if state == 1 {
-        return 1;
-    } else {
-        return -1;
+    let partition: trit = check_partition(s1, s2, s3);
+    match partition {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
