@@ -1,0 +1,18 @@
+// stdlib/showcase/tensor_ops_showcase.tern
+// Demonstrates: declaring and accessing trittensors
+// Tier: 1 — Community
+
+fn main() -> trit {
+    let t: trittensor<2 x 2>;
+    t[0, 0] = 1;
+    t[0, 1] = 0;
+    t[1, 0] = -1;
+    t[1, 1] = 1;
+    
+    let res: trit = t[1, 0];
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
