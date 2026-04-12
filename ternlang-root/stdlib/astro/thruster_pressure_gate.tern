@@ -1,0 +1,30 @@
+// stdlib/astro/thruster_pressure_gate.tern
+// Demonstrates: Fuel thruster pressure monitoring
+// Tier: 3 — Industrial
+
+fn monitor_pressure(p: float, nominal: float, tolerance: float) -> trit {
+    let high: float = nominal + tolerance;
+    let low: float = nominal - tolerance;
+    
+    if p > high {
+        return conflict(); // Critical overpressure
+    }
+    if p < low {
+        return hold();     // Underpressure — waiting for pressurization
+    }
+    return truth();        // Within nominal range
+}
+
+fn main() -> trit {
+    let p: float = 450.0;
+    let nominal: float = 400.0;
+    let tolerance: float = 50.0;
+    
+    let ok: trit = monitor_pressure(p, nominal, tolerance);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
