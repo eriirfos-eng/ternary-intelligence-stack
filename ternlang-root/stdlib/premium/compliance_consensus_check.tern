@@ -1,0 +1,23 @@
+// stdlib/premium/compliance_consensus_check.tern
+// Demonstrates: multi-agent consensus on enterprise compliance requirements
+// Tier: 4 — Enterprise
+
+fn check_compliance(reg1: trit, reg2: trit, reg3: trit) -> trit {
+    let agg: trit = consensus(reg1, consensus(reg2, reg3));
+    if agg == 1 { return truth(); } // Fully compliant
+    if agg == 0 { return hold(); }  // Minor findings
+    return conflict(); // Non-compliant
+}
+
+fn main() -> trit {
+    let r1: trit = 1;
+    let r2: trit = 1;
+    let r3: trit = 0;
+    
+    let res: trit = check_compliance(r1, r2, r3);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
