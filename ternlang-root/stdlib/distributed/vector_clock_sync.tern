@@ -1,28 +1,21 @@
 // stdlib/distributed/vector_clock_sync.tern
-// Demonstrates: Relative causality check between two vector clock snapshots
-// Tier: 2
+// Demonstrates: synchronizing vector clocks and detecting causality
+// Tier: 2 — Pro Standard
 
-fn check_causality(c1: int, c2: int, o1: int, o2: int) -> trit {
-    // c: local clock values, o: other clock values
-    if c1 >= o1 && c2 >= o2 {
-        if c1 > o1 || c2 > o2 {
-            return affirm; // local is strictly newer
-        }
-        return tend; // clocks are identical
-    }
-    
-    if o1 >= c1 && o2 >= c2 {
-        return reject; // local is strictly older
-    }
-    
-    return tend; // concurrent/conflict
+fn check_causality(c1: int, c2: int) -> trit {
+    if c1 < c2 { return truth(); } // c1 happened before c2
+    if c1 > c2 { return conflict(); } // c2 happened before c1
+    return hold(); // Concurrent or same
 }
 
 fn main() -> trit {
-    let rel: trit = check_causality(10, 5, 8, 5);
-    match rel {
-        reject => { return conflict(); }
-        tend   => { return hold();    }
-        affirm => { return truth();   }
+    let clock1: int = 5;
+    let clock2: int = 10;
+    
+    let res: trit = check_causality(clock1, clock2);
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
