@@ -1,30 +1,21 @@
 // stdlib/integrations/message_queue_priority.tern
-// Demonstrates: Priority-based message queue processing decision.
-// Tier: 2 — Pro Standard
+// Demonstrates: prioritizing message queue processing based on task urgency
+// Tier: 3 — Industrial
 
-fn should_process(priority: trit, queue_depth: int) -> trit {
-    match priority {
-        -1 => { return conflict(); } // Revoked message
-         1 => { return truth();    } // High priority, process always
-         0 => {
-            if queue_depth < 50 {
-                return truth();
-            } else {
-                return hold(); // Queue full, wait
-            }
-         }
-    }
+fn task_priority(urgency: int, tier: int) -> trit {
+    if urgency > 5 { return truth(); }
+    if tier > 2 { return truth(); }
+    return hold();
 }
 
 fn main() -> trit {
-    let p: trit = 0;
-    let depth: int = 60;
+    let u: int = 3;
+    let t: int = 1;
     
-    let result: trit = should_process(p, depth);
-    
-    match result {
+    let res: trit = task_priority(u, t);
+    match res {
         -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
