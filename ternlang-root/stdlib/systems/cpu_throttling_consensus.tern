@@ -1,0 +1,40 @@
+// stdlib/systems/cpu_throttling_consensus.tern
+// Demonstrates: CPU thermal throttling consensus logic
+// Tier: 3 — Industrial
+
+fn check_throttle(temp: float, load: float) -> trit {
+    if temp > 90.0 {
+        return truth();   // Critical temp (Throttle now)
+    }
+    if temp < 60.0 && load < 0.5 {
+        return conflict(); // Safe (Full speed)
+    }
+    return hold();        // Warning (Slightly adjust)
+}
+
+fn main() -> trit {
+    // Overheating
+    let res1: trit = check_throttle(95.0, 0.8); // 1
+    // Cold, low load
+    let res2: trit = check_throttle(40.0, 0.2); // -1
+    // Warm but okay
+    let res3: trit = check_throttle(75.0, 0.6); // 0
+
+    match res1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => {
+             match res2 {
+                 -1 => {
+                     match res3 {
+                         -1 => { return conflict(); }
+                          0 => { return truth(); }
+                          1 => { return conflict(); }
+                     }
+                 }
+                 0 => { return hold(); }
+                 1 => { return conflict(); }
+             }
+         }
+    }
+}
