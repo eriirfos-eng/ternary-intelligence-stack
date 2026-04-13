@@ -1,0 +1,30 @@
+// stdlib/physical/torque_moment_consensus.tern
+// Demonstrates: Consensus on applied torque
+// Tier: 3
+
+fn torque_consensus(t1: float, t2: float, limit: float) -> trit {
+    // If torque sensors agree within limit, affirm torque
+    let diff: float = t1 - t2;
+    if diff < 0.0 { diff = 0.0 - diff; }
+    
+    if diff < limit {
+        if t1 > 0.0 {
+            return affirm; // Clockwise consensus
+        }
+        if t1 < 0.0 {
+            return reject; // Counter-clockwise consensus
+        }
+    }
+    return tend;
+}
+
+fn main() -> trit {
+    let s1: float = 10.0;
+    let s2: float = 10.5;
+    let res: trit = torque_consensus(s1, s2, 1.0);
+    
+    if res == affirm {
+        return truth();
+    }
+    return hold();
+}
