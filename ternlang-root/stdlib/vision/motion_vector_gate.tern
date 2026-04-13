@@ -1,0 +1,25 @@
+// stdlib/vision/motion_vector_gate.tern
+// Demonstrates: Gating based on motion vectors
+// Tier: 3
+
+fn check_motion(vx: float, vy: float, min_velocity: float) -> trit {
+    let speed_sq: float = vx * vx + vy * vy;
+    let limit_sq: float = min_velocity * min_velocity;
+    
+    if speed_sq > limit_sq {
+        return affirm; // Motion detected
+    }
+    return tend; // No significant motion
+}
+
+fn main() -> trit {
+    let vx: float = 0.5;
+    let vy: float = 0.5;
+    let res: trit = check_motion(vx, vy, 0.1);
+    
+    match res {
+        affirm => { return truth();   }
+        tend   => { return hold();    }
+        reject => { return conflict(); }
+    }
+}
