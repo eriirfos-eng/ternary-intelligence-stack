@@ -1,0 +1,28 @@
+// stdlib/timeseries/missing_value_imputation_mask.tern
+// Demonstrates: Missing value imputation strategy selection.
+// Tier: 3 — Industrial
+
+fn decide_imputation(gap_size: int, volatility: float) -> trit {
+    if gap_size == 1 {
+        return truth(); // Linear interpolation (Affirm)
+    }
+
+    if gap_size < 5 && volatility < 0.1 {
+        return hold(); // Mean imputation (Tend)
+    }
+
+    return conflict(); // Forward fill or external source required (Reject)
+}
+
+fn main() -> trit {
+    let gap: int = 3;
+    let vol: float = 0.05;
+
+    let strategy: trit = decide_imputation(gap, vol);
+
+    match strategy {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
