@@ -1,0 +1,27 @@
+// stdlib/ensemble/ambiguity_resolution_mask.tern
+// Demonstrates: Resolving ambiguity between conflicting ensemble predictions
+// Tier: 2
+
+fn resolve_ambiguity(s1: trit, s2: trit) -> trit {
+    // If both agree, return the agreement
+    if s1 == s2 {
+        return s1;
+    }
+    
+    // If one is certain and other is uncertain, return certain
+    if s1 == tend { return s2; }
+    if s2 == tend { return s1; }
+    
+    // If they directly conflict (affirm vs reject), return tend (ambiguous)
+    return tend;
+}
+
+fn main() -> trit {
+    let r1: trit = resolve_ambiguity(affirm, tend);   // affirm
+    let r2: trit = resolve_ambiguity(affirm, reject); // tend
+    
+    if r1 == affirm && r2 == tend {
+        return truth();
+    }
+    return conflict();
+}
