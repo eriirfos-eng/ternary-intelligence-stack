@@ -113,7 +113,18 @@ All opcodes as of 2026-04-10. Do not add opcodes to .tern files that aren't in t
 
 ---
 
-## 6. Canonical file template — copy this exactly
+## 6. Lexer & Parser Constraints — exact patterns
+
+| Constraint | Status | Workaround |
+|------------|--------|------------|
+| **Hex Literals** | **Not Supported** | Use decimal (e.g. `4096` instead of `0x1000`) |
+| **Float Arrays** | **Not Supported** | Use `struct` with `float` fields or `trit[]` |
+| **`length(s)`** | **Tensors Only** | `length()` built-in only supports `TritTensor` |
+| **Reserved `remote`** | **Keyword** | Avoid `remote` as identifier, use `rem_v` etc. |
+
+---
+
+## 7. Canonical file template — copy this exactly
 
 ```tern
 // stdlib/<category>/<name>.tern
