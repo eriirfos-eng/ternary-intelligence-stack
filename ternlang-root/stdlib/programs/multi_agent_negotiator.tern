@@ -1,0 +1,48 @@
+// stdlib/programs/multi_agent_negotiator.tern
+// Demonstrates: A multi-agent negotiation system with nested calls.
+// Tier: 3 - Industrial
+
+from std::trit import *;
+
+agent Negotiator {
+    fn handle(offer: trit) -> trit {
+        match offer {
+            1 => { return affirm; }
+            0 => { return tend;   }
+           -1 => { return reject; }
+        }
+    }
+}
+
+fn get_p1() -> agentref { return spawn Negotiator; }
+fn get_p2() -> agentref { return spawn Negotiator; }
+fn get_p3() -> agentref { return spawn Negotiator; }
+
+fn negotiate(p1: agentref, p2: agentref, p3: agentref, offer: trit) -> trit {
+    send p1 offer;
+    send p2 offer;
+    send p3 offer;
+    
+    let v1: trit = await p1;
+    let v2: trit = await p2;
+    let v3: trit = await p3;
+    
+    let c12: trit = consensus(v1, v2);
+    return consensus(c12, v3);
+}
+
+fn main() -> trit {
+    let p1: agentref = get_p1();
+    let p2: agentref = get_p2();
+    let p3: agentref = get_p3();
+    
+    let result: trit = negotiate(p1, p2, p3, affirm);
+    
+    match result {
+        -1 => { println("Negotiation Rejected"); }
+         0 => { println("Negotiation Held");     }
+         1 => { println("Negotiation Accepted"); }
+    }
+    
+    return result;
+}
