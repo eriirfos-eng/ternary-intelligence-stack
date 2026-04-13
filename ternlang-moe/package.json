@@ -1,0 +1,8 @@
+{
+  "name": "@eriirfos-eng/ternlang-moe",
+  "version": "0.1.0",
+  "description": "Ternary Intelligence Stack - ternlang-moe",
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "author": "RFI-IRFOS",
+  "license": "BSL-1.1"
+}

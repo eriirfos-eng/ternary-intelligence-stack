@@ -1,0 +1,8 @@
+{
+  "name": "@eriirfos-eng/ternlang-lsp",
+  "version": "0.1.0",
+  "description": "Ternary Intelligence Stack - ternlang-lsp",
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "author": "RFI-IRFOS",
+  "license": "BSL-1.1"
+}
