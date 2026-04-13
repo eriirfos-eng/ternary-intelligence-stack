@@ -5,14 +5,14 @@
 // Ternary linear layer: sparse matrix-vector product
 // W is a weight matrix (quantized to -1/0/+1), x is the input vector
 // Zero-weighted connections are skipped entirely via @sparseskip
-fn linear(W: trittensor<1 x 1>, x: trittensor<1 x 1>) -> trittensor<1 x 1> {
-    @sparseskip let out: trittensor<1 x 1> = matmul(W, x);
+fn linear(W: trit[], x: trit[]) -> trit[] {
+    @sparseskip let out: trit[] = matmul(W, x);
     return out;
 }
 
 // Dense linear layer: no zero skipping (baseline comparison)
-fn linear_dense(W: trittensor<1 x 1>, x: trittensor<1 x 1>) -> trittensor<1 x 1> {
-    let out: trittensor<1 x 1> = matmul(W, x);
+fn linear_dense(W: trit[], x: trit[]) -> trit[] {
+    let out: trit[] = matmul(W, x);
     return out;
 }
 
@@ -24,7 +24,13 @@ fn attend(q: trit, k: trit) -> trit {
 
 // Accumulate evidence: reduce a tensor to a single trit decision
 // Counts truth vs conflict, returns whichever wins; ties → hold
-fn decide(evidence: trittensor<1 x 1>) -> trit {
-    let s: trit = sparsity(evidence);
-    return s;
+fn decide(evidence: trit[]) -> trit {
+    let s: int = sparsity(evidence);
+    if s > 0 ? {
+        return 1;
+    } else {
+        return 0;
+    } else {
+        return -1;
+    }
 }
