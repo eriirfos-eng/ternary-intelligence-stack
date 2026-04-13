@@ -2,10 +2,11 @@
 // Part of the Ternlang Standard Library
 
 // Moving average for trits: return majority of window
-fn moving_average_trit(stream: trittensor<N>, window: int) -> trittensor<N> {
-    let mut out: trittensor<N> = trittensor<N>::zero();
+fn moving_average_trit(stream: trit[], window: int) -> trit[] {
+    let mut out: trittensor<1024>;
+    let n: int = length(stream);
     let mut i: int = 0;
-    while i < N {
+    while i < n {
         let mut sum_val: int = 0;
         let mut j: int = 0;
         while j < window && (i - j) >= 0 {
@@ -17,9 +18,19 @@ fn moving_average_trit(stream: trittensor<N>, window: int) -> trittensor<N> {
             j = j + 1;
         }
         
-        if sum_val > 0 { out[i] = affirm; }
-        else if sum_val < 0 { out[i] = reject; }
-        else { out[i] = tend; }
+        if sum_val > 0 ? { 
+            out[i] = affirm; 
+        } else {
+            if sum_val < 0 ? {
+                out[i] = reject;
+            } else {
+                out[i] = tend;
+            } else {
+                out[i] = tend;
+            }
+        } else {
+            out[i] = reject;
+        }
         i = i + 1;
     }
     return out;
@@ -27,26 +38,31 @@ fn moving_average_trit(stream: trittensor<N>, window: int) -> trittensor<N> {
 
 // Edge detection: detects state changes in a trit stream
 fn edge_detect(curr: trit, prev: trit) -> trit {
-    if curr == prev { return tend; } // Stable signal
-    
-    match curr {
-        affirm => { return affirm; } // Rising edge/Strong affirm
-        tend => { 
-            match prev {
-                affirm => { return reject; } // Falling edge from affirm
-                reject => { return affirm; } // Rising edge from reject
-                tend => { return tend; }
+    if curr == prev ? { 
+        return tend; // Stable signal
+    } else {
+        match curr {
+            affirm => { return affirm; } // Rising edge/Strong affirm
+            tend => { 
+                match prev {
+                    affirm => { return reject; } // Falling edge from affirm
+                    reject => { return affirm; } // Rising edge from reject
+                    tend => { return tend; }
+                }
             }
+            reject => { return reject; } // Falling edge/Strong reject
         }
-        reject => { return reject; } // Falling edge/Strong reject
+    } else {
+        return tend; // Not possible with curr == prev being trit, but needed for syntax
     }
 }
 
 // Spike detect: detect brief deviations from the mean
-fn spike_detect(stream: trittensor<N>, sensitivity: int) -> bool {
+fn spike_detect(stream: trit[], sensitivity: int) -> bool {
     let mut avg: int = 0;
+    let n: int = length(stream);
     let mut i: int = 0;
-    while i < N {
+    while i < n {
         match stream[i] {
             affirm => { avg = avg + 1; }
             tend => { avg = avg + 0; }
@@ -56,20 +72,30 @@ fn spike_detect(stream: trittensor<N>, sensitivity: int) -> bool {
     }
     
     // Check if the current trit deviates significantly from the window
-    let last: trit = stream[N - 1];
-    let diff: int = 0;
+    let last: trit = stream[n - 1];
+    let mut diff: int = 0;
     match last {
         affirm => { diff = 1; }
         tend => { diff = 0; }
         reject => { diff = -1; }
     }
     
-    if (diff * N - avg) > sensitivity { return true; }
-    return false;
+    if (diff * n - avg) > sensitivity ? { 
+        return true; 
+    } else {
+        return false;
+    } else {
+        return false;
+    }
 }
 
 // Ternary filter: bandpass analog for ternary logic
 fn ternary_filter(input: trit, threshold: float, strength: float) -> trit {
-    if strength > threshold { return input; }
-    return tend;
+    if strength > threshold ? { 
+        return input; 
+    } else {
+        return tend;
+    } else {
+        return tend;
+    }
 }
