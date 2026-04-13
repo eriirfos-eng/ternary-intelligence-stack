@@ -1,0 +1,25 @@
+// stdlib/vision/resolution_downsampler.tern
+// Demonstrates: A simple resolution downsampling logic
+// Tier: 3
+
+fn downsample_pixel(p1: trit, p2: trit, p3: trit, p4: trit) -> trit {
+    // 2x2 pooling down to 1 pixel. Use consensus of the block.
+    let c1: trit = consensus(p1, p2);
+    let c2: trit = consensus(p3, p4);
+    return consensus(c1, c2);
+}
+
+fn main() -> trit {
+    let b1: trit = affirm;
+    let b2: trit = tend;
+    let b3: trit = affirm;
+    let b4: trit = tend;
+    
+    let res: trit = downsample_pixel(b1, b2, b3, b4);
+    
+    match res {
+        affirm => { return truth();   }
+        tend   => { return hold();    }
+        reject => { return conflict(); }
+    }
+}
