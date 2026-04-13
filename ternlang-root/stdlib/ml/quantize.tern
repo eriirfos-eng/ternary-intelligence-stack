@@ -1,6 +1,9 @@
 // std::ml::quantize — BitNet-style ternary quantization helpers
 // RFI-IRFOS Ternary Intelligence Stack
 // use std::ml::quantize;
+//
+// [FIXED 2026-04-13]
+// - Fixed quantize_one: removed matmul on scalars and fixed return type (was tensor).
 
 // Ternary step quantization: value above threshold → truth, below negated threshold → conflict
 // Caller must supply threshold τ (typically 0.5 × mean(|w|))

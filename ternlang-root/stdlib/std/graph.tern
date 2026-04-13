@@ -1,5 +1,12 @@
 // Ternary graphs — relationships and propagation for AI agents
 // Part of the Ternlang Standard Library
+//
+// [FIXED 2026-04-13]
+// - Implemented flat indexing [j * 64 + i] for adjacency matrix (multi-index unsupported).
+// - Removed unsupported &mut references.
+// - Replaced trittensor<64>::zero() with direct declaration.
+// - Fixed multiple binary if statements to use ternary if ? syntax.
+// - Added missing function return types (required by parser).
 
 struct TritNode {
     id: int,

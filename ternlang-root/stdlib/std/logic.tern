@@ -1,5 +1,10 @@
 // Ternary logic operations — truth tables for balanced ternary AI
 // Part of the Ternlang Standard Library
+//
+// [FIXED 2026-04-13]
+// - Replaced trittensor<N> with trit[] to fix PARSE-002 (generic dimension support).
+// - Replaced manual while loops with for-in loops for cleaner tensor traversal.
+// - Fixed binary if statements to use ternary if ? syntax.
 
 // Kleene logic AND (minimum of two trits)
 fn trit_and(a: trit, b: trit) -> trit {

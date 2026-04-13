@@ -205,3 +205,26 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** The `Tstore` and `Tload` opcodes take a 1-byte immediate for the register index. When `next_reg` (and thus `tr`) became `usize`, the direct push to the `Vec<u8>` failed.
 **Fix:** Added `.try_into().unwrap()` to `tr` before pushing to `self.code` in `Expr::TritTensorLiteral` arm of `emit_expr`.
 **Status:** Fixed.
+
+## 2026-04-13 — Core Stdlib Repair (Signal, Logic, Collections, Memory, Graph)
+
+**Trigger:** Importing `std::signal` or `std::logic` caused `PARSE-002` (Expected dimension but found Ident("N")) and `BET-013` (Call stack overflow).
+**Symptom:** Standard library modules failed to parse or crashed the VM during import.
+**Diagnosis:** 
+1. The parser requires integer literals for tensor dimensions (`trittensor<1024>`); generic identifiers like `N` are not yet supported.
+2. `shape(t)` and `zeros(size)` built-ins are currently stubs or broken in the VM, triggering `BET-013`.
+3. `&mut` reference syntax is present in the stdlib but not supported by the parser.
+4. Binary `if` and `while` were used in several stdlib files but the grammar technically requires ternary `if ?` and `while ?`.
+5. 2D tensor indexing `t[i][j]` is not supported (returns a trit after the first index); flat indexing `[i * cols + j]` must be used.
+
+**Fix:** 
+- Replaced `trittensor<N>` with `trit[]` for generic function parameters.
+- Replaced `trittensor<N>::zero()` with `let t: trittensor<1024>;` (using fixed-size buffers for returns).
+- Converted binary `if` statements to ternary `if ?` with explicit branches.
+- Replaced unsupported `&mut` with standard pass-by-value/reference (tensors are references).
+- Implemented flat indexing `[i * 64 + j]` for 2D structures in `memory.tern` and `graph.tern`.
+- Switched from `shape(t)` to the working `length(t)` built-in.
+- Fixed type mismatches where `int` (from `sparsity` or `length`) was assigned to `trit`.
+
+**Status:** Fixed. All core stdlib files now parse and run correctly.
+**Files:** `stdlib/std/{logic, signal, collections, memory, graph, tensor, io}.tern`, `stdlib/ml/{inference, quantize}.tern`.
