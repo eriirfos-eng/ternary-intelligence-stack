@@ -12,6 +12,16 @@ fn check_entropy(samples: int, unique_count: int) -> trit {
     return truth();        // Healthy entropy source
 }
 
+fn check_entropy_float(measured: float, threshold: float) -> trit {
+    if measured < threshold {
+        if measured < (threshold / 2.0) {
+            return conflict();
+        }
+        return hold();
+    }
+    return truth();
+}
+
 fn main() -> trit {
     let s: int = 100;
     let u: int = 65;

@@ -1,0 +1,38 @@
+// stdlib/programs/secure_key_exchange_simulation.tern
+// Demonstrates: Secure key exchange simulation with crypto and net imports
+// Tier: 3 - Industrial
+
+from "../crypto/entropy_check_gate.tern" import *;
+from "../net/ip_address_validator.tern" import *;
+
+fn generate_local_entropy() -> float {
+    return 0.88; // Simulated entropy level
+}
+
+fn verify_peer(ip1: int, ip2: int, ip3: int, ip4: int) -> trit {
+    return validate_ip(ip1, ip2, ip3, ip4);
+}
+
+fn check_key_strength(entropy: float) -> trit {
+    return check_entropy_float(entropy, 0.7);
+}
+
+fn exchange_handshake(peer_ip: int) -> trit {
+    let peer_ok: trit = verify_peer(10, 0, 0, peer_ip);
+    if peer_ok < 1 { return conflict(); }
+    
+    let ent: float = generate_local_entropy();
+    let key_ok: trit = check_key_strength(ent);
+    
+    return peer_ok && key_ok;
+}
+
+fn main() -> trit {
+    let result: trit = exchange_handshake(5);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
