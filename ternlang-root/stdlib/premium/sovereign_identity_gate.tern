@@ -1,0 +1,48 @@
+// stdlib/premium/sovereign_identity_gate.tern
+// Demonstrates: Decentralized identity verification using multi-factor trits.
+// Tier: 4 - Enterprise
+
+// Returns affirm if all factors agree, reject if any major factor rejects.
+fn verify_identity(did: trit, biometric: trit, mfa: trit) -> trit {
+    // Both DID and Biometric are critical factors
+    if did == reject { return reject; }
+    if biometric == reject { return reject; }
+    
+    // MFA is a strong but optional signal in this specific policy
+    match mfa {
+        1 => {
+            // All three affirm? Definite yes.
+            if did == affirm && biometric == affirm {
+                return affirm;
+            }
+            return tend;
+        }
+        -1 => {
+            // MFA failed? This is a problem but maybe not a hard reject if others are 1.
+            if did == affirm && biometric == affirm {
+                return tend;
+            }
+            return reject;
+        }
+        0 => {
+            // MFA not provided? Fallback to DID + Biometric consensus.
+            return consensus(did, biometric);
+        }
+    }
+}
+
+fn main() -> trit {
+    let d: trit = affirm;
+    let b: trit = affirm;
+    let m: trit = -1; // MFA failed
+    
+    let result: trit = verify_identity(d, b, m);
+    
+    match result {
+        -1 => { println("Identity: Rejected"); }
+         0 => { println("Identity: Pending");  }
+         1 => { println("Identity: Verified"); }
+    }
+    
+    return result;
+}
