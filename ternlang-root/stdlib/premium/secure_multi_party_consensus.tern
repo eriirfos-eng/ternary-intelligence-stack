@@ -1,0 +1,35 @@
+// stdlib/premium/secure_multi_party_consensus.tern
+// Demonstrates: Multi-party consensus gate for privacy-preserving computation.
+// Tier: 4 - Enterprise
+
+// Evaluates consensus between three secret shares (trit).
+// Any one share being reject overrides everything (veto).
+// Otherwise, it's a majority or consensus.
+fn evaluate_smpc(p1: trit, p2: trit, p3: trit) -> trit {
+    // Veto check
+    if p1 == reject { return reject; }
+    if p2 == reject { return reject; }
+    if p3 == reject { return reject; }
+    
+    // Consensus aggregation
+    let c12: trit = consensus(p1, p2);
+    let c23: trit = consensus(p2, p3);
+    
+    return consensus(c12, c23);
+}
+
+fn main() -> trit {
+    let party_1: trit = affirm;
+    let party_2: trit = tend;
+    let party_3: trit = affirm;
+    
+    let result: trit = evaluate_smpc(party_1, party_2, party_3);
+    
+    match result {
+        -1 => { println("Consensus: Blocked"); }
+         0 => { println("Consensus: Hold");    }
+         1 => { println("Consensus: Approved"); }
+    }
+    
+    return result;
+}
