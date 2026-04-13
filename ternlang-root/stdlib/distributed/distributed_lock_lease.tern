@@ -1,0 +1,29 @@
+// stdlib/distributed/distributed_lock_lease.tern
+// Demonstrates: Lock lease expiration and renewal logic.
+// Tier: 2 — Pro Standard
+
+fn validate_lease(current_time: int, lease_expiry: int, renewal_window: int) -> trit {
+    if current_time >= lease_expiry {
+        return conflict(); // Lease expired
+    }
+
+    if lease_expiry - current_time <= renewal_window {
+        return hold(); // Lease valid but needs renewal soon
+    }
+
+    return truth(); // Lease valid and stable
+}
+
+fn main() -> trit {
+    let now: int = 1500;
+    let expiry: int = 1510;
+    let window: int = 20;
+
+    let status: trit = validate_lease(now, expiry, window);
+
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
