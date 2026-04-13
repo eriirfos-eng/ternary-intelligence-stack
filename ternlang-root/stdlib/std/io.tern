@@ -27,7 +27,7 @@ fn print_trit_num(x: trit) -> trit {
 }
 
 // Print a trittensor (placeholder — VM will handle formatting)
-fn print_tensor(t: trittensor<1 x 1>) -> trit {
+fn print_tensor(t: trit[]) -> trit {
     return 0;
 }
 
