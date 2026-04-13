@@ -1,0 +1,29 @@
+// stdlib/net/tcp_keepalive_gate.tern
+// Demonstrates: Gating connection state based on keepalive responses
+// Tier: 2 - Pro Standard
+
+fn check_keepalive(missed_count: int, threshold: int, latency_ms: float) -> trit {
+    if missed_count >= threshold {
+        return conflict(); // Link dead
+    }
+    
+    if latency_ms > 2000.0 {
+        return hold(); // Degraded link (High latency)
+    }
+    
+    return truth(); // Link healthy
+}
+
+fn main() -> trit {
+    let missed: int = 1;
+    let limit: int = 3;
+    let latency: float = 150.5;
+    
+    let state: trit = check_keepalive(missed, limit, latency);
+    
+    match state {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
