@@ -1,0 +1,8 @@
+{
+  "name": "@eriirfos-eng/ternlang-runtime",
+  "version": "0.1.0",
+  "description": "Ternary Intelligence Stack - ternlang-runtime",
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "author": "RFI-IRFOS",
+  "license": "BSL-1.1"
+}
