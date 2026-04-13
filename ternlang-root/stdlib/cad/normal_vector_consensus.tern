@@ -1,0 +1,28 @@
+// stdlib/cad/normal_vector_consensus.tern
+// Demonstrates: Evaluating consensus between calculated and stored surface normals
+// Tier: 3 - Industrial
+
+fn normal_consensus(dot_product: float, tolerance: float) -> trit {
+    if dot_product > (1.0 - tolerance) {
+        return truth(); // Aligned
+    }
+    
+    if dot_product < 0.0 {
+        return conflict(); // Inverted normal
+    }
+    
+    return hold(); // Misaligned but not inverted
+}
+
+fn main() -> trit {
+    let dp: float = 0.95;
+    let tol: float = 0.1;
+    
+    let result: trit = normal_consensus(dp, tol);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

@@ -1,0 +1,28 @@
+// stdlib/cad/draft_angle_validator.tern
+// Demonstrates: Validating draft angles for injection molding or casting
+// Tier: 3 - Industrial
+
+fn validate_draft(angle_deg: float, required_deg: float) -> trit {
+    if angle_deg < 0.0 {
+        return conflict(); // Undercut!
+    }
+    
+    if angle_deg < required_deg {
+        return hold(); // Insufficient draft (warning)
+    }
+    
+    return truth(); // Sufficient draft
+}
+
+fn main() -> trit {
+    let angle: float = 0.5;
+    let req: float = 1.0;
+    
+    let result: trit = validate_draft(angle, req);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
