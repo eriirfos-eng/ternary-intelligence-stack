@@ -1,0 +1,32 @@
+// stdlib/timeseries/window_size_optimizer_gate.tern
+// Demonstrates: Adaptive window size recommendation for smoothing.
+// Tier: 3 — Industrial
+
+fn recommend_window(frequency_hz: float, noise_level: float) -> int {
+    if noise_level > 0.5 {
+        return 50; // High noise, large window
+    }
+
+    if frequency_hz > 100.0 {
+        return 10; // High frequency, small window
+    }
+
+    return 25; // Balanced
+}
+
+fn main() -> trit {
+    let freq: float = 50.0;
+    let noise: float = 0.2;
+
+    let win: int = recommend_window(freq, noise);
+
+    if win == 25 {
+        return truth();
+    }
+
+    if win > 25 {
+        return hold();
+    }
+
+    return conflict();
+}
