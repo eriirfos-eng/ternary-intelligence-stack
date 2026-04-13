@@ -1,0 +1,33 @@
+// stdlib/distributed/byzantine_voter_weight.tern
+// Demonstrates: Dynamic voter weighting based on historical consensus alignment.
+// Tier: 2 — Pro Standard
+
+fn calculate_weight(reliability: float, consensus_matches: int) -> float {
+    let base: float = 1.0;
+    if reliability < 0.5 {
+        return base * 0.5; // Penality for low reliability
+    }
+
+    if consensus_matches > 100 {
+        return base * 1.5; // Bonus for consistent alignment
+    }
+
+    return base;
+}
+
+fn main() -> trit {
+    let rel: float = 0.8;
+    let matches: int = 150;
+
+    let weight: float = calculate_weight(rel, matches);
+
+    if weight > 1.0 {
+        return truth();
+    }
+
+    if weight < 1.0 {
+        return conflict();
+    }
+
+    return hold();
+}
