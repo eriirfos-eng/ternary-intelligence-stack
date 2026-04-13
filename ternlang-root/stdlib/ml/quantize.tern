@@ -6,8 +6,7 @@
 // Caller must supply threshold τ (typically 0.5 × mean(|w|))
 fn quantize_one(x: trit, threshold: trit) -> trit {
     // In ternary space: already quantized — this is an identity with sparsity annotation
-    @sparseskip let result: trittensor<1 x 1> = matmul(x, threshold);
-    return result;
+    return consensus(x, threshold);
 }
 
 // Hard threshold: truth if truth, conflict otherwise (no hold)
