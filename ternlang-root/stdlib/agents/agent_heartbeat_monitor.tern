@@ -1,0 +1,29 @@
+// stdlib/agents/agent_heartbeat_monitor.tern
+// Demonstrates: Monitoring heartbeats of multiple agents
+// Tier: 2
+
+fn heartbeat_monitor(last_seen: int, current_time: int, timeout: int) -> trit {
+    // If agent seen within timeout, affirm presence
+    if current_time - last_seen < timeout {
+        return affirm;
+    }
+    // If agent seen but near timeout, warn (tend)
+    if current_time - last_seen < timeout * 2 {
+        return tend;
+    }
+    // If time exceeded, agent is offline (reject)
+    return reject;
+}
+
+fn main() -> trit {
+    let t_now: int = 1000;
+    let t_seen: int = 995;
+    let limit: int = 10;
+    
+    let res: trit = heartbeat_monitor(t_seen, t_now, limit); // affirm
+    
+    if res == affirm {
+        return truth();
+    }
+    return conflict();
+}
