@@ -1,0 +1,35 @@
+// stdlib/gametheory/public_goods_contribution.tern
+// Demonstrates: Reciprocal contribution logic in a public goods game.
+// Tier: 3 — Industrial
+
+fn decide_contribution(avg_other_contribution: float, my_prev: float, budget: float) -> float {
+    if avg_other_contribution > my_prev {
+        // Increase contribution to match group
+        return (avg_other_contribution + my_prev) / 2.0;
+    }
+
+    if avg_other_contribution < my_prev {
+        // Punish free-riders by reducing contribution
+        return avg_other_contribution;
+    }
+
+    return my_prev; // Stable
+}
+
+fn main() -> trit {
+    let group_avg: float = 5.0;
+    let mine: float = 3.0;
+    let max_b: float = 10.0;
+
+    let next: float = decide_contribution(group_avg, mine, max_b);
+
+    if next > mine {
+        return truth(); // Cooperative increase
+    }
+
+    if next < mine {
+        return conflict(); // Retaliatory decrease
+    }
+
+    return hold(); // No change
+}
