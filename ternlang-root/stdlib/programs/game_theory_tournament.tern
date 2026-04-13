@@ -1,0 +1,67 @@
+// stdlib/programs/game_theory_tournament.tern
+// Demonstrates: Strategy competition simulation and round evaluation.
+// Tier: 4 — Enterprise
+
+from std::trit import *;
+
+fn tit_for_tat(other_last: trit) -> trit {
+    if other_last == -1 { return -1; }
+    return 1; // Cooperate by default or if they did
+}
+
+fn pavlov(my_last: trit, other_last: trit) -> trit {
+    if my_last == other_last { return 1; }
+    return -1;
+}
+
+fn grim_trigger(any_defection: trit) -> trit {
+    if any_defection == -1 { return -1; }
+    return 1;
+}
+
+fn evaluate_round(p1: trit, p2: trit) -> int {
+    // 1=Coop, -1=Defect
+    if p1 == 1 && p2 == 1 { return 3; } // (3,3)
+    if p1 == -1 && p2 == -1 { return 1; } // (1,1)
+    if p1 == 1 && p2 == -1 { return 0; } // (0,5)
+    if p1 == -1 && p2 == 1 { return 5; } // (5,0)
+    return 0;
+}
+
+fn simulate_round(s1: int, s2: int, last1: trit, last2: trit, defection: trit) -> int {
+    let m1: trit = 0;
+    let m2: trit = 0;
+    
+    // Select m1
+    if s1 == 1 { m1 = tit_for_tat(last2); }
+    if s1 == 2 { m1 = pavlov(last1, last2); }
+    if s1 == 3 { m1 = grim_trigger(defection); }
+    
+    // Select m2
+    if s2 == 1 { m2 = tit_for_tat(last1); }
+    if s2 == 2 { m2 = pavlov(last2, last1); }
+    if s2 == 3 { m2 = grim_trigger(defection); }
+    
+    return evaluate_round(m1, m2);
+}
+
+fn main() -> trit {
+    let s_tit: int = 1;
+    let s_pavlov: int = 2;
+    
+    let l1: trit = 1;
+    let l2: trit = 1;
+    let def: trit = 0;
+    
+    let p1_score: int = simulate_round(s_tit, s_pavlov, l1, l2, def);
+    
+    if p1_score == 3 {
+        return truth(); // Success: both cooperated
+    }
+    
+    if p1_score == 0 {
+        return conflict(); // Failure: p1 was defected on
+    }
+    
+    return hold(); // Tie or other
+}
