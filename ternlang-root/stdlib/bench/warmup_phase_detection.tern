@@ -1,0 +1,40 @@
+// stdlib/bench/warmup_phase_detection.tern
+// Demonstrates: Detection of steady-state performance using latency trend.
+// Tier: 1 - Open Core
+
+// Returns affirm if stable, hold if warming up, reject if oscillating.
+fn detect_steady_state(prev: int, curr: int, next: int) -> trit {
+    let diff1: int = curr - prev;
+    let diff2: int = next - curr;
+    
+    // If diffs are very small (e.g., < 2ms), it's stable
+    if diff1 < 2 && diff1 > -2 {
+        if diff2 < 2 && diff2 > -2 {
+            return affirm;
+        }
+    }
+    
+    // If it's still decreasing significantly, it's warming up
+    if diff1 <= -5 || diff2 <= -5 {
+        return tend;
+    }
+    
+    // If it's increasing significantly or oscillating, reject
+    return reject;
+}
+
+fn main() -> trit {
+    let t1: int = 100;
+    let t2: int = 95;
+    let t3: int = 94;
+    
+    let state: trit = detect_steady_state(t1, t2, t3);
+    
+    match state {
+        -1 => { println("Oscillating/Unstable"); }
+         0 => { println("Warming up...");         }
+         1 => { println("Steady state reached"); }
+    }
+    
+    return state;
+}
