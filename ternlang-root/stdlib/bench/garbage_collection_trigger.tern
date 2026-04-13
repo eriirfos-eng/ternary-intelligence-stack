@@ -1,0 +1,49 @@
+// stdlib/bench/garbage_collection_trigger.tern
+// Demonstrates: Garbage collection trigger logic based on allocation pressure.
+// Tier: 1 - Open Core
+
+// Evaluates whether to trigger GC.
+// pressure: 1 (high), 0 (normal), -1 (low)
+fn should_gc(alloc_count: int, pressure: trit) -> trit {
+    if alloc_count > 1000 {
+        return affirm; // Force GC
+    }
+    
+    match pressure {
+        -1 => { 
+            // Low pressure: only GC if count is high enough
+            if alloc_count > 500 {
+                return affirm;
+            }
+            return reject;
+        }
+        0 => {
+            if alloc_count > 100 {
+                return affirm;
+            }
+            return reject;
+        }
+        1 => {
+            // High pressure: always GC if anything is allocated
+            if alloc_count > 0 {
+                return affirm;
+            }
+            return reject;
+        }
+    }
+}
+
+fn main() -> trit {
+    let count: int = 250;
+    let p: trit = 0; // normal pressure
+    
+    let result: trit = should_gc(count, p);
+    
+    match result {
+        -1 => { println("Skip GC"); }
+         0 => { println("Hold GC"); }
+         1 => { println("Trigger GC"); }
+    }
+    
+    return result;
+}
