@@ -1,0 +1,28 @@
+// stdlib/kernel/panic_handler_mask.tern
+// Demonstrates: Kernel panic handling logic and recovery decision.
+// Tier: 4 — Enterprise
+
+fn decide_panic_action(severity: int, can_recover: trit) -> trit {
+    if severity < 10 && can_recover == 1 {
+        return hold(); // Attempt soft reboot / recovery
+    }
+
+    if severity >= 10 {
+        return conflict(); // Hard stop / Halt system
+    }
+
+    return truth(); // Log and continue (if minor/recoverable)
+}
+
+fn main() -> trit {
+    let sev: int = 15;
+    let recov: trit = tend;
+
+    let action: trit = decide_panic_action(sev, recov);
+
+    match action {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
