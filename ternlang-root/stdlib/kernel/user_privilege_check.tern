@@ -1,0 +1,33 @@
+// stdlib/kernel/user_privilege_check.tern
+// Demonstrates: User privilege level and syscall permission check.
+// Tier: 4 — Enterprise
+
+fn check_permission(uid: int, gid: int, required_uid: int) -> trit {
+    if uid == 0 {
+        return truth(); // Root always has permission
+    }
+
+    if uid == required_uid {
+        return truth(); // Owner has permission
+    }
+
+    if gid == 0 {
+        return hold(); // Admin group, might have permission via sudo
+    }
+
+    return conflict(); // Permission denied
+}
+
+fn main() -> trit {
+    let u: int = 1000;
+    let g: int = 100;
+    let req: int = 0;
+
+    let allowed: trit = check_permission(u, g, req);
+
+    match allowed {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
