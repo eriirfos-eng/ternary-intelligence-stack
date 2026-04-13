@@ -1,0 +1,46 @@
+// stdlib/bench/jitter_compensation.tern
+// Demonstrates: Latency jitter measurement and stability classification.
+// Tier: 1 - Open Core
+
+// Evaluates jitter given four latency samples (int ms).
+// Returns 1 (stable), 0 (jittery), -1 (high jitter).
+fn evaluate_jitter(s1: int, s2: int, s3: int, s4: int) -> trit {
+    let mean: int = (s1 + s2 + s3 + s4) / 4;
+    
+    // Calculate simple absolute deviation sum
+    let d1: int = s1 - mean; if d1 < 0 { d1 = -d1; }
+    let d2: int = s2 - mean; if d2 < 0 { d2 = -d2; }
+    let d3: int = s3 - mean; if d3 < 0 { d3 = -d3; }
+    let d4: int = s4 - mean; if d4 < 0 { d4 = -d4; }
+    
+    let total_dev: int = d1 + d2 + d3 + d4;
+    
+    // If total deviation across 4 samples is < 5ms, it's very stable
+    if total_dev < 5 {
+        return affirm;
+    }
+    
+    // If total deviation is < 20ms, it's jittery but acceptable
+    if total_dev < 20 {
+        return tend;
+    }
+    
+    return reject;
+}
+
+fn main() -> trit {
+    let l1: int = 15;
+    let l2: int = 17;
+    let l3: int = 16;
+    let l4: int = 14;
+    
+    let stability: trit = evaluate_jitter(l1, l2, l3, l4);
+    
+    match stability {
+        -1 => { println("High Jitter!");   }
+         0 => { println("Jittery...");     }
+         1 => { println("Stable Signal."); }
+    }
+    
+    return stability;
+}
