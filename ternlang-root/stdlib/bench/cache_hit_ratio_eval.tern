@@ -1,0 +1,43 @@
+// stdlib/bench/cache_hit_ratio_eval.tern
+// Demonstrates: Cache performance evaluation using hit ratio thresholding.
+// Tier: 1 - Open Core
+
+// Evaluates cache performance based on hit ratio.
+// ratio: 0.0 to 1.0
+fn evaluate_cache(hits: int, misses: int) -> trit {
+    if hits + misses == 0 {
+        return hold();
+    }
+    
+    let total: int = hits + misses;
+    // We don't have integer to float cast yet?
+    // GEMINI.md says: `cast(expr) dropped inner expression` - FIXED.
+    // So cast(total) should work for i64 to f64?
+    // Let's try.
+    let hit_ratio: float = (1.0 * cast(hits)) / cast(total);
+    
+    if hit_ratio > 0.9 {
+        return affirm; // Excellent performance
+    }
+    
+    if hit_ratio < 0.5 {
+        return reject; // Poor performance
+    }
+    
+    return tend; // Acceptable performance
+}
+
+fn main() -> trit {
+    let h: int = 95;
+    let m: int = 5;
+    
+    let state: trit = evaluate_cache(h, m);
+    
+    match state {
+        -1 => { println("Poor Cache Ratio"); }
+         0 => { println("Neutral Cache Ratio"); }
+         1 => { println("Optimal Cache Ratio"); }
+    }
+    
+    return state;
+}
