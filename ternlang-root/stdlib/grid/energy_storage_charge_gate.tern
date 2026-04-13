@@ -1,0 +1,31 @@
+// stdlib/grid/energy_storage_charge_gate.tern
+// Demonstrates: Gating energy storage charging based on grid state
+// Tier: 2
+
+fn charge_gate(grid_frequency: float, storage_level: float) -> trit {
+    // If frequency high (> 50.1 Hz), grid has excess energy. Charge.
+    if grid_frequency > 50.1 {
+        if storage_level < 0.9 {
+            return affirm;
+        }
+        return tend; // Full
+    }
+    
+    // If frequency low (< 49.9 Hz), grid needs energy. Discharge.
+    if grid_frequency < 49.9 {
+        return reject; // Don't charge, signal discharge
+    }
+    
+    return tend; // Nominal frequency, stay neutral
+}
+
+fn main() -> trit {
+    let freq: float = 50.2; // High frequency
+    let level: float = 0.5;
+    let res: trit = charge_gate(freq, level);
+    
+    if res == affirm {
+        return truth();
+    }
+    return conflict();
+}

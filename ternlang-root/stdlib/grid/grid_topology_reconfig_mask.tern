@@ -1,0 +1,27 @@
+// stdlib/grid/grid_topology_reconfig_mask.tern
+// Demonstrates: Ternary mask for reconfiguring grid topology
+// Tier: 2
+
+fn reconfigure_mask(current: trit, proposed: trit) -> trit {
+    // Determine the switch action: 1 (close), -1 (open), 0 (maintain)
+    
+    // If proposed state matches current state, maintain (tend)
+    if current == proposed {
+        return tend;
+    }
+    
+    // Otherwise, transition to proposed state
+    return proposed;
+}
+
+fn main() -> trit {
+    let cur_state: trit = reject; // Switch open
+    let prop_state: trit = affirm; // Propose closing
+    
+    let action: trit = reconfigure_mask(cur_state, prop_state);
+    
+    if action == affirm {
+        return truth(); // Correct action: close (affirm)
+    }
+    return conflict();
+}
