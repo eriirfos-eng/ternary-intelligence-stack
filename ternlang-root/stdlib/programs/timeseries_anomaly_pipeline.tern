@@ -1,0 +1,59 @@
+// stdlib/programs/timeseries_anomaly_pipeline.tern
+// Demonstrates: Multi-stage signal processing: EMA -> Variance -> Anomaly Gate.
+// Tier: 4 — Enterprise
+
+from std::trit import *;
+
+fn update_ema(prev: float, curr: float, alpha: float) -> float {
+    return alpha * curr + (1.0 - alpha) * prev;
+}
+
+fn calculate_variance(curr: float, avg: float) -> float {
+    let diff: float = curr - avg;
+    return diff * diff;
+}
+
+fn check_anomaly(sq_diff: float, avg_variance: float, threshold_sigma_sq: float) -> trit {
+    if sq_diff > threshold_sigma_sq * avg_variance {
+        return affirm; // Anomaly detected
+    }
+    
+    if sq_diff > avg_variance {
+        return tend; // Suspicious activity
+    }
+    
+    return reject; // Normal noise
+}
+
+fn process_signal_stage(curr: float, prev_ema: float, prev_var: float, alpha: float) -> trit {
+    let new_ema: float = update_ema(prev_ema, curr, alpha);
+    let new_var: float = calculate_variance(curr, new_ema);
+    
+    // threshold = 4.0 sigma squared (2 sigma)
+    let res: trit = check_anomaly(new_var, prev_var, 4.0);
+    return res;
+}
+
+fn main() -> trit {
+    let signal: float = 1.25;
+    let avg: float = 0.5;
+    let var: float = 0.04; // (0.2 sigma)
+    let a: float = 0.1;
+    
+    let result: trit = process_signal_stage(signal, avg, var, a);
+    
+    match result {
+        1 => {
+            // ALARM!
+            return truth();
+        }
+        0 => {
+            // Monitor
+            return hold();
+        }
+        -1 => {
+            // OK
+            return conflict();
+        }
+    }
+}
