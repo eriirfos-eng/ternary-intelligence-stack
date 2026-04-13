@@ -1,0 +1,41 @@
+// stdlib/showcase/binary_to_ternary_encoder.tern
+// Demonstrates: Binary-to-Ternary encoding logic.
+// Tier: 1 - Open Core
+
+// Maps two binary bits (int 0 or 1) to a single trit.
+// sign: 0 (pos), 1 (neg)
+// magnitude: 0 (zero), 1 (one)
+fn encode_bits(sign: int, magnitude: int) -> trit {
+    if magnitude == 0 {
+        return tend; // 0
+    }
+    
+    if sign == 0 {
+        return affirm; // +1
+    }
+    
+    return reject; // -1
+}
+
+fn main() -> trit {
+    // Test cases
+    let s: int = 0;
+    let m: int = 1;
+    let result: trit = encode_bits(s, m);
+    println("Bit pattern (0, 1) -> ");
+    println(result);
+    
+    s = 1;
+    m = 1;
+    result = encode_bits(s, m);
+    println("Bit pattern (1, 1) -> ");
+    println(result);
+    
+    s = 0;
+    m = 0;
+    result = encode_bits(s, m);
+    println("Bit pattern (x, 0) -> ");
+    println(result);
+    
+    return affirm;
+}
