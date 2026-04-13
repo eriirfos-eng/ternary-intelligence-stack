@@ -1,0 +1,37 @@
+// stdlib/kernel/kernel_module_validator.tern
+// Demonstrates: Kernel module signature and compatibility validation.
+// Tier: 4 — Enterprise
+
+fn validate_module(sig_valid: trit, version_match: trit, license_allow: trit) -> trit {
+    if sig_valid == -1 {
+        return conflict(); // Invalid signature, high risk
+    }
+
+    if license_allow == -1 {
+        return conflict(); // License mismatch (e.g. non-GPL on GPL kernel)
+    }
+
+    if version_match == 0 {
+        return hold(); // Version mismatch, potentially unstable
+    }
+
+    if version_match == 1 && sig_valid == 1 {
+        return truth(); // Valid and compatible
+    }
+
+    return hold(); // Unknown state
+}
+
+fn main() -> trit {
+    let sig: trit = 1;
+    let ver: trit = 0;
+    let lic: trit = 1;
+
+    let res: trit = validate_module(sig, ver, lic);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
