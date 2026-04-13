@@ -1,0 +1,34 @@
+// stdlib/timeseries/sampling_rate_validator.tern
+// Demonstrates: Time series sampling rate consistency check.
+// Tier: 3 — Industrial
+
+fn validate_rate(t1: int, t2: int, expected_ms: int, tolerance_ms: int) -> trit {
+    let diff: int = t2 - t1;
+    let jitter: int = diff - expected_ms;
+    if jitter < 0 { jitter = -jitter; }
+
+    if jitter <= tolerance_ms {
+        return truth(); // Rate is consistent
+    }
+
+    if jitter <= tolerance_ms * 2 {
+        return hold(); // High jitter, but usable
+    }
+
+    return conflict(); // Rate violation, dropped samples
+}
+
+fn main() -> trit {
+    let t_prev: int = 1000;
+    let t_curr: int = 1120;
+    let exp: int = 100;
+    let tol: int = 10;
+
+    let res: trit = validate_rate(t_prev, t_curr, exp, tol);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
