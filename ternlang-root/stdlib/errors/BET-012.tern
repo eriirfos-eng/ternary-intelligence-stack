@@ -1,0 +1,48 @@
+// stdlib/errors/BET-012.tern
+// Error: BET-012 — Division by Zero
+// Tier: 1 — Open Core
+//
+// "Ternary division by zero. The universe cannot divide by zero — not even
+//  in a hold state. Every state requires a non-zero denominator."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// A TDIV (/) or TMOD (%) instruction was executed when the second operand
+// (the denominator) was exactly zero.
+//
+// WRONG (will trigger BET-012 at runtime):
+//
+//   let n: int = 10;
+//   let d: int = 0;
+//   let r: int = n / d;   // ← BET-012: Division by zero
+//
+// ─── Zero in ternary logic ───────────────────────────────────────────────────
+//
+//   In balanced ternary (trit), the 0 (tend) state represents uncertainty.
+//   However, for integer and floating-point arithmetic (Int and Float types),
+//   zero follows the standard mathematical rules: it cannot be used as a
+//   denominator.
+//
+//   If you are computing a ratio or a remainder, you must ensure the
+//   divisor is non-zero before the operation.
+//
+// ─── How to prevent BET-012 ──────────────────────────────────────────────────
+//
+//   Always use a conditional guard before division.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn safe_divide(numerator: int, denominator: int) -> int {
+    if denominator == 0 {
+        return 0; // Or some other neutral value/error signal
+    }
+    return numerator / denominator;
+}
+
+fn main() -> trit {
+    let result: int = safe_divide(100, 10);
+    if result == 10 {
+        return truth();
+    }
+    return hold();
+}

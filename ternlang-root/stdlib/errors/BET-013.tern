@@ -1,0 +1,64 @@
+// stdlib/errors/BET-013.tern
+// Error: BET-013 — Call Stack Overflow
+// Tier: 1 — Open Core
+//
+// "VM Error: [BET-013] Call stack overflow — max depth (4096) exceeded.
+//  Infinite recursion or unbounded cross-module mutual calls detected."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The BET VM's call stack reached its maximum depth of 4096. This almost
+// always means an infinite recursion (a function calling itself) or a
+// circular dependency between multiple functions.
+//
+// WRONG (will trigger BET-013 at runtime):
+//
+//   fn infinite(v: trit) -> trit {
+//       return infinite(v); // ← infinite recursion
+//   }
+//
+// ─── Common Causes ───────────────────────────────────────────────────────────
+//
+//   1. Infinite Recursion:   A function calls itself with no base case or
+//                            a base case that is never reached.
+//
+//   2. Mutual Recursion:     Function A calls B, and B calls A.
+//
+//   3. Unresolved Imports:   [FIXED 2026-04-13] A named import from a module
+//                            where the imported function calls another local
+//                            function that was NOT imported. The unresolved
+//                            patch address (0x0000) points to the program 
+//                            header, causing a jump back to 'main' and 
+//                            infinite recursion.
+//
+//   4. Broken Built-ins:     [FIXED 2026-04-13] Calling 'shape(t)' or 'zeros(n)'
+//                            which were stubs that triggered recursion or
+//                            incorrect jumps. Use 'length(t)' instead.
+//
+// ─── How to prevent BET-013 ──────────────────────────────────────────────────
+//
+//   1. Always define a base case for recursive functions and ensure
+//      every code path eventually reaches it.
+//
+//   2. Use 'import *' when importing from local modules to ensure all
+//      internal dependencies of the functions you need are pulled in.
+//
+//   3. Check your logic for circular calls between different modules.
+//
+// ─── Correct pattern — recursive base case ───────────────────────────────────
+
+fn factorial_ternary(n: int) -> int {
+    if n <= 1 {
+        return 1; // ← base case
+    }
+    let prev: int = factorial_ternary(n - 1);
+    return n * prev;
+}
+
+fn main() -> trit {
+    let res: int = factorial_ternary(5); // 120
+    if res > 100 {
+        return truth();
+    }
+    return hold();
+}

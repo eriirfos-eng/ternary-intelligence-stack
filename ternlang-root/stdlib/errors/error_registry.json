@@ -452,6 +452,39 @@
       "fix": "Always use the AgentRef value returned by the 'spawn' expression. Do not construct AgentRef values manually. Ensure TSPAWN succeeds (no BET-010) before calling TSEND or TAWAIT.",
       "distinction_from_bet_010": "BET-010 = the agent TYPE was never registered (spawn fails). BET-011 = the agent INSTANCE doesn't exist (send/await fails on a bad ID).",
       "example_file": "stdlib/errors/BET-011.tern"
+    },
+
+    "BET-012": {
+      "code": "BET-012",
+      "title": "Division by Zero",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "Ternary division by zero. The universe cannot divide by zero — not even in a hold state. Every state requires a non-zero denominator.",
+      "technical": "A TDIV or TMOD instruction was executed when the second operand (denominator) was exactly zero (Int(0) or Float(0.0)).",
+      "common_causes": [
+        "Using an uninitialized variable that defaults to zero in a division",
+        "Dividing by a computed result that happened to be zero",
+        "Failure to bound-check a denominator before division"
+      ],
+      "fix": "Always check that your denominator is not zero before performing a division or modulo operation.",
+      "example_file": "stdlib/errors/BET-012.tern"
+    },
+
+    "BET-013": {
+      "code": "BET-013",
+      "title": "Call Stack Overflow",
+      "namespace": "BET",
+      "severity": "fatal",
+      "fun_message": "VM Error: [BET-013] Call stack overflow — max depth (4096) exceeded. Infinite recursion or unbounded cross-module mutual calls detected.",
+      "technical": "The VM's call stack reached its maximum depth of 4096. This almost always means an infinite recursion (a function calling itself) or a circular dependency between multiple functions.",
+      "common_causes": [
+        "Infinite Recursion: A function calls itself with no base case or a base case that is never reached.",
+        "Mutual Recursion: Function A calls B, and B calls A.",
+        "Unresolved Imports: [FIXED 2026-04-13] A named import from a module where the imported function calls another local function that was NOT imported.",
+        "Broken Built-ins: [FIXED 2026-04-13] Calling 'shape(t)' or 'zeros(n)' which were stubs that triggered recursion or incorrect jumps. Use 'length(t)' instead."
+      ],
+      "fix": "Ensure recursive functions have a base case. Use 'import *' to pull in all local dependencies of functions. Check for circular module calls.",
+      "example_file": "stdlib/errors/BET-013.tern"
     }
 
   }
