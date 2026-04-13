@@ -1,0 +1,37 @@
+// stdlib/bench/tensor_copy_latency.tern
+// Demonstrates: Tensor copying logic and overhead evaluation.
+// Tier: 1 - Open Core
+
+// Manually copies elements between 1D tensors.
+fn copy_1d(src: trit[], dest: trit[], len: int) -> trit {
+    let i: int = 0;
+    while i < len {
+        dest[i] = src[i];
+        i = i + 1;
+    }
+    return affirm;
+}
+
+fn main() -> trit {
+    let size: int = 10;
+    let source: trittensor<10>;
+    let target: trittensor<10>;
+    
+    // Fill source
+    let j: int = 0;
+    while j < size {
+        source[j] = affirm;
+        j = j + 1;
+    }
+    
+    let result: trit = copy_1d(source, target, size);
+    
+    // Verify last element
+    if target[9] == affirm {
+        println("Copy successful");
+        return affirm;
+    }
+    
+    println("Copy failed");
+    return reject;
+}
