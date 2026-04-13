@@ -1,0 +1,28 @@
+// stdlib/showcase/truth_table_visualizer.tern
+// Demonstrates: Exhaustive 2-trit truth table visualization.
+// Tier: 1 - Open Core
+
+// Visualizes a 2-trit logic gate (AND).
+fn visualize_and(a: trit, b: trit) -> trit {
+    let result: trit = a && b;
+    // print in tabular format: a, b | res
+    println(result);
+    return result;
+}
+
+fn main() -> trit {
+    println("--- Balanced Ternary AND Truth Table ---");
+    println("A | B | Result");
+    
+    let a: trit = -1;
+    while a <= 1 {
+        let b: trit = -1;
+        while b <= 1 {
+            visualize_and(a, b);
+            b = b + 1;
+        }
+        a = a + 1;
+    }
+    
+    return affirm;
+}
