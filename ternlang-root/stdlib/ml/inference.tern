@@ -1,6 +1,11 @@
 // std::ml::inference — sparse ternary inference primitives
 // RFI-IRFOS Ternary Intelligence Stack
 // use std::ml::inference;
+//
+// [FIXED 2026-04-13]
+// - Replaced trittensor<1 x 1> with trit[] for parameters and return types.
+// - Fixed type mismatch in decide (sparsity returns int, must be mapped to trit).
+// - Fixed binary if statement in decide to use ternary if ? syntax.
 
 // Ternary linear layer: sparse matrix-vector product
 // W is a weight matrix (quantized to -1/0/+1), x is the input vector

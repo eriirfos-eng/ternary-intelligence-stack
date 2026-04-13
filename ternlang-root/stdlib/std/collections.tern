@@ -1,5 +1,13 @@
 // Trit collections — utilities for handling ternary data structures
 // Part of the Ternlang Standard Library
+//
+// [FIXED 2026-04-13]
+// - Removed &mut references (unsupported by current parser).
+// - Fixed multi-dimensional indexing assignment (s.data[s.top] -> local temp).
+// - Replaced trittensor<N> with trit[] for generic parameters.
+// - Replaced trittensor<N>::zero() with direct declaration (defaults to zero).
+// - Fixed binary if statements to use ternary if ? syntax.
+// - Stubbed out quicksort (partition3) due to unsupported tuple returns.
 
 struct TritStack {
     data: trittensor<256>,

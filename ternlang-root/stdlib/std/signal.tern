@@ -1,5 +1,11 @@
 // Ternary signal processing — filtering and detection for streams
 // Part of the Ternlang Standard Library
+//
+// [FIXED 2026-04-13]
+// - Replaced trittensor<N> with trit[] to fix PARSE-002 (generic dimensions).
+// - Replaced trittensor<N>::zero() with fixed-size allocation (trittensor<1024>).
+// - Fixed multiple binary if statements to use ternary if ? syntax.
+// - Replaced shape(t) with length(t) to avoid BET-013 (stub built-in crash).
 
 // Moving average for trits: return majority of window
 fn moving_average_trit(stream: trit[], window: int) -> trit[] {

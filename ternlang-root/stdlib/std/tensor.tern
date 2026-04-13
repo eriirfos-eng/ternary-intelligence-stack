@@ -1,6 +1,10 @@
 // std::tensor — ternary tensor operations
 // RFI-IRFOS Ternary Intelligence Stack
 // use std::tensor;
+//
+// [FIXED 2026-04-13]
+// - Replaced trittensor<1 x 1> stubs with trit[] and fixed-size (1024) allocation.
+// - Fixed function signatures to use unsized trit[] for maximum compatibility.
 
 // Allocate a 1D ternary tensor of given size (all hold/zero initialised)
 // Note: Currently limited to fixed size 1024 in this implementation

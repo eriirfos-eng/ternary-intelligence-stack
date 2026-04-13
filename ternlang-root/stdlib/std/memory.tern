@@ -1,5 +1,12 @@
 // Ternary memory — state cells and associative recall structures
 // Part of the Ternlang Standard Library
+//
+// [FIXED 2026-04-13]
+// - Implemented flat indexing [i * 64 + j] for 2D tensors (multi-index unsupported).
+// - Removed unsupported &mut references.
+// - Replaced generic trittensor<N x M> with trit[].
+// - Fixed binary if statements to use ternary if ? syntax.
+// - Fixed return type for recall (returns 1D tensor of size 64).
 
 struct TritMemoryCell {
     state: trit,

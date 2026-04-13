@@ -1,6 +1,9 @@
 // std::io — ternary I/O utilities
 // RFI-IRFOS Ternary Intelligence Stack
 // use std::io;
+//
+// [FIXED 2026-04-13]
+// - Fixed print_tensor signature to use unsized trit[] instead of trittensor<1 x 1>.
 
 // Print a single trit value as its symbolic name
 fn print_trit(x: trit) -> trit {
