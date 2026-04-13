@@ -1,0 +1,34 @@
+// stdlib/gametheory/centipede_game_gate.tern
+// Demonstrates: Decision logic in the Centipede Game with backward induction.
+// Tier: 3 — Industrial
+
+fn should_pass(current_round: int, max_rounds: int, altruism: float) -> trit {
+    if current_round >= max_rounds {
+        return conflict(); // Must take at the end
+    }
+
+    if altruism > 0.8 {
+        return truth(); // Very altruistic, always pass
+    }
+
+    // Typical self-interest: pass early, take late
+    if current_round < max_rounds / 2 {
+        return truth();
+    }
+
+    return hold(); // Ambiguous middle ground
+}
+
+fn main() -> trit {
+    let round: int = 8;
+    let total: int = 10;
+    let alt: float = 0.5;
+
+    let decision: trit = should_pass(round, total, alt);
+
+    match decision {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
