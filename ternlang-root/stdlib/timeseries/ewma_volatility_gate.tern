@@ -1,0 +1,35 @@
+// stdlib/timeseries/ewma_volatility_gate.tern
+// Demonstrates: Volatility spike detection using EWMA.
+// Tier: 3 — Industrial
+
+fn estimate_volatility(prev_vol: float, current_return: float, alpha: float) -> float {
+    let return_sq: float = current_return * current_return;
+    return alpha * return_sq + (1.0 - alpha) * prev_vol;
+}
+
+fn check_spike(vol: float, limit: float) -> trit {
+    if vol > limit {
+        return truth(); // Volatility spike
+    }
+
+    if vol > limit * 0.8 {
+        return hold(); // Rising volatility
+    }
+
+    return conflict(); // Stable volatility
+}
+
+fn main() -> trit {
+    let p_vol: float = 0.02;
+    let ret: float = 0.05;
+    let a: float = 0.94;
+
+    let curr_vol: float = estimate_volatility(p_vol, ret, a);
+    let res: trit = check_spike(curr_vol, 0.04);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
