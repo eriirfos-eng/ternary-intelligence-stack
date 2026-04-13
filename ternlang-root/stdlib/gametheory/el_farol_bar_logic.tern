@@ -1,0 +1,31 @@
+// stdlib/gametheory/el_farol_bar_logic.tern
+// Demonstrates: El Farol Bar problem logic (congestion avoidance).
+// Tier: 3 — Industrial
+
+fn should_go(predicted_attendance: int, capacity: int, threshold: float) -> trit {
+    let utilization: float = cast(predicted_attendance) / cast(capacity);
+
+    if utilization < threshold {
+        return truth(); // Go, bar is not too crowded
+    }
+
+    if utilization > 1.0 {
+        return conflict(); // Bar is over capacity, stay home
+    }
+
+    return hold(); // Crowded but acceptable
+}
+
+fn main() -> trit {
+    let pred: int = 55;
+    let cap: int = 100;
+    let thresh: float = 0.6;
+
+    let decision: trit = should_go(pred, cap, thresh);
+
+    match decision {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
