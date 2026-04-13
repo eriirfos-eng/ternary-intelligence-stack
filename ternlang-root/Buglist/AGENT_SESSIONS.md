@@ -249,3 +249,17 @@
 
 **Compiler fixes this session:** none (Workaround for BET-013 identified and documented)
 **VM errors encountered:** BET-013 (Call stack overflow due to unresolved named imports), BET-005 (Initial concern for While registers, verified as non-issue for runtime execution).
+
+## 2026-04-13 — Batch 11-15: bio, econ, crypto, nlp, optimization
+**Status:** Completed 5 new programs across targeted categories.
+**Artifacts:**
+- stdlib/bio/: enzyme_kinetics (reaction velocity states).
+- stdlib/econ/: inflation_pressure (deflation/stable/inflation logic).
+- stdlib/crypto/: ternary_mac (MAC using imported ternary XOR).
+- stdlib/nlp/: intent_classifier (evidence aggregation classification).
+- stdlib/optimization/: line_search (step size evaluation).
+**Insights:**
+- **BUG BET-013 (confirmed):** `float(n)` built-in triggers stack overflow (infinite recursion to `main`) when used in division or complex expressions. Avoid using it until fixed; use `cast(n)` or raw literals where possible.
+- **Import Workaround:** `from stdlib::category` syntax is unstable; use relative paths `from "../category/file.tern"` for reliable cross-module imports.
+- **Loop Verification:** `for x in data` correctly iterates over `trit[]` dynamic arrays.
+- **Category Rest:** Avoid `bio`, `econ`, `crypto`, `nlp`, `optimization` next session.

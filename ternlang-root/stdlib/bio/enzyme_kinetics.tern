@@ -1,0 +1,62 @@
+// stdlib/bio/enzyme_kinetics.tern
+// Demonstrates: Enzyme reaction velocity states using ternary logic
+// Tier: 3
+
+fn reaction_velocity(substrate_conc: trit, inhibitor_presence: trit) -> trit {
+    // Model reaction velocity based on substrate and inhibitors
+    // substrate_conc: -1 (low), 0 (medium), 1 (high)
+    // inhibitor_presence: -1 (none), 0 (trace), 1 (high)
+    
+    match substrate_conc {
+        -1 => {
+            // Low substrate: velocity is limited by concentration
+            match inhibitor_presence {
+                -1 => { return 0; } // Steady slow
+                 0 => { return -1; } // Inhibited
+                 1 => { return -1; } // Heavily inhibited
+            }
+        }
+        0 => {
+            // Medium substrate
+            match inhibitor_presence {
+                -1 => { return 1; }  // Normal acceleration
+                 0 => { return 0; }  // Balanced
+                 1 => { return -1; } // Inhibited
+            }
+        }
+        1 => {
+            // High substrate: saturation or peak performance
+            match inhibitor_presence {
+                -1 => { return 1; }  // Maximum acceleration
+                 0 => { return 1; }  // Still accelerating despite trace inhibition
+                 1 => { return 0; }  // Saturated/Steady due to high inhibition offset
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let substrate: trit = 0; // medium
+    let inhibitor: trit = -1; // none
+    
+    let result: trit = reaction_velocity(substrate, inhibitor);
+    
+    // Test a few cases
+    let case1: trit = reaction_velocity(1, -1); // High substrate, no inhibitor -> 1
+    let case2: trit = reaction_velocity(-1, 1); // Low substrate, high inhibitor -> -1
+    
+    // Verify results via match
+    match case1 {
+        1 => {
+            match case2 {
+                -1 => {
+                    return truth();
+                }
+                0 => { return conflict(); }
+                1 => { return conflict(); }
+            }
+        }
+        -1 => { return conflict(); }
+         0 => { return conflict(); }
+    }
+}
