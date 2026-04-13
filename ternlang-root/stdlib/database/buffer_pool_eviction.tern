@@ -1,0 +1,48 @@
+// stdlib/database/buffer_pool_eviction.tern
+// Demonstrates: Buffer pool page eviction strategy using trit-weighted access and recency.
+// Tier: 3 - Industrial
+
+// Evaluates whether a page should be evicted based on its access count (int) and recency state (trit).
+// recency: 1 (recent), 0 (stable), -1 (stale)
+fn should_evict(access_count: int, recency: trit) -> trit {
+    // If access count is high (> 100), keep it regardless of recency
+    if access_count > 100 {
+        return reject; // reject eviction
+    }
+
+    match recency {
+        -1 => { 
+            // Stale page with low access is prime for eviction
+            if access_count < 10 {
+                return affirm; // affirm eviction
+            }
+            return tend; // hold decision
+        }
+        0 => {
+            // Stable page: only evict if access count is very low
+            if access_count < 2 {
+                return affirm;
+            }
+            return reject;
+        }
+        1 => {
+            // Recent page: never evict unless something is very wrong
+            return reject;
+        }
+    }
+}
+
+fn main() -> trit {
+    let page_a_access: int = 5;
+    let page_a_recency: trit = -1; // stale
+    
+    let result: trit = should_evict(page_a_access, page_a_recency);
+    
+    match result {
+        -1 => { println("Keep page"); }
+         0 => { println("Hold page"); }
+         1 => { println("Evict page"); }
+    }
+    
+    return result;
+}
