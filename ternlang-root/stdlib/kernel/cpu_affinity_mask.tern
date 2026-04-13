@@ -1,0 +1,33 @@
+// stdlib/kernel/cpu_affinity_mask.tern
+// Demonstrates: CPU affinity selection based on process type and cache locality.
+// Tier: 4 — Enterprise
+
+fn select_core(is_latency_sensitive: trit, last_core: int, num_cores: int) -> int {
+    if is_latency_sensitive == 1 {
+        return last_core; // Stick to same core for cache locality
+    }
+
+    if last_core + 1 >= num_cores {
+        return 0; // Rotate back to first core
+    }
+
+    return last_core + 1; // Round-robin to next core
+}
+
+fn main() -> trit {
+    let latency: trit = truth();
+    let prev: int = 2;
+    let total: int = 4;
+
+    let core: int = select_core(latency, prev, total);
+
+    if core == prev {
+        return truth();
+    }
+
+    if core >= total {
+        return conflict();
+    }
+
+    return hold();
+}
