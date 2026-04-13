@@ -235,3 +235,12 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** The emitter adds a patch for `func_b` because it's undefined. Since `func_b` is never defined in the program or imports, the patch remains `0x0000`. Calling address `0x0000` re-executes the program header (TJMP to main), causing infinite recursion.
 **Fix:** Unresolved — Workaround: use `import *` to ensure all local dependencies are pulled in, or explicitly import all called functions.
 **Status:** Needs compiler change (ModuleResolver should ideally pull transitive local dependencies or emitter should error on unresolved patches).
+
+## 2026-04-13 — 'remote' Reserved Keyword Discovery
+
+**Trigger:** Using 'remote' as an identifier (e.g., let remote: int = 45000;).
+**Symptom:** Parse program error: ExpectedToken("identifier", "Remote").
+**Diagnosis:** 'remote' is a reserved keyword used in 'spawn remote "addr" AgentName' for distributed agent communication. The parser treats it as a special token rather than a generic identifier.
+**Fix:** Documentation only — avoid using 'remote' as a variable or function name. Renamed variables to 'rem_val' or similar.
+**Status:** Resolved (by avoidance).
+
