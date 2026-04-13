@@ -1,0 +1,38 @@
+// stdlib/premium/quantum_resilient_key_gate.tern
+// Demonstrates: Post-quantum resilience check for cryptographic keys.
+// Tier: 4 - Enterprise
+
+// Returns affirm if key is robust, hold if marginal, reject if compromised.
+fn check_pq_resilience(entropy_score: float, bit_depth: int) -> trit {
+    // Bit depth < 256 is a hard reject for PQ standards
+    if bit_depth < 256 {
+        return reject;
+    }
+    
+    // High entropy (e.g. > 0.99) is required for affirmation
+    if entropy_score > 0.99 {
+        return affirm;
+    }
+    
+    // Marginal entropy?
+    if entropy_score > 0.95 {
+        return tend;
+    }
+    
+    return reject;
+}
+
+fn main() -> trit {
+    let e: float = 0.995;
+    let b: int = 512;
+    
+    let result: trit = check_pq_resilience(e, b);
+    
+    match result {
+        -1 => { println("Key: Compromised/Weak"); }
+         0 => { println("Key: Marginal/Warning"); }
+         1 => { println("Key: Robust/PQ-Safe");   }
+    }
+    
+    return result;
+}
