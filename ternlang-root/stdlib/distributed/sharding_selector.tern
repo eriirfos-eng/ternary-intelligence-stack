@@ -1,0 +1,26 @@
+// stdlib/distributed/sharding_selector.tern
+// Demonstrates: Deterministic shard selection based on integer key hash.
+// Tier: 2 — Pro Standard
+
+fn get_shard(key: int, num_shards: int) -> int {
+    // Simple modulo sharding
+    let shard: int = key % num_shards;
+    if shard < 0 {
+        return -shard; // Ensure positive shard index
+    }
+    return shard;
+}
+
+fn main() -> trit {
+    let key_id: int = 12345;
+    let total_shards: int = 4;
+    
+    let shard: int = get_shard(key_id, total_shards);
+    
+    // Validate shard is in range [0, 3]
+    if shard >= 0 && shard < total_shards {
+        return truth();
+    }
+    
+    return conflict();
+}
