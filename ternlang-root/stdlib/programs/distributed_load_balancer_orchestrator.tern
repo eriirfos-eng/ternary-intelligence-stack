@@ -1,0 +1,57 @@
+// stdlib/programs/distributed_load_balancer_orchestrator.tern
+// Demonstrates: Multi-node load balancing, rebalancing logic, and node reputation.
+// Tier: 4 — Enterprise
+
+from std::trit import *;
+
+struct NodeLoad {
+    id: int,
+    load: float,
+    rep: float,
+}
+
+fn calculate_load(q: int, ms: float) -> float {
+    return cast(q) * ms / 1000.0;
+}
+
+fn recommend_rebalance(l1: float, l2: float, threshold: float) -> trit {
+    let diff: float = l1 - l2;
+    if diff < 0.0 { diff = -diff; }
+    
+    if diff > threshold {
+        return affirm; // Rebalance now
+    }
+    
+    if diff > threshold * 0.7 {
+        return tend; // Keep eye on it
+    }
+    
+    return reject; // Balanced enough
+}
+
+fn select_best_node(n1: NodeLoad, n2: NodeLoad) -> int {
+    // Decision based on load * reputation inverse
+    if n1.load < n2.load {
+        if n1.rep >= n2.rep { return n1.id; }
+    }
+    
+    if n2.load < n1.load {
+        if n2.rep >= n1.rep { return n2.id; }
+    }
+    
+    return n1.id; // Default
+}
+
+fn main() -> trit {
+    let nl1: NodeLoad = NodeLoad { id: 1, load: 0.85, rep: 0.95 };
+    let nl2: NodeLoad = NodeLoad { id: 2, load: 0.20, rep: 0.80 };
+    
+    let best: int = select_best_node(nl1, nl2);
+    let reb: trit = recommend_rebalance(nl1.load, nl2.load, 0.4);
+    
+    if reb == 1 && best == 2 {
+        return truth(); // Correctly identifies node 2 for rebalance
+    }
+    
+    return hold();
+}
