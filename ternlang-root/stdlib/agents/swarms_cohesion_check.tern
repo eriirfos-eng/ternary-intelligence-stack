@@ -1,0 +1,28 @@
+// stdlib/agents/swarms_cohesion_check.tern
+// Demonstrates: Checking cohesion in an agent swarm
+// Tier: 2
+
+fn check_cohesion(avg_dist: float, max_radius: float) -> trit {
+    // If average distance is within max radius, swarm is cohesive
+    if avg_dist < max_radius {
+        if avg_dist < max_radius * 0.5 {
+            return affirm; // Very cohesive
+        }
+        return tend; // Cohesive but loose
+    }
+    return reject; // Swarm is breaking up
+}
+
+fn main() -> trit {
+    let r: float = 10.0;
+    let d1: float = 4.0;
+    let res1: trit = check_cohesion(d1, r); // affirm
+    
+    let d2: float = 12.0;
+    let res2: trit = check_cohesion(d2, r); // reject
+    
+    if res1 == affirm && res2 == reject {
+        return truth();
+    }
+    return conflict();
+}

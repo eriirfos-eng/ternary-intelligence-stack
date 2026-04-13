@@ -1,0 +1,26 @@
+// stdlib/agents/agent_handshake_protocol.tern
+// Demonstrates: A simple agent-to-agent handshake protocol
+// Tier: 2
+
+fn handshake(req: trit, ack: trit) -> trit {
+    // Both must affirm to establish handshake
+    if req == affirm && ack == affirm {
+        return affirm;
+    }
+    // If one rejects, handshake failed
+    if req == reject || ack == reject {
+        return reject;
+    }
+    // Otherwise, it's in a hold state (waiting)
+    return tend;
+}
+
+fn main() -> trit {
+    let r1: trit = handshake(affirm, tend);   // waiting
+    let r2: trit = handshake(affirm, affirm); // connected
+    
+    if r1 == tend && r2 == affirm {
+        return truth();
+    }
+    return conflict();
+}
