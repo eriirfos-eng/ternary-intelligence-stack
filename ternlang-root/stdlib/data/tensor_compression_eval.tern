@@ -1,0 +1,57 @@
+// stdlib/data/tensor_compression_eval.tern
+// Demonstrates: Tensor compression decision based on zero-state density.
+// Tier: 2 - Pro Standard
+
+// Returns 1 (compress), 0 (marginal), -1 (don't compress).
+fn evaluate_compression(t: trit[]) -> trit {
+    let zeros: int = 0;
+    let total: int = 0;
+    
+    for val in t {
+        total = total + 1;
+        if val == tend {
+            zeros = zeros + 1;
+        }
+    }
+    
+    if total == 0 { return hold(); }
+    
+    let density: float = (1.0 * cast(zeros)) / cast(total);
+    
+    // If >= 80% is zero, compression is highly beneficial
+    if density >= 0.8 {
+        return affirm;
+    }
+    
+    // If < 20% is zero, overhead is likely too high
+    if density < 0.2 {
+        return reject;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let sample: trittensor<10>;
+    // Fill with many zeros
+    sample[0] = affirm;
+    sample[1] = tend;
+    sample[2] = tend;
+    sample[3] = tend;
+    sample[4] = tend;
+    sample[5] = tend;
+    sample[6] = tend;
+    sample[7] = tend;
+    sample[8] = tend;
+    sample[9] = reject;
+    
+    let result: trit = evaluate_compression(sample);
+    
+    match result {
+        -1 => { println("Sparse Compression: NO"); }
+         0 => { println("Sparse Compression: MArginal"); }
+         1 => { println("Sparse Compression: YES"); }
+    }
+    
+    return result;
+}
