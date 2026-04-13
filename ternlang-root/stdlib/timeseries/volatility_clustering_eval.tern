@@ -1,0 +1,29 @@
+// stdlib/timeseries/volatility_clustering_eval.tern
+// Demonstrates: Volatility clustering detection in time series.
+// Tier: 3 — Industrial
+
+fn detect_clustering(current_vol: float, historical_vol: float, window: int) -> trit {
+    if current_vol > historical_vol * 1.5 {
+        return truth(); // High volatility cluster
+    }
+
+    if current_vol < historical_vol * 0.5 {
+        return conflict(); // Low volatility cluster
+    }
+
+    return hold(); // Transition or stable
+}
+
+fn main() -> trit {
+    let curr: float = 0.45;
+    let hist: float = 0.25;
+    let win: int = 20;
+
+    let cluster: trit = detect_clustering(curr, hist, win);
+
+    match cluster {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
