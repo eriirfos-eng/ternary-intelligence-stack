@@ -1,0 +1,61 @@
+// stdlib/programs/distributed_hash_table.tern
+// Demonstrates: Consistent hashing, sharding, replication, and admission control.
+// Tier: 4 — Enterprise
+
+from std::trit import *;
+
+fn hash_key(s: string) -> int {
+    // Basic hash placeholder — length() only for tensors
+    return 15 * 31; 
+}
+
+fn get_node_for_key(key_hash: int, total_nodes: int) -> int {
+    let node: int = key_hash % total_nodes;
+    if node < 0 { return -node; }
+    return node;
+}
+
+fn replicate_key(primary: int, total_nodes: int) -> int {
+    // Replicate to the next node in the ring
+    return (primary + 1) % total_nodes;
+}
+
+fn validate_shard_access(node_id: int, load: float, limit: float) -> trit {
+    if load > limit {
+        return reject; // Overloaded
+    }
+    
+    if load > limit * 0.8 {
+        return tend; // Near limit
+    }
+    
+    return affirm; // OK
+}
+
+fn main() -> trit {
+    let key: string = "user_data_12345";
+    let n_nodes: int = 8;
+    let max_load: float = 0.9;
+    let curr_load: float = 0.85;
+
+    let h: int = hash_key(key);
+    let primary: int = get_node_for_key(h, n_nodes);
+    let replica: int = replicate_key(primary, n_nodes);
+    
+    let access: trit = validate_shard_access(primary, curr_load, max_load);
+    
+    match access {
+        1 => {
+            // Process on primary
+            return truth();
+        }
+        0 => {
+            // Process on replica due to primary load
+            return hold();
+        }
+        -1 => {
+            // Deny both
+            return conflict();
+        }
+    }
+}
