@@ -228,3 +228,10 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 **Status:** Fixed. All core stdlib files now parse and run correctly.
 **Files:** `stdlib/std/{logic, signal, collections, memory, graph, tensor, io}.tern`, `stdlib/ml/{inference, quantize}.tern`.
+
+## 2026-04-13 — BET-013 Call Stack Overflow via Named Imports
+**Trigger:** Importing a function via `from "file.tern" import func_a;` where `func_a` calls another local function `func_b` which is NOT imported.
+**Symptom:** `VM Error: [BET-013] Call stack overflow`.
+**Diagnosis:** The emitter adds a patch for `func_b` because it's undefined. Since `func_b` is never defined in the program or imports, the patch remains `0x0000`. Calling address `0x0000` re-executes the program header (TJMP to main), causing infinite recursion.
+**Fix:** Unresolved — Workaround: use `import *` to ensure all local dependencies are pulled in, or explicitly import all called functions.
+**Status:** Needs compiler change (ModuleResolver should ideally pull transitive local dependencies or emitter should error on unresolved patches).
