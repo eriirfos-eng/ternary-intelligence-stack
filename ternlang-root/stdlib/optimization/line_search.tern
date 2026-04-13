@@ -1,0 +1,58 @@
+// stdlib/optimization/line_search.tern
+// Demonstrates: Ternary step size evaluation in line search
+// Tier: 3
+
+fn evaluate_step(values: trit[]) -> trit {
+    // values[0] is baseline
+    // values[1] is step alpha
+    // values[2] is step 2*alpha
+    
+    let v0: trit = values[0];
+    let v1: trit = values[1];
+    let v2: trit = values[2];
+    
+    // Logic:
+    // If v1 < v0 and v1 < v2 => v1 is optimal (0)
+    // If v1 < v0 and v2 < v1 => v1 is too small (-1), keep going
+    // If v1 > v0 => v1 is too large (1)
+    
+    if v1 == -1 && v0 == 0 {
+        if v2 == 0 || v2 == 1 {
+            return 0; // optimal
+        }
+        return -1; // too small, v2 is even better (-1)
+    }
+    
+    if v1 == 1 && v0 == 1 {
+        // ...
+    }
+    
+    // Simple version:
+    match v1 {
+        -1 => { 
+            match v0 {
+                -1 => { return -1; } // Still at bottom?
+                 0 => { return 0;  } // Improved from neutral
+                 1 => { return 0;  } // Improved from bad
+            }
+        }
+         0 => {
+            match v0 {
+                -1 => { return 1; } // Regressed from good
+                 0 => { return 0; } // Steady
+                 1 => { return 0; } // Improved
+            }
+        }
+         1 => { return 1; } // Too large/Bad
+    }
+}
+
+fn main() -> trit {
+    let vals: trit[] = [0, -1, 0]; // neutral -> improve -> regress
+    let result: trit = evaluate_step(vals);
+    
+    if result == 0 {
+        return truth();
+    }
+    return conflict();
+}
