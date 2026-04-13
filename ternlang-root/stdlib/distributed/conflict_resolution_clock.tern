@@ -1,0 +1,28 @@
+// stdlib/distributed/conflict_resolution_clock.tern
+// Demonstrates: Resolving concurrent updates using vector clock comparison.
+// Tier: 2 — Pro Standard
+
+fn resolve_conflict(local_v: int, rem_v: int) -> trit {
+    if rem_v > local_v {
+        return affirm; // Remote wins, update local
+    }
+
+    if rem_v == local_v {
+        return tend; // Concurrent or identical, need further merge
+    }
+
+    return reject; // Local is ahead, ignore remote
+}
+
+fn main() -> trit {
+    let local: int = 15;
+    let rem_v: int = 20;
+
+    let res: trit = resolve_conflict(local, rem_v);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
