@@ -1,0 +1,28 @@
+// stdlib/testing/test_spy_gate.tern
+// Demonstrates: Recording call frequency and validating against expected count
+// Tier: 1 - Open Core
+
+fn spy_check(actual_calls: int, expected_calls: int) -> trit {
+    if actual_calls == expected_calls {
+        return truth();
+    }
+    
+    if actual_calls > expected_calls {
+        return conflict(); // Over-called
+    }
+    
+    return hold(); // Under-called (Incomplete)
+}
+
+fn main() -> trit {
+    let calls: int = 3;
+    let expected: int = 3;
+    
+    let result: trit = spy_check(calls, expected);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

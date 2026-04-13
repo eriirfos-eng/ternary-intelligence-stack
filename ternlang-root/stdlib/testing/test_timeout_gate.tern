@@ -1,0 +1,29 @@
+// stdlib/testing/test_timeout_gate.tern
+// Demonstrates: Detection of slow test execution via duration threshold
+// Tier: 1 - Open Core
+
+fn timeout_gate(actual_ms: int, timeout_ms: int) -> trit {
+    if actual_ms > timeout_ms {
+        return conflict(); // TIMEOUT
+    }
+    
+    // Within 90% of timeout is a warning (hold)
+    if actual_ms > (timeout_ms * 9 / 10) {
+        return hold();
+    }
+    
+    return truth(); // Well within limits
+}
+
+fn main() -> trit {
+    let actual: int = 95;
+    let limit: int = 100;
+    
+    let result: trit = timeout_gate(actual, limit);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

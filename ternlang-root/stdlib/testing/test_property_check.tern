@@ -1,0 +1,24 @@
+// stdlib/testing/test_property_check.tern
+// Demonstrates: Validating invariants over a range of inputs
+// Tier: 1 - Open Core
+
+fn check_sum_invariant(a: int, b: int) -> trit {
+    let sum: int = a + b;
+    let reversed_sum: int = b + a;
+    
+    if sum == reversed_sum {
+        return truth();
+    }
+    
+    return conflict(); // Should never happen for commutativity
+}
+
+fn main() -> trit {
+    let result: trit = check_sum_invariant(10, 20);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
