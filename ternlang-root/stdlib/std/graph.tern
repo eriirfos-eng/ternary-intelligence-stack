@@ -14,22 +14,25 @@ struct TritGraph {
 }
 
 fn graph_init() -> TritGraph {
+    let n: trittensor<64>;
+    let a: trittensor<64 x 64>;
     return TritGraph { 
-        nodes: trittensor<64>::zero(), 
-        adj: trittensor<64 x 64>::zero(), 
+        nodes: n, 
+        adj: a, 
         num_nodes: 0 
     };
 }
 
 // Propagate signals through the graph edges
-fn propagate(graph: &mut TritGraph) {
-    let mut next_nodes: trittensor<64> = trittensor<64>::zero();
+fn propagate(graph: TritGraph) -> trit {
+    let mut next_nodes: trittensor<64>;
     let mut i: int = 0;
     while i < graph.num_nodes {
         let mut sum_val: float = 0.0;
         let mut j: int = 0;
+        let adj_d: trit[] = graph.adj;
         while j < graph.num_nodes {
-            match graph.adj[j][i] {
+            match adj_d[j * 64 + i] {
                 affirm => { sum_val = sum_val + 1.0; }
                 tend   => { sum_val = sum_val + 0.0; }
                 reject => { sum_val = sum_val - 1.0; }
@@ -37,32 +40,44 @@ fn propagate(graph: &mut TritGraph) {
             j = j + 1;
         }
         
-        if sum_val > 0.1 { next_nodes[i] = affirm; }
-        else if sum_val < -0.1 { next_nodes[i] = reject; }
-        else { next_nodes[i] = tend; }
+        if sum_val > 0.1 ? { 
+            next_nodes[i] = affirm; 
+        } else {
+            if sum_val < -0.1 ? {
+                next_nodes[i] = reject;
+            } else {
+                next_nodes[i] = tend;
+            } else {
+                next_nodes[i] = tend;
+            }
+        } else {
+            next_nodes[i] = reject;
+        }
         i = i + 1;
     }
     graph.nodes = next_nodes;
+    return 0;
 }
 
 // Simple BFS on ternary graph (reaches affirm/reject nodes)
 fn trit_bfs(graph: TritGraph, start: int) -> trittensor<64> {
-    let mut visited: trittensor<64> = trittensor<64>::zero();
+    let mut visited: trittensor<64>;
     let mut q: TritQueue = queue_init();
     
     // In ternary BFS, we visit nodes and record their signals
     // Start node is assumed affirm for simplicity
-    enqueue(&mut q, start);
+    enqueue(q, start);
     visited[start] = affirm;
     
     while q.size > 0 {
-        let curr: int = dequeue(&mut q);
+        let curr: int = dequeue(q);
         let mut next: int = 0;
+        let adj_d: trit[] = graph.adj;
         while next < graph.num_nodes {
-            if graph.adj[curr][next] != tend && visited[next] == tend {
-                visited[next] = graph.adj[curr][next];
-                enqueue(&mut q, next);
-            }
+            if adj_d[curr * 64 + next] != tend && visited[next] == tend ? {
+                visited[next] = adj_d[curr * 64 + next];
+                enqueue(q, next);
+            } else { } else { }
             next = next + 1;
         }
     }
@@ -70,20 +85,22 @@ fn trit_bfs(graph: TritGraph, start: int) -> trittensor<64> {
 }
 
 // PageRank step for ternary graph: node importance calculation
-fn trit_pagerank_step(graph: TritGraph, scores: &mut trittensor<64>, damping: float) {
-    let mut next_scores: trittensor<64> = trittensor<64>::zero();
+fn trit_pagerank_step(graph: TritGraph, scores: trittensor<64>, damping: float) -> trit {
+    let mut next_scores: trittensor<64>;
     let mut i: int = 0;
     while i < graph.num_nodes {
         let mut rank: float = (1.0 - damping) / 64.0;
         let mut j: int = 0;
+        let adj_d: trit[] = graph.adj;
         while j < graph.num_nodes {
-            if graph.adj[j][i] != tend {
+            if adj_d[j * 64 + i] != tend ? {
                 // Simplified rank contribution
                 rank = rank + damping * (1.0 / 64.0);
-            }
+            } else { } else { }
             j = j + 1;
         }
         // page rank stores float, but here we can quantize it back to trit if needed
         i = i + 1;
     }
+    return 0;
 }
