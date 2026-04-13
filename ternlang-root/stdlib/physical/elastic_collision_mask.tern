@@ -1,0 +1,25 @@
+// stdlib/physical/elastic_collision_mask.tern
+// Demonstrates: Masking elastic collision events
+// Tier: 3
+
+fn collision_mask(dist: float, radius1: float, radius2: float) -> trit {
+    // If distance <= sum of radii, collision occurs
+    let sum_radii: float = radius1 + radius2;
+    if dist <= sum_radii {
+        return affirm;
+    }
+    return tend;
+}
+
+fn main() -> trit {
+    let d: float = 0.5;
+    let r1: float = 0.3;
+    let r2: float = 0.3;
+    
+    let res: trit = collision_mask(d, r1, r2); // 0.5 <= 0.6: affirm
+    
+    if res == affirm {
+        return truth();
+    }
+    return conflict();
+}
