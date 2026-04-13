@@ -1,0 +1,34 @@
+// stdlib/net/dns_query_filter.tern
+// Demonstrates: DNS query filtering logic based on domain score and trust threshold
+// Tier: 2 - Pro Standard
+
+fn filter_query(domain_score: float, threshold: float, blacklist_flag: trit) -> trit {
+    match blacklist_flag {
+        -1 => { return conflict(); } // Explicitly blacklisted
+         0 => { 
+            // Check domain score against threshold if not blacklisted
+            if domain_score > threshold {
+                return truth();
+            }
+            if domain_score < (threshold - 0.2) {
+                return conflict();
+            }
+            return hold();
+         }
+         1 => { return truth(); } // Explicitly whitelisted
+    }
+}
+
+fn main() -> trit {
+    let score: float = 0.85;
+    let limit: float = 0.7;
+    let flag: trit = 0; // Neutral, use score
+    
+    let result: trit = filter_query(score, limit, flag);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
