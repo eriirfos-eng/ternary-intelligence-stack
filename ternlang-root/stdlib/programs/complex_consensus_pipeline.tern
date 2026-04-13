@@ -1,0 +1,52 @@
+// stdlib/programs/complex_consensus_pipeline.tern
+// Demonstrates: Multi-stage pipeline: outlier filter -> majority vote -> confidence gate.
+// Tier: 4 — Enterprise
+
+from std::trit import *;
+
+fn filter_outlier(v: trit, signal_noise: float) -> trit {
+    if signal_noise > 0.8 {
+        return hold(); // Too much noise, ignore vote
+    }
+    return v;
+}
+
+fn vote_consensus_3(v1: trit, v2: trit, v3: trit) -> trit {
+    // Uses majority logic from std::trit
+    return majority(v1, v2, v3);
+}
+
+fn validate_with_confidence(c: trit, conf: float, min_conf: float) -> trit {
+    if conf < min_conf {
+        return hold(); // Insufficient confidence
+    }
+    return c;
+}
+
+fn process_consensus_pipeline(v1: trit, v2: trit, v3: trit, noise: float, conf: float) -> trit {
+    let f1: trit = filter_outlier(v1, noise);
+    let f2: trit = filter_outlier(v2, noise);
+    let f3: trit = filter_outlier(v3, noise);
+    
+    let cons: trit = vote_consensus_3(f1, f2, f3);
+    
+    let final_res: trit = validate_with_confidence(cons, conf, 0.7);
+    return final_res;
+}
+
+fn main() -> trit {
+    let v_a: trit = 1;
+    let v_b: trit = 1;
+    let v_c: trit = -1;
+    
+    let n: float = 0.2;
+    let c: float = 0.85;
+    
+    let res: trit = process_consensus_pipeline(v_a, v_b, v_c, n, c);
+    
+    match res {
+        1 => { return truth(); }
+        0 => { return hold();  }
+       -1 => { return conflict(); }
+    }
+}
