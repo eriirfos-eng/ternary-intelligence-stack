@@ -1,0 +1,33 @@
+// stdlib/gametheory/chicken_game_eval.tern
+// Demonstrates: Evaluation of outcomes in the Game of Chicken (Hawk-Dove).
+// Tier: 3 — Industrial
+
+fn evaluate_outcome(a_swerves: trit, b_swerves: trit) -> trit {
+    // 1 = Swerve (Dove), -1 = Straight (Hawk)
+    if a_swerves == 1 && b_swerves == 1 {
+        return hold(); // Mutual swerve, tie (0, 0)
+    }
+
+    if a_swerves == -1 && b_swerves == 1 {
+        return truth(); // A wins (Hawk), B loses (Dove)
+    }
+
+    if a_swerves == 1 && b_swerves == -1 {
+        return conflict(); // B wins (Hawk), A loses (Dove)
+    }
+
+    return conflict(); // Mutual straight, crash (-100, -100)
+}
+
+fn main() -> trit {
+    let a: trit = reject;
+    let b: trit = reject;
+
+    let res: trit = evaluate_outcome(a, b);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
