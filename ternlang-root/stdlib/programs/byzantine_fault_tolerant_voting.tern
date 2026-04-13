@@ -1,0 +1,90 @@
+// stdlib/programs/byzantine_fault_tolerant_voting.tern
+// Demonstrates: Weighted voting with struct-based weights and consensus threshold.
+// Tier: 4 — Enterprise
+
+from std::trit import *;
+
+struct Weights {
+    w1: float,
+    w2: float,
+    w3: float,
+    w4: float,
+    w5: float,
+}
+
+fn validate_vote(v: trit, w: float) -> float {
+    if w < 0.2 {
+        return 0.0;
+    }
+    
+    if v == 1 { return w; }
+    if v == -1 { return -w; }
+    return 0.0;
+}
+
+fn aggregate_5_votes(v1: trit, v2: trit, v3: trit, v4: trit, v5: trit, w: Weights) -> float {
+    let total: float = 0.0;
+    total = total + validate_vote(v1, w.w1);
+    total = total + validate_vote(v2, w.w2);
+    total = total + validate_vote(v3, w.w3);
+    total = total + validate_vote(v4, w.w4);
+    total = total + validate_vote(v5, w.w5);
+    return total;
+}
+
+fn decide_consensus(sum: float, threshold: float) -> trit {
+    if sum > threshold {
+        return affirm;
+    }
+    
+    if sum < -threshold {
+        return reject;
+    }
+    
+    return tend;
+}
+
+fn count_dissent(v1: trit, v2: trit, v3: trit, v4: trit, v5: trit, consensus: trit) -> int {
+    let count: int = 0;
+    if consensus != 0 {
+        if v1 != consensus { count = count + 1; }
+        if v2 != consensus { count = count + 1; }
+        if v3 != consensus { count = count + 1; }
+        if v4 != consensus { count = count + 1; }
+        if v5 != consensus { count = count + 1; }
+    }
+    return count;
+}
+
+fn main() -> trit {
+    let v1: trit = 1;
+    let v2: trit = 1;
+    let v3: trit = -1;
+    let v4: trit = 1;
+    let v5: trit = 0;
+    
+    let w: Weights = Weights {
+        w1: 1.0,
+        w2: 0.8,
+        w3: 1.0,
+        w4: 0.9,
+        w5: 0.5,
+    };
+    
+    let t: float = 1.5;
+    
+    let score: float = aggregate_5_votes(v1, v2, v3, v4, v5, w);
+    let final_c: trit = decide_consensus(score, t);
+    
+    let dissent: int = count_dissent(v1, v2, v3, v4, v5, final_c);
+    
+    if dissent > 2 {
+        return reject;
+    }
+    
+    match final_c {
+        1 => { return truth(); }
+        0 => { return hold();    }
+       -1 => { return conflict(); }
+    }
+}
