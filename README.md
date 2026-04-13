@@ -5,7 +5,7 @@
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](ternlang-root/LICENSE)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
-[![MCP](https://img.shields.io/badge/MCP-13%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
+[![MCP](https://img.shields.io/badge/MCP-+20%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399)](https://ternlang.com/compliance)
 [![Data Residency](https://img.shields.io/badge/Data%20Residency-EU%20Frankfurt-003399)](https://ternlang.com/compliance)
 
