@@ -1,0 +1,29 @@
+// stdlib/grid/transmission_line_thermal_limit.tern
+// Demonstrates: Checking thermal limits of grid transmission lines
+// Tier: 2
+
+fn check_thermal_limit(current_amps: float, ambient_temp: float, max_amps: float) -> trit {
+    // Basic thermal model: current causes heating, ambient adds to it.
+    let heat_factor: float = (current_amps / max_amps) + (ambient_temp / 100.0);
+    
+    if heat_factor > 0.95 {
+        return reject; // Danger of overheating
+    }
+    if heat_factor > 0.8 {
+        return tend; // Warning, approach limit
+    }
+    return affirm; // Safe to operate
+}
+
+fn main() -> trit {
+    let curr: float = 800.0;
+    let amb:  float = 25.0;
+    let max:  float = 1000.0;
+    
+    let status: trit = check_thermal_limit(curr, amb, max); // 0.8 + 0.25 = 1.05 > 0.95: reject
+    
+    if status == reject {
+        return truth();
+    }
+    return conflict();
+}
