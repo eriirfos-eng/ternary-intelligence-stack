@@ -1,0 +1,35 @@
+// stdlib/gametheory/battle_of_the_sexes.tern
+// Demonstrates: Coordination logic in the Battle of the Sexes game.
+// Tier: 3 — Industrial
+
+fn calculate_payoff(my_choice: int, other_choice: int, preference: int) -> int {
+    if my_choice != other_choice {
+        return 0; // Coordination failure
+    }
+
+    if my_choice == preference {
+        return 3; // Coordinated on preferred option
+    }
+
+    return 2; // Coordinated on non-preferred option
+}
+
+fn main() -> trit {
+    let p1_pref: int = 1;
+    let p2_pref: int = 2;
+    
+    let p1_choice: int = 1;
+    let p2_choice: int = 1;
+
+    let payoff: int = calculate_payoff(p1_choice, p2_choice, p1_pref);
+
+    if payoff == 3 {
+        return truth();
+    }
+
+    if payoff == 0 {
+        return conflict();
+    }
+
+    return hold();
+}
