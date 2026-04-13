@@ -1,0 +1,75 @@
+// stdlib/programs/fault_tolerant_aggregator.tern
+// Demonstrates: Fault-tolerant sensor aggregation using majority voting and confidence scoring.
+// Tier: 3 - Industrial
+
+from std::trit import majority;
+
+// Simulated sensor reading based on hardcoded ID logic.
+fn sensor_read(id: int) -> trit {
+    if id == 0 { return affirm; }
+    if id == 1 { return affirm; }
+    if id == 2 { return reject; } // Failing sensor
+    return tend;
+}
+
+// Filters out extreme noise or out-of-bounds readings.
+fn filter_anomalies(val: trit) -> trit {
+    // In this model, we trust all trits unless they are tend (unreliable)
+    if val == tend {
+        return reject; // Treat unreliable as negative for this specific pipeline
+    }
+    return val;
+}
+
+// Aggregates three filtered signals using majority vote from std::trit.
+fn aggregate_triplet(s1: trit, s2: trit, s3: trit) -> trit {
+    let f1: trit = filter_anomalies(s1);
+    let f2: trit = filter_anomalies(s2);
+    let f3: trit = filter_anomalies(s3);
+    
+    return majority(f1, f2, f3);
+}
+
+// Calculates confidence score as a float based on agreement.
+fn calculate_confidence(s1: trit, s2: trit, s3: trit, result: trit) -> float {
+    let matches: int = 0;
+    if s1 == result { matches = matches + 1; }
+    if s2 == result { matches = matches + 1; }
+    if s3 == result { matches = matches + 1; }
+    
+    let score: float = (1.0 * cast(matches)) / 3.0;
+    return score;
+}
+
+// Final decision gate based on confidence threshold.
+fn decision_gate(result: trit, confidence: float) -> trit {
+    if confidence < 0.6 {
+        println("Confidence too low. Result held.");
+        return tend;
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let r1: trit = sensor_read(0);
+    let r2: trit = sensor_read(1);
+    let r3: trit = sensor_read(2);
+    
+    let consensus_val: trit = aggregate_triplet(r1, r2, r3);
+    let conf: float = calculate_confidence(r1, r2, r3, consensus_val);
+    
+    println("Consensus Value:");
+    println(consensus_val);
+    println("Confidence Score:");
+    println(conf);
+    
+    let final_res: trit = decision_gate(consensus_val, conf);
+    
+    match final_res {
+        -1 => { println("Pipeline: BLOCK"); }
+         0 => { println("Pipeline: HOLD");  }
+         1 => { println("Pipeline: ALLOW"); }
+    }
+    
+    return final_res;
+}
