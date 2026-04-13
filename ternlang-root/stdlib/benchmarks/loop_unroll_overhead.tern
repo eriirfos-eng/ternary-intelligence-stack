@@ -1,0 +1,39 @@
+// stdlib/benchmarks/loop_unroll_overhead.tern
+// Demonstrates: Benchmarking loop overhead vs manual unrolling
+// Tier: 1 - Open Core
+
+fn loop_bench(iterations: int) -> int {
+    let sum: int = 0;
+    let i: int = 0;
+    while i < iterations {
+        sum = sum + 1;
+        i = i + 1;
+    }
+    return sum;
+}
+
+fn unrolled_bench() -> int {
+    let sum: int = 0;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    sum = sum + 1;
+    return sum;
+}
+
+fn main() -> trit {
+    let l_sum: int = loop_bench(10);
+    let u_sum: int = unrolled_bench();
+    
+    if l_sum == u_sum {
+        return truth();
+    }
+    
+    return conflict();
+}

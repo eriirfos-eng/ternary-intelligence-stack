@@ -1,0 +1,23 @@
+// stdlib/benchmarks/tensor_allocation_latency.tern
+// Demonstrates: Measuring tensor allocation and deallocation overhead
+// Tier: 1 - Open Core
+
+fn allocate_many(count: int) -> trit {
+    let i: int = 0;
+    while i < count {
+        let t: trittensor<16>;
+        // t is allocated via Talloc (0x0f)
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let result: trit = allocate_many(100);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
