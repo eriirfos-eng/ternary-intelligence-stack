@@ -1,0 +1,77 @@
+// stdlib/programs/autonomous_fleet_coordinator.tern
+// Demonstrates: 2D tensor management for autonomous fleet coordination.
+// Tier: 3 - Industrial
+
+from std::trit import majority;
+
+// Fleet status types (columns): 0: Health, 1: Fuel, 2: Mission
+// States: 1 (OK/Affirm), 0 (Warning/Tend), -1 (Critical/Reject)
+
+fn init_fleet(fleet: trittensor<3 x 3>) -> trit {
+    let i: int = 0;
+    while i < 3 {
+        fleet[i, 0] = affirm; // Health OK
+        fleet[i, 1] = affirm; // Fuel Full
+        fleet[i, 2] = tend;   // Idle
+        i = i + 1;
+    }
+    return affirm;
+}
+
+fn simulate_wear(fleet: trittensor<3 x 3>) -> trit {
+    fleet[0, 1] = tend;   // Drone 0 low fuel
+    fleet[1, 0] = tend;   // Drone 1 minor fault
+    fleet[2, 1] = reject; // Drone 2 empty fuel
+    return affirm;
+}
+
+// Aggregates status of a single drone across health and fuel.
+fn evaluate_drone(fleet: trittensor<3 x 3>, id: int) -> trit {
+    let h: trit = fleet[id, 0];
+    let f: trit = fleet[id, 1];
+    
+    // Safety first: if health is reject, drone is out.
+    if h == reject { return reject; }
+    
+    // Otherwise, consensus of health and fuel
+    return consensus(h, f);
+}
+
+fn rebalance_fleet(fleet: trittensor<3 x 3>) -> int {
+    let active_count: int = 0;
+    let i: int = 0;
+    while i < 3 {
+        let status: trit = evaluate_drone(fleet, i);
+        println("Drone status:");
+        println(status);
+        
+        if status != reject {
+            active_count = active_count + 1;
+            fleet[i, 2] = affirm; // Assign task
+        } else {
+            fleet[i, 2] = reject; // Ground drone
+        }
+        i = i + 1;
+    }
+    return active_count;
+}
+
+fn main() -> trit {
+    let fleet: trittensor<3 x 3>;
+    init_fleet(fleet);
+    simulate_wear(fleet);
+    
+    println("Rebalancing fleet...");
+    let active: int = rebalance_fleet(fleet);
+    
+    println("Active drones:");
+    println(active);
+    
+    if active >= 2 {
+        println("Mission: GO");
+        return affirm;
+    }
+    
+    println("Mission: ABORT");
+    return reject;
+}
