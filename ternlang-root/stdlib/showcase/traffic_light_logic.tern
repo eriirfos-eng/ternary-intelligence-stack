@@ -1,0 +1,37 @@
+// stdlib/showcase/traffic_light_logic.tern
+// Demonstrates: Traffic light state machine using trits.
+// Tier: 1 - Open Core
+
+// Returns the next state given current state (trit).
+// -1 (Red) -> 1 (Green)
+//  1 (Green) -> 0 (Yellow)
+//  0 (Yellow) -> -1 (Red)
+fn next_state(current: trit) -> trit {
+    match current {
+        -1 => { return 1; }
+         1 => { return 0; }
+         0 => { return -1; }
+    }
+}
+
+fn describe_state(state: trit) -> trit {
+    match state {
+        -1 => { println("Signal: RED (Stop)");     }
+         0 => { println("Signal: YELLOW (Wait)"); }
+         1 => { println("Signal: GREEN (Go)");   }
+    }
+    return state;
+}
+
+fn main() -> trit {
+    let s: trit = -1; // Start at Red
+    
+    let i: int = 0;
+    while i < 6 {
+        describe_state(s);
+        s = next_state(s);
+        i = i + 1;
+    }
+    
+    return affirm;
+}
