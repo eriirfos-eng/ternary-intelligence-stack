@@ -1,0 +1,35 @@
+// stdlib/database/query_cost_estimate.tern
+// Demonstrates: Query cost estimation using float weights and trit thresholding.
+// Tier: 3 - Industrial
+
+// Estimator function combining I/O, CPU, and Network costs.
+fn estimate_query_plan(io_cost: float, cpu_cost: float, net_cost: float) -> trit {
+    let total: float = io_cost * 0.5 + cpu_cost * 0.3 + net_cost * 0.2;
+    
+    // Lower total cost is better
+    if total < 50.0 {
+        return affirm; // optimal
+    }
+    
+    if total > 200.0 {
+        return reject; // too expensive
+    }
+    
+    return tend; // acceptable
+}
+
+fn main() -> trit {
+    let io: float = 30.0;
+    let cpu: float = 40.0;
+    let net: float = 20.0;
+    
+    let plan_a: trit = estimate_query_plan(io, cpu, net);
+    
+    match plan_a {
+        -1 => { println("Plan rejected: too expensive"); }
+         0 => { println("Plan acceptable: neutral cost"); }
+         1 => { println("Plan approved: optimal");        }
+    }
+    
+    return plan_a;
+}
