@@ -1,0 +1,31 @@
+// stdlib/gametheory/ultimatum_game_responder.tern
+// Demonstrates: Responder logic in the Ultimatum Game based on fairness threshold.
+// Tier: 3 — Industrial
+
+fn decide_acceptance(offer: float, total: float, fairness_threshold: float) -> trit {
+    let ratio: float = offer / total;
+
+    if ratio >= fairness_threshold {
+        return truth(); // Accept fair offer
+    }
+
+    if ratio >= 0.1 {
+        return hold(); // Unfair but non-zero, hesitant
+    }
+
+    return conflict(); // Very unfair, reject out of spite
+}
+
+fn main() -> trit {
+    let my_offer: float = 2.0;
+    let pool: float = 10.0;
+    let threshold: float = 0.3;
+
+    let res: trit = decide_acceptance(my_offer, pool, threshold);
+
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
