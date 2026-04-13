@@ -1,0 +1,42 @@
+// stdlib/showcase/rock_paper_scissors_gate.tern
+// Demonstrates: Rock-Paper-Scissors rules implemented as a trit gate.
+// Tier: 1 - Open Core
+
+// 1: Rock, 0: Paper, -1: Scissors
+// Returns 1 if p1 wins, -1 if p2 wins, 0 if tie.
+fn rps_match(p1: trit, p2: trit) -> trit {
+    if p1 == p2 { return hold(); }
+    
+    match p1 {
+        1 => {
+            // Rock vs ...
+            if p2 == 0 { return reject; } // Paper wraps Rock
+            return affirm;               // Rock crushes Scissors
+        }
+        0 => {
+            // Paper vs ...
+            if p2 == -1 { return reject; } // Scissors cuts Paper
+            return affirm;                // Paper wraps Rock
+        }
+        -1 => {
+            // Scissors vs ...
+            if p2 == 1 { return reject; } // Rock crushes Scissors
+            return affirm;               // Scissors cuts Paper
+        }
+    }
+}
+
+fn main() -> trit {
+    let p1: trit = 1;  // Rock
+    let p2: trit = -1; // Scissors
+    
+    let result: trit = rps_match(p1, p2);
+    
+    match result {
+        -1 => { println("Player 2 Wins!"); }
+         0 => { println("Tie Game!");       }
+         1 => { println("Player 1 Wins!"); }
+    }
+    
+    return result;
+}
