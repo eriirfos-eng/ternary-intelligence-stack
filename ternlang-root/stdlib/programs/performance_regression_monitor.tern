@@ -1,0 +1,33 @@
+// stdlib/programs/performance_regression_monitor.tern
+// Demonstrates: Automated performance regression monitoring using bench imports
+// Tier: 1 - Open Core
+
+from "../benchmarks/loop_unroll_overhead.tern" import loop_bench;
+from "../stats/arithmetic_mean_gate.tern" import check_mean_threshold;
+
+fn record_run(iterations: int) -> int {
+    return loop_bench(iterations);
+}
+
+fn analyze_samples(s1: int, s2: int, s3: int, baseline: float) -> trit {
+    let avg: float = cast(s1 + s2 + s3) / 3.0;
+    return check_mean_threshold(avg, baseline, 0.1);
+}
+
+fn monitor_pipeline(base: float) -> trit {
+    let run1: int = record_run(10);
+    let run2: int = record_run(10);
+    let run3: int = record_run(10);
+    
+    return analyze_samples(run1, run2, run3, base);
+}
+
+fn main() -> trit {
+    let result: trit = monitor_pipeline(10.0);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

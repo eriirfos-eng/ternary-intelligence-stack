@@ -20,6 +20,16 @@ fn mean(data: trit[]) -> float {
     }
 }
 
+fn check_mean_threshold(actual: float, expected: float, tolerance: float) -> trit {
+    if actual > (expected + tolerance) {
+        return conflict();
+    }
+    if actual < (expected - tolerance) {
+        return conflict();
+    }
+    return truth();
+}
+
 fn main() -> trit {
     let signals: trit[] = [1, 1, 1, 0, 0];
     

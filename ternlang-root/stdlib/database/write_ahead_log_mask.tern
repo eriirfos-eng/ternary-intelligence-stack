@@ -1,28 +1,21 @@
 // stdlib/database/write_ahead_log_mask.tern
-// Demonstrates: ensuring that data writes only happen after log commits
-// Tier: 3 — Industrial
+// Demonstrates: Validating WAL log index consistency across cluster
+// Tier: 3 - Industrial
 
-fn wal_check(log_flushed: trit, buffer_dirty: trit, data_written: trit) -> trit {
-    if data_written == 1 {
-        if log_flushed == -1 {
-            return conflict(); // Data written but log not flushed! Inconsistent.
-        }
+fn check_log_consistency(local_idx: int, master_idx: int) -> trit {
+    if local_idx == master_idx {
+        return truth(); // Fully synced
     }
     
-    if buffer_dirty == 1 {
-        if log_flushed == 1 { return truth(); } // Safe to write data
-        return hold(); // Wait for log flush
+    if local_idx < master_idx {
+        return hold(); // Lagging
     }
     
-    return truth(); // Clean state
+    return conflict(); // Local index ahead of master (Corruption!)
 }
 
 fn main() -> trit {
-    let flushed: trit = 1;
-    let dirty: trit = 1;
-    let written: trit = 0;
-    
-    let res: trit = wal_check(flushed, dirty, written);
+    let res: trit = check_log_consistency(100, 100);
     match res {
         -1 => { return conflict(); }
          0 => { return hold();     }

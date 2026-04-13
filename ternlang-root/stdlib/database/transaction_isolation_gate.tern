@@ -1,24 +1,23 @@
 // stdlib/database/transaction_isolation_gate.tern
-// Demonstrates: validating transaction isolation levels
-// Tier: 3 — Industrial
+// Demonstrates: Gating transactions based on isolation levels and conflict detection
+// Tier: 3 - Industrial
 
-fn check_isolation(level: int, allows_dirty_reads: trit, required_clean: trit) -> trit {
-    if required_clean == 1 {
-        // Isolation level 1 usually means read uncommitted
-        if level == 1 { return conflict(); }
-        if allows_dirty_reads == 1 { return conflict(); }
+fn check_isolation(level: int, conflict_detected: trit) -> trit {
+    match conflict_detected {
+        -1 => { return conflict(); } // Hard conflict
+         1 => { return conflict(); } // Conflict affirm
+         0 => { 
+            if level > 2 {
+                return truth(); // Strict isolation ok
+            }
+            return hold(); // Loose isolation, proceed with caution
+         }
     }
-    if level >= 3 { return truth(); } // Serializable or Repeatable Read
-    return hold();
 }
 
 fn main() -> trit {
-    let iso_level: int = 2; // Read committed
-    let dirty: trit = 0;
-    let req_clean: trit = 1;
-    
-    let ok: trit = check_isolation(iso_level, dirty, req_clean);
-    match ok {
+    let res: trit = check_isolation(3, 0);
+    match res {
         -1 => { return conflict(); }
          0 => { return hold();     }
          1 => { return truth();    }
