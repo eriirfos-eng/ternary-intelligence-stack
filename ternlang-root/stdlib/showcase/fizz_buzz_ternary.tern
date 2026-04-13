@@ -1,0 +1,48 @@
+// stdlib/showcase/fizz_buzz_ternary.tern
+// Demonstrates: FizzBuzz logic using trits to signal divisibility.
+// Tier: 1 - Open Core
+
+// Returns 1 if divisible by divisor, -1 if not, 0 if error.
+fn is_divisible(n: int, d: int) -> trit {
+    if d == 0 { return hold(); }
+    if n % d == 0 {
+        return affirm;
+    }
+    return reject;
+}
+
+fn fizzbuzz(n: int) -> trit {
+    let f: trit = is_divisible(n, 3);
+    let b: trit = is_divisible(n, 5);
+    
+    // Both 3 and 5? FizzBuzz
+    if f == affirm && b == affirm {
+        println("FizzBuzz");
+        return affirm;
+    }
+    
+    // 3 only? Fizz
+    if f == affirm {
+        println("Fizz");
+        return tend;
+    }
+    
+    // 5 only? Buzz
+    if b == affirm {
+        println("Buzz");
+        return reject;
+    }
+    
+    // Neither? The number
+    println(n);
+    return hold();
+}
+
+fn main() -> trit {
+    let i: int = 1;
+    while i <= 15 {
+        fizzbuzz(i);
+        i = i + 1;
+    }
+    return affirm;
+}
