@@ -1,0 +1,22 @@
+// stdlib/benchmarks/recursion_depth_bench.tern
+// Demonstrates: Measuring recursion depth overhead
+// Tier: 1 - Open Core
+
+fn recurse(n: int) -> int {
+    if n <= 0 {
+        return 0;
+    }
+    let prev: int = recurse(n - 1);
+    return 1 + prev;
+}
+
+fn main() -> trit {
+    let depth: int = 50;
+    let result: int = recurse(depth);
+    
+    if result == depth {
+        return truth();
+    }
+    
+    return conflict();
+}

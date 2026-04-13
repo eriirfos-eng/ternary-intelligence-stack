@@ -1,0 +1,22 @@
+// stdlib/benchmarks/string_concat_bench.tern
+// Demonstrates: Measuring string printing and literal push overhead
+// Tier: 1 - Open Core
+
+fn print_many(count: int) -> trit {
+    let i: int = 0;
+    while i < count {
+        println("benchmark trace");
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let result: trit = print_many(20);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

@@ -1,0 +1,31 @@
+// stdlib/benchmarks/bitwise_ternary_ops.tern
+// Demonstrates: Measuring Tand (&&) and Tor (||) performance
+// Tier: 1 - Open Core
+
+fn logic_bench(iterations: int) -> trit {
+    let i: int = 0;
+    let res: trit = 0;
+    while i < iterations {
+        // Balanced ternary logic ops
+        let a: trit = 1;
+        let b: trit = -1;
+        let c: trit = 0;
+        
+        res = a && b; // -1
+        res = res || c; // 0
+        res = res && a; // 0
+        
+        i = i + 1;
+    }
+    return res;
+}
+
+fn main() -> trit {
+    let r: trit = logic_bench(100);
+    
+    match r {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}
