@@ -6,16 +6,17 @@ struct TritMemoryCell {
     stability: float
 }
 
-fn cell_update(cell: &mut TritMemoryCell, input: trit, rate: float) {
-    if input == cell.state {
+fn cell_update(cell: TritMemoryCell, input: trit, rate: float) -> trit {
+    if input == cell.state ? {
         cell.stability = cell.stability + (1.0 - cell.stability) * rate;
     } else {
         cell.stability = cell.stability - rate;
-        if cell.stability < 0.0 {
+        if cell.stability < 0.0 ? {
             cell.state = input;
             cell.stability = 0.1;
-        }
-    }
+        } else { } else { }
+    } else { }
+    return 0;
 }
 
 struct AssociativeMemory {
@@ -24,17 +25,27 @@ struct AssociativeMemory {
     occupancy: int
 }
 
-fn associate(mem: &mut AssociativeMemory, key: trittensor<64>, val: trittensor<64>) -> bool {
-    if mem.occupancy < 128 {
-        mem.keys[mem.occupancy] = key;
-        mem.values[mem.occupancy] = val;
+fn associate(mem: AssociativeMemory, key: trit[], val: trit[]) -> bool {
+    if mem.occupancy < 128 ? {
+        let mut j: int = 0;
+        let k_base: int = mem.occupancy * 64;
+        let keys_d: trit[] = mem.keys;
+        let values_d: trit[] = mem.values;
+        while j < 64 {
+            keys_d[k_base + j] = key[j];
+            values_d[k_base + j] = val[j];
+            j = j + 1;
+        }
         mem.occupancy = mem.occupancy + 1;
         return true;
+    } else {
+        return false;
+    } else {
+        return false;
     }
-    return false;
 }
 
-fn recall(mem: AssociativeMemory, key: trittensor<64>) -> trittensor<64> {
+fn recall(mem: AssociativeMemory, key: trit[]) -> trit[] {
     let mut best_idx: int = -1;
     let mut best_score: int = -1;
     
@@ -42,28 +53,47 @@ fn recall(mem: AssociativeMemory, key: trittensor<64>) -> trittensor<64> {
     while i < mem.occupancy {
         let mut score: int = 0;
         let mut j: int = 0;
+        let k_base: int = i * 64;
+        let keys_d: trit[] = mem.keys;
         while j < 64 {
-            if mem.keys[i][j] == key[j] {
+            if keys_d[k_base + j] == key[j] ? {
                 score = score + 1;
-            }
+            } else { } else { }
             j = j + 1;
         }
         
-        if score > best_score {
+        if score > best_score ? {
             best_score = score;
             best_idx = i;
-        }
+        } else { } else { }
         i = i + 1;
     }
     
-    if best_idx >= 0 {
-        return mem.values[best_idx];
+    if best_idx >= 0 ? {
+        // Return a slice? No, we don't have slice.
+        // Return the original? No, it's 2D.
+        // We have to return a new 1D tensor.
+        let mut out: trittensor<64>;
+        let mut j: int = 0;
+        let v_base: int = best_idx * 64;
+        let values_d: trit[] = mem.values;
+        while j < 64 {
+            out[j] = values_d[v_base + j];
+            j = j + 1;
+        }
+        return out;
+    } else {
+        let d: trittensor<64>;
+        return d;
+    } else {
+        let d: trittensor<64>;
+        return d;
     }
-    return trittensor<64>::zero();
 }
 
 // Memory decay — reduces stability over time for all cells
-fn memory_decay(cells: &mut trittensor<N x M>, factor: float) {
+fn memory_decay(cells: trit[], factor: float) -> trit {
     // Note: Implicitly handles decay in stability tensors
     // This function can reset cells to 'tend' (neutral)
+    return 0;
 }
