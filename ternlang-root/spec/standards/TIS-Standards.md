@@ -1,18 +1,18 @@
-# ISO/IEC TIS-9000: Triadic Computing Systems — Requirements & Benchmarking
+# TIS Standards: Triadic Computing Systems — Requirements & Benchmarking
 
 **Status:** Published (RFI-IRFOS Proprietary Certification)
 **Standardized by:** RFI-IRFOS Certification Board
 **Date:** 2026-04-07
 
 ## 1. Scope
-This document specifies the requirements, performance metrics, and benchmarking protocols for hardware and software systems seeking official **Ternary Intelligence Stack (TIS) Certification**. Compliance with ISO/IEC TIS-9000 is mandatory for enterprise vendors, silicon foundries, and public-sector integrations seeking to utilize the BET-VM or TIS ecosystem components.
+This document specifies the requirements, performance metrics, and benchmarking protocols for hardware and software systems seeking official **Ternary Intelligence Stack (TIS) Certification**. Compliance with TIS Standards is mandatory for enterprise vendors, silicon foundries, and public-sector integrations seeking to utilize the BET-VM or TIS ecosystem components.
 
 ## 2. Terms and Definitions
 *   **Trit:** The fundamental unit of triadic information, strictly bounded to `{-1, 0, 1}`.
 *   **TEND (0):** Hardware equilibrium. The state of deliberation or native sparsity bypass.
 *   **VETO (-1):** Hard rejection. Triggers immediate instruction-level abort.
 *   **AFFIRM (+1):** Authorization. Grants execution continuation.
-*   **T-FLOPs (Triadic Floating Point Operations):** Measures operations using IEEE TFP-754.
+*   **T-FLOPs (Triadic Floating Point Operations):** Measures triadic floating point operations.
 
 ## 3. Certification Requirements
 

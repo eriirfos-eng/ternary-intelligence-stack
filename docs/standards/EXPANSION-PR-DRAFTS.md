@@ -13,7 +13,7 @@
 
 # Proposed PR for aalhour/awesome-compilers
 
-## Experimental Infrastructure: BET-VM (Balanced Ternary Execution)
+## Advanced Infrastructure: BET-VM (Balanced Ternary Execution)
 
 * [BET-VM](https://github.com/eriirfos-eng/ternary-intelligence-stack) - A sovereign systems-level virtual machine implementing Balanced Ternary Logic ({-1, 0, +1}). Features 2-bit wire-pair trit encoding, a 24-trit ISA, and native sparse AI offloading via TUANN logic. Ideal for post-binary systems research and thermal-efficient edge compute. 🔱
 

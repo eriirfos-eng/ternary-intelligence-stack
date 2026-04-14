@@ -215,7 +215,6 @@ Do not write workarounds for AND/OR — use `&&` and `||` directly.
 ## 9. Test command — exact
 
 ```bash
-cd "/home/eri-irfos/Desktop/Ternary Intelligence Stack (TIS)/ternlang-root"
 ./target/debug/ternlang-cli run stdlib/<category>/<name>.tern
 ```
 

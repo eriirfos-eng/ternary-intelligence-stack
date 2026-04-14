@@ -1,6 +1,6 @@
 // --- OPERATION MYCELIAL WEB: THE SOVEREIGN REGISTRY ---
 // Module: tools/registry/mycelial_index.tern
-// Purpose: P2P package registry for ternpkg via local T-Cloud mesh.
+// Purpose: P2P package registry for ternpkg via local sovereign mesh.
 // Logic: Triadic Byzantine Fault Tolerance (TBFT) for cryptographic crate verification.
 
 use stdlib::net::ipfs;

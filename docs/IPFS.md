@@ -7,7 +7,7 @@ To ensure the **Ternary Intelligence Stack (TIS)** remains permanently reachable
 - **Gateway**: [https://ipfs.io/ipfs/Qm...](https://ipfs.io/ipfs/Qm...)
 
 ## Included Standards
-- **ISO/IEC TIS-9000**: Quality and Benchmarking
+- **TIS Standards**: Quality and Benchmarking
 - **BET-ISA-v1.0**: Balanced Ternary Instruction Set
 - **T-HARMONY**: Huawei Harmony OS NDK Bindings
 - **T-BIO / T-CAD / T-SEC**: Domain-specific triadic standards

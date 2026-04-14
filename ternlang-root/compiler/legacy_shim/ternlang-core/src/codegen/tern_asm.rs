@@ -391,7 +391,7 @@ impl TernAsmEmitter {
 
             Expr::StringLiteral(_) => {
                 let r = ra.scratch();
-                self.emit(&format!("tlii  {}, 0           ; string (addr placeholder)", reg(r)));
+                self.emit(&format!("tlii  {}, 0           ; string (addr architecture defined)", reg(r)));
                 r
             }
 

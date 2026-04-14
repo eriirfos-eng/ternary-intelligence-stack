@@ -26,7 +26,7 @@
  * The royalty heartbeat is now a transparent hardware gate check.
  */
 int bet_dispatch_signal(int8_t trit_state) {
-    T_CLOCK_HEARTBEAT(); // Instantaneous hardware verification (<100ps)
+    T_CLOCK_HEARTBEAT(); // Instantaneous hardware verification
     
     /* 
      * Direct signal propagation:

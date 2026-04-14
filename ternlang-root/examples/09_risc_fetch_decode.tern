@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // risc_fetch_decode.tern — Ternary CPU fetch-decode-execute cycle
 //
-// Conceptually inspired by Brandon Smith's 9-trit RISC simulator (Python).
+// Architecturally informed by Brandon Smith's 9-trit RISC simulator (Python).
 // Brandon's work demonstrated a full fetch-decode-execute loop on 9-trit words
 // using balanced ternary arithmetic — an existence proof that a ternary ISA
 // can be implemented cleanly in software without collapsing to binary at any
@@ -15,7 +15,7 @@
 // Pipeline stall = hold. Illegal instruction = conflict. Ready = truth.
 //
 // Reference: Smith, B. — 9-trit RISC Simulator (Python, open source)
-//            https://github.com/bsmith89/balanced-ternary (conceptual lineage)
+//            https://github.com/bsmith89/balanced-ternary (technical lineage)
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn fetch_ready(bus: trit, memory_valid: trit) -> trit {

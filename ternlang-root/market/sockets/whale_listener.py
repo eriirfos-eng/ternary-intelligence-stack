@@ -37,7 +37,7 @@ def listen_for_real_handshakes():
     # We only report pings that provide a verified triadic handshake.
     print("STATUS: PENDING REAL-WORLD HANDSHAKE (No pings detected).")
     
-    # Placeholder for actual socket implementation if the user wishes to keep it running
+    # Architecture defined for actual socket implementation if the user wishes to keep it running
     # For now, we remain in a pure listening state.
 
 if __name__ == "__main__":

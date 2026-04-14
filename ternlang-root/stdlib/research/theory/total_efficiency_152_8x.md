@@ -32,5 +32,5 @@ The following table illustrates the energy consumption per inference relative to
 The transition from binary to triadic-native execution provides a multiplicative efficiency gain. The 152.8x coefficient represents the combined reduction in memory bandwidth requirements and computational cycles, resulting in an 80% reduction in thermal load over sustained execution cycles.
 
 ---
-**RFI-IRFOS Theoretical Research Department**
+**RFI-IRFOS Systems Architecture Division**
 *Reference: Patent Pending A50296/2026*

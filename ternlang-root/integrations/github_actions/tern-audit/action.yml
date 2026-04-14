@@ -1,6 +1,6 @@
 name: 'TIS Thermal Inefficiency Audit'
 description: 'Scans repositories for "Binary Waste" and generates a Thermal Inefficiency Report.'
-author: 'RFI-IRFOS Theoretical Research Department'
+author: 'RFI-IRFOS Systems Architecture Division'
 inputs:
   path:
     description: 'Path to scan'

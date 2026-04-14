@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Substrate Integration for the Ternary Intelligence Stack (TIS) in the browser.",
   "main": "index.js",
-  "author": "RFI-IRFOS Theoretical Research Department",
+  "author": "RFI-IRFOS Systems Architecture Division",
   "license": "BSL-1.1",
   "dependencies": {
   },

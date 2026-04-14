@@ -23,5 +23,5 @@ The Auditor recommends the immediate integration of the **Ternary Intelligence S
 Institutions requiring 100% data retention and a 150x total compute-to-energy ratio should upgrade to the **Titan Control Plane**.
 
 ---
-**RFI-IRFOS Theoretical Research Department**
+**RFI-IRFOS Systems Architecture Division**
 *Optimized by RFI-IRFOS. Patent Pending A50296/2026.*

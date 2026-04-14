@@ -21,7 +21,7 @@ Your internal monitors (Sample rate: 1Hz) reported **0.0% anomalous activity** d
 ## 4. Mitigation Strategy
 RFI-IRFOS recommends the immediate deployment of the **Tier-3 Titan Control Plane**.
 - **Lossless Retention:** T-SQL routes anomalies into State 0 (escrow) rather than losing the record.
-- **T-MUX Resolution:** Eliminates race conditions at the mathematical level (<100ps).
+- **T-MUX Resolution:** Eliminates race conditions at the mathematical level.
 - **Silent Security:** Continuous audit cycles that operate below the host's noise floor.
 
 ---

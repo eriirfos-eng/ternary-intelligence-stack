@@ -1,5 +1,5 @@
-// --- RFI-IRFOS HARDWARE SOVEREIGNTY MANIFESTO ---
-// Module: docs/HARDWARE_SOVEREIGNTY_MANIFESTO.tern
+// --- RFI-IRFOS HARDWARE SOVEREIGNTY STRATEGIC WHITEPAPER ---
+// Module: docs/HARDWARE_SOVEREIGNTY_STRATEGIC_WHITEPAPER.tern
 // Purpose: A declaration of independence from binary backdoors.
 // Author: The Scribe (via MoE-13)
 // License: Tier-3 Sovereign Restricted
@@ -38,7 +38,7 @@
  * key to that ownership.
  */
 
-agent SovereigntyManifesto {
+agent SovereigntyWhitepaper {
     fn declare_independence() -> trit {
         @sparseskip
         // Enforce the picosecond unity lock as the foundation of freedom.

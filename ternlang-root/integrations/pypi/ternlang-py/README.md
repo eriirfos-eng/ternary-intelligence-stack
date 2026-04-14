@@ -20,6 +20,6 @@ Benchmarks demonstrate an 80% reduction in thermal energy waste compared to bina
 Unlike binary cleaning scripts that prune "dirty" data, the TIS loader preserves anomalies in a Deliberative Hold (State 0) for secondary evaluation, ensuring robust dataset integrity.
 
 ---
-**RFI-IRFOS Theoretical Research Department**
+**RFI-IRFOS Systems Architecture Division**
 *Patent Pending: A50296/2026*
 *License: BSL-1.1*

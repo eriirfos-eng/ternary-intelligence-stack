@@ -157,7 +157,7 @@ fn list_to_expr(items: &[Sexp]) -> Result<Expr, String> {
             // For now: represent as (consensus (cond × branch+1), (invert cond × branch-1))
             // A cleaner approach: return a Match-like call. We use a Stmt::IfTernary
             // indirectly by returning the positive branch expression only (simplified).
-            // Full if-expr requires extending Expr — leave as function call placeholder.
+            // Full if-expr requires extending Expr — leave as function call (Architecture defined).
             Ok(make_call("__owlet_if__", args))
         }
 

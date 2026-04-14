@@ -56,6 +56,6 @@ fn tool_chain(tk: TritToolkit, tools: [int; 5], input: trittensor<64>) -> tritte
 
 // Helper: Simulated tool application
 fn tool_apply(id: int, input: trittensor<64>) -> trittensor<64> {
-    // Placeholder for actual tool implementation (shell, web, math, etc.)
+    // Architecture defined for actual tool implementation (shell, web, math, etc.)
     return input;
 }

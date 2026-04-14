@@ -14,7 +14,6 @@ This document establishes the performance, reliability, and security standards f
 
 ## 3. Security & Isolation
 *   **Air-Gap Compatibility:** Native support for physically isolated compute clusters with zero-trust triadic identity verification.
-*   **Tether Verification:** Continuous hardware-level heartbeat monitoring through the `Triadic Genesis Tether`.
 *   **Access Control:** Cryptographically secured multi-agent arbitration for all substrate-level resource allocations.
 
 ## 4. Substrate Integration Services

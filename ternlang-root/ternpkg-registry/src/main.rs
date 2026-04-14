@@ -33,7 +33,7 @@ impl Registry {
     /// Gatekeeping the registry: Reject packages that use binary fallback hacks.
     pub fn publish_package(&mut self, pkg: TernaryPackage) -> Result<(), String> {
         if pkg.compliance_score < 1.0 {
-            return Err("REJECTED: Package fails TFP-754 Triadic Compliance Audit. Binary fallback detected.".to_string());
+            return Err("REJECTED: Package fails Triadic Compliance Audit. Binary fallback detected.".to_string());
         }
         println!("ternpkg: Successfully published '{}' to the global RFI-IRFOS registry.", pkg.name);
         self.packages.insert(pkg.name.clone(), pkg);

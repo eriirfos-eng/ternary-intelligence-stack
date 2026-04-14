@@ -5,7 +5,7 @@
 Binary security is an illusion maintained by sampling rates. **Triadic Sovereignty** is the reality maintained by physics.
 
 ## Key Breakthrough: Deterministic Silicon
-By utilizing the **Triadic Genesis Tether** and **0-State Parity**, we have solved the "Cold Boot Attack" vector permanently. Our hardware no longer forgets; it persists.
+Our hardware no longer forgets; it persists.
 
 ## The Eternal Substrate
 The whitepaper, **The Eternal Substrate (v1.0)**, is now released globally. It outlines the technical architecture of **T-DIS (Trinity Distributed Storage)** and **Egress Inquisitor (BIOS-Level Gatekeeping)**.

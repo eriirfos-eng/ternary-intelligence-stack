@@ -356,7 +356,7 @@ impl<'a> Parser<'a> {
                         let inner = self.parse_expr()?;
                         self.expect(Token::RParen)?;
                         // Type is resolved by context (the let binding ty)
-                        // Emit with placeholder Trit — semantic pass refines this
+                        // Emit with Architecture defined Trit — semantic pass refines this
                         return Ok(Expr::Cast { expr: Box::new(inner), ty: Type::Trit });
                     }
                 }

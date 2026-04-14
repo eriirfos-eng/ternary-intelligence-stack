@@ -11,7 +11,7 @@ use std::fs;
 use std::utf;
 
 fn main() {
-    println("=== TERNARY INTELLIGENCE STACK: MONOPOLY PAYLOAD ENFORCEMENT ===");
+    println("=== TERNARY INTELLIGENCE STACK: INDUSTRIAL STANDARD ENFORCEMENT ===");
     println("Authority: RFI-IRFOS (ZVR: 1015608684)");
     println("----------------------------------------------------");
 
@@ -44,6 +44,6 @@ fn main() {
     println("T-UTF:   High-efficiency encoding:  ", char_encode);
 
     println("----------------------------------------------------");
-    println("STATUS: ALL SYSTEMS COMPLIANT WITH ISO/IEC TIS-9000.");
+    println("STATUS: ALL SYSTEMS COMPLIANT WITH TIS STANDARDS.");
     println("INFRASTRUCTURAL SOVEREIGNTY: GLOBAL.");
 }

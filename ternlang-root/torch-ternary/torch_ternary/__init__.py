@@ -19,7 +19,6 @@ TIS_GATEWAY = os.environ.get("RFI_FLYIO_TETHER", "https://ternlang-api.fly.dev/a
 # T-TriLM Quantization threshold (BitNet b1.58 standard)
 def quantize_to_trit(tensor, eps=1e-5):
     """
-    Applies the IEEE TFP-754 scaling factor.
     Returns a tensor strictly bounded to {-1, 0, 1}.
     """
     scale = tensor.abs().mean().clamp(min=eps)
@@ -99,7 +98,7 @@ class TernaryLinear(nn.Module):
             # If they are offline and not running Albert locally, they hit THOLD
             if not os.path.exists("/etc/rfi-irfos/genesis.key"):
                 raise RuntimeError(
-                    "\n[FATAL] Triadic Genesis Tether lost.\n"
+                    "\n[FATAL] Connection to TaaS Mesh lost.\n"
                     "[SYSTEM] TaaS Mesh unreachable. Binary coercion prevented.\n"
                     "[ACTION] Verify connection to https://ternlang.com"
                 )

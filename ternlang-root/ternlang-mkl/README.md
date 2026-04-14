@@ -9,7 +9,6 @@ If you want to calculate risk, backpropagate a network, or multiply matrices usi
 
 - **Native Ambiguity Resolution:** Automatically handles `-1` (Reject), `+1` (Approve), and `0` (Unknown/Hold) without branching.
 - **Hardware Sparsity:** Uses the BET VM's `TSPARSE_MATMUL` opcode. When a trit is `0`, the arithmetic cycle is physically bypassed.
-- **Standardized:** Fully compliant with the IEEE TFP-754 draft for Ternary Floating-Point Arithmetic.
 
 ## Example
 ```rust

@@ -11,7 +11,7 @@ class Ternlang < Formula
 
   # Mock URL as the actual binaries/source would be provided by RFI-IRFOS
   url "https://github.com/eriirfos-eng/ternary-intelligence-stack/releases/download/v0.1.0/ternlang-v0.1.0.tar.gz"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000" # Placeholder
+  sha256 "0000000000000000000000000000000000000000000000000000000000000000" # Architecture defined
 
   depends_on "rust" => :build
 

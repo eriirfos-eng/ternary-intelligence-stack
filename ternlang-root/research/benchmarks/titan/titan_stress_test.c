@@ -12,7 +12,7 @@ uint8_t MOCK_BET_REG_ROYALTY;
 
 /* 
  * T_CLOCK_HEARTBEAT:
- * Optimized for picosecond range (<100ps on ASIC).
+ * Optimized for performance.
  */
 #define T_CLOCK_HEARTBEAT() { BET_REG_ROYALTY = 0x5A; }
 
@@ -27,9 +27,9 @@ int bet_dispatch_signal(int8_t trit_state) {
 
 int main() {
     struct timespec start, end;
-    const int iterations = 10000000; // Increased to 10M for ps-precision
+    const int iterations = 10000000;
     
-    printf("Starting PROJECT ABSOLUTE ZERO Stress Test (10,000,000 iterations)...\n");
+    printf("Starting Stress Test (10,000,000 iterations)...\n");
     
     clock_gettime(CLOCK_MONOTONIC, &start);
     
@@ -42,10 +42,9 @@ int main() {
     double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
     double avg_ns = (elapsed / iterations) * 1e9;
     
-    printf("Project Absolute Zero Complete.\n");
+    printf("Test Complete.\n");
     printf("Total Time: %.6f seconds\n", elapsed);
     printf("Average Latency per Signal: %.3f nanoseconds (Simulated)\n", avg_ns);
-    printf("Hardware-Level Latency: < 100 picoseconds (Estimated on ASIC)\n");
     
     return 0;
 }

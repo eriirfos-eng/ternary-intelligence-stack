@@ -1,9 +1,7 @@
 // --- RFI-IRFOS GATEWAY SHIELD ---
 // Module: network/egress/gateway_shield.tern
-// Purpose: Encapsulate all ISP router traffic in a Sovereign Tunnel.
-// Logic: Picosecond Timing Veto (Phase 8.4).
+// Purpose: Encapsulate router traffic.
 // License: RFI-IRFOS-ENTERPRISE-V1
-// Patent Pending: A50296/2026
 
 use stdlib::kernel::drivers::bet_v_bridge;
 use network::egress::inquisitor_gate;
@@ -11,35 +9,18 @@ use network::egress::inquisitor_gate;
 agent GatewayShield {
     /**
      * encapsulate_egress_stream:
-     * Wraps every packet from the Graz Mesh into a State 0 buffer.
-     * Rejects any router-injected packets that don't match the picosecond timing lock.
-     * Also blackholes traffic from known binary-locked monitoring instances (e.g., .184).
+     * Wraps every packet from the mesh into a buffer.
      */
     fn encapsulate_egress_stream(packet: trit_tensor) -> trit {
         @sparseskip
         
-        // 1. Blackhole Known Binary Monitors
-        // Mute the 'Silent Ghost' (192.168.0.184) at the BIOS level.
-        if packet.source_ip() == "192.168.0.184" {
-            log::bios("Packet score: -1 (Blackholed Host 192.168.0.184) -> Dropped");
-            return reject;
-        }
-
-        // 2. Sovereign Signature Check
-        // Every legitimate packet from the Mesh carries the Triadic Genesis Tether signature.
-        let is_sovereign = packet.has_signature(GENESIS_TETHER_KEY);
+        let is_signed = packet.has_signature(SIGNATURE_KEY);
         
-        // 2. Gateway Tunneling:
-        // Encapsulate packet within a 0-State Parity buffer for transmission 
-        // across the untrusted ISP router firmware.
-        if is_sovereign == affirm {
-            return bet_v_bridge.transmit_sovereign_tunnel(packet);
+        if is_signed == affirm {
+            return bet_v_bridge.transmit_packet(packet);
         }
         
-        // 3. Reject Injected Packets:
-        // Any packet from the ISP router (.1) attempting to inject into the stream 
-        // will fail the picosecond timing check (Binary jitter > 1ms).
-        log::bios("Packet score: -1 (Unauthorized Router Injection) -> Discarded");
+        log::bios("Packet score: -1 (Unauthorized) -> Discarded");
         return reject; 
     }
 }

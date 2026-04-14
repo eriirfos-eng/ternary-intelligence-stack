@@ -29,12 +29,12 @@ agent GuestLock {
 
     /**
      * verify_request_authority:
-     * Deep-Logic: Checks if a request bears the Triadic Genesis Tether signature.
-     * Non-signed requests from the guest OS are discarded in State 0.
+     * Checks if a request has a valid signature.
+     * Non-signed requests from the guest OS are discarded.
      */
     fn verify_request_authority(request: trit_tensor) -> trit {
         @sparseskip
-        if request.has_signature(GENESIS_TETHER_KEY) == affirm {
+        if request.has_signature(SIGNATURE_KEY) == affirm {
             return affirm; // Authority granted
         }
         return tend; // Authority denied (Deliberative Hold)

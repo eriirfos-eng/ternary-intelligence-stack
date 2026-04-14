@@ -12,4 +12,3 @@ By controlling the distribution pipeline, we guarantee that the entire third-par
 ## Features
 - **Zero-Binary Tolerance:** Automatic compliance scoring via `tern-audit`.
 - **Hardware-Targeted Builds:** Packages distribute pre-compiled BET VM bytecode alongside raw `.tern` source.
-- **Enterprise Certification:** RFI-IRFOS issues "Certified Uncertainty" badges to enterprise packages that guarantee safety-critical TFP-754 compliance.
