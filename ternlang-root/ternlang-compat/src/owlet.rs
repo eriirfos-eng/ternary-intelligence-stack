@@ -252,7 +252,7 @@ impl OwletParser {
             });
         }
 
-        Ok(Program { imports: vec![], structs: vec![], agents: vec![], functions })
+        Ok(Program { imports: vec![], import_specs: vec![], structs: vec![], agents: vec![], functions })
     }
 }
 
