@@ -5,7 +5,6 @@
 
 // Oracle: marks target state by flipping its sign
 fn oracle(state: trit, target: trit) -> trit {
-    // If state matches target, negate; else preserve
     match target {
         -1 => {
             match state {
@@ -46,11 +45,37 @@ fn grover_step(state: trit, target: trit) -> trit {
     return diffuse(marked);
 }
 
-let initial: trit  = 0;
-let target:  trit  = 1;
-let after1:  trit  = grover_step(initial, target);
+fn main() -> trit {
+    let state: trit = hold();  // Initial superposition-like
+    let target: trit = truth();
+    
+    let count: int = 0;
+    let ok: trit = truth();
+    
+    // Run exactly 2 iterations for demonstration
+    while ok ? {
+        state = grover_step(state, target);
+        count = count + 1;
+        
+        if count == 2 ? {
+            ok = hold(); // Done
+        } else {
+            ok = truth(); // Continue
+        } else {
+            ok = truth(); // count != 2 yet, continue
+        }
+    } else {
+        // body for 0 (hold) -> loop finished
+        return state;
+    } else {
+        // body for -1 (conflict)
+        return conflict();
+    }
+}
 
-match after1 {
+// Entry point
+let result: trit = main();
+match result {
     -1 => { return conflict(); }
      0 => { return hold();    }
      1 => { return truth();   }
