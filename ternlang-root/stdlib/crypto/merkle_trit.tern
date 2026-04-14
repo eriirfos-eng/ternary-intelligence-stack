@@ -1,24 +1,42 @@
-// Module:  stdlib/crypto/merkle_trit.tern
-// Purpose: Ternary Merkle Tree
-// Author:  RFI-IRFOS
-// Ref:     https://ternlang.com
+// stdlib/crypto/merkle_trit.tern
+// Purpose: Ternary Merkle Tree simulation.
+// Demonstrates: Merkle tree where nodes have 3 children (ternary branching).
+// Tier: 3 — Industrial
 
-// Merkle tree where nodes have 3 children instead of 2.
-
-struct TritMerkleNode {
-    hash_val: trittensor<4 x 1>,
-    is_leaf: trit
+fn hash_nodes(left: trittensor<4>, mid: trittensor<4>, right: trittensor<4>) -> trittensor<4> {
+    // Combine 3 nodes via consensus to simulate a ternary hash node
+    let parent: trittensor<4>;
+    parent[0] = consensus(left[0], consensus(mid[0], right[0]));
+    parent[1] = consensus(left[1], consensus(mid[1], right[1]));
+    parent[2] = consensus(left[2], consensus(mid[2], right[2]));
+    parent[3] = consensus(left[3], consensus(mid[3], right[3]));
+    return parent;
 }
 
-fn hash_children(left: trittensor<4 x 1>, mid: trittensor<4 x 1>, right: trittensor<4 x 1>) -> trittensor<4 x 1> {
-    // Concatenate and hash 3 nodes
-    let out: trittensor<4 x 1> = { [affirm], [tend], [reject], [affirm] };
-    return out;
+fn main() -> trit {
+    // Leaves
+    let L: trittensor<4>; L[0] = 1; L[1] = 0; L[2] = -1; L[3] = 1;
+    let M: trittensor<4>; M[0] = 0; M[1] = 1; M[2] = 0; M[3] = -1;
+    let R: trittensor<4>; R[0] = -1; R[1] = -1; R[2] = 1; R[3] = 0;
+    
+    // Parent node (root of a 3-leaf tree)
+    let root: trittensor<4> = hash_nodes(L, M, R);
+    
+    // Verify: consensus(1, 0, -1) -> 0?
+    // Let's check root[0]
+    let r0: trit = root[0];
+    
+    match r0 {
+        -1 => { return conflict(); }
+         0 => { return truth();    } // Expected 0 (hold) for consensus of 1, 0, -1
+         1 => { return conflict(); }
+    }
 }
 
-fn verify_proof_trit(root: trittensor<4 x 1>, leaf: trittensor<4 x 1>, proof_path: trittensor<4 x 1>[]) -> trit {
-    // Validates a leaf belongs to the tree.
-    let calculated_root: trittensor<4 x 1> = root; // Simulated
-    if calculated_root == root { return affirm; }
-    return reject;
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
