@@ -1,0 +1,58 @@
+// stdlib/stats/outlier_detection_gate.tern
+// Demonstrates: outlier detection relative to a reference consensus
+// Tier: 3 — Industrial
+
+fn outlier_check(reference: trit[], x: trit) -> trit {
+    let count_affirm: int = 0;
+    let count_reject: int = 0;
+    let n: int = length(reference);
+    
+    if n == 0 {
+        return hold();
+    }
+    
+    for s in reference {
+        match s {
+            -1 => { count_reject = count_reject + 1; }
+             0 => { }
+             1 => { count_affirm = count_affirm + 1; }
+        }
+    }
+    
+    // Determine the dominant signal in the reference
+    let dominant: trit = hold();
+    if count_affirm > count_reject {
+        dominant = truth();
+    }
+    if count_reject > count_affirm {
+        dominant = conflict();
+    }
+    
+    // If the dominant signal is clear, compare x
+    if dominant == truth() && x == conflict() {
+        return truth(); // it's an outlier (contradicts affirm)
+    }
+    
+    if dominant == conflict() && x == truth() {
+        return truth(); // it's an outlier (contradicts reject)
+    }
+    
+    // If x is tend, it's not a strong outlier
+    if x == hold() {
+        return hold();
+    }
+    
+    return conflict(); // not an outlier
+}
+
+fn main() -> trit {
+    let ref: trit[] = [1, 1, 1, 1, 0];
+    let candidate: trit = -1;
+    let is_outlier: trit = outlier_check(ref, candidate);
+    
+    match is_outlier {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
