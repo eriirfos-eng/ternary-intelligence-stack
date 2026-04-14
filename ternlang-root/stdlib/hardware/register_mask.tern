@@ -1,0 +1,27 @@
+// stdlib/hardware/register_mask.tern
+// Demonstrates: Masking ternary registers (simulating hardware masking)
+// Tier: 3 - Industrial
+
+fn apply_mask(reg_val: trit[], mask: trit[]) -> trit[] {
+    let i: int = 0;
+    while i < 3 {
+        // If mask is affirm, keep value; else hold/reject
+        if mask[i] != 1 {
+            reg_val[i] = tend;
+        }
+        i = i + 1;
+    }
+    return reg_val;
+}
+
+fn main() -> trit {
+    let val: trit[] = [affirm, reject, affirm];
+    let msk: trit[] = [affirm, tend, reject];
+    
+    let res: trit[] = apply_mask(val, msk);
+    
+    if res[0] == affirm && res[1] == tend && res[2] == tend {
+        return affirm;
+    }
+    return reject;
+}
