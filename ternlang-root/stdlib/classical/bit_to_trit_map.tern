@@ -1,0 +1,24 @@
+// stdlib/classical/bit_to_trit_map.tern
+// Demonstrates: Mapping binary 0/1 to ternary reject/affirm
+// Tier: 1 - Open Core
+
+fn bit_to_trit(bit: int) -> trit {
+    if bit == 0 {
+        return reject;
+    }
+    if bit == 1 {
+        return affirm;
+    }
+    return tend;
+}
+
+fn main() -> trit {
+    let b1: int = 1;
+    let t1: trit = bit_to_trit(b1);
+    
+    if t1 == affirm {
+        return affirm;
+    } else {
+        return reject;
+    }
+}
