@@ -5,32 +5,58 @@
 
 fn measure_collapse(state: trit, confidence: float) -> trit {
     // High confidence: state is preserved (measurement confirms)
-    if confidence > 0.8 { return state; }
-    // Low confidence: collapse to neutral (measurement disturbs)
-    if confidence < 0.3 { return hold(); }
-    // Mid confidence: partial collapse — biased toward neutral
+    if confidence > 0.8 ? { return state; }
+    else {
+        // Low confidence: collapse to neutral (measurement disturbs)
+        if confidence < 0.3 ? { return hold(); }
+        else {
+            // Mid confidence: partial collapse — biased toward neutral (hold)
+            match state {
+                -1 => { return hold();    }
+                 0 => { return hold();    }
+                 1 => { return truth();   }
+            }
+        }
+        else { return hold(); } // hold branch of if confidence < 0.3
+    }
+    else { return hold(); } // hold branch of if confidence > 0.8
+}
+
+fn born_rule_proxy(state: trit) -> trit {
+    // Ternary Born rule proxy: project onto most probable classical value
     match state {
-        -1 => { return hold();    }
-         0 => { return hold();    }
-         1 => { return truth();   }
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
     }
 }
 
-fn born_rule(state: trit) -> trit {
-    // Ternary Born rule proxy: project onto most probable classical value
-    match state {
+fn main() -> trit {
+    let psi: trit = truth();
+    let conf: float = 0.9;
+    
+    // Test high confidence
+    let outcome: trit = measure_collapse(psi, conf);
+    let res1: trit = born_rule_proxy(outcome);
+
+    // Test low confidence
+    let outcome2: trit = measure_collapse(psi, 0.1);
+    let res2: trit = born_rule_proxy(outcome2);
+
+    // Final consensus: if high conf is truth (1) and low conf is hold (0)
+    // consensus(1, 0) -> 1
+    let final_res: trit = consensus(res1, res2);
+
+    match final_res {
         -1 => { return conflict(); }
          0 => { return hold();    }
          1 => { return truth();   }
     }
 }
 
-let psi: trit   = 1;
-let conf: float = 0.9;
-let outcome: trit = measure_collapse(psi, conf);
-let classical: trit = born_rule(outcome);
-
-match classical {
+// Entry point
+let result: trit = main();
+match result {
     -1 => { return conflict(); }
      0 => { return hold();    }
      1 => { return truth();   }
