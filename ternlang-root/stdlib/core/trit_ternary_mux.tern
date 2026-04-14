@@ -1,0 +1,26 @@
+// stdlib/core/trit_ternary_mux.tern
+// Demonstrates: A ternary multiplexer (selects output based on control trit)
+// Tier: 1 - Open Core
+
+fn mux(sel: trit, a: trit, b: trit, c: trit) -> trit {
+    match sel {
+        -1 => { return a; }
+         0 => { return b; }
+         1 => { return c; }
+    }
+}
+
+fn main() -> trit {
+    let sel: trit = tend;
+    let a: trit = reject;
+    let b: trit = tend;
+    let c: trit = affirm;
+    
+    let res: trit = mux(sel, a, b, c);
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
