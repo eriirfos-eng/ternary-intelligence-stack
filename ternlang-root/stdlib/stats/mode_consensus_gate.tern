@@ -1,0 +1,44 @@
+// stdlib/stats/mode_consensus_gate.tern
+// Demonstrates: mode calculation for trit signals with consensus output
+// Tier: 3 — Industrial
+
+fn mode_consensus(signals: trit[]) -> trit {
+    let count_affirm: int = 0;
+    let count_reject: int = 0;
+    let count_tend: int = 0;
+    
+    for s in signals {
+        match s {
+            -1 => { count_reject = count_reject + 1; }
+             0 => { count_tend = count_tend + 1; }
+             1 => { count_affirm = count_affirm + 1; }
+        }
+    }
+    
+    // Determine which trit has the highest frequency
+    if count_affirm > count_reject && count_affirm > count_tend {
+        return truth();
+    }
+    
+    if count_reject > count_affirm && count_reject > count_tend {
+        return conflict();
+    }
+    
+    if count_tend > count_affirm && count_tend > count_reject {
+        return hold();
+    }
+    
+    // In case of a tie, default to hold() or a specific tie-breaker
+    return hold();
+}
+
+fn main() -> trit {
+    let signals: trit[] = [1, 1, 0, -1, 1, 0];
+    let result: trit = mode_consensus(signals);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
