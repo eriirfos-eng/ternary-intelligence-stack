@@ -1,10 +1,10 @@
 // stdlib/qnn/qnn_layer.tern
 // Qutrit neural network layer — single ternary neuron with activation.
-// Computes: consensus of weighted ternary inputs, then applies gate.
+// Demonstrates: Weighted consensus with trittensor inputs and weights.
 // Tier: 2 — Pro Standard
 
 fn trit_weight(signal: trit, weight: trit) -> trit {
-    // Ternary multiply: sign(signal) * sign(weight)
+    // Ternary multiplication gate
     match weight {
         -1 => {
             match signal {
@@ -14,22 +14,51 @@ fn trit_weight(signal: trit, weight: trit) -> trit {
             }
         }
          0 => { return hold(); }
-         1 => { return signal; }
+         1 => {
+            match signal {
+                -1 => { return conflict(); }
+                 0 => { return hold();     }
+                 1 => { return truth();    }
+            }
+         }
     }
 }
 
-fn qnn_neuron(x0: trit, x1: trit, x2: trit, w0: trit, w1: trit, w2: trit) -> trit {
-    let a: trit = trit_weight(x0, w0);
-    let b: trit = trit_weight(x1, w1);
-    let c: trit = trit_weight(x2, w2);
+fn qnn_neuron(inputs: trittensor<3>, weights: trittensor<3>) -> trit {
+    // Manually sum the weighted inputs via consensus
+    let a: trit = trit_weight(inputs[0], weights[0]);
+    let b: trit = trit_weight(inputs[1], weights[1]);
+    let c: trit = trit_weight(inputs[2], weights[2]);
+    
     let ab: trit = consensus(a, b);
     return consensus(ab, c);
 }
 
-// Example: 3-input qutrit neuron
-let out: trit = qnn_neuron(1, 0, 1, 1, -1, 1);
+fn main() -> trit {
+    let x: trittensor<3>;
+    x[0] = 1;
+    x[1] = 0;
+    x[2] = 1;
 
-match out {
+    let w: trittensor<3>;
+    w[0] = 1;
+    w[1] = -1;
+    w[2] = 1;
+
+    // x = [1, 0, 1], w = [1, -1, 1]
+    // x*w = [1, 0, 1] -> consensus(1, 0, 1) -> 1
+    let out: trit = qnn_neuron(x, w);
+
+    match out {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+// Entry point
+let result: trit = main();
+match result {
     -1 => { return conflict(); }
      0 => { return hold();    }
      1 => { return truth();   }
