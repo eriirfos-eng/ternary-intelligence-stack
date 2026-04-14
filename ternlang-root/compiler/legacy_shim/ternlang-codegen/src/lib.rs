@@ -210,6 +210,7 @@ impl CTranspiler {
             Stmt::Break    => self.push("break;\n"),
             Stmt::Continue => self.push("continue;\n"),
             Stmt::Use { .. } => { /* module imports resolved before codegen */ }
+            Stmt::FromImport { .. } => { /* module imports resolved before codegen */ }
             Stmt::Send { target, message } => {
                 let t = self.emit_expr(target);
                 let m = self.emit_expr(message);
