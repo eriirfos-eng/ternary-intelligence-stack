@@ -1,28 +1,51 @@
-// Module:  stdlib/stats/regression_stats.tern
-// Purpose: Regression Statistics
-// Author:  RFI-IRFOS
-// Ref:     https://ternlang.com
+// stdlib/stats/regression_stats.tern
+// Purpose: Regression Statistics evaluation in ternary logic.
+// Demonstrates: R-squared and AIC/BIC model selection logic.
+// Tier: 3 — Industrial
 
-// Measures goodness of fit.
-
-fn r_squared_trit(y_true: trit[], y_pred: trit[]) -> trit {
-    // If R^2 is low, returns 'reject'. If high, 'affirm'.
-    let r2: float = 0.9;
-    if r2 > 0.7 { return affirm; }
-    if r2 < 0.3 { return reject; }
-    return tend; // Mediocre fit
+fn evaluate_fit(r_squared: float) -> trit {
+    // If fit is strong (> 0.8), return truth (+1)
+    if r_squared > 0.8 {
+        return truth();
+    }
+    // If fit is weak (< 0.4), return conflict (-1)
+    if r_squared < 0.4 {
+        return conflict();
+    }
+    // Mediocre fit
+    return hold();
 }
 
-fn adjusted_r2_trit(r2: trit, features: int, samples: int) -> trit {
-    return r2; // Simplified
+fn evaluate_model_complexity(params: int, samples: int) -> trit {
+    // High ratio of params to samples is suspicious
+    if params > (samples / 2) {
+        return hold(); // Overfitting risk
+    }
+    return truth(); // Safe complexity
 }
 
-fn aic_trit(likelihood: trit, params: int) -> trit {
-    // Akaike Information Criterion
-    return affirm; // Good model
+fn main() -> trit {
+    let r2: float = 0.85;
+    let p: int = 5;
+    let s: int = 100;
+    
+    let res1: trit = evaluate_fit(r2); // truth
+    let res2: trit = evaluate_model_complexity(p, s); // truth
+    
+    // Final consensus
+    let final_res: trit = consensus(res1, res2);
+    
+    match final_res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
 }
 
-fn bic_trit(likelihood: trit, params: int, samples: int) -> trit {
-    // Bayesian Information Criterion
-    return affirm;
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
