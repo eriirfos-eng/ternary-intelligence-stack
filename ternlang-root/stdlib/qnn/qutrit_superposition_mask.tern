@@ -1,0 +1,77 @@
+// stdlib/qnn/qutrit_superposition_mask.tern
+// Demonstrates: Ternary superposition mask for QNN weights.
+// In QNNs, we often mask weights to represent uncertainty or superposition states.
+// Tier: 3 — Industrial
+
+fn apply_mask(weight: trit, mask: trit) -> trit {
+    // If mask is 'tend' (0), the weight is in superposition/uncertain.
+    // Otherwise, the mask either preserves or flips the weight.
+    match mask {
+        -1 => { 
+            // Negative mask flips the weight polarity.
+            match weight {
+                -1 => { return truth();    }
+                 0 => { return hold();    }
+                 1 => { return conflict(); }
+            }
+        }
+        0 => { 
+            // Tend mask forces superposition (hold).
+            return hold(); 
+        }
+        1 => { 
+            // Positive mask preserves the weight.
+            match weight {
+                -1 => { return conflict(); }
+                 0 => { return hold();    }
+                 1 => { return truth();   }
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let w1: trit = truth();
+    let m1: trit = conflict(); // flip
+    let r1: trit = apply_mask(w1, m1); // should be conflict
+
+    let w2: trit = conflict();
+    let m2: trit = hold(); // mask
+    let r2: trit = apply_mask(w2, m2); // should be hold
+
+    let w3: trit = truth();
+    let m3: trit = truth(); // preserve
+    let r3: trit = apply_mask(w3, m3); // should be truth
+
+    // Final consensus: if r1 is conflict, r2 is hold, and r3 is truth.
+    // consensus(conflict, hold) -> conflict? Let's check.
+    // consensus is built-in. 
+    
+    match r1 {
+        -1 => {
+            match r2 {
+                0 => {
+                    match r3 {
+                        1 => { return truth(); } // verified sequence
+                        0 => { return hold(); }
+                        -1 => { return conflict(); }
+                    }
+                }
+                -1 => { return conflict(); }
+                1 => { return truth(); }
+            }
+        }
+        0 => { return hold(); }
+        1 => { return truth(); }
+    }
+}
+
+// Call main and return its value
+let final_res: trit = main();
+match final_res {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
+}
+
+return truth();
