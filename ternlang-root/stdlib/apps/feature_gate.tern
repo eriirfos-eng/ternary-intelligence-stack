@@ -1,0 +1,29 @@
+// stdlib/apps/feature_gate.tern
+// Demonstrates: Feature access control using ternary logic
+// Tier: 2 - Pro Standard
+
+fn can_access_feature(is_premium: trit, quota_exhausted: trit, system_healthy: trit) -> trit {
+    if is_premium == -1 { return reject; }
+    if quota_exhausted == 1 { return reject; }
+    if system_healthy == -1 { return tend; } // Degraded mode
+    
+    if is_premium == 1 && system_healthy == 1 {
+        return affirm;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let p: trit = affirm;
+    let q: trit = reject;
+    let s: trit = tend;
+    
+    let res: trit = can_access_feature(p, q, s); // should be tend
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
