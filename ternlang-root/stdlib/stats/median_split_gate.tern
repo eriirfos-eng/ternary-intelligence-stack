@@ -1,39 +1,59 @@
 // stdlib/stats/median_split_gate.tern
-// Demonstrates: splitting signals based on a median analog
-// Tier: 3
+// Purpose: Signal splitting based on a ternary median approximation.
+// Demonstrates: Majority voting/median logic for trit populations.
+// Tier: 3 — Industrial
 
-fn median_approx(data: trit[]) -> trit {
-    // For trits, median is just the most frequent trit if sorted
-    // but here we just count.
+fn approximate_median(data: trittensor<6>) -> trit {
     let pos: int = 0;
     let neg: int = 0;
     let zer: int = 0;
+    let idx: int = 0;
     
-    for x in data {
-        match x {
-            1  => { pos = pos + 1; }
-            0  => { zer = zer + 1; }
+    while idx < 6 ? {
+        let val: trit = data[idx];
+        match val {
+            1 => { pos = pos + 1; }
+            0 => { zer = zer + 1; }
             -1 => { neg = neg + 1; }
         }
-    }
+        idx = idx + 1;
+    } else { } else { }
     
+    // Simple plurality-based median approximation
     if pos > neg {
-        if pos > zer { return 1; }
-        return 0;
-    } else {
-        if neg > zer { return -1; }
-        return 0;
+        if pos > zer { return truth(); }
+        return hold();
     }
+    if neg > pos {
+        if neg > zer { return conflict(); }
+        return hold();
+    }
+    return hold();
 }
 
 fn main() -> trit {
-    let signals: trit[] = [1, 1, 0, -1, -1, -1]; // more -1
+    let signals: trittensor<6>;
+    signals[0] = 1;
+    signals[1] = 1;
+    signals[2] = 0;
+    signals[3] = -1;
+    signals[4] = -1;
+    signals[5] = -1; // Majority is -1
     
-    let m: trit = median_approx(signals);
+    let m: trit = approximate_median(signals);
     
-    if m == -1 {
-        return 1;
-    } else {
-        return -1;
+    // Verify result is conflict (-1)
+    match m {
+        -1 => { return truth(); }
+         0 => { return hold(); }
+         1 => { return conflict(); }
     }
+}
+
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
