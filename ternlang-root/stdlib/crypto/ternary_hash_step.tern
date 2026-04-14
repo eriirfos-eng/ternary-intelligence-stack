@@ -1,49 +1,61 @@
 // stdlib/crypto/ternary_hash_step.tern
-// Demonstrates: A single step of a balanced ternary hash function.
-// Uses non-linear trit transformations to ensure dispersion.
+// Purpose: Single step of a balanced ternary hash function.
+// Demonstrates: Non-linear trit transformations for cryptographic state mixing.
 // Tier: 3 — Industrial
 
-fn hash_step(state: trit, input: trit) -> trit {
-    // Non-linear transformation based on state and input
-    // Using a modified cyclic XOR mixed with NOT
-    let mixed: trit = 0;
-    
+fn mix_step(state: trit, input: trit) -> trit {
+    // Non-linear transformation matrix for high dispersion
     match state {
         -1 => { 
             match input {
-                -1 => { mixed = 0;  }
-                 0 => { mixed = 1;  }
-                 1 => { mixed = -1; }
+                -1 => { return hold();     } // -1, -1 -> 0
+                 0 => { return truth();    } // -1,  0 -> 1
+                 1 => { return conflict(); } // -1,  1 -> -1
             }
         }
          0 => {
             match input {
-                -1 => { mixed = 1;  }
-                 0 => { mixed = -1; }
-                 1 => { mixed = 0;  }
+                -1 => { return truth();    } //  0, -1 -> 1
+                 0 => { return conflict(); } //  0,  0 -> -1
+                 1 => { return hold();     } //  0,  1 -> 0
             }
         }
          1 => {
             match input {
-                -1 => { mixed = -1; }
-                 0 => { mixed = 0;  }
-                 1 => { mixed = 1;  }
+                -1 => { return conflict(); } //  1, -1 -> -1
+                 0 => { return hold();     } //  1,  0 -> 0
+                 1 => { return truth();    } //  1,  1 -> 1
             }
         }
     }
-    
-    return mixed;
 }
 
 fn main() -> trit {
-    let s: trit = 0;
+    let s: trit = hold();
     
-    // Test: Feed some input and see if state changes
-    let s1: trit = hash_step(s, 1);
-    if s1 != 0 { return conflict(); } // Based on the matrix above: (0, 1) -> 0
+    // Test: Feed some input and verify state transitions
+    let s1: trit = mix_step(s, truth());
     
-    let s2: trit = hash_step(1, -1);
-    if s2 != -1 { return conflict(); } // Based on the matrix above: (1, -1) -> -1
-    
-    return truth();
+    // According to matrix: (0, 1) -> 0
+    match s1 {
+        0 => { 
+            // Further transition: (0, -1) -> 1
+            let s2: trit = mix_step(s1, conflict());
+            match s2 {
+                1 => { return truth(); }
+                0 => { return hold(); }
+                -1 => { return conflict(); }
+            }
+        }
+        1 => { return conflict(); }
+        -1 => { return conflict(); }
+    }
+}
+
+// Entry point
+let final_res: trit = main();
+match final_res {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
