@@ -2,7 +2,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io::BufReader;
 use std::time::Instant;
-use ternlang_ml::coherence::{ModelData};
+use ternlang_ml::coherence::{ModelCoherence};
 
 fn main() -> anyhow::Result<()> {
     let json_path = Path::new("../../llama32-1b.tern.json");
@@ -18,7 +18,7 @@ fn main() -> anyhow::Result<()> {
     let start = Instant::now();
     let file = File::open(json_path)?;
     let reader = BufReader::new(file);
-    let model: ModelData = serde_json::from_reader(reader)?;
+    let model: ModelCoherence = serde_json::from_reader(reader)?;
     println!("JSON loaded in {:.2}s.", start.elapsed().as_secs_f32());
 
     println!("Saving Binary...");
