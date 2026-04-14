@@ -1,0 +1,22 @@
+// stdlib/ml/ema_filter.tern
+// Demonstrates: Exponential Moving Average (EMA) filter for signal smoothing
+// Tier: 2 - Pro Standard
+
+fn update_ema(current_val: float, prev_ema: float, alpha: float) -> float {
+    // EMA = alpha * current + (1 - alpha) * prev
+    return (alpha * current_val) + ((1.0 - alpha) * prev_ema);
+}
+
+fn main() -> trit {
+    let alpha: float = 0.1;
+    let prev: float = 0.5;
+    let cur: float = 0.6;
+    
+    let next_ema: float = update_ema(cur, prev, alpha);
+    
+    // 0.1 * 0.6 + 0.9 * 0.5 = 0.06 + 0.45 = 0.51
+    if next_ema > 0.5 {
+        return affirm;
+    }
+    return reject;
+}
