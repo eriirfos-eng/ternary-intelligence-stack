@@ -4,6 +4,8 @@
 // Uses parametric qutrit ansatz + ternary energy estimation.
 // Tier: 2 — Pro Standard
 
+use std::trit;
+
 // Parametric ansatz: applies rotation based on parameter trit
 fn ansatz(param: trit) -> trit {
     match param {
@@ -22,22 +24,32 @@ fn hamiltonian(state: trit) -> trit {
     }
 }
 
-// VQE iteration: evaluate energy for given parameter, return best
-fn vqe_step(param: trit) -> trit {
+// VQE iteration: evaluate energy for given parameter
+fn vqe_evaluate(param: trit) -> trit {
     let state: trit  = ansatz(param);
     let energy: trit = hamiltonian(state);
     return energy;
 }
 
-// Scan all three parameter values, select minimum energy
-let e0: trit = vqe_step(-1);
-let e1: trit = vqe_step(0);
-let e2: trit = vqe_step(1);
+fn main() -> trit {
+    // Scan all three parameter values, find minimum energy
+    let e_neg: trit = vqe_evaluate(conflict());
+    let e_zer: trit = vqe_evaluate(hold());
+    let e_pos: trit = vqe_evaluate(truth());
 
-// Best energy = consensus (most negative = ground state)
-let best: trit = consensus(e0, consensus(e1, e2));
+    // Best energy = min(e_neg, e_zer, e_pos)
+    let best: trit = min(e_neg, min(e_zer, e_pos));
 
-match best {
+    match best {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+// Entry point
+let result: trit = main();
+match result {
     -1 => { return conflict(); }
      0 => { return hold();    }
      1 => { return truth();   }
