@@ -1,0 +1,30 @@
+// stdlib/sim/particle_sim.tern
+// Demonstrates: Basic particle simulation with ternary state
+// Tier: 3 - Industrial
+
+fn simulate_interaction(p1_state: trit, p2_state: trit) -> trit {
+    // Simplified interaction logic:
+    // If both affirm, they reinforce (affirm).
+    // If both reject, they annihilate (reject).
+    // If one is hold, or states differ, they neutralize (tend).
+    if p1_state == 1 && p2_state == 1 {
+        return affirm;
+    }
+    if p1_state == -1 && p2_state == -1 {
+        return reject;
+    }
+    return tend;
+}
+
+fn main() -> trit {
+    let p1: trit = affirm;
+    let p2: trit = reject;
+    
+    let result: trit = simulate_interaction(p1, p2); // should be tend
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
