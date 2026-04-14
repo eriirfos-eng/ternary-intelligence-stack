@@ -38,7 +38,7 @@ Zabih specializes in the practical implementation of the TIS stack, from network
 *   **Role:** IT-Technician, Network Specialist, ML Application Engineer.
 *   **Focus:** Networking, ML Inference, Technical Operations, BET VM Stability.
 *   **LinkedIn:** [Zabih Karimi](https://www.linkedin.com/in/zabih-karimi-3292ab349/)
-*   **Email:**  z.karimi@ernlang.com
+*   **Email:**  z.karimi@ternlang.com
 
 ---
 
