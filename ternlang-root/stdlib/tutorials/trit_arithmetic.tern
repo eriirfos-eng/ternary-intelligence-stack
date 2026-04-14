@@ -1,0 +1,23 @@
+// stdlib/tutorials/trit_arithmetic.tern
+// Demonstrates: Basic ternary arithmetic operations
+// Tier: 1 - Open Core
+
+fn main() -> trit {
+    let a: trit = affirm;
+    let b: trit = reject;
+    
+    // a + b in balanced ternary
+    // 1 + (-1) = 0
+    let sum: trit = a + b;
+    
+    if sum == tend {
+        // a * b
+        // 1 * (-1) = -1
+        let prod: trit = a * b;
+        if prod == reject {
+            return affirm;
+        }
+    }
+    
+    return reject;
+}
