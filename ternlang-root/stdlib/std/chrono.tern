@@ -1,0 +1,49 @@
+// stdlib/std/chrono.tern
+// Demonstrates: time-related signal stubs using tensors for shared state
+// Tier: 1 — Open Core
+
+struct Clock {
+    state: trittensor<1>,
+}
+
+fn tick(c: Clock) -> trit {
+    let t: trittensor<1> = c.state;
+    let current: trit = t[0];
+    let next: trit = hold();
+    
+    match current {
+        -1 => { next = hold(); }
+         0 => { next = truth(); }
+         1 => { next = truth(); }
+    }
+    
+    t[0] = next;
+    return next;
+}
+
+fn reset(c: Clock) -> trit {
+    let t: trittensor<1> = c.state;
+    t[0] = hold();
+    return truth();
+}
+
+// Check if the clock has been triggered (is affirm)
+fn is_triggered(c: Clock) -> trit {
+    let t: trittensor<1> = c.state;
+    let val: trit = t[0];
+    return val;
+}
+
+fn main() -> trit {
+    let s: trittensor<1>;
+    s[0] = hold();
+    let c: Clock = Clock { state: s };
+    
+    let t1: trit = tick(c);
+    
+    if is_triggered(c) == truth() {
+        return truth();
+    }
+    
+    return conflict();
+}

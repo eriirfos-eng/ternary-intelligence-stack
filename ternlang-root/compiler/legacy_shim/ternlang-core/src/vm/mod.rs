@@ -610,7 +610,7 @@ impl BetVm {
                             let tensor = &mut self.tensors[idx];
                             let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
                             if pos >= tensor.data.len() { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() }); }
-                            tensor.data[pos] = Trit::from(v as i8);
+                            tensor.data[pos] = if v > 0 { Trit::Affirm } else if v < 0 { Trit::Reject } else { Trit::Tend };
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "TensorRef, Trit".into(), found: format!("{:?}", (rf, val)) }),
                     }

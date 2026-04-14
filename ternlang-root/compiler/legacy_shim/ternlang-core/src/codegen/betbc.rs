@@ -165,8 +165,8 @@ impl BytecodeEmitter {
             Stmt::Let { name, ty, value } => {
                 let mut handled = false;
                 if let Type::TritTensor { dims } = ty {
-                    // Only auto-allocate if size is fixed (>0) and no literal is provided
-                    if !dims.is_empty() && !dims.contains(&0) && !matches!(value, Expr::TritTensorLiteral(_)) {
+                    // Only auto-allocate if size is fixed (>0) and NO value is provided (defaults to TritLiteral(0))
+                    if !dims.is_empty() && !dims.contains(&0) && matches!(value, Expr::TritLiteral(0)) {
                         let rows = dims[0];
                         let cols = if dims.len() > 1 { dims[1] } else { 1 };
                         self.code.push(0x0f);
