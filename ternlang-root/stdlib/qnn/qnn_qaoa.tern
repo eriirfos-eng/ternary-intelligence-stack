@@ -1,43 +1,43 @@
-// stdlib/qnn/qnn_qaoa.tern
+// stdlib/qnn/qaoa_maxcut_step.tern
 // Quantum Approximate Optimization Algorithm — ternary analogue.
 // Alternates between a cost operator and a mixing operator.
-// Models a ternary 2-node MAX-CUT problem.
+// Models a ternary 2-node MAX-CUT problem where -1, 0, 1 are partitions.
 // Tier: 2 — Pro Standard
 
-// Cost operator: encodes MAX-CUT objective on 2 qutrit nodes
-// Reward = conflict if nodes agree (bad cut), truth if they differ (good cut)
+// Cost operator: encodes MAX-CUT objective on 2 qutrit nodes.
+// Reward = conflict if nodes agree (bad cut), truth if they differ (good cut).
 fn cost_operator(x0: trit, x1: trit) -> trit {
     match x0 {
         -1 => {
             match x1 {
                 -1 => { return conflict(); }  // same partition
-                 0 => { return hold();    }
-                 1 => { return truth();   }   // different → good cut
+                 0 => { return hold();     }
+                 1 => { return truth();    }   // different → good cut
             }
         }
          0 => {
             match x1 {
-                -1 => { return hold();    }
-                 0 => { return conflict(); }
-                 1 => { return hold();    }
+                -1 => { return hold();     }
+                 0 => { return conflict(); }  // same partition
+                 1 => { return hold();     }
             }
         }
          1 => {
             match x1 {
-                -1 => { return truth();   }   // different → good cut
-                 0 => { return hold();    }
+                -1 => { return truth();    }   // different → good cut
+                 0 => { return hold();     }
                  1 => { return conflict(); }  // same partition
             }
         }
     }
 }
 
-// Mixing operator: applies ternary diffusion (Hadamard-like)
+// Mixing operator: applies ternary diffusion (Hadamard-like mixer)
 fn mixer(x: trit) -> trit {
     match x {
-        -1 => { return hold();    }
-         0 => { return truth();   }
-         1 => { return hold();    }
+        -1 => { return hold();     }
+         0 => { return truth();    }
+         1 => { return hold();     }
     }
 }
 
@@ -47,13 +47,25 @@ fn qaoa_layer(x0: trit, x1: trit) -> trit {
     return mixer(cost);
 }
 
-// Initial state: superposition (hold)
-let q0: trit = 0;
-let q1: trit = 0;
+fn main() -> trit {
+    // Initial state: superposition (hold)
+    let q0: trit = hold();
+    let q1: trit = hold();
 
-// Run one QAOA layer
-let result: trit = qaoa_layer(q0, q1);
+    // Run one QAOA layer
+    // cost_operator(0, 0) -> conflict (-1)
+    // mixer(-1) -> hold (0)
+    let result: trit = qaoa_layer(q0, q1);
 
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+// Entry point
+let result: trit = main();
 match result {
     -1 => { return conflict(); }
      0 => { return hold();    }
