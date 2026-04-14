@@ -1,30 +1,48 @@
-// Module:  stdlib/stats/correlation.tern
-// Purpose: Statistical Correlation Measures
-// Author:  RFI-IRFOS
-// Ref:     https://ternlang.com
+// stdlib/stats/correlation.tern
+// Purpose: Statistical Correlation Measures in ternary logic.
+// Demonstrates: Evaluating correlation strength from float coefficients.
+// Tier: 3 — Industrial
 
-// If correlation is ambiguous, returns 'tend'.
-
-fn pearson_trit(x: trit[], y: trit[]) -> trit {
-    // Linear correlation
-    let r: float = 0.8; // simulated
-    if r > 0.5 { return affirm; } // Positive
-    if r < -0.5 { return reject; } // Negative
-    return tend; // Weak/No correlation
+fn evaluate_correlation(coefficient: float, threshold: float) -> trit {
+    // Determine if correlation is positive (+1), negative (-1), or weak (0)
+    if coefficient > threshold {
+        return truth();
+    }
+    let neg_threshold: float = -threshold;
+    if coefficient < neg_threshold {
+        return conflict();
+    }
+    // Correlation is below significance threshold
+    return hold();
 }
 
-fn spearman_trit(x: trit[], y: trit[]) -> trit {
-    // Rank correlation
-    let rho: float = 0.1;
-    if rho > 0.5 { return affirm; }
-    if rho < -0.5 { return reject; }
-    return tend;
+fn main() -> trit {
+    let rho_p: float = 0.85;  // Strong positive
+    let rho_n: float = -0.72; // Strong negative
+    let rho_w: float = 0.15;  // Weak
+    
+    let sig: float = 0.5;
+    
+    let res1: trit = evaluate_correlation(rho_p, sig); // truth
+    let res2: trit = evaluate_correlation(rho_n, sig); // conflict
+    let res3: trit = evaluate_correlation(rho_w, sig); // hold
+    
+    // Check results
+    if res1 == 1 {
+        if res2 == -1 {
+            if res3 == 0 {
+                return truth();
+            }
+        }
+    }
+    
+    return conflict();
 }
 
-fn kendall_trit(x: trit[], y: trit[]) -> trit {
-    // Tau correlation
-    let tau: float = -0.7;
-    if tau > 0.5 { return affirm; }
-    if tau < -0.5 { return reject; }
-    return tend;
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
