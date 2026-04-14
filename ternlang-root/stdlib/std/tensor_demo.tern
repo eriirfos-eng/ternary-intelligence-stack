@@ -1,0 +1,17 @@
+// stdlib/std/tensor_demo.tern
+// Purpose: Demonstrates ternary tensor operations from std::tensor.
+// Tier: 1 — Community
+
+from "tensor.tern" import zeros;
+
+fn main() -> trit {
+    // Allocate a zero tensor
+    let t: trit[] = zeros(10);
+    
+    // Check if first element is hold (0)
+    if t[0] == 0 {
+        return truth();
+    }
+    
+    return conflict();
+}

@@ -1726,7 +1726,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-codegen"
-version = "0.1.0"
+version = "0.3.1"
 dependencies = [
  "ternlang-core",
 ]
@@ -1795,7 +1795,11 @@ dependencies = [
 name = "ternlang-ml"
 version = "0.3.1"
 dependencies = [
+ "anyhow",
+ "bincode",
  "rayon",
+ "serde",
+ "serde_json",
  "ternlang-core",
 ]
 
@@ -1821,7 +1825,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-test"
-version = "0.1.0"
+version = "0.3.1"
 dependencies = [
  "ternlang-core",
 ]

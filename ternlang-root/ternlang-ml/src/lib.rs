@@ -31,6 +31,8 @@ pub mod spectra_compat {
     }
 }
 
+pub mod coherence;
+
 // ─── Quantization ────────────────────────────────────────────────────────────
 
 /// Quantize a slice of f32 weights to balanced ternary using threshold tau.
@@ -1795,4 +1797,257 @@ mod reasoning_tests {
         assert_eq!(score.trust_trit, 0);
         assert_eq!(score.signal_count, 0);
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Phase 9: TritTransformer (Ternary Llama-style Architecture)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Implementation of a 1.2B parameter Llama-3 style Transformer using strictly
+// ternary weights. This is the flagship model for the RFI-IRFOS TIS.
+//
+// Key Features:
+//   - Ternary Linear Layers: all matmuls use `sparse_matmul`
+//   - RMSNorm: Pre-layer normalization
+//   - Rotary Positional Embeddings (RoPE): Frequency-based positional encoding
+//   - SwiGLU Activation: Gated Linear Unit with SiLU (approx) activation
+//   - Memory Efficient: 2-bit packed weights (TritMatrix)
+
+use std::collections::HashMap;
+use crate::coherence::ModelCoherence;
+
+pub struct TritTransformerConfig {
+    pub dim: usize,
+    pub n_layers: usize,
+    pub n_heads: usize,
+    pub n_kv_heads: usize,
+    pub vocab_size: usize,
+    pub multiple_of: usize,
+    pub ffn_dim_multiplier: Option<f64>,
+    pub norm_eps: f32,
+    pub max_seq_len: usize,
+}
+
+impl Default for TritTransformerConfig {
+    fn default() -> Self {
+        Self {
+            dim: 2048,
+            n_layers: 16,
+            n_heads: 32,
+            n_kv_heads: 8,
+            vocab_size: 128256, // Llama-3 vocab
+            multiple_of: 256,
+            ffn_dim_multiplier: None,
+            norm_eps: 1e-5,
+            max_seq_len: 2048,
+        }
+    }
+}
+
+/// A single Transformer block (Attention + FeedForward).
+pub struct TritBlock {
+    pub wq: TritMatrix,
+    pub wk: TritMatrix,
+    pub wv: TritMatrix,
+    pub wo: TritMatrix,
+    pub w1: TritMatrix,
+    pub w2: TritMatrix,
+    pub w3: TritMatrix,
+    pub attention_norm: Vec<f32>, // scale weights for RMSNorm
+    pub ffn_norm: Vec<f32>,
+}
+
+/// The full TritTransformer model.
+pub struct TritTransformer {
+    pub config: TritTransformerConfig,
+    pub tok_embeddings: TritMatrix,
+    pub layers: Vec<TritBlock>,
+    pub norm: Vec<f32>,
+    pub output: TritMatrix,
+    pub freq_cis: Vec<(f32, f32)>, // Precomputed RoPE frequencies (cos, sin)
+}
+
+impl TritTransformer {
+    /// Load a TritTransformer from a ModelCoherence container.
+    pub fn from_coherence(coherence: ModelCoherence, config: TritTransformerConfig) -> Self {
+        println!("ternlang-ml: Building TritTransformer (Layers: {})...", config.n_layers);
+        
+        let mut layers = Vec::with_capacity(config.n_layers);
+        let mut layer_map: HashMap<String, TritMatrix> = HashMap::new();
+        
+        for layer in coherence.layers {
+            layer_map.insert(layer.name.clone(), layer.to_trit_matrix());
+        }
+
+        // Helper to extract a layer or panic
+        let mut get = |name: &str| {
+            layer_map.remove(name).unwrap_or_else(|| panic!("Missing layer: {}", name))
+        };
+
+        let tok_embeddings = get("token_embd.weight");
+        let output = get("output.weight");
+        
+        // Note: RMSNorm weights are stored as f32 in the original model, 
+        // but here they might be in the TritMatrix or we need to handle them.
+        // For now, we assume identity if not found, or extract from the binary.
+        // TODO: Update coherence to handle f32 param blocks specifically.
+        let norm = vec![1.0; config.dim]; 
+
+        for i in 0..config.n_layers {
+            layers.push(TritBlock {
+                wq: get(&format!("layers.{}.attention.wq.weight", i)),
+                wk: get(&format!("layers.{}.attention.wk.weight", i)),
+                wv: get(&format!("layers.{}.attention.wv.weight", i)),
+                wo: get(&format!("layers.{}.attention.wo.weight", i)),
+                w1: get(&format!("layers.{}.feed_forward.w1.weight", i)),
+                w2: get(&format!("layers.{}.feed_forward.w2.weight", i)),
+                w3: get(&format!("layers.{}.feed_forward.w3.weight", i)),
+                attention_norm: vec![1.0; config.dim],
+                ffn_norm: vec![1.0; config.dim],
+            });
+        }
+
+        // Precompute RoPE
+        let freq_cis = precompute_freqs_cis(config.dim / config.n_heads, config.max_seq_len);
+
+        Self {
+            config,
+            tok_embeddings,
+            layers,
+            norm,
+            output,
+            freq_cis,
+        }
+    }
+
+    /// Forward pass for a single token at a given position.
+    /// Returns the logits for the next token.
+    pub fn forward(&self, token: usize, pos: usize) -> Vec<f32> {
+        let mut h = self.get_embedding(token);
+        
+        for layer in &self.layers {
+            // Attention
+            let h_norm = rms_norm(&h, &layer.attention_norm, self.config.norm_eps);
+            let attn_out = self.attention(layer, &h_norm, pos);
+            for i in 0..h.len() { h[i] += attn_out[i]; }
+            
+            // Feed Forward
+            let h_norm = rms_norm(&h, &layer.ffn_norm, self.config.norm_eps);
+            let ffn_out = self.feed_forward(layer, &h_norm);
+            for i in 0..h.len() { h[i] += ffn_out[i]; }
+        }
+        
+        let h = rms_norm(&h, &self.norm, self.config.norm_eps);
+        self.project_output(&h)
+    }
+
+    fn get_embedding(&self, token: usize) -> Vec<f32> {
+        let start = token * self.config.dim;
+        let mut embd = Vec::with_capacity(self.config.dim);
+        for i in 0..self.config.dim {
+            embd.push(trit_to_f32(self.tok_embeddings.data[start + i]));
+        }
+        embd
+    }
+
+    fn attention(&self, layer: &TritBlock, x: &[f32], pos: usize) -> Vec<f32> {
+        // x is [dim]
+        // Q, K, V projections
+        let x_trit = TritMatrix::from_trits(1, x.len(), x.iter().map(|&v| trit_from_f32_approx(v)).collect());
+        
+        let (q_trit, _) = sparse_matmul(&x_trit, &layer.wq);
+        let (k_trit, _) = sparse_matmul(&x_trit, &layer.wk);
+        let (v_trit, _) = sparse_matmul(&x_trit, &layer.wv);
+        
+        let mut q = q_trit.data.iter().map(|&t| trit_to_f32(t)).collect::<Vec<_>>();
+        let mut k = k_trit.data.iter().map(|&t| trit_to_f32(t)).collect::<Vec<_>>();
+        let v = v_trit.data.iter().map(|&t| trit_to_f32(t)).collect::<Vec<_>>();
+        
+        // Apply RoPE to Q and K
+        apply_rope(&mut q, pos, &self.freq_cis, self.config.n_heads);
+        apply_rope(&mut k, pos, &self.freq_cis, self.config.n_heads);
+        
+        // Note: For a single-token forward pass without KV cache, we just return V
+        // (Simplified for this initial implementation)
+        // TODO: Full scaled dot-product attention with KV cache
+        
+        let v_trit = TritMatrix::from_trits(1, v.len(), v.iter().map(|&val| trit_from_f32_approx(val)).collect());
+        let (out, _) = sparse_matmul(&v_trit, &layer.wo);
+        out.data.iter().map(|&t| trit_to_f32(t)).collect()
+    }
+
+    fn feed_forward(&self, layer: &TritBlock, x: &[f32]) -> Vec<f32> {
+        let x_trit = TritMatrix::from_trits(1, x.len(), x.iter().map(|&v| trit_from_f32_approx(v)).collect());
+        
+        // SwiGLU: (w1(x) * silu(w3(x))) * w2
+        let (w1_x, _) = sparse_matmul(&x_trit, &layer.w1);
+        let (w3_x, _) = sparse_matmul(&x_trit, &layer.w3);
+        
+        let mut hidden = Vec::with_capacity(w1_x.data.len());
+        for i in 0..w1_x.data.len() {
+            let v1 = trit_to_f32(w1_x.data[i]);
+            let v3 = trit_to_f32(w3_x.data[i]);
+            // silu(x) = x * sigmoid(x)
+            let silu_v3 = v3 / (1.0 + (-v3).exp());
+            hidden.push(v1 * silu_v3);
+        }
+        
+        let hidden_trit = TritMatrix::from_trits(1, hidden.len(), hidden.iter().map(|&v| trit_from_f32_approx(v)).collect());
+        let (out, _) = sparse_matmul(&hidden_trit, &layer.w2);
+        out.data.iter().map(|&t| trit_to_f32(t)).collect()
+    }
+
+    fn project_output(&self, x: &[f32]) -> Vec<f32> {
+        let x_trit = TritMatrix::from_trits(1, x.len(), x.iter().map(|&v| trit_from_f32_approx(v)).collect());
+        let (logits, _) = sparse_matmul(&x_trit, &self.output);
+        logits.data.iter().map(|&t| trit_to_f32(t)).collect()
+    }
+}
+
+// ─── Transformer Kernels ─────────────────────────────────────────────────────
+
+fn rms_norm(x: &[f32], weight: &[f32], eps: f32) -> Vec<f32> {
+    let sum_sq = x.iter().map(|&v| v * v).sum::<f32>();
+    let inv_rms = 1.0 / (sum_sq / x.len() as f32 + eps).sqrt();
+    x.iter().zip(weight.iter()).map(|(&v, &w)| v * inv_rms * w).collect()
+}
+
+fn precompute_freqs_cis(dim: usize, end: usize) -> Vec<(f32, f32)> {
+    let mut freqs_cis = Vec::with_capacity(end * (dim / 2));
+    for pos in 0..end {
+        for i in 0..(dim / 2) {
+            let freq = 1.0 / 10000.0f32.powf((i * 2) as f32 / dim as f32);
+            let val = pos as f32 * freq;
+            freqs_cis.push((val.cos(), val.sin()));
+        }
+    }
+    freqs_cis
+}
+
+fn apply_rope(x: &mut [f32], pos: usize, freq_cis: &[(f32, f32)], n_heads: usize) {
+    let head_dim = x.len() / n_heads;
+    for h in 0..n_heads {
+        let start = h * head_dim;
+        for i in 0..(head_dim / 2) {
+            let (cos, sin) = freq_cis[pos * (head_dim / 2) + i];
+            let x0 = x[start + i];
+            let x1 = x[start + i + head_dim / 2];
+            x[start + i] = x0 * cos - x1 * sin;
+            x[start + i + head_dim / 2] = x0 * sin + x1 * cos;
+        }
+    }
+}
+
+pub fn trit_to_f32(t: Trit) -> f32 {
+    match t {
+        Trit::Affirm => 1.0,
+        Trit::Reject => -1.0,
+        Trit::Tend => 0.0,
+    }
+}
+
+pub fn trit_from_f32_approx(v: f32) -> Trit {
+    if v > 0.5 { Trit::Affirm }
+    else if v < -0.5 { Trit::Reject }
+    else { Trit::Tend }
 }
