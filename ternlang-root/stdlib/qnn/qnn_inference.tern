@@ -4,7 +4,7 @@
 // Layer 2: 2 hidden → 1 output
 // Tier: 2 — Pro Standard
 
-fn trit_weight(signal: trit, weight: trit) -> trit {
+fn trit_mult(signal: trit, weight: trit) -> trit {
     match weight {
         -1 => {
             match signal {
@@ -14,36 +14,53 @@ fn trit_weight(signal: trit, weight: trit) -> trit {
             }
         }
          0 => { return hold(); }
-         1 => { return signal; }
+         1 => {
+            match signal {
+                -1 => { return conflict(); }
+                 0 => { return hold();     }
+                 1 => { return truth();    }
+            }
+         }
     }
 }
 
-fn neuron(x0: trit, x1: trit, x2: trit, w0: trit, w1: trit, w2: trit) -> trit {
-    let a: trit = trit_weight(x0, w0);
-    let b: trit = trit_weight(x1, w1);
-    let c: trit = trit_weight(x2, w2);
+fn neuron_3(inputs: trittensor<3>, w0: trit, w1: trit, w2: trit) -> trit {
+    let a: trit = trit_mult(inputs[0], w0);
+    let b: trit = trit_mult(inputs[1], w1);
+    let c: trit = trit_mult(inputs[2], w2);
     return consensus(consensus(a, b), c);
 }
 
-fn binary_neuron(x0: trit, x1: trit, w0: trit, w1: trit) -> trit {
-    let a: trit = trit_weight(x0, w0);
-    let b: trit = trit_weight(x1, w1);
+fn neuron_2(x0: trit, x1: trit, w0: trit, w1: trit) -> trit {
+    let a: trit = trit_mult(x0, w0);
+    let b: trit = trit_mult(x1, w1);
     return consensus(a, b);
 }
 
-// Inputs
-let i0: trit = 1;
-let i1: trit = 0;
-let i2: trit = 1;
+fn main() -> trit {
+    // Inputs layer
+    let x: trittensor<3>;
+    x[0] = 1;
+    x[1] = 0;
+    x[2] = 1;
 
-// Hidden layer
-let h0: trit = neuron(i0, i1, i2,  1, -1,  1);
-let h1: trit = neuron(i0, i1, i2, -1,  1,  0);
+    // Hidden layer: 2 neurons
+    let h0: trit = neuron_3(x,  1, -1,  1);
+    let h1: trit = neuron_3(x, -1,  1,  0);
 
-// Output layer
-let out: trit = binary_neuron(h0, h1, 1, 1);
+    // Output layer: 1 neuron
+    let out: trit = neuron_2(h0, h1, 1, 1);
 
-match out {
+    match out {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+// Entry point
+let result: trit = main();
+match result {
     -1 => { return conflict(); }
      0 => { return hold();    }
      1 => { return truth();   }
