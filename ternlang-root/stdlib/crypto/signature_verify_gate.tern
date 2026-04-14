@@ -1,26 +1,51 @@
 // stdlib/crypto/signature_verify_gate.tern
-// Demonstrates: Basic signature or hash verification gate
+// Purpose: Basic signature or hash verification gate.
+// Demonstrates: Ternary verification of integer hashes.
 // Tier: 3 — Industrial
 
 fn verify_hash(received: int, expected: int) -> trit {
-    if received == expected {
-        return truth();    // Signature valid
+    // Integer equality returns a trit (1: equal, -1: not equal)
+    let eq: trit = (received == expected);
+    
+    match eq {
+        1 => { return truth(); }    // Signature valid
+        0 => { return hold(); }     // Uncertain (rare for exact int match)
+        -1 => { 
+            // If received is 0, consider it incomplete rather than tampered
+            if received == 0 ? {
+                return hold();
+            } else {
+                return conflict(); // Tampering detected
+            } else {
+                return conflict();
+            }
+        }
     }
-    if received == 0 {
-        return hold();     // Missing or incomplete signature
-    }
-    return conflict();     // Tampering detected
 }
 
 fn main() -> trit {
-    let r_hash: int = 123456789;
-    let e_hash: int = 123456789;
+    let r_hash: int = 12345;
+    let e_hash: int = 12345;
     
-    let ok: trit = verify_hash(r_hash, e_hash);
+    let res1: trit = verify_hash(r_hash, e_hash); // should be truth
+    let res2: trit = verify_hash(0, e_hash);      // should be hold
+    let res3: trit = verify_hash(999, e_hash);    // should be conflict
     
-    match ok {
+    // consensus(truth, hold) -> truth
+    // consensus(truth, conflict) -> conflict
+    let final_check: trit = consensus(res1, res2);
+    
+    match final_check {
         -1 => { return conflict(); }
-         0 => { return hold();     }
-         1 => { return truth();    }
+         0 => { return hold();    }
+         1 => { return truth();   }
     }
+}
+
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
