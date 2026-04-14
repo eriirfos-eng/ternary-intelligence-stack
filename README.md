@@ -2,7 +2,7 @@
 
 **The next frontier of AI is not scaling — it is logic.**
 
-Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic. This is not a layer of optimization; it is a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty.
+Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic. We provide a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty.
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![Rust CI](https://github.com/eriirfos-eng/ternary-intelligence-stack/actions/workflows/rust.yml/badge.svg)](https://github.com/eriirfos-eng/ternary-intelligence-stack/actions/workflows/rust.yml)
