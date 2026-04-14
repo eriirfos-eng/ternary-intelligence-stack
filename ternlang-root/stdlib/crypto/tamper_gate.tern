@@ -1,41 +1,56 @@
 // stdlib/crypto/tamper_gate.tern
-// Demonstrates: Ternary tamper-detection logic for cryptographic operations.
+// Purpose: Ternary tamper-detection logic for cryptographic operations.
+// Demonstrates: Multi-modal integrity evaluation.
 // Tier: 3 — Industrial
-// This logic evaluates the integrity of a cryptographic context using
-// multi-modal signals. It maps environmental and logical health to trits.
-// - Valid (+1): Safe to proceed with private key operations.
-// - Compromised (-1): Clear tampering detected — zeroize memory immediately.
-// - Uncertain (0): Suspicious signals — lock context until manual clearance.
 
-fn verify_integrity(checksum: trit, voltage: trit, glitch_detected: trit) -> trit {
-    // HARD REJECT: Any evidence of active tampering or checksum failure.
-    if checksum == -1 { return reject; }
-    if glitch_detected == 1 { return reject; }
+fn evaluate_integrity(checksum: trit, environment: trit, sensor: trit) -> trit {
+    // If checksum is conflict or sensor reports active tampering, return conflict
+    if checksum == -1 { return conflict(); }
+    if sensor == 1 { return conflict(); }
     
-    // ESCALATE: Voltage instability or partial checksum (0) triggers hold.
-    if voltage == 0 { return tend; }
-    if checksum == 0 { return tend; }
+    // If environment is unstable (hold), or checksum is uncertain (hold), return hold
+    if environment == 0 { return hold(); }
+    if checksum == 0 { return hold(); }
     
-    // AFFIRM: All signals indicate a nominal environment.
-    if checksum == 1 && voltage == 1 && glitch_detected == -1 {
-        return affirm;
+    // If everything is truth and sensor is quiet, return truth
+    if checksum == 1 {
+        if environment == 1 {
+            if sensor == -1 {
+                return truth();
+            }
+        }
     }
     
-    return tend; // Default to hold if signals are mixed.
+    // Default to hold for mixed/uncertain states
+    return hold();
 }
 
 fn main() -> trit {
-    // Scenario 1: Nominal operation (Checksum OK, Voltage OK, No Glitch)
-    if verify_integrity(affirm, affirm, reject) != affirm { return reject; }
+    // Case 1: Nominal
+    let res1: trit = evaluate_integrity(truth(), truth(), conflict()); // truth
     
-    // Scenario 2: Active glitch attack detected
-    if verify_integrity(affirm, affirm, affirm) != reject { return reject; }
+    // Case 2: Tamper detected
+    let res2: trit = evaluate_integrity(truth(), truth(), truth());   // conflict
     
-    // Scenario 3: Environmental instability (Voltage drop)
-    if verify_integrity(affirm, tend, reject)   != tend   { return reject; }
+    // Case 3: Unstable environment
+    let res3: trit = evaluate_integrity(truth(), hold(), conflict()); // hold
     
-    // Scenario 4: Suspicious checksum (Partial match / bit rot)
-    if verify_integrity(tend, affirm, reject)   != tend   { return reject; }
+    // Verify results
+    if res1 == 1 {
+        if res2 == -1 {
+            if res3 == 0 {
+                return truth();
+            }
+        }
+    }
+    
+    return conflict();
+}
 
-    return affirm;
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
