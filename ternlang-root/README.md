@@ -10,7 +10,7 @@ Ternlang is a systems programming language and ML inference runtime built on bal
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 
-Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
+Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
 ---
 
