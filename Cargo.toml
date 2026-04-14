@@ -28,8 +28,12 @@ authors     = [
     "Zabih Karimi <z.karimi@ternlang.com>",
     "RFI-IRFOS <licensing@ternlang.com>"
 ]
-keywords    = ["ternary", "trit", "balanced-ternary", "vm", "compiler"]
-categories  = ["compilers", "science"]
+keywords    = [
+    "ternary-logic", "machine-learning", "inference-engine", "compiler", 
+    "ai-safety", "explainable-ai", "sparsity", "rust-lang", "low-latency", 
+    "post-binary", "quantization", "hpc", "deterministic"
+]
+categories  = ["compilers", "science", "embedded-programming", "development-tools::ffi"]
 
 [workspace.dependencies]
 ternlang-core    = { path = "ternlang-root/compiler/legacy_shim/ternlang-core",    version = "0.3.1" }

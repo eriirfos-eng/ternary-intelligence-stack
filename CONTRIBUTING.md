@@ -1,70 +1,37 @@
-# Contribution Guidelines
+# Join the Logic Frontier: Contributing to TIS
 
-Thank you for your interest in contributing to the Ternary Intelligence Stack! This document outlines the steps for contributing to this project, including setup instructions, workflow, commit formatting, style guides, testing requirements, and the pull request process.
+The world is trapped in binary thinking. We are building the alternative. 
 
-## Setup Instructions
-1. **Clone the Repository**
+Contributing to the Ternary Intelligence Stack (TIS) isn't just about code; it's about shifting the paradigm of computation from "Forced Guessing" to "Honest Deliberation."
+
+## The Trit-0 Mentality
+Every contribution must respect the **Hold (0)** state. If your code forces a binary choice where uncertainty exists, it will be **Rejected (-1)**. We value precision over speed, and logic over scaling.
+
+## The Styrian Loop (Development)
+We build from Graz, Austria, but our logic is universal.
+1. **Forge**: Use the Rust toolchain. We rely on its type-safety to enforce our ternary logic.
    ```bash
-   git clone https://github.com/eriirfos-eng/ternary-intelligence-stack.git
-   cd ternary-intelligence-stack
+   cd ternlang-root && cargo build
    ```
-2. **Install Dependencies**
-   Follow the instructions for your environment. Generally, this involves:
+2. **Deliberate**: Run the test suite. If a test returns `0` (uncertainty), investigate the edge case.
    ```bash
-   npm install   # For Node.js projects
-   pip install -r requirements.txt   # For Python projects
+   cargo test --workspace
    ```
+3. **Commit**: Speak in the imperative. Tell the history what you *forced* the machine to do.
+   - `feat(core): unleash TSPARSE_MATMUL optimization`
+   - `fix(vm): stabilize register overflow in BET-013`
+   - `stdlib(math): add consensus logic for medical triage`
 
-## Workflow
-1. **Create a Branch**
-   When working on a new feature or bug fix, create a new branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+## The Tri-State Review Protocol
+Your Pull Requests will face the same logic as our VM:
+- **Affirm (+1)**: Clean code, passing tests, high signal. Merged.
+- **Hold (0)**: Architectural questions or missing edge cases. We discuss until consensus.
+- **Reject (-1)**: Speculative features, hallucinated logic, or binary-only shortcuts.
 
-2. **Make Your Changes**
-   Work on your changes and keep your commits focused on one aspect of your patch.
+## Style: "Clean, Mean, and Lean"
+- **No Fluff**: We don't use "TODO" or "Fixme". We define the architecture or we don't write it.
+- **Sovereignty**: Ensure your code respects the EU AI Act mandates embedded in our `SECURITY.md`.
+- **Formatting**: 4 spaces. Rustfmt. No trailing whitespace. Keep it surgical.
 
-3. **Run Tests**
-   Ensure that the tests pass before you commit your changes.
-   ```bash
-   npm test   # For Node.js projects
-   pytest   # For Python projects
-   ```
-
-## Commit Format
-- Use the following format for commit messages:
-  `type(scope): subject`
-  - **type**: feat (feature), fix (bug fix), docs (documentation), style (formatting), refactor, test, chore
-  - **scope**: optional, an area of the codebase (e.g., `ui`, `backend`)
-  - **subject**: a brief description in the imperative mood (e.g., `add new UI component`)
-
-Examples:
-- `feat(ui): add new button component`
-- `fix(backend): resolve null reference issue`
-
-## Style Guides
-- Follow the coding standards of the existing code. If there are no existing standards, adhere to the following:
-  - Use 2 spaces for indentation.
-  - No trailing whitespace.
-  - Use single quotes for strings.
-  - Follow language-specific guidelines, e.g., PEP 8 for Python.
-
-## Testing Requirements
-- Write unit tests for any new functionality and ensure all existing tests pass. Use the framework appropriate for the language (e.g., Jest for JavaScript, PyTest for Python).
-
-## Pull Request Process
-1. **Open a Pull Request**
-   Once your changes are ready, push your branch to the remote repository:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-   Then, open a pull request via the GitHub interface.
-
-2. **Review and Feedback**
-   Be open to feedback from maintainers and respond appropriately. Make changes as requested and push the updates to your branch.
-
-3. **Merging**
-   Once approved, the maintainer will merge your pull request. You can also ask for permission to merge your branch if the project allows it.
-
-Thank you for your contributions! Your help is essential in making the Ternary Intelligence Stack better!
+---
+*By contributing, you are helping RFI-IRFOS secure European technological sovereignty. Welcome to the resistance.*

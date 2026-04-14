@@ -9,13 +9,13 @@ fn ternadd3(a: trit, b: trit, c: trit) -> trit {
 
 // Negate: maps +1↔-1, 0→0
 fn neg(x: trit) -> trit {
-    return invert(x);
+    return -x;
 }
 
 // Balance: push any extreme signal toward hold
 // Used to dampen oscillating signals in feedback loops
 fn balance(x: trit, damping: trit) -> trit {
-    return consensus(x, invert(damping));
+    return consensus(x, -damping);
 }
 
 // Step function: hold → truth (useful for activation-like behaviour)
