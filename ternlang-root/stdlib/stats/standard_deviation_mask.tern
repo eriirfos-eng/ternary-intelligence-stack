@@ -1,9 +1,9 @@
 // stdlib/stats/standard_deviation_mask.tern
-// Demonstrates: masking values that are outside a standard deviation bound
-// Tier: 3
+// Purpose: Masking values that are outside a variance-based bound.
+// Demonstrates: Ternary outlier detection using floating-point comparisons.
+// Tier: 3 — Industrial
 
-// Note: No sqrt() yet, so we use variance threshold.
-fn is_outlier(val: trit, mean: float, variance: float) -> trit {
+fn check_is_outlier(val: trit, mean: float, variance: float) -> trit {
     let v: float = 0.0;
     match val {
         1  => { v = 1.0; }
@@ -14,26 +14,38 @@ fn is_outlier(val: trit, mean: float, variance: float) -> trit {
     let diff: float = v - mean;
     let diff_sq: float = diff * diff;
     
-    // If (v - mean)^2 > variance * k, it's an outlier
-    // Using k=1.0 for this demo
+    // If squared difference exceeds variance, it's an outlier (+1)
     if diff_sq > variance {
-        return 1;
-    } else {
-        return -1;
+        return truth();
     }
+    // Otherwise, it's a nominal value (-1)
+    return conflict();
 }
 
 fn main() -> trit {
     let m: float = 0.5;
     let var: float = 0.25;
     
-    let out1: trit = is_outlier(-1, m, var); // (-1 - 0.5)^2 = 2.25 > 0.25 -> Outlier
-    let out2: trit = is_outlier(1, m, var);  // (1 - 0.5)^2 = 0.25 <= 0.25 -> Not outlier
+    // (-1 - 0.5)^2 = 2.25 > 0.25 -> truth
+    let res1: trit = check_is_outlier(conflict(), m, var);
     
-    if out1 == 1 {
-        if out2 == -1 {
-            return 1;
+    // (1 - 0.5)^2 = 0.25 <= 0.25 -> conflict
+    let res2: trit = check_is_outlier(truth(), m, var);
+    
+    // Verify results
+    if res1 == 1 {
+        if res2 == -1 {
+            return truth();
         }
     }
-    return -1;
+    
+    return conflict();
+}
+
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
