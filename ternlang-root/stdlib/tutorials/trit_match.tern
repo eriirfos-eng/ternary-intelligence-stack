@@ -1,0 +1,22 @@
+// stdlib/tutorials/trit_match.tern
+// Demonstrates: Pattern matching on trits
+// Tier: 1 - Open Core
+
+fn describe_trit(t: trit) -> int {
+    match t {
+        -1 => { return 111; } // Conflict marker
+         0 => { return 0;   } // Hold marker
+         1 => { return 1;   } // Truth marker
+    }
+}
+
+fn main() -> trit {
+    let t: trit = reject;
+    let desc: int = describe_trit(t);
+    
+    if desc == 111 {
+        return affirm;
+    } else {
+        return reject;
+    }
+}
