@@ -2,7 +2,7 @@
 // Purpose: Demonstrates ternary logic operations from std::logic.
 // Tier: 1 — Community
 
-from std::logic import trit_and, trit_or, trit_not;
+from "logic.tern" import trit_and, trit_or, trit_not;
 
 fn main() -> trit {
     let a: trit = truth();

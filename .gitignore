@@ -31,3 +31,5 @@ legacy_archive/
 
 # TIS logs
 logs/
+llama32-1b.tern.json
+llama32-1b.tern.bin

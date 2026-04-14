@@ -1,0 +1,37 @@
+// stdlib/std/trit_demo.tern
+// Purpose: Demonstrates and verifies core trit utilities from std::trit.
+// Tier: 1 — Community
+
+from "trit.tern" import abs, min, max, clamp, majority;
+
+fn main() -> trit {
+    let a: trit = truth();
+    let b: trit = hold();
+    let c: trit = conflict();
+
+    // Test abs
+    if abs(c) == 1 {
+        // abs test passed
+    } else { return conflict(); }
+
+    // Test min/max
+    if min(a, c) == -1 {
+        if max(a, c) == 1 {
+            // min/max test passed
+        } else { return conflict(); }
+    } else { return conflict(); }
+
+    // Test clamp
+    // clamp(hold, conflict, truth) -> hold
+    if clamp(b, c, a) == 0 {
+        // clamp test passed
+    } else { return conflict(); }
+
+    // Test majority
+    // majority(1, 1, -1) -> 1
+    if majority(a, a, c) == 1 {
+        return truth();
+    }
+
+    return conflict();
+}

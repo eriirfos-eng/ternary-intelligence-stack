@@ -2,7 +2,7 @@
 // Purpose: Demonstrates and verifies ternary arithmetic functions from std::math.
 // Tier: 1 — Community
 
-from std::math import neg, rectify, ternadd3;
+from "math.tern" import neg, rectify, ternadd3;
 
 fn main() -> trit {
     let a: trit = truth();
