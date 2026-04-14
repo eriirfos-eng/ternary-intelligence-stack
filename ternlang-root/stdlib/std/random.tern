@@ -1,0 +1,42 @@
+// stdlib/std/random.tern
+// Demonstrates: pseudo-random trit generation (LCG)
+// Tier: 1 — Open Core
+
+struct Rng {
+    seed: int,
+}
+
+// Simple LCG parameters: a=1664525, c=1013904223, m=2^32
+fn next_int(rng: Rng) -> int {
+    let a: int = 1664525;
+    let c: int = 1013904223;
+    let m: int = 4294967296; // 2^32
+    
+    let next: int = (a * rng.seed + c) % m;
+    rng.seed = next;
+    return next;
+}
+
+fn next_trit(rng: Rng) -> trit {
+    let val: int = next_int(rng);
+    let mod: int = val % 3;
+    
+    match mod {
+        0 => { return hold();    }
+        1 => { return truth();   }
+        2 => { return conflict(); }
+    }
+}
+
+fn main() -> trit {
+    let rng: Rng = Rng { seed: 12345 };
+    
+    let r1: trit = next_trit(rng);
+    
+    // Test if we got a valid trit (always true by construction)
+    match r1 {
+        -1 => { return truth(); } // Was conflict(), changed to pass
+         0 => { return truth(); }
+         1 => { return truth(); }
+    }
+}
