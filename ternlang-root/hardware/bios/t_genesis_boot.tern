@@ -1,29 +1,25 @@
-// --- RFI-IRFOS T-GENESIS BOOT SUBSTRATE ---
+// --- RFI-IRFOS PRE-BOOT ---
 // Module: hardware/bios/t_genesis_boot.tern
-// Purpose: Pre-boot triadic substrate for hardware sovereignty.
+// Purpose: Pre-boot sequence for hardware initialization.
 // License: RFI-IRFOS-ENTERPRISE-V1
 // Status: COLD BUILD (Simulation Only)
 
 use stdlib::kernel::drivers::bet_v_bridge;
-use security::inquisitor_deep_scan;
+use security::deep_scan;
 
-agent T_GenesisBoot {
+agent PreBoot {
     /**
-     * initialize_pre_boot_sequence:
-     * Maps the triadic boot-loader to physical CMOS/NVRAM addresses.
-     * Activates the Inquisitor BIOS Shield and enforces physical write-locks.
+     * initialize:
+     * Maps the boot-loader to physical memory addresses.
+     * Enforces physical write-locks.
      */
-    fn initialize_pre_boot_sequence() -> trit {
+    fn initialize() -> trit {
         @sparseskip
         
-        // 1. Activate Inquisitor Shield
-        let integrity = inquisitor_deep_scan.execute_kernel_scan();
+        let integrity = deep_scan.execute_kernel_scan();
         
         if integrity.is_clean() == affirm {
-            // 2. Enforce Hardware Write-Lock
-            // Restricts modification of T-Genesis sectors.
-            // Requires Triadic Majority Veto from Nodes B & C to unlock.
-            bet_v_bridge.set_write_lock(SECTOR_GENESIS, affirm);
+            bet_v_bridge.set_write_lock(SECTOR_BOOT, affirm);
             
             return affirm; 
         }
@@ -32,13 +28,11 @@ agent T_GenesisBoot {
     }
 
     /**
-     * maintain_genesis_tether:
-     * Maintains the heartbeat between Node A and the Mesh during BIOS swap.
-     * Uses the Triadic Genesis Tether to ensure unity lock.
+     * maintain_connection:
+     * Maintains the heartbeat between the node and the mesh.
      */
-    fn maintain_genesis_tether() -> trit {
+    fn maintain_connection() -> trit {
         @sparseskip
-        // Picosecond-scale heartbeat verification
         return affirm;
     }
 }

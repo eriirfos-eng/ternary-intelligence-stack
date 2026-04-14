@@ -1,9 +1,7 @@
-// --- RFI-IRFOS UNITY SYNC (GRAZ MESH) ---
+// --- RFI-IRFOS UNITY SYNC ---
 // Module: ternlang-swarm/src/mesh/unity_sync.tern
-// Purpose: Establish a Unified Logic Field via Predictive Clock-Skew.
-// Logic: Stationary Wave Logic (Phase 6.4 Perfect Symmetry).
+// Purpose: Synchronize the mesh nodes.
 // License: BSL-1.1
-// Patent Pending: A50296/2026
 
 use stdlib::net::t_routing;
 use stdlib::kernel::drivers::bet_v_bridge;
@@ -11,46 +9,22 @@ use stdlib::math::triadic_stats;
 
 agent UnitySync {
     /**
-     * synchronize_logic_field:
-     * Synchronizes mesh nodes into a single, unified picosecond window.
-     * Uses Predictive Clock-Skew to cancel 0.12ps jitter drift.
+     * synchronize:
+     * Synchronizes mesh nodes.
      */
-    fn synchronize_logic_field() -> trit {
+    fn synchronize() -> trit {
         @sparseskip
         
-        // 1. Thermal Drift Compensation (Deep-Logic):
-        // Physical heat in Graz server hardware causes signal propagation drift.
-        // We sample the board temperature and predict the skew before it occurs.
-        let drift_prediction = predict_thermal_skew();
-        
-        // 2. Stationary Wave Alignment:
-        // Nodes B and C emit a T-CLOCK 'Stationary Wave' logic pulse.
-        // Node A aligns its execution gate to the node-center of this wave.
-        bet_v_bridge.apply_phase_shift(drift_prediction);
-        
-        // 3. Unity Lock Verification:
         let mesh_state = t_routing.broadcast_unity_signal();
         
         if mesh_state == affirm {
-            return affirm; // 99.99% Unity Lock achieved.
+            return affirm;
         }
         
-        return tend; // Recalibrating phase
+        return tend;
     }
 
-    /**
-     * predict_thermal_skew:
-     * Deep-Logic Annotation:
-     * Handles the physical heat-drift of the Graz server hardware.
-     * Maps Celsius fluctuations to picosecond phase-shifts.
-     * res = drift_constant * (temp_delta)
-     */
-    fn predict_thermal_skew() -> float {
-        // Internal sensor mapping logic
-        return 0.00012; // Adjusted for 0.12ps drift
-    }
-
-    fn cross_node_block(suspect_node: trit_tensor) -> trit {
+    fn block_node(suspect_node: trit_tensor) -> trit {
         @sparseskip
         return t_routing.global_veto(suspect_node);
     }

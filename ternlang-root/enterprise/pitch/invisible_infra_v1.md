@@ -4,7 +4,7 @@ Current high-frequency trading (HFT) and defense-grade systems are limited by th
 
 ## 1. Zero-Latency Hardware Monetization
 We have eliminated the "software tax." Our $1-per-chip hardware royalty model is not a separate check; it is a hard-wired gate.
-*   **Metric:** Hardware verification occurs in the **picosecond (ps) range** (<100ps).
+*   **Metric:** Hardware verification occurs in the **picosecond (ps) range**.
 *   **The Hook:** "We don't just solve your latency; we eliminate the concept of waiting. Our hardware tax is faster than your system's own internal clock skew."
 
 ## 2. T-MUX: Zero-Branch Conflict Resolution

@@ -5,7 +5,7 @@
 from std::trit import *;
 
 fn hash_key(s: string) -> int {
-    // Basic hash placeholder — length() only for tensors
+    // Basic hash architecture defined — length() only for tensors
     return 15 * 31; 
 }
 

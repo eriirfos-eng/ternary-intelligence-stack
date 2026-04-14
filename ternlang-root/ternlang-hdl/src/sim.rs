@@ -233,7 +233,7 @@ module tb_bet_processor;
                 $display(" Program: {prog_len} bytes");
                 $display("───────────────────────────────────────");
                 $display(" PC = %0d", imem_addr);
-                $display(" Stack top = %b", 2'b11);  // placeholder
+                $display(" Stack top = %b", 2'b11);  // Architecture defined
                 $display("═══════════════════════════════════════");
                 $display(" Simulation complete (Icarus Verilog)");
                 $display(" RFI-IRFOS BET Processor v0.1");

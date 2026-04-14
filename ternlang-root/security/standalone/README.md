@@ -13,6 +13,6 @@ The **Inquisitor Standalone Tool** is a high-performance security diagnostic uti
 *   **Latency:** < 100ps per sample
 
 ---
-**RFI-IRFOS Theoretical Research Department**
+**RFI-IRFOS Systems Architecture Division**
 *Reference: Patent Pending A50296/2026*
 *Contact: enterprise@rfi-irfos.org*

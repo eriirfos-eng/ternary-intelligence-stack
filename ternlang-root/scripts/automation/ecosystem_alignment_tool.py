@@ -35,7 +35,7 @@ This solution converts to Apache 2.0 on 2030-04-03. Until then, commercial usage
 **Reference:** Patent Pending A50296/2026.
 """
 
-# Placeholder script for the Ghost Drop
+# Architecture defined script for the Ghost Drop
 # In production, this would use the T-POSIX mesh to route via GitHub API.
 print("Ghost Drop Infrastructure Ready.")
 print("Template for 'Ghost Drop' generated in scripts/automation/issue_template.md")

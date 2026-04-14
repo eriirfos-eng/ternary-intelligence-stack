@@ -45,7 +45,6 @@ TernCore-Silicon allows the `hdl_bridge` in TIS Tier 3 to compile Ternlang high-
 TernCore-Silicon is a proprietary ISA owned by RFI-IRFOS. 
 *   **Academic Use**: Free under the Open-Ternary Initiative.
 *   **Commercial Fabrication**: Per-unit royalty model managed via the Tier 3 Enterprise License.
-*   **IP Protection**: Hardcoded `Triadic Genesis Tether` verification required for all silicon-level ML constructors.
 
 ---
 © 2026 RFI-IRFOS – All Rights Reserved.

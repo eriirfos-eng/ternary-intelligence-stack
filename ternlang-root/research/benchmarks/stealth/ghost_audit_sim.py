@@ -25,7 +25,7 @@ def simulate_binary_monitor(duration=10):
         host_thermal = 35.4 # Baseline idle temp (Celsius)
         
         # 2. TIS Ghost Agent (Simulated)
-        # The agent executes its audit in the <100ps Absolute Zero timeframe,
+        # The agent executes its audit in the Absolute Zero timeframe,
         # perfectly aligned BETWEEN the host monitor's sampling window.
         
         # 3. Output Host Monitor View

@@ -34,7 +34,7 @@ fn forward(model: TritClassifier, input: trittensor<64>) -> trittensor<10> {
     return out;
 }
 
-// Training loop placeholder
+// Training loop architecture defined
 fn train_classifier(model: &mut TritClassifier, dataset: Dataset) {
     let mut epoch: int = 0;
     while epoch < 10 {

@@ -5,7 +5,7 @@
 T-NTP replaces legacy binary NTP mechanisms. It eliminates the "jump" and "slew" artifacts that corrupt distributed logs by introducing a formal **Temporal Hold (deliberative hold)**.
 
 ## 2. Temporal Equilibrium
-When a T-NTP client detects clock drift above the TFP-754 threshold, it MUST NOT adjust its clock immediately. Instead, it enters `deliberative hold`. 
+When a T-NTP client detects clock drift above a predefined threshold, it MUST NOT adjust its clock immediately. Instead, it enters `deliberative hold`. 
 
 During `deliberative hold`, the BET VM:
 1. Suspends all timestamp-critical I/O instructions.

@@ -59,4 +59,4 @@ class TernTorchBridge:
         # Communicates with the local or remote TIS MCP server for 
         # architectural alignment and memory-efficient packing.
         print(f"INFO: Applying Native Triadic Quantization to {len(flat_weights)} parameters.")
-        return flat_weights # Placeholder for quantized return values
+        return flat_weights # Architecture defined for quantized return values

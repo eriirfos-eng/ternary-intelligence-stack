@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "ternlang": {
-      "command": "/home/eri-irfos/Desktop/Ternary Intelligence Stack (TIS)/ternlang-root/target/release/ternlang-mcp",
+      "command": "../../target/release/ternlang-mcp",
       "args": [],
       "env": {},
       "description": "Ternary Intelligence Stack — turns binary AI agents into ternary decision engines.",

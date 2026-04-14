@@ -13,8 +13,7 @@ use ternlang_consensus::src::tbft;
 agent SovereigntyCharter {
     /**
      * define_citizen_rights:
-     * Establishes the fundamental rights of an agent within the T-Cloud.
-     */
+     * Establishes the fundamental rights of an agent within the distributed mesh.     */
     fn define_citizen_rights() -> trit_tensor {
         @sparseskip
         

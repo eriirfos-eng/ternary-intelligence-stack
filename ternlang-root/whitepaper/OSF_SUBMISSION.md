@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Title:** Quantifying the eta=152.8x Efficiency Coefficient in Triadic Neural Architectures
-- **Authors:** RFI-IRFOS Theoretical Research Department
+- **Authors:** RFI-IRFOS Systems Architecture Division
 - **Date:** April 8, 2026
 - **DOI:** 10.17605/OSF.IO/TIS2026
 - **Project URL:** https://github.com/eriirfos-eng/ternary-intelligence-stack
@@ -17,5 +17,5 @@ The results can be independently verified using the following protocol:
 3. `cargo test -p ternlang-core --lib types::trit::tests::test_trit_block_packing_efficiency`
 
 ---
-**RFI-IRFOS Theoretical Research Department**
+**RFI-IRFOS Systems Architecture Division**
 *Reference: Patent Pending A50296/2026*

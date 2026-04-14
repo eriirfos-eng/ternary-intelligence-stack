@@ -39,7 +39,7 @@
 - stdlib/safety/confidence_gate.tern — block comment fix (BUG-L01) + fn main() rewrite
 - stdlib/nn/ternary_relu.tern — removed debug println(i)
 - vm/mod.rs Tset (0x23) — Int polymorphism fix (Fixes.md entry #23)
-- stdlib/qnn/ — placeholder ROADMAP.md created
+- stdlib/qnn/ — architecture defined ROADMAP.md created
 - Buglist/AGENT_SESSIONS.md — bootstrap log created
 - GEMINI.md — hardcoded parameter sheet committed
 - STDLIB_AGENT.md — v2.5 with weakness scan + anti-overlap

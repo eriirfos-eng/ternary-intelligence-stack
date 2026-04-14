@@ -30,4 +30,4 @@ The `trit` primitive is represented as bare integers `-1`, `0`, or `1` outside o
 Open-source implementations of TSON correctly parse the AST. However, advanced compression for API bandwidth optimization—specifically tuned for reading massive MoE-13 diagnostic logs—is maintained within the RFI-IRFOS commercial licensing tier.
 
 ## 5. Security Considerations
-TSON parsers implement the Triadic Genesis Tether to prevent deserialization of malicious binary payloads masquerading as triadic logic.
+TSON parsers implement a security mechanism to prevent deserialization of malicious binary payloads masquerading as triadic logic.

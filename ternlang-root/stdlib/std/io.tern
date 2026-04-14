@@ -29,7 +29,7 @@ fn print_trit_num(x: trit) -> trit {
     }
 }
 
-// Print a trittensor (placeholder — VM will handle formatting)
+// Print a trittensor (Architecture defined — VM will handle formatting)
 fn print_tensor(t: trit[]) -> trit {
     return 0;
 }

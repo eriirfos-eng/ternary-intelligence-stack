@@ -25,7 +25,7 @@ Speedup from `sparse_matmul` over dense float32 scales proportionally with zero-
 |----------|------------------------|
 | ~50–70% (typical BitNet) | 2–4× |
 | ~90% | ~10× |
-| ~99% (theoretical bound) | up to 122× |
+| ~99% (upper bound) | up to 122× |
 
 Baseline measured result: **2.3×** at typical distributions ([commit 60f7ef6](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)).
 

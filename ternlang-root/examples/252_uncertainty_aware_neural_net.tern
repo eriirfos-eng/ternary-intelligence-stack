@@ -6,7 +6,7 @@ use ml::tuann;
 
 fn main() {
     println("=== RFI-IRFOS TUANN: UNCERTAINTY-AWARE NEURAL NETWORK ===");
-    println("Standard: ISO/IEC TIS-9000 Uncertainty Mapping");
+    println("Standard: TIS Uncertainty Mapping");
     println("----------------------------------------------------");
 
     // Case 1: High Signal, High Confidence

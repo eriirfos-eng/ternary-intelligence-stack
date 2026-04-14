@@ -3,7 +3,7 @@
 --- RFI-IRFOS FIRST INTER-SOVEREIGN TRANSACTION (Phase 7.5) ---
 Module: research/benchmarks/cloud/inter_sovereign_tx.py
 Purpose: Execute the first picosecond transaction between Graz and Aerospace.
-Logic: Temporal Folding Protocol (TFP) & Trit-Consensus Ledger.
+Logic: Ternary Synchronization Protocol & Trit-Consensus Ledger.
 License: Tier-3 Sovereign
 """
 
@@ -15,11 +15,11 @@ def execute_inter_sovereign_tx():
     print("  INITIATING INTER-SOVEREIGN TRANSACTION")
     print("  Origin: Node A (Graz, Austria)")
     print("  Target: Node D (Aerospace, USA)")
-    print("  Orchestrator: The Architect (T-Cloud v1.0)")
+    print("  Orchestrator: The Architect (Sovereign Mesh v1.0)")
     print("══════════════════════════════════════════════")
     
     # 1. Temporal Folding Initialization
-    print("[1/4] Calibrating Temporal Folding Protocol (TFP)...")
+    print("[1/4] Calibrating Ternary Synchronization Protocol (TFP)...")
     time.sleep(1)
     fiber_latency = 82.4 # ms (Physical distance)
     tfp_jitter = 0.04 # ps (Triadic Correction)

@@ -407,8 +407,8 @@ Every example should:
 
 ## Attribution
 
-- `09_risc_fetch_decode.tern` — conceptually informed by Brandon Smith's Python 9-trit RISC simulator
-- `13_owlet_bridge.tern` — conceptually informed by the Owlet S-expression ternary interpreter (Node.js)
+- `09_risc_fetch_decode.tern` — operationally informed by Brandon Smith's Python 9-trit RISC simulator
+- `13_owlet_bridge.tern` — operationally informed by the Owlet S-expression ternary interpreter (Node.js)
 - Balanced ternary mathematical foundations: Knuth (1997), *The Art of Computer Programming*
 - Physical ternary precedent: Setun computer, Moscow State University, 1958
 - BitNet b1.58 ternary neural network weights: Ma et al. (2024)

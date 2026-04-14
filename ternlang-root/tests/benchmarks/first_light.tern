@@ -1,7 +1,7 @@
 // --- FIRST LIGHT: THE POST-BINARY HELLO WORLD ---
 // Module: tests/benchmarks/first_light.tern
 // Purpose: Cross-stack functional verification.
-// Logic: L3 Cache -> TFP -> Node D -> Echo.
+// Logic: L3 Cache -> Ternary Synchronization Protocol -> Node D -> Echo.
 
 use tier3::cluster::titan_orchestrator;
 

@@ -444,7 +444,7 @@ heading("3.6  Diagnostic Philosophy and Error Codes", 2)
 body(
     "Ternlang's error messages carry structured codes and ternary-philosophical commentary. "
     "Every diagnostic has a machine-readable code (for tooling and documentation lookup) "
-    "and a human-readable nudge that frames the error in the language's conceptual model:"
+    "and a human-readable nudge that frames the error in the language's formal architecture:"
 )
 
 add_table(
@@ -1352,7 +1352,7 @@ add_table(
 )
 
 body(
-    "Beyond runtime interoperability, ternlang aims to serve as a conceptual archive "
+    "Beyond runtime interoperability, ternlang aims to serve as a technical archive "
     "for prior ternary computing work. Brandon Smith's Python 9-trit RISC simulator "
     "demonstrated a complete fetch-decode-execute cycle in balanced ternary — an existence "
     "proof that received little downstream adoption due to the absence of a compiler "
@@ -1476,6 +1476,6 @@ for ref in refs:
 # SAVE
 # ══════════════════════════════════════════════════════════════════════════════
 
-out = "/home/eri-irfos/Desktop/Ternary Intelligence Stack (TIS)/ternlang-root/whitepaper/ternlang-whitepaper.docx"
+out = "ternlang-whitepaper.docx"
 doc.save(out)
 print(f"Saved: {out}")

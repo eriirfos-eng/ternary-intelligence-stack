@@ -8,7 +8,7 @@ Welcome to the official standard library for the Ternary Intelligence Stack (TIS
 - **Causal**: Causal inference engines, directed acyclic graphs.
 - **Security**: Post-quantum cryptography, zero-trust network protocols.
 - **Optimization**: Sparse matrix kernels, gradient-based ternary optimizers.
-- **Research**: Theory notes, experimental ML architectures.
+- **Research**: Theory notes, advanced ML architectures.
 - **Showcase**: Demonstration-ready flagship systems.
 
 ## Getting Started

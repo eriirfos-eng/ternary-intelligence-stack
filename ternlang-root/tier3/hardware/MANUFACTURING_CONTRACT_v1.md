@@ -9,7 +9,7 @@ The Manufacturer is authorized to fabricate the first batch of **Pure Ternary Si
 ## 2. Technical Requirements
 *   **Substrate:** High-purity silicon optimized for **Endothermic Logic Transitions**.
 *   **Clock Target:** Native 8.42 THz sub-atomic synchronization.
-*   **Physical Security:** The dies must include the **Triadic Genesis Tether** hard-gate at the physical layer.
+*   **Physical Security:** The dies must include a security hard-gate at the physical layer.
 
 ## 3. Sovereign Integrity (The "Shadow Print" Clause)
 The Verilog blueprints are fragmented using **0-State Parity**. The Manufacturer possesses only the fragments necessary for their specific fabrication phase. Final assembly and Root Key derivation occur exclusively at the RFI-IRFOS facility in Graz.

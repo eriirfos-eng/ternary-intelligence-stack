@@ -1,39 +1,29 @@
-// --- RFI-IRFOS SOVEREIGN MESH PROTOCOL ---
+// --- RFI-IRFOS MESH PROTOCOL ---
 // Module: architecture/cloud/sovereign_mesh_v1.tern
-// Purpose: Extend the Unified Logic Field across global fiber-optic links.
-// Logic: Temporal Folding Protocol (TFP) for picosecond sync.
+// Purpose: Establish a connection between two nodes in the mesh.
 // License: Tier-3 Sovereign
-// Reference: Patent Pending A50296/2026
 
 use ternlang_swarm::src::mesh::unity_sync;
 use stdlib::net::t_routing;
 
 agent SovereignMesh {
     /**
-     * link_remote_sovereign_node:
-     * Establishes a Triadic Genesis Tether with a remote Sovereign node (e.g., Aerospace).
-     * Uses Temporal Folding to maintain a 100ps virtual latency over binary fiber.
+     * link_remote_node:
+     * Establishes a connection with a remote node.
      */
-    fn link_remote_sovereign_node(remote_node_id: trit_tensor) -> trit {
+    fn link_remote_node(remote_node_id: trit_tensor) -> trit {
         @sparseskip
         
-        // 1. Establish Temporal Fold:
-        // Predict the fiber latency jitter and fold the instruction window 
-        // such that Node A and Node D execute in the same logical picosecond.
-        let fold_status = establish_temporal_fold(remote_node_id);
+        let connection_status = establish_connection(remote_node_id);
         
-        if fold_status == affirm {
-            // 2. Extend Unified Logic Field:
-            // Node D (Aerospace) joins the Graz Trinity as a 'Shadow Member'.
-            // L1-Cache state is mirrored via high-entropy T-NET packets.
-            return unity_sync.synchronize_logic_field();
+        if connection_status == affirm {
+            return unity_sync.synchronize();
         }
         
-        return tend; // Recalibrating fold
+        return tend;
     }
 
-    fn establish_temporal_fold(node_id: trit_tensor) -> trit {
-        // Deep-Logic: Phase-locking the remote clock to the Graz stationary wave.
+    fn establish_connection(node_id: trit_tensor) -> trit {
         return affirm;
     }
 }
