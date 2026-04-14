@@ -1,0 +1,26 @@
+// stdlib/research/p_val_mask.tern
+// Demonstrates: Masking p-values for statistical significance
+// Tier: 3 - Industrial
+
+fn p_value_significance(p_value: float, alpha: float) -> trit {
+    if p_value < alpha {
+        return affirm; // Statistically significant
+    }
+    if p_value < alpha * 1.5 { // Within 50% of alpha
+        return tend; // Marginally significant
+    }
+    return reject; // Not significant
+}
+
+fn main() -> trit {
+    let p: float = 0.04;
+    let alpha: float = 0.05;
+    
+    let res: trit = p_value_significance(p, alpha); // should be affirm
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
