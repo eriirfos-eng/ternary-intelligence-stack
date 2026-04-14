@@ -26,6 +26,11 @@ The zero state is a first-class routing instruction: *"insufficient confidence �
 Ternlang provides a machine-readable path to human escalation instead of a forced binary guess. This is the foundation for **Post-Binary Intelligence**.
 
 ---
+## Full Technical Documentation
+
+→ **[ternlang-root/README.md](ternlang-root/README.md)** (Architecture, Benchmarks, and Spec)
+
+---
 
 ## Team
 
@@ -36,13 +41,6 @@ The Ternary Intelligence Stack is built by a core team of three co-founders from
 *   **Zabih Karimi**: Principal Network & ML Engineer.
 
 **[Read our BIOS and Mission in LEADERSHIP.md](LEADERSHIP.md)**
-
-
----
-
-## Full Technical Documentation
-
-→ **[ternlang-root/README.md](ternlang-root/README.md)** (Architecture, Benchmarks, and Spec)
 
 ---
 
