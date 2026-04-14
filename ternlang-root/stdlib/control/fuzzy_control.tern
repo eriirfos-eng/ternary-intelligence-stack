@@ -1,0 +1,29 @@
+// stdlib/control/fuzzy_control.tern
+// Demonstrates: A fuzzy control system using ternary logic
+// Tier: 2 - Pro Standard
+
+fn fuzzy_eval(temp_error: float) -> trit {
+    // If error is large positive, cool down (reject)
+    if temp_error > 2.0 {
+        return reject;
+    }
+    // If error is near zero, hold (tend)
+    if temp_error > -1.0 {
+        if temp_error < 1.0 {
+            return tend;
+        }
+    }
+    // If error is large negative, heat up (affirm)
+    return affirm;
+}
+
+fn main() -> trit {
+    let err: float = 0.5;
+    let action: trit = fuzzy_eval(err); // should be tend
+    
+    match action {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
