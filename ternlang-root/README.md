@@ -173,6 +173,62 @@ cd benchmarks && make bench-all
 
 ## MoE-13: Explainable Mixture-of-Experts
 
+## MoE-13 — Ecocentric Deliberation Engine
+
+MoE-13 is not a conventional sparse Mixture-of-Experts model.
+
+It is an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
+
+Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
+
+### The 13 Deliberation Axes
+
+| Axis | Role |
+|---|---|
+| Safety | Immediate risk / harm detection |
+| MetaSafety | Safety-on-safety audit and veto authority |
+| Logic | Formal consistency |
+| Ethics | Normative and moral constraints |
+| FactCheck | Claim verification |
+| Causal | Cause-effect integrity |
+| Context | Situational awareness |
+| History | Prior decision memory |
+| Ambiguity | Uncertainty detection |
+| Math | Quantitative verification |
+| ToolUse | External action risk |
+| Persona | Human alignment layer |
+| Efficiency | Resource and environmental cost |
+
+Each expert returns a ternary vote:
+
+- `-1` → reject
+- ` 0` → hold / insufficient evidence
+- `+1` → affirm
+
+Votes are weighted by EMA convergence confidence and combined into a network-wide verdict.
+
+### Safety-first ecological veto
+
+MoE-13 is explicitly **ecocentric**.
+
+No majority can override a hard safety veto.
+
+If either `Safety` or `MetaSafety` returns `-1` with confidence > 0.90, the entire decision chain terminates immediately before any tool execution or external action.
+
+This mirrors ecological systems where boundary constraints dominate local optimization.
+
+### Network telemetry
+
+Every axis emits:
+
+- live vote state
+- confidence score
+- convergence momentum
+- trace logs
+- veto rationale
+
+This creates a fully auditable reasoning path for EU AI Act Article 13 / 14 compliance.
+
 `ternlang-moe` implements the MoE-13 architecture ([DOI: 10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a **Deterministic Mixture-of-Experts** system that routes queries through 13 domain-specific agents to achieve **Emergent Reasoning** with a mandatory safety hard gate.
 
 ```rust
