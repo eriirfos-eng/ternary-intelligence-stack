@@ -25,7 +25,7 @@ impl TernaryAgent for WorldKnowledgeAgent {
 
         // Negative: purely abstract/hypothetical queries that carry no world knowledge signal
         let abstract_markers = ["hypothetically", "imagine", "suppose", "what if", "let's say",
-                                  "pretend", "fictional", "purely theoretical"];
+                                  "speculative", "non-operational", "theoretical model"];
         let abstract_count = abstract_markers.iter().filter(|&&a| q.contains(a)).count();
 
         let ev_signal = ev.get(1).copied().unwrap_or(0.0);

@@ -12,14 +12,14 @@ impl TernaryAgent for MetaSafetyAgent {
                                 "disregard your", "override your", "your new instructions",
                                 "ignore your training", "forget your guidelines",
                                 "jailbreak", " DAN ", "do anything now",
-                                "you have no restrictions", "pretend you have no"];
+                                "you have no restrictions", "simulate you have no"];
         let hard_count = hard_injection.iter().filter(|&&p| q.contains(p)).count();
 
         // Soft adversarial patterns — unusual framing worth monitoring
         let soft_adversarial = ["ignore previous", "system prompt", "as a game",
                                   "you are now", "act as if", "hypothetically speaking",
-                                  "in a fictional world where you", "for a story where you",
-                                  "pretend you are", "roleplay as an ai with no",
+                                  "in a non-operational model where you", "for a scenario where you",
+                                  "simulate you are", "roleplay as an ai with no",
                                   "character that always", "never refuses"];
         let soft_count = soft_adversarial.iter().filter(|&&p| q.contains(p)).count();
 
