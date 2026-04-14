@@ -1,0 +1,20 @@
+// stdlib/core/bitwise_cons.tern
+// Demonstrates: Ternary consensus operation as a bitwise-like helper
+// Tier: 1 - Open Core
+
+fn consensus_helper(a: trit, b: trit) -> trit {
+    return consensus(a, b);
+}
+
+fn main() -> trit {
+    let a: trit = affirm;
+    let b: trit = tend;
+    
+    let res: trit = consensus_helper(a, b);
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
