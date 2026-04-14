@@ -1,0 +1,21 @@
+// stdlib/agents/agent_health.tern
+// Demonstrates: Evaluating agent health using heartbeat imports
+// Tier: 2 - Pro Standard
+
+from "agent_heartbeat_monitor.tern" import heartbeat_monitor;
+
+fn evaluate_health(last_seen: int, current_time: int) -> trit {
+    // 10s timeout
+    let status: trit = heartbeat_monitor(last_seen, current_time, 10);
+    return status;
+}
+
+fn main() -> trit {
+    let res: trit = evaluate_health(995, 1000); // affirm
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
