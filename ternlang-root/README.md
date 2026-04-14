@@ -1,3 +1,5 @@
+# Ternlang — Balanced Ternary Intelligence Stack
+
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![version](https://img.shields.io/badge/version-v0.3.0-black)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
@@ -9,8 +11,6 @@
 [![examples](https://img.shields.io/badge/examples-2,090%2B_.tern_programs-blueviolet)](#example-library)
 [![stdlib](https://img.shields.io/badge/stdlib-27,000%2B_modules-blue)](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
-
-# Ternlang — Balanced Ternary Intelligence Stack
 
 
 Ternlang is a systems programming language and ML inference runtime built on balanced ternary logic. It is the foundational layer of a post-binary technology ecosystem designed to secure European technological sovereignty.
