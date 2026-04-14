@@ -1,0 +1,28 @@
+// stdlib/control/pid_loop.tern
+// Demonstrates: A proportional-integral-derivative control loop in ternary environment
+// Tier: 2 - Pro Standard
+
+fn calculate_pid(error: float, prev_error: float, integral: float, kp: float, ki: float, kd: float) -> float {
+    let p: float = kp * error;
+    let i: float = integral + (ki * error);
+    let d: float = kd * (error - prev_error);
+    return p + i + d;
+}
+
+fn main() -> trit {
+    let kp: float = 1.0;
+    let ki: float = 0.1;
+    let kd: float = 0.05;
+    
+    let err: float = 5.0;
+    let prev_err: float = 4.0;
+    let total_int: float = 2.0;
+    
+    let output: float = calculate_pid(err, prev_err, total_int, kp, ki, kd);
+    
+    // If output is within acceptable bounds
+    if output > 0.0 {
+        return affirm;
+    }
+    return reject;
+}
