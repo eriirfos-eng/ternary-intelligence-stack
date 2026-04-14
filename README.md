@@ -1,7 +1,5 @@
 # Ternary Intelligence Stack (TIS)
 
-**The next frontier of AI is not scaling — it is logic.**
-
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic. We provide a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty.
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
