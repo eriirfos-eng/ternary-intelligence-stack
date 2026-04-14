@@ -1,0 +1,47 @@
+// stdlib/std/conv.tern
+// Demonstrates: conversion helpers between trit, int, and float
+// Tier: 1 — Open Core
+
+fn to_trit(n: int) -> trit {
+    match n {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+    
+    // Clamp values outside [-1, 1]
+    if n > 1 { return truth(); }
+    if n < -1 { return conflict(); }
+    
+    return hold();
+}
+
+fn to_int(s: trit) -> int {
+    match s {
+        -1 => { return -1; }
+         0 => { return 0;  }
+         1 => { return 1;  }
+    }
+}
+
+fn float_to_trit(f: float, threshold: float) -> trit {
+    if f > threshold {
+        return truth();
+    }
+    if f < -threshold {
+        return conflict();
+    }
+    return hold();
+}
+
+fn main() -> trit {
+    let n: int = 1;
+    let s: trit = to_trit(n);
+    let i: int = to_int(s);
+    
+    if i == n {
+        return truth();
+    }
+    
+    return conflict();
+}
