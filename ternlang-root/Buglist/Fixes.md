@@ -251,3 +251,10 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** Codegen for Stmt::Let was too aggressive with TALLOC. VM Tset was using Trit::from() directly on i8.
 **Fix:** Modified betbc.rs to only TALLOC if value is missing (TritLiteral(0)). Modified vm/mod.rs to saturate integers to Trit::Reject/Tend/Affirm on Tset.
 **Status:** Fixed
+
+## 2026-04-14 — Forward reference bug in TCALL
+**Trigger:** Calling a function defined later in the file.
+**Symptom:** Call target address is incorrect or patch failed silently. Resulted in wrong behavior/wrong function executed.
+**Diagnosis:** Function patching in betbc.rs might be referencing incorrect indices or patches are being overwritten.
+**Workaround:** Move helper functions ABOVE the calling function.
+**Status:** Unresolved — Workaround applied
