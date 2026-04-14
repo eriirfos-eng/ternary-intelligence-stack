@@ -1,0 +1,22 @@
+// stdlib/classical/trit_to_bit_map.tern
+// Demonstrates: Mapping ternary trits to binary bits
+// Tier: 1 - Open Core
+
+fn trit_to_bit(t: trit) -> int {
+    match t {
+        -1 => { return 0; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let t: trit = affirm;
+    let b: int = trit_to_bit(t);
+    
+    if b == 1 {
+        return affirm;
+    } else {
+        return reject;
+    }
+}
