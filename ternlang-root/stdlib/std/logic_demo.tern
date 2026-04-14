@@ -1,0 +1,36 @@
+// stdlib/std/logic_demo.tern
+// Purpose: Demonstrates ternary logic operations from std::logic.
+// Tier: 1 — Community
+
+from std::logic import trit_and, trit_or, trit_not;
+
+fn main() -> trit {
+    let a: trit = truth();
+    let b: trit = hold();
+    let c: trit = conflict();
+
+    // Test trit_and
+    if trit_and(a, b) == 0 {
+        if trit_and(a, c) == -1 {
+            // and passed
+        } else { return conflict(); }
+    } else { return conflict(); }
+
+    // Test trit_or
+    if trit_or(a, b) == 1 {
+        if trit_or(b, c) == 0 {
+            // or passed
+        } else { return conflict(); }
+    } else { return conflict(); }
+
+    // Test trit_not
+    if trit_not(a) == -1 {
+        if trit_not(b) == 0 {
+            if trit_not(c) == 1 {
+                return truth();
+            }
+        }
+    }
+
+    return conflict();
+}

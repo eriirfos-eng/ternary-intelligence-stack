@@ -1,26 +1,28 @@
-# Security Policy for Ternary Intelligence Stack
+# Defending Post-Binary Sovereignty: Security Policy
 
-## Vulnerability Reporting
-If you discover a security vulnerability within this project, please report it to us directly via email at [contact@eriirfos-eng.com](mailto:contact@eriirfos-eng.com). We appreciate your efforts to improve the security of our project and will respond quickly to your report.
+Security at TIS is not a patch; it is the **Neutrality Shield**. We don't just protect data; we protect the integrity of the deliberation process.
 
-## Supported Versions
-Our support policy for this project includes the following versions:
-- Current release: *version number*  (Updating as necessary)
-- Past release: *version number*  (Updating as necessary)
+## The Veto Protocol (Reporting)
+If you find a breach in our logic or a vulnerability in our crates, execute a **Safety Veto** immediately. 
+**Contact the Core Team:** [rfi.irfos@gmail.com](mailto:rfi.irfos@gmail.com)
 
-Security fixes will be released for the current and past version as outlined above.
+We don't do "bug bounties" in the traditional sense—we offer **recognition in the Logic Frontier** and the gratitude of the RFI-IRFOS collective.
 
-## Security Guidelines
-We encourage developers to follow best practices for security in their own contributions:
-- Regularly update your dependencies to the latest versions.
-- Validate input to prevent injection attacks.
-- Follow secure coding standards as outlined by the [OWASP](https://owasp.org).
+## Sovereignty Status
+| Logic Gate | Status |
+|------------|--------|
+| **v0.3.1** | **Operational (Active Defense)** |
+| **Legacy** | **Decommissioned (No Veto Support)** |
 
-## Coordinated Disclosure Timeline
-We aim to maintain a responsible disclosure policy. Here is our coordinated disclosure timeline:
-- **Day 0:** A vulnerability is reported to us.
-- **Day 7:** We acknowledge receipt of the report and start investigating.
-- **Day 30:** We will initiate a patch release if applicable.
-- **Day 90:** If a fix cannot be applied within 30 days, we will provide a detailed status update on the investigation and the potential risk.
+## The Three Mandates of TIS Security
+1. **Zero-Guessing**: Vulnerabilities often live in the "undefined" space. Our Trit-0 architecture minimizes this by design.
+2. **Rust-Hardened**: We leverage the borrow checker as our primary line of defense. Raw pointers are a **Veto (-1)** offense unless strictly justified.
+3. **Safety-by-Design**: We align with **Articles 13 & 15 of the EU AI Act**. Our inference must be transparent and robust against adversarial manipulation.
 
-Thank you for helping us keep Ternary Intelligence Stack secure!
+## Disclosure Timeline
+- **T+0h**: Vulnerability detected.
+- **T+48h**: Core team acknowledgement.
+- **T+7d**: Strategy finalized.
+- **T+30d**: Deployment of the Neutrality Patch.
+
+*Stay sharp. Logic is our only shield.*

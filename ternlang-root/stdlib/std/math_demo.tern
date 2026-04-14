@@ -1,0 +1,38 @@
+// stdlib/std/math_demo.tern
+// Purpose: Demonstrates and verifies ternary arithmetic functions from std::math.
+// Tier: 1 — Community
+
+from std::math import neg, rectify, ternadd3;
+
+fn main() -> trit {
+    let a: trit = truth();
+    let b: trit = hold();
+    let c: trit = conflict();
+
+    // Test neg
+    if neg(a) == -1 {
+        if neg(b) == 0 {
+            if neg(c) == 1 {
+                // neg test passed
+            } else { return conflict(); }
+        } else { return conflict(); }
+    } else { return conflict(); }
+
+    // Test rectify
+    if rectify(a) == 1 {
+        if rectify(b) == 0 {
+            if rectify(c) == 0 {
+                // rectify test passed
+            } else { return conflict(); }
+        } else { return conflict(); }
+    } else { return conflict(); }
+
+    // Test ternadd3
+    if ternadd3(a, c, b) == 0 {
+        if ternadd3(a, a, c) == 1 {
+            return truth();
+        }
+    }
+
+    return conflict();
+}

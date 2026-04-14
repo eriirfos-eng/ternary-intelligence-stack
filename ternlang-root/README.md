@@ -171,9 +171,9 @@ cd benchmarks && make bench-all
 
 ---
 
-## MoE-13 Ternary Orchestrator
+## MoE-13: Explainable Mixture-of-Experts
 
-`ternlang-moe` implements the MoE-13 architecture ([DOI: 10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a ternary Mixture-of-Experts system that routes queries through a pool of 13 domain experts, synthesises an emergent signal, enforces a hard safety veto, and returns a ternary decision with confidence and temperature.
+`ternlang-moe` implements the MoE-13 architecture ([DOI: 10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a **Deterministic Mixture-of-Experts** system that routes queries through 13 domain-specific agents to achieve **Emergent Reasoning** with a mandatory safety hard gate.
 
 ```rust
 use ternlang_moe::TernMoeOrchestrator;
@@ -604,5 +604,8 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 | **Commercial licensing** | [licensing@ternlang.com](mailto:licensing@ternlang.com) |
 | **Academic collaboration** | Open — cite the whitepaper |
 | **API access** | [ternlang.com/#licensing](https://ternlang.com/#licensing) |
+
+*"The place where fragmented ternary efforts compile into one."*
+/#licensing) |
 
 *"The place where fragmented ternary efforts compile into one."*
