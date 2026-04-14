@@ -1,0 +1,36 @@
+// stdlib/causal/counterfactual_mask.tern
+// Demonstrates: Evaluating counterfactual outcomes using ternary state
+// Tier: 3 - Industrial
+
+fn evaluate_counterfactual(observed: trit, hypothetical: trit, consistency: float) -> trit {
+    // If consistency is low, we can't affirm the counterfactual
+    if consistency < 0.5 {
+        return tend;
+    }
+    
+    // If observed and hypothetical are same, it's consistent
+    if observed == hypothetical {
+        return affirm;
+    }
+    
+    // If they differ but consistency is high, it's a valid "what if"
+    if consistency > 0.8 {
+        return hypothetical;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let obs: trit = reject;
+    let hyp: trit = affirm;
+    let conf: float = 0.85;
+    
+    let res: trit = evaluate_counterfactual(obs, hyp, conf); // should be affirm (+1)
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
