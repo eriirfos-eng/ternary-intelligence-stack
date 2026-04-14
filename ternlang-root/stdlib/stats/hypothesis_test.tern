@@ -1,28 +1,50 @@
-// Module:  stdlib/stats/hypothesis_test.tern
-// Purpose: Statistical Hypothesis Testing
-// Author:  RFI-IRFOS
-// Ref:     https://ternlang.com
+// stdlib/stats/hypothesis_test.tern
+// Purpose: Statistical Hypothesis Testing in ternary logic.
+// Demonstrates: P-value evaluation against significance thresholds.
+// Tier: 3 — Industrial
 
-// Returns 'affirm' if significant, 'reject' if not, 'tend' if borderline.
-
-fn t_test_trit(sample_a: trit[], sample_b: trit[], alpha: float) -> trit {
-    let p_val: float = 0.04; // simulated
-    if p_val < alpha { return affirm; } // Significant
-    if p_val < (alpha + 0.05) { return tend; } // Borderline
-    return reject; // Not significant
+fn evaluate_hypothesis(p_value: float, alpha: float) -> trit {
+    // If p-value is below significance level, reject null hypothesis (+1)
+    if p_value < alpha {
+        return truth();
+    }
+    // If p-value is borderline (within 5% of alpha), return uncertain (0)
+    let borderline: float = alpha + 0.05;
+    if p_value < borderline {
+        return hold();
+    }
+    // Null hypothesis stands (-1)
+    return conflict();
 }
 
-fn chi_square_trit(observed: int[], expected: int[]) -> trit {
-    let p_val: float = 0.1;
-    if p_val < 0.05 { return affirm; }
-    if p_val < 0.10 { return tend; }
-    return reject;
+fn main() -> trit {
+    let alpha: float = 0.05;
+    
+    // Case 1: Significant p-value (0.01)
+    let res1: trit = evaluate_hypothesis(0.01, alpha); // truth
+    
+    // Case 2: Borderline p-value (0.07)
+    let res2: trit = evaluate_hypothesis(0.07, alpha); // hold
+    
+    // Case 3: Not significant p-value (0.25)
+    let res3: trit = evaluate_hypothesis(0.25, alpha); // conflict
+    
+    // Verify results
+    if res1 == 1 {
+        if res2 == 0 {
+            if res3 == -1 {
+                return truth();
+            }
+        }
+    }
+    
+    return conflict();
 }
 
-fn anova_trit(groups: trit[][]) -> trit {
-    // Analysis of Variance across groups
-    let p_val: float = 0.01;
-    if p_val < 0.05 { return affirm; }
-    if p_val < 0.10 { return tend; }
-    return reject;
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
