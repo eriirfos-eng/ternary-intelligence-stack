@@ -1,0 +1,41 @@
+// stdlib/stats/kurtosis_excess_check.tern
+// Demonstrates: kurtosis detection (concentration in tend vs extremes)
+// Tier: 3 — Industrial
+
+fn kurtosis_excess(signals: trit[]) -> trit {
+    let count_extreme: int = 0;
+    let count_neutral: int = 0;
+    
+    for s in signals {
+        match s {
+            -1 => { count_extreme = count_extreme + 1; }
+             0 => { count_neutral = count_neutral + 1; }
+             1 => { count_extreme = count_extreme + 1; }
+        }
+    }
+    
+    // concentration in extremes > concentration in neutral
+    // means the distribution is "spread out" (platykurtic)
+    if count_extreme > count_neutral {
+        return conflict();
+    }
+    
+    // concentration in neutral > extremes
+    // means the distribution is "peaked" (leptokurtic)
+    if count_neutral > count_extreme {
+        return truth();
+    }
+    
+    return hold();
+}
+
+fn main() -> trit {
+    let signals: trit[] = [0, 0, 0, 1, -1]; // concentrated in 0
+    let result: trit = kurtosis_excess(signals);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
