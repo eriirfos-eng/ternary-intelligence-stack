@@ -244,3 +244,10 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Fix:** Documentation only — avoid using 'remote' as a variable or function name. Renamed variables to 'rem_val' or similar.
 **Status:** Resolved (by avoidance).
 
+
+## 2026-04-14 — TALLOC bug in Stmt::Let + Tset saturating int
+**Trigger:** `let t: trittensor<1> = c.state;` auto-allocated instead of using existing tensor. `t[0] = 2` panicked.
+**Symptom:** Tensors not sharing state. VM panic: Invalid trit value 2.
+**Diagnosis:** Codegen for Stmt::Let was too aggressive with TALLOC. VM Tset was using Trit::from() directly on i8.
+**Fix:** Modified betbc.rs to only TALLOC if value is missing (TritLiteral(0)). Modified vm/mod.rs to saturate integers to Trit::Reject/Tend/Affirm on Tset.
+**Status:** Fixed
