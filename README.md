@@ -20,6 +20,11 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · [Whitepaper (DOI)
 - **Explainable AI (XAI) by Design**: Every decision is auditable and traceable, fulfilling **EU AI Act Articles 13, 14, and 15** mandates for algorithmic transparency and human oversight.
 - **Post-Binary Systems Architecture**: A full-stack ecosystem including a custom **Instruction Set Architecture (ISA)**, triadic networking, and memory-efficient ternary encoding.
 
+The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm).
+The zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
+
+Ternlang provides a machine-readable path to human escalation instead of a forced binary guess. This is the foundation for **Post-Binary Intelligence**.
+
 ---
 
 ## Team
@@ -32,12 +37,6 @@ The Ternary Intelligence Stack is built by a core team of three co-founders from
 
 **[Read our BIOS and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
----
-
-The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm).
-The zero state is not an error. It is a first-class routing instruction: *"insufficient confidence — do not act yet."*
-
-Ternlang provides a machine-readable path to human escalation instead of a forced binary guess. This is the foundation for **Post-Binary Intelligence**.
 
 ---
 
