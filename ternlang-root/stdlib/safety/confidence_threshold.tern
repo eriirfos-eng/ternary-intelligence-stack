@@ -1,0 +1,30 @@
+// stdlib/safety/confidence_threshold.tern
+// Demonstrates: A multi-level confidence threshold gating system
+// Tier: 2 - Pro Standard
+
+fn eval_confidence(conf: float, critical: trit) -> trit {
+    // Critical systems require 0.95+
+    if critical == 1 {
+        if conf >= 0.95 { return affirm; }
+        if conf >= 0.80 { return tend; }
+        return reject;
+    }
+    
+    // Non-critical require 0.70+
+    if conf >= 0.70 { return affirm; }
+    if conf >= 0.50 { return tend; }
+    return reject;
+}
+
+fn main() -> trit {
+    let c: float = 0.85;
+    let crit: trit = affirm;
+    
+    let res: trit = eval_confidence(c, crit); // should be tend
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
