@@ -15,8 +15,7 @@ Simeon leads the architectural vision and research direction of the Ternary Inte
 *   **Role:** Operational Lead, Lead Architect.
 *   **Focus:** Balanced Ternary Logic, Causal Routing, Systems Architecture.
 *   **LinkedIn:** [Simeon Kepp](https://www.linkedin.com/in/simeon-kepp/)
-
----
+*   **Email:** s.kepp@ternlang.com
 
 ### Nikoletta Csonka
 **Co-Founder & Head of International Relations**  
@@ -27,7 +26,7 @@ Nikoletta manages the strategic positioning and international partnerships of RF
 *   **Role:** Lead Management, Strategic Outreach, Regulatory Alignment.
 *   **Focus:** EU AI Act Compliance, International Relations, Strategic Partnerships.
 *   **LinkedIn:** [Nikoletta Csonka](https://www.linkedin.com/in/csonikoletta/)
-
+*   **Email:**  csonikoletta@ternlang.com
 ---
 
 ### Zabih Karimi
@@ -39,6 +38,7 @@ Zabih specializes in the practical implementation of the TIS stack, from network
 *   **Role:** IT-Technician, Network Specialist, ML Application Engineer.
 *   **Focus:** Networking, ML Inference, Technical Operations, BET VM Stability.
 *   **LinkedIn:** [Zabih Karimi](https://www.linkedin.com/in/zabih-karimi-3292ab349/)
+*   **Email:**  z.karimi@ernlang.com
 
 ---
 
