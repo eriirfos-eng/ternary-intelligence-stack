@@ -338,8 +338,8 @@ impl TernAsmEmitter {
                 self.emit_label(&lbl_end);
             }
 
-            Stmt::Break    => { self.emit("j     .L_break_TODO   ; break"); }
-            Stmt::Continue => { self.emit("j     .L_continue_TODO ; continue"); }
+            Stmt::Break    => { self.emit("j     .L_break_arch_def ; break"); }
+            Stmt::Continue => { self.emit("j     .L_continue_arch_def ; continue"); }
 
             Stmt::Send { target, message } => {
                 let t = self.emit_expr(target, ra);
