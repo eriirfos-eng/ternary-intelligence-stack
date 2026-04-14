@@ -1,0 +1,46 @@
+// stdlib/ensemble/redundancy_reduction.tern
+// Demonstrates: redundancy detection in expert signals
+// Tier: 2 — Pro Standard
+
+fn are_equal(a: trit[], b: trit[]) -> trit {
+    let n: int = length(a);
+    let m: int = length(b);
+    
+    if n != m {
+        return conflict();
+    }
+    
+    let i: int = 0;
+    while i < n {
+        if a[i] != b[i] {
+            return conflict();
+        }
+        i = i + 1;
+    }
+    
+    return truth();
+}
+
+fn check_redundancy(expert: trit[], pool1: trit[], pool2: trit[]) -> trit {
+    if are_equal(expert, pool1) == truth() {
+        return truth();
+    }
+    
+    if are_equal(expert, pool2) == truth() {
+        return truth();
+    }
+    
+    return conflict();
+}
+
+fn main() -> trit {
+    let e:  trit[] = [1, 0, -1];
+    let p1: trit[] = [1, 0, -1]; // Redundant
+    let p2: trit[] = [0, 0, 0];
+    
+    if check_redundancy(e, p1, p2) == truth() {
+        return truth();
+    }
+    
+    return conflict();
+}
