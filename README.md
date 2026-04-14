@@ -1,28 +1,41 @@
 # Ternary Intelligence Stack (TIS)
 
-**Ternlang is a systems programming language, compiler, and ML inference runtime built on balanced ternary logic.**
+**The next frontier of AI is not scaling — it is logic.**
+
+Ternlang is a systems programming language, compiler, and ML inference runtime built on balanced ternary logic. This is not a layer of optimization; it is a fundamental architectural shift for European technological sovereignty.
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](ternlang-root/LICENSE)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![MCP](https://img.shields.io/badge/MCP-+20%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399)](https://ternlang.com/compliance)
-[![Data Residency](https://img.shields.io/badge/Data%20Residency-EU%20Frankfurt-003399)](https://ternlang.com/compliance)
 
-Built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
+Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
+
+---
+
+## Team
+
+The Ternary Intelligence Stack is built by a core team of three co-founders from **RFI-IRFOS**, Graz:
+
+*   **Simeon Kepp**: Head of Research & Operational Lead.
+*   **Nikoletta Csonka**: Head of International Relations & Strategic Outreach.
+*   **Zabih Karimi**: Network & ML Application Specialist.
+
+**[Read our BIOS and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
 ---
 
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm).
 The zero state is not an error. It is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
-This makes Ternlang the natural foundation for AI systems that must reason honestly under uncertainty — with a machine-readable path to human escalation instead of a forced binary guess.
+Ternlang provides a machine-readable path to human escalation instead of a forced binary guess. This is the foundation for **Post-Binary Intelligence**.
 
 ---
 
 ## Full documentation
 
-→ **[ternlang-root/README.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md)**
+→ **[ternlang-root/README.md](ternlang-root/README.md)**
 
 ---
 

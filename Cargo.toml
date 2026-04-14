@@ -22,7 +22,12 @@ edition     = "2024"
 license     = "LGPL-3.0-or-later"
 repository  = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
 homepage    = "https://ternlang.com"
-authors     = ["RFI-IRFOS <licensing@ternlang.com>"]
+authors     = [
+    "Simeon Kepp <rfi.irfos@gmail.com>",
+    "Nikoletta Csonka <csonikoletta@ternlang.com>",
+    "Zabih Karimi <z.karimi@ternlang.com>",
+    "RFI-IRFOS <licensing@ternlang.com>"
+]
 keywords    = ["ternary", "trit", "balanced-ternary", "vm", "compiler"]
 categories  = ["compilers", "science"]
 

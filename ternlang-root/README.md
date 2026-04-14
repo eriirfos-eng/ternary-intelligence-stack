@@ -1,24 +1,26 @@
 # Ternlang — Balanced Ternary Intelligence Stack
 
-**The definitive platform for balanced ternary computing.**
+**The next frontier of AI is not scaling — it is logic.**
+
+Ternlang is a systems programming language and ML inference runtime built on balanced ternary logic. It is the foundational layer of a post-binary technology ecosystem designed to secure European technological sovereignty.
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
-[![MCP](https://img.shields.io/badge/MCP-19%20tools%20v0.3.0-purple)](https://ternlang.com/mcp)
-[![VS Code](https://img.shields.io/badge/VS%20Code-Open%20VSX%20v0.4.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
-[![Linguist PR](https://img.shields.io/badge/GitHub%20Linguist-PR%20pending-yellow)](https://github.com/github/linguist/pulls)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
-[![Human Oversight](https://img.shields.io/badge/Human%20Oversight-Article%2014%20Ready-003399)](https://ternlang.com/compliance)
-[![Data Residency](https://img.shields.io/badge/Data%20Residency-EU%20Frankfurt-003399)](https://ternlang.com/compliance)
-[![GDPR](https://img.shields.io/badge/GDPR-Compliant%20Design-003399)](https://ternlang.com/compliance)
 
-Ternlang is a systems programming language built on balanced ternary logic built by [RFI-IRFOS](https://ternlang.com) · [ternlang.com](https://ternlang.com) · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
+Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · [Whitepaper (DOI)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
 ---
 
-## The Problem with Binary AI
+## Our Mission: Post-Binary Sovereignty
+
+We are a core team of three co-founders based in Graz, Austria, working at the intersection of computer science, machine learning, and international relations. We believe that Europe's path to technological sovereignty lies in leapfrogging the binary limitations of current AI hyperscalers.
+
+**Ternlang adds the third state.** By representing uncertainty as a first-class citizen, we enable AI systems that reason with causal transparency and ontological integrity.
+
+**[Meet the Team in LEADERSHIP.md](../LEADERSHIP.md)**
 
 Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either make a confident inference or return null.
 
