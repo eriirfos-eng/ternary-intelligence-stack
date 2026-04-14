@@ -1,0 +1,38 @@
+// stdlib/std/search.tern
+// Demonstrates: binary search on a sorted trit array
+// Tier: 1 — Open Core
+
+fn binary_search(sorted_signals: trit[], target: trit) -> int {
+    let low: int = 0;
+    let high: int = length(sorted_signals) - 1;
+    
+    while low <= high {
+        let mid: int = (low + high) / 2;
+        let val: trit = sorted_signals[mid];
+        
+        if val == target {
+            return mid; // Found
+        }
+        
+        if val < target {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    
+    return -1; // Not found
+}
+
+fn main() -> trit {
+    let data: trit[] = [-1, -1, 0, 0, 1, 1]; // Sorted
+    let target: trit = 0;
+    let index: int = binary_search(data, target);
+    
+    // Index should be 2 or 3
+    if index == 2 || index == 3 {
+        return truth();
+    }
+    
+    return conflict();
+}
