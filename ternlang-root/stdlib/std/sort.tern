@@ -1,0 +1,52 @@
+// stdlib/std/sort.tern
+// Demonstrates: O(n) counting sort for trit signals
+// Tier: 1 — Open Core
+
+fn sort_trits(signals: trit[]) -> trit {
+    let count_neg: int = 0;
+    let count_zero: int = 0;
+    let count_pos: int = 0;
+    
+    // Pass 1: Count
+    for s in signals {
+        match s {
+            -1 => { count_neg = count_neg + 1; }
+             0 => { count_zero = count_zero + 1; }
+             1 => { count_pos = count_pos + 1; }
+        }
+    }
+    
+    // Pass 2: Fill (Overwrite in-place)
+    let n: int = length(signals);
+    let i: int = 0;
+    
+    while i < count_neg {
+        signals[i] = conflict();
+        i = i + 1;
+    }
+    
+    let limit_zero: int = count_neg + count_zero;
+    while i < limit_zero {
+        signals[i] = hold();
+        i = i + 1;
+    }
+    
+    while i < n {
+        signals[i] = truth();
+        i = i + 1;
+    }
+    
+    return truth();
+}
+
+fn main() -> trit {
+    let data: trit[] = [1, 0, -1, 1, 0, -1];
+    let ok: trit = sort_trits(data);
+    
+    // Verify first element is -1
+    if data[0] == conflict() {
+        return truth();
+    }
+    
+    return conflict();
+}
