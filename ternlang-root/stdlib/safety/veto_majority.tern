@@ -1,0 +1,36 @@
+// stdlib/safety/veto_majority.tern
+// Demonstrates: Majority veto logic for a three-agent system
+// Tier: 2 - Pro Standard
+
+fn veto_majority(a1: trit, a2: trit, a3: trit) -> trit {
+    let rejects: int = 0;
+    if a1 == -1 { rejects = rejects + 1; }
+    if a2 == -1 { rejects = rejects + 1; }
+    if a3 == -1 { rejects = rejects + 1; }
+    
+    // If 2 or more reject, final is reject
+    if rejects >= 2 {
+        return reject;
+    }
+    
+    // If 1 rejects, final is hold
+    if rejects == 1 {
+        return tend;
+    }
+    
+    return affirm;
+}
+
+fn main() -> trit {
+    let a1: trit = affirm;
+    let a2: trit = reject;
+    let a3: trit = affirm;
+    
+    let res: trit = veto_majority(a1, a2, a3); // should be tend
+    
+    match res {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
