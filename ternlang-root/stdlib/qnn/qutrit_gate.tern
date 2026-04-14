@@ -20,11 +20,21 @@ fn qutrit_shift(q: trit) -> trit {
     }
 }
 
-let q0: trit = 0;
-let q1: trit = qutrit_gate(q0);
-let q2: trit = qutrit_shift(q1);
+fn main() -> trit {
+    let q0: trit = hold();
+    let q1: trit = qutrit_gate(q0);
+    let q2: trit = qutrit_shift(q1);
 
-match q2 {
+    match q2 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+// Entry point
+let result: trit = main();
+match result {
     -1 => { return conflict(); }
      0 => { return hold();    }
      1 => { return truth();   }
