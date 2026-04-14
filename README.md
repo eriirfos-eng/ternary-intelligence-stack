@@ -8,7 +8,7 @@
 
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic. We provide a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty.
 
-Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · [Whitepaper (https://osf.io/cyn28/files/8hzux) ]
+Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
 ---
 
