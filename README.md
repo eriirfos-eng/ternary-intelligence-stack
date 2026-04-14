@@ -1,11 +1,10 @@
 # Ternary Intelligence Stack (TIS)
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![Rust CI](https://github.com/eriirfos-eng/ternary-intelligence-stack/actions/workflows/rust.yml/badge.svg)](https://github.com/eriirfos-eng/ternary-intelligence-stack/actions/workflows/rust.yml)
-[![clippy](https://img.shields.io/badge/rust-clippy-brightgreen)](https://github.com/eriirfos-eng/ternary-intelligence-stack/actions)
-[![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](ternlang-root/LICENSE)
-[![Sparsity](https://img.shields.io/badge/Sparsity-122x%20Bound-purple)](#sparse-ternary-inference)
-[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant-003399)](https://ternlang.com/compliance)
+[![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
+[![tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](#architecture)
+[![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
+[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic. We provide a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty.
 
