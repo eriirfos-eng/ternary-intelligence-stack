@@ -1,21 +1,18 @@
 # Ternlang — Balanced Ternary Intelligence Stack
 
-**The next frontier of AI is not scaling — it is logic.**
-
-Ternlang is a systems programming language and ML inference runtime built on balanced ternary logic. It is the foundational layer of a post-binary technology ecosystem designed to secure European technological sovereignty.
-
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
+[![version](https://img.shields.io/badge/version-v0.3.0-black)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
-[![version](https://img.shields.io/badge/version-v0.3.0-black)](#architecture)
-[![examples](https://img.shields.io/badge/examples-2,090%2B-blueviolet)](#example-library)
-[![stdlib](https://img.shields.io/badge/stdlib-27,000%2B_modules-blue)](#language--vm)
-[![MCP](https://img.shields.io/badge/MCP-19_tools-orange)](#mcp-server--v030-19-tools)
 [![speedup](https://img.shields.io/badge/@sparseskip-up_to_122x-success)](#sparse-ternary-inference)
+[![MCP](https://img.shields.io/badge/MCP-19_tools-orange)](#mcp-server--v030-19-tools)
+[![examples](https://img.shields.io/badge/examples-2,090%2B_.tern_programs-blueviolet)](#example-library)
+[![stdlib](https://img.shields.io/badge/stdlib-27,000%2B_modules-blue)](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
+Ternlang is a systems programming language and ML inference runtime built on balanced ternary logic. It is the foundational layer of a post-binary technology ecosystem designed to secure European technological sovereignty.
 
 Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
