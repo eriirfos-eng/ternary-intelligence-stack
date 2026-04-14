@@ -1,0 +1,38 @@
+// stdlib/stats/z_score_classifier.tern
+// Demonstrates: Z-score classification using float thresholds
+// Tier: 3 — Industrial
+
+fn z_score_classify(x: float, mean: float, std_dev: float) -> trit {
+    if std_dev == 0.0 {
+        return hold();
+    }
+    
+    let diff: float = x - mean;
+    let z: float = diff / std_dev;
+    
+    // Using standard 95% confidence interval thresholds (~1.96)
+    if z > 1.96 {
+        return truth();
+    }
+    
+    if z < -1.96 {
+        return conflict();
+    }
+    
+    return hold();
+}
+
+fn main() -> trit {
+    let x: float = 10.0;
+    let mean: float = 5.0;
+    let std_dev: float = 2.0;
+    
+    // Z = (10-5)/2 = 2.5 > 1.96 -> truth()
+    let classification: trit = z_score_classify(x, mean, std_dev);
+    
+    match classification {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
