@@ -1,44 +1,62 @@
 // stdlib/stats/arithmetic_mean_gate.tern
-// Demonstrates: signal mean comparison against target
-// Tier: 3
+// Purpose: Signal mean comparison against target threshold.
+// Demonstrates: Floating-point arithmetic on ternary signal populations.
+// Tier: 3 — Industrial
 
-fn mean(data: trit[]) -> float {
+fn calculate_trit_mean(data: trittensor<5>) -> float {
     let sum: int = 0;
-    let count: int = 0;
-    for x in data {
-        match x {
-            1  => { sum = sum + 1; }
-            0  => { sum = sum + 0; }
+    let idx: int = 0;
+    
+    // Manual loop for fixed-size tensor
+    while idx < 5 ? {
+        let val: trit = data[idx];
+        match val {
+            1 => { sum = sum + 1; }
+            0 => { sum = sum + 0; }
             -1 => { sum = sum - 1; }
         }
-        count = count + 1;
-    }
-    if count > 0 {
-        return cast(sum) / cast(count);
-    } else {
-        return 0.0;
-    }
+        idx = idx + 1;
+    } else { } else { }
+    
+    return cast(sum) / 5.0;
 }
 
-fn check_mean_threshold(actual: float, expected: float, tolerance: float) -> trit {
-    if actual > (expected + tolerance) {
+fn check_mean_bounds(actual: float, target: float, epsilon: float) -> trit {
+    if actual > (target + epsilon) {
         return conflict();
     }
-    if actual < (expected - tolerance) {
+    if actual < (target - epsilon) {
         return conflict();
     }
     return truth();
 }
 
 fn main() -> trit {
-    let signals: trit[] = [1, 1, 1, 0, 0];
+    let signals: trittensor<5>;
+    signals[0] = 1;
+    signals[1] = 1;
+    signals[2] = 1;
+    signals[3] = 0;
+    signals[4] = 0;
     
-    // Mean = 3/5 = 0.6
-    let m: float = mean(signals);
+    // Mean = (1+1+1+0+0)/5 = 0.6
+    let m: float = calculate_trit_mean(signals);
     
-    if m > 0.5 {
-        return 1;
-    } else {
-        return -1;
+    // Target 0.5, epsilon 0.2 -> bounds [0.3, 0.7]
+    // 0.6 is within bounds
+    let ok: trit = check_mean_bounds(m, 0.5, 0.2);
+    
+    match ok {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
     }
+}
+
+// Entry point
+let result: trit = main();
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold();    }
+     1 => { return truth();   }
 }
