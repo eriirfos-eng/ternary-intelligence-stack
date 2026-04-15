@@ -26,10 +26,16 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** None. This is a fundamental VM safety issue.
 - **Regression Test:** `stdlib/bughunt/probe_37_invalid_tensor_literal.tern` (This test triggers the panic).
 
+## [VM-LOGIC-002] Casting Errors
+- **Description:** Type casting, particularly involving negative numbers (trit to float, float to int), produces incorrect results, leading to silent data corruption or incorrect program behavior.
+- **Error:** Returns `reject` state when calculations involving casts are incorrect.
+- **Workaround:** Avoid casting negative numbers or complex casting chains until fixed.
+- **Regression Test:** `stdlib/bughunt/probe_41_casting_logic_bug.tern`
+
 ## [BET-001] For-Loop Break Stack Underflow
-- **Description:** Using a `break` statement inside a `for` loop can cause a `BET-001` Stack Underflow error. The exact conditions are still under investigation.
+- **Description:** Using a `break` statement inside a `match` within a `for` loop can lead to `BET-001` Stack Underflow. This indicates an issue with stack management during complex control flow exits.
 - **Error:** `VM Error: [BET-001] Stack underflow`
-- **Workaround:** Avoid using `break` inside `for` loops.
+- **Workaround:** Avoid using `break` inside `match` statements within `for` loops.
 - **Regression Test:** `stdlib/bughunt/probe_35_stress_test_v2.tern` (This test triggers the underflow).
 
 ## [PARSER-002] Match on Floats
@@ -98,7 +104,7 @@ impl std::fmt::Display for ParseError {
             
             // New error message:
             Self::InvalidTritLiteralValue(val) =>
-                write!(f, "[PARSE-009] Invalid value '{val}' in trittensor literal. Only -1, 0, and 1 are allowed."),
+                write!(f, "[PARSER-009] Invalid value '{val}' in trittensor literal. Only -1, 0, and 1 are allowed."),
         }
     }
 }
@@ -112,7 +118,7 @@ impl std::fmt::Display for ParseError {
 
 **1. Update `VmError` Enum:**
 
-Add variants for the integer overflow and invalid trit value panics.
+Add variants for the integer overflow, invalid trit value, and invalid cast errors.
 
 ```rust
 pub enum VmError {
@@ -122,12 +128,13 @@ pub enum VmError {
     // New error types:
     IntegerOverflow,
     InvalidTritValue(i64),
+    InvalidCast(String), // For invalid casting operations
 }
 ```
 
 **2. Update `fmt::Display` Implementation:**
 
-Add new match arms. The VM's arithmetic opcodes should use `checked_...` methods and return `IntegerOverflow`. The VM's loop and value-handling logic should validate trits and return `InvalidTritValue` instead of panicking.
+Add new match arms. The VM's arithmetic opcodes should use `checked_...` methods and return `IntegerOverflow`. The VM's loop and value-handling logic should validate trits and return `InvalidTritValue` instead of panicking. The VM's casting operations should check for valid conversions and return `InvalidCast`.
 
 ```rust
 impl fmt::Display for VmError {
@@ -139,6 +146,7 @@ impl fmt::Display for VmError {
             // New error messages:
             Self::IntegerOverflow => write!(f, "[BET-014] Integer overflow. You tried to count past the stars and ran out of numbers."),
             Self::InvalidTritValue(val) => write!(f, "[BET-015] Invalid trit value: {val}. The VM found a pretender in its midst."),
+            Self::InvalidCast(msg) => write!(f, "[BET-016] Invalid cast: {msg}. Cannot convert value to target type."),
         }
     }
 }

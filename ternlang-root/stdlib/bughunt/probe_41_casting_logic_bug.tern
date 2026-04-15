@@ -1,0 +1,45 @@
+// stdlib/bughunt/probe_41_casting_logic_bug.tern
+// Demonstrates: Incorrect behavior in type casting, especially with negative values.
+// Tier: 1
+
+fn main() -> trit {
+    // Test trit to float
+    let trit_pos: trit = 1;
+    let float_from_trit_pos: float = cast(trit_pos);
+    if float_from_trit_pos != 1.0 {
+        return reject; // Fail if trit(1) to float fails
+    }
+
+    let trit_zero: trit = 0;
+    let float_from_trit_zero: float = cast(trit_zero);
+    if float_from_trit_zero != 0.0 {
+        return reject; // Fail if trit(0) to float fails
+    }
+
+    let trit_neg: trit = -1;
+    let float_from_trit_neg: float = cast(trit_neg);
+    if float_from_trit_neg != -1.0 {
+        return reject; // Fail if trit(-1) to float fails
+    }
+
+    // Test float to int (truncation)
+    let float_pos: float = 5.9;
+    let int_from_float_pos: int = cast(float_pos);
+    if int_from_float_pos != 5 {
+        return reject; // Fail if positive float to int truncation fails
+    }
+
+    let float_neg: float = -5.9;
+    let int_from_float_neg: int = cast(float_neg);
+    if int_from_float_neg != -5 { // Expecting truncation towards zero for negative numbers
+        return reject; // Fail if negative float to int truncation fails
+    }
+
+    // This combination was problematic in probe_40: trit -> float -> int
+    let final_sum_check: int = cast(cast(trit_neg)); // trit(-1) -> float(-1.0) -> int(-1)
+    if final_sum_check != -1 {
+        return reject; // Fail if the combined cast fails
+    }
+
+    return truth(); // All cast tests passed
+}
