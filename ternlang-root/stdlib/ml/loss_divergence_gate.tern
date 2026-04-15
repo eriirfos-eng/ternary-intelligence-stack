@@ -1,0 +1,19 @@
+// stdlib/ml/loss_divergence_gate.tern
+// Demonstrates: Detection of diverging loss using imported utilities
+// Tier: 2 — Pro Standard
+
+from "ml_utils.tern" import eval_loss_delta;
+
+fn main() -> trit {
+    let current: float = 1.5;
+    let previous: float = 1.2;
+    
+    // Diverging loss: current > previous -> returns 1
+    let status: trit = eval_loss_delta(current, previous);
+    
+    match status {
+        -1 => { return truth(); }     // Improving
+         0 => { return hold(); }      // Stable
+         1 => { return conflict(); }  // Diverging (Reject)
+    }
+}
