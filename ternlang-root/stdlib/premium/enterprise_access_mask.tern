@@ -1,0 +1,46 @@
+// stdlib/premium/enterprise_access_mask.tern
+// Demonstrates: Fine-grained enterprise access control
+// Tier: 4 — Enterprise
+
+fn access_eval(role: trit, sensitivity: trit) -> trit {
+    // Role: 1 (Admin), 0 (User), -1 (Guest)
+    // Sensitivity: 1 (Secret), 0 (Internal), -1 (Public)
+    
+    match role {
+        affirm => { 
+            // Admin can access everything
+            return affirm; 
+        }
+        tend => { 
+            // User can access Internal and Public
+            if sensitivity == 1 { return reject; }
+            return affirm;
+        }
+        reject => { 
+            // Guest can only access Public
+            if sensitivity == -1 { return affirm; }
+            return reject;
+        }
+    }
+}
+
+fn main() -> trit {
+    // User (tend) accessing Secret (affirm)
+    let decision: trit = access_eval(tend, affirm);
+    
+    // decision should be reject
+    match decision {
+        affirm => { 
+            // Access granted
+            return truth(); 
+        }
+        tend => { 
+            // MFA required
+            return hold(); 
+        }
+        reject => { 
+            // Access denied
+            return conflict(); 
+        }
+    }
+}
