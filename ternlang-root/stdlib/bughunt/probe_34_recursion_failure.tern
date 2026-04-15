@@ -1,0 +1,25 @@
+// stdlib/bughunt/probe_34_recursion_failure.tern
+// Demonstrates: Silent failure in recursive function calls.
+// Tier: 1
+
+// The factorial function seems to be broken when called recursively.
+// It does not produce the correct output, leading to silent data corruption.
+fn factorial(n: int) -> int {
+    if n == 0 {
+        return 1;
+    } else {
+        // The bug is likely in the handling of the call stack (CALL/RET opcodes)
+        // or the multiplication (MUL) opcode in a recursive context.
+        return n * factorial(n - 1);
+    }
+}
+
+fn main() -> trit {
+    let result: int = factorial(5); // Should be 120
+
+    if result == 120 {
+        return truth(); // Should return this
+    } else {
+        return reject; // Returns this instead, indicating the bug.
+    }
+}
