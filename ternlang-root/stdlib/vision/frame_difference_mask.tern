@@ -1,0 +1,19 @@
+// stdlib/vision/frame_difference_mask.tern
+// Demonstrates: Masking changed pixels between consecutive frames
+// Tier: 3 — Industrial
+
+from "vision_utils.tern" import intensity_gate;
+
+fn main() -> trit {
+    let diff: float = 0.35;
+    let change_threshold: float = 0.2;
+    
+    // Status: 1 if change is significant
+    let has_changed: trit = intensity_gate(diff, 0.0, change_threshold);
+    
+    match has_changed {
+        -1 => { return hold(); }
+         0 => { return hold(); }      // No change
+         1 => { return truth(); }     // Change detected (Mask)
+    }
+}
