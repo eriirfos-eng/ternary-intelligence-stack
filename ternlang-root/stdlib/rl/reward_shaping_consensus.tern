@@ -1,0 +1,22 @@
+// stdlib/rl/reward_shaping_consensus.tern
+// Demonstrates: Consensus on reward shaping signals
+// Tier: 2 — Pro Standard
+
+from "rl_utils.tern" import clip_reward;
+
+fn main() -> trit {
+    let internal_reward: float = 0.1;
+    let external_reward: float = 1.5;
+    
+    let r1: trit = clip_reward(internal_reward);
+    let r2: trit = clip_reward(external_reward);
+    
+    // Consensus for final reward signal
+    let shaped_reward: trit = consensus(r1, r2);
+    
+    match shaped_reward {
+        -1 => { return conflict(); }  // Negative reinforcement
+         0 => { return hold(); }      // Neutral
+         1 => { return truth(); }     // Positive reinforcement
+    }
+}
