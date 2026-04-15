@@ -1,0 +1,19 @@
+// stdlib/nn/attention_map_mask.tern
+// Demonstrates: Masking attention scores based on relevance
+// Tier: 3 — Industrial
+
+from "nn_utils.tern" import check_bound;
+
+fn main() -> trit {
+    let score: float = 0.8;
+    let relevance_threshold: float = 0.5;
+    
+    // Status: 1 if relevant, 0 if ignorable
+    let is_relevant: trit = check_bound(score, relevance_threshold);
+    
+    match is_relevant {
+        -1 => { return truth(); }     // Relevant (Negative)
+         0 => { return hold(); }      // Mask (Zero)
+         1 => { return truth(); }     // Relevant (Positive)
+    }
+}
