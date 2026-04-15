@@ -1,0 +1,49 @@
+// stdlib/research/hypothesis_falsification.tern
+// Demonstrates: Popperian falsification logic
+// Tier: 3
+
+fn falsify(predictions: trittensor<5>, observations: trittensor<5>) -> trit {
+    let matches: int = 0;
+    let conflicts: int = 0;
+    
+    let i: int = 0;
+    while i < 5 ? {
+        let p: trit = predictions[i];
+        let o: trit = observations[i];
+        
+        if p == o {
+            matches = matches + 1;
+        } else {
+            // Strict falsification: if observation rejects a truth prediction, falsified
+            if p == 1 {
+                if o == -1 {
+                    return -1; // Falsified
+                }
+            }
+            conflicts = conflicts + 1;
+        }
+        i = i + 1;
+    } else { } else { }
+    
+    if matches > conflicts {
+        return 1; // Supported
+    }
+    
+    return 0; // Inconclusive
+}
+
+fn main() -> trit {
+    let preds: trittensor<5>;
+    preds[0] = 1; preds[1] = 1; preds[2] = 0; preds[3] = 1; preds[4] = -1;
+    
+    let obs: trittensor<5>;
+    obs[0] = 1; obs[1] = 1; obs[2] = 0; obs[3] = -1; obs[4] = -1;
+    
+    let result: trit = falsify(preds, obs);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
