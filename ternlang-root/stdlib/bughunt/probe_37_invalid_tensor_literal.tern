@@ -1,12 +1,21 @@
 // stdlib/bughunt/probe_37_invalid_tensor_literal.tern
-// Demonstrates: Parser allows invalid integer values in a trittensor literal.
+// Demonstrates: Invalid trittensor literal causing runtime panic.
 // Tier: 1
 
 fn main() -> trit {
-    // This line should cause a parse error, because a trittensor can only
-    // contain the values -1, 0, or 1.
-    // The parser incorrectly accepts this line.
-    let items: trittensor<5> = [0, 1, 5, -1, 0];
+    // Attempt to declare a trittensor with values outside the valid trit range [-1, 0, 1].
+    // The parser should ideally catch this, but the bug description states it doesn't,
+    // leading to a runtime panic instead.
+    
+    // Test case 1: Literal with out-of-range integer (-2)
+    // This should cause a runtime panic: "Invalid trit value: -2"
+    let tensor1: trittensor<3> = [-1, 0, -2]; 
 
-    return truth();
+    // Test case 2: Literal with out-of-range integer (2)
+    // This should also cause a runtime panic: "Invalid trit value: 2"
+    let tensor2: trittensor<3> = [1, 2, 0];
+
+    // If the program reaches here, it means the invalid literals did not cause a panic,
+    // which contradicts the bug description. In such a case, we return reject.
+    return reject;
 }
