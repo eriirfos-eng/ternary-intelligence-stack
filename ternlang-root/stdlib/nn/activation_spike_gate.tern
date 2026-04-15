@@ -1,0 +1,19 @@
+// stdlib/nn/activation_spike_gate.tern
+// Demonstrates: Detecting activation spikes in deep layers
+// Tier: 3 — Industrial
+
+from "nn_utils.tern" import check_bound;
+
+fn main() -> trit {
+    let activation: float = 12.5;
+    let safety_limit: float = 10.0;
+    
+    // Status: 1 if spiked, -1 if negative spike, 0 if within limit
+    let status: trit = check_bound(activation, safety_limit);
+    
+    match status {
+        -1 => { return conflict(); }  // Negative spike
+         0 => { return truth(); }     // Safe
+         1 => { return conflict(); }  // Positive spike
+    }
+}
