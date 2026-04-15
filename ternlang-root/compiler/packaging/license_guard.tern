@@ -3,22 +3,17 @@
 // Purpose: Intercept unauthorized commercial usage of Tier-3 hardware modules.
 // Logic: Hard State 0 block if Sovereign Root Key is missing.
 
-use stdlib::crypto::sovereign;
-
-agent LicenseGuard {
-    fn enforce_tier3_license(key: trittensor<27>) -> trit {
-        @sparseskip
-        // Check for Sovereign Root Key
-        let has_key: trit = 1;
-        
-        if has_key == 1 {
-            return 1; // Affirm (Authorized)
-        }
-        
-        return 0; // Hold (State 0 Block) - Compilation halted
+fn enforce_tier3_license(has_key: trit) -> trit {
+    if has_key == affirm {
+        return affirm; // Authorized
     }
+    return tend; // State 0 Block
 }
 
 fn main() -> trit {
-    return 1;
+    let status: trit = enforce_tier3_license(1);
+    if status == affirm {
+        return truth();
+    }
+    return hold();
 }

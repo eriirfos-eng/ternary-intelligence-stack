@@ -5,37 +5,18 @@
 // License: Tier-3 Sovereign
 // Reference: Patent Pending A50296/2026
 
-use security::inquisitor_deep_scan;
-use ternlang_swarm::src::mesh::unity_sync;
-
-agent Negotiator {
-    /**
-     * negotiate_tier3_authorization:
-     * Audits the potential partner's hardware before authorizing a Sovereign Root Key.
-     * Enforces the VM-Grip Test to ensure native triadic execution.
-     */
-    fn negotiate_tier3_authorization(partner_node_id: trit_tensor) -> trit {
-        @sparseskip
-        
-        // 1. Initiate VM-Grip Test:
-        // Measures the L1-Cache latency and instruction jitter on the partner node.
-        let jitter = perform_vm_grip_test(partner_node_id);
-        
-        // 2. Jitter Threshold Check:
-        // Native TIS < 100ps. Virtualized Binary > 1ms.
-        // We do not sign contracts with 'Virtualized Ghosts'.
-        if jitter < state::affirm {
-            // 3. Sovereign Root Key Provisioning:
-            // Physically derive the unique key from the partner node's Trit-Noise Floor.
-            return authorize_substrate(partner_node_id);
-        }
-        
-        return reject; // Substrate validation failed (VM detected)
+fn negotiate_tier3_authorization(jitter: int) -> trit {
+    // Native TIS < 100ps. Virtualized Binary > 1ms.
+    if jitter < 100 {
+        return affirm;
     }
+    return reject; // Substrate validation failed (VM detected)
+}
 
-    fn perform_vm_grip_test(node_id: trit_tensor) -> trit {
-        // Measures the picosecond lock synchronization against the Unity heartbeat.
-        // Returns affirm (+1) if native, reject (-1) if virtualized.
-        return unity_sync.verify_native_lock(node_id);
+fn main() -> trit {
+    let status: trit = negotiate_tier3_authorization(50);
+    if status == affirm {
+        return truth();
     }
+    return conflict();
 }
