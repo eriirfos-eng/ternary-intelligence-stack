@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for short_term_memory
-fn short_term_memory_safe() -> trit {
-    return affirm;
+
+fn check_memory_integrity(checksum: int) -> trit {
+    if checksum > 0 { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = check_memory_integrity(12345);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
