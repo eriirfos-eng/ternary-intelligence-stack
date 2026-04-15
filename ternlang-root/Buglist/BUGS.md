@@ -44,6 +44,12 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Avoid complex float expressions; use intermediate variables or simpler operations.
 - **Regression Test:** `stdlib/bughunt/probe_45_mixed_type_arithmetic.tern` and `stdlib/bughunt/probe_47_float_precision.tern` (These tests trigger the parser error).
 
+## [PARSER-BUG-2] Cast Expression Syntax Error
+- **Description:** The parser fails when a `cast` expression is used as part of a binary operation (e.g., `cast(int) + float`). It incorrectly expects a block `{}` instead of continuing to parse the expression.
+- **Error:** `Parse program error: ExpectedToken("LBrace", "LParen")`
+- **Workaround:** Avoid using `cast` directly within binary expressions; use an intermediate variable.
+- **Regression Test:** `probe_46_cast_expression_bug.tern` (This test triggers the parser error).
+
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.
 - **Error:** `Parse program error: ExpectedToken("pattern (int or trit)", "Float(1.0)")`
@@ -84,14 +90,10 @@ This file tracks known bugs in the Ternlang compiler and VM.
 
 **File to Edit:** `compiler/legacy_shim/ternlang-core/src/parser.rs`
 
-To fix **[PARSER-BUG] Float Expression Syntax Error**, the parser needs to be more robust in handling binary operations involving float literals and results of float expressions. This is similar to the `cast` expression issue. The parser should correctly identify float literals as part of expressions and not mistake them for block delimiters.
+**1. For [PARSER-BUG] Float Expression Syntax Error:**
+The parser needs to correctly handle float literals and expressions within binary operations. This is similar to the `cast` expression issue. The `parse_binary_expr` and `parse_primary_expr` functions must be updated to recognize float literals as valid operands and allow binary operations to continue, rather than expecting a block delimiter.
 
-**1. Update `ParseError` Enum:**
+**2. For [PARSER-BUG-2] Cast Expression Syntax Error:**
+The `parse_binary_expr` function needs to be updated to correctly parse `cast(...)` as a primary expression and then allow subsequent binary operations on it. This might involve ensuring `parse_primary_expr` correctly returns the `Cast` node and that `parse_binary_expr` correctly consumes it before looking for operators.
 
-No new enum variant is strictly necessary if the existing `ExpectedToken` or `UnexpectedToken` can be made more descriptive. However, a dedicated error for this specific issue could be added for clarity.
-
-**2. Update Parser Logic:**
-
-The logic in `parse_binary_expr` and `parse_primary_expr` needs to be refined. When encountering float literals or expressions that evaluate to floats, the parser must correctly continue parsing binary operators (`+`, `-`, `*`, `/`) rather than prematurely expecting a block (`LBrace`).
-
-*(No direct code snippet to add here as it's a logic refinement in existing parsing functions.)*
+*(No direct code snippets to add here as they are logic refinements in existing parsing functions.)*
