@@ -1,0 +1,22 @@
+// stdlib/rl/experience_replay_gate.tern
+// Demonstrates: Gating experience replay samples by priority/TD-error
+// Tier: 2 — Pro Standard
+
+from "rl_utils.tern" import clip_reward;
+
+fn main() -> trit {
+    let td_error: float = 2.5;
+    let priority_threshold: float = 1.0;
+    
+    // Status: 1 if high priority
+    let is_high_priority: trit = 0;
+    if td_error > priority_threshold {
+        is_high_priority = 1;
+    }
+    
+    match is_high_priority {
+        -1 => { return hold(); }
+         0 => { return hold(); }      // Low priority (Skip)
+         1 => { return truth(); }     // High priority (Sample)
+    }
+}
