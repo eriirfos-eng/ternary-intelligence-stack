@@ -1,0 +1,20 @@
+// stdlib/vision/edge_detection_gate.tern
+// Demonstrates: Gating pixels based on edge gradient intensity
+// Tier: 3 — Industrial
+
+from "vision_utils.tern" import intensity_gate;
+
+fn main() -> trit {
+    let gradient: float = 0.65;
+    let edge_lo: float = 0.2;
+    let edge_hi: float = 0.5;
+    
+    // Status: 1 if strong edge, 0 if weak/flat
+    let edge_status: trit = intensity_gate(gradient, edge_lo, edge_hi);
+    
+    match edge_status {
+        -1 => { return hold(); }      // Very low gradient
+         0 => { return hold(); }      // Moderate (Uncertain)
+         1 => { return truth(); }     // Strong edge
+    }
+}
