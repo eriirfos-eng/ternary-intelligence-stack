@@ -1,0 +1,19 @@
+// stdlib/stats/skewness_anomaly_detector.tern
+// Demonstrates: Detecting distribution skewness anomalies
+// Tier: 3 — Industrial
+
+from "stats_utils.tern" import is_outlier;
+
+fn main() -> trit {
+    let skew: float = 2.5;
+    let max_abs_skew: float = 2.0;
+    
+    // Status: 1 if skewed beyond tolerance
+    let status: trit = is_outlier(skew, (0.0 - max_abs_skew), max_abs_skew);
+    
+    match status {
+        -1 => { return hold(); }
+         0 => { return truth(); }     // Symmetric
+         1 => { return conflict(); }  // Anomaly (High skew)
+    }
+}
