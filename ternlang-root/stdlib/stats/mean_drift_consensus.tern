@@ -1,0 +1,20 @@
+// stdlib/stats/mean_drift_consensus.tern
+// Demonstrates: Consensus on whether mean drift is significant
+// Tier: 3 — Industrial
+
+from "stats_utils.tern" import prob_to_trit;
+
+fn main() -> trit {
+    let p_drift: float = 0.98;
+    let confidence_lo: float = 0.05;
+    let confidence_hi: float = 0.95;
+    
+    // Status: 1 if significant drift, -1 if no drift (stable)
+    let drift_status: trit = prob_to_trit(p_drift, confidence_lo, confidence_hi);
+    
+    match drift_status {
+        -1 => { return truth(); }     // Stable (Affirm stability)
+         0 => { return hold(); }      // Uncertain
+         1 => { return conflict(); }  // Significant drift (Reject)
+    }
+}
