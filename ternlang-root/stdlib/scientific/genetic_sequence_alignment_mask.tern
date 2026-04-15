@@ -1,0 +1,39 @@
+// stdlib/scientific/genetic_sequence_alignment_mask.tern
+// Demonstrates: Mapping DNA sequence alignment scores to ternary confidence
+// Tier: 3
+
+fn match_rate_eval(matches: int, total: int) -> trit {
+    if (matches * 10) < (total * 7) { return -1; } // < 70% match
+    if (matches * 10) < (total * 9) { return 0; }  // 70-90% match
+    return 1; // High confidence match
+}
+
+fn gap_penalty_check(gaps: int, max_allowed: int) -> trit {
+    if gaps > max_allowed { return -1; }
+    if gaps > (max_allowed / 2) { return 0; }
+    return 1;
+}
+
+fn mutation_significance(mut_count: int) -> trit {
+    if mut_count > 10 { return -1; }
+    if mut_count > 2 { return 0; }
+    return 1;
+}
+
+fn main() -> trit {
+    let rate: trit = match_rate_eval(85, 100);
+    let gaps: trit = gap_penalty_check(2, 10);
+    let muts: trit = mutation_significance(1);
+    
+    match rate {
+        -1 => { return -1; }
+        0  => { return 0;  }
+        1  => {
+            match gaps {
+                -1 => { return -1; }
+                0  => { return 0;  }
+                1  => { return muts; }
+            }
+        }
+    }
+}

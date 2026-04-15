@@ -1,0 +1,31 @@
+// stdlib/scientific/black_hole_event_horizon_gate.tern
+// Demonstrates: Evaluating proximity to a Schwarzschild radius
+// Tier: 3
+
+fn event_horizon_eval(radius: float, mass: float) -> trit {
+    // rs = 2GM / c^2
+    // Simplified: rs ~ 3.0 * mass (in solar masses)
+    let rs: float = 3.0 * mass;
+    if radius < rs { return -1; } // Inside
+    if radius < (rs * 2.0) { return 0; } // Near horizon
+    return 1; // Safe distance
+}
+
+fn hawking_radiation_intensity(mass: float) -> trit {
+    if mass < 1.0 { return -1; } // High radiation (small mass)
+    if mass < 10.0 { return 0; }
+    return 1; // Low radiation
+}
+
+fn main() -> trit {
+    let r: float = 100.0;
+    let m: float = 10.0;
+    let eval: trit = event_horizon_eval(r, m);
+    let rad: trit = hawking_radiation_intensity(m);
+    
+    match eval {
+        -1 => { return -1; }
+        0  => { return 0;  }
+        1  => { return rad; }
+    }
+}

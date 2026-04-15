@@ -1,0 +1,27 @@
+// stdlib/security/anomaly_score_evaluator.tern
+// Demonstrates: Mapping raw numeric anomaly scores to ternary state
+// Tier: 3
+
+fn evaluate_anomaly(score: int, threshold_high: int, threshold_low: int) -> trit {
+    if score > threshold_high { return -1; } // High risk
+    if score > threshold_low { return 0; }  // Moderate risk
+    return 1; // Normal behavior
+}
+
+fn check_historical_trend(recent_avg: int, overall_avg: int) -> trit {
+    if recent_avg > (overall_avg * 3) { return -1; }
+    if recent_avg > (overall_avg * 2) { return 0; }
+    return 1;
+}
+
+fn main() -> trit {
+    let raw_score: int = 85;
+    let eval: trit = evaluate_anomaly(raw_score, 80, 40);
+    let trend: trit = check_historical_trend(40, 30);
+    
+    match eval {
+        -1 => { return -1; }
+        0 => { return trend; }
+        1 => { return 1; }
+    }
+}

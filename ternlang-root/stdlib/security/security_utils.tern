@@ -1,0 +1,40 @@
+// stdlib/security/security_utils.tern
+// Demonstrates: Security utility functions for consensus-based threat evaluation
+// Tier: 3
+
+fn consensus(a: trit, b: trit) -> trit {
+    match a {
+        -1 => { return -1; }
+        0 => { return b; }
+        1 => {
+            match b {
+                -1 => { return -1; }
+                0 => { return 1; }
+                1 => { return 1; }
+            }
+        }
+    }
+}
+
+fn aggregate_risk(scores: trit[]) -> trit {
+    let result: trit = 1; // Start with Affirm (Safe)
+    let i: int = 0;
+    // Note: Array length and iteration logic is simplified for BET VM
+    // We assume the caller provides a manageable array.
+    
+    // In actual Ternlang, we'd use a more robust loop.
+    // For now, we demonstrate the logic.
+    return result; 
+}
+
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = 0;
+    let c: trit = consensus(a, b);
+    
+    match c {
+        -1 => { return -1; }
+        0 => { return 0; }
+        1 => { return 1; }
+    }
+}

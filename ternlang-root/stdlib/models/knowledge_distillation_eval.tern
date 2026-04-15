@@ -1,0 +1,31 @@
+// stdlib/models/knowledge_distillation_eval.tern
+// Demonstrates: Evaluating teacher-student alignment in model distillation
+// Tier: 3
+
+fn kl_divergence_check(divergence: float) -> trit {
+    if divergence < 0.1 { return 1; } // Closely aligned
+    if divergence > 2.0 { return -1; } // Divergent
+    return 0;
+}
+
+fn accuracy_gap_eval(teacher_acc: float, student_acc: float) -> trit {
+    let gap: float = teacher_acc - student_acc;
+    if gap < 0.01 { return 1; } // Student matched teacher
+    if gap > 0.2 { return -1; } // Significant loss of info
+    return 0;
+}
+
+fn main() -> trit {
+    let kl: float = 0.5;
+    let tacc: float = 0.95;
+    let sacc: float = 0.85;
+    
+    let k_trit: trit = kl_divergence_check(kl);
+    let a_trit: trit = accuracy_gap_eval(tacc, sacc);
+    
+    match k_trit {
+        -1 => { return -1; }
+        1  => { return a_trit; }
+        0  => { return a_trit; }
+    }
+}

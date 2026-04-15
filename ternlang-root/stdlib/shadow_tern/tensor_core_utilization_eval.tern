@@ -1,0 +1,28 @@
+// stdlib/shadow_tern/tensor_core_utilization_eval.tern
+// Demonstrates: Evaluating hardware-level tensor core efficiency
+// Tier: 4
+
+fn alignment_check(dim: int) -> trit {
+    if (dim % 16) == 0 { return 1; } // Optimal for tensor cores
+    if (dim % 8) == 0 { return 0; }
+    return -1; // Severe misalignment
+}
+
+fn precision_mode_eval(is_fp16: int) -> trit {
+    if is_fp16 == 1 { return 1; }
+    return -1; // Tensor cores require specific precision
+}
+
+fn main() -> trit {
+    let d: int = 1024;
+    let p: int = 1;
+    
+    let ali: trit = alignment_check(d);
+    let prec: trit = precision_mode_eval(p);
+    
+    match ali {
+        1  => { return prec; }
+        0  => { return 0; }
+        -1 => { return -1; }
+    }
+}

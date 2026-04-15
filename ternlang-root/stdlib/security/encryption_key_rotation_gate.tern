@@ -1,0 +1,30 @@
+// stdlib/security/encryption_key_rotation_gate.tern
+// Demonstrates: Ternary-based decision for triggering encryption key rotations
+// Tier: 3
+
+from "security_utils.tern" import consensus;
+
+fn check_key_age(age_days: int) -> trit {
+    if age_days > 90 { return -1; } // Rotation required immediately
+    if age_days > 60 { return 0; }  // Rotation scheduled
+    return 1; // Key is fresh
+}
+
+fn check_access_frequency(freq: int) -> trit {
+    if freq > 1000000 { return -1; } // High usage, rotate sooner
+    if freq > 500000 { return 0; } 
+    return 1;
+}
+
+fn main() -> trit {
+    let age_check: trit = check_key_age(75);
+    let freq_check: trit = check_access_frequency(200000);
+    
+    let decision: trit = consensus(age_check, freq_check);
+    
+    match decision {
+        -1 => { return -1; } // Conflict: Immediate Rotation
+        0 => { return 0; }   // Tend: Scheduled Rotation
+        1 => { return 1; }   // Affirm: Key Secure
+    }
+}

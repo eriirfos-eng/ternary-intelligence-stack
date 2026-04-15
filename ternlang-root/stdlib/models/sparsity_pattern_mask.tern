@@ -1,0 +1,28 @@
+// stdlib/models/sparsity_pattern_mask.tern
+// Demonstrates: Evaluating model weight sparsity for @sparseskip optimization
+// Tier: 3
+
+fn check_sparsity(zero_count: int, total_count: int) -> trit {
+    if (zero_count * 100) > (total_count * 95) { return 1; } // Ultra-sparse (Affirm)
+    if (zero_count * 100) > (total_count * 50) { return 0; } // Moderate
+    return -1; // Dense (Reject @sparseskip)
+}
+
+fn structured_sparsity_check(block_sparsity: float) -> trit {
+    if block_sparsity > 0.8 { return 1; }
+    return 0;
+}
+
+fn main() -> trit {
+    let zeros: int = 98;
+    let total: int = 100;
+    
+    let spar: trit = check_sparsity(zeros, total);
+    let struc: trit = structured_sparsity_check(0.9);
+    
+    match spar {
+        1  => { return struc; }
+        0  => { return 0; }
+        -1 => { return -1; }
+    }
+}

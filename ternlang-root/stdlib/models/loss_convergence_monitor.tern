@@ -1,0 +1,36 @@
+// stdlib/models/loss_convergence_monitor.tern
+// Demonstrates: Monitoring training convergence via loss trends
+// Tier: 3
+
+fn loss_reduction_eval(prev_loss: float, curr_loss: float) -> trit {
+    if curr_loss > (prev_loss * 1.5) { return -1; } // Diverging
+    if curr_loss < (prev_loss * 0.99) { return 1; } // Converging
+    return 0; // Plateau
+}
+
+fn loss_volatility(std_dev: float) -> trit {
+    if std_dev > 1.0 { return -1; } // High variance
+    if std_dev > 0.1 { return 0; }
+    return 1;
+}
+
+fn main() -> trit {
+    let p: float = 2.5;
+    let c: float = 2.48;
+    let s: float = 0.05;
+    
+    let red: trit = loss_reduction_eval(p, c);
+    let vol: trit = loss_volatility(s);
+    
+    match red {
+        -1 => { return -1; }
+        1  => { return vol; }
+        0  => {
+            match vol {
+                -1 => { return -1; }
+                0  => { return 0;  }
+                1  => { return 0;  } // Still a plateau
+            }
+        }
+    }
+}
