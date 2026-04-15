@@ -1,5 +1,17 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for expert_router in cluster
-agent expert_router_Enterprise {
-    fn execute() -> trit { return affirm; }
+// --- RFI-IRFOS TIER 3 PROPRIETARY ---
+// Module: tier3/cluster/expert_router_cluster.tern
+// License: BSL 1.1 - Industrial
+
+fn route_cluster_expert(node_id: int) -> trit {
+    if node_id > 0 { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = route_cluster_expert(10);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
