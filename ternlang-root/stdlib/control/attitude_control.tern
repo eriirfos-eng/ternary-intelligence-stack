@@ -1,0 +1,41 @@
+// stdlib/control/attitude_control.tern
+// Demonstrates: Three-axis attitude control (pitch, roll, yaw)
+// Tier: 2
+
+from "control_utils.tern" import error_state;
+
+fn compute_corrections(pitch: float, roll: float, yaw: float) -> trittensor<3> {
+    let t: trittensor<3>;
+    let tol: float = 0.1;
+    
+    // Pitch correction (target 0.0)
+    let p_corr: trit = error_state(0.0, pitch, tol);
+    t[0] = p_corr;
+    
+    // Roll correction (target 0.0)
+    let r_corr: trit = error_state(0.0, roll, tol);
+    t[1] = r_corr;
+    
+    // Yaw correction (target 0.0)
+    let y_corr: trit = error_state(0.0, yaw, tol);
+    t[2] = y_corr;
+    
+    return t;
+}
+
+fn main() -> trit {
+    let p: float = 0.2;
+    let r: float = -0.05;
+    let y: float = 0.3;
+    
+    let corrections: trittensor<3> = compute_corrections(p, r, y);
+    
+    // Check pitch correction
+    match corrections[0] {
+        1  => { /* increase pitch */ }
+        0  => { /* maintain pitch */ }
+        -1 => { return conflict();    } // Negative correction needed
+    }
+    
+    return truth();
+}
