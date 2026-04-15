@@ -1,0 +1,44 @@
+// stdlib/bughunt/probe_43_struct_casting_bug.tern
+// Demonstrates: Potential VM stack underflow related to struct operations
+// combined with type casting. This aims to reproduce the issue from probe_35.
+// Tier: 1
+
+// 1. Struct Definition
+struct Point {
+    x: int,
+    y: int,
+    label: string
+}
+
+// 2. Function returning a struct
+fn create_point(x: int, y: int) -> Point {
+    let p: Point = Point {
+        x: x,
+        y: y,
+        label: "default"
+    };
+    return p;
+}
+
+fn main() -> trit {
+    // Create a struct instance.
+    let my_point: Point = create_point(120, -10);
+
+    // Perform casting on struct fields, similar to probe_35.
+    // This is where the bug might hide.
+    let x_as_float: float = cast(my_point.x);
+    let y_as_int: int = cast(-10.5); // Use a float literal here for variety.
+
+    // We don't care about the exact values, just if this complex sequence
+    // of operations (struct access, casting) leads to a stack underflow.
+    // If the program reaches this point without a panic, it means the
+    // stack is likely managed correctly in this specific scenario.
+    
+    // A simple final check to ensure the program doesn't exit with reject.
+    // The real goal is to see if it panics with BET-001.
+    if my_point.x == 120 && y_as_int == -10 {
+        return truth();
+    } else {
+        return reject; // Should not be reached if no panic occurs.
+    }
+}

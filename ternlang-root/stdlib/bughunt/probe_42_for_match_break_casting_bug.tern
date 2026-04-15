@@ -1,0 +1,41 @@
+// stdlib/bughunt/probe_42_for_match_break_casting_bug.tern
+// Demonstrates: VM stack underflow when combining `for-match-break` with
+// casting operations, re-introducing complexity from probe_35.
+// Tier: 1
+
+fn main() -> trit {
+    let items: trittensor<3> = [-1, 0, 1];
+    let mut processed_value: int = 0;
+
+    for item in items {
+        // Perform some casting operations that might interact with stack management.
+        // The exact values and sequence are chosen to mimic probe_35's complexity.
+        let intermediate_float: float = cast(item); // trit to float
+        let temp_int: int = cast(intermediate_float + 10.5); // float to int, shifted
+
+        processed_value = processed_value + temp_int;
+
+        match item {
+            // The combination of iterating, matching, breaking, and performing
+            // casts inside the loop is suspected to cause stack issues.
+            0 => { break; } 
+            _ => { /* do nothing */ }
+        }
+    }
+
+    // We don't expect this test to necessarily pass or fail cleanly.
+    // The primary goal is to observe if it panics with BET-001 (Stack Underflow).
+    // If it reaches here and exits cleanly, the stack underflow bug might be
+    // related to other factors not tested here.
+    
+    // If the loop completed as expected and no stack underflow occurred,
+    // we might still want to check the processed_value.
+    // trit(-1) -> float(-1.0) -> int(-1). processed_value = 0 + (-1) = -1.
+    // trit(0) is where it breaks. So expected processed_value = -1.
+    if processed_value == -1 {
+        return truth(); // Indicates no stack underflow AND correct logic (if reached)
+    } else {
+        // If it exits cleanly but with wrong logic, return reject.
+        return reject;
+    }
+}
