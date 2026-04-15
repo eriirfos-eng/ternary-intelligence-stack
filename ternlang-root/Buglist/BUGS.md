@@ -2,12 +2,6 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
-## [PARSER-BUG] Float Expression Syntax Error
-- **Description:** The parser fails when float literals or expressions involving floats are used in binary operations (e.g., `0.1 + 0.2`, `val1 - val2`, `1.0 / 3.0`, `diff_val.abs()`). It incorrectly expects a block `{}` instead of continuing to parse the expression. This indicates a fundamental issue in the parser's expression grammar for floats.
-- **Error:** `Parse program error: ExpectedToken("LBrace", "LParen")`
-- **Workaround:** Avoid complex float expressions; use intermediate variables or simpler operations.
-- **Regression Test:** `stdlib/bughunt/probe_45_mixed_type_arithmetic.tern`, `stdlib/bughunt/probe_46_cast_expression_bug.tern`, `stdlib/bughunt/probe_47_float_precision.tern` (These tests trigger the parser error).
-
 ## [VM-LOGIC-001] Silent Recursion Failure
 - **Description:** Recursive functions fail silently, producing incorrect results instead of crashing or returning an error. This points to a logic error in the VM's handling of the call stack or related opcodes during recursion.
 - **Error:** None. The program returns an incorrect value, causing silent data corruption.
@@ -77,17 +71,3 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Error:** `Parse program error: UnexpectedToken("tensor literal element: RBracket")`
 - **Workaround:** There is no known workaround to create an empty dynamic array via a literal. It must be created by a function that returns an empty array.
 - **Regression Test:** `stdlib/bughunt/probe_30_empty_array_literal.tern`
-
----
-
-## Proposed Rust Implementation for New Parser Errors
-
-**File to Edit:** `compiler/legacy_shim/ternlang-core/src/parser.rs`
-
-**1. For [PARSER-BUG] Float Expression Syntax Error:**
-The parser needs to correctly handle float literals and expressions within binary operations. This is similar to the `cast` expression issue. The `parse_binary_expr` and `parse_primary_expr` functions must be updated to recognize float literals as valid operands and allow binary operations to continue, rather than expecting a block delimiter.
-
-**2. For [PARSER-BUG-2] Cast Expression Syntax Error:**
-The `parse_binary_expr` function needs to be updated to correctly parse `cast(...)` as a primary expression and then allow subsequent binary operations on it. This might involve ensuring `parse_primary_expr` correctly returns the `Cast` node and that `parse_binary_expr` correctly consumes it before looking for operators.
-
-*(No direct code snippets to add here as they are logic refinements in existing parsing functions.)*
