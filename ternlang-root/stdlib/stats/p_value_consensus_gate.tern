@@ -1,0 +1,19 @@
+// stdlib/stats/p_value_consensus_gate.tern
+// Demonstrates: Consensus on statistical significance (p-value gate)
+// Tier: 3 — Industrial
+
+from "stats_utils.tern" import prob_to_trit;
+
+fn main() -> trit {
+    let p_val: float = 0.02;
+    let alpha: float = 0.05;
+    
+    // Status: -1 if p < alpha (significant)
+    let significance: trit = prob_to_trit(p_val, alpha, 0.99);
+    
+    match significance {
+        -1 => { return truth(); }     // Significant (Reject null)
+         0 => { return hold(); }      // Not significant
+         1 => { return hold(); }      // Not significant
+    }
+}
