@@ -1,5 +1,18 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for moe13_core in cluster
-agent moe13_core_Enterprise {
-    fn execute() -> trit { return affirm; }
+// --- RFI-IRFOS TIER 3 PROPRIETARY ---
+// Module: tier3/cluster/moe13_core_cluster.tern
+// License: BSL 1.1 - Industrial
+
+fn check_cluster_moe(experts_active: int) -> trit {
+    if experts_active == 13 { return affirm; }
+    if experts_active > 0 { return tend; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = check_cluster_moe(13);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
