@@ -1,0 +1,26 @@
+// stdlib/rl/state_stability_eval.tern
+// Demonstrates: Evaluating state stability for value estimation
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    let state_v1: float = 10.5;
+    let state_v2: float = 10.6;
+    let stability_threshold: float = 0.2;
+    
+    // Status: 1 if unstable
+    let diff: float = state_v1 - state_v2;
+    if diff < 0.0 {
+        diff = 0.0 - diff;
+    }
+    
+    let is_unstable: trit = 0;
+    if diff > stability_threshold {
+        is_unstable = 1;
+    }
+    
+    match is_unstable {
+        -1 => { return hold(); }
+         0 => { return truth(); }     // Stable (Affirm estimation)
+         1 => { return hold(); }      // Unstable (Tend)
+    }
+}
