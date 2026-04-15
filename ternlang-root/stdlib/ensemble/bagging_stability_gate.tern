@@ -1,0 +1,18 @@
+// stdlib/ensemble/bagging_stability_gate.tern
+// Demonstrates: Evaluating stability across bagging subsamples
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    let fold1: trit = 1;
+    let fold2: trit = 1;
+    let fold3: trit = 0;
+    
+    // Stability is consensus of folds
+    let stability: trit = consensus(consensus(fold1, fold2), fold3);
+    
+    match stability {
+        -1 => { return conflict(); }  // Unstable (High variance)
+         0 => { return hold(); }      // Marginal stability
+         1 => { return truth(); }     // Stable (Low variance)
+    }
+}
