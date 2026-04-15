@@ -1,0 +1,31 @@
+// stdlib/kernel/device_driver_consensus.tern
+// Demonstrates: Device driver status consensus
+// Tier: 3 — Industrial
+
+from "kernel_utils.tern" import kernel_consensus;
+
+fn main() -> trit {
+    // Three driver health signals for a redundant disk array
+    let disk1: trit = affirm;
+    let disk2: trit = affirm;
+    let disk3: trit = tend; // Warning on disk 3
+    
+    // Evaluate consensus
+    let overall_health: trit = kernel_consensus(disk1, disk2, disk3);
+    
+    // Result should be affirm (consensus(affirm, consensus(affirm, tend)) = affirm)
+    match overall_health {
+        affirm => { 
+            // Device group healthy
+            return truth(); 
+        }
+        tend => { 
+            // Degraded performance
+            return hold(); 
+        }
+        reject => { 
+            // Device failure
+            return conflict(); 
+        }
+    }
+}
