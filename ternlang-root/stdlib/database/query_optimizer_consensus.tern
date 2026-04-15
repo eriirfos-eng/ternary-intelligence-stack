@@ -1,0 +1,34 @@
+// stdlib/database/query_optimizer_consensus.tern
+// Demonstrates: Query plan consensus across optimizer nodes
+// Tier: 3 — Industrial
+
+from "database_utils.tern" import transaction_consensus_3;
+
+fn main() -> trit {
+    // Plan A: Index Scan (node1: affirm)
+    // Plan B: Sequential Scan (node2: reject)
+    // Plan C: BitMap Scan (node3: tend)
+    
+    // Optimizer nodes vote on a specific plan stability
+    let node1: trit = affirm;
+    let node2: trit = affirm;
+    let node3: trit = tend;
+    
+    let consensus_result: trit = transaction_consensus_3(node1, node2, node3);
+    
+    // Result should be affirm (consensus(affirm, consensus(affirm, tend)) = affirm)
+    match consensus_result {
+        affirm => { 
+            // Consensus reached
+            return truth(); 
+        }
+        tend => { 
+            // Insufficient consensus
+            return hold(); 
+        }
+        reject => { 
+            // Rejected
+            return conflict(); 
+        }
+    }
+}
