@@ -1,0 +1,17 @@
+// stdlib/nn/residual_path_consensus.tern
+// Demonstrates: Consensus on whether to bypass via residual link
+// Tier: 3 — Industrial
+
+fn main() -> trit {
+    let layer_signal: trit = -1;  // Negative/Conflict
+    let bypass_signal: trit = 1;  // Positive/Affirm
+    
+    // Consensus between layer output and bypass link
+    let final_signal: trit = consensus(layer_signal, bypass_signal);
+    
+    match final_signal {
+        -1 => { return conflict(); }  // Blocked
+         0 => { return hold(); }      // Uncertain
+         1 => { return truth(); }     // Proceed
+    }
+}
