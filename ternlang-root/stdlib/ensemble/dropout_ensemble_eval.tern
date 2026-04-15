@@ -1,0 +1,18 @@
+// stdlib/ensemble/dropout_ensemble_eval.tern
+// Demonstrates: Evaluating ensemble with dropout-masked experts
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    let expert1: trit = 1;
+    let expert2: trit = 0;  // Dropped out
+    let expert3: trit = 1;
+    
+    // Evaluate consensus with missing data
+    let consensus_val: trit = consensus(consensus(expert1, expert2), expert3);
+    
+    match consensus_val {
+        -1 => { return conflict(); }  // Reject
+         0 => { return hold(); }      // Uncertain
+         1 => { return truth(); }     // Affirm
+    }
+}
