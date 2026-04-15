@@ -1,0 +1,22 @@
+// stdlib/rl/policy_gradient_mask.tern
+// Demonstrates: Masking policy updates with high gradient variance
+// Tier: 2 — Pro Standard
+
+from "rl_utils.tern" import clip_reward;
+
+fn main() -> trit {
+    let grad_variance: float = 0.5;
+    let max_variance: float = 0.4;
+    
+    // Status: 1 if variance is high
+    let is_unstable: trit = 0;
+    if grad_variance > max_variance {
+        is_unstable = 1;
+    }
+    
+    match is_unstable {
+        -1 => { return hold(); }
+         0 => { return truth(); }     // Stable update
+         1 => { return hold(); }      // Mask update (High variance)
+    }
+}
