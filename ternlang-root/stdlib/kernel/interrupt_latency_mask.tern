@@ -1,0 +1,35 @@
+// stdlib/kernel/interrupt_latency_mask.tern
+// Demonstrates: Interrupt latency threshold monitoring
+// Tier: 3 — Industrial
+
+fn eval_interrupt_latency(latency_ns: float, threshold_ns: float) -> trit {
+    if latency_ns > threshold_ns {
+        return affirm; // High latency
+    }
+    // Warning at 75% of threshold
+    if latency_ns > (threshold_ns * 0.75) {
+        return tend; // Warning
+    }
+    return reject; // OK
+}
+
+fn main() -> trit {
+    // Current: 800ns, Threshold: 1000ns
+    let status: trit = eval_interrupt_latency(800.0, 1000.0);
+    
+    // Status should be tend
+    match status {
+        affirm => { 
+            // Latency spike - reschedule
+            return conflict(); 
+        }
+        tend => { 
+            // Latency elevated - monitor
+            return hold(); 
+        }
+        reject => { 
+            // Healthy
+            return truth(); 
+        }
+    }
+}
