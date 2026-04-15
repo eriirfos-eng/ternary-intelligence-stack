@@ -1,0 +1,19 @@
+// stdlib/ensemble/diversity_check_gate.tern
+// Demonstrates: Ensuring diversity in ensemble predictions
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    let expert1: trit = 1;
+    let expert2: trit = 1;
+    let expert3: trit = 1;
+    
+    // Check for "excessive" consensus (Lack of diversity)
+    let c12: trit = consensus(expert1, expert2);
+    let total_consensus: trit = consensus(c12, expert3);
+    
+    match total_consensus {
+        -1 => { return hold(); }      // Diverse (Negative)
+         0 => { return hold(); }      // Diverse (Neutral)
+         1 => { return conflict(); }  // Redundant (All agree)
+    }
+}
