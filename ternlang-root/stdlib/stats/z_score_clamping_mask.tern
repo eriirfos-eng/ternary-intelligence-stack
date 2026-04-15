@@ -1,0 +1,19 @@
+// stdlib/stats/z_score_clamping_mask.tern
+// Demonstrates: Masking data points based on Z-score
+// Tier: 3 — Industrial
+
+from "stats_utils.tern" import is_outlier;
+
+fn main() -> trit {
+    let z_score: float = 3.5;
+    let threshold: float = 3.0;
+    
+    // Status: 1 if |z| > threshold
+    let status: trit = is_outlier(z_score, (0.0 - threshold), threshold);
+    
+    match status {
+        -1 => { return hold(); }
+         0 => { return truth(); }     // Within bounds
+         1 => { return hold(); }      // Clamp/Mask
+    }
+}
