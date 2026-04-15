@@ -2,6 +2,12 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [PARSER-009] Invalid Trittensor Literal / [RUNTIME-PANIC] Invalid Trit Value
+- **Description:** The parser allows integer literals outside the valid trit range [-1, 0, 1] within `trittensor` literals. Instead of catching this at parse time, the VM panics at runtime with an "Invalid trit value" message when it encounters such a value.
+- **Error:** `thread 'main' panicked at compiler/legacy_shim/ternlang-core/src/trit.rs:18:18: Invalid trit value: <value>` (where `<value>` is the out-of-range integer).
+- **Workaround:** Manually ensure all values in `trittensor` literals are valid trits. The parser does not enforce this.
+- **Regression Test:** `stdlib/bughunt/probe_37_invalid_tensor_literal.tern`
+
 ## [VM-LOGIC-001] Silent Recursion Failure
 - **Description:** Recursive functions fail silently, producing incorrect results instead of crashing or returning a clear error. The test `stdlib/bughunt/probe_34_recursion_failure.tern` shows that a function expected to return `4` instead resulted in the program exiting with `reject`, confirming a silent failure in the recursion logic.
 - **Error:** Returns an incorrect value, causing the program to exit with `reject` in tests, rather than the expected `truth()` or a panic.
