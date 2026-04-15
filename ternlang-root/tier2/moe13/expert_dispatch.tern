@@ -1,12 +1,17 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Module: tier2/moe13/expert_dispatch.tern
 // License: BSL 1.1 - Restricted API
-// Cryptographically tethered to Fly.io Genesis API.
-// Unauthorized reproduction is a violation of T-SPEC-v2.0.
-// ------------------------------------------
 
-fn route_request(load: float, capacity: float) -> trit {
-    if load < capacity * 0.7 { return affirm; } // Route normally
-    if load > capacity { return reject; } // Spillover to fallback
-    return tend; // Throttled state
+fn dispatch_task(expert_available: trit) -> trit {
+    if expert_available == affirm { return affirm; }
+    return tend;
+}
+
+fn main() -> trit {
+    let result: trit = dispatch_task(1);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
