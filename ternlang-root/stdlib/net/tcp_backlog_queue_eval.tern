@@ -1,0 +1,35 @@
+// stdlib/net/tcp_backlog_queue_eval.tern
+// Demonstrates: TCP backlog queue monitoring
+// Tier: 2 — Pro Standard
+
+fn eval_backlog(current_size: int, max_size: int) -> trit {
+    if current_size > max_size {
+        return affirm; // Full!
+    }
+    // Warning at 80%
+    if current_size > (max_size * 4 / 5) {
+        return tend; // High pressure
+    }
+    return reject; // Normal
+}
+
+fn main() -> trit {
+    // Current: 90, Max: 100
+    let status: trit = eval_backlog(90, 100);
+    
+    // Status should be tend
+    match status {
+        affirm => { 
+            // SYN Cookies or drop
+            return conflict(); 
+        }
+        tend => { 
+            // Warning: queue filling
+            return hold(); 
+        }
+        reject => { 
+            // OK
+            return truth(); 
+        }
+    }
+}
