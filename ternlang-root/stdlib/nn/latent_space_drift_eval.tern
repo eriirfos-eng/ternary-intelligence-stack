@@ -1,0 +1,21 @@
+// stdlib/nn/latent_space_drift_eval.tern
+// Demonstrates: Evaluating drift in latent representations
+// Tier: 3 — Industrial
+
+from "nn_utils.tern" import check_bound;
+
+fn main() -> trit {
+    let current_centroid: float = 0.55;
+    let baseline_centroid: float = 0.5;
+    let drift_tolerance: float = 0.04;
+    
+    // Status: 1 if drift > tolerance
+    let drift: float = current_centroid - baseline_centroid;
+    let status: trit = check_bound(drift, drift_tolerance);
+    
+    match status {
+        -1 => { return conflict(); }  // Negative drift
+         0 => { return truth(); }     // Within tolerance
+         1 => { return conflict(); }  // Positive drift
+    }
+}
