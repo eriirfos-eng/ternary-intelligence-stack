@@ -2,6 +2,12 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [RUNTIME-BEHAVIOR] Integer Overflow Graceful Handling
+- **Description:** An integer overflow or underflow does not cause a raw Rust panic or a specific `VmError`. Instead, it appears to be handled gracefully, resulting in the program exiting with a `reject` state. This could indicate that Ternlang's `int` type has arbitrary precision, or that overflow is handled implicitly without a distinct error code. The original assumption of a raw panic was incorrect.
+- **Error:** `Program exited with error (Reject state).` (Instead of panic)
+- **Workaround:** If a panic is desired for overflow, manual bound checks are needed. If graceful `reject` is acceptable, no workaround is strictly needed for correctness but may be for desired behavior.
+- **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
+
 ## [PARSER-BUG] Cast Expression Syntax Error
 - **Description:** The parser fails when a `cast()` expression is used as part of a binary operation (e.g., `cast(int) + float` or `(cast(int) val_int) + val_float`). This indicates the parser cannot correctly handle `cast` expressions when they are operands in binary arithmetic. The error suggests it expects a block `{}` instead of continuing the expression. This bug persists.
 - **Error:** `Parse program error: ExpectedToken("RParen", "Ident("val_int")")` (or similar, depending on the exact expression)
