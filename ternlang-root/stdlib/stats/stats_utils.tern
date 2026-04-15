@@ -1,0 +1,35 @@
+// stdlib/stats/stats_utils.tern
+// Demonstrates: Statistical utility functions
+// Tier: 3 — Industrial
+
+// Returns 1 if val is outside [low, high], else 0
+fn is_outlier(val: float, low: float, high: float) -> trit {
+    if val < low {
+        return 1;
+    }
+    if val > high {
+        return 1;
+    }
+    return 0;
+}
+
+// Maps a probability to a ternary confidence state
+// conf > high -> 1, conf < low -> -1, else 0
+fn prob_to_trit(p: float, low: float, high: float) -> trit {
+    if p > high {
+        return 1;
+    }
+    if p < low {
+        return -1;
+    }
+    return 0;
+}
+
+fn main() -> trit {
+    let p: trit = prob_to_trit(0.95, 0.05, 0.9);
+    match p {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
