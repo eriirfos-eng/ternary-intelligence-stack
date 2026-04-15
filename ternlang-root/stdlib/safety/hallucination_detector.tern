@@ -1,0 +1,32 @@
+// stdlib/safety/hallucination_detector.tern
+// Demonstrates: Ternary-based hallucination/confidence check
+// Tier: 2
+
+fn check_hallucination(prob: float, evidence_count: int) -> trit {
+    if evidence_count < 3 {
+        return 0; // Insufficient evidence -> Hold
+    }
+    
+    if prob > 0.95 {
+        return 1; // High confidence -> Truth
+    }
+    
+    if prob < 0.3 {
+        return -1; // Low confidence -> Hallucination/Reject
+    }
+    
+    return 0; // Ambiguous
+}
+
+fn main() -> trit {
+    let p: float = 0.25;
+    let count: int = 5;
+    
+    let state: trit = check_hallucination(p, count);
+    
+    match state {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
