@@ -1,0 +1,29 @@
+// stdlib/bughunt/probe_38_for_match_break_bug.tern
+// Demonstrates: VM stack underflow when using `break` inside a `match`
+// within a `for` loop.
+// Tier: 1
+
+fn main() -> trit {
+    let items: trittensor<3> = [-1, 0, 1];
+    let mut last_item: trit = 1;
+
+    for item in items {
+        last_item = item;
+        match item {
+            // The combination of iterating, matching, and then breaking
+            // seems to corrupt the stack, leading to a BET-001 underflow
+            // after the loop finishes.
+            0 => { break; }
+            1 => { /* do nothing */ }
+            -1 => { /* do nothing */ }
+        }
+    }
+
+    // When the loop breaks at item=0, last_item should be 0.
+    // The stack underflow likely happens right as `main` tries to return.
+    if last_item == 0 {
+        return truth();
+    }
+
+    return reject;
+}

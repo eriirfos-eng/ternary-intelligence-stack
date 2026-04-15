@@ -1,0 +1,73 @@
+// stdlib/bughunt/probe_45_mixed_type_arithmetic.tern
+// Demonstrates: Arithmetic operations between int and float types.
+// Tier: 1
+
+fn main() -> trit {
+    let i_val: int = 10;
+    let f_val: float = 5.5;
+
+    // Test int + float
+    let sum_if: float = cast(i_val) + f_val; // Expected: 10.0 + 5.5 = 15.5
+    if sum_if != 15.5 {
+        return reject; // Fail if int + float is wrong
+    }
+
+    // Test float + int
+    let sum_fi: float = f_val + cast(i_val); // Expected: 5.5 + 10.0 = 15.5
+    if sum_fi != 15.5 {
+        return reject; // Fail if float + int is wrong
+    }
+
+    // Test int - float
+    let diff_if: float = cast(i_val) - f_val; // Expected: 10.0 - 5.5 = 4.5
+    if diff_if != 4.5 {
+        return reject; // Fail if int - float is wrong
+    }
+
+    // Test float - int
+    let diff_fi: float = f_val - cast(i_val); // Expected: 5.5 - 10.0 = -4.5
+    if diff_fi != -4.5 {
+        return reject; // Fail if float - int is wrong
+    }
+    
+    // Test int * float
+    let prod_if: float = cast(i_val) * f_val; // Expected: 10.0 * 5.5 = 55.0
+    if prod_if != 55.0 {
+        return reject; // Fail if int * float is wrong
+    }
+
+    // Test float * int
+    let prod_fi: float = f_val * cast(i_val); // Expected: 5.5 * 10.0 = 55.0
+    if prod_fi != 55.0 {
+        return reject; // Fail if float * int is wrong
+    }
+
+    // Test int / float
+    let quot_if: float = cast(i_val) / f_val; // Expected: 10.0 / 5.5 = ~1.8181...
+    // Use a tolerance for float comparison
+    if (quot_if - 1.8181818).abs() > 0.00001 {
+        return reject; // Fail if int / float is wrong
+    }
+
+    // Test float / int
+    let quot_fi: float = f_val / cast(i_val); // Expected: 5.5 / 10.0 = 0.55
+    if quot_fi != 0.55 {
+        return reject; // Fail if float / int is wrong
+    }
+    
+    // Test mixed type in a loop (e.g. int + float)
+    let mut sum_in_loop: float = 0.0;
+    let loop_values: trittensor<2> = [1, -1]; // trit(1) and trit(-1)
+
+    for val_trit in loop_values {
+        let val_int: int = cast(val_trit); // trit to int
+        sum_in_loop = sum_in_loop + cast(val_int); // int to float, then add to sum_in_loop
+    }
+    // Expected: 0.0 + (float(1) + float(-1)) = 0.0 + (1.0 + -1.0) = 0.0
+    if sum_in_loop != 0.0 {
+        return reject; // Fail if loop arithmetic with casts is wrong
+    }
+
+    // If all tests pass
+    return truth();
+}
