@@ -1,0 +1,19 @@
+// stdlib/ml/hyperparameter_tuning_eval.tern
+// Demonstrates: Evaluating hyperparameter trial success
+// Tier: 2 — Pro Standard
+
+from "ml_utils.tern" import eval_loss_delta;
+
+fn main() -> trit {
+    let best_val_loss: float = 0.42;
+    let trial_val_loss: float = 0.45;
+    
+    // Status: 1 if trial > best (worse), -1 if trial < best (better)
+    let trial_result: trit = eval_loss_delta(trial_val_loss, best_val_loss);
+    
+    match trial_result {
+        -1 => { return truth(); }     // New best!
+         0 => { return hold(); }      // No change
+         1 => { return conflict(); }  // Worse performance
+    }
+}
