@@ -1,0 +1,19 @@
+// stdlib/ml/prediction_confidence_mask.tern
+// Demonstrates: Masking predictions based on confidence scores
+// Tier: 2 — Pro Standard
+
+from "ml_utils.tern" import clip_signal;
+
+fn main() -> trit {
+    let conf: float = 0.45;
+    let threshold: float = 0.5;
+    
+    // Status: 1 if high conf, 0 if unsure, -1 if low conf
+    let status: trit = clip_signal(conf, threshold);
+    
+    match status {
+        -1 => { return conflict(); }  // Low confidence
+         0 => { return hold(); }      // Unsure
+         1 => { return truth(); }     // High confidence
+    }
+}
