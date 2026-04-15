@@ -1,0 +1,31 @@
+// stdlib/distributed/membership_status_consensus.tern
+// Demonstrates: Cluster membership consensus
+// Tier: 2 — Pro Standard
+
+from "distributed_utils.tern" import dist_consensus;
+
+fn main() -> trit {
+    // Gossip nodes report on node 5 status
+    let g1: trit = affirm; // Online
+    let g2: trit = affirm; // Online
+    let g3: trit = tend;   // Suspect
+    
+    // Evaluate consensus
+    let status: trit = dist_consensus(g1, g2, g3);
+    
+    // Result should be affirm (consensus(affirm, consensus(affirm, tend)) = affirm)
+    match status {
+        affirm => { 
+            // Node confirmed online
+            return truth(); 
+        }
+        tend => { 
+            // Node suspect
+            return hold(); 
+        }
+        reject => { 
+            // Node confirmed offline
+            return conflict(); 
+        }
+    }
+}
