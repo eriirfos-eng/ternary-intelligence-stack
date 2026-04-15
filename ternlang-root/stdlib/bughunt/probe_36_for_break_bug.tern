@@ -1,0 +1,22 @@
+// stdlib/bughunt/probe_36_for_break_bug.tern
+// Demonstrates: VM stack underflow when using `break` in a `for` loop.
+// Tier: 1
+
+fn main() -> trit {
+    let items: trittensor<5> = [1, 2, 3, 4, 5];
+    let mut accumulator: int = 0;
+
+    for item in items {
+        accumulator = accumulator + item;
+        if item == 3 {
+            break; // The stack underflow appears to be caused by `break`.
+        }
+    }
+
+    // If the loop worked, accumulator should be 1 + 2 + 3 = 6.
+    if accumulator == 6 {
+        return truth();
+    }
+
+    return reject;
+}

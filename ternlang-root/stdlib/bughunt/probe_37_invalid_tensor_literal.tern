@@ -1,0 +1,12 @@
+// stdlib/bughunt/probe_37_invalid_tensor_literal.tern
+// Demonstrates: Parser allows invalid integer values in a trittensor literal.
+// Tier: 1
+
+fn main() -> trit {
+    // This line should cause a parse error, because a trittensor can only
+    // contain the values -1, 0, or 1.
+    // The parser incorrectly accepts this line.
+    let items: trittensor<5> = [0, 1, 5, -1, 0];
+
+    return truth();
+}

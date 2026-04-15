@@ -14,43 +14,56 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Manually check integer bounds before performing arithmetic that may overflow.
 - **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
 
+## [PARSER-009] Invalid Trittensor Literal
+- **Description:** The parser allows integer literals outside the valid range of [-1, 0, 1] inside a `trittensor` literal.
+- **Error:** None at parse time. The parser should reject this code but doesn't. This leads to a runtime panic.
+- **Workaround:** Manually ensure all values in a `trittensor` literal are valid trits.
+- **Regression Test:** `stdlib/bughunt/probe_37_invalid_tensor_literal.tern`
+
+## [RUNTIME-PANIC] Invalid Trit Value
+- **Description:** The VM panics when it encounters a non-trit integer value (e.g., `5`) when executing a program, for example when iterating with a `for` loop. It should return a graceful `BET-007` error.
+- **Error:** `thread 'main' panicked at 'Invalid trit value: 5'`
+- **Workaround:** None. This is a fundamental VM safety issue.
+- **Regression Test:** `stdlib/bughunt/probe_37_invalid_tensor_literal.tern` (This test triggers the panic).
+
+## [BET-001] For-Loop Break Stack Underflow
+- **Description:** Using a `break` statement inside a `for` loop can cause a `BET-001` Stack Underflow error. The exact conditions are still under investigation.
+- **Error:** `VM Error: [BET-001] Stack underflow`
+- **Workaround:** Avoid using `break` inside `for` loops.
+- **Regression Test:** `stdlib/bughunt/probe_35_stress_test_v2.tern` (This test triggers the underflow).
+
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.
 - **Error:** `Parse program error: ExpectedToken("pattern (int or trit)", "Float(1.0)")`
 - **Workaround:** Use `if` statement chains.
 - **Regression Test:** `stdlib/bughunt/probe_21_float_match.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_21_float_match_workaround.tern`
 
 ## [PARSER-003] Array Parameters
 - **Description:** Function parameters cannot be typed as `int[]` or `float[]`.
 - **Error:** `Parse program error: ExpectedToken("RParen", "LBracket")`
 - **Workaround:** Use `trit[]` or `trittensor` and cast/saturate values.
 - **Regression Test:** `stdlib/bughunt/probe_22_int_array_param.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_22_int_array_param_workaround.tern`
 
 ## [TCALL-BUG] Forward Reference
-- **Description:** A function must be defined before it is called. If called before definition, it fails silently by returning the wrong value (e.g., `tend` instead of the expected `truth`) rather than crashing.
+- **Description:** A function must be defined before it is called. If called before definition, it fails silently.
 - **Workaround:** Define functions before use.
 - **Regression Test:** `stdlib/bughunt/probe_23_forward_reference.tern`
-- **Workaround Example:** `stdlib/buuhunt/probe_23_forward_reference_workaround.tern`
 
 ## [BET-013] Named Import Stack Overflow
-- **Description:** Importing a function via `from "file" import func_a` without its local dependencies (e.g., `func_b` called by `func_a`) causes `VM Error: [BET-013] Call stack overflow`.
+- **Description:** Named imports can cause a stack overflow if the imported function has un-imported dependencies.
 - **Workaround:** Use `from "file" import *`.
 - **Regression Test:** `stdlib/bughunt/probe_24_named_import_failure.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_24_named_import_workaround.tern`
 
 ## [PARSER-007] Empty Trittensor Declaration
-- **Description:** Declaring a `trittensor` without an explicit type and initialization is not supported. `trittensor<0>` is not supported.
+- **Description:** `let x = trittensor<0>;` is not supported.
 - **Error:** `Parse program error: ExpectedToken("Colon", "Assign")`
-- **Workaround:** Explicitly type and initialize the tensor, e.g., `let my_tensor: trittensor<1> = [0];`. A true empty tensor is not supported.
+- **Workaround:** Explicitly type and initialize, e.g., `let my_tensor: trittensor<1> = [0];`.
 - **Regression Test:** `stdlib/bughunt/probe_29_empty_tensor.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_29_empty_tensor_workaround.tern`
 
 ## [PARSER-008] Empty Array Literal
-- **Description:** Declaring an empty array literal using `let name: trit[] = []` causes a parser error.
+- **Description:** `let x: trit[] = [];` is not supported.
 - **Error:** `Parse program error: UnexpectedToken("tensor literal element: RBracket")`
-- **Workaround:** There is no known workaround to create an empty dynamic array via a literal. It must be created by a function that returns an empty array.
+- **Workaround:** None for literals.
 - **Regression Test:** `stdlib/bughunt/probe_30_empty_array_literal.tern`
 
 ---
@@ -59,103 +72,73 @@ This file tracks known bugs in the Ternlang compiler and VM.
 
 **File to Edit:** `compiler/legacy_shim/ternlang-core/src/parser.rs`
 
-**1. Update `ParseError` Enum:**
+To fix **[PARSER-009]**, the `parse_primary_expr` function should validate the values inside a `TritTensorLiteral` block and return a new `InvalidTritLiteralValue` error if they are out of range.
 
-Add the following variants to the `ParseError` enum definition.
+**1. Update `ParseError` Enum:**
 
 ```rust
 #[derive(Debug)]
 pub enum ParseError {
-    UnexpectedToken(String),
-    ExpectedToken(String, String),
-    InvalidTrit(String),
-    NonExhaustiveMatch(String),
-    // New error types:
-    MatchOnFloat,
-    InvalidArrayParam,
-    EmptyTrittensor,
+    // ... existing ...
     EmptyArrayLiteral,
+    // New error type for PARSER-009
+    InvalidTritLiteralValue(String),
 }
 ```
 
 **2. Update `fmt::Display` Implementation:**
-
-Add the corresponding match arms to the `impl fmt::Display for ParseError` block.
 
 ```rust
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             // ... existing arms ...
-            Self::UnexpectedToken(tok) =>
-                write!(f, "[PARSE-001] Unexpected token '{tok}' — the lexer hit something it didn't expect. Binary habit? Check 'fn' vs 'func', trit vs bool.
-            → details: stdlib/errors/PARSE-001.tern  |  ternlang errors PARSE-001"),
-            Self::ExpectedToken(expected, found) =>
-                write!(f, "[PARSE-002] Expected {expected} but found '{found}'. Missing type annotation, brace, or semicolon?
-            → details: stdlib/errors/PARSE-002.tern  |  ternlang errors PARSE-002"),
-            Self::InvalidTrit(val) =>
-                write!(f, "[PARSE-003] '{val}' is not a valid trit. Trits are -1, 0, or +1 — the universe has exactly three states.
-            → details: stdlib/errors/PARSE-003.tern  |  ternlang errors PARSE-003"),
-            Self::NonExhaustiveMatch(msg) =>
-                write!(f, "[PARSE-004] Non-exhaustive match: {msg}. Ternary has three states — cover -1, 0, and +1 or the compiler won't let you through.
-            → details: stdlib/errors/PARSE-004.tern  |  ternlang errors PARSE-004"),
-            
-            // New error messages:
-            Self::MatchOnFloat =>
-                write!(f, "[PARSE-005] Match on float is not supported. Floats are continuous; `match` is for discrete types like int and trit. Use an `if` chain instead.
-            → details: stdlib/errors/PARSE-005.tern  |  ternlang errors PARSE-005"),
-            Self::InvalidArrayParam =>
-                write!(f, "[PARSE-006] Invalid array parameter type. Functions can only accept `trit[]` or `trittensor` parameters for now.
-            → details: stdlib/errors/PARSE-006.tern  |  ternlang errors PARSE-006"),
-            Self::EmptyTrittensor =>
-                write!(f, "[PARSE-007] Empty `trittensor<0>` is not allowed. Tensors must have at least one element.
-            → details: stdlib/bughunt/probe_29_empty_tensor.tern"),
             Self::EmptyArrayLiteral =>
-                write!(f, "[PARSER-008] Empty array literal `[]` is not supported for initialization. The parser needs at least one element to get going.
-            → details: stdlib/bughunt/probe_30_empty_array_literal.tern"),
+                write!(f, "[PARSER-008] Empty array literal `[]` is not supported..."),
+            
+            // New error message:
+            Self::InvalidTritLiteralValue(val) =>
+                write!(f, "[PARSE-009] Invalid value '{val}' in trittensor literal. Only -1, 0, and 1 are allowed."),
         }
     }
 }
 ```
 
-**3. Update Parser Logic:**
-
-The respective parsing functions (`parse_match`, `parse_type`, `parse_primary_expr`) must be updated to throw these new, specific errors instead of the generic `ExpectedToken` or `UnexpectedToken` errors.
-
 ---
 
-## Proposed Rust Implementation for New VM Error
+## Proposed Rust Implementation for New VM Errors
 
 **File to Edit:** `compiler/legacy_shim/ternlang-core/src/vm/mod.rs`
 
 **1. Update `VmError` Enum:**
 
-Add the `IntegerOverflow` variant.
+Add variants for the integer overflow and invalid trit value panics.
 
 ```rust
 pub enum VmError {
     // ... existing ...
     RuntimeError(String),
     CallStackOverflow,
-    // New error type:
+    // New error types:
     IntegerOverflow,
+    InvalidTritValue(i64),
 }
 ```
 
 **2. Update `fmt::Display` Implementation:**
 
-Add the new match arm. Instead of panicking, the VM's `add`, `sub`, `mul` operations should use `checked_add`, `checked_sub`, etc., and return this error on `None`.
+Add new match arms. The VM's arithmetic opcodes should use `checked_...` methods and return `IntegerOverflow`. The VM's loop and value-handling logic should validate trits and return `InvalidTritValue` instead of panicking.
 
 ```rust
 impl fmt::Display for VmError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             // ... existing arms ...
-            Self::RuntimeError(msg) => write!(f, "[BET-012] Runtime error: {msg}"),
-            Self::CallStackOverflow => write!(f, "[BET-013] Call stack overflow. Your program is too deep, friend."),
+            Self::CallStackOverflow => write!(f, "[BET-013] Call stack overflow..."),
             
-            // New error message:
+            // New error messages:
             Self::IntegerOverflow => write!(f, "[BET-014] Integer overflow. You tried to count past the stars and ran out of numbers."),
+            Self::InvalidTritValue(val) => write!(f, "[BET-015] Invalid trit value: {val}. The VM found a pretender in its midst."),
         }
     }
 }
