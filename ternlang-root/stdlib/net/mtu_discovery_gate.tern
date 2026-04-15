@@ -1,0 +1,36 @@
+// stdlib/net/mtu_discovery_gate.tern
+// Demonstrates: Path MTU Discovery (PMTUD) logic
+// Tier: 2 — Pro Standard
+
+fn check_mtu(packet_size: int, path_mtu: int) -> trit {
+    if packet_size > path_mtu {
+        return affirm; // Fragmentation needed
+    }
+    // Warning at 90% MTU
+    let threshold: int = path_mtu - 64; 
+    if packet_size > threshold {
+        return tend; // Close to limit
+    }
+    return reject; // OK
+}
+
+fn main() -> trit {
+    // Packet: 1480, MTU: 1500
+    let status: trit = check_mtu(1480, 1500);
+    
+    // Status should be tend (1480 > 1436)
+    match status {
+        affirm => { 
+            // ICMP Destination Unreachable (Fragmentation Needed)
+            return conflict(); 
+        }
+        tend => { 
+            // Send but optimize for smaller MTU
+            return hold(); 
+        }
+        reject => { 
+            // Send
+            return truth(); 
+        }
+    }
+}
