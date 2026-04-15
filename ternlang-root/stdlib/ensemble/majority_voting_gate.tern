@@ -1,31 +1,18 @@
 // stdlib/ensemble/majority_voting_gate.tern
-// Demonstrates: Majority vote across 5 signals
-// Tier: 2
-
-fn majority_vote(s1: trit, s2: trit, s3: trit, s4: trit, s5: trit) -> trit {
-    let sum: int = 0;
-    
-    if s1 == affirm { sum = sum + 1; }
-    if s1 == reject { sum = sum + (-1); }
-    if s2 == affirm { sum = sum + 1; }
-    if s2 == reject { sum = sum + (-1); }
-    if s3 == affirm { sum = sum + 1; }
-    if s3 == reject { sum = sum + (-1); }
-    if s4 == affirm { sum = sum + 1; }
-    if s4 == reject { sum = sum + (-1); }
-    if s5 == affirm { sum = sum + 1; }
-    if s5 == reject { sum = sum + (-1); }
-    
-    if sum > 0 { return affirm; }
-    if sum < 0 { return reject; }
-    return tend;
-}
+// Demonstrates: Majority voting gate across three expert agents
+// Tier: 2 — Pro Standard
 
 fn main() -> trit {
-    let result: trit = majority_vote(affirm, affirm, reject, tend, affirm);
-    match result {
-        reject => { return conflict(); }
-        tend   => { return hold();    }
-        affirm => { return truth();   }
+    let expert1: trit = 1;  // Affirm
+    let expert2: trit = 1;  // Affirm
+    let expert3: trit = -1; // Reject
+    
+    // Majority vote using consensus chain
+    let final_vote: trit = consensus(consensus(expert1, expert2), expert3);
+    
+    match final_vote {
+        -1 => { return conflict(); }  // Majority Reject
+         0 => { return hold(); }      // No majority/Split
+         1 => { return truth(); }     // Majority Affirm
     }
 }
