@@ -2,8 +2,14 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [PARSER-BUG] Struct Initialization/Return Syntax Error
+- **Description:** The parser fails when attempting to initialize or return structs, particularly when casting or complex expressions are involved within the struct definition or function return. The specific error `Parse program error: UnexpectedToken("LBrace")` suggests the parser is misinterpreting struct syntax or related casting operations, expecting a block `{}` incorrectly. This prevents testing deeper VM issues like stack underflow related to struct returns.
+- **Error:** `Parse program error: UnexpectedToken("LBrace")`
+- **Workaround:** None currently. Struct syntax in these contexts is not parsable.
+- **Regression Test:** `stdlib/bughunt/probe_43_struct_casting_bug.tern`
+
 ## [PARSER-BUG] Cast Expression Syntax Error (revisited)
-- **Description:** The parser fails when a `cast()` expression is used in various contexts, including within binary operations and as a standalone expression followed by a method call. The parser incorrectly expects a semicolon or a block `{}` instead of continuing to parse the expression. This indicates a fundamental issue with how the parser handles `cast` expressions.
+- **Description:** The parser fails when a `cast()` expression is used in various contexts, including within binary operations and as a standalone expression followed by a method call. The error suggests it expects a block `{}` instead of continuing the expression. This indicates a fundamental issue with how the parser handles `cast` expressions.
 - **Error:** `Parse program error: ExpectedToken("Semicolon", "Ident("neg_trit")")` or `Parse program error: ExpectedToken("RParen", "Ident("val_int")")` (depending on the context).
 - **Workaround:** Avoid using `cast` directly in complex expressions or method calls; use intermediate variables to store the cast result first.
 - **Regression Test:** `stdlib/bughunt/retest_cast_in_binary_op.tern`
@@ -19,6 +25,12 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Error:** `Program exited with error (Reject state).` (Instead of panic)
 - **Workaround:** If a panic is desired for overflow, manual bound checks are needed. If graceful `reject` is acceptable, no workaround is strictly needed for correctness but may be for desired behavior.
 - **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
+
+## [BET-001] Stack Underflow on Struct Return with Casting
+- **Description:** This bug is currently blocked by a parser error related to struct initialization/return syntax (`[PARSER-BUG] Struct Initialization/Return Syntax Error`). The underlying issue of stack underflow when returning structs with casted negative values cannot be tested until the parser issue is resolved.
+- **Error:** Currently blocked by parser error. Expected `VM Error: [BET-001] Stack underflow`.
+- **Workaround:** Not applicable due to parser block.
+- **Regression Test:** `stdlib/bughunt/probe_43_struct_casting_bug.tern` (This test currently fails due to parser error).
 
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.

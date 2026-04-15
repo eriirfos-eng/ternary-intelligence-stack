@@ -1,44 +1,70 @@
 // stdlib/bughunt/probe_43_struct_casting_bug.tern
-// Demonstrates: Potential VM stack underflow related to struct operations
-// combined with type casting. This aims to reproduce the issue from probe_35.
+// Demonstrates: Stack underflow on struct return with casting.
 // Tier: 1
 
-// 1. Struct Definition
+// Define a struct
 struct Point {
     x: int,
     y: int,
-    label: string
 }
 
-// 2. Function returning a struct
-fn create_point(x: int, y: int) -> Point {
-    let p: Point = Point {
-        x: x,
-        y: y,
-        label: "default"
-    };
-    return p;
+// Function that returns a struct and involves casting, expected to cause stack underflow.
+// The bug description mentions casting negative numbers specifically.
+fn buggy_struct_return() -> Point {
+    let p: Point = {x: 1, y: 2};
+    
+    // Attempt to cast parts of the struct or the struct itself, 
+    // in a way that might trigger stack underflow.
+    // The previous mention of casting negative numbers suggests this might be key.
+    
+    // Let's try casting a negative integer field to float, then back to int.
+    // This might corrupt stack state.
+    let neg_y_as_float: float = cast(float) (p.y as trit * -1); // p.y is 2. cast(float) (-2) should be -2.0f
+    
+    // The bug description implies a combination of struct operations, casting, and negative numbers.
+    // Let's try to cast the result of a calculation involving a negative value.
+    // The bug states "struct operations (creation, field access, return) and type casting (especially with negative numbers)".
+    
+    // Attempting a sequence that might corrupt the stack.
+    // The original test probe_43_struct_casting_bug.tern would have had specific logic.
+    // Let's construct a scenario based on the description.
+    
+    // Create a struct with a value that when cast negatively and then back, might cause issues.
+    // Recreating based on known bug description: "Stack Underflow on Struct Return with Casting: Combination of struct operations (creation, field access, return) and type casting (especially with negative numbers) causes stack underflow."
+    
+    // Let's create a struct and attempt a cast operation that results in a negative value, then return it.
+    let temp_val_int: int = -5;
+    let temp_val_float: float = cast(float) temp_val_int; // -5.0f
+    let final_val_int: int = cast(int) temp_val_float; // Should be -5.
+    
+    // The issue might be in the return itself, or how the casted values are handled.
+    // Let's simulate a struct return with a casted value, perhaps in a field.
+    let p2: Point = {x: final_val_int, y: 10}; // x would be -5 if the cast worked.
+    
+    // Let's try to return this struct. If it causes underflow, it's the bug.
+    // If the compiler/VM is smart, it might optimize this. Let's try a simpler return first.
+    
+    // Simplified scenario: just return a struct. The bug might be in the VM handling returns of structs with casted values.
+    // Let's try to return a struct where a field is directly cast from a negative.
+    let p_with_cast: Point = {x: cast(int) (cast(float) reject), y: 5}; // cast(int) (cast(float) -1) -> cast(int) -1.0f -> -1
+    
+    // The original probe_43 might have had a more complex interaction.
+    // For now, let's assume this is representative.
+    return p_with_cast; // This return statement might be where the stack underflow occurs.
 }
 
 fn main() -> trit {
-    // Create a struct instance.
-    let my_point: Point = create_point(120, -10);
-
-    // Perform casting on struct fields, similar to probe_35.
-    // This is where the bug might hide.
-    let x_as_float: float = cast(my_point.x);
-    let y_as_int: int = cast(-10.5); // Use a float literal here for variety.
-
-    // We don't care about the exact values, just if this complex sequence
-    // of operations (struct access, casting) leads to a stack underflow.
-    // If the program reaches this point without a panic, it means the
-    // stack is likely managed correctly in this specific scenario.
+    // Call the function that is expected to cause a stack underflow.
+    let point_result: Point = buggy_struct_return();
     
-    // A simple final check to ensure the program doesn't exit with reject.
-    // The real goal is to see if it panics with BET-001.
-    if my_point.x == 120 && y_as_int == -10 {
-        return truth();
-    } else {
-        return reject; // Should not be reached if no panic occurs.
-    }
+    // If the program reaches here, it means no stack underflow occurred, or it was handled silently.
+    // This would be unexpected based on the bug description.
+    // However, a stack underflow typically causes a panic or crash, not a graceful return.
+    // If we reach here, it implies the bug is either not triggered or not present.
+    // We will return reject in this case, as the expected failure did not happen.
+    
+    // Check if the returned struct values are as expected, though the primary bug is stack underflow.
+    // If the code reaches here, it means no crash happened.
+    // The bug is about stack underflow, so if we get here, something is wrong with the test or the bug's nature.
+    return reject; // Indicates that the expected crash/underflow did not occur.
 }
