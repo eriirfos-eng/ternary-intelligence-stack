@@ -1,0 +1,48 @@
+// stdlib/bughunt/probe_39_for_match_break_struct_bug.tern
+// Demonstrates: VM stack underflow when using `break` inside a `match`
+// within a `for` loop, combined with struct usage.
+// Tier: 1
+
+// 1. Struct Definition
+struct Point {
+    x: int,
+    y: int,
+    label: string
+}
+
+// 2. Function returning a struct
+fn create_point(x: int, y: int) -> Point {
+    let p: Point = Point {
+        x: x,
+        y: y,
+        label: "default"
+    };
+    return p;
+}
+
+fn main() -> trit {
+    // Use a struct and a function call that returns a struct.
+    // This is part of the context from probe_35 where stack underflow occurred.
+    let p1: Point = create_point(1, 1);
+    let mut value_to_check: trit = tend;
+
+    // We'll iterate through some simple values, but the actual operation
+    // isn't as important as the loop/match/break structure combined with
+    // the function call context from earlier.
+    let items: trittensor<3> = [-1, 0, 1];
+
+    for item in items {
+        // The actual value of `item` or `last_item` is less important now.
+        // We're focusing on the structural complexity.
+        match item {
+            0 => { break; } // This break is within the match, inside the for.
+            _ => { /* do nothing */ }
+        }
+    }
+
+    // The stack underflow from probe_35 happened after the loop/match finished,
+    // likely during the final return or function exit.
+    // We don't care about the exact return value here, just if it panics.
+    
+    return truth(); // If we reach here without a panic, it passed this specific test.
+}
