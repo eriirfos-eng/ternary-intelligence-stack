@@ -1,0 +1,36 @@
+// stdlib/net/congestion_control_gate.tern
+// Demonstrates: Network congestion control logic
+// Tier: 2 — Pro Standard
+
+fn eval_congestion(current_rtt: float, baseline_rtt: float) -> trit {
+    // If RTT is 2x baseline, high congestion
+    if current_rtt > (baseline_rtt * 2.0) {
+        return affirm;
+    }
+    // If RTT is 1.5x baseline, moderate
+    if current_rtt > (baseline_rtt * 1.5) {
+        return tend;
+    }
+    return reject; // Clear
+}
+
+fn main() -> trit {
+    // Current: 160ms, Baseline: 100ms
+    let status: trit = eval_congestion(160.0, 100.0);
+    
+    // Status should be tend
+    match status {
+        affirm => { 
+            // Reduce window (Multiplicative Decrease)
+            return conflict(); 
+        }
+        tend => { 
+            // Hold window
+            return hold(); 
+        }
+        reject => { 
+            // Increase window (Additive Increase)
+            return truth(); 
+        }
+    }
+}
