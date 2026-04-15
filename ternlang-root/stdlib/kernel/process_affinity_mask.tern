@@ -1,0 +1,38 @@
+// stdlib/kernel/process_affinity_mask.tern
+// Demonstrates: Process affinity binding logic
+// Tier: 3 — Industrial
+
+fn set_affinity(target_cpu: int, allowed_mask: trit[]) -> trit {
+    // Basic mock: if target_cpu < allowed_mask length and value is affirm
+    // But we don't have length yet. Let's use simple logic.
+    if target_cpu == 0 {
+        return allowed_mask[0];
+    }
+    if target_cpu == 1 {
+        return allowed_mask[1];
+    }
+    return reject;
+}
+
+fn main() -> trit {
+    let mask: trit[] = [affirm, reject];
+    
+    // Set to CPU 0
+    let status: trit = set_affinity(0, mask);
+    
+    // status should be affirm
+    match status {
+        affirm => { 
+            // Bound successfully
+            return truth(); 
+        }
+        tend => { 
+            // Warning: binding sub-optimal
+            return hold(); 
+        }
+        reject => { 
+            // Binding forbidden
+            return conflict(); 
+        }
+    }
+}
