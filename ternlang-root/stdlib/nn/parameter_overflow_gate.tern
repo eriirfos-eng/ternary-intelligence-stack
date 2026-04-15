@@ -1,0 +1,19 @@
+// stdlib/nn/parameter_overflow_gate.tern
+// Demonstrates: Guarding against parameter overflow (NaN/Inf proxy)
+// Tier: 3 — Industrial
+
+from "nn_utils.tern" import check_bound;
+
+fn main() -> trit {
+    let weight_norm: float = 1000000.0;
+    let max_safe_norm: float = 100000.0;
+    
+    // Status: 1 if overflow
+    let status: trit = check_bound(weight_norm, max_safe_norm);
+    
+    match status {
+        -1 => { return conflict(); }  // Underflow/Sign flip
+         0 => { return truth(); }     // Safe
+         1 => { return conflict(); }  // Overflow
+    }
+}
