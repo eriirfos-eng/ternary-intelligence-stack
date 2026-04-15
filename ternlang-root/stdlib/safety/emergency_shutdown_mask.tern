@@ -1,0 +1,24 @@
+// stdlib/safety/emergency_shutdown_mask.tern
+// Demonstrates: Multi-signal emergency shutdown logic
+// Tier: 2
+
+fn compute_shutdown_signal(temp_crit: trit, pressure_crit: trit, manual_stop: trit) -> trit {
+    // If ANY of these is a Reject (-1), the result must be Reject
+    // In balanced ternary AND (&&), min(a, b, c) will be -1 if any is -1.
+    let combined: trit = temp_crit && pressure_crit;
+    return combined && manual_stop;
+}
+
+fn main() -> trit {
+    let t: trit = 1; // Temperature OK
+    let p: trit = 1; // Pressure OK
+    let m: trit = -1; // MANUAL STOP PRESSED
+    
+    let shutdown: trit = compute_shutdown_signal(t, p, m);
+    
+    match shutdown {
+        1  => { return truth();    } // System OK
+        0  => { return hold();     } // Warning
+        -1 => { return conflict(); } // SHUTDOWN
+    }
+}
