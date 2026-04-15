@@ -18,17 +18,18 @@ fn main() -> trit {
         return reject; 
     }
 
-    // 2. Comparison with tolerance (epsilon) - this part caused a parser error before.
-    // We'll test components of this separately.
+    // 2. Comparison with tolerance (epsilon)
+    // Reintroduced with simpler components to avoid parse errors.
     let val1: float = 1.0 / 3.0; // Approximately 0.333...
     let val2: float = 0.3333333; // Close to val1
+    let epsilon: float = 0.000001;
 
     // Subtraction of floats
     let diff_val: float = val1 - val2;
-    let epsilon: float = 0.000001;
-
+    
     // Check if the absolute difference is greater than epsilon.
     // This relies on the abs() function and float comparison.
+    // Using a direct call to abs() assuming it's a built-in or correctly parsed.
     if diff_val.abs() > epsilon {
         // If the difference is greater than epsilon, they are considered not equal.
         // If this check returns reject, it might indicate an issue with subtraction, abs(), or comparison.
@@ -44,6 +45,6 @@ fn main() -> trit {
         return reject; // Fail if division by small number is not producing a large result
     }
 
-    // If all tests pass without returning reject.
+    // If all float tests pass without returning reject.
     return truth();
 }
