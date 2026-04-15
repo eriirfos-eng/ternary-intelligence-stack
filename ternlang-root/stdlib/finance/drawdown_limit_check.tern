@@ -1,0 +1,33 @@
+// proprietary/finance/drawdown_limit_check.tern
+// Demonstrates: A limit check for maximum allowable drawdown.
+// Tier: 2
+
+fn check_drawdown(current_price: float, peak_price: float, limit: float) -> trit {
+    let drawdown: float = (peak_price - current_price) / peak_price;
+
+    if drawdown > limit {
+        return reject; // Limit reached
+    }
+    
+    // We consider it safe if drawdown < 20% of the limit
+    let safe_threshold: float = limit * 0.2;
+    if drawdown < safe_threshold {
+        return affirm;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let price: float = 85.0;
+    let peak: float = 100.0;
+    let max_dd: float = 0.1; // 10%
+
+    let status: trit = check_drawdown(price, peak, max_dd);
+
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
