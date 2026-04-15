@@ -1,0 +1,32 @@
+// stdlib/premium/multi_tenant_isolation_mask.tern
+// Demonstrates: Multi-tenant resource isolation logic
+// Tier: 4 — Enterprise
+
+fn isolate_tenant(tenant_id: int, resource_owner_id: int) -> trit {
+    if tenant_id == resource_owner_id {
+        return affirm; // Access allowed
+    }
+    // Cross-tenant access is strictly forbidden in Tier 4
+    return reject; 
+}
+
+fn main() -> trit {
+    // Tenant 101 accessing Tenant 102 resource
+    let isolation_status: trit = isolate_tenant(101, 102);
+    
+    // Status should be reject
+    match isolation_status {
+        affirm => { 
+            // Grant access
+            return truth(); 
+        }
+        tend => { 
+            // Wait for authorization
+            return hold(); 
+        }
+        reject => { 
+            // Block access (isolation breach attempt)
+            return conflict(); 
+        }
+    }
+}
