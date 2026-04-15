@@ -1,0 +1,12 @@
+// stdlib/bughunt/probe_29_empty_tensor_workaround.tern
+// Demonstrates: Workaround for empty trittensor declaration bug.
+// Tier: 1
+
+fn main() -> trit {
+    // Workaround: Use a tensor of size 1 and ignore it.
+    let almost_empty_tensor: trittensor<1> = [0];
+
+    println("Successfully created a size-1 tensor.");
+
+    return truth();
+}

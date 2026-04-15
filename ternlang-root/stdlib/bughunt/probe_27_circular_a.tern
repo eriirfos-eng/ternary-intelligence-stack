@@ -1,0 +1,17 @@
+// stdlib/bughunt/probe_27_circular_a.tern
+// Demonstrates: Circular import behavior.
+// Tier: 1
+
+from "probe_27_circular_b.tern" import *;
+
+fn func_a() -> trit {
+    println("in func_a");
+    return truth();
+}
+
+fn main() -> trit {
+    println("main in A starting");
+    let result: trit = func_b();
+    println("main in A finished");
+    return result;
+}

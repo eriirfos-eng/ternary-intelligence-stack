@@ -1,0 +1,59 @@
+// stdlib/bughunt/probe_26_logical_ops.tern
+// Demonstrates: Behavior of logical AND (min) and OR (max)
+// Tier: 1
+//
+// Testing Tand (0x28) and Tor (0x29) opcodes.
+// In balanced ternary, AND is min(a, b) and OR is max(a, b).
+
+fn test_op(a: trit, b: trit) -> trit {
+    let a_and_b: trit = a && b; // Tand / min
+    let a_or_b: trit = a || b;  // Tor / max
+
+    let expected_and: trit;
+    if (a < b) {
+        expected_and = a;
+    } else {
+        expected_and = b;
+    }
+
+    let expected_or: trit;
+    if (a > b) {
+        expected_or = a;
+    } else {
+        expected_or = b;
+    }
+
+    if (a_and_b != expected_and) {
+        println("AND failed for ");
+        println(a);
+        println(b);
+        return conflict();
+    }
+
+    if (a_or_b != expected_or) {
+        println("OR failed for ");
+        println(a);
+        println(b);
+        return conflict();
+    }
+
+    return truth();
+}
+
+fn main() -> trit {
+    let trits: trit[] = [-1, 0, 1];
+
+    // This is not a great way to loop, but ternlang has no loops.
+    // We have to unroll it.
+    if (test_op(trits[0], trits[0]) != truth()) { return conflict(); }
+    if (test_op(trits[0], trits[1]) != truth()) { return conflict(); }
+    if (test_op(trits[0], trits[2]) != truth()) { return conflict(); }
+    if (test_op(trits[1], trits[0]) != truth()) { return conflict(); }
+    if (test_op(trits[1], trits[1]) != truth()) { return conflict(); }
+    if (test_op(trits[1], trits[2]) != truth()) { return conflict(); }
+    if (test_op(trits[2], trits[0]) != truth()) { return conflict(); }
+    if (test_op(trits[2], trits[1]) != truth()) { return conflict(); }
+    if (test_op(trits[2], trits[2]) != truth()) { return conflict(); }
+
+    return truth();
+}

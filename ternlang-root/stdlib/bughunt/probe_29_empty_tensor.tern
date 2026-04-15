@@ -1,0 +1,8 @@
+// stdlib/bughunt/probe_29_empty_tensor.tern
+// Demonstrates: Bug with empty trittensor declaration.
+// Tier: 1
+
+fn main() -> trit {
+    let empty_tensor = trittensor<0>;
+    return truth();
+}
