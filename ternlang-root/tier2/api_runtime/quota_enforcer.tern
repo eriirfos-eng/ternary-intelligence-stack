@@ -1,11 +1,18 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Module: tier2/api_runtime/quota_enforcer.tern
 // License: BSL 1.1 - Restricted API
-// Cryptographically tethered to Fly.io Genesis API.
-// Unauthorized reproduction is a violation of T-SPEC-v2.0.
-// ------------------------------------------
 
-fn restricted_op(p: float) -> trit {
-    if p > 0.5 { return affirm; }
+fn check_quota(used: float, limit: float) -> trit {
+    if used < limit { return affirm; }
+    if used > (limit * 1.05) { return reject; }
     return tend;
+}
+
+fn main() -> trit {
+    let result: trit = check_quota(90.0, 100.0);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

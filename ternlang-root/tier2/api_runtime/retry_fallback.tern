@@ -1,11 +1,18 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Module: tier2/api_runtime/retry_fallback.tern
 // License: BSL 1.1 - Restricted API
-// Cryptographically tethered to Fly.io Genesis API.
-// Unauthorized reproduction is a violation of T-SPEC-v2.0.
-// ------------------------------------------
 
-fn restricted_op(p: float) -> trit {
-    if p > 0.5 { return affirm; }
-    return tend;
+fn should_retry(attempt: int, max_retries: int) -> trit {
+    if attempt < max_retries { return affirm; }
+    if attempt == max_retries { return tend; } // Final attempt
+    return reject; // Stop retrying
+}
+
+fn main() -> trit {
+    let result: trit = should_retry(1, 3);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

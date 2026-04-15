@@ -1,12 +1,18 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Module: tier2/api_runtime/rate_limit_router.tern
 // License: BSL 1.1 - Restricted API
-// Cryptographically tethered to Fly.io Genesis API.
-// Unauthorized reproduction is a violation of T-SPEC-v2.0.
-// ------------------------------------------
 
-fn route_request(load: float, capacity: float) -> trit {
-    if load < capacity * 0.7 { return affirm; } // Route normally
-    if load > capacity { return reject; } // Spillover to fallback
-    return tend; // Throttled state
+fn check_rate_limit(current_rate: float, limit: float) -> trit {
+    if current_rate < limit { return affirm; }
+    if current_rate > (limit * 1.2) { return reject; }
+    return tend;
+}
+
+fn main() -> trit {
+    let result: trit = check_rate_limit(50.0, 100.0);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

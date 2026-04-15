@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for retry_fallback
-fn retry_fallback_safe() -> trit {
-    return affirm;
+
+fn safe_retry_limit(backoff_ms: int) -> trit {
+    if backoff_ms < 5000 { return affirm; }
+    return tend; // High latency warning
+}
+
+fn main() -> trit {
+    let result: trit = safe_retry_limit(1000);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

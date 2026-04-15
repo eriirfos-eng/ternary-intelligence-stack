@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for rate_limit_router
-fn rate_limit_router_safe() -> trit {
-    return affirm;
+
+fn check_rate_safety(requests_per_sec: int) -> trit {
+    if requests_per_sec < 1000 { return affirm; }
+    return reject; // Potential DDoS
+}
+
+fn main() -> trit {
+    let result: trit = check_rate_safety(150);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
