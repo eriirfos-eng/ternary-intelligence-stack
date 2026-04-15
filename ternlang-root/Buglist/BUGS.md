@@ -2,6 +2,12 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [TCALL-BUG] Forward Reference
+- **Description:** A function must be defined before it is called. If a function is called before its definition, it fails silently by returning an incorrect value (e.g., `reject` in tests, instead of the expected `truth` or a panic). This indicates an issue with the compiler's or VM's symbol resolution or call stack management for forward references.
+- **Error:** Returns an incorrect value, leading to `reject` in regression tests, rather than a compile-time error or a clear runtime failure.
+- **Workaround:** Define functions before they are called.
+- **Regression Test:** `stdlib/bughunt/probe_23_forward_reference.tern`
+
 ## [PARSER-BUG] Struct Initialization/Return Syntax Error
 - **Description:** The parser fails when attempting to initialize or return structs, particularly when casting or complex expressions are involved within the struct definition or function return. The specific error `Parse program error: UnexpectedToken("LBrace")` suggests the parser is misinterpreting struct syntax or related casting operations, expecting a block `{}` incorrectly. This prevents testing deeper VM issues like stack underflow related to struct returns.
 - **Error:** `Parse program error: UnexpectedToken("LBrace")`
@@ -14,6 +20,18 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Avoid using `cast` directly in complex expressions or method calls; use intermediate variables to store the cast result first.
 - **Regression Test:** `stdlib/bughunt/retest_cast_in_binary_op.tern`
 
+## [PARSER-BUG] Float Method Call Syntax Error
+- **Description:** The parser fails when attempting to call methods on float variables (e.g., `float_var.abs()`). The parser incorrectly expects a semicolon after the variable name or the start of a block `{}` instead of recognizing the dot notation for method calls.
+- **Error:** `Parse program error: ExpectedToken("Semicolon", "LParen")`
+- **Workaround:** None. Method calls on floats are not supported or are not parsable.
+- **Regression Test:** `stdlib/bughunt/retest_float_method_call.tern`
+
+## [RUNTIME-FLOAT-ISSUE] Float Arithmetic/Comparison Issues
+- **Description:** Basic float arithmetic (e.g., addition `0.1 + 0.2 == 0.3`, division `1.0 / 3.0`) and comparisons appear to function at a basic level, but the test `retest_float_binary_ops.tern` exited with `reject`, indicating that either the arithmetic result, the comparison logic, or both are not producing the expected outcome. This could be due to precision limitations or a logic error in the VM's float handling.
+- **Error:** `Program exited with error (Reject state).`
+- **Workaround:** Avoid complex float calculations or rely on exact ternary representations where possible.
+- **Regression Test:** `stdlib/bughunt/retest_float_binary_ops.tern`
+
 ## [VM-LOGIC-001] Silent Recursion Failure
 - **Description:** Recursive functions fail silently, producing incorrect results instead of crashing or returning a clear error. The test `stdlib/bughunt/probe_34_recursion_failure.tern` shows that a function expected to return `4` instead resulted in the program exiting with `reject`, confirming a silent failure in the recursion logic.
 - **Error:** Returns an incorrect value, causing the program to exit with `reject` in tests, rather than the expected `truth()` or a panic.
@@ -25,12 +43,6 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Error:** `Program exited with error (Reject state).` (Instead of panic)
 - **Workaround:** If a panic is desired for overflow, manual bound checks are needed. If graceful `reject` is acceptable, no workaround is strictly needed for correctness but may be for desired behavior.
 - **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
-
-## [BET-001] Stack Underflow on Struct Return with Casting
-- **Description:** This bug is currently blocked by a parser error related to struct initialization/return syntax (`[PARSER-BUG] Struct Initialization/Return Syntax Error`). The underlying issue of stack underflow when returning structs with casted negative values cannot be tested until the parser issue is resolved.
-- **Error:** Currently blocked by parser error. Expected `VM Error: [BET-001] Stack underflow`.
-- **Workaround:** Not applicable due to parser block.
-- **Regression Test:** `stdlib/bughunt/probe_43_struct_casting_bug.tern` (This test currently fails due to parser error).
 
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.
@@ -45,18 +57,6 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Use `trit[]` or `trittensor` and cast/saturate values.
 - **Regression Test:** `stdlib/bughunt/probe_22_int_array_param.tern`
 - **Workaround Example:** `stdlib/bughunt/probe_22_int_array_param_workaround.tern`
-
-## [TCALL-BUG] Forward Reference
-- **Description:** A function must be defined before it is called. If called before definition, it fails silently by returning the wrong value (e.g., `tend` instead of the expected `truth`) rather than crashing.
-- **Workaround:** Define functions before use.
-- **Regression Test:** `stdlib/bughunt/probe_23_forward_reference.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_23_forward_reference_workaround.tern`
-
-## [BET-013] Named Import Stack Overflow
-- **Description:** Importing a function via `from "file" import func_a` without its local dependencies (e.g., `func_b` called by `func_a`) causes `VM Error: [BET-013] Call stack overflow`.
-- **Workaround:** Use `from "file" import *`.
-- **Regression Test:** `stdlib/bughunt/probe_24_named_import_failure.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_24_named_import_workaround.tern`
 
 ## [PARSER-007] Empty Trittensor Declaration
 - **Description:** Declaring a `trittensor` without an explicit type and initialization is not supported. `trittensor<0>` is not supported.
