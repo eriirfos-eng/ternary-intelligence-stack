@@ -1,0 +1,50 @@
+// stdlib/errors/PARSE-005.tern
+// Error: PARSE-005 — Invalid Match Pattern Type (Float)
+// Tier: 1 — Open Core
+//
+// "You tried to match a float. The ternlang match statement is wise,
+//  but its wisdom is limited to the discrete realms of trits and integers."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The `match` statement in Ternlang is designed for exhaustive, pattern-based
+// control flow on discrete types (`trit` and `int`). It does not support
+// matching on `float` literals or variables due to the complexities of
+// floating-point equality.
+//
+// WRONG (will trigger PARSE-005):
+//
+//   let x: float = 1.0;
+//   match x {
+//       1.0 => { return truth(); } // Invalid: float literal in pattern
+//       _   => { return hold(); }
+//   }
+//
+// ─── The Workaround: If-Statements ──────────────────────────────────────────
+//
+// For floating-point values, use a chain of `if` statements to check for
+// equality or thresholds. This is the idiomatic and required way to handle
+// control flow with floats.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn check_float(f: float) -> trit {
+    if f == 1.0 {
+        return truth();
+    }
+    if f == 0.0 {
+        return hold();
+    }
+    // Note: Direct equality checks with floats can be risky.
+    // Consider using a threshold for robustness in real applications.
+    // if (f - -1.0) < 0.0001 { ... }
+    return conflict();
+}
+
+let result: trit = check_float(1.0);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold(); }
+     1 => { return truth(); }
+}
