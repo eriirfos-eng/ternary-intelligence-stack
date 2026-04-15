@@ -1,0 +1,29 @@
+// proprietary/astro/pointing_precision_gate.tern
+// Demonstrates: A gate for validating pointing accuracy of sensitive astronomical equipment.
+// Tier: 3
+
+fn check_pointing(error_arcsec: float, mission_spec: float) -> trit {
+    if error_arcsec > mission_spec {
+        return reject; // Pointing error exceeds specification
+    }
+    
+    // Within 10% of spec is excellent
+    if error_arcsec < (mission_spec * 0.1) {
+        return affirm;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let err: float = 0.05; // arcsec
+    let spec: float = 0.1; // JWST-class requirement
+
+    let status: trit = check_pointing(err, spec);
+
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

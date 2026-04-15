@@ -1,0 +1,40 @@
+// proprietary/astro/trajectory_safety_gate.tern
+// Demonstrates: A gate for validating orbital trajectories based on safety buffers.
+// Tier: 3
+
+from "astro_utils.tern" import orbital_velocity;
+
+fn is_safe_trajectory(m_earth: float, r: float, v_current: float, tolerance: float) -> trit {
+    let v_required_sq: float = orbital_velocity(m_earth, r);
+    let v_current_sq: float = v_current * v_current;
+    
+    let diff: float = v_current_sq - v_required_sq;
+    if diff < 0.0 { diff = diff * -1.0; }
+
+    // If velocity deviation is too high, it's unsafe (reject)
+    if diff > (v_required_sq * tolerance) {
+        return reject;
+    }
+    
+    // If it's very close, it's safe (affirm)
+    if diff < (v_required_sq * (tolerance * 0.1)) {
+        return affirm;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let m: float = 5972000000000000000000000.0; // Earth mass
+    let r: float = 6371000.0 + 400000.0; // ISS orbit
+    let v: float = 7660.0; // m/s
+    let tol: float = 0.05; // 5% tolerance
+
+    let result: trit = is_safe_trajectory(m, r, v, tol);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
