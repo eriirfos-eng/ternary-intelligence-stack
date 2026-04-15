@@ -1,0 +1,21 @@
+// stdlib/bughunt/probe_46_cast_expression_bug.tern
+// Demonstrates: Parser error when using `cast` within a binary expression.
+// Tier: 1
+
+fn main() -> trit {
+    let i_val: int = 10;
+    let f_val: float = 5.5;
+
+    // This expression caused a parse error:
+    // `Parse program error: ExpectedToken("LBrace", "LParen")`
+    // The parser struggles with `cast(int) + float`.
+    let sum_if: float = cast(i_val) + f_val; 
+
+    // We expect this line to be unreachable if the parser fails.
+    // If it parses, we check the result.
+    if sum_if == 15.5 {
+        return truth();
+    } else {
+        return reject;
+    }
+}
