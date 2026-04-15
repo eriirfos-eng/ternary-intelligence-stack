@@ -1,0 +1,44 @@
+// stdlib/research/blind_trial_aggregator.tern
+// Demonstrates: Double-blind trial data aggregator
+// Tier: 3
+
+fn aggregate_trial(control: trit[], treatment: trit[]) -> trit {
+    let c_pos: int = 0;
+    let t_pos: int = 0;
+    
+    for c in control {
+        if c == 1 { c_pos = c_pos + 1; }
+    }
+    
+    for t in treatment {
+        if t == 1 { t_pos = t_pos + 1; }
+    }
+    
+    // If treatment has significantly more positive results than control
+    if t_pos > (c_pos + 1) {
+        return 1; // Effective
+    }
+    
+    // If control is better or equal
+    if c_pos >= t_pos {
+        return -1; // Ineffective
+    }
+    
+    return 0; // Marginal
+}
+
+fn main() -> trit {
+    let c_results: trittensor<5>;
+    c_results[0]=1; c_results[1]=0; c_results[2]=-1; c_results[3]=0; c_results[4]=0;
+    
+    let t_results: trittensor<5>;
+    t_results[0]=1; t_results[1]=1; t_results[2]=1; t_results[3]=0; t_results[4]=1;
+    
+    let result: trit = aggregate_trial(c_results, t_results);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
