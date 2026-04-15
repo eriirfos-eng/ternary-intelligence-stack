@@ -1,0 +1,33 @@
+// proprietary/astro/atmospheric_entry_mask.tern
+// Demonstrates: A mask for validating spacecraft re-entry angles.
+// Tier: 3
+
+fn evaluate_entry_angle(angle: float, target: float, tolerance: float) -> trit {
+    let diff: float = angle - target;
+    if diff < 0.0 { diff = diff * -1.0; }
+
+    if diff > tolerance {
+        return reject; // Fatal entry angle (too shallow or too steep)
+    }
+    
+    // Within 20% of tolerance is safe
+    if diff < (tolerance * 0.2) {
+        return affirm;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let a: float = -6.2; // degrees
+    let t: float = -6.0;
+    let tol: float = 1.0;
+
+    let result: trit = evaluate_entry_angle(a, t, tol);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

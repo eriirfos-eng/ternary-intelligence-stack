@@ -1,0 +1,15 @@
+// proprietary/astro/astro_utils.tern
+// Demonstrates: Common astronomical utility functions for ternary mission logic.
+// Tier: 3
+
+fn gravitational_force(m1: float, m2: float, r: float) -> float {
+    let G: float = 0.00000000006674; // G constant
+    return G * (m1 * m2) / (r * r);
+}
+
+fn orbital_velocity(m_central: float, r: float) -> float {
+    let G: float = 0.00000000006674;
+    let v_sq: float = G * m_central / r;
+    // Simple square root approximation or just return squared for comparison
+    return v_sq; 
+}

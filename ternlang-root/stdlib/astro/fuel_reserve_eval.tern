@@ -1,0 +1,32 @@
+// proprietary/astro/fuel_reserve_eval.tern
+// Demonstrates: Evaluating fuel reserves against mission requirements.
+// Tier: 3
+
+fn check_fuel(current: float, required: float, safety_margin: float) -> trit {
+    let total_required: float = required * (1.0 + safety_margin);
+
+    if current < required {
+        return reject; // Insufficient fuel for baseline
+    }
+    
+    if current < total_required {
+        return tend; // Sufficient for baseline, but below safety margin
+    }
+    
+    return affirm; // All good
+}
+
+fn main() -> trit {
+    let fuel: float = 1200.0;
+    let req: float = 1000.0;
+    let margin: float = 0.25; // 25% safety margin
+
+    // total_required = 1250.0. 1200 < 1250 -> tend
+    let fuel_status: trit = check_fuel(fuel, req, margin);
+
+    match fuel_status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

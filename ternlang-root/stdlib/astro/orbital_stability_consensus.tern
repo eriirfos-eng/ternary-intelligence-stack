@@ -1,0 +1,30 @@
+// proprietary/astro/orbital_stability_consensus.tern
+// Demonstrates: A consensus gate for orbital stability monitoring.
+// Tier: 3
+
+fn evaluate_sensor_stability(drift_rate: float, noise: float, threshold: float) -> trit {
+    if drift_rate > threshold {
+        return reject; // Significant drift
+    }
+    if noise > (threshold * 0.5) {
+        return tend; // High noise, uncertain
+    }
+    return affirm; // Stable
+}
+
+fn main() -> trit {
+    let sensor_a_drift: float = 0.0001;
+    let sensor_b_drift: float = 0.005; // Different result
+    let tol: float = 0.001;
+
+    let res_a: trit = evaluate_sensor_stability(sensor_a_drift, 0.00001, tol);
+    let res_b: trit = evaluate_sensor_stability(sensor_b_drift, 0.00001, tol);
+
+    let consensus_stability: trit = consensus(res_a, res_b);
+
+    match consensus_stability {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
