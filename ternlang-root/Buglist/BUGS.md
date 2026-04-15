@@ -2,6 +2,18 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [VM-LOGIC-001] Silent Recursion Failure
+- **Description:** Recursive functions fail silently, producing incorrect results instead of crashing or returning an error. This points to a logic error in the VM's handling of the call stack or related opcodes during recursion.
+- **Error:** None. The program returns an incorrect value, causing silent data corruption.
+- **Workaround:** Avoid recursive functions. Use loops instead.
+- **Regression Test:** `stdlib/bughunt/probe_34_recursion_failure.tern`
+
+## [RUNTIME-PANIC] Integer Overflow
+- **Description:** An integer overflow or underflow causes the VM to exit with a raw Rust panic instead of a graceful `VmError`.
+- **Error:** `thread 'main' panicked at [...] attempt to add with overflow`
+- **Workaround:** Manually check integer bounds before performing arithmetic that may overflow.
+- **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
+
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.
 - **Error:** `Parse program error: ExpectedToken("pattern (int or trit)", "Float(1.0)")`
@@ -40,12 +52,6 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Error:** `Parse program error: UnexpectedToken("tensor literal element: RBracket")`
 - **Workaround:** There is no known workaround to create an empty dynamic array via a literal. It must be created by a function that returns an empty array.
 - **Regression Test:** `stdlib/bughunt/probe_30_empty_array_literal.tern`
-
-## [RUNTIME-PANIC] Integer Overflow
-- **Description:** An integer overflow or underflow causes the VM to exit with a raw Rust panic instead of a graceful `VmError`.
-- **Error:** `thread 'main' panicked at [...] attempt to add with overflow`
-- **Workaround:** Manually check integer bounds before performing arithmetic that may overflow.
-- **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
 
 ---
 
