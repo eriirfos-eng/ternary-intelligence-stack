@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for inference_queue
-fn inference_queue_safe() -> trit {
-    return affirm;
+
+fn run_safe_queue(system_load: float) -> trit {
+    if system_load < 0.9 { return affirm; }
+    return reject; // Safety shutdown
+}
+
+fn main() -> trit {
+    let result: trit = run_safe_queue(0.5);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

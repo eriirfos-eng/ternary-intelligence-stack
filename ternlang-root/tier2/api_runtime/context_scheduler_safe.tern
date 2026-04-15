@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for context_scheduler
-fn context_scheduler_safe() -> trit {
-    return affirm;
+
+fn is_schedule_safe(task_count: int) -> trit {
+    if task_count < 100 { return affirm; }
+    return tend;
+}
+
+fn main() -> trit {
+    let result: trit = is_schedule_safe(50);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

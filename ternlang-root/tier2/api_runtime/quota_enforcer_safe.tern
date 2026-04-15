@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for quota_enforcer
-fn quota_enforcer_safe() -> trit {
-    return affirm;
+
+fn is_quota_secure(api_key_valid: trit) -> trit {
+    if api_key_valid == affirm { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = is_quota_secure(1);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
