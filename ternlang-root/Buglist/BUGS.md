@@ -2,17 +2,23 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
-## [RUNTIME-FLOAT-ISSUE] Float Arithmetic/Comparison Issues
-- **Description:** Basic float arithmetic (e.g., addition `0.1 + 0.2 == 0.3`, division `1.0 / 3.0`) and comparisons appear to function at a basic level, but the test `retest_float_binary_ops.tern` exited with `reject`, indicating that either the arithmetic result, the comparison logic, or both are not producing the expected outcome. This could be due to precision limitations or a logic error in the VM's float handling.
-- **Error:** `Program exited with error (Reject state).`
-- **Workaround:** Avoid complex float calculations or rely on exact ternary representations where possible.
-- **Regression Test:** `stdlib/bughunt/retest_float_binary_ops.tern`
-
 ## [PARSER-BUG] Cast Expression Syntax Error
 - **Description:** The parser fails when a `cast()` expression is used as part of a binary operation (e.g., `cast(int) + float` or `(cast(int) val_int) + val_float`). This indicates the parser cannot correctly handle `cast` expressions when they are operands in binary arithmetic. The error suggests it expects a block `{}` instead of continuing the expression. This bug persists.
 - **Error:** `Parse program error: ExpectedToken("RParen", "Ident("val_int")")` (or similar, depending on the exact expression)
 - **Workaround:** Avoid using `cast` directly within binary expressions; use an intermediate variable to store the cast result first.
 - **Regression Test:** `stdlib/bughunt/retest_cast_in_binary_op.tern`
+
+## [PARSER-BUG] Float Method Call Syntax Error
+- **Description:** The parser fails when attempting to call methods on float variables (e.g., `float_var.abs()`). The parser incorrectly expects a semicolon after the variable name or the start of a block `{}` instead of recognizing the dot notation for method calls.
+- **Error:** `Parse program error: ExpectedToken("Semicolon", "LParen")`
+- **Workaround:** None. Method calls on floats are not supported or are not parsable.
+- **Regression Test:** `stdlib/bughunt/retest_float_method_call.tern`
+
+## [RUNTIME-FLOAT-ISSUE] Float Arithmetic/Comparison Issues
+- **Description:** Basic float arithmetic (e.g., addition `0.1 + 0.2 == 0.3`, division `1.0 / 3.0`) and comparisons appear to function at a basic level, but the test `retest_float_binary_ops.tern` exited with `reject`, indicating that either the arithmetic result, the comparison logic, or both are not producing the expected outcome. This could be due to precision limitations or a logic error in the VM's float handling.
+- **Error:** `Program exited with error (Reject state).`
+- **Workaround:** Avoid complex float calculations or rely on exact ternary representations where possible.
+- **Regression Test:** `stdlib/bughunt/retest_float_binary_ops.tern`
 
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.

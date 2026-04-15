@@ -1,0 +1,26 @@
+// stdlib/bughunt/retest_float_method_call.tern
+// Demonstrates: Re-testing method calls on float variables (like .abs()).
+// Tier: 1
+
+fn main() -> trit {
+    let negative_val: float = -5.5;
+    let positive_val: float = 5.5;
+
+    // Test case 1: abs() on a negative float
+    // This previously failed parsing.
+    let abs_neg: float = negative_val.abs();
+    
+    // Test case 2: abs() on a positive float
+    // This previously failed parsing.
+    let abs_pos: float = positive_val.abs();
+
+    // If parsing and execution succeed, we check the results.
+    // If parsing fails, the test will error out.
+    // Note: This test primarily checks if the method call parses and executes.
+    // Runtime precision of abs() is secondary here.
+    if abs_neg == 5.5 && abs_pos == 5.5 {
+        return truth();
+    } else {
+        return reject; // Indicates potential runtime issue with abs() or comparison.
+    }
+}
