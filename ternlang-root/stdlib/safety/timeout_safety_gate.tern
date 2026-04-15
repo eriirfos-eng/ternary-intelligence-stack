@@ -1,0 +1,30 @@
+// stdlib/safety/timeout_safety_gate.tern
+// Demonstrates: Ternary timeout-based safety gate
+// Tier: 2
+
+fn check_timeout(elapsed_ms: int, limit_ms: int) -> trit {
+    if elapsed_ms > limit_ms {
+        return -1; // Timeout / Failed
+    }
+    
+    // Near-timeout warning (within 10% of limit)
+    let threshold: int = limit_ms - (limit_ms / 10);
+    if elapsed_ms > threshold {
+        return 0; // Warning
+    }
+    
+    return 1; // Safe
+}
+
+fn main() -> trit {
+    let elapsed: int = 950;
+    let limit: int = 1000;
+    
+    let result: trit = check_timeout(elapsed, limit);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
