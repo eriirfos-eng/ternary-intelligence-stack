@@ -1,0 +1,19 @@
+// stdlib/ml/learning_rate_scheduler.tern
+// Demonstrates: Learning rate adjustment based on loss delta
+// Tier: 2 — Pro Standard
+
+from "ml_utils.tern" import eval_loss_delta;
+
+fn main() -> trit {
+    let loss_cur: float = 0.8;
+    let loss_prev: float = 1.0;
+    
+    // Status: -1 (improving), 0 (stable), 1 (worsening)
+    let status: trit = eval_loss_delta(loss_cur, loss_prev);
+    
+    match status {
+        -1 => { return truth(); }     // Keep or increase LR
+         0 => { return hold(); }      // No change
+         1 => { return conflict(); }  // Reduce LR (Signal)
+    }
+}
