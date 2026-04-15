@@ -1,0 +1,35 @@
+// stdlib/net/ssl_certificate_expiry_mask.tern
+// Demonstrates: SSL certificate expiry monitoring
+// Tier: 2 — Pro Standard
+
+fn check_cert_expiry(days_remaining: float) -> trit {
+    if days_remaining < 0.0 {
+        return reject; // Expired
+    }
+    // Warning at 30 days
+    if days_remaining < 30.0 {
+        return tend; // Renewal warning
+    }
+    return affirm; // Valid
+}
+
+fn main() -> trit {
+    // 15 days remaining
+    let status: trit = check_cert_expiry(15.0);
+    
+    // Status should be tend
+    match status {
+        affirm => { 
+            // Valid
+            return truth(); 
+        }
+        tend => { 
+            // Warning: expiring soon
+            return hold(); 
+        }
+        reject => { 
+            // Expired! Block connection
+            return conflict(); 
+        }
+    }
+}
