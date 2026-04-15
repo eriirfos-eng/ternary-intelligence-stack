@@ -1,0 +1,42 @@
+// stdlib/errors/PARSE-006.tern
+// Error: PARSE-006 — Invalid Array Parameter Type
+// Tier: 1 — Open Core
+//
+// "Ternlang functions are particular about the arrays they accept.
+//  For now, only arrays of trits (`trit[]` or `trittensor`) may be passed."
+//
+// ─── What went wrong ─────────────────────────────────────────────────────────
+//
+// The parser currently only supports `trit[]` and `trittensor` as types
+// for function parameters that are arrays. While `int` and `float` are
+// valid types, using them as array types in a function signature is not
+// yet implemented.
+//
+// WRONG (will trigger PARSE-006):
+//
+//   fn process_numbers(data: int[]) -> trit { ... }
+//
+//   fn process_signals(data: float[]) -> trit { ... }
+//
+// ─── The Workaround: Use `trit[]` or `trittensor` ──────────────────────────
+//
+// The required workaround is to pass data as a `trit[]` or `trittensor`
+// and then handle the values within the function. For integer-like data,
+// you may need to cast or interpret the trits as numbers.
+//
+// ─── Correct pattern ─────────────────────────────────────────────────────────
+
+fn process_data(data: trit[]) -> trit {
+    // Inside the function, you can process the trit array.
+    // let first_val: trit = data[0];
+    return truth();
+}
+
+let my_trits: trit[] = [1, 0, -1, 1];
+let result: trit = process_data(my_trits);
+
+match result {
+    -1 => { return conflict(); }
+     0 => { return hold(); }
+     1 => { return truth(); }
+}
