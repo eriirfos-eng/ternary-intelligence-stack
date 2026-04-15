@@ -1,5 +1,17 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for moe13_core
-fn moe13_core_safe() -> trit {
-    return affirm;
+
+fn is_moe13_safe(veto_count: int) -> trit {
+    if veto_count == 0 { return affirm; }
+    if veto_count < 3 { return tend; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = is_moe13_safe(0);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

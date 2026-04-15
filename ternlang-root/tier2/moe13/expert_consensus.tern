@@ -1,13 +1,18 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Module: tier2/moe13/expert_consensus.tern
 // License: BSL 1.1 - Restricted API
-// Cryptographically tethered to Fly.io Genesis API.
-// Unauthorized reproduction is a violation of T-SPEC-v2.0.
-// ------------------------------------------
 
-agent ExpertOrchestrator {
-    fn select_expert(input_embedding: trit_tensor) -> int {
-        // High-precision proprietary MoE routing logic
-        return 13; // Proprietary Expert-13 Default
+fn reach_consensus(votes: int, total_experts: int) -> trit {
+    if votes > (total_experts / 2) { return affirm; }
+    if votes < (total_experts / 4) { return reject; }
+    return tend;
+}
+
+fn main() -> trit {
+    let result: trit = reach_consensus(10, 13);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
     }
 }

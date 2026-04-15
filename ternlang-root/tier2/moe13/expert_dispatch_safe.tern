@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for expert_dispatch
-fn expert_dispatch_safe() -> trit {
-    return affirm;
+
+fn is_dispatch_secure(auth_token: int) -> trit {
+    if auth_token > 0 { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = is_dispatch_secure(777);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for expert_router
-fn expert_router_safe() -> trit {
-    return affirm;
+
+fn validate_expert_path(path_id: int) -> trit {
+    if path_id > 0 { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = validate_expert_path(101);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

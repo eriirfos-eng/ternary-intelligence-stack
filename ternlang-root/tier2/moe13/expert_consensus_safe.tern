@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for expert_consensus
-fn expert_consensus_safe() -> trit {
-    return affirm;
+
+fn validate_quorum(active_experts: int) -> trit {
+    if active_experts >= 7 { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = validate_quorum(13);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
