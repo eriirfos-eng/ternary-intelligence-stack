@@ -42,7 +42,7 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Description:** The parser fails when float literals or expressions involving floats are used in binary operations (e.g., `0.1 + 0.2`, `val1 - val2`). It incorrectly expects a block `{}` instead of continuing to parse the expression. This is similar to the `cast` expression bug.
 - **Error:** `Parse program error: ExpectedToken("LBrace", "LParen")`
 - **Workaround:** Avoid complex float expressions; use intermediate variables or simpler operations.
-- **Regression Test:** `stdlib/bughunt/probe_47_float_precision.tern` (This test triggers the parser error).
+- **Regression Test:** `stdlib/bughunt/probe_45_mixed_type_arithmetic.tern` and `stdlib/bughunt/probe_47_float_precision.tern` (These tests trigger the parser error).
 
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.
