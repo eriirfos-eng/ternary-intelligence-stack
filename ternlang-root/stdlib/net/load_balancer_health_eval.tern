@@ -1,0 +1,36 @@
+// stdlib/net/load_balancer_health_eval.tern
+// Demonstrates: Load balancer target health evaluation
+// Tier: 2 — Pro Standard
+
+fn eval_target_health(resp_time_ms: float, status_code: int) -> trit {
+    // If status is 200 (affirm) and latency is low
+    if status_code == 200 {
+        if resp_time_ms < 100.0 {
+            return affirm;
+        }
+        return tend; // High latency but healthy status
+    }
+    // Error status
+    return reject;
+}
+
+fn main() -> trit {
+    // Latency 150ms, Status 200
+    let status: trit = eval_target_health(150.0, 200);
+    
+    // Status should be tend
+    match status {
+        affirm => { 
+            // Healthy
+            return truth(); 
+        }
+        tend => { 
+            // Degraded
+            return hold(); 
+        }
+        reject => { 
+            // Dead
+            return conflict(); 
+        }
+    }
+}
