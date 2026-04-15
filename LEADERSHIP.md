@@ -17,6 +17,21 @@ Simeon leads the architectural vision and research direction of the Ternary Inte
 *   **LinkedIn:** [Simeon Kepp](https://www.linkedin.com/in/simeon-kepp/)
 *   **Email:** s.kepp@ternlang.com
 
+---
+
+### Zabih Karimi
+**Co-Founder & IT Technician**  
+*Network & ML Application Specialist*
+
+Zabih specializes in the practical implementation of the TIS stack, from networking protocols to high-performance ML applications. He oversees the technical reliability of the BET VM and the integration of MoE-13 experts into real-world sovereign environments.
+
+*   **Role:** IT Technician, Network Specialist, ML Application Engineer.
+*   **Focus:** Networking, ML Inference, Technical Operations, BET VM Stability.
+*   **LinkedIn:** [Zabih Karimi](https://www.linkedin.com/in/zabih-karimi-3292ab349/)
+*   **Email:** z.karimi@ternlang.com
+
+---
+
 ### Nikoletta Csonka
 **Co-Founder & Head of International Relations**  
 *Strategic Outreach*
@@ -26,19 +41,20 @@ Nikoletta manages the strategic positioning and international partnerships of RF
 *   **Role:** Lead Management, Strategic Outreach, Regulatory Alignment.
 *   **Focus:** EU AI Act Compliance, International Relations, Strategic Partnerships.
 *   **LinkedIn:** [Nikoletta Csonka](https://www.linkedin.com/in/csonikoletta/)
-*   **Email:**  csonikoletta@ternlang.com
+*   **Email:** csonikoletta@ternlang.com
+
 ---
 
-### Zabih Karimi
-**Co-Founder & IT-Techniker**  
-*Network & ML Application Specialist*
+### Louis Paul Ehrig
+**Co-Founder & Head of Public Affairs**  
+*Corporate Secretary · Press & Media Relations*
 
-Zabih specializes in the practical implementation of the TIS stack, from networking protocols to high-performance ML applications. He oversees the technical reliability of the BET VM and the integration of MoE-13 experts into real-world sovereign environments.
+Louis oversees the public communication strategy of RFI-IRFOS, including press relations, official releases, and external communications. He ensures that the institute’s research, mission, and technological vision are clearly represented across public and institutional channels.
 
-*   **Role:** IT-Technician, Network Specialist, ML Application Engineer.
-*   **Focus:** Networking, ML Inference, Technical Operations, BET VM Stability.
-*   **LinkedIn:** [Zabih Karimi](https://www.linkedin.com/in/zabih-karimi-3292ab349/)
-*   **Email:**  z.karimi@ternlang.com
+*   **Role:** Corporate Secretary, Press Relations, Public Communications.
+*   **Focus:** Press Releases, Public Affairs, Media Outreach, Institutional Communication.
+*   **LinkedIn:** [Louis Paul Ehrig](https://www.linkedin.com/in/louis-ehrig-317941335/)
+*   **Email:** l.ehrig@ternlang.com
 
 ---
 
