@@ -1,0 +1,21 @@
+// proprietary/finance/finance_utils.tern
+// Demonstrates: Common financial math utility functions for ternary logic.
+// Tier: 2
+
+fn abs_diff(a: float, b: float) -> float {
+    let diff: float = a - b;
+    if diff < 0.0 {
+        return diff * -1.0;
+    }
+    return diff;
+}
+
+fn clamp_to_trit(val: float, threshold: float) -> trit {
+    if val > threshold {
+        return affirm;
+    }
+    if val < threshold * -1.0 {
+        return reject;
+    }
+    return tend;
+}
