@@ -1,0 +1,36 @@
+// stdlib/causal/causal_graph_validator.tern
+// Demonstrates: Validation of causal graph acyclicity (DAG check)
+// Tier: 3
+
+fn validate_dag(adj_matrix: trittensor<9>) -> trit {
+    // Simplified DAG check for 3 nodes:
+    // A -> B, B -> C, C -> A is a cycle
+    
+    // Check for direct cycles (A -> A)
+    if adj_matrix[0] == 1 { return -1; }
+    if adj_matrix[4] == 1 { return -1; }
+    if adj_matrix[8] == 1 { return -1; }
+    
+    // Check for A -> B -> A
+    if adj_matrix[1] == 1 {
+        if adj_matrix[3] == 1 { return -1; }
+    }
+    
+    return 1; // Valid DAG (simplified)
+}
+
+fn main() -> trit {
+    let graph: trittensor<9>;
+    // Node 0 -> Node 1
+    graph[1] = 1;
+    // Node 1 -> Node 0 (Cycle!)
+    graph[3] = 1;
+    
+    let result: trit = validate_dag(graph);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
