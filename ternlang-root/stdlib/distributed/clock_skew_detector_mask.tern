@@ -1,0 +1,35 @@
+// stdlib/distributed/clock_skew_detector_mask.tern
+// Demonstrates: Distributed clock skew detection
+// Tier: 2 — Pro Standard
+
+fn eval_clock_skew(local_ms: float, remote_ms: float, threshold_ms: float) -> trit {
+    let diff: float = remote_ms - local_ms;
+    if diff > threshold_ms {
+        return affirm; // Ahead
+    }
+    if diff < (0.0 - threshold_ms) {
+        return reject; // Behind
+    }
+    return tend; // Stable
+}
+
+fn main() -> trit {
+    // Diff: 60ms, Threshold: 100ms
+    let status: trit = eval_clock_skew(1000.0, 1060.0, 100.0);
+    
+    // Status should be tend (Stable)
+    match status {
+        affirm => { 
+            // Ahead - decelerate
+            return conflict(); 
+        }
+        tend => { 
+            // Stable - proceed
+            return truth(); 
+        }
+        reject => { 
+            // Behind - accelerate
+            return conflict(); 
+        }
+    }
+}
