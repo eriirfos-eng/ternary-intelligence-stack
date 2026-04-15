@@ -1,0 +1,8 @@
+// stdlib/bughunt/probe_30_empty_array_literal.tern
+// Demonstrates: Bug with empty array literal declaration.
+// Tier: 1
+
+fn main() -> trit {
+    let empty_array: trit[] = [];
+    return truth();
+}

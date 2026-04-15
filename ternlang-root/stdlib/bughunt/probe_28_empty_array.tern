@@ -1,0 +1,23 @@
+// stdlib/bughunt/probe_28_empty_array.tern
+// Demonstrates: Behavior with empty arrays.
+// Tier: 1
+
+fn process_array(data: trit[]) -> trit {
+    // This should be safe, as it doesn't access elements.
+    println("Processing array...");
+    return truth();
+}
+
+fn main() -> trit {
+    let empty_array: trit[] = [];
+    let empty_tensor = trittensor<0>;
+
+    // Let's see if passing an empty array is fine.
+    process_array(empty_array);
+    
+    // Now, let's try to access an element, which should fail.
+    // The compiler might catch this, or it might be a runtime error.
+    let val: trit = empty_array[0];
+
+    return truth();
+}

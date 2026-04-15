@@ -1,0 +1,47 @@
+// stdlib/bughunt/probe_25_tmod.tern
+// Demonstrates: Behavior of the modulo operator (`%`)
+// Tier: 1
+//
+// We are testing the `Tmod` opcode (0x1f) with various inputs
+// to check for unexpected behavior or undocumented errors.
+
+fn main() -> trit {
+    let a: int = 10;
+    let b: int = 3;
+    let c: int = -3;
+
+    let res1: int = a % b; // Expected: 1
+    let res2: int = a % c; // Expected: 1 (or -2, depending on implementation)
+    let res3: int = -10 % 3; // Expected: -1 (or 2)
+    let res4: int = -10 % -3; // Expected: -1
+
+    println("10 % 3 = ");
+    println(res1);
+    println("10 % -3 = ");
+    println(res2);
+    println("-10 % 3 = ");
+    println(res3);
+    println("-10 % -3 = ");
+    println(res4);
+    
+    // Now let's try with floats
+    let fa: float = 10.5;
+    let fb: float = 3.2;
+    let fc: float = -3.2;
+    
+    let fres1: float = fa % fb;
+    let fres2: float = fa % fc;
+    
+    println("10.5 % 3.2 = ");
+    println(fres1);
+    println("10.5 % -3.2 = ");
+    println(fres2);
+
+    // Let's check if the integer results are as expected.
+    // In many languages, `10 % -3` is `1`.
+    if res1 == 1 && res2 == 1 && res3 == -1 && res4 == -1 {
+        return truth();
+    }
+
+    return conflict();
+}
