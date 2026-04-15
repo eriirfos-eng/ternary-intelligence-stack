@@ -2,11 +2,37 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [MOD-004] Module Loading Failure
+- **Description:** The module system fails to load imported files, reporting them as not found or not readable. This prevents the testing of import-related bugs, such as `[BET-013] Named Import Stack Overflow`, as the necessary dependency files cannot be accessed by the VM during execution.
+- **Error:** `[MOD-004] Could not load file '<filename>' — file not found or not readable.`
+- **Workaround:** None identified. Requires fixing the module loading mechanism.
+- **Regression Test:** `stdlib/bughunt/probe_24_named_import_failure.tern`
+
+## [PARSER-002] Match on Floats
+- **Description:** `match` statements do not support float literals.
+- **Error:** `Parse program error: ExpectedToken("pattern (int or trit)", "Float(1.0)")`
+- **Workaround:** Use `if` statement chains.
+- **Regression Test:** `stdlib/bughunt/probe_21_float_match.tern`
+- **Workaround Example:** `stdlib/bughunt/probe_21_float_match_workaround.tern`
+
+## [PARSER-003] Array Parameters
+- **Description:** Function parameters cannot be typed as `int[]` or `float[]`.
+- **Error:** `Parse program error: ExpectedToken("RParen", "LBracket")`
+- **Workaround:** Use `trit[]` or `trittensor` and cast/saturate values.
+- **Regression Test:** `stdlib/bughunt/probe_22_int_array_param.tern`
+- **Workaround Example:** `stdlib/bughunt/probe_22_int_array_param_workaround.tern`
+
 ## [TCALL-BUG] Forward Reference
 - **Description:** A function must be defined before it is called. If a function is called before its definition, it fails silently by returning an incorrect value (e.g., `reject` in regression tests, instead of the expected `truth` or a panic). This indicates an issue with the compiler's or VM's symbol resolution or call stack management for forward references.
 - **Error:** Returns an incorrect value, causing the program to exit with `reject` in regression tests, rather than a compile-time error or a clear runtime failure.
 - **Workaround:** Define functions before they are called.
 - **Regression Test:** `stdlib/bughunt/probe_23_forward_reference.tern`
+
+## [BET-013] Named Import Stack Overflow
+- **Description:** This bug is currently blocked by a module loading failure (`[MOD-004]`). The intended test case involves importing a function with unfulfilled dependencies, which is expected to cause a `VM Error: [BET-013] Call stack overflow`. However, the import itself fails before the VM can execute the faulty logic.
+- **Error:** Blocked by module loading failure. Expected `VM Error: [BET-013] Call stack overflow`.
+- **Workaround:** Not applicable until module loading is fixed.
+- **Regression Test:** `stdlib/bughunt/probe_24_named_import_failure.tern` (This test currently fails due to module loading).
 
 ## [PARSER-BUG] Struct Initialization/Return Syntax Error
 - **Description:** The parser fails when attempting to initialize or return structs, particularly when casting or complex expressions are involved within the struct definition or function return. The specific error `Parse program error: UnexpectedToken("LBrace")` suggests the parser is misinterpreting struct syntax or related casting operations, expecting a block `{}` incorrectly. This prevents testing deeper VM issues like stack underflow related to struct returns.
@@ -43,20 +69,6 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Error:** `Program exited with error (Reject state).` (Instead of panic)
 - **Workaround:** If a panic is desired for overflow, manual bound checks are needed. If graceful `reject` is acceptable, no workaround is strictly needed for correctness but may be for desired behavior.
 - **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
-
-## [PARSER-002] Match on Floats
-- **Description:** `match` statements do not support float literals.
-- **Error:** `Parse program error: ExpectedToken("pattern (int or trit)", "Float(1.0)")`
-- **Workaround:** Use `if` statement chains.
-- **Regression Test:** `stdlib/bughunt/probe_21_float_match.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_21_float_match_workaround.tern`
-
-## [PARSER-003] Array Parameters
-- **Description:** Function parameters cannot be typed as `int[]` or `float[]`.
-- **Error:** `Parse program error: ExpectedToken("RParen", "LBracket")`
-- **Workaround:** Use `trit[]` or `trittensor` and cast/saturate values.
-- **Regression Test:** `stdlib/bughunt/probe_22_int_array_param.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_22_int_array_param_workaround.tern`
 
 ## [PARSER-007] Empty Trittensor Declaration
 - **Description:** Declaring a `trittensor` without an explicit type and initialization is not supported. `trittensor<0>` is not supported.

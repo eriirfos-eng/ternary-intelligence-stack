@@ -1,9 +1,18 @@
-// bughunt/probe_24_named_import_failure.tern
-// Probe: Named import without transitive dependencies (EXPECTED FAILURE: BET-013)
-// Workaround: Use 'import *' or import all dependencies explicitly.
+// stdlib/bughunt/probe_24_named_import_failure.tern
+// Demonstrates: Named import causing stack overflow due to missing dependencies in the import.
+// Tier: 1
 
-from "probe_24_helper.tern" import func_a;
+// Import only 'function_that_depends_on_helper' from 'file_with_dependency.tern'.
+// 'function_that_depends_on_helper' relies on 'helper_func', which is NOT imported here.
+// This is expected to cause a stack overflow during VM execution when 'function_that_depends_on_helper' is called.
+from "file_with_dependency.tern" import function_that_depends_on_helper;
 
 fn main() -> trit {
-    return func_a();
+    // Call the function that should trigger the stack overflow due to its unimported dependency.
+    // We expect this to fail with VM Error: [BET-013] Call stack overflow.
+    let result: int = function_that_depends_on_helper();
+    
+    // If the program reaches here, it means no stack overflow occurred, which is unexpected.
+    // We will return reject in this case.
+    return reject; 
 }
