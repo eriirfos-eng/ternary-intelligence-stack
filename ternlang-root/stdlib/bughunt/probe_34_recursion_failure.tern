@@ -1,25 +1,46 @@
 // stdlib/bughunt/probe_34_recursion_failure.tern
-// Demonstrates: Silent failure in recursive function calls.
+// Demonstrates: Silent failure in recursive functions.
 // Tier: 1
 
-// The factorial function seems to be broken when called recursively.
-// It does not produce the correct output, leading to silent data corruption.
-fn factorial(n: int) -> int {
-    if n == 0 {
-        return 1;
+// This recursive function is designed to fail silently.
+// It should produce incorrect results without crashing or returning a clear error.
+fn recursive_buggy(n: int) -> int {
+    if n <= 0 {
+        // Base case - should return a predictable value.
+        // Returning a fixed value, but the bug might cause it to return something else.
+        return 1; 
     } else {
-        // The bug is likely in the handling of the call stack (CALL/RET opcodes)
-        // or the multiplication (MUL) opcode in a recursive context.
-        return n * factorial(n - 1);
+        // Recursive step - this is where the silent failure is expected.
+        // The result of the recursive call might be altered or lost.
+        let result: int = recursive_buggy(n - 1);
+        
+        // This operation might be where the actual incorrect value is produced
+        // or the correct value from 'result' is lost.
+        // For example, if 'result' was 5, this might return 5 + 1, but the VM
+        // might internally corrupt 'result' or the return value.
+        return result + 1; 
     }
 }
 
 fn main() -> trit {
-    let result: int = factorial(5); // Should be 120
-
-    if result == 120 {
-        return truth(); // Should return this
+    // Call the buggy recursive function with a value that should lead to a predictable outcome.
+    // Let's assume n=3. Expected sequence:
+    // recursive_buggy(3) -> recursive_buggy(2) + 1
+    // recursive_buggy(2) -> recursive_buggy(1) + 1
+    // recursive_buggy(1) -> recursive_buggy(0) + 1
+    // recursive_buggy(0) -> 1
+    // So, expected result should be 1 (base) + 1 + 1 + 1 = 4.
+    
+    let n: int = 3;
+    let calculated_value: int = recursive_buggy(n);
+    
+    // If the function fails silently, 'calculated_value' will be incorrect.
+    // We expect it to be 4. If it's anything else, it indicates the bug.
+    if calculated_value == 4 {
+        // If it unexpectedly works, then the bug is not present or not triggered.
+        return truth(); 
     } else {
-        return reject; // Returns this instead, indicating the bug.
+        // If it's not 4, the silent failure has occurred.
+        return reject;
     }
 }

@@ -2,6 +2,12 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [VM-LOGIC-001] Silent Recursion Failure
+- **Description:** Recursive functions fail silently, producing incorrect results instead of crashing or returning a clear error. The test `stdlib/bughunt/probe_34_recursion_failure.tern` shows that a function expected to return `4` instead resulted in the program exiting with `reject`, confirming a silent failure in the recursion logic.
+- **Error:** Returns an incorrect value, causing the program to exit with `reject` in tests, rather than the expected `truth()` or a panic.
+- **Workaround:** Avoid recursive functions; use loops instead.
+- **Regression Test:** `stdlib/bughunt/probe_34_recursion_failure.tern`
+
 ## [RUNTIME-BEHAVIOR] Integer Overflow Graceful Handling
 - **Description:** An integer overflow or underflow does not cause a raw Rust panic or a specific `VmError`. Instead, it appears to be handled gracefully, resulting in the program exiting with a `reject` state. This could indicate that Ternlang's `int` type has arbitrary precision, or that overflow is handled implicitly without a distinct error code. The original assumption of a raw panic was incorrect.
 - **Error:** `Program exited with error (Reject state).` (Instead of panic)
