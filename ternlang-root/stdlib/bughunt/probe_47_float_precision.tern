@@ -19,7 +19,7 @@ fn main() -> trit {
     }
 
     // 2. Comparison with tolerance (epsilon)
-    // Reintroduced with simpler components to avoid parse errors.
+    // Reintroduced simpler float expressions to avoid parser errors.
     let val1: float = 1.0 / 3.0; // Approximately 0.333...
     let val2: float = 0.3333333; // Close to val1
     let epsilon: float = 0.000001;
@@ -29,7 +29,7 @@ fn main() -> trit {
     
     // Check if the absolute difference is greater than epsilon.
     // This relies on the abs() function and float comparison.
-    // Using a direct call to abs() assuming it's a built-in or correctly parsed.
+    // Assuming abs() is a built-in or correctly parsed function.
     if diff_val.abs() > epsilon {
         // If the difference is greater than epsilon, they are considered not equal.
         // If this check returns reject, it might indicate an issue with subtraction, abs(), or comparison.
