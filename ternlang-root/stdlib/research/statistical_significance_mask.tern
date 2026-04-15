@@ -1,0 +1,27 @@
+// stdlib/research/statistical_significance_mask.tern
+// Demonstrates: P-value thresholding using ternary logic
+// Tier: 3
+
+fn evaluate_significance(p_value: float) -> trit {
+    if p_value < 0.01 {
+        return 1; // Highly significant
+    }
+    
+    if p_value < 0.05 {
+        return 0; // Marginally significant / Hold for review
+    }
+    
+    return -1; // Not significant
+}
+
+fn main() -> trit {
+    let p: float = 0.042;
+    
+    let state: trit = evaluate_significance(p);
+    
+    match state {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
