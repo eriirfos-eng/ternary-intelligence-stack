@@ -1,0 +1,32 @@
+// stdlib/causal/collider_bias_detector.tern
+// Demonstrates: Detection of collider bias in causal models
+// Tier: 3
+
+fn detect_collider(node_a_to_c: trit, node_b_to_c: trit, condition_on_c: trit) -> trit {
+    // A -> C <- B is a collider at C
+    // If we condition on C (condition_on_c == 1), we introduce bias
+    
+    if node_a_to_c == 1 {
+        if node_b_to_c == 1 {
+            if condition_on_c == 1 {
+                return -1; // Collider bias detected
+            }
+        }
+    }
+    
+    return 1; // Likely no collider bias
+}
+
+fn main() -> trit {
+    let a_c: trit = 1;
+    let b_c: trit = 1;
+    let c_cond: trit = 1;
+    
+    let result: trit = detect_collider(a_c, b_c, c_cond);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
