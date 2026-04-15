@@ -1,0 +1,17 @@
+// stdlib/rl/action_masking_gate.tern
+// Demonstrates: Masking illegal or unsafe actions in RL environments
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    let raw_action_signal: trit = 1;
+    let safety_mask: trit = -1;  // Safety veto
+    
+    // Final action signal using consensus
+    let masked_action: trit = consensus(raw_action_signal, safety_mask);
+    
+    match masked_action {
+        -1 => { return conflict(); }  // Blocked
+         0 => { return hold(); }      // Uncertain
+         1 => { return truth(); }     // Safe to execute
+    }
+}
