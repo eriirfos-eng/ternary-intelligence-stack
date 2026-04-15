@@ -1,0 +1,24 @@
+// stdlib/vision/motion_vector_mask.tern
+// Demonstrates: Masking regions with excessive motion drift
+// Tier: 3 — Industrial
+
+from "vision_utils.tern" import intensity_gate;
+
+fn main() -> trit {
+    let dx: float = 5.5;
+    let dy: float = 0.2;
+    let max_drift: float = 5.0;
+    
+    // Status: 1 if drift exceeds limit
+    let x_drift: trit = intensity_gate(dx, (0.0 - max_drift), max_drift);
+    let y_drift: trit = intensity_gate(dy, (0.0 - max_drift), max_drift);
+    
+    // Aggregate drift consensus
+    let drift_status: trit = consensus(x_drift, y_drift);
+    
+    match drift_status {
+        -1 => { return conflict(); }  // Out of bounds
+         0 => { return hold(); }      // Uncertain (High motion)
+         1 => { return conflict(); }  // Out of bounds
+    }
+}
