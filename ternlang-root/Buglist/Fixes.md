@@ -259,9 +259,16 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Workaround:** Move helper functions ABOVE the calling function.
 **Status:** Unresolved — Workaround applied
 
-## 2026-04-15 — Import reliability and Lexer constraints
-**Trigger:** Using `from cat::file import ...` style imports and scientific notation `1e6`.
-**Symptom:** `[MOD-002] Unknown module` and `Parse program error: ExpectedToken("Semicolon", "Ident(\"e6\")")`.
-**Diagnosis:** Module-style imports are unstable in current VM build; lexer does not support scientific notation for floats.
-**Fix:** Switched to relative imports `from "file.tern" import ...` and used decimal literals `1000000.0`.
-**Status:** Workaround applied in stdlib; needs compiler/lexer enhancement.
+## 2026-04-15 — [PARSER-002] Match Float literal failure
+**Trigger:** Using a `float` variable or literal in a `match` statement arms.
+**Symptom:** `Parse program error: ExpectedToken("pattern (int or trit)", "Ident("d")")`.
+**Diagnosis:** The `match` pattern parser was strictly limited to `Int` and `Trit` literals. It failed to recognize `Float` literals or identifiers used as patterns for floating-point comparison.
+**Fix:** Unresolved — Workaround: use `if` chains for floating-point comparisons.
+**Status:** Needs compiler change
+
+## 2026-04-15 — [PARSER-003] Generic array parameter failure
+**Trigger:** Using `int[]` or `float[]` in function parameter signatures.
+**Symptom:** `Parse program error: ExpectedToken("RParen", "LBracket")`.
+**Diagnosis:** The `parse_type` function in the parser was hardcoded to only recognize `trit` followed by `[]` for dynamic arrays. Other primitive types like `int` and `float` were not allowed to have array suffixes.
+**Fix:** Unresolved — Workaround: use `trit[]` or `trittensor` (and cast/saturate) where possible, or avoid passing non-trit arrays.
+**Status:** Needs compiler change

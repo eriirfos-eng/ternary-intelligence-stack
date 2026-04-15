@@ -1,0 +1,11 @@
+// bughunt/probe_22_int_array_param_workaround.tern
+// Probe: trit[] as function parameter (Workaround for [PARSER-003])
+
+fn process_trits(data: trit[]) -> trit {
+    return truth();
+}
+
+fn main() -> trit {
+    let my_data: trit[] = [1, 0, -1];
+    return process_trits(my_data);
+}

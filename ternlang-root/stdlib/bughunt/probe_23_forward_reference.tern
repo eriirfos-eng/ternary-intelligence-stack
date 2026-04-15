@@ -1,0 +1,11 @@
+// bughunt/probe_23_forward_reference.tern
+// Probe: Forward reference call (EXPECTED FAILURE: bug in TCALL)
+// Workaround: Define helper functions before they are called.
+
+fn main() -> trit {
+    return helper();
+}
+
+fn helper() -> trit {
+    return truth();
+}

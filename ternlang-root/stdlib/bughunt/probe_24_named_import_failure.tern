@@ -1,0 +1,9 @@
+// bughunt/probe_24_named_import_failure.tern
+// Probe: Named import without transitive dependencies (EXPECTED FAILURE: BET-013)
+// Workaround: Use 'import *' or import all dependencies explicitly.
+
+from "probe_24_helper.tern" import func_a;
+
+fn main() -> trit {
+    return func_a();
+}

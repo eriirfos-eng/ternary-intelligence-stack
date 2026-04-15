@@ -572,26 +572,28 @@ impl<'a> Parser<'a> {
                 self.expect(Token::LBrace)?;
                 let mut arms = Vec::new();
                 while self.peek_token()? != Token::RBrace {
-                    let val = match self.next_token()? {
+                    let pattern = match self.next_token()? {
                         Token::TritLiteral => {
                             let slice = self.lex.slice();
-                            slice.parse::<i64>().map_err(|_| ParseError::InvalidTrit(slice.to_string()))?
+                            Pattern::Trit(slice.parse::<i8>().map_err(|_| ParseError::InvalidTrit(slice.to_string()))?)
                         }
-                        Token::Int(v) => v,
+                        Token::Int(v) => Pattern::Int(v),
+                        Token::Float(v) => Pattern::Float(v),
                         Token::Minus => {
                             match self.next_token()? {
-                                Token::Int(v) => -v,
-                                t => return Err(ParseError::ExpectedToken("integer literal after '-'".into(), format!("{:?}", t))),
+                                Token::Int(v) => Pattern::Int(-v),
+                                Token::Float(v) => Pattern::Float(-v),
+                                t => return Err(ParseError::ExpectedToken("number literal after '-'".into(), format!("{:?}", t))),
                             }
                         }
-                        Token::Affirm => 1,
-                        Token::Tend   => 0,
-                        Token::Reject => -1,
-                        t => return Err(ParseError::ExpectedToken("pattern (int or trit)".into(), format!("{:?}", t))),
+                        Token::Affirm => Pattern::Trit(1),
+                        Token::Tend   => Pattern::Trit(0),
+                        Token::Reject => Pattern::Trit(-1),
+                        t => return Err(ParseError::ExpectedToken("pattern (int, float or trit)".into(), format!("{:?}", t))),
                     };
                     self.expect(Token::FatArrow)?;
                     let stmt = self.parse_stmt()?;
-                    arms.push((val, stmt));
+                    arms.push((pattern, stmt));
                 }
                 self.expect(Token::RBrace)?;
 
@@ -766,8 +768,24 @@ impl<'a> Parser<'a> {
                 Ok(Type::TritTensor { dims })
             }
             Token::Ident(ref name) => match name.as_str() {
-                "int"    => Ok(Type::Int),
-                "float"  => Ok(Type::Float),
+                "int"    => {
+                    if let Ok(Token::LBracket) = self.peek_token() {
+                        self.next_token()?;
+                        self.expect(Token::RBracket)?;
+                        Ok(Type::IntTensor { dims: vec![0] })
+                    } else {
+                        Ok(Type::Int)
+                    }
+                }
+                "float"  => {
+                    if let Ok(Token::LBracket) = self.peek_token() {
+                        self.next_token()?;
+                        self.expect(Token::RBracket)?;
+                        Ok(Type::FloatTensor { dims: vec![0] })
+                    } else {
+                        Ok(Type::Float)
+                    }
+                }
                 "bool"   => Ok(Type::Bool),
                 "string" => Ok(Type::String),
                 // Named struct type
