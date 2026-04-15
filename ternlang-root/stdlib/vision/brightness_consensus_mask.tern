@@ -1,0 +1,20 @@
+// stdlib/vision/brightness_consensus_mask.tern
+// Demonstrates: Neighborhood consensus for brightness normalization
+// Tier: 3 — Industrial
+
+from "vision_utils.tern" import neighbor_consensus;
+
+fn main() -> trit {
+    let p1: trit = 1;  // Bright
+    let p2: trit = 1;  // Bright
+    let p3: trit = 0;  // Normal
+    
+    // Consensus: returns 1 if mostly bright
+    let consensus_val: trit = neighbor_consensus(p1, p2, p3);
+    
+    match consensus_val {
+        -1 => { return hold(); }      // Dark neighborhood
+         0 => { return hold(); }      // Uncertain
+         1 => { return truth(); }     // Consistent bright (Affirm)
+    }
+}
