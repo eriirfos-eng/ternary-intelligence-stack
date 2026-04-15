@@ -1,0 +1,35 @@
+// proprietary/graph/edge_weight_anomaly_detector.tern
+// Demonstrates: Detecting anomalies in edge weights based on average distribution.
+// Tier: 2
+
+fn is_anomalous_edge(weight: float, avg_weight: float, sigma: float) -> trit {
+    let diff: float = weight - avg_weight;
+    if diff < 0.0 { diff = diff * -1.0; }
+
+    // Use a 3-sigma rule for rejection
+    if diff > (sigma * 3.0) {
+        return reject;
+    }
+    
+    // Within 1-sigma is affirm
+    if diff < sigma {
+        return affirm;
+    }
+    
+    return tend;
+}
+
+fn main() -> trit {
+    let w: float = 12.5;
+    let avg: float = 5.0;
+    let s: float = 2.0;
+
+    // diff = 7.5. 7.5 > 3*2.0 (6.0) -> reject
+    let result: trit = is_anomalous_edge(w, avg, s);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

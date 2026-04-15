@@ -1,0 +1,47 @@
+// proprietary/graph/bipartite_partition_check.tern
+// Demonstrates: A check for bipartite graph partitioning validity.
+// Tier: 2
+
+from "graph_utils.tern" import is_connected;
+
+fn is_bipartite_partition(partition: trit[], size: int, matrix: trit[]) -> trit {
+    let i: int = 0;
+    while i < size {
+        let j: int = i + 1;
+        while j < size {
+            // If they are in the same partition (both affirm or both reject)
+            if partition[i] == partition[j] {
+                // And there's an edge between them
+                if is_connected(i, j, size, matrix) == 1 {
+                    return reject; // Conflict found
+                }
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return affirm;
+}
+
+fn main() -> trit {
+    let size: int = 4;
+    let m: trittensor<16>;
+    let p: trittensor<4>;
+    
+    // Edges only between partitions
+    m[1] = 1; m[4] = 1; // 0-1
+    m[2] = 1; m[8] = 1; // 0-2
+    
+    p[0] = 1; // Partition A
+    p[1] = -1; // Partition B
+    p[2] = -1; // Partition B
+    p[3] = 1; // Partition A
+
+    let result: trit = is_bipartite_partition(p, size, m);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

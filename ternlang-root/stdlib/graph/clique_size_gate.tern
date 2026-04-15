@@ -1,0 +1,47 @@
+// proprietary/graph/clique_size_gate.tern
+// Demonstrates: A gate that verifies if a subset of nodes forms a clique.
+// Tier: 2
+
+from "graph_utils.tern" import is_connected;
+
+fn is_clique(nodes: trit[], num_nodes: int, size: int, matrix: trit[]) -> trit {
+    let i: int = 0;
+    while i < size {
+        if nodes[i] == 1 {
+            let j: int = i + 1;
+            while j < size {
+                if nodes[j] == 1 {
+                    if is_connected(i, j, size, matrix) != 1 {
+                        return reject; // Missing edge in potential clique
+                    }
+                }
+                j = j + 1;
+            }
+        }
+        i = i + 1;
+    }
+    return affirm;
+}
+
+fn main() -> trit {
+    let size: int = 4;
+    let m: trittensor<16>;
+    let subset: trittensor<4>;
+    
+    // Clique: 0, 1, 2
+    m[1] = 1; m[4] = 1; // 0-1
+    m[2] = 1; m[8] = 1; // 0-2
+    m[6] = 1; m[9] = 1; // 1-2
+    
+    subset[0] = 1;
+    subset[1] = 1;
+    subset[2] = 1;
+
+    let result: trit = is_clique(subset, 3, size, m);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}

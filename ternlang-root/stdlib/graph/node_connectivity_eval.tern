@@ -1,0 +1,43 @@
+// proprietary/graph/node_connectivity_eval.tern
+// Demonstrates: Evaluating node connectivity (isolates vs connected nodes).
+// Tier: 2
+
+from "graph_utils.tern" import is_connected;
+
+fn connectivity_status(node: int, size: int, matrix: trit[]) -> trit {
+    let degree: int = 0;
+    let j: int = 0;
+    
+    while j < size {
+        if is_connected(node, j, size, matrix) == 1 {
+            degree = degree + 1;
+        }
+        j = j + 1;
+    }
+    
+    if degree > 2 {
+        return affirm; // Well-connected
+    }
+    if degree == 0 {
+        return reject; // Isolate
+    }
+    return tend; // Weakly connected
+}
+
+fn main() -> trit {
+    let size: int = 4;
+    let m: trittensor<16>;
+    
+    // Connect node 0 to 1, 2, 3
+    m[1] = 1; 
+    m[2] = 1;
+    m[3] = 1;
+
+    let status: trit = connectivity_status(0, size, m);
+
+    match status {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
