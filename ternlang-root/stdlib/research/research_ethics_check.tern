@@ -1,0 +1,31 @@
+// stdlib/research/research_ethics_check.tern
+// Demonstrates: Research ethics compliance check
+// Tier: 3
+
+fn check_ethics(informed_consent: trit, minimal_harm: trit, data_privacy: trit) -> trit {
+    // All three are mandatory. ANY conflict (-1) results in immediate failure.
+    // If any is neutral (0), the status is 'Hold for IRB review'.
+    
+    let combined: trit = informed_consent && minimal_harm;
+    let final_check: trit = combined && data_privacy;
+    
+    match final_check {
+        1  => { return 1;  } // Ethical approval granted
+        0  => { return 0;  } // Pending review
+        -1 => { return -1; } // Ethical violation
+    }
+}
+
+fn main() -> trit {
+    let consent: trit = 1;
+    let harm: trit = 0; // Marginally acceptable, needs review
+    let privacy: trit = 1;
+    
+    let state: trit = check_ethics(consent, harm, privacy);
+    
+    match state {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
