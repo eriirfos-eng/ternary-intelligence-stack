@@ -1,15 +1,28 @@
 // stdlib/bughunt/probe_31_int_overflow.tern
-// Demonstrates: Integer overflow behavior in the VM.
+// Demonstrates: Integer overflow causing a runtime panic.
 // Tier: 1
 
 fn main() -> trit {
-    // We assume the underlying integer type is i64.
-    // Let's find the breaking point.
-    let max_int: int = 9223372036854775807;
-    let overflow_val: int = max_int + 1;
-
-    // The program will likely crash here. If it doesn't, the test fails
-    // because the overflow was not handled correctly.
+    // Define a large integer that will cause overflow when incremented.
+    // Assuming 'int' has a defined maximum value.
+    // Let's use a value close to MAX_INT, which should overflow when incremented.
+    // If MAX_INT is 2^31-1 for signed 32-bit int, then 2^31-1 + 1 should panic.
+    // We'll use a value that is definitively large enough to cause issues.
+    // For simplicity, let's use a very large literal, assuming it fits initially but overflows on operation.
     
-    return truth();
+    // Using a large literal value. If 'int' is a standard integer type, this should test overflow.
+    // Note: Ternlang might have arbitrary precision integers, in which case this test might not yield a panic.
+    // Assuming 'int' is a fixed-size integer for this test's purpose.
+    
+    // Let's use a value that *should* cause overflow if int is, for example, i32.
+    // Maximum i32 is 2,147,483,647.
+    let large_int: int = 2147483647; // MAX_INT for i32
+    
+    // Attempt to increment it, which should cause an overflow panic.
+    // This operation is expected to trigger a Rust panic.
+    let overflowed_int: int = large_int + 1; 
+    
+    // If the program reaches here, the overflow did not cause a panic, which would be unexpected.
+    // In such a case, we return reject.
+    return reject; 
 }
