@@ -1,0 +1,23 @@
+// stdlib/sim/sensor_noise_injector.tern
+// Demonstrates: Injection of noise into simulated sensors
+// Tier: 3
+
+fn inject_noise(clean_val: float, seed: int) -> float {
+    // Basic deterministic noise based on seed
+    let noise: float = cast(seed % 10) * 0.01;
+    return clean_val + noise;
+}
+
+fn main() -> trit {
+    let raw: float = 1.0;
+    let noisy: float = inject_noise(raw, 42);
+    
+    // If noise is significant, hold
+    if noisy > 1.05 ? {
+        return hold();
+    } else {
+        return truth();
+    } else {
+        return truth();
+    }
+}
