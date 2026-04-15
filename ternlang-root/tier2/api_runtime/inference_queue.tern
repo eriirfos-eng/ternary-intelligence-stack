@@ -9,3 +9,12 @@ fn restricted_op(p: float) -> trit {
     if p > 0.5 { return affirm; }
     return tend;
 }
+
+fn main() -> trit {
+    let res: trit = restricted_op(0.7);
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
