@@ -1,0 +1,48 @@
+// stdlib/database/b_tree_node_split.tern
+// Demonstrates: B-Tree node split decision logic
+// Tier: 3 — Industrial
+
+from "database_utils.tern" import query_cost_eval;
+
+fn b_tree_node_split_gate(occupancy: float, max_capacity: float) -> trit {
+    // If occupancy exceeds capacity, split (affirm)
+    if occupancy > max_capacity {
+        return affirm;
+    }
+    // If occupancy is near capacity, prepare (tend)
+    let threshold: float = max_capacity * 0.9;
+    if occupancy > threshold {
+        return tend;
+    }
+    // Otherwise, don't split (reject)
+    return reject;
+}
+
+fn main() -> trit {
+    // Current node occupancy: 95%
+    let split_decision: trit = b_tree_node_split_gate(95.0, 100.0);
+    
+    // Evaluate the cost of the split operation
+    let split_cost: float = 150.0;
+    let cost_gate: trit = query_cost_eval(split_cost, 200.0);
+    
+    // Both must align: split needed AND cost within budget
+    // consensus(tend, reject) = 0?
+    // consensus(tend, -1) = 0?
+    // Let's match on split_decision
+    match split_decision {
+        affirm => { 
+            // Split required
+            if cost_gate == reject { return conflict(); } // Too expensive
+            return truth(); 
+        }
+        tend => {
+            // Split pending
+            return hold();
+        }
+        reject => {
+            // No split needed
+            return hold();
+        }
+    }
+}
