@@ -1,0 +1,59 @@
+// proprietary/graph/cycle_detection_mask.tern
+// Demonstrates: A mask for detecting simple cycles using a visited node bitmask.
+// Tier: 2
+
+fn has_cycle(size: int, matrix: trit[], start_node: int, max_steps: int) -> trit {
+    let visited: trittensor<32>; // Assume max 32 nodes for this mask
+    let current: int = start_node;
+    let steps: int = 0;
+    
+    while steps < max_steps {
+        if visited[current] == 1 {
+            return reject; // Cycle detected: revisited a node
+        }
+        visited[current] = 1; // Mark as visited
+        
+        // Find next node (greedy or fixed for this simple demo)
+        // In a real graph, we'd iterate over matrix[current][j]
+        let found_next: bool = false;
+        let j: int = 0;
+        while j < size {
+            let idx: int = current * size + j;
+            if matrix[idx] == 1 {
+                if visited[j] == 0 {
+                    current = j;
+                    found_next = true;
+                    // Exit inner loop
+                    j = size; 
+                }
+            }
+            j = j + 1;
+        }
+        
+        if found_next == false {
+            return affirm; // No more nodes to visit, no cycle found
+        }
+        
+        steps = steps + 1;
+    }
+    
+    return tend; // Max steps reached without conclusive cycle
+}
+
+fn main() -> trit {
+    let size: int = 4;
+    let m: trittensor<16>;
+    
+    // Create a cycle 0 -> 1 -> 2 -> 0
+    m[1] = 1; // (0,1)
+    m[6] = 1; // (1,2)
+    m[8] = 1; // (2,0)
+
+    let result: trit = has_cycle(size, m, 0, 10);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
