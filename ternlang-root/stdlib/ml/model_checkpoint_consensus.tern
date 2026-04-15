@@ -1,0 +1,20 @@
+// stdlib/ml/model_checkpoint_consensus.tern
+// Demonstrates: Consensus gate for model checkpoint saving
+// Tier: 2 — Pro Standard
+
+from "ml_utils.tern" import train_consensus;
+
+fn main() -> trit {
+    let loss_improving: trit = 1;      // +1 (affirm)
+    let accuracy_improving: trit = 1;  // +1 (affirm)
+    let val_score_stable: trit = 0;    // 0 (tend)
+    
+    // Checkpoint consensus
+    let save_checkpoint: trit = train_consensus(loss_improving, accuracy_improving, val_score_stable);
+    
+    match save_checkpoint {
+        -1 => { return conflict(); }  // Do not save
+         0 => { return hold(); }      // Wait
+         1 => { return truth(); }     // Save
+    }
+}
