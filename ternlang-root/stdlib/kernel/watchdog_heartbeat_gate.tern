@@ -1,0 +1,36 @@
+// stdlib/kernel/watchdog_heartbeat_gate.tern
+// Demonstrates: Kernel watchdog heartbeat logic
+// Tier: 3 — Industrial
+
+fn check_heartbeat(last_seen_ms: float, current_ms: float, timeout_ms: float) -> trit {
+    let diff: float = current_ms - last_seen_ms;
+    if diff > timeout_ms {
+        return affirm; // Timeout!
+    }
+    // Warning at 50% of timeout
+    if diff > (timeout_ms * 0.5) {
+        return tend; // Late heartbeat
+    }
+    return reject; // Healthy
+}
+
+fn main() -> trit {
+    // Last seen: 1000ms, Current: 1600ms, Timeout: 1000ms
+    let status: trit = check_heartbeat(1000.0, 1600.0, 1000.0);
+    
+    // Status should be tend (Late)
+    match status {
+        affirm => { 
+            // Reboot system
+            return conflict(); 
+        }
+        tend => { 
+            // Log warning
+            return hold(); 
+        }
+        reject => { 
+            // OK
+            return truth(); 
+        }
+    }
+}
