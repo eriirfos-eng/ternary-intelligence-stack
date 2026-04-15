@@ -1,0 +1,20 @@
+// stdlib/stats/kurtosis_peak_gate.tern
+// Demonstrates: Gating based on distribution kurtosis
+// Tier: 3 — Industrial
+
+from "stats_utils.tern" import is_outlier;
+
+fn main() -> trit {
+    let kurtosis: float = 6.0;
+    let normal_kurtosis: float = 3.0;
+    let tolerance: float = 2.0;
+    
+    // Status: 1 if leptokurtic beyond tolerance
+    let status: trit = is_outlier(kurtosis, 0.0, (normal_kurtosis + tolerance));
+    
+    match status {
+        -1 => { return hold(); }
+         0 => { return truth(); }     // Mesokurtic
+         1 => { return conflict(); }  // Heavy-tailed anomaly
+    }
+}
