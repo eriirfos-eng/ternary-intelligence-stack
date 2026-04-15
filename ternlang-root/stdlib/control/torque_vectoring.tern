@@ -1,0 +1,41 @@
+// stdlib/control/torque_vectoring.tern
+// Demonstrates: Torque vectoring logic for differential drive
+// Tier: 2
+
+from "control_utils.tern" import ternary_signal;
+
+fn distribute_torque(steering_angle: float, throttle: float) -> trittensor<2> {
+    let t: trittensor<2>;
+    let gain: float = 0.3;
+    let yaw_request: float = steering_angle * gain;
+    
+    // Left wheel torque adjustment
+    let left_state: trit = ternary_signal(throttle - yaw_request, 0.1);
+    t[0] = left_state;
+    
+    // Right wheel torque adjustment
+    let right_state: trit = ternary_signal(throttle + yaw_request, 0.1);
+    t[1] = right_state;
+    
+    return t;
+}
+
+fn main() -> trit {
+    let steering: float = 0.5; // Turn right
+    let speed: float = 0.6;
+    
+    let result: trittensor<2> = distribute_torque(steering, speed);
+    
+    // If both wheels have positive torque, proceed
+    if result[0] == 1 {
+        if result[1] == 1 {
+            return truth();
+        }
+    }
+    
+    match result[0] {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
