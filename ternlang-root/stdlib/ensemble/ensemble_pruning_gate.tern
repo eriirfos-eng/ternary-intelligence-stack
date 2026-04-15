@@ -1,0 +1,19 @@
+// stdlib/ensemble/ensemble_pruning_gate.tern
+// Demonstrates: Pruning experts with negative contribution to consensus
+// Tier: 2 — Pro Standard
+
+from "ensemble_utils.tern" import evaluate_expert;
+
+fn main() -> trit {
+    let expert_signal: trit = -1;
+    let target_signal: trit = 1;
+    
+    // Status: -1 if expert conflicts with ground truth target
+    let contribution: trit = evaluate_expert(expert_signal, target_signal);
+    
+    match contribution {
+        -1 => { return conflict(); }  // Prune (Conflict)
+         0 => { return hold(); }      // Uncertain
+         1 => { return truth(); }     // Active
+    }
+}
