@@ -48,19 +48,7 @@ The Ternary Intelligence Stack is built by a core team of three co-founders from
 *   **Zabih Karimi**: Principal Network & ML Engineer.
 *   **Louis Paul Ehrig**:Corporate Secretary & Press & Media Relations
 
-    Translating frontier research into public trust, visibility, and institutional narrative.
-
-Louis oversees press relations, public communication, institutional releases, and external messaging across media and stakeholder channels.
-Leadership Role 	Communications Focus
-Corporate Secretary · Public Affairs 	Press Releases · Media Relations · Public Communication
-
-Connect
-
-    LinkedIn: Louis Paul Ehrig
-    Email: l.ehrig@ternlang.com
-
-
-**[Read our BIOS and Mission in LEADERSHIP.md](LEADERSHIP.md)**
+**[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
 ---
 
