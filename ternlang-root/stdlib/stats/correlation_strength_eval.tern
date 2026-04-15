@@ -1,0 +1,20 @@
+// stdlib/stats/correlation_strength_eval.tern
+// Demonstrates: Evaluating correlation strength for feature selection
+// Tier: 3 — Industrial
+
+from "stats_utils.tern" import prob_to_trit;
+
+fn main() -> trit {
+    let r_squared: float = 0.85;
+    let threshold_lo: float = 0.3;
+    let threshold_hi: float = 0.7;
+    
+    // Status: 1 if strong correlation, -1 if weak, 0 if moderate
+    let strength: trit = prob_to_trit(r_squared, threshold_lo, threshold_hi);
+    
+    match strength {
+        -1 => { return hold(); }      // Weak correlation
+         0 => { return hold(); }      // Moderate correlation
+         1 => { return truth(); }     // Strong correlation (Affirm)
+    }
+}
