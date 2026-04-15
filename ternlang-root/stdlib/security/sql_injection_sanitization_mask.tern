@@ -1,0 +1,44 @@
+// stdlib/security/sql_injection_sanitization_mask.tern
+// Demonstrates: Identifying suspicious patterns that may indicate SQL injection
+// Tier: 3
+
+fn check_special_chars(count: int) -> trit {
+    if count > 10 { return -1; } // High risk
+    if count > 3 { return 0; }  // Possible
+    return 1; // Normal
+}
+
+fn check_reserved_words(word_count: int) -> trit {
+    if word_count > 5 { return -1; } // SELECT, UNION, etc detected multiple times
+    if word_count > 1 { return 0; }
+    return 1;
+}
+
+fn comment_indicator_eval(comment_exists: int) -> trit {
+    if comment_exists == 1 { return 0; } // Suspicious if found in data fields
+    return 1;
+}
+
+fn main() -> trit {
+    let chars: trit = check_special_chars(5);
+    let words: trit = check_reserved_words(2);
+    let comment: trit = comment_indicator_eval(0);
+    
+    match chars {
+        -1 => { return -1; }
+        0 => { 
+            match words {
+                -1 => { return -1; }
+                0 => { return 0; }
+                1 => { return 0; }
+            }
+        }
+        1 => {
+            match words {
+                1 => { return comment; }
+                0 => { return 0; }
+                -1 => { return -1; }
+            }
+        }
+    }
+}

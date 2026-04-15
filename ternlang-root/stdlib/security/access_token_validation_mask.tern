@@ -1,0 +1,43 @@
+// stdlib/security/access_token_validation_mask.tern
+// Demonstrates: Multi-stage token validation with early rejection
+// Tier: 3
+
+fn is_expired(exp_ts: int, now_ts: int) -> trit {
+    if exp_ts < now_ts { return -1; }
+    if exp_ts < (now_ts + 300) { return 0; } // Expires in < 5 minutes
+    return 1;
+}
+
+fn has_correct_scope(scopes_mask: int) -> trit {
+    if scopes_mask == 0 { return -1; }
+    if scopes_mask == 1 { return 0; } // Limited access
+    return 1;
+}
+
+fn signature_integrity_check(hash_valid: trit) -> trit {
+    return hash_valid;
+}
+
+fn main() -> trit {
+    let exp: trit = is_expired(1000, 500);
+    let scope: trit = has_correct_scope(2);
+    let sig: trit = signature_integrity_check(1);
+    
+    match exp {
+        -1 => { return -1; } // Rejection is absolute
+        0 => { 
+            match sig {
+                1 => { return 0; } // Expiring soon but valid sig
+                0 => { return -1; } // Invalid sig or other issue
+                -1 => { return -1; } // Invalid sig or other issue
+            }
+        }
+        1 => {
+            match sig {
+                1 => { return 1; } // All good
+                0 => { return 0; } // Uncertain sig
+                -1 => { return -1; } // Signature failed
+            }
+        }
+    }
+}
