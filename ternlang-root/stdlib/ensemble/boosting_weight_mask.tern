@@ -1,0 +1,20 @@
+// stdlib/ensemble/boosting_weight_mask.tern
+// Demonstrates: Masking experts with low boosting weights
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    let weight: float = 0.05;
+    let threshold: float = 0.1;
+    
+    // Status: 1 if weight is significant
+    let is_significant: trit = 0;
+    if weight > threshold {
+        is_significant = 1;
+    }
+    
+    match is_significant {
+        -1 => { return hold(); }
+         0 => { return hold(); }      // Low weight (Mask)
+         1 => { return truth(); }     // High weight (Use)
+    }
+}
