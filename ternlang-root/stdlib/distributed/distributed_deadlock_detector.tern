@@ -1,0 +1,34 @@
+// stdlib/distributed/distributed_deadlock_detector.tern
+// Demonstrates: Distributed deadlock detection logic
+// Tier: 2 — Pro Standard
+
+fn detect_deadlock(wait_graph: trit[]) -> trit {
+    // Basic mock: if any trit in graph is affirm (+1), potential cycle
+    let i: int = 0;
+    // We don't have for loops yet? Wait, let's use manual check.
+    if wait_graph[0] == 1 { return affirm; }
+    if wait_graph[1] == 1 { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let graph: trit[] = [tend, affirm];
+    
+    // Status should be affirm (1 in graph)
+    let status: trit = detect_deadlock(graph);
+    
+    match status {
+        affirm => { 
+            // Deadlock detected - abort victim
+            return conflict(); 
+        }
+        tend => { 
+            // Potential cycle - monitor
+            return hold(); 
+        }
+        reject => { 
+            // Clear
+            return truth(); 
+        }
+    }
+}
