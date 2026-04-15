@@ -1,0 +1,39 @@
+// stdlib/research/peer_review_consensus.tern
+// Demonstrates: Peer review consensus logic for scientific research
+// Tier: 3
+
+fn aggregate_reviews(reviews: trit[]) -> trit {
+    let positive: int = 0;
+    let negative: int = 0;
+    
+    for r in reviews {
+        match r {
+            1  => { positive = positive + 1; }
+            0  => { } // Neutral
+            -1 => { negative = negative + 1; }
+        }
+    }
+    
+    // Strict consensus: if any negative, reject
+    if negative > 0 { return -1; }
+    
+    // Require at least 2 positive reviews
+    if positive >= 2 { return 1; }
+    
+    return 0; // Insufficient consensus
+}
+
+fn main() -> trit {
+    let reviews: trittensor<3>;
+    reviews[0] = 1;
+    reviews[1] = 0;
+    reviews[2] = 1;
+    
+    let result: trit = aggregate_reviews(reviews);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
