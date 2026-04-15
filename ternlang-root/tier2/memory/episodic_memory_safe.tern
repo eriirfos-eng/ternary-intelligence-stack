@@ -1,5 +1,16 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Safety wrapper for episodic_memory
-fn episodic_memory_safe() -> trit {
-    return affirm;
+
+fn check_episode_bounds(index: int, total: int) -> trit {
+    if index < total { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let result: trit = check_episode_bounds(5, 10);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }

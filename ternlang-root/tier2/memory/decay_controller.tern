@@ -1,11 +1,17 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
 // Module: tier2/memory/decay_controller.tern
 // License: BSL 1.1 - Restricted API
-// Cryptographically tethered to Fly.io Genesis API.
-// Unauthorized reproduction is a violation of T-SPEC-v2.0.
-// ------------------------------------------
 
-fn restricted_op(p: float) -> trit {
-    if p > 0.5 { return affirm; }
+fn control_decay(age: int, threshold: int) -> trit {
+    if age > threshold { return reject; }
     return tend;
+}
+
+fn main() -> trit {
+    let result: trit = control_decay(50, 100);
+    match result {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
 }
