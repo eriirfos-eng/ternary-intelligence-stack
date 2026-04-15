@@ -293,3 +293,39 @@
 **Compiler fixes this session:** none (Workaround: hex literals 0xNN not supported in lexer, used decimal).
 **VM errors encountered:** BET-007 (length() on String fails, only supports TensorRef).
 **Import-heavy modules added:** all files in stdlib/programs/ use from std::trit import *;
+
+---
+
+## 2026-04-15 10:00 — 60 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: stdlib/ml/ — loss_divergence_gate, batch_normalization_eval, learning_rate_scheduler, weight_decay_mask, gradient_sparsity_eval, feature_importance_gate, model_checkpoint_consensus, prediction_confidence_mask, data_augmentation_gate, hyperparameter_tuning_eval (10 files + ml_utils)
+- Batch 2: stdlib/nn/ — activation_spike_gate, residual_path_consensus, layer_output_clamping, gradient_vanishing_detector, weight_update_mask, neuron_pruning_gate, attention_map_mask, parameter_overflow_gate, latent_space_drift_eval, activation_sparsity_eval (10 files + nn_utils)
+- Batch 3: stdlib/stats/ — outlier_detection_gate, mean_drift_consensus, variance_threshold_mask, skewness_anomaly_detector, kurtosis_peak_gate, correlation_strength_eval, confidence_interval_mask, p_value_consensus_gate, sample_bias_detector, z_score_clamping_mask (10 files + stats_utils)
+- Batch 4: stdlib/vision/ — edge_detection_gate, brightness_consensus_mask, pixel_noise_gate, color_space_clipping, motion_vector_mask, occlusion_detector_gate, object_bounding_consensus, texture_granularity_eval, frame_difference_mask, region_growing_consensus (10 files + vision_utils)
+- Batch 5: stdlib/ensemble/ — majority_voting_gate, weighted_consensus_mask, diversity_check_gate, dropout_ensemble_eval, bagging_stability_gate, boosting_weight_mask, expert_conflict_detector, stacking_meta_consensus, ensemble_pruning_gate, uncertainty_threshold_mask (10 files + ensemble_utils)
+- Batch 6: stdlib/rl/ — epsilon_greedy_selector, reward_shaping_consensus, discount_factor_gate, action_masking_gate, state_stability_eval, policy_gradient_mask, value_function_consensus, experience_replay_gate, curiosity_bonus_consensus, exploration_exploit_meta (10 files + rl_utils)
+
+**Do not work in these categories next session:** ml, nn, stats, vision, ensemble, rl, distributed, gametheory, kernel, timeseries, programs
+
+**Compiler fixes this session:** none (Workaround: scientific notation 1e6 not supported, used decimal).
+**VM errors encountered:** [MOD-002] module-style import failed, switched to relative paths.
+**Import-heavy modules added:** All Tier 2-3 files use imports from local _utils helpers.
+- 2026-04-15 14:00: Added 50 files across Database (Tier 3), Premium (Tier 4), Kernel (Tier 3), Net (Tier 2), and Distributed (Tier 2). Implemented category helpers and relative path imports. Verified all with ternlang-cli.
+
+---
+
+## 2026-04-15 18:00 — 50 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: stdlib/security/ — security_utils, encryption_key_rotation, intrusion_detection, access_token_validation, privilege_escalation_guard, secure_session_token, anomaly_score_evaluator, brute_force_protection, sql_injection_sanitization, data_exfiltration_detector (10 files)
+- Batch 2: stdlib/scientific/ — scientific_utils, black_hole_event_horizon, genetic_sequence_alignment, chemical_reaction_equilibrium, stellar_classification, planetary_habitability, neutron_star_density, particle_decay_probability, superconductivity_critical_temp, oceanic_acidity_trend (10 files)
+- Batch 3: stdlib/systems/ — systems_utils, raid_rebuild_priority, process_signal_disposition, thermal_throttling_consensus, io_scheduler_starvation, numa_memory_locality, paging_fault_rate, kernel_module_integrity, udev_device_event, systemd_unit_health (10 files)
+- Batch 4: stdlib/models/ — models_utils, transformer_layer_consensus, attention_head_weight, encoder_decoder_alignment, embedding_drift, gradient_norm_clipper, loss_convergence_monitor, sparsity_pattern_mask, knowledge_distillation, model_pruning_threshold (10 files)
+- Batch 5: stdlib/shadow_tern/ — shadow_utils, fused_dense_relu, attention_mask_optimization, tensor_core_utilization, sparse_backprop_mask, weight_quantization_drift, pipeline_parallelism_sync, model_sharding_imbalance, gpu_memory_fragmentation, dynamic_batch_size_consensus (10 files)
+
+**Do not work in these categories next session:** security, scientific, systems, models, shadow_tern, ml, nn, stats, vision, ensemble, rl
+
+**Compiler fixes this session:** none. (Verified exhaustive match arms required for all types, no `_` wildcard).
+**VM errors encountered:** [MOD-002] module import failure (workaround: relative paths), [LEX-001] scientific notation not supported (workaround: decimal float literals).
+**Status:** 110 files added total this session (two 50+ batches). 

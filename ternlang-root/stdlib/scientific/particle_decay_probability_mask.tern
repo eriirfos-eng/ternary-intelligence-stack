@@ -1,0 +1,42 @@
+// stdlib/scientific/particle_decay_probability_mask.tern
+// Demonstrates: Evaluating stability of subatomic particles
+// Tier: 3
+
+fn check_lifetime(sec: float) -> trit {
+    if sec > 1000000.0 { return 1; } // Stable
+    if sec < 0.0000001 { return -1; } // Highly unstable
+    return 0; // Resonance
+}
+
+fn branching_ratio_eval(ratio: float) -> trit {
+    if ratio > 0.9 { return 1; } // Dominant channel
+    if ratio < 0.01 { return -1; } // Rare decay
+    return 0;
+}
+
+fn conservation_check(violation_detected: int) -> trit {
+    if violation_detected == 1 { return -1; } // Forbidden
+    return 1; // Allowed
+}
+
+fn main() -> trit {
+    let t: float = 0.001;
+    let r: float = 0.5;
+    let v: int = 0;
+    
+    let life: trit = check_lifetime(t);
+    let br: trit = branching_ratio_eval(r);
+    let con: trit = conservation_check(v);
+    
+    match con {
+        -1 => { return -1; }
+        1  => {
+            match life {
+                1 => { return 1; }
+                0 => { return br; }
+                -1 => { return -1; }
+            }
+        }
+        0 => { return 0; }
+    }
+}

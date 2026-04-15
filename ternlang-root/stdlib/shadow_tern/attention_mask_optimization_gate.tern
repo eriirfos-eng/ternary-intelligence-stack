@@ -1,0 +1,28 @@
+// stdlib/shadow_tern/attention_mask_optimization_gate.tern
+// Demonstrates: Choosing optimal attention mask implementation
+// Tier: 4
+
+fn sequence_length_eval(len: int) -> trit {
+    if len > 4096 { return 1; } // Use sparse/flash attention
+    if len < 512 { return -1; } // Standard attention fine
+    return 0;
+}
+
+fn mask_density_check(is_causal: int) -> trit {
+    if is_causal == 1 { return 1; } // Highly predictable, optimize
+    return 0;
+}
+
+fn main() -> trit {
+    let s: int = 8192;
+    let c: int = 1;
+    
+    let seq: trit = sequence_length_eval(s);
+    let den: trit = mask_density_check(c);
+    
+    match seq {
+        1  => { return 1; }
+        0  => { return den; }
+        -1 => { return -1; }
+    }
+}

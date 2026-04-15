@@ -1,0 +1,36 @@
+// stdlib/systems/kernel_module_integrity_mask.tern
+// Demonstrates: Verifying kernel module status before loading
+// Tier: 3
+
+fn signature_valid(is_signed: int) -> trit {
+    if is_signed == 1 { return 1; }
+    return -1; // Mandatory signing
+}
+
+fn symbols_check(unresolved_count: int) -> trit {
+    if unresolved_count > 0 { return -1; }
+    return 1;
+}
+
+fn tainting_eval(is_tainted: int) -> trit {
+    if is_tainted == 1 { return 0; } // Loading tainted module is a warning
+    return 1;
+}
+
+fn main() -> trit {
+    let sig: trit = signature_valid(1);
+    let sym: trit = symbols_check(0);
+    let taint: trit = tainting_eval(0);
+    
+    match sig {
+        -1 => { return -1; }
+        1  => {
+            match sym {
+                -1 => { return -1; }
+                1  => { return taint; }
+                0  => { return 0; }
+            }
+        }
+        0 => { return 0; }
+    }
+}

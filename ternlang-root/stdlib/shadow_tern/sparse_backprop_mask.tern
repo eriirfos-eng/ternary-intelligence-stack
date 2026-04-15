@@ -1,0 +1,30 @@
+// stdlib/shadow_tern/sparse_backprop_mask.tern
+// Demonstrates: Deciding when to apply sparse backpropagation
+// Tier: 4
+
+fn gradient_sparsity_eval(zeros: int, total: int) -> trit {
+    if (zeros * 10) > (total * 8) { return 1; } // > 80% sparse
+    if (zeros * 10) > (total * 3) { return 0; }
+    return -1;
+}
+
+fn compute_cost_eval(sparse_overhead: float, dense_cost: float) -> trit {
+    if sparse_overhead < (dense_cost * 0.5) { return 1; }
+    return -1;
+}
+
+fn main() -> trit {
+    let z: int = 85;
+    let tot: int = 100;
+    let sov: float = 10.0;
+    let dcos: float = 50.0;
+    
+    let spar: trit = gradient_sparsity_eval(z, tot);
+    let cost: trit = compute_cost_eval(sov, dcos);
+    
+    match spar {
+        1  => { return cost; }
+        0  => { return 0; }
+        -1 => { return -1; }
+    }
+}

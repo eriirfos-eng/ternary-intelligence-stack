@@ -1,0 +1,29 @@
+// stdlib/shadow_tern/weight_quantization_drift_detector.tern
+// Demonstrates: Identifying accuracy loss due to weight quantization
+// Tier: 4
+
+fn mse_drift_eval(mse: float, threshold: float) -> trit {
+    if mse > (threshold * 5.0) { return -1; } // High error
+    if mse > threshold { return 0; }  // Noticeable
+    return 1; // Accurate
+}
+
+fn bits_per_weight_eval(bits: int) -> trit {
+    if bits < 4 { return 0; } // Low precision, watch drift
+    return 1;
+}
+
+fn main() -> trit {
+    let m: float = 0.002;
+    let t: float = 0.001;
+    let b: int = 4;
+    
+    let mse: trit = mse_drift_eval(m, t);
+    let prec: trit = bits_per_weight_eval(b);
+    
+    match mse {
+        -1 => { return -1; }
+        0  => { return prec; }
+        1  => { return 1; }
+    }
+}

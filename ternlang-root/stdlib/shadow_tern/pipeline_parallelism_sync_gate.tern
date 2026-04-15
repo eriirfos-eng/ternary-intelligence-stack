@@ -1,0 +1,29 @@
+// stdlib/shadow_tern/pipeline_parallelism_sync_gate.tern
+// Demonstrates: Deciding when to synchronize pipeline parallel stages
+// Tier: 4
+
+fn pipeline_bubble_eval(bubble_ms: int, step_ms: int) -> trit {
+    if bubble_ms > (step_ms / 2) { return -1; } // Massive idle time
+    if bubble_ms > (step_ms / 10) { return 0; }
+    return 1;
+}
+
+fn network_latency_check(latency_ms: int) -> trit {
+    if latency_ms > 100 { return -1; } // High latency, avoid frequent sync
+    return 1;
+}
+
+fn main() -> trit {
+    let b: int = 50;
+    let s: int = 200;
+    let l: int = 5;
+    
+    let bub: trit = pipeline_bubble_eval(b, s);
+    let net: trit = network_latency_check(l);
+    
+    match bub {
+        -1 => { return -1; }
+        1  => { return net; }
+        0  => { return 0; }
+    }
+}

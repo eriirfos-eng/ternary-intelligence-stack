@@ -1,0 +1,32 @@
+// stdlib/models/transformer_layer_consensus.tern
+// Demonstrates: Evaluating transformer layer stability
+// Tier: 3
+
+from "models_utils.tern" import consensus;
+
+fn layer_output_stability(curr_mean: float, prev_mean: float) -> trit {
+    let diff: float = curr_mean - prev_mean;
+    if diff > 10.0 { return -1; } // Exploding
+    if diff < -10.0 { return -1; }
+    if diff < 0.000001 { return 0; } // Vanishing
+    return 1;
+}
+
+fn norm_check(norm_val: float) -> trit {
+    if norm_val > 50.0 { return -1; }
+    if norm_val < 0.1 { return 0; }
+    return 1;
+}
+
+fn main() -> trit {
+    let stab: trit = layer_output_stability(1.5, 1.2);
+    let norm: trit = norm_check(2.5);
+    
+    let con: trit = consensus(stab, norm);
+    
+    match con {
+        -1 => { return -1; }
+        0  => { return 0;  }
+        1  => { return 1;  }
+    }
+}

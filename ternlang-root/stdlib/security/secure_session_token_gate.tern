@@ -1,0 +1,40 @@
+// stdlib/security/secure_session_token_gate.tern
+// Demonstrates: Evaluating session token security state
+// Tier: 3
+
+fn ip_consistency(original_ip: int, current_ip: int) -> trit {
+    if original_ip == current_ip { return 1; }
+    // Subnet matching would happen here
+    if original_ip > 0 { return 0; } // IP changed but maybe valid
+    return -1;
+}
+
+fn device_fingerprint(match_score: int) -> trit {
+    if match_score > 90 { return 1; }
+    if match_score > 50 { return 0; }
+    return -1;
+}
+
+fn session_lifetime(duration_sec: int) -> trit {
+    if duration_sec > 36000 { return -1; } // 10 hours max
+    if duration_sec > 3600 { return 0; } // 1 hour - warn
+    return 1;
+}
+
+fn main() -> trit {
+    let ip: trit = ip_consistency(100, 100);
+    let dev: trit = device_fingerprint(95);
+    let life: trit = session_lifetime(500);
+    
+    match ip {
+        -1 => { return -1; } // IP mismatch is severe
+        0 => { return 0; }   // Hold for verification
+        1 => {
+            match dev {
+                1 => { return life; }
+                0 => { return 0; }
+                -1 => { return -1; }
+            }
+        }
+    }
+}

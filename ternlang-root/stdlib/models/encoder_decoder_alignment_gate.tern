@@ -1,0 +1,30 @@
+// stdlib/models/encoder_decoder_alignment_gate.tern
+// Demonstrates: Evaluating alignment between encoder and decoder outputs
+// Tier: 3
+
+fn alignment_cross_entropy(score: float) -> trit {
+    if score > 5.0 { return -1; } // High mismatch
+    if score > 2.0 { return 0; }  // Moderate
+    return 1; // Well aligned
+}
+
+fn length_ratio_eval(enc_len: int, dec_len: int) -> trit {
+    if dec_len > (enc_len * 3) { return -1; } // Hallucination suspected
+    if dec_len > (enc_len * 2) { return 0; }
+    return 1;
+}
+
+fn main() -> trit {
+    let ce: float = 1.2;
+    let enc: int = 50;
+    let dec: int = 60;
+    
+    let ce_trit: trit = alignment_cross_entropy(ce);
+    let len_trit: trit = length_ratio_eval(enc, dec);
+    
+    match ce_trit {
+        -1 => { return -1; }
+        0  => { return 0;  }
+        1  => { return len_trit; }
+    }
+}

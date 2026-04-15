@@ -1,0 +1,35 @@
+// stdlib/scientific/planetary_habitability_score.tern
+// Demonstrates: Evaluating potential habitability of an exoplanet
+// Tier: 3
+
+fn liquid_water_range(dist_au: float, lum_star: float) -> trit {
+    // Basic HZ calculation
+    let inner_hz: float = 0.7 * lum_star;
+    let outer_hz: float = 1.3 * lum_star;
+    if dist_au < inner_hz { return -1; } // Too hot
+    if dist_au > outer_hz { return -1; } // Too cold
+    if dist_au > (inner_hz * 1.1) { return 1; } // Prime HZ
+    return 0; // Marginal
+}
+
+fn atmospheric_density_check(pressure_atm: float) -> trit {
+    if pressure_atm < 0.01 { return -1; } // No atmosphere
+    if pressure_atm > 100.0 { return -1; } // Crushing atmosphere
+    if pressure_atm < 2.0 { return 1; }  // Earth-like
+    return 0;
+}
+
+fn main() -> trit {
+    let d: float = 1.0;
+    let l: float = 1.0;
+    let p: float = 1.0;
+    
+    let hz: trit = liquid_water_range(d, l);
+    let atm: trit = atmospheric_density_check(p);
+    
+    match hz {
+        -1 => { return -1; }
+        0  => { return 0;  }
+        1  => { return atm; }
+    }
+}
