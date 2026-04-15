@@ -1,0 +1,29 @@
+// stdlib/causal/causal_intervention_sim.tern
+// Demonstrates: Simulation of do-calculus interventions
+// Tier: 3
+
+fn simulate_intervention(node_x: trit, node_y: trit, do_x: trit) -> trit {
+    // If we perform an intervention on X (do_x != 0)
+    // The value of X is fixed, and its incoming edges are removed.
+    
+    if do_x != 0 {
+        // Outcome Y depends on the fixed value of X
+        return do_x; // Simplified dependency
+    }
+    
+    return node_y; // Normal observation
+}
+
+fn main() -> trit {
+    let x: trit = -1;
+    let y: trit = -1;
+    let intervention: trit = 1; // do(X=1)
+    
+    let result: trit = simulate_intervention(x, y, intervention);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
