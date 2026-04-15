@@ -1,0 +1,20 @@
+// stdlib/vision/pixel_noise_gate.tern
+// Demonstrates: Filtering pixel noise using neighborhood consensus
+// Tier: 3 — Industrial
+
+from "vision_utils.tern" import neighbor_consensus;
+
+fn main() -> trit {
+    let p1: trit = 1;  // Signal
+    let p2: trit = 1;  // Signal
+    let p3: trit = -1; // Noise spike
+    
+    // Consensus: returns 0 if neighborhood disagrees (Uncertain)
+    let consensus_val: trit = neighbor_consensus(p1, p2, p3);
+    
+    match consensus_val {
+        -1 => { return conflict(); }  // Consistent Noise
+         0 => { return hold(); }      // Noise filtered (Neutralized)
+         1 => { return truth(); }     // Consistent Signal
+    }
+}
