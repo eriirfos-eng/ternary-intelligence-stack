@@ -1,0 +1,26 @@
+// stdlib/bughunt/retest_float_binary_ops.tern
+// Demonstrates: Re-testing float literals/expressions in binary operations.
+// Tier: 1
+
+fn main() -> trit {
+    let a: float = 0.1;
+    let b: float = 0.2;
+    let c: float = 0.3;
+    let d: float = 1.0 / 3.0; // Float expression
+
+    // Test case 1: Addition
+    let sum_ab: float = a + b;
+    
+    // Test case 2: Division and comparison
+    let expected_d: float = 0.3333333;
+
+    // If parsing and execution succeed, we check the results.
+    // If parsing fails, the test will error out.
+    // Note: Direct float equality checks can be unreliable due to precision.
+    // This test primarily checks if the expressions parse and run.
+    if sum_ab == c && d == expected_d { 
+        return truth();
+    } else {
+        return reject; // Indicates potential precision issues or comparison bugs.
+    }
+}
