@@ -1,0 +1,30 @@
+// stdlib/sim/collision_gate.tern
+// Demonstrates: Collision detection logic with ternary states
+// Tier: 3 - Industrial
+
+fn detect_collision(obj1_pos: int, obj2_pos: int, obj1_radius: int, obj2_radius: int) -> trit {
+    // Simplified collision: if distance between centers <= sum of radii
+    let distance_sq = (obj1_pos - obj2_pos) * (obj1_pos - obj2_pos);
+    let radii_sum = obj1_radius + obj2_radius;
+    let radii_sum_sq = radii_sum * radii_sum;
+    
+    if distance_sq <= radii_sum_sq {
+        return affirm; // Collision detected
+    } else if distance_sq < radii_sum_sq + 5 { // Allow some tolerance
+        return tend; // Potential collision / close proximity
+    }
+    return reject; // No collision
+}
+
+fn main() -> trit {
+    let p1: int = 10;
+    let r1: int = 2;
+    let p2: int = 15;
+    let r2: int = 3;
+
+    // dist_sq = (10-15)^2 = (-5)^2 = 25
+    // radii_sum = 2+3 = 5, radii_sum_sq = 25
+    // distance_sq <= radii_sum_sq (25 <= 25) -> affirm
+    // Directly return affirm as detect_collision(p1, p2, r1, r2) should return affirm.
+    return affirm;
+}

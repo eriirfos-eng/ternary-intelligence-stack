@@ -258,3 +258,10 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** Function patching in betbc.rs might be referencing incorrect indices or patches are being overwritten.
 **Workaround:** Move helper functions ABOVE the calling function.
 **Status:** Unresolved — Workaround applied
+
+## 2026-04-15 — Import reliability and Lexer constraints
+**Trigger:** Using `from cat::file import ...` style imports and scientific notation `1e6`.
+**Symptom:** `[MOD-002] Unknown module` and `Parse program error: ExpectedToken("Semicolon", "Ident(\"e6\")")`.
+**Diagnosis:** Module-style imports are unstable in current VM build; lexer does not support scientific notation for floats.
+**Fix:** Switched to relative imports `from "file.tern" import ...` and used decimal literals `1000000.0`.
+**Status:** Workaround applied in stdlib; needs compiler/lexer enhancement.

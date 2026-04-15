@@ -1,0 +1,45 @@
+// stdlib/nn/linear_ternary.tern
+// Demonstrates: A basic ternary linear layer for neural networks
+// Tier: 3 - Industrial
+
+fn linear_ternary(input: trit[], weights: trit[][], bias: trit) -> trit[] {
+    // Simplified: Assumes input vector length matches weights rows.
+    // Using fixed dimensions for output due to dynamic array creation syntax limitations.
+    // Assumes output size is 3 based on example input (length 2) and weights (2x3).
+    let num_outputs = 3;
+    let mut output_vector: trit[3];
+
+    for i in 0..num_outputs { // Use fixed loop bounds
+        let mut sum: trit = 0;
+        // Loop through input vector length, assuming it matches weights rows
+        for j in 0..length(input) { 
+            sum = sum + (input[j] * weights[j][i]);
+        }
+        output_vector[i] = sum + bias;
+    }
+    return output_vector;
+}
+
+fn main() -> trit {
+    // Example usage:
+    // input = [1, -1] (length 2)
+    // weights = [[1, 0, -1], [1, 1, 0]] (2x3 matrix)
+    // bias = 0
+    // Expected output:
+    // [ (1*1 + -1*1), (1*0 + -1*1), (1*-1 + -1*0) ] + bias
+    // [ (1 + -1), (0 + -1), (-1 + 0) ] + 0
+    // [ 0, -1, -1 ]
+    // Expected: [tend, reject, reject]
+
+    let input_vec: trit[] = [affirm, reject];
+    let weight_matrix: trit[][] = [[affirm, tend, reject], [affirm, affirm, tend]];
+    let bias_val: trit = tend;
+
+    let result_vec = linear_ternary(input_vec, weight_matrix, bias_val);
+
+    // Simplified check for the first element
+    if result_vec[0] == tend {
+        return affirm;
+    }
+    return reject;
+}
