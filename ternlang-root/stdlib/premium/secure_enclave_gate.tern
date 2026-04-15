@@ -1,0 +1,36 @@
+// stdlib/premium/secure_enclave_gate.tern
+// Demonstrates: Secure enclave attestation verification
+// Tier: 4 — Enterprise
+
+fn verify_attestation(h_root: trit, h_measurement: trit) -> trit {
+    // Both must be affirm (+1)
+    if h_root == 1 {
+        if h_measurement == 1 {
+            return affirm;
+        }
+        return tend; // Measurement mismatch
+    }
+    return reject; // Root of trust compromised
+}
+
+fn main() -> trit {
+    // Root of trust: affirm
+    // Measurement: tend (warning)
+    let status: trit = verify_attestation(affirm, tend);
+    
+    // Status should be tend
+    match status {
+        affirm => { 
+            // Enclave verified
+            return truth(); 
+        }
+        tend => { 
+            // Enclave state uncertain
+            return hold(); 
+        }
+        reject => { 
+            // Enclave compromised
+            return conflict(); 
+        }
+    }
+}
