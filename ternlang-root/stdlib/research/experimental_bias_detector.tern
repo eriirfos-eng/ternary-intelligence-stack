@@ -1,0 +1,33 @@
+// stdlib/research/experimental_bias_detector.tern
+// Demonstrates: Ternary experimental bias detection
+// Tier: 3
+
+fn detect_bias(control_mean: float, treatment_mean: float, selection_bias: trit) -> trit {
+    // If explicit selection bias is flagged, reject
+    if selection_bias == 1 {
+        return -1;
+    }
+    
+    let diff: float = treatment_mean - control_mean;
+    
+    // If difference is extreme and unexplained, hold for audit
+    if diff > 10.0 {
+        return 0;
+    }
+    
+    return 1; // Likely unbiased
+}
+
+fn main() -> trit {
+    let c: float = 1.2;
+    let t: float = 12.5;
+    let b: trit = -1; // No explicit bias
+    
+    let state: trit = detect_bias(c, t, b);
+    
+    match state {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
