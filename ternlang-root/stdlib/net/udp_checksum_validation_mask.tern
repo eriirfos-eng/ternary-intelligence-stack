@@ -1,0 +1,35 @@
+// stdlib/net/udp_checksum_validation_mask.tern
+// Demonstrates: UDP checksum validation logic
+// Tier: 2 — Pro Standard
+
+fn validate_checksum(expected: int, actual: int) -> trit {
+    if expected == actual {
+        return affirm; // Valid
+    }
+    // UDP checksum 0 means no checksum (tend)
+    if actual == 0 {
+        return tend;
+    }
+    return reject; // Invalid
+}
+
+fn main() -> trit {
+    // Expected: 12345, Actual: 12345
+    let status: trit = validate_checksum(12345, 12345);
+    
+    // Status should be affirm
+    match status {
+        affirm => { 
+            // Process packet
+            return truth(); 
+        }
+        tend => { 
+            // Accept but warn
+            return hold(); 
+        }
+        reject => { 
+            // Drop packet
+            return conflict(); 
+        }
+    }
+}
