@@ -3,8 +3,8 @@
 This file tracks known bugs in the Ternlang compiler and VM.
 
 ## [TCALL-BUG] Forward Reference
-- **Description:** A function must be defined before it is called. If a function is called before its definition, it fails silently by returning an incorrect value (e.g., `reject` in tests, instead of the expected `truth` or a panic). This indicates an issue with the compiler's or VM's symbol resolution or call stack management for forward references.
-- **Error:** Returns an incorrect value, leading to `reject` in regression tests, rather than a compile-time error or a clear runtime failure.
+- **Description:** A function must be defined before it is called. If a function is called before its definition, it fails silently by returning an incorrect value (e.g., `reject` in regression tests, instead of the expected `truth` or a panic). This indicates an issue with the compiler's or VM's symbol resolution or call stack management for forward references.
+- **Error:** Returns an incorrect value, causing the program to exit with `reject` in regression tests, rather than a compile-time error or a clear runtime failure.
 - **Workaround:** Define functions before they are called.
 - **Regression Test:** `stdlib/bughunt/probe_23_forward_reference.tern`
 
