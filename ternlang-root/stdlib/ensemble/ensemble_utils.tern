@@ -1,0 +1,34 @@
+// stdlib/ensemble/ensemble_utils.tern
+// Demonstrates: Utilities for ensemble learning methods
+// Tier: 2 — Pro Standard
+
+// Returns 1 if signal matches target, -1 if conflict, 0 if unsure
+fn evaluate_expert(signal: trit, target: trit) -> trit {
+    if signal == target {
+        return 1;
+    }
+    if signal == (0 - target) {
+        return -1;
+    }
+    return 0;
+}
+
+// Simple weighted vote between two signals
+fn weighted_vote(s1: trit, w1: float, s2: trit, w2: float) -> trit {
+    if w1 > w2 {
+        return s1;
+    }
+    if w2 > w1 {
+        return s2;
+    }
+    return consensus(s1, s2);
+}
+
+fn main() -> trit {
+    let e: trit = evaluate_expert(1, -1);
+    match e {
+        -1 => { return truth(); }
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}
