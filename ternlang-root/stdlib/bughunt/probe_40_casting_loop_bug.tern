@@ -1,0 +1,43 @@
+// stdlib/bughunt/probe_40_casting_loop_bug.tern
+// Demonstrates: Potential VM stack underflow related to type casting
+// within a `for` loop.
+// Tier: 1
+
+fn main() -> trit {
+    // Test integer to float casting
+    let val_int: int = 123;
+    let val_float_from_int: float = cast(val_int);
+    if val_float_from_int != 123.0 {
+        return reject; // Fail if int-to-float cast is wrong
+    }
+
+    // Test float to int casting (truncation)
+    let val_float: float = 45.67;
+    let val_int_from_float: int = cast(val_float);
+    if val_int_from_float != 45 {
+        return reject; // Fail if float-to-int cast is wrong
+    }
+    
+    // Use a for loop with some casting operations inside.
+    // This mimics some complexity from probe_35 that might interact with stack.
+    let values: trittensor<3> = [1, 0, -1];
+    let mut processed_sum: int = 0;
+
+    for val_trit in values {
+        let intermediate_float: float = cast(val_trit); // trit to float
+        let final_int: int = cast(intermediate_float); // float to int
+        processed_sum = processed_sum + final_int;
+    }
+
+    // The expected sum depends on the values:
+    // 1 -> 1.0 -> 1
+    // 0 -> 0.0 -> 0
+    // -1 -> -1.0 -> -1
+    // So, processed_sum should be 1 + 0 + (-1) = 0.
+    if processed_sum != 0 {
+        return reject; // Fail if the loop/casting combined produces wrong sum
+    }
+
+    // If all checks pass without stack underflow, return truth.
+    return truth();
+}
