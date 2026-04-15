@@ -1,0 +1,19 @@
+// stdlib/nn/gradient_vanishing_detector.tern
+// Demonstrates: Detecting vanishing gradients in deep networks
+// Tier: 3 — Industrial
+
+from "nn_utils.tern" import check_bound;
+
+fn main() -> trit {
+    let grad: float = 0.00000001;
+    let min_grad: float = 0.00001;
+    
+    // Status: 0 if within range (effectively zero), 1 or -1 if significant
+    let is_significant: trit = check_bound(grad, min_grad);
+    
+    match is_significant {
+        -1 => { return truth(); }     // Significant
+         0 => { return conflict(); }  // Vanished (Reject training step)
+         1 => { return truth(); }     // Significant
+    }
+}
