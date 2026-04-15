@@ -1,0 +1,39 @@
+// stdlib/kernel/cpu_topology_eval.tern
+// Demonstrates: CPU topology distance evaluation
+// Tier: 3 — Industrial
+
+fn eval_core_distance(core_a: int, core_b: int) -> trit {
+    // If same core: 0 distance (affirm)
+    if core_a == core_b {
+        return affirm;
+    }
+    // If same socket (e.g. core / 8 is same): close distance (tend)
+    let socket_a: int = core_a / 8;
+    let socket_b: int = core_b / 8;
+    if socket_a == socket_b {
+        return tend;
+    }
+    // Remote socket: far (reject)
+    return reject;
+}
+
+fn main() -> trit {
+    // Core 0 and Core 4 (same socket)
+    let distance: trit = eval_core_distance(0, 4);
+    
+    // Status should be tend
+    match distance {
+        affirm => { 
+            // Optimal placement
+            return truth(); 
+        }
+        tend => { 
+            // Sub-optimal (same socket)
+            return hold(); 
+        }
+        reject => { 
+            // Remote (expensive)
+            return conflict(); 
+        }
+    }
+}
