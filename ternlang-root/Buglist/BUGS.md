@@ -2,11 +2,11 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
-## [PARSER-009] Invalid Trittensor Literal / [RUNTIME-PANIC] Invalid Trit Value
-- **Description:** The parser allows integer literals outside the valid trit range [-1, 0, 1] within `trittensor` literals. Instead of catching this at parse time, the VM panics at runtime with an "Invalid trit value" message when it encounters such a value.
-- **Error:** `thread 'main' panicked at compiler/legacy_shim/ternlang-core/src/trit.rs:18:18: Invalid trit value: <value>` (where `<value>` is the out-of-range integer).
-- **Workaround:** Manually ensure all values in `trittensor` literals are valid trits. The parser does not enforce this.
-- **Regression Test:** `stdlib/bughunt/probe_37_invalid_tensor_literal.tern`
+## [PARSER-BUG] Cast Expression Syntax Error (revisited)
+- **Description:** The parser fails when a `cast()` expression is used in various contexts, including within binary operations and as a standalone expression followed by a method call. The parser incorrectly expects a semicolon or a block `{}` instead of continuing to parse the expression. This indicates a fundamental issue with how the parser handles `cast` expressions.
+- **Error:** `Parse program error: ExpectedToken("Semicolon", "Ident("neg_trit")")` or `Parse program error: ExpectedToken("RParen", "Ident("val_int")")` (depending on the context).
+- **Workaround:** Avoid using `cast` directly in complex expressions or method calls; use intermediate variables to store the cast result first.
+- **Regression Test:** `stdlib/bughunt/retest_cast_in_binary_op.tern`
 
 ## [VM-LOGIC-001] Silent Recursion Failure
 - **Description:** Recursive functions fail silently, producing incorrect results instead of crashing or returning a clear error. The test `stdlib/bughunt/probe_34_recursion_failure.tern` shows that a function expected to return `4` instead resulted in the program exiting with `reject`, confirming a silent failure in the recursion logic.
@@ -19,24 +19,6 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Error:** `Program exited with error (Reject state).` (Instead of panic)
 - **Workaround:** If a panic is desired for overflow, manual bound checks are needed. If graceful `reject` is acceptable, no workaround is strictly needed for correctness but may be for desired behavior.
 - **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
-
-## [PARSER-BUG] Cast Expression Syntax Error
-- **Description:** The parser fails when a `cast()` expression is used as part of a binary operation (e.g., `cast(int) + float` or `(cast(int) val_int) + val_float`). This indicates the parser cannot correctly handle `cast` expressions when they are operands in binary arithmetic. The error suggests it expects a block `{}` instead of continuing the expression. This bug persists.
-- **Error:** `Parse program error: ExpectedToken("RParen", "Ident("val_int")")` (or similar, depending on the exact expression)
-- **Workaround:** Avoid using `cast` directly within binary expressions; use an intermediate variable to store the cast result first.
-- **Regression Test:** `stdlib/bughunt/retest_cast_in_binary_op.tern`
-
-## [PARSER-BUG] Float Method Call Syntax Error
-- **Description:** The parser fails when attempting to call methods on float variables (e.g., `float_var.abs()`). The parser incorrectly expects a semicolon after the variable name or the start of a block `{}` instead of recognizing the dot notation for method calls.
-- **Error:** `Parse program error: ExpectedToken("Semicolon", "LParen")`
-- **Workaround:** None. Method calls on floats are not supported or are not parsable.
-- **Regression Test:** `stdlib/bughunt/retest_float_method_call.tern`
-
-## [RUNTIME-FLOAT-ISSUE] Float Arithmetic/Comparison Issues
-- **Description:** Basic float arithmetic (e.g., addition `0.1 + 0.2 == 0.3`, division `1.0 / 3.0`) and comparisons appear to function at a basic level, but the test `retest_float_binary_ops.tern` exited with `reject`, indicating that either the arithmetic result, the comparison logic, or both are not producing the expected outcome. This could be due to precision limitations or a logic error in the VM's float handling.
-- **Error:** `Program exited with error (Reject state).`
-- **Workaround:** Avoid complex float calculations or rely on exact ternary representations where possible.
-- **Regression Test:** `stdlib/bughunt/retest_float_binary_ops.tern`
 
 ## [PARSER-002] Match on Floats
 - **Description:** `match` statements do not support float literals.
