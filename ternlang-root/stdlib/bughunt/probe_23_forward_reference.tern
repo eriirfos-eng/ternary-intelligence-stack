@@ -1,11 +1,36 @@
-// bughunt/probe_23_forward_reference.tern
-// Probe: Forward reference call (EXPECTED FAILURE: bug in TCALL)
-// Workaround: Define helper functions before they are called.
+// stdlib/bughunt/probe_23_forward_reference.tern
+// Demonstrates: Forward reference (calling a function before its definition) causing silent failure.
+// Tier: 1
 
-fn main() -> trit {
-    return helper();
+// Function 'second_func' is called by 'first_func' but defined *after* 'first_func' is called in main.
+// This tests the forward reference bug where it fails silently.
+
+fn first_func() -> int {
+    // This function calls second_func, which is defined later.
+    // According to the bug description, this should fail silently,
+    // meaning it won't necessarily panic or give a clear compile error,
+    // but might return an incorrect value.
+    let result: int = second_func();
+    return result;
 }
 
-fn helper() -> trit {
-    return truth();
+fn main() -> trit {
+    // Call first_func, which in turn calls second_func before second_func is defined.
+    let final_result: int = first_func();
+    
+    // The expected result from second_func() should be 10 (based on its definition).
+    // If first_func() returns something else due to the silent failure,
+    // then final_result will not be 10.
+    if final_result == 10 {
+        // If it unexpectedly works, the bug might not be present or triggered.
+        return truth();
+    } else {
+        // If it's not 10, the silent failure has occurred.
+        return reject;
+    }
+}
+
+// Function defined *after* it's called by first_func.
+fn second_func() -> int {
+    return 10;
 }
