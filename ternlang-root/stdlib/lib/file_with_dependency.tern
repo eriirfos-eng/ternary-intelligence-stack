@@ -1,0 +1,12 @@
+// stdlib/lib/file_with_dependency.tern
+// Contains helper_func and a function that depends on it.
+// Tier: 1
+
+fn helper_func() -> int {
+    return 42;
+}
+
+fn function_that_depends_on_helper() -> int {
+    // Calls helper_func, which is not intended to be directly imported by the main file.
+    return helper_func();
+}
