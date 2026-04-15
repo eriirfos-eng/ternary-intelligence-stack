@@ -1,0 +1,11 @@
+// bughunt/probe_22_int_array_param.tern
+// Probe: int[] as function parameter (EXPECTED FAILURE: [PARSER-003])
+// Workaround: use trit[] or trittensor.
+
+fn process_ints(data: int[]) -> trit {
+    return truth();
+}
+
+fn main() -> trit {
+    return truth();
+}

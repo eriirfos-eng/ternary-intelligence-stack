@@ -164,28 +164,32 @@ impl BytecodeEmitter {
         match stmt {
             Stmt::Let { name, ty, value } => {
                 let mut handled = false;
-                if let Type::TritTensor { dims } = ty {
-                    // Only auto-allocate if size is fixed (>0) and NO value is provided (defaults to TritLiteral(0))
-                    if !dims.is_empty() && !dims.contains(&0) && matches!(value, Expr::TritLiteral(0)) {
-                        let rows = dims[0];
-                        let cols = if dims.len() > 1 { dims[1] } else { 1 };
-                        self.code.push(0x0f);
-                        self.code.extend_from_slice(&(rows as u16).to_le_bytes());
-                        self.code.extend_from_slice(&(cols as u16).to_le_bytes());
-                        handled = true;
-                    }
-                } else if let Type::Named(_) = ty {
-                    if let Expr::StructLiteral { fields, .. } = value {
-                        // Flatten struct fields into mangled registers
-                        for (f_name, f_val) in fields {
-                            self.emit_expr(f_val);
-                            let reg = self.alloc_reg();
-                            let key = format!("{}.{}", name, f_name);
-                            self.symbols.insert(key, reg);
-                            self.code.push(0x08); self.code.push(reg);
+                match ty {
+                    Type::TritTensor { dims } | Type::IntTensor { dims } | Type::FloatTensor { dims } => {
+                        // Only auto-allocate if size is fixed (>0) and NO value is provided (defaults to TritLiteral(0))
+                        if !dims.is_empty() && !dims.contains(&0) && matches!(value, Expr::TritLiteral(0)) {
+                            let rows = dims[0];
+                            let cols = if dims.len() > 1 { dims[1] } else { 1 };
+                            self.code.push(0x0f);
+                            self.code.extend_from_slice(&(rows as u16).to_le_bytes());
+                            self.code.extend_from_slice(&(cols as u16).to_le_bytes());
+                            handled = true;
                         }
-                        // Now we let the normal path emit the root variable's dummy value
                     }
+                    Type::Named(_) => {
+                        if let Expr::StructLiteral { fields, .. } = value {
+                            // Flatten struct fields into mangled registers
+                            for (f_name, f_val) in fields {
+                                self.emit_expr(f_val);
+                                let reg = self.alloc_reg();
+                                let key = format!("{}.{}", name, f_name);
+                                self.symbols.insert(key, reg);
+                                self.code.push(0x08); self.code.push(reg);
+                            }
+                            // Now we let the normal path emit the root variable's dummy value
+                        }
+                    }
+                    _ => {}
                 }
                 if !handled {
                     self.emit_expr(value);
@@ -250,7 +254,7 @@ impl BytecodeEmitter {
                 let mut end_patches = Vec::new();
                 let mut next_arm_patch = None;
 
-                for (val, stmt) in arms {
+                for (pattern, stmt) in arms {
                     if let Some(p) = next_arm_patch {
                         let addr = self.code.len() as u16;
                         self.patch_u16(p, addr);
@@ -260,24 +264,38 @@ impl BytecodeEmitter {
                     self.code.push(0x09); self.code.push(cond_reg); // Tload
 
                     let match_patch;
-                    match val {
-                        1 => {
+                    match pattern {
+                        Pattern::Trit(1) | Pattern::Int(1) => {
                             self.code.push(0x05); // TjmpPos (peeks)
                             match_patch = self.code.len();
                             self.code.extend_from_slice(&[0, 0]);
                         }
-                        0 => {
+                        Pattern::Trit(0) | Pattern::Int(0) => {
                             self.code.push(0x06); // TjmpZero (peeks)
                             match_patch = self.code.len();
                             self.code.extend_from_slice(&[0, 0]);
                         }
-                        -1 => {
+                        Pattern::Trit(-1) | Pattern::Int(-1) => {
                             self.code.push(0x07); // TjmpNeg (peeks)
                             match_patch = self.code.len();
                             self.code.extend_from_slice(&[0, 0]);
                         }
-                        v => {
+                        Pattern::Int(v) => {
                             self.code.push(0x25); // TjmpEqInt (peeks)
+                            self.code.extend_from_slice(&v.to_le_bytes());
+                            match_patch = self.code.len();
+                            self.code.extend_from_slice(&[0, 0]);
+                        }
+                        Pattern::Trit(v) => {
+                            // Should not happen for -1, 0, 1 due to arms above,
+                            // but handle as Int for completeness.
+                            self.code.push(0x25); // TjmpEqInt (peeks)
+                            self.code.extend_from_slice(&(*v as i64).to_le_bytes());
+                            match_patch = self.code.len();
+                            self.code.extend_from_slice(&[0, 0]);
+                        }
+                        Pattern::Float(v) => {
+                            self.code.push(0x2a); // TjmpEqFloat (peeks) - NEW OPCODE
                             self.code.extend_from_slice(&v.to_le_bytes());
                             match_patch = self.code.len();
                             self.code.extend_from_slice(&[0, 0]);

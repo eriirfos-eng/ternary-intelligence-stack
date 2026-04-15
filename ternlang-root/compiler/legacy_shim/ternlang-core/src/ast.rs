@@ -99,7 +99,7 @@ pub enum Stmt {
     },
     Match {
         condition: Expr,
-        arms: Vec<(i64, Stmt)>,
+        arms: Vec<(Pattern, Stmt)>,
     },
     /// for <var> in <iter_expr> { body }
     ForIn {
@@ -161,12 +161,21 @@ pub enum Stmt {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum Pattern {
+    Int(i64),
+    Trit(i8),
+    Float(f64),
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Trit,
     TritTensor { dims: Vec<usize> },
     Int,
+    IntTensor { dims: Vec<usize> },
     Bool,
     Float,
+    FloatTensor { dims: Vec<usize> },
     String,
     /// User-defined struct type
     Named(String),

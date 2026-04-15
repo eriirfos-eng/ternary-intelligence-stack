@@ -1,0 +1,12 @@
+// bughunt/probe_21_float_match.tern
+// Probe: match on float literal (EXPECTED FAILURE: [PARSER-002])
+// Workaround: use if-statements for floats.
+
+fn main() -> trit {
+    let x: float = 1.0;
+    match x {
+        1.0 => { return truth(); }
+        0.0 => { return hold(); }
+        -1.0 => { return conflict(); }
+    }
+}

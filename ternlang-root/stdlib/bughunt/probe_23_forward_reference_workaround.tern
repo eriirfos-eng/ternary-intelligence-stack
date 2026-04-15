@@ -1,0 +1,10 @@
+// bughunt/probe_23_forward_reference_workaround.tern
+// Probe: Forward reference workaround (define functions before use)
+
+fn helper() -> trit {
+    return truth();
+}
+
+fn main() -> trit {
+    return helper();
+}

@@ -245,28 +245,28 @@ impl SemanticAnalyzer {
 
             Stmt::Match { condition, arms } => {
                 let cond_ty = self.infer_expr_type(condition)?;
-                if cond_ty != Type::Trit && cond_ty != Type::Int {
+                if cond_ty != Type::Trit && cond_ty != Type::Int && cond_ty != Type::Float {
                     return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: cond_ty });
                 }
                 
                 if cond_ty == Type::Trit {
                     // Enforce exhaustiveness and value range for Trit match
-                    let has_pos = arms.iter().any(|(v, _)| *v == 1);
-                    let has_zero = arms.iter().any(|(v, _)| *v == 0);
-                    let has_neg = arms.iter().any(|(v, _)| *v == -1);
+                    let has_pos = arms.iter().any(|(p, _)| matches!(p, Pattern::Trit(1) | Pattern::Int(1)));
+                    let has_zero = arms.iter().any(|(p, _)| matches!(p, Pattern::Trit(0) | Pattern::Int(0)));
+                    let has_neg = arms.iter().any(|(p, _)| matches!(p, Pattern::Trit(-1) | Pattern::Int(-1)));
                     if !has_pos || !has_zero || !has_neg {
-                        // We reuse TypeMismatch as a generic error here for simplicity
-                        // in the current schema if a specific exhaustiveness error isn't available.
-                        return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: cond_ty });
+                        return Err(SemanticError::NonExhaustiveMatch("Trit match must cover -1, 0, and 1".into()));
                     }
-                    for (val, _) in arms {
-                        if *val < -1 || *val > 1 {
-                            return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: Type::Int });
+                    for (pattern, _) in arms {
+                        match pattern {
+                            Pattern::Trit(v) => if *v < -1 || *v > 1 { return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: Type::Int }); }
+                            Pattern::Int(v)  => if *v < -1 || *v > 1 { return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: Type::Int }); }
+                            Pattern::Float(_) => return Err(SemanticError::TypeMismatch { expected: Type::Trit, found: Type::Float }),
                         }
                     }
                 }
 
-                for (_val, arm_stmt) in arms {
+                for (_pattern, arm_stmt) in arms {
                     self.check_stmt(arm_stmt)?;
                 }
                 Ok(())

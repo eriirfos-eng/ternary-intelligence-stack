@@ -1,0 +1,8 @@
+// bughunt/probe_24_named_import_workaround.tern
+// Probe: Wildcard import as a workaround for BET-013.
+
+from "probe_24_helper.tern" import *;
+
+fn main() -> trit {
+    return func_a();
+}

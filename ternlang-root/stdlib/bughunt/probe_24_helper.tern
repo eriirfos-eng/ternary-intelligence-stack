@@ -1,0 +1,10 @@
+// bughunt/probe_24_helper.tern
+// Helper file for probe_24_named_import_failure.tern
+
+fn func_b() -> trit {
+    return truth();
+}
+
+fn func_a() -> trit {
+    return func_b();
+}

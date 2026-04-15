@@ -1,0 +1,10 @@
+// bughunt/probe_21_float_match_workaround.tern
+// Probe: float comparison via if-statements (Workaround for [PARSER-002])
+
+fn main() -> trit {
+    let x: float = 1.0;
+    if x == 1.0 { return truth(); }
+    if x == 0.0 { return hold(); }
+    if x == -1.0 { return conflict(); }
+    return hold();
+}

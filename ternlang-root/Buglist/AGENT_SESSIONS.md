@@ -19,7 +19,7 @@
 - stdlib/safety/ — confidence_gate rewrite (fn main pattern fix)
 - stdlib/astro/ — launch_window_gate, reentry_heat_gate, telemetry_anomaly (seed)
 - stdlib/bench/ — opcode_coverage, inference_latency_gate (seed)
-- stdlib/benchmarks/ — sparse_matmul (fix from stub)
+- stdlib/benchmarks/ — sparse_matmul (fix from_ import stub)
 
 **Do not work in these categories next session:** safety (16 files), astro (3 files — needs more but let it breathe one session)
 
@@ -276,7 +276,7 @@
 
 **Do not work in these categories next session:** database, bench, premium, showcase, data, programs, bio, econ, crypto, nlp, optimization
 
-**Compiler fixes this session:** none (Identified 'remote' as a reserved keyword for spawn).
+**Compiler fixes this session:** none (Identified 'remote' as a reserved keyword for_ spawn).
 **VM errors encountered:** BET-007 (TypeMismatch) when using trit[] for uninitialized tensor access; resolved by switching to trittensor<N>.
 
 ## 2026-04-13 22:00 — 50 files committed (Gemini session)
@@ -329,3 +329,30 @@
 **Compiler fixes this session:** none. (Verified exhaustive match arms required for all types, no `_` wildcard).
 **VM errors encountered:** [MOD-002] module import failure (workaround: relative paths), [LEX-001] scientific notation not supported (workaround: decimal float literals).
 **Status:** 110 files added total this session (two 50+ batches). 
+
+---
+
+## 2026-04-15 22:00 — 30 proprietary files committed
+
+**Batches:**
+- Batch 1: stdlib/finance/ — finance_utils, volatility_arbitrage_gate, margin_safety_eval, portfolio_risk_consensus, yield_spread_detector, liquidity_crunch_gate, drawdown_limit_check, sharpe_ratio_eval, var_threshold_gate, option_premium_mask, rebalancing_trigger_consensus (11 files)
+- Batch 2: stdlib/graph/ — graph_utils, adjacency_consensus_gate, cycle_detection_mask, node_connectivity_eval, clique_size_gate, pagerank_stability_mask, edge_weight_anomaly_detector, shortest_path_validity_gate, bipartite_partition_check, community_structure_consensus (10 files)
+- Batch 3: stdlib/astro/ — astro_utils, trajectory_safety_gate, orbital_stability_consensus, radiation_threshold_mask, docking_alignment_gate, fuel_reserve_eval, atmospheric_entry_mask, solar_flare_anomaly_detector, pointing_precision_gate, life_support_redundancy_consensus (10 files)
+
+**Do not work in these categories next session:** finance, graph, astro, security, scientific, systems, models, shadow_tern
+
+**Compiler fixes this session:** none.
+**VM errors encountered:** [PARSER-002] ExpectedToken("pattern (int or trit)") when matching floats (workaround: use if-statements for floats). [PARSER-003] ExpectedToken("RParen", "LBracket") for int[] parameters (workaround: use trit[] or trittensor).
+**Import-heavy proprietary modules added:** All programs in finance, graph, and astro use imports from local _utils helpers.
+
+---
+
+## 2026-04-15 23:00 — 6 files committed (Gemini session)
+
+**Batches:**
+- stdlib/bughunt/ — probe_21_float_match.tern, probe_21_float_match_workaround.tern, probe_22_int_array_param.tern, probe_22_int_array_param_workaround.tern, probe_23_forward_reference.tern, probe_23_forward_reference_workaround.tern, probe_24_helper.tern, probe_24_named_import_failure.tern, probe_24_named_import_workaround.tern (9 files)
+
+**Do not work in these categories next session:** bughunt, finance, graph, astro
+
+**Compiler fixes this session:** none.
+**VM errors encountered:** Reproduced and documented workarounds for [PARSER-002], [PARSER-003], TCALL forward reference bug, and BET-013 named import bug.
