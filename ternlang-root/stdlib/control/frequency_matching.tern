@@ -1,0 +1,29 @@
+// stdlib/control/frequency_matching.tern
+// Demonstrates: Frequency matching logic for grid synchronization
+// Tier: 2
+
+from "control_utils.tern" import error_state;
+
+fn match_frequency(grid_f: float, gen_f: float) -> trit {
+    let tolerance: float = 0.001;
+    let state: trit = error_state(grid_f, gen_f, tolerance);
+    
+    match state {
+        1  => { return 1;  } // Generator slow, speed up
+        0  => { return 0;  } // Synchronized
+        -1 => { return -1; } // Generator fast, slow down
+    }
+}
+
+fn main() -> trit {
+    let grid: float = 50.0;
+    let gen: float = 49.9999;
+    
+    let result: trit = match_frequency(grid, gen);
+    
+    match result {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
