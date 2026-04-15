@@ -1,58 +1,20 @@
 // stdlib/stats/outlier_detection_gate.tern
-// Demonstrates: outlier detection relative to a reference consensus
+// Demonstrates: Gating outliers in data streams
 // Tier: 3 — Industrial
 
-fn outlier_check(reference: trit[], x: trit) -> trit {
-    let count_affirm: int = 0;
-    let count_reject: int = 0;
-    let n: int = length(reference);
-    
-    if n == 0 {
-        return hold();
-    }
-    
-    for s in reference {
-        match s {
-            -1 => { count_reject = count_reject + 1; }
-             0 => { }
-             1 => { count_affirm = count_affirm + 1; }
-        }
-    }
-    
-    // Determine the dominant signal in the reference
-    let dominant: trit = hold();
-    if count_affirm > count_reject {
-        dominant = truth();
-    }
-    if count_reject > count_affirm {
-        dominant = conflict();
-    }
-    
-    // If the dominant signal is clear, compare x
-    if dominant == truth() && x == conflict() {
-        return truth(); // it's an outlier (contradicts affirm)
-    }
-    
-    if dominant == conflict() && x == truth() {
-        return truth(); // it's an outlier (contradicts reject)
-    }
-    
-    // If x is tend, it's not a strong outlier
-    if x == hold() {
-        return hold();
-    }
-    
-    return conflict(); // not an outlier
-}
+from "stats_utils.tern" import is_outlier;
 
 fn main() -> trit {
-    let ref: trit[] = [1, 1, 1, 1, 0];
-    let candidate: trit = -1;
-    let is_outlier: trit = outlier_check(ref, candidate);
+    let observation: float = 150.0;
+    let lower_bound: float = 0.0;
+    let upper_bound: float = 100.0;
     
-    match is_outlier {
-        -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
+    // Status: 1 if outlier, 0 if normal
+    let status: trit = is_outlier(observation, lower_bound, upper_bound);
+    
+    match status {
+        -1 => { return hold(); }      // Not used by is_outlier
+         0 => { return truth(); }     // Normal data
+         1 => { return conflict(); }  // Outlier (Reject)
     }
 }
