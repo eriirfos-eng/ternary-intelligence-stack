@@ -1,31 +1,37 @@
 // stdlib/bughunt/probe_47_float_precision.tern
-// Demonstrates: Potential issues with float precision and comparison.
+// Demonstrates: Potential issues with float arithmetic and comparison precision.
 // Tier: 1
 
 fn main() -> trit {
-    // Test basic float arithmetic and comparison
+    // Test basic float arithmetic and comparison precision.
+
+    // 1. Simple addition: 0.1 + 0.2 might not be exactly 0.3 due to precision issues.
+    // We expect this to fail if strict equality is enforced and precision is limited.
     let a: float = 0.1;
     let b: float = 0.2;
     let c: float = 0.3;
-
-    // 1. Simple addition: 0.1 + 0.2 might not be exactly 0.3 due to precision issues.
     let sum_ab: float = a + b;
     if sum_ab != c {
         // If strict equality fails, this check will return reject.
-        // This could indicate a precision issue or correct behavior depending on implementation.
-        // For now, we log it as a potential bug if it causes rejection.
+        // This is expected behavior for float comparisons sometimes, but we log it
+        // as a potential bug if strict equality is intended or causes issues.
         return reject; 
     }
 
-    // 2. Comparison with tolerance (epsilon)
+    // 2. Comparison with tolerance (epsilon) - this part caused a parser error before.
+    // We'll test components of this separately.
     let val1: float = 1.0 / 3.0; // Approximately 0.333...
     let val2: float = 0.3333333; // Close to val1
+
+    // Subtraction of floats
+    let diff_val: float = val1 - val2;
     let epsilon: float = 0.000001;
 
-    // Check if val1 is close to val2
-    if (val1 - val2).abs() > epsilon {
+    // Check if the absolute difference is greater than epsilon.
+    // This relies on the abs() function and float comparison.
+    if diff_val.abs() > epsilon {
         // If the difference is greater than epsilon, they are considered not equal.
-        // If this check returns reject, it might indicate an issue with subtraction, abs, or comparison.
+        // If this check returns reject, it might indicate an issue with subtraction, abs(), or comparison.
         return reject;
     }
 
@@ -33,12 +39,11 @@ fn main() -> trit {
     let big_num: float = 1e10;
     let small_num: float = 1e-10;
     let division_result: float = big_num / small_num; // Expected: 1e20 (very large)
-    // Checking for infinity or NaN might be relevant here, but ternary logic might not support it directly.
-    // We'll just check if it's a reasonable large number or if it causes a runtime error/reject.
+    // We'll check if the result is a very large number.
     if division_result < 1e19 { // A loose check for a very large number
         return reject; // Fail if division by small number is not producing a large result
     }
 
-    // If all float tests pass without returning reject.
+    // If all tests pass without returning reject.
     return truth();
 }
