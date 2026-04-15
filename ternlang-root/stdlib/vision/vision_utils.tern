@@ -1,0 +1,29 @@
+// stdlib/vision/vision_utils.tern
+// Demonstrates: Image processing utility functions
+// Tier: 3 — Industrial
+
+// Returns 1 if intensity exceeds threshold, -1 if below lower bound
+fn intensity_gate(val: float, lo: float, hi: float) -> trit {
+    if val > hi {
+        return 1;
+    }
+    if val < lo {
+        return -1;
+    }
+    return 0;
+}
+
+// Consensus for pixel neighborhood activity
+fn neighbor_consensus(p1: trit, p2: trit, p3: trit) -> trit {
+    let c1: trit = consensus(p1, p2);
+    return consensus(c1, p3);
+}
+
+fn main() -> trit {
+    let i: trit = intensity_gate(0.9, 0.1, 0.8);
+    match i {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
