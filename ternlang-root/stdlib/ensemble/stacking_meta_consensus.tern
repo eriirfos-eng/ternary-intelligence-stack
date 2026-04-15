@@ -1,0 +1,17 @@
+// stdlib/ensemble/stacking_meta_consensus.tern
+// Demonstrates: Meta-consensus for stacked ensemble models
+// Tier: 2 — Pro Standard
+
+fn main() -> trit {
+    let ensemble_a: trit = 1;
+    let ensemble_b: trit = 0;
+    
+    // Meta-consensus
+    let meta_vote: trit = consensus(ensemble_a, ensemble_b);
+    
+    match meta_vote {
+        -1 => { return conflict(); }  // Meta-Reject
+         0 => { return hold(); }      // Meta-Uncertain
+         1 => { return truth(); }     // Meta-Affirm
+    }
+}
