@@ -41,6 +41,12 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** There is no known workaround to create an empty dynamic array via a literal. It must be created by a function that returns an empty array.
 - **Regression Test:** `stdlib/bughunt/probe_30_empty_array_literal.tern`
 
+## [RUNTIME-PANIC] Integer Overflow
+- **Description:** An integer overflow or underflow causes the VM to exit with a raw Rust panic instead of a graceful `VmError`.
+- **Error:** `thread 'main' panicked at [...] attempt to add with overflow`
+- **Workaround:** Manually check integer bounds before performing arithmetic that may overflow.
+- **Regression Test:** `stdlib/bughunt/probe_31_int_overflow.tern`
+
 ---
 
 ## Proposed Rust Implementation for New Parser Errors
@@ -109,3 +115,42 @@ impl std::fmt::Display for ParseError {
 **3. Update Parser Logic:**
 
 The respective parsing functions (`parse_match`, `parse_type`, `parse_primary_expr`) must be updated to throw these new, specific errors instead of the generic `ExpectedToken` or `UnexpectedToken` errors.
+
+---
+
+## Proposed Rust Implementation for New VM Error
+
+**File to Edit:** `compiler/legacy_shim/ternlang-core/src/vm/mod.rs`
+
+**1. Update `VmError` Enum:**
+
+Add the `IntegerOverflow` variant.
+
+```rust
+pub enum VmError {
+    // ... existing ...
+    RuntimeError(String),
+    CallStackOverflow,
+    // New error type:
+    IntegerOverflow,
+}
+```
+
+**2. Update `fmt::Display` Implementation:**
+
+Add the new match arm. Instead of panicking, the VM's `add`, `sub`, `mul` operations should use `checked_add`, `checked_sub`, etc., and return this error on `None`.
+
+```rust
+impl fmt::Display for VmError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            // ... existing arms ...
+            Self::RuntimeError(msg) => write!(f, "[BET-012] Runtime error: {msg}"),
+            Self::CallStackOverflow => write!(f, "[BET-013] Call stack overflow. Your program is too deep, friend."),
+            
+            // New error message:
+            Self::IntegerOverflow => write!(f, "[BET-014] Integer overflow. You tried to count past the stars and ran out of numbers."),
+        }
+    }
+}
+```

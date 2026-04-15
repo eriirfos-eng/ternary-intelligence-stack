@@ -1,0 +1,15 @@
+// stdlib/bughunt/probe_31_int_overflow.tern
+// Demonstrates: Integer overflow behavior in the VM.
+// Tier: 1
+
+fn main() -> trit {
+    // We assume the underlying integer type is i64.
+    // Let's find the breaking point.
+    let max_int: int = 9223372036854775807;
+    let overflow_val: int = max_int + 1;
+
+    // The program will likely crash here. If it doesn't, the test fails
+    // because the overflow was not handled correctly.
+    
+    return truth();
+}
