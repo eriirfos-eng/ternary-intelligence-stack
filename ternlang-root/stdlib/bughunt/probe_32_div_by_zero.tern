@@ -1,0 +1,11 @@
+// stdlib/bughunt/probe_32_div_by_zero.tern
+// Demonstrates: Division by zero behavior in the VM.
+// Tier: 1
+
+fn main() -> trit {
+    let x: int = 10;
+    let y: int = 0;
+    let z: int = x / y; // Should cause a VM error
+
+    return truth();
+}
