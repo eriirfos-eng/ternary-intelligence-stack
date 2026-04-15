@@ -1,0 +1,29 @@
+// stdlib/control/flow_stabilization.tern
+// Demonstrates: Liquid flow stabilization logic
+// Tier: 2
+
+from "control_utils.tern" import error_state;
+
+fn valve_control(current_flow: float, target_flow: float) -> trit {
+    let tolerance: float = 0.01;
+    let state: trit = error_state(target_flow, current_flow, tolerance);
+    
+    match state {
+        1  => { return 1;  } // Flow too low, open valve
+        0  => { return 0;  } // Flow stable
+        -1 => { return -1; } // Flow too high, close valve
+    }
+}
+
+fn main() -> trit {
+    let flow: float = 0.505;
+    let target: float = 0.5;
+    
+    let adjust: trit = valve_control(flow, target);
+    
+    match adjust {
+        1  => { return truth();    }
+        0  => { return hold();     }
+        -1 => { return conflict(); }
+    }
+}
