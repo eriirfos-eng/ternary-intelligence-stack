@@ -1,0 +1,35 @@
+// stdlib/econ/market_liquidity_consensus.tern
+// Demonstrates: Consensus logic for market liquidity assessment
+// Tier: 2
+
+from "./_utils.tern" import *;
+
+fn liquidity_consensus(provider_reports: trit[]) -> trit {
+    // Uses simple consensus score from _utils
+    return consensus_score(provider_reports);
+}
+
+fn main() -> trit {
+    let reports: trittensor<5>;
+    reports[0] = affirm; // Provider A: High liquidity
+    reports[1] = tend;   // Provider B: Uncertain
+    reports[2] = affirm; // Provider C: High
+    reports[3] = reject; // Provider D: Low
+    reports[4] = tend;   // Provider E: Uncertain
+    
+    let consensus: trit = liquidity_consensus(reports);
+    
+    match consensus {
+        affirm => {
+            println("Market Liquidity: SUFFICIENT");
+        }
+        tend => {
+            println("Market Liquidity: MODERATE/UNCERTAIN");
+        }
+        reject => {
+            println("Market Liquidity: INSUFFICIENT - HIGH SLIPPAGE RISK");
+        }
+    }
+    
+    return consensus;
+}
