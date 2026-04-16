@@ -1,0 +1,47 @@
+// stdlib/econ/inflation_trigger.tern
+// Demonstrates: Adaptive Inflation Response logic
+// Tier: 2 — Pro Standard
+
+// evaluate_inflation: Compares CPI growth to a target.
+// Returns -1 (high inflation alert), 0 (neutral), 1 (low/deflationary).
+fn evaluate_inflation(cpi: float, target: float, tolerance: float) -> trit {
+    let diff: float = cpi - target;
+    
+    if diff > tolerance {
+        return -1; // High inflation (negative status alert)
+    }
+    
+    let neg_tolerance: float = 0.0 - tolerance;
+    if diff < neg_tolerance {
+        return 1; // Deflationary / Growth opportunity
+    }
+    
+    return 0; // Within target range
+}
+
+// aggregate_economic_status: Consensus on overall macro economic health.
+fn aggregate_economic_status(inf: trit, gdp: trit, employment: trit) -> trit {
+    let m12: trit = consensus(inf, gdp);
+    let final_m: trit = consensus(m12, employment);
+    
+    match final_m {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let current_cpi: float = 0.05;
+    let target_cpi: float = 0.02;
+    let t: float = 0.01;
+    
+    // (0.05 - 0.02) = 0.03. 0.03 > 0.01. Should return -1.
+    let status: trit = evaluate_inflation(current_cpi, target_cpi, t);
+    
+    match status {
+        -1 => { return truth(); } // Pass test: Inflation alert detected
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}
