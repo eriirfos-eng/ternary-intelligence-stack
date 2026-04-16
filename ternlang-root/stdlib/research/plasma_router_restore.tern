@@ -1,7 +1,0 @@
-// Module: stdlib/research/plasma_router_restore.tern
-// Purpose: State restoration logic for plasma_router
-// Author: RFI-IRFOS
-
-fn execute_plasma_router_restore() -> trit {
-    return tend;
-}

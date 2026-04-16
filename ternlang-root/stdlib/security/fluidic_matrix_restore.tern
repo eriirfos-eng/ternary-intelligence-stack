@@ -1,7 +1,0 @@
-// Module: stdlib/security/fluidic_matrix_restore.tern
-// Purpose: State restoration logic for fluidic_matrix
-// Author: RFI-IRFOS
-
-fn execute_fluidic_matrix_restore() -> trit {
-    return tend;
-}

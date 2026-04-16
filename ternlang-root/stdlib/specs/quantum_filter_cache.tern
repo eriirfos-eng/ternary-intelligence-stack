@@ -1,7 +1,0 @@
-// Module: stdlib/specs/quantum_filter_cache.tern
-// Purpose: State caching layer for quantum_filter
-// Author: RFI-IRFOS
-
-fn execute_quantum_filter_cache() -> trit {
-    return tend;
-}

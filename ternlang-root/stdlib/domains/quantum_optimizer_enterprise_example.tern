@@ -1,7 +1,0 @@
-// Module: stdlib/domains/quantum_optimizer_enterprise_example.tern
-// Purpose: Enterprise scale example for quantum_optimizer
-// Author: RFI-IRFOS
-
-fn execute_quantum_optimizer_enterprise_example() -> trit {
-    return tend;
-}

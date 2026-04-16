@@ -1,7 +1,0 @@
-// Module: stdlib/science/nuclear_tensor_enterprise_example.tern
-// Purpose: Enterprise scale example for nuclear_tensor
-// Author: RFI-IRFOS
-
-fn execute_nuclear_tensor_enterprise_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/causal/acoustic_engine_restore.tern
-// Purpose: State restoration logic for acoustic_engine
-// Author: RFI-IRFOS
-
-fn execute_acoustic_engine_restore() -> trit {
-    return tend;
-}

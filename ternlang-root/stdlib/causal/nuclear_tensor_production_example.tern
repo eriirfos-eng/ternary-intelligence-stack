@@ -1,7 +1,0 @@
-// Module: stdlib/causal/nuclear_tensor_production_example.tern
-// Purpose: Production deployment example for nuclear_tensor
-// Author: RFI-IRFOS
-
-fn execute_nuclear_tensor_production_example() -> trit {
-    return tend;
-}

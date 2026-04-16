@@ -1,7 +1,0 @@
-// Module: stdlib/specs/thermal_model_restore.tern
-// Purpose: State restoration logic for thermal_model
-// Author: RFI-IRFOS
-
-fn execute_thermal_model_restore() -> trit {
-    return tend;
-}

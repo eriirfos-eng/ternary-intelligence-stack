@@ -1,7 +1,0 @@
-// Module: stdlib/tests/fluidic_engine_production_example.tern
-// Purpose: Production deployment example for fluidic_engine
-// Author: RFI-IRFOS
-
-fn execute_fluidic_engine_production_example() -> trit {
-    return tend;
-}

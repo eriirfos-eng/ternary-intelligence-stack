@@ -1,7 +1,0 @@
-// Module: stdlib/hardware/kinetic_filter_restore.tern
-// Purpose: State restoration logic for kinetic_filter
-// Author: RFI-IRFOS
-
-fn execute_kinetic_filter_restore() -> trit {
-    return tend;
-}

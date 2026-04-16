@@ -1,7 +1,0 @@
-// Module: stdlib/control/kinetic_engine_production_example.tern
-// Purpose: Production deployment example for kinetic_engine
-// Author: RFI-IRFOS
-
-fn execute_kinetic_engine_production_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/specs/plasma_analyzer_production_example.tern
-// Purpose: Production deployment example for plasma_analyzer
-// Author: RFI-IRFOS
-
-fn execute_plasma_analyzer_production_example() -> trit {
-    return tend;
-}

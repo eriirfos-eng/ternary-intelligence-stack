@@ -1,7 +1,0 @@
-// Module: stdlib/sim/stellar_analyzer_enterprise_example.tern
-// Purpose: Enterprise scale example for stellar_analyzer
-// Author: RFI-IRFOS
-
-fn execute_stellar_analyzer_enterprise_example() -> trit {
-    return tend;
-}

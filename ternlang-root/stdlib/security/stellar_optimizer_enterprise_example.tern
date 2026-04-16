@@ -1,7 +1,0 @@
-// Module: stdlib/security/stellar_optimizer_enterprise_example.tern
-// Purpose: Enterprise scale example for stellar_optimizer
-// Author: RFI-IRFOS
-
-fn execute_stellar_optimizer_enterprise_example() -> trit {
-    return tend;
-}

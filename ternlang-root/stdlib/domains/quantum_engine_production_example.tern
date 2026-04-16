@@ -1,7 +1,0 @@
-// Module: stdlib/domains/quantum_engine_production_example.tern
-// Purpose: Production deployment example for quantum_engine
-// Author: RFI-IRFOS
-
-fn execute_quantum_engine_production_example() -> trit {
-    return tend;
-}

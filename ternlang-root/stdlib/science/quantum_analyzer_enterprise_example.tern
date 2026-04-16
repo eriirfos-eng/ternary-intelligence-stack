@@ -1,7 +1,0 @@
-// Module: stdlib/science/quantum_analyzer_enterprise_example.tern
-// Purpose: Enterprise scale example for quantum_analyzer
-// Author: RFI-IRFOS
-
-fn execute_quantum_analyzer_enterprise_example() -> trit {
-    return tend;
-}

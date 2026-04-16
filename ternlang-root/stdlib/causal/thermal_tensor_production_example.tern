@@ -1,7 +1,0 @@
-// Module: stdlib/causal/thermal_tensor_production_example.tern
-// Purpose: Production deployment example for thermal_tensor
-// Author: RFI-IRFOS
-
-fn execute_thermal_tensor_production_example() -> trit {
-    return tend;
-}

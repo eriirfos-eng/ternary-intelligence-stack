@@ -1,7 +1,0 @@
-// Module: stdlib/sim/magnetic_filter_restore.tern
-// Purpose: State restoration logic for magnetic_filter
-// Author: RFI-IRFOS
-
-fn execute_magnetic_filter_restore() -> trit {
-    return tend;
-}

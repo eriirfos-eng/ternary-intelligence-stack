@@ -1,7 +1,0 @@
-// Module: stdlib/econ/nuclear_router_production_example.tern
-// Purpose: Production deployment example for nuclear_router
-// Author: RFI-IRFOS
-
-fn execute_nuclear_router_production_example() -> trit {
-    return tend;
-}

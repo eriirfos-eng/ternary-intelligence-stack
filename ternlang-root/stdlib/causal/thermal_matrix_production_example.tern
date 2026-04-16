@@ -1,7 +1,0 @@
-// Module: stdlib/causal/thermal_matrix_production_example.tern
-// Purpose: Production deployment example for thermal_matrix
-// Author: RFI-IRFOS
-
-fn execute_thermal_matrix_production_example() -> trit {
-    return tend;
-}

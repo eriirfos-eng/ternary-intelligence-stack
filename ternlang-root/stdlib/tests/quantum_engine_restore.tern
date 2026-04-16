@@ -1,7 +1,0 @@
-// Module: stdlib/tests/quantum_engine_restore.tern
-// Purpose: State restoration logic for quantum_engine
-// Author: RFI-IRFOS
-
-fn execute_quantum_engine_restore() -> trit {
-    return tend;
-}

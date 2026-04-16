@@ -1,7 +1,0 @@
-// Module: stdlib/specs/plasma_optimizer_enterprise_example.tern
-// Purpose: Enterprise scale example for plasma_optimizer
-// Author: RFI-IRFOS
-
-fn execute_plasma_optimizer_enterprise_example() -> trit {
-    return tend;
-}

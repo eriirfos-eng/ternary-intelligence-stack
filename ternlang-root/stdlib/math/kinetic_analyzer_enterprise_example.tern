@@ -1,7 +1,0 @@
-// Module: stdlib/math/kinetic_analyzer_enterprise_example.tern
-// Purpose: Enterprise scale example for kinetic_analyzer
-// Author: RFI-IRFOS
-
-fn execute_kinetic_analyzer_enterprise_example() -> trit {
-    return tend;
-}

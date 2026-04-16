@@ -1,7 +1,0 @@
-// Module: stdlib/science/nuclear_engine_enterprise_example.tern
-// Purpose: Enterprise scale example for nuclear_engine
-// Author: RFI-IRFOS
-
-fn execute_nuclear_engine_enterprise_example() -> trit {
-    return tend;
-}

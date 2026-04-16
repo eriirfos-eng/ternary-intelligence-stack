@@ -1,7 +1,0 @@
-// Module: stdlib/hardware/stellar_router_enterprise_example.tern
-// Purpose: Enterprise scale example for stellar_router
-// Author: RFI-IRFOS
-
-fn execute_stellar_router_enterprise_example() -> trit {
-    return tend;
-}

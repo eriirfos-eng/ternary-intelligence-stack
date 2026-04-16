@@ -1,7 +1,0 @@
-// Module: stdlib/science/magnetic_system_cache.tern
-// Purpose: State caching layer for magnetic_system
-// Author: RFI-IRFOS
-
-fn execute_magnetic_system_cache() -> trit {
-    return tend;
-}

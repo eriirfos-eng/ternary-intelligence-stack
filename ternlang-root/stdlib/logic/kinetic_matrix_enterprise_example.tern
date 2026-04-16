@@ -1,7 +1,0 @@
-// Module: stdlib/logic/kinetic_matrix_enterprise_example.tern
-// Purpose: Enterprise scale example for kinetic_matrix
-// Author: RFI-IRFOS
-
-fn execute_kinetic_matrix_enterprise_example() -> trit {
-    return tend;
-}

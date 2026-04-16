@@ -1,7 +1,0 @@
-// Module: stdlib/causal/acoustic_router_enterprise_example.tern
-// Purpose: Enterprise scale example for acoustic_router
-// Author: RFI-IRFOS
-
-fn execute_acoustic_router_enterprise_example() -> trit {
-    return tend;
-}

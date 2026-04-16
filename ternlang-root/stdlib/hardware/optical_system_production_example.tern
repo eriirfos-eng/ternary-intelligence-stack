@@ -1,7 +1,0 @@
-// Module: stdlib/hardware/optical_system_production_example.tern
-// Purpose: Production deployment example for optical_system
-// Author: RFI-IRFOS
-
-fn execute_optical_system_production_example() -> trit {
-    return tend;
-}

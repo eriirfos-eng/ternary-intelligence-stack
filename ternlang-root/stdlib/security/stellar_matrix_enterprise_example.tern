@@ -1,7 +1,0 @@
-// Module: stdlib/security/stellar_matrix_enterprise_example.tern
-// Purpose: Enterprise scale example for stellar_matrix
-// Author: RFI-IRFOS
-
-fn execute_stellar_matrix_enterprise_example() -> trit {
-    return tend;
-}

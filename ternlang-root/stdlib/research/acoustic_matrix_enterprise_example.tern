@@ -1,7 +1,0 @@
-// Module: stdlib/research/acoustic_matrix_enterprise_example.tern
-// Purpose: Enterprise scale example for acoustic_matrix
-// Author: RFI-IRFOS
-
-fn execute_acoustic_matrix_enterprise_example() -> trit {
-    return tend;
-}

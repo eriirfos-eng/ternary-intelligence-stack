@@ -1,7 +1,0 @@
-// Module: stdlib/causal/nuclear_matrix_enterprise_example.tern
-// Purpose: Enterprise scale example for nuclear_matrix
-// Author: RFI-IRFOS
-
-fn execute_nuclear_matrix_enterprise_example() -> trit {
-    return tend;
-}

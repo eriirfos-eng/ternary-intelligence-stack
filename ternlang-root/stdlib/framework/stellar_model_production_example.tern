@@ -1,7 +1,0 @@
-// Module: stdlib/framework/stellar_model_production_example.tern
-// Purpose: Production deployment example for stellar_model
-// Author: RFI-IRFOS
-
-fn execute_stellar_model_production_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/sim/kinetic_optimizer_production_example.tern
-// Purpose: Production deployment example for kinetic_optimizer
-// Author: RFI-IRFOS
-
-fn execute_kinetic_optimizer_production_example() -> trit {
-    return tend;
-}

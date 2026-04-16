@@ -1,7 +1,0 @@
-// Module: stdlib/security/thermal_solver_restore.tern
-// Purpose: State restoration logic for thermal_solver
-// Author: RFI-IRFOS
-
-fn execute_thermal_solver_restore() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/control/acoustic_tensor_enterprise_example.tern
-// Purpose: Enterprise scale example for acoustic_tensor
-// Author: RFI-IRFOS
-
-fn execute_acoustic_tensor_enterprise_example() -> trit {
-    return tend;
-}

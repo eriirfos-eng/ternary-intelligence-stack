@@ -1,7 +1,0 @@
-// Module: stdlib/hardware/plasma_matrix_production_example.tern
-// Purpose: Production deployment example for plasma_matrix
-// Author: RFI-IRFOS
-
-fn execute_plasma_matrix_production_example() -> trit {
-    return tend;
-}

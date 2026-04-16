@@ -1,7 +1,0 @@
-// Module: stdlib/bio/thermal_tensor_cache.tern
-// Purpose: State caching layer for thermal_tensor
-// Author: RFI-IRFOS
-
-fn execute_thermal_tensor_cache() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/science/kinetic_filter_enterprise_example.tern
-// Purpose: Enterprise scale example for kinetic_filter
-// Author: RFI-IRFOS
-
-fn execute_kinetic_filter_enterprise_example() -> trit {
-    return tend;
-}

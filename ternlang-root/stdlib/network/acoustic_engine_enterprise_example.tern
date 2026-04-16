@@ -1,7 +1,0 @@
-// Module: stdlib/network/acoustic_engine_enterprise_example.tern
-// Purpose: Enterprise scale example for acoustic_engine
-// Author: RFI-IRFOS
-
-fn execute_acoustic_engine_enterprise_example() -> trit {
-    return tend;
-}

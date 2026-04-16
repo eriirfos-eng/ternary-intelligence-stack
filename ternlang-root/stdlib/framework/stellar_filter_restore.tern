@@ -1,7 +1,0 @@
-// Module: stdlib/framework/stellar_filter_restore.tern
-// Purpose: State restoration logic for stellar_filter
-// Author: RFI-IRFOS
-
-fn execute_stellar_filter_restore() -> trit {
-    return tend;
-}

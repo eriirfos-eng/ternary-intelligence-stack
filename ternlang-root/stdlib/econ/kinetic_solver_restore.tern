@@ -1,7 +1,0 @@
-// Module: stdlib/econ/kinetic_solver_restore.tern
-// Purpose: State restoration logic for kinetic_solver
-// Author: RFI-IRFOS
-
-fn execute_kinetic_solver_restore() -> trit {
-    return tend;
-}

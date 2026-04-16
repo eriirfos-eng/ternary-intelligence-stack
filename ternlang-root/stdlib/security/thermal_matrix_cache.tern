@@ -1,7 +1,0 @@
-// Module: stdlib/security/thermal_matrix_cache.tern
-// Purpose: State caching layer for thermal_matrix
-// Author: RFI-IRFOS
-
-fn execute_thermal_matrix_cache() -> trit {
-    return tend;
-}

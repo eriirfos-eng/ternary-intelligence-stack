@@ -1,7 +1,0 @@
-// Module: stdlib/domains/stellar_router_restore.tern
-// Purpose: State restoration logic for stellar_router
-// Author: RFI-IRFOS
-
-fn execute_stellar_router_restore() -> trit {
-    return tend;
-}

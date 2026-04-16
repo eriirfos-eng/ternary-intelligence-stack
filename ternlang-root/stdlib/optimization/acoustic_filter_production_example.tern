@@ -1,7 +1,0 @@
-// Module: stdlib/optimization/acoustic_filter_production_example.tern
-// Purpose: Production deployment example for acoustic_filter
-// Author: RFI-IRFOS
-
-fn execute_acoustic_filter_production_example() -> trit {
-    return tend;
-}

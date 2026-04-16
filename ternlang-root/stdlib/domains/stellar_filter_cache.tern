@@ -1,7 +1,0 @@
-// Module: stdlib/domains/stellar_filter_cache.tern
-// Purpose: State caching layer for stellar_filter
-// Author: RFI-IRFOS
-
-fn execute_stellar_filter_cache() -> trit {
-    return tend;
-}

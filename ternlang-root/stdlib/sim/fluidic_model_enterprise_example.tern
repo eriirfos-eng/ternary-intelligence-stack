@@ -1,7 +1,0 @@
-// Module: stdlib/sim/fluidic_model_enterprise_example.tern
-// Purpose: Enterprise scale example for fluidic_model
-// Author: RFI-IRFOS
-
-fn execute_fluidic_model_enterprise_example() -> trit {
-    return tend;
-}

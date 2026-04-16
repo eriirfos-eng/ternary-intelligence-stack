@@ -1,7 +1,0 @@
-// Module: stdlib/control/thermal_model_enterprise_example.tern
-// Purpose: Enterprise scale example for thermal_model
-// Author: RFI-IRFOS
-
-fn execute_thermal_model_enterprise_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/math/acoustic_optimizer_enterprise_example.tern
-// Purpose: Enterprise scale example for acoustic_optimizer
-// Author: RFI-IRFOS
-
-fn execute_acoustic_optimizer_enterprise_example() -> trit {
-    return tend;
-}

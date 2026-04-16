@@ -1,7 +1,0 @@
-// Module: stdlib/math/fluidic_analyzer_restore.tern
-// Purpose: State restoration logic for fluidic_analyzer
-// Author: RFI-IRFOS
-
-fn execute_fluidic_analyzer_restore() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/framework/fluidic_optimizer_production_example.tern
-// Purpose: Production deployment example for fluidic_optimizer
-// Author: RFI-IRFOS
-
-fn execute_fluidic_optimizer_production_example() -> trit {
-    return tend;
-}

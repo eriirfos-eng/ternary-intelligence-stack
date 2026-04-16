@@ -1,7 +1,0 @@
-// Module: stdlib/causal/magnetic_tensor_enterprise_example.tern
-// Purpose: Enterprise scale example for magnetic_tensor
-// Author: RFI-IRFOS
-
-fn execute_magnetic_tensor_enterprise_example() -> trit {
-    return tend;
-}

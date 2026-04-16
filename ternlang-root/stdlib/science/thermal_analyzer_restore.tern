@@ -1,7 +1,0 @@
-// Module: stdlib/science/thermal_analyzer_restore.tern
-// Purpose: State restoration logic for thermal_analyzer
-// Author: RFI-IRFOS
-
-fn execute_thermal_analyzer_restore() -> trit {
-    return tend;
-}

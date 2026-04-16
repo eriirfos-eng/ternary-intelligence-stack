@@ -1,7 +1,0 @@
-// Module: stdlib/research/quantum_system_enterprise_example.tern
-// Purpose: Enterprise scale example for quantum_system
-// Author: RFI-IRFOS
-
-fn execute_quantum_system_enterprise_example() -> trit {
-    return tend;
-}

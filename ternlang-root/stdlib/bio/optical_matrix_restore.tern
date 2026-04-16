@@ -1,7 +1,0 @@
-// Module: stdlib/bio/optical_matrix_restore.tern
-// Purpose: State restoration logic for optical_matrix
-// Author: RFI-IRFOS
-
-fn execute_optical_matrix_restore() -> trit {
-    return tend;
-}

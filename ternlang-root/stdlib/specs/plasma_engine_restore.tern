@@ -1,7 +1,0 @@
-// Module: stdlib/specs/plasma_engine_restore.tern
-// Purpose: State restoration logic for plasma_engine
-// Author: RFI-IRFOS
-
-fn execute_plasma_engine_restore() -> trit {
-    return tend;
-}

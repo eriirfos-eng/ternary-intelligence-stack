@@ -1,7 +1,0 @@
-// Module: stdlib/research/nuclear_filter_restore.tern
-// Purpose: State restoration logic for nuclear_filter
-// Author: RFI-IRFOS
-
-fn execute_nuclear_filter_restore() -> trit {
-    return tend;
-}

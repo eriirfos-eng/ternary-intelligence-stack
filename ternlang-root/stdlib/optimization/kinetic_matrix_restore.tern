@@ -1,7 +1,0 @@
-// Module: stdlib/optimization/kinetic_matrix_restore.tern
-// Purpose: State restoration logic for kinetic_matrix
-// Author: RFI-IRFOS
-
-fn execute_kinetic_matrix_restore() -> trit {
-    return tend;
-}

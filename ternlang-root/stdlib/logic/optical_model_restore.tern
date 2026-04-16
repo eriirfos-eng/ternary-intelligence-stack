@@ -1,7 +1,0 @@
-// Module: stdlib/logic/optical_model_restore.tern
-// Purpose: State restoration logic for optical_model
-// Author: RFI-IRFOS
-
-fn execute_optical_model_restore() -> trit {
-    return tend;
-}

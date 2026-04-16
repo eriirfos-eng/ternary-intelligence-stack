@@ -1,7 +1,0 @@
-// Module: stdlib/network/fluidic_tensor_enterprise_example.tern
-// Purpose: Enterprise scale example for fluidic_tensor
-// Author: RFI-IRFOS
-
-fn execute_fluidic_tensor_enterprise_example() -> trit {
-    return tend;
-}

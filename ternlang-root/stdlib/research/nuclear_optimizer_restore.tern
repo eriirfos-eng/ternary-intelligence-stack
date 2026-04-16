@@ -1,7 +1,0 @@
-// Module: stdlib/research/nuclear_optimizer_restore.tern
-// Purpose: State restoration logic for nuclear_optimizer
-// Author: RFI-IRFOS
-
-fn execute_nuclear_optimizer_restore() -> trit {
-    return tend;
-}

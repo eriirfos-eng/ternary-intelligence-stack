@@ -1,7 +1,0 @@
-// Module: stdlib/tests/plasma_tensor_production_example.tern
-// Purpose: Production deployment example for plasma_tensor
-// Author: RFI-IRFOS
-
-fn execute_plasma_tensor_production_example() -> trit {
-    return tend;
-}
