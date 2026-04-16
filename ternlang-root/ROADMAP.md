@@ -29,9 +29,9 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 
 ---
 
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 # PART I — FOUNDATION (Phases 1–9) — ALL COMPLETE
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 
 ## ✅ Phase 1: Core Language & VM Stability — COMPLETE
 - [x] **Trit Primitives**: `-1`, `0`, `+1` logic (Sum/Carry, Neg, Mul) — fully tested
