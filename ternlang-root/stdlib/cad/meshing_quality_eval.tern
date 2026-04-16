@@ -1,0 +1,29 @@
+// stdlib/cad/meshing_quality_eval.tern
+// Demonstrates: FEM mesh quality evaluation using ternary aspect ratio check
+// Tier: 3
+
+from "_utils.tern" import evaluate_tolerance;
+
+fn check_mesh_element(aspect_ratio: float, max_allowed: float) -> trit {
+    // Aspect ratio: 1.0 is perfect. We check if it exceeds max_allowed.
+    let score: trit = evaluate_tolerance(1.0, aspect_ratio, max_allowed - 1.0);
+    
+    match score {
+        -1 => { return reject; }  // Too distorted
+         0 => { return hold; }    // Warning
+         1 => { return affirm; }  // Good quality
+    }
+}
+
+fn main() -> trit {
+    let current_aspect: float = 1.8;
+    let limit: float = 2.0;
+
+    let result: trit = check_mesh_element(current_aspect, limit);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
