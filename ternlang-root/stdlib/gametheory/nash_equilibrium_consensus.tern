@@ -1,0 +1,28 @@
+// stdlib/gametheory/nash_equilibrium_consensus.tern
+// Demonstrates: Nash equilibrium consensus logic
+// Tier: 3
+
+from "gametheory_utils.tern" import *;
+
+fn nash_consensus(p1_payoff: float, p1_best: float, p2_payoff: float, p2_best: float) -> trit {
+    // Logic: if both players are at their best possible payoff, affirm Nash.
+    let s1: trit = evaluate_strategy(p1_payoff, p1_best);
+    let s2: trit = evaluate_strategy(p2_payoff, p2_best);
+    
+    return strategy_consensus(s1, s2);
+}
+
+fn main() -> trit {
+    let p1_p: float = 10.0;
+    let p1_b: float = 10.0;
+    let p2_p: float = 10.0;
+    let p2_b: float = 10.0;
+    
+    let res: trit = nash_consensus(p1_p, p1_b, p2_p, p2_b);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
