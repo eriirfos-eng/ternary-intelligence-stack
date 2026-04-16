@@ -178,11 +178,8 @@ cd benchmarks && make bench-all
 
 ## MoE-13: Explainable Mixture-of-Experts
 
-## MoE-13 — Ecocentric Deliberation Engine
 
-MoE-13 is not a conventional sparse Mixture-of-Experts model.
-
-It is an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
+MoE-13 an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
 
 Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
 
