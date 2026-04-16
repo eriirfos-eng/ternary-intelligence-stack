@@ -1,7 +1,7 @@
 # Ternlang Roadmap: Bridging the Ternary Software Deficit
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
-**Current Version:** v0.3.0
-**Last Updated:** 2026-04-10
+**Current Version:** v0.3.3
+**Last Updated:** 2026-04-16
 **Repo:** https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-
 **Local:** ~/Desktop/Ternary Intelligence Stack (TIS)/
 
@@ -143,7 +143,7 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 
 ## 🛠 Developer Tooling — COMPLETE ✅
 - [x] **LSP**: `ternlang-lsp` crate — JSON-RPC 2.0 over stdio, diagnostics, hover, completion (19 snippets)
-- [x] **VS Code extension v0.3.0**: `ternlang-vscode/` — TextMate grammar, 19 snippets, `Ctrl+Shift+R` run command, graceful LSP, status bar, 4-tier API key gating. Published to Open VSX (`rfi-irfos/ternlang`).
+- [x] **VS Code extension v0.3.3**: `ternlang-vscode/` — Full extension rebuilt from scratch. TextMate grammar (keywords/types/trit constants/functions/@attributes/operators/strings/comments), 8 snippets (main, fn, exhaustive 3-way match, let, @sparseskip, consensus, invert, tensor), 5 commands (`ternlang.run`, `ternlang.runDebug`, `ternlang.build`, `ternlang.check`, `ternlang.repl`), check-on-save diagnostics via `ternlang check`, `ternlang.executablePath` + `ternlang.checkOnSave` configuration. Published to **Open VSX only** (`rfi-irfos/ternlang`). Do NOT publish to Microsoft VS Marketplace.
 - [x] **Formatter**: `ternlang fmt [--write]` — canonical style for 3-way match arms
 - [x] **REPL**: `ternlang repl` — interactive trit expression evaluation via BET VM
 - [x] **Package manager (ternpkg)**: `ternlang.toml`, `ternpkg install [PKG]`, GitHub-backed registry
@@ -160,7 +160,7 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 - [x] **Cargo workspace metadata**: `[workspace.package]` with keywords, categories, license, repository for crates.io
 - [x] **Academic whitepaper**: `whitepaper/ternlang-whitepaper.tex` (IEEE two-column LaTeX) + `ternlang-whitepaper.docx`
 - [x] **Spec consolidation**: `spec/grammar.ebnf`, `spec/ternlang-language-reference-v0.1.md`, `spec/ternlang-dictionary-v0.1.json` versioned in main repo
-- [ ] **Phase 7B**: VS Code Marketplace publication (needs user publisher PAT token → `vsce publish`)
+- [x] **Phase 7B**: VS Code extension → **Open VSX only** (`rfi-irfos/ternlang`). Microsoft VS Marketplace is NOT a target. Open VSX publish confirmed. Full v0.3.3 extension published 2026-04-16.
 - [x] **Phase 7B**: crates.io — all 9 crates published (2026-04-04)
 - [x] **Phase 7B**: MCP registry — HTTP transport live at https://ternlang.com/mcp, Smithery submission in progress
 - [ ] **Phase 7C**: USN / Bos+Gundersen academic outreach, joint whitepaper draft
@@ -225,7 +225,7 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 
 ---
 
-## 🚧 Pending Action Items (as of 2026-04-10)
+## 🚧 Pending Action Items (as of 2026-04-16)
 
 ### High Priority
 - [x] **TernStudio full rewrite** — SAP-style dashboard view + Editor view (activity bar, Explorer, History, resizable panels) + Settings view. "Upskill" replaces "Upgrade". Share button (btoa hash), Download button, run history (last 20), toast notifications, expanded stdlib tree. Monaco layout() on view switch. Done 2026-04-10.
@@ -241,6 +241,13 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 | 2026-04-12 | MCP registry / Smithery — listed as `rfi-irfos/ternlang` at smithery.ai. Description + icon updated to v0.3.0 via API. Tools auto-scanned from live server. |
 | 2026-04-14 | **MILESTONE: 1.2B Parameter Binary Model + TritTransformer.** Created `ModelCoherence` binary format for `ternlang-ml`, reducing 1.2GB JSON to 240MB packed binary. Fixed several Rust compilation errors in `ternlang-ml`. Implemented `TritTransformer` (Llama-3 architecture) in Rust with RMSNorm, RoPE, and SwiGLU kernels. Verified model loading and performed the first full 1.2B parameter ternary forward pass in `ternlang-ml/src/bin/inference.rs`. |
 
+- [x] **v0.3.3 crates.io republish** — all 8 crates (core→cli) republished at v0.3.3 with exec/check/--debug/clean output improvements. 2026-04-16.
+- [x] **`ternlang check`** — new subcommand: parse-only validation, walks dirs, reports per-file ok/error with fn count. 2026-04-16.
+- [x] **`ternlang exec <file.tbc>`** — run pre-compiled bytecode. Missing piece of compile-once/run-anywhere pipeline. 2026-04-16.
+- [x] **`ternlang run --debug`** — verbose register dump with variable name labels from symbol map; clean output by default. 2026-04-16.
+- [x] **`ternlang build` fixed** — now emits header-jump + `emit_entry_call("main")` so `.tbc` files are self-contained executables. Previously caused stack underflow on exec. 2026-04-16.
+- [x] **Clean run output** — replaced all-`trit(tend)` register dump with formatted result box + tip lines pointing to build/exec/debug. 2026-04-16.
+- [x] **VS Code extension v0.3.3 published** — full extension (grammar, snippets, commands, diagnostics, language-config) published to Open VSX. Previously was a stub `package.json` with 500 downloads and zero functionality. 2026-04-16.
 - [ ] **Phase 7C: Academic outreach** — USN group (Bos & Gundersen) for co-authorship.
 
 ### Low Priority / Nice to Have
@@ -550,3 +557,4 @@ The standalone web IDE — Monaco editor + real BET VM (WASM, Phase 12) + integr
 | 2026-04-10 | **[Infra] stdlib/qnn/ architecture defined.** README referenced `stdlib/qnn/` (dead link — directory absent). Created with ROADMAP.md listing 10 planned QNN module stubs. Actual QNN programs (251–265) remain in `examples/`. QNN stdlib population deferred to Gemini next session (excluded from today's cooldown list). |
 | 2026-04-10 | **[VS Code extension] v0.2.0 — grammar upgrade + Open VSX publish.** `ternlang.tmLanguage.json`: added `affirm\|tend\|reject` as `constant.language.trit.ternlang`; added `<=\|>=` to operators pattern. `package.json` bumped 0.1.0 → 0.2.0. VSIX rebuilt (442 KB, 11 files). Published to Open VSX registry as `rfi-irfos/ternlang v0.2.0`. `ternlang-root/README.md`: Open VSX badge added to badge row; full "VS Code Extension" section added after quick-start (install instructions, feature table, LSP wiring, marketplace note). Bughunt: 5 compiler/VM bugs fixed (AND/OR logic BUG-A/B, for-in loop count BUG-C, FieldAccess BUG-D, Cast BUG-E) — all documented in Buglist/Fixes.md. GEMINI.md v1.2: all fixes hardcoded, opcodes 0x28/0x29 (Tand/Tor) added to table, §15 fix ledger. Fly.io CI: FLY_API_TOKEN refreshed (100-year Macaroon), deploy-fly.yml moved to repo root `.github/workflows/`. |
 | 2026-04-11 | **[Ecosystem] Tern Systems collaboration outreach + TERN-ASM emitter.** Discovered Tern-Computer GitHub org (Tern Systems) — building BTMC (Balanced Ternary Machine Code) and TERN assembly language (RISC-V-inspired) in the same ternary computing space. Opened collaboration issue: Tern-Computer/.github#8 (formal intro, ecosystem alignment proposal, offer to share BET ISA spec + contribute to their docs). Added `ternlang-core/codegen/tern_asm.rs` — full RISC-V-inspired balanced ternary ASM emitter covering all AST nodes (arithmetic, comparison, control flow, tensor ops, actors, error propagation). Wired into CLI as `ternlang build --emit-tern` → writes `.tern.asm` file. Smoke tested on multi-function programs — output is valid TERN-compatible assembly with correct register allocation, label generation, and 3-way branch dispatch. |
+| 2026-04-16 | **[CLI v0.3.3] exec, check, --debug, clean output + full VS Code extension.** **`ternlang check`**: new subcommand — parse-only validation, walks directories, reports per-file ok/error count and fn count, no VM execution. **`ternlang exec <file.tbc>`**: run pre-compiled `.tbc` bytecode — the missing link in the compile-once/run-anywhere pipeline. **`ternlang run --debug`**: verbose register dump with variable name labels from symbol map (skips default Tend registers); clean formatted result box by default. **`ternlang build` fixed**: was not emitting header-jump + `emit_entry_call("main")`, causing stack underflow in `exec`; now self-contained executables. **Clean run output**: coloured result box + tip lines pointing to build/exec/debug — replaces all-`trit(tend)` register noise. **`ternlang run <file>`** shortcut: bare file argument dispatches to run (no need for explicit `run` subcommand). All 8 crates bumped to v0.3.3 and published to crates.io in dependency order (core→hdl→ml→moe→compat→lsp→runtime→cli). **VS Code extension v0.3.3**: rebuilt the entire extension from scratch — previously was a stub `package.json` with 500 downloads and zero functionality. Now: full TextMate grammar (keywords, types, trit constants affirm/tend/reject, @attributes, functions, operators, strings, comments), 8 snippets (main, fn, exhaustive 3-way match, let, @sparseskip, consensus, invert, tensor), 5 editor commands with title/context menu contributions (run, runDebug, build, check, repl), check-on-save diagnostics via `cp.execFile('ternlang check')`, language-configuration.json (brackets, auto-close, indent rules), `ternlang.executablePath` + `ternlang.checkOnSave` settings. Published to Open VSX only (`rfi-irfos/ternlang`). **Policy established**: Microsoft VS Marketplace is NOT a target — Open VSX is the exclusive registry for this extension. Fly.io rolling deploy: one machine had a transient health check timeout (not a code issue — API confirmed healthy, other machines passed). |
