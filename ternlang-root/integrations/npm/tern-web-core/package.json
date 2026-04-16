@@ -1,6 +1,6 @@
 {
-  "name": "tern-web-core",
-  "version": "0.1.0",
+  "name": "@eriirfos-eng/tern-web-core",
+  "version": "0.1.2",
   "description": "Substrate Integration for the Ternary Intelligence Stack (TIS) in the browser.",
   "main": "index.js",
   "author": "RFI-IRFOS Systems Architecture Division",
