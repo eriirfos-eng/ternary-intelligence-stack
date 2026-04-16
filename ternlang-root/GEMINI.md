@@ -110,12 +110,12 @@ All opcodes as of 2026-04-16. Do not add opcodes to .tern files that aren't in t
 | `0x27` | TgreaterEqual | a, b → trit | — | a >= b → affirm, else reject (polymorphic) |
 | `0x28` | Tand | a, b → trit | — | min(a,b) in balanced ternary — logical AND |
 | `0x29` | Tor | a, b → trit | — | max(a,b) in balanced ternary — logical OR |
-| `0x2a` | Topent | path, mode → handle | — | mode: 0=Read, 1=Write, 2=Append |
-| `0x2b` | Treadt | handle → trit | — | read single trit character (+, 0, -) |
-| `0x2c` | Twritet | handle, trit → | — | write single trit character (+, 0, -) |
 | `0x30` | Tspawn | → AgentRef | 2 (type_id u16) | spawn registered agent type |
 | `0x31` | Tsend | msg, AgentRef → | — | send message to agent |
 | `0x32` | Tawait | AgentRef → result | — | receive result from agent |
+| `0x33` | Topent | path, mode → handle | — | mode: 0=Read, 1=Write, 2=Append |
+| `0x34` | Treadt | handle → trit | — | read single trit character (+, 0, -) |
+| `0x35` | Twritet | handle, trit → | — | write single trit character (+, 0, -) |
 
 ---
 

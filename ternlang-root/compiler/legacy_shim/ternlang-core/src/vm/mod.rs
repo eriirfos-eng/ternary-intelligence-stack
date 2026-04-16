@@ -758,7 +758,7 @@ impl BetVm {
                     let result = if (ta as i8) >= (tb as i8) { ta } else { tb };
                     self.stack.push(Value::Trit(result));
                 }
-                0x2a => { // Topent — path_str, mode_int → handle_int
+                0x33 => { // Topent — path_str, mode_int → handle_int
                     let mode = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let path = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     if let (Value::String(p), Value::Int(m)) = (path, mode) {
@@ -778,7 +778,7 @@ impl BetVm {
                         return Err(VmError::TypeMismatch { expected: "String, Int".into(), found: "Unknown".into() });
                     }
                 }
-                0x2b => { // Treadt — handle_int → trit
+                0x34 => { // Treadt — handle_int → trit
                     let handle_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     if let Value::Int(h) = handle_val {
                         let h = h as usize;
@@ -806,7 +806,7 @@ impl BetVm {
                         return Err(VmError::TypeMismatch { expected: "Int".into(), found: format!("{:?}", handle_val) });
                     }
                 }
-                0x2c => { // Twritet — handle_int, trit → void
+                0x35 => { // Twritet — handle_int, trit → void
                     let t_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let h_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     if let (Value::Int(h), Value::Trit(t)) = (h_val, t_val) {
