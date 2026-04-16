@@ -1,0 +1,43 @@
+// stdlib/causal/counterfactual_gate.tern
+// Demonstrates: Counterfactual reasoning gate
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn counterfactual_gate(actual_outcome: trit, counterfactual_outcome: trit) -> trit {
+    // If the counterfactual outcome is better than the actual, regret is affirm
+    if actual_outcome == reject ? {
+        if counterfactual_outcome == affirm ? {
+            return affirm; // High regret / high causal impact of the change
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
+    } else {
+        return tend;
+    } else {
+        return reject; // Actual was better
+    }
+}
+
+fn main() -> trit {
+    let actual: trit = reject; // Failed
+    let counter: trit = affirm; // Would have succeeded if X
+    
+    let regret: trit = counterfactual_gate(actual, counter);
+    
+    match regret {
+        affirm => {
+            println("Counterfactual impact: HIGH.");
+        }
+        tend => {
+            println("Counterfactual impact: NEUTRAL.");
+        }
+        reject => {
+            println("Counterfactual impact: LOW.");
+        }
+    }
+    
+    return regret;
+}
