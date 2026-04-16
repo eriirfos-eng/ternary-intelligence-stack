@@ -1,0 +1,51 @@
+// probe_98_forin_nested.tern
+// Regression probe for Bug 1 — ForIn register leak.
+//
+// BEFORE fix: each for..in loop permanently consumed 4 registers (it, r, i, v).
+//             With 7 nested/sequential loops in one function the register file
+//             at 27 slots was exhausted, silently dropping stores/loads.
+// AFTER fix:  pre_loop_reg snapshot + restore at loop exit; symbols.remove(var).
+//
+// This probe runs 8 sequential for..in loops and 2 nested loops.
+// It would previously silently produce wrong output; now it must print > 0.
+
+fn main() -> trit {
+    let data: trit[] = [1, 0, 1, 0, 1];
+    let acc: int = 0;
+
+    // 8 sequential for..in loops — each borrows and returns 4 registers
+    for x in data {
+        acc = acc + 1;
+    }
+    for x in data {
+        acc = acc + 1;
+    }
+    for x in data {
+        acc = acc + 1;
+    }
+    for x in data {
+        acc = acc + 1;
+    }
+    for x in data {
+        acc = acc + 1;
+    }
+    for x in data {
+        acc = acc + 1;
+    }
+    for x in data {
+        acc = acc + 1;
+    }
+    for x in data {
+        acc = acc + 1;
+    }
+
+    // Nested for..in loops
+    for x in data {
+        for y in data {
+            acc = acc + 1;
+        }
+    }
+
+    println(acc);
+    return truth();
+}

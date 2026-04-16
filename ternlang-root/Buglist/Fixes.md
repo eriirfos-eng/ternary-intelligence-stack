@@ -351,3 +351,36 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** The AST and Parser support `FloatTensor` and `IntTensor`, but the `BetVm`'s `TensorInstance` is hardcoded to `Vec<Trit>`. There is no logic in the VM to store or retrieve floats from tensors.
 **Workaround:** Use `trit[]` for tensors and individual `float`/`int` variables for high-precision data.
 **Status:** Needs VM enhancement.
+
+---
+
+## 2026-04-16 — Bug 1: ForIn Register Leak — VERIFIED FIXED
+
+**Trigger:** Running 7+ sequential or nested `for x in tensor` loops in a single function.
+**Symptom (before):** Silent register exhaustion after ~6 loops; subsequent stores dropped, loads returned zero, incorrect computation.
+**Diagnosis:** Each `for..in` loop allocated 4 internal registers (it_reg, r_reg, i_reg, v_reg) but never released them, consuming the fixed 27-slot register file permanently.
+**Fix (betbc.rs):** Snapshot `pre_loop_reg = self.next_reg` before loop setup; restore `self.next_reg = pre_loop_reg` after loop body; call `self.symbols.remove(var)` to clean the loop variable. Continue/break patches correctly scoped by index.
+**Verification:** `probe_98_forin_nested.tern` — 8 sequential + 1 nested loop pair. Expected output: 65. Actual: 65. Status: FIXED.
+
+---
+
+## 2026-04-16 — Bug 2: Hard Register File Limit — VERIFIED FIXED
+
+**Trigger:** Functions with more than 27 local variables.
+**Symptom (before):** Silent corruption — stores dropped, loads returned zero default, wrong computation results, no error emitted.
+**Diagnosis:** `registers` was `[Value; 27]`. Writing to register index 27+ silently clobbered adjacent memory or was ignored.
+**Fix (vm/mod.rs):** Changed `registers` to `Vec<Value>`. TSTORE (0x08) and TLOAD (0x09) both call `self.registers.resize(reg + 1, Value::default())` when `reg >= self.registers.len()`. `alloc_reg()` in betbc.rs emits a stderr warning at >255 but does not crash. `register_stack` snapshots the full Vec on TCALL and restores on TRET.
+**Verification:** `probe_99_register_stress.tern` — 30 distinct `int` locals, sum expected 435. Actual: 435. Status: FIXED.
+
+---
+
+## 2026-04-16 — Bug 3: NodeId Hardcoded Emission — FIXED
+
+**Trigger:** Using `nodeid` keyword in .tern programs deployed with `--node-addr`.
+**Symptom (before):** `nodeid` always returned the literal string `"127.0.0.1:7373"` regardless of the `--node-addr` CLI argument or `vm.set_node_id()` call, because the address was burned into bytecode at compile time.
+**Root cause:** `Expr::NodeId` in `betbc.rs` emitted opcode `0x21` (TPUSH_STRING) with the hardcoded bytes `b"127.0.0.1:7373"`. The VM has a `node_id: String` field and `set_node_id()` method, but bytecode never consulted it.
+**Fix:**
+- `vm/mod.rs`: Added opcode `0x36` (`TNODEID`) that pushes `Value::String(self.node_id.clone())` — a single-byte instruction with no immediates.
+- `betbc.rs`: `Expr::NodeId` now emits `0x36` instead of the hardcoded string bytes.
+**Files:** `compiler/legacy_shim/ternlang-core/src/vm/mod.rs` (0x36 arm), `compiler/legacy_shim/ternlang-core/src/codegen/betbc.rs` (Expr::NodeId arm).
+**Verification:** `probe_97_nodeid_runtime.tern` — default run prints `127.0.0.1`; run with `--node-addr 10.0.0.1:9000` prints `10.0.0.1:9000`. Status: FIXED.

@@ -721,10 +721,12 @@ impl BytecodeEmitter {
                 self.emit_expr(expr);
             }
             Expr::NodeId => {
-                let bytes = b"127.0.0.1:7373";
-                self.code.push(0x21);
-                self.code.extend_from_slice(&(bytes.len() as u16).to_le_bytes());
-                self.code.extend_from_slice(bytes);
+                // Emit TNODEID (0x36): defers binding to runtime so that
+                // `--node-addr` / vm.set_node_id() is actually respected.
+                // Previously this emitted a hardcoded "127.0.0.1:7373" string
+                // literal at compile time, which meant distributed modules always
+                // announced the wrong address when deployed with a custom node addr.
+                self.code.push(0x36); // TNODEID — pushes Value::String(vm.node_id)
             }
         }
     }
