@@ -1,15 +1,15 @@
 # Ternary Intelligence Stack (TIS)
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![version](https://img.shields.io/badge/version-v0.3.0-black)](#architecture)
+[![version](https://img.shields.io/badge/version-v0.3.2-black)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-212%2B%20passing-brightgreen)](#architecture)
+[![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 [![speedup](https://img.shields.io/badge/@sparseskip-up_to_122x-success)](#sparse-ternary-inference)
 [![MCP](https://img.shields.io/badge/MCP-19_tools-orange)](#mcp-server--v030-19-tools)
 [![examples](https://img.shields.io/badge/examples-2,090%2B_.tern_programs-blueviolet)](#example-library)
-[![stdlib](https://img.shields.io/badge/stdlib-27,000%2B_modules-blue)](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib)
+[![stdlib](https://img.shields.io/badge/stdlib-293_open%20%2B%2028k%2B_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
 
@@ -84,10 +84,11 @@ cargo install ternlang-cli
 | Directory | Contents |
 |-----------|----------|
 | [`ternlang-root/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root) | All Rust crates — compiler, VM, API, MCP server, ML stack |
-| [`ternlang-root/stdlib/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib) | 300+ `.tern` programs across every domain |
+| [`ternlang-root/stdlib/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib) | 293 open-core `.tern` modules (Tier 1 — free) |
 | [`ternlang-root/examples/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/examples) | Runnable `.tern` examples (medical, finance, aerospace, etc.) |
 | [`ternlang-root/spec/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec) | BET-ISA spec, language reference, grammar, protocol specs |
 | [`ternlang-root/ternlang-web/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-web) | ternlang.com frontend (GitHub Pages) |
+| `eriirfos-eng/ternlang-premium` *(private)* | 28,495+ proprietary `.tern` modules — Tier 2 / 3 / 4 |
 
 ---
 
@@ -105,14 +106,27 @@ curl -X POST https://ternlang.com/mcp \
 
 ---
 
+## StdLib Access
+
+The standard library is split across two repos to protect paid-tier IP:
+
+- **Tier 1 (free):** 293 open-core modules in [`ternlang-root/stdlib/`](ternlang-root/stdlib/) — clone this repo and use immediately
+- **Tier 2/3/4 (paid):** 28,495+ proprietary modules in the private `eriirfos-eng/ternlang-premium` repo
+
+After purchasing: visit **[ternlang.com/activate](https://ternlang.com/activate)** — enter your API key + GitHub username and you'll receive a collaborator invite to the private repo automatically.
+
+→ [Full tier breakdown](ternlang-root/stdlib/PREMIUM.md)
+
+---
+
 ## Licensing
 
 | Tier | Price | Details |
 |------|-------|---------|
-| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP — full open source |
-| Pro Standard (BSL-1.1) | €99/month | 10,000 API calls, MoE-13, 3-layer memory, MCP |
-| Industrial (BSL-1.1) | €349/month | 50,000 API calls, QNN, SEC, T-HAL, TernAudit |
-| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA |
+| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP — full open source + 293 stdlib modules |
+| Pro Standard (BSL-1.1) | €99/month | 10,000 API calls, MoE-13, 3-layer memory, MCP + Tier 2 stdlib |
+| Industrial (BSL-1.1) | €349/month | 50,000 API calls, QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
+| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + full Tier 4 stdlib |
 
 BSL-1.1 crates auto-convert to Apache-2.0 on 2030-04-03.
 
