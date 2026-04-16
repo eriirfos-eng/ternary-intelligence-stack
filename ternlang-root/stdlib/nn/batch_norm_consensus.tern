@@ -1,0 +1,30 @@
+// stdlib/nn/batch_norm_consensus.tern
+// Demonstrates: Batch normalization consensus for stable weights
+// Tier: 3
+
+from "nn_utils.tern" import *;
+
+fn batch_norm_eval(mean: float, variance: float, target_mean: float) -> trit {
+    // Logic: if mean and variance are within bounds, affirm.
+    let b: trit = check_bound(mean - target_mean, 0.5);
+    let mean_ok: trit = 0;
+    if b == 0 ? { mean_ok = 1; } else { mean_ok = -1; } else { mean_ok = -1; }
+    let var_ok: trit = 0;
+    if variance < 2.0 ? { var_ok = 1; } else { var_ok = -1; } else { var_ok = -1; }
+    
+    return consensus(mean_ok, var_ok);
+}
+
+fn main() -> trit {
+    let m: float = 0.1;
+    let v: float = 1.0;
+    let tm: float = 0.0;
+    
+    let res: trit = batch_norm_eval(m, v, tm);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
