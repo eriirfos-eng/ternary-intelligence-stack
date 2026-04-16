@@ -1,0 +1,49 @@
+// stdlib/ensemble/moe_routing_consensus.tern
+// Demonstrates: Mixture of Experts (MoE) routing consensus logic
+// Tier: 2
+
+from "ensemble_utils.tern" import *;
+
+fn moe_routing(expert_scores: float[], threshold: float) -> trit[] {
+    let routing: trittensor<5>; // Fixed size for now
+    let i: int = 0;
+    
+    while i < 5 {
+        let score: float = expert_scores[i];
+        if score > threshold ? {
+            routing[i] = affirm;
+        } else {
+            if score > (threshold * 0.5) ? {
+                routing[i] = tend;
+            } else {
+                routing[i] = reject;
+            } else {
+                routing[i] = reject;
+            }
+        } else {
+            routing[i] = reject;
+        }
+        i = i + 1;
+    }
+    return routing;
+}
+
+fn main() -> trit {
+    // Manually setting scores due to float[] literal issues
+    let scores: float[]; // Not really usable as literal
+    // Instead of float[], use individual variables or just test logic
+    
+    let s1: float = 0.8;
+    let s2: float = 0.4;
+    let s3: float = 0.1;
+    
+    let r1: trit = evaluate_expert(affirm, affirm); // helper usage
+    
+    if s1 > 0.5 ? {
+        return truth();
+    } else {
+        return hold();
+    } else {
+        return conflict();
+    }
+}
