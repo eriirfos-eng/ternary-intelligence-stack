@@ -1,0 +1,36 @@
+// stdlib/ml/curriculum_learning_gate.tern
+// Demonstrates: Curriculum learning difficulty gate
+// Tier: 2
+
+from "ml_utils.tern" import *;
+
+fn check_difficulty(avg_reward: float, threshold: float) -> trit {
+    // Logic: if reward is high, increase difficulty (+1). If low, stay (0).
+    // If very low, maybe decrease (-1).
+    if avg_reward > threshold ? {
+        return affirm;
+    } else {
+        if avg_reward < (threshold * 0.5) ? {
+            return reject;
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
+    } else {
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let r: float = 0.9;
+    let t: float = 0.8;
+    
+    let res: trit = check_difficulty(r, t);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
