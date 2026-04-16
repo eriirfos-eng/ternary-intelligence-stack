@@ -1,0 +1,33 @@
+// stdlib/causal/bayesian_inference_mask.tern
+// Demonstrates: Bayesian inference masking for causal discovery
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn infer_cause(prior: float, evidence_likelihood: float) -> trit {
+    let posterior: float = bayes_update(prior, evidence_likelihood);
+    return probability_to_trit(posterior);
+}
+
+fn main() -> trit {
+    let prior_prob: float = 0.5;
+    let likelihood: float = 0.9; // Strong evidence
+    
+    // Posterior = 0.45. Should be tend.
+    
+    let result: trit = infer_cause(prior_prob, likelihood);
+    
+    match result {
+        affirm => {
+            println("Causal link: HIGHLY LIKELY.");
+        }
+        tend => {
+            println("Causal link: UNCERTAIN/POSSIBLE.");
+        }
+        reject => {
+            println("Causal link: UNLIKELY.");
+        }
+    }
+    
+    return result;
+}
