@@ -1,0 +1,46 @@
+// stdlib/control/emergency_brake_consensus.tern
+// Demonstrates: Multi-sensor Emergency Brake Consensus
+// Tier: 2 — Pro Standard
+
+// brake_consensus: Merges signals from three brake sensors with high-priority safety override.
+// If ANY sensor confirms a critical obstruction (-1), the output is immediately -1 (halt).
+fn brake_consensus(s1: trit, s2: trit, s3: trit) -> trit {
+    // Safety Priority: Any detection of danger (-1) triggers immediate stop.
+    if s1 == -1 { return -1; }
+    if s2 == -1 { return -1; }
+    if s3 == -1 { return -1; }
+    
+    // Consensus: Use standard majority/signal merge if no immediate danger detected.
+    let c12: trit = consensus(s1, s2);
+    let final_c: trit = consensus(c12, s3);
+    
+    match final_c {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+// apply_brake_effort: Translates the ternary status into a physical control effort.
+fn apply_brake_effort(status: trit) -> float {
+    match status {
+        -1 => { return 1.0; } // Maximum braking force
+         0 => { return 0.1; } // Gentle braking / coasting
+         1 => { return 0.0; } // Zero braking force
+    }
+}
+
+fn main() -> trit {
+    let sensor1: trit = 1;  // Sensor 1 reports path clear
+    let sensor2: trit = 0;  // Sensor 2 is uncertain/neutral
+    let sensor3: trit = -1; // Sensor 3 detects a critical obstruction!
+    
+    // Sensor 3's -1 should override the clear/uncertain status of other sensors.
+    let status: trit = brake_consensus(sensor1, sensor2, sensor3);
+    
+    match status {
+        -1 => { return truth(); } // Pass test: Safety override triggered correctly
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}
