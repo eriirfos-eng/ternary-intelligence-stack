@@ -1,5 +1,5 @@
 # GEMINI.md — Ternlang Precision Parameter Sheet
-# RFI-IRFOS · ternlang.com · v1.4 (2026-04-14)
+# RFI-IRFOS · ternlang.com · v1.5 (2026-04-16)
 # Read this at session start. These values are ground truth. Do not guess.
 # Current workspace version: 0.3.1 (Professionalized metadata & XAI branding)
 
@@ -16,6 +16,7 @@
 | Carry register | `Trit::Tend` on init | Single trit |
 | Agent node_id default | `"127.0.0.1:7373"` | Set via `set_node_id()` |
 | Max tensor pool | unbounded Vec | Indexed by usize handle |
+| Open Files | unbounded Vec | File handles for opent/readt/writet |
 
 ---
 
@@ -71,7 +72,7 @@ Default value (unset register): `Value::Trit(Trit::Tend)` = 0
 
 ## 6. Complete opcode table — BET VM
 
-All opcodes as of 2026-04-10. Do not add opcodes to .tern files that aren't in this table.
+All opcodes as of 2026-04-16. Do not add opcodes to .tern files that aren't in this table.
 
 | Opcode | Name | Stack effect | Immediate bytes | Notes |
 |--------|------|-------------|-----------------|-------|
@@ -109,6 +110,9 @@ All opcodes as of 2026-04-10. Do not add opcodes to .tern files that aren't in t
 | `0x27` | TgreaterEqual | a, b → trit | — | a >= b → affirm, else reject (polymorphic) |
 | `0x28` | Tand | a, b → trit | — | min(a,b) in balanced ternary — logical AND |
 | `0x29` | Tor | a, b → trit | — | max(a,b) in balanced ternary — logical OR |
+| `0x2a` | Topent | path, mode → handle | — | mode: 0=Read, 1=Write, 2=Append |
+| `0x2b` | Treadt | handle → trit | — | read single trit character (+, 0, -) |
+| `0x2c` | Twritet | handle, trit → | — | write single trit character (+, 0, -) |
 | `0x30` | Tspawn | → AgentRef | 2 (type_id u16) | spawn registered agent type |
 | `0x31` | Tsend | msg, AgentRef → | — | send message to agent |
 | `0x32` | Tawait | AgentRef → result | — | receive result from agent |
