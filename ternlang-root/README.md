@@ -17,6 +17,8 @@ Ternlang is a systems programming language and ML inference runtime built on bal
 
 Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
+→ **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
+
 ---
 
 ## Our Mission: Post-Binary Sovereignty
