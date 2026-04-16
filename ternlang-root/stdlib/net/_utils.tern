@@ -1,0 +1,36 @@
+// stdlib/net/_utils.tern
+// Utility functions for Ternary Networking
+// Tier: 2
+
+fn calculate_latency_score(latency_ms: int, threshold_ms: int) -> trit {
+    if latency_ms < threshold_ms ? {
+        return affirm;
+    } else {
+        if latency_ms == threshold_ms ? {
+            return tend;
+        } else {
+            return reject;
+        } else {
+            return reject;
+        }
+    } else {
+        return reject;
+    }
+}
+
+fn aggregate_node_signals(node_signals: trit[]) -> trit {
+    let count: int = length(node_signals);
+    let consensus_val: trit = tend;
+    let i: int = 0;
+    
+    while i < count ? {
+        consensus_val = consensus(consensus_val, node_signals[i]);
+        i = i + 1;
+    } else {
+        return consensus_val;
+    } else {
+        return consensus_val;
+    }
+    
+    return consensus_val;
+}
