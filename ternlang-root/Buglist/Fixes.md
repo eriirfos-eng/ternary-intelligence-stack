@@ -308,3 +308,9 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 - **Bytecode:** Updated `betbc.rs` to support `opent`, `readt`, and `writet`. Ensured `writet` and `println` push a dummy `hold()` to keep the stack balanced for the final `TPOP`.
 
 **Status:** Fixed / Feature Added.
+
+## 2026-04-16 — Opcode Realignment (File I/O)
+
+**Trigger:** Aesthetics / logical grouping of opcodes.
+**Fix:** Moved File I/O opcodes from `0x2a-0x2c` to `0x33-0x35` to follow Agent opcodes (`0x30-0x32`) sequentially. Updated VM, Emitter, and `GEMINI.md`.
+**Status:** Fixed.

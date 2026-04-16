@@ -540,7 +540,7 @@ impl BytecodeEmitter {
                     "opent" => {
                         if args.len() == 2 {
                             for a in args { self.emit_expr(a); }
-                            self.code.push(0x2a); // TOPENT (pushes Int handle)
+                            self.code.push(0x33); // TOPENT (pushes Int handle)
                         } else {
                             // error but push dummy
                             self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
@@ -549,7 +549,7 @@ impl BytecodeEmitter {
                     "readt" => {
                         if args.len() == 1 {
                             self.emit_expr(&args[0]);
-                            self.code.push(0x2b); // TREADT (pushes Trit)
+                            self.code.push(0x34); // TREADT (pushes Trit)
                         } else {
                             self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
                         }
@@ -557,7 +557,7 @@ impl BytecodeEmitter {
                     "writet" => {
                         if args.len() == 2 {
                             for a in args { self.emit_expr(a); }
-                            self.code.push(0x2c); // TWRITET
+                            self.code.push(0x35); // TWRITET
                         }
                         self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); // push void/hold result
                     }
