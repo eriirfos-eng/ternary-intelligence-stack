@@ -1,0 +1,54 @@
+// stdlib/bio/gene_regulatory_gate.tern
+// Demonstrates: Ternary gene regulatory network logic (Activator/Repressor)
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn regulatory_gate(activator: trit, repressor: trit) -> trit {
+    // Expression logic:
+    // If repressor is affirm (1), expression is reject (-1) regardless of activator.
+    // If repressor is reject (-1) and activator is affirm (1), expression is affirm (1).
+    // Otherwise, expression is tend (0) - basal level.
+    
+    match repressor {
+        affirm => {
+            return reject;
+        }
+        tend => {
+            match activator {
+                affirm => { return tend; } // Partially repressed
+                tend   => { return tend; }
+                reject => { return reject; }
+            }
+        }
+        reject => {
+            // No repression
+            match activator {
+                affirm => { return affirm; }
+                tend   => { return tend; }
+                reject => { return reject; }
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let act: trit = affirm;
+    let rep: trit = reject;
+    
+    let expression: trit = regulatory_gate(act, rep);
+    
+    match expression {
+        affirm => {
+            println("Gene Expression: ACTIVE (ON)");
+        }
+        tend => {
+            println("Gene Expression: BASAL (LEAKY)");
+        }
+        reject => {
+            println("Gene Expression: SILENCED (OFF)");
+        }
+    }
+    
+    return expression;
+}
