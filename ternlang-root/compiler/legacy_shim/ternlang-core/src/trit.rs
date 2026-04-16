@@ -11,12 +11,13 @@ pub enum Trit {
 
 impl From<i8> for Trit {
     fn from(val: i8) -> Self {
-        match val {
-            -1 => Trit::Reject,
-            0 => Trit::Tend,
-            1 => Trit::Affirm,
-            _ => panic!("Invalid trit value: {}", val),
-        }
+        // VM-PANIC-001: saturate to the nearest trit instead of panicking.
+        // Values outside {-1, 0, +1} (e.g. from arithmetic overflow in balanced-ternary
+        // tensor ops) previously hard-crashed the VM. Saturate: positive → Affirm,
+        // negative → Reject, zero → Tend.
+        if val > 0 { Trit::Affirm }
+        else if val < 0 { Trit::Reject }
+        else { Trit::Tend }
     }
 }
 

@@ -201,6 +201,11 @@ pub enum Token {
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*", |lex| lex.slice().to_string(), priority = 1)]
     Ident(String),
 
+    // PARSER-LIT-001: hex (0xFF) and binary (0b1010) integer literals.
+    // Must have higher priority than the plain decimal rule so the '0' prefix is
+    // consumed as part of the full literal rather than tokenised as Int(0) + Ident.
+    #[regex(r"0[xX][0-9a-fA-F]+", |lex| i64::from_str_radix(&lex.slice()[2..], 16).ok(), priority = 20)]
+    #[regex(r"0[bB][01]+", |lex| i64::from_str_radix(&lex.slice()[2..], 2).ok(), priority = 20)]
     #[regex("[0-9]+", |lex| lex.slice().parse::<i64>().ok(), priority = 10)]
     Int(i64),
 

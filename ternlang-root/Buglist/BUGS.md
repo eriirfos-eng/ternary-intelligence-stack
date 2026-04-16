@@ -27,12 +27,11 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** None identified. Requires fixing the module loading mechanism.
 - **Regression Test:** `stdlib/bughunt/probe_24_named_import_failure.tern`
 
-## [PARSER-002] Match on Floats
+## [PARSER-002] Match on Floats — FIXED (2026-04-16)
 - **Description:** `match` statements do not support float literals.
-- **Error:** `Parse program error: ExpectedToken("pattern (int or trit)", "Float(1.0)")`
-- **Workaround:** Use `if` statement chains.
+- **Fix:** Added `Token::Float(f) => Pattern::Float(f)` to the match pattern parser. Added opcode `0x2a` (TjmpEqFloat) to the VM (peek + f64 immediate + u16 target). Codegen emits 0x2a for float arms.
 - **Regression Test:** `stdlib/bughunt/probe_21_float_match.tern`
-- **Workaround Example:** `stdlib/bughunt/probe_21_float_match_workaround.tern`
+- **Status:** FIXED
 
 ## [PARSER-003] Array Parameters
 - **Description:** Function parameters cannot be typed as `int[]` or `float[]`.
@@ -41,11 +40,11 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Regression Test:** `stdlib/bughunt/probe_22_int_array_param.tern`
 - **Workaround Example:** `stdlib/bughunt/probe_22_int_array_param_workaround.tern`
 
-## [TCALL-BUG] Forward Reference
+## [TCALL-BUG] Forward Reference — FIXED (2026-04-16)
 - **Description:** A function must be defined before it is called. If a function is called before its definition, it fails silently by returning an incorrect value (e.g., `reject` in regression tests, instead of the expected `truth` or a panic). This indicates an issue with the compiler's or VM's symbol resolution or call stack management for forward references.
-- **Error:** Returns an incorrect value, causing the program to exit with `reject` in regression tests, rather than a compile-time error or a clear runtime failure.
-- **Workaround:** Define functions before they are called.
+- **Fix:** In `emit_program` PASS 1, `emit_function` was overwriting `func_addrs[name]` with a temp-buffer-relative offset. Fixed by re-inserting the correct absolute address after each `emit_function` call.
 - **Regression Test:** `stdlib/bughunt/probe_23_forward_reference.tern`
+- **Status:** FIXED
 
 ## [BET-013] Named Import Stack Overflow
 - **Description:** This bug is currently blocked by a module loading failure (`[MOD-004]`). The intended test case involves importing a function with unfulfilled dependencies, which is expected to cause a `VM Error: [BET-013] Call stack overflow`. However, the import itself fails before the VM can execute the faulty logic.
@@ -102,11 +101,11 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Manually invert trits using `match` or `if/else` (though `match` has its own issues).
 - **Regression Test:** `stdlib/bughunt/probe_09_trit_builtins.tern` (also reproduced in `test_invert.tern`)
 
-## [VM-MATCH-001] Match Arm Leak & Type Pollution
+## [VM-MATCH-001] Match Arm Leak & Type Pollution — FIXED (2026-04-16)
 - **Description:** If a `match` statement is given a value that is not covered by any of its arms, it fails by returning the *input value* itself. If the input is an `int`, this non-trit value is leaked into a `trit` register, polluting the ternary state.
-- **Error:** Pollution of `trit` registers with `int` values. Subsequent use of this polluted register in built-ins (like `consensus`) causes a `VM Error: [BET-001] Stack underflow`.
-- **Workaround:** Ensure all possible values are covered in `match` arms (but see `[PARSER-MATCH-001]` regarding lack of `_`).
+- **Fix:** Added per-arm TPOP (0x0c) immediately before the mismatch skip-jump in the codegen. Each failed arm now self-cleans its TLOAD peek result. The fallback case pushes `Tend` instead of leaking the input value. Old end-of-match fallback TPOP removed (was double-popping).
 - **Regression Test:** `stdlib/bughunt/probe_48_match_unhandled.tern`, `stdlib/bughunt/probe_53_match_leak.tern`
+- **Status:** FIXED
 
 ## [PARSER-MATCH-001] Limited Match Arm Syntax
 - **Description:** The `match` statement is highly restrictive. It does not support:
@@ -117,23 +116,24 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Use nested `match` or `if/else` chains.
 - **Regression Test:** `stdlib/bughunt/probe_49_match_expression.tern`, `stdlib/bughunt/probe_50_match_multi_val.tern`
 
-## [VM-STRUCT-001] Nested Struct Access Stack Underflow
-- **Description:** Accessing a field of a nested struct (e.g., `frame.origin.x`) causes a VM stack underflow. Direct access to top-level fields (e.g., `frame.id`) works correctly.
+## [VM-STRUCT-001] Nested Struct Access Stack Underflow — ARCH-LIMIT
+- **Description:** Accessing a field of a nested struct (e.g., `frame.origin.x`) causes a VM stack underflow. Direct access to top-level fields (e.g., `frame.id`) works correctly. Returning structs from functions also fails — struct fields live in caller registers that are fully restored on TRET.
 - **Error:** `VM Error: [BET-001] Stack underflow — you tried to pop a truth that wasn't there.`
-- **Workaround:** Copy nested structs to local variables before accessing their fields.
+- **Workaround:** Copy nested structs to local variables before accessing their fields. Do not return structs from functions.
 - **Regression Test:** `stdlib/bughunt/probe_54_struct_chaos.tern`
+- **Status:** ARCH-LIMIT (requires struct-value ABI — major refactor)
 
-## [VM-PANIC-001] Trittensor Non-Trit Panic
+## [VM-PANIC-001] Trittensor Non-Trit Panic — FIXED (2026-04-16)
 - **Description:** Storing a non-trit value (e.g., 2, -5) in a `trittensor<N>` fixed array causes a raw Rust panic in the compiler's `trit.rs` rather than a graceful VM error or compile-time type error.
-- **Error:** `thread 'main' panicked at .../trit.rs: Invalid trit value: 2`
-- **Workaround:** Ensure only valid trits (-1, 0, 1) are stored in `trittensor`.
+- **Fix:** `From<i8> for Trit` now saturates: positive → Affirm, negative → Reject, zero → Tend. No panic.
 - **Regression Test:** `stdlib/bughunt/probe_56_deep_nesting.tern`
+- **Status:** FIXED
 
-## [VM-GLOBAL-001] Global Variable Access Stack Underflow
+## [VM-GLOBAL-001] Global Variable Access Stack Underflow — FIXED (2026-04-16)
 - **Description:** Accessing a global variable (defined at the top level with `let`) from within a function causes a VM stack underflow.
-- **Error:** `VM Error: [BET-001] Stack underflow — you tried to pop a truth that wasn't there.`
-- **Workaround:** Pass global state as function parameters.
+- **Fix:** In `parse_program`, when both top-level stmts and an explicit `fn main` exist, top-level declarations are injected into `main`'s body prefix (bare `main()` call filtered to prevent recursion).
 - **Regression Test:** `stdlib/bughunt/probe_62_globals.tern`
+- **Status:** FIXED
 
 ## [PARSER-ARRAY-001] Missing Integer Arrays
 - **Description:** The language lacks support for dynamic integer arrays (`int[]`) or fixed-size integer tensors (`inttensor<N>`). Only `trittensor<N>` is supported for fixed-size arrays.
@@ -147,35 +147,36 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** None. Requires fixing the code generation in the compiler.
 - **Regression Test:** `stdlib/bughunt/probe_68_sparse_skip.tern`
 
-## [PARSER-STR-001] Missing String Concatenation
+## [PARSER-STR-001] Missing String Concatenation — FIXED (2026-04-16)
 - **Description:** The language lacks support for string concatenation using the `+` operator. Attempting to use `+` with strings results in a runtime type mismatch as the VM expects numeric types.
-- **Error:** `VM Error: [BET-007] Runtime type mismatch — expected Numeric but found (String(...), String(...)).`
-- **Workaround:** Print strings sequentially or use separate variables.
+- **Fix:** Added `(Value::String(a), Value::String(b)) => stack.push(Value::String(a + &b))` arm to Tadd (0x02) dispatch in `vm/mod.rs`.
 - **Regression Test:** `stdlib/bughunt/probe_67_string_concat.tern`
+- **Status:** FIXED
 
-## [COMP-TENSOR-001] Tensor Size Truncation (16-bit)
+## [COMP-TENSOR-001] Tensor Size Truncation (16-bit) — ARCH-LIMIT
 - **Description:** The compiler truncates `trittensor<N>` sizes to 16 bits (0-65535) during bytecode emission. Allocating a tensor with a size like 1,000,000 results in a tensor of size 16,960 (1,000,000 % 65536).
 - **Error:** `VM Error: [BET-008] Tensor[0]: index ... is out of bounds — tensor only has <truncated size> element(s).`
 - **Workaround:** Keep tensor sizes below 65,536 or use multiple tensors.
 - **Regression Test:** `stdlib/bughunt/probe_71_large_tensor.tern`, `stdlib/bughunt/probe_72_tensor_limit.tern`
+- **Status:** ARCH-LIMIT (requires 32-bit immediate encoding change across VM + emitter)
 
-## [COMP-BOOL-001] True/False Literal Stack Underflow
+## [COMP-BOOL-001] True/False Literal Stack Underflow — FIXED (2026-04-16)
 - **Description:** Using the boolean literals `true` or `false` in `if` or `while` conditions results in a VM stack underflow. The compiler appears to emit incorrect bytecode for these literals.
-- **Error:** `VM Error: [BET-001] Stack underflow — you tried to pop a truth that wasn't there.`
-- **Workaround:** Use integer `1` (true) / `0` (false) or trit `affirm` / `hold` instead.
+- **Fix:** Added early arms in `Expr::Ident` emit: `"true"` emits TPUSH_INT(1), `"false"` emits TPUSH_INT(0).
 - **Regression Test:** `stdlib/bughunt/probe_73_inf_loop.tern`, `stdlib/bughunt/probe_78_if_true.tern`
+- **Status:** FIXED
 
-## [VM-BUILTIN-001] Missing/Broken Math Built-ins
+## [VM-BUILTIN-001] Missing/Broken Math Built-ins — FIXED (2026-04-16)
 - **Description:** Basic math built-ins like `abs(int)`, `pow(int, int)`, `sqrt(float)`, `min(int, int)`, and `max(int, int)` are either completely missing from the global scope or defined in a way that causes an immediate stack overflow.
-- **Error:** `VM Error: [BET-013] Call stack overflow — max depth (4096) exceeded.`
-- **Workaround:** Explicitly import from `std::trit` for trit versions, or implement manually for `int`.
+- **Fix:** Added inline handler arms in `betbc.rs` `Expr::Call` dispatch before the default TCALL arm for `abs`, `min`, `max`, `pow` (inline loop), and `print` (alias for println). No external TCALL emitted.
 - **Regression Test:** `stdlib/bughunt/probe_79_math_builtins.tern`, `stdlib/bughunt/probe_81_pow_test.tern`
+- **Status:** FIXED
 
-## [VM-BUILTIN-002] Missing/Broken Trit Built-ins (invert, len)
+## [VM-BUILTIN-002] Missing/Broken Trit Built-ins (invert, len) — FIXED (2026-04-16)
 - **Description:** The `invert(trit)` and `len(array)` built-ins, despite being documented and used in examples, cause stack overflows or are missing during execution.
-- **Error:** `VM Error: [BET-013] Call stack overflow — max depth (4096) exceeded.`
-- **Workaround:** For `invert`, use a manual `match`. No workaround for `len`.
+- **Fix:** Added inline handlers in `betbc.rs` `Expr::Call` dispatch: `invert` emits trit negation inline; `len` emits TSHAPE (0x24) + TPOP (discard cols, keep len on stack).
 - **Regression Test:** `stdlib/bughunt/probe_09_trit_builtins.tern`, `stdlib/bughunt/probe_82_array_methods.tern`
+- **Status:** FIXED
 
 ## [PARSER-FN-001] Missing First-Class Functions
 - **Description:** The parser does not support passing functions as arguments or assigning them to variables. The `fn(...) -> ...` type syntax is not recognized.
@@ -195,11 +196,11 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Use regular functions that take the struct as the first argument.
 - **Regression Test:** `stdlib/bughunt/probe_86_struct_methods.tern`
 
-## [PARSER-LIT-001] Missing Non-Decimal Literals
+## [PARSER-LIT-001] Missing Non-Decimal Literals — FIXED (2026-04-16)
 - **Description:** Hexadecimal (`0xFF`) and Binary (`0b1010`) integer literals are not supported.
-- **Error:** `Parse program error: ExpectedToken("Semicolon", "Ident(...)")`
-- **Workaround:** Use decimal representations only.
+- **Fix:** Added two priority-20 regex rules to `Token::Int` in `lexer.rs` for `0x`/`0X` hex and `0b`/`0B` binary prefixes. Both outprioritize the plain decimal rule (priority 10).
 - **Regression Test:** `stdlib/bughunt/probe_91_literals.tern`
+- **Status:** FIXED
 
 ## [PARSER-LIT-002] Missing Character Literals
 - **Description:** Character literals (e.g., `'A'`) are not supported.
