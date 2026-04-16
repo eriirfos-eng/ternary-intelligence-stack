@@ -1,0 +1,63 @@
+                   GNU LESSER GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+Ternlang Open Core — RFI-IRFOS Ternary Intelligence Stack
+Copyright (C) 2026 RFI-IRFOS
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+─────────────────────────────────────────────────────────────────────────────
+
+SCOPE OF THIS LICENSE
+
+The following crates are released under LGPL v3:
+
+  ternlang-core     — lexer, parser, AST, semantic checker, BET VM
+  ternlang-codegen  — BET bytecode emitter and LLVM backend
+  ternlang-cli      — command-line interface (run / build / repl / fmt)
+  ternlang-lsp      — Language Server Protocol implementation
+  ternlang-compat   — Tasm assembler and Owlet S-expression front-end
+  ternlang-test     — integration test harness
+  ternpkg           — package manager
+
+The following crates are NOT covered by this license:
+
+  ternlang-ml       — AI Reasoning Toolkit (commercial)
+  ternlang-hdl      — Verilog/VHDL codegen and RTL simulator (commercial)
+  ternlang-runtime  — distributed actor runtime (commercial)
+  ternlang-moe      — MoE-13 ternary orchestrator (commercial)
+  ternlang-mcp      — MCP server (commercial)
+  ternlang-api      — REST API server (commercial)
+
+See LICENSE-COMMERCIAL for terms governing the commercial tier.
+
+─────────────────────────────────────────────────────────────────────────────
+
+WHAT LGPL v3 MEANS IN PRACTICE
+
+You are free to:
+  - Use ternlang-core (and the other LGPL crates) in any project,
+    including proprietary software, without open-sourcing your code.
+  - Link against the LGPL crates dynamically or statically.
+  - Modify the LGPL crates for your own use.
+
+You must:
+  - Make your modifications to the LGPL crates available under LGPL v3
+    if you distribute a modified version.
+  - Preserve this copyright notice and the LGPL headers in source files.
+  - Not misrepresent the origin of the software.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Full LGPL v3 license text: https://www.gnu.org/licenses/lgpl-3.0.txt
