@@ -356,3 +356,31 @@
 
 **Compiler fixes this session:** none.
 **VM errors encountered:** Reproduced and documented workarounds for [PARSER-002], [PARSER-003], TCALL forward reference bug, and BET-013 named import bug.
+
+---
+
+## 2026-04-16 06:30 — File I/O Implementation & Chaos Monkey Stress Test (Gemini session)
+
+**Batches:**
+- stdlib/bughunt/ — probe_93_agent_test, probe_94_agent_mailbox, probe_95_agent_concurrency, probe_96_file_io (4 files)
+- Added core File I/O capability to the language.
+
+**Do not work in these categories next session:** bughunt, agent, io, core
+
+**Compiler fixes this session:**
+- **[SEMANTIC]** Added `NonExhaustiveMatch` variant and Display implementation to `SemanticError`.
+- **[ASM-EMITTER]** Fixed `Pattern` formatting bug in `tern_asm.rs` (mismatched types and missing Display).
+- **[C-CODEGEN]** Fixed `Pattern` formatting in `ternlang-codegen/src/lib.rs` and added missing `IntTensor`/`FloatTensor` variants to `c_type`.
+- **[BYTECODE]** Updated `betbc.rs` to support `opent`, `readt`, and `writet` built-ins with proper stack balancing (pushing dummy `hold()` for void functions).
+
+**VM enhancements implemented:**
+- **[IO-OPCODES]** Added `Topent` (0x2a), `Treadt` (0x2b), and `Twritet` (0x2c) opcodes.
+- **[IO-ERRORS]** Added `FileOpenError`, `FileReadError`, `FileWriteError`, and `FileNotOpen` variants to `VmError`.
+- **[IO-STORAGE]** Added `open_files` registry to `BetVm` using `std::fs::File`.
+
+**VM bugs encountered:**
+- **[BET-001]** Stack underflow in `writet`/`println` — FIXED by ensuring all Expr-level built-ins push exactly one value.
+- **[AGENT-STATE]** Confirmed agents do not support field declarations (Stateless agents).
+- **[AGENT-BLOCK]** Confirmed `await` is non-blocking on empty mailboxes (returns 0).
+
+**Status:** Ternlang now supports persistence via trit-based files (`+-` protocol). 100+ files across stdlib verified against the new VM build.
