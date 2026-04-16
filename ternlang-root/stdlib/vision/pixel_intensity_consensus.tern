@@ -1,0 +1,28 @@
+// stdlib/vision/pixel_intensity_consensus.tern
+// Demonstrates: Consensus on pixel intensity for noise reduction
+// Tier: 3
+
+from "vision_utils.tern" import *;
+
+fn intensity_consensus(p1: float, p2: float, p3: float, threshold: float) -> trit {
+    let t1: trit = intensity_gate(p1, 0.0, threshold);
+    let t2: trit = intensity_gate(p2, 0.0, threshold);
+    let t3: trit = intensity_gate(p3, 0.0, threshold);
+    
+    return neighbor_consensus(t1, t2, t3);
+}
+
+fn main() -> trit {
+    let p1: float = 0.85;
+    let p2: float = 0.9;
+    let p3: float = 0.1; // Outlier/Noise
+    let thresh: float = 0.8;
+    
+    let res: trit = intensity_consensus(p1, p2, p3, thresh);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
