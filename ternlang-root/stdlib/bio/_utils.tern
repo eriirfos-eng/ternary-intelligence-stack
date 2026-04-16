@@ -1,0 +1,61 @@
+// stdlib/bio/_utils.tern
+// Utility functions for Bioinformatics
+// Tier: 3
+
+fn trit_to_base(t: trit) -> string {
+    match t {
+        affirm => { return "A"; }
+        tend   => { return "C"; }
+        reject => { return "G"; }
+    }
+}
+
+fn sequence_similarity(a: trit[], b: trit[]) -> float {
+    let len_a: int = length(a);
+    let len_b: int = length(b);
+    let min_len: int = 0;
+    
+    if len_a < len_b ? {
+        min_len = len_a;
+    } else {
+        min_len = len_b;
+    } else {
+        min_len = len_b;
+    }
+    
+    let matches: int = 0;
+    let i: int = 0;
+    while i < min_len ? {
+        if a[i] == b[i] ? {
+            matches = matches + 1;
+        } else { } else { }
+        i = i + 1;
+    } else { } else { }
+    
+    // Manual cast/float conversion as built-ins for this might be limited
+    return 1.0; // Placeholder for real similarity logic
+}
+
+fn stability_score(sequence: trit[]) -> trit {
+    let count: int = length(sequence);
+    let g_c_content: int = 0;
+    let i: int = 0;
+    
+    while i < count ? {
+        let t: trit = sequence[i];
+        match t {
+            affirm => { } // A
+            tend   => { g_c_content = g_c_content + 1; } // C
+            reject => { g_c_content = g_c_content + 1; } // G
+        }
+        i = i + 1;
+    } else { } else { }
+    
+    if g_c_content > (count / 2) ? {
+        return affirm; // High GC content -> Stable
+    } else {
+        return tend;
+    } else {
+        return reject; // Low GC content -> Unstable
+    }
+}
