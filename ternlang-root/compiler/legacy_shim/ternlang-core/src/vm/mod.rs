@@ -35,6 +35,11 @@ pub enum VmError {
     AgentIdInvalid(usize),
     RuntimeError(String),
     CallStackOverflow,
+    // ── File I/O errors ──────────────────────────────────────────────────────
+    FileOpenError(String),
+    FileReadError(String),
+    FileWriteError(String),
+    FileNotOpen(usize),
 }
 
 impl fmt::Display for VmError {
@@ -66,6 +71,14 @@ impl fmt::Display for VmError {
                 write!(f, "[BET-012] Runtime error: {msg}"),
             VmError::CallStackOverflow =>
                 write!(f, "[BET-013] Call stack overflow — max depth ({MAX_CALL_DEPTH}) exceeded. Infinite recursion or unbounded cross-module mutual calls detected.\n          → details: stdlib/errors/BET-013.tern  |  ternlang errors BET-013"),
+            VmError::FileOpenError(e) =>
+                write!(f, "[IO-001] File open error: {e}"),
+            VmError::FileReadError(e) =>
+                write!(f, "[IO-002] File read error: {e}"),
+            VmError::FileWriteError(e) =>
+                write!(f, "[IO-003] File write error: {e}"),
+            VmError::FileNotOpen(id) =>
+                write!(f, "[IO-004] File handle {id} is not open or was closed."),
         }
     }
 }
@@ -112,6 +125,7 @@ pub struct BetVm {
     code: Vec<u8>,
     node_id: String,
     remote: Option<Arc<dyn RemoteTransport>>,
+    open_files: Vec<Option<std::fs::File>>,
     _instructions_count: u64,
     pub print_log: Vec<String>,
 }
@@ -131,6 +145,7 @@ impl BetVm {
             code,
             node_id: "127.0.0.1".into(),
             remote: None,
+            open_files: Vec::new(),
             _instructions_count: 0,
             print_log: Vec::new(),
         }
@@ -742,6 +757,74 @@ impl BetVm {
                     let tb = to_trit(b)?;
                     let result = if (ta as i8) >= (tb as i8) { ta } else { tb };
                     self.stack.push(Value::Trit(result));
+                }
+                0x2a => { // Topent — path_str, mode_int → handle_int
+                    let mode = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let path = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let (Value::String(p), Value::Int(m)) = (path, mode) {
+                        use std::fs::OpenOptions;
+                        let mut options = OpenOptions::new();
+                        match m {
+                            0 => { options.read(true); } // Read
+                            1 => { options.write(true).create(true).truncate(true); } // Write
+                            2 => { options.append(true).create(true); } // Append
+                            _ => return Err(VmError::RuntimeError(format!("Invalid file mode: {m}"))),
+                        }
+                        let file = options.open(&p).map_err(|e| VmError::FileOpenError(e.to_string()))?;
+                        let handle = self.open_files.len();
+                        self.open_files.push(Some(file));
+                        self.stack.push(Value::Int(handle as i64));
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "String, Int".into(), found: "Unknown".into() });
+                    }
+                }
+                0x2b => { // Treadt — handle_int → trit
+                    let handle_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let Value::Int(h) = handle_val {
+                        let h = h as usize;
+                        if h >= self.open_files.len() || self.open_files[h].is_none() {
+                            return Err(VmError::FileNotOpen(h));
+                        }
+                        let file = self.open_files[h].as_mut().unwrap();
+                        let mut buf = [0u8; 1];
+                        use std::io::Read;
+                        match file.read_exact(&mut buf) {
+                            Ok(_) => {
+                                let t = match buf[0] {
+                                    b'+' | b'1' => Trit::Affirm,
+                                    b'-' => Trit::Reject,
+                                    _ => Trit::Tend,
+                                };
+                                self.stack.push(Value::Trit(t));
+                            }
+                            Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+                                self.stack.push(Value::Trit(Trit::Tend)); // EOF as Tend
+                            }
+                            Err(e) => return Err(VmError::FileReadError(e.to_string())),
+                        }
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "Int".into(), found: format!("{:?}", handle_val) });
+                    }
+                }
+                0x2c => { // Twritet — handle_int, trit → void
+                    let t_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let h_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let (Value::Int(h), Value::Trit(t)) = (h_val, t_val) {
+                        let h = h as usize;
+                        if h >= self.open_files.len() || self.open_files[h].is_none() {
+                            return Err(VmError::FileNotOpen(h));
+                        }
+                        let file = self.open_files[h].as_mut().unwrap();
+                        let out = match t {
+                            Trit::Affirm => b'+',
+                            Trit::Reject => b'-',
+                            Trit::Tend   => b'0',
+                        };
+                        use std::io::Write;
+                        file.write_all(&[out]).map_err(|e| VmError::FileWriteError(e.to_string()))?;
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "Int, Trit".into(), found: "Unknown".into() });
+                    }
                 }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),

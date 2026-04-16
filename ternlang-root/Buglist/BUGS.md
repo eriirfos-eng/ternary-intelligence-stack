@@ -194,8 +194,21 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Use `println()` to verify actual values during execution.
 - **Regression Test:** `test_println.tern`, `test_return_1.tern`
 
-## [PARSER-008] Empty Array Literal
-- **Description:** Declaring an empty array literal using `let name: trit[] = []` causes a parser error.
-- **Error:** `Parse program error: UnexpectedToken("tensor literal element: RBracket")`
-- **Workaround:** There is no known workaround to create an empty dynamic array via a literal. It must be created by a function that returns an empty array.
-- **Regression Test:** `stdlib/bughunt/probe_30_empty_array_literal.tern`
+## [PARSER-AGENT-001] Missing Agent Fields (State)
+- **Description:** Agents do not support field declarations (e.g., `let count: int = 0;`). The parser only expects function definitions within an `agent` block.
+- **Error:** `Parse stmt error: UnexpectedToken("Agent")` (when trying to define a field inside an agent).
+- **Workaround:** None. Agents are currently stateless between `handle` calls unless external persistence is used.
+- **Regression Test:** `stdlib/bughunt/probe_94_agent_mailbox.tern`
+
+## [VM-AGENT-001] Non-Blocking Await
+- **Description:** The `await` expression does not block if the agent's mailbox is empty. Instead, it immediately returns `tend` (0). This prevents standard actor-model patterns where an agent waits for a message.
+- **Error:** Logical error; `await` on an empty mailbox returns `tend` instead of blocking or yielding.
+- **Workaround:** Use a loop to poll the agent until a non-zero result is received (if applicable).
+- **Regression Test:** `stdlib/bughunt/probe_95_agent_concurrency.tern`
+
+## [VM-AGENT-002] Synchronous Agent Execution
+- **Description:** Despite the "distributed actor" branding, local agents appear to run synchronously on the same thread as the caller during an `await` call. This is confirmed by the VM implementation in `compiler/legacy_shim/ternlang-core/src/vm/mod.rs` (opcode 0x32).
+- **Error:** Lack of true local concurrency.
+- **Workaround:** Use remote agents (Phase 5.1) for true parallelism.
+- **Regression Test:** `stdlib/bughunt/probe_93_agent_test.tern`
+

@@ -14,6 +14,7 @@ pub enum SemanticError {
     ArgTypeMismatch { function: String, param_index: usize, expected: Type, found: Type },
     /// `?` used on an expression that doesn't return trit
     PropagateOnNonTrit { found: Type },
+    NonExhaustiveMatch(String),
 }
 
 impl std::fmt::Display for SemanticError {
@@ -37,6 +38,8 @@ impl std::fmt::Display for SemanticError {
                 write!(f, "[FN-004] '{function}' arg {param_index}: expected {expected:?}, found {found:?}. Types travel with their values — they don't change at the border.\n          → details: stdlib/errors/FN-004.tern  |  ternlang errors FN-004"),
             Self::PropagateOnNonTrit { found } =>
                 write!(f, "[PROP-001] '?' used on a {found:?} expression. Only trit-returning functions carry the three-valued signal. The third state requires a trit.\n            → details: stdlib/errors/PROP-001.tern  |  ternlang errors PROP-001"),
+            Self::NonExhaustiveMatch(msg) =>
+                write!(f, "Non-exhaustive match: {msg}"),
         }
     }
 }
