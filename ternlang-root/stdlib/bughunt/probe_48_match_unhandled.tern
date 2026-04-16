@@ -1,0 +1,20 @@
+// stdlib/bughunt/probe_48_match_unhandled.tern
+// Demonstrates: Behavior of match statement when input value is not covered by any arm.
+// Tier: 1
+
+fn score(n: int) -> trit {
+    match n {
+        0 => { return conflict(); }
+        1 => { return hold(); }
+        2 => { return truth(); }
+    }
+}
+
+fn main() -> trit {
+    let r: trit = score(5);
+    println("Result of unhandled match: ");
+    println(r);
+    return truth();
+}
+
+main();

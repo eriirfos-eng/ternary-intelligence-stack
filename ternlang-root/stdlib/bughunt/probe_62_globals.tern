@@ -1,0 +1,12 @@
+// stdlib/bughunt/probe_62_globals.tern
+// Tier: 1
+
+let counter: int = 42;
+
+fn main() -> trit {
+    println("Global Counter: ");
+    println(counter);
+    return truth();
+}
+
+main();

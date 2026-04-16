@@ -1,4 +1,0 @@
-let x: trit = 1;
-let y: trit = -x;
-let z: trit = x + y;
-return z;

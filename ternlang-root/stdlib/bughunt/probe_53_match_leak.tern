@@ -1,0 +1,24 @@
+// stdlib/bughunt/probe_53_match_leak.tern
+// Demonstrates: Unhandled match arm on int leaks the int value into a trit register.
+// Tier: 1
+
+fn leak(n: int) -> trit {
+    match n {
+        0 => { return conflict(); }
+    }
+}
+
+fn main() -> trit {
+    let leaked: trit = leak(42);
+    println("Leaked value in trit: ");
+    println(leaked);
+    
+    // Test if this non-trit value in a trit register causes issues with other trits
+    let consensus_val: trit = consensus(leaked, truth());
+    println("Consensus(leaked, 1): ");
+    println(consensus_val);
+    
+    return truth();
+}
+
+main();

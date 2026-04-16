@@ -1,0 +1,30 @@
+// stdlib/bughunt/probe_54_struct_chaos.tern
+// Demonstrates: Struct definition, nesting, and array of structs.
+// Tier: 1
+
+struct Point {
+    x: int,
+    y: int,
+    status: trit
+}
+
+struct Frame {
+    id: int,
+    origin: Point
+}
+
+fn main() -> trit {
+    let p1: Point = Point { x: 10, y: 20, status: truth() };
+    let f1: Frame = Frame { id: 1, origin: p1 };
+    
+    println("Frame ID: ");
+    println(f1.id);
+    
+    // Test nested access
+    println("Origin X: ");
+    println(f1.origin.x);
+    
+    return truth();
+}
+
+main();

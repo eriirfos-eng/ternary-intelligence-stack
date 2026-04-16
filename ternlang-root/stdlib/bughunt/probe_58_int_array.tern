@@ -1,0 +1,18 @@
+// stdlib/bughunt/probe_58_int_array.tern
+// Demonstrates: Whether int[] is supported for literals and variables.
+// Tier: 1
+
+fn main() -> trit {
+    // Is int[] a valid type?
+    let items: int[] = [10, 20, 30, 42];
+    
+    println("Item 0: ");
+    println(items[0]);
+    
+    println("Item 3: ");
+    println(items[3]);
+    
+    return truth();
+}
+
+main();

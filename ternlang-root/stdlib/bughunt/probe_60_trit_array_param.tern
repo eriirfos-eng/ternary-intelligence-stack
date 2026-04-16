@@ -1,0 +1,25 @@
+// stdlib/bughunt/probe_60_trit_array_param.tern
+// Demonstrates: Passing trit[] to a function and returning it.
+// Tier: 1
+
+fn process_array(arr: trit[]) -> trit[] {
+    println("Array length? (can't check)");
+    println("Item 0: ");
+    println(arr[0]);
+    return arr;
+}
+
+fn main() -> trit {
+    // How do we even CREATE a trit[] if literals are trittensor?
+    // Maybe an empty one from some builtin?
+    // Or maybe cast?
+    
+    // Let's try to just use a literal where trit[] is expected.
+    let res: trit[] = process_array([1, 0, -1]);
+    println("Result Item 2: ");
+    println(res[2]);
+    
+    return truth();
+}
+
+main();

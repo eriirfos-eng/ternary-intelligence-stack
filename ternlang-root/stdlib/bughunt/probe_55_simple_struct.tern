@@ -1,0 +1,17 @@
+// stdlib/bughunt/probe_55_simple_struct.tern
+// Demonstrates: Simple struct field access.
+// Tier: 1
+
+struct Point {
+    x: int,
+    y: int
+}
+
+fn main() -> trit {
+    let p: Point = Point { x: 42, y: 7 };
+    println("X: ");
+    println(p.x);
+    return truth();
+}
+
+main();

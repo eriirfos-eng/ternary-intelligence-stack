@@ -1,0 +1,10 @@
+// stdlib/bughunt/probe_63_mutual_rec_b.tern
+// Tier: 1
+from "probe_63_mutual_rec_a.tern" import *;
+
+fn func_b(n: int) -> int {
+    println("b: ");
+    println(n);
+    if n <= 0 { return 0; }
+    return func_a(n - 1);
+}
