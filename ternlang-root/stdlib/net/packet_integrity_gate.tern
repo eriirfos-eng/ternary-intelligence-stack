@@ -1,0 +1,32 @@
+// stdlib/net/packet_integrity_gate.tern
+// Demonstrates: Ternary packet integrity check (Corrupt/Valid/Unknown)
+// Tier: 2
+
+from "_utils.tern" import aggregate_node_signals;
+
+fn verify_packet(checksum_result: trit, parity_result: trit) -> trit {
+    let signals: trittensor<2>;
+    signals[0] = checksum_result;
+    signals[1] = parity_result;
+    
+    let result: trit = aggregate_node_signals(signals);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn main() -> trit {
+    let checksum: trit = 1;
+    let parity: trit = 1;
+
+    let result: trit = verify_packet(checksum, parity);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
