@@ -1,0 +1,29 @@
+// stdlib/eval/perplexity_mask.tern
+// Demonstrates: Language model perplexity evaluation mask
+// Tier: 2
+
+from "_utils.tern" import evaluate_metric;
+
+fn check_perplexity(perp: float, threshold: float) -> trit {
+    // Lower perplexity is better
+    let score: trit = evaluate_metric(perp, threshold);
+    
+    match score {
+        1 => { return reject; }  // High perplexity (Bad)
+        0 => { return hold; }    // Borderline
+        -1 => { return affirm; } // Low perplexity (Good)
+    }
+}
+
+fn main() -> trit {
+    let current_perp: float = 25.0;
+    let target_perp: float = 30.0;
+
+    let result: trit = check_perplexity(current_perp, target_perp);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
