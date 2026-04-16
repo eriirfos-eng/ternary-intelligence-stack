@@ -1,0 +1,19 @@
+// probe_97_nodeid_runtime.tern
+// Regression probe for Bug 3 — NodeId hardcoded emission.
+//
+// BEFORE fix: nodeid always emitted "127.0.0.1:7373" literal bytes in bytecode,
+//             ignoring --node-addr / vm.set_node_id() at runtime.
+// AFTER fix:  nodeid emits opcode 0x36 (TNODEID) which pushes vm.node_id at runtime.
+//
+// Run with:
+//   ternlang run stdlib/bughunt/probe_97_nodeid_runtime.tern
+//   Expected output line: "node: 127.0.0.1"  (the VM default)
+//
+//   ternlang run stdlib/bughunt/probe_97_nodeid_runtime.tern --node-addr 10.0.0.1:9000
+//   Expected output line: "node: 10.0.0.1:9000"  (runtime injection)
+
+fn main() -> trit {
+    let addr: string = nodeid;
+    println(addr);
+    return truth();
+}

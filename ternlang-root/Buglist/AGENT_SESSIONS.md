@@ -446,3 +446,27 @@ Imports added:
 **Compiler fixes this session:** none.
 **VM errors encountered:** none.
 **Status:** 1 file added (verification & cleanup).
+
+---
+
+## 2026-04-16 (Claude Sonnet 4.6) — BUGFIX session — 3 bugs closed, 3 regression probes added
+
+**Batches:**
+- Buglist/BUGS.md — added [BUG-1], [BUG-2], [BUG-3] entries with FIXED status
+- Buglist/Fixes.md — appended verification records for all three bugs
+- stdlib/bughunt/ — probe_97_nodeid_runtime.tern, probe_98_forin_nested.tern, probe_99_register_stress.tern
+- compiler/legacy_shim/ternlang-core/src/vm/mod.rs — added opcode 0x36 (TNODEID)
+- compiler/legacy_shim/ternlang-core/src/codegen/betbc.rs — Expr::NodeId now emits 0x36
+
+**Do not work in these categories next session:** bughunt (regression probes just added)
+
+**Compiler fixes this session:**
+- **[BUG-3 — NodeId hardcoded]:** Added opcode `0x36` (TNODEID) to vm/mod.rs — pushes `vm.node_id` at runtime. Updated `Expr::NodeId` in betbc.rs to emit `0x36` instead of hardcoded `b"127.0.0.1:7373"` via TPUSH_STRING. CLI `--node-addr` now correctly propagates through the full stack.
+
+**Verification results:**
+- [BUG-1] probe_98_forin_nested.tern → printed 65 (correct: 8×5 + 5×5). FIXED.
+- [BUG-2] probe_99_register_stress.tern → printed 435 (correct: sum 0..29). FIXED.
+- [BUG-3] probe_97_nodeid_runtime.tern → default: 127.0.0.1; --node-addr 10.0.0.1:9000: 10.0.0.1:9000. FIXED.
+
+**VM errors encountered:** none.
+**Status:** 3 bugs closed. Build clean. All regression probes pass.

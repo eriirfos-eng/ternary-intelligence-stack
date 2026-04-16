@@ -826,6 +826,12 @@ impl BetVm {
                         return Err(VmError::TypeMismatch { expected: "Int, Trit".into(), found: "Unknown".into() });
                     }
                 }
+                0x36 => { // Tnodeid — push this node's runtime address as a String
+                    // Defers the binding to runtime so --node-addr is respected.
+                    // Previously, Expr::NodeId emitted a hardcoded "127.0.0.1:7373"
+                    // string at compile time, ignoring vm.set_node_id().
+                    self.stack.push(Value::String(self.node_id.clone()));
+                }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
             }

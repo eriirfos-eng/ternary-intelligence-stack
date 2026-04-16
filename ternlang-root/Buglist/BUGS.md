@@ -2,6 +2,25 @@
 
 This file tracks known bugs in the Ternlang compiler and VM.
 
+## [BUG-1] ForIn Register Leak — FIXED (2026-04-16)
+- **Description:** Each `for x in tensor` loop allocated 4 internal registers (it_reg, r_reg, i_reg, v_reg) without releasing them. After ~6–7 loops in a single function, the register file was exhausted, causing silent dropped stores and zero-value loads.
+- **Fix:** `pre_loop_reg` snapshot + `self.next_reg = pre_loop_reg` restore + `self.symbols.remove(var)` in `betbc.rs`.
+- **Regression Test:** `stdlib/bughunt/probe_98_forin_nested.tern` (expected output: 65)
+- **Status:** FIXED
+
+## [BUG-2] Hard Register File Limit — FIXED (2026-04-16)
+- **Description:** VM register file was `[Value; 27]`. Functions with >27 locals silently corrupted: stores dropped, loads returned zero.
+- **Fix:** Changed to `Vec<Value>` with auto-grow in TSTORE/TLOAD. `alloc_reg()` warns at >255.
+- **Regression Test:** `stdlib/bughunt/probe_99_register_stress.tern` (30 locals, expected sum: 435)
+- **Status:** FIXED
+
+## [BUG-3] NodeId Hardcoded Emission — FIXED (2026-04-16)
+- **Description:** `Expr::NodeId` emitted a hardcoded `"127.0.0.1:7373"` string into bytecode at compile time, ignoring `--node-addr` / `vm.set_node_id()` at runtime. Distributed modules always announced the wrong address.
+- **Fix:** Added opcode `0x36` (TNODEID) to `vm/mod.rs` that pushes `Value::String(self.node_id.clone())`. Updated `betbc.rs` `Expr::NodeId` to emit `0x36` instead of hardcoded bytes.
+- **Regression Test:** `stdlib/bughunt/probe_97_nodeid_runtime.tern` (default: `127.0.0.1`; `--node-addr 10.0.0.1:9000`: `10.0.0.1:9000`)
+- **Status:** FIXED
+
+
 ## [MOD-004] Module Loading Failure
 - **Description:** The module system fails to load imported files, reporting them as not found or not readable. This prevents the testing of import-related bugs, such as `[BET-013] Named Import Stack Overflow`, as the necessary dependency files cannot be accessed by the VM during execution.
 - **Error:** `[MOD-004] Could not load file '<filename>' — file not found or not readable.`

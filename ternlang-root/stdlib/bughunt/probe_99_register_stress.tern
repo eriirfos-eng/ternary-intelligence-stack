@@ -1,0 +1,48 @@
+// probe_99_register_stress.tern
+// Regression probe for Bug 2 — hard register file limit.
+//
+// BEFORE fix: registers was [Value; 27]. Functions with >27 locals caused silent
+//             corruption: stores were dropped, loads returned zero, wrong results.
+// AFTER fix:  registers is Vec<Value>; TSTORE/TLOAD auto-grow on demand.
+//
+// This probe declares 30 distinct local int variables (3 beyond the old limit),
+// assigns sequential values, sums them, and prints the result.
+// Expected: 0+1+2+...+29 = 435
+
+fn main() -> trit {
+    let a0: int = 0;
+    let a1: int = 1;
+    let a2: int = 2;
+    let a3: int = 3;
+    let a4: int = 4;
+    let a5: int = 5;
+    let a6: int = 6;
+    let a7: int = 7;
+    let a8: int = 8;
+    let a9: int = 9;
+    let a10: int = 10;
+    let a11: int = 11;
+    let a12: int = 12;
+    let a13: int = 13;
+    let a14: int = 14;
+    let a15: int = 15;
+    let a16: int = 16;
+    let a17: int = 17;
+    let a18: int = 18;
+    let a19: int = 19;
+    let a20: int = 20;
+    let a21: int = 21;
+    let a22: int = 22;
+    let a23: int = 23;
+    let a24: int = 24;
+    let a25: int = 25;
+    let a26: int = 26;
+    let a27: int = 27;
+    let a28: int = 28;
+    let a29: int = 29;
+    let sum: int = a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9
+                 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17 + a18 + a19
+                 + a20 + a21 + a22 + a23 + a24 + a25 + a26 + a27 + a28 + a29;
+    println(sum);
+    return truth();
+}
