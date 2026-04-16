@@ -1,0 +1,50 @@
+// stdlib/finance/arbitrage_gate.tern
+// Demonstrates: Multi-market Arbitrage Gate via Consensus
+// Tier: 2 — Pro Standard
+
+// arbitrage_gate: Checks if multiple market feeds confirm an arbitrage opportunity.
+// If two or more feeds show affirm (1), the gate opens.
+fn arbitrage_gate(m1: trit, m2: trit, m3: trit) -> trit {
+    let c12: trit = consensus(m1, m2);
+    
+    match c12 {
+        -1 => { 
+            // Unified rejection of opportunity
+            return -1; 
+        }
+         0 => {
+            // Disagreement between feeds 1 and 2. Check if m3 confirms either.
+            if m3 == m1 { return m1; }
+            if m3 == m2 { return m2; }
+            return 0; // No consensus reached
+        }
+         1 => { 
+            // Unified affirmation of opportunity
+            return 1; 
+        }
+    }
+}
+
+// execute_trade_size: Returns the transaction size based on signal confidence.
+fn execute_trade_size(signal: trit, base_size: float) -> float {
+    match signal {
+        -1 => { return 0.0; } // No trade
+         0 => { return 0.0; } // Wait for more data
+         1 => { return base_size; } // Full trade execution
+    }
+}
+
+fn main() -> trit {
+    let market1: trit = 1;
+    let market2: trit = -1;
+    let market3: trit = 1;
+    
+    // Market 1 and 3 agree on 1. Gate should return 1 (truth).
+    let signal: trit = arbitrage_gate(market1, market2, market3);
+    
+    match signal {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => { return conflict(); }
+    }
+}
