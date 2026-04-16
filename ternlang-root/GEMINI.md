@@ -160,3 +160,21 @@ fn main() -> trit {
 2. **Tri-State Review**: Affirm (+1) = Merged, Hold (0) = Discuss, Reject (-1) = No fluff.
 3. **SEO Mandate**: Use keywords: `XAI`, `Sparsity-Aware`, `Deterministic`, `Quantization`.
 4. **License**: LGPL (Core) / BSL-1.1 (ML/MoE/API).
+
+---
+
+## 11. Session Log — 2026-04-16
+
+- **Accomplishments:**
+    - Delivered 30 proprietary modules across Tier 2 (nlp, safety, econ, control, societal, apps) and Tier 3 (bio, crypto, research, hardware, sim, causal).
+    - Fixed [BET-007] compiler stack leaks in `IfTernary` and `WhileTernary` statements in `betbc.rs`.
+    - Fixed register reclamation leak in `Match` statement arms in `betbc.rs`.
+    - Standardized `_utils.tern` utility pattern across all proprietary categories for code reuse.
+    - Verified all 30 files exit cleanly on the fixed VM.
+- **Compiler Status:**
+    - `betbc.rs` is now stack-neutral for all ternary control flow blocks.
+    - `Match` arms correctly reclaim local registers, preventing exhaustion in deep functions.
+- **Next Session Focus:**
+    - Expand Tier 2/3 coverage into `nn/`, `ml/`, and `eval/`.
+    - Implement more complex `trittensor` manipulations for industrial inference.
+    - Optimize `@sparseskip` paths in `ternlang-ml` using the now-stable ternary loops.
