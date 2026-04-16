@@ -6,23 +6,22 @@ from "./_utils.tern" import *;
 
 fn stability_gate(oscillation_amplitude: float, damping_ratio: float) -> trit {
     let osc_status: trit = saturation_check(oscillation_amplitude, 10.0);
-    // If oscillation is high (affirm), stability is reject
     
     match osc_status {
         affirm => {
-            return reject; // Unstable
-        }
-        tend => {
-            return tend; // Uncertain
+            return reject; // Positive saturation of oscillation -> UNSTABLE
         }
         reject => {
-            // Oscillation is low (within limits)
+            return reject; // Negative saturation of oscillation -> UNSTABLE
+        }
+        tend => {
+            // No saturation (oscillation is within limits)
             if damping_ratio > 0.7 ? {
                 return affirm; // Stable/Damped
             } else {
                 return tend;
             } else {
-                return tend; // Underdamped but not necessarily unstable yet
+                return tend; // Underdamped
             }
         }
     }
