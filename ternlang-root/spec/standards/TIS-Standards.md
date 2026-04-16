@@ -20,7 +20,7 @@ This document specifies the requirements, performance metrics, and benchmarking 
 To receive "TIS-Certified Silicon" status (e.g., Huawei T3, FP5500), the hardware must:
 1.  **Implement T-DRIVER v1.0:** Expose all ALUs and registers via the RFI-IRFOS HAL.
 2.  **Native 0-Trit Bypass:** The silicon must physically skip clock cycles when performing arithmetic operations (e.g., matrix multiplication) involving a 0-trit. Emulating the skip via binary branch prediction results in immediate certification failure.
-3.  **The Genesis Tether:** The firmware must securely integrate the `verify_genesis_anchor()` heartbeat. If the Fly.io API is unreachable, the hardware must hard-lock into deliberative hold.
+3.  **BET-ISA Compliance:** The firmware must implement the full BET-ISA v1.0 instruction set including native 0-trit bypass, and expose a `/health` ping endpoint compatible with the ternlang-api liveness protocol.
 
 ### 3.2. Software Compliance (Middleware & Agents)
 1.  **Zero-State Exhaustiveness:** The compiler must mathematically prove that every logical branch handles the `0` (TEND) state. Binary coercion (translating 0 to null/false) is a violation.

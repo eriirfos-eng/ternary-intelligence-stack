@@ -13,7 +13,7 @@ use ternlang_core::codegen::betbc::BytecodeEmitter;
 use ternlang_core::codegen::tern_asm::emit_tern_asm;
 use ternlang_core::vm::{BetVm, Value};
 use ternlang_core::ModuleResolver;
-use ternlang_ml::{TritMatrix, bitnet_threshold, benchmark};
+
 use ternlang_hdl::{BetSimEmitter, BetRtlProcessor};
 use ternlang_runtime::TernNode;
 use walkdir::WalkDir;

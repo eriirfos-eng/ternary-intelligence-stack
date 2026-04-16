@@ -450,7 +450,7 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "GET  /api/stream/moe_orchestrate":  "SSE: MoE-13 orchestration pass streamed event-by-event",
             "GET  /api/stream/deliberate":       "SSE: EMA deliberation — one event per round, live feed",
             "POST /api/v1/taas/infer":           "TaaS: Hardware-native sparse inference with MoE-13 safety audit.",
-            "POST /api/v1/heartbeat":            "Genesis Tether heartbeat + anonymous telemetry",
+            "POST /api/v1/heartbeat":            "API liveness ping — returns server timestamp and version",
         },
         "mcp": {
             "url":         "https://ternlang.com/mcp",

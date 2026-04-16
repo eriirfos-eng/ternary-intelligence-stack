@@ -1,0 +1,15 @@
+// stdlib/tutorials/compliance/lesson_03_assert_statement.tern
+// Demonstrates: using the assert statement to enforce compliance rules.
+// Tier: 1
+
+fn main() -> trit {
+    let required_confidence: float = 0.9;
+    let actual_confidence: float = 0.95;
+
+    // The assert statement checks if a condition is true. If the condition is false,
+    // the program will exit with an error. This is useful for enforcing compliance
+    // rules, such as ensuring that a model's confidence is above a certain threshold.
+    assert(actual_confidence >= required_confidence);
+
+    return 1;
+}

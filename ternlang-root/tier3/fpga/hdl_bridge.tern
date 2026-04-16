@@ -1,32 +1,31 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Module: tier3/fpga/hdl_bridge.tern
-// Purpose: Hardware-Software Bridge for TernCore-Silicon VHDL generation.
-// License: Proprietary - Enterprise Only
+// tier3/fpga/hdl_bridge.tern
+// Purpose: Hardware-Software Bridge for BET-ISA FPGA bitstream generation.
+// License: BSL-1.1 — Tier 3 Enterprise
 
-agent HDLBridge {
-    fn map_to_isa(op_code: int) -> trit {
-        // Direct mapping to TernCore-Silicon Instruction Set (V1.0)
-        match op_code {
-            100 => return affirm; // TADD
-            200 => return affirm; // TMUL
-            300 => return affirm; // TSKIP
-            _   => return tend;   // Ambiguous instruction
-        }
+fn map_to_isa(op_code: int) -> trit {
+    match op_code {
+        100 => { return affirm; }
+        200 => { return affirm; }
+        300 => { return affirm; }
+          0 => { return tend;   }
+         -1 => { return reject; }
+          1 => { return tend;   }
     }
+}
 
-    fn generate_bitstream(model_id: int, security_key: trit_tensor) -> trit {
-        // Final gate for FPGA bitstream generation
-        // Requires valid Genesis Tether handshake
-        if security_key.is_valid() {
-            return affirm;
-        }
-        return reject;
+fn check_clock_stability(clock_speed: float) -> trit {
+    match clock_speed {
+        5.0 => { return tend;   }
+        6.0 => { return reject; }
+         -1 => { return reject; }
     }
+}
 
-    fn optimize_timing(clock_speed: float) -> trit {
-        if clock_speed > 5.0 { // 5GHz threshold
-            return reject; // Potential thermal instability
-        }
-        return affirm;
+fn main() -> trit {
+    let isa: trit = map_to_isa(100);
+    match isa {
+        -1 => { return reject; }
+         0 => { return tend;   }
+         1 => { return affirm; }
     }
 }

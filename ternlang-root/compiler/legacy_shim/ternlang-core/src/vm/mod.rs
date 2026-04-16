@@ -40,6 +40,7 @@ pub enum VmError {
     FileReadError(String),
     FileWriteError(String),
     FileNotOpen(usize),
+    AssertionFailed,
 }
 
 impl fmt::Display for VmError {
@@ -79,6 +80,8 @@ impl fmt::Display for VmError {
                 write!(f, "[IO-003] File write error: {e}"),
             VmError::FileNotOpen(id) =>
                 write!(f, "[IO-004] File handle {id} is not open or was closed."),
+            VmError::AssertionFailed =>
+                write!(f, "[ASSERT-001] Assertion failed: an assert() condition evaluated to reject or tend."),
         }
     }
 }
@@ -849,6 +852,17 @@ impl BetVm {
                     // Previously, Expr::NodeId emitted a hardcoded "127.0.0.1:7373"
                     // string at compile time, ignoring vm.set_node_id().
                     self.stack.push(Value::String(self.node_id.clone()));
+                }
+                0x37 => { // Tassert
+                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let is_affirm = match val {
+                        Value::Trit(Trit::Affirm) => true,
+                        Value::Int(1) => true,
+                        _ => false,
+                    };
+                    if !is_affirm {
+                        return Err(VmError::AssertionFailed);
+                    }
                 }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
