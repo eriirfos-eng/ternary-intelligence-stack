@@ -1,0 +1,43 @@
+// stdlib/ml/learning_rate_consensus.tern
+// Demonstrates: Learning rate adjustment consensus
+// Tier: 2
+
+from "ml_utils.tern" import *;
+
+fn lr_adjustment(loss_signal: trit, val_acc_signal: trit) -> trit {
+    // Logic: if loss is increasing (-1 signal from eval_loss_delta?) and acc is decreasing, reduce LR.
+    // Wait, eval_loss_delta returns 1 if increasing (bad).
+    
+    if loss_signal == 1 ? {
+        if val_acc_signal == -1 ? {
+            return reject; // Reduce LR
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
+    } else {
+        if loss_signal == -1 ? {
+            return affirm; // Increase LR or stay
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
+    } else {
+        return tend;
+    }
+}
+
+fn main() -> trit {
+    let loss: trit = 1; // Increasing
+    let acc: trit = -1; // Decreasing
+    
+    let res: trit = lr_adjustment(loss, acc);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
