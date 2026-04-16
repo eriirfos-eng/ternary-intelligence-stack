@@ -1,0 +1,36 @@
+// stdlib/timeseries/lagged_correlation_mask.tern
+// Demonstrates: Lagged correlation masking for time series
+// Tier: 3
+
+from "timeseries_utils.tern" import *;
+
+fn check_correlation(corr: float, threshold: float) -> trit {
+    // Logic: if correlation > threshold, affirm. If < -threshold, affirm (neg corr).
+    // Else hold.
+    if corr > threshold ? {
+        return affirm;
+    } else {
+        if corr < (0.0 - threshold) ? {
+            return affirm;
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
+    } else {
+        return reject; // This arm is for unknown/null
+    }
+}
+
+fn main() -> trit {
+    let c: float = 0.85;
+    let t: float = 0.7;
+    
+    let res: trit = check_correlation(c, t);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
