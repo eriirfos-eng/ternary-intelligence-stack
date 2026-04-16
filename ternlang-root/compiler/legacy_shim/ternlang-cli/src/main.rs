@@ -24,7 +24,7 @@ use colored::*;
 #[command(about = "Ternlang — Balanced Ternary Intelligence Stack\n\nUsage:\n  ternlang                    → interactive REPL\n  ternlang <file.tern>        → run a .tern file directly\n  ternlang run <file.tern>    → same as above\n  ternlang repl               → interactive REPL\n  ternlang build <file.tern>  → compile to bytecode\n  ternlang fmt <file.tern>    → format source\n  ternlang test [path]        → run test suite", long_about = None)]
 struct Cli {
     /// Optional .tern file to run directly (shortcut for `ternlang run <file>`)
-    #[arg(value_name = "FILE", conflicts_with = "command")]
+    #[arg(value_name = "FILE")]
     file: Option<PathBuf>,
 
     #[command(subcommand)]
@@ -47,6 +47,14 @@ enum Commands {
         /// Used by the VS Code extension to map register dumps back to source variable names.
         #[arg(long)]
         emit_symbols: bool,
+        /// Show full register dump and bytecode details after execution
+        #[arg(long)]
+        debug: bool,
+    },
+    /// Parse and validate a .tern file without running it
+    Check {
+        /// Path to the .tern file (or directory — checks all .tern files found)
+        file: PathBuf,
     },
     /// Compile a .tern file to bytecode or TERN assembly
     Build {
@@ -135,13 +143,13 @@ fn main() {
     // Shortcut: `ternlang file.tern` → run directly (same as `ternlang run file.tern`)
     // Shortcut: `ternlang`           → interactive REPL
     let command = match (cli.file, cli.command) {
-        (Some(f), _) => Commands::Run { file: f, node_addr: None, peer: vec![], emit_symbols: false },
+        (Some(f), _) => Commands::Run { file: f, node_addr: None, peer: vec![], emit_symbols: false, debug: false },
         (None, Some(c)) => c,
         (None, None) => Commands::Repl,
     };
 
     match &command {
-        Commands::Run { file, node_addr, peer, emit_symbols } => {
+        Commands::Run { file, node_addr, peer, emit_symbols, debug } => {
             let input = fs::read_to_string(file).expect("Failed to read file");
             let mut parser = Parser::new(&input);
             let mut emitter = BytecodeEmitter::new();
@@ -223,17 +231,26 @@ fn main() {
             }
 
             let code = emitter.finalize();
-            println!("Emitted {} bytes of bytecode", code.len());
+            let byte_count = code.len();
+
+            // Build a reverse symbol map: register index (u8) → variable name
+            let sym_rev: std::collections::HashMap<u8, String> = {
+                let map = emitter.get_symbols();
+                map.iter()
+                    .filter(|(k, _)| !k.contains('.') && !k.contains('['))
+                    .map(|(k, v)| (*v, k.clone()))
+                    .collect()
+            };
+
             let mut vm = BetVm::new(code);
             emitter.register_agents(&mut vm);
 
-            // Phase 5.1: Distributed runtime setup
+            // Distributed runtime setup
             if let Some(addr) = node_addr {
                 let node = Arc::new(TernNode::new(addr));
                 node.listen();
                 eprintln!("[runtime] TernNode listening on {}", addr);
                 vm.set_node_id(addr.clone());
-                // Pre-connect to any specified peers
                 for peer_addr in peer {
                     match node.connect(peer_addr) {
                         Ok(()) => eprintln!("[runtime] connected to peer {}", peer_addr),
@@ -243,34 +260,89 @@ fn main() {
                 vm.set_remote(node);
             }
 
+            // Header
+            let sep = "─".repeat(52);
+            println!("{}", sep.dimmed());
+            if *debug {
+                println!("  {}  {}  {}", "ternlang".bold(), file.display().to_string().cyan(), "[debug]".yellow());
+            } else {
+                println!("  {}  {}", "ternlang".bold(), file.display().to_string().cyan());
+            }
+            println!("  compiled   {} bytes  ·  BET bytecode", byte_count.to_string().dimmed());
+            println!("{}", sep.dimmed());
+
             match vm.run() {
                 Ok(_) => {
-                    // Check top of stack for return value (affirm/tend/reject)
                     let result = vm.peek_stack();
-                    if let Some(Value::Trit(ternlang_core::trit::Trit::Reject)) = result {
-                        eprintln!("Program exited with error (Reject state).");
-                        std::process::exit(1);
+
+                    // Debug: print non-default registers with variable names
+                    if *debug {
+                        let mut printed_any = false;
+                        for i in 0u8..32 {
+                            let val = vm.get_register(i);
+                            let is_default = matches!(val, Value::Trit(ternlang_core::trit::Trit::Tend));
+                            if !is_default {
+                                if !printed_any {
+                                    println!("  {}", "registers (non-zero):".bold());
+                                    printed_any = true;
+                                }
+                                let name_hint = sym_rev.get(&i)
+                                    .map(|n| format!("  [{}]", n).dimmed().to_string())
+                                    .unwrap_or_default();
+                                let val_str = format_value(&val);
+                                println!("    r{:<3} {}{}", i, val_str, name_hint);
+                            }
+                        }
+                        if printed_any { println!("{}", sep.dimmed()); }
                     }
 
-                    println!("Program exited successfully.");
-                    // Print registers for debugging
-                    for i in 0..10 {
-                        let val = vm.get_register(i);
-                        match val {
-                            Value::Trit(t) => println!("Reg {}: trit({})", i, t),
-                            Value::Int(v) => println!("Reg {}: int({})", i, v),
-                            Value::Float(f) => println!("Reg {}: float({})", i, f),
-                            Value::TensorRef(r) => println!("Reg {}: tensor_ref({})", i, r),
-                            Value::AgentRef(a, _)  => println!("Reg {}: agent_ref({})", i, a),
-                            Value::String(s) => println!("Reg {}: string({:?})", i, s),
+                    // Result line
+                    match &result {
+                        Some(Value::Trit(ternlang_core::trit::Trit::Reject)) => {
+                            println!("  {}     {}", "result".bold(), "-1  reject".red().bold());
+                            println!("{}", sep.dimmed());
+                            eprintln!("  {}  program returned reject (−1).", "✗".red().bold());
+                            std::process::exit(1);
                         }
+                        Some(Value::Trit(ternlang_core::trit::Trit::Tend)) => {
+                            println!("  {}     {}", "result".bold(), " 0  hold".yellow());
+                            println!("{}", sep.dimmed());
+                            println!("  {}  program held — no final decision.", "●".yellow());
+                        }
+                        Some(Value::Trit(ternlang_core::trit::Trit::Affirm)) => {
+                            println!("  {}     {}", "result".bold(), "+1  affirm".green().bold());
+                            println!("{}", sep.dimmed());
+                            println!("  {}  program exited cleanly.", "✓".green().bold());
+                        }
+                        Some(v) => {
+                            println!("  {}     {}", "result".bold(), format_value(v).green());
+                            println!("{}", sep.dimmed());
+                            println!("  {}  program exited cleanly.", "✓".green().bold());
+                        }
+                        None => {
+                            println!("  {}     {}", "result".bold(), "(stack empty)".dimmed());
+                            println!("{}", sep.dimmed());
+                            println!("  {}  program exited cleanly.", "✓".green().bold());
+                        }
+                    }
+
+                    if !debug {
+                        println!();
+                        println!("  {}  ternlang build {}  →  emits .tbc bytecode to disk",
+                            "tip:".dimmed(), file.display().to_string().dimmed());
+                        println!("  {}  ternlang run {} --debug  →  show register state",
+                            "    ".dimmed(), file.display().to_string().dimmed());
                     }
                 }
                 Err(e) => {
-                    eprintln!("VM Error: {}", e);
+                    println!("{}", sep.dimmed());
+                    eprintln!("  {}  VM error: {}", "✗".red().bold(), e);
                     std::process::exit(1);
                 }
             }
+        }
+        Commands::Check { file } => {
+            run_check(file);
         }
         Commands::Repl => {
             run_repl();
@@ -454,6 +526,109 @@ fn run_sim(file: &std::path::PathBuf, output: Option<&std::path::Path>, run: boo
         println!("\nTo run with Icarus Verilog:");
         println!("  iverilog -o bet_sim.vvp -g2001 {} && vvp bet_sim.vvp", tb_path.display());
         println!("  # Open bet_sim.vcd in GTKWave for waveform inspection");
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Format a VM value for display
+// ─────────────────────────────────────────────────────────────────────────────
+fn format_value(val: &Value) -> String {
+    match val {
+        Value::Trit(ternlang_core::trit::Trit::Affirm) => "+1  affirm".to_string(),
+        Value::Trit(ternlang_core::trit::Trit::Tend)   => " 0  hold".to_string(),
+        Value::Trit(ternlang_core::trit::Trit::Reject)  => "-1  reject".to_string(),
+        Value::Int(v)       => format!("{}  int", v),
+        Value::Float(f)     => format!("{:.6}  float", f),
+        Value::TensorRef(r) => format!("tensor@{}", r),
+        Value::AgentRef(a, _) => format!("agent:{}", a),
+        Value::String(s)    => format!("{:?}", s),
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Check — parse and validate without running
+// ─────────────────────────────────────────────────────────────────────────────
+fn run_check(path: &std::path::PathBuf) {
+    use std::io::Write;
+
+    // Collect files to check
+    let files: Vec<std::path::PathBuf> = if path.is_dir() {
+        WalkDir::new(path).into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().map_or(false, |x| x == "tern"))
+            .map(|e| e.path().to_path_buf())
+            .collect()
+    } else {
+        vec![path.clone()]
+    };
+
+    if files.is_empty() {
+        eprintln!("  no .tern files found in {:?}", path);
+        std::process::exit(1);
+    }
+
+    let sep = "─".repeat(52);
+    println!("{}", sep.dimmed());
+    println!("  {}  checking {} file{}", "ternlang check".bold(), files.len(),
+        if files.len() == 1 { "" } else { "s" });
+    println!("{}", sep.dimmed());
+
+    let mut errors = 0usize;
+    let mut ok = 0usize;
+
+    for f in &files {
+        let name = f.display().to_string();
+        print!("  {:<48}", name);
+        std::io::stdout().flush().unwrap();
+
+        let src = match fs::read_to_string(f) {
+            Ok(s) => s,
+            Err(e) => {
+                println!("  {}  (read error: {})", "✗".red().bold(), e);
+                errors += 1;
+                continue;
+            }
+        };
+
+        let mut parser = Parser::new(&src);
+        let result = parser.parse_program();
+
+        match result {
+            Ok(prog) => {
+                let fn_count = prog.functions.len();
+                println!("  {}  {} fn", "ok".green().bold(), fn_count);
+                ok += 1;
+            }
+            Err(e) => {
+                // Try parse as statements (snippet without fn)
+                let mut p2 = Parser::new(&src);
+                let mut stmt_ok = true;
+                loop {
+                    match p2.parse_stmt() {
+                        Ok(_) => {}
+                        Err(ref e2) if format!("{:?}", e2).contains("EOF") => break,
+                        Err(_) => { stmt_ok = false; break; }
+                    }
+                }
+                if stmt_ok {
+                    println!("  {}  (script)", "ok".green().bold());
+                    ok += 1;
+                } else {
+                    println!("  {}  {:?}", "error".red().bold(), e);
+                    errors += 1;
+                }
+            }
+        }
+    }
+
+    println!("{}", sep.dimmed());
+    if errors == 0 {
+        println!("  {}  {} file{} checked, no errors.",
+            "✓".green().bold(), ok, if ok == 1 { "" } else { "s" });
+    } else {
+        println!("  {}  {} error{} found.",
+            "✗".red().bold(), errors, if errors == 1 { "" } else { "s" });
+        std::process::exit(1);
     }
 }
 
