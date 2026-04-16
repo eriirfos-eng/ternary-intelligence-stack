@@ -8,7 +8,13 @@ fn normalize_signal(signal: float) -> trit {
     } else {
         return tend;
     } else {
-        return reject;
+        if signal < -0.5 ? {
+            return reject;
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
     }
 }
 
@@ -18,12 +24,10 @@ fn consensus_score(scores: trit[]) -> trit {
     let i: int = 0;
     while i < count ? {
         let val: trit = scores[i];
-        if val == affirm ? {
-            sum = sum + 1;
-        } else {
-            // No action on tend
-        } else {
-            sum = sum - 1;
+        match val {
+            affirm => { sum = sum + 1; }
+            tend   => { }
+            reject => { sum = sum - 1; }
         }
         i = i + 1;
     } else { } else { }
@@ -31,14 +35,14 @@ fn consensus_score(scores: trit[]) -> trit {
     if sum > 0 ? {
         return affirm;
     } else {
+        return tend;
+    } else {
         if sum < 0 ? {
             return reject;
         } else {
             return tend;
         } else {
-            return reject;
+            return tend;
         }
-    } else {
-        return reject;
     }
 }

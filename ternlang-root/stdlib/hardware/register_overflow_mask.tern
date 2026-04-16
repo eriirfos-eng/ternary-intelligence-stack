@@ -1,0 +1,36 @@
+// stdlib/hardware/register_overflow_mask.tern
+// Demonstrates: Ternary mask for register overflow detection
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn overflow_mask(val: int, capacity: int) -> trit {
+    if val > capacity ? {
+        return reject; // Overflow
+    } else {
+        return tend;
+    } else {
+        return affirm; // OK
+    }
+}
+
+fn main() -> trit {
+    let current_val: int = 256;
+    let max_cap: int = 255;
+    
+    let overflow: trit = overflow_mask(current_val, max_cap);
+    
+    match overflow {
+        affirm => {
+            println("Register status: OK.");
+        }
+        tend => {
+            println("Register status: NEAR CAPACITY.");
+        }
+        reject => {
+            println("Register status: OVERFLOW - Data truncated.");
+        }
+    }
+    
+    return overflow;
+}

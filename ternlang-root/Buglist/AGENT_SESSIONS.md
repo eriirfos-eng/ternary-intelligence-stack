@@ -384,3 +384,14 @@
 - **[AGENT-BLOCK]** Confirmed `await` is non-blocking on empty mailboxes (returns 0).
 
 **Status:** Ternlang now supports persistence via trit-based files (`+-` protocol). 100+ files across stdlib verified against the new VM build.
+
+## [2026-04-16] — 30 files committed
+Batches:
+- Batch 1: 10 Tier 2 files (nlp, safety, econ, control, societal)
+- Batch 2: 10 Tier 2/3 files (apps, bio, crypto, research)
+- Batch 3: 10 Tier 3 files (hardware, sim, causal, bio)
+Compiler fixes:
+- fixed stack leaks in IfTernary and WhileTernary in betbc.rs
+- fixed register leak in Match arms in betbc.rs
+Imports added:
+- added _utils.tern to nlp, safety, econ, control, societal, apps, bio, crypto, research, hardware, sim, causal
