@@ -1,0 +1,30 @@
+// stdlib/research/experimental_drift_detector.tern
+// Demonstrates: Detecting experimental drift between data points
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn check_drift(old: float, new: float) -> trit {
+    return drift_check(old, new, 0.5);
+}
+
+fn main() -> trit {
+    let baseline: float = 10.0;
+    let observation: float = 10.2;
+    
+    let drift: trit = check_drift(baseline, observation);
+    
+    match drift {
+        affirm => {
+            println("Experiment STABLE - No significant drift.");
+        }
+        tend => {
+            println("Drift within marginal limits.");
+        }
+        reject => {
+            println("Significant DRIFT detected - Check calibration.");
+        }
+    }
+    
+    return drift;
+}
