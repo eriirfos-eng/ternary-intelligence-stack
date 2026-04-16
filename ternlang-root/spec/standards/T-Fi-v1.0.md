@@ -6,4 +6,4 @@ The "Compute Toll." Standardizes the cryptographic signing of TaaS (Ternary-as-a
 
 ## 2. Credit Logic
 - 1.0 TritCredit = 1,000,000 Sparse Ops.
-- Settlement occurs via the Genesis Tether Heartbeat.
+- Settlement is logged via the ternlang-api `/api/usage` endpoint per billing cycle.

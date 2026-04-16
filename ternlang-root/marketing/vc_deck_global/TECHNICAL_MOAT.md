@@ -16,9 +16,9 @@ We have not just written single modules; we have saturated the algorithmic lands
 *   `_quantized`: Low-precision variants.
 *   **The Moat:** FFS-v1.0 is now the *expectation* of ternary engineers. No new entrant can launch an ecosystem without adhering to this standard, which we mathematically define and own.
 
-## 3. Cryptographic Tethering (Tier 2 API)
-Our commercial advantage lies in proprietary components like the **MoE-13 Expert Router** and the **3-Layer Memory Stack**. 
-*   **The Moat:** These modules do not function independently. They require a live cryptographic handshake via the **Genesis Tether** on our Fly.io infrastructure. Without the €24.99/mo subscription, the proprietary logic hard-fails. We do not rely on legal threats for enforcement; we rely on cryptographic denial-of-service.
+## 3. Tiered Access Model (Tier 2/3/4 API)
+Our commercial advantage lies in proprietary components like the **MoE-13 Expert Router** and the **3-Layer Memory Stack**.
+*   **The Moat:** Premium modules are gated behind API key authentication on ternlang-api. The private stdlib (28,495+ .tern modules) is hosted in a locked GitHub repo — access granted automatically post-purchase via ternlang.com/activate. Enforcement is structural: the open-core repo contains none of the paid logic. No legal threats needed — the code simply isn't there.
 
 ## 4. Hardware/Software Co-Design (TernCore-Silicon)
 The true end-game of TIS is hardware. The `hdl_bridge` allows enterprise clients to compile TIS native `trit` paths directly into FPGA bitstreams and VHDL. 

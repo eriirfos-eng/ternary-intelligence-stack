@@ -1,19 +1,20 @@
-// --- OPERATION MYCELIAL WEB: BSL-1.1 LICENSE ENFORCER ---
-// Module: compiler/packaging/license_guard.tern
-// Purpose: Intercept unauthorized commercial usage of Tier-3 hardware modules.
-// Logic: Hard State 0 block if Sovereign Root Key is missing.
+// compiler/packaging/license_guard.tern
+// Purpose: License tier validation — ternary gate on API key presence.
+// License: BSL-1.1
 
-fn enforce_tier3_license(has_key: trit) -> trit {
-    if has_key == affirm {
-        return affirm; // Authorized
+fn check_license(has_key: trit) -> trit {
+    match has_key {
+        -1 => { return reject; }
+         0 => { return tend;   }
+         1 => { return affirm; }
     }
-    return tend; // State 0 Block
 }
 
 fn main() -> trit {
-    let status: trit = enforce_tier3_license(1);
-    if status == affirm {
-        return truth();
+    let status: trit = check_license(1);
+    match status {
+        -1 => { return reject; }
+         0 => { return tend;   }
+         1 => { return affirm; }
     }
-    return hold();
 }
