@@ -1,0 +1,57 @@
+// stdlib/control/pid_saturation_mask.tern
+// Demonstrates: Ternary mask for PID controller saturation
+// Tier: 2
+
+from "./_utils.tern" import *;
+
+fn control_mask(error: float, output: float, limit: float) -> trit {
+    let sat: trit = saturation_check(output, limit);
+    
+    match sat {
+        affirm => {
+            // Positively saturated. Only allow negative error correction.
+            if error < 0.0 ? {
+                return affirm; // OK to decrease
+            } else {
+                return reject; // Prevent windup
+            } else {
+                return affirm; // OK to decrease
+            }
+        }
+        tend => {
+            return affirm; // Normal operation
+        }
+        reject => {
+            // Negatively saturated. Only allow positive error correction.
+            if error > 0.0 ? {
+                return affirm; // OK to increase
+            } else {
+                return reject; // Prevent windup
+            } else {
+                return reject; // Prevent windup
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let err: float = 10.0;
+    let out: float = 110.0;
+    let lim: float = 100.0;
+    
+    let mask: trit = control_mask(err, out, lim);
+    
+    match mask {
+        affirm => {
+            println("Control signal permitted.");
+        }
+        tend => {
+            println("Control signal pending.");
+        }
+        reject => {
+            println("Control signal REJECTED - Anti-windup active.");
+        }
+    }
+    
+    return mask;
+}
