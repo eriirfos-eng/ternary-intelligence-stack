@@ -1,0 +1,51 @@
+// stdlib/nn/residual_v2.tern
+// Demonstrates: Advanced Residual Connection with Consensus and Scaling
+// Tier: 3 — Industrial
+
+// residual_v2: Merges the original input and the processed output using consensus.
+// If consensus fails (returns tend/0), it prioritizes the stronger original signal.
+fn residual_v2(x: trit, processed: trit) -> trit {
+    let combined: trit = consensus(x, processed);
+    
+    match combined {
+        -1 => { 
+            // Unified rejection
+            return -1; 
+        }
+         0 => { 
+            // Conflict or neutral state. Fall back to input if it had signal.
+            if x != 0 {
+                return x;
+            }
+            return processed;
+        }
+         1 => { 
+            // Unified affirmation
+            return 1; 
+        }
+    }
+}
+
+// consensus_gate: Determines if the residual path should be active.
+fn consensus_gate(signal_a: trit, signal_b: trit) -> trit {
+    let res: trit = consensus(signal_a, signal_b);
+    match res {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let input: trit = 1;
+    let output: trit = -1;
+    
+    let final_signal: trit = residual_v2(input, output);
+    
+    // Test: consensus(1, -1) -> 0. residual_v2(1, -1) -> if 1 != 0 -> return 1.
+    match final_signal {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
