@@ -21,10 +21,14 @@ use colored::*;
 
 #[derive(ClapParser)]
 #[command(name = "ternlang")]
-#[command(about = "Ternlang CLI - Balanced Ternary Systems Language", long_about = None)]
+#[command(about = "Ternlang — Balanced Ternary Intelligence Stack\n\nUsage:\n  ternlang                    → interactive REPL\n  ternlang <file.tern>        → run a .tern file directly\n  ternlang run <file.tern>    → same as above\n  ternlang repl               → interactive REPL\n  ternlang build <file.tern>  → compile to bytecode\n  ternlang fmt <file.tern>    → format source\n  ternlang test [path]        → run test suite", long_about = None)]
 struct Cli {
+    /// Optional .tern file to run directly (shortcut for `ternlang run <file>`)
+    #[arg(value_name = "FILE", conflicts_with = "command")]
+    file: Option<PathBuf>,
+
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -128,7 +132,15 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
 
-    match &cli.command {
+    // Shortcut: `ternlang file.tern` → run directly (same as `ternlang run file.tern`)
+    // Shortcut: `ternlang`           → interactive REPL
+    let command = match (cli.file, cli.command) {
+        (Some(f), _) => Commands::Run { file: f, node_addr: None, peer: vec![], emit_symbols: false },
+        (None, Some(c)) => c,
+        (None, None) => Commands::Repl,
+    };
+
+    match &command {
         Commands::Run { file, node_addr, peer, emit_symbols } => {
             let input = fs::read_to_string(file).expect("Failed to read file");
             let mut parser = Parser::new(&input);
