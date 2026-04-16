@@ -1,0 +1,50 @@
+// stdlib/control/fault_tolerant_gate.tern
+// Demonstrates: Fault Tolerant Safety Gate for Control Signals
+// Tier: 2 — Pro Standard
+
+// gate_control: Checks if a signal should pass based on fault status.
+// Any confirmed fault (-1) triggers a safety-halt (-1).
+fn gate_control(raw_signal: trit, fault_status: trit) -> trit {
+    match fault_status {
+        -1 => { 
+            // Fault confirmed. Safety shutdown.
+            return -1; 
+        }
+         0 => {
+            // Fault suspected or sensor uncertain.
+            // For safety, clamp to neutral (0) if signal is reject (-1).
+            if raw_signal == -1 { return 0; }
+            return raw_signal;
+        }
+         1 => {
+            // No fault detected. Signal passes through.
+            return raw_signal;
+        }
+    }
+}
+
+// redundancy_consensus: Consensus across three redundant safety sensors.
+fn redundancy_consensus(s1: trit, s2: trit, s3: trit) -> trit {
+    let c12: trit = consensus(s1, s2);
+    let final_c: trit = consensus(c12, s3);
+    
+    match final_c {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let sig: trit = 1;
+    let fault: trit = -1;
+    
+    // sig is 1, but fault is -1. gate_control should return -1 (halt).
+    let gated: trit = gate_control(sig, fault);
+    
+    match gated {
+        -1 => { return truth(); } // Pass test: fault override
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}
