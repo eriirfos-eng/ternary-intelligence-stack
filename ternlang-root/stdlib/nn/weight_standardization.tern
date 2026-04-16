@@ -1,0 +1,53 @@
+// stdlib/nn/weight_standardization.tern
+// Demonstrates: Ternary Weight Standardization logic
+// Tier: 3 — Industrial
+
+// standardize_trit: Stabilizes weights by checking against a dynamic mean.
+// In balanced ternary, if a weight opposes the sign of the local mean significantly,
+// it might be normalized or clamped to zero.
+fn standardize_trit(weight: trit, local_mean: float, eps: float) -> trit {
+    // If mean is positive and weight is negative, check if it should be gated.
+    if local_mean > eps {
+        match weight {
+            -1 => { return 0; } // Suppress opposition
+             0 => { return 0; }
+             1 => { return 1; }
+        }
+    }
+    
+    let neg_eps: float = 0.0 - eps;
+    if local_mean < neg_eps {
+        match weight {
+            -1 => { return -1; }
+             0 => { return 0; }
+             1 => { return 0; } // Suppress opposition
+        }
+    }
+    
+    return weight;
+}
+
+// compute_standardized_consensus: Multi-expert consensus on standardized weights.
+fn compute_standardized_consensus(w1: trit, w2: trit) -> trit {
+    let res: trit = consensus(w1, w2);
+    match res {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let w: trit = -1;
+    let mean: float = 0.5;
+    let e: float = 0.1;
+    
+    // w is -1, mean is 0.5 (> 0.1). Should return 0 (tend).
+    let std_w: trit = standardize_trit(w, mean, e);
+    
+    match std_w {
+        -1 => { return conflict(); }
+         0 => { return truth(); } // Pass test if gated to 0
+         1 => { return conflict(); }
+    }
+}
