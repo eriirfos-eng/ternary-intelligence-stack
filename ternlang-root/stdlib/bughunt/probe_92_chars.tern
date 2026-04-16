@@ -1,0 +1,11 @@
+// stdlib/bughunt/probe_92_chars.tern
+// Tier: 1
+
+fn main() -> trit {
+    let c: char = 'A';
+    println("Char: ");
+    println(c);
+    return truth();
+}
+
+main();

@@ -1,0 +1,19 @@
+// stdlib/bughunt/probe_88_first_class_fns.tern
+// Tier: 1
+
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+
+fn apply(f: fn(int, int) -> int, x: int, y: int) -> int {
+    return f(x, y);
+}
+
+fn main() -> trit {
+    let result: int = apply(add, 10, 20);
+    println("Result: ");
+    println(result);
+    return truth();
+}
+
+main();

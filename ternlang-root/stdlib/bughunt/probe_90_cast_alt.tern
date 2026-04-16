@@ -1,0 +1,13 @@
+// stdlib/bughunt/probe_90_cast_alt.tern
+// Tier: 1
+
+fn main() -> trit {
+    let f: float = 3.14;
+    // Test alternative cast syntax if cast() is buggy
+    let i: int = (int)f;
+    println("Cast float to int: ");
+    println(i);
+    return truth();
+}
+
+main();

@@ -146,6 +146,48 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Use integer `1` (true) / `0` (false) or trit `affirm` / `hold` instead.
 - **Regression Test:** `stdlib/bughunt/probe_73_inf_loop.tern`, `stdlib/bughunt/probe_78_if_true.tern`
 
+## [VM-BUILTIN-001] Missing/Broken Math Built-ins
+- **Description:** Basic math built-ins like `abs(int)`, `pow(int, int)`, `sqrt(float)`, `min(int, int)`, and `max(int, int)` are either completely missing from the global scope or defined in a way that causes an immediate stack overflow.
+- **Error:** `VM Error: [BET-013] Call stack overflow — max depth (4096) exceeded.`
+- **Workaround:** Explicitly import from `std::trit` for trit versions, or implement manually for `int`.
+- **Regression Test:** `stdlib/bughunt/probe_79_math_builtins.tern`, `stdlib/bughunt/probe_81_pow_test.tern`
+
+## [VM-BUILTIN-002] Missing/Broken Trit Built-ins (invert, len)
+- **Description:** The `invert(trit)` and `len(array)` built-ins, despite being documented and used in examples, cause stack overflows or are missing during execution.
+- **Error:** `VM Error: [BET-013] Call stack overflow — max depth (4096) exceeded.`
+- **Workaround:** For `invert`, use a manual `match`. No workaround for `len`.
+- **Regression Test:** `stdlib/bughunt/probe_09_trit_builtins.tern`, `stdlib/bughunt/probe_82_array_methods.tern`
+
+## [PARSER-FN-001] Missing First-Class Functions
+- **Description:** The parser does not support passing functions as arguments or assigning them to variables. The `fn(...) -> ...` type syntax is not recognized.
+- **Error:** `Parse program error: UnexpectedToken("Fn")`
+- **Workaround:** None. First-class functions are not supported.
+- **Regression Test:** `stdlib/bughunt/probe_88_first_class_fns.tern`
+
+## [PARSER-FN-002] Missing Nested Functions
+- **Description:** Defining a function inside another function is not supported.
+- **Error:** `Parse program error: UnexpectedToken("Fn")`
+- **Workaround:** Define all functions at the top level or module level.
+- **Regression Test:** `stdlib/bughunt/probe_87_nested_fns.tern`
+
+## [PARSER-STRUCT-002] Missing Struct Methods
+- **Description:** Receiver-style method syntax (e.g., `fn (s: MyStruct) my_method()`) is not supported.
+- **Error:** `Parse program error: ExpectedToken("function name", "LParen")`
+- **Workaround:** Use regular functions that take the struct as the first argument.
+- **Regression Test:** `stdlib/bughunt/probe_86_struct_methods.tern`
+
+## [PARSER-LIT-001] Missing Non-Decimal Literals
+- **Description:** Hexadecimal (`0xFF`) and Binary (`0b1010`) integer literals are not supported.
+- **Error:** `Parse program error: ExpectedToken("Semicolon", "Ident(...)")`
+- **Workaround:** Use decimal representations only.
+- **Regression Test:** `stdlib/bughunt/probe_91_literals.tern`
+
+## [PARSER-LIT-002] Missing Character Literals
+- **Description:** Character literals (e.g., `'A'`) are not supported.
+- **Error:** `Parse program error: UnexpectedToken("Invalid token")`
+- **Workaround:** Use `int` ASCII/Unicode values.
+- **Regression Test:** `stdlib/bughunt/probe_92_chars.tern`
+
 ## [CLI-DISPLAY-001] CLI Register Display Bug
 - **Description:** The `ternlang-cli` always reports `Reg 0: trit(tend)` (and other registers as `tend`) after program execution, regardless of the actual return value of the program or the state of the registers.
 - **Error:** Incorrect register values displayed in CLI output.
