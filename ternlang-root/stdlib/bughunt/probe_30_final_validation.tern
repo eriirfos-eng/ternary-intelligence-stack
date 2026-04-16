@@ -1,0 +1,29 @@
+// stdlib/bughunt/probe_30_final_validation.tern
+// Demonstrates: Comprehensive session validation of Tier 2/3 patterns
+// Tier: 1
+
+fn validate_all(t: trit, i: int, f: float) -> trit {
+    if i > 0 ? {
+        if f > 0.0 ? {
+            return consensus(t, truth());
+        } else {
+            return hold();
+        } else {
+            return hold();
+        }
+    } else {
+        return reject;
+    } else {
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let result: trit = validate_all(truth(), 10, 1.5);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
