@@ -1,0 +1,24 @@
+// stdlib/rl/reward_shaping_mask.tern
+// Demonstrates: Reward shaping mask for reinforcement learning
+// Tier: 2
+
+from "rl_utils.tern" import *;
+
+fn apply_shaping(base_reward: trit, shaping_signal: trit) -> trit {
+    // Logic: if shaping signal aligns with base reward, affirm.
+    // If they conflict, hold.
+    return consensus(base_reward, shaping_signal);
+}
+
+fn main() -> trit {
+    let base: trit = 1;
+    let shape: trit = 0;
+    
+    let res: trit = apply_shaping(base, shape);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
