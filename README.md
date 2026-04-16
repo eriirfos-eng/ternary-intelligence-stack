@@ -36,6 +36,7 @@ Ternlang provides a machine-readable path to human escalation instead of a force
 ## Full Technical Documentation
 
 → **[ternlang-root/README.md](ternlang-root/README.md)** (Architecture, Benchmarks, and Spec)
+→ **[ROADMAP.md](ternlang-root/ROADMAP.md)** (Phases 1–18, session log, priority matrix)
 
 ---
 
