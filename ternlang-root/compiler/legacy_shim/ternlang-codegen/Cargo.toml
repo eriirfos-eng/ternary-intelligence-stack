@@ -1,5 +1,6 @@
 [package]
 name = "ternlang-codegen"
+description = "C transpiler backend for the Ternlang compiler — emits C source from the Ternlang AST for native cross-compilation targets."
 version.workspace = true
 edition.workspace = true
 license.workspace   = true
