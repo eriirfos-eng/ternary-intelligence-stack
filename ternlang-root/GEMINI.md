@@ -1,7 +1,7 @@
 # GEMINI.md — Ternlang Precision Parameter Sheet
-# RFI-IRFOS · ternlang.com · v1.6 (2026-04-16)
+# RFI-IRFOS · ternlang.com · v1.7 (2026-04-16)
 # Read this at session start. These values are ground truth. Do not guess.
-# Current workspace version: 0.3.1 (Professionalized metadata & XAI branding)
+# Current workspace version: 0.3.2 (14-bug sweep: builtins, match leaks, globals, literals, forward refs)
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Parameter | Value | Note |
 |-----------|-------|------|
-| Registers | **27** (indices 0–26) | 3³ — "That's 3³. No more." |
+| Registers | **unbounded Vec<Value>** (auto-grow) | Was 27 fixed — now dynamic; TSTORE/TLOAD grow on demand |
 | Register default | `trit(tend)` = 0 | Unset registers hold tend |
 | Stack | unbounded Vec | Dynamic, no fixed limit |
 | Call stack | unbounded Vec | Return addresses only |
@@ -110,12 +110,14 @@ All opcodes as of 2026-04-16. Do not add opcodes to .tern files that aren't in t
 | `0x27` | TgreaterEqual | a, b → trit | — | a >= b → affirm, else reject (polymorphic) |
 | `0x28` | Tand | a, b → trit | — | min(a,b) in balanced ternary — logical AND |
 | `0x29` | Tor | a, b → trit | — | max(a,b) in balanced ternary — logical OR |
+| `0x2a` | TjmpEqFloat | peek(f) → jump | 8 (f64 little-endian) + 2 (addr u16) | PEEK; jump if top Float matches imm_float (ε=1e-9) — used in `match` float arms |
 | `0x30` | Tspawn | → AgentRef | 2 (type_id u16) | spawn registered agent type |
 | `0x31` | Tsend | msg, AgentRef → | — | send message to agent |
 | `0x32` | Tawait | AgentRef → result | — | receive result from agent |
 | `0x33` | Topent | path, mode → handle | — | mode: 0=Read, 1=Write, 2=Append |
 | `0x34` | Treadt | handle → trit | — | read single trit character (+, 0, -) |
 | `0x35` | Twritet | handle, trit → | — | write single trit character (+, 0, -) |
+| `0x36` | Tnodeid | → String | — | push `vm.node_id` at runtime (set via `--node-addr`; default "127.0.0.1:7373") |
 
 ---
 
@@ -176,10 +178,36 @@ fn main() -> trit {
     - Verified multi-batch consensus chains and `@sparseskip` dense units on the fixed VM.
     - Achieved 100% success rate on exhaustive `match` regression tests.
     - Documented [PARSER-002] and [PARSER-006] workaround patterns in `Buglist/AGENT_SESSIONS.md`.
-- **Compiler Status:**
-    - `betbc.rs` is now stack-neutral for all ternary control flow blocks.
-    - `Match` arms correctly reclaim local registers, preventing exhaustion in deep functions.
+
+- **~18:00 Accomplishments (Claude Sonnet 4.6 — FULL BUG SWEEP):**
+    - **Probe suite: 88 PASS / 10 FAIL** (all 10 = expected-error probes or ARCH-LIMIT).
+    - **[TCALL-BUG FIXED]** Forward references now work: re-insert correct absolute `func_addrs` after `emit_function` in PASS 1.
+    - **[COMP-BOOL-001 FIXED]** `true`/`false` emit `TPUSH_INT(1/0)` — no more stack underflow.
+    - **[PARSER-002 FIXED]** Float match patterns: added `Pattern::Float` + opcode `0x2a` (TjmpEqFloat) to VM.
+    - **[PARSER-STR-001 FIXED]** String concatenation: `Tadd` (0x02) now handles `(String, String)`.
+    - **[VM-PANIC-001 FIXED]** `Trit::from(i8)` saturates instead of panicking on out-of-range values.
+    - **[VM-MATCH-001 FIXED]** Match TLOAD stack leak: per-arm TPOP on mismatch path. `probe_48`, `probe_53` pass.
+    - **[ForIn stack leak FIXED]** `cmp_reg`-based loop design — stack exactly neutral per iteration.
+    - **[VM-GLOBAL-001 FIXED]** Global `let` declarations injected into `fn main` body prefix in `parse_program`.
+    - **[PARSER-LIT-001 FIXED]** Hex (`0xFF`) and binary (`0b1010`) literals: priority-20 regex in lexer. `probe_91` passes.
+    - **[VM-BUILTIN-001/002 / BET-014 FIXED]** Inline builtins: `abs`, `min`, `max`, `pow` (loop), `invert`, `len`, `print`, `push`/`pop` stubs. No more TCALL overflow.
+    - **[BUG-3 FIXED (prior session)]** `0x36` TNODEID: `nodeid` keyword pushes `vm.node_id` at runtime.
+    - **Released v0.3.2** to crates.io (9 crates), GitHub Packages (2 npm packages), fly.io (ternlang-api 3 machines).
+
+- **Compiler Status (as of v0.3.2):**
+    - `betbc.rs`: stack-neutral for all ternary control flow; forward references resolve correctly.
+    - `vm/mod.rs`: register file is `Vec<Value>` (auto-grow); builtins are inline (no TCALL); float match works.
+    - `parser.rs`: global lets injected into `fn main`; hex/binary literals parse.
+    - `lexer.rs`: hex + binary integer literal rules at priority 20.
+    - `trit.rs`: `From<i8>` saturates instead of panicking.
+
+- **Architectural Limits (do not attempt to fix — requires major refactor):**
+    - `VM-STRUCT-001`: struct returns from functions broken (caller-register ABI). Needs struct-value layout on stack.
+    - `COMP-TENSOR-001`: 16-bit tensor immediates → max 65535 elements. Needs 32-bit encoding change.
+    - `MOD-004`: module file loading unimplemented. Named imports fail.
+
 - **Next Session Focus:**
-    - Focus on resting categories from prior sessions: `graphics/`, `scientific/`, `distributed/`.
+    - Focus on resting categories: `graphics/`, `scientific/`, `distributed/`.
     - Expand `stdlib/premium/` with Enterprise Tier 4 logic.
-    - Verify file I/O persistence across agent mailboxes.
+    - Phase 11: 5 new MCP tools + EcoCore in ternlang-moe.
+    - Do NOT touch bughunt probes 07, 11-12, 24, 32-35, 48, 53-54, 62, 67, 71-73, 78-82, 91 — all covered.
