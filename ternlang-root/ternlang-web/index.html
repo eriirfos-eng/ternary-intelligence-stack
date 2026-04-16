@@ -479,24 +479,25 @@
     <div class="slide-page bg-t_bg2">
       <div class="max-w-7xl mx-auto px-6 py-20">
         <div class="text-center mb-16 reveal active">
-          <p class="font-mono text-t_red text-xs font-bold tracking-widest uppercase mb-4">Governance & Observability</p>
+          <p class="font-mono text-t_red text-xs font-bold tracking-widest uppercase mb-4">Governance & Observability · EU AI Act Art. 13 / 14 / 15</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Tern<span class="text-t_red">Audit.</span></h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">Your model makes thousands of decisions per day. TernAudit logs every trit=0 hold and trit=−1 veto with full trace: which expert fired, at what confidence, on what input. No silent overrides. No guessing after the fact.</p>
+          <p class="text-2xl text-t_text max-w-4xl mx-auto font-bold leading-snug mb-4">Every decision your AI makes is now traceable, timestamped, and explainable.</p>
+          <p class="text-lg text-t_muted max-w-3xl mx-auto font-medium">TernAudit logs every trit=0 hold and trit=−1 veto with full trace: which expert fired, at what confidence, on what input. No silent overrides. No guessing after the fact. <span class="text-t_red font-bold">This is what EU regulators ask for.</span></p>
         </div>
-        
+
         <div class="glass-card rounded-[3rem] p-10 md:p-16 text-left shadow-[0_0_100px_rgba(255,77,77,0.05)] border-t_red/10 relative max-w-5xl mx-auto reveal">
           <div class="grid md:grid-cols-3 gap-12 mb-16">
             <div>
-              <h4 class="text-t_text font-black text-sm uppercase mb-4 tracking-widest">Evidence Graph</h4>
-              <p class="text-xs text-t_muted font-medium leading-relaxed">See exactly which input dimensions pushed — or failed to push — your agent's confidence above threshold. Real-time, during inference. Not a post-mortem. You watch the decision form.</p>
+              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Evidence Graph</h4>
+              <p class="text-sm text-t_muted font-medium leading-relaxed">See exactly which input dimensions pushed — or failed to push — your agent's confidence above threshold. Real-time, during inference. Not a post-mortem. You watch the decision form.</p>
             </div>
             <div>
-              <h4 class="text-t_text font-black text-sm uppercase mb-4 tracking-widest">Veto Trace</h4>
-              <p class="text-xs text-t_muted font-medium leading-relaxed">Safety fired a −1 block. TernAudit gives you the expert name, its confidence score, and the exact input vector that triggered it — timestamped, permanently logged to AxisMemory. You don't debug it. You read it.</p>
+              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Veto Trace</h4>
+              <p class="text-sm text-t_muted font-medium leading-relaxed">Safety fired a −1 block. TernAudit gives you the expert name, its confidence score, and the exact input vector that triggered it — timestamped, permanently logged to AxisMemory. You don't debug it. You read it.</p>
             </div>
             <div>
-              <h4 class="text-t_text font-black text-sm uppercase mb-4 tracking-widest">Resolution Path</h4>
-              <p class="text-xs text-t_muted font-medium leading-relaxed">Agent stuck on trit=0? TernAudit generates a typed evidence request: the exact dimensions that are under-threshold and what value they need to resolve. You supply the data. The hold clears. No guesswork, no manual log trawl.</p>
+              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Resolution Path</h4>
+              <p class="text-sm text-t_muted font-medium leading-relaxed">Agent stuck on trit=0? TernAudit generates a typed evidence request: the exact dimensions that are under-threshold and what value they need to resolve. You supply the data. The hold clears. No guesswork, no manual log trawl.</p>
             </div>
           </div>
           <div class="bg-t_bg rounded-3xl p-8 border border-t_red/20 font-mono text-sm relative group overflow-hidden">
@@ -598,11 +599,11 @@
               <div class="text-t_muted font-bold uppercase tracking-widest pb-2 border-b border-t_border/30 mb-2">AI Reasoning Endpoints</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_deliberate</span></div><span class="text-t_muted font-medium">EMA convergence</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_gate</span></div><span class="text-t_muted font-medium">safety hard veto</span></div>
-              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.3.2 · 19 tools</div>
+              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.3.3 · 19 tools — all free</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/mcp</span></div><span class="text-t_muted font-medium">JSON-RPC 2.0</span></div>
-              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">/mcp + Header</span></div><span class="text-t_muted font-medium">3-layer memory</span></div>
-              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">trit_debate / trit_calibrate</span></div><span class="text-t_muted font-medium">multi-round EMA</span></div>
-              <div class="flex justify-between py-1 border-b border-t_border/50"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">trit_audit</span></div><span class="text-t_muted font-medium">EU AI Act Art.13/14</span></div>
+              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">trit_debate / trit_calibrate</span></div><span class="text-t_muted font-medium">multi-round EMA</span></div>
+              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">trit_eco_check / trit_translate</span></div><span class="text-t_muted font-medium">EcoCore + code migration</span></div>
+              <div class="flex justify-between py-1 border-b border-t_border/50"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">trit_audit</span></div><span class="text-t_muted font-medium">EU AI Act Art.13/14</span></div>
               <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">Live Streams (SSE)</div>
               <div class="flex justify-between py-1"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">GET</span><span class="text-t_text font-medium">/api/stream/moe</span></div><span class="text-t_muted font-medium">live MoE routing</span></div>
             </div>
@@ -953,6 +954,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <li class="flex items-center gap-3">✓ ternpkg manager</li>
               <li class="flex items-center gap-3">✓ 293 open-core stdlib modules</li>
               <li class="flex items-center gap-3">✓ 300+ runnable .tern examples</li>
+              <li class="flex items-center gap-3 font-black text-t_text">★ 19 MCP tools — keyless, no limit</li>
             </ul>
           </div>
 
@@ -964,10 +966,9 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
             <p class="text-t_teal text-xs font-mono font-bold mb-6">BSL 1.1 (→ Apache 2030)</p>
             <div class="text-3xl font-black text-t_text mb-8 uppercase tracking-tighter italic">€99<span class="text-t_muted text-sm font-bold">/MO</span></div>
             <ul class="space-y-3 mb-10 flex-grow text-sm text-t_text font-bold leading-relaxed">
-              <li class="flex items-center gap-3 text-t_teal">★ 19 MCP tools — full API surface</li>
-              <li class="flex items-center gap-3">✓ 10,000 API calls/month</li>
+              <li class="flex items-center gap-3 font-black">★ 10,000 API calls/month</li>
               <li class="flex items-center gap-3">✓ Server-side 3-layer memory</li>
-              <li class="flex items-center gap-3">✓ MoE-13 orchestration</li>
+              <li class="flex items-center gap-3">✓ MoE-13 orchestration at scale</li>
               <li class="flex items-center gap-3">✓ Ternary context compression</li>
               <li class="flex items-center gap-3">✓ Tier 2 stdlib (private repo access)</li>
             </ul>
