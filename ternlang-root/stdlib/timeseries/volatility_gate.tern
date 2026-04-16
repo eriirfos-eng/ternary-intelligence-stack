@@ -1,0 +1,35 @@
+// stdlib/timeseries/volatility_gate.tern
+// Demonstrates: Volatility gate for time series execution
+// Tier: 3
+
+from "timeseries_utils.tern" import *;
+
+fn check_volatility(std_dev: float, limit: float) -> trit {
+    // Logic: if volatility is low, affirm (safe). If high, reject.
+    if std_dev < limit ? {
+        return affirm;
+    } else {
+        if std_dev < (limit * 2.0) ? {
+            return tend;
+        } else {
+            return reject;
+        } else {
+            return reject;
+        }
+    } else {
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let v: float = 0.05;
+    let l: float = 0.1;
+    
+    let res: trit = check_volatility(v, l);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
