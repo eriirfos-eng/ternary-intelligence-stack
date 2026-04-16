@@ -1,7 +1,0 @@
-// Module: stdlib/logic/fluidic_system_cache.tern
-// Purpose: State caching layer for fluidic_system
-// Author: RFI-IRFOS
-
-fn execute_fluidic_system_cache() -> trit {
-    return tend;
-}

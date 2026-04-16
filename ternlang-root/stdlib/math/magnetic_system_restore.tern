@@ -1,7 +1,0 @@
-// Module: stdlib/math/magnetic_system_restore.tern
-// Purpose: State restoration logic for magnetic_system
-// Author: RFI-IRFOS
-
-fn execute_magnetic_system_restore() -> trit {
-    return tend;
-}

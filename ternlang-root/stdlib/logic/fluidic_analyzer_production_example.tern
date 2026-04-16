@@ -1,7 +1,0 @@
-// Module: stdlib/logic/fluidic_analyzer_production_example.tern
-// Purpose: Production deployment example for fluidic_analyzer
-// Author: RFI-IRFOS
-
-fn execute_fluidic_analyzer_production_example() -> trit {
-    return tend;
-}

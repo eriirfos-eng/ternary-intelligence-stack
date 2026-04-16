@@ -1,7 +1,0 @@
-// Module: stdlib/framework/plasma_tensor_enterprise_example.tern
-// Purpose: Enterprise scale example for plasma_tensor
-// Author: RFI-IRFOS
-
-fn execute_plasma_tensor_enterprise_example() -> trit {
-    return tend;
-}

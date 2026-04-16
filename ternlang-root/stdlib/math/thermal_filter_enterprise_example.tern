@@ -1,7 +1,0 @@
-// Module: stdlib/math/thermal_filter_enterprise_example.tern
-// Purpose: Enterprise scale example for thermal_filter
-// Author: RFI-IRFOS
-
-fn execute_thermal_filter_enterprise_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/research/plasma_matrix_cache.tern
-// Purpose: State caching layer for plasma_matrix
-// Author: RFI-IRFOS
-
-fn execute_plasma_matrix_cache() -> trit {
-    return tend;
-}

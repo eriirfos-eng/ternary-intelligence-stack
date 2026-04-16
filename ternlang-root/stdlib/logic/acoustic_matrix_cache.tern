@@ -1,7 +1,0 @@
-// Module: stdlib/logic/acoustic_matrix_cache.tern
-// Purpose: State caching layer for acoustic_matrix
-// Author: RFI-IRFOS
-
-fn execute_acoustic_matrix_cache() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/science/acoustic_router_cache.tern
-// Purpose: State caching layer for acoustic_router
-// Author: RFI-IRFOS
-
-fn execute_acoustic_router_cache() -> trit {
-    return tend;
-}

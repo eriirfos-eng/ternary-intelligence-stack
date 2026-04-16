@@ -1,7 +1,0 @@
-// Module: stdlib/math/stellar_model_enterprise_example.tern
-// Purpose: Enterprise scale example for stellar_model
-// Author: RFI-IRFOS
-
-fn execute_stellar_model_enterprise_example() -> trit {
-    return tend;
-}

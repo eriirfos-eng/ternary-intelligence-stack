@@ -1,7 +1,0 @@
-// Module: stdlib/bio/stellar_model_restore.tern
-// Purpose: State restoration logic for stellar_model
-// Author: RFI-IRFOS
-
-fn execute_stellar_model_restore() -> trit {
-    return tend;
-}

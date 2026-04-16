@@ -1,7 +1,0 @@
-// Module: stdlib/sim/optical_system_cache.tern
-// Purpose: State caching layer for optical_system
-// Author: RFI-IRFOS
-
-fn execute_optical_system_cache() -> trit {
-    return tend;
-}

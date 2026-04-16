@@ -1,7 +1,0 @@
-// Module: stdlib/tests/thermal_tensor_restore.tern
-// Purpose: State restoration logic for thermal_tensor
-// Author: RFI-IRFOS
-
-fn execute_thermal_tensor_restore() -> trit {
-    return tend;
-}

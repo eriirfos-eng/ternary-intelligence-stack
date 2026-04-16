@@ -1,7 +1,0 @@
-// Module: stdlib/tests/nuclear_analyzer_restore.tern
-// Purpose: State restoration logic for nuclear_analyzer
-// Author: RFI-IRFOS
-
-fn execute_nuclear_analyzer_restore() -> trit {
-    return tend;
-}

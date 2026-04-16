@@ -1,7 +1,0 @@
-// Module: stdlib/specs/quantum_engine_enterprise_example.tern
-// Purpose: Enterprise scale example for quantum_engine
-// Author: RFI-IRFOS
-
-fn execute_quantum_engine_enterprise_example() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/network/nuclear_engine_cache.tern
-// Purpose: State caching layer for nuclear_engine
-// Author: RFI-IRFOS
-
-fn execute_nuclear_engine_cache() -> trit {
-    return tend;
-}

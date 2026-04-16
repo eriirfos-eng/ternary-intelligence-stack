@@ -1,7 +1,0 @@
-// Module: stdlib/causal/optical_filter_restore.tern
-// Purpose: State restoration logic for optical_filter
-// Author: RFI-IRFOS
-
-fn execute_optical_filter_restore() -> trit {
-    return tend;
-}

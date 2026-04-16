@@ -1,7 +1,0 @@
-// Module: stdlib/math/quantum_system_cache.tern
-// Purpose: State caching layer for quantum_system
-// Author: RFI-IRFOS
-
-fn execute_quantum_system_cache() -> trit {
-    return tend;
-}

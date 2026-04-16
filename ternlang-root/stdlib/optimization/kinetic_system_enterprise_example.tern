@@ -1,7 +1,0 @@
-// Module: stdlib/optimization/kinetic_system_enterprise_example.tern
-// Purpose: Enterprise scale example for kinetic_system
-// Author: RFI-IRFOS
-
-fn execute_kinetic_system_enterprise_example() -> trit {
-    return tend;
-}

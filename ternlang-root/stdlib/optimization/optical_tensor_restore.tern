@@ -1,7 +1,0 @@
-// Module: stdlib/optimization/optical_tensor_restore.tern
-// Purpose: State restoration logic for optical_tensor
-// Author: RFI-IRFOS
-
-fn execute_optical_tensor_restore() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/bio/nuclear_solver_cache.tern
-// Purpose: State caching layer for nuclear_solver
-// Author: RFI-IRFOS
-
-fn execute_nuclear_solver_cache() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/specs/magnetic_solver_enterprise_example.tern
-// Purpose: Enterprise scale example for magnetic_solver
-// Author: RFI-IRFOS
-
-fn execute_magnetic_solver_enterprise_example() -> trit {
-    return tend;
-}

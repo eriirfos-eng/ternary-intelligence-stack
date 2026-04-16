@@ -1,7 +1,0 @@
-// Module: stdlib/tests/optical_solver_enterprise_example.tern
-// Purpose: Enterprise scale example for optical_solver
-// Author: RFI-IRFOS
-
-fn execute_optical_solver_enterprise_example() -> trit {
-    return tend;
-}

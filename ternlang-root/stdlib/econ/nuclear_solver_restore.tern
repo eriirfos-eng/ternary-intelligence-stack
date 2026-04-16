@@ -1,7 +1,0 @@
-// Module: stdlib/econ/nuclear_solver_restore.tern
-// Purpose: State restoration logic for nuclear_solver
-// Author: RFI-IRFOS
-
-fn execute_nuclear_solver_restore() -> trit {
-    return tend;
-}

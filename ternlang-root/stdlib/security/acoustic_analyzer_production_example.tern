@@ -1,7 +1,0 @@
-// Module: stdlib/security/acoustic_analyzer_production_example.tern
-// Purpose: Production deployment example for acoustic_analyzer
-// Author: RFI-IRFOS
-
-fn execute_acoustic_analyzer_production_example() -> trit {
-    return tend;
-}

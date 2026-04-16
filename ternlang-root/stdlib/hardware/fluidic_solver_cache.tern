@@ -1,7 +1,0 @@
-// Module: stdlib/hardware/fluidic_solver_cache.tern
-// Purpose: State caching layer for fluidic_solver
-// Author: RFI-IRFOS
-
-fn execute_fluidic_solver_cache() -> trit {
-    return tend;
-}

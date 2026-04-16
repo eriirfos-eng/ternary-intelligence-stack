@@ -1,7 +1,0 @@
-// Module: stdlib/security/kinetic_tensor_restore.tern
-// Purpose: State restoration logic for kinetic_tensor
-// Author: RFI-IRFOS
-
-fn execute_kinetic_tensor_restore() -> trit {
-    return tend;
-}

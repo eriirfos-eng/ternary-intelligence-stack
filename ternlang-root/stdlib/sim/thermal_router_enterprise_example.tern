@@ -1,7 +1,0 @@
-// Module: stdlib/sim/thermal_router_enterprise_example.tern
-// Purpose: Enterprise scale example for thermal_router
-// Author: RFI-IRFOS
-
-fn execute_thermal_router_enterprise_example() -> trit {
-    return tend;
-}

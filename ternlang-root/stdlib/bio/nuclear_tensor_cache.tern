@@ -1,7 +1,0 @@
-// Module: stdlib/bio/nuclear_tensor_cache.tern
-// Purpose: State caching layer for nuclear_tensor
-// Author: RFI-IRFOS
-
-fn execute_nuclear_tensor_cache() -> trit {
-    return tend;
-}

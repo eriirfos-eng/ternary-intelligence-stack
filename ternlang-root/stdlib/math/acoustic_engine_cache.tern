@@ -1,7 +1,0 @@
-// Module: stdlib/math/acoustic_engine_cache.tern
-// Purpose: State caching layer for acoustic_engine
-// Author: RFI-IRFOS
-
-fn execute_acoustic_engine_cache() -> trit {
-    return tend;
-}

@@ -1,7 +1,0 @@
-// Module: stdlib/logic/fluidic_engine_restore.tern
-// Purpose: State restoration logic for fluidic_engine
-// Author: RFI-IRFOS
-
-fn execute_fluidic_engine_restore() -> trit {
-    return tend;
-}

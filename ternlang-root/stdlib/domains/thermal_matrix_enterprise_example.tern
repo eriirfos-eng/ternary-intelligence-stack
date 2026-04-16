@@ -1,7 +1,0 @@
-// Module: stdlib/domains/thermal_matrix_enterprise_example.tern
-// Purpose: Enterprise scale example for thermal_matrix
-// Author: RFI-IRFOS
-
-fn execute_thermal_matrix_enterprise_example() -> trit {
-    return tend;
-}

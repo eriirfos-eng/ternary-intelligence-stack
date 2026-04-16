@@ -1,7 +1,0 @@
-// Module: stdlib/control/optical_router_enterprise_example.tern
-// Purpose: Enterprise scale example for optical_router
-// Author: RFI-IRFOS
-
-fn execute_optical_router_enterprise_example() -> trit {
-    return tend;
-}

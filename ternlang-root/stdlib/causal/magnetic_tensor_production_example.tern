@@ -1,7 +1,0 @@
-// Module: stdlib/causal/magnetic_tensor_production_example.tern
-// Purpose: Production deployment example for magnetic_tensor
-// Author: RFI-IRFOS
-
-fn execute_magnetic_tensor_production_example() -> trit {
-    return tend;
-}

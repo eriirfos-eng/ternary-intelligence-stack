@@ -1,7 +1,0 @@
-// Module: stdlib/bio/kinetic_tensor_enterprise_example.tern
-// Purpose: Enterprise scale example for kinetic_tensor
-// Author: RFI-IRFOS
-
-fn execute_kinetic_tensor_enterprise_example() -> trit {
-    return tend;
-}

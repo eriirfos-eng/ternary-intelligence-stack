@@ -1,7 +1,0 @@
-// Module: stdlib/hardware/nuclear_analyzer_enterprise_example.tern
-// Purpose: Enterprise scale example for nuclear_analyzer
-// Author: RFI-IRFOS
-
-fn execute_nuclear_analyzer_enterprise_example() -> trit {
-    return tend;
-}

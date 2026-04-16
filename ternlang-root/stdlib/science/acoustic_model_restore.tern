@@ -1,7 +1,0 @@
-// Module: stdlib/science/acoustic_model_restore.tern
-// Purpose: State restoration logic for acoustic_model
-// Author: RFI-IRFOS
-
-fn execute_acoustic_model_restore() -> trit {
-    return tend;
-}

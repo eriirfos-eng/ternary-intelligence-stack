@@ -1,7 +1,0 @@
-// Module: stdlib/domains/kinetic_system_restore.tern
-// Purpose: State restoration logic for kinetic_system
-// Author: RFI-IRFOS
-
-fn execute_kinetic_system_restore() -> trit {
-    return tend;
-}

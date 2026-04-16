@@ -1,7 +1,0 @@
-// Module: stdlib/math/nuclear_optimizer_enterprise_example.tern
-// Purpose: Enterprise scale example for nuclear_optimizer
-// Author: RFI-IRFOS
-
-fn execute_nuclear_optimizer_enterprise_example() -> trit {
-    return tend;
-}

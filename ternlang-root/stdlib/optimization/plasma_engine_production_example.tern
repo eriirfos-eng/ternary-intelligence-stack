@@ -1,7 +1,0 @@
-// Module: stdlib/optimization/plasma_engine_production_example.tern
-// Purpose: Production deployment example for plasma_engine
-// Author: RFI-IRFOS
-
-fn execute_plasma_engine_production_example() -> trit {
-    return tend;
-}

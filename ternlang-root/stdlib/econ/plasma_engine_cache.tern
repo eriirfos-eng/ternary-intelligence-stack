@@ -1,7 +1,0 @@
-// Module: stdlib/econ/plasma_engine_cache.tern
-// Purpose: State caching layer for plasma_engine
-// Author: RFI-IRFOS
-
-fn execute_plasma_engine_cache() -> trit {
-    return tend;
-}

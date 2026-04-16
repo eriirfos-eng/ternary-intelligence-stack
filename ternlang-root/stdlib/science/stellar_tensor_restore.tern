@@ -1,7 +1,0 @@
-// Module: stdlib/science/stellar_tensor_restore.tern
-// Purpose: State restoration logic for stellar_tensor
-// Author: RFI-IRFOS
-
-fn execute_stellar_tensor_restore() -> trit {
-    return tend;
-}

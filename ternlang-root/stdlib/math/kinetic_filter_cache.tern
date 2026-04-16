@@ -1,7 +1,0 @@
-// Module: stdlib/math/kinetic_filter_cache.tern
-// Purpose: State caching layer for kinetic_filter
-// Author: RFI-IRFOS
-
-fn execute_kinetic_filter_cache() -> trit {
-    return tend;
-}

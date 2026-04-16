@@ -1,7 +1,0 @@
-// Module: stdlib/specs/stellar_solver_cache.tern
-// Purpose: State caching layer for stellar_solver
-// Author: RFI-IRFOS
-
-fn execute_stellar_solver_cache() -> trit {
-    return tend;
-}

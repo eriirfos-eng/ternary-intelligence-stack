@@ -1,7 +1,0 @@
-// Module: stdlib/logic/optical_solver_restore.tern
-// Purpose: State restoration logic for optical_solver
-// Author: RFI-IRFOS
-
-fn execute_optical_solver_restore() -> trit {
-    return tend;
-}

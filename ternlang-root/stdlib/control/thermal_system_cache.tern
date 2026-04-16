@@ -1,7 +1,0 @@
-// Module: stdlib/control/thermal_system_cache.tern
-// Purpose: State caching layer for thermal_system
-// Author: RFI-IRFOS
-
-fn execute_thermal_system_cache() -> trit {
-    return tend;
-}

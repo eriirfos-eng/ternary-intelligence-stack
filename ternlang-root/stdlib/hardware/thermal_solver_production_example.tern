@@ -1,7 +1,0 @@
-// Module: stdlib/hardware/thermal_solver_production_example.tern
-// Purpose: Production deployment example for thermal_solver
-// Author: RFI-IRFOS
-
-fn execute_thermal_solver_production_example() -> trit {
-    return tend;
-}

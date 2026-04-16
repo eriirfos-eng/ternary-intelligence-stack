@@ -1,7 +1,0 @@
-// Module: stdlib/specs/fluidic_engine_enterprise_example.tern
-// Purpose: Enterprise scale example for fluidic_engine
-// Author: RFI-IRFOS
-
-fn execute_fluidic_engine_enterprise_example() -> trit {
-    return tend;
-}

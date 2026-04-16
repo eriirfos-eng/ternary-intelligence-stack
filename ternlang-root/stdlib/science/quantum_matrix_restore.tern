@@ -1,7 +1,0 @@
-// Module: stdlib/science/quantum_matrix_restore.tern
-// Purpose: State restoration logic for quantum_matrix
-// Author: RFI-IRFOS
-
-fn execute_quantum_matrix_restore() -> trit {
-    return tend;
-}

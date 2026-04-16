@@ -1,7 +1,0 @@
-// Module: stdlib/control/nuclear_optimizer_production_example.tern
-// Purpose: Production deployment example for nuclear_optimizer
-// Author: RFI-IRFOS
-
-fn execute_nuclear_optimizer_production_example() -> trit {
-    return tend;
-}
