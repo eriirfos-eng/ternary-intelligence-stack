@@ -1,0 +1,24 @@
+// stdlib/causal/_utils.tern
+// Utility functions for Causal inference and Bayesian logic
+// Tier: 3
+
+fn probability_to_trit(p: float) -> trit {
+    if p > 0.8 ? {
+        return affirm; // High probability
+    } else {
+        return tend;
+    } else {
+        if p < 0.2 ? {
+            return reject; // Low probability
+        } else {
+            return tend; // Uncertain
+        } else {
+            return tend;
+        }
+    }
+}
+
+fn bayes_update(prior: float, likelihood: float) -> float {
+    // Simplified Bayesian update: prior * likelihood
+    return prior * likelihood;
+}
