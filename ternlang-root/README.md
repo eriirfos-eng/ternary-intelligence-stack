@@ -615,7 +615,7 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 
 ## EU AI Act Compliance
 
-> Ternlang is designed from first principles to support EU AI Act compliance for downstream AI systems. The following applies to TIS v0.3.0 and later. This is a self-declaration by RFI-IRFOS — independent third-party audit is available on request for Tier 4 Enterprise customers.
+> Ternlang is designed from first principles to support EU AI Act compliance for downstream AI systems. The following applies to TIS v0.3.0 and later.
 
 | EU AI Act Article | How Ternlang addresses it |
 |-------------------|--------------------------|
