@@ -1,0 +1,30 @@
+// stdlib/apps/user_subscription_eval.tern
+// Demonstrates: Subscription tier evaluation
+// Tier: 2
+
+from "./_utils.tern" import *;
+
+fn evaluate_access(paid: trit, usage: float) -> trit {
+    return subscription_tier(paid, usage);
+}
+
+fn main() -> trit {
+    let paid_member: trit = reject; // Free user
+    let current_usage: float = 1200.0;
+    
+    let access: trit = evaluate_access(paid_member, current_usage);
+    
+    match access {
+        affirm => {
+            println("Premium access GRANTED.");
+        }
+        tend => {
+            println("Standard free access GRANTED.");
+        }
+        reject => {
+            println("Usage limit EXCEEDED - Please upgrade to Premium.");
+        }
+    }
+    
+    return access;
+}

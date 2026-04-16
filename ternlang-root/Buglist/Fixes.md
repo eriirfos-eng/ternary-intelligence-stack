@@ -314,3 +314,8 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Trigger:** Aesthetics / logical grouping of opcodes.
 **Fix:** Moved File I/O opcodes from `0x2a-0x2c` to `0x33-0x35` to follow Agent opcodes (`0x30-0x32`) sequentially. Updated VM, Emitter, and `GEMINI.md`.
 **Status:** Fixed.
+
+## [2026-04-16]
+- Fixed [BET-007] stack leaks in ternary control flow statements (IfTernary, WhileTernary) where condition values were not correctly popped.
+- Fixed register leak in Match statements where arm-local registers were not being reclaimed.
+- Standardized _utils.tern patterns across Tier 2 and Tier 3 directories.

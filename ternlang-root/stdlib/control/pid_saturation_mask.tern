@@ -13,9 +13,9 @@ fn control_mask(error: float, output: float, limit: float) -> trit {
             if error < 0.0 ? {
                 return affirm; // OK to decrease
             } else {
-                return reject; // Prevent windup
+                return tend;
             } else {
-                return affirm; // OK to decrease
+                return reject; // Prevent windup (error >= 0)
             }
         }
         tend => {
@@ -26,9 +26,9 @@ fn control_mask(error: float, output: float, limit: float) -> trit {
             if error > 0.0 ? {
                 return affirm; // OK to increase
             } else {
-                return reject; // Prevent windup
+                return tend;
             } else {
-                return reject; // Prevent windup
+                return reject; // Prevent windup (error <= 0)
             }
         }
     }

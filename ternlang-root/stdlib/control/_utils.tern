@@ -22,14 +22,14 @@ fn saturation_check(val: float, limit: float) -> trit {
     if val > limit ? {
         return affirm; // Positive saturation
     } else {
-        return tend; // No saturation
+        return tend;
     } else {
         if val < (0.0 - limit) ? {
             return reject; // Negative saturation
         } else {
-            return tend; // No saturation
-        } else {
             return tend;
+        } else {
+            return tend; // No saturation (between -limit and limit)
         }
     }
 }

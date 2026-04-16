@@ -1,0 +1,29 @@
+// stdlib/hardware/_utils.tern
+// Utility functions for Hardware simulation
+// Tier: 3
+
+fn signal_level(voltage: float) -> trit {
+    if voltage > 3.0 ? {
+        return affirm; // HIGH
+    } else {
+        return tend;
+    } else {
+        if voltage < 0.5 ? {
+            return reject; // LOW
+        } else {
+            return tend; // High impedance or transition
+        } else {
+            return tend;
+        }
+    }
+}
+
+fn bit_match(a: trit, b: trit) -> trit {
+    if a == b ? {
+        return affirm;
+    } else {
+        return tend;
+    } else {
+        return reject;
+    }
+}

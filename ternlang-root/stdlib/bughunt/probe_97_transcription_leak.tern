@@ -1,0 +1,31 @@
+// stdlib/bughunt/probe_97_transcription_leak.tern
+// Probe: Test for stack leak in while loop during transcription-like logic
+
+fn mock_transcribe(b: trit) -> trit {
+    match b {
+        1 => { return -1; }
+        0 => { return  0; }
+        -1 => { return  1; }
+    }
+}
+
+fn main() -> trit {
+    let dna: trittensor<5> = [1, 0, -1, 1, 0];
+    let rna: trittensor<5>;
+    let i: int = 0;
+    while i < 5 ? {
+        rna[i] = mock_transcribe(dna[i]);
+        i = i + 1;
+    } else { } else { }
+    
+    if rna[0] == -1 ? {
+        println("Success: First base transcribed.");
+        return affirm;
+    } else {
+        println("Fail: First base wrong.");
+        return reject;
+    } else {
+        println("Fail: First base wrong.");
+        return reject;
+    }
+}

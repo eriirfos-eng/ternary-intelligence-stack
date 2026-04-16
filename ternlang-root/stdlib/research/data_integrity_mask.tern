@@ -1,0 +1,41 @@
+// stdlib/research/data_integrity_mask.tern
+// Demonstrates: Ternary mask for data integrity in scientific datasets
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn integrity_mask(data_point: float, parity_bit: trit) -> trit {
+    // Parity bit affirm means valid, reject means corrupt
+    match parity_bit {
+        affirm => {
+            return affirm; // Data is valid
+        }
+        tend => {
+            return tend; // Data integrity uncertain
+        }
+        reject => {
+            return reject; // Data corrupted
+        }
+    }
+}
+
+fn main() -> trit {
+    let reading: float = 45.67;
+    let parity: trit = reject; // Corrupted!
+    
+    let valid: trit = integrity_mask(reading, parity);
+    
+    match valid {
+        affirm => {
+            println("Data point VALIDATED.");
+        }
+        tend => {
+            println("Data integrity UNCERTAIN - Verify sensors.");
+        }
+        reject => {
+            println("Data CORRUPTED - Discarding point.");
+        }
+    }
+    
+    return valid;
+}
