@@ -1,0 +1,30 @@
+// stdlib/distributed/gossip_protocol_consensus.tern
+// Demonstrates: Gossip protocol message propagation consensus
+// Tier: 2
+
+from "distributed_utils.tern" import *;
+
+fn gossip_consensus(m1: trit, m2: trit, m3: trit) -> trit {
+    // Logic: if all messages align, affirm. If majority align, affirm/reject.
+    // If no consensus, hold.
+    let c: trit = dist_consensus(m1, m2, m3);
+    match c {
+        affirm => { return affirm; }
+        tend   => { return tend; }
+        reject => { return reject; }
+    }
+}
+
+fn main() -> trit {
+    let msg1: trit = affirm;
+    let msg2: trit = affirm;
+    let msg3: trit = reject;
+    
+    let res: trit = gossip_consensus(msg1, msg2, msg3);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
