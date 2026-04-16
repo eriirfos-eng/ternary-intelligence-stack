@@ -1,0 +1,21 @@
+// stdlib/bughunt/probe_86_struct_methods.tern
+// Tier: 1
+
+struct Counter {
+    value: int
+}
+
+fn (c: Counter) increment() -> int {
+    c.value = c.value + 1;
+    return c.value;
+}
+
+fn main() -> trit {
+    let c: Counter = Counter { value: 0 };
+    c.increment();
+    println("Counter: ");
+    println(c.value);
+    return truth();
+}
+
+main();

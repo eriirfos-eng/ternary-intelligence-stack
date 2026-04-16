@@ -1,0 +1,13 @@
+// stdlib/bughunt/probe_79_math_builtins.tern
+// Tier: 1
+
+fn main() -> trit {
+    let t: trit = -1;
+    let t_abs: trit = abs(t); 
+    println("abs(-1): ");
+    println(t_abs);
+    
+    return truth();
+}
+
+main();

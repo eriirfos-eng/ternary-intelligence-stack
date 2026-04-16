@@ -1,0 +1,18 @@
+// stdlib/bughunt/probe_87_nested_fns.tern
+// Tier: 1
+
+fn outer(x: int) -> int {
+    fn inner(y: int) -> int {
+        return y * 2;
+    }
+    return inner(x);
+}
+
+fn main() -> trit {
+    let res: int = outer(21);
+    println("Outer(21): ");
+    println(res);
+    return truth();
+}
+
+main();

@@ -1,0 +1,17 @@
+// stdlib/bughunt/probe_84_basic_builtins.tern
+// Tier: 1
+
+fn main() -> trit {
+    let a: trit = truth();
+    let b: trit = hold();
+    let c: trit = conflict();
+    println("truth: ");
+    println(a);
+    println("hold: ");
+    println(b);
+    println("conflict: ");
+    println(c);
+    return truth();
+}
+
+main();

@@ -1,0 +1,14 @@
+// stdlib/bughunt/probe_91_literals.tern
+// Tier: 1
+
+fn main() -> trit {
+    let h: int = 0xFF;
+    let b: int = 0b1010;
+    println("Hex 0xFF: ");
+    println(h);
+    println("Bin 0b1010: ");
+    println(b);
+    return truth();
+}
+
+main();

@@ -1,0 +1,20 @@
+// stdlib/bughunt/probe_82_array_methods.tern
+// Tier: 1
+
+fn main() -> trit {
+    let arr: trit[] = [1, 0, -1];
+    
+    // Test length
+    let l: int = len(arr);
+    println("Length: ");
+    println(l);
+    
+    // Test push
+    push(arr, 1);
+    println("New length: ");
+    println(len(arr));
+    
+    return truth();
+}
+
+main();

@@ -1,0 +1,19 @@
+// stdlib/bughunt/probe_89_variadic_fns.tern
+// Tier: 1
+
+fn sum_all(items: ...int) -> int {
+    let s: int = 0;
+    for item in items {
+        s = s + item;
+    }
+    return s;
+}
+
+fn main() -> trit {
+    let res: int = sum_all(1, 2, 3, 4);
+    println("Sum: ");
+    println(res);
+    return truth();
+}
+
+main();

@@ -1,0 +1,13 @@
+// stdlib/bughunt/probe_85_consensus_test.tern
+// Tier: 1
+
+fn main() -> trit {
+    let a: trit = truth();
+    let b: trit = hold();
+    let res: trit = consensus(a, b);
+    println("consensus(1, 0): ");
+    println(res);
+    return truth();
+}
+
+main();
