@@ -1,0 +1,78 @@
+// stdlib/bio/genomic_sequence_match.tern
+// Demonstrates: Genomic sequence matching using ternary encoding
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn match_sequence(target: trit[], pattern: trit[]) -> trit {
+    let t_len: int = length(target);
+    let p_len: int = length(pattern);
+    
+    if p_len > t_len ? {
+        return reject;
+    } else {
+        return tend;
+    } else {
+        // Search for pattern (simplified)
+        let found: trit = reject;
+        let i: int = 0;
+        let limit: int = t_len - p_len;
+        
+        while i < (limit + 1) ? {
+            let match_count: int = 0;
+            let j: int = 0;
+            while j < p_len ? {
+                if target[i + j] == pattern[j] ? {
+                    match_count = match_count + 1;
+                } else { } else { }
+                j = j + 1;
+            } else { } else { }
+            
+            if match_count == p_len ? {
+                found = affirm;
+                i = t_len; // break
+            } else {
+                i = i + 1;
+            } else {
+                i = i + 1;
+            }
+        } else { } else { }
+        
+        return found;
+    }
+}
+
+fn main() -> trit {
+    let genome: trittensor<10>;
+    genome[0] = affirm; // A
+    genome[1] = tend;   // C
+    genome[2] = reject; // G
+    genome[3] = affirm; // A
+    genome[4] = affirm; // A
+    genome[5] = tend;   // C
+    genome[6] = reject; // G
+    genome[7] = affirm; // A
+    genome[8] = tend;   // C
+    genome[9] = tend;   // C
+    
+    let target_pattern: trittensor<3>;
+    target_pattern[0] = affirm; // A
+    target_pattern[1] = tend;   // C
+    target_pattern[2] = reject; // G
+    
+    let is_match: trit = match_sequence(genome, target_pattern);
+    
+    match is_match {
+        affirm => {
+            println("Genomic pattern MATCH FOUND.");
+        }
+        tend => {
+            println("Genomic matching UNCERTAIN.");
+        }
+        reject => {
+            println("Genomic pattern NOT FOUND.");
+        }
+    }
+    
+    return is_match;
+}
