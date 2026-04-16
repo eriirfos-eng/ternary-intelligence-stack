@@ -1,0 +1,30 @@
+// stdlib/nlp/token_consensus_mask.tern
+// Demonstrates: Ternary token classification consensus (Validated/Refuted/Wait)
+// Tier: 2
+
+from "_utils.tern" import consensus_score;
+
+fn validate_token(reports: trit[]) -> trit {
+    let result: trit = consensus_score(reports);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+
+fn main() -> trit {
+    let reports: trittensor<3>;
+    reports[0] = 1; // Validator A: Valid
+    reports[1] = 1; // Validator B: Valid
+    reports[2] = 0; // Validator C: Unsure
+
+    let result: trit = validate_token(reports);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
