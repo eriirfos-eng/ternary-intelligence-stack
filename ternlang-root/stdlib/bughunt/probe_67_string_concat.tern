@@ -1,0 +1,13 @@
+// stdlib/bughunt/probe_67_string_concat.tern
+// Demonstrates: String concatenation.
+// Tier: 1
+
+fn main() -> trit {
+    let s1: string = "Hello";
+    let s2: string = "World";
+    let s3: string = s1 + " " + s2; 
+    println(s3);
+    return truth();
+}
+
+main();

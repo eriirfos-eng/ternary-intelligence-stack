@@ -122,6 +122,30 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Use `trit[]` or `trittensor` if values are small, or separate variables.
 - **Regression Test:** `stdlib/bughunt/probe_58_int_array.tern`, `stdlib/bughunt/probe_59_int_tensor.tern`
 
+## [COMP-OP-001] Sparseskip Annotation is No-Op
+- **Description:** The `@sparseskip` annotation on functions is correctly parsed but does not result in the emission of the `TSPARSE_MATMUL` (0x07) opcode in the compiled bytecode. The compiler appears to treat it as a standard function.
+- **Error:** Bytecode contains standard call logic instead of optimized sparse matrix multiplication.
+- **Workaround:** None. Requires fixing the code generation in the compiler.
+- **Regression Test:** `stdlib/bughunt/probe_68_sparse_skip.tern`
+
+## [PARSER-STR-001] Missing String Concatenation
+- **Description:** The language lacks support for string concatenation using the `+` operator. Attempting to use `+` with strings results in a runtime type mismatch as the VM expects numeric types.
+- **Error:** `VM Error: [BET-007] Runtime type mismatch — expected Numeric but found (String(...), String(...)).`
+- **Workaround:** Print strings sequentially or use separate variables.
+- **Regression Test:** `stdlib/bughunt/probe_67_string_concat.tern`
+
+## [COMP-TENSOR-001] Tensor Size Truncation (16-bit)
+- **Description:** The compiler truncates `trittensor<N>` sizes to 16 bits (0-65535) during bytecode emission. Allocating a tensor with a size like 1,000,000 results in a tensor of size 16,960 (1,000,000 % 65536).
+- **Error:** `VM Error: [BET-008] Tensor[0]: index ... is out of bounds — tensor only has <truncated size> element(s).`
+- **Workaround:** Keep tensor sizes below 65,536 or use multiple tensors.
+- **Regression Test:** `stdlib/bughunt/probe_71_large_tensor.tern`, `stdlib/bughunt/probe_72_tensor_limit.tern`
+
+## [COMP-BOOL-001] True/False Literal Stack Underflow
+- **Description:** Using the boolean literals `true` or `false` in `if` or `while` conditions results in a VM stack underflow. The compiler appears to emit incorrect bytecode for these literals.
+- **Error:** `VM Error: [BET-001] Stack underflow — you tried to pop a truth that wasn't there.`
+- **Workaround:** Use integer `1` (true) / `0` (false) or trit `affirm` / `hold` instead.
+- **Regression Test:** `stdlib/bughunt/probe_73_inf_loop.tern`, `stdlib/bughunt/probe_78_if_true.tern`
+
 ## [CLI-DISPLAY-001] CLI Register Display Bug
 - **Description:** The `ternlang-cli` always reports `Reg 0: trit(tend)` (and other registers as `tend`) after program execution, regardless of the actual return value of the program or the state of the registers.
 - **Error:** Incorrect register values displayed in CLI output.

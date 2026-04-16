@@ -1,0 +1,17 @@
+// stdlib/bughunt/probe_72_tensor_limit.tern
+// Demonstrates: Tensor size truncation.
+// Tier: 1
+
+fn main() -> trit {
+    let t: trittensor<70000>;
+    // If it truncated to 16960 (0x4240 mod ? No, 1M = 0xF4240. 0x4240 is 16960)
+    // 0xF4240 & 0xFFFF = 0x4240 (16960). 
+    // It's definitely a u16 truncation in the compiler/bytecode format!
+    
+    println("Should be 70000 elements.");
+    t[69999] = 1; 
+    println("Success!");
+    return truth();
+}
+
+main();

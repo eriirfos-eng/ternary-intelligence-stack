@@ -1,0 +1,25 @@
+// stdlib/bughunt/probe_75_basic_flow.tern
+// Tier: 1
+
+fn main() -> trit {
+    if 1 {
+        println("if 1 works");
+    }
+    
+    if 0 {
+        println("if 0 works?");
+    }
+    
+    let i: int = 0;
+    while 1 {
+        i = i + 1;
+        if i == 5 {
+            break;
+        }
+    }
+    println("loop break works");
+    
+    return truth();
+}
+
+main();

@@ -1,0 +1,14 @@
+// stdlib/bughunt/probe_71_large_tensor.tern
+// Demonstrates: Large trittensor allocation.
+// Tier: 1
+
+fn main() -> trit {
+    // Try to allocate a large tensor. 
+    // If it's Vec-backed, it might be fine, but let's see.
+    let large: trittensor<1000000>;
+    large[999999] = 1;
+    println("Accessed last element of 1M tensor.");
+    return truth();
+}
+
+main();

@@ -1,0 +1,16 @@
+// stdlib/bughunt/probe_68_sparse_skip.tern
+// Tier: 2
+
+@sparseskip
+fn sparse_matmul(weights: trit[], inputs: trit[]) -> trit {
+    return truth();
+}
+
+fn main() -> trit {
+    let w: trit[] = [1, 0, -1];
+    let i: trit[] = [0, 1, 0];
+    let res: trit = sparse_matmul(w, i);
+    return res;
+}
+
+main();

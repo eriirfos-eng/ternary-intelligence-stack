@@ -1,0 +1,16 @@
+// stdlib/bughunt/probe_73_inf_loop.tern
+// Tier: 1
+
+fn main() -> trit {
+    let count: int = 0;
+    while true {
+        count = count + 1;
+        if count == 5 {
+            break;
+        }
+    }
+    println("while true break success");
+    return truth();
+}
+
+main();
