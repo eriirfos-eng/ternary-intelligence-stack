@@ -1,0 +1,24 @@
+// stdlib/timeseries/timeseries_utils.tern
+// Demonstrates: Utilities for time series analysis
+// Tier: 3 — Industrial
+
+// Returns 1 if drift is significant, -1 if stable, 0 if unsure
+fn evaluate_drift(current_avg: float, previous_avg: float, threshold: float) -> trit {
+    let diff: float = current_avg - previous_avg;
+    if diff > threshold {
+        return 1;
+    }
+    if diff < (0.0 - threshold) {
+        return 1; // Significant drift in either direction
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let d: trit = evaluate_drift(10.5, 10.0, 1.0);
+    match d {
+        -1 => { return truth(); }
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}
