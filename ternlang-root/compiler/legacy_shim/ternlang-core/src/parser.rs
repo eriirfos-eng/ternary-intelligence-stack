@@ -271,8 +271,8 @@ impl<'a> Parser<'a> {
                         expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(col) };
                     } else {
                         self.expect(Token::RBracket)?;
-                        // Use row as the single index, 0 as column (for 1D logic in VM)
-                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(Expr::IntLiteral(0)) };
+                        // Single-index access: sentinel col=-1 signals flat indexing in VM
+                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(Expr::IntLiteral(-1)) };
                     }
                 }
                 Token::UncertainBranch => {
@@ -847,10 +847,11 @@ mod tests {
         let mut parser = Parser::new(input);
         let stmt = parser.parse_stmt().unwrap();
         if let Stmt::Match { arms, .. } = stmt {
+            use crate::ast::Pattern;
             assert_eq!(arms.len(), 3);
-            assert_eq!(arms[0].0, 1);
-            assert_eq!(arms[1].0, 0);
-            assert_eq!(arms[2].0, -1);
+            assert_eq!(arms[0].0, Pattern::Int(1));
+            assert_eq!(arms[1].0, Pattern::Int(0));
+            assert_eq!(arms[2].0, Pattern::Int(-1));
         } else {
             panic!("Expected Match");
         }

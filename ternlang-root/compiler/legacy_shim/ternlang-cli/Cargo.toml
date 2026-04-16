@@ -11,6 +11,10 @@ authors.workspace   = true
 keywords.workspace  = true
 categories.workspace = true
 
+[[bin]]
+name = "ternlang"
+path = "src/main.rs"
+
 [dependencies]
 ternlang-core    = { workspace = true }
 ternlang-ml      = { workspace = true }

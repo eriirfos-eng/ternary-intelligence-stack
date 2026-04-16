@@ -601,7 +601,8 @@ impl BetVm {
                                 return Err(VmError::TensorNotAllocated(idx));
                             }
                             let tensor = &self.tensors[idx];
-                            let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
+                            // c == -1 is the flat-index sentinel (single-index access m[i])
+                            let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
                             if pos >= tensor.data.len() {
                                 return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() });
                             }
@@ -621,14 +622,16 @@ impl BetVm {
                         (Value::TensorRef(idx), Value::Trit(t)) => {
                             if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
                             let tensor = &mut self.tensors[idx];
-                            let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
+                            // c == -1 is the flat-index sentinel (single-index access m[i])
+                            let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
                             if pos >= tensor.data.len() { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() }); }
                             tensor.data[pos] = t;
                         }
                         (Value::TensorRef(idx), Value::Int(v)) => {
                             if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
                             let tensor = &mut self.tensors[idx];
-                            let pos = if tensor.cols > 1 { r as usize * tensor.cols + c as usize } else { r as usize };
+                            // c == -1 is the flat-index sentinel (single-index access m[i])
+                            let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
                             if pos >= tensor.data.len() { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() }); }
                             tensor.data[pos] = if v > 0 { Trit::Affirm } else if v < 0 { Trit::Reject } else { Trit::Tend };
                         }
