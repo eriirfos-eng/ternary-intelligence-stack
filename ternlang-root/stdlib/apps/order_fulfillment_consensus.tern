@@ -1,0 +1,49 @@
+// stdlib/apps/order_fulfillment_consensus.tern
+// Demonstrates: Multi-stage order fulfillment consensus
+// Tier: 2
+
+from "./_utils.tern" import *;
+
+fn fulfillment_gate(inventory_ok: trit, payment_ok: trit, shipping_ok: trit) -> trit {
+    if inventory_ok == affirm ? {
+        if payment_ok == affirm ? {
+            if shipping_ok == affirm ? {
+                return affirm; // All systems go
+            } else {
+                return tend;
+            } else {
+                return reject; // Shipping failure
+            }
+        } else {
+            return tend;
+        } else {
+            return reject; // Payment failure
+        }
+    } else {
+        return tend;
+    } else {
+        return reject; // Inventory failure
+    }
+}
+
+fn main() -> trit {
+    let inv: trit = affirm;
+    let pay: trit = affirm;
+    let ship: trit = affirm;
+    
+    let can_fulfill: trit = fulfillment_gate(inv, pay, ship);
+    
+    match can_fulfill {
+        affirm => {
+            println("Order FULFILLED successfully.");
+        }
+        tend => {
+            println("Order PENDING - Manual review required.");
+        }
+        reject => {
+            println("Order CANCELLED - System failure.");
+        }
+    }
+    
+    return can_fulfill;
+}
