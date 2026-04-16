@@ -1,0 +1,28 @@
+// stdlib/apps/inventory_stock_gate.tern
+// Demonstrates: Inventory management gating
+// Tier: 2
+
+from "./_utils.tern" import *;
+
+fn inventory_gate(current_stock: int) -> trit {
+    return stock_status(current_stock, 50, 10);
+}
+
+fn main() -> trit {
+    let stock: int = 45;
+    let status: trit = inventory_gate(stock);
+    
+    match status {
+        affirm => {
+            println("Stock levels healthy.");
+        }
+        tend => {
+            println("Stock levels low - Reorder suggested.");
+        }
+        reject => {
+            println("CRITICAL: Out of stock or below minimum threshold.");
+        }
+    }
+    
+    return status;
+}
