@@ -1,0 +1,46 @@
+// stdlib/nn/skip_connection_consensus.tern
+// Demonstrates: Multi-path Skip Connection with Consensus
+// Tier: 3 — Industrial
+
+// merge_skip_paths: Merges three skip paths. If they conflict, prioritize the primary signal.
+fn merge_skip_paths(primary: trit, skip1: trit, skip2: trit) -> trit {
+    let consensus_skips: trit = consensus(skip1, skip2);
+    
+    match consensus_skips {
+        -1 => { 
+            // Skips agree on rejection. Merge with primary.
+            return consensus(primary, -1);
+        }
+         0 => {
+            // Skips conflict. Return primary signal (highest confidence).
+            return primary;
+        }
+         1 => {
+            // Skips agree on affirmation. Merge with primary.
+            return consensus(primary, 1);
+        }
+    }
+}
+
+// adaptive_residual_gate: Checks if primary signal is too weak.
+fn adaptive_residual_gate(signal: trit, confidence: float) -> trit {
+    if confidence < 0.3 {
+        return 0; // Drop weak signal
+    }
+    return signal;
+}
+
+fn main() -> trit {
+    let p: trit = 1;
+    let s1: trit = -1;
+    let s2: trit = 1;
+    
+    // s1 and s2 conflict (consensus -> 0). merge_skip_paths should return p (1).
+    let merged: trit = merge_skip_paths(p, s1, s2);
+    
+    match merged {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => { return conflict(); }
+    }
+}
