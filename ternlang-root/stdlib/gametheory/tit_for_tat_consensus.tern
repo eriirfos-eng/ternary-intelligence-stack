@@ -1,0 +1,21 @@
+// stdlib/gametheory/tit_for_tat_consensus.tern
+// Demonstrates: Tit-for-tat strategy consensus
+// Tier: 3
+
+from "gametheory_utils.tern" import *;
+
+fn tit_for_tat_action(opponent_prev: trit) -> trit {
+    // Logic: mimic opponent's previous move.
+    return opponent_prev;
+}
+
+fn main() -> trit {
+    let opp: trit = affirm;
+    let res: trit = tit_for_tat_action(opp);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
