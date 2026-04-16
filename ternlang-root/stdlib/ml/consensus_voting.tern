@@ -1,0 +1,52 @@
+// stdlib/ml/consensus_voting.tern
+// Demonstrates: Multi-expert Consensus Voting logic
+// Tier: 2 — Pro Standard
+
+// vote_consensus: Merges votes from three experts.
+// If two or more agree, the consensus is that value.
+// If all three differ, the consensus is tend (0).
+fn vote_consensus(v1: trit, v2: trit, v3: trit) -> trit {
+    // Binary consensus (merge)
+    let c12: trit = consensus(v1, v2);
+    
+    match c12 {
+        -1 => { 
+            // v1 and v2 agree on rejection.
+            return -1;
+        }
+         0 => {
+            // v1 and v2 conflict. Check v3.
+            // If v3 matches v1 or v2, we have a majority.
+            if v3 == v1 { return v1; }
+            if v3 == v2 { return v2; }
+            return 0; // Absolute deadlock
+        }
+         1 => {
+            // v1 and v2 agree on affirmation.
+            return 1;
+        }
+    }
+}
+
+// weighted_vote: Adjusts vote based on expert confidence.
+fn weighted_vote(vote: trit, confidence: float) -> trit {
+    if confidence < 0.5 {
+        return 0; // Low confidence experts don't get a full vote.
+    }
+    return vote;
+}
+
+fn main() -> trit {
+    let e1: trit = 1;
+    let e2: trit = -1;
+    let e3: trit = 1;
+    
+    // e1 and e3 agree (1). Majority is 1.
+    let winner: trit = vote_consensus(e1, e2, e3);
+    
+    match winner {
+        1 => { return truth(); }
+        0 => { return hold(); }
+        -1 => { return conflict(); }
+    }
+}
