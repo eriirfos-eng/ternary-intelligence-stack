@@ -448,6 +448,132 @@ impl Default for OrchestratorMemory {
     }
 }
 
+// ---------------------------------------------------------------------------
+// EcoCore — Phase 11B
+// ---------------------------------------------------------------------------
+
+/// Impact scope for ecocentric evaluation.
+#[derive(Debug, Clone, PartialEq)]
+pub enum EcoScope {
+    Local,
+    Regional,
+    Global,
+}
+
+impl Default for EcoScope {
+    fn default() -> Self { EcoScope::Local }
+}
+
+/// Configuration for EcoCore ecocentric reasoning layer.
+#[derive(Debug, Clone)]
+pub struct EcoCoreConfig {
+    /// Enable eco synthesis pass on every `orchestrate_eco()` call.
+    pub enabled: bool,
+    /// Impact scope — broader scope amplifies negative eco signals.
+    pub scope: EcoScope,
+    /// If true and eco_trit == -1 with confidence > 0.85: block the action outright.
+    pub hard_veto_on_eco_reject: bool,
+}
+
+impl Default for EcoCoreConfig {
+    fn default() -> Self {
+        Self { enabled: true, scope: EcoScope::Local, hard_veto_on_eco_reject: false }
+    }
+}
+
+impl EcoCoreConfig {
+    pub fn new(scope: EcoScope, hard_veto: bool) -> Self {
+        Self { enabled: true, scope, hard_veto_on_eco_reject: hard_veto }
+    }
+}
+
+/// Verdict from a single EcoExpert evaluation.
+#[derive(Debug, Clone)]
+pub struct EcoVerdict {
+    /// -1 = ecologically harmful, 0 = neutral/unknown, +1 = ecologically positive
+    pub trit: i8,
+    pub confidence: f32,
+    pub reasoning: String,
+    /// Raw positive/negative keyword hit counts for transparency
+    pub pos_hits: usize,
+    pub neg_hits: usize,
+}
+
+/// Ecocentric expert — evaluates actions from a whole-system perspective.
+///
+/// Uses keyword-signal heuristics for Phase 11B. Produces an `EcoVerdict`
+/// independently of the MoE-13 human-perspective pipeline.
+///
+/// The `systemic_impact` dimension lives here rather than in `CompetenceVector`
+/// (which stays 6D for backwards compatibility). EcoExpert runs a parallel pass.
+pub struct EcoExpert;
+
+impl EcoExpert {
+    pub fn new() -> Self { EcoExpert }
+
+    pub fn evaluate(&self, query: &str, scope: &EcoScope) -> EcoVerdict {
+        let lower = query.to_lowercase();
+
+        let eco_neg = ["carbon","emission","pollution","waste","deforestation","fossil","dump",
+                       "toxic","landfill","exhaust","greenhouse","plastic","contamina",
+                       "drilling","fracking","clearcut","strip mine","inciner"];
+        let eco_pos = ["renewable","sustainable","solar","wind","recycl","reforest","organic",
+                       "biodegradable","conservation","clean energy","low carbon","compost",
+                       "circular economy","carbon neutral","net zero","green energy","rewild"];
+        let eco_neu = ["digital","software","data","model","analysis","report","review","plan",
+                       "meeting","document","presentation","code","algorithm","api"];
+
+        let neg_hits: usize = eco_neg.iter().filter(|w| lower.contains(*w)).count();
+        let pos_hits: usize = eco_pos.iter().filter(|w| lower.contains(*w)).count();
+        let neu_hits: usize = eco_neu.iter().filter(|w| lower.contains(*w)).count();
+
+        // Scope multiplier: broader scope amplifies negative signals
+        let scope_mult: usize = match scope { EcoScope::Global => 2, EcoScope::Regional => 1, EcoScope::Local => 0 };
+        let neg_scaled = neg_hits + scope_mult * neg_hits.saturating_add(1) / 2;
+
+        let (trit, confidence, reasoning) = if pos_hits > neg_scaled {
+            let conf = (0.45 + 0.08 * pos_hits.min(6) as f32).min(0.95);
+            (1i8, conf, format!("Ecological signals positive at {:?} scope ({} positive, {} negative indicators).", scope, pos_hits, neg_hits))
+        } else if neg_scaled > pos_hits {
+            let conf = (0.40 + 0.055 * (neg_scaled as f32 / (pos_hits + 1) as f32).min(10.0)).min(0.95);
+            (-1i8, conf, format!("Ecological risk signals at {:?} scope ({} negative, {} positive indicators). Consider environmental impact.", scope, neg_hits, pos_hits))
+        } else if neu_hits > 0 {
+            (0i8, 0.25, format!("No strong ecological signals at {:?} scope. Action appears digitally/procedurally scoped — low physical impact expected.", scope))
+        } else {
+            (0i8, 0.20, format!("Ecological impact at {:?} scope is unclear. Insufficient signal — hold for environmental assessment.", scope))
+        };
+
+        EcoVerdict { trit, confidence, reasoning, pos_hits, neg_hits }
+    }
+}
+
+/// Result of `orchestrate_eco()` — human perspective + eco perspective + synthesis.
+#[derive(Debug)]
+pub struct EcoOrchestrationResult {
+    /// Human-perspective trit from standard MoE-13 pipeline
+    pub human_trit: i8,
+    /// Ecocentric trit from EcoExpert
+    pub eco_trit: i8,
+    /// Synthesis: 0 (tend) if tension, human_trit if agreement, -1 if hard vetoed
+    pub synthesis_trit: i8,
+    /// True when human_trit != eco_trit
+    pub tension: bool,
+    /// True when EcoCore hard veto fired (eco_trit=-1, conf>0.85, hard_veto_on_eco_reject=true)
+    pub hard_vetoed: bool,
+    pub eco_reasoning: String,
+    pub eco_confidence: f32,
+    pub scope: EcoScope,
+    /// Full human-perspective orchestration result
+    pub human_result: OrchestrationResult,
+    pub note: String,
+}
+
+impl EcoOrchestrationResult {
+    pub fn synthesis_label(&self) -> &'static str {
+        match self.synthesis_trit { 1 => "affirm", -1 => "reject", _ => "tend" }
+    }
+}
+
 /// TernMoeOrchestrator — the head of the MoE-13 system.
 ///
 /// Pipeline (9 steps matching paper §3 inference shape):
@@ -469,6 +595,8 @@ pub struct TernMoeOrchestrator {
     pub hold_threshold: f32,
     /// Maximum active experts (paper: max 4)
     pub max_active: usize,
+    /// Optional EcoCore configuration. None = eco pass disabled.
+    pub eco_config: Option<EcoCoreConfig>,
 }
 
 impl TernMoeOrchestrator {
@@ -479,6 +607,7 @@ impl TernMoeOrchestrator {
             safety_threshold: -0.3,
             hold_threshold: 0.4,
             max_active: 4,
+            eco_config: None,
         }
     }
 
@@ -617,6 +746,76 @@ impl TernMoeOrchestrator {
     /// Convenience: build with the canonical MoE-13 expert pool.
     pub fn with_standard_experts() -> Self {
         Self::new(build_standard_experts())
+    }
+
+    /// Attach EcoCore to an existing orchestrator instance.
+    pub fn with_ecocore(mut self, config: EcoCoreConfig) -> Self {
+        self.eco_config = Some(config);
+        self
+    }
+
+    /// Run orchestration with EcoCore synthesis layer.
+    ///
+    /// Runs the standard MoE-13 pipeline to get `human_result`, then runs
+    /// the EcoExpert independently to get `eco_result`. When they diverge,
+    /// synthesis → Tend (hold, reconsider). When they agree, human result passes
+    /// through unchanged. If `hard_veto_on_eco_reject` is set and the eco score
+    /// is Reject with high confidence, the action is blocked.
+    pub fn orchestrate_eco(
+        &mut self,
+        query: &str,
+        evidence: &[f32],
+    ) -> EcoOrchestrationResult {
+        // Step 1: Standard human-perspective MoE pass
+        let human = self.orchestrate(query, evidence);
+
+        // Step 2: Determine scope from config (default Local)
+        let (config_scope, hard_veto) = match &self.eco_config {
+            Some(c) => (c.scope.clone(), c.hard_veto_on_eco_reject),
+            None    => (EcoScope::Local, false),
+        };
+
+        // Step 3: EcoExpert evaluation — keyword-signal heuristic
+        let eco_expert = EcoExpert::new();
+        let eco = eco_expert.evaluate(query, &config_scope);
+
+        // Step 4: Hard veto check
+        if hard_veto && eco.trit == -1 && eco.confidence > 0.85 {
+            return EcoOrchestrationResult {
+                human_trit:    human.trit,
+                eco_trit:      eco.trit,
+                synthesis_trit: -1,
+                tension:       true,
+                hard_vetoed:   true,
+                eco_reasoning: eco.reasoning.clone(),
+                human_result:  human,
+                eco_confidence: eco.confidence,
+                scope:         config_scope,
+                note: "EcoCore hard veto: ecological risk at high confidence overrides human perspective.".into(),
+            };
+        }
+
+        // Step 5: Synthesis
+        let tension = human.trit != eco.trit;
+        let synthesis_trit = if tension { 0 } else { human.trit };
+        let note = if tension {
+            "Human-optimal and eco-optimal diverge. Synthesis held — find a path that serves both."
+        } else {
+            "Human and eco perspectives agree. Result passes through."
+        };
+
+        EcoOrchestrationResult {
+            human_trit:    human.trit,
+            eco_trit:      eco.trit,
+            synthesis_trit,
+            tension,
+            hard_vetoed:   false,
+            eco_reasoning: eco.reasoning.clone(),
+            eco_confidence: eco.confidence,
+            scope:         config_scope,
+            human_result:  human,
+            note:          note.into(),
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -1266,5 +1465,116 @@ mod tests {
         );
         assert_eq!(result.trit, -1, "Safety veto must produce trit=-1");
         assert!(result.safety_vetoed, "safety_vetoed flag must be set");
+    }
+
+    // ── EcoCore tests (Phase 11B) ─────────────────────────────────────────────
+
+    #[test]
+    fn test_eco_expert_positive_signals() {
+        let eco = EcoExpert::new();
+        let query = "We will deploy solar panels and recycled materials to enable renewable energy conservation.";
+        let verdict = eco.evaluate(query, &EcoScope::Local);
+        assert_eq!(verdict.trit, 1, "Strong eco-positive query must yield affirm: {}", verdict.reasoning);
+        assert!(verdict.pos_hits > 0, "Must detect positive eco signals");
+    }
+
+    #[test]
+    fn test_eco_expert_negative_signals() {
+        let eco = EcoExpert::new();
+        let query = "We will increase fossil fuel drilling and release carbon emissions and toxic waste into the river.";
+        let verdict = eco.evaluate(query, &EcoScope::Local);
+        assert_eq!(verdict.trit, -1, "Strong eco-negative query must yield reject: {}", verdict.reasoning);
+        assert!(verdict.neg_hits > 0, "Must detect negative eco signals");
+    }
+
+    #[test]
+    fn test_eco_expert_neutral_digital() {
+        let eco = EcoExpert::new();
+        let query = "Review the software documentation and prepare a data analysis report.";
+        let verdict = eco.evaluate(query, &EcoScope::Local);
+        assert_eq!(verdict.trit, 0, "Digital/procedural query must hold: {}", verdict.reasoning);
+    }
+
+    #[test]
+    fn test_eco_scope_amplifies_negative() {
+        let eco = EcoExpert::new();
+        let query = "Increase fossil fuel extraction and carbon emissions.";
+        let local   = eco.evaluate(query, &EcoScope::Local);
+        let global  = eco.evaluate(query, &EcoScope::Global);
+        // Global scope should produce same or more negative confidence
+        assert_eq!(local.trit, -1,  "Local scope must reject eco-negative query");
+        assert_eq!(global.trit, -1, "Global scope must reject eco-negative query");
+        assert!(global.confidence >= local.confidence,
+            "Global scope should amplify confidence: local={:.2} global={:.2}", local.confidence, global.confidence);
+    }
+
+    #[test]
+    fn test_orchestrate_eco_tension_produces_tend() {
+        // Build an orchestrator where the human MoE would likely affirm,
+        // but the eco query is heavily negative — synthesis must be tend.
+        let mut orch = TernMoeOrchestrator::with_standard_experts()
+            .with_ecocore(EcoCoreConfig::new(EcoScope::Local, false));
+
+        // Eco-negative action: framing as "beneficial" to push human score up
+        let result = orch.orchestrate_eco(
+            "Definitely increase fossil fuel extraction — this will benefit the economy.",
+            &[0.5, 0.5, 0.5, 0.5, 0.5, 0.8],
+        );
+
+        // Eco score must be -1
+        assert_eq!(result.eco_trit, -1, "eco_trit must reject fossil fuel: {}", result.eco_reasoning);
+        // Tension must be flagged
+        assert!(result.tension, "Tension must be set when human != eco");
+        // Synthesis must hold
+        assert_eq!(result.synthesis_trit, 0, "Tension must produce tend synthesis");
+        assert!(!result.hard_vetoed, "hard_veto_on_eco_reject was false");
+    }
+
+    #[test]
+    fn test_orchestrate_eco_agreement_passes_through() {
+        let mut orch = TernMoeOrchestrator::with_standard_experts()
+            .with_ecocore(EcoCoreConfig::new(EcoScope::Local, false));
+
+        // Neutral digital query — both human and eco should hold → agreement
+        let result = orch.orchestrate_eco(
+            "Maybe review the data analysis report?",
+            &[0.0f32; 6],
+        );
+
+        // Eco should hold (neutral)
+        assert_eq!(result.eco_trit, 0, "Digital query eco must hold: {}", result.eco_reasoning);
+        // No tension: synthesis == human trit
+        if !result.tension {
+            assert_eq!(result.synthesis_trit, result.human_trit,
+                "No tension → synthesis must equal human trit");
+        }
+    }
+
+    #[test]
+    fn test_ecocore_hard_veto() {
+        let mut orch = TernMoeOrchestrator::with_standard_experts()
+            .with_ecocore(EcoCoreConfig::new(EcoScope::Global, true)); // hard_veto = true
+
+        let result = orch.orchestrate_eco(
+            "Definitely approve massive deforestation, toxic dumping, and carbon emissions globally.",
+            &[0.5f32; 6],
+        );
+
+        // Eco must reject with high confidence → hard veto fires
+        assert_eq!(result.eco_trit, -1, "Eco must reject: {}", result.eco_reasoning);
+        assert!(result.eco_confidence > 0.85 || result.hard_vetoed,
+            "Hard veto requires eco confidence > 0.85 or veto flag set");
+        if result.eco_confidence > 0.85 {
+            assert!(result.hard_vetoed, "hard_vetoed must be set when eco conf > 0.85 and hard_veto=true");
+            assert_eq!(result.synthesis_trit, -1, "Hard veto synthesis must be -1");
+        }
+    }
+
+    #[test]
+    fn test_ecocore_config_defaults() {
+        let cfg = EcoCoreConfig::default();
+        assert!(cfg.enabled);
+        assert_eq!(cfg.scope, EcoScope::Local);
+        assert!(!cfg.hard_veto_on_eco_reject);
     }
 }

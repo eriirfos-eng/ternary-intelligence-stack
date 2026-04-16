@@ -1237,6 +1237,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_decide",
             "description": "Scalar ternary decision engine. Pass in floating-point evidence signals on [-1.0, +1.0]. Returns a continuous scalar temperature, a discrete ternary decision (reject/tend/affirm), and a confidence score.\n\nThe three zones:\n  affirm  (+0.33, +1.0] — signal is affirmative. Act if confidence is high enough.\n  tend    [-0.33, +0.33] — deliberation zone. Do NOT act. Gather more evidence.\n  reject  [-1.0, -0.33) — signal is negative. Do not proceed.\n\nThe 'tend' zone is the key innovation: it is not null or undecided — it is an active computational instruction to remain in uncertainty until the scalar clears a boundary. Confidence tells you HOW decisive the signal is within its zone.",
+            "annotations": { "title": "Trit Decide — Scalar Evidence → Ternary Decision", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1256,6 +1257,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_vector",
             "description": "Multi-dimensional ternary evidence aggregation. The full agent reasoning tool.\n\nProvide named evidence dimensions, each with a scalar value [-1.0, +1.0] and an importance weight. The engine computes a weighted-mean aggregate TritScalar and returns:\n  - aggregate: scalar, trit, label (reject/tend/affirm), confidence, is_actionable\n  - breakdown: per-dimension zone classification\n  - dominant: which evidence dimension is pulling hardest\n  - recommendation: plain-language decision guidance\n\nUse case: an AI agent collects evidence from multiple sources (visual, textual, contextual, historical) before deciding whether to act. The tend zone means 'keep deliberating'. Only act when is_actionable is true.",
+            "annotations": { "title": "Trit Vector — Multi-Dimensional Evidence Aggregation", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1283,6 +1285,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_consensus",
             "description": "Compute balanced ternary consensus between two trit signals.\n\nConsensus is the core ternary addition operator: truth+conflict=hold, truth+truth=truth, conflict+conflict=conflict.\n\nUse this to merge two independent ternary judgements into a single signal.",
+            "annotations": { "title": "Trit Consensus — Balanced Ternary Addition", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1295,6 +1298,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_eval",
             "description": "Evaluate a ternary expression using the BET (Balanced Ternary Execution) VM.\n\nSupports: consensus(a,b), invert(x), truth(), hold(), conflict(), arithmetic (+, -, *), let bindings.",
+            "annotations": { "title": "Trit Eval — BET VM Expression Evaluator", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1306,6 +1310,7 @@ fn tools_list() -> Value {
         {
             "name": "ternlang_run",
             "description": "Compile and execute a full ternlang (.tern) program on the BET VM. Returns register state after execution.",
+            "annotations": { "title": "Ternlang Run — Execute .tern Programs on BET VM", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1317,6 +1322,7 @@ fn tools_list() -> Value {
         {
             "name": "quantize_weights",
             "description": "Quantize an array of float weights to balanced ternary (-1, 0, +1) using BitNet-style thresholding. Returns the trit vector and sparsity statistics.",
+            "annotations": { "title": "Quantize Weights — Float → Ternary (BitNet)", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1329,6 +1335,7 @@ fn tools_list() -> Value {
         {
             "name": "sparse_benchmark",
             "description": "Run sparse vs dense ternary matrix multiply benchmark. Shows how many multiply-accumulate operations are skipped due to zero-state (hold) weights. Demonstrates the computational efficiency of ternary AI inference.",
+            "annotations": { "title": "Sparse Benchmark — Ternary Matmul Efficiency (up to 122x)", "readOnlyHint": true, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1342,6 +1349,7 @@ fn tools_list() -> Value {
         {
             "name": "moe_orchestrate",
             "description": "Full MoE-13 ternary orchestration pass.\n\nRoutes your query through a pool of 13 domain experts (Syntax, WorldKnowledge, DeductiveReason, InductiveReason, ToolUse, Persona, Safety, FactCheck, CausalReason, AmbiguityRes, MathReason, ContextMem, MetaSafety) using dual-key synergistic routing.\n\nThe routing algorithm selects the expert PAIR that maximises both relevance to the query AND complementarity to each other — orthogonal competences produce a stronger emergent field than two similar experts.\n\nThe emergent triad field (1+1=3): Ek = synergy × (vi + vj)/2. Two experts that are good in different dimensions produce a third signal neither could produce alone.\n\nSafety hard gate fires FIRST, before any vote. A negative safety field = immediate reject, logged to audit trail.\n\nHold state: if the vote is split or confidence is low, the orchestrator calls a tiebreaker (up to 4 active experts max) before giving up — modelling the human 'I'll think about it' behaviour.\n\nReturns: trit decision, confidence, held flag, safety_vetoed flag, temperature hint for downstream LLM, prompt_hint, triad field details, and per-expert verdicts.",
+            "annotations": { "title": "MoE Orchestrate — Full 13-Expert Ternary Reasoning", "readOnlyHint": true, "idempotentHint": false, "destructiveHint": false, "openWorldHint": true },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1361,6 +1369,7 @@ fn tools_list() -> Value {
         {
             "name": "moe_deliberate",
             "description": "EMA-based ternary deliberation engine.\n\nModels iterative reasoning: given an initial scalar signal and a series of incoming evidence updates, the engine converges toward a stable ternary decision using exponential moving average. Alpha controls how fast new evidence is weighted vs prior belief.\n\nThis is the 'Wall-E collecting things' mechanism: the agent doesn't have to decide immediately. It accumulates evidence across rounds and commits only when confidence crosses the target threshold.\n\nRound-by-round trace is returned so you can inspect exactly when and why the agent committed or stayed in the tend (hold) zone.\n\nUse cases:\n  - Simulate multi-turn deliberation before acting\n  - Model an agent that keeps gathering context before deciding\n  - Tune alpha and target_confidence to calibrate risk tolerance",
+            "annotations": { "title": "MoE Deliberate — EMA Iterative Convergence Engine", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1392,6 +1401,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_action_gate",
             "description": "Multi-dimensional ternary action gate with hard-block safety veto.\n\nBefore any AI agent takes an action, pass the relevant decision dimensions through this gate. Any dimension marked hard_block:true with a negative trit (reject) VETOES the action unconditionally, regardless of other dimensions. This implements the 'safety as absolute veto' principle from the MoE-13 architecture.\n\nNon-hard-block dimensions contribute to a weighted vote: positive trits add to pass_weight, negative trits add to block_weight. The gate returns Pass, Blocked, or Hold.\n\nTypical pattern:\n  - Safety check → hard_block: true\n  - Relevance → hard_block: false, weight: 1.0\n  - User consent → hard_block: true\n  - Confidence → hard_block: false, weight: 0.5\n\nThe gate enforces a structural separation: some signals are hard constraints, others are soft preferences. Binary logic collapses these — ternary keeps them distinct.",
+            "annotations": { "title": "Trit Action Gate — Safety Veto + Weighted Vote", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1416,6 +1426,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_debate",
             "description": "Give two competing claims — get a structured 3-way verdict. Routes each claim through MoE-13 independently, compares verdicts, and surfaces the tension between them.\n\nOutput: for_a (trit+confidence), for_b (trit+confidence), tension (0–1), synthesis (plain-language summary), verdict (AGREEMENT / CONFLICT / HOLD).\n\nThe tend zone means the system is holding — one or both claims are genuinely uncertain.",
+            "annotations": { "title": "Trit Debate — Structured 3-Way Verdict on Competing Claims", "readOnlyHint": true, "idempotentHint": false, "destructiveHint": false, "openWorldHint": true },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1429,6 +1440,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_uncertainty_map",
             "description": "Paste any text — meeting notes, a medical report, a legal clause — and get every sentence or paragraph annotated with a ternary signal (affirm/tend/reject) and a confidence score.\n\nThe tend annotations are the ones that matter most: they mark claims the text itself hedges, qualifies, or leaves open. These are the areas that need verification before acting.",
+            "annotations": { "title": "Trit Uncertainty Map — Text Annotation by Confidence", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1441,6 +1453,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_calibrate",
             "description": "Feed an AI agent's recent decision log and get a calibration report. Detects binary habituation: how often did the agent force YES/NO when it should have held?\n\nReturns: binary_ratio, hold_opportunities, calibration_score (trit), recommendations, and flagged decisions with explanations.",
+            "annotations": { "title": "Trit Calibrate — Binary Habituation Detector", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1464,6 +1477,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_translate",
             "description": "Input Python if/elif/else, SQL CASE WHEN, or a JSON rule array — output the equivalent .tern program with the ternary hold zone inserted where the original code had no coverage.\n\nThe 'else' gap in binary code is where real-world ambiguity lives. trit_translate makes it explicit as a Tend arm.",
+            "annotations": { "title": "Trit Translate — Binary Code → Ternary .tern Programs", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1476,6 +1490,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_eco_check",
             "description": "Given a proposed action, returns two trit scores: one from a human-centric perspective (MoE-13) and one from an ecocentric perspective (EcoCore heuristic). When they diverge, synthesis is Tend — 'this needs more consideration before acting.'\n\nThe first MCP tool that asks: is this good for everything, not just us?",
+            "annotations": { "title": "Trit Eco Check — Human + Ecocentric Dual Perspective", "readOnlyHint": true, "idempotentHint": false, "destructiveHint": false, "openWorldHint": true },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1489,6 +1504,7 @@ fn tools_list() -> Value {
         {
             "name": "trit_audit",
             "description": "Full ternary audit of an AI system's decision log. Answers: 'how binary is this AI's decision-making, and would a regulator flag it?'\n\nReturns: decision counts (affirm/tend/reject), forced_binary_ratio, EU AI Act heuristic (Article 13 transparency + Article 14 human oversight), calibration score, and a list of flagged decisions that should have held.\n\nThis is Phase 13 — TernAudit. The commercial case for ternlang made tangible.",
+            "annotations": { "title": "Trit Audit — EU AI Act Compliance Report", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1512,11 +1528,13 @@ fn tools_list() -> Value {
         {
             "name": "get_industrial_standards",
             "description": "Returns the list of current triadic industrial standards published by RFI-IRFOS. Use this to determine compliance requirements for tokenization, memory, compute, and hardware access.",
+            "annotations": { "title": "Get Industrial Standards — RFI-IRFOS Triadic Standards", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": { "type": "object", "properties": {} }
         },
         {
             "name": "audit_ternary_logic",
             "description": "Performs a compliance audit on a snippet of Ternlang or triadic-inspired code. Detects 'Binary Habituation' (over-reliance on true/false) and suggests 'Deliberation Injection' to break binary logic drifts. Reports sparsity potential and MoE-13 safety gate alignment.",
+            "annotations": { "title": "Audit Ternary Logic — Triadic Code Compliance Check", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1528,6 +1546,7 @@ fn tools_list() -> Value {
         {
             "name": "tsql_join",
             "description": "Enterprise T-SQL Triadic Join. Unlike binary SQL (Match/No-Match), a T-Join routes partial matches into a Deliberative Hold (State 0) for escrow audit. Guarantees 100% data retention and eliminates binary error-handling overhead for high-frequency trading and defense datasets.",
+            "annotations": { "title": "T-SQL Join — Ternary Triadic Database Join", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -1545,11 +1564,35 @@ fn tools_list() -> Value {
 fn initialize_response() -> Value {
     json!({
         "protocolVersion": "2024-11-05",
-        "capabilities": { "tools": {} },
+        "capabilities": {
+            "tools": {},
+            "configSchema": {
+                "type": "object",
+                "title": "Ternlang MCP Configuration",
+                "description": "Community tier is fully keyless. Pro/Industrial/Enterprise tiers require an API key.",
+                "properties": {
+                    "apiKey": {
+                        "type": "string",
+                        "title": "API Key (optional)",
+                        "description": "Required for paid tiers. Obtain at https://ternlang.com/activate. Community tier (all 19 tools) is free without a key.",
+                        "x-smithery-secret": true
+                    }
+                },
+                "required": []
+            }
+        },
         "serverInfo": {
-            "name":    "ternlang-mcp",
-            "version": "0.3.0",
-            "description": "Ternary Intelligence Stack — turns binary AI agents into ternary decision engines. Built by RFI-IRFOS."
+            "name":        "ternlang-mcp",
+            "displayName": "Ternary Intelligence Stack",
+            "version":     "0.3.3",
+            "description": "Turns binary AI agents into ternary decision engines. 19 tools across 4 layers: core trit primitives, BET VM, MoE-13 orchestration, EcoCore + Audit. Built by RFI-IRFOS (ZVR: 1015608684), Graz, Austria. EU AI Act Articles 13/14/15 compliant design.",
+            "homepage":    "https://ternlang.com",
+            "icon":        "https://ternlang.com/favicon.ico",
+            "author": {
+                "name":  "RFI-IRFOS",
+                "email": "rfi.irfos@gmail.com",
+                "url":   "https://ternlang.com"
+            }
         }
     })
 }
@@ -1596,7 +1639,7 @@ fn main() {
     let stdout = io::stdout();
     let mut out = io::BufWriter::new(stdout.lock());
 
-    eprintln!("[ternlang-mcp] server ready — ternary intelligence stack v0.2");
+    eprintln!("[ternlang-mcp] server ready — ternary intelligence stack v0.3.3");
     eprintln!("[ternlang-mcp] waiting for MCP client on stdin...");
 
     for line in stdin.lock().lines() {
