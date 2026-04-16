@@ -1,0 +1,56 @@
+// stdlib/nn/sparsity_aware_dense.tern
+// Demonstrates: Dense Layer logic with @sparseskip hint
+// Tier: 3 — Industrial
+
+// dense_unit: Computes a single neuron output using sparse logic.
+// @sparseskip hint tells the compiler to optimize by skipping 0 (tend) weights.
+@sparseskip
+fn dense_unit(weight: trit, input: trit) -> trit {
+    // In balanced ternary multiplication:
+    // 1 * 1 = 1
+    // 1 * -1 = -1
+    // -1 * -1 = 1
+    // 0 * x = 0
+    
+    match weight {
+         1 => { 
+            return input; 
+        }
+         0 => { 
+            // This path is optimized by @sparseskip in the BET-VM
+            return 0; 
+        }
+        -1 => {
+            // Flip the input signal
+            match input {
+                 1 => { return -1; }
+                 0 => { return 0; }
+                -1 => { return 1; }
+            }
+        }
+    }
+}
+
+// aggregate_signals: Merges multiple neuron outputs via consensus.
+fn aggregate_signals(s1: trit, s2: trit) -> trit {
+    let res: trit = consensus(s1, s2);
+    match res {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let w: trit = -1;
+    let i: trit = -1;
+    
+    // Test: -1 * -1 should equal 1 (affirm).
+    let result: trit = dense_unit(w, i);
+    
+    match result {
+         1 => { return truth(); } // Pass test: Correct signal propagation
+         0 => { return hold(); }
+        -1 => { return conflict(); }
+    }
+}
