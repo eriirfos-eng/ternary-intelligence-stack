@@ -1,0 +1,44 @@
+// stdlib/bio/protein_folding_stability.tern
+// Demonstrates: Evaluating protein folding stability via ternary GC-content proxy
+// Tier: 3
+
+from "./_utils.tern" import *;
+
+fn folding_stability(sequence: trit[]) -> trit {
+    return stability_score(sequence);
+}
+
+fn main() -> trit {
+    let protein: trittensor<12>;
+    protein[0] = tend;
+    protein[1] = reject;
+    protein[2] = tend;
+    protein[3] = reject;
+    protein[4] = tend;
+    protein[5] = reject;
+    protein[6] = affirm;
+    protein[7] = affirm;
+    protein[8] = affirm;
+    protein[9] = tend;
+    protein[10] = tend;
+    protein[11] = tend;
+    
+    // GC Content = 2 (reject) + 6 (tend) = 8
+    // Total count = 12. 8 > 6 (12/2). Should be affirm.
+    
+    let stability: trit = folding_stability(protein);
+    
+    match stability {
+        affirm => {
+            println("Protein structure is STABLE.");
+        }
+        tend => {
+            println("Protein structure stability is MARGINAL.");
+        }
+        reject => {
+            println("Protein structure is UNSTABLE.");
+        }
+    }
+    
+    return stability;
+}
