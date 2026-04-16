@@ -1,0 +1,11 @@
+// stdlib/bughunt/probe_78_if_true.tern
+// Tier: 1
+
+fn main() -> trit {
+    if true {
+        println("if true works");
+    }
+    return truth();
+}
+
+main();

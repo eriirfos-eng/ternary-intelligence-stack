@@ -1,0 +1,23 @@
+// stdlib/bughunt/probe_66_string_ops.tern
+// Demonstrates: String concatenation and function passing.
+// Tier: 1
+
+fn print_msg(prefix: string, msg: string) -> trit {
+    println(prefix);
+    println(msg);
+    return truth();
+}
+
+fn main() -> trit {
+    let s1: string = "Hello";
+    let s2: string = "World";
+    
+    // Test concatenation (if supported)
+    // let s3: string = s1 + " " + s2; 
+    
+    print_msg("Greeting: ", s1);
+    
+    return truth();
+}
+
+main();
