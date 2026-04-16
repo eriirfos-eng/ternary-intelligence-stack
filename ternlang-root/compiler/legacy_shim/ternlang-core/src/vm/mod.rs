@@ -206,6 +206,8 @@ impl BetVm {
                         (Value::Trit(av), Value::Float(bv)) => self.stack.push(Value::Float((av as i8 as f64) + bv)),
                         (Value::Float(av), Value::Int(bv)) => self.stack.push(Value::Float(av + (bv as f64))),
                         (Value::Int(av), Value::Float(bv)) => self.stack.push(Value::Float((av as f64) + bv)),
+                        // PARSER-STR-001: string concatenation via + operator
+                        (Value::String(av), Value::String(bv)) => self.stack.push(Value::String(av + &bv)),
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", (a, b)) }),
                     }
                 }
@@ -757,6 +759,22 @@ impl BetVm {
                     let tb = to_trit(b)?;
                     let result = if (ta as i8) >= (tb as i8) { ta } else { tb };
                     self.stack.push(Value::Trit(result));
+                }
+                0x2a => { // TjmpEqFloat — peek stack, jump if top Float equals embedded f64 literal
+                    // Emitted by betbc.rs for float match-arm patterns (PARSER-002 fix).
+                    // Layout: [opcode: u8] [target_f64: 8 bytes LE] [jump_addr: u16 LE]
+                    // Peeks the top of stack (does NOT consume it), jumps if value matches
+                    // within machine epsilon.
+                    let mut fb = [0u8; 8];
+                    for i in 0..8 { fb[i] = self.read_u8()?; }
+                    let target_f = f64::from_le_bytes(fb);
+                    let addr = self.read_u16()?;
+                    let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
+                    if let Value::Float(f) = val {
+                        if (f - target_f).abs() < 1e-9 {
+                            self.pc = addr as usize;
+                        }
+                    }
                 }
                 0x33 => { // Topent — path_str, mode_int → handle_int
                     let mode = self.stack.pop().ok_or(VmError::StackUnderflow)?;

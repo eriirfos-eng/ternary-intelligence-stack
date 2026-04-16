@@ -64,14 +64,36 @@ impl<'a> Parser<'a> {
 
         // Wrap any top-level statements in a synthetic fn main() -> trit { ... }
         // only when no explicit main function is defined.
-        if !toplevel_stmts.is_empty() && !functions.iter().any(|f| f.name == "main") {
-            functions.push(Function {
-                name: "main".to_string(),
-                params: vec![],
-                return_type: Type::Trit,
-                body: toplevel_stmts,
-                directive: None,
-            });
+        // VM-GLOBAL-001: when an explicit main IS defined but there are also top-level
+        // statements (e.g. `let counter: int = 42;` before `fn main`), prepend those
+        // stmts to main's body so they are visible as locals inside main.
+        if !toplevel_stmts.is_empty() {
+            if let Some(main_fn) = functions.iter_mut().find(|f| f.name == "main") {
+                // Separate call-stmts (e.g. `main();`) from declarations/assignments so
+                // we don't accidentally re-invoke main recursively.
+                let mut decls: Vec<Stmt> = Vec::new();
+                for s in toplevel_stmts {
+                    match &s {
+                        Stmt::Expr(Expr::Call { callee, .. }) if callee == "main" => {
+                            // Skip bare `main();` — it's just the script entry-point call
+                        }
+                        _ => decls.push(s),
+                    }
+                }
+                // Prepend declarations to main's body so they are accessible as locals
+                let mut new_body = decls;
+                new_body.append(&mut main_fn.body);
+                main_fn.body = new_body;
+            } else {
+                // No explicit main — synthesize one as before
+                functions.push(Function {
+                    name: "main".to_string(),
+                    params: vec![],
+                    return_type: Type::Trit,
+                    body: toplevel_stmts,
+                    directive: None,
+                });
+            }
         }
 
         Ok(Program { imports, import_specs, structs, agents, functions })

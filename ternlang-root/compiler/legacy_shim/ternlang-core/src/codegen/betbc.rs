@@ -87,6 +87,7 @@ impl BytecodeEmitter {
                 let addr = base_addr + self.code.len() as u16;
                 if handler_addr.is_none() { handler_addr = Some(addr); }
                 self.emit_function(method);
+                // Restore correct absolute address overwritten by emit_function (TCALL-BUG fix):
                 self.func_addrs.insert(format!("{}::{}", agent.name, method.name), addr);
             }
             if let Some(addr) = handler_addr { self.agent_handlers.push((type_id, addr)); }
@@ -96,6 +97,10 @@ impl BytecodeEmitter {
             self.func_addrs.insert(func.name.clone(), addr);
             // Ensure any global symbols or previous definitions are visible
             self.emit_function(func);
+            // emit_function overwrites func_addrs[name] with a temp-buffer offset that
+            // omits base_addr. Restore the correct absolute address so that forward
+            // references resolved later in PASS 1 get the right TCALL target.
+            self.func_addrs.insert(func.name.clone(), addr);
         }
 
         let final_func_addrs = std::mem::replace(&mut self.func_addrs, real_func_addrs);
@@ -317,7 +322,10 @@ impl BytecodeEmitter {
                         }
                     }
 
-                    // Mismatch: Jump past body to the next arm's check
+                    // Mismatch: the conditional test above PEEKS (doesn't pop), so if it
+                    // didn't jump the TLOAD result is still on the stack. Pop it before
+                    // jumping to the next arm to keep the stack balanced.
+                    self.code.push(0x0c); // TPOP — discard unmatched arm's cond value
                     let skip_patch = self.code.len() + 1;
                     self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
                     next_arm_patch = Some(skip_patch);
@@ -342,7 +350,12 @@ impl BytecodeEmitter {
                 }
                 
                 if !arms.is_empty() {
-                    self.code.push(0x0c); // Tpop (pops the last failed peek)
+                    // Each arm's mismatch path now does its own TPOP (see per-arm fix above),
+                    // so the stack is already clean when we reach the fallback.
+                    // VM-MATCH-001: non-exhaustive match — no arm was taken.
+                    // Push a Tend (hold/undefined) placeholder so the stack is balanced
+                    // even if the caller expects a return value from this match expression.
+                    self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
                 }
 
                 let end_addr = self.code.len() as u16;
@@ -367,20 +380,34 @@ impl BytecodeEmitter {
                 self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes());
                 self.code.push(0x08); self.code.push(i_reg);
 
+                // Use a register for the loop comparison so we avoid TDUP accumulation.
+                // Previously: TDUP + TjmpNeg/TjmpZero (peek) left 2 values on the stack per
+                // iteration, causing a stack leak that corrupted subsequent operations.
+                let cmp_reg = self.alloc_reg();
+
                 let top = self.code.len() as u16;
                 let pre_break = self.break_patches.len();
                 let pre_cont = self.continue_patches.len();
 
+                // Compute i < r → cmp_reg (stack neutral: push then immediately store)
                 self.code.push(0x09); self.code.push(i_reg);
                 self.code.push(0x09); self.code.push(r_reg);
-                self.code.push(0x14);
-                self.code.push(0x0a);
+                self.code.push(0x14);                        // Tless → [cmp]
+                self.code.push(0x08); self.code.push(cmp_reg); // TSTORE cmp → []
+
+                // Load and test for NEG (i >= r → Reject → exit)
+                self.code.push(0x09); self.code.push(cmp_reg); // [cmp]
                 let neg = self.code.len() + 1;
-                self.code.push(0x07); self.code.extend_from_slice(&[0, 0]);
-                self.code.push(0x0a);
+                self.code.push(0x07); self.code.extend_from_slice(&[0, 0]); // TjmpNeg → peeks
+                self.code.push(0x0c); // TPOP — clean up after failed neg check
+
+                // Load and test for ZERO (i == r → Tend → exit)
+                self.code.push(0x09); self.code.push(cmp_reg); // [cmp]
                 let zero = self.code.len() + 1;
-                self.code.push(0x06); self.code.extend_from_slice(&[0, 0]);
-                self.code.push(0x0c);
+                self.code.push(0x06); self.code.extend_from_slice(&[0, 0]); // TjmpZero → peeks
+                self.code.push(0x0c); // TPOP — clean up after failed zero check, body runs clean
+
+                // Body: load element tensor[it, i, 0] → v_reg
                 self.code.push(0x09); self.code.push(it_reg);
                 self.code.push(0x09); self.code.push(i_reg);
                 self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes());
@@ -401,8 +428,24 @@ impl BytecodeEmitter {
                 let back = self.code.len() + 1;
                 self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
                 self.patch_u16(back, top);
+
+                // Exit paths for neg/zero: the TjmpNeg/TjmpZero PEEK so the cmp value
+                // is still on the stack when they jump. Add a TPOP cleanup then TJMP end.
+                let neg_exit_addr = self.code.len() as u16;
+                self.patch_u16(neg, neg_exit_addr);
+                self.code.push(0x0c); // TPOP — clean peeked cmp
+                let neg_to_end = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+
+                let zero_exit_addr = self.code.len() as u16;
+                self.patch_u16(zero, zero_exit_addr);
+                self.code.push(0x0c); // TPOP — clean peeked cmp
+                let zero_to_end = self.code.len() + 1;
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+
                 let end = self.code.len() as u16;
-                self.patch_u16(neg, end); self.patch_u16(zero, end);
+                self.patch_u16(neg_to_end, end);
+                self.patch_u16(zero_to_end, end);
                 let bs: Vec<usize> = self.break_patches.drain(pre_break..).collect();
                 for p in bs { self.patch_u16(p, end); }
 
@@ -520,8 +563,23 @@ impl BytecodeEmitter {
                 self.code.extend_from_slice(bytes);
             }
             Expr::Ident(name) => {
-                if let Some(&r) = self.symbols.get(name) {
-                    self.code.push(0x09); self.code.push(r);
+                // COMP-BOOL-001: `true`/`false` are not keywords in the lexer — they arrive
+                // as Token::Ident. Handle them here so they produce a value instead of
+                // causing a stack underflow when no symbol matches.
+                match name.as_str() {
+                    "true" => {
+                        self.code.push(0x17); // TpushInt
+                        self.code.extend_from_slice(&1i64.to_le_bytes());
+                    }
+                    "false" => {
+                        self.code.push(0x17); // TpushInt
+                        self.code.extend_from_slice(&0i64.to_le_bytes());
+                    }
+                    _ => {
+                        if let Some(&r) = self.symbols.get(name) {
+                            self.code.push(0x09); self.code.push(r);
+                        }
+                    }
                 }
             }
             Expr::BinaryOp { op, lhs, rhs } => {
@@ -548,7 +606,8 @@ impl BytecodeEmitter {
             }
             Expr::Call { callee, args } => {
                 match callee.as_str() {
-                    "println" => {
+                    // `print` is an alias for `println` — same TPRINT opcode (0x20)
+                    "println" | "print" => {
                         if args.is_empty() {
                             // print newline only (not implemented, but let's push dummy)
                         } else {
@@ -594,6 +653,165 @@ impl BytecodeEmitter {
                             self.code.push(0x24); // TSHAPE
                             self.code.push(0x0c); // TPOP (cols)
                         }
+                    }
+                    // VM-BUILTIN-001: `invert(t)` = ternary negation (Tneg, opcode 0x04)
+                    "invert" => {
+                        if args.len() == 1 {
+                            self.emit_expr(&args[0]);
+                            self.code.push(0x04); // Tneg
+                        }
+                    }
+                    // VM-BUILTIN-002: `len(arr)` is an alias for `length(arr)`
+                    "len" => {
+                        if args.len() == 1 {
+                            self.emit_expr(&args[0]);
+                            self.code.push(0x24); // TSHAPE
+                            self.code.push(0x0c); // TPOP (cols — TSHAPE pushes rows then cols)
+                        }
+                    }
+                    // VM-BUILTIN-001: `abs(n)` — inline: dup, push 0, less-than, branch on negative
+                    "abs" => {
+                        if args.len() == 1 {
+                            self.emit_expr(&args[0]);          // stack: [x]
+                            self.code.push(0x0a);              // TDUP   → [x, x]
+                            self.code.push(0x17);              // TpushInt 0
+                            self.code.extend_from_slice(&0i64.to_le_bytes()); // → [x, x, 0]
+                            self.code.push(0x14);              // Tless: (x < 0) → Affirm; [x, cmp]
+                            // TjmpPos (peek) to negate branch
+                            let neg_patch = self.code.len() + 1;
+                            self.code.push(0x05); self.code.extend_from_slice(&[0, 0]);
+                            // not negative: pop cmp, jump to end
+                            self.code.push(0x0c);              // TPOP → [x]
+                            let end_patch = self.code.len() + 1;
+                            self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                            // negate branch: pop cmp, negate x
+                            let neg_addr = self.code.len() as u16;
+                            self.patch_u16(neg_patch, neg_addr);
+                            self.code.push(0x0c);              // TPOP → [x]
+                            self.code.push(0x04);              // Tneg → [-x] (positive when x<0)
+                            let end_addr = self.code.len() as u16;
+                            self.patch_u16(end_patch, end_addr);
+                        }
+                    }
+                    // VM-BUILTIN-001: `min(a, b)` — inline with temp registers
+                    "min" => {
+                        if args.len() == 2 {
+                            let a_reg = self.alloc_reg();
+                            let b_reg = self.alloc_reg();
+                            self.emit_expr(&args[0]);
+                            self.code.push(0x08); self.code.push(a_reg); // TSTORE a
+                            self.emit_expr(&args[1]);
+                            self.code.push(0x08); self.code.push(b_reg); // TSTORE b
+                            self.code.push(0x09); self.code.push(a_reg); // TLOAD a
+                            self.code.push(0x09); self.code.push(b_reg); // TLOAD b
+                            self.code.push(0x14);                         // Tless: a < b → Affirm
+                            // TjmpPos → a is smaller, return a
+                            let a_smaller_patch = self.code.len() + 1;
+                            self.code.push(0x05); self.code.extend_from_slice(&[0, 0]);
+                            // a >= b: return b
+                            self.code.push(0x0c);              // TPOP cmp
+                            self.code.push(0x09); self.code.push(b_reg); // TLOAD b
+                            let end_patch = self.code.len() + 1;
+                            self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                            // a < b: return a
+                            let a_smaller_addr = self.code.len() as u16;
+                            self.patch_u16(a_smaller_patch, a_smaller_addr);
+                            self.code.push(0x0c);              // TPOP cmp
+                            self.code.push(0x09); self.code.push(a_reg); // TLOAD a
+                            let end_addr = self.code.len() as u16;
+                            self.patch_u16(end_patch, end_addr);
+                        }
+                    }
+                    // VM-BUILTIN-001: `max(a, b)` — inline with temp registers
+                    "max" => {
+                        if args.len() == 2 {
+                            let a_reg = self.alloc_reg();
+                            let b_reg = self.alloc_reg();
+                            self.emit_expr(&args[0]);
+                            self.code.push(0x08); self.code.push(a_reg); // TSTORE a
+                            self.emit_expr(&args[1]);
+                            self.code.push(0x08); self.code.push(b_reg); // TSTORE b
+                            self.code.push(0x09); self.code.push(b_reg); // TLOAD b
+                            self.code.push(0x09); self.code.push(a_reg); // TLOAD a
+                            self.code.push(0x14);                         // Tless: b < a → Affirm
+                            // TjmpPos → a is larger, return a
+                            let a_larger_patch = self.code.len() + 1;
+                            self.code.push(0x05); self.code.extend_from_slice(&[0, 0]);
+                            // b >= a: return b
+                            self.code.push(0x0c);              // TPOP cmp
+                            self.code.push(0x09); self.code.push(b_reg); // TLOAD b
+                            let end_patch = self.code.len() + 1;
+                            self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                            // b < a: return a
+                            let a_larger_addr = self.code.len() as u16;
+                            self.patch_u16(a_larger_patch, a_larger_addr);
+                            self.code.push(0x0c);              // TPOP cmp
+                            self.code.push(0x09); self.code.push(a_reg); // TLOAD a
+                            let end_addr = self.code.len() as u16;
+                            self.patch_u16(end_patch, end_addr);
+                        }
+                    }
+                    // `pow(base, exp)` — integer power via loop: result = 1; while exp>0 { result*=base; exp-=1; }
+                    "pow" => {
+                        if args.len() == 2 {
+                            let b_reg = self.alloc_reg(); // base
+                            let e_reg = self.alloc_reg(); // exponent
+                            let r_reg = self.alloc_reg(); // result
+                            // store base
+                            self.emit_expr(&args[0]);
+                            self.code.push(0x08); self.code.push(b_reg);
+                            // store exp
+                            self.emit_expr(&args[1]);
+                            self.code.push(0x08); self.code.push(e_reg);
+                            // result = 1
+                            self.code.push(0x17); self.code.extend_from_slice(&1i64.to_le_bytes());
+                            self.code.push(0x08); self.code.push(r_reg);
+                            // loop_start: check e > 0
+                            let loop_start = self.code.len() as u16;
+                            self.code.push(0x09); self.code.push(e_reg);  // TLOAD e
+                            self.code.push(0x17); self.code.extend_from_slice(&0i64.to_le_bytes()); // push 0
+                            self.code.push(0x15);  // Tgreater: e > 0 → Affirm
+                            // TjmpPos → jump to loop body
+                            let body_patch = self.code.len() + 1;
+                            self.code.push(0x05); self.code.extend_from_slice(&[0, 0]);
+                            // e <= 0: pop cmp, jump to end
+                            self.code.push(0x0c);
+                            let end_patch = self.code.len() + 1;
+                            self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                            // loop body:
+                            let body_addr = self.code.len() as u16;
+                            self.patch_u16(body_patch, body_addr);
+                            self.code.push(0x0c);  // TPOP cmp
+                            // r = r * b
+                            self.code.push(0x09); self.code.push(r_reg);
+                            self.code.push(0x09); self.code.push(b_reg);
+                            self.code.push(0x03);  // Tmul (handles int*int)
+                            self.code.push(0x08); self.code.push(r_reg);
+                            // e = e - 1
+                            self.code.push(0x09); self.code.push(e_reg);
+                            self.code.push(0x17); self.code.extend_from_slice(&(-1i64).to_le_bytes());
+                            self.code.push(0x18);  // TaddInt
+                            self.code.push(0x08); self.code.push(e_reg);
+                            // jump back to loop_start
+                            self.code.push(0x0b); self.code.extend_from_slice(&loop_start.to_le_bytes());
+                            // end:
+                            let end_addr = self.code.len() as u16;
+                            self.patch_u16(end_patch, end_addr);
+                            // push result
+                            self.code.push(0x09); self.code.push(r_reg);
+                        }
+                    }
+                    // `push(arr, val)` / `pop(arr)` — tensor mutation not yet implemented.
+                    // Emit argument expressions for side-effects then push a Tend stub so
+                    // callers get a value without falling through to an unresolved TCALL 0x0000
+                    // (which causes infinite recursion via jump-to-program-start).
+                    "push" => {
+                        for a in args { self.emit_expr(a); self.code.push(0x0c); } // eval + discard
+                        self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); // stub result
+                    }
+                    "pop" => {
+                        for a in args { self.emit_expr(a); self.code.push(0x0c); } // eval + discard
+                        self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); // stub result
                     }
                     "mul" => {
                         for a in args { self.emit_expr(a); }
