@@ -329,7 +329,7 @@ The Tier-3 plan provides on-premise deployment, custom FPGA integration via `ter
 - **ternlang-mkl (cuTern)** — native sparsity bypass kernel library for production inference
 - **Enterprise SLA** — dedicated support, audit logs, custom licensing
 
-For inquiries: `enterprise@rfi-irfos.org`
+For inquiries: `enterprise@ternlang.com`
 
 | `GET  /api/stream/deliberate` | EMA deliberation streamed per round via SSE |
 | `GET  /api/usage` | Monthly usage stats for the authenticated key |
