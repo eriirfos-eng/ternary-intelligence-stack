@@ -1,0 +1,43 @@
+// stdlib/nlp/sentiment_gate.tern
+// Demonstrates: Ternary sentiment analysis gating
+// Tier: 2
+
+from "./_utils.tern" import *;
+
+fn evaluate_sentiment(positive_words: int, negative_words: int) -> trit {
+    let diff: int = positive_words - negative_words;
+    
+    if diff > 2 ? {
+        return affirm;
+    } else {
+        if diff < -2 ? {
+            return reject;
+        } else {
+            return tend;
+        } else {
+            return reject;
+        }
+    } else {
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let pos: int = 5;
+    let neg: int = 1;
+    let sentiment: trit = evaluate_sentiment(pos, neg);
+    
+    match sentiment {
+        affirm => {
+            println("Sentiment is overwhelmingly positive.");
+        }
+        tend => {
+            println("Sentiment is neutral or mixed.");
+        }
+        reject => {
+            println("Sentiment is overwhelmingly negative.");
+        }
+    }
+    
+    return sentiment;
+}
