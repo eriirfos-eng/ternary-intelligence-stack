@@ -1,0 +1,35 @@
+// stdlib/research/replication_confidence_mask.tern
+// Demonstrates: Research replication confidence mask using multi-study consensus
+// Tier: 3
+
+fn compute_replication_score(study_results: trit[]) -> trit {
+    let count: int = length(study_results);
+    let i: int = 0;
+    let consensus_val: trit = tend;
+    
+    while i < count ? {
+        consensus_val = consensus(consensus_val, study_results[i]);
+        i = i + 1;
+    } else {
+        return consensus_val;
+    } else {
+        return consensus_val;
+    }
+    
+    return consensus_val;
+}
+
+fn main() -> trit {
+    let studies: trittensor<3>;
+    studies[0] = 1; // Study 1: Replicated
+    studies[1] = 1; // Study 2: Replicated
+    studies[2] = 0; // Study 3: Pending
+    
+    let result: trit = compute_replication_score(studies);
+
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
