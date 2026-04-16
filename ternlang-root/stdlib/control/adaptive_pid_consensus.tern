@@ -1,0 +1,50 @@
+// stdlib/control/adaptive_pid_consensus.tern
+// Demonstrates: Adaptive PID Gains via Consensus
+// Tier: 2 — Pro Standard
+
+// adjust_gain: Returns a trit multiplier for the PID gain adjustment.
+// If system is unstable (-1 from stability sensor), reduce gain (-1).
+// If system is stable but slow (1), increase gain (1).
+fn adjust_gain(stability_status: trit, error_rate: float) -> trit {
+    match stability_status {
+        -1 => { 
+            // Unstable! Must reduce gain immediately.
+            return -1;
+        }
+         0 => {
+            // Neutral stability. Check if error rate justifies increasing gain.
+            if error_rate > 0.5 {
+                return 1; // Increase gain to reduce error
+            }
+            return 0; // Hold steady
+        }
+         1 => {
+            // System is very stable. Can safely increase gain to improve performance.
+            return 1;
+        }
+    }
+}
+
+// consensus_gain_multiplier: Multi-sensor consensus on gain adjustment.
+fn consensus_gain_multiplier(m1: trit, m2: trit) -> trit {
+    let combined: trit = consensus(m1, m2);
+    match combined {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    let s: trit = -1; // System detected as unstable
+    let e: float = 0.8; // High error rate
+    
+    // Instability (-1) should override high error rate (0.8).
+    let adj: trit = adjust_gain(s, e);
+    
+    match adj {
+        -1 => { return truth(); } // Pass test: safety over performance
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}
