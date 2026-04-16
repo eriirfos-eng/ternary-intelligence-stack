@@ -395,3 +395,15 @@ Compiler fixes:
 - fixed register leak in Match arms in betbc.rs
 Imports added:
 - added _utils.tern to nlp, safety, econ, control, societal, apps, bio, crypto, research, hardware, sim, causal
+
+## 2026-04-16 10:00 — 30 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: 10 Tier 2 files (ml, rl, distributed, ensemble) — momentum_optimizer, sparse_dropout, experience_prioritization, soft_actor_critic_gate, gossip_protocol_consensus, sharding_integrity_mask, boosting_weight_consensus, stacking_meta_gate, moe_routing_consensus, layer_norm_consensus
+- Batch 2: 10 Tier 2/3 files (nn, vision, stats, timeseries, gametheory) — ternary_weight_clamping, activation_sparsity_eval, pixel_intensity_consensus, object_persistence_mask, hypothesis_test_consensus, variance_analysis_consensus, timeseries_utils, seasonal_drift_consensus, lagged_correlation_mask, gametheory_utils, nash_equilibrium_consensus, pareto_efficiency_mask
+- Batch 3: 8 Tier 2/3 files (ml, rl, ensemble, nn, vision, stats, timeseries, gametheory) — curriculum_learning_gate, reward_shaping_mask, diversity_mask, batch_norm_consensus, occlusion_detector_mask, skewness_anomaly_consensus, volatility_gate, tit_for_tat_consensus, bagging_stability_mask, learning_rate_consensus, soft_actor_critic_consensus
+
+**Do not work in these categories next session:** ml, rl, distributed, ensemble, nn, vision, stats, timeseries, gametheory
+
+**Compiler fixes this session:** none (Identified global variable stack underflow weakness and float[] VM absence)
+**VM errors encountered:** [BET-001] Stack underflow (resolved by avoiding global variables), [PARSER-006] float[] literal failure (identified as VM absence)
