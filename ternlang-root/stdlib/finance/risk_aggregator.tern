@@ -1,0 +1,46 @@
+// stdlib/finance/risk_aggregator.tern
+// Demonstrates: Multi-source Risk Aggregation logic
+// Tier: 2 — Pro Standard
+
+// aggregate_risk: Merges risk signals from credit, market, and operational sources.
+// If any source confirms a high risk (-1), the aggregate signal is -1.
+fn aggregate_risk(credit: trit, market: trit, operational: trit) -> trit {
+    // Priority 1: High risk rejection override
+    if credit == -1 { return -1; }
+    if market == -1 { return -1; }
+    if operational == -1 { return -1; }
+    
+    // Priority 2: Consensus on safety
+    let m12: trit = consensus(credit, market);
+    let final_m: trit = consensus(m12, operational);
+    
+    match final_m {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+// safety_limit_gate: Returns pass/fail based on risk status.
+fn safety_limit_gate(status: trit) -> trit {
+    match status {
+        -1 => { return 0; } // Reject (halt operation)
+         0 => { return 0; } // Hold (insufficient confidence)
+         1 => { return 1; } // Pass (safe)
+    }
+}
+
+fn main() -> trit {
+    let c: trit = 1;
+    let m: trit = 0;
+    let o: trit = -1;
+    
+    // Operational source (o) is -1 (high risk). aggregate_risk should return -1.
+    let risk: trit = aggregate_risk(c, m, o);
+    
+    match risk {
+        -1 => { return truth(); } // Pass test: high risk detected
+         0 => { return hold(); }
+         1 => { return conflict(); }
+    }
+}
