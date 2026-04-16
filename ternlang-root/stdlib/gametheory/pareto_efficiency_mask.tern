@@ -1,0 +1,35 @@
+// stdlib/gametheory/pareto_efficiency_mask.tern
+// Demonstrates: Pareto efficiency masking for multi-objective optimization
+// Tier: 3
+
+from "gametheory_utils.tern" import *;
+
+fn check_pareto(u1: float, u1_prev: float, u2: float, u2_prev: float) -> trit {
+    // Logic: if at least one player improves and none worsen, affirm Pareto improvement.
+    let better1: trit = 0;
+    if u1 > u1_prev ? { better1 = 1; } else { better1 = 0; } else { better1 = -1; }
+    
+    let better2: trit = 0;
+    if u2 > u2_prev ? { better2 = 1; } else { better2 = 0; } else { better2 = -1; }
+    
+    if better1 == -1 ? { return reject; } else {} else {}
+    if better2 == -1 ? { return reject; } else {} else {}
+    
+    if better1 == 1 ? { return affirm; } else {} else {}
+    if better2 == 1 ? { return affirm; } else {} else {}
+    
+    return tend; // No change
+}
+
+fn main() -> trit {
+    let u1: float = 12.0; let u1p: float = 10.0;
+    let u2: float = 10.0; let u2p: float = 10.0;
+    
+    let res: trit = check_pareto(u1, u1p, u2, u2p);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
