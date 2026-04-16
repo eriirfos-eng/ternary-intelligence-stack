@@ -65,16 +65,28 @@ The Ternary Intelligence Stack is built by a core team of three co-founders from
 ## Quick start
 
 ```bash
+cargo install ternlang-cli
+```
+
+That's it. The `ternlang` binary is now in your PATH:
+
+```bash
+ternlang                        # → interactive REPL, start typing trit expressions
+ternlang my_program.tern        # → run a .tern file directly
+ternlang run my_program.tern    # → same (explicit form)
+ternlang build my_program.tern  # → compile to .bet bytecode
+ternlang fmt my_program.tern    # → format source file
+ternlang repl                   # → interactive REPL (explicit)
+ternlang test                   # → run test suite
+```
+
+Or build from source:
+
+```bash
 git clone https://github.com/eriirfos-eng/ternary-intelligence-stack
 cd ternary-intelligence-stack/ternlang-root
 cargo build --release
-./target/release/ternlang run examples/03_rocket_launch.tern
-```
-
-Or install the CLI directly:
-
-```bash
-cargo install ternlang-cli
+./target/release/ternlang examples/03_rocket_launch.tern
 ```
 
 ---

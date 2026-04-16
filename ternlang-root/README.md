@@ -99,15 +99,25 @@ match conscious {
 cargo install ternlang-cli
 ```
 
-Then run any `.tern` file directly from your terminal:
+That installs the `ternlang` binary. Then:
 
 ```bash
-ternlang run my_program.tern
-ternlang run examples/03_rocket_launch.tern
-ternlang build my_program.tern --output my_program.bet
-ternlang repl
-ternlang fmt my_program.tern --write
-ternlang audit decisions.json [--output report.json] [--html]
+ternlang                        # launch interactive REPL immediately
+ternlang my_program.tern        # run a .tern file directly — no subcommand needed
+ternlang run my_program.tern    # same as above (explicit form)
+```
+
+**All commands:**
+
+```bash
+ternlang                                          # → interactive REPL
+ternlang <file.tern>                              # → run file directly
+ternlang run <file.tern>                          # → run file
+ternlang build <file.tern> [--output file.bet]   # → compile to bytecode
+ternlang repl                                     # → interactive REPL
+ternlang fmt <file.tern> [--write]               # → format source
+ternlang test [path]                              # → run test suite
+ternlang audit decisions.json [--html]           # → EU AI Act audit report
 ternlang translate my_logic.py [--language python] [--output result.tern]
 ```
 
@@ -117,7 +127,7 @@ ternlang translate my_logic.py [--language python] [--output result.tern]
 git clone https://github.com/eriirfos-eng/ternary-intelligence-stack
 cd ternary-intelligence-stack/ternlang-root
 cargo build --release
-./target/release/ternlang run examples/03_rocket_launch.tern
+./target/release/ternlang my_program.tern   # or: ./target/release/ternlang run ...
 ```
 
 ---
