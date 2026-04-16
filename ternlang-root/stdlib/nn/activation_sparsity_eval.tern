@@ -1,25 +1,44 @@
 // stdlib/nn/activation_sparsity_eval.tern
-// Demonstrates: Evaluating activation sparsity for optimization
-// Tier: 3 — Industrial
+// Demonstrates: Evaluation of activation sparsity in ternary neural networks
+// Tier: 3
 
-from "nn_utils.tern" import ternary_relu;
+from "nn_utils.tern" import *;
+
+fn eval_sparsity(activations: trit[]) -> trit {
+    let zeros_count: int = 0;
+    let i: int = 0;
+    let len: int = length(activations);
+    
+    while i < len {
+        if activations[i] == 0 ? {
+            zeros_count = zeros_count + 1;
+        } else {} else {}
+        i = i + 1;
+    }
+    
+    // Logic: if sparsity > 50%, affirm (healthy). If > 20%, tend. Else reject.
+    if zeros_count > (len / 2) ? {
+        return affirm;
+    } else {
+        if zeros_count > (len / 5) ? {
+            return tend;
+        } else {
+            return reject;
+        } else {
+            return reject;
+        }
+    } else {
+        return reject;
+    }
+}
 
 fn main() -> trit {
-    let a1: trit = 1;
-    let a2: trit = -1;
-    let a3: trit = 0;
+    let acts: trit[] = [1, 0, 0, -1, 0]; // 3 zeros out of 5 (60%)
+    let res: trit = eval_sparsity(acts);
     
-    // ReLU activations
-    let r1: trit = ternary_relu(a1);  // 1
-    let r2: trit = ternary_relu(a2);  // 0
-    let r3: trit = ternary_relu(a3);  // 0
-    
-    // Consensus: returns 1 if mostly active, 0 if mostly sparse
-    let consensus_active: trit = consensus(consensus(r1, r2), r3);
-    
-    match consensus_active {
-        -1 => { return conflict(); }  // Unstable
-         0 => { return hold(); }      // Sparse (Optimization target)
-         1 => { return truth(); }     // Active
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
     }
 }
