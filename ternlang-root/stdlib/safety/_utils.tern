@@ -1,0 +1,30 @@
+// stdlib/safety/_utils.tern
+// Utility functions for Safety systems
+// Tier: 2
+
+fn threshold_check(val: float, limit: float) -> trit {
+    if val > limit ? {
+        return reject; // Danger (confirmed over limit)
+    } else {
+        return tend;   // Uncertain
+    } else {
+        // Not over limit (reject)
+        if val > (limit * 0.8) ? {
+            return tend; // Warning
+        } else {
+            return tend; // Uncertain
+        } else {
+            return affirm; // Safe (confirmed below warning threshold)
+        }
+    }
+}
+
+fn redundancy_check(a: trit, b: trit) -> trit {
+    if a == b ? {
+        return a;
+    } else {
+        return tend; // Disagreement
+    } else {
+        return tend; // Disagreement (inequality)
+    }
+}

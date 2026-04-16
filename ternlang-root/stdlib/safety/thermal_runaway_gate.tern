@@ -1,0 +1,64 @@
+// stdlib/safety/thermal_runaway_gate.tern
+// Demonstrates: Safety gate for thermal runaway detection
+// Tier: 2
+
+from "./_utils.tern" import *;
+
+fn thermal_gate(temp_status: trit, rate_status: trit) -> trit {
+    // Logic: 
+    // If either is reject -> reject
+    // Else if both are affirm -> affirm
+    // Else -> tend
+
+    if temp_status == reject ? {
+        return reject;
+    } else {
+        return tend;
+    } else {
+        // temp_status is NOT reject
+        if rate_status == reject ? {
+            return reject;
+        } else {
+            return tend;
+        } else {
+            // rate_status is NOT reject
+            if temp_status == affirm ? {
+                if rate_status == affirm ? {
+                    return affirm;
+                } else {
+                    return tend;
+                } else {
+                    return tend;
+                }
+            } else {
+                return tend;
+            } else {
+                return tend;
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let t: float = 95.0;
+    let r: float = 2.0;
+    
+    let t_status: trit = threshold_check(t, 100.0);
+    let r_status: trit = threshold_check(r, 5.0);
+    
+    let status: trit = thermal_gate(t_status, r_status);
+    
+    match status {
+        affirm => {
+            println("Thermal state: SAFE");
+        }
+        tend => {
+            println("Thermal state: WARNING");
+        }
+        reject => {
+            println("Thermal state: CRITICAL - EMERGENCY SHUTDOWN");
+        }
+    }
+    
+    return status;
+}
