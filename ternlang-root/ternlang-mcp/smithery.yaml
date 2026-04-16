@@ -1,210 +1,38 @@
 # Smithery MCP Registry — ternlang-mcp
-# https://smithery.ai
+# https://smithery.ai/server/ternlang
 #
 # Submit via: https://smithery.ai/new (paste this file)
 # Or CLI:     npx @smithery/cli publish
 
 name: ternlang
-displayName: "Ternlang — Ternary Intelligence Stack"
+displayName: "Ternary Intelligence Stack"
 description: |
   Turns any binary AI agent into a ternary decision engine.
 
   Every AI system today is forced to answer yes or no — even when the evidence
   is contradictory, incomplete, or genuinely uncertain. Ternlang adds the third
-  state: hold (trit = 0). Not indecision — a first-class routing instruction
+  state: **hold** (trit = 0). Not indecision — a first-class routing instruction
   that tells the agent to gather more data before committing.
 
-  Tools include:
-  - trit_decide: float evidence → reject / hold / affirm + confidence
-  - trit_consensus: balanced ternary consensus(a, b)
-  - trit_eval: evaluate ternlang expressions on the live BET VM
-  - ternlang_run: compile + run full .tern programs
-  - quantize_weights: f32 → ternary via BitNet thresholding
-  - sparse_benchmark: sparse vs dense matmul statistics
-  - moe_orchestrate: full MoE-13 orchestration pass (13 specialist experts)
-  - moe_deliberate: EMA-based iterative deliberation engine
-  - trit_action_gate: multi-dimensional hard-block safety veto
-  - trit_enlighten: ternary wisdom (easter egg)
+  19 tools across 4 layers:
+  - **Core trit primitives** — trit_decide, trit_consensus, trit_eval, trit_vector, trit_action_gate
+  - **BET VM execution** — ternlang_run, trit_translate
+  - **MoE-13 orchestration** — moe_orchestrate, moe_deliberate, trit_debate, trit_calibrate, trit_uncertainty_map
+  - **EcoCore + Audit** — trit_eco_check, trit_audit, audit_ternary_logic, trit_enlighten
+  - **ML primitives** — quantize_weights, sparse_benchmark, tsql_join, get_industrial_standards
 
-version: "0.1.0"
+  Built by RFI-IRFOS (ZVR: 1015608684) · Graz, Austria
+  EU AI Act Articles 13/14/15 compliant design.
+
+version: "0.3.3"
 license: "BSL-1.1"
 homepage: "https://ternlang.com"
 repository: "https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-"
+icon: "https://ternlang.com/favicon.ico"
 author:
   name: "RFI-IRFOS"
   email: "rfi.irfos@gmail.com"
-
-# How to connect
-# HTTP transport: POST https://ternlang.com/mcp
-# Stdio transport: cargo install ternlang-mcp
-
-runtime: http
-config:
-  url: "https://ternlang.com/mcp"
-
-# MCP protocol
-protocol: "2024-11-05"
-transport: http
-
-tools:
-  - name: trit_decide
-    description: >
-      Convert float evidence into a ternary decision (-1/0/+1) with confidence
-      score and interpretation. The core primitive: maps uncertain signals to
-      reject / hold / affirm.
-    inputSchema:
-      type: object
-      required: [evidence]
-      properties:
-        evidence:
-          type: array
-          items: { type: number }
-          description: "Evidence values ∈ [-1.0, 1.0]. Negative = reject signal, positive = affirm signal, near 0 = uncertain."
-        threshold:
-          type: number
-          description: "Decision boundary (default 0.15). Values |x| < threshold → hold."
-
-  - name: trit_consensus
-    description: >
-      Balanced ternary consensus of two trits: +1 if both affirm, -1 if both
-      reject, 0 otherwise. The fundamental binary operation of ternary logic.
-    inputSchema:
-      type: object
-      required: [a, b]
-      properties:
-        a: { type: number, description: "First trit: -1, 0, or +1" }
-        b: { type: number, description: "Second trit: -1, 0, or +1" }
-
-  - name: trit_eval
-    description: >
-      Evaluate a ternlang expression on the live BET (Balanced Ternary
-      Execution) VM. Supports consensus(), invert(), truth(), hold(),
-      conflict(), and let bindings.
-    inputSchema:
-      type: object
-      required: [expression]
-      properties:
-        expression:
-          type: string
-          description: "A ternlang expression, e.g. 'consensus(truth(), conflict())'"
-
-  - name: ternlang_run
-    description: >
-      Compile and run a complete .tern program on the BET VM. Returns the
-      final trit value from the program's top-level match expression.
-    inputSchema:
-      type: object
-      required: [code]
-      properties:
-        code:
-          type: string
-          description: "Complete .tern source code to compile and execute."
-
-  - name: quantize_weights
-    description: >
-      Quantize f32 neural network weights to ternary {-1, 0, +1} using
-      BitNet-style thresholding (τ = 0.5 × mean(|w|)). Returns quantized
-      weights and sparsity statistics.
-    inputSchema:
-      type: object
-      required: [weights]
-      properties:
-        weights:
-          type: array
-          items: { type: number }
-          description: "f32 weight values to quantize."
-        threshold:
-          type: number
-          description: "Manual threshold override. If omitted, uses BitNet auto-threshold."
-
-  - name: sparse_benchmark
-    description: >
-      Run sparse vs dense ternary matrix multiplication benchmark.
-      Returns speedup factor, skip rate, and timing for the CSC kernel.
-    inputSchema:
-      type: object
-      properties:
-        size:
-          type: integer
-          description: "Matrix dimension N for N×N benchmark (default 128)."
-        sparsity:
-          type: number
-          description: "Target weight sparsity ∈ [0.0, 1.0] (default 0.5)."
-
-  - name: moe_orchestrate
-    description: >
-      Run a full MoE-13 (Mixture-of-Experts) ternary orchestration pass.
-      Routes the query to the optimal pair of 13 specialist experts using
-      dual-key synergistic routing, synthesises an emergent triad field
-      (1+1=3), enforces a hard safety veto, and returns the final ternary
-      verdict with confidence, temperature, and routing metadata.
-    inputSchema:
-      type: object
-      required: [query]
-      properties:
-        query:
-          type: string
-          description: "The query or decision to orchestrate."
-        evidence:
-          type: array
-          items: { type: number }
-          description: >
-            Optional 6D evidence vector [syntax, world_knowledge, reasoning,
-            tool_use, persona, safety] ∈ [-1.0, 1.0] each. Defaults to [0.5; 6].
-        confidence_threshold:
-          type: number
-          description: "Minimum confidence to affirm/reject (default 0.6). Below → hold."
-
-  - name: moe_deliberate
-    description: >
-      Iterative EMA deliberation engine. Feeds evidence round by round and
-      tracks convergence toward a confidence target. Returns the final scalar
-      trit, convergence flag, and per-round trace.
-    inputSchema:
-      type: object
-      required: [target_confidence, rounds_evidence]
-      properties:
-        target_confidence:
-          type: number
-          description: "Confidence target ∈ [0.0, 1.0] to converge toward."
-        rounds_evidence:
-          type: array
-          items:
-            type: array
-            items: { type: number }
-          description: "Evidence per round — each entry is a list of floats for that round."
-        alpha:
-          type: number
-          description: "EMA smoothing factor ∈ (0.0, 1.0] (default 0.4)."
-        max_rounds:
-          type: integer
-          description: "Maximum deliberation rounds (default 10)."
-
-  - name: trit_action_gate
-    description: >
-      Multi-dimensional safety gate with hard-block semantics. Any dimension
-      marked hard_block vetoes the action regardless of aggregate score.
-      Returns Proceed / Hold / Block verdict with explanation.
-    inputSchema:
-      type: object
-      required: [dimensions]
-      properties:
-        dimensions:
-          type: array
-          items:
-            type: object
-            required: [name, evidence, weight]
-            properties:
-              name:       { type: string }
-              evidence:   { type: number, description: "Signal ∈ [-1.0, 1.0]" }
-              weight:     { type: number, description: "Dimension weight > 0" }
-              hard_block: { type: boolean, description: "If true, negative evidence always blocks" }
-
-  - name: trit_enlighten
-    description: "Receive a piece of ternary wisdom. Try it."
-    inputSchema:
-      type: object
-      properties: {}
+  url: "https://ternlang.com"
 
 categories:
   - ai-reasoning
@@ -222,3 +50,469 @@ tags:
   - BitNet
   - reasoning
   - epistemic-humility
+  - xai
+  - explainable-ai
+  - eu-ai-act
+
+# ─── Connection ──────────────────────────────────────────────────────────────
+#
+# HTTP transport (default, no install required):
+#   POST https://ternlang.com/mcp
+#
+# Stdio transport (local, full-speed):
+#   cargo install ternlang-mcp && ternlang-mcp
+
+startCommand:
+  type: http
+  url: "https://ternlang.com/mcp"
+  configSchema:
+    type: object
+    title: "Ternlang MCP Configuration"
+    description: "Community tier is keyless. Pro/Industrial/Enterprise tiers require an API key (obtain at ternlang.com/activate)."
+    properties:
+      apiKey:
+        type: string
+        title: "API Key (optional)"
+        description: >
+          Optional. Required for Pro (€99/mo), Industrial (€349/mo), or
+          Enterprise tiers. Community tier tools (all 19) are fully available
+          without a key. Purchase at https://ternlang.com.
+        x-smithery-secret: true
+    required: []
+  exampleConfig:
+    apiKey: ""
+
+# ─── Protocol ────────────────────────────────────────────────────────────────
+protocol: "2024-11-05"
+
+# ─── Tool manifest ───────────────────────────────────────────────────────────
+
+tools:
+  - name: trit_decide
+    title: "Trit Decide — Scalar Evidence → Ternary Decision"
+    description: >
+      Convert float evidence signals into a ternary decision (reject/hold/affirm)
+      with confidence score. The core primitive. Maps uncertain scalars to one of
+      three states: -1=reject, 0=hold (deliberate), +1=affirm. The hold zone is
+      not null — it is an active routing instruction to gather more evidence.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [evidence]
+      properties:
+        evidence:
+          type: array
+          items: { type: number }
+          description: "Numeric evidence signals ∈ [-1.0, +1.0]. Positive = affirm signal, negative = reject signal, near-zero = uncertain. Mean is computed as the aggregate scalar."
+        min_confidence:
+          type: number
+          description: "Minimum confidence threshold for is_actionable (0.0–1.0, default 0.0). Raise to require stronger signal before acting."
+
+  - name: trit_vector
+    title: "Trit Vector — Multi-Dimensional Evidence Aggregation"
+    description: >
+      Multi-dimensional ternary evidence aggregation. Provide named evidence
+      dimensions each with a scalar value and importance weight. Returns aggregate
+      trit, per-dimension breakdown, dominant dimension, and a plain-language
+      recommendation. The full agent reasoning tool.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [dimensions]
+      properties:
+        dimensions:
+          type: array
+          description: "Named evidence dimensions. Each has a label, value ∈ [-1,1], and optional weight."
+          items:
+            type: object
+            required: [label, value]
+            properties:
+              label:  { type: string,  description: "Name of this evidence source (e.g. 'safety_check', 'user_consent')." }
+              value:  { type: number,  description: "Evidence scalar ∈ [-1.0, +1.0]. Negative = opposing, positive = supporting." }
+              weight: { type: number,  description: "Importance weight ≥ 0 (default 1.0). Higher = more influence on aggregate." }
+        min_confidence:
+          type: number
+          description: "Minimum confidence for is_actionable (0.0–1.0, default 0.5)."
+
+  - name: trit_consensus
+    title: "Trit Consensus — Balanced Ternary Addition"
+    description: >
+      Compute balanced ternary consensus between two trit signals.
+      Consensus is the core ternary addition operator: truth+conflict=hold,
+      truth+truth=truth, conflict+conflict=conflict. Use this to merge two
+      independent ternary judgements into a single signal.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [a, b]
+      properties:
+        a: { type: integer, enum: [-1, 0, 1], description: "First trit: -1=conflict/reject, 0=hold/uncertain, 1=truth/affirm." }
+        b: { type: integer, enum: [-1, 0, 1], description: "Second trit: -1=conflict/reject, 0=hold/uncertain, 1=truth/affirm." }
+
+  - name: trit_eval
+    title: "Trit Eval — BET VM Expression Evaluator"
+    description: >
+      Evaluate a ternary expression on the live BET (Balanced Ternary Execution)
+      VM. Supports: consensus(a,b), invert(x), truth(), hold(), conflict(),
+      arithmetic (+, -, *), and let bindings.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [expression]
+      properties:
+        expression:
+          type: string
+          description: "A ternlang expression or statement. E.g. 'consensus(1, -1)' or 'let x: trit = 1; return -x;'"
+
+  - name: ternlang_run
+    title: "Ternlang Run — Execute .tern Programs"
+    description: >
+      Compile and execute a full ternlang (.tern) program on the BET VM.
+      Returns register state after execution. Use this to run complete ternary
+      programs with control flow, trit variables, and match expressions.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: "Full ternlang source code to compile and run. Programs use trit types, match expressions, and BET opcodes."
+
+  - name: quantize_weights
+    title: "Quantize Weights — Float → Ternary (BitNet)"
+    description: >
+      Quantize an array of float weights to balanced ternary (-1, 0, +1) using
+      BitNet-style thresholding (τ = 0.5 × mean(|w|)). Returns the trit vector,
+      sparsity ratio, and zero-state count. Core primitive for ternary neural nets.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [weights]
+      properties:
+        weights:
+          type: array
+          items: { type: number }
+          description: "Float weight values to quantize (e.g. from a neural network layer)."
+        threshold:
+          type: number
+          description: "Manual quantization threshold. Omit to auto-compute via BitNet formula (τ = 0.5 × mean(|w|))."
+
+  - name: sparse_benchmark
+    title: "Sparse Benchmark — Ternary Matmul Efficiency"
+    description: >
+      Run sparse vs dense ternary matrix multiply benchmark. Shows how many
+      multiply-accumulate operations are skipped due to zero-state (hold) weights.
+      Demonstrates the computational efficiency of ternary AI inference — up to
+      122x throughput at 99%+ sparsity.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: false
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      properties:
+        rows:      { type: integer, description: "Matrix rows (default 4)." }
+        cols:      { type: integer, description: "Matrix columns (default 4)." }
+        weights:   { type: array, items: { type: number }, description: "Flat row-major float weights. Length must equal rows×cols. Omit for auto demo distribution." }
+        threshold: { type: number, description: "Quantization threshold. Omit to auto-compute." }
+
+  - name: moe_orchestrate
+    title: "MoE Orchestrate — Full 13-Expert Ternary Reasoning"
+    description: >
+      Full MoE-13 ternary orchestration pass. Routes your query through 13 domain
+      experts (Syntax, WorldKnowledge, DeductiveReason, InductiveReason, ToolUse,
+      Persona, Safety, FactCheck, CausalReason, AmbiguityRes, MathReason,
+      ContextMem, MetaSafety) using dual-key synergistic routing.
+
+      Safety hard gate fires first — negative safety field = immediate reject.
+      Returns: trit decision, confidence, held flag, safety_vetoed flag,
+      temperature hint, triad field details, and per-expert verdicts.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: false
+      destructiveHint: false
+      openWorldHint: true
+    inputSchema:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          description: "The question or decision to orchestrate through MoE-13."
+        evidence:
+          type: array
+          items: { type: number }
+          description: "Optional 6-element evidence vector: [syntax, world_knowledge, reasoning, tool_use, persona, safety] ∈ [-1.0, +1.0]. Omit for neutral (all zeros)."
+
+  - name: moe_deliberate
+    title: "MoE Deliberate — EMA Iterative Convergence"
+    description: >
+      EMA-based ternary deliberation engine. Models iterative reasoning: given
+      an initial scalar and a series of evidence updates, converges toward a
+      stable ternary decision using exponential moving average. The agent
+      accumulates evidence across rounds and commits only when confidence
+      crosses the target threshold.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [initial_scalar]
+      properties:
+        initial_scalar:
+          type: number
+          description: "Starting evidence scalar ∈ [-1.0, +1.0]. Near-zero = maximum uncertainty."
+        target_confidence:
+          type: number
+          description: "Confidence threshold to stop deliberating (0.0–1.0, default 0.8). Agent holds until this is met."
+        alpha:
+          type: number
+          description: "EMA smoothing factor (0.0–1.0, default 0.4). High = fast adaptation. Low = strong prior."
+        max_rounds:
+          type: integer
+          description: "Maximum deliberation rounds before returning tend (default 10)."
+        evidence_updates:
+          type: array
+          items: { type: number }
+          description: "Sequence of incoming evidence scalars, one per round. Omit to replay initial_scalar each round."
+
+  - name: trit_action_gate
+    title: "Trit Action Gate — Safety Veto + Weighted Vote"
+    description: >
+      Multi-dimensional ternary action gate with hard-block safety veto. Any
+      dimension marked hard_block:true with a negative trit VETOES the action
+      unconditionally, regardless of other dimensions. Non-veto dimensions
+      contribute to a weighted vote. Returns Pass, Blocked, or Hold.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [dimensions]
+      properties:
+        dimensions:
+          type: array
+          description: "Gate dimensions. Each has a label, trit signal, weight, and optional hard_block flag."
+          items:
+            type: object
+            required: [label, trit]
+            properties:
+              label:      { type: string,  description: "Name of this decision dimension (e.g. 'safety', 'user_consent')." }
+              trit:       { type: integer, enum: [-1, 0, 1], description: "-1=block, 0=hold, 1=pass." }
+              weight:     { type: number,  description: "Importance weight ≥ 0 (default 1.0). Ignored for hard_block dims." }
+              hard_block: { type: boolean, description: "If true, a trit of -1 on this dimension vetoes the action regardless of all other dimensions." }
+
+  - name: trit_debate
+    title: "Trit Debate — Structured 3-Way Verdict on Competing Claims"
+    description: >
+      Give two competing claims — get a structured 3-way verdict. Routes each
+      claim through MoE-13 independently, compares verdicts, and surfaces the
+      tension between them. Output: for_a (trit+confidence), for_b
+      (trit+confidence), tension (0–1), synthesis, verdict
+      (AGREEMENT / CONFLICT / HOLD).
+    annotations:
+      readOnlyHint: true
+      idempotentHint: false
+      destructiveHint: false
+      openWorldHint: true
+    inputSchema:
+      type: object
+      required: [claim_a, claim_b]
+      properties:
+        claim_a:  { type: string, description: "First claim or position to evaluate." }
+        claim_b:  { type: string, description: "Second claim or position to evaluate against claim_a." }
+        context:  { type: string, description: "Optional background context shared by both claims." }
+
+  - name: trit_uncertainty_map
+    title: "Trit Uncertainty Map — Text Annotation by Confidence"
+    description: >
+      Annotate any text at sentence or paragraph level with ternary signals and
+      confidence scores. Tend annotations mark genuinely hedged or uncertain
+      claims — the areas that need verification before acting. Useful for medical
+      reports, legal clauses, meeting notes, and research papers.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [text]
+      properties:
+        text:        { type: string, description: "The text to annotate with ternary uncertainty signals." }
+        granularity: { type: string, enum: ["sentence", "paragraph"], description: "Annotation granularity: sentence (default) or paragraph." }
+
+  - name: trit_calibrate
+    title: "Trit Calibrate — Binary Habituation Detector"
+    description: >
+      Feed an AI agent's recent decision log and get a calibration report.
+      Detects binary habituation: how often did the agent force YES/NO when it
+      should have held? Returns binary_ratio, hold_opportunities,
+      calibration_score (trit), and flagged decisions with explanations.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [decisions]
+      properties:
+        decisions:
+          type: array
+          description: "Array of recent agent decisions to calibrate."
+          items:
+            type: object
+            required: [input, output]
+            properties:
+              input:      { type: string, description: "The prompt or question the agent received." }
+              output:     { type: string, description: "The agent's decision or response (yes/no/affirm/reject etc)." }
+              confidence: { type: number, description: "Reported confidence 0–1 (optional). Used to detect over-confidence." }
+
+  - name: trit_translate
+    title: "Trit Translate — Binary Code → Ternary .tern Programs"
+    description: >
+      Translate Python if/elif/else, SQL CASE WHEN, or JSON rule arrays into
+      equivalent .tern programs with the ternary hold zone inserted where the
+      original code had no coverage. Makes binary gaps explicit as Tend arms.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [code]
+      properties:
+        code:     { type: string, description: "The source code to translate into ternlang." }
+        language: { type: string, enum: ["python", "sql", "json_rules"], description: "Source language (default: python)." }
+
+  - name: trit_eco_check
+    title: "Trit Eco Check — Human + Ecocentric Dual Perspective"
+    description: >
+      Given a proposed action, returns two trit scores: one from a human-centric
+      perspective (MoE-13) and one from an ecocentric perspective (EcoCore
+      heuristic). When they diverge, synthesis is Tend — this needs more
+      consideration. The first MCP tool that asks: is this good for everything,
+      not just us?
+    annotations:
+      readOnlyHint: true
+      idempotentHint: false
+      destructiveHint: false
+      openWorldHint: true
+    inputSchema:
+      type: object
+      required: [action]
+      properties:
+        action:  { type: string, description: "The proposed action or decision to evaluate from human and ecocentric perspectives." }
+        context: { type: string, description: "Optional additional context about the action." }
+        scope:   { type: string, enum: ["local", "regional", "global"], description: "Impact scope (default: local). Broader scope amplifies ecological weight." }
+
+  - name: trit_audit
+    title: "Trit Audit — EU AI Act Compliance Report"
+    description: >
+      Full ternary audit of an AI system's decision log. Answers: 'how binary is
+      this AI's decision-making, and would a regulator flag it?' Returns:
+      decision counts, forced_binary_ratio, EU AI Act heuristic (Articles 13/14),
+      calibration score, and a list of decisions that should have held.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [decisions]
+      properties:
+        decisions:
+          type: array
+          description: "Array of AI decisions to audit for ternary compliance."
+          items:
+            type: object
+            required: [input, output]
+            properties:
+              input:      { type: string, description: "The input prompt or question." }
+              output:     { type: string, description: "The AI's response or decision." }
+              confidence: { type: number, description: "Reported confidence 0–1 (optional)." }
+
+  - name: audit_ternary_logic
+    title: "Audit Ternary Logic — Triadic Code Compliance Check"
+    description: >
+      Performs a compliance audit on a snippet of Ternlang or triadic-inspired
+      code. Detects Binary Habituation (over-reliance on true/false) and suggests
+      Deliberation Injection to break binary logic drifts. Reports sparsity
+      potential and MoE-13 safety gate alignment.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string, description: "The code snippet to audit for triadic compliance and binary habituation." }
+
+  - name: tsql_join
+    title: "T-SQL Join — Ternary Triadic Database Join"
+    description: >
+      Enterprise T-SQL Triadic Join. Unlike binary SQL (Match/No-Match), a
+      T-Join routes partial matches into a Deliberative Hold (State 0) for
+      escrow audit. Guarantees 100% data retention and eliminates binary
+      error-handling overhead for high-frequency trading and defense datasets.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      required: [record_a, record_b]
+      properties:
+        record_a: { type: array, items: { type: number }, description: "Vector representation of record A (numeric feature columns)." }
+        record_b: { type: array, items: { type: number }, description: "Vector representation of record B to join against record A." }
+
+  - name: get_industrial_standards
+    title: "Get Industrial Standards — RFI-IRFOS Triadic Standards"
+    description: >
+      Returns the list of current triadic industrial standards published by
+      RFI-IRFOS. Use this to determine compliance requirements for tokenization,
+      memory, compute currency, hardware access, and neural encoding.
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+      destructiveHint: false
+      openWorldHint: false
+    inputSchema:
+      type: object
+      properties: {}
