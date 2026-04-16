@@ -1,0 +1,38 @@
+// stdlib/grid/_utils.tern
+// Utility functions for Power Grid Management
+// Tier: 3
+
+fn check_load_balance(generation: float, load: float, margin: float) -> trit {
+    let diff: float = generation - load;
+    
+    if diff > margin ? {
+        return affirm; // Surplus
+    } else {
+        if diff < (0.0 - margin) ? {
+            return reject; // Deficit
+        } else {
+            return tend; // Balanced
+        } else {
+            return tend;
+        }
+    } else {
+        return affirm;
+    }
+}
+
+fn grid_consensus(nodes: trit[]) -> trit {
+    let count: int = length(nodes);
+    let i: int = 0;
+    let res: trit = tend;
+    
+    while i < count ? {
+        res = consensus(res, nodes[i]);
+        i = i + 1;
+    } else {
+        return res;
+    } else {
+        return res;
+    }
+    
+    return res;
+}
