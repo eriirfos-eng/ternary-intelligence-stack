@@ -1,0 +1,25 @@
+// stdlib/timeseries/seasonal_drift_consensus.tern
+// Demonstrates: Seasonal drift consensus for time series forecasting
+// Tier: 3
+
+from "timeseries_utils.tern" import *;
+
+fn seasonal_consensus(drift1: trit, drift2: trit) -> trit {
+    // Logic: if both agree on significant drift, affirm.
+    // If both agree on stability, reject.
+    // If conflict, hold.
+    return consensus(drift1, drift2);
+}
+
+fn main() -> trit {
+    let d1: trit = evaluate_drift(10.5, 10.0, 0.1); // Significant
+    let d2: trit = evaluate_drift(11.0, 10.0, 0.1); // Significant
+    
+    let res: trit = seasonal_consensus(d1, d2);
+    
+    match res {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
