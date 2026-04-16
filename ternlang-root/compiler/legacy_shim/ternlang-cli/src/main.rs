@@ -56,6 +56,14 @@ enum Commands {
         /// Path to the .tern file (or directory — checks all .tern files found)
         file: PathBuf,
     },
+    /// Execute a pre-compiled .tbc bytecode file (output of `ternlang build`)
+    Exec {
+        /// Path to the .tbc bytecode file
+        file: PathBuf,
+        /// Show full register dump after execution
+        #[arg(long)]
+        debug: bool,
+    },
     /// Compile a .tern file to bytecode or TERN assembly
     Build {
         /// Path to the .tern file
@@ -273,8 +281,6 @@ fn main() {
 
             match vm.run() {
                 Ok(_) => {
-                    let result = vm.peek_stack();
-
                     // Debug: print non-default registers with variable names
                     if *debug {
                         let mut printed_any = false;
@@ -297,39 +303,14 @@ fn main() {
                     }
 
                     // Result line
-                    match &result {
-                        Some(Value::Trit(ternlang_core::trit::Trit::Reject)) => {
-                            println!("  {}     {}", "result".bold(), "-1  reject".red().bold());
-                            println!("{}", sep.dimmed());
-                            eprintln!("  {}  program returned reject (−1).", "✗".red().bold());
-                            std::process::exit(1);
-                        }
-                        Some(Value::Trit(ternlang_core::trit::Trit::Tend)) => {
-                            println!("  {}     {}", "result".bold(), " 0  hold".yellow());
-                            println!("{}", sep.dimmed());
-                            println!("  {}  program held — no final decision.", "●".yellow());
-                        }
-                        Some(Value::Trit(ternlang_core::trit::Trit::Affirm)) => {
-                            println!("  {}     {}", "result".bold(), "+1  affirm".green().bold());
-                            println!("{}", sep.dimmed());
-                            println!("  {}  program exited cleanly.", "✓".green().bold());
-                        }
-                        Some(v) => {
-                            println!("  {}     {}", "result".bold(), format_value(v).green());
-                            println!("{}", sep.dimmed());
-                            println!("  {}  program exited cleanly.", "✓".green().bold());
-                        }
-                        None => {
-                            println!("  {}     {}", "result".bold(), "(stack empty)".dimmed());
-                            println!("{}", sep.dimmed());
-                            println!("  {}  program exited cleanly.", "✓".green().bold());
-                        }
-                    }
+                    print_run_result(&vm, &sep);
 
                     if !debug {
                         println!();
                         println!("  {}  ternlang build {}  →  emits .tbc bytecode to disk",
                             "tip:".dimmed(), file.display().to_string().dimmed());
+                        println!("  {}  ternlang exec <file.tbc>  →  run pre-compiled bytecode",
+                            "    ".dimmed());
                         println!("  {}  ternlang run {} --debug  →  show register state",
                             "    ".dimmed(), file.display().to_string().dimmed());
                     }
@@ -343,6 +324,64 @@ fn main() {
         }
         Commands::Check { file } => {
             run_check(file);
+        }
+        Commands::Exec { file, debug } => {
+            let code = fs::read(file).unwrap_or_else(|e| {
+                eprintln!("  {}  cannot read {:?}: {}", "✗".red().bold(), file, e);
+                std::process::exit(1);
+            });
+
+            let sep = "─".repeat(52);
+            println!("{}", sep.dimmed());
+            if *debug {
+                println!("  {}  {}  {}", "ternlang exec".bold(), file.display().to_string().cyan(), "[debug]".yellow());
+            } else {
+                println!("  {}  {}", "ternlang exec".bold(), file.display().to_string().cyan());
+            }
+            println!("  bytecode   {} bytes  ·  pre-compiled .tbc", code.len().to_string().dimmed());
+            println!("{}", sep.dimmed());
+
+            let mut vm = BetVm::new(code);
+
+            if *debug {
+                // Build empty sym_rev (no source available for exec)
+                let sym_rev: std::collections::HashMap<u8, String> = std::collections::HashMap::new();
+                match vm.run() {
+                    Ok(_) => {
+                        let mut printed_any = false;
+                        for i in 0u8..32 {
+                            let val = vm.get_register(i);
+                            let is_default = matches!(val, Value::Trit(ternlang_core::trit::Trit::Tend));
+                            if !is_default {
+                                if !printed_any {
+                                    println!("  {}", "registers (non-zero):".bold());
+                                    printed_any = true;
+                                }
+                                let name_hint = sym_rev.get(&i)
+                                    .map(|n| format!("  [{}]", n).dimmed().to_string())
+                                    .unwrap_or_default();
+                                println!("    r{:<3} {}{}", i, format_value(&val), name_hint);
+                            }
+                        }
+                        if printed_any { println!("{}", sep.dimmed()); }
+                        print_run_result(&vm, &sep);
+                    }
+                    Err(e) => {
+                        println!("{}", sep.dimmed());
+                        eprintln!("  {}  VM error: {}", "✗".red().bold(), e);
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                match vm.run() {
+                    Ok(_) => print_run_result(&vm, &sep),
+                    Err(e) => {
+                        println!("{}", sep.dimmed());
+                        eprintln!("  {}  VM error: {}", "✗".red().bold(), e);
+                        std::process::exit(1);
+                    }
+                }
+            }
         }
         Commands::Repl => {
             run_repl();
@@ -392,11 +431,19 @@ fn main() {
                 println!("TERN assembly written to {}", out_path.display());
             } else {
                 // ── BET bytecode output ──────────────────────────────────────
+                // Emit with the same header-jump + entry-call pattern as `run`
+                // so the resulting .tbc is directly executable by `ternlang exec`.
                 let mut emitter = BytecodeEmitter::new();
+                let header_patch = emitter.emit_header_jump();
                 match prog_result {
-                    Ok(prog) => { emitter.emit_program(&prog); }
+                    Ok(prog) => {
+                        emitter.emit_program(&prog);
+                        emitter.patch_header_jump(header_patch);
+                        emitter.emit_entry_call("main");
+                    }
                     Err(_) => {
                         let mut parser = Parser::new(&input);
+                        emitter.patch_header_jump(header_patch);
                         while let Ok(stmt) = parser.parse_stmt() {
                             emitter.emit_stmt(&stmt);
                         }
@@ -408,8 +455,14 @@ fn main() {
                     path.set_extension("tbc");
                     path
                 });
+                let byte_count = code.len();
                 fs::write(&out_path, code).expect("Failed to write bytecode");
-                println!("Compiled to {}", out_path.display());
+                let sep = "─".repeat(52);
+                println!("{}", sep.dimmed());
+                println!("  {}  {}", "compiled".green().bold(), out_path.display().to_string().cyan());
+                println!("  {}   {} bytes  ·  run with: ternlang exec {}",
+                    "size".dimmed(), byte_count, out_path.display());
+                println!("{}", sep.dimmed());
             }
         }
     }
@@ -526,6 +579,41 @@ fn run_sim(file: &std::path::PathBuf, output: Option<&std::path::Path>, run: boo
         println!("\nTo run with Icarus Verilog:");
         println!("  iverilog -o bet_sim.vvp -g2001 {} && vvp bet_sim.vvp", tb_path.display());
         println!("  # Open bet_sim.vcd in GTKWave for waveform inspection");
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Print the VM result line + exit accordingly
+// ─────────────────────────────────────────────────────────────────────────────
+fn print_run_result(vm: &BetVm, sep: &str) {
+    let result = vm.peek_stack();
+    match &result {
+        Some(Value::Trit(ternlang_core::trit::Trit::Reject)) => {
+            println!("  {}     {}", "result".bold(), "-1  reject".red().bold());
+            println!("{}", sep.dimmed());
+            eprintln!("  {}  program returned reject (−1).", "✗".red().bold());
+            std::process::exit(1);
+        }
+        Some(Value::Trit(ternlang_core::trit::Trit::Tend)) => {
+            println!("  {}     {}", "result".bold(), " 0  hold".yellow());
+            println!("{}", sep.dimmed());
+            println!("  {}  program held — no final decision.", "●".yellow());
+        }
+        Some(Value::Trit(ternlang_core::trit::Trit::Affirm)) => {
+            println!("  {}     {}", "result".bold(), "+1  affirm".green().bold());
+            println!("{}", sep.dimmed());
+            println!("  {}  program exited cleanly.", "✓".green().bold());
+        }
+        Some(v) => {
+            println!("  {}     {}", "result".bold(), format_value(v).green());
+            println!("{}", sep.dimmed());
+            println!("  {}  program exited cleanly.", "✓".green().bold());
+        }
+        None => {
+            println!("  {}     {}", "result".bold(), "(stack empty)".dimmed());
+            println!("{}", sep.dimmed());
+            println!("  {}  program exited cleanly.", "✓".green().bold());
+        }
     }
 }
 
