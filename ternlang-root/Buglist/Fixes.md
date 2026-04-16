@@ -319,3 +319,35 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 - Fixed [BET-007] stack leaks in ternary control flow statements (IfTernary, WhileTernary) where condition values were not correctly popped.
 - Fixed register leak in Match statements where arm-local registers were not being reclaimed.
 - Standardized _utils.tern patterns across Tier 2 and Tier 3 directories.
+
+## 2026-04-16 — Global Variable Stack Underflow Discovery
+
+**Trigger:** Defining tensors or variables at the top-level and accessing them inside  or other functions.
+**Symptom:** .
+**Diagnosis:** Top-level code execution and  entry call sequence might be clobbering registers or failing to restore the correct stack state during / of the entry function.
+**Workaround:** Define all variables inside  or pass them as parameters.
+**Status:** Unresolved (Workaround applied).
+
+## 2026-04-16 — float[] and int[] VM Implementation Gap
+
+**Trigger:** Using  or  literals or parameters.
+**Symptom:**  or .
+**Diagnosis:** The AST and Parser support  and , but the 's  is hardcoded to . There is no logic in the VM to store or retrieve floats from tensors.
+**Workaround:** Use  for tensors and individual / variables for high-precision data.
+**Status:** Needs VM enhancement.
+
+## 2026-04-16 — Global Variable Stack Underflow Discovery
+
+**Trigger:** Defining tensors or variables at the top-level and accessing them inside `main()` or other functions.
+**Symptom:** `VM Error: [BET-001] Stack underflow`.
+**Diagnosis:** Top-level code execution and `main()` entry call sequence might be clobbering registers or failing to restore the correct stack state during `Tcall`/`Tret` of the entry function.
+**Workaround:** Define all variables inside `main()` or pass them as parameters.
+**Status:** Unresolved (Workaround applied).
+
+## 2026-04-16 — float[] and int[] VM Implementation Gap
+
+**Trigger:** Using `float[]` or `int[]` literals or parameters.
+**Symptom:** `Parse program error: UnexpectedToken("tensor literal element: Float(0.5)")` or `TypeMismatch`.
+**Diagnosis:** The AST and Parser support `FloatTensor` and `IntTensor`, but the `BetVm`'s `TensorInstance` is hardcoded to `Vec<Trit>`. There is no logic in the VM to store or retrieve floats from tensors.
+**Workaround:** Use `trit[]` for tensors and individual `float`/`int` variables for high-precision data.
+**Status:** Needs VM enhancement.
