@@ -17,8 +17,8 @@
         "priceCurrency": "EUR",
         "name": "Restricted API (BSL 1.1)"
       },
-      "description": "The definitive system programming paradigm and compiler for the Ternary Intelligence Stack and the BET VM. Optimized for Post-Quantum security and 60% power reduction via Native Sparsity.",
-      "softwareVersion": "0.3.0",
+      "description": "Systems programming language, compiler, and inference runtime built on balanced ternary logic. Provides deterministic uncertainty (trit = −1/0/+1), sparsity-aware BET VM execution, and EU AI Act Article 13/14 compliant decision tracing.",
+      "softwareVersion": "0.3.2",
       "publisher": {
         "@type": "Organization",
         "name": "RFI-IRFOS",
@@ -314,31 +314,35 @@
         <div class="max-w-4xl mx-auto px-6">
           <div class="text-center mb-12">
             <h2 class="text-4xl font-black mb-4 uppercase text-t_text">Get Started</h2>
-            <p class="text-t_muted">Build the BET VM from source and run your first .tern program in under two minutes.</p>
+            <p class="text-t_muted">Install from crates.io or build from source. Run your first .tern program in under two minutes.</p>
           </div>
           <div class="bg-t_bg rounded-3xl border border-t_border p-8 md:p-10 font-mono text-sm shadow-2xl relative overflow-hidden group">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-t_teal via-t_blue to-t_red opacity-50"></div>
             <div class="space-y-6 text-t_text font-medium">
               <div>
-                <span class="text-t_muted block mb-1"># 1. Clone the repository</span>
-                <span class="text-t_teal">git</span> clone https://github.com/eriirfos-eng/ternary-intelligence-stack<br>
-                <span class="text-t_teal">cd</span> ternary-intelligence-stack/ternlang-root
+                <span class="text-t_muted block mb-1"># Install from crates.io (recommended)</span>
+                <span class="text-t_blue">cargo</span> install ternlang-cli<br>
+                <span class="text-t_teal">ternlang</span>                        <span class="text-t_muted"># → interactive REPL</span><br>
+                <span class="text-t_teal">ternlang</span> my_program.tern         <span class="text-t_muted"># → run a .tern file directly</span><br>
+                <span class="text-t_teal">ternlang</span> run my_program.tern      <span class="text-t_muted"># → same (explicit form)</span>
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># 2. Build the BET VM and compiler</span>
+                <span class="text-t_muted block mb-1"># Or build from source</span>
+                <span class="text-t_teal">git</span> clone https://github.com/eriirfos-eng/ternary-intelligence-stack<br>
+                <span class="text-t_teal">cd</span> ternary-intelligence-stack/ternlang-root<br>
                 <span class="text-t_blue">cargo</span> build --release<br>
                 <span class="text-t_blue">cargo</span> test --workspace
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># 3. Run a .tern program on the BET VM</span>
+                <span class="text-t_muted block mb-1"># Run a .tern program on the BET VM (from source)</span>
                 <span class="text-t_blue">cargo</span> run --bin ternlang -- run examples/03_rocket_launch.tern
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># 4. Boot the MCP Server (stdio)</span>
+                <span class="text-t_muted block mb-1"># Boot the MCP Server (stdio)</span>
                 <span class="text-t_red">./target/release/ternlang-mcp</span>
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># 5. Audit a decision log for binary habituation (EU AI Act Art.13/14)</span>
+                <span class="text-t_muted block mb-1"># Audit a decision log (EU AI Act Art.13/14)</span>
                 <span class="text-t_blue">cargo</span> run --bin ternlang -- audit decisions.json --html
               </div>
             </div>
@@ -591,13 +595,13 @@
             </ul>
             
             <div class="space-y-2 font-mono text-[10px] sm:text-xs bg-t_bg p-6 rounded-xl border border-t_border shadow-sm">
-              <div class="text-t_muted font-bold uppercase tracking-widest pb-2 border-b border-t_border/30 mb-2">AI Reasoning (Phase 8)</div>
+              <div class="text-t_muted font-bold uppercase tracking-widest pb-2 border-b border-t_border/30 mb-2">AI Reasoning Endpoints</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_deliberate</span></div><span class="text-t_muted font-medium">EMA convergence</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_gate</span></div><span class="text-t_muted font-medium">safety hard veto</span></div>
-              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.3.0 · 19 tools</div>
+              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.3.2 · 19 tools</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/mcp</span></div><span class="text-t_muted font-medium">JSON-RPC 2.0</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">/mcp + Header</span></div><span class="text-t_muted font-medium">3-layer memory</span></div>
-              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">trit_debate / trit_calibrate</span></div><span class="text-t_muted font-medium">Phase 11A</span></div>
+              <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">trit_debate / trit_calibrate</span></div><span class="text-t_muted font-medium">multi-round EMA</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/50"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">KEY</span><span class="text-t_text font-medium">trit_audit</span></div><span class="text-t_muted font-medium">EU AI Act Art.13/14</span></div>
               <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">Live Streams (SSE)</div>
               <div class="flex justify-between py-1"><div class="flex gap-4"><span class="text-t_blue bg-t_blue/10 px-2 rounded font-bold">GET</span><span class="text-t_text font-medium">/api/stream/moe</span></div><span class="text-t_muted font-medium">live MoE routing</span></div>
@@ -642,7 +646,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <div class="text-center mb-20 reveal active">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Laboratory 05</p>
           <h2 class="text-7xl font-black text-t_text mb-8 uppercase leading-none">Benchmarks.</h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">Absolute, verifiable telemetry of the Ternary Intelligence Stack operating on native BET-ISA infrastructure.</p>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">Performance measurements for the Ternary Intelligence Stack running on the BET VM. Figures are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root.</p>
         </div>
 
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 reveal">
@@ -722,7 +726,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
              <p class="text-sm text-t_muted font-medium mb-6">32-bit Float Limits</p>
 
              <p class="text-sm text-t_muted leading-relaxed mt-auto mb-6">
-               Evaluates memory allocation boundaries under continuous saturation. By shedding State 0 propagation overhead, the VM maps absolute volume bounds.
+               Measures VM memory usage under continuous allocation load. Because the hold state (trit=0) skips propagation entirely, peak allocation stays lower than equivalent binary workloads.
              </p>
 
              <div class="flex items-end justify-between pt-6 border-t border-t_border">
@@ -741,7 +745,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
              <p class="text-sm text-t_muted font-medium mb-6">Linux CFS Scheduler</p>
 
              <p class="text-sm text-t_muted leading-relaxed mt-auto mb-6">
-               Subjected to maximum concurrency saturation via rapid threaded dispatches. Triadic locks yield natively at the VM tier.
+               Tests the VM under high thread contention. The BET VM's ternary state transitions have no shared mutable boolean flags, so concurrent dispatch does not produce data races at the opcode level.
              </p>
 
              <div class="flex items-end justify-between pt-6 border-t border-t_border">
@@ -801,11 +805,11 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <a href="https://crates.io/crates/ternlang-core" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-core</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">Lexer, parser, AST, and 51-opcode BET VM. The compiler core — all .tern programs pass through here before bytecode emission.</span>
+                <span class="text-xs text-t_muted leading-relaxed">Lexer, parser, AST, and 53-opcode BET VM. The compiler core — all .tern programs pass through here before bytecode emission.</span>
               </a>
               <a href="https://crates.io/crates/ternlang-cli" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-cli</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
-                <span class="text-xs text-t_muted leading-relaxed"><code class="text-t_text">run</code> · <code class="text-t_text">build</code> · <code class="text-t_text">sim</code> · <code class="text-t_text">fmt</code> · <code class="text-t_text">repl</code> · <code class="text-t_text">compat</code>. CLI frontend for the BET VM. Entry point for every .tern workflow.</span>
+                <span class="text-xs text-t_muted leading-relaxed"><code class="text-t_text">ternlang</code> launches the REPL. <code class="text-t_text">ternlang file.tern</code> runs directly. Full subcommands: <code class="text-t_text">run</code> · <code class="text-t_text">build</code> · <code class="text-t_text">sim</code> · <code class="text-t_text">fmt</code> · <code class="text-t_text">repl</code> · <code class="text-t_text">compat</code>. CLI frontend for the BET VM.</span>
               </a>
               <a href="https://crates.io/crates/ternlang-lsp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-lsp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
@@ -847,7 +851,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-api" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-api</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">Axum REST + SSE API on Fly.io. Multi-tenant key provisioning via Stripe webhook. Rate-limited by tier (10k / 20k / unlimited calls/month).</span>
+                <span class="text-xs text-t_muted leading-relaxed">Axum REST + SSE API on Fly.io. Multi-tenant key provisioning via Stripe webhook. Rate-limited by tier (10k / 50k / unlimited calls/month).</span>
               </a>
               <a href="https://crates.io/crates/ternlang-hdl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-hdl</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
@@ -911,7 +915,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/BET-ISA-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">BET-ISA</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
-                <span class="text-[11px] text-t_muted leading-relaxed">9-trit RISC instruction set architecture. 51 opcodes, 27 registers, THOLD as a first-class pipeline gate.</span>
+                <span class="text-[11px] text-t_muted leading-relaxed">9-trit RISC instruction set architecture. 53 opcodes, unbounded register file, THOLD as a first-class pipeline gate.</span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-BIO-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">T-BIO</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
@@ -947,7 +951,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
             <ul class="space-y-3 mb-10 flex-grow text-sm text-t_muted font-bold">
               <li class="flex items-center gap-3">✓ ternlang-core (compiler + VM)</li>
               <li class="flex items-center gap-3">✓ ternpkg manager</li>
-              <li class="flex items-center gap-3">✓ 300+ open .tern examples</li>
+              <li class="flex items-center gap-3">✓ 293 open-core stdlib modules</li>
+              <li class="flex items-center gap-3">✓ 300+ runnable .tern examples</li>
             </ul>
           </div>
 
@@ -964,6 +969,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <li class="flex items-center gap-3">✓ Server-side 3-layer memory</li>
               <li class="flex items-center gap-3">✓ MoE-13 orchestration</li>
               <li class="flex items-center gap-3">✓ Ternary context compression</li>
+              <li class="flex items-center gap-3">✓ Tier 2 stdlib (private repo access)</li>
             </ul>
             <a href="https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608" target="_blank" rel="noopener noreferrer" class="block w-full text-center py-4 bg-t_teal text-black font-black rounded-2xl hover:bg-t_text hover:text-t_bg transition-all uppercase tracking-widest text-xs shadow-md">Subscribe — €99/mo</a>
           </div>
@@ -997,6 +1003,10 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
             </ul>
             <a href="mailto:rfi.irfos@gmail.com" class="block w-full text-center py-4 border border-t_blue/50 text-t_blue font-bold rounded-2xl hover:bg-t_blue/10 transition-all uppercase tracking-widest text-xs">Contact Sales</a>
           </div>
+        </div>
+
+        <div class="mt-12 text-center reveal">
+          <p class="text-sm text-t_muted font-medium">After subscribing, unlock private stdlib access at <a href="https://ternlang.com/activate" class="text-t_teal font-bold hover:underline">ternlang.com/activate</a> — enter your API key + GitHub username to receive a collaborator invite to the private repo automatically.</p>
         </div>
       </div>
     </div>
@@ -1279,7 +1289,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="hover:text-t_text transition-all">Source</a>
       </div>
       <p class="text-t_muted text-[10px] font-black tracking-widest uppercase mb-4">
-        &copy; 2026 RFI-IRFOS &middot; GRAZ, AT &middot; SOVEREIGN INTELLIGENCE STACK
+        &copy; 2026 RFI-IRFOS &middot; GRAZ, AT &middot; TERNARY INTELLIGENCE STACK
       </p>
       <p class="text-t_muted/50 text-[9px] font-mono font-bold tracking-widest uppercase">
         BSL-1.1 converts to Apache-2.0 on 2030-04-03.
