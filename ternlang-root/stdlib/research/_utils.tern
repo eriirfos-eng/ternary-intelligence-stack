@@ -25,12 +25,13 @@ fn drift_check(prev: float, current: float, max_drift: float) -> trit {
     } else {
         return tend;
     } else {
+        // diff <= max_drift
         if diff < (0.0 - max_drift) ? {
             return reject; // Significant drift
         } else {
-            return affirm; // Stable
+            return tend;
         } else {
-            return reject;
+            return affirm; // Stable (diff is within [-max_drift, max_drift])
         }
     }
 }
