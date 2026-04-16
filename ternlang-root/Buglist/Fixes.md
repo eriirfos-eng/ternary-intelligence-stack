@@ -272,3 +272,39 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 **Diagnosis:** The `parse_type` function in the parser was hardcoded to only recognize `trit` followed by `[]` for dynamic arrays. Other primitive types like `int` and `float` were not allowed to have array suffixes.
 **Fix:** Unresolved — Workaround: use `trit[]` or `trittensor` (and cast/saturate) where possible, or avoid passing non-trit arrays.
 **Status:** Needs compiler change
+
+## 2026-04-16 — File I/O (0x2a-0x2c) + Semantic Error Variants
+
+**Trigger:** Implementing File I/O and handling non-exhaustive match arms.
+**Symptom:** .  in .
+**Diagnosis:** 
+1.  was missing the  variant used in the logic.
+2.  enum didn't implement , causing  to fail in  and .
+3. , , and  opcodes were missing from the VM and emitters.
+4.  didn't push a return value, causing  to fail.
+
+**Fix:**
+- **VM:** Implemented  (0x2a),  (0x2b),  (0x2c) in .
+- **Error Handling:** Added  and File I/O error variants to  and .
+- **Codegen:** Fixed  formatting by matching the enum and extracting inner values in  and . Added  and  to C  switch.
+- **Bytecode:** Updated  to support , , and . Ensured  and  push a dummy  to keep the stack balanced for the final .
+
+**Status:** Fixed / Feature Added.
+
+## 2026-04-16 — File I/O (0x2a-0x2c) + Semantic Error Variants
+
+**Trigger:** Implementing File I/O and handling non-exhaustive match arms.
+**Symptom:** `error[E0599]: no variant or associated item named 'NonExhaustiveMatch' found`. `Stack underflow` in `writet`.
+**Diagnosis:** 
+1. `SemanticError` was missing the `NonExhaustiveMatch` variant used in the logic.
+2. `Pattern` enum didn't implement `Display`, causing `format!` to fail in `tern_asm.rs` and `codegen/lib.rs`.
+3. `opent`, `readt`, and `writet` opcodes were missing from the VM and emitters.
+4. `writet` didn't push a return value, causing `Stmt::Expr(e) => { e; TPOP }` to fail.
+
+**Fix:**
+- **VM:** Implemented `Topent` (0x2a), `Treadt` (0x2b), `Twritet` (0x2c) in `vm/mod.rs`.
+- **Error Handling:** Added `NonExhaustiveMatch` and File I/O error variants to `VmError` and `SemanticError`.
+- **Codegen:** Fixed `Pattern` formatting by matching the enum and extracting inner values in `tern_asm.rs` and `codegen/lib.rs`. Added `IntTensor` and `FloatTensor` to C `c_type` switch.
+- **Bytecode:** Updated `betbc.rs` to support `opent`, `readt`, and `writet`. Ensured `writet` and `println` push a dummy `hold()` to keep the stack balanced for the final `TPOP`.
+
+**Status:** Fixed / Feature Added.
