@@ -97,6 +97,10 @@ pub struct ApiKeyEntry {
     pub monthly_calls: u64,      // calls this calendar month
     #[serde(default)]
     pub month_key:     String,   // "YYYY-MM" — resets monthly_calls when it changes
+    #[serde(default)]
+    pub github_username: String, // set when customer activates via /activate
+    #[serde(default)]
+    pub github_invited:  bool,   // true once GitHub collaborator invite has been sent
 }
 
 pub enum KeyCheckResult {
@@ -179,15 +183,17 @@ impl KeyStore {
         let key_id = format!("tk_{}", &uid[..8]);
 
         let entry = ApiKeyEntry {
-            key_id:        key_id.clone(),
+            key_id:          key_id.clone(),
             tier,
             email,
             note,
-            created_at:    Utc::now().to_rfc3339(),
-            is_active:     true,
-            request_count: 0,
-            monthly_calls: 0,
-            month_key:     Utc::now().format("%Y-%m").to_string(),
+            created_at:      Utc::now().to_rfc3339(),
+            is_active:       true,
+            request_count:   0,
+            monthly_calls:   0,
+            month_key:       Utc::now().format("%Y-%m").to_string(),
+            github_username: String::new(),
+            github_invited:  false,
         };
 
         self.data.write().await.keys.insert(raw.clone(), entry.clone());
@@ -228,6 +234,25 @@ impl KeyStore {
         }).collect()
     }
 
+    /// Mark a key as GitHub-invited and store the username. Returns the entry tier or None if key not found.
+    pub async fn set_github_invited(&self, raw_key: &str, github_username: &str) -> Option<u8> {
+        let mut data = self.data.write().await;
+        let entry = data.keys.get_mut(raw_key)?;
+        if !entry.is_active { return None; }
+        entry.github_username = github_username.to_string();
+        entry.github_invited  = true;
+        let tier = entry.tier;
+        drop(data);
+        self.save().await;
+        Some(tier)
+    }
+
+    /// Peek at a key's entry without bumping counters (for activation check).
+    pub async fn peek(&self, raw_key: &str) -> Option<ApiKeyEntry> {
+        let data = self.data.read().await;
+        data.keys.get(raw_key).cloned()
+    }
+
     /// Return usage info for a single raw key (for GET /api/usage).
     pub async fn usage(&self, raw_key: &str) -> Option<Value> {
         let data = self.data.read().await;
@@ -258,6 +283,8 @@ pub struct AppState {
     version:                &'static str,
     stripe_webhook_secret:  String,
     resend_api_key:         String,
+    /// GitHub PAT with `repo` scope — used to invite customers as collaborators.
+    github_token:           String,
     /// Server-side three-layer memory, keyed by API key string.
     memory_store:           MemStore,
 
@@ -296,7 +323,9 @@ async fn require_api_key(
         || path == "/stripe/webhook"
         || path == "/pricing"
         || path == "/studio"
+        || path == "/activate"
         || path == "/api/run"
+        || path == "/api/github/activate"
         || path.starts_with("/admin") {
         return next.run(request).await;
     }
@@ -3149,13 +3178,13 @@ fn verify_stripe_signature(secret: &str, raw_body: &[u8], sig_header: &str) -> b
     expected == v1_sig
 }
 
-/// Send the API key to the customer via Resend.
+/// Send the API key + GitHub activation instructions to the customer via Resend.
 async fn send_key_email(resend_key: &str, to_email: &str, api_key: &str, key_id: &str, tier: u8) {
     let (tier_label, tier_detail) = match tier {
-        3 => ("Tier 3 (Industrial)", "20,000 API calls/month"),
+        3 => ("Tier 3 (Industrial)",   "50,000 API calls/month"),
         _  => ("Tier 2 (Pro Standard)", "10,000 API calls/month"),
     };
-    let subject = format!("Your Ternlang API Key — {}", tier_label);
+    let subject = format!("Your Ternlang API Key + Premium StdLib Access — {}", tier_label);
 
     let html = format!(r#"
 <!DOCTYPE html>
@@ -3175,11 +3204,28 @@ async fn send_key_email(resend_key: &str, to_email: &str, api_key: &str, key_id:
   -H "X-Ternlang-Key: {api_key}" \
   -H "Content-Type: application/json" \
   -d '{{"a":1,"b":-1}}'</pre>
-  <p style="font-size:13px;color:#888;">Keep this key private — it is not recoverable. If you lose it, contact <a href="mailto:rfi.irfos@gmail.com" style="color:#00f5c4;">rfi.irfos@gmail.com</a>.</p>
+
   <hr style="border-color:#1e2030;margin:24px 0;">
-  <p style="font-size:11px;color:#555;">ternlang.com · RFI-IRFOS · BSL-1.1</p>
+
+  <p style="font-size:15px;color:#00f5c4;font-weight:bold;">Step 2 — Activate GitHub Access to Premium StdLib</p>
+  <p style="font-size:13px;margin:12px 0;">Your subscription includes read access to <strong>28,495+ proprietary .tern programs</strong> across Tier 2/3/4 directories in our private repository.</p>
+
+  <p style="font-size:13px;margin-bottom:8px;">To activate, visit:</p>
+  <div style="background:#13131f;border:1px solid #2a2a3d;border-radius:8px;padding:16px;margin:0 0 16px 0;text-align:center;">
+    <a href="https://ternlang.com/activate" style="color:#00f5c4;font-size:16px;font-weight:bold;text-decoration:none;">https://ternlang.com/activate</a>
+  </div>
+
+  <p style="font-size:13px;color:#888;line-height:1.6;">Enter your API key above and your <strong>GitHub username</strong>. We will send you a GitHub repository invitation for <code style="color:#e2e8f0">eriirfos-eng/ternlang-premium</code>. Accept it and clone:</p>
+  <pre style="background:#13131f;padding:12px;border-radius:6px;color:#a0aec0;font-size:13px;">git clone https://github.com/eriirfos-eng/ternlang-premium</pre>
+
+  <hr style="border-color:#1e2030;margin:24px 0;">
+  <p style="font-size:13px;color:#888;">Keep this key private — it is not recoverable. If you lose it, contact <a href="mailto:licensing@ternlang.com" style="color:#00f5c4;">licensing@ternlang.com</a>.</p>
+  <hr style="border-color:#1e2030;margin:24px 0;">
+  <p style="font-size:11px;color:#555;">ternlang.com · RFI-IRFOS Graz Institute · BSL-1.1 · Patent A50296/2026</p>
 </body>
-</html>"#, tier_label = tier_label, tier_detail = tier_detail, key_id = key_id, api_key = api_key);
+</html>"#,
+    tier_label = tier_label, tier_detail = tier_detail,
+    key_id = key_id, api_key = api_key);
 
     let body = json!({
         "from":    "Ternlang API <noreply@ternlang.com>",
@@ -3269,6 +3315,180 @@ async fn stripe_webhook(
     }
 
     (StatusCode::OK, Json(json!({ "received": true }))).into_response()
+}
+
+// ─── GitHub collaborator provisioning ─────────────────────────────────────────
+
+/// Call the GitHub REST API to invite `github_username` as a read-only collaborator
+/// on the private `ternlang-premium` repo. Returns Ok(()) on success or 204 (already a
+/// collaborator), Err(msg) on any API failure.
+async fn github_invite_collaborator(token: &str, github_username: &str) -> Result<(), String> {
+    if token.is_empty() {
+        return Err("GITHUB_TOKEN not configured on server".to_string());
+    }
+
+    let url = format!(
+        "https://api.github.com/repos/eriirfos-eng/ternlang-premium/collaborators/{}",
+        github_username
+    );
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .put(&url)
+        .header("Authorization", format!("Bearer {}", token))
+        .header("Accept", "application/vnd.github+json")
+        .header("X-GitHub-Api-Version", "2022-11-28")
+        .header("User-Agent", "ternlang-api/0.3.2")
+        .json(&serde_json::json!({ "permission": "pull" }))
+        .send()
+        .await
+        .map_err(|e| format!("GitHub API request failed: {}", e))?;
+
+    match resp.status().as_u16() {
+        // 201 = invite sent, 204 = already a collaborator
+        201 | 204 => Ok(()),
+        status => {
+            let body = resp.text().await.unwrap_or_default();
+            Err(format!("GitHub API error {}: {}", status, body))
+        }
+    }
+}
+
+/// GET /activate — HTML self-service page for GitHub repo access after purchase.
+async fn activate_page() -> impl IntoResponse {
+    Html(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activate Ternlang Premium — GitHub Access</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0d0d14;color:#e2e8f0;font-family:monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:#13131f;border:1px solid #1e2030;border-radius:12px;padding:40px;max-width:480px;width:100%}
+    h1{color:#00f5c4;font-size:20px;margin-bottom:4px}
+    .sub{color:#666;font-size:12px;margin-bottom:28px}
+    label{display:block;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    input{width:100%;background:#0d0d14;border:1px solid #2a2a3d;border-radius:6px;color:#e2e8f0;font-family:monospace;font-size:14px;padding:10px 12px;margin-bottom:20px;outline:none}
+    input:focus{border-color:#00f5c4}
+    button{width:100%;background:#00f5c4;color:#0d0d14;border:none;border-radius:6px;font-family:monospace;font-size:14px;font-weight:bold;padding:12px;cursor:pointer}
+    button:hover{background:#00ddb0}
+    #msg{margin-top:16px;font-size:13px;text-align:center;min-height:20px}
+    .ok{color:#00f5c4}.err{color:#f87171}
+    hr{border-color:#1e2030;margin:24px 0}
+    .note{color:#555;font-size:11px;line-height:1.6}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Activate Premium Access</h1>
+  <p class="sub">ternlang.com · RFI-IRFOS · BSL-1.1</p>
+  <label for="key">Your Ternlang API Key</label>
+  <input id="key" type="text" placeholder="tern_2_…" autocomplete="off" spellcheck="false">
+  <label for="gh">Your GitHub Username</label>
+  <input id="gh" type="text" placeholder="octocat" autocomplete="off" spellcheck="false">
+  <button onclick="activate()">Activate GitHub Access</button>
+  <div id="msg"></div>
+  <hr>
+  <p class="note">
+    After clicking Activate, GitHub will send you an invitation email to join
+    <strong style="color:#e2e8f0">eriirfos-eng/ternlang-premium</strong>.<br><br>
+    Accept the invite, then clone:<br>
+    <code style="color:#00f5c4">git clone https://github.com/eriirfos-eng/ternlang-premium</code>
+  </p>
+</div>
+<script>
+async function activate() {
+  const key = document.getElementById('key').value.trim();
+  const gh  = document.getElementById('gh').value.trim();
+  const msg = document.getElementById('msg');
+  if (!key || !gh) { msg.className='err'; msg.textContent='Both fields are required.'; return; }
+  msg.className=''; msg.textContent='Sending invite…';
+  try {
+    const r = await fetch('/api/github/activate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({api_key: key, github_username: gh})
+    });
+    const j = await r.json();
+    if (r.ok) {
+      msg.className='ok';
+      msg.textContent = '✓ Invite sent! Check your GitHub email and accept the invitation.';
+    } else {
+      msg.className='err';
+      msg.textContent = j.error || 'Activation failed. Check your API key and try again.';
+    }
+  } catch(e) {
+    msg.className='err'; msg.textContent='Network error — please try again.';
+  }
+}
+</script>
+</body>
+</html>"#)
+}
+
+/// Request body for POST /api/github/activate
+#[derive(Deserialize)]
+struct GithubActivateRequest {
+    api_key:        String,
+    github_username: String,
+}
+
+/// POST /api/github/activate
+///
+/// Called from the /activate page. Validates the customer's API key, then
+/// invites their GitHub username as a read-only collaborator on ternlang-premium.
+/// Idempotent — safe to call multiple times (GitHub returns 204 if already invited).
+async fn github_activate(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<GithubActivateRequest>,
+) -> Response {
+    // Sanitise inputs
+    let raw_key = req.api_key.trim().to_string();
+    let username = req.github_username.trim().to_string();
+
+    if raw_key.is_empty() || username.is_empty() {
+        return api_error(StatusCode::BAD_REQUEST, "api_key and github_username are required.");
+    }
+
+    // GitHub usernames: alphanumeric + hyphens, 1–39 chars, no leading/trailing hyphens
+    if username.len() > 39
+        || !username.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+        || username.starts_with('-')
+        || username.ends_with('-')
+    {
+        return api_error(StatusCode::BAD_REQUEST, "Invalid GitHub username.");
+    }
+
+    // Validate key (peek — don't burn a call quota slot)
+    let entry = match state.keys.peek(&raw_key).await {
+        Some(e) if e.is_active && e.tier >= 2 => e,
+        Some(_) => return api_error(StatusCode::FORBIDDEN,
+            "This key does not have Premium StdLib access (tier 2+ required)."),
+        None => return api_error(StatusCode::UNAUTHORIZED,
+            "Invalid API key. Purchase at ternlang.com/pricing."),
+    };
+
+    eprintln!("[github] activating {} for key {} (tier {})", username, entry.key_id, entry.tier);
+
+    // Invite on GitHub
+    if let Err(e) = github_invite_collaborator(&state.github_token, &username).await {
+        eprintln!("[github] invite error: {}", e);
+        return api_error(StatusCode::BAD_GATEWAY,
+            "GitHub invite failed. Please try again or contact support@ternlang.com.");
+    }
+
+    // Persist the github_username + mark invited
+    state.keys.set_github_invited(&raw_key, &username).await;
+
+    eprintln!("[github] invite sent to {} for key {}", username, entry.key_id);
+
+    (StatusCode::OK, Json(json!({
+        "status":   "invited",
+        "username": username,
+        "repo":     "eriirfos-eng/ternlang-premium",
+        "message":  "GitHub invitation sent. Accept the email from GitHub to gain access."
+    }))).into_response()
 }
 
 // ─── TaaS Payloads ────────────────────────────────────────────────────────────
@@ -3522,12 +3742,18 @@ async fn main() {
         String::new()
     });
 
+    let github_token = env::var("GITHUB_TOKEN").unwrap_or_else(|_| {
+        eprintln!("[ternlang-api] WARNING: GITHUB_TOKEN not set — GitHub repo invites will not work");
+        String::new()
+    });
+
     let state = Arc::new(AppState {
         admin_key,
         keys,
-        version: "0.3.1",
+        version: "0.3.2",
         stripe_webhook_secret,
         resend_api_key,
+        github_token,
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
         total_instructions: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         total_nodes:        Arc::new(std::sync::atomic::AtomicU64::new(0)),
@@ -3545,9 +3771,11 @@ async fn main() {
         .route("/health", get(health))
         .route("/mcp",    get(mcp_info).post(mcp_handler))
         .route("/.well-known/mcp/server-card.json", get(mcp_server_card))
-        .route("/stripe/webhook", post(stripe_webhook))
-        .route("/pricing",        get(pricing_page))
-        .route("/studio",         get(studio_page))
+        .route("/stripe/webhook",       post(stripe_webhook))
+        .route("/pricing",              get(pricing_page))
+        .route("/studio",               get(studio_page))
+        .route("/activate",             get(activate_page))
+        .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))
         .route("/api/run",        post(run_program))
         // API (requires X-Ternlang-Key)
