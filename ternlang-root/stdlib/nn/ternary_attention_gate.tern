@@ -1,0 +1,49 @@
+// stdlib/nn/ternary_attention_gate.tern
+// Demonstrates: Sparsity-aware Attention Gating logic
+// Tier: 3 — Industrial
+
+// attention_gate: Decisions on weighting based on attention scores and sparsity rules.
+// If sparsity is high, we might suppress low-confidence signals.
+fn attention_gate(score: float, sparsity_threshold: float, value: trit) -> trit {
+    // Workaround [PARSER-005]: Use if/else if for float comparisons.
+    if score > sparsity_threshold {
+        return value;
+    }
+    
+    // If score is significantly low, we might zero it.
+    let negative_threshold: float = 0.0 - sparsity_threshold;
+    if score < negative_threshold {
+        return 0; // Gated out (trit 0 is 'tend')
+    }
+    
+    // Intermediate zone: use tend (hold)
+    return 0;
+}
+
+// compute_consensus_attention: Merges multiple attention-gated signals.
+fn compute_consensus_attention(v1: trit, v2: trit, v3: trit) -> trit {
+    let c12: trit = consensus(v1, v2);
+    let final_c: trit = consensus(c12, v3);
+    
+    match final_c {
+        -1 => { return -1; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn main() -> trit {
+    // Mock attention scores and values
+    let s1: float = 0.8;
+    let t1: float = 0.5;
+    let val: trit = 1;
+    
+    let gated: trit = attention_gate(s1, t1, val);
+    
+    // gated should be 1 because 0.8 > 0.5
+    match gated {
+        -1 => { return conflict(); }
+         0 => { return hold(); }
+         1 => { return truth(); }
+    }
+}
