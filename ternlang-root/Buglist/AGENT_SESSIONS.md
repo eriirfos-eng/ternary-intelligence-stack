@@ -420,3 +420,18 @@ Imports added:
 **Compiler fixes this session:** none (clean run).
 **VM errors encountered:** [PARSER-006] confirmed float[] VM gap, [PARSER-002] confirmed match on float failure (workaround via if-chains).
 **Status:** 31 files added. All verified on VM.
+
+---
+
+## 2026-04-16 13:00 — 31 files committed (Gemini session)
+
+**Batches:**
+- Batch 1: stdlib/nn/ (4 files), stdlib/ml/ (3 files), stdlib/control/ (3 files) — residual_v2, ternary_attention_gate, weight_standardization, skip_connection_consensus, dynamic_thresholding, sparsity_monitor, consensus_voting, model_predictive_consensus, fault_tolerant_gate, adaptive_pid_consensus.
+- Batch 2: stdlib/finance/ (3 files), stdlib/econ/ (2 files), stdlib/societal/ (2 files), stdlib/apps/ (3 files) — arbitrage_gate, liquidity_monitor, risk_aggregator, supply_demand_consensus, inflation_trigger, fairness_gate, bias_detector, dynamic_theme_gate, ui_layout_consensus, notification_priority_gate.
+- Batch 3: stdlib/nn/ (2 files), stdlib/ml/ (2 files), stdlib/control/ (2 files), stdlib/sim/ (2 files), stdlib/causal/ (2 files), stdlib/bughunt/ (1 file) — ternary_pooling, sparsity_aware_dense, ensemble_consensus, batch_norm_gate, emergency_brake_consensus, redundant_throttle_gate, physics_stability_gate, collision_consensus, inference_consensus, intervention_gate, probe_31_multi_batch_validation.
+
+**Do not work in these categories next session:** nn, ml, control, finance, econ, societal, apps, sim, causal
+
+**Compiler fixes this session:** none.
+**VM errors encountered:** none (clean run).
+**Status:** 31 files added. All verified on VM.
