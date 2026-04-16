@@ -215,9 +215,9 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 
 ---
 
-# ═══════════════════════════════════════════════════
+ ═══════════════════════════════════════════════════
 # PART II — ACTIVE DEVELOPMENT (Phases 10–13)
-# ═══════════════════════════════════════════════════
+ ═══════════════════════════════════════════════════
 
 ## ✅ Phase 10: Extension Maturity — COMPLETE
 
@@ -322,9 +322,9 @@ The key insight: when human-optimal is Affirm and eco-optimal is Reject, the rig
 
 ---
 
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 # PART III — FUTURE PHASES (14–18)
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 
 ## 🔄 Phase 14: TernTranslator — The Bridge Into the Existing World — PARTIAL
 Most potential users have binary decision trees they've been running for years. TernTranslator is the onramp: give it your Python `if/elif/else` or SQL `CASE WHEN` and it outputs `.tern` with the ternary hold zone added where the original code had no coverage.
@@ -427,9 +427,9 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 
 ---
 
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 # LICENSING & IP
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 
 - [ ] **Open core**: LGPL v3 (compiler + stdlib) — forces compiler contributions back
 - [ ] **Commercial tier**: proprietary license for `ternlang-ml`, HDL backend, distributed runtime
@@ -438,9 +438,9 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 
 ---
 
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 # PENDING ACTION ITEMS (as of 2026-04-16)
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 
 ### High Priority — Completed This Session
 - [x] **v0.3.3 crates.io republish** — all 8 crates (core→cli) republished at v0.3.3. 2026-04-16.
@@ -468,9 +468,9 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 
 ---
 
-# ═══════════════════════════════════════════════════
+ ═══════════════════════════════════════════════════
 # 2026 PRIORITY MATRIX
-# ═══════════════════════════════════════════════════
+ ═══════════════════════════════════════════════════
 
 | Quarter | Deliverable | Impact | Effort |
 |---------|------------|--------|--------|
@@ -487,9 +487,9 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 
 ---
 
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 # APPENDIX A — HISTORICAL SESSION LOG
-# ═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════
 
 | Date | Session Update |
 |------|----------------|
