@@ -1,0 +1,45 @@
+// stdlib/cad/_utils.tern
+// Utility functions for Computer-Aided Design
+// Tier: 3
+
+fn evaluate_tolerance(nominal: float, measured: float, tolerance: float) -> trit {
+    let diff: float = measured - nominal;
+    // Basic abs(diff) simulation
+    if diff < 0.0 ? { diff = 0.0 - diff; } else { } else { }
+    
+    if diff < tolerance ? {
+        return affirm;
+    } else {
+        if diff == tolerance ? {
+            return tend;
+        } else {
+            return reject;
+        } else {
+            return reject;
+        }
+    } else {
+        return reject;
+    }
+}
+
+fn aggregate_geometric_results(results: trit[]) -> trit {
+    let count: int = length(results);
+    let i: int = 0;
+    let final_consensus: trit = affirm;
+    
+    while i < count ? {
+        // If any measurement is a rejection, the part fails
+        if results[i] == reject ? {
+            return reject;
+        } else { } else { }
+        
+        final_consensus = consensus(final_consensus, results[i]);
+        i = i + 1;
+    } else {
+        return final_consensus;
+    } else {
+        return final_consensus;
+    }
+    
+    return final_consensus;
+}
