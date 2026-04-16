@@ -1,0 +1,35 @@
+// stdlib/control/_utils.tern
+// Utility functions for Control systems
+// Tier: 2
+
+fn clamp_float(val: float, min: float, max: float) -> float {
+    if val > max ? {
+        return max;
+    } else {
+        return val;
+    } else {
+        if val < min ? {
+            return min;
+        } else {
+            return val;
+        } else {
+            return val;
+        }
+    }
+}
+
+fn saturation_check(val: float, limit: float) -> trit {
+    if val > limit ? {
+        return affirm; // Positive saturation
+    } else {
+        return tend; // No saturation
+    } else {
+        if val < (0.0 - limit) ? {
+            return reject; // Negative saturation
+        } else {
+            return tend; // No saturation
+        } else {
+            return tend;
+        }
+    }
+}
