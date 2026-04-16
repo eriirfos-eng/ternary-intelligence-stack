@@ -163,7 +163,7 @@ The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/tern
 - [x] **Phase 7B**: VS Code extension → **Open VSX only** (`rfi-irfos/ternlang`). Microsoft VS Marketplace is NOT a target. Open VSX publish confirmed. Full v0.3.3 extension published 2026-04-16.
 - [x] **Phase 7B**: crates.io — all 9 crates published (2026-04-04)
 - [x] **Phase 7B**: MCP registry — HTTP transport live at https://ternlang.com/mcp, Smithery submission in progress
-- [ ] **Phase 7C**: USN / Bos+Gundersen academic outreach, joint whitepaper draft
+- [x] **Phase 7C**: USN / Bos+Gundersen academic outreach — initial contact made 2026-04-13. Dr. Steven Bos replied. Critical feedback received: (a) hardware is the actual bottleneck, not software/compiler ecosystem; (b) 122× benchmark claim questioned — needs simulation vs real hardware clarification; (c) AI-generated formal language flagged as off-putting. Response: Simeon opened 2 silent PRs fixing real bugs in their codebase. Next step: engage on their terms — use their ISAs/compiler pipelines as foundation.
 
 ---
 
@@ -248,7 +248,7 @@ Paper: DOI [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) · TVL
 - [x] **`ternlang build` fixed** — now emits header-jump + `emit_entry_call("main")` so `.tbc` files are self-contained executables. Previously caused stack underflow on exec. 2026-04-16.
 - [x] **Clean run output** — replaced all-`trit(tend)` register dump with formatted result box + tip lines pointing to build/exec/debug. 2026-04-16.
 - [x] **VS Code extension v0.3.3 published** — full extension (grammar, snippets, commands, diagnostics, language-config) published to Open VSX. Previously was a stub `package.json` with 500 downloads and zero functionality. 2026-04-16.
-- [ ] **Phase 7C: Academic outreach** — USN group (Bos & Gundersen) for co-authorship.
+- [x] **Phase 7C: Academic outreach** — USN contacted 2026-04-13. Dr. Bos replied with substantive criticism (hardware-first, benchmark skepticism, AI-generated prose warning). Simeon opened 2 silent PRs fixing bugs in their codebase. Relationship initiated — correct path is to build on their open ISAs/tools, not pitch metrics at them.
 
 ### Low Priority / Nice to Have
 - [ ] **README example count update** — Table says "300+ `.tern` programs" but actual count is 2,090 in examples/ (267 root + subdirs). Update to "2,000+".
@@ -453,9 +453,13 @@ Most potential users have binary decision trees they've been running for years. 
 - [ ] Seed with: stdlib bundles (core, ml, safety), TernAudit rules, community agents
 
 ### 15C — Academic Outreach
-- [ ] Contact USN group (Bos & Gundersen) — joint whitepaper on ternary ISA + inference
-- [ ] Submit to arXiv: "BET-ISA: A Balanced Ternary Execution Architecture for Sparse Neural Inference"
-- [ ] Target venues: NeurIPS workshop on efficiency, ISCA, DATE conference (hardware)
+- [x] Contact USN group (Bos & Gundersen) — done 2026-04-13. Reply from Dr. Steven Bos received.
+  - Key feedback: hardware switching devices are the real limit, not software/compilers. They have EDA tooling, RTL, C→ternary compilers already. 122× claim questioned (sim vs real hardware). AI-generated prose flagged.
+  - Correct next step: engage their open stack (ISAs, compiler pipelines, tapeout flow) — not pitch metrics.
+  - Simeon opened 2 silent PRs fixing bugs in their code — right way to earn credibility.
+- [ ] Follow-up after PRs merged — propose aligning BET-ISA encoding with their BCT standard
+- [ ] Submit to arXiv: "BET-ISA: A Balanced Ternary Execution Architecture for Sparse Neural Inference" — needs honest benchmark methodology section (measured in Rust release mode, not on ternary hardware)
+- [ ] Target venues: DATE conference (hardware EDA — relevant to their tapeout work), NeurIPS efficiency workshop
 - [ ] DOI registration for all RFI-IRFOS papers — already started (OSF)
 
 ### 15D — Community
