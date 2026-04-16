@@ -1,0 +1,58 @@
+{
+  "Main function": {
+    "prefix": "main",
+    "body": [
+      "fn main() -> trit {",
+      "    $0",
+      "    return tend;",
+      "}"
+    ],
+    "description": "Ternlang main entry point"
+  },
+  "Function": {
+    "prefix": "fn",
+    "body": [
+      "fn ${1:name}(${2:param}: ${3:trit}) -> ${4:trit} {",
+      "    $0",
+      "    return tend;",
+      "}"
+    ],
+    "description": "Ternlang function definition"
+  },
+  "Three-way match": {
+    "prefix": "match",
+    "body": [
+      "match ${1:signal} {",
+      "     1 => { $2 }",
+      "     0 => { $3 }",
+      "    -1 => { $4 }",
+      "}"
+    ],
+    "description": "Exhaustive ternary match expression"
+  },
+  "Let trit": {
+    "prefix": "let",
+    "body": "let ${1:name}: ${2:trit} = ${3:tend};",
+    "description": "Trit variable declaration"
+  },
+  "Sparse skip annotation": {
+    "prefix": "@sparse",
+    "body": "@sparseskip",
+    "description": "Mark function for sparse BET VM skip optimization"
+  },
+  "Consensus call": {
+    "prefix": "cons",
+    "body": "consensus(${1:a}, ${2:b})",
+    "description": "Ternary consensus gate"
+  },
+  "Invert": {
+    "prefix": "inv",
+    "body": "invert(${1:signal})",
+    "description": "Trit negation: +1→-1, -1→+1, 0→0"
+  },
+  "Tensor declaration": {
+    "prefix": "tensor",
+    "body": "let ${1:m}: tensor<${2:4} x ${3:4}> = [[${4:0}]];",
+    "description": "Ternary tensor (matrix) declaration"
+  }
+}

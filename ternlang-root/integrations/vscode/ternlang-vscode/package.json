@@ -1,37 +1,40 @@
 {
   "name": "ternlang-vscode",
-  "displayName": "Ternlang VSCode Integration",
-  "description": "Official RFI-IRFOS Ternlang Extension. Includes syntax highlighting, MoE-13 linter, and triadic logic tools.",
-  "version": "0.1.0",
+  "displayName": "Ternlang",
+  "description": "Syntax highlighting, diagnostics, and run commands for the Ternlang balanced ternary language (.tern files). Powered by the BET VM and the ternlang CLI.",
+  "version": "0.3.3",
   "publisher": "RFI-IRFOS",
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.75.0"
   },
   "categories": [
     "Programming Languages",
-    "Linters"
+    "Linters",
+    "Snippets"
   ],
-  "license": "BSL-1.1",
-  "homepage": "https://github.com/eriirfos-eng/ternary-intelligence-stack",
+  "keywords": ["ternlang", "ternary", "trit", "BET", "balanced ternary", "RFI-IRFOS"],
+  "license": "LGPL-3.0-or-later",
+  "homepage": "https://ternlang.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/eriirfos-eng/ternary-intelligence-stack.git"
   },
+  "bugs": {
+    "url": "https://github.com/eriirfos-eng/ternary-intelligence-stack/issues",
+    "email": "licensing@ternlang.com"
+  },
+  "icon": "icon.png",
   "activationEvents": [
-    "onLanguage:ternlang"
+    "onLanguage:ternlang",
+    "workspaceContains:**/*.tern"
   ],
   "main": "./extension.js",
   "contributes": {
     "languages": [
       {
         "id": "ternlang",
-        "aliases": [
-          "Ternlang",
-          "tern"
-        ],
-        "extensions": [
-          ".tern"
-        ],
+        "aliases": ["Ternlang", "tern"],
+        "extensions": [".tern"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -41,7 +44,78 @@
         "scopeName": "source.tern",
         "path": "./syntaxes/ternlang.tmLanguage.json"
       }
-    ]
+    ],
+    "snippets": [
+      {
+        "language": "ternlang",
+        "path": "./snippets/ternlang.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "ternlang.run",
+        "title": "Ternlang: Run File",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ternlang.runDebug",
+        "title": "Ternlang: Run File (Debug)",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "ternlang.build",
+        "title": "Ternlang: Build to .tbc Bytecode"
+      },
+      {
+        "command": "ternlang.check",
+        "title": "Ternlang: Check File (Validate)"
+      },
+      {
+        "command": "ternlang.repl",
+        "title": "Ternlang: Open REPL"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "ternlang.run",
+          "when": "resourceExtname == .tern",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "ternlang.run",
+          "when": "resourceExtname == .tern",
+          "group": "ternlang"
+        },
+        {
+          "command": "ternlang.build",
+          "when": "resourceExtname == .tern",
+          "group": "ternlang"
+        },
+        {
+          "command": "ternlang.check",
+          "when": "resourceExtname == .tern",
+          "group": "ternlang"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Ternlang",
+      "properties": {
+        "ternlang.executablePath": {
+          "type": "string",
+          "default": "ternlang",
+          "description": "Path to the ternlang CLI binary. Defaults to 'ternlang' (must be on PATH after cargo install ternlang-cli)."
+        },
+        "ternlang.checkOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run 'ternlang check' on every save and surface parse errors as diagnostics."
+        }
+      }
+    }
   },
   "_rfi_meta": {
     "institute": "RFI-IRFOS Graz Institute (ZVR: 1015608684)",
