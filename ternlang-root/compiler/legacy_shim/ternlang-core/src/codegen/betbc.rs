@@ -221,32 +221,49 @@ impl BytecodeEmitter {
                 }
             }
             Stmt::IfTernary { condition, on_pos, on_zero, on_neg } => {
+                let pre_reg = self.next_reg;
                 self.emit_expr(condition);
-                self.code.push(0x0a);
+                let cond_reg = self.alloc_reg();
+                self.code.push(0x08); self.code.push(cond_reg); // Tstore
+                
+                // Load condition for checks
+                self.code.push(0x09); self.code.push(cond_reg); // Tload
+                
+                // Check POS
                 let pos_patch = self.code.len() + 1;
-                self.code.push(0x05); self.code.extend_from_slice(&[0, 0]);
-                self.code.push(0x0a);
+                self.code.push(0x05); self.code.extend_from_slice(&[0, 0]); // TJMP_POS
+                
+                // Check ZERO
                 let zero_patch = self.code.len() + 1;
-                self.code.push(0x06); self.code.extend_from_slice(&[0, 0]);
-                self.code.push(0x0c);
+                self.code.push(0x06); self.code.extend_from_slice(&[0, 0]); // TJMP_ZERO
+                
+                // NEG arm: pop the condition and execute
+                self.code.push(0x0c); // TPOP
                 self.emit_stmt(on_neg);
                 let exit_patch = self.code.len() + 1;
-                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]); // TJMP to end
+                
+                // POS arm
                 let pos_addr = self.code.len() as u16;
                 self.patch_u16(pos_patch, pos_addr);
-                self.code.push(0x0c);
+                self.code.push(0x0c); // TPOP
                 self.emit_stmt(on_pos);
                 let exit_pos = self.code.len() + 1;
                 self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
+                
+                // ZERO arm
                 let zero_addr = self.code.len() as u16;
                 self.patch_u16(zero_patch, zero_addr);
-                self.code.push(0x0c);
+                self.code.push(0x0c); // TPOP
                 self.emit_stmt(on_zero);
+                
                 let end = self.code.len() as u16;
                 self.patch_u16(exit_patch, end);
                 self.patch_u16(exit_pos, end);
+                self.next_reg = pre_reg;
             }
             Stmt::Match { condition, arms } => {
+                let pre_reg = self.next_reg;
                 self.emit_expr(condition);
                 let cond_reg = self.alloc_reg();
                 self.code.push(0x08); self.code.push(cond_reg); // Tstore
@@ -287,15 +304,13 @@ impl BytecodeEmitter {
                             self.code.extend_from_slice(&[0, 0]);
                         }
                         Pattern::Trit(v) => {
-                            // Should not happen for -1, 0, 1 due to arms above,
-                            // but handle as Int for completeness.
                             self.code.push(0x25); // TjmpEqInt (peeks)
                             self.code.extend_from_slice(&(*v as i64).to_le_bytes());
                             match_patch = self.code.len();
                             self.code.extend_from_slice(&[0, 0]);
                         }
                         Pattern::Float(v) => {
-                            self.code.push(0x2a); // TjmpEqFloat (peeks) - NEW OPCODE
+                            self.code.push(0x2a); // TjmpEqFloat (peeks)
                             self.code.extend_from_slice(&v.to_le_bytes());
                             match_patch = self.code.len();
                             self.code.extend_from_slice(&[0, 0]);
@@ -326,15 +341,13 @@ impl BytecodeEmitter {
                     self.patch_u16(p, addr);
                 }
                 
-                // If no arms matched, we still have one Tload on stack from the last failed arm check
-                // unless arms was empty (but semantic enforces it isn't for Trit, and for Int it might be)
                 if !arms.is_empty() {
-                    self.code.push(0x0c); // Tpop
+                    self.code.push(0x0c); // Tpop (pops the last failed peek)
                 }
 
                 let end_addr = self.code.len() as u16;
                 for p in end_patches { self.patch_u16(p, end_addr); }
-                self.next_reg -= 1;
+                self.next_reg = pre_reg;
             }
             Stmt::ForIn { var, iter, body } => {
                 // Save next_reg so loop-internal registers are freed after the loop ends.
@@ -399,25 +412,33 @@ impl BytecodeEmitter {
                 self.next_reg = pre_loop_reg;
             }
             Stmt::WhileTernary { condition, on_pos, on_zero, on_neg } => {
+                let pre_reg = self.next_reg;
+                let cond_reg = self.alloc_reg();
                 let top = self.code.len() as u16;
                 let pre_break = self.break_patches.len();
                 let pre_cont = self.continue_patches.len();
 
                 self.emit_expr(condition);
-                self.code.push(0x0a); // TDUP
+                self.code.push(0x08); self.code.push(cond_reg); // Tstore
+                
+                // Load condition for checks
+                self.code.push(0x09); self.code.push(cond_reg); // Tload
+                
+                // Check POS
                 let pos_patch = self.code.len() + 1;
                 self.code.push(0x05); self.code.extend_from_slice(&[0, 0]); // TJMP_POS
-                self.code.push(0x0a); // TDUP
+                
+                // Check ZERO
                 let zero_patch = self.code.len() + 1;
                 self.code.push(0x06); self.code.extend_from_slice(&[0, 0]); // TJMP_ZERO
                 
-                // NEG ARM: execute and EXIT (don't loop back)
+                // NEG ARM: pop and execute and EXIT (don't loop back)
                 self.code.push(0x0c); // TPOP
                 self.emit_stmt(on_neg);
                 let exit_neg = self.code.len() + 1;
                 self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]); // TJMP to end
 
-                // POS ARM: execute and LOOP BACK
+                // POS ARM: pop and execute and LOOP BACK
                 let pos_addr = self.code.len() as u16;
                 self.patch_u16(pos_patch, pos_addr);
                 self.code.push(0x0c); // TPOP
@@ -426,7 +447,7 @@ impl BytecodeEmitter {
                 self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
                 self.patch_u16(back_pos, top);
 
-                // ZERO ARM: execute and EXIT (don't loop back)
+                // ZERO ARM: pop and execute and EXIT (don't loop back)
                 let zero_addr = self.code.len() as u16;
                 self.patch_u16(zero_patch, zero_addr);
                 self.code.push(0x0c); // TPOP
@@ -439,6 +460,7 @@ impl BytecodeEmitter {
                 for p in cs { self.patch_u16(p, top); }
                 let bs: Vec<usize> = self.break_patches.drain(pre_break..).collect();
                 for p in bs { self.patch_u16(p, end); }
+                self.next_reg = pre_reg;
             }
             Stmt::Loop { body } => {
                 let top = self.code.len() as u16;
