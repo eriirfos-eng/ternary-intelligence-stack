@@ -1,0 +1,32 @@
+// stdlib/grid/voltage_sag_detector.tern
+// Demonstrates: Ternary voltage sag detection in power distribution
+// Tier: 3
+
+fn detect_sag(voltage: float, nominal: float) -> trit {
+    let ratio: float = voltage / nominal;
+    
+    // Sag if ratio < 0.9, Swell if ratio > 1.1
+    if ratio < 0.9 ? {
+        return reject;
+    } else {
+        if ratio > 1.1 ? {
+            return affirm;
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
+    } else {
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let result: trit = detect_sag(205.0, 230.0);
+
+    match result {
+        -1 => { return truth(); }    // Sag detected (Success for test)
+         0 => { return hold();    }
+         1 => { return conflict(); }
+    }
+}
