@@ -174,7 +174,12 @@ impl CTranspiler {
                 let cond = self.emit_expr(condition);
                 self.push(&format!("switch ((int){cond}) {{\n"));
                 self.indent += 1;
-                for (val, arm) in arms {
+                for (pattern, arm) in arms {
+                    let val = match pattern {
+                        Pattern::Int(v) => *v,
+                        Pattern::Trit(t) => *t as i64,
+                        Pattern::Float(f) => *f as i64,
+                    };
                     self.push(&format!("case {val}: "));
                     self.emit_stmt(arm);
                     self.push("break;\n");
@@ -340,6 +345,8 @@ impl CTranspiler {
             Type::Float             => "double",
             Type::String            => "const char*",
             Type::TritTensor { .. } => "trit*",
+            Type::IntTensor { .. }  => "int64_t*",
+            Type::FloatTensor { .. } => "double*",
             Type::Named(_)          => "trit",  // struct handled separately
             Type::AgentRef          => "int",   // opaque ID in C backend
         }

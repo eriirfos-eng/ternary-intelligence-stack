@@ -526,14 +526,43 @@ impl BytecodeEmitter {
             }
             Expr::Call { callee, args } => {
                 match callee.as_str() {
-                    "print" | "println" => {
-                        for a in args {
-                            self.emit_expr(a);
-                            self.code.push(0x20); // TPRINT
+                    "println" => {
+                        if args.is_empty() {
+                            // print newline only (not implemented, but let's push dummy)
+                        } else {
+                            for a in args {
+                                self.emit_expr(a);
+                                self.code.push(0x20); // TPRINT
+                            }
                         }
                         self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); // return hold()
                     }
+                    "opent" => {
+                        if args.len() == 2 {
+                            for a in args { self.emit_expr(a); }
+                            self.code.push(0x2a); // TOPENT (pushes Int handle)
+                        } else {
+                            // error but push dummy
+                            self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
+                        }
+                    }
+                    "readt" => {
+                        if args.len() == 1 {
+                            self.emit_expr(&args[0]);
+                            self.code.push(0x2b); // TREADT (pushes Trit)
+                        } else {
+                            self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
+                        }
+                    }
+                    "writet" => {
+                        if args.len() == 2 {
+                            for a in args { self.emit_expr(a); }
+                            self.code.push(0x2c); // TWRITET
+                        }
+                        self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); // push void/hold result
+                    }
                     "consensus" => {
+
                         for a in args { self.emit_expr(a); }
                         if args.len() == 2 { self.code.push(0x0e); }
                     }

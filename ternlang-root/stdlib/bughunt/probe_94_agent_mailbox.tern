@@ -1,0 +1,23 @@
+// stdlib/bughunt/probe_94_agent_mailbox.tern
+// Demonstrates: Agent mailbox behavior (multiple messages)
+// Tier: 1
+
+agent Accumulator {
+    fn handle(msg: trit) -> int {
+        return 42;
+    }
+}
+
+fn main() -> trit {
+    let a: agentref = spawn Accumulator;
+    
+    send a affirm;
+    let r1: int = await a;
+    println(r1); 
+    
+    if r1 == 42 {
+        return truth();
+    } else {
+        return conflict();
+    }
+}

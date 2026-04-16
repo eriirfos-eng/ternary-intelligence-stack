@@ -1,0 +1,17 @@
+// stdlib/bughunt/probe_96_file_io.tern
+fn main() -> trit {
+    let hw: int = opent("test_io.trit", 1);
+    writet(hw, affirm);
+    writet(hw, reject);
+    
+    let hr: int = opent("test_io.trit", 0);
+    let t1: trit = readt(hr);
+    let t2: trit = readt(hr);
+    
+    if t1 == affirm {
+        if t2 == reject {
+            return truth();
+        }
+    }
+    return conflict();
+}

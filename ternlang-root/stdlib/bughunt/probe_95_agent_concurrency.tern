@@ -1,0 +1,21 @@
+// stdlib/bughunt/probe_95_agent_concurrency.tern
+// Demonstrates: Agent mailbox blocking (potential dead-lock)
+// Tier: 1
+
+agent Echo {
+    fn handle(msg: trit) -> trit {
+        return msg;
+    }
+}
+
+fn main() -> trit {
+    let a: agentref = spawn Echo;
+    
+    println("Awaiting empty mailbox (should return 0/tend immediately or block)...");
+    let res: trit = await a;
+    
+    println("Result from empty await: ");
+    println(res);
+    
+    return truth();
+}

@@ -258,8 +258,13 @@ impl TernAsmEmitter {
                 let lbl_end  = self.fresh_label("match_end");
                 let mut arm_labels: Vec<(i64, String)> = Vec::new();
 
-                for (val, _) in arms {
-                    arm_labels.push((*val, self.fresh_label(&format!("arm_{}", val))));
+                for (pattern, _) in arms {
+                    let val = match pattern {
+                        Pattern::Int(v) => *v,
+                        Pattern::Trit(t) => *t as i64,
+                        Pattern::Float(f) => *f as i64,
+                    };
+                    arm_labels.push((val, self.fresh_label(&format!("arm_{}", val))));
                 }
 
                 // branch dispatch
@@ -447,6 +452,36 @@ impl TernAsmEmitter {
                             self.emit(&format!("tprint {}", reg(r)));
                         }
                         return 0; // zero reg
+                    }
+                    "opent" => { // opent(path, mode) -> handle
+                        if args.len() == 2 {
+                            let r_path = self.emit_expr(&args[0], ra);
+                            let r_mode = self.emit_expr(&args[1], ra);
+                            self.emit(&format!("tpush {}", reg(r_path)));
+                            self.emit(&format!("tpush {}", reg(r_mode)));
+                            self.emit("topent");
+                            self.emit("tpop t2"); // return handle in t2
+                        }
+                        return 2;
+                    }
+                    "readt" => { // readt(handle) -> trit
+                        if !args.is_empty() {
+                            let r_handle = self.emit_expr(&args[0], ra);
+                            self.emit(&format!("tpush {}", reg(r_handle)));
+                            self.emit("treadt");
+                            self.emit("tpop t2");
+                        }
+                        return 2;
+                    }
+                    "writet" => { // writet(handle, trit) -> void
+                        if args.len() == 2 {
+                            let r_handle = self.emit_expr(&args[0], ra);
+                            let r_trit = self.emit_expr(&args[1], ra);
+                            self.emit(&format!("tpush {}", reg(r_handle)));
+                            self.emit(&format!("tpush {}", reg(r_trit)));
+                            self.emit("twritet");
+                        }
+                        return 0;
                     }
                     _ => {}
                 }
