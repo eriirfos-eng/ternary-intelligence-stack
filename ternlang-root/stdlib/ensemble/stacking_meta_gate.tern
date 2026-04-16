@@ -1,0 +1,53 @@
+// stdlib/ensemble/stacking_meta_gate.tern
+// Demonstrates: Stacking meta-model ensemble gate logic with individual weights
+// Tier: 2
+
+from "ensemble_utils.tern" import *;
+
+fn meta_decision_3(e1: trit, w1: float, e2: trit, w2: float, e3: trit, w3: float) -> trit {
+    let weighted_affirm: float = 0.0;
+    let weighted_reject: float = 0.0;
+    
+    // Expert 1
+    if e1 == 1 ? { weighted_affirm = weighted_affirm + w1; } 
+    else { if e1 == -1 ? { weighted_reject = weighted_reject + w1; } else {} else {} } 
+    else {}
+    
+    // Expert 2
+    if e2 == 1 ? { weighted_affirm = weighted_affirm + w2; } 
+    else { if e2 == -1 ? { weighted_reject = weighted_reject + w2; } else {} else {} } 
+    else {}
+    
+    // Expert 3
+    if e3 == 1 ? { weighted_affirm = weighted_affirm + w3; } 
+    else { if e3 == -1 ? { weighted_reject = weighted_reject + w3; } else {} else {} } 
+    else {}
+    
+    if weighted_affirm > weighted_reject ? {
+        return affirm;
+    } else {
+        if weighted_reject > weighted_affirm ? {
+            return reject;
+        } else {
+            return tend;
+        } else {
+            return tend;
+        }
+    } else {
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let e1: trit = 1; let w1: float = 0.8;
+    let e2: trit = -1; let w2: float = 0.9;
+    let e3: trit = 1; let w3: float = 0.7;
+    
+    let decision: trit = meta_decision_3(e1, w1, e2, w2, e3, w3);
+    
+    match decision {
+        affirm => { return truth(); }
+        tend   => { return hold(); }
+        reject => { return conflict(); }
+    }
+}
