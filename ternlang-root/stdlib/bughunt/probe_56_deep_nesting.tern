@@ -1,0 +1,45 @@
+// stdlib/bughunt/probe_56_deep_nesting.tern
+// Demonstrates: Deeply nested control flow (while, for, if, match).
+// Tier: 1
+
+fn main() -> trit {
+    let i: int = 0;
+    let items: trittensor<3> = [1, 2, 3];
+    let mut sum: int = 0;
+
+    while i < 2 {
+        println("i: ");
+        println(i);
+        
+        for item in items {
+            println("  item: ");
+            println(item);
+            
+            if item > 1 {
+                match item {
+                    2 => { 
+                        println("    found 2");
+                        sum = sum + item;
+                    }
+                    3 => {
+                        println("    found 3");
+                        sum = sum + item;
+                    }
+                    0 => { return conflict(); }
+                    -1 => { return conflict(); }
+                    1 => { return conflict(); }
+                }
+            } else {
+                println("    item <= 1");
+            }
+        }
+        i = i + 1;
+    }
+    
+    println("Final Sum: ");
+    println(sum);
+    
+    return truth();
+}
+
+main();

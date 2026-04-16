@@ -77,6 +77,57 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Regression Test:** `stdlib/bughunt/probe_29_empty_tensor.tern`
 - **Workaround Example:** `stdlib/bughunt/probe_29_empty_tensor_workaround.tern`
 
+## [BET-014] Invert Builtin Stack Overflow
+- **Description:** Calling the built-in `invert(trit)` function causes a VM stack overflow, even in non-recursive contexts.
+- **Error:** `VM Error: [BET-013] Call stack overflow — max depth (4096) exceeded.`
+- **Workaround:** Manually invert trits using `match` or `if/else` (though `match` has its own issues).
+- **Regression Test:** `stdlib/bughunt/probe_09_trit_builtins.tern` (also reproduced in `test_invert.tern`)
+
+## [VM-MATCH-001] Match Arm Leak & Type Pollution
+- **Description:** If a `match` statement is given a value that is not covered by any of its arms, it fails by returning the *input value* itself. If the input is an `int`, this non-trit value is leaked into a `trit` register, polluting the ternary state.
+- **Error:** Pollution of `trit` registers with `int` values. Subsequent use of this polluted register in built-ins (like `consensus`) causes a `VM Error: [BET-001] Stack underflow`.
+- **Workaround:** Ensure all possible values are covered in `match` arms (but see `[PARSER-MATCH-001]` regarding lack of `_`).
+- **Regression Test:** `stdlib/bughunt/probe_48_match_unhandled.tern`, `stdlib/bughunt/probe_53_match_leak.tern`
+
+## [PARSER-MATCH-001] Limited Match Arm Syntax
+- **Description:** The `match` statement is highly restrictive. It does not support:
+    - Wildcard/Default arm (`_`).
+    - Multiple values per arm (e.g., `1, 2 => ...`).
+    - Expressions in arms (e.g., `a + b => ...`).
+- **Error:** `Parse program error: ExpectedToken("pattern (int or trit)", ...)` or `ExpectedToken("FatArrow", "Comma")`.
+- **Workaround:** Use nested `match` or `if/else` chains.
+- **Regression Test:** `stdlib/bughunt/probe_49_match_expression.tern`, `stdlib/bughunt/probe_50_match_multi_val.tern`
+
+## [VM-STRUCT-001] Nested Struct Access Stack Underflow
+- **Description:** Accessing a field of a nested struct (e.g., `frame.origin.x`) causes a VM stack underflow. Direct access to top-level fields (e.g., `frame.id`) works correctly.
+- **Error:** `VM Error: [BET-001] Stack underflow — you tried to pop a truth that wasn't there.`
+- **Workaround:** Copy nested structs to local variables before accessing their fields.
+- **Regression Test:** `stdlib/bughunt/probe_54_struct_chaos.tern`
+
+## [VM-PANIC-001] Trittensor Non-Trit Panic
+- **Description:** Storing a non-trit value (e.g., 2, -5) in a `trittensor<N>` fixed array causes a raw Rust panic in the compiler's `trit.rs` rather than a graceful VM error or compile-time type error.
+- **Error:** `thread 'main' panicked at .../trit.rs: Invalid trit value: 2`
+- **Workaround:** Ensure only valid trits (-1, 0, 1) are stored in `trittensor`.
+- **Regression Test:** `stdlib/bughunt/probe_56_deep_nesting.tern`
+
+## [VM-GLOBAL-001] Global Variable Access Stack Underflow
+- **Description:** Accessing a global variable (defined at the top level with `let`) from within a function causes a VM stack underflow.
+- **Error:** `VM Error: [BET-001] Stack underflow — you tried to pop a truth that wasn't there.`
+- **Workaround:** Pass global state as function parameters.
+- **Regression Test:** `stdlib/bughunt/probe_62_globals.tern`
+
+## [PARSER-ARRAY-001] Missing Integer Arrays
+- **Description:** The language lacks support for dynamic integer arrays (`int[]`) or fixed-size integer tensors (`inttensor<N>`). Only `trittensor<N>` is supported for fixed-size arrays.
+- **Error:** `Parse program error: ExpectedToken("Semicolon", "LBracket")` or `ExpectedToken("Semicolon", "LAngle")`.
+- **Workaround:** Use `trit[]` or `trittensor` if values are small, or separate variables.
+- **Regression Test:** `stdlib/bughunt/probe_58_int_array.tern`, `stdlib/bughunt/probe_59_int_tensor.tern`
+
+## [CLI-DISPLAY-001] CLI Register Display Bug
+- **Description:** The `ternlang-cli` always reports `Reg 0: trit(tend)` (and other registers as `tend`) after program execution, regardless of the actual return value of the program or the state of the registers.
+- **Error:** Incorrect register values displayed in CLI output.
+- **Workaround:** Use `println()` to verify actual values during execution.
+- **Regression Test:** `test_println.tern`, `test_return_1.tern`
+
 ## [PARSER-008] Empty Array Literal
 - **Description:** Declaring an empty array literal using `let name: trit[] = []` causes a parser error.
 - **Error:** `Parse program error: UnexpectedToken("tensor literal element: RBracket")`

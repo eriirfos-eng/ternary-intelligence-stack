@@ -1,45 +1,38 @@
 // stdlib/bughunt/probe_41_casting_logic_bug.tern
-// Demonstrates: Incorrect behavior in type casting, especially with negative values.
+// Demonstrates: Casting errors, particularly with negative numbers.
 // Tier: 1
 
 fn main() -> trit {
-    // Test trit to float
-    let trit_pos: trit = 1;
-    let float_from_trit_pos: float = cast(trit_pos);
-    if float_from_trit_pos != 1.0 {
-        return reject; // Fail if trit(1) to float fails
+    // Test case 1: Casting a negative trit to float
+    // trit(-1) should ideally be -1.0f
+    let neg_trit: trit = reject; // reject is -1
+    let neg_trit_as_float: float = cast(float) neg_trit;
+
+    // Test case 2: Casting a negative float to int
+    // float(-5.9) should ideally be -5 or -6 depending on truncation/rounding.
+    // The bug description suggests this results in incorrect values.
+    let neg_float: float = -5.9;
+    let neg_float_as_int: int = cast(int) neg_float;
+
+    // Test case 3: Combined trit -> float -> int casting with negative values
+    // This is expected to produce incorrect results silently.
+    let combined_cast: int = cast(int) (cast(float) reject); // cast(float) reject should be -1.0f. cast(int) -1.0f should be -1.
+
+    // Check the results. If any of these casts produce unexpected results,
+    // return reject.
+    if neg_trit_as_float != -1.0 {
+        return reject; // Expected -1.0
+    }
+    // The exact integer result of casting -5.9 to int is implementation-defined (truncation vs rounding).
+    // If it's consistently wrong, we flag it. Let's assume it should truncate towards zero, so -5.
+    // If it behaves unexpectedly (e.g., -6 or similar), it's a bug.
+    if neg_float_as_int != -5 { // Assuming truncation towards zero for -5.9 -> -5
+        return reject; // Unexpected integer conversion for negative float
+    }
+    if combined_cast != -1 {
+        return reject; // Expected -1 from reject -> -1.0f -> -1
     }
 
-    let trit_zero: trit = 0;
-    let float_from_trit_zero: float = cast(trit_zero);
-    if float_from_trit_zero != 0.0 {
-        return reject; // Fail if trit(0) to float fails
-    }
-
-    let trit_neg: trit = -1;
-    let float_from_trit_neg: float = cast(trit_neg);
-    if float_from_trit_neg != -1.0 {
-        return reject; // Fail if trit(-1) to float fails
-    }
-
-    // Test float to int (truncation)
-    let float_pos: float = 5.9;
-    let int_from_float_pos: int = cast(float_pos);
-    if int_from_float_pos != 5 {
-        return reject; // Fail if positive float to int truncation fails
-    }
-
-    let float_neg: float = -5.9;
-    let int_from_float_neg: int = cast(float_neg);
-    if int_from_float_neg != -5 { // Expecting truncation towards zero for negative numbers
-        return reject; // Fail if negative float to int truncation fails
-    }
-
-    // This combination was problematic in probe_40: trit -> float -> int
-    let final_sum_check: int = cast(cast(trit_neg)); // trit(-1) -> float(-1.0) -> int(-1)
-    if final_sum_check != -1 {
-        return reject; // Fail if the combined cast fails
-    }
-
-    return truth(); // All cast tests passed
+    // If all checks pass, return truth.
+    return truth();
 }

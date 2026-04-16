@@ -1,0 +1,12 @@
+// stdlib/bughunt/probe_59_int_tensor.tern
+// Demonstrates: Whether inttensor<N> is supported.
+// Tier: 1
+
+fn main() -> trit {
+    let items: inttensor<3> = [10, 20, 30];
+    println("Item 1: ");
+    println(items[1]);
+    return truth();
+}
+
+main();

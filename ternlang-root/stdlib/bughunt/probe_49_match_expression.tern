@@ -1,0 +1,16 @@
+// stdlib/bughunt/probe_49_match_expression.tern
+// Demonstrates: Whether match arms support non-literal expressions.
+// Tier: 1
+
+fn main() -> trit {
+    let target: int = 5;
+    let a: int = 2;
+    let b: int = 3;
+    
+    match target {
+        a + b => { return truth(); }
+        _ => { return conflict(); }
+    }
+}
+
+main();

@@ -1,0 +1,14 @@
+// stdlib/bughunt/probe_50_match_multi_val.tern
+// Demonstrates: Whether match arms support multiple values (e.g., 1, 2 => ...).
+// Tier: 1
+
+fn main() -> trit {
+    let x: int = 1;
+    match x {
+        1, 2 => { return truth(); }
+        0 => { return conflict(); }
+        -1 => { return hold(); }
+    }
+}
+
+main();
