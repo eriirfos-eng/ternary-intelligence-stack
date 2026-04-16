@@ -1,0 +1,36 @@
+// stdlib/research/_utils.tern
+// Utility functions for Scientific Research
+// Tier: 3
+
+fn confidence_interval(p_value: float) -> trit {
+    if p_value < 0.01 ? {
+        return affirm; // Highly significant
+    } else {
+        return tend;
+    } else {
+        if p_value < 0.05 ? {
+            return tend; // Significant but marginal
+        } else {
+            return tend;
+        } else {
+            return reject; // Not significant
+        }
+    }
+}
+
+fn drift_check(prev: float, current: float, max_drift: float) -> trit {
+    let diff: float = current - prev;
+    if diff > max_drift ? {
+        return reject; // Significant drift
+    } else {
+        return tend;
+    } else {
+        if diff < (0.0 - max_drift) ? {
+            return reject; // Significant drift
+        } else {
+            return affirm; // Stable
+        } else {
+            return reject;
+        }
+    }
+}
