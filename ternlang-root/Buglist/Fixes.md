@@ -597,3 +597,9 @@ The following were confirmed as architectural limits requiring major restructuri
 - **COMP-TENSOR-001** (`probe_71`, `probe_72`): Tensor sizes use 16-bit immediates (TALLOC). >65535 element tensors silently truncate. Marked [ARCH-LIMIT].
 - **probe_07 2D tensor**: Index OOB for 2D access patterns in certain edge cases. Marked [KNOWN / 2D-LIMIT].
 - **MOD-004**: Module file loading not implemented. Named imports fail with "file not found". Marked [UNRESOLVED].
+
+## 2026-04-17 — Findings from 50-file session
+- **len(string) unsupported:** len() currently only accepts TensorRef. Workaround: avoided len() on strings or used specific word checks.
+- **Scientific notation unsupported:** Float literals like 1.23e-10 fail to parse. Workaround: use decimal notation.
+- **else if unsupported:** 'else if' triggers parse errors. Workaround: use nested 'if' or separate 'if' blocks.
+- **float[] literals/params re-verified:** PARSER-006 still active for float arrays. Workaround: use individual variables or trit arrays with casting.

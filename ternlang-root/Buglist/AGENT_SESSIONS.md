@@ -516,3 +516,29 @@ All 10 failures are expected-error probes or documented architectural limits.
 **Do not work in these categories next session:** bughunt (probes 07, 11, 12, 23, 24, 32-35, 48, 53, 54, 62, 67, 71-73, 78-82, 91 all covered and stable)
 
 **Status:** 14 bugs closed this session. Build clean. 88/98 probes passing.
+
+## 2026-04-17 (Gemini CLI) — 30 modules committed
+- **Batches 1-10 complete:** 10 Tier 1 (Public), 10 Tier 2 (Premium), 10 Tier 3 (Premium).
+- **Highlights:** Fibonacci, Sieve, MSE Loss, DNA Alignment, Policy Gate, ALU Sim, Advanced Literals, Credit Score, Particle Collision, Clamping, Task Priority, Identity Block, XOR, Bellman Update, Grayscale, Demux, Plurality, Chi-Square, Latch, Adaptive Control, Ideal Gas Law, Recursion, Node Identity, P-Value, Is Numeric, Labor Market, Grid Monitor.
+- **Bugs/Fixes:** 
+  - [PARSER-006] Workaround: using trit[] or individual variables instead of int[].
+  - [BET-007] Type mismatch in nodeid retrieval handled by string check.
+  - [RESERVED-KEYWORD] 'in' is a reserved keyword; renamed to 'input_val'.
+  - [CAST-ISSUE] cast() syntax inconsistent; used match-based helpers or multiplication by 1.0.
+Status: 30 files tested and committed. Build clean.
+
+## 2026-04-17 22:00 — 50 files committed (10 public, 40 premium)
+**Batches:**
+- Tier 1 (public): core/trit_gates_extended, core/ternary_inc_dec, std/math_constants, std/array_utils, tutorials/02_control_flow, tutorials/03_builtin_functions, tutorials/04_tensor_iteration, classical/factorial_ternary, classical/insertion_sort, classical/binary_search_ternary.
+- Tier 2 (premium): distributed/byzantine_consensus, distributed/node_election_gate, data/validation_pipeline, integrations/stripe_payout_mask, nlp/sentiment_consensus, safety/content_moderation_gate, rl/exploration_strategy_gate, distributed/load_balancer_gate, distributed/health_check_mask, data/feature_drift_detector, data/normalization_selector, integrations/aws_cost_monitor, nlp/named_entity_mask, nlp/stopword_filter_ternary, safety/pii_redaction_mask, safety/bias_mitigation_eval, rl/reward_shaping_consensus, distributed/shard_balance_mask, distributed/replication_factor_eval, data/outlier_detection_gate.
+- Tier 3 (premium): timeseries/moving_average_convergence, gametheory/nash_equilibrium_check, stats/standard_deviation_ternary, vision/kernel_convolution, bio/dna_transcription_gate, crypto/diffie_hellman_mock, hardware/ternary_alu_sim, research/hypothesis_test_gate, causal/intervention_bias_mask, sim/particle_collision_gate, nn/leaky_relu_ternary, scientific/thermodynamic_entropy_eval, systems/memory_fragmentation_gate, kernel/syscall_permission_mask, database/query_optimization_consensus, grid/load_shedding_gate, physical/stress_strain_consensus, math/matrix_determinant_2x2, logic/fuzzy_consensus_aggregator, net/qos_priority_gate.
+
+**Do not work in these categories next session:** core, std, tutorials, classical, distributed, data, integrations, nlp, safety, rl, timeseries, gametheory, stats, vision, bio, crypto, hardware, research, causal, sim, nn, scientific, systems, kernel, database, grid, physical, math, logic, net.
+
+**Compiler findings:**
+- len(string) triggers BET-007 (expected TensorRef).
+- Scientific notation (e-23) fails parser.
+- 'else if' triggers parse error.
+- Wildcard imports (from "x" import *) preferred for cross-module complexity.
+
+**Status:** 50 files verified and committed.
