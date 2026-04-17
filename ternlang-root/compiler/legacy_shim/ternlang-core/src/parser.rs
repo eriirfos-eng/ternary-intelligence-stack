@@ -653,14 +653,23 @@ impl<'a> Parser<'a> {
                     let on_neg  = Box::new(self.parse_block()?);
                     Ok(Stmt::WhileTernary { condition, on_pos, on_zero, on_neg })
                 } else {
-                    // Binary while: while cond { body }
-                    // Maps to WhileTernary(cond, body, Break, Break)
+                    // Binary while: while cond { body } [else { zero } else { neg }]
+                    // The else arms are optional — ? is not required for ternary while.
                     let body = Box::new(self.parse_block()?);
+                    let (on_zero, on_neg) = if let Ok(Token::Else) = self.peek_token() {
+                        self.next_token()?;
+                        let zero = Box::new(self.parse_block()?);
+                        self.expect(Token::Else)?;
+                        let neg = Box::new(self.parse_block()?);
+                        (zero, neg)
+                    } else {
+                        (Box::new(Stmt::Break), Box::new(Stmt::Break))
+                    };
                     Ok(Stmt::WhileTernary {
                         condition,
                         on_pos: body,
-                        on_zero: Box::new(Stmt::Break),
-                        on_neg: Box::new(Stmt::Break),
+                        on_zero,
+                        on_neg,
                     })
                 }
             }
