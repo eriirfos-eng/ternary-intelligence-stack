@@ -1,0 +1,28 @@
+// stdlib/core/ternary_statistics.tern
+// Demonstrates: Basic statistical analysis for ternary distributions
+// Tier: 1 — Open Core
+
+fn calculate_ternary_mean(data: trittensor<1>) -> float {
+    let sum: float = 0.0;
+    let i: int = 0;
+    while i < 10 {
+        sum = sum + (data[i] * 1.0);
+        i = i + 1;
+    }
+    return sum / 10.0;
+}
+
+fn main() -> trit {
+    // 10 element distribution
+    let data: trittensor<1> = [1, 1, 1, 0, 0, 0, -1, -1, -1, 1];
+    
+    let mean: float = calculate_ternary_mean(data);
+    print(" Ternary Mean: ");
+    print(mean);
+    
+    if mean > 0.0 {
+        return truth();
+    }
+    
+    return hold();
+}
