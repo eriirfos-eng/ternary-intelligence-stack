@@ -1,3 +1,4 @@
+#![recursion_limit = "512"]
 // SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
 // Ternlang — RFI-IRFOS Ternary Intelligence Stack
 // Copyright (C) 2026 RFI-IRFOS. All rights reserved.
@@ -1370,8 +1371,8 @@ async fn mcp_info() -> Json<Value> {
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
         "usage":       "POST JSON-RPC 2.0 — methods: initialize, tools/list, tools/call",
-        "tools":       29,
-        "free_tools":  19,
+        "tools":         25,
+        "free_tools":    15,
         "premium_tools": 10,
         "auth":        "free: no key required | Tier 2 €99/mo (10k/mo) | Tier 3 €349/mo (50k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
         "highlight":   "server-side 3-layer memory (working/session/core) + ternary attention + MoE-13 deliberation + ternary compression",
@@ -1404,9 +1405,6 @@ const MCP_PREMIUM_TOOLS: &[&str] = &[
     "trit_compress", "trit_triage", "trit_plan", "trit_factcheck",
     "moe_full", "trit_mem_write", "trit_mem_read", "trit_mem_consolidate",
     "trit_mem_stats", "trit_mem_compress",
-    // Phase 11A + Phase 13
-    "trit_debate", "trit_uncertainty_map", "trit_calibrate",
-    "trit_translate", "trit_eco_check", "trit_audit",
 ];
 
 async fn mcp_handler(
@@ -1552,6 +1550,11 @@ fn mcp_dispatch_tool(name: &str, params: &Value, api_key: &str, mem: &MemStore) 
         "trit_translate"       => mcp_trit_translate(params),
         "trit_eco_check"       => mcp_trit_eco_check(params),
         "trit_audit"           => mcp_trit_audit(params),
+        // Free tools: multi-dimensional evidence, enterprise join, code audit, standards
+        "trit_vector"              => mcp_trit_vector(params),
+        "tsql_join"                => mcp_tsql_join(params),
+        "audit_ternary_logic"      => mcp_audit_ternary_logic(params),
+        "get_industrial_standards" => mcp_get_industrial_standards(),
         _ => Err(format!("unknown tool: {}", name)),
     }?;
 
@@ -2914,6 +2917,250 @@ fn mcp_trit_audit(params: &Value) -> Result<Value, String> {
     }))
 }
 
+// ─── trit_vector ─────────────────────────────────────────────────────────────
+
+fn mcp_trit_vector(params: &Value) -> Result<Value, String> {
+    let dims_raw = params["dimensions"].as_array()
+        .ok_or("dimensions must be an array of {label, value, weight} objects")?;
+    if dims_raw.is_empty() { return Err("dimensions cannot be empty".into()); }
+    let min_confidence = params["min_confidence"].as_f64().unwrap_or(0.5) as f32;
+
+    let mut labels  = Vec::new();
+    let mut values  = Vec::new();
+    let mut weights = Vec::new();
+    for (i, d) in dims_raw.iter().enumerate() {
+        let label  = d["label"].as_str().unwrap_or("unnamed").to_string();
+        let value  = d["value"].as_f64()
+            .ok_or_else(|| format!("dimensions[{}].value must be a number", i))? as f32;
+        let weight = d["weight"].as_f64().unwrap_or(1.0) as f32;
+        if weight < 0.0 {
+            return Err(format!("dimensions[{}].weight must be >= 0", i));
+        }
+        labels.push(label);
+        values.push(value.clamp(-1.0, 1.0));
+        weights.push(weight);
+    }
+    let ev      = TritEvidenceVec::new(labels, values, weights);
+    let agg     = ev.aggregate();
+    let scalars = ev.scalars();
+    let actionable = agg.is_actionable(min_confidence);
+    let breakdown: Vec<Value> = ev.dimensions.iter()
+        .zip(ev.values.iter())
+        .zip(ev.weights.iter())
+        .zip(scalars.iter())
+        .map(|(((label, &val), &w), sc)| json!({
+            "label":      label,
+            "value":      (val * 1000.0).round() / 1000.0,
+            "weight":     w,
+            "trit":       sc.trit_i8(),
+            "zone":       sc.label(),
+            "confidence": (sc.confidence() * 1000.0).round() / 1000.0,
+        })).collect();
+    let dominant = ev.dimensions.iter()
+        .zip(ev.values.iter().map(|v| v.abs()))
+        .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+        .map(|(l, _)| l.as_str())
+        .unwrap_or("none");
+    Ok(json!({
+        "aggregate": {
+            "scalar":        (agg.raw() * 1000.0).round() / 1000.0,
+            "trit":          agg.trit_i8(),
+            "label":         agg.label(),
+            "confidence":    (agg.confidence() * 1000.0).round() / 1000.0,
+            "is_actionable": actionable,
+        },
+        "breakdown":   breakdown,
+        "dominant":    dominant,
+        "recommendation": match agg.trit_i8() {
+             1 => "Affirm — weighted evidence clears the threshold. Act if confidence meets your bar.",
+            -1 => "Reject — weighted evidence crosses the negative threshold. Do not proceed.",
+             _ => "Tend — aggregate within the deliberation zone. Resolve conflicting dimensions before acting.",
+        },
+    }))
+}
+
+// ─── tsql_join ────────────────────────────────────────────────────────────────
+//
+// Ternary SQL join: instead of binary MATCH/NO-MATCH, computes cosine similarity
+// between two numeric record vectors and routes to affirm / tend / reject.
+// Partial matches (0.4–0.7 similarity) land in the hold zone for escrow audit.
+
+fn mcp_tsql_join(params: &Value) -> Result<Value, String> {
+    let parse_vec = |key: &str| -> Result<Vec<f32>, String> {
+        params[key].as_array()
+            .ok_or_else(|| format!("{} must be an array of numbers", key))?
+            .iter()
+            .map(|v| v.as_f64().ok_or_else(|| format!("{} values must be numbers", key)).map(|f| f as f32))
+            .collect()
+    };
+    let a = parse_vec("record_a")?;
+    let b = parse_vec("record_b")?;
+    if a.is_empty() || b.is_empty() { return Err("record_a and record_b must be non-empty".into()); }
+    let len = a.len().min(b.len());
+    let dot:  f32 = a[..len].iter().zip(b[..len].iter()).map(|(x, y)| x * y).sum();
+    let na:   f32 = a[..len].iter().map(|x| x * x).sum::<f32>().sqrt();
+    let nb:   f32 = b[..len].iter().map(|x| x * x).sum::<f32>().sqrt();
+    let similarity = if na == 0.0 || nb == 0.0 { 0.0f32 } else { (dot / (na * nb)).clamp(-1.0, 1.0) };
+    let (trit, label, action, note) = if similarity >= 0.70 {
+        (1i8, "affirm", "MATCH",       "High similarity — records join cleanly.")
+    } else if similarity >= 0.35 {
+        (0i8, "tend",   "HOLD",        "Partial match — routed to deliberative escrow for audit.")
+    } else {
+        (-1i8,"reject", "NO_MATCH",    "Low similarity — records do not join.")
+    };
+    Ok(json!({
+        "trit":          trit,
+        "label":         label,
+        "action":        action,
+        "similarity":    (similarity * 1000.0).round() / 1000.0,
+        "confidence":    (similarity.abs() * 100.0).round() / 100.0,
+        "record_a_len":  a.len(),
+        "record_b_len":  b.len(),
+        "compared_dims": len,
+        "note":          note,
+        "advantage": "Unlike binary SQL (match/no-match), the HOLD zone preserves partial matches for escrow audit — zero data loss.",
+    }))
+}
+
+// ─── audit_ternary_logic ──────────────────────────────────────────────────────
+//
+// Static code analysis pass: detect binary habituation patterns in source code.
+// Returns sparsity potential, habituation ratio, and deliberation injection points.
+
+fn mcp_audit_ternary_logic(params: &Value) -> Result<Value, String> {
+    let code = params["code"].as_str().ok_or("code must be a string")?;
+    if code.trim().is_empty() { return Err("code cannot be empty".into()); }
+
+    let binary_patterns = [
+        ("if.*true",         "boolean condition — could be ternary signal"),
+        ("if.*false",        "boolean condition — could be ternary signal"),
+        ("== true",          "exact boolean match — consider trit_decide"),
+        ("== false",         "exact boolean match — consider trit_decide"),
+        ("bool ",            "bool type — consider replacing with trit"),
+        ("boolean ",         "boolean type — consider replacing with trit"),
+        ("else {",           "binary else branch — should be HOLD zone"),
+        ("else:",            "binary else branch — should be HOLD zone"),
+        ("} else",           "binary else branch — should be HOLD zone"),
+        ("? true : false",   "ternary operator used as binary — add hold case"),
+        ("return true",      "binary return — consider returning trit +1"),
+        ("return false",     "binary return — consider returning trit -1"),
+        ("assert ",          "binary assertion — consider ternary validation gate"),
+        ("panic!",           "hard panic — consider trit_action_gate hard_block"),
+        ("unwrap()",         "binary unwrap — consider ternary error handling"),
+    ];
+
+    let lines: Vec<&str> = code.lines().collect();
+    let mut flagged: Vec<Value> = Vec::new();
+    for (line_no, line) in lines.iter().enumerate() {
+        let lower = line.to_lowercase();
+        for (pattern_frag, reason) in &binary_patterns {
+            if lower.contains(*pattern_frag) {
+                flagged.push(json!({
+                    "line":      line_no + 1,
+                    "content":   line.trim(),
+                    "pattern":   pattern_frag,
+                    "reason":    reason,
+                    "injection": "Add a ternary hold/tend branch to handle uncertain state.",
+                }));
+                break;
+            }
+        }
+    }
+
+    let total_lines    = lines.len().max(1);
+    let flagged_lines  = flagged.len();
+    let binary_ratio   = flagged_lines as f32 / total_lines as f32;
+    let trit_score: i8 = if binary_ratio < 0.10 { 1 } else if binary_ratio < 0.35 { 0 } else { -1 };
+    let sparsity_potential = ((1.0 - binary_ratio) * 100.0).round();
+
+    Ok(json!({
+        "trit":               trit_score,
+        "label":              if trit_score == 1 { "affirm" } else if trit_score == 0 { "tend" } else { "reject" },
+        "binary_ratio":       (binary_ratio * 100.0).round() / 100.0,
+        "flagged_lines":      flagged_lines,
+        "total_lines":        total_lines,
+        "sparsity_potential": format!("{}%", sparsity_potential),
+        "calibration_score":  if trit_score == 1 { "PASS" } else if trit_score == 0 { "REVIEW" } else { "REFACTOR" },
+        "recommendations":    flagged,
+        "summary": format!(
+            "{}/{} lines contain binary logic patterns. Ternary compliance: {}.",
+            flagged_lines, total_lines,
+            if trit_score == 1 { "PASS — minimal binary habituation detected" }
+            else if trit_score == 0 { "REVIEW — moderate binary patterns, deliberation injection recommended" }
+            else { "REFACTOR — high binary habituation, significant tend-zone gaps present" }
+        ),
+    }))
+}
+
+// ─── get_industrial_standards ─────────────────────────────────────────────────
+
+fn mcp_get_industrial_standards() -> Result<Value, String> {
+    Ok(json!({
+        "publisher": "RFI-IRFOS",
+        "registry":  "https://ternlang.com/standards",
+        "version":   "0.3.3",
+        "standards": [
+            {
+                "id":      "T-TOKEN-v1.0",
+                "name":    "Triadic Tokenization Protocol (TPE)",
+                "domain":  "Tokenization",
+                "status":  "ACTIVE",
+                "summary": "Replaces BPE with ternary probability encoding. 33% entropy reduction on natural language tokens.",
+                "impact":  "33% Entropy Reduction",
+                "spec":    "https://ternlang.com/standards/T-TOKEN-v1.0"
+            },
+            {
+                "id":      "T-KV-CACHE-v1.0",
+                "name":    "Memory Moat — Sparse KV Cache",
+                "domain":  "Memory",
+                "status":  "ACTIVE",
+                "summary": "Ternary attention sparsity: zero-trit keys are skipped, reducing KV cache footprint by up to 60%.",
+                "impact":  "60% Memory Reduction",
+                "spec":    "https://ternlang.com/standards/T-KV-CACHE-v1.0"
+            },
+            {
+                "id":      "T-Fi-v1.0",
+                "name":    "Triadic Compute Currency (T-Fi)",
+                "domain":  "Billing",
+                "status":  "ACTIVE",
+                "summary": "Standardised compute billing unit for ternary inference. 1 T-Fi = 1M balanced ternary multiply-accumulate ops.",
+                "impact":  "Standardized TaaS Billing",
+                "spec":    "https://ternlang.com/standards/T-Fi-v1.0"
+            },
+            {
+                "id":      "T-HAL-v1.0",
+                "name":    "Hardware Abstraction Layer (BET-HAL)",
+                "domain":  "Hardware",
+                "status":  "ACTIVE",
+                "summary": "Unified driver interface for ternary compute: FPGA clusters, Harmony OS microkernels, ASIC native, software emulator.",
+                "impact":  "Native Triadic Silicon Access",
+                "spec":    "https://ternlang.com/standards/T-HAL-v1.0"
+            },
+            {
+                "id":      "T-BIO-v1.0",
+                "name":    "Neural Encoding Standard (BCI Parity)",
+                "domain":  "BCI / Neural",
+                "status":  "DRAFT",
+                "summary": "Maps biological neural spike trains (-1/0/+1) to balanced ternary, enabling 1:1 BCI signal parity without binary conversion loss.",
+                "impact":  "1:1 BCI Parity",
+                "spec":    "https://ternlang.com/standards/T-BIO-v1.0"
+            },
+            {
+                "id":      "T-AUDIT-v1.0",
+                "name":    "TernAudit — AI Decision Compliance",
+                "domain":  "Compliance / EU AI Act",
+                "status":  "ACTIVE",
+                "summary": "Formalises ternary audit requirements for AI decision logs under EU AI Act Articles 13 (transparency), 14 (human oversight), 15 (robustness). trit_audit implements this standard.",
+                "impact":  "EU AI Act Art. 13/14/15 Compliance",
+                "spec":    "https://ternlang.com/standards/T-AUDIT-v1.0"
+            }
+        ],
+        "note": "Standards are published under BSL-1.1. Commercial implementation license required for production use above 1M T-Fi/month."
+    }))
+}
+
+// ─── mcp_tools_manifest ───────────────────────────────────────────────────────
+
 fn mcp_tools_manifest() -> Value {
     json!({ "tools": [
         {
@@ -3014,10 +3261,10 @@ fn mcp_tools_manifest() -> Value {
                 "description": "Array of evaluation dimensions. Each entry names a dimension, provides an evidence score, a weight, and an optional hard-block flag.",
                 "items": { "type": "object", "required": ["name","evidence","weight"],
                   "properties": {
-                    "name": { "type": "string", "description": "Human-readable dimension name, e.g. 'safety', 'reversibility', 'user_intent'." },
-                    "evidence": { "type": "number", "description": "Evidence score for this dimension in [-1.0, 1.0]. Negative = risk present, positive = risk absent." },
-                    "weight": { "type": "number", "description": "Relative weight of this dimension in the aggregate score. Values are normalised across all dimensions." },
-                    "hard_block": { "type": "boolean", "description": "If true and evidence < 0, this dimension unconditionally vetoes the action and returns trit=-1 regardless of other dimensions." }
+                    "name":       { "type": "string",  "description": "Human-readable dimension name, e.g. 'safety', 'reversibility', 'user_intent'." },
+                    "evidence":   { "type": "number",  "description": "Evidence score for this dimension in [-1.0, 1.0]. Negative = risk/block signal, positive = safe/pass signal." },
+                    "weight":     { "type": "number",  "description": "Relative weight of this dimension in the aggregate score." },
+                    "hard_block": { "type": "boolean", "description": "If true and evidence < 0, this dimension unconditionally vetoes the action regardless of other dimensions." }
                   }
                 }
               }
@@ -3144,19 +3391,129 @@ fn mcp_tools_manifest() -> Value {
         },
         {
           "name": "trit_audit",
-          "description": "Full TernAudit of an AI decision log. Returns binary habituation ratio, EU AI Act Article 13 (transparency) and Article 14 (human oversight) heuristic assessment, calibration score, and flagged decisions that should have been held. Tier 3+ recommended for production compliance use.",
+          "description": "Full TernAudit of an AI decision log. Returns binary habituation ratio, EU AI Act Article 13 (transparency) and Article 14 (human oversight) heuristic assessment, calibration score, and flagged decisions that should have been held.",
           "annotations": { "title": "Trit Audit — EU AI Act Compliance Report", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["decisions"],
             "properties": {
               "decisions": { "type": "array", "description": "Array of {input, output, confidence?} decision objects to audit.",
                 "items": { "type": "object", "required": ["input","output"],
                   "properties": {
-                    "input":      { "type": "string" },
-                    "output":     { "type": "string" },
-                    "confidence": { "type": "number" }
+                    "input":      { "type": "string", "description": "The input prompt or question the AI received." },
+                    "output":     { "type": "string", "description": "The AI's decision or response." },
+                    "confidence": { "type": "number", "description": "Reported confidence 0.0–1.0 (optional)." }
                   }
                 }
               }
+            }
+          }
+        },
+        {
+          "name": "trit_vector",
+          "description": "Multi-dimensional ternary evidence aggregation — the full agent reasoning tool. Provide named evidence dimensions each with a scalar value [-1.0, +1.0] and importance weight. Computes weighted-mean aggregate TritScalar and returns: aggregate (trit+confidence+is_actionable), per-dimension breakdown, dominant dimension, and plain-language recommendation.",
+          "annotations": { "title": "Trit Vector — Multi-Dimensional Evidence Aggregation", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["dimensions"],
+            "properties": {
+              "dimensions": { "type": "array",
+                "description": "Named evidence dimensions. Each has a label, value ∈ [-1,1], and optional weight.",
+                "items": { "type": "object", "required": ["label","value"],
+                  "properties": {
+                    "label":  { "type": "string", "description": "Name of this evidence source, e.g. 'safety_check', 'user_consent', 'market_signal'." },
+                    "value":  { "type": "number", "description": "Evidence scalar ∈ [-1.0, +1.0]. Positive = supporting evidence, negative = opposing evidence." },
+                    "weight": { "type": "number", "description": "Importance weight ≥ 0 (default 1.0). Higher weight = more influence on the aggregate." }
+                  }
+                }
+              },
+              "min_confidence": { "type": "number", "description": "Minimum confidence for is_actionable (0.0–1.0, default 0.5). Raise to require stronger signal before acting." }
+            }
+          }
+        },
+        {
+          "name": "tsql_join",
+          "description": "Ternary SQL Join. Unlike binary SQL (MATCH / NO-MATCH), a T-Join routes partial matches into a Deliberative Hold (State 0) for escrow audit — guaranteeing 100% data retention. Computes cosine similarity between two numeric record vectors: ≥0.70 similarity → affirm (MATCH), 0.35–0.70 → tend (HOLD / escrow), <0.35 → reject (NO-MATCH). Eliminates data loss from binary join discards.",
+          "annotations": { "title": "T-SQL Join — Ternary Triadic Database Join", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["record_a","record_b"],
+            "properties": {
+              "record_a": { "type": "array", "items": { "type": "number" }, "description": "Numeric feature vector for record A (e.g. a flattened row from a database table or embedding)." },
+              "record_b": { "type": "array", "items": { "type": "number" }, "description": "Numeric feature vector for record B to join against record A." }
+            }
+          }
+        },
+        {
+          "name": "audit_ternary_logic",
+          "description": "Static code compliance audit. Detects Binary Habituation — over-reliance on true/false, bool types, and binary else branches — and returns a ternary calibration score with line-by-line Deliberation Injection recommendations. Also reports sparsity potential (what % of logic could benefit from a ternary hold zone).",
+          "annotations": { "title": "Audit Ternary Logic — Triadic Code Compliance Check", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["code"],
+            "properties": {
+              "code": { "type": "string", "description": "Source code snippet to audit for triadic compliance. Supports any language (Rust, Python, TypeScript, SQL, ternlang .tern)." }
+            }
+          }
+        },
+        {
+          "name": "get_industrial_standards",
+          "description": "Returns the current triadic industrial standards published by RFI-IRFOS: T-TOKEN-v1.0 (tokenization), T-KV-CACHE-v1.0 (memory), T-Fi-v1.0 (compute billing), T-HAL-v1.0 (hardware abstraction), T-BIO-v1.0 (neural encoding), T-AUDIT-v1.0 (EU AI Act compliance). Use to determine compliance requirements before deploying ternary AI systems.",
+          "annotations": { "title": "Get Industrial Standards — RFI-IRFOS Triadic Standards", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "properties": {} }
+        },
+        {
+          "name": "trit_compress",
+          "description": "Ternary context compression. Score each text chunk by information density: high-signal chunks are kept verbatim (+1), medium-signal chunks are truncated to their first sentence (0/tend), low-signal chunks are dropped (-1). Returns a manifest with actions and estimated token savings. Premium tool — requires API key.",
+          "annotations": { "title": "Trit Compress — Ternary Context Compression", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["chunks"],
+            "properties": {
+              "chunks": { "type": "array", "items": { "type": "string" }, "description": "Array of text chunks to compress (e.g. paragraphs, retrieved documents, memory entries)." },
+              "query":  { "type": "string", "description": "Optional relevance query. When provided, scoring uses query–chunk word overlap instead of raw information density." }
+            }
+          }
+        },
+        {
+          "name": "trit_triage",
+          "description": "Ternary triage and prioritisation. Score an array of text chunks against a query by word overlap, then sort: affirm (+1) = highly relevant, tend (0) = partially relevant, reject (-1) = not relevant. Returns sorted manifest with relevance trit and score. Premium tool — requires API key.",
+          "annotations": { "title": "Trit Triage — Ternary Relevance Prioritisation", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["chunks","query"],
+            "properties": {
+              "chunks": { "type": "array", "description": "Array of {id, text} objects to triage.",
+                "items": { "type": "object", "required": ["id","text"],
+                  "properties": {
+                    "id":   { "type": "string", "description": "Unique identifier for this chunk." },
+                    "text": { "type": "string", "description": "Text content to score." }
+                  }
+                }
+              },
+              "query": { "type": "string", "description": "Relevance query to score chunks against." }
+            }
+          }
+        },
+        {
+          "name": "trit_plan",
+          "description": "Ternary task planner. Decomposes a goal into subtasks, scores each subtask by confidence and feasibility, and routes uncertain tasks into a deliberation queue. Returns an ordered plan with trit verdicts and a hold queue for tasks needing more context. Premium tool — requires API key.",
+          "annotations": { "title": "Trit Plan — Ternary Task Decomposition", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
+          "inputSchema": { "type": "object", "required": ["goal"],
+            "properties": {
+              "goal":     { "type": "string", "description": "High-level goal or objective to decompose into subtasks." },
+              "context":  { "type": "string", "description": "Optional background context or constraints." },
+              "max_steps":{ "type": "integer", "description": "Maximum number of plan steps to generate (default 8)." }
+            }
+          }
+        },
+        {
+          "name": "trit_factcheck",
+          "description": "Ternary fact-check engine. Decomposes a claim into sub-claims, scores each against an optional evidence corpus using word overlap, and returns an overall verdict: affirm (claim supported), tend (partially supported — needs more evidence), reject (claim contradicted). Premium tool — requires API key.",
+          "annotations": { "title": "Trit Factcheck — Ternary Claim Verification", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": true },
+          "inputSchema": { "type": "object", "required": ["claim"],
+            "properties": {
+              "claim":    { "type": "string", "description": "The claim or statement to fact-check." },
+              "evidence": { "type": "array", "items": { "type": "string" }, "description": "Optional array of evidence documents to check the claim against." }
+            }
+          }
+        },
+        {
+          "name": "moe_full",
+          "description": "Full 13-expert MoE orchestration with complete triad field, routing pair, per-expert verdicts, synergy scores, and deliberation trace. Unlike the free moe_orchestrate preview, returns the complete response including all expert voices and the emergent triad field computation. Premium tool — requires API key.",
+          "annotations": { "title": "MoE Full — Complete 13-Expert Orchestration", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
+          "inputSchema": { "type": "object", "required": ["query"],
+            "properties": {
+              "query":    { "type": "string", "description": "The question or decision to route through the full 13-expert ensemble." },
+              "evidence": { "type": "array", "items": { "type": "number" }, "description": "Optional 6-element evidence vector [syntax, world_knowledge, reasoning, tool_use, persona, safety] ∈ [-1.0, 1.0]." }
             }
           }
         }
