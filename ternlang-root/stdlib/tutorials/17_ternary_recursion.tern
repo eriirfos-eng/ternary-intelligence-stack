@@ -1,0 +1,22 @@
+// stdlib/tutorials/17_ternary_recursion.tern
+// Demonstrates: Recursive function calls in Ternlang.
+// Tier: 1
+
+fn factorial(n: int) -> int {
+    if n <= 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+fn main() -> trit {
+    let res: int = factorial(5);
+    println("Factorial(5) = "); println(res);
+    
+    if res == 120 {
+        println("Recursion functional.");
+        return truth();
+    }
+    
+    return conflict();
+}
