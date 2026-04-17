@@ -1,0 +1,30 @@
+// stdlib/tutorials/02_control_flow.tern
+// Demonstrates: Ternary control flow — if, else, and while loops.
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let a: trit = affirm;
+    let b: trit = reject;
+    
+    // Simple if-else
+    if a == affirm {
+        print("A is affirm");
+    } else {
+        print("A is not affirm");
+    }
+    
+    // Iterative logic with while
+    let i: int = 0;
+    while i < 3 {
+        print("Loop index: ");
+        print(i);
+        i = i + 1;
+    }
+    
+    // Ternary conditional logic
+    if a == affirm && b == reject {
+        return affirm;
+    }
+    
+    return tend;
+}
