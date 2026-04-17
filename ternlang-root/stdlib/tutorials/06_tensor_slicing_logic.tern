@@ -1,0 +1,26 @@
+// stdlib/tutorials/06_tensor_slicing_logic.tern
+// Demonstrates: Flat tensor indexing and pseudo-slicing logic
+// Tier: 1
+
+fn get_slice_sum(t: trit[], start: int, end: int) -> int {
+    let sum: int = 0;
+    // Note: for loops on tensors use 'in' keyword for values
+    // For index-based iteration, we use standard while/if
+    let i: int = start;
+    while i < end {
+        sum = sum + t[i];
+        i = i + 1;
+    }
+    return sum;
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [1, 1, 0, -1, -1];
+    let slice_sum: int = get_slice_sum(data, 0, 3);
+    
+    if slice_sum == 2 {
+        print("Slice sum (indices 0-2) is 2: PASS");
+        return truth();
+    }
+    return conflict();
+}
