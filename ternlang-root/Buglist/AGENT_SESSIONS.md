@@ -551,3 +551,25 @@ Findings:
 - len(string) triggers BET-007.
 - 2D tensor syntax is trittensor<R x C> with flat access.
 - 2D literals must be flat.
+
+---
+
+## 2026-04-17 — v1.0.0 RELEASE SESSION (8 compiler fixes + stable release)
+
+Batches: N/A — this was a compiler fix + release session.
+
+Compiler fixes:
+- PARSER-MATCH-001: wildcard `_` match arm — ast.rs, parser.rs, betbc.rs, tern_asm.rs, semantic.rs
+- COMP-TRIT-001: `hold` keyword not tokenized — lexer.rs + betbc.rs Expr::Ident handler
+- PARSER-003: float[N] / int[N] typed tensors — parser.rs (dim in brackets), vm/mod.rs (TensorData enum, TALLOC_Int 0x3c, TALLOC_Float 0x3d, TIDX/TSET updated), betbc.rs (emit correct opcode + fix zero-init check)
+- SCALAR-TRIT-001: scalar trit saturation — TjmpPos/Zero/Neg now use >0/>0/<0 not exact Int(±1/0)
+- LEN-STRING-001: len(string) — TSHAPE (0x24) extended to handle Value::String
+- PARSER-003b: else if chains (previous session) — already committed
+- PARSER-003c: while-else-else without ? (previous session) — already committed
+- STDLIB_AGENT.md: targeted coverage check protocol (previous session) — already committed
+
+Release:
+- v1.0.0 tagged on GitHub: https://github.com/eriirfos-eng/ternary-intelligence-stack/releases/tag/v1.0.0
+- Published to crates.io: ternlang-core, ternlang-hdl, ternlang-ml, ternlang-moe, ternlang-compat, ternlang-lsp, ternlang-runtime, ternlang-cli (all v1.0.0)
+- Published to Open VSX: rfi-irfos.ternlang-vscode v1.0.0
+- MCP server: ternlang-mcp v1.0.0 (Smithery, already published previous session)
