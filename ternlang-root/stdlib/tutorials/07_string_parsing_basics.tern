@@ -1,0 +1,36 @@
+// stdlib/tutorials/07_string_parsing_basics.tern
+// Demonstrates: Basic string comparison and presence checks
+// Tier: 1
+
+fn is_empty(s: string) -> trit {
+    if s == "" {
+        return truth();
+    }
+    return conflict();
+}
+
+fn compare_identifiers(id1: string, id2: string) -> trit {
+    if id1 == id2 {
+        return affirm;
+    }
+    return reject;
+}
+
+fn main() -> trit {
+    let s1: string = "ternary";
+    let s2: string = "ternary";
+    
+    if compare_identifiers(s1, s2) == affirm {
+        print("Strings match: PASS");
+    } else {
+        return conflict();
+    }
+    
+    if is_empty("") == affirm {
+        print("Empty string detected: PASS");
+    } else {
+        return conflict();
+    }
+    
+    return truth();
+}
