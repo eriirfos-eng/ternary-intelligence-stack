@@ -1,0 +1,45 @@
+// stdlib/showcase/lorenz_attractor_ternary.tern
+// Demonstrates: Ternary simulation of Lorenz chaotic system
+// Tier: 1 — Open Core
+
+fn update_lorenz(x: float, y: float, z: float, dt: float) -> float {
+    // Sigma = 10.0, Rho = 28.0, Beta = 8.0/3.0
+    let dx: float = 10.0 * (y - x);
+    let dy: float = x * (28.0 - z) - y;
+    let dz: float = x * y - (8.0 / 3.0) * z;
+    
+    // Return magnitude of delta to check stability
+    return (dx + dy + dz) * dt;
+}
+
+fn main() -> trit {
+    let x: float = 0.1;
+    let y: float = 0.0;
+    let z: float = 0.0;
+    let dt: float = 0.01;
+    
+    let i: int = 0;
+    while i < 10 {
+        let dx: float = 10.0 * (y - x);
+        let dy: float = x * (28.0 - z) - y;
+        let dz: float = x * y - (8.0 / 3.0) * z;
+        
+        x = x + dx * dt;
+        y = y + dy * dt;
+        z = z + dz * dt;
+        
+        print(" Lorenz step ");
+        print(i);
+        print(": x=");
+        print(x);
+        
+        i = i + 1;
+    }
+    
+    // Check if system is moving (chaotic behavior)
+    if (x + y + z) != 0.0 {
+        return truth();
+    } else {
+        return hold();
+    }
+}
