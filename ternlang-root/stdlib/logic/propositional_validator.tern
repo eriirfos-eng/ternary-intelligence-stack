@@ -1,0 +1,43 @@
+// stdlib/logic/propositional_validator.tern
+// Demonstrates: Ternary propositional logic evaluation using match statements.
+// Tier: 1
+
+fn evaluate_proposal(p: trit, q: trit) -> trit {
+    // Basic ternary implication: p -> q
+    let res: trit = 0;
+    match p {
+        1 => {
+            match q {
+                1  => { res = 1; }
+                0  => { res = 0; }
+                -1 => { res = -1; }
+            }
+        }
+        0 => {
+            match q {
+                1  => { res = 1; }
+                0  => { res = 0; }
+                -1 => { res = 0; }
+            }
+        }
+        -1 => {
+            res = 1; // Material implication vacuum truth
+        }
+    }
+    return res;
+}
+
+fn main() -> trit {
+    let p_val: trit = 1;
+    let q_val: trit = 0;
+    let result: trit = evaluate_proposal(p_val, q_val);
+    
+    match result {
+        1  => { println("Proposal affirmed"); }
+        0  => { println("Proposal in progress"); }
+        -1 => { println("Proposal rejected"); }
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
