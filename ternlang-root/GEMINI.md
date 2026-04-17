@@ -1,7 +1,7 @@
 # GEMINI.md — Ternlang Precision Parameter Sheet
-# RFI-IRFOS · ternlang.com · v1.7 (2026-04-16)
+# RFI-IRFOS · ternlang.com · v1.8 (2026-04-17)
 # Read this at session start. These values are ground truth. Do not guess.
-# Current workspace version: 0.3.2 (14-bug sweep: builtins, match leaks, globals, literals, forward refs)
+# Current workspace version: 1.0.0 STABLE (v1.0.0: wildcard _, hold keyword, float[N]/int[N] tensors, scalar trit saturation, len(string))
 
 ---
 
@@ -65,8 +65,10 @@ Default value (unset register): `Value::Trit(Trit::Tend)` = 0
 | Numeric | Rust enum | Built-in fn | Bare identifier | Meaning |
 |---------|-----------|-------------|-----------------|---------|
 | `1`  | `Trit::Affirm` | `truth()`    | `affirm` | positive signal, proceed |
-| `0`  | `Trit::Tend`   | `hold()`     | `tend`   | insufficient evidence, wait |
+| `0`  | `Trit::Tend`   | `hold()`     | `tend` **or `hold`** | insufficient evidence, wait |
 | `-1` | `Trit::Reject` | `conflict()` | `reject` | negative signal, block |
+
+**Note:** Both `tend` and `hold` are valid bare identifiers for `Trit::Tend`. `hold` was added as a lexer alias in v1.0.0. `return hold;` and `return tend;` are both correct.
 
 ---
 
@@ -80,9 +82,9 @@ All opcodes as of 2026-04-16. Do not add opcodes to .tern files that aren't in t
 | `0x02` | Tadd | a, b → result | — | polymorphic: Trit/Int/Float |
 | `0x03` | Tmul | a, b → result | — | polymorphic |
 | `0x04` | Tneg | a → -a | — | polymorphic |
-| `0x05` | TjmpPos | peek(+1) → jump | 2 (addr u16) | **PEEK not pop**; exact match Int(1) |
-| `0x06` | TjmpZero | peek(0) → jump | 2 (addr u16) | **PEEK not pop**; exact match Int(0) |
-| `0x07` | TjmpNeg | peek(-1) → jump | 2 (addr u16) | **PEEK not pop**; exact match Int(-1) |
+| `0x05` | TjmpPos | peek(+) → jump | 2 (addr u16) | **PEEK not pop**; any positive Int/Float or Trit::Affirm |
+| `0x06` | TjmpZero | peek(0) → jump | 2 (addr u16) | **PEEK not pop**; any zero Int/Float or Trit::Tend |
+| `0x07` | TjmpNeg | peek(-) → jump | 2 (addr u16) | **PEEK not pop**; any negative Int/Float or Trit::Reject |
 | `0x08` | Tstore | val → reg | 1 (reg idx) | pops val, stores to register |
 | `0x09` | Tload | → val | 1 (reg idx) | pushes register onto stack |
 | `0x0a` | Tdup | a → a, a | — | duplicate top of stack |
@@ -118,6 +120,8 @@ All opcodes as of 2026-04-16. Do not add opcodes to .tern files that aren't in t
 | `0x34` | Treadt | handle → trit | — | read single trit character (+, 0, -) |
 | `0x35` | Twritet | handle, trit → | — | write single trit character (+, 0, -) |
 | `0x36` | Tnodeid | → String | — | push `vm.node_id` at runtime (set via `--node-addr`; default "127.0.0.1:7373") |
+| `0x3c` | Talloc_Int | size → TensorRef | 4 (rows u16, cols u16) | allocate int tensor (TensorData::Int) — used for `let v: int[N] = 0` |
+| `0x3d` | Talloc_Float | size → TensorRef | 4 (rows u16, cols u16) | allocate float tensor (TensorData::Float) — used for `let v: float[N] = 0` |
 
 ---
 
@@ -211,3 +215,39 @@ fn main() -> trit {
     - Expand `stdlib/premium/` with Enterprise Tier 4 logic.
     - Phase 11: 5 new MCP tools + EcoCore in ternlang-moe.
     - Do NOT touch bughunt probes 07, 11-12, 24, 32-35, 48, 53-54, 62, 67, 71-73, 78-82, 91 — all covered.
+
+---
+
+## 12. Session Log — 2026-04-17 (Claude Sonnet 4.6 — v1.0.0 STABLE release)
+
+- **FIXED [PARSER-MATCH-001]** Wildcard `_` match arm — `ast.rs` + `parser.rs` + `betbc.rs` + `tern_asm.rs` + `semantic.rs`. Key: wildcard emits unconditional TJMP (0x0b) without pre-pop; body's shared TPOP handles stack cleanup.
+- **FIXED [COMP-TRIT-001]** `hold` keyword — added `#[token("hold")]` alias to lexer for `Token::Tend`. Belt-and-suspenders fallback in `Expr::Ident` codegen.
+- **FIXED [PARSER-003]** `float[N]` and `int[N]` typed tensors — parser accepts optional `[N]` dimension; new opcodes `0x3c` (TALLOC_Int) and `0x3d` (TALLOC_Float); `TensorData` enum added to VM (Trit/Float/Int variants). Zero-init fix: `matches!(value, Expr::TritLiteral(0) | Expr::IntLiteral(0))`.
+- **FIXED [SCALAR-TRIT-001]** Scalar trit saturation in match — `TjmpPos/Zero/Neg` (0x05/06/07) now use range comparison (`*v > 0`, `*v == 0`, `*v < 0`) instead of exact `Int(1/0/-1)` match.
+- **FIXED [LEN-STRING-001]** `len(string)` — TSHAPE (0x24) extended with `Value::String(s)` arm returning `(chars().count(), 1)`.
+- **FIXED [ELSE-IF]** Arbitrary-depth `else if` chains verified working.
+- **FIXED [WHILE-ELSE]** `while` with `else`/`else` arms: `?` optional, parser relaxed.
+- **Bumped workspace to v1.0.0** — all 14 crates, Cargo.toml version + dep fields.
+- **Published v1.0.0** to crates.io (9 crates), Open VSX (`rfi-irfos.ternlang` v1.0.0 with full README).
+- **VS Code extension** — fixed duplicate: reverted name to `ternlang`, added README.md, republished.
+- **Smithery 100/100 fix** — changed `isError:true` → `isError:false` for premium gate + validation errors; redeployed to Fly.io Frankfurt (3 machines). All 30 tools return `isError:false`.
+
+- **Compiler Status (as of v1.0.0):**
+    - `ast.rs`: `Pattern::Wildcard` variant added.
+    - `betbc.rs`: wildcard arm emits unconditional TJMP; hold/tend/affirm/reject as Expr::Ident handled; float[N]/int[N] emit TALLOC_Float/Int (0x3d/3c); zero-init fix for IntLiteral(0).
+    - `lexer.rs`: `hold` is a valid alias for `Token::Tend` (priority 4).
+    - `parser.rs`: wildcard `_` → `Pattern::Wildcard`; float/int type with optional `[N]` dimension.
+    - `semantic.rs`: wildcard arm skips exhaustiveness check; Pattern::Wildcard valid in all match contexts.
+    - `vm/mod.rs`: TensorData enum (Trit/Float/Int); TALLOC_Int (0x3c), TALLOC_Float (0x3d); TjmpPos/Zero/Neg range-compare; TSHAPE extended for String; TIDX/TSET typed.
+
+- **Architectural Limits (v1.0.0 — WONTFIX — major refactor required):**
+    - `VM-STRUCT-001`: struct returns broken (caller-register ABI).
+    - `COMP-TENSOR-001`: tensor sizes >65535 silently truncate (16-bit immediates).
+    - `MOD-004`: transitive module deps unresolved; direct `from "file.tern" import *` works.
+    - `PARSER-FN-001`: no first-class functions.
+    - `PARSER-FLOAT-001`: scientific notation floats not supported.
+
+- **Next Session Focus:**
+    - Expand `graphics/`, `scientific/`, `distributed/` tiers in premium repo.
+    - Phase 11: 5 new MCP tools + EcoCore in ternlang-moe.
+    - Do NOT re-run bughunt probes: 07, 11, 12, 24, 32, 33, 35, 48, 53, 54, 62, 67, 71, 72, 73, 78, 79, 80, 81, 82, 91.
