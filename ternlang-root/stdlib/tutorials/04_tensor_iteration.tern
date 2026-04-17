@@ -1,0 +1,26 @@
+// stdlib/tutorials/04_tensor_iteration.tern
+// Demonstrates: Iterating over trit tensors.
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let data: trit[] = [affirm, tend, reject];
+    
+    print("Iterating over tensor:");
+    for t in data {
+        print("Value: ");
+        print(t);
+    }
+    
+    // Check if we can find 'affirm'
+    let found: trit = reject;
+    for t in data {
+        if t == affirm {
+            found = affirm;
+        }
+    }
+    
+    if found == affirm {
+        return affirm;
+    }
+    return reject;
+}
