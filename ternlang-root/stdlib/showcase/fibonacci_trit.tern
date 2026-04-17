@@ -1,0 +1,36 @@
+// stdlib/showcase/fibonacci_trit.tern
+// Demonstrates: Iterative calculation, integer arithmetic, and ternary exit condition.
+// Tier: 1
+
+fn fib(n: int) -> int {
+    if n <= 1 {
+        return n;
+    }
+    
+    let a: int = 0;
+    let b: int = 1;
+    let i: int = 2;
+    
+    while i <= n {
+        let temp: int = a + b;
+        a = b;
+        b = temp;
+        i = i + 1;
+    }
+    
+    return b;
+}
+
+fn main() -> trit {
+    let result: int = fib(10);
+    print("Fibonacci(10) = ");
+    println(result);
+    
+    if result == 55 {
+        println("Calculation correct.");
+        return truth();
+    } else {
+        println("Calculation failed.");
+        return conflict();
+    }
+}
