@@ -1,0 +1,20 @@
+// stdlib/classical/factorial_ternary.tern
+// Demonstrates: Recursive factorial calculation.
+// Tier: 1 — Open Core
+
+fn factorial(n: int) -> int {
+    if n <= 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+fn main() -> trit {
+    let res: int = factorial(5); // 120
+    print("Factorial(5) = "); print(res);
+    
+    if res == 120 {
+        return affirm;
+    }
+    return reject;
+}
