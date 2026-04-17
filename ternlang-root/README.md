@@ -18,8 +18,6 @@ Ternlang is a systems programming language and ML inference runtime built on bal
 
 Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
-→ **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
-
 ---
 
 ## Our Mission: Post-Binary Sovereignty
@@ -42,6 +40,7 @@ Ternlang adds the third state.
 
 The `tend` state is not indecision. It is a **first-class routing instruction** — a computational directive to remain in deliberation until evidence crosses a threshold. This makes ternlang the natural foundation for AI agents that must reason honestly under uncertainty.
 
+→ **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
 ---
 
 ## What's in This Repository
