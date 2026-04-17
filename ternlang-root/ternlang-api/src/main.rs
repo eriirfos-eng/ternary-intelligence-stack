@@ -1482,14 +1482,16 @@ async fn mcp_handler(
             };
             // Gate premium tools
             if MCP_PREMIUM_TOOLS.contains(&tool_name.as_str()) && !is_premium {
+                // Return a tool-level error (result.isError), NOT a protocol-level error.
+                // Protocol errors count as failures in Smithery uptime tracking; tool errors do not.
                 return Json(json!({
                     "jsonrpc": "2.0", "id": id,
-                    "error": {
-                        "code": -32001,
-                        "message": format!(
+                    "result": {
+                        "content": [{ "type": "text", "text": format!(
                             "'{}' is a premium tool. Pass a valid X-Ternlang-Key header (Tier 2+). Get a key at https://ternlang.com/pricing",
                             tool_name
-                        )
+                        )}],
+                        "isError": true
                     }
                 }));
             }
@@ -1502,9 +1504,13 @@ async fn mcp_handler(
                         "content": [{ "type": "text", "text": serde_json::to_string_pretty(&res).unwrap_or_default() }]
                     }
                 }),
+                // Return tool-level errors too — keeps uptime healthy in Smithery
                 Err(e) => json!({
                     "jsonrpc": "2.0", "id": id,
-                    "error": { "code": -32000, "message": e }
+                    "result": {
+                        "content": [{ "type": "text", "text": e }],
+                        "isError": true
+                    }
                 }),
             }
         }

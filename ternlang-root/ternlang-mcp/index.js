@@ -504,7 +504,7 @@ export async function createSandboxServer(config = {}) {
   const server = new Server(
     {
       name: "ternlang-mcp",
-      version: "0.3.3",
+      version: "1.0.0",
     },
     {
       capabilities: { tools: {} },

@@ -1,9 +1,35 @@
 {
   "name": "@rfi-irfos/ternlang-mcp",
-  "version": "0.3.3",
-  "description": "Ternary Intelligence Stack MCP server",
+  "version": "1.0.0",
+  "description": "Ternary Intelligence Stack — MCP server that adds a third state (hold/tend) to any AI agent's decision-making. 19 tools for ternary reasoning, evidence aggregation, MoE-13 orchestration, and EU AI Act compliance.",
+  "main": "index.js",
   "module": "index.js",
   "type": "module",
+  "homepage": "https://ternlang.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-"
+  },
+  "license": "BSL-1.1",
+  "keywords": [
+    "mcp",
+    "ternary",
+    "balanced-ternary",
+    "trit",
+    "ai-reasoning",
+    "decision-making",
+    "mixture-of-experts",
+    "ai-safety",
+    "sparse-inference",
+    "BitNet",
+    "eu-ai-act",
+    "explainable-ai"
+  ],
+  "author": {
+    "name": "RFI-IRFOS",
+    "email": "rfi.irfos@gmail.com",
+    "url": "https://ternlang.com"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"
   }
