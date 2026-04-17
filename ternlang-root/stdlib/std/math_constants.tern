@@ -1,0 +1,29 @@
+// stdlib/std/math_constants.tern
+// Demonstrates: Math constants and float comparison utilities.
+// Tier: 1 — Open Core
+
+let PI: float = 3.14159265358979323846;
+let E: float = 2.71828182845904523536;
+
+fn is_close(a: float, b: float, epsilon: float) -> trit {
+    let diff: float = a - b;
+    if diff < 0.0 {
+        diff = -diff;
+    }
+    
+    if diff < epsilon {
+        return affirm;
+    }
+    return reject;
+}
+
+fn main() -> trit {
+    let my_pi: float = 3.14159;
+    let res: trit = is_close(PI, my_pi, 0.0001);
+    
+    match res {
+        1 => { return affirm; }
+        0 => { return tend;   }
+       -1 => { return reject; }
+    }
+}
