@@ -1,0 +1,31 @@
+// stdlib/errors/type_mismatch_aggregator.tern
+// Demonstrates: Ternary error aggregation and logical grouping
+// Tier: 1
+
+fn aggregate_errors(e1: trit, e2: trit) -> trit {
+    // Both must be affirm (no error) for truth()
+    // If either is conflict() or tend(), it propagates the most negative state
+    return consensus(e1, e2);
+}
+
+fn validate_type(actual: trit, expected: trit) -> trit {
+    if actual == expected {
+        return truth();
+    }
+    return conflict();
+}
+
+fn main() -> trit {
+    let t1: trit = validate_type(affirm, affirm);
+    let t2: trit = validate_type(reject, affirm);
+    
+    let total_status: trit = aggregate_errors(t1, t2);
+    
+    match total_status {
+        affirm => { print("Validation passed"); }
+        tend   => { print("Validation caution"); }
+        reject => { print("Validation failure"); }
+    }
+    
+    return total_status;
+}
