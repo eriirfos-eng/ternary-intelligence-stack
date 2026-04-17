@@ -1,5 +1,5 @@
 {
-  "name": "ternlang-vscode",
+  "name": "ternlang",
   "displayName": "Ternlang",
   "description": "Syntax highlighting, diagnostics, and run commands for the Ternlang balanced ternary language (.tern files). Powered by the BET VM and the ternlang CLI.",
   "version": "1.0.0",
