@@ -1,0 +1,32 @@
+// stdlib/logic/ternary_mux.tern
+// Demonstrates: 3-to-1 ternary multiplexer logic.
+// Tier: 1
+
+fn mux_3to1(inputs: trittensor<3>, select: trit) -> trit {
+    let result: trit = 0;
+    match select {
+        -1 => { result = inputs[0]; }
+        0  => { result = inputs[1]; }
+        1  => { result = inputs[2]; }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let data: trittensor<3>;
+    data[0] = -1;
+    data[1] = 0;
+    data[2] = 1;
+    
+    let sel: trit = 1;
+    let selected: trit = mux_3to1(data, sel);
+    
+    match selected {
+        1  => { println("Selected: Affirm"); }
+        0  => { println("Selected: Hold");   }
+        -1 => { println("Selected: Reject"); }
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
