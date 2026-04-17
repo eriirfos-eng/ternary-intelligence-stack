@@ -1,0 +1,27 @@
+// stdlib/tutorials/03_builtin_functions.tern
+// Demonstrates: Using built-in math functions.
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    // abs() - works on int and float
+    let a: int = -42;
+    let b: int = abs(a);
+    print("abs(-42) = "); print(b);
+    
+    // min() and max()
+    let x: int = 10;
+    let y: int = 20;
+    print("min(10, 20) = "); print(min(x, y));
+    print("max(10, 20) = "); print(max(x, y));
+    
+    // pow()
+    let base: int = 2;
+    let exponent: int = 8;
+    print("2^8 = "); print(pow(base, exponent));
+    
+    if b == 42 && min(x, y) == 10 && pow(2, 3) == 8 {
+        return affirm;
+    }
+    
+    return reject;
+}
