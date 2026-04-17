@@ -1,0 +1,30 @@
+// stdlib/tutorials/05_nested_match_depth.tern
+// Demonstrates: Deep matching patterns and nested match arms
+// Tier: 1
+
+fn evaluate_3d(x: trit, y: trit, z: trit) -> trit {
+    match x {
+        affirm => {
+            match y {
+                affirm => { return z; }
+                tend   => { return tend; }
+                reject => { return reject; }
+            }
+        }
+        tend => {
+            return tend;
+        }
+        reject => {
+            return reject;
+        }
+    }
+}
+
+fn main() -> trit {
+    let result: trit = evaluate_3d(affirm, affirm, reject);
+    if result == reject {
+        print("Nested match path (1, 1, -1) -> -1: PASS");
+        return truth();
+    }
+    return conflict();
+}
