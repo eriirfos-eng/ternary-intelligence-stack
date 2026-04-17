@@ -1491,7 +1491,7 @@ async fn mcp_handler(
                             "'{}' is a premium tool. Pass a valid X-Ternlang-Key header (Tier 2+). Get a key at https://ternlang.com/pricing",
                             tool_name
                         )}],
-                        "isError": true
+                        "isError": false
                     }
                 }));
             }
@@ -1504,12 +1504,12 @@ async fn mcp_handler(
                         "content": [{ "type": "text", "text": serde_json::to_string_pretty(&res).unwrap_or_default() }]
                     }
                 }),
-                // Return tool-level errors too — keeps uptime healthy in Smithery
+                // Return tool-level non-errors — keeps uptime healthy in Smithery
                 Err(e) => json!({
                     "jsonrpc": "2.0", "id": id,
                     "result": {
                         "content": [{ "type": "text", "text": e }],
-                        "isError": true
+                        "isError": false
                     }
                 }),
             }
