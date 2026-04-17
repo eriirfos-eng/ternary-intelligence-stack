@@ -1,0 +1,25 @@
+// stdlib/testing/overflow_saturation_test.tern
+// Demonstrates: Automatic trit saturation from integer values
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    // Tensors automatically saturate to trits
+    let t: trittensor<2> = [0, 0];
+    
+    t[0] = 5;
+    t[1] = -10;
+    
+    let b: trit = t[0]; 
+    let d: trit = t[1];
+    
+    print(" Saturation test (5 -> tensor -> trit): "); print(b);
+    print(" Saturation test (-10 -> tensor -> trit): "); print(d);
+    
+    if b == affirm {
+        if d == reject {
+            return truth();
+        }
+    }
+    
+    return conflict();
+}
