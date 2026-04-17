@@ -175,10 +175,17 @@ impl CTranspiler {
                 self.push(&format!("switch ((int){cond}) {{\n"));
                 self.indent += 1;
                 for (pattern, arm) in arms {
+                    if matches!(pattern, Pattern::Wildcard) {
+                        self.push("default: ");
+                        self.emit_stmt(arm);
+                        self.push("break;\n");
+                        continue;
+                    }
                     let val = match pattern {
                         Pattern::Int(v) => *v,
                         Pattern::Trit(t) => *t as i64,
                         Pattern::Float(f) => *f as i64,
+                        Pattern::Wildcard => unreachable!(),
                     };
                     self.push(&format!("case {val}: "));
                     self.emit_stmt(arm);

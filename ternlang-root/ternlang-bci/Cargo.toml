@@ -7,4 +7,4 @@ description = "Biologically Native Programming Middleware. Maps EEG/EMG neural s
 
 [dependencies]
 ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "1.0.0" }
-ternlang-bio = { path = "../ternlang-bio", version = "0.3.1" }
+ternlang-bio = { path = "../ternlang-bio", version = "1.0.0" }

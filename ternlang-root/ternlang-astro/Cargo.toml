@@ -7,5 +7,5 @@ description = "Orbital and Satellite Routing Control. MoE-13 orchestrator and T-
 
 [dependencies]
 ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "1.0.0" }
-ternlang-posix = { path = "../ternlang-posix", version = "0.3.1" }
-ternlang-moe = { path = "../ternlang-moe", version = "0.3.1" }
+ternlang-posix = { path = "../ternlang-posix", version = "1.0.0" }
+ternlang-moe = { path = "../ternlang-moe", version = "1.0.0" }

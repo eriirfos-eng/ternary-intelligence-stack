@@ -7,4 +7,4 @@ description = "Ternary Security Enforcement. Hardened hardware-level safety gate
 
 [dependencies]
 ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "1.0.0" }
-ternlang-crypto = { path = "../ternlang-crypto", version = "0.3.1" }
+ternlang-crypto = { path = "../ternlang-crypto", version = "1.0.0" }

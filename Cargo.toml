@@ -17,7 +17,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version     = "0.3.1"
+version     = "1.0.0"
 edition     = "2024"
 license     = "LGPL-3.0-or-later"
 repository  = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
@@ -36,17 +36,17 @@ keywords    = [
 categories  = ["compilers", "science", "embedded-programming", "development-tools::ffi"]
 
 [workspace.dependencies]
-ternlang-core    = { path = "ternlang-root/compiler/legacy_shim/ternlang-core",    version = "0.3.1" }
-ternlang-codegen = { path = "ternlang-root/compiler/legacy_shim/ternlang-codegen", version = "0.3.1" }
-ternlang-runtime = { path = "ternlang-root/compiler/legacy_shim/ternlang-runtime", version = "0.3.1" }
-ternlang-cli     = { path = "ternlang-root/compiler/legacy_shim/ternlang-cli",     version = "0.3.1" }
-ternlang-ml      = { path = "ternlang-root/ternlang-ml",      version = "0.3.1" }
-ternlang-moe     = { path = "ternlang-root/ternlang-moe",     version = "0.3.1" }
-ternlang-hdl     = { path = "ternlang-root/ternlang-hdl",     version = "0.3.1" }
-ternlang-lsp     = { path = "ternlang-root/ternlang-lsp",     version = "0.3.1" }
-ternlang-mcp     = { path = "ternlang-root/ternlang-mcp",     version = "0.3.1" }
-ternpkg          = { path = "ternlang-root/ternpkg",          version = "0.3.1" }
-ternlang-compat  = { path = "ternlang-root/ternlang-compat",  version = "0.3.1" }
-ternlang-test    = { path = "ternlang-root/ternlang-test",    version = "0.3.1" }
-ternlang-api     = { path = "ternlang-root/ternlang-api",     version = "0.3.1" }
-ternlang-compress = { path = "ternlang-root/ternlang-compress", version = "0.3.1" }
+ternlang-core    = { path = "ternlang-root/compiler/legacy_shim/ternlang-core",    version = "1.0.0" }
+ternlang-codegen = { path = "ternlang-root/compiler/legacy_shim/ternlang-codegen", version = "1.0.0" }
+ternlang-runtime = { path = "ternlang-root/compiler/legacy_shim/ternlang-runtime", version = "1.0.0" }
+ternlang-cli     = { path = "ternlang-root/compiler/legacy_shim/ternlang-cli",     version = "1.0.0" }
+ternlang-ml      = { path = "ternlang-root/ternlang-ml",      version = "1.0.0" }
+ternlang-moe     = { path = "ternlang-root/ternlang-moe",     version = "1.0.0" }
+ternlang-hdl     = { path = "ternlang-root/ternlang-hdl",     version = "1.0.0" }
+ternlang-lsp     = { path = "ternlang-root/ternlang-lsp",     version = "1.0.0" }
+ternlang-mcp     = { path = "ternlang-root/ternlang-mcp",     version = "1.0.0" }
+ternpkg          = { path = "ternlang-root/ternpkg",          version = "1.0.0" }
+ternlang-compat  = { path = "ternlang-root/ternlang-compat",  version = "1.0.0" }
+ternlang-test    = { path = "ternlang-root/ternlang-test",    version = "1.0.0" }
+ternlang-api     = { path = "ternlang-root/ternlang-api",     version = "1.0.0" }
+ternlang-compress = { path = "ternlang-root/ternlang-compress", version = "1.0.0" }
