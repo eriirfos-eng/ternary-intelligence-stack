@@ -1,0 +1,26 @@
+// stdlib/core/clamping.tern
+// Demonstrates: Clamping values using min and max built-ins.
+// Tier: 1
+
+fn clamp_int(val: int, low: int, high: int) -> int {
+    return max(low, min(high, val));
+}
+
+fn clamp_float(val: float, low: float, high: float) -> float {
+    return max(low, min(high, val));
+}
+
+fn main() -> trit {
+    let i: int = clamp_int(150, 0, 100);
+    let f: float = clamp_float(-5.5, -1.0, 1.0);
+    
+    println("Clamped int (150 in [0,100]): "); println(i);
+    println("Clamped float (-5.5 in [-1,1]): "); println(f);
+    
+    if i == 100 && f == -1.0 {
+        println("Clamping functional.");
+        return truth();
+    }
+    
+    return conflict();
+}
