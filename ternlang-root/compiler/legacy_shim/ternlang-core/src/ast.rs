@@ -165,6 +165,7 @@ pub enum Pattern {
     Int(i64),
     Trit(i8),
     Float(f64),
+    Wildcard,
 }
 
 #[derive(Debug, Clone, PartialEq)]

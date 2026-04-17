@@ -320,11 +320,19 @@ impl BytecodeEmitter {
                             match_patch = self.code.len();
                             self.code.extend_from_slice(&[0, 0]);
                         }
+                        Pattern::Wildcard => {
+                            // Wildcard always matches — unconditional jump to body.
+                            // Do NOT pop here: the body's shared TPOP below will clean
+                            // the TLOAD value from the stack, keeping it balanced.
+                            match_patch = self.code.len() + 1;
+                            self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]); // TJMP placeholder
+                        }
                     }
 
                     // Mismatch: the conditional test above PEEKS (doesn't pop), so if it
                     // didn't jump the TLOAD result is still on the stack. Pop it before
                     // jumping to the next arm to keep the stack balanced.
+                    // (Wildcard never reaches here — it always jumps above.)
                     self.code.push(0x0c); // TPOP — discard unmatched arm's cond value
                     let skip_patch = self.code.len() + 1;
                     self.code.push(0x0b); self.code.extend_from_slice(&[0, 0]);
@@ -575,6 +583,10 @@ impl BytecodeEmitter {
                         self.code.push(0x17); // TpushInt
                         self.code.extend_from_slice(&0i64.to_le_bytes());
                     }
+                    // COMP-TRIT-001: trit aliases that arrive as Ident if lexer misses them
+                    "affirm" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Affirm])); }
+                    "hold" | "tend" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); }
+                    "reject" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Reject])); }
                     _ => {
                         if let Some(&r) = self.symbols.get(name) {
                             self.code.push(0x09); self.code.push(r);

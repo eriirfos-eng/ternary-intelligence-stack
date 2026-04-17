@@ -13,6 +13,7 @@ pub enum Token {
     Affirm,
 
     #[token("tend", priority = 4)]
+    #[token("hold", priority = 4)]
     Tend,
 
     #[token("reject", priority = 4)]

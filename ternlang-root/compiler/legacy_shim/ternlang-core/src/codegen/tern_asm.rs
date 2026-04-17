@@ -258,29 +258,59 @@ impl TernAsmEmitter {
                 let lbl_end  = self.fresh_label("match_end");
                 let mut arm_labels: Vec<(i64, String)> = Vec::new();
 
-                for (pattern, _) in arms {
-                    let val = match pattern {
-                        Pattern::Int(v) => *v,
-                        Pattern::Trit(t) => *t as i64,
-                        Pattern::Float(f) => *f as i64,
-                    };
-                    arm_labels.push((val, self.fresh_label(&format!("arm_{}", val))));
+                let mut wildcard_lbl: Option<String> = None;
+                for (pattern, _) in arms.iter() {
+                    match pattern {
+                        Pattern::Wildcard => {
+                            wildcard_lbl = Some(self.fresh_label("arm_wildcard"));
+                        }
+                        Pattern::Int(v) => arm_labels.push((*v, self.fresh_label(&format!("arm_{}", v)))),
+                        Pattern::Trit(t) => arm_labels.push((*t as i64, self.fresh_label(&format!("arm_{}", t)))),
+                        Pattern::Float(f) => arm_labels.push((*f as i64, self.fresh_label(&format!("arm_f{}", *f as i64)))),
+                    }
                 }
 
-                // branch dispatch
-                for (val, lbl) in &arm_labels {
-                    let tmp = ra.scratch();
-                    self.emit(&format!("tlii  {}, {}", reg(tmp), val));
-                    let cmp = ra.scratch();
-                    self.emit(&format!("teq   {}, {}, {}", reg(cmp), reg(cond_reg), reg(tmp)));
-                    self.emit(&format!("bpos  {}, {}", reg(cmp), lbl));
+                // branch dispatch — value arms
+                let mut label_iter = arm_labels.iter();
+                for (pattern, _) in arms.iter() {
+                    if matches!(pattern, Pattern::Wildcard) { continue; }
+                    if let Some((val, lbl)) = label_iter.next() {
+                        let tmp = ra.scratch();
+                        self.emit(&format!("tlii  {}, {}", reg(tmp), val));
+                        let cmp = ra.scratch();
+                        self.emit(&format!("teq   {}, {}, {}", reg(cmp), reg(cond_reg), reg(tmp)));
+                        self.emit(&format!("bpos  {}, {}", reg(cmp), lbl));
+                    }
                 }
-                self.emit(&format!("j     {}", lbl_end));
-
-                for ((_, body_stmt), (_, lbl)) in arms.iter().zip(arm_labels.iter()) {
-                    self.emit_label(lbl);
-                    self.emit_stmt(body_stmt, ra);
+                // wildcard fallthrough or end
+                if let Some(ref wlbl) = wildcard_lbl {
+                    self.emit(&format!("j     {}", wlbl));
+                } else {
                     self.emit(&format!("j     {}", lbl_end));
+                }
+
+                let mut label_iter = arm_labels.iter();
+                let mut w_emitted = false;
+                for (pattern, body_stmt) in arms.iter() {
+                    match pattern {
+                        Pattern::Wildcard => {
+                            if let Some(ref wlbl) = wildcard_lbl {
+                                if !w_emitted {
+                                    self.emit_label(wlbl);
+                                    w_emitted = true;
+                                }
+                            }
+                            self.emit_stmt(body_stmt, ra);
+                            self.emit(&format!("j     {}", lbl_end));
+                        }
+                        _ => {
+                            if let Some((_, lbl)) = label_iter.next() {
+                                self.emit_label(lbl);
+                                self.emit_stmt(body_stmt, ra);
+                                self.emit(&format!("j     {}", lbl_end));
+                            }
+                        }
+                    }
                 }
 
                 self.emit_label(&lbl_end);
