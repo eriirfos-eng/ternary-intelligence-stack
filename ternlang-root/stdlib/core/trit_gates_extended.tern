@@ -1,0 +1,37 @@
+// stdlib/core/trit_gates_extended.tern
+// Demonstrates: Ternary NAND, NOR, and XNOR logic implementation.
+// Tier: 1 — Open Core
+
+fn ternary_nand(a: trit, b: trit) -> trit {
+    let and_res: trit = a && b;
+    return -and_res;
+}
+
+fn ternary_nor(a: trit, b: trit) -> trit {
+    let or_res: trit = a || b;
+    return -or_res;
+}
+
+fn ternary_xnor(a: trit, b: trit) -> trit {
+    // XNOR is affirm if equal, else reject.
+    if a == b {
+        return affirm;
+    }
+    return reject;
+}
+
+fn main() -> trit {
+    let t1: trit = ternary_nand(affirm, affirm);   // reject
+    let t2: trit = ternary_nor(reject, reject);   // affirm
+    let t3: trit = ternary_xnor(tend, tend);      // affirm
+
+    if t1 == reject && t2 == affirm && t3 == affirm {
+        return affirm;
+    }
+
+    match t1 {
+        -1 => { return reject; }
+         0 => { return tend;   }
+         1 => { return affirm; }
+    }
+}
