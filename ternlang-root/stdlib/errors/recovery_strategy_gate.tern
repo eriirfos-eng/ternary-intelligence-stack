@@ -1,0 +1,34 @@
+// stdlib/errors/recovery_strategy_gate.tern
+// Demonstrates: Decision logic for error recovery strategies
+// Tier: 1
+
+fn select_recovery_strategy(severity: trit, availability: trit) -> trit {
+    // severity: 1 (high), 0 (medium), -1 (low)
+    // availability: 1 (available), 0 (limited), -1 (none)
+    
+    match severity {
+        affirm => {
+            // High severity: requires full availability for recovery
+            if availability == affirm { return affirm; } // Proceed with recovery
+            return reject; // Escalation required
+        }
+        tend => {
+            // Medium severity: can proceed with limited availability
+            if availability >= tend { return affirm; }
+            return tend; // Wait for resources
+        }
+        reject => {
+            // Low severity: always proceed
+            return affirm;
+        }
+    }
+}
+
+fn main() -> trit {
+    let strat: trit = select_recovery_strategy(tend, tend);
+    if strat == affirm {
+        print("Medium severity recovery: PROCEED");
+        return truth();
+    }
+    return conflict();
+}
