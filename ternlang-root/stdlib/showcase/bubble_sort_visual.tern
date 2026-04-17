@@ -1,0 +1,61 @@
+// stdlib/showcase/bubble_sort_visual.tern
+// Demonstrates: Bubble sort algorithm on a trittensor.
+// Tier: 1
+
+fn main() -> trit {
+    let arr: trittensor<8>;
+    arr[0] = 1;
+    arr[1] = -1;
+    arr[2] = 0;
+    arr[3] = 1;
+    arr[4] = -1;
+    arr[5] = 1;
+    arr[6] = 0;
+    arr[7] = -1;
+    
+    println("Unsorted array:");
+    let i: int = 0;
+    while i < 8 {
+        print(arr[i]);
+        print(" ");
+        i = i + 1;
+    }
+    println("");
+    
+    // Bubble sort
+    let n: int = 8;
+    let swapped: int = 1;
+    while swapped == 1 {
+        swapped = 0;
+        let j: int = 1;
+        while j < n {
+            if arr[j-1] > arr[j] {
+                // Swap
+                let temp: trit = arr[j-1];
+                arr[j-1] = arr[j];
+                arr[j] = temp;
+                swapped = 1;
+            }
+            j = j + 1;
+        }
+        n = n - 1;
+    }
+    
+    println("Sorted array:");
+    let k: int = 0;
+    while k < 8 {
+        print(arr[k]);
+        print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    // Verify sorted: -1, -1, -1, 0, 0, 1, 1, 1
+    if arr[0] == -1 && arr[7] == 1 {
+        println("Sorting verified.");
+        return truth();
+    } else {
+        println("Sorting failed.");
+        return conflict();
+    }
+}
