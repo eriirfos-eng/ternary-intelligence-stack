@@ -1,0 +1,45 @@
+// stdlib/core/trit_vector_ops.tern
+// Demonstrates: Element-wise vector operations on trit tensors
+// Tier: 1 — Open Core
+
+fn vector_add(a: trittensor<1>, b: trittensor<1>, size: int) -> trittensor<1> {
+    let result: trittensor<1> = [0, 0, 0, 0, 0];
+    let i: int = 0;
+    while i < size {
+        result[i] = a[i] + b[i];
+        i = i + 1;
+    }
+    return result;
+}
+
+fn dot_product(a: trittensor<1>, b: trittensor<1>, size: int) -> int {
+    let dot: int = 0;
+    let i: int = 0;
+    while i < size {
+        dot = dot + (a[i] * b[i]);
+        i = i + 1;
+    }
+    return dot;
+}
+
+fn main() -> trit {
+    let v1: trittensor<1> = [1, 0, -1, 1, 0];
+    let v2: trittensor<1> = [1, 1, 1, 0, 0];
+    
+    let sum: trittensor<1> = vector_add(v1, v2, 5);
+    let dp: int = dot_product(v1, v2, 5);
+    
+    print(" Vector 1 + Vector 2: [");
+    print(sum[0]); print(", "); print(sum[1]); print(", ");
+    print(sum[2]); print(", "); print(sum[3]); print(", ");
+    print(sum[4]); print("]");
+    
+    print(" Dot Product: ");
+    print(dp);
+    
+    if dp == 0 {
+        return truth();
+    }
+    
+    return conflict();
+}
