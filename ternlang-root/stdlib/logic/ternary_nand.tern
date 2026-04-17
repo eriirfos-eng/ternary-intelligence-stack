@@ -1,0 +1,43 @@
+// stdlib/logic/ternary_nand.tern
+// Demonstrates: Ternary NAND gate logic (NOT of the minimum value).
+// Tier: 1
+
+fn ternary_nand(a: trit, b: trit) -> trit {
+    // NAND(a, b) = NOT(MIN(a, b))
+    let min_val: trit = 0;
+    if a < b {
+        min_val = a;
+    } else {
+        min_val = b;
+    }
+    
+    let result: trit = 0;
+    match min_val {
+        1  => { result = -1; }
+        0  => { result = 0;  }
+        -1 => { result = 1;  }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let inputs_a: trittensor<3>;
+    let inputs_b: trittensor<3>;
+    inputs_a[0] = 1;  inputs_b[0] = 1;
+    inputs_a[1] = 0;  inputs_b[1] = 0;
+    inputs_a[2] = -1; inputs_b[2] = -1;
+    
+    let i: int = 0;
+    while i < 3 {
+        let res: trit = ternary_nand(inputs_a[i], inputs_b[i]);
+        println("NAND of:");
+        println(inputs_a[i]);
+        println(inputs_b[i]);
+        println("Result:");
+        println(res);
+        i = i + 1;
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
