@@ -1,0 +1,32 @@
+// stdlib/errors/runtime_sanity_check.tern
+// Demonstrates: Generic runtime sanity checks and invariant validation
+// Tier: 1
+
+fn validate_invariant(cond: trit, msg: string) -> trit {
+    if cond == affirm {
+        return truth();
+    }
+    print("INVARIANT VIOLATION: " + msg);
+    return conflict();
+}
+
+fn check_system_state(load: int, limit: int) -> trit {
+    if load > limit {
+        return reject;
+    }
+    if load == limit {
+        return tend;
+    }
+    return affirm;
+}
+
+fn main() -> trit {
+    let state: trit = check_system_state(50, 100);
+    let check: trit = validate_invariant(state, "System load exceeded limits");
+    
+    if check == affirm {
+        print("Sanity check: OK");
+        return truth();
+    }
+    return conflict();
+}
