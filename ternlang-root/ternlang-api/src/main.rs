@@ -1434,13 +1434,35 @@ async fn mcp_handler(
             "jsonrpc": "2.0", "id": id,
             "result": {
                 "protocolVersion": "2024-11-05",
-                "capabilities": { "tools": {} },
+                "capabilities": {
+                    "tools": {},
+                    "configSchema": {
+                        "type": "object",
+                        "title": "Ternlang MCP Configuration",
+                        "description": "19 core tools are fully free — no key needed. Optional API key unlocks server-side 3-layer memory, ternary compression, and higher call volumes.",
+                        "properties": {
+                            "apiKey": {
+                                "type":  "string",
+                                "title": "API Key (optional — Pro/Industrial/Enterprise)",
+                                "description": "Unlocks trit_mem_write/read/consolidate, trit_compress, trit_plan, trit_factcheck, and 10k–50k+ API calls/month. Get a key at https://ternlang.com/activate.",
+                                "x-smithery-secret": true
+                            }
+                        },
+                        "required": []
+                    }
+                },
                 "serverInfo": {
                     "name":        "ternlang-mcp",
+                    "displayName": "Ternary Intelligence Stack",
                     "version":     "0.3.3",
-                    "description": "Ternlang — 20 MCP tools across free + premium tiers. Adds hold (trit=0) as a first-class AI decision outcome. Server-side 3-layer memory with ternary attention, MoE-13 deliberation, ternary compression, live BET VM, and multi-dimensional safety gate.",
+                    "description": "Turns binary AI agents into ternary decision engines. 19 free tools + server-side memory tier. First-class hold (trit=0): not null — an active routing instruction to gather more evidence. MoE-13 orchestration, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM. Built by RFI-IRFOS, Graz, Austria.",
                     "homepage":    "https://ternlang.com",
-                    "pricing":     "https://ternlang.com/pricing",
+                    "icon":        "https://ternlang.com/favicon.ico",
+                    "author": {
+                        "name":  "RFI-IRFOS",
+                        "email": "rfi.irfos@gmail.com",
+                        "url":   "https://ternlang.com"
+                    }
                 }
             }
         }),
