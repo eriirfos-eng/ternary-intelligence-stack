@@ -1452,8 +1452,8 @@ async fn mcp_handler(
                 "serverInfo": {
                     "name":        "ternlang-mcp",
                     "displayName": "Ternary Intelligence Stack",
-                    "version":     "0.3.3",
-                    "description": "Turns binary AI agents into ternary decision engines. 19 free tools + server-side memory tier. First-class hold (trit=0): not null — an active routing instruction to gather more evidence. MoE-13 orchestration, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM. Built by RFI-IRFOS, Graz, Austria.",
+                    "version":     "1.0.0",
+                    "description": "Turns binary AI agents into ternary decision engines. 30 tools: 19 free (community tier, no key required) + 11 premium (Tier 2/3/4 — trit_mem, trit_compress, trit_triage, trit_plan, trit_factcheck, moe_full). First-class hold (trit=0): not null — an active routing instruction to gather more evidence. MoE-13 orchestration, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM. Built by RFI-IRFOS, Graz, Austria. v1.0.0",
                     "homepage":    "https://ternlang.com",
                     "icon":        "https://ternlang.com/favicon.ico",
                     "author": {
