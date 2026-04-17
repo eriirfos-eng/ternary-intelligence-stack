@@ -1,0 +1,51 @@
+// stdlib/showcase/prime_sieve.tern
+// Demonstrates: Sieve of Eratosthenes using trittensor.
+// Tier: 1
+
+fn main() -> trit {
+    // Sieve up to 50
+    let n: int = 50;
+    let sieve: trittensor<51>;
+    
+    // Initialize: all unknown (0)
+    let i: int = 2;
+    while i <= n {
+        sieve[i] = 1; // Assume prime
+        i = i + 1;
+    }
+    
+    let p: int = 2;
+    while (p * p) <= n {
+        // If sieve[p] is prime
+        if sieve[p] == 1 {
+            // Mark multiples
+            let j: int = p * p;
+            while j <= n {
+                sieve[j] = -1; // Not prime
+                j = j + p;
+            }
+        }
+        p = p + 1;
+    }
+    
+    println("Primes up to 50:");
+    let count: int = 0;
+    let k: int = 2;
+    while k <= n {
+        if sieve[k] == 1 {
+            print(k);
+            print(" ");
+            count = count + 1;
+        }
+        k = k + 1;
+    }
+    println("");
+    
+    if count == 15 {
+        println("Found all 15 primes.");
+        return truth();
+    } else {
+        println("Incorrect prime count.");
+        return conflict();
+    }
+}
