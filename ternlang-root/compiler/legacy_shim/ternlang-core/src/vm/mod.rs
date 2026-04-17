@@ -102,8 +102,24 @@ impl Default for Value {
     }
 }
 
+enum TensorData {
+    Trit(Vec<Trit>),
+    Float(Vec<f64>),
+    Int(Vec<i64>),
+}
+
+impl TensorData {
+    fn len(&self) -> usize {
+        match self {
+            TensorData::Trit(v) => v.len(),
+            TensorData::Float(v) => v.len(),
+            TensorData::Int(v) => v.len(),
+        }
+    }
+}
+
 struct TensorInstance {
-    data: Vec<Trit>,
+    data: TensorData,
     rows: usize,
     cols: usize,
 }
@@ -319,13 +335,37 @@ impl BetVm {
                     };
                     self.stack.push(Value::Trit(result));
                 }
-                0x0f => { // Talloc
+                0x0f => { // Talloc (trit tensor)
                     let rows = self.read_u16()? as usize;
                     let cols = self.read_u16()? as usize;
                     let size = rows * cols;
                     let idx = self.tensors.len();
                     self.tensors.push(TensorInstance {
-                        data: vec![Trit::Tend; size],
+                        data: TensorData::Trit(vec![Trit::Tend; size]),
+                        rows,
+                        cols,
+                    });
+                    self.stack.push(Value::TensorRef(idx));
+                }
+                0x3c => { // Talloc_Int (int tensor)
+                    let rows = self.read_u16()? as usize;
+                    let cols = self.read_u16()? as usize;
+                    let size = rows * cols;
+                    let idx = self.tensors.len();
+                    self.tensors.push(TensorInstance {
+                        data: TensorData::Int(vec![0i64; size]),
+                        rows,
+                        cols,
+                    });
+                    self.stack.push(Value::TensorRef(idx));
+                }
+                0x3d => { // Talloc_Float (float tensor)
+                    let rows = self.read_u16()? as usize;
+                    let cols = self.read_u16()? as usize;
+                    let size = rows * cols;
+                    let idx = self.tensors.len();
+                    self.tensors.push(TensorInstance {
+                        data: TensorData::Float(vec![0.0f64; size]),
                         rows,
                         cols,
                     });
@@ -601,12 +641,17 @@ impl BetVm {
                                 return Err(VmError::TensorNotAllocated(idx));
                             }
                             let tensor = &self.tensors[idx];
-                            // c == -1 is the flat-index sentinel (single-index access m[i])
+                            let data_len = tensor.data.len();
                             let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
-                            if pos >= tensor.data.len() {
-                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() });
+                            if pos >= data_len {
+                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len });
                             }
-                            self.stack.push(Value::Trit(tensor.data[pos]));
+                            let pushed = match &tensor.data {
+                                TensorData::Trit(v) => Value::Trit(v[pos]),
+                                TensorData::Float(v) => Value::Float(v[pos]),
+                                TensorData::Int(v) => Value::Int(v[pos]),
+                            };
+                            self.stack.push(pushed);
                         }
                         _ => return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) }),
                     }
@@ -618,24 +663,24 @@ impl BetVm {
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
                     let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
-                    match (rf.clone(), val.clone()) {
-                        (Value::TensorRef(idx), Value::Trit(t)) => {
-                            if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
-                            let tensor = &mut self.tensors[idx];
-                            // c == -1 is the flat-index sentinel (single-index access m[i])
-                            let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
-                            if pos >= tensor.data.len() { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() }); }
-                            tensor.data[pos] = t;
+                    if let Value::TensorRef(idx) = rf.clone() {
+                        if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
+                        let tensor = &mut self.tensors[idx];
+                        let data_len = tensor.data.len();
+                        let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
+                        if pos >= data_len { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len }); }
+                        match (&mut tensor.data, val.clone()) {
+                            (TensorData::Trit(v), Value::Trit(t)) => v[pos] = t,
+                            (TensorData::Trit(v), Value::Int(i)) => v[pos] = if i > 0 { Trit::Affirm } else if i < 0 { Trit::Reject } else { Trit::Tend },
+                            (TensorData::Float(v), Value::Float(f)) => v[pos] = f,
+                            (TensorData::Float(v), Value::Int(i)) => v[pos] = i as f64,
+                            (TensorData::Int(v), Value::Int(i)) => v[pos] = i,
+                            (TensorData::Int(v), Value::Float(f)) => v[pos] = f as i64,
+                            (TensorData::Int(v), Value::Trit(t)) => v[pos] = t as i64,
+                            _ => return Err(VmError::TypeMismatch { expected: "compatible value for tensor type".into(), found: format!("{:?}", val) }),
                         }
-                        (Value::TensorRef(idx), Value::Int(v)) => {
-                            if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
-                            let tensor = &mut self.tensors[idx];
-                            // c == -1 is the flat-index sentinel (single-index access m[i])
-                            let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
-                            if pos >= tensor.data.len() { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: tensor.data.len() }); }
-                            tensor.data[pos] = if v > 0 { Trit::Affirm } else if v < 0 { Trit::Reject } else { Trit::Tend };
-                        }
-                        _ => return Err(VmError::TypeMismatch { expected: "TensorRef, Trit".into(), found: format!("{:?}", (rf, val)) }),
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) });
                     }
                 }
                 0x24 => { // Tshape

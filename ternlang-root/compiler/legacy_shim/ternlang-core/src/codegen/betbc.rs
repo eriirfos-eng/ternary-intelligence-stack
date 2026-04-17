@@ -170,12 +170,35 @@ impl BytecodeEmitter {
             Stmt::Let { name, ty, value } => {
                 let mut handled = false;
                 match ty {
-                    Type::TritTensor { dims } | Type::IntTensor { dims } | Type::FloatTensor { dims } => {
-                        // Only auto-allocate if size is fixed (>0) and NO value is provided (defaults to TritLiteral(0))
-                        if !dims.is_empty() && !dims.contains(&0) && matches!(value, Expr::TritLiteral(0)) {
+                    Type::TritTensor { dims } => {
+                        // Auto-alloc for any zero-initializer (TritLiteral(0) or IntLiteral(0))
+                        let is_zero_init = matches!(value, Expr::TritLiteral(0) | Expr::IntLiteral(0));
+                        if !dims.is_empty() && !dims.contains(&0) && is_zero_init {
                             let rows = dims[0];
                             let cols = if dims.len() > 1 { dims[1] } else { 1 };
-                            self.code.push(0x0f);
+                            self.code.push(0x0f); // TALLOC (trit)
+                            self.code.extend_from_slice(&(rows as u16).to_le_bytes());
+                            self.code.extend_from_slice(&(cols as u16).to_le_bytes());
+                            handled = true;
+                        }
+                    }
+                    Type::IntTensor { dims } => {
+                        let is_zero_init = matches!(value, Expr::TritLiteral(0) | Expr::IntLiteral(0));
+                        if !dims.is_empty() && !dims.contains(&0) && is_zero_init {
+                            let rows = dims[0];
+                            let cols = if dims.len() > 1 { dims[1] } else { 1 };
+                            self.code.push(0x3c); // TALLOC_Int
+                            self.code.extend_from_slice(&(rows as u16).to_le_bytes());
+                            self.code.extend_from_slice(&(cols as u16).to_le_bytes());
+                            handled = true;
+                        }
+                    }
+                    Type::FloatTensor { dims } => {
+                        let is_zero_init = matches!(value, Expr::TritLiteral(0) | Expr::IntLiteral(0));
+                        if !dims.is_empty() && !dims.contains(&0) && is_zero_init {
+                            let rows = dims[0];
+                            let cols = if dims.len() > 1 { dims[1] } else { 1 };
+                            self.code.push(0x3d); // TALLOC_Float
                             self.code.extend_from_slice(&(rows as u16).to_le_bytes());
                             self.code.extend_from_slice(&(cols as u16).to_le_bytes());
                             handled = true;
