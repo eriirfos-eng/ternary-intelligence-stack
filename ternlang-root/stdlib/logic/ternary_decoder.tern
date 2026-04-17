@@ -1,0 +1,39 @@
+// stdlib/logic/ternary_decoder.tern
+// Demonstrates: Ternary 1-to-3 decoder (converts trit to one-hot encoding).
+// Tier: 1
+
+fn decode_trit(input_val: trit) -> trittensor<3> {
+    let result: trittensor<3>;
+    result[0] = 0;
+    result[1] = 0;
+    result[2] = 0;
+    
+    match input_val {
+        -1 => { result[0] = 1; }
+        0  => { result[1] = 1; }
+        1  => { result[2] = 1; }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let test_vals: trittensor<3>;
+    test_vals[0] = -1;
+    test_vals[1] = 0;
+    test_vals[2] = 1;
+    
+    let i: int = 0;
+    while i < 3 {
+        let dec: trittensor<3> = decode_trit(test_vals[i]);
+        println("Decoding trit:");
+        println(test_vals[i]);
+        println("Resulting one-hot:");
+        println(dec[0]);
+        println(dec[1]);
+        println(dec[2]);
+        i = i + 1;
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
