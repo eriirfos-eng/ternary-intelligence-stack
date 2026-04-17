@@ -1,0 +1,32 @@
+// stdlib/logic/ternary_demux.tern
+// Demonstrates: 1-to-3 ternary demultiplexer logic.
+// Tier: 1
+
+fn demux_1to3(input_val: trit, select: trit) -> trittensor<3> {
+    let outputs: trittensor<3>;
+    outputs[0] = 0;
+    outputs[1] = 0;
+    outputs[2] = 0;
+    
+    match select {
+        -1 => { outputs[0] = input_val; }
+        0  => { outputs[1] = input_val; }
+        1  => { outputs[2] = input_val; }
+    }
+    
+    return outputs;
+}
+
+fn main() -> trit {
+    let input_data: trit = 1;
+    let sel: trit = 0;
+    let out: trittensor<3> = demux_1to3(input_data, sel);
+    
+    println("Demux outputs:");
+    println(out[0]);
+    println(out[1]);
+    println(out[2]);
+    
+    println("Program exited successfully.");
+    return 1;
+}
