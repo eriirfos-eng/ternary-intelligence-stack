@@ -1,0 +1,18 @@
+// stdlib/testing/string_concat_test.tern
+// Demonstrates: String concatenation with + operator
+// Tier: 1 — Open Core
+
+fn main() -> trit {
+    let s1: string = "Balanced";
+    let s2: string = " Ternary";
+    let s3: string = s1 + s2;
+    
+    print(" Concatenated string: ");
+    print(s3);
+    
+    if s3 == "Balanced Ternary" {
+        return truth();
+    }
+    
+    return conflict();
+}
