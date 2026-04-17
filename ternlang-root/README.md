@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
-[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
+[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 [![speedup](https://img.shields.io/badge/@sparseskip-up_to_122x-success)](#sparse-ternary-inference)
 [![MCP](https://img.shields.io/badge/MCP-19_tools-orange)](#mcp-server--v030-19-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
