@@ -1,0 +1,37 @@
+// stdlib/core/ternary_xor.tern
+// Demonstrates: A ternary-adapted XOR logic gate.
+// Tier: 1
+
+fn trit_xor(a: trit, b: trit) -> trit {
+    // Map -1 to 1 for binary-like logic
+    let a_val: int = 0;
+    if a != 0 { a_val = 1; }
+    
+    let b_val: int = 0;
+    if b != 0 { b_val = 1; }
+    
+    if a_val != b_val {
+        return truth();
+    } else {
+        return hold();
+    }
+}
+
+fn main() -> trit {
+    let r1: trit = trit_xor(1, 1);   // 0
+    let r2: trit = trit_xor(1, 0);   // 1
+    let r3: trit = trit_xor(-1, 0);  // 1
+    let r4: trit = trit_xor(0, 0);   // 0
+    
+    print("XOR(1,1): "); println(r1);
+    print("XOR(1,0): "); println(r2);
+    print("XOR(-1,0): "); println(r3);
+    print("XOR(0,0): "); println(r4);
+    
+    if r1 == 0 && r2 == 1 && r3 == 1 && r4 == 0 {
+        println("Ternary XOR functional.");
+        return truth();
+    }
+    
+    return conflict();
+}
