@@ -1,0 +1,36 @@
+// stdlib/classical/binary_search_ternary.tern
+// Demonstrates: Binary search on a sorted trit array.
+// Tier: 1 — Open Core
+
+fn binary_search(arr: trit[], target: trit) -> int {
+    let low: int = 0;
+    let high: int = len(arr) - 1;
+    
+    while low <= high {
+        let mid: int = (low + high) / 2;
+        if arr[mid] == target {
+            return mid;
+        }
+        if arr[mid] < target {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let sorted_data: trit[] = [reject, reject, tend, affirm, affirm];
+    
+    let idx_tend: int = binary_search(sorted_data, tend); // 2
+    let idx_affirm: int = binary_search(sorted_data, affirm); // 3 or 4
+    let idx_missing: int = -1; // Not really possible to miss if it's exhaustive trit but...
+    
+    print("Index of tend: "); print(idx_tend);
+    
+    if idx_tend == 2 && idx_affirm >= 3 {
+        return affirm;
+    }
+    return reject;
+}
