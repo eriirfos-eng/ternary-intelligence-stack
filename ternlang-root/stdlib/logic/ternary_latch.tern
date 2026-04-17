@@ -1,0 +1,36 @@
+// stdlib/logic/ternary_latch.tern
+// Demonstrates: Ternary latch (memory cell) logic.
+// Tier: 1
+
+fn update_latch(state: trit, set: trit, reset: trit) -> trit {
+    // If set is Affirm, result is Affirm
+    // If reset is Affirm, result is Reject
+    // Otherwise, maintain current state
+    let result: trit = state;
+    if set == 1 {
+        result = 1;
+    } else {
+        if reset == 1 {
+            result = -1;
+        }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let current: trit = 0;
+    
+    println("Initial state:");
+    println(current);
+    
+    current = update_latch(current, 1, 0);
+    println("After Set:");
+    println(current);
+    
+    current = update_latch(current, 0, 1);
+    println("After Reset:");
+    println(current);
+    
+    println("Program exited successfully.");
+    return 1;
+}
