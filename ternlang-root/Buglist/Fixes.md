@@ -658,3 +658,9 @@ The following were confirmed as architectural limits requiring major restructuri
 - **Scientific notation unsupported:** Float literals like 1.23e-10 fail to parse. Workaround: use decimal notation.
 - **else if unsupported:** 'else if' triggers parse errors. Workaround: use nested 'if' or separate 'if' blocks.
 - **float[] literals/params re-verified:** PARSER-006 still active for float arrays. Workaround: use individual variables or trit arrays with casting.
+## 2026-04-17 — Parser edge cases in complex expressions
+Trigger: Using 'return hold();' or complex expressions like 'if val > (a * b)' in .tern files.
+Symptom: Parse program error: ExpectedToken("Semicolon", "LParen").
+Diagnosis: The parser occasionally struggles with lookahead for parentheses in specific return or conditional contexts.
+Fix: Workaround applied — assign complex expressions to a temporary variable before evaluation, and use the 'hold' keyword instead of the function-style 'hold()'.
+Status: Resolved via idiom update in patterns.md and AGENT_SESSIONS.md.
