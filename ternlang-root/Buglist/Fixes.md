@@ -531,6 +531,64 @@ Both outprioritize the plain decimal rule (priority 10).
 
 ---
 
+---
+
+## 2026-04-17 — `else if` Chain Support — FIXED
+
+**Trigger:** Using `else if` in ternlang programs.
+**Symptom:** `Parse program error: ExpectedToken("LBrace", "If")` — parser consumed `else` then immediately called `parse_block()` which expected `{` but found `if`.
+**Diagnosis:** In the binary-if parse branch (`if cond { A } else { B }`), after consuming `else`, the parser unconditionally called `parse_block()`. No branch existed for `else if` — it was never implemented and never listed as an ARCH-LIMIT either. Went unnoticed until Gemini hit it in stdlib generation.
+**Fix:** Added one peek-and-branch in `parser.rs` binary-if else handler: after consuming `else`, peek the next token; if it is `Token::If`, call `parse_stmt()` recursively (which re-enters the full if-statement parser); otherwise call `parse_block()` as before. Chains of arbitrary depth work correctly because each `else if` recursively produces a new `Stmt::IfTernary`.
+**File:** `compiler/legacy_shim/ternlang-core/src/parser.rs` — binary-if else_branch block (~line 576).
+**Status:** Fixed. `else if x == 5 { ... } else { ... }` and deeper chains all parse and execute correctly.
+
+---
+
+## 2026-04-17 — Smithery MCP Uptime Fix (Protocol Error → Tool-Level isError)
+
+**Trigger:** `trit_mem_write`, `trit_mem_read`, `trit_mem_consolidate`, `trit_mem_stats` showed 0% uptime on Smithery.
+**Symptom:** Smithery uptime checker logged every call to premium tools as a failure, dragging average uptime to ~50%.
+**Diagnosis:** Premium tool access checks (and dispatch errors) returned JSON-RPC protocol-level errors: `"error": {"code": -32001, "message": "..."}`. Smithery's uptime probe treats any JSON-RPC `"error"` field as a call failure, regardless of cause.
+**Fix:** Changed all premium-gate and dispatch-error responses in `ternlang-api/src/main.rs` to return `"result": {"content": [{"type": "text", "text": "..."}], "isError": true}` — MCP spec-compliant tool-level error, counts as a healthy response.
+**Files:** `ternlang-api/src/main.rs` (premium gate block ~line 1484, dispatch Err arm ~line 1508).
+**Status:** Fixed. Deployed to Fly.io (release `412ff381`). Republished to Smithery.
+
+---
+
+## 2026-04-17 — Smithery 100/100 Score Push (ternlang-mcp v1.0.0)
+
+**Trigger:** Smithery quality score was 70/100 after prior session.
+**Missing items identified from Smithery scoring guide:**
+1. No `README.md` in ternlang-mcp (Smithery checks for Tools/Installation/Usage headings)
+2. `package.json` missing `homepage`, `repository`, `license`, `keywords` (must include `"mcp"`), `main`
+3. No `systemPrompt` in smithery.yaml (tells AI when/why to use each tool)
+4. Version was `0.3.3` (not semver-significant enough for registry prominence)
+
+**Fix:**
+- `ternlang-mcp/README.md` — created with full Tools table (all 19 tools), Installation (HTTP/Smithery CLI/cargo), Usage (3 real call examples), hold-state explanation
+- `ternlang-mcp/package.json` — bumped to `1.0.0`, added `homepage`, `repository`, `license: BSL-1.1`, `main`, `keywords: ["mcp", "ternary", ...]`
+- `ternlang-mcp/smithery.yaml` — bumped to `1.0.0`, added full `systemPrompt` block (when to use each tool category, hold-state semantics, free tier note)
+- `ternlang-mcp/index.js` — version bumped to `1.0.0`
+- Republished: `npx @smithery/cli@latest mcp publish https://ternlang.com/mcp --name rfi-irfos/ternlang` → release `a02625c1`, 30 tools confirmed
+
+**Status:** Published. Score rescan pending (check smithery.ai/server/rfi-irfos/ternlang).
+
+---
+
+## 2026-04-17 — STDLIB_AGENT.md: Targeted Coverage Check Protocol
+
+**Problem:** During weakness scan, Gemini listed all 30,000+ .tern files to find gaps, burning massive context budget before writing a single file.
+**Fix:** Replaced global weakness scan with targeted per-directory protocol:
+- Agent picks 10 target dirs from the tier tables (3 Tier1 + 4 Tier2 + 3 Tier3)
+- Runs `ls <dir> | wc -l` for each — if < 15 files → needs work; if ≥ 15 → skip
+- Checks individual file existence with `ls <path>/<file>.tern` before writing (not directory listing)
+- Hard prohibition on `ls -R`, `find`, or listing any parent/global directory
+- Context budget rule: >30% context used before first file written = protocol violation
+**File:** `~/Desktop/STDLIB_AGENT.md`
+**Status:** Updated.
+
+---
+
 ### Architectural Limits Documented (Not Fixed — No Code Change)
 
 The following were confirmed as architectural limits requiring major restructuring:
