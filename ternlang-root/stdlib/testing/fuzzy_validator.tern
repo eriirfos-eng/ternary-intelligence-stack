@@ -1,0 +1,33 @@
+// stdlib/testing/fuzzy_validator.tern
+// Demonstrates: Basic fuzzy logic validation
+// Tier: 1
+
+fn fuzzy_and(a: trit, b: trit) -> trit {
+    // Standard Min(A, B) in ternary
+    if a < b { return a; }
+    return b;
+}
+
+fn fuzzy_or(a: trit, b: trit) -> trit {
+    // Standard Max(A, B) in ternary
+    if a > b { return a; }
+    return b;
+}
+
+fn validate_fuzzy_bounds(val: trit) -> trit {
+    // Ensures value is within -1, 0, 1 (always true for trit type)
+    match val {
+        affirm => { return truth(); }
+        tend   => { return truth(); }
+        reject => { return truth(); }
+    }
+}
+
+fn main() -> trit {
+    let result: trit = fuzzy_and(affirm, tend);
+    if result == tend {
+        print("Fuzzy AND (1, 0) = 0: PASS");
+        return truth();
+    }
+    return conflict();
+}
