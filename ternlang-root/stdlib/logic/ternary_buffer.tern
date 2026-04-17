@@ -1,0 +1,34 @@
+// stdlib/logic/ternary_buffer.tern
+// Demonstrates: Ternary buffer (repeater) logic for signal amplification.
+// Tier: 1
+
+fn ternary_buffer(x: trit) -> trit {
+    // A simple repeater: pass signal unchanged
+    let result: trit = 0;
+    match x {
+        1  => { result = 1; }
+        0  => { result = 0; }
+        -1 => { result = -1; }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let test_vals: trittensor<3>;
+    test_vals[0] = 1;
+    test_vals[1] = 0;
+    test_vals[2] = -1;
+    
+    let i: int = 0;
+    while i < 3 {
+        let res: trit = ternary_buffer(test_vals[i]);
+        println("Buffer Input:");
+        println(test_vals[i]);
+        println("Buffer Output:");
+        println(res);
+        i = i + 1;
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
