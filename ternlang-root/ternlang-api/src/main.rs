@@ -456,7 +456,7 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "url":         "https://ternlang.com/mcp",
             "transport":   "HTTP JSON-RPC 2.0",
             "smithery":    "https://smithery.ai/server/ternlang",
-            "description": "POST /mcp — 10 free tools + 16 premium tools (26 total). Pass X-Ternlang-Key for premium access.",
+            "description": "POST /mcp — 19 free tools + 10 premium server-side tools. Pass X-Ternlang-Key for memory/compression tier.",
         },
         "acquire_key": "https://ternlang.com/#licensing"
     })).into_response()
@@ -1322,9 +1322,9 @@ async fn stream_deliberate(
 async fn mcp_server_card() -> Json<Value> {
     Json(json!({
         "name":        "ternlang",
-        "displayName": "Ternlang — Ternary Intelligence Stack",
-        "version":     "0.3.1",
-        "description": "The most principled AI reasoning server on MCP. Ternlang adds a third logical state — hold (trit=0) — that binary agents cannot express. Where others force yes/no, Ternlang surfaces 'I need more data' as a first-class outcome. Includes: 20 tools across free + premium tiers; 13-expert MoE deliberation (Mixture-of-Experts with dual-key synergistic routing); server-side three-layer memory (working → session → core) with ternary attention and automatic MoE-backed consolidation; ternary context compression (strip tend-noise, keep signal); live BET VM that runs .tern programs in balanced ternary; BitNet-style weight quantizer; multi-dimensional safety gate; and ternary fact-check, plan, and triage tools. First programming language + MCP server to ship a native ISO-registered ternary ISA (BET-ISA-SPEC). GitHub Linguist language detection live.",
+        "displayName": "Ternary Intelligence Stack",
+        "version":     "0.3.3",
+        "description": "Turns binary AI agents into ternary decision engines. 19 free tools (no key required) + 10 server-side premium tools. Adds hold (trit=0) as a first-class outcome — not null, an active routing instruction to gather more evidence. 13-expert MoE orchestration, EcoCore ecocentric reasoning, TernAudit (EU AI Act Art.13/14/15), BET VM, BitNet quantizer, multi-dimensional safety gate. First programming language + MCP server with a native triadic ISA (BET-ISA-SPEC). Built by RFI-IRFOS, Graz, Austria.",
         "homepage":    "https://ternlang.com",
         "icon":        "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack--tis-/main/ternlang-root/ternlang-web/favicon.svg",
         "repository":  "https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-",
@@ -1345,9 +1345,11 @@ async fn mcp_server_card() -> Json<Value> {
             "required": []
         },
         "free_tools": [
-            "trit_decide", "trit_consensus", "trit_eval", "ternlang_run",
-            "quantize_weights", "sparse_benchmark", "moe_orchestrate",
-            "moe_deliberate", "trit_action_gate", "trit_upgrade"
+            "trit_decide", "trit_vector", "trit_consensus", "trit_eval", "ternlang_run",
+            "quantize_weights", "sparse_benchmark", "moe_orchestrate", "moe_deliberate",
+            "trit_action_gate", "trit_debate", "trit_uncertainty_map", "trit_calibrate",
+            "trit_translate", "trit_eco_check", "trit_audit", "audit_ternary_logic",
+            "tsql_join", "get_industrial_standards"
         ],
         "premium_tools": [
             "trit_compress", "trit_triage", "trit_plan", "trit_factcheck",
@@ -1363,14 +1365,14 @@ async fn mcp_server_card() -> Json<Value> {
 async fn mcp_info() -> Json<Value> {
     Json(json!({
         "name":        "ternlang-mcp",
-        "version":     "0.3.1",
+        "version":     "0.3.3",
         "protocol":    "2024-11-05",
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
         "usage":       "POST JSON-RPC 2.0 — methods: initialize, tools/list, tools/call",
-        "tools":       26,
-        "free_tools":  10,
-        "premium_tools": 16,
+        "tools":       29,
+        "free_tools":  19,
+        "premium_tools": 10,
         "auth":        "free: no key required | Tier 2 €99/mo (10k/mo) | Tier 3 €349/mo (50k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
         "highlight":   "server-side 3-layer memory (working/session/core) + ternary attention + MoE-13 deliberation + ternary compression",
         "upgrade":     "https://ternlang.com/pricing",
@@ -1435,7 +1437,7 @@ async fn mcp_handler(
                 "capabilities": { "tools": {} },
                 "serverInfo": {
                     "name":        "ternlang-mcp",
-                    "version":     "0.3.1",
+                    "version":     "0.3.3",
                     "description": "Ternlang — 20 MCP tools across free + premium tiers. Adds hold (trit=0) as a first-class AI decision outcome. Server-side 3-layer memory with ternary attention, MoE-13 deliberation, ternary compression, live BET VM, and multi-dimensional safety gate.",
                     "homepage":    "https://ternlang.com",
                     "pricing":     "https://ternlang.com/pricing",
@@ -3338,7 +3340,7 @@ async fn github_invite_collaborator(token: &str, github_username: &str) -> Resul
         .header("Authorization", format!("Bearer {}", token))
         .header("Accept", "application/vnd.github+json")
         .header("X-GitHub-Api-Version", "2022-11-28")
-        .header("User-Agent", "ternlang-api/0.3.2")
+        .header("User-Agent", "ternlang-api/0.3.3")
         .json(&serde_json::json!({ "permission": "pull" }))
         .send()
         .await
@@ -3750,7 +3752,7 @@ async fn main() {
     let state = Arc::new(AppState {
         admin_key,
         keys,
-        version: "0.3.2",
+        version: "0.3.3",
         stripe_webhook_secret,
         resend_api_key,
         github_token,
