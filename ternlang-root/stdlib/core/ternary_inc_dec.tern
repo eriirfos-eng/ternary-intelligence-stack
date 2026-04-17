@@ -1,0 +1,52 @@
+// stdlib/core/ternary_inc_dec.tern
+// Demonstrates: Ternary increment and decrement (circular and clamped).
+// Tier: 1 — Open Core
+
+fn trit_inc_circular(t: trit) -> trit {
+    match t {
+        -1 => { return tend;   }
+         0 => { return affirm; }
+         1 => { return reject; }
+    }
+}
+
+fn trit_dec_circular(t: trit) -> trit {
+    match t {
+        -1 => { return affirm; }
+         0 => { return reject; }
+         1 => { return tend;   }
+    }
+}
+
+fn trit_inc_clamped(t: trit) -> trit {
+    match t {
+        -1 => { return tend;   }
+         0 => { return affirm; }
+         1 => { return affirm; }
+    }
+}
+
+fn trit_dec_clamped(t: trit) -> trit {
+    match t {
+        -1 => { return reject; }
+         0 => { return reject; }
+         1 => { return tend;   }
+    }
+}
+
+fn main() -> trit {
+    let t: trit = reject;
+    
+    t = trit_inc_circular(t); // tend
+    t = trit_inc_circular(t); // affirm
+    t = trit_inc_circular(t); // reject
+    
+    let c: trit = affirm;
+    c = trit_inc_clamped(c); // affirm
+    
+    if t == reject && c == affirm {
+        return affirm;
+    }
+    
+    return reject;
+}
