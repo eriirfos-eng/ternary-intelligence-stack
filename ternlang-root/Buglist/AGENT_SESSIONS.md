@@ -542,3 +542,12 @@ Status: 30 files tested and committed. Build clean.
 - Wildcard imports (from "x" import *) preferred for cross-module complexity.
 
 **Status:** 50 files verified and committed.
+## 2026-04-17 — 50 modules committed (10 public, 40 premium)
+Batches:
+- Tier 1 (public): showcase/monte_carlo_trit, showcase/lorenz_attractor_ternary, showcase/neural_logic_gate, testing/overflow_saturation_test, testing/nested_match_test, testing/string_concat_test, core/trit_math_helpers, core/ternary_statistics, core/trit_vector_ops, core/trit_matrix_ops.
+- Tier 2 (premium): integrations/auth_token_validator, integrations/slack_notification_gate, integrations/discord_alert_mask, integrations/stripe_id_check, eval/performance_score_aggregator, eval/risk_threshold_eval, eval/safety_policy_compliance, eval/fairness_audit_mask, societal/voting_consensus_chain, societal/public_opinion_drift, societal/labor_market_index, societal/social_welfare_eval, data/hot_deck_imputer, data/categorical_encoder_mask, data/min_max_scaler_ternary, data/feature_importance_eval, agents/agent_negotiation_gate, agents/expert_consensus_gate, agents/agent_reliability_monitor, agents/moe_routing_logic, apps/task_scheduler_gate, apps/inventory_replenishment_mask, apps/customer_churn_eval, apps/fraud_detection_gate, ensemble/bagging_consensus_aggregator, ensemble/boosting_weight_mask, ensemble/stacking_layer_eval, ensemble/voting_classifier_gate, graph/node_connectivity_eval, graph/shortest_path_heuristic_mask.
+- Tier 3 (premium): crypto/elliptic_curve_addition_mask, crypto/ring_signature_consensus, crypto/homomorphic_op_gate, timeseries/hurst_exponent_eval, timeseries/seasonal_decomposition_mask, timeseries/anomaly_score_aggregator, gametheory/bayesian_game_eval, gametheory/correlated_equilibrium_mask, gametheory/shapley_value_consensus, systems/resource_lease_gate.
+Findings:
+- len(string) triggers BET-007.
+- 2D tensor syntax is trittensor<R x C> with flat access.
+- 2D literals must be flat.
