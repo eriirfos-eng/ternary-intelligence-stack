@@ -1,0 +1,48 @@
+// stdlib/logic/ternary_shifter.tern
+// Demonstrates: Ternary vector shift logic (left/right with zero-fill).
+// Tier: 1
+
+fn shift_left(data: trittensor<5>) -> trittensor<5> {
+    let result: trittensor<5>;
+    let i: int = 0;
+    while i < 4 {
+        result[i] = data[i + 1];
+        i = i + 1;
+    }
+    result[4] = 0;
+    return result;
+}
+
+fn shift_right(data: trittensor<5>) -> trittensor<5> {
+    let result: trittensor<5>;
+    let i: int = 4;
+    while i > 0 {
+        result[i] = data[i - 1];
+        i = i - 1;
+    }
+    result[0] = 0;
+    return result;
+}
+
+fn main() -> trit {
+    let data: trittensor<5>;
+    data[0] = 1;
+    data[1] = -1;
+    data[2] = 1;
+    data[3] = 0;
+    data[4] = -1;
+    
+    println("Original:");
+    println(data[0]); println(data[1]); println(data[2]); println(data[3]); println(data[4]);
+    
+    let left: trittensor<5> = shift_left(data);
+    println("Shift Left:");
+    println(left[0]); println(left[1]); println(left[2]); println(left[3]); println(left[4]);
+    
+    let right: trittensor<5> = shift_right(data);
+    println("Shift Right:");
+    println(right[0]); println(right[1]); println(right[2]); println(right[3]); println(right[4]);
+    
+    println("Program exited successfully.");
+    return 1;
+}
