@@ -2919,7 +2919,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_decide",
           "description": "Convert float evidence into a ternary decision (-1 conflict / 0 hold / +1 affirm) with confidence score and human-readable interpretation. The core ternary reasoning primitive.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Decide — Scalar Evidence → Ternary Decision", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["evidence"],
             "properties": {
               "evidence": { "type": "array", "items": {"type":"number"}, "description": "Array of float values in range [-1.0, 1.0]. Each value is one evidence dimension. Positive = supporting, negative = opposing, near-zero = ambiguous." },
@@ -2930,7 +2930,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_consensus",
           "description": "Balanced ternary consensus of two trit values: +1 if both affirm, -1 if both conflict, 0 (hold) for any disagreement. Use to merge two independent ternary judgements.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Consensus — Balanced Ternary Addition", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["a","b"],
             "properties": {
               "a": { "type": "number", "description": "First trit value. Must be -1, 0, or +1." },
@@ -2941,7 +2941,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_eval",
           "description": "Evaluate a single ternlang expression on the live BET (Balanced Execution Trit) VM. Returns the trit result. Good for quick expression testing without writing a full program.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Eval — BET VM Expression Evaluator", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["expression"],
             "properties": {
               "expression": { "type": "string", "description": "A ternlang expression to evaluate, e.g. 'trit_add(+1, -1)' or 'majority(+1, +1, -1)'. Must be valid ternlang syntax." }
@@ -2951,7 +2951,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "ternlang_run",
           "description": "Compile and run a complete .tern source program on the BET VM. Use for multi-statement programs, function definitions, struct usage, agent spawning, and tensor operations.",
-          "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
+          "annotations": { "title": "Ternlang Run — Execute .tern Programs on BET VM", "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["code"],
             "properties": {
               "code": { "type": "string", "description": "Full ternlang source code as a UTF-8 string. May contain fn definitions, let bindings, match expressions, struct defs, agent/spawn/send/await, and @sparseskip directives." }
@@ -2961,7 +2961,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "quantize_weights",
           "description": "Quantize f32 neural network weights to ternary {-1, 0, +1} using BitNet-style absolute-mean thresholding. Returns quantized weights, sparsity ratio, and effective compute savings.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Quantize Weights — Float → Ternary (BitNet)", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["weights"],
             "properties": {
               "weights": { "type": "array", "items": {"type":"number"}, "description": "Array of f32 neural network weights to quantize. Typically a flattened matrix row or layer." },
@@ -2972,7 +2972,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "sparse_benchmark",
           "description": "Benchmark sparse vs dense ternary matrix multiplication. Reports sparsity ratio, multiply-op count for both methods, and speedup factor. Demonstrates the @sparseskip efficiency gain.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Sparse Benchmark — Ternary Matmul Efficiency", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object",
             "properties": {
               "size": { "type": "integer", "description": "Square matrix dimension N for the N×N benchmark. Defaults to 8. Larger sizes amplify the sparsity benefit." },
@@ -2983,7 +2983,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "moe_orchestrate",
           "description": "MoE-13 deliberation — routes your query through 13 specialised expert agents (deductive, inductive, safety, fact-check, causal, ambiguity, math, context, meta-safety, and more) with dual-key synergistic routing and a hard safety veto. FREE preview: returns the real trit verdict + top-3 expert voices. Full 13-expert response with triad field, routing pair, synergy scores, and SSE streaming available via REST API (X-Ternlang-Key, Tier 2). Call trit_upgrade to see what unlocks.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
+          "annotations": { "title": "MoE Orchestrate — Full 13-Expert Ternary Reasoning", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
           "inputSchema": { "type": "object", "required": ["query"],
             "properties": {
               "query": { "type": "string", "description": "Natural-language query or statement for the expert ensemble to deliberate on. Can be a question, an action proposal, a claim to verify, or a text to analyse." },
@@ -2994,7 +2994,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "moe_deliberate",
           "description": "EMA-based iterative deliberation engine. Feeds evidence round by round, applying exponential moving average smoothing, until the target confidence is reached or max_rounds is exhausted. Returns per-round trace and final trit verdict.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
+          "annotations": { "title": "MoE Deliberate — EMA Iterative Convergence Engine", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["target_confidence","rounds_evidence"],
             "properties": {
               "target_confidence": { "type": "number", "description": "Confidence level (0.0–1.0) at which deliberation stops early. E.g. 0.85 means stop once the EMA confidence exceeds 85%." },
@@ -3007,7 +3007,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_action_gate",
           "description": "Multi-dimensional safety gate for action authorisation. Each dimension contributes weighted evidence; any dimension marked hard_block:true with negative evidence immediately vetoes the action and returns trit=-1. Returns aggregate trit, per-dimension breakdown, and veto reason if blocked.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Action Gate — Safety Veto + Weighted Vote", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["dimensions"],
             "properties": {
               "dimensions": { "type": "array",
@@ -3027,13 +3027,13 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_upgrade",
           "description": "Returns a structured map of what is available free via MCP vs what unlocks with a paid API key: Tier 2 €24.99/mo (10k calls/mo), Tier 3 €49.99/mo (20k calls/mo), Tier 4 Enterprise (contact us). Unlocks include full MoE-13 experts, SSE streaming, server-side three-layer memory, ternary context compression, and production SLA. Call this tool when a user asks 'what can I do with ternlang?' or 'how do I get more out of this?'",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Upgrade — Feature Map (Free vs Premium)", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "properties": {} }
         },
         {
           "name": "trit_mem_write",
           "description": "Write a memory entry to one of three layers: working (hot context, TTL 1h), session (flow patterns, TTL 24h), or core (identity anchors, never evicted). Annotate each entry with a trit confidence score (+1 affirm / 0 tend / -1 reject). Session and core writes are automatically compressed via ternary sparsity (low-information sentences stripped). Premium: memory is stored server-side — no state blob required.",
-          "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
+          "annotations": { "title": "Trit Mem Write — Three-Layer Memory Write", "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["layer","key","value"],
             "properties": {
               "layer":    { "type": "string",  "enum": ["working","session","core"], "description": "Memory layer to write into." },
@@ -3047,7 +3047,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_mem_read",
           "description": "Read from three-layer memory using ternary attention. Each entry is scored: attention = key_overlap×0.35 + value_overlap×0.55 + trit_bias×0.10. Returns entries sorted by relevance. Attention trit: >0.45=affirm (highly relevant), 0.20–0.45=tend (partial match). Expired entries are automatically excluded. Premium: reads from server-side store keyed to your API key.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Mem Read — Ternary Attention Memory Read", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["query"],
             "properties": {
               "query":  { "type": "string", "description": "Natural language query. Matched against all entry keys and values using ternary attention." },
@@ -3058,19 +3058,19 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_mem_consolidate",
           "description": "Run the three-layer memory consolidation cycle: (1) evict expired working entries; (2) promote affirm working entries to session with ternary compression; (3) promote long-lived affirm session entries to core with MoE-13 trit resolution; (4) upsert into core. Returns promotion counts and updated layer sizes. Call periodically (e.g. end of conversation turn) to maintain memory hygiene.",
-          "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
+          "annotations": { "title": "Trit Mem Consolidate — Memory Promotion Cycle", "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
           "inputSchema": { "type": "object", "properties": {} }
         },
         {
           "name": "trit_mem_stats",
           "description": "Return statistics for all three memory layers: entry counts, trit distribution (affirm/tend/reject), expired-but-not-yet-evicted entries, oldest and newest entry ages. Useful for debugging memory health and deciding when to consolidate.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Mem Stats — Memory Layer Health Report", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "properties": {} }
         },
         {
           "name": "trit_mem_compress",
           "description": "Apply ternary sparsity compression to an entire memory layer in-place. Strips low-information sentences (density < 0.25) from every entry's value, keeps high-signal sentences verbatim, and truncates medium-density sentences to their first phrase. Optionally drops all reject-trit entries. Returns original vs compressed byte counts and compression ratio.",
-          "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Mem Compress — Ternary Sparsity Compression", "readOnlyHint": false, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["layer"],
             "properties": {
               "layer":       { "type": "string",  "enum": ["working","session","core"], "description": "Layer to compress." },
@@ -3081,7 +3081,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_debate",
           "description": "Route two claims through MoE-13, compare their ternary verdicts, and return a tension score, synthesis, and AGREEMENT/CONFLICT/HOLD verdict. Useful for due-diligence, legal review, and argumentation analysis.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
+          "annotations": { "title": "Trit Debate — Structured 3-Way Verdict on Competing Claims", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
           "inputSchema": { "type": "object", "required": ["claim_a","claim_b"],
             "properties": {
               "claim_a":  { "type": "string", "description": "First claim or statement to evaluate." },
@@ -3093,7 +3093,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_uncertainty_map",
           "description": "Annotate every sentence (or paragraph) in a text with a trit value: +1 affirm (confident language), 0 tend (hedging language), -1 reject (contradicting language). Returns an uncertainty ratio and per-claim breakdown.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Uncertainty Map — Text Annotation by Confidence", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["text"],
             "properties": {
               "text":        { "type": "string", "description": "Text to annotate. Can be a document, report, or any natural-language content." },
@@ -3104,7 +3104,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_calibrate",
           "description": "Analyse an AI agent's recent decision log for binary habituation. Detects how often the agent forced YES/NO when the evidence called for hold (tend). Returns a calibration score trit, binary ratio, and flagged decisions.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Calibrate — Binary Habituation Detector", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["decisions"],
             "properties": {
               "decisions": { "type": "array", "description": "Array of decision objects: {input, output, confidence?}.",
@@ -3122,7 +3122,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_translate",
           "description": "Convert binary control-flow code (Python if/elif/else, SQL CASE WHEN, JSON rule arrays) into equivalent .tern code with explicit tend arms injected wherever the original code had no coverage. Returns generated .tern code + count of hold zones added.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Translate — Binary Code → Ternary .tern Programs", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["code"],
             "properties": {
               "code":     { "type": "string", "description": "Source code to translate." },
@@ -3133,7 +3133,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_eco_check",
           "description": "Evaluate a proposed action along two axes: human-optimal (via MoE-13) and eco-optimal (keyword heuristic). When they diverge, synthesis returns tend — a signal to find a path that serves both. Scoped to local, regional, or global impact.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
+          "annotations": { "title": "Trit Eco Check — Human + Ecocentric Dual Perspective", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
           "inputSchema": { "type": "object", "required": ["action"],
             "properties": {
               "action":  { "type": "string", "description": "Proposed action to evaluate." },
@@ -3145,7 +3145,7 @@ fn mcp_tools_manifest() -> Value {
         {
           "name": "trit_audit",
           "description": "Full TernAudit of an AI decision log. Returns binary habituation ratio, EU AI Act Article 13 (transparency) and Article 14 (human oversight) heuristic assessment, calibration score, and flagged decisions that should have been held. Tier 3+ recommended for production compliance use.",
-          "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "annotations": { "title": "Trit Audit — EU AI Act Compliance Report", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["decisions"],
             "properties": {
               "decisions": { "type": "array", "description": "Array of {input, output, confidence?} decision objects to audit.",
