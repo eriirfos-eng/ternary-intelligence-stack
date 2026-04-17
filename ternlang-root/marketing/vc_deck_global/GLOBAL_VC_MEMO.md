@@ -32,7 +32,7 @@ TIS introduces native **Uncertainty-Aware (TUANN) Logic** by embedding a third c
 ## Business Model: "The Octopus Paradigm"
 A highly defensible, three-tiered monetization structure:
 1. **Tier 1 (Open Core - LGPL-3.0):** 30,000+ stdlib modules. Drives ubiquitous academic and developer adoption.
-2. **Tier 2 (Restricted API - €24.99/mo):** Proprietary 3-Layer Memory, MoE-13 routing, and Lossy Tend Compression. Cryptographically tethered to the RFI-IRFOS Genesis API. Generates high-margin recurring SaaS revenue.
+2. **Tier 2 (Restricted API - €24.99/mo):** Proprietary 3-Layer Memory, MoE-13 routing, and Lossy Tend Compression. Licensed under BSL-1.1. Generates high-margin recurring SaaS revenue.
 3. **Tier 3 (Enterprise - $1M+ site licenses):** Air-gapped on-premise execution, zero-latency FPGA bridges, and SLA-guaranteed cluster managers for defense and tier-1 finance.
 
 ## Team

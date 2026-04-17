@@ -11,7 +11,7 @@ The "Octopus Paradigm" monetization model for the **Ternary Intelligence Stack (
 ## Phase 2: The "Compute Tax" via Tier 2 API (Months 6-18)
 **Strategy:** Launch proprietary Restricted API (BSL 1.1) at €24.99/mo per seat.
 **Value Prop:** Startups and mid-market AI companies hit binary memory/compute limits and require our proprietary **MoE-13 Router** and **Lossy Tend Compression** to scale models cheaply.
-**Cryptographic Lock-in:** These modules require a heartbeat connection to the RFI-IRFOS Genesis API via Fly.io. We do not just sell a library; we operate the routing switchboard.
+**Cryptographic Lock-in:** These modules require a heartbeat connection to the RFI-IRFOS Ternlang API via Fly.io. We do not just sell a library; we operate the routing switchboard.
 **Financial Projection:** 
 *   **Target Users:** 50,000 AI researchers & enterprise developers.
 *   **Pricing:** $300/year (€24.99/mo).

@@ -14,7 +14,7 @@ The unprecedented expansion of the standard library implements the newly codifie
 ### A Three-Tiered Commercial Era
 This milestone also officially marks the commercial launch of TIS:
 *   **Tier 1 (Open Core, LGPL-3.0):** Over 30,000 standard library modules for developers to freely build and research ternary logic kernels.
-*   **Tier 2 (Restricted API, BSL 1.1):** A proprietary suite of commercial modules—including the MoE-13 router, 3-Layer Memory Stack, and Lossy Tend Compression—cryptographically tethered to the RFI-IRFOS Genesis API at €24.99/mo.
+*   **Tier 2 (Restricted API, BSL 1.1):** A proprietary suite of commercial modules—including the MoE-13 router, 3-Layer Memory Stack, and Lossy Tend Compression—licensed under BSL-1.1 at €24.99/mo.
 *   **Tier 3 (Enterprise):** Air-gapped, zero-latency FPGA, and cluster orchestrators designed for high-compliance defense and enterprise deployments.
 
 ### Formalizing Uncertainty

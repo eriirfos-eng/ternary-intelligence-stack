@@ -30,19 +30,10 @@ pub trait TernaryDriver {
 
 pub struct BetHal {
     pub backend: BackendType,
-    pub is_tethered: bool,
 }
 
 impl BetHal {
     pub fn new(backend: BackendType) -> Self {
-        Self {
-            backend,
-            is_tethered: true, // RFI-IRFOS Tether is mandatory
-        }
-    }
-
-    pub fn verify_tether(&self) -> bool {
-        // Core security: Drivers refuse to boot without Fly.io API heartbeat
-        std::env::var("RFI_FLYIO_TETHER").is_ok() || std::env::var("RFI_UNIT_TEST").is_ok()
+        Self { backend }
     }
 }

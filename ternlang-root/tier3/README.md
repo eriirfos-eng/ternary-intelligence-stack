@@ -19,7 +19,7 @@ The Enterprise Tier provides the foundational infrastructure for deploying the T
 
 ### 4. Secure On-Premise Execution (`onprem/`)
 - **Air-Gap Support:** Zero-telemetry deployments for defense and national infrastructure.
-- **Local Proxy Gates:** High-security handshakes that bypass the cloud-based Genesis API while maintaining T-SPEC-v2.0 compliance.
+- **Local Proxy Gates:** High-security handshakes that bypass the cloud API while maintaining T-SPEC-v2.0 compliance.
 
 ---
 **Restricted Access:** This directory contains proprietary IP. Reproduction or deployment requires a valid Tier 3 Enterprise Site License from RFI-IRFOS.

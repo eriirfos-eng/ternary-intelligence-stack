@@ -3,8 +3,6 @@
 
 pub mod kernel {
     pub fn sparse_matmul_bypass() {
-        if std::env::var("RFI_GENESIS_TOKEN").is_ok() {
-            println!("CANDLE [TIS]: Bypassing to native triadic matrix kernel.");
-        }
+        println!("CANDLE [TIS]: Bypassing to native triadic matrix kernel.");
     }
 }
