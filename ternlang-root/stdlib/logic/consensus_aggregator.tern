@@ -1,0 +1,51 @@
+// stdlib/logic/consensus_aggregator.tern
+// Demonstrates: Multi-input consensus aggregation using majority-style logic.
+// Tier: 1
+
+fn aggregate_consensus(inputs: trit[]) -> trit {
+    let sum: int = 0;
+    let i: int = 0;
+    let len: int = length(inputs);
+    
+    while i < len {
+        let val: trit = inputs[i];
+        match val {
+            1  => { sum = sum + 1; }
+            0  => { sum = sum + 0; }
+            -1 => { sum = sum - 1; }
+        }
+        i = i + 1;
+    }
+    
+    let result: trit = 0;
+    if sum > 0 {
+        result = 1;
+    } else {
+        if sum < 0 {
+            result = -1;
+        } else {
+            result = 0;
+        }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let data: trittensor<5>;
+    data[0] = 1;
+    data[1] = 1;
+    data[2] = 0;
+    data[3] = -1;
+    data[4] = 1;
+    
+    let consensus: trit = aggregate_consensus(data);
+    
+    match consensus {
+        1  => { println("Consensus: Affirm"); }
+        0  => { println("Consensus: Hold");   }
+        -1 => { println("Consensus: Reject"); }
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
