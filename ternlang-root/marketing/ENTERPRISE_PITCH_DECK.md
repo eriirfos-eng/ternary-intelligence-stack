@@ -21,7 +21,7 @@ We operate on a standardized monetization and distribution model:
 **Slide 4: Why Upgrade to Tier 3?**
 For defense, high-frequency trading, and national infrastructure:
 - **Hardware Integration:** Compile ternary primitives directly into VHDL/Verilog using the `hdl_bridge`.
-- **Absolute Privacy:** `airgap_deployment` ensures no outbound telemetry back to the Genesis API. 
+- **Absolute Privacy:** `airgap_deployment` ensures no outbound telemetry back to cloud services. 
 - **Scale:** `distributed_shard_manager` allows seamless 10,000-node cluster operations.
 
 **Slide 5: Commercial Verticals Available Today**

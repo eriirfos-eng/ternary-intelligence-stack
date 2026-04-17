@@ -515,7 +515,7 @@ For local stdio transport (Claude Desktop, offline use):
 - [**T-ARCHIVE v1.0**](spec/standards/T-ARCHIVE-v1.0.md): Triadic Cold Storage — Neutral State structural stability.
 - [**T-Fi v1.0**](spec/standards/T-Fi-v1.0.md): Triadic Compute Currency — Standardizing the TaaS cryptographic toll.
 - [**T-TAX v1.0**](spec/standards/T-TAX-v1.0.md): Automatic Compute Dividends — Decentralized royalty routing.
-- [**T-GENESIS v1.0**](spec/standards/GENESIS-ANCHOR.md): The Triadic Trust Anchor. Mandates global MoE-13 consensus validation to prevent logic drift.
+
 
 ---
 
