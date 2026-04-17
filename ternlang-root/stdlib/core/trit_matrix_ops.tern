@@ -1,0 +1,30 @@
+// stdlib/core/trit_matrix_ops.tern
+// Demonstrates: Basic matrix operations on 2x2 trit matrices
+// Tier: 1 — Open Core
+
+fn matrix_transpose(m: trittensor<2 x 2>) -> trittensor<2 x 2> {
+    let res: trittensor<2 x 2> = [0, 0, 0, 0];
+    res[0] = m[0];
+    res[1] = m[2];
+    res[2] = m[1];
+    res[3] = m[3];
+    return res;
+}
+
+fn main() -> trit {
+    let m: trittensor<2 x 2> = [1, 0, -1, 1];
+    
+    let mt: trittensor<2 x 2> = matrix_transpose(m);
+    
+    print(" Matrix Transpose: [");
+    print(mt[0]); print(", "); print(mt[1]);
+    print("], [");
+    print(mt[2]); print(", "); print(mt[3]);
+    print("]");
+    
+    if mt[1] == reject {
+        return truth();
+    }
+    
+    return conflict();
+}
