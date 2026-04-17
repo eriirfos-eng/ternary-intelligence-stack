@@ -573,3 +573,14 @@ Release:
 - Published to crates.io: ternlang-core, ternlang-hdl, ternlang-ml, ternlang-moe, ternlang-compat, ternlang-lsp, ternlang-runtime, ternlang-cli (all v1.0.0)
 - Published to Open VSX: rfi-irfos.ternlang-vscode v1.0.0
 - MCP server: ternlang-mcp v1.0.0 (Smithery, already published previous session)
+## 2026-04-17 21:53 — 50 files committed (10 public, 40 premium)
+Batches:
+- Tier 1 (public): errors/null_pointer_mask, errors/type_mismatch_aggregator, testing/assertion_helpers, testing/fuzzy_validator, tutorials/05_nested_match_depth, tutorials/06_tensor_slicing_logic, errors/runtime_sanity_check, testing/boundary_test_suite, tutorials/07_string_parsing_basics, errors/recovery_strategy_gate.
+- Tier 2 (premium): finance/loan_risk_eval, finance/currency_volatility_mask, finance/portfolio_rebalance_gate, finance/arbitrage_opportunity_eval, finance/credit_limit_gate, safety/industrial_shutdown_logic, safety/hazard_detection_gate, safety/access_control_mask, safety/compliance_drift_monitor, safety/incident_response_gate, ml/gradient_clipping_mask, ml/dropout_mask_ternary, ml/learning_rate_scheduler_gate, ml/momentum_buffer_gate, ml/early_stopping_eval, distributed/byzantine_fault_mask, distributed/latency_mask_ternary, distributed/replica_sync_gate, distributed/heartbeat_monitor_gate, distributed/partition_recovery_eval.
+- Tier 3 (premium): stats/t_test_eval_gate, stats/correlation_mask_ternary, stats/skewness_detector_gate, stats/kurtosis_profile_eval, stats/variance_analysis_gate, stats/outlier_iqr_gate, stats/z_score_threshold_mask, crypto/xor_checksum_mask, crypto/entropy_eval_gate, crypto/signature_verify_mock, crypto/nonce_reuse_detector, crypto/padding_oracle_mask, crypto/key_derivation_gate, gametheory/zero_sum_eval, gametheory/dominant_strategy_mask, gametheory/payoff_matrix_gate, gametheory/mixed_strategy_eval, gametheory/prisoner_dilemma_mask, gametheory/cooperation_equilibrium_eval, gametheory/threat_level_mask.
+
+Findings:
+- 'hold' keyword is stable; 'hold()' function call may have edge case issues in complex expressions.
+- Assignment of expression to 'let' before 'if' condition remains safest for complex float logic.
+
+Status: 50 files verified and committed. Build clean.
