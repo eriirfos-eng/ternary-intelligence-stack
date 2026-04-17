@@ -1,0 +1,47 @@
+// stdlib/std/array_utils.tern
+// Demonstrates: Trit tensor utilities — min, max, and count.
+// Tier: 1 — Open Core
+
+fn find_max(arr: trit[]) -> trit {
+    let max_val: trit = reject;
+    for val in arr {
+        if val > max_val {
+            max_val = val;
+        }
+    }
+    return max_val;
+}
+
+fn find_min(arr: trit[]) -> trit {
+    let min_val: trit = affirm;
+    for val in arr {
+        if val < min_val {
+            min_val = val;
+        }
+    }
+    return min_val;
+}
+
+fn count_affirm(arr: trit[]) -> int {
+    let count: int = 0;
+    for val in arr {
+        if val == affirm {
+            count = count + 1;
+        }
+    }
+    return count;
+}
+
+fn main() -> trit {
+    let data: trit[] = [reject, tend, affirm, tend, reject];
+    
+    let max_v: trit = find_max(data);
+    let min_v: trit = find_min(data);
+    let count_v: int = count_affirm(data);
+    
+    if max_v == affirm && min_v == reject && count_v == 1 {
+        return affirm;
+    }
+    
+    return reject;
+}
