@@ -1,7 +1,7 @@
 # Ternlang Roadmap: Bridging the Ternary Software Deficit
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
-**Current Version:** v0.3.3
-**Last Updated:** 2026-04-16
+**Current Version:** v0.3.3 (crates) / v1.0.0 (ternlang-mcp)
+**Last Updated:** 2026-04-17
 **Repo:** https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-
 **Local:** ~/Desktop/Ternary Intelligence Stack (TIS)/
 
@@ -439,23 +439,27 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 ---
 
 ═══════════════════════════════════════════════════
-# PENDING ACTION ITEMS (as of 2026-04-16)
+# PENDING ACTION ITEMS (as of 2026-04-17)
 ═══════════════════════════════════════════════════
 
-### High Priority — Completed This Session
+### High Priority — Completed This Session (2026-04-17)
+- [x] **Smithery uptime fix** — premium tool errors changed from JSON-RPC protocol errors → MCP tool-level `isError:true`. Deployed to Fly.io. 2026-04-17.
+- [x] **KPI dashboard** — `~/Desktop/ternlang_kpi_fetch.py` (1054 lines): live crates.io/OpenVSX/GitHub/Smithery data, 5-min auto-refresh, light/dark, XLSX export, milestone alerts, Firefox launch. 2026-04-17.
+- [x] **Day-0 baseline locked** — `~/Desktop/ternlang_baseline.json` (crates 749, openvsx 554, gh_stars 4). Permanent reference point. 2026-04-17.
+- [x] **Permanent GitHub traffic log** — `~/Desktop/ternlang_gh_traffic.json` — 14-day window merges on every run, data never expires. 2026-04-17.
+- [x] **ternlang-mcp v1.0.0** — README.md created, package.json hardened (keywords/homepage/repo/license), smithery.yaml systemPrompt added, published to Smithery (release `a02625c1`, 30 tools). 2026-04-17.
+- [x] **STDLIB_AGENT.md targeted scan protocol** — replaced global weakness scan with per-directory targeted check (10 ls commands max, hard prohibition on ls -R / find across full tree). 2026-04-17.
+
+### High Priority — Completed Previous Session (2026-04-16)
 - [x] **v0.3.3 crates.io republish** — all 8 crates (core→cli) republished at v0.3.3. 2026-04-16.
 - [x] **`ternlang check`** — new subcommand: parse-only validation, walks dirs, per-file ok/error + fn count. 2026-04-16.
 - [x] **`ternlang exec <file.tbc>`** — run pre-compiled bytecode. 2026-04-16.
 - [x] **`ternlang run --debug`** — verbose register dump with variable name labels. 2026-04-16.
 - [x] **`ternlang build` fixed** — emits header-jump + `emit_entry_call("main")`, .tbc files are now self-contained. 2026-04-16.
-- [x] **Clean run output** — coloured result box + tips replacing all-`trit(tend)` register dump. 2026-04-16.
 - [x] **VS Code extension v0.3.3** — full rebuild from stub. Published to Open VSX. 2026-04-16.
-- [x] **USN academic outreach** — contacted 2026-04-13, Dr. Bos replied, silent PRs opened. 2026-04-16.
-- [x] **TernStudio full rewrite** — SAP-style dashboard. Done 2026-04-10.
-- [x] **stdlib/qnn/** — 10 Qutrit Neural Network modules populated. Done 2026-04-10.
-- [x] **ROADMAP structural refactor** — duplicate phases renumbered, broken table fixed, section dividers added. 2026-04-16.
 
 ### Medium Priority — Remaining
+- [ ] **Smithery score check** — verify if 100/100 achieved after release `a02625c1` rescan. Address any remaining gaps.
 - [ ] **Whitepaper update** — stdlib count now 27,000+ files, 267 examples in root + 2,090 total. Update Section 10 implementation status table.
 - [ ] **Phase 7C follow-up** — after PRs merged, propose BET-ISA alignment with USN BCT standard.
 - [ ] **Phase 11A/11B build** — 5 new MCP tools + EcoCore in ternlang-moe.
@@ -464,7 +468,7 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 ### Low Priority / Nice to Have
 - [ ] **README example count update** — actual count is 2,090 in examples/. Update table to "2,000+".
 - [ ] **Benchmark blog post** — Document 2.3×–122× sparse matmul results vs float32 (with methodology note).
-- [ ] **Gemini stdlib sessions** — Continue breadth-first population per STDLIB_AGENT.md v2.5. Target: 50 new files per session.
+- [ ] **Gemini stdlib sessions** — Continue breadth-first population per STDLIB_AGENT.md (now with targeted scan protocol). Target: 50 new files per session.
 
 ---
 
@@ -537,4 +541,5 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | 2026-04-12 | MCP registry / Smithery — listed as `rfi-irfos/ternlang` at smithery.ai. Description + icon updated to v0.3.0 via API. Tools auto-scanned from live server. |
 | 2026-04-14 | **MILESTONE: 1.2B Parameter Binary Model + TritTransformer.** Created `ModelCoherence` binary format for `ternlang-ml`, reducing 1.2GB JSON to 240MB packed binary. Implemented `TritTransformer` (Llama-3 architecture) in Rust with RMSNorm, RoPE, and SwiGLU kernels. Verified model loading and performed first full 1.2B parameter ternary forward pass in `ternlang-ml/src/bin/inference.rs`. |
 | 2026-04-13 | USN academic outreach: Dr. Steven Bos (USN) replied. Key feedback: (1) hardware switching is the real bottleneck, not software; (2) 122× benchmark claim questioned — needs sim vs real hardware distinction; (3) AI-generated prose flagged as off-putting. Simeon opened 2 silent PRs fixing bugs in their codebase. |
+| 2026-04-17 | **[Smithery uptime + MCP v1.0.0 + KPI dashboard + STDLIB_AGENT targeted scan]** Smithery 0% uptime fixed (protocol errors → MCP isError:true). Deployed to Fly.io (release 412ff381). KPI dashboard built: ternlang_kpi_fetch.py (1054 lines), Day-0 baseline locked, permanent traffic log, 5-min live chart, light/dark, XLSX export, Firefox launch. ternlang-mcp bumped to v1.0.0: README.md created, package.json hardened, smithery.yaml systemPrompt added. Republished to Smithery (release a02625c1, 30 tools confirmed). STDLIB_AGENT.md: global weakness scan replaced with targeted 10-dir check protocol (wc -l per dir, single-file existence check before writing, hard ban on ls -R / find). |
 | 2026-04-16 | **[CLI v0.3.3 + VS Code v0.3.3]** `ternlang check`: parse-only validator, walks directories, per-file ok/error + fn count. `ternlang exec <file.tbc>`: run pre-compiled bytecode — completes build→exec pipeline. `ternlang run --debug`: verbose register dump with variable name labels. `ternlang run`: clean coloured result box by default. `ternlang build` fixed: header-jump + entry_call("main") now emitted — .tbc files self-contained. `ternlang <file>` shortcut. All 8 crates bumped to v0.3.3 and published to crates.io. VS Code extension v0.3.3 rebuilt from scratch — full grammar, 8 snippets, 5 commands, check-on-save diagnostics, language-config. Published to Open VSX only. GitHub release v0.3.3 tagged. Stripe webhook secret rotated after public exposure in ROADMAP.md. ROADMAP structurally refactored: duplicate Phase 12/13 renumbered to 17/18, broken session log table header fixed, section dividers added, orphaned rows moved to appendix. |
