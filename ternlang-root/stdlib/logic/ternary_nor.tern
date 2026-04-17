@@ -1,0 +1,43 @@
+// stdlib/logic/ternary_nor.tern
+// Demonstrates: Ternary NOR gate logic (NOT of the maximum value).
+// Tier: 1
+
+fn ternary_nor(a: trit, b: trit) -> trit {
+    // NOR(a, b) = NOT(MAX(a, b))
+    let max_val: trit = 0;
+    if a > b {
+        max_val = a;
+    } else {
+        max_val = b;
+    }
+    
+    let result: trit = 0;
+    match max_val {
+        1  => { result = -1; }
+        0  => { result = 0;  }
+        -1 => { result = 1;  }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let inputs_a: trittensor<3>;
+    let inputs_b: trittensor<3>;
+    inputs_a[0] = 1;  inputs_b[0] = 1;
+    inputs_a[1] = 0;  inputs_b[1] = 0;
+    inputs_a[2] = -1; inputs_b[2] = -1;
+    
+    let i: int = 0;
+    while i < 3 {
+        let res: trit = ternary_nor(inputs_a[i], inputs_b[i]);
+        println("NOR of:");
+        println(inputs_a[i]);
+        println(inputs_b[i]);
+        println("Result:");
+        println(res);
+        i = i + 1;
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
