@@ -1,0 +1,46 @@
+// stdlib/logic/ternary_xor_consensus.tern
+// Demonstrates: Ternary XOR logic (sum mod 3 in balanced ternary).
+// Tier: 1
+
+fn ternary_xor(a: trit, b: trit) -> trit {
+    // Balanced ternary sum:
+    // 1 + 1 = -1 (carry 1)
+    // 1 + 0 = 1
+    // 1 + -1 = 0
+    // 0 + 0 = 0
+    // -1 + -1 = 1 (carry -1)
+    let sum: int = cast(a) + cast(b);
+    let result: trit = 0;
+    
+    if sum > 1 {
+        result = -1;
+    } else {
+        if sum < -1 {
+            result = 1;
+        } else {
+            result = cast(sum);
+        }
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let inputs_a: trittensor<5>;
+    let inputs_b: trittensor<5>;
+    inputs_a[0] = 1;  inputs_b[0] = 1;
+    inputs_a[1] = 1;  inputs_b[1] = 0;
+    inputs_a[2] = 1;  inputs_b[2] = -1;
+    inputs_a[3] = -1; inputs_b[3] = -1;
+    inputs_a[4] = 0;  inputs_b[4] = 0;
+    
+    let i: int = 0;
+    while i < 5 {
+        let res: trit = ternary_xor(inputs_a[i], inputs_b[i]);
+        println("XOR result:");
+        println(res);
+        i = i + 1;
+    }
+    
+    println("Program exited successfully.");
+    return 1;
+}
