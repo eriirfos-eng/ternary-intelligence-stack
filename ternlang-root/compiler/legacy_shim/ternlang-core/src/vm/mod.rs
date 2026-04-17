@@ -255,32 +255,35 @@ impl BetVm {
                         _ => return Err(VmError::TypeMismatch { expected: "Numeric".into(), found: format!("{:?}", a) }),
                     }
                 }
-                0x05 => { // TjmpPos — jumps if top is +1
+                0x05 => { // TjmpPos — jumps if top is positive (Affirm / any int > 0)
                     let addr = self.read_u16()?;
                     let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
                     let is_pos = match val {
                         Value::Trit(Trit::Affirm) => true,
-                        Value::Int(1) => true,
+                        Value::Int(v) => *v > 0,
+                        Value::Float(f) => *f > 0.0,
                         _ => false,
                     };
                     if is_pos { self.pc = addr as usize; }
                 }
-                0x06 => { // TjmpZero — jumps if top is 0
+                0x06 => { // TjmpZero — jumps if top is zero (Tend / 0)
                     let addr = self.read_u16()?;
                     let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
                     let is_zero = match val {
                         Value::Trit(Trit::Tend) => true,
-                        Value::Int(0) => true,
+                        Value::Int(v) => *v == 0,
+                        Value::Float(f) => *f == 0.0,
                         _ => false,
                     };
                     if is_zero { self.pc = addr as usize; }
                 }
-                0x07 => { // TjmpNeg — jumps if top is -1
+                0x07 => { // TjmpNeg — jumps if top is negative (Reject / any int < 0)
                     let addr = self.read_u16()?;
                     let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
                     let is_neg = match val {
                         Value::Trit(Trit::Reject) => true,
-                        Value::Int(-1) => true,
+                        Value::Int(v) => *v < 0,
+                        Value::Float(f) => *f < 0.0,
                         _ => false,
                     };
                     if is_neg { self.pc = addr as usize; }
@@ -683,16 +686,25 @@ impl BetVm {
                         return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) });
                     }
                 }
-                0x24 => { // Tshape
+                0x24 => { // Tshape — TensorRef → (rows, cols); String → (len, 1)
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    if let Value::TensorRef(idx) = rf {
-                        if idx >= self.tensors.len() {
-                            return Err(VmError::TensorNotAllocated(idx));
+                    match rf {
+                        Value::TensorRef(idx) => {
+                            if idx >= self.tensors.len() {
+                                return Err(VmError::TensorNotAllocated(idx));
+                            }
+                            let tensor = &self.tensors[idx];
+                            self.stack.push(Value::Int(tensor.rows as i64));
+                            self.stack.push(Value::Int(tensor.cols as i64));
                         }
-                        let tensor = &self.tensors[idx];
-                        self.stack.push(Value::Int(tensor.rows as i64));
-                        self.stack.push(Value::Int(tensor.cols as i64));
-                    } else { return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) }); }
+                        Value::String(s) => {
+                            // len(string) — returns character count as rows, cols=1
+                            let n = s.chars().count() as i64;
+                            self.stack.push(Value::Int(n));
+                            self.stack.push(Value::Int(1));
+                        }
+                        _ => return Err(VmError::TypeMismatch { expected: "TensorRef or String".into(), found: format!("{:?}", rf) }),
+                    }
                 }
                 0x30 => { // Tspawn — (type_id) → AgentRef
                     let type_id = self.read_u16()?;
