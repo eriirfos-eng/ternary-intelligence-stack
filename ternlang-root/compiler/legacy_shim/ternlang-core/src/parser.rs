@@ -807,18 +807,26 @@ impl<'a> Parser<'a> {
             Token::Ident(ref name) => match name.as_str() {
                 "int"    => {
                     if let Ok(Token::LBracket) = self.peek_token() {
-                        self.next_token()?;
+                        self.next_token()?; // consume [
+                        let dim = if let Ok(Token::Int(n)) = self.peek_token() {
+                            self.next_token()?;
+                            n as usize
+                        } else { 0 };
                         self.expect(Token::RBracket)?;
-                        Ok(Type::IntTensor { dims: vec![0] })
+                        Ok(Type::IntTensor { dims: vec![dim] })
                     } else {
                         Ok(Type::Int)
                     }
                 }
                 "float"  => {
                     if let Ok(Token::LBracket) = self.peek_token() {
-                        self.next_token()?;
+                        self.next_token()?; // consume [
+                        let dim = if let Ok(Token::Int(n)) = self.peek_token() {
+                            self.next_token()?;
+                            n as usize
+                        } else { 0 };
                         self.expect(Token::RBracket)?;
-                        Ok(Type::FloatTensor { dims: vec![0] })
+                        Ok(Type::FloatTensor { dims: vec![dim] })
                     } else {
                         Ok(Type::Float)
                     }
