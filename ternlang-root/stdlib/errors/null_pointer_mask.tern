@@ -1,0 +1,29 @@
+// stdlib/errors/null_pointer_mask.tern
+// Demonstrates: Ternary null-state handling (tend as null/undefined)
+// Tier: 1
+
+fn check_reference(ref: trit) -> trit {
+    match ref {
+        affirm => { return truth(); }
+        tend   => { return conflict(); } // tend as "null/uninitialized"
+        reject => { return conflict(); }
+    }
+}
+
+fn handle_potential_null(val: trit, default_val: trit) -> trit {
+    // If val is tend (0), we treat it as uninitialized and return default_val
+    match val {
+        affirm => { return affirm; }
+        tend   => { return default_val; }
+        reject => { return reject; }
+    }
+}
+
+fn main() -> trit {
+    let result: trit = handle_potential_null(tend, affirm);
+    if result == affirm {
+        print("Null handled: used default affirm");
+        return truth();
+    }
+    return conflict();
+}
