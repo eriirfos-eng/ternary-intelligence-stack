@@ -1,0 +1,24 @@
+// stdlib/core/is_numeric.tern
+// Demonstrates: A simple check to see if a value is numeric.
+// Tier: 1
+
+fn is_numeric(val: int) -> trit {
+    // In Ternlang, if we can pass it as int, it's numeric.
+    // This is a basic demonstration of type-based routing.
+    if val >= 0 || val < 0 {
+        return truth();
+    }
+    return hold();
+}
+
+fn main() -> trit {
+    let a: int = 10;
+    let res: trit = is_numeric(a);
+    
+    if res == 1 {
+        println("Numeric check passed.");
+        return truth();
+    }
+    
+    return conflict();
+}
