@@ -6,4 +6,4 @@ license = "LicenseRef-BSL-1.1"
 description = "Native 3-state Quantum (Qutrit) Compiler. Maps triadic {-1, 0, +1} logic states directly to qutrit spin levels (0, 1, 2) for quantum supremacy."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.1" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "1.0.0" }

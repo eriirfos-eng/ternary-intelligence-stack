@@ -6,4 +6,4 @@ license = "LicenseRef-BSL-1.1"
 description = "Triadic Consensus Mechanisms for the T-Fi Credit Ledger. Replaces Proof-of-Work/Proof-of-Stake with Proof-of-Ambiguity-Resolution."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.1" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "1.0.0" }

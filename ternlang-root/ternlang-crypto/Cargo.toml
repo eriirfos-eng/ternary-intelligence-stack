@@ -6,4 +6,4 @@ license = "LicenseRef-BSL-1.1"
 description = "Post-Quantum Ternary-Hardened Cryptography. Implements modulo-3 hashing and balanced-ternary permutation as a defense against Shor's Algorithm."
 
 [dependencies]
-ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "0.3.1" }
+ternlang-core = { path = "../compiler/legacy_shim/ternlang-core", version = "1.0.0" }
