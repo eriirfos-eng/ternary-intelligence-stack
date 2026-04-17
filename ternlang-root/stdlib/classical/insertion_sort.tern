@@ -1,0 +1,41 @@
+// stdlib/classical/insertion_sort.tern
+// Demonstrates: Insertion sort on a trit array.
+// Tier: 1 — Open Core
+
+fn insertion_sort(arr: trit[]) -> trit[] {
+    let n: int = len(arr);
+    let i: int = 1;
+    while i < n {
+        let key: trit = arr[i];
+        let j: int = i - 1;
+        
+        let continue_loop: trit = affirm;
+        while continue_loop == affirm {
+            if j < 0 {
+                continue_loop = reject;
+            } else {
+                if arr[j] > key {
+                    arr[j + 1] = arr[j];
+                    j = j - 1;
+                } else {
+                    continue_loop = reject;
+                }
+            }
+        }
+        
+        arr[j + 1] = key;
+        i = i + 1;
+    }
+    return arr;
+}
+
+fn main() -> trit {
+    let data: trit[] = [affirm, reject, tend, affirm, reject];
+    let sorted: trit[] = insertion_sort(data);
+    
+    // Expected: [reject, reject, tend, affirm, affirm]
+    if sorted[0] == reject && sorted[1] == reject && sorted[2] == tend && sorted[3] == affirm && sorted[4] == affirm {
+        return affirm;
+    }
+    return reject;
+}
