@@ -1,0 +1,42 @@
+// stdlib/core/trit_math_helpers.tern
+// Demonstrates: Core math helper functions for balanced ternary logic
+// Tier: 1 — Open Core
+
+fn abs_trit(x: trit) -> trit {
+    match x {
+        -1 => { return affirm; }
+         0 => { return tend; }
+         1 => { return affirm; }
+    }
+}
+
+fn min_trit(a: trit, b: trit) -> trit {
+    // Standard balanced ternary AND
+    if a < b { return a; }
+    return b;
+}
+
+fn max_trit(a: trit, b: trit) -> trit {
+    // Standard balanced ternary OR
+    if a > b { return a; }
+    return b;
+}
+
+fn main() -> trit {
+    let a: trit = reject;
+    let b: trit = affirm;
+    
+    let abs_a: trit = abs_trit(a);
+    let m: trit = min_trit(a, b);
+    
+    print(" abs(-1) -> "); print(abs_a);
+    print(" min(-1, 1) -> "); print(m);
+    
+    if abs_a == affirm {
+        if m == reject {
+            return truth();
+        }
+    }
+    
+    return conflict();
+}
