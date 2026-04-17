@@ -616,7 +616,8 @@ impl<'a> Parser<'a> {
                         Token::Affirm => Pattern::Trit(1),
                         Token::Tend   => Pattern::Trit(0),
                         Token::Reject => Pattern::Trit(-1),
-                        t => return Err(ParseError::ExpectedToken("pattern (int, float or trit)".into(), format!("{:?}", t))),
+                        Token::Ident(ref s) if s == "_" => Pattern::Wildcard,
+                        t => return Err(ParseError::ExpectedToken("pattern (int, float, trit, or _)".into(), format!("{:?}", t))),
                     };
                     self.expect(Token::FatArrow)?;
                     let stmt = self.parse_stmt()?;
