@@ -232,3 +232,21 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Workaround:** Use remote agents (Phase 5.1) for true parallelism.
 - **Regression Test:** `stdlib/bughunt/probe_93_agent_test.tern`
 
+
+## [PARSER-008] 'in' is a Reserved Keyword
+- **Description:** Using `in` as a variable name causes a parser error, likely due to its role in `for in` loops.
+- **Error:** `Parse program error: ExpectedToken("identifier", "In")`
+- **Workaround:** Rename variable (e.g., to `input_val`).
+- **Regression Test:** `stdlib/core/ternary_demux.tern` (fixed by renaming).
+
+## [PARSER-009] Cast Syntax Failures
+- **Description:** Both `cast(type) expr` and `(type)expr` syntax fails in several contexts (binary expressions, function arguments) with unexpected token errors.
+- **Error:** `Parse program error: ExpectedToken("Semicolon", ...)` or `ExpectedToken("RParen", ...)`.
+- **Workaround:** Use intermediate variables or arithmetic conversions (e.g., `val * 1.0` for int-to-float).
+- **Regression Test:** `stdlib/ml/loss/mean_squared_error.tern`, `stdlib/stats/chi_square.tern`.
+
+## [BET-015] len() on Strings Type Mismatch
+- **Description:** Calling `len()` on a `string` variable causes a runtime type mismatch, as the VM expects a `TensorRef`.
+- **Error:** `VM Error: [BET-007] Runtime type mismatch — expected TensorRef but found String(...).`
+- **Workaround:** Use string comparison (e.g., `s != ""`) if applicable.
+- **Regression Test:** `stdlib/distributed/node_identity.tern` (fixed by workaround).
