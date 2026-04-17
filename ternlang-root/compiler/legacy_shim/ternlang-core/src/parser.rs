@@ -575,7 +575,12 @@ impl<'a> Parser<'a> {
                     let then_branch = Box::new(self.parse_block()?);
                     let else_branch = if let Ok(Token::Else) = self.peek_token() {
                         self.next_token()?;
-                        Box::new(self.parse_block()?)
+                        // Support `else if` chains — peek for `if` before expecting a block
+                        if let Ok(Token::If) = self.peek_token() {
+                            Box::new(self.parse_stmt()?)
+                        } else {
+                            Box::new(self.parse_block()?)
+                        }
                     } else {
                         Box::new(Stmt::Block(vec![]))
                     };
