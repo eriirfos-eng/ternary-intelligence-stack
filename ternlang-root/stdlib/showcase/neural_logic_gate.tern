@@ -1,0 +1,37 @@
+// stdlib/showcase/neural_logic_gate.tern
+// Demonstrates: Single neuron implementing ternary logic gates
+// Tier: 1 — Open Core
+
+fn neuron(x1: trit, x2: trit, w1: float, w2: float, bias: float) -> trit {
+    let sum: float = (x1 * 1.0) * w1 + (x2 * 1.0) * w2 + bias;
+    
+    // Ternary activation function
+    if sum > 0.5 {
+        return affirm;
+    } else if sum < -0.5 {
+        return reject;
+    } else {
+        return tend;
+    }
+}
+
+fn main() -> trit {
+    // AND-like gate with weights
+    let w1: float = 1.0;
+    let w2: float = 1.0;
+    let bias: float = 0.0;
+    
+    let r1: trit = neuron(affirm, affirm, w1, w2, bias);
+    let r2: trit = neuron(affirm, reject, w1, w2, bias);
+    let r3: trit = neuron(reject, reject, w1, w2, bias);
+    
+    print(" (1, 1) -> "); print(r1);
+    print(" (1, -1) -> "); print(r2);
+    print(" (-1, -1) -> "); print(r3);
+    
+    match r1 {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
