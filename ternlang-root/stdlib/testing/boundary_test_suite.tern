@@ -1,0 +1,28 @@
+// stdlib/testing/boundary_test_suite.tern
+// Demonstrates: Testing boundary conditions (min/max/abs logic)
+// Tier: 1
+
+fn test_trit_boundaries() -> trit {
+    let lower: trit = reject;
+    let upper: trit = affirm;
+    
+    // Test abs(-1) == 1
+    if abs(lower) == affirm {
+        print("abs(-1) == 1: PASS");
+    } else {
+        return conflict();
+    }
+    
+    // Test min(-1, 1) == -1
+    if min(lower, upper) == reject {
+        print("min(-1, 1) == -1: PASS");
+    } else {
+        return conflict();
+    }
+    
+    return truth();
+}
+
+fn main() -> trit {
+    return test_trit_boundaries();
+}
