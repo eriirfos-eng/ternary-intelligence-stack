@@ -2,6 +2,61 @@
 
 This file tracks all architectural improvements, bug fixes, and feature additions to the Ternlang core crates (compiler and VM).
 
+---
+
+## 2026-04-17 — wildcard _ match arm (PARSER-MATCH-001 resolved)
+
+**Trigger:** `match x { _ => { ... } }` → ParseError: ExpectedToken
+**Symptom:** Any `.tern` file using `_` as a catch-all arm failed to parse.
+**Diagnosis:** `Pattern::Wildcard` existed in ast.rs but had no `#[token]` in lexer, no parse arm in parser, no codegen in betbc.rs/tern_asm.rs, and no semantic check handling.
+**Fix:**
+- `ast.rs`: added `Wildcard` variant to `Pattern` enum
+- `parser.rs`: `Token::Ident(ref s) if s == "_" => Pattern::Wildcard`
+- `betbc.rs`: emit unconditional TJMP to body_addr (no condition test needed)
+- `tern_asm.rs`: separate wildcard arm from value arms in text-assembly backend
+- `semantic.rs`: skip exhaustiveness check when any arm is `Pattern::Wildcard`
+**Status:** FIXED. Committed 769a06bae.
+
+---
+
+## 2026-04-17 — `hold` keyword not tokenized (COMP-TRIT-001 resolved)
+
+**Trigger:** `return hold;` inside a match arm → TRET with empty stack → stack underflow
+**Symptom:** Functions returning `hold` produced no push bytecode — TRET fired with nothing on stack.
+**Diagnosis:** Lexer had `#[token("tend")]` but NOT `#[token("hold")]`. `hold` parsed as `Ident("hold")`, fell into `Expr::Ident` with no symbol match → emits nothing.
+**Fix:**
+- `lexer.rs`: added `#[token("hold", priority = 4)]` alias for `Token::Tend`
+- `betbc.rs` `Expr::Ident`: added belt-and-suspenders `"hold" | "tend"` arm → emits TPUSH Tend
+**Status:** FIXED. Committed 769a06bae.
+
+---
+
+## 2026-04-17 — float[N] / int[N] typed tensor arrays (PARSER-003 resolved)
+
+**Trigger:** `let v: float[5] = 0;` → BET-007 (TensorRef expected, found Int(0))
+**Diagnosis:** Three compounding bugs:
+1. Parser only accepted `float[]` (no dim), not `float[N]`
+2. TALLOC used `Vec<Trit>` for all tensors — float/int tensors stored wrong type
+3. Zero-initializer `= 0` parsed as `Expr::IntLiteral(0)` → auto-alloc check (`matches!(value, Expr::TritLiteral(0))`) false → stored Int(0) in register instead of TensorRef
+**Fix:**
+- `parser.rs`: `float[N]` and `int[N]` now parse optional dimension inside brackets
+- `vm/mod.rs`: added `TensorData` enum (Trit/Float/Int); added `TALLOC_Int` (0x3c) and `TALLOC_Float` (0x3d) opcodes; `TIDX` now returns correct `Value` type; `TSET` accepts typed writes
+- `betbc.rs`: emit correct TALLOC opcode per type; fix zero-init check to accept `Expr::IntLiteral(0)`
+**Status:** FIXED. Committed 99083dae7.
+
+---
+
+## 2026-04-17 — scalar trit saturation + len(string) (Gemini empirical)
+
+**Trigger:** `let x: trit = 5; match x { 1 => ... }` → no arm matches (Int(5) ≠ Int(1))
+**Diagnosis:** `TjmpPos/Zero/Neg` only matched exactly `Int(1)`/`Int(0)`/`Int(-1)`. Any out-of-range int silently fell through all arms.
+**Fix (vm/mod.rs):** `TjmpPos` now jumps if `v > 0` (any positive int/float); `TjmpZero` for `v == 0`; `TjmpNeg` for `v < 0`. Correct ternary semantics.
+
+**Trigger:** `len(s)` on string → BET-007 (TensorRef expected)
+**Diagnosis:** `TSHAPE` only handled `Value::TensorRef`.
+**Fix (vm/mod.rs):** `TSHAPE` now handles `Value::String` → returns `(chars().count(), 1)` so `len(string)` returns the character count.
+**Status:** FIXED. Committed 7287b4ac6.
+
 ## Known Fixes (Legacy)
 
 1. **Register Isolation** (2026-04-10)
