@@ -1,0 +1,32 @@
+// stdlib/core/ternary_demux.tern
+// Demonstrates: A 1-to-3 ternary demultiplexer.
+// Tier: 1
+
+fn demux(input: trit, control: trit) -> trittensor<3> {
+    let outputs: trittensor<3>;
+    outputs[0] = 0;
+    outputs[1] = 0;
+    outputs[2] = 0;
+    
+    match control {
+        -1 => { outputs[0] = input; }
+         0 => { outputs[1] = input; }
+         1 => { outputs[2] = input; }
+    }
+    
+    return outputs;
+}
+
+fn main() -> trit {
+    let input_val: trit = truth();
+    let out_neg: trittensor<3> = demux(input_val, -1);
+    let out_zero: trittensor<3> = demux(input_val, 0);
+    let out_pos: trittensor<3> = demux(input_val, 1);
+    
+    if out_neg[0] == 1 && out_zero[1] == 1 && out_pos[2] == 1 {
+        println("Demux functional.");
+        return truth();
+    }
+    
+    return conflict();
+}
