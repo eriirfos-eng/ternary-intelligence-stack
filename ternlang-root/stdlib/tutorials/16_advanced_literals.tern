@@ -1,0 +1,30 @@
+// stdlib/tutorials/16_advanced_literals.tern
+// Demonstrates: Hexadecimal, binary, and float literals + float match.
+// Tier: 1
+
+fn main() -> trit {
+    // Hex literals
+    let hex_val: int = 0xFF;
+    println("Hex 0xFF is: "); println(hex_val);
+    
+    // Binary literals
+    let bin_val: int = 0b1010;
+    println("Binary 0b1010 is: "); println(bin_val);
+    
+    // Float literals and match
+    let f: float = 3.14;
+    println("Float value: "); println(f);
+    
+    match f {
+        3.14 => { println("Pi approximation matched."); }
+        2.71 => { println("Euler matched."); }
+        1.0  => { println("One matched."); }
+    }
+    
+    if hex_val == 255 && bin_val == 10 {
+        println("Literals parsed correctly.");
+        return truth();
+    }
+    
+    return conflict();
+}
