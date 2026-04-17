@@ -1,0 +1,34 @@
+// stdlib/core/ternary_latch.tern
+// Demonstrates: A 1-trit memory latch simulation.
+// Tier: 1
+
+fn latch(state: trit, set: trit) -> trit {
+    // If set is Affirm (1), state becomes 1
+    // If set is Reject (-1), state becomes -1
+    // If set is Tend (0), state is preserved
+    
+    if set == 1 { return 1; }
+    if set == -1 { return -1; }
+    
+    return state;
+}
+
+fn main() -> trit {
+    let s: trit = 0;
+    
+    s = latch(s, 1);   // Set to 1
+    println("State after set(1): "); println(s);
+    
+    s = latch(s, 0);   // Preserve
+    println("State after set(0): "); println(s);
+    
+    s = latch(s, -1);  // Set to -1
+    println("State after set(-1): "); println(s);
+    
+    if s == -1 {
+        println("Latch functional.");
+        return truth();
+    }
+    
+    return conflict();
+}
