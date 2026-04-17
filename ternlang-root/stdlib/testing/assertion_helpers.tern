@@ -1,0 +1,28 @@
+// stdlib/testing/assertion_helpers.tern
+// Demonstrates: Ternary reusable assertions
+// Tier: 1
+
+fn assert_equal(a: trit, b: trit) -> trit {
+    if a == b {
+        print("PASS: values match");
+        return truth();
+    }
+    print("FAIL: mismatch detected");
+    return conflict();
+}
+
+fn assert_not_reject(a: trit) -> trit {
+    if a == reject {
+        print("FAIL: value was reject");
+        return conflict();
+    }
+    print("PASS: value is non-negative");
+    return truth();
+}
+
+fn main() -> trit {
+    let check1: trit = assert_equal(affirm, affirm);
+    let check2: trit = assert_not_reject(tend);
+    
+    return consensus(check1, check2);
+}
