@@ -1,0 +1,56 @@
+// stdlib/lib/sort_utils.tern
+// Demonstrates: Utility functions related to sorting and array ordering.
+// Tier: 1 - Open Core
+
+fn is_sorted(data: trittensor<5>, size: int) -> trit {
+    let i: int = 0;
+    while i < size - 1 {
+        if data[i] > data[i + 1] {
+            return -1;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn reverse_tensor(data: trittensor<5>, size: int) -> trit {
+    let i: int = 0;
+    let limit: int = size / 2;
+    while i < limit {
+        let temp: trit = data[i];
+        let swap_idx: int = size - i - 1;
+        data[i] = data[swap_idx];
+        data[swap_idx] = temp;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [-1, 0, 1, 1, 1];
+    println("Checking if [-1, 0, 1, 1, 1] is sorted:");
+    let s1: trit = is_sorted(data, 5);
+    if s1 == 1 {
+        println("Yes (Correct).");
+    } else { return conflict(); }
+    
+    println("Reversing tensor:");
+    reverse_tensor(data, 5);
+    // Expected [1, 1, 1, 0, -1]
+    println(data[0]); println(data[4]);
+    
+    if data[0] == 1 {
+        if data[4] == -1 {
+            println("Reverse OK.");
+        } else { return conflict(); }
+    } else { return conflict(); }
+    
+    println("Checking if reversed tensor is sorted:");
+    let s2: trit = is_sorted(data, 5);
+    if s2 == -1 {
+        println("No (Correct). Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
