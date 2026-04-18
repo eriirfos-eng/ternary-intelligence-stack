@@ -1,0 +1,34 @@
+// stdlib/ternary/ternary_min_3.tern
+// Demonstrates: Minimum of three trits.
+// Tier: 1 - Open Core
+
+fn trit_min_3(a: trit, b: trit, c: trit) -> trit {
+    let m: trit = a;
+    if b < m { m = b; }
+    if c < m { m = c; }
+    return m;
+}
+
+fn main() -> trit {
+    println("Trit Min 3 Showcase:");
+    
+    println("min(1, 0, -1):");
+    let r1: trit = trit_min_3(1, 0, -1);
+    println(r1);
+    if r1 == -1 { println("OK."); } else { return conflict(); }
+    
+    println("min(1, 0, 1):");
+    let r2: trit = trit_min_3(1, 0, 1);
+    println(r2);
+    if r2 == 0 { println("OK."); } else { return conflict(); }
+    
+    println("min(1, 1, 1):");
+    let r3: trit = trit_min_3(1, 1, 1);
+    println(r3);
+    if r3 == 1 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
