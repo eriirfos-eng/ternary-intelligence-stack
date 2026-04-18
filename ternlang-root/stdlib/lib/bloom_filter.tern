@@ -1,0 +1,73 @@
+// stdlib/lib/bloom_filter.tern
+// Demonstrates: A simple Bloom filter simulation for trits using multiple hash indices.
+// Tier: 1 - Open Core
+
+fn bloom_add(filter: trittensor<20>, val: trit) -> trit {
+    // 3 pseudo-hash functions based on trit value
+    let h1: int = 0;
+    let h2: int = 0;
+    let h3: int = 0;
+    
+    match val {
+        1 => { h1 = 2; h2 = 5; h3 = 11; }
+        0 => { h1 = 3; h2 = 7; h3 = 13; }
+       -1 => { h1 = 4; h2 = 9; h3 = 17; }
+    }
+    
+    filter[h1] = 1;
+    filter[h2] = 1;
+    filter[h3] = 1;
+    return 1;
+}
+
+fn bloom_check(filter: trittensor<20>, val: trit) -> trit {
+    let h1: int = 0;
+    let h2: int = 0;
+    let h3: int = 0;
+    
+    match val {
+        1 => { h1 = 2; h2 = 5; h3 = 11; }
+        0 => { h1 = 3; h2 = 7; h3 = 13; }
+       -1 => { h1 = 4; h2 = 9; h3 = 17; }
+    }
+    
+    if filter[h1] == 1 {
+        if filter[h2] == 1 {
+            if filter[h3] == 1 {
+                return 1; // Likely present
+            }
+        }
+    }
+    return -1; // Definitely not present
+}
+
+fn main() -> trit {
+    let filter: trittensor<20> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    println("Bloom Filter: adding Affirm (1)");
+    bloom_add(filter, 1);
+    
+    println("Checking Affirm (1):");
+    if bloom_check(filter, 1) == 1 {
+        println("Affirm is present (Correct).");
+    } else { return conflict(); }
+    
+    println("Checking Tend (0):");
+    if bloom_check(filter, 0) == -1 {
+        println("Tend is NOT present (Correct).");
+    } else { 
+        println("False positive or logic error.");
+        return conflict(); 
+    }
+    
+    println("Adding Reject (-1)");
+    bloom_add(filter, -1);
+    
+    println("Checking Reject (-1):");
+    if bloom_check(filter, -1) == 1 {
+        println("Reject is present (Correct).");
+    } else { return conflict(); }
+
+    println("Bloom filter simulation verified. Success.");
+    return truth();
+}
