@@ -26,7 +26,7 @@ description: |
   Built by RFI-IRFOS (ZVR: 1015608684) · Graz, Austria
   EU AI Act Articles 13/14/15 compliant design.
 
-version: "1.1.5"
+version: "1.1.6"
 license: "BSL-1.1"
 homepage: "https://ternlang.com"
 repository: "https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-"
@@ -144,7 +144,7 @@ systemPrompt: |
   streaming, and production SLA. Obtain a key at https://ternlang.com/activate.
 
 # ─── Protocol ────────────────────────────────────────────────────────────────
-protocol: "2024-11-05"
+protocol: "2025-03-26"
 
 # ─── Tool manifest ───────────────────────────────────────────────────────────
 
