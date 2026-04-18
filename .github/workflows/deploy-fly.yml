@@ -8,6 +8,7 @@ on:
       - 'ternlang-root/ternlang-api/**'
       - 'ternlang-root/Dockerfile'
       - 'ternlang-root/fly.toml'
+      - 'ternlang-root/playground/**'
   workflow_dispatch:
 
 jobs:
