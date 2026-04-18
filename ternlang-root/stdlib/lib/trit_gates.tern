@@ -1,0 +1,30 @@
+// stdlib/lib/trit_gates.tern
+// Demonstrates: Common ternary logic gates.
+// Tier: 1
+
+fn min_gate(a: trit, b: trit) -> trit {
+    if a < b { return a; }
+    return b;
+}
+
+fn max_gate(a: trit, b: trit) -> trit {
+    if a > b { return a; }
+    return b;
+}
+
+fn consensus_gate(a: trit, b: trit) -> trit {
+    if a == b { return a; }
+    return 0;
+}
+
+fn main() -> trit {
+    println("min(-1, 1):");
+    println(min_gate(-1, 1));
+    println("max(-1, 1):");
+    println(max_gate(-1, 1));
+    println("consensus(1, 1):");
+    println(consensus_gate(1, 1));
+    
+    println("Program exited successfully.");
+    return 1;
+}
