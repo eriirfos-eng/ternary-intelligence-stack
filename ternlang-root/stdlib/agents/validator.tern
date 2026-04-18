@@ -1,0 +1,32 @@
+// stdlib/agents/validator.tern
+// Demonstrates: Validator agent pattern
+// Tier: 1
+
+agent NonRejectValidator {
+    fn handle(msg: trit) -> trit {
+        // Validates that the signal is not 'reject' (-1).
+        // Returns 'affirm' (+1) if valid, 'reject' (-1) otherwise.
+        if msg != reject {
+            return affirm;
+        }
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let v: agentref = spawn NonRejectValidator;
+    
+    send v affirm;
+    let res1: trit = await v;
+    
+    send v tend;
+    let res2: trit = await v;
+    
+    send v reject;
+    let res3: trit = await v;
+    
+    if res1 == affirm && res2 == affirm && res3 == reject {
+        return affirm;
+    }
+    return reject;
+}
