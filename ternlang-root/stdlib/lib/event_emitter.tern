@@ -1,0 +1,43 @@
+// stdlib/lib/event_emitter.tern
+// Demonstrates: An event-based dispatch pattern using match statements.
+// Tier: 1 - Open Core
+
+fn handle_ev(id: int, p: trit) -> trit {
+    match id {
+        101 => { 
+            println("Event 101: START");
+            return 1; 
+        }
+        102 => { 
+            println("Event 102: DATA");
+            match p {
+                1 => { println("Payload: Affirm."); }
+                0 => { println("Payload: Tend."); }
+               -1 => { println("Payload: Reject."); }
+            }
+            return 1; 
+        }
+        103 => { 
+            println("Event 103: STOP");
+            return -1; 
+        }
+        _ => { 
+            println("Unknown event");
+            return 0; 
+        }
+    }
+}
+
+fn main() -> trit {
+    let p: trit = 1;
+    let r1: trit = handle_ev(101, p);
+    let r2: trit = handle_ev(102, p);
+    let r3: trit = handle_ev(103, p);
+    
+    if r3 == -1 {
+        println("System stopped correctly.");
+        return 1;
+    }
+    println("System failed to stop.");
+    return -1;
+}
