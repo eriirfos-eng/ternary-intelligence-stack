@@ -1,0 +1,43 @@
+// stdlib/lib/semaphore_stub.tern
+// Demonstrates: A conceptual semaphore for controlling access to limited resources.
+// Tier: 1
+
+// Conceptual: A semaphore is typically an integer counter.
+// For simplicity, using trit where:
+// 1: Available, 0: Limited, -1: Unavailable
+
+fn acquire_resource(semaphore: trit) -> trit {
+    if semaphore == 1 { // If available
+        return 0; // Decrement and return limited
+    }
+    return -1; // Unavailable
+}
+
+fn release_resource(semaphore: trit) -> trit {
+    if semaphore == 0 { // If limited
+        return 1; // Increment and return available
+    }
+    return -1; // Already available or error
+}
+
+fn main() -> trit {
+    let mut res_count: trit = 1; // Initially available
+
+    println("Initial resource state:");
+    println(res_count);
+
+    res_count = acquire_resource(res_count);
+    println("After acquiring resource:");
+    println(res_count);
+
+    res_count = acquire_resource(res_count);
+    println("Attempt to acquire again:");
+    println(res_count);
+
+    res_count = release_resource(res_count);
+    println("After releasing resource:");
+    println(res_count);
+    
+    println("Program exited successfully.");
+    return 1;
+}
