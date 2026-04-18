@@ -1,0 +1,34 @@
+// stdlib/lib/state_machine.tern
+// Demonstrates: A simple state machine with explicit transitions.
+// Tier: 1
+
+fn transition(current_state: int, input: trit) -> int {
+    // State 0: Idle, State 1: Active, State 2: Error
+    match current_state {
+        0 => { // Idle
+            if input == 1 { return 1; } // Go to Active
+        }
+        1 => { // Active
+            if input == -1 { return 2; } // Go to Error
+            if input == 0 { return 0; } // Go to Idle
+        }
+        2 => { // Error
+            if input == 1 { return 0; } // Reset to Idle
+        }
+    }
+    return current_state; // No change
+}
+
+fn main() -> trit {
+    let mut state: int = 0;
+    println(state);
+
+    state = transition(state, 1);
+    println(state);
+
+    state = transition(state, -1);
+    println(state);
+    
+    println("Program exited successfully.");
+    return 1;
+}
