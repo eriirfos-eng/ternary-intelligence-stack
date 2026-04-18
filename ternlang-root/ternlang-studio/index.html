@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
@@ -136,6 +137,8 @@
     .flow-node.active-1 { border-color: var(--green); }
     .flow-node.active-0 { border-color: var(--amber); }
     .flow-node.active-n1 { border-color: var(--red); }
+    .flow-node.external { border-color: var(--amber); border-style: dashed; }
+    .flow-node.external .flow-node-header { color: var(--amber); }
 
     /* ─── Topbar ───────────────────────────────────────────────────── */
     #topbar {
@@ -655,10 +658,10 @@
 
 <!-- ═══ VIEW BAR ══════════════════════════════════════════════════════════════ -->
 <div id="viewbar">
-  <button class="view-tab active" id="vt-dashboard" onclick="switchView('dashboard')">📊 Dashboard</button>
-  <button class="view-tab"        id="vt-editor"    onclick="switchView('editor')">💻 Editor</button>
-  <button class="view-tab"        id="vt-flow"      onclick="switchView('flow')">🧠 Flow</button>
-  <button class="view-tab"        id="vt-settings"  onclick="switchView('settings')">⚙ Settings</button>
+  <button class="view-tab active" id="vt-dashboard" onclick="switchView('dashboard')"><i data-lucide="layout-dashboard" style="width:14px"></i> Dashboard</button>
+  <button class="view-tab"        id="vt-editor"    onclick="switchView('editor')"><i data-lucide="code-2" style="width:14px"></i> Editor</button>
+  <button class="view-tab"        id="vt-flow"      onclick="switchView('flow')"><i data-lucide="brain-circuit" style="width:14px"></i> Flow</button>
+  <button class="view-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings" style="width:14px"></i> Settings</button>
 </div>
 
 <!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
@@ -916,10 +919,17 @@
   </div>
   <!-- Flow Toolbar -->
   <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
-    <div class="card" style="padding:10px; display:flex; gap:10px; align-items:center; background:rgba(30, 41, 59, 0.8); backdrop-filter:blur(8px); border-radius:50px;">
-      <button class="btn btn-ghost" onclick="renderFlow()" title="Refresh Nodes">↺</button>
+    <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(30, 41, 59, 0.85); backdrop-filter:blur(12px); border-radius:50px; border: 1px solid var(--border2);">
+      <button class="btn btn-ghost" onclick="renderFlow()" title="Refresh Nodes">
+        <i data-lucide="refresh-cw" style="width:16px"></i>
+      </button>
+      <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add Binary LLM Bridge" style="color:var(--amber)">
+        <i data-lucide="plus-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Bridge</span>
+      </button>
       <div style="width:1px; height:20px; background:var(--border2);"></div>
-      <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px;">Export .tern</button>
+      <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px; padding: 6px 18px;">
+        <i data-lucide="download" style="width:16px"></i> <span style="margin-left:4px">Export .tern</span>
+      </button>
     </div>
   </div>
 </div>
@@ -1395,6 +1405,8 @@ function switchView(name) {
     renderFlow();
   }
   if (name === "settings") syncSettingsUI();
+
+  lucide.createIcons();
 }
 
 // ─── TernFlow Logic ───────────────────────────────────────────────────────────
@@ -1420,22 +1432,26 @@ function renderFlow() {
   });
 }
 
-function createFlowNode(name, path, x, y) {
+function createFlowNode(name, path, x, y, type = 'agent') {
   const canvas = document.getElementById("flow-canvas");
   const node = document.createElement("div");
-  node.className = "flow-node";
+  node.className = "flow-node" + (type === 'external' ? ' external' : '');
   node.style.left = x + "px";
   node.style.top = y + "px";
   
+  const headerText = type === 'external' ? 'EXTERNAL AI' : 'AGENT';
+  const subText = type === 'external' ? 'OpenAI / Claude' : path.split('/').pop();
+  const signature = type === 'external' ? 'Output: raw string' : 'fn handle(msg: trit) -> trit';
+
   node.innerHTML = `
     <div class="flow-node-header">
-      <span>AGENT</span>
-      <span style="color:var(--cyan)">${path.split('/').pop()}</span>
+      <span>${headerText}</span>
+      <span style="color:var(--cyan)">${subText}</span>
     </div>
     <div class="flow-node-title">${name}</div>
     <div class="flow-port flow-port-in"></div>
     <div class="flow-port flow-port-out"></div>
-    <div style="font-size:10px; color:var(--muted)">fn handle(msg: trit) -> trit</div>
+    <div style="font-size:10px; color:var(--muted)">${signature}</div>
   `;
 
   // Basic Dragging
@@ -1462,27 +1478,59 @@ function createFlowNode(name, path, x, y) {
   });
 
   canvas.appendChild(node);
-  flowNodes.push({ name, path, element: node });
+  flowNodes.push({ name, path, type, element: node });
+}
+
+function addExternalBridge() {
+  const name = "External_LLM_" + (flowNodes.filter(n => n.type === 'external').length + 1);
+  createFlowNode(name, "external", 100, 100, 'external');
 }
 
 function exportFlowCode() {
   let code = "// Generated by TernFlow Orchestrator\n";
-  code += "// Swarm definition\n\n";
+  code += "// Swarm definition with Binary-to-Ternary Bridge\n\n";
   
-  flowNodes.forEach(n => {
+  // Imports
+  const agentNodes = flowNodes.filter(n => n.type === 'agent');
+  agentNodes.forEach(n => {
     code += `// from "${n.path}" import ${n.name};\n`;
   });
 
+  // Check if we need the bridge stdlib
+  if (flowNodes.some(n => n.type === 'external')) {
+    code += "use stdlib::agents::binary_bridge;\n\n";
+  }
+
   code += "\nfn main() -> trit {\n";
+  
+  // 1. Spawn agents
   flowNodes.forEach((n, i) => {
-    code += `    let a${i}: agentref = spawn ${n.name};\n`;
+    if (n.type === 'agent') {
+      code += `    let a${i}: agentref = spawn ${n.name};\n`;
+    } else {
+      code += `    let bridge${i}: agentref = spawn binary_bridge::LLMGateway;\n`;
+    }
   });
-  code += "\n    return affirm;\n}\n";
+
+  // 2. Logic chain (Example: first bridge feeds first agent)
+  if (flowNodes.length >= 2) {
+      code += "\n    // Bridging Binary -> Ternary\n";
+      code += "    send bridge0 \"AFFIRM\"; // Mock external result\n";
+      code += "    let signal: trit = await bridge0;\n\n";
+      code += "    // Process through Ternary Swarm\n";
+      code += "    send a0 signal;\n";
+      code += "    let result: trit = await a0;\n";
+      code += "    return result;\n";
+  } else {
+      code += "\n    return affirm;\n";
+  }
+  
+  code += "}\n";
 
   newFile();
   if (monacoEditor) monacoEditor.setValue(code);
   switchView("editor");
-  showToast("Flow exported to Editor", "ok");
+  showToast("Flow exported with Bridge logic", "ok");
 }
 
 // ─── Build file tree ──────────────────────────────────────────────────────────
@@ -2291,6 +2339,8 @@ require(["vs/editor/editor.main"], function () {
 
   // Load from hash after Monaco is ready
   loadFromHash();
+
+  lucide.createIcons();
 });
 </script>
 
