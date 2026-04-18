@@ -1,0 +1,73 @@
+// stdlib/lib/linked_list.tern
+// Demonstrates: A linked list simulation using indexed arrays (pool pattern).
+// Tier: 1 - Open Core
+
+// Note: No real pointers in Ternary. We use a pool and index-based "pointers".
+
+fn list_add(values: trittensor<10>, next: int[10], free_idx: int, head: int, val: trit) -> int {
+    if free_idx >= 10 { return -1; }
+    
+    values[free_idx] = val;
+    next[free_idx] = -1; // End of list
+    
+    if head == -1 {
+        return free_idx; // New head
+    }
+    
+    // Find last element
+    let curr: int = head;
+    while next[curr] != -1 {
+        curr = next[curr];
+    }
+    next[curr] = free_idx;
+    return head;
+}
+
+fn main() -> trit {
+    let values: trittensor<10> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let next: int[10];
+    let k: int = 0;
+    while k < 10 { 
+        next[k] = -1; 
+        k = k + 1; 
+    }
+    
+    let head: int = -1;
+    let free_p: int = 0;
+    
+    println("Adding 1 to list");
+    head = list_add(values, next, free_p, head, 1);
+    free_p = free_p + 1;
+    
+    println("Adding -1 to list");
+    head = list_add(values, next, free_p, head, -1);
+    free_p = free_p + 1;
+    
+    println("Adding 0 to list");
+    head = list_add(values, next, free_p, head, 0);
+    free_p = free_p + 1;
+    
+    println("Traversing list:");
+    let curr: int = head;
+    while curr != -1 {
+        let v: trit = values[curr];
+        match v {
+            1 => { println("Affirm (1)"); }
+            0 => { println("Tend (0)"); }
+           -1 => { println("Reject (-1)"); }
+        }
+        curr = next[curr];
+    }
+    
+    if head == 0 {
+        if next[0] == 1 {
+            if next[1] == 2 {
+                println("List structure verified.");
+                return truth();
+            }
+        }
+    }
+
+    println("Verification failed.");
+    return conflict();
+}
