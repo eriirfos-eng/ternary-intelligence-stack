@@ -148,9 +148,11 @@
     }
     #flow-svg-layer {
       position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%; pointer-events: none;
+      width: 5000px; height: 5000px; pointer-events: none;
       z-index: 5;
     }
+    #flow-svg-layer path { pointer-events: stroke; }
+    #flow-svg-layer .wire-hit { pointer-events: stroke; cursor: pointer; }
     .flow-wire {
       fill: none; stroke: var(--border2); stroke-width: 2;
       stroke-linecap: round; transition: stroke 0.3s, stroke-width 0.3s;
@@ -231,7 +233,13 @@
     }
     .flow-port:hover { background: var(--cyan); }
     .flow-node.external { border-color: var(--amber); border-style: dashed; }
-    .flow-node.external .flow-node-header { color: var(--amber); }
+    .flow-node.external .fn-head { background: rgba(245,158,11,0.08); }
+    .flow-node.gate { border-color: var(--cyan); }
+    .flow-node.gate .fn-head { background: rgba(56,189,248,0.08); }
+    .flow-node .fn-status { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); margin-left: auto; flex-shrink: 0; }
+    .flow-node .fn-status.ok   { background: var(--green); box-shadow: 0 0 4px var(--green); }
+    .flow-node .fn-status.err  { background: var(--red);   box-shadow: 0 0 4px var(--red); }
+    .flow-node .fn-status.run  { background: var(--amber);  animation: pulse-node-hold 1s infinite; }
 
     /* ─── Execution Inspector ────────────────────────────────────────── */
     #flow-inspector {
@@ -1261,8 +1269,11 @@
     <!-- Flow Floating Toolbar -->
     <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
       <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(12px); border-radius:50px; border: 1px solid var(--border2);">
-        <button class="btn btn-ghost" onclick="renderFlow()" title="Reset Canvas">
-          <i data-lucide="refresh-cw" style="width:16px"></i>
+        <button class="btn btn-ghost" onclick="clearCanvas()" title="Clear Canvas">
+          <i data-lucide="trash-2" style="width:16px"></i>
+        </button>
+        <button class="btn btn-ghost" onclick="saveCanvasState();showToast('Canvas saved','ok')" title="Save canvas to browser storage" style="color:var(--green)">
+          <i data-lucide="save" style="width:16px"></i>
         </button>
         <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add Binary LLM Bridge" style="color:var(--amber)">
           <i data-lucide="plus-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Bridge</span>
@@ -1741,52 +1752,151 @@ let flowWires = [];
 let selectedNodeId = null;
 let activeWire = null;
 
-function renderFlow() {
+// ─── Built-in Agent Library ──────────────────────────────────────────────────
+const BUILTIN_AGENTS = {
+  "Sensor": {
+    desc: "Reads and validates an input trit signal",
+    code: `fn main() -> trit {\n    // Sensor: validate input\n    let raw: trit = read_input();\n    if raw == affirm { return affirm; }\n    return tend;\n}`,
+    icon: "radio", color: "var(--cyan)"
+  },
+  "SafetyGate": {
+    desc: "Blocks reject signals, passes affirm/tend",
+    code: `fn main() -> trit {\n    let sig: trit = read_input();\n    if sig == reject { return reject; }\n    return affirm;\n}`,
+    icon: "shield-check", color: "var(--green)"
+  },
+  "ConsensusGate": {
+    desc: "Aggregates N trit votes — majority wins",
+    code: `fn main() -> trit {\n    let a: trit = read_input();\n    let b: trit = read_input();\n    let c: trit = read_input();\n    if a == affirm && b == affirm { return affirm; }\n    if a == reject && b == reject { return reject; }\n    return tend;\n}`,
+    icon: "git-merge", color: "var(--cyan)"
+  },
+  "Classifier": {
+    desc: "Classifies input into one of three ternary classes",
+    code: `fn main() -> trit {\n    let input: trit = read_input();\n    match input {\n        affirm => return affirm,\n        tend   => return tend,\n        reject => return reject,\n    }\n}`,
+    icon: "layers", color: "var(--amber)"
+  },
+  "Actuator": {
+    desc: "Terminal node: acts on final trit signal",
+    code: `fn main() -> trit {\n    let decision: trit = read_input();\n    if decision == affirm {\n        emit \"ACTION: execute\";\n        return affirm;\n    }\n    emit \"ACTION: skip\";\n    return tend;\n}`,
+    icon: "zap-off", color: "var(--green)"
+  },
+  "Ranker": {
+    desc: "Scores candidates and outputs affirm/tend/reject",
+    code: `fn main() -> trit {\n    let score: trit = read_input();\n    if score == affirm { return affirm; }\n    if score == tend   { return tend;   }\n    return reject;\n}`,
+    icon: "bar-chart-2", color: "var(--muted)"
+  },
+  "Proposer": {
+    desc: "Generates a proposal signal for debate pattern",
+    code: `fn main() -> trit {\n    emit \"PROPOSE: candidate solution\";\n    return affirm;\n}`,
+    icon: "message-square", color: "var(--blue)"
+  },
+  "Challenger": {
+    desc: "Challenges the proposal, outputs counter-signal",
+    code: `fn main() -> trit {\n    emit \"CHALLENGE: counter-argument\";\n    return tend;\n}`,
+    icon: "swords", color: "var(--red)"
+  },
+  "Arbiter": {
+    desc: "Decides between competing signals — debate final node",
+    code: `fn main() -> trit {\n    let a: trit = read_input();\n    let b: trit = read_input();\n    if a == affirm && b == tend { return affirm; }\n    if a == tend   && b == tend { return tend;   }\n    return reject;\n}`,
+    icon: "scale", color: "var(--amber)"
+  },
+  "OutputGuard": {
+    desc: "Final output filter — sanitizes signal before emission",
+    code: `fn main() -> trit {\n    let sig: trit = read_input();\n    if sig == reject { emit \"BLOCKED\"; return reject; }\n    emit \"PASS\";\n    return affirm;\n}`,
+    icon: "shield", color: "var(--green)"
+  },
+};
+
+function saveCanvasState() {
+  try {
+    const state = { nodes: flowNodes.map(n => ({ id: n.id, name: n.name, path: n.path, type: n.type, props: n.props, x: parseInt(document.getElementById(n.id)?.style.left||0), y: parseInt(document.getElementById(n.id)?.style.top||0) })), wires: flowWires };
+    localStorage.setItem("ternflow_canvas", JSON.stringify(state));
+  } catch(e) {}
+}
+
+function restoreCanvasState() {
+  try {
+    const raw = localStorage.getItem("ternflow_canvas");
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    if (!state.nodes || state.nodes.length === 0) return false;
+    state.nodes.forEach(n => createFlowNode(n.name, n.path, n.x, n.y, n.type, n.id));
+    // Restore props
+    state.nodes.forEach(n => { const node = flowNodes.find(f => f.id === n.id); if (node) node.props = n.props; });
+    flowWires = state.wires || [];
+    updateWires();
+    return true;
+  } catch(e) { return false; }
+}
+
+function clearCanvas() {
   const canvas = document.getElementById("flow-canvas");
   canvas.innerHTML = "";
   flowNodes = [];
   flowWires = [];
   selectedNodeId = null;
+  selectedWireId = null;
+  document.querySelectorAll(".edge-badge").forEach(b => b.remove());
   updatePropertyPanel();
-  renderFlowLibrary();
   updateWires();
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = "flex";
+  localStorage.removeItem("ternflow_canvas");
+  showToast("Canvas cleared", "ok");
+}
+
+function renderFlow() {
+  renderFlowLibrary();
+  // Restore canvas from localStorage (don't wipe on every view switch)
+  if (flowNodes.length === 0) {
+    const restored = restoreCanvasState();
+    if (!restored) {
+      const hint = document.getElementById("canvas-hint");
+      if (hint) hint.style.display = "flex";
+    }
+  }
 }
 
 let _flowLibPaths = []; // cache for search + new-agent picker
 
 async function renderFlowLibrary() {
-  const lib = document.getElementById("flow-lib-items");
-  lib.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading agents…</div>';
+  // Always render built-ins immediately — no blank state
+  renderBuiltinLibItems();
 
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
     const key = document.getElementById("apiKey").value.trim();
-    const r = await fetch(endpoint + "/api/stdlib/list", {
-      headers: key ? { "X-Ternlang-Key": key } : {}
-    });
+    const r = await fetch(endpoint + "/api/stdlib/list", { headers: key ? { "X-Ternlang-Key": key } : {}, signal: AbortSignal.timeout(3000) });
     const d = await r.json();
-
     let paths = (d.status === "ok" && d.files) ? d.files.filter(p => p.includes("agents/")) : [];
-
-    // Fallback to GitHub if empty
-    if (paths.length === 0) {
-      try {
-        const gr = await fetch(GH_API_BASE + "stdlib/agents");
-        if (gr.ok) {
-          const gfiles = await gr.json();
-          if (Array.isArray(gfiles)) paths = gfiles.filter(f => f.name.endsWith(".tern")).map(f => `stdlib/agents/${f.name}`);
-        }
-      } catch(e) {}
+    if (paths.length > 0) {
+      _flowLibPaths = paths;
+      renderFlowLibItems(paths);
+      populateNewAgentPicker(paths);
     }
+  } catch (e) { /* built-ins already shown */ }
+}
 
-    _flowLibPaths = paths;
-    renderFlowLibItems(paths);
-    populateNewAgentPicker(paths);
-  } catch (e) {
-    lib.innerHTML = '<div style="padding:10px; color:var(--muted2); font-size:11px;">Could not load agents.</div>';
-  }
+function renderBuiltinLibItems() {
+  const lib = document.getElementById("flow-lib-items");
+  lib.innerHTML = "";
+  Object.entries(BUILTIN_AGENTS).forEach(([name, agent]) => {
+    const div = document.createElement("div");
+    div.className = "lib-item";
+    div.dataset.name = name.toLowerCase();
+    div.title = agent.desc;
+    div.innerHTML = `<i data-lucide="${agent.icon}" style="color:${agent.color}"></i> <span>${name}</span>`;
+    div.onclick = () => {
+      const id = "node_" + Date.now();
+      const canvas = document.getElementById("flow-canvas");
+      const cx = Math.max(40, (canvas.parentElement.clientWidth / 2) - 100 + (Math.random()-0.5)*160);
+      const cy = Math.max(40, (canvas.parentElement.clientHeight / 2) - 60 + (Math.random()-0.5)*120);
+      createFlowNode(name, "__builtin__", cx, cy, 'agent', id);
+      const node = flowNodes.find(n => n.id === id);
+      if (node) node.props.code = agent.code;
+    };
+    lib.appendChild(div);
+  });
+  lucide.createIcons();
 }
 
 function renderFlowLibItems(paths) {
@@ -1865,26 +1975,31 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   const canvas = document.getElementById("flow-canvas");
   const node = document.createElement("div");
   node.id = id;
-  node.className = "flow-node" + (type === 'external' ? ' external' : '');
+  const typeClass = type === 'external' ? ' external' : (type === 'gate' ? ' gate' : '');
+  node.className = "flow-node" + typeClass;
   node.style.left = x + "px";
   node.style.top = y + "px";
-  
-  const icon = type === 'external' ? 'zap' : (type === 'gate' ? 'split' : 'bot');
+
+  const icon  = type === 'external' ? 'zap' : (type === 'gate' ? 'git-merge' : 'bot');
+  const label = type === 'external' ? 'LLM BRIDGE' : (type === 'gate' ? 'TRIT GATE' : 'AGENT');
+  const iconColor = type === 'external' ? 'var(--amber)' : (type === 'gate' ? 'var(--cyan)' : 'var(--muted)');
+  const subtitle  = path === '__custom__' || path === '__arch__' ? 'inline code' : path.split('/').pop();
 
   node.innerHTML = `
     <div class="fn-head">
-      <div style="display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; color:var(--muted)">
+      <div style="display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; color:${iconColor}">
         <i data-lucide="${icon}" style="width:12px"></i>
-        ${type.toUpperCase()}
+        ${label}
       </div>
-      <button class="btn-ghost" onclick="deleteNode('${id}')" style="padding:2px; background:none; border:none; cursor:pointer; color:var(--muted)"><i data-lucide="x" style="width:12px"></i></button>
+      <div class="fn-status" id="status-${id}" title="idle"></div>
+      <button onclick="deleteNode('${id}')" style="padding:2px 4px; background:none; border:none; cursor:pointer; color:var(--muted); line-height:1; margin-left:4px;" title="Remove">✕</button>
     </div>
     <div class="fn-body">
-      <div style="font-weight:600; color:var(--text); font-size:13px; margin-bottom:4px;">${name}</div>
-      <div style="font-size:10px; color:var(--muted)">${path.split('/').pop()}</div>
+      <div style="font-weight:600; color:var(--text); font-size:13px; margin-bottom:3px;" class="fn-title">${name}</div>
+      <div style="font-size:10px; color:var(--muted2); font-family:'JetBrains Mono',monospace;">${subtitle}</div>
     </div>
-    <div class="flow-port flow-port-in" style="left:-6px; top:50%; margin-top:-6px;"></div>
-    <div class="flow-port flow-port-out" style="right:-6px; top:50%; margin-top:-6px;"></div>
+    <div class="flow-port flow-port-in"  style="left:-7px;  top:50%; margin-top:-6px;" title="Input"></div>
+    <div class="flow-port flow-port-out" style="right:-7px; top:50%; margin-top:-6px;" title="Output"></div>
   `;
 
   let isDragging = false;
@@ -1907,15 +2022,17 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   });
 
   document.addEventListener('mouseup', () => {
-    isDragging = false;
+    if (isDragging) { isDragging = false; saveCanvasState(); }
     node.style.zIndex = 10;
   });
 
   canvas.appendChild(node);
-  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7, max_trits: 512, routing: "affirm→next", code: "" } });
+  const builtinCode = BUILTIN_AGENTS[name] ? BUILTIN_AGENTS[name].code : '';
+  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7, max_trits: 512, routing: "affirm→next", code: builtinCode } });
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = "none";
   lucide.createIcons();
+  saveCanvasState();
 }
 
 function selectNode(id) {
@@ -2019,11 +2136,12 @@ function updateNodeProp(key, val) {
   if (!node) return;
   if (key === 'name') {
     node.name = val;
-    const titleEl = document.querySelector(`#${node.id} .fn-body div`);
+    const titleEl = document.querySelector(`#${node.id} .fn-title`);
     if (titleEl) titleEl.textContent = val;
   } else {
     node.props[key] = val;
   }
+  saveCanvasState();
 }
 
 function addExternalBridge() {
@@ -2306,45 +2424,106 @@ async function runSimulation() {
   ins.classList.add("active");
   ins.style.display = "flex";
   document.getElementById("ins-body").innerHTML = "";
-  
-  logInspector("SYSTEM", "Initializing Swarm Simulation...");
-  
-  // Clear all pulses
-  document.querySelectorAll('.flow-node').forEach(n => {
-    n.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
-  });
 
   if (flowNodes.length === 0) {
-    logInspector("ERROR", "No nodes found on canvas.");
+    logInspector("SYSTEM", "No nodes on canvas — drag agents from the library.");
     return;
   }
 
-  // Simple BFS-like simulation of signal flow
-  const startNodes = flowNodes.filter(n => n.type === 'external' || !flowWires.some(w => w.toId === n.id));
-  
-  for (const node of startNodes) {
-    await simulateNode(node, 1); // Start with affirm signal
+  // Reset all visual state
+  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('pulse-affirm','pulse-reject','pulse-hold'));
+  flowNodes.forEach(n => setNodeStatus(n.id, ""));
+
+  const wasmTag = window.wasmReady ? "⚡ WASM" : "⚠ passthrough (no WASM)";
+  logInspector("SYSTEM", `Simulation start — ${wasmTag} — ${flowNodes.length} nodes`);
+
+  // Find entry nodes (no incoming wires)
+  const startNodes = flowNodes.filter(n => !flowWires.some(w => w.toId === n.id));
+  if (startNodes.length === 0) {
+    logInspector("SYSTEM", "No entry nodes (all have incoming wires). Add an unconnected source node.");
+    return;
   }
+
+  for (const node of startNodes) {
+    await simulateNode(node, 1);
+  }
+
+  logInspector("SYSTEM", "✓ Simulation complete");
 }
 
-async function simulateNode(node, signal) {
-  const el = document.getElementById(node.id);
-  const pulseClass = signal === 1 ? 'pulse-affirm' : (signal === -1 ? 'pulse-reject' : 'pulse-hold');
-  const signalLabel = signal === 1 ? '+1 AFFIRM' : (signal === -1 ? '-1 REJECT' : '0 HOLD');
+function setNodeStatus(id, status) {
+  const dot = document.getElementById("status-" + id);
+  if (dot) { dot.className = "fn-status" + (status ? " " + status : ""); dot.title = status || "idle"; }
+}
 
-  logInspector(node.name, `Processing signal: ${signalLabel}`);
+async function simulateNode(node, inSignal) {
+  const el = document.getElementById(node.id);
+  if (!el) return inSignal;
+
+  setNodeStatus(node.id, "run");
+  el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
+
+  // Try WASM execution if node has code
+  let outSignal = inSignal;
+  const code = node.props.code || "";
+  if (code.trim() && window.wasmReady && window.wasmRunTern) {
+    try {
+      logInspector(node.name, "⚡ Running via WASM…");
+      const raw = window.wasmRunTern(code);
+      const r = JSON.parse(raw);
+      if (r.ok) {
+        outSignal = r.trit === 1 ? 1 : (r.trit === -1 ? -1 : 0);
+        const lbl = outSignal === 1 ? '+1 AFFIRM' : (outSignal === -1 ? '-1 REJECT' : '0 TEND');
+        logInspector(node.name, `→ ${lbl}${r.output && r.output.length ? ' · ' + r.output.join(', ') : ''}`);
+      } else {
+        logInspector(node.name, `✗ ${r.error || "error"}`);
+        setNodeStatus(node.id, "err");
+        el.classList.add('pulse-reject');
+        await new Promise(r => setTimeout(r, 600));
+        return -1;
+      }
+    } catch(e) {
+      logInspector(node.name, `⚠ WASM error: ${e.message}`);
+      outSignal = inSignal; // pass through
+    }
+  } else {
+    const lbl = inSignal === 1 ? '+1 AFFIRM' : (inSignal === -1 ? '-1 REJECT' : '0 TEND');
+    logInspector(node.name, `→ ${lbl} (passthrough)`);
+  }
+
+  const pulseClass = outSignal === 1 ? 'pulse-affirm' : (outSignal === -1 ? 'pulse-reject' : 'pulse-hold');
   el.classList.add(pulseClass);
-  
-  await new Promise(r => setTimeout(r, 1000));
+  setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : "run"));
+  await new Promise(r => setTimeout(r, 700));
 
   const outWires = flowWires.filter(w => w.fromId === node.id);
   for (const wire of outWires) {
+    // Apply edge condition logic
+    let pass = true;
+    if (wire.condition && wire.condition !== "all") {
+      const wc = wire.condition;
+      if (wc === "affirm" && outSignal !== 1)  pass = false;
+      if (wc === "tend"   && outSignal !== 0)  pass = false;
+      if (wc === "reject" && outSignal !== -1) pass = false;
+      if (wc === "!reject" && outSignal === -1) pass = false;
+      if (wc === "!tend"   && outSignal === 0)  pass = false;
+      if (!pass) {
+        if (wire.transform === "block") { logInspector(node.name, `⊗ Wire blocked (condition: ${wc})`); continue; }
+        if (wire.transform === "flip")  { logInspector(node.name, `⇄ Flipped to reject`); outSignal = -1; }
+        if (wire.transform === "hold")  { logInspector(node.name, `⏸ Forced to tend`); outSignal = 0; }
+      }
+    }
     const nextNode = flowNodes.find(n => n.id === wire.toId);
     if (nextNode) {
-      await animateSignal(wire, signal);
-      await simulateNode(nextNode, signal);
+      await animateSignal(wire, outSignal);
+      await simulateNode(nextNode, outSignal);
     }
   }
+
+  await new Promise(r => setTimeout(r, 400));
+  el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
+  setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : ""));
+  return outSignal;
 }
 
 function updateWires() {
@@ -2431,17 +2610,16 @@ function drawWire(start, end, id, signal, wire) {
   path.setAttribute("id", id);
 
   if (id !== 'active-wire' && wire) {
-    path.addEventListener("click", (e) => {
-      e.stopPropagation();
-      selectWire(id);
-    });
-    // Invisible fat hitbox path for easier clicking
+    path.style.pointerEvents = 'stroke';
+    path.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); });
+    // Fat transparent hitbox for easier clicking
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
     hit.setAttribute("d", d);
     hit.setAttribute("fill", "none");
     hit.setAttribute("stroke", "transparent");
-    hit.setAttribute("stroke-width", "14");
-    hit.setAttribute("style", "cursor:pointer");
+    hit.setAttribute("stroke-width", "18");
+    hit.setAttribute("class", "wire-hit");
+    hit.style.pointerEvents = 'stroke';
     hit.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); });
     svg.appendChild(hit);
   }
@@ -2533,8 +2711,12 @@ document.addEventListener('mouseup', (e) => {
           id: wireId,
           fromId: activeWire.fromId,
           toId: toNode.id,
-          signal: 0
+          signal: 0,
+          condition: "all",
+          transform: "pass",
+          label: ""
         });
+        saveCanvasState();
       }
     }
     activeWire = null;

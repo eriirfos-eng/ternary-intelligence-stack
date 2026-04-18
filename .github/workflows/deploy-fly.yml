@@ -25,6 +25,6 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy
-        run: cd ternlang-root && flyctl deploy --remote-only
+        run: cd ternlang-root && flyctl deploy --remote-only --yes
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
