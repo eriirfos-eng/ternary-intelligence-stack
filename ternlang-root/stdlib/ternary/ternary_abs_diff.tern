@@ -1,0 +1,38 @@
+// stdlib/ternary/ternary_abs_diff.tern
+// Demonstrates: Absolute difference between two trits.
+// Tier: 1 - Open Core
+
+fn trit_abs_diff(a: trit, b: trit) -> trit {
+    let diff: int = cast(a) - cast(b);
+    if diff < 0 { diff = 0 - diff; }
+    
+    // Result is 0, 1, or 2. Normalize to trit.
+    if diff == 0 { return 0; }
+    if diff == 1 { return 1; }
+    if diff == 2 { return 1; }
+    return 0;
+}
+
+fn main() -> trit {
+    println("Trit Absolute Difference Showcase:");
+    
+    println("abs_diff(1, 1):");
+    let r1: trit = trit_abs_diff(1, 1);
+    println(r1);
+    if r1 == 0 { println("OK."); } else { return conflict(); }
+    
+    println("abs_diff(1, -1):");
+    let r2: trit = trit_abs_diff(1, -1);
+    println(r2);
+    if r2 == 1 { println("OK."); } else { return conflict(); }
+    
+    println("abs_diff(0, -1):");
+    let r3: trit = trit_abs_diff(0, -1);
+    println(r3);
+    if r3 == 1 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
