@@ -1,0 +1,41 @@
+// stdlib/classical/euclidean_algorithm.tern
+// Demonstrates: Euclidean algorithm for Greatest Common Divisor (GCD).
+// Tier: 1 - Open Core
+
+fn gcd(a: int, b: int) -> int {
+    while b != 0 {
+        let t: int = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+
+fn main() -> trit {
+    let x: int = 48;
+    let y: int = 18;
+    let res: int = gcd(x, y);
+
+    println("GCD of 48 and 18:");
+    println(res);
+
+    if res == 6 {
+        println("GCD correct (6).");
+    } else {
+        println("GCD failed.");
+        return conflict();
+    }
+
+    x = 101;
+    y = 10;
+    res = gcd(x, y);
+    println("GCD of 101 and 10:");
+    println(res);
+    
+    if res == 1 {
+        println("GCD correct (1). Success.");
+        return truth();
+    } else {
+        return conflict();
+    }
+}
