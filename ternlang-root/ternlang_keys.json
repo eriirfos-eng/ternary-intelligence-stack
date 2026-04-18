@@ -8,6 +8,19 @@
       "created_at": "2026-04-03T17:50:25.499190055+00:00",
       "is_active": true,
       "request_count": 0
+    },
+    "tern_3_d02c7be187e744c49a5b4821": {
+      "key_id": "tk_d02c7be1",
+      "tier": 3,
+      "email": "dev@ternlang.com",
+      "note": "Developer Axis Token",
+      "created_at": "2026-04-18T14:17:28Z",
+      "is_active": true,
+      "request_count": 0,
+      "monthly_calls": 0,
+      "month_key": "2026-04",
+      "github_username": "",
+      "github_invited": false
     }
   }
 }

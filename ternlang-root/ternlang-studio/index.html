@@ -1339,295 +1339,16 @@
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
 <script>
 // ─── Embedded stdlib files ────────────────────────────────────────────────────
-const STDLIB = {
-  "examples/hello_trit.tern": `// Hello, Trit!
-// Your first Ternlang program.
-// Tier: 1 — Open Core
-
-fn greet(signal: trit) -> trit {
-    match signal {
-        -1 => { return conflict(); }  // reject
-         0 => { return hold();    }   // wait
-         1 => { return truth();   }   // affirm
-    }
-}
-
-let result: trit = greet(1);
-
-match result {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "examples/ema_gate.tern": `// stdlib/safety/ema_deliberation_gate.tern
-// Demonstrates: EMA convergence gate for deployment decisions.
-// Tier: 2 — Pro Standard
-
-fn ema_gate(prior: float, evidence: float, alpha: float) -> trit {
-    let smoothed: float = alpha * evidence + (1.0 - alpha) * prior;
-    if smoothed > 0.75 { return truth();    }
-    if smoothed < 0.25 { return conflict(); }
-    return hold();
-}
-
-let result: trit = ema_gate(0.5, 0.8, 0.3);
-
-match result {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "examples/three_way_match.tern": `// Three-way match — the foundation of ternary logic.
-// Tier: 1 — Open Core
-
-fn classify(confidence: float) -> trit {
-    if confidence > 0.7 { return truth();    }
-    if confidence < 0.3 { return conflict(); }
-    return hold();
-}
-
-fn describe(t: trit) -> trit {
-    match t {
-        -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
-    }
-}
-
-let signal: trit = classify(0.5);
-let out: trit = describe(signal);
-
-match out {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "examples/consensus_chain.tern": `// Consensus chaining — multiple signals merged into one decision.
-// Tier: 1 — Open Core
-
-fn evidence_merge(a: trit, b: trit, c: trit) -> trit {
-    let ab: trit = consensus(a, b);
-    return consensus(ab, c);
-}
-
-let sensor_a: trit = 1;
-let sensor_b: trit = 1;
-let sensor_c: trit = 0;
-
-let decision: trit = evidence_merge(sensor_a, sensor_b, sensor_c);
-
-match decision {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "stdlib/core/ternary_counter.tern": `// stdlib/core/ternary_counter.tern
-// Demonstrates: Balanced ternary counting with trit state.
-// Tier: 1 — Open Core
-
-fn increment(state: trit) -> trit {
-    match state {
-        -1 => { return hold();     }
-         0 => { return truth();    }
-         1 => { return conflict(); }
-    }
-}
-
-fn decrement(state: trit) -> trit {
-    match state {
-        -1 => { return truth();    }
-         0 => { return conflict(); }
-         1 => { return hold();     }
-    }
-}
-
-let s: trit = 0;
-s = increment(s);
-s = increment(s);
-s = decrement(s);
-
-match s {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "stdlib/math/ternary_sign.tern": `// stdlib/math/ternary_sign.tern
-// Demonstrates: Sign function converting integer to ternary trit.
-// Tier: 1 — Open Core
-
-fn ternary_sign(val: int) -> trit {
-    if val > 0 { return truth();    }
-    if val < 0 { return conflict(); }
-    return hold();
-}
-
-let r1: trit = ternary_sign(42);
-let r2: trit = ternary_sign(-7);
-let r3: trit = ternary_sign(0);
-
-let combined: trit = consensus(r1, r2);
-
-match combined {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "stdlib/math/ternary_clamp.tern": `// stdlib/math/ternary_clamp.tern
-// Demonstrates: Clamping a float to a ternary band.
-// Tier: 1 — Open Core
-
-fn clamp_to_trit(val: float, lo: float, hi: float) -> trit {
-    if val > hi { return truth();    }
-    if val < lo { return conflict(); }
-    return hold();
-}
-
-let r: trit = clamp_to_trit(0.5, 0.3, 0.7);
-
-match r {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "stdlib/safety/confidence_gate.tern": `// stdlib/safety/confidence_gate.tern
-// Demonstrates: Confidence gating before committing an action.
-// Tier: 2 — Pro Standard
-
-fn confidence_gate(score: float, threshold_hi: float, threshold_lo: float) -> trit {
-    if score > threshold_hi { return truth();    }
-    if score < threshold_lo { return conflict(); }
-    return hold();
-}
-
-fn safe_act(confidence: float) -> trit {
-    let gate: trit = confidence_gate(confidence, 0.8, 0.2);
-    match gate {
-        -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
-    }
-}
-
-let result: trit = safe_act(0.85);
-
-match result {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "stdlib/safety/ema_deliberation_gate.tern": `// stdlib/safety/ema_deliberation_gate.tern
-// Demonstrates: EMA deliberation engine.
-// Tier: 2 — Pro Standard
-
-fn ema_deliberate(prior: float, current_signal: float, alpha: float) -> trit {
-    let smoothed: float = alpha * current_signal + (1.0 - alpha) * prior;
-    if smoothed > 0.85 { return truth();    }
-    if smoothed < 0.15 { return conflict(); }
-    return hold();
-}
-
-let s1: trit = ema_deliberate(0.5, 0.9, 0.3);
-let s2: trit = ema_deliberate(0.8, 0.95, 0.3);
-let final_signal: trit = consensus(s1, s2);
-
-match final_signal {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "stdlib/errors/BET-001.tern": `// stdlib/errors/BET-001.tern
-// Error: BET-001 — Stack Underflow
-// Tier: 1 — Open Core
-//
-// Every function must push exactly one value onto the stack
-// before TRET, on EVERY code path.
-
-fn gate(v: trit) -> trit {
-    match v {
-        -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
-    }
-}
-
-fn chain(a: trit, b: trit) -> trit {
-    let r1: trit = gate(a);
-    let r2: trit = gate(b);
-    return consensus(r1, r2);
-}
-
-let result: trit = chain(1, 0);
-
-match result {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-
-  "stdlib/errors/BET-007.tern": `// stdlib/errors/BET-007.tern
-// Error: BET-007 — Type Mismatch
-// Tier: 1 — Open Core
-//
-// The VM is strongly typed. Passing an Int where a Trit
-// is expected raises BET-007: TypeMismatch.
-// Always annotate every parameter.
-
-fn signal_gate(input: trit) -> trit {
-    match input {
-        -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
-    }
-}
-
-let t: trit = 1;
-let result: trit = signal_gate(t);
-
-match result {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
-};
-
-// ─── File tree config ──────────────────────────────────────────────────────────
-const TREE = [
-  { dir: "▸ Examples",       prefix: "examples/",       tier: 1 },
-  { dir: "▸ stdlib/core",    prefix: "stdlib/core/",    tier: 1 },
-  { dir: "▸ stdlib/math",    prefix: "stdlib/math/",    tier: 1 },
-  { dir: "▸ stdlib/safety",  prefix: "stdlib/safety/",  tier: 2 },
-  { dir: "▸ stdlib/errors",  prefix: "stdlib/errors/",  tier: 1 },
-];
-
-const TIER_CLASS = { 1: "t1", 2: "t2", 3: "t3" };
+const STDLIB = {};
+const TREE = [];
+const TIER_CLASS = { 1: "t1", 2: "t2", 3: "t3", 4: "t4" };
+const TIER_LABELS = { 1: "Tier 1 — Free", 2: "Tier 2 — Pro", 3: "Tier 3 — Industrial", 4: "Tier 4 — Enterprise" };
+const TIER_BADGE_CLASS = { 1: "badge-free", 2: "badge-t2", 3: "badge-t3", 4: "badge-t4" };
 
 // ─── Templates ────────────────────────────────────────────────────────────────
 const TEMPLATES = {
-  hello: `// Hello, Trit!
-fn greet(signal: trit) -> trit {
-    match signal {
-        -1 => { return conflict(); }
-         0 => { return hold();    }
-         1 => { return truth();   }
-    }
-}
-
-let result: trit = greet(1);
-
-match result {
-    -1 => { return conflict(); }
-     0 => { return hold();    }
-     1 => { return truth();   }
-}`,
+  hello: `fn main() -> trit {\n    print("⊕ Hello Ternary World");\n    return affirm;\n}\n`,
+};
   match: `fn classify(x: int) -> trit {
     if x > 0 { return truth();    }
     if x < 0 { return conflict(); }
@@ -1705,31 +1426,37 @@ function renderFlow() {
   updateWires();
 }
 
-function renderFlowLibrary() {
+async function renderFlowLibrary() {
   const lib = document.getElementById("flow-lib-items");
-  lib.innerHTML = "";
+  lib.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading experts…</div>';
   
-  const allSources = { ...STDLIB, ...fileBuffers };
-  const agents = [];
-
-  Object.entries(allSources).forEach(([path, code]) => {
-    const agentMatches = [...code.matchAll(/agent\s+(\w+)\s*\{/g)];
-    agentMatches.forEach(match => {
-      agents.push({ name: match[1], path });
+  try {
+    const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+    const key = document.getElementById("apiKey").value.trim();
+    
+    const r = await fetch(endpoint + "/api/stdlib/list", {
+      headers: key ? { "X-Ternlang-Key": key } : {}
     });
-  });
+    const d = await r.json();
+    if (d.status !== "ok") return;
 
-  agents.forEach(a => {
-    const div = document.createElement("div");
-    div.className = "lib-item";
-    div.innerHTML = `<i data-lucide="bot"></i> <span>${a.name}</span>`;
-    div.onclick = () => {
-      const id = "node_" + Date.now();
-      createFlowNode(a.name, a.path, 100, 100, 'agent', id);
-    };
-    lib.appendChild(div);
-  });
-  lucide.createIcons();
+    lib.innerHTML = "";
+    d.files.forEach(path => {
+        const name = path.split('/').pop().replace('.tern', '');
+        // Heuristic: if in agents/ or has meaningful name
+        if (path.includes("agents/")) {
+            const div = document.createElement("div");
+            div.className = "lib-item";
+            div.innerHTML = `<i data-lucide="bot"></i> <span>${name}</span>`;
+            div.onclick = async () => {
+                const id = "node_" + Date.now();
+                createFlowNode(name, path, 100, 100, 'agent', id);
+            };
+            lib.appendChild(div);
+        }
+    });
+    lucide.createIcons();
+  } catch (e) {}
 }
 
 function createFlowNode(name, path, x, y, type = 'agent', id) {
@@ -2076,36 +1803,76 @@ document.addEventListener('mouseup', (e) => {
 });
 
 // ─── Build file tree ──────────────────────────────────────────────────────────
-function buildFileTree() {
+async function buildFileTree() {
   const tree = document.getElementById("file-tree");
-  tree.innerHTML = "";
-  TREE.forEach(({ dir, prefix, tier }) => {
-    const files = Object.keys(STDLIB).filter(k => k.startsWith(prefix));
-    if (files.length === 0) return;
-    const sec = document.createElement("div");
-    sec.className = "tree-section";
-    const dirEl = document.createElement("div");
-    dirEl.className = "tree-dir";
-    dirEl.innerHTML = `<span class="arrow">▾</span> ${dir.replace("▸ ", "")}`;
-    dirEl.onclick = () => {
-      const collapsed = dirEl.classList.toggle("collapsed");
-      filesEl.classList.toggle("hidden", collapsed);
-    };
-    const filesEl = document.createElement("div");
-    filesEl.className = "tree-files";
-    files.forEach(path => {
-      const name = path.split("/").pop();
-      const fileEl = document.createElement("div");
-      fileEl.className = "tree-file";
-      fileEl.dataset.path = path;
-      fileEl.innerHTML = `<span class="tier-dot ${TIER_CLASS[tier] || 't1'}"></span>${name}`;
-      fileEl.onclick = () => { openFile(path); switchView('editor'); };
-      filesEl.appendChild(fileEl);
+  // Don't clear if already loaded unless specifically requested
+  if (tree.dataset.loaded === "true") {
+     refreshTreeHighlight();
+     return;
+  }
+  tree.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading library…</div>';
+  
+  try {
+    const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+    const key = document.getElementById("apiKey").value.trim();
+    
+    const r = await fetch(endpoint + "/api/stdlib/list", {
+      headers: key ? { "X-Ternlang-Key": key } : {}
     });
-    sec.appendChild(dirEl);
-    sec.appendChild(filesEl);
-    tree.appendChild(sec);
-  });
+    const d = await r.json();
+    
+    if (d.status !== "ok") {
+        tree.innerHTML = `<div style="padding:10px; color:var(--red); font-size:11px;">${d.error || "Failed to load"}</div>`;
+        return;
+    }
+
+    // Group files by top-level directory
+    const groups = {};
+    d.files.forEach(path => {
+        const parts = path.split('/');
+        if (parts.length < 2) return;
+        const dir = parts[1]; 
+        if (!groups[dir]) groups[dir] = [];
+        groups[dir].push(path);
+    });
+
+    tree.innerHTML = "";
+    Object.keys(groups).sort().forEach(dir => {
+        const section = document.createElement("div");
+        section.className = "tree-section";
+        
+        const dirEl = document.createElement("div");
+        dirEl.className = "tree-dir";
+        dirEl.innerHTML = `<span class="arrow">▾</span> <i data-lucide="folder" style="width:12px; height:12px"></i> ${dir}/`;
+        dirEl.onclick = () => {
+            const filesEl = section.querySelector(".tree-files");
+            const isHidden = filesEl.classList.toggle("hidden");
+            dirEl.classList.toggle("collapsed", isHidden);
+            dirEl.querySelector(".arrow").textContent = isHidden ? "▸" : "▾";
+        };
+        section.appendChild(dirEl);
+
+        const filesEl = document.createElement("div");
+        filesEl.className = "tree-files";
+        groups[dir].forEach(path => {
+            const name = path.split('/').pop();
+            const fileEl = document.createElement("div");
+            fileEl.className = "tree-file";
+            fileEl.dataset.path = path;
+            fileEl.innerHTML = `<i data-lucide="file-code" style="width:12px; height:12px"></i> ${name}`;
+            fileEl.onclick = () => { openFile(path); switchView('editor'); };
+            filesEl.appendChild(fileEl);
+        });
+        section.appendChild(filesEl);
+        tree.appendChild(section);
+    });
+    tree.dataset.loaded = "true";
+    refreshTreeHighlight();
+    lucide.createIcons();
+
+  } catch (e) {
+    tree.innerHTML = `<div style="padding:10px; color:var(--red); font-size:11px;">Connection Error</div>`;
+  }
 }
 
 function refreshTreeHighlight() {
@@ -2136,13 +1903,45 @@ function switchToTab(path) {
   document.getElementById("sbFile").textContent = path.split("/").pop();
 }
 
-function openFile(path) {
+async function openFile(path) {
   if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
+  
+  if (fileBuffers[path]) {
+    loadToEditor(path, fileBuffers[path]);
+    return;
+  }
+
+  // Fetch from API
+  try {
+    const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+    const key = document.getElementById("apiKey").value.trim();
+    
+    const r = await fetch(endpoint + "/api/stdlib/read/" + path, {
+      headers: key ? { "X-Ternlang-Key": key } : {}
+    });
+    const d = await r.json();
+    
+    if (d.status === "ok") {
+        fileBuffers[path] = d.content;
+        loadToEditor(path, d.content);
+    } else {
+        showToast(d.error || "Failed to read file", "error");
+    }
+  } catch (e) {
+    showToast("Connection Error", "error");
+  }
+}
+
+function loadToEditor(path, content) {
   const existing = tabs.find(t => t.path === path);
   if (!existing) tabs.push({ name: path.split("/").pop(), path });
   activeFile = path;
-  if (!fileBuffers[path]) fileBuffers[path] = STDLIB[path] || "";
-  if (monacoEditor) monacoEditor.setValue(fileBuffers[path]);
+  if (monacoEditor) {
+    monacoEditor.setValue(content);
+    const model = monacoEditor.getModel();
+    const ext = path.split(".").pop();
+    if (ext === "tern") monaco.editor.setModelLanguage(model, "ternlang");
+  }
   renderTabs();
   refreshTreeHighlight();
   document.getElementById("sbFile").textContent = path.split("/").pop();
@@ -2698,8 +2497,17 @@ async function fetchUsage() {
     const d = await r.json();
     document.getElementById("usageError").style.display = "none";
     const masked = key.length > 12 ? key.slice(0, 8) + "…" + key.slice(-4) : key;
-    document.getElementById("usageKeyDisplay").textContent = masked;
+    
     const tier = d.tier || 1;
+    const oldTier = document.getElementById("usageTierBadge").dataset.tier;
+    if (oldTier && oldTier != tier) {
+        document.getElementById("file-tree").dataset.loaded = "false";
+        renderFlowLibrary();
+        buildFileTree();
+    }
+    document.getElementById("usageTierBadge").dataset.tier = tier;
+
+    document.getElementById("usageKeyDisplay").textContent = masked;
     updateTopbarTier(tier);
     document.getElementById("usageTierBadge").textContent = TIER_LABELS[tier] || "Tier 1";
     document.getElementById("usageTierBadge").className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
@@ -2934,6 +2742,7 @@ require(["vs/editor/editor.main"], function () {
 
   // Load from hash after Monaco is ready
   loadFromHash();
+  buildFileTree();
 
   lucide.createIcons();
 });

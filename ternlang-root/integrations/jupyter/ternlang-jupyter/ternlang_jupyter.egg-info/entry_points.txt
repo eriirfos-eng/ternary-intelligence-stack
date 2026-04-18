@@ -1,0 +1,2 @@
+[console_scripts]
+ternlang-jupyter-install = ternlang_jupyter.install:main

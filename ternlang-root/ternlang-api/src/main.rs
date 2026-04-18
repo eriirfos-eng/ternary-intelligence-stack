@@ -62,7 +62,13 @@ use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 use uuid::Uuid;
 
-use ternlang_core::{trit::Trit, parser::Parser, codegen::betbc::BytecodeEmitter, vm::BetVm};
+use ternlang_core::{
+    trit::Trit,
+    parser::{Parser, ParseError},
+    lexer::Token,
+    codegen::betbc::BytecodeEmitter,
+    vm::BetVm
+};
 use ternlang_moe::TernMoeOrchestrator;
 use ternlang_ml::{
     TritScalar, TritEvidenceVec, TEND_BOUNDARY,
@@ -348,8 +354,8 @@ async fn require_api_key(
 
     match state.keys.validate_and_bump(raw).await {
         KeyCheckResult::Valid(entry) => {
-            // /api/usage — any valid key can read their own usage stats
-            if path == "/api/usage" {
+            // Endpoints accessible by any valid key (Tier 1+)
+            if path == "/api/usage" || path == "/api/stdlib/list" || path.starts_with("/api/stdlib/read") {
                 return next.run(request).await;
             }
             // All other /api/* endpoints require Tier 2 or above (paid commercial access)
@@ -3567,6 +3573,89 @@ fn mcp_tools_manifest() -> Value {
 
 // ─── GET /api/usage ───────────────────────────────────────────────────────────
 
+fn get_path_tier(path: &str) -> u8 {
+    let p = path.trim_start_matches("stdlib/");
+    if p.starts_with("core/") || p.starts_with("logic/") || p.starts_with("classical/") 
+       || p.starts_with("tutorials/") || p.starts_with("testing/") || p.starts_with("showcase/")
+       || p.starts_with("bughunt/") || p.starts_with("errors/") {
+        return 1;
+    }
+    if p.starts_with("agents/") || p.starts_with("apps/") || p.starts_with("ml/") 
+       || p.starts_with("nlp/") || p.starts_with("safety/") || p.starts_with("rl/")
+       || p.starts_with("distributed/") || p.starts_with("graph/") || p.starts_with("finance/")
+       || p.starts_with("econ/") || p.starts_with("ensemble/") || p.starts_with("control/")
+       || p.starts_with("societal/") || p.starts_with("net/") || p.starts_with("eval/") {
+        return 2;
+    }
+    if p.starts_with("premium/") { return 4; }
+    3 // Default for industrial tiers (bio, crypto, etc)
+}
+
+async fn stdlib_list(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> Response {
+    let raw = headers.get("X-Ternlang-Key").and_then(|v| v.to_str().ok()).unwrap_or("");
+    let tier = if let Some(entry) = state.keys.peek(raw).await { entry.tier } else { 0 };
+
+    let base = std::env::var("STDLIB_PATH").unwrap_or_else(|_| "stdlib".to_string());
+    let mut files = Vec::new();
+
+    fn walk(dir: &std::path::Path, files: &mut Vec<String>, user_tier: u8) {
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    walk(&path, files, user_tier);
+                } else if path.extension().and_then(|s| s.to_str()) == Some("tern") {
+                    let full_str = path.to_string_lossy().to_string();
+                    if let Some(pos) = full_str.find("stdlib/") {
+                        let rel_path = &full_str[pos..];
+                        if get_path_tier(rel_path) <= user_tier {
+                            files.push(rel_path.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    walk(std::path::Path::new(&base), &mut files, tier);
+    files.sort();
+
+    Json(json!({ "status": "ok", "tier": tier, "files": files })).into_response()
+}
+
+async fn stdlib_read(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Path(file_path): Path<String>,
+) -> Response {
+    let raw = headers.get("X-Ternlang-Key").and_then(|v| v.to_str().ok()).unwrap_or("");
+    let user_tier = if let Some(entry) = state.keys.peek(raw).await { entry.tier } else { 0 };
+
+    let sanitized = file_path.replace("..", "").trim_start_matches('/').to_string();
+    let rel_path = if sanitized.starts_with("stdlib/") { sanitized.clone() } else { format!("stdlib/{}", sanitized) };
+    
+    if get_path_tier(&rel_path) > user_tier {
+        return api_error(StatusCode::FORBIDDEN, "This file requires a higher subscription tier.");
+    }
+
+    let base = std::env::var("STDLIB_PATH").unwrap_or_else(|_| "stdlib".to_string());
+    let mut full_path = std::path::PathBuf::from(&base);
+    let final_subpath = if sanitized.starts_with("stdlib/") {
+        sanitized.strip_prefix("stdlib/").unwrap()
+    } else {
+        &sanitized
+    };
+    full_path.push(final_subpath);
+
+    match std::fs::read_to_string(&full_path) {
+        Ok(content) => Json(json!({ "status": "ok", "path": sanitized, "content": content })).into_response(),
+        Err(e) => api_error(StatusCode::NOT_FOUND, &format!("File not found: {} ({})", sanitized, e)),
+    }
+}
+
 async fn api_usage(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -4257,6 +4346,8 @@ async fn main() {
         .route("/activate",             get(activate_page))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))
+        .route("/api/stdlib/list", get(stdlib_list))
+        .route("/api/stdlib/read/*path", get(stdlib_read))
         .route("/api/run",        post(run_program))
         // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))

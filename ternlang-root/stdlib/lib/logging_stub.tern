@@ -1,0 +1,18 @@
+// stdlib/lib/logging_stub.tern
+// Demonstrates: A conceptual logging utility.
+// Tier: 1
+
+fn log_message(level: string, message: string) {
+    // In a real system, this would write to a file or console.
+    // For stub purposes, we just print a formatted string.
+    println(level + ": " + message);
+}
+
+fn main() -> trit {
+    log_message("INFO", "System started.");
+    log_message("WARN", "Low disk space.");
+    log_message("ERROR", "Critical failure detected.");
+    
+    println("Program exited successfully.");
+    return 1;
+}

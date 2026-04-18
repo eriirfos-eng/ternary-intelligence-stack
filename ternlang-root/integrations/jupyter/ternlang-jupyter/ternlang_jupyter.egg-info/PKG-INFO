@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: ternlang-jupyter
+Version: 1.0.0
+Summary: Jupyter kernel for the Ternlang balanced ternary language — run .tern programs in notebooks
+Author-email: RFI-IRFOS <licensing@ternlang.com>
+License: LGPL-3.0-or-later
+Project-URL: Homepage, https://ternlang.com
+Project-URL: Repository, https://github.com/eriirfos-eng/ternary-intelligence-stack
+Project-URL: Issues, https://github.com/eriirfos-eng/ternary-intelligence-stack/issues
+Keywords: ternlang,ternary,trit,jupyter,kernel,BET,balanced-ternary
+Classifier: Framework :: Jupyter
+Classifier: Programming Language :: Other
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: ipykernel>=6.0
+Requires-Dist: jupyter_client>=7.0
