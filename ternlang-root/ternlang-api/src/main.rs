@@ -1372,27 +1372,30 @@ async fn mcp_server_card() -> Json<Value> {
     // Smithery expects exactly this shape at /.well-known/mcp/server-card.json
     // to bypass the live scan and use the static card instead.
     // Format confirmed from Smithery CLI output (.smithery/shttp/manifest.json → serverCard).
-    //
-    // Tool names scoring: MCP 2025-03-26 adds top-level `title` on Tool objects.
-    // We hoist annotations.title → title so Smithery's "Tool names" check passes.
-    let raw_tools = mcp_tools_manifest()["tools"].clone();
-    let tools: Vec<Value> = raw_tools.as_array().unwrap_or(&vec![]).iter().map(|tool| {
-        let mut t = tool.clone();
-        if t.get("title").is_none() {
-            if let Some(title) = tool.get("annotations").and_then(|a| a.get("title")).cloned() {
-                t["title"] = title;
-            }
-        }
-        t
-    }).collect();
+    // mcp_tools_manifest() already hoists annotations.title → top-level title.
+    let tools = mcp_tools_manifest()["tools"].clone();
     Json(json!({
         "serverInfo": {
             "name":    "ternlang-mcp",
-            "version": "1.1.7"
+            "version": "1.1.8"
         },
-        "tools": tools,
+        "tools":     tools,
         "resources": [],
-        "prompts": mcp_prompts_list()
+        "prompts":   mcp_prompts_list(),
+        "configSchema": {
+            "type": "object",
+            "title": "Ternlang MCP Configuration",
+            "description": "All 30 MCP tools are free — no key needed. An optional API key unlocks server-side persistent 3-layer memory, REST API access, SSE streaming, and production SLA.",
+            "properties": {
+                "apiKey": {
+                    "type": "string",
+                    "title": "API Key (optional)",
+                    "description": "Optional. All 30 tools work without a key. A key unlocks server-side persistent memory, REST API (10k–50k+ calls/month), SSE streaming, and SLA. Get one at https://ternlang.com/activate.",
+                    "x-smithery-secret": true
+                }
+            },
+            "required": []
+        }
     }))
 }
 
@@ -3229,9 +3232,12 @@ fn mcp_get_industrial_standards() -> Result<Value, String> {
 }
 
 // ─── mcp_tools_manifest ───────────────────────────────────────────────────────
+//
+// Returns { "tools": [...] } with top-level `title` hoisted from annotations.title
+// on every tool (MCP 2025-03-26 spec). Both tools/list and server-card use this.
 
 fn mcp_tools_manifest() -> Value {
-    json!({ "tools": [
+    let raw = json!({ "tools": [
         {
           "name": "trit_decide",
           "description": "Convert float evidence into a ternary decision (-1 conflict / 0 hold / +1 affirm) with confidence score and human-readable interpretation. The core ternary reasoning primitive.",
@@ -3586,7 +3592,18 @@ fn mcp_tools_manifest() -> Value {
             }
           }
         }
-    ]})
+    ]});
+    // Hoist annotations.title → top-level title on every tool (MCP 2025-03-26 spec)
+    let tools: Vec<Value> = raw["tools"].as_array().unwrap().iter().map(|tool| {
+        let mut t = tool.clone();
+        if t.get("title").is_none() {
+            if let Some(title) = tool.get("annotations").and_then(|a| a.get("title")).cloned() {
+                t["title"] = title;
+            }
+        }
+        t
+    }).collect();
+    json!({ "tools": tools })
 }
 
 // ─── GET /api/usage ───────────────────────────────────────────────────────────
