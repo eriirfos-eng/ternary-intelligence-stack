@@ -1,0 +1,32 @@
+// stdlib/logic/ternary_xnor.tern
+// Demonstrates: A ternary XNOR gate (equality gate).
+// Tier: 1 - Open Core
+
+fn ternary_xnor(a: trit, b: trit) -> trit {
+    if a == b { return 1; }
+    return -1;
+}
+
+fn main() -> trit {
+    println("Ternary XNOR Gate Showcase:");
+    
+    println("XNOR(1, 1):");
+    let r1: trit = ternary_xnor(1, 1);
+    println(r1);
+    if r1 == 1 { println("OK."); } else { return conflict(); }
+    
+    println("XNOR(1, -1):");
+    let r2: trit = ternary_xnor(1, -1);
+    println(r2);
+    if r2 == -1 { println("OK."); } else { return conflict(); }
+    
+    println("XNOR(0, 0):");
+    let r3: trit = ternary_xnor(0, 0);
+    println(r3);
+    if r3 == 1 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
