@@ -1,0 +1,28 @@
+// stdlib/agents/string_validator.tern
+// Demonstrates: String Validator agent pattern
+// Tier: 1
+
+agent StringValidator {
+    fn handle(msg: string) -> trit {
+        // Validates that a string has more than 5 characters.
+        if len(msg) > 5 {
+            return affirm;
+        }
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let v: agentref = spawn StringValidator;
+    
+    send v "Hello World";
+    let r1: trit = await v;
+    
+    send v "Hi";
+    let r2: trit = await v;
+    
+    if r1 == affirm && r2 == reject {
+        return affirm;
+    }
+    return reject;
+}
