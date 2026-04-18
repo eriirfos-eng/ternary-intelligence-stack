@@ -1578,6 +1578,12 @@
   <div class="sb-item">
     <span id="cursorPos">Ln 1, Col 1</span>
   </div>
+  <div class="sb-item">
+    <span id="sbTier" style="color:var(--muted2)">Tier 1 — Open Core</span>
+  </div>
+  <div class="sb-item">
+    <span id="connLabel" style="color:var(--muted2)">Offline</span>
+  </div>
   <div class="sb-item" style="border-right:none; margin-left:auto;">
     <span id="sbWasmStatus" style="color:var(--muted2)">WASM loading…</span>
   </div>
@@ -3394,9 +3400,8 @@ function renderTierBenefits(tier) {
 
 function updateTopbarTier(tier) {
   const badge = document.getElementById("tierBadge");
-  badge.textContent = TIER_LABELS[tier] || "Tier 1";
-  badge.className = "tier-badge tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
-  document.getElementById("sbTier").textContent = TIER_LABELS[tier] || "Tier 1 — Open Core";
+  if (badge) { badge.textContent = TIER_LABELS[tier] || "Tier 1"; badge.className = "tier-badge tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free"); }
+  const sbTierEl = document.getElementById("sbTier"); if (sbTierEl) sbTierEl.textContent = TIER_LABELS[tier] || "Tier 1 — Open Core";
   const upBtn = document.getElementById("topbarUpskillBtn");
   if (upBtn) upBtn.style.display = tier <= 1 ? "flex" : "none";
   // Sync dashboard tier badge
