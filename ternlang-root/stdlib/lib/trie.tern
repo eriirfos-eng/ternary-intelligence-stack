@@ -1,0 +1,99 @@
+// stdlib/lib/trie.tern
+// Demonstrates: A simple Trie (prefix tree) structure for trits.
+// Tier: 1 - Open Core
+
+fn trie_add(next: int[30], is_end: trittensor<10>, head: int, sequence: trit[], seq_len: int, free_p: int) -> int {
+    let curr: int = head;
+    let i: int = 0;
+    let p: int = free_p;
+    while i < seq_len {
+        let val: trit = sequence[i];
+        let child_idx: int = 0;
+        match val {
+            1 => { child_idx = 0; }
+            0 => { child_idx = 1; }
+           -1 => { child_idx = 2; }
+        }
+        
+        let pool_idx: int = curr * 3 + child_idx;
+        if next[pool_idx] == -1 {
+            next[pool_idx] = p;
+            p = p + 1;
+        }
+        curr = next[pool_idx];
+        i = i + 1;
+    }
+    is_end[curr] = 1;
+    return p;
+}
+
+fn trie_search(next: int[30], is_end: trittensor<10>, head: int, sequence: trit[], seq_len: int) -> trit {
+    let curr: int = head;
+    let i: int = 0;
+    while i < seq_len {
+        let val: trit = sequence[i];
+        let child_idx: int = 0;
+        match val {
+            1 => { child_idx = 0; }
+            0 => { child_idx = 1; }
+           -1 => { child_idx = 2; }
+        }
+        
+        let pool_idx: int = curr * 3 + child_idx;
+        if next[pool_idx] == -1 {
+            return -1; // Not found
+        }
+        curr = next[pool_idx];
+        i = i + 1;
+    }
+    return is_end[curr];
+}
+
+fn main() -> trit {
+    let next: int[30];
+    let k: int = 0;
+    while k < 30 { next[k] = -1; k = k + 1; }
+    
+    let is_end: trittensor<10> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let head: int = 0; 
+    let free_p: int = 1; 
+    
+    let seq1: trit[] = [1, 0, -1];
+    println("Adding [1, 0, -1] to trie...");
+    free_p = trie_add(next, is_end, head, seq1, 3, free_p);
+    
+    println("Searching for [1, 0, -1]:");
+    let res: trit = trie_search(next, is_end, head, seq1, 3);
+    println("Result (expected 1):");
+    println(res);
+    
+    if res == 1 {
+        println("Found.");
+    } else {
+        println("Not found.");
+        return conflict();
+    }
+    
+    let seq2: trit[] = [1, 0];
+    println("Searching for [1, 0] (prefix):");
+    let res2: trit = trie_search(next, is_end, head, seq2, 2);
+    println("Result (expected 0):");
+    println(res2);
+    
+    if res2 == 0 {
+        println("Prefix exists but not as end of sequence.");
+    } else {
+        println("Unexpected result for prefix.");
+        return conflict();
+    }
+
+    let seq3: trit[] = [-1, 1];
+    println("Searching for [-1, 1] (non-existent):");
+    let res3: trit = trie_search(next, is_end, head, seq3, 2);
+    if res3 == -1 {
+        println("Correct: sequence not found.");
+        return truth();
+    }
+    
+    return conflict();
+}
