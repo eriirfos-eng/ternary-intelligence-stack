@@ -1,0 +1,34 @@
+// stdlib/ternary/ternary_max_3.tern
+// Demonstrates: Maximum of three trits.
+// Tier: 1 - Open Core
+
+fn trit_max_3(a: trit, b: trit, c: trit) -> trit {
+    let m: trit = a;
+    if b > m { m = b; }
+    if c > m { m = c; }
+    return m;
+}
+
+fn main() -> trit {
+    println("Trit Max 3 Showcase:");
+    
+    println("max(1, 0, -1):");
+    let r1: trit = trit_max_3(1, 0, -1);
+    println(r1);
+    if r1 == 1 { println("OK."); } else { return conflict(); }
+    
+    println("max(-1, 0, -1):");
+    let r2: trit = trit_max_3(-1, 0, -1);
+    println(r2);
+    if r2 == 0 { println("OK."); } else { return conflict(); }
+    
+    println("max(-1, -1, -1):");
+    let r3: trit = trit_max_3(-1, -1, -1);
+    println(r3);
+    if r3 == -1 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
