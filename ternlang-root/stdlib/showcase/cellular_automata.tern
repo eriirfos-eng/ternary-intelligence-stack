@@ -1,0 +1,60 @@
+// stdlib/showcase/cellular_automata.tern
+// Demonstrates: 1D cellular automata (Rule 90-like) using trittensors and string concatenation.
+// Tier: 1 - Open Core
+
+fn print_cells(cells: trittensor<20>) -> trit {
+    let s: string = "";
+    let i: int = 0;
+    while i < 20 {
+        match cells[i] {
+            1 => { s = s + "+"; }
+            0 => { s = s + " "; }
+           -1 => { s = s + "."; } // Using . for better visibility than space if needed
+        }
+        i = i + 1;
+    }
+    println(s);
+    return truth();
+}
+
+fn step_automata(current: trittensor<20>, next: trittensor<20>) -> trit {
+    let i: int = 1;
+    while i < 19 {
+        let left: trit = current[i - 1];
+        let right: trit = current[i + 1];
+        
+        // Rule: if left != right then 1 else 0
+        if left != right {
+            next[i] = 1;
+        } else {
+            next[i] = 0;
+        }
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let cells1: trittensor<20> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let cells2: trittensor<20> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    println("Cellular Automata (Rule 90-like):");
+    
+    let generations: int = 10;
+    let g: int = 0;
+    while g < generations {
+        print_cells(cells1);
+        step_automata(cells1, cells2);
+        
+        // Copy back to cells1
+        let i: int = 0;
+        while i < 20 {
+            cells1[i] = cells2[i];
+            i = i + 1;
+        }
+        g = g + 1;
+    }
+    
+    println("Automata complete.");
+    return truth();
+}
