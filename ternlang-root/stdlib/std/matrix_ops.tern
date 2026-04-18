@@ -1,0 +1,54 @@
+// stdlib/std/matrix_ops.tern
+// Demonstrates: Matrix addition and scalar multiplication on flat float tensors.
+// Tier: 1 - Open Core
+
+fn mat_add(a: float[4], b: float[4], res: float[4], size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        res[i] = a[i] + b[i];
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn mat_scalar_mul(a: float[4], s: float, res: float[4], size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        res[i] = a[i] * s;
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let size: int = 4;
+    let a: float[4];
+    a[0] = 1.0; a[1] = 2.0; a[2] = 3.0; a[3] = 4.0;
+    
+    let b: float[4];
+    b[0] = 5.0; b[1] = 6.0; b[2] = 7.0; b[3] = 8.0;
+    
+    let res: float[4];
+    res[0] = 0.0; res[1] = 0.0; res[2] = 0.0; res[3] = 0.0;
+    
+    println("Matrix Addition (2x2 flat):");
+    mat_add(a, b, res, size);
+    println(res[0]); println(res[1]); println(res[2]); println(res[3]);
+
+    if res[0] == 6.0 {
+        if res[3] == 12.0 {
+            println("Addition OK.");
+        } else { return conflict(); }
+    } else { return conflict(); }
+
+    println("Matrix Scalar Multiplication (x 0.5):");
+    mat_scalar_mul(a, 0.5, res, size);
+    println(res[0]); println(res[1]); println(res[2]); println(res[3]);
+
+    if res[0] == 0.5 {
+        if res[3] == 2.0 {
+            println("Scalar Multiplication OK. Success.");
+            return truth();
+        } else { return conflict(); }
+    } else { return conflict(); }
+}
