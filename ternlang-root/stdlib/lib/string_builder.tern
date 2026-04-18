@@ -1,0 +1,38 @@
+// stdlib/lib/string_builder.tern
+// Demonstrates: A simple string builder pattern using concatenation.
+// Tier: 1 - Open Core
+
+fn append_trit(base: string, val: trit) -> string {
+    match val {
+        1 => { return base + "1"; }
+        0 => { return base + "0"; }
+       -1 => { return base + "-"; }
+    }
+}
+
+fn append_int(base: string, val: int) -> string {
+    // Very basic: just handles small positive ints as example
+    if val == 0 { return base + "0"; }
+    if val == 1 { return base + "1"; }
+    if val == 2 { return base + "2"; }
+    return base + "?";
+}
+
+fn main() -> trit {
+    let s: string = "Data: ";
+    s = append_trit(s, 1);
+    s = s + ", ";
+    s = append_trit(s, -1);
+    s = s + ". Score: ";
+    s = append_int(s, 2);
+    
+    println(s);
+    
+    if s == "Data: 1, -. Score: 2" {
+        println("String building verified. Success.");
+        return truth();
+    }
+    
+    println("Failed string match.");
+    return conflict();
+}
