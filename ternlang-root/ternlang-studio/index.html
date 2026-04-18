@@ -807,6 +807,7 @@
       <button id="topbarUpskillBtn" class="btn btn-hero secondary" style="color:var(--amber); border-color:var(--amber); height:32px" onclick="openUpskillModal()">Upskill</button>
       <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Theme">●</button>
     </div>
+    <!-- Auto-detect endpoint: same origin when served from the API server, else default to ternlang.com -->
     <input type="hidden" id="apiEndpoint" value="https://ternlang.com" />
     <input type="password" id="apiKey" style="display:none;" />
   </div>
@@ -1134,11 +1135,42 @@
 <div class="view" id="view-flow">
   <!-- Left: Library -->
   <div id="flow-library">
-    <div class="lib-search">
-      <input type="text" class="prop-input" placeholder="Search Agents..." style="width:100%">
+    <div class="lib-search" style="display:flex; gap:6px;">
+      <input type="text" class="prop-input" id="flowLibSearch" placeholder="Search Agents..." style="flex:1" oninput="filterFlowLib(this.value)">
+      <button class="tb-btn" onclick="openNewAgentModal()" title="Create new agent" style="color:var(--green); border-color:var(--green); flex-shrink:0;"><i data-lucide="plus"></i></button>
     </div>
     <div id="flow-lib-items" style="flex:1; overflow-y:auto;">
       <!-- Loaded via JS -->
+    </div>
+  </div>
+
+  <!-- New Agent Modal -->
+  <div id="newAgentModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeNewAgentModal()">
+    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:24px; width:500px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="font-size:14px; font-weight:700; color:var(--text);">⊕ New Agent</div>
+        <button onclick="closeNewAgentModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <div class="prop-label" style="margin-bottom:4px;">Agent Name</div>
+          <input id="newAgentName" class="prop-input" style="width:100%" placeholder="e.g. SentimentGate" />
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:4px;">Import from Library</div>
+          <select id="newAgentLibPick" class="prop-input" style="width:100%" onchange="loadNewAgentTemplate()">
+            <option value="">— Start blank —</option>
+          </select>
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:4px;">Agent Code (.tern)</div>
+          <textarea id="newAgentCode" class="prop-input" style="width:100%; height:160px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:11px;" placeholder="fn main() -> trit {&#10;    return affirm;&#10;}"></textarea>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+          <button onclick="closeNewAgentModal()" class="btn btn-ghost">Cancel</button>
+          <button onclick="addAgentFromModal()" class="btn btn-primary">Add to Canvas</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1283,6 +1315,12 @@
       <div>
         <h1 style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:-0.02em;">TernWiki</h1>
         <p style="font-size:14px; color:var(--muted)">Technical Reference for Balanced Ternary Intelligence</p>
+        <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/Language-Reference.md" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="book" style="width:13px;height:13px;"></i> Language Reference</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/QUICKSTART.md" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="zap" style="width:13px;height:13px;"></i> Quickstart</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/stdlib" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="library" style="width:13px;height:13px;"></i> Browse Stdlib</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="github" style="width:13px;height:13px;"></i> GitHub</a>
+        </div>
       </div>
     </div>
 
@@ -1412,301 +1450,6 @@
   </div>
 </div>
 
-<!-- ═══ FLOW VIEW (TernFlow) ═════════════════════════════════════════════════ -->
-<div class="view" id="view-flow">
-  <!-- Left: Library -->
-  <div id="flow-library">
-    <div class="lib-search">
-      <input type="text" class="prop-input" placeholder="Search Agents..." style="width:100%">
-    </div>
-    <div id="flow-lib-items" style="flex:1; overflow-y:auto;">
-      <!-- Loaded via JS -->
-    </div>
-  </div>
-
-  <!-- Center: Canvas -->
-  <div id="flow-canvas-wrap">
-    <svg id="flow-svg-layer">
-      <!-- Wires rendered here -->
-    </svg>
-    <div id="flow-canvas">
-      <!-- Nodes injected via JS -->
-    </div>
-
-    <!-- Flow Floating Toolbar -->
-    <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
-      <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(12px); border-radius:50px; border: 1px solid var(--border2);">
-        <button class="btn btn-ghost" onclick="renderFlow()" title="Reset Canvas">
-          <i data-lucide="refresh-cw" style="width:16px"></i>
-        </button>
-        <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add Binary LLM Bridge" style="color:var(--amber)">
-          <i data-lucide="plus-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Bridge</span>
-        </button>
-        <button class="btn btn-ghost" onclick="addTernaryGate()" title="Add Ternary Logic Gate" style="color:var(--cyan)">
-          <i data-lucide="split" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Gate</span>
-        </button>
-        <button class="btn btn-ghost" onclick="runSimulation()" title="Run Visual Simulation" style="color:var(--green)">
-          <i data-lucide="play-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Simulate</span>
-        </button>
-        <div style="width:1px; height:20px; background:var(--border2);"></div>
-        <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px; padding: 6px 20px;">
-          <i data-lucide="download" style="width:16px"></i> <span style="margin-left:6px">Export .tern</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Execution Inspector Overlay -->
-    <div id="flow-inspector">
-      <div class="ins-head">
-        <span>Execution Inspector</span>
-        <button class="btn-ghost" onclick="toggleInspector()" style="padding:2px"><i data-lucide="chevron-down" style="width:14px"></i></button>
-      </div>
-      <div id="ins-body" class="ins-body">
-        <!-- Logs injected via JS -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Right: Properties -->
-  <div id="flow-props">
-    <div class="prop-header">Node Properties</div>
-    <div id="prop-body" class="prop-body">
-      <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px;">Select a node to configure</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SETTINGS VIEW ════════════════════════════════════════════════════════ -->
-<div class="view" id="view-settings">
-
-  <div class="settings-section">
-    <div class="settings-section-title">API Connection</div>
-    <div class="settings-row">
-      <div class="settings-label">Endpoint URL</div>
-      <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" />
-      <button class="settings-btn" onclick="applyEndpoint()">Apply</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">API Key</div>
-      <div class="key-display" id="settingsKeyDisplay">—</div>
-      <button class="settings-btn" onclick="copyKey()">Copy</button>
-      <button class="settings-btn" onclick="clearKey()">Clear</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">Set new key</div>
-      <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="flex:1"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
-      <button class="settings-btn" onclick="applySettingsKey()">Apply</button>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">Save key locally</div>
-      <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" />
-      <div class="settings-desc">Stored in localStorage — never sent anywhere except the API endpoint</div>
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <div class="settings-section-title">Editor</div>
-    <div class="settings-row">
-      <div class="settings-label">Font size</div>
-      <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()">
-        <option value="11">11px</option>
-        <option value="12">12px</option>
-        <option value="13" selected>13px</option>
-        <option value="14">14px</option>
-        <option value="16">16px</option>
-      </select>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">Minimap</div>
-      <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()">
-        <option value="false" selected>Off</option>
-        <option value="true">On</option>
-      </select>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">Word wrap</div>
-      <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()">
-        <option value="off" selected>Off</option>
-        <option value="on">On</option>
-        <option value="wordWrapColumn">At column</option>
-      </select>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">Theme</div>
-      <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()">
-        <option value="dark" selected>Dark</option>
-        <option value="light">Light</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="settings-section">
-    <div class="settings-section-title">About</div>
-    <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
-      TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
-      Runtime: BET VM (27 registers · balanced ternary)<br/>
-      License: LGPL-3.0-or-later<br/>
-      <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
-      &nbsp;·&nbsp;
-      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
-    </div>
-  </div>
-
-</div>
-
-<!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
-<div class="view" id="view-docs">
-  <div style="padding: 40px; max-width: 1200px; margin: 0 auto; overflow-y: auto;">
-    <div style="display:flex; align-items:center; gap:20px; margin-bottom:48px;">
-      <div style="width:64px; height:64px; background:var(--bg1); border:1px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)">
-        <i data-lucide="book-open" style="width:32px; height:32px; color:var(--cyan)"></i>
-      </div>
-      <div>
-        <h1 style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:-0.02em;">TernWiki</h1>
-        <p style="font-size:14px; color:var(--muted)">Technical Reference for Balanced Ternary Intelligence</p>
-      </div>
-    </div>
-
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
-      
-      <!-- Syntax Guide -->
-      <div class="dash-col">
-        <div class="dash-section-title">Language Fundamentals</div>
-        <div class="dash-card" style="padding:32px">
-          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
-            <i data-lucide="code-2" style="width:18px; color:var(--cyan)"></i> Syntax Guide
-          </h2>
-          
-          <div style="margin-bottom:24px;">
-            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Functions</div>
-            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); border:1px solid var(--border2)">fn add(a: int, b: int) -> int {
-  return a + b;
-}</pre>
-          </div>
-
-          <div style="margin-bottom:24px;">
-            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Control Flow</div>
-            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green); border:1px solid var(--border2)">match signal {
-  affirm => { println("YES"); }
-  tend   => { println("HOLD"); }
-  reject => { println("NO"); }
-}</pre>
-          </div>
-
-          <div style="margin-bottom:0;">
-            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Agents</div>
-            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--amber); border:1px solid var(--border2)">agent Sensor {
-  handle(s: trit) {
-    spawn Consensus(s);
-  }
-}</pre>
-          </div>
-        </div>
-      </div>
-
-      <!-- Logic Tables -->
-      <div class="dash-col">
-        <div class="dash-section-title">Logical Operations</div>
-        <div class="dash-card" style="padding:32px">
-          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
-            <i data-lucide="table" style="width:18px; color:var(--amber)"></i> Truth Tables
-          </h2>
-
-          <div style="background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid var(--border2); overflow:hidden;">
-            <table style="width:100%; border-collapse:collapse; font-size:12px; font-family:'JetBrains Mono',monospace;">
-              <thead style="background:rgba(255,255,255,0.03);">
-                <tr style="border-bottom:1px solid var(--border2)">
-                  <th style="padding:12px; text-align:left; color:var(--muted)">Input A</th>
-                  <th style="padding:12px; text-align:left; color:var(--muted)">Input B</th>
-                  <th style="padding:12px; text-align:left; color:var(--cyan)">Consensus</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
-                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
-                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
-                  <td style="padding:12px; font-weight:700; color:var(--green)">+1</td>
-                </tr>
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
-                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
-                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
-                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
-                </tr>
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
-                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
-                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
-                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
-                </tr>
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
-                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
-                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
-                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
-                </tr>
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
-                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
-                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
-                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
-                </tr>
-                <tr>
-                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
-                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
-                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div style="margin-top:24px; padding:16px; background:var(--bg2); border-radius:8px; font-size:12px; color:var(--muted); line-height:1.6;">
-            <div style="font-weight:700; color:var(--text); margin-bottom:4px;">Did you know?</div>
-            The <b>Consensus</b> operator is the ternary equivalent of a logical AND. It resolves to the <i>minimum</i> value of its inputs: 
-            <code style="color:var(--cyan)">consensus(A, B) = min(A, B)</code> where <code style="color:var(--text)">+1 > 0 > -1</code>.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ DEBUGGER VIEW (Tracer) ═══════════════════════════════════════════════ -->
-<div class="view" id="view-debugger">
-  <div class="empty-state">
-    <i data-lucide="bug" style="width:48px; height:48px; opacity:0.2;"></i>
-    <div>
-      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">Execution Tracer</div>
-      <div style="font-size:13px;">Step-through debugging and register monitoring.</div>
-    </div>
-    <button class="btn btn-primary" onclick="switchView('editor')" style="margin-top:10px;">Run code to start trace</button>
-  </div>
-</div>
-
-<!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
-<div class="view" id="view-modules">
-  <div class="empty-state">
-    <i data-lucide="package" style="width:48px; height:48px; opacity:0.2;"></i>
-    <div>
-      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">TernPkg Registry</div>
-      <div style="font-size:13px;">Discover and manage ternary standard library modules.</div>
-    </div>
-    <div style="width:100%; max-width:500px; margin-top:20px;">
-       <input type="text" class="prop-input" placeholder="Search math, safety, hardware..." style="width:100%">
-    </div>
-  </div>
-</div>
-
-<!-- ═══ STATUSBAR ════════════════════════════════════════════════════════════ -->
-<div id="statusbar">
-  <div class="sb-item">
-    <span class="sb-dot" id="connDot"></span>
-    <span id="connLabel">Connecting…</span>
-  </div>
-  <div class="sb-item">⊕ Ternlang</div>
-  <div class="sb-item" id="sbFile">hello_trit.tern</div>
-  <div class="sb-item" id="sbTier">Tier 1 — Open Core</div>
-  <div class="sb-item" id="cursorPos">Ln 1, Col 1</div>
-</div>
-
-<!-- ═══ UPSKILL MODAL ════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
   <div class="modal-box">
     <button class="modal-close" onclick="closeUpskillModal()">✕</button>
@@ -1790,6 +1533,15 @@ match result {
 }`,
 };
 
+// ─── Auto-detect API endpoint (same-origin when served from the API server) ──
+(function() {
+  const loc = window.location;
+  if (loc.hostname !== 'localhost' && loc.hostname !== '127.0.0.1' && loc.protocol !== 'file:') {
+    const origin = loc.protocol + '//' + loc.hostname + (loc.port ? ':' + loc.port : '');
+    document.getElementById('apiEndpoint').value = origin;
+  }
+})();
+
 // ─── App state ────────────────────────────────────────────────────────────────
 let monacoEditor = null;
 let activeFile = "examples/hello_trit.tern";
@@ -1863,37 +1615,111 @@ function renderFlow() {
   updateWires();
 }
 
+let _flowLibPaths = []; // cache for search + new-agent picker
+
 async function renderFlowLibrary() {
   const lib = document.getElementById("flow-lib-items");
-  lib.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading experts…</div>';
-  
+  lib.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading agents…</div>';
+
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
     const key = document.getElementById("apiKey").value.trim();
-    
     const r = await fetch(endpoint + "/api/stdlib/list", {
       headers: key ? { "X-Ternlang-Key": key } : {}
     });
     const d = await r.json();
-    if (d.status !== "ok") return;
 
-    lib.innerHTML = "";
-    d.files.forEach(path => {
-        const name = path.split('/').pop().replace('.tern', '');
-        // Heuristic: if in agents/ or has meaningful name
-        if (path.includes("agents/")) {
-            const div = document.createElement("div");
-            div.className = "lib-item";
-            div.innerHTML = `<i data-lucide="bot"></i> <span>${name}</span>`;
-            div.onclick = async () => {
-                const id = "node_" + Date.now();
-                createFlowNode(name, path, 100, 100, 'agent', id);
-            };
-            lib.appendChild(div);
+    let paths = (d.status === "ok" && d.files) ? d.files.filter(p => p.includes("agents/")) : [];
+
+    // Fallback to GitHub if empty
+    if (paths.length === 0) {
+      try {
+        const gr = await fetch("https://api.github.com/repos/eriirfos-eng/ternary-intelligence-stack/contents/stdlib/agents");
+        if (gr.ok) {
+          const gfiles = await gr.json();
+          if (Array.isArray(gfiles)) paths = gfiles.filter(f => f.name.endsWith(".tern")).map(f => `stdlib/agents/${f.name}`);
         }
-    });
-    lucide.createIcons();
-  } catch (e) {}
+      } catch(e) {}
+    }
+
+    _flowLibPaths = paths;
+    renderFlowLibItems(paths);
+    populateNewAgentPicker(paths);
+  } catch (e) {
+    lib.innerHTML = '<div style="padding:10px; color:var(--muted2); font-size:11px;">Could not load agents.</div>';
+  }
+}
+
+function renderFlowLibItems(paths) {
+  const lib = document.getElementById("flow-lib-items");
+  lib.innerHTML = "";
+  if (paths.length === 0) {
+    lib.innerHTML = '<div style="padding:16px; color:var(--muted2); font-size:11px; text-align:center;">No agents found.<br>Use + to create one.</div>';
+    return;
+  }
+  paths.forEach(path => {
+    const name = path.split('/').pop().replace('.tern', '');
+    const div = document.createElement("div");
+    div.className = "lib-item";
+    div.dataset.name = name.toLowerCase();
+    div.innerHTML = `<i data-lucide="bot"></i> <span>${name}</span>`;
+    div.onclick = () => { const id = "node_" + Date.now(); createFlowNode(name, path, 120 + Math.random()*200, 80 + Math.random()*200, 'agent', id); };
+    lib.appendChild(div);
+  });
+  lucide.createIcons();
+}
+
+function filterFlowLib(q) {
+  const filtered = q ? _flowLibPaths.filter(p => p.toLowerCase().includes(q.toLowerCase())) : _flowLibPaths;
+  renderFlowLibItems(filtered);
+}
+
+function populateNewAgentPicker(paths) {
+  const sel = document.getElementById("newAgentLibPick");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Start blank —</option>';
+  paths.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p.split('/').pop().replace('.tern','');
+    sel.appendChild(opt);
+  });
+}
+
+function openNewAgentModal() {
+  document.getElementById("newAgentModal").style.display = "flex";
+  document.getElementById("newAgentName").value = "";
+  document.getElementById("newAgentCode").value = 'fn main() -> trit {\n    return affirm;\n}';
+}
+
+function closeNewAgentModal() {
+  document.getElementById("newAgentModal").style.display = "none";
+}
+
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeNewAgentModal(); });
+
+async function loadNewAgentTemplate() {
+  const path = document.getElementById("newAgentLibPick").value;
+  if (!path) { document.getElementById("newAgentCode").value = 'fn main() -> trit {\n    return affirm;\n}'; return; }
+  try {
+    const r = await fetch(GH_RAW + path);
+    if (r.ok) document.getElementById("newAgentCode").value = await r.text();
+  } catch(e) {}
+}
+
+function addAgentFromModal() {
+  const name = document.getElementById("newAgentName").value.trim() || "Agent";
+  const code = document.getElementById("newAgentCode").value;
+  const id = "node_" + Date.now();
+  const canvas = document.getElementById("flow-canvas");
+  const cx = (canvas.parentElement.clientWidth / 2) - 100 + Math.random() * 100;
+  const cy = (canvas.parentElement.clientHeight / 2) - 60 + Math.random() * 80;
+  createFlowNode(name, "__custom__", cx, cy, 'agent', id);
+  // Store code in the node
+  const node = flowNodes.find(n => n.id === id);
+  if (node) node.props.code = code;
+  closeNewAgentModal();
+  showToast(`Agent "${name}" added`, "ok");
 }
 
 function createFlowNode(name, path, x, y, type = 'agent', id) {
@@ -2239,84 +2065,122 @@ document.addEventListener('mouseup', (e) => {
   }
 });
 
+// ─── GitHub raw content base (Tier 1 public fallback) ────────────────────────
+const GH_RAW = "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/";
+// Static Tier 1 directory list (public stdlib dirs) — used when no API key
+const TIER1_DIRS = ["core","ternary","std","showcase","bughunt","testing","bench","benchmarks","classical","errors","tutorials","lib"];
+
+async function loadGithubTree() {
+  const tree = document.getElementById("file-tree");
+  tree.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading from GitHub…</div>';
+  try {
+    // Use GitHub API to list all files in each Tier 1 dir
+    const allFiles = [];
+    for (const dir of TIER1_DIRS) {
+      try {
+        const r = await fetch(`https://api.github.com/repos/eriirfos-eng/ternary-intelligence-stack/contents/stdlib/${dir}`);
+        if (!r.ok) continue;
+        const files = await r.json();
+        if (Array.isArray(files)) {
+          files.filter(f => f.name.endsWith(".tern")).forEach(f => allFiles.push(`stdlib/${dir}/${f.name}`));
+        }
+      } catch(e) {}
+    }
+    if (allFiles.length === 0) { showNoKeyMessage(tree); return; }
+    renderFileTree(tree, allFiles, true);
+  } catch(e) { showNoKeyMessage(tree); }
+}
+
+function showNoKeyMessage(tree) {
+  tree.innerHTML = `<div style="padding:20px 12px; color:var(--muted2); font-size:11px; text-align:center; line-height:1.8;">
+    No library files available.<br>
+    <span style="color:var(--cyan); cursor:pointer;" onclick="toggleKeyInput()">Enter your API key</span><br>
+    to unlock the full stdlib.
+  </div>`;
+}
+
+function renderFileTree(tree, files, isGitHub = false) {
+  const groups = {};
+  files.forEach(path => {
+    const parts = path.split('/');
+    if (parts.length < 2) return;
+    const dir = parts[1];
+    if (!groups[dir]) groups[dir] = [];
+    groups[dir].push(path);
+  });
+  if (Object.keys(groups).length === 0) { showNoKeyMessage(tree); return; }
+  tree.innerHTML = "";
+  if (isGitHub) {
+    const banner = document.createElement("div");
+    banner.style.cssText = "padding:6px 12px; font-size:10px; color:var(--amber); background:rgba(245,158,11,0.08); border-bottom:1px solid var(--border);";
+    banner.innerHTML = `Tier 1 — GitHub · <span style="cursor:pointer;color:var(--cyan)" onclick="toggleKeyInput()">Enter key for full access</span>`;
+    tree.appendChild(banner);
+  }
+  Object.keys(groups).sort().forEach(dir => {
+    const section = document.createElement("div");
+    section.className = "tree-section";
+    const dirEl = document.createElement("div");
+    dirEl.className = "tree-dir";
+    dirEl.innerHTML = `<span class="arrow">▾</span> <i data-lucide="folder" style="width:12px; height:12px"></i> ${dir}/`;
+    dirEl.onclick = () => {
+      const filesEl = section.querySelector(".tree-files");
+      const isHidden = filesEl.classList.toggle("hidden");
+      dirEl.classList.toggle("collapsed", isHidden);
+      dirEl.querySelector(".arrow").textContent = isHidden ? "▸" : "▾";
+    };
+    section.appendChild(dirEl);
+    const filesEl = document.createElement("div");
+    filesEl.className = "tree-files";
+    groups[dir].forEach(path => {
+      const name = path.split('/').pop();
+      const fileEl = document.createElement("div");
+      fileEl.className = "tree-file";
+      fileEl.dataset.path = path;
+      fileEl.dataset.github = isGitHub ? "1" : "";
+      fileEl.innerHTML = `<i data-lucide="file-code" style="width:12px; height:12px"></i> ${name}`;
+      fileEl.onclick = () => { openFile(path, isGitHub); switchView('editor'); };
+      filesEl.appendChild(fileEl);
+    });
+    section.appendChild(filesEl);
+    tree.appendChild(section);
+  });
+  tree.dataset.loaded = "true";
+  refreshTreeHighlight();
+  lucide.createIcons();
+}
+
 // ─── Build file tree ──────────────────────────────────────────────────────────
 async function buildFileTree(force = false) {
   const tree = document.getElementById("file-tree");
-  // Don't clear if already loaded unless specifically requested
   if (!force && tree.dataset.loaded === "true") {
      refreshTreeHighlight();
      return;
   }
   tree.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading library…</div>';
-  
+
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
     const key = document.getElementById("apiKey").value.trim();
-    
+
     const r = await fetch(endpoint + "/api/stdlib/list", {
       headers: key ? { "X-Ternlang-Key": key } : {}
     });
     const d = await r.json();
     
     if (d.status !== "ok") {
-        tree.innerHTML = `<div style="padding:10px; color:var(--red); font-size:11px;">${d.error || "Failed to load"}</div>`;
-        return;
+      await loadGithubTree(); return;
     }
-
-    // Group files by top-level directory
-    const groups = {};
-    d.files.forEach(path => {
-        const parts = path.split('/');
-        if (parts.length < 2) return;
-        const dir = parts[1]; 
-        if (!groups[dir]) groups[dir] = [];
-        groups[dir].push(path);
-    });
-
-    if (Object.keys(groups).length === 0) {
-      tree.innerHTML = `<div style="padding:20px 12px; color:var(--muted2); font-size:11px; text-align:center; line-height:1.8;">
-        No files visible.<br>
-        <span style="color:var(--cyan); cursor:pointer;" onclick="toggleKeyInput()">Click here to enter your API key</span><br>
-        to unlock the stdlib library.
-      </div>`;
-      return;
+    // If tier=0 (no key), fall back to GitHub for Tier 1 files
+    if (!d.files || d.files.length === 0) {
+      await loadGithubTree(); return;
     }
-    tree.innerHTML = "";
-    Object.keys(groups).sort().forEach(dir => {
-        const section = document.createElement("div");
-        section.className = "tree-section";
-        
-        const dirEl = document.createElement("div");
-        dirEl.className = "tree-dir";
-        dirEl.innerHTML = `<span class="arrow">▾</span> <i data-lucide="folder" style="width:12px; height:12px"></i> ${dir}/`;
-        dirEl.onclick = () => {
-            const filesEl = section.querySelector(".tree-files");
-            const isHidden = filesEl.classList.toggle("hidden");
-            dirEl.classList.toggle("collapsed", isHidden);
-            dirEl.querySelector(".arrow").textContent = isHidden ? "▸" : "▾";
-        };
-        section.appendChild(dirEl);
-
-        const filesEl = document.createElement("div");
-        filesEl.className = "tree-files";
-        groups[dir].forEach(path => {
-            const name = path.split('/').pop();
-            const fileEl = document.createElement("div");
-            fileEl.className = "tree-file";
-            fileEl.dataset.path = path;
-            fileEl.innerHTML = `<i data-lucide="file-code" style="width:12px; height:12px"></i> ${name}`;
-            fileEl.onclick = () => { openFile(path); switchView('editor'); };
-            filesEl.appendChild(fileEl);
-        });
-        section.appendChild(filesEl);
-        tree.appendChild(section);
-    });
+    renderFileTree(tree, d.files, false);
     tree.dataset.loaded = "true";
     refreshTreeHighlight();
     lucide.createIcons();
 
   } catch (e) {
-    tree.innerHTML = `<div style="padding:10px; color:var(--red); font-size:11px;">Connection Error</div>`;
+    await loadGithubTree();
   }
 }
 
@@ -2348,11 +2212,27 @@ function switchToTab(path) {
   document.getElementById("sbFile").textContent = path.split("/").pop();
 }
 
-async function openFile(path) {
+async function openFile(path, useGithub = false) {
   if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
-  
+
   if (fileBuffers[path]) {
     loadToEditor(path, fileBuffers[path]);
+    return;
+  }
+
+  // Check if the tree loaded this from GitHub
+  const treeEl = document.querySelector(`.tree-file[data-path="${CSS.escape(path)}"]`);
+  if (useGithub || (treeEl && treeEl.dataset.github === "1")) {
+    try {
+      const r = await fetch(GH_RAW + path);
+      if (r.ok) {
+        const content = await r.text();
+        fileBuffers[path] = content;
+        loadToEditor(path, content);
+        return;
+      }
+    } catch(e) {}
+    showToast("Failed to load from GitHub", "error");
     return;
   }
 
@@ -2360,17 +2240,15 @@ async function openFile(path) {
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
     const key = document.getElementById("apiKey").value.trim();
-    
     const r = await fetch(endpoint + "/api/stdlib/read/" + path, {
       headers: key ? { "X-Ternlang-Key": key } : {}
     });
     const d = await r.json();
-    
     if (d.status === "ok") {
-        fileBuffers[path] = d.content;
-        loadToEditor(path, d.content);
+      fileBuffers[path] = d.content;
+      loadToEditor(path, d.content);
     } else {
-        showToast(d.error || "Failed to read file", "error");
+      showToast(d.error || "Failed to read file", "error");
     }
   } catch (e) {
     showToast("Connection Error", "error");
