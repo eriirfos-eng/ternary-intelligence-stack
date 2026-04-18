@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Local dev config: sets window.TERNSTUDIO_DEV_KEY — gitignored, never committed -->
+  <script src=".ternstudio-local.js" onerror="void 0"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
@@ -232,79 +234,101 @@
 
     /* ─── Topbar ───────────────────────────────────────────────────── */
     #topbar {
-      height: 42px; min-height: 42px;
+      height: 48px; min-height: 48px;
       background: var(--bg1);
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; gap: 0;
-      z-index: 100; flex-shrink: 0;
+      padding: 0 16px; overflow: hidden;
+      z-index: 1000; flex-shrink: 0;
+      position: relative;
     }
+    
+    .tb-left { display: flex; align-items: center; gap: 12px; height: 100%; flex: 1; min-width: 0; overflow: hidden; }
     .tb-logo {
       display: flex; align-items: center; gap: 8px;
-      padding: 0 16px; border-right: 1px solid var(--border);
-      height: 100%; color: var(--cyan);
-      font-size: 13px; font-weight: 700;
-      letter-spacing: 0.04em; text-transform: uppercase; user-select: none;
+      padding-right: 16px; margin-right: 4px;
+      border-right: 1px solid var(--border);
+      height: 24px; color: var(--cyan);
+      font-size: 14px; font-weight: 800;
+      letter-spacing: 0.05em; user-select: none;
+      cursor: pointer;
     }
-    .tb-logo .logo-mark { font-size: 20px; line-height: 1; }
-    .tb-logo .logo-sub { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; }
-    .tb-spacer { flex: 1; }
-    .tb-btn {
-      height: 28px; padding: 0 12px;
-      background: var(--bg2); border: 1px solid var(--border2);
-      color: var(--text); font-family: inherit; font-size: 11px;
-      cursor: pointer; border-radius: 4px; display: flex; align-items: center;
-      gap: 5px; margin-right: 6px; transition: background 0.15s, border-color 0.15s;
-      white-space: nowrap;
+    .logo-v { font-size: 10px; color: var(--muted2); font-weight: 600; margin-left: -4px; }
+    
+    .tb-nav { display: flex; align-items: center; gap: 4px; height: 100%; }
+    .nav-tab {
+      height: 32px; padding: 0 10px; border-radius: 4px;
+      appearance: none; -webkit-appearance: none;
+      background: transparent !important; border: none !important; outline: none;
+      color: var(--muted); font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: all 0.2s;
     }
-    .tb-btn:hover { background: var(--bg3); border-color: var(--cyan); color: var(--cyan); }
-    .tb-btn.run-btn {
-      background: #0a2010; border-color: var(--green); color: var(--green); font-weight: 700;
+    .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.05) !important; }
+    .nav-tab.active { color: var(--cyan); position: relative; }
+    .nav-tab.active::after {
+      content: ""; position: absolute; bottom: -8px; left: 10px; right: 10px;
+      height: 2px; background: var(--cyan); border-radius: 2px;
     }
-    .tb-btn.run-btn:hover { background: #0d2c18; }
-    .tb-btn.run-btn.running { background: #1a1000; border-color: var(--amber); color: var(--amber); }
-    .tb-btn.upskill-btn {
-      background: #120a00; border-color: var(--amber); color: var(--amber); font-weight: 600;
-    }
-    .tb-btn.upskill-btn:hover { background: #1c1200; }
-    .kbd { font-size: 9px; color: var(--muted); background: var(--bg3); padding: 1px 4px; border-radius: 3px; }
-    .tb-sep { width: 1px; background: var(--border); height: 22px; margin: 0 4px; }
-    .tb-key-wrap {
-      display: flex; align-items: center; gap: 6px;
-      padding: 0 12px; border-left: 1px solid var(--border); height: 100%;
-    }
-    .tb-key-wrap label { font-size: 10px; color: var(--muted); white-space: nowrap; }
-    .tb-key-input {
-      background: var(--bg2); border: 1px solid var(--border2);
-      color: var(--text); font-family: inherit; font-size: 11px;
-      padding: 3px 8px; border-radius: 4px; width: 180px; outline: none;
-    }
-    .tb-key-input:focus { border-color: var(--cyan); }
-    .tb-badge {
-      font-size: 10px; padding: 2px 8px; border-radius: 3px;
-      border: 1px solid var(--border2); background: var(--bg2);
-      color: var(--muted); white-space: nowrap; margin-left: 4px;
-    }
-    .badge-free { background: var(--bg2); border-color: var(--border2); color: var(--muted); }
-    .badge-t2   { background: #0a1a2e; border-color: #1a4a8a; color: #60a8ff; }
-    .badge-t3   { background: #1a1000; border-color: #604000; color: var(--amber); }
-    .badge-t4   { background: #100a00; border-color: var(--amber); color: var(--amber); font-weight: 700; }
+    .nav-tab i { width: 14px !important; height: 14px !important; }
 
-    /* ─── View bar ─────────────────────────────────────────────────── */
-    #viewbar {
-      height: 36px; min-height: 36px; flex-shrink: 0;
-      background: var(--bg1); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 2px; padding: 0 8px;
-      z-index: 99;
+    .tb-center {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 4px;
+      pointer-events: none;
     }
-    .view-tab {
-      height: 28px; padding: 0 14px;
+    .tb-center > * { pointer-events: auto; }
+    .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 8px; }
+    
+    .btn-hero {
+      height: 32px; padding: 0 16px; border-radius: 6px;
+      font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 8px;
+      cursor: pointer; border: 1px solid transparent; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-hero.run { background: #10b981; color: #000; }
+    .btn-hero.run:hover { background: #34d399; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+    .btn-hero.run.running { background: var(--amber); animation: pulse-btn 1s infinite; }
+    @keyframes pulse-btn { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    
+    .btn-hero.secondary { background: var(--bg2); border-color: var(--border2); color: var(--text); font-weight: 500; }
+    .btn-hero.secondary:hover { background: var(--bg3); }
+
+    .tb-btn {
+      width: 32px; height: 32px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
       background: transparent; border: 1px solid transparent;
-      color: var(--muted); font-family: inherit; font-size: 11px;
-      cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 5px;
-      transition: all 0.15s;
+      color: var(--muted); cursor: pointer; transition: all 0.2s;
     }
-    .view-tab:hover { color: var(--text); background: var(--bg2); }
-    .view-tab.active { color: var(--cyan); background: var(--bg2); border-color: var(--border2); }
+    .tb-btn:hover { background: var(--bg2); color: var(--text); border-color: var(--border2); }
+    .tb-btn i { width: 16px !important; height: 16px !important; }
+
+    .tb-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .tb-status-wrap { display: flex; align-items: center; gap: 12px; padding-right: 12px; border-right: 1px solid var(--border); }
+    .status-pill {
+      display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--muted);
+    }
+    .status-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-pill .dot.err { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    
+    .tier-badge, .tb-badge {
+      font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px;
+      background: var(--bg2); border: 1px solid var(--border2); color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .tier-badge.pro, .tb-badge.badge-t2 { background: #0a1a2e; border-color: #1a4a8a; color: #60a8ff; }
+    .tb-badge.badge-free { background: var(--bg2); border-color: var(--border2); color: var(--muted); }
+    .tb-badge.badge-t3 { background: #1a1000; border-color: #9a6000; color: var(--amber); }
+    .tb-badge.badge-t4 { background: #100a1a; border-color: #6040a0; color: #c080ff; }
+
+    /* ─── Hiding old styles ────────────────────────────────────────── */
+    #viewbar { display: none !important; }
+    .tb-key-wrap { display: none; }
+    .logo-mark { display: none; }
+    .logo-sub { display: none; }
+    .upskill-btn { display: none; }
+    .kbd { display: none; }
+    .tb-spacer { display: none; }
 
     /* ─── Views ────────────────────────────────────────────────────── */
     .view { display: none; flex: 1; overflow: hidden; flex-direction: column; }
@@ -761,22 +785,28 @@
     </div>
   </div>
 
-  <div class="tb-center">
-    <button class="btn-hero run" id="runBtn" onclick="runCode()">
-      <i data-lucide="play"></i> <span>RUN</span>
-    </button>
-    <div class="tb-sep"></div>
-    <button class="tb-btn" onclick="shareCode()" title="Share Swarm"><i data-lucide="share-2"></i></button>
-    <button class="tb-btn" onclick="downloadCode()" title="Download .tern"><i data-lucide="download"></i></button>
-  </div>
+  <div class="tb-center"></div>
 
   <div class="tb-right">
-    <div class="tb-status-wrap">
-      <div class="status-pill"><span class="dot" id="vmDot"></span> <span id="vmStatusLabel">System</span></div>
-      <div id="tierBadge" class="tier-badge">Tier 1</div>
+    <div id="keyToggleArea" style="display:none; align-items:center; gap:8px;">
+      <input type="password" id="topbarKeyInput" class="prop-input" style="width:220px; height:28px; font-size:11px" placeholder="Enter API Key (tern_...)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();updateApiKey(this.value);}" />
+      <button class="tb-btn" onclick="updateApiKey(document.getElementById('topbarKeyInput').value)" title="Apply key" style="color:var(--green); border-color:var(--green)"><i data-lucide="check"></i></button>
+      <button class="tb-btn" onclick="toggleKeyInput()" title="Close"><i data-lucide="x"></i></button>
     </div>
-    <button class="btn btn-hero secondary" style="color:var(--amber); border-color:var(--amber)" onclick="openUpskillModal()">Upskill</button>
-    <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Theme">●</button>
+    
+    <div id="topbarActions" style="display:flex; align-items:center; gap:12px;">
+      <button class="tb-btn" onclick="shareCode()" title="Share Swarm"><i data-lucide="share-2"></i></button>
+      <button class="tb-btn" onclick="downloadCode()" title="Download .tern"><i data-lucide="download"></i></button>
+      <div class="tb-sep"></div>
+      <div class="tb-status-wrap">
+        <div id="tierBadge" class="tier-badge" onclick="toggleKeyInput()" style="cursor:pointer" title="Click to enter API Key">Tier 1</div>
+        <button class="tb-btn" onclick="toggleKeyInput()" title="Account Settings"><i data-lucide="user-circle"></i></button>
+      </div>
+      <div class="tb-sep"></div>
+      <button id="topbarUpskillBtn" class="btn btn-hero secondary" style="color:var(--amber); border-color:var(--amber); height:32px" onclick="openUpskillModal()">Upskill</button>
+      <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Theme">●</button>
+    </div>
     <input type="hidden" id="apiEndpoint" value="https://ternlang.com" />
     <input type="password" id="apiKey" style="display:none;" />
   </div>
@@ -991,6 +1021,9 @@
         <button class="out-tab"        onclick="switchOutTab('api', this)">API</button>
         <button class="out-tab"        onclick="switchOutTab('ref', this)">Reference</button>
         <div class="out-tab-spacer"></div>
+        <button class="btn btn-hero run" id="runBtn" style="height:24px; padding:0 12px; font-size:10px; margin-right:8px; border-radius:4px" onclick="runCode()">
+          <i data-lucide="play" style="width:12px; height:12px"></i> <span>RUN</span>
+        </button>
         <button class="out-clear-btn" onclick="clearOutput()">Clear</button>
       </div>
       <div class="out-panels">
@@ -1178,6 +1211,12 @@
       <button class="settings-btn" onclick="clearKey()">Clear</button>
     </div>
     <div class="settings-row">
+      <div class="settings-label">Set new key</div>
+      <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="flex:1"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
+      <button class="settings-btn" onclick="applySettingsKey()">Apply</button>
+    </div>
+    <div class="settings-row">
       <div class="settings-label">Save key locally</div>
       <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" />
       <div class="settings-desc">Stored in localStorage — never sent anywhere except the API endpoint</div>
@@ -1236,20 +1275,112 @@
 
 <!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
 <div class="view" id="view-docs">
-  <div class="empty-state">
-    <i data-lucide="book-open"></i>
-    <div>
-      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">TernWiki</div>
-      <div style="font-size:13px;">The definitive guide to balanced ternary systems.</div>
-    </div>
-    <div style="max-width:600px; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-      <div class="card" style="text-align:left">
-        <div style="font-weight:600; font-size:12px; margin-bottom:4px; color:var(--cyan)">Syntax Guide</div>
-        <div style="font-size:11px; color:var(--muted)">Master fn, agent, and match statements.</div>
+  <div style="padding: 40px; max-width: 1200px; margin: 0 auto; overflow-y: auto;">
+    <div style="display:flex; align-items:center; gap:20px; margin-bottom:48px;">
+      <div style="width:64px; height:64px; background:var(--bg1); border:1px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)">
+        <i data-lucide="book-open" style="width:32px; height:32px; color:var(--cyan)"></i>
       </div>
-      <div class="card" style="text-align:left">
-        <div style="font-weight:600; font-size:12px; margin-bottom:4px; color:var(--amber)">Truth Tables</div>
-        <div style="font-size:11px; color:var(--muted)">Balanced ternary logic gates (-1, 0, +1).</div>
+      <div>
+        <h1 style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:-0.02em;">TernWiki</h1>
+        <p style="font-size:14px; color:var(--muted)">Technical Reference for Balanced Ternary Intelligence</p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
+      
+      <!-- Syntax Guide -->
+      <div class="dash-col">
+        <div class="dash-section-title">Language Fundamentals</div>
+        <div class="dash-card" style="padding:32px">
+          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+            <i data-lucide="code-2" style="width:18px; color:var(--cyan)"></i> Syntax Guide
+          </h2>
+          
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Functions</div>
+            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); border:1px solid var(--border2)">fn add(a: int, b: int) -> int {
+  return a + b;
+}</pre>
+          </div>
+
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Control Flow</div>
+            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green); border:1px solid var(--border2)">match signal {
+  affirm => { println("YES"); }
+  tend   => { println("HOLD"); }
+  reject => { println("NO"); }
+}</pre>
+          </div>
+
+          <div style="margin-bottom:0;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Agents</div>
+            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--amber); border:1px solid var(--border2)">agent Sensor {
+  handle(s: trit) {
+    spawn Consensus(s);
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logic Tables -->
+      <div class="dash-col">
+        <div class="dash-section-title">Logical Operations</div>
+        <div class="dash-card" style="padding:32px">
+          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+            <i data-lucide="table" style="width:18px; color:var(--amber)"></i> Truth Tables
+          </h2>
+
+          <div style="background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid var(--border2); overflow:hidden;">
+            <table style="width:100%; border-collapse:collapse; font-size:12px; font-family:'JetBrains Mono',monospace;">
+              <thead style="background:rgba(255,255,255,0.03);">
+                <tr style="border-bottom:1px solid var(--border2)">
+                  <th style="padding:12px; text-align:left; color:var(--muted)">Input A</th>
+                  <th style="padding:12px; text-align:left; color:var(--muted)">Input B</th>
+                  <th style="padding:12px; text-align:left; color:var(--cyan)">Consensus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--green)">+1</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="margin-top:24px; padding:16px; background:var(--bg2); border-radius:8px; font-size:12px; color:var(--muted); line-height:1.6;">
+            <div style="font-weight:700; color:var(--text); margin-bottom:4px;">Did you know?</div>
+            The <b>Consensus</b> operator is the ternary equivalent of a logical AND. It resolves to the <i>minimum</i> value of its inputs: 
+            <code style="color:var(--cyan)">consensus(A, B) = min(A, B)</code> where <code style="color:var(--text)">+1 > 0 > -1</code>.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1258,7 +1389,7 @@
 <!-- ═══ DEBUGGER VIEW (Tracer) ═══════════════════════════════════════════════ -->
 <div class="view" id="view-debugger">
   <div class="empty-state">
-    <i data-lucide="bug"></i>
+    <i data-lucide="bug" style="width:48px; height:48px; opacity:0.2;"></i>
     <div>
       <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">Execution Tracer</div>
       <div style="font-size:13px;">Step-through debugging and register monitoring.</div>
@@ -1270,7 +1401,289 @@
 <!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
 <div class="view" id="view-modules">
   <div class="empty-state">
-    <i data-lucide="package"></i>
+    <i data-lucide="package" style="width:48px; height:48px; opacity:0.2;"></i>
+    <div>
+      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">TernPkg Registry</div>
+      <div style="font-size:13px;">Discover and manage ternary standard library modules.</div>
+    </div>
+    <div style="width:100%; max-width:500px; margin-top:20px;">
+       <input type="text" class="prop-input" placeholder="Search math, safety, hardware..." style="width:100%">
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FLOW VIEW (TernFlow) ═════════════════════════════════════════════════ -->
+<div class="view" id="view-flow">
+  <!-- Left: Library -->
+  <div id="flow-library">
+    <div class="lib-search">
+      <input type="text" class="prop-input" placeholder="Search Agents..." style="width:100%">
+    </div>
+    <div id="flow-lib-items" style="flex:1; overflow-y:auto;">
+      <!-- Loaded via JS -->
+    </div>
+  </div>
+
+  <!-- Center: Canvas -->
+  <div id="flow-canvas-wrap">
+    <svg id="flow-svg-layer">
+      <!-- Wires rendered here -->
+    </svg>
+    <div id="flow-canvas">
+      <!-- Nodes injected via JS -->
+    </div>
+
+    <!-- Flow Floating Toolbar -->
+    <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
+      <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(12px); border-radius:50px; border: 1px solid var(--border2);">
+        <button class="btn btn-ghost" onclick="renderFlow()" title="Reset Canvas">
+          <i data-lucide="refresh-cw" style="width:16px"></i>
+        </button>
+        <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add Binary LLM Bridge" style="color:var(--amber)">
+          <i data-lucide="plus-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Bridge</span>
+        </button>
+        <button class="btn btn-ghost" onclick="addTernaryGate()" title="Add Ternary Logic Gate" style="color:var(--cyan)">
+          <i data-lucide="split" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Gate</span>
+        </button>
+        <button class="btn btn-ghost" onclick="runSimulation()" title="Run Visual Simulation" style="color:var(--green)">
+          <i data-lucide="play-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Simulate</span>
+        </button>
+        <div style="width:1px; height:20px; background:var(--border2);"></div>
+        <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px; padding: 6px 20px;">
+          <i data-lucide="download" style="width:16px"></i> <span style="margin-left:6px">Export .tern</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Execution Inspector Overlay -->
+    <div id="flow-inspector">
+      <div class="ins-head">
+        <span>Execution Inspector</span>
+        <button class="btn-ghost" onclick="toggleInspector()" style="padding:2px"><i data-lucide="chevron-down" style="width:14px"></i></button>
+      </div>
+      <div id="ins-body" class="ins-body">
+        <!-- Logs injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Properties -->
+  <div id="flow-props">
+    <div class="prop-header">Node Properties</div>
+    <div id="prop-body" class="prop-body">
+      <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px;">Select a node to configure</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS VIEW ════════════════════════════════════════════════════════ -->
+<div class="view" id="view-settings">
+
+  <div class="settings-section">
+    <div class="settings-section-title">API Connection</div>
+    <div class="settings-row">
+      <div class="settings-label">Endpoint URL</div>
+      <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" />
+      <button class="settings-btn" onclick="applyEndpoint()">Apply</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">API Key</div>
+      <div class="key-display" id="settingsKeyDisplay">—</div>
+      <button class="settings-btn" onclick="copyKey()">Copy</button>
+      <button class="settings-btn" onclick="clearKey()">Clear</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Set new key</div>
+      <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="flex:1"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
+      <button class="settings-btn" onclick="applySettingsKey()">Apply</button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Save key locally</div>
+      <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" />
+      <div class="settings-desc">Stored in localStorage — never sent anywhere except the API endpoint</div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Editor</div>
+    <div class="settings-row">
+      <div class="settings-label">Font size</div>
+      <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()">
+        <option value="11">11px</option>
+        <option value="12">12px</option>
+        <option value="13" selected>13px</option>
+        <option value="14">14px</option>
+        <option value="16">16px</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Minimap</div>
+      <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()">
+        <option value="false" selected>Off</option>
+        <option value="true">On</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Word wrap</div>
+      <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()">
+        <option value="off" selected>Off</option>
+        <option value="on">On</option>
+        <option value="wordWrapColumn">At column</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <div class="settings-label">Theme</div>
+      <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()">
+        <option value="dark" selected>Dark</option>
+        <option value="light">Light</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">About</div>
+    <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
+      TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
+      Runtime: BET VM (27 registers · balanced ternary)<br/>
+      License: LGPL-3.0-or-later<br/>
+      <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
+<div class="view" id="view-docs">
+  <div style="padding: 40px; max-width: 1200px; margin: 0 auto; overflow-y: auto;">
+    <div style="display:flex; align-items:center; gap:20px; margin-bottom:48px;">
+      <div style="width:64px; height:64px; background:var(--bg1); border:1px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)">
+        <i data-lucide="book-open" style="width:32px; height:32px; color:var(--cyan)"></i>
+      </div>
+      <div>
+        <h1 style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:-0.02em;">TernWiki</h1>
+        <p style="font-size:14px; color:var(--muted)">Technical Reference for Balanced Ternary Intelligence</p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
+      
+      <!-- Syntax Guide -->
+      <div class="dash-col">
+        <div class="dash-section-title">Language Fundamentals</div>
+        <div class="dash-card" style="padding:32px">
+          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+            <i data-lucide="code-2" style="width:18px; color:var(--cyan)"></i> Syntax Guide
+          </h2>
+          
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Functions</div>
+            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); border:1px solid var(--border2)">fn add(a: int, b: int) -> int {
+  return a + b;
+}</pre>
+          </div>
+
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Control Flow</div>
+            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green); border:1px solid var(--border2)">match signal {
+  affirm => { println("YES"); }
+  tend   => { println("HOLD"); }
+  reject => { println("NO"); }
+}</pre>
+          </div>
+
+          <div style="margin-bottom:0;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Agents</div>
+            <pre style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--amber); border:1px solid var(--border2)">agent Sensor {
+  handle(s: trit) {
+    spawn Consensus(s);
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logic Tables -->
+      <div class="dash-col">
+        <div class="dash-section-title">Logical Operations</div>
+        <div class="dash-card" style="padding:32px">
+          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+            <i data-lucide="table" style="width:18px; color:var(--amber)"></i> Truth Tables
+          </h2>
+
+          <div style="background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid var(--border2); overflow:hidden;">
+            <table style="width:100%; border-collapse:collapse; font-size:12px; font-family:'JetBrains Mono',monospace;">
+              <thead style="background:rgba(255,255,255,0.03);">
+                <tr style="border-bottom:1px solid var(--border2)">
+                  <th style="padding:12px; text-align:left; color:var(--muted)">Input A</th>
+                  <th style="padding:12px; text-align:left; color:var(--muted)">Input B</th>
+                  <th style="padding:12px; text-align:left; color:var(--cyan)">Consensus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--green)">+1</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02)">
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="margin-top:24px; padding:16px; background:var(--bg2); border-radius:8px; font-size:12px; color:var(--muted); line-height:1.6;">
+            <div style="font-weight:700; color:var(--text); margin-bottom:4px;">Did you know?</div>
+            The <b>Consensus</b> operator is the ternary equivalent of a logical AND. It resolves to the <i>minimum</i> value of its inputs: 
+            <code style="color:var(--cyan)">consensus(A, B) = min(A, B)</code> where <code style="color:var(--text)">+1 > 0 > -1</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEBUGGER VIEW (Tracer) ═══════════════════════════════════════════════ -->
+<div class="view" id="view-debugger">
+  <div class="empty-state">
+    <i data-lucide="bug" style="width:48px; height:48px; opacity:0.2;"></i>
+    <div>
+      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">Execution Tracer</div>
+      <div style="font-size:13px;">Step-through debugging and register monitoring.</div>
+    </div>
+    <button class="btn btn-primary" onclick="switchView('editor')" style="margin-top:10px;">Run code to start trace</button>
+  </div>
+</div>
+
+<!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
+<div class="view" id="view-modules">
+  <div class="empty-state">
+    <i data-lucide="package" style="width:48px; height:48px; opacity:0.2;"></i>
     <div>
       <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">TernPkg Registry</div>
       <div style="font-size:13px;">Discover and manage ternary standard library modules.</div>
@@ -1348,7 +1761,6 @@ const TIER_BADGE_CLASS = { 1: "badge-free", 2: "badge-t2", 3: "badge-t3", 4: "ba
 // ─── Templates ────────────────────────────────────────────────────────────────
 const TEMPLATES = {
   hello: `fn main() -> trit {\n    print("⊕ Hello Ternary World");\n    return affirm;\n}\n`,
-};
   match: `fn classify(x: int) -> trit {
     if x > 0 { return truth();    }
     if x < 0 { return conflict(); }
@@ -1382,12 +1794,37 @@ match result {
 let monacoEditor = null;
 let activeFile = "examples/hello_trit.tern";
 let tabs = [{ name: "hello_trit.tern", path: "examples/hello_trit.tern" }];
-let fileBuffers = { "examples/hello_trit.tern": STDLIB["examples/hello_trit.tern"] };
+let fileBuffers = { "examples/hello_trit.tern": TEMPLATES.hello };
 let scratchCounter = 1;
 let runHistory = [];
 let sessionRuns = 0, sessionOk = 0, sessionErr = 0;
 
 // ─── View switching ───────────────────────────────────────────────────────────
+// ─── API Key management ──────────────────────────────────────────────────────
+function toggleKeyInput() {
+  const area = document.getElementById("keyToggleArea");
+  const acts = document.getElementById("topbarActions");
+  const isHidden = area.style.display === "none";
+  area.style.display = isHidden ? "flex" : "none";
+  acts.style.display = isHidden ? "none" : "flex";
+  if (isHidden) {
+    const input = document.getElementById("topbarKeyInput");
+    input.value = document.getElementById("apiKey").value;
+    setTimeout(() => input.focus(), 10);
+  }
+}
+
+function updateApiKey(val) {
+  val = val.trim();
+  document.getElementById("apiKey").value = val;
+  localStorage.setItem("ternstudio-key", val);
+  fetchUsage();
+  if (val) {
+    showToast("API Key updated", "ok");
+    toggleKeyInput();
+  }
+}
+
 function switchView(name) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
@@ -1803,10 +2240,10 @@ document.addEventListener('mouseup', (e) => {
 });
 
 // ─── Build file tree ──────────────────────────────────────────────────────────
-async function buildFileTree() {
+async function buildFileTree(force = false) {
   const tree = document.getElementById("file-tree");
   // Don't clear if already loaded unless specifically requested
-  if (tree.dataset.loaded === "true") {
+  if (!force && tree.dataset.loaded === "true") {
      refreshTreeHighlight();
      return;
   }
@@ -1836,6 +2273,14 @@ async function buildFileTree() {
         groups[dir].push(path);
     });
 
+    if (Object.keys(groups).length === 0) {
+      tree.innerHTML = `<div style="padding:20px 12px; color:var(--muted2); font-size:11px; text-align:center; line-height:1.8;">
+        No files visible.<br>
+        <span style="color:var(--cyan); cursor:pointer;" onclick="toggleKeyInput()">Click here to enter your API key</span><br>
+        to unlock the stdlib library.
+      </div>`;
+      return;
+    }
     tree.innerHTML = "";
     Object.keys(groups).sort().forEach(dir => {
         const section = document.createElement("div");
@@ -2367,19 +2812,13 @@ function toggleSaveKey() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  initKeyPersistence();
-  const keyInput = document.getElementById("apiKey");
-  keyInput.addEventListener("change", () => {
-    const key = keyInput.value.trim();
-    if (document.getElementById("saveKeyCheck").checked && key)
-      localStorage.setItem("ternstudio-key", key);
-    if (key) { fetchUsage(); } else renderUsageAnon();
-    syncSettingsKeyDisplay();
-  });
-  syncSettingsKeyDisplay();
-  loadFromHash();
-});
+function applySettingsKey() {
+  const val = (document.getElementById("settingsNewKey") || {}).value || "";
+  if (val.trim()) {
+    updateApiKey(val.trim());
+    document.getElementById("settingsNewKey").value = "";
+  }
+}
 
 function syncSettingsKeyDisplay() {
   const key = document.getElementById("apiKey").value.trim();
@@ -2433,8 +2872,6 @@ function applyThemeFromSettings() {
 }
 
 // ─── Usage dashboard ──────────────────────────────────────────────────────────
-const TIER_LABELS = { 1: "Tier 1 — Free", 2: "Tier 2 — Pro", 3: "Tier 3 — Industrial", 4: "Tier 4 — Enterprise" };
-const TIER_BADGE_CLASS = { 1: "badge-free", 2: "badge-t2", 3: "badge-t3", 4: "badge-t4" };
 const TIER_BENEFITS = {
   1: ["● /api/run — execute .tern programs", "● /health, /studio", "○ Trit decisions + vectors (Tier 2+)", "○ MoE-13 orchestrator (Tier 2+)", "○ Deliberation engine (Tier 2+)"],
   2: ["● /api/run", "● /api/trit_decide, /api/trit_vector", "● /api/trit_consensus, /api/trit_gate", "● /api/moe/orchestrate", "● Deliberation + coalition engine", "○ Industrial endpoints (Tier 3+)"],
@@ -2467,7 +2904,7 @@ function renderTierBenefits(tier) {
 function updateTopbarTier(tier) {
   const badge = document.getElementById("tierBadge");
   badge.textContent = TIER_LABELS[tier] || "Tier 1";
-  badge.className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
+  badge.className = "tier-badge tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
   document.getElementById("sbTier").textContent = TIER_LABELS[tier] || "Tier 1 — Open Core";
   const upBtn = document.getElementById("topbarUpskillBtn");
   if (upBtn) upBtn.style.display = tier <= 1 ? "flex" : "none";
@@ -2497,6 +2934,7 @@ async function fetchUsage() {
     const d = await r.json();
     document.getElementById("usageError").style.display = "none";
     const masked = key.length > 12 ? key.slice(0, 8) + "…" + key.slice(-4) : key;
+    document.getElementById("topbarKeyInput").value = key;
     
     const tier = d.tier || 1;
     const oldTier = document.getElementById("usageTierBadge").dataset.tier;
@@ -2512,6 +2950,11 @@ async function fetchUsage() {
     document.getElementById("usageTierBadge").textContent = TIER_LABELS[tier] || "Tier 1";
     document.getElementById("usageTierBadge").className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
     renderTierBenefits(tier);
+    
+    // Always refresh tree when key usage is fetched to ensure correct tier visibility
+    buildFileTree(true);
+    renderFlowLibrary();
+
     if (d.limit === null || d.limit === undefined || tier >= 4) {
       document.getElementById("usage-quota-section").style.display = "none";
       document.getElementById("usage-unlimited-section").style.display = "block";
@@ -2701,7 +3144,7 @@ require(["vs/editor/editor.main"], function () {
   applyTheme(initTheme);
 
   monacoEditor = monaco.editor.create(document.getElementById("monaco-container"), {
-    value: fileBuffers[activeFile],
+    value: fileBuffers[activeFile] || TEMPLATES.hello,
     language: "ternlang",
     theme: initTheme === "light" ? "ternstudio-light" : "ternstudio-dark",
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
@@ -2728,22 +3171,32 @@ require(["vs/editor/editor.main"], function () {
 
   window.addEventListener("resize", () => monacoEditor.layout());
 
-  monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runCode());
   monacoEditor.addCommand(monaco.KeyCode.F5, () => runCode());
 
-  buildFileTree();
+  // Initialization: load saved state
+  initKeyPersistence();
+  const savedKey = localStorage.getItem("ternstudio-key") || "";
+  if (savedKey) {
+    document.getElementById("apiKey").value = savedKey;
+    document.getElementById("topbarKeyInput").value = savedKey;
+    fetchUsage();
+  } else if (window.TERNSTUDIO_DEV_KEY) {
+    // Auto-load dev key from local config (.ternstudio-local.js, gitignored)
+    document.getElementById("apiKey").value = window.TERNSTUDIO_DEV_KEY;
+    document.getElementById("topbarKeyInput").value = window.TERNSTUDIO_DEV_KEY;
+    localStorage.setItem("ternstudio-key", window.TERNSTUDIO_DEV_KEY);
+    fetchUsage();
+  } else {
+    renderUsageAnon();
+    buildFileTree();
+  }
+
   renderTabs();
-  refreshTreeHighlight();
   checkConnection();
   setInterval(checkConnection, 30000);
 
-  const savedKey = document.getElementById("apiKey").value.trim();
-  if (savedKey) fetchUsage(); else renderUsageAnon();
-
   // Load from hash after Monaco is ready
   loadFromHash();
-  buildFileTree();
-
   lucide.createIcons();
 });
 </script>
