@@ -1,0 +1,32 @@
+// stdlib/lib/mutex_stub.tern
+// Demonstrates: A conceptual mutex for resource locking.
+// Tier: 1
+
+fn acquire_lock(lock: trit) -> trit {
+    if lock == 0 { // If lock is free (0)
+        return 1; // Acquire it (1)
+    }
+    return -1; // Failed to acquire
+}
+
+fn release_lock(lock: trit) -> trit {
+    if lock == 1 { // If lock is held (1)
+        return 0; // Release it (0)
+    }
+    return -1; // Not the owner
+}
+
+fn main() -> trit {
+    let mut mutex: trit = 0; // 0 = unlocked
+
+    mutex = acquire_lock(mutex);
+    println("Acquire on unlocked mutex:");
+    println(mutex);
+
+    mutex = release_lock(mutex);
+    println("Release mutex:");
+    println(mutex);
+    
+    println("Program exited successfully.");
+    return 1;
+}

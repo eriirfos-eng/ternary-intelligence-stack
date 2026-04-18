@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ternlang-jupyter"
+version = "1.0.0"
+description = "Jupyter kernel for the Ternlang balanced ternary language — run .tern programs in notebooks"
+readme = "README.md"
+license = { text = "LGPL-3.0-or-later" }
+authors = [
+    { name = "RFI-IRFOS", email = "licensing@ternlang.com" }
+]
+keywords = ["ternlang", "ternary", "trit", "jupyter", "kernel", "BET", "balanced-ternary"]
+classifiers = [
+    "Framework :: Jupyter",
+    "Programming Language :: Other",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "ipykernel>=6.0",
+    "jupyter_client>=7.0",
+]
+
+[project.urls]
+Homepage   = "https://ternlang.com"
+Repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+Issues     = "https://github.com/eriirfos-eng/ternary-intelligence-stack/issues"
+
+[project.scripts]
+ternlang-jupyter-install = "ternlang_jupyter.install:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ternlang_jupyter*"]
+
+[tool.setuptools.package-data]
+ternlang_jupyter = ["../kernelspec/*"]

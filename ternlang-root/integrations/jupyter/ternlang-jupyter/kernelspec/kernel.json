@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "python",
+    "-m",
+    "ternlang_jupyter",
+    "-f",
+    "{connection_file}"
+  ],
+  "display_name": "Ternlang (BET VM)",
+  "language": "ternlang",
+  "interrupt_mode": "signal",
+  "metadata": {
+    "debugger": false
+  }
+}
