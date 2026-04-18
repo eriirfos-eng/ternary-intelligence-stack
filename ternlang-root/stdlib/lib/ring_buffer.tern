@@ -1,0 +1,55 @@
+// stdlib/lib/ring_buffer.tern
+// Demonstrates: A circular ring buffer for trits using head/tail pointers.
+// Tier: 1 - Open Core
+
+fn rb_write(buffer: trittensor<5>, head: int, count: int, val: trit) -> int {
+    let size: int = 5;
+    let tail: int = (head + count) % size;
+    buffer[tail] = val;
+    if count < size {
+        return count + 1;
+    }
+    return size; // Overwritten, count stays at size
+}
+
+fn main() -> trit {
+    let buffer: trittensor<5> = [0, 0, 0, 0, 0];
+    let head: int = 0;
+    let count: int = 0;
+    let size: int = 5;
+
+    println("Writing 1, 1, 1, 1, 1 to ring buffer (filling it):");
+    count = rb_write(buffer, head, count, 1);
+    count = rb_write(buffer, head, count, 1);
+    count = rb_write(buffer, head, count, 1);
+    count = rb_write(buffer, head, count, 1);
+    count = rb_write(buffer, head, count, 1);
+    
+    println("Writing -1 (should overwrite first element at index 0):");
+    count = rb_write(buffer, head, count, -1);
+    
+    println("Buffer[0] value:");
+    match buffer[0] {
+        1 => { println("Affirm (+1)"); }
+        0 => { println("Tend (0)"); }
+       -1 => { println("Reject (-1)"); }
+    }
+
+    if buffer[0] == -1 {
+        println("Overwrite verified.");
+    } else { 
+        println("Overwrite failed.");
+        return conflict(); 
+    }
+
+    println("Final buffer contents:");
+    let i: int = 0;
+    while i < size {
+        let v: trit = buffer[i];
+        println(v);
+        i = i + 1;
+    }
+    
+    println("Ring buffer simulation complete. Success.");
+    return truth();
+}
