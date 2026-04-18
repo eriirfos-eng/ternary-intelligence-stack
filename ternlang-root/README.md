@@ -134,6 +134,36 @@ cargo build --release
 
 ---
 
+## Jupyter Kernel
+
+[![PyPI](https://img.shields.io/pypi/v/ternlang-jupyter?color=blue&logo=python&logoColor=white)](https://pypi.org/project/ternlang-jupyter/)
+
+Run `.tern` programs directly in Jupyter notebooks — JupyterLab, Jupyter Notebook, VS Code notebooks, or any environment that speaks the Jupyter protocol.
+
+```bash
+pip install ternlang-jupyter
+ternlang-jupyter-install
+```
+
+Then select **Ternlang (BET VM)** from the kernel menu. Each cell is a complete `.tern` program:
+
+```ternlang
+fn main() -> trit {
+    print("uncertainty quantification, natively");
+    let confidence: trit = hold;   // 0 — insufficient evidence
+    return confidence;
+}
+```
+
+Output streams `print()` calls live and renders a color-coded result block:
+- **AFFIRM +1** — green
+- **HOLD 0** — amber
+- **REJECT −1** — red
+
+Includes tab completion, hover docs for all builtins, and `%version` / `%help` magic commands.
+
+---
+
 ## VS Code Extension
 
 [![Open VSX](https://img.shields.io/badge/Open%20VSX-rfi--irfos.ternlang%20v0.4.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
