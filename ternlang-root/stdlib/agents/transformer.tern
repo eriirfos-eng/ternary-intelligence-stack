@@ -1,0 +1,29 @@
+// stdlib/agents/transformer.tern
+// Demonstrates: Transformer agent pattern (Inversion)
+// Tier: 1
+
+agent Inverter {
+    fn handle(msg: trit) -> trit {
+        // Balanced ternary inversion: 1 -> -1, 0 -> 0, -1 -> 1
+        match msg {
+            affirm => { return reject; }
+            tend   => { return tend;   }
+            reject => { return affirm; }
+        }
+    }
+}
+
+fn main() -> trit {
+    let t: agentref = spawn Inverter;
+    
+    send t affirm;
+    let res1: trit = await t;
+    
+    send t reject;
+    let res2: trit = await t;
+    
+    if res1 == reject && res2 == affirm {
+        return affirm;
+    }
+    return reject;
+}
