@@ -1,0 +1,29 @@
+// stdlib/agents/filter.tern
+// Demonstrates: Filter agent pattern
+// Tier: 1
+
+agent AffirmFilter {
+    fn handle(msg: trit) -> trit {
+        // Only allows 'affirm' (+1) signals through.
+        // Everything else is suppressed to 'tend' (0).
+        match msg {
+            affirm => { return affirm; }
+            _      => { return tend;   }
+        }
+    }
+}
+
+fn main() -> trit {
+    let f: agentref = spawn AffirmFilter;
+    
+    send f affirm;
+    let res1: trit = await f;
+    
+    send f reject;
+    let res2: trit = await f;
+    
+    if res1 == affirm && res2 == tend {
+        return affirm;
+    }
+    return reject;
+}
