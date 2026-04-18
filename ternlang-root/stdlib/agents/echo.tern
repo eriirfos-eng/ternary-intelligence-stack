@@ -1,0 +1,28 @@
+// stdlib/agents/echo.tern
+// Demonstrates: Echo agent pattern (Identity)
+// Tier: 1
+
+agent Echo {
+    fn handle(msg: trit) -> trit {
+        // Simple identity agent: returns exactly what it receives.
+        return msg;
+    }
+}
+
+fn main() -> trit {
+    let e: agentref = spawn Echo;
+    
+    send e affirm;
+    let r1: trit = await e;
+    
+    send e tend;
+    let r2: trit = await e;
+    
+    send e reject;
+    let r3: trit = await e;
+    
+    if r1 == affirm && r2 == tend && r3 == reject {
+        return affirm;
+    }
+    return reject;
+}
