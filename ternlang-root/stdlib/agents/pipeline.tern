@@ -1,0 +1,40 @@
+// stdlib/agents/pipeline.tern
+// Demonstrates: Pipeline agent pattern (A -> B -> C)
+// Tier: 1
+
+agent Incrementer {
+    fn handle(msg: trit) -> trit {
+        match msg {
+            -1 => { return 0; }
+             0 => { return 1; }
+             1 => { return -1; } // Wraps around or saturates - here wraps
+        }
+    }
+}
+
+agent Pipeline {
+    fn handle(msg: trit) -> trit {
+        let step1: agentref = spawn Incrementer;
+        let step2: agentref = spawn Incrementer;
+
+        send step1 msg;
+        let res1: trit = await step1;
+
+        send step2 res1;
+        let res2: trit = await step2;
+
+        return res2;
+    }
+}
+
+fn main() -> trit {
+    let p: agentref = spawn Pipeline;
+    send p 0;
+    let result: trit = await p;
+    
+    // 0 -> 1 -> -1
+    match result {
+        -1 => { return 1; } // Success: 0 became -1 through two increments
+        _  => { return -1; }
+    }
+}
