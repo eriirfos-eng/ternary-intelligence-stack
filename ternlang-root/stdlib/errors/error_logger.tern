@@ -1,0 +1,31 @@
+// stdlib/errors/error_logger.tern
+// Demonstrates: A simple system error logging pattern using string concatenation.
+// Tier: 1 - Open Core
+
+fn log_error(system: string, code: int, status: trit) -> trit {
+    let msg: string = "[ERROR] System: " + system;
+    msg = msg + ", Code: ";
+    // Basic code mapping
+    if code == 404 { msg = msg + "NOT_FOUND"; }
+    if code == 500 { msg = msg + "INTERNAL_FAILURE"; }
+    
+    msg = msg + ", Status: ";
+    match status {
+        1 => { msg = msg + "AFFIRM"; }
+        0 => { msg = msg + "TEND"; }
+       -1 => { msg = msg + "REJECT"; }
+    }
+    
+    println(msg);
+    return truth();
+}
+
+fn main() -> trit {
+    println("Simulating system errors:");
+    
+    log_error("Network", 404, -1);
+    log_error("Kernel", 500, 0);
+    
+    println("Error logging verified. Success.");
+    return truth();
+}
