@@ -1,0 +1,31 @@
+// stdlib/lib/string_utils.tern
+// Demonstrates: Basic string utility functions.
+// Tier: 1
+
+// Note: String manipulation is limited in the current VM.
+// This file uses workarounds.
+
+fn is_empty(s: string) -> trit {
+    // len() on strings is not supported, this is a conceptual placeholder
+    // A real implementation would require VM enhancement.
+    if s == "" {
+        return 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let s1: string = "hello";
+    let s2: string = "";
+
+    let status1: trit = is_empty(s1);
+    println("Status for 'hello':");
+    println(status1);
+
+    let status2: trit = is_empty(s2);
+    println("Status for '':");
+    println(status2);
+    
+    println("Program exited successfully.");
+    return 1;
+}
