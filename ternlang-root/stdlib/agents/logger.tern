@@ -1,0 +1,35 @@
+// stdlib/agents/logger.tern
+// Demonstrates: Logger agent pattern
+// Tier: 1
+
+agent Logger {
+    fn handle(msg: trit) -> trit {
+        match msg {
+            1 => {
+                print("LOG [+1]: Affirmative signal detected.");
+            }
+            0 => {
+                print("LOG [ 0]: Neutral/Tentative signal detected.");
+            }
+            -1 => {
+                print("LOG [-1]: Rejection/Conflict signal detected.");
+            }
+        }
+        return 1;
+    }
+}
+
+fn main() -> trit {
+    let l: agentref = spawn Logger;
+    
+    send l affirm;
+    await l;
+    
+    send l tend;
+    await l;
+    
+    send l reject;
+    await l;
+    
+    return affirm;
+}
