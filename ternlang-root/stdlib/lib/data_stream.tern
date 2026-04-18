@@ -1,0 +1,45 @@
+// stdlib/lib/data_stream.tern
+// Demonstrates: A simple data stream processor simulation for trits.
+// Tier: 1 - Open Core
+
+fn process_stream(input: trittensor<10>, output: trittensor<10>, size: int) -> int {
+    let count: int = 0;
+    let i: int = 0;
+    while i < size {
+        let val: trit = input[i];
+        // Filter: only pass non-zero (non-tend) values
+        if val != 0 {
+            // Transform: invert the signal
+            let transformed: trit = 0 - val;
+            output[count] = transformed;
+            count = count + 1;
+        }
+        i = i + 1;
+    }
+    return count;
+}
+
+fn main() -> trit {
+    let input: trittensor<10> = [1, 0, -1, 0, 0, 1, 1, 0, -1, 0];
+    let output: trittensor<10> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    println("Data Stream Processing:");
+    println("Input: 1, 0, -1, 0, 0, 1, 1, 0, -1, 0");
+    
+    let processed_count: int = process_stream(input, output, 10);
+    println("Processed count (expected 5 non-zero elements):");
+    println(processed_count);
+    
+    if processed_count == 5 {
+        println("Count correct.");
+    } else { return conflict(); }
+    
+    println("First transformed element (expected -1):");
+    println(output[0]);
+    if output[0] == -1 {
+        println("Transformation OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
