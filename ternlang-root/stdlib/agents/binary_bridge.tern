@@ -1,0 +1,37 @@
+// stdlib/agents/binary_bridge.tern
+// Demonstrates: Bridging Binary LLM responses into Ternary logic
+// Tier: 2 — Pro Standard
+
+agent ConfidenceScorer {
+    fn handle(msg: string) -> trit {
+        // In a real system, this would be a BitNet 1.58b model
+        // Here we simulate scoring based on keywords
+        
+        if msg == "AFFIRM" { return affirm; }
+        if msg == "REJECT" { return reject; }
+        
+        return tend;
+    }
+}
+
+agent LLMGateway {
+    fn handle(raw_input: string) -> trit {
+        let scorer: agentref = spawn ConfidenceScorer;
+        
+        // Pass the raw string from the external binary AI
+        send scorer raw_input;
+        let score: trit = await scorer;
+        
+        return score;
+    }
+}
+
+fn main() -> trit {
+    let gate: agentref = spawn LLMGateway;
+    
+    // Simulate an external call result
+    send gate "AFFIRM";
+    let res: trit = await gate;
+    
+    return res;
+}
