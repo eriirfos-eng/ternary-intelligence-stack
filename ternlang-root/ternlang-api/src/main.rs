@@ -1340,6 +1340,29 @@ async fn stream_deliberate(
     )
 }
 
+// ─── MCP prompts ─────────────────────────────────────────────────────────────
+
+fn mcp_prompts_list() -> Value {
+    json!([
+        {
+            "name": "ternary_reasoning",
+            "description": "Activate ternary reasoning mode. Use trit_decide or trit_vector when evidence is mixed or incomplete, moe_orchestrate for complex multi-faceted queries, and trit_action_gate before any irreversible action. Return hold (trit=0) instead of guessing when confidence is insufficient.",
+            "arguments": []
+        },
+        {
+            "name": "decision_audit",
+            "description": "Audit an AI system's decision log for binary habituation and EU AI Act compliance. Use trit_audit to detect over-reliance on YES/NO decisions, trit_calibrate to score calibration quality, and surface hold opportunities that were collapsed to binary guesses.",
+            "arguments": [
+                {
+                    "name": "decisions",
+                    "description": "JSON array of {input, output, confidence?} decision records to audit.",
+                    "required": true
+                }
+            ]
+        }
+    ])
+}
+
 // ─── GET /.well-known/mcp/server-card.json — Smithery scan skip ──────────────
 //
 // Smithery reads this to skip the automatic scanning step.
@@ -1349,15 +1372,27 @@ async fn mcp_server_card() -> Json<Value> {
     // Smithery expects exactly this shape at /.well-known/mcp/server-card.json
     // to bypass the live scan and use the static card instead.
     // Format confirmed from Smithery CLI output (.smithery/shttp/manifest.json → serverCard).
-    let tools = mcp_tools_manifest()["tools"].clone();
+    //
+    // Tool names scoring: MCP 2025-03-26 adds top-level `title` on Tool objects.
+    // We hoist annotations.title → title so Smithery's "Tool names" check passes.
+    let raw_tools = mcp_tools_manifest()["tools"].clone();
+    let tools: Vec<Value> = raw_tools.as_array().unwrap_or(&vec![]).iter().map(|tool| {
+        let mut t = tool.clone();
+        if t.get("title").is_none() {
+            if let Some(title) = tool.get("annotations").and_then(|a| a.get("title")).cloned() {
+                t["title"] = title;
+            }
+        }
+        t
+    }).collect();
     Json(json!({
         "serverInfo": {
             "name":    "ternlang-mcp",
-            "version": "1.1.6"
+            "version": "1.1.7"
         },
-        "tools":     tools,
+        "tools": tools,
         "resources": [],
-        "prompts":   []
+        "prompts": mcp_prompts_list()
     }))
 }
 
@@ -1466,16 +1501,21 @@ async fn mcp_handler(
                 "jsonrpc": "2.0", "id": id,
                 "result": {
                     "protocolVersion": client_version,
-                    "capabilities": { "tools": {} },
+                    "capabilities": { "tools": {}, "prompts": {} },
                     "serverInfo": {
                         "name":    "ternlang-mcp",
-                        "version": "1.1.4"
+                        "version": "1.1.7"
                     }
                 }
             })
         },
 
         "notifications/initialized" => json!({ "jsonrpc": "2.0", "id": id, "result": {} }),
+
+        "prompts/list" => json!({
+            "jsonrpc": "2.0", "id": id,
+            "result": { "prompts": mcp_prompts_list() }
+        }),
 
         "tools/list" => json!({
             "jsonrpc": "2.0", "id": id,
