@@ -7,7 +7,7 @@
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20-003399?logo=european-union)](https://ternlang.com/compliance)
 [![speedup](https://img.shields.io/badge/@sparseskip-up_to_122x-success)](#sparse-ternary-inference)
-[![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
+[![MCP](https://img.shields.io/badge/MCP-30_tools_free-orange)](#live-api)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples-2,090%2B_.tern_programs-blueviolet)](#example-library)
 [![stdlib](https://img.shields.io/badge/stdlib-293_open%20%2B%2028k%2B_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
@@ -139,8 +139,8 @@ After purchasing: visit **[ternlang.com/activate](https://ternlang.com/activate)
 
 | Tier | Price | Details |
 |------|-------|---------|
-| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP — full open source + 293 stdlib modules |
-| Pro Standard (BSL-1.1) | €99/month | 10,000 API calls, MoE-13, 3-layer memory, MCP + Tier 2 stdlib |
+| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 293 stdlib modules + **30 MCP tools (all free)** |
+| Pro Standard (BSL-1.1) | €99/month | REST API (10,000 calls/month), server-side 3-layer memory, SSE streaming + Tier 2 stdlib |
 | Industrial (BSL-1.1) | €349/month | 50,000 API calls, QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
 | Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + full Tier 4 stdlib |
 
