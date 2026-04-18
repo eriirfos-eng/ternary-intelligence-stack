@@ -1,0 +1,63 @@
+// stdlib/std/math_extended.tern
+// Demonstrates: Extended mathematical functions like factorial and power.
+// Tier: 1 - Open Core
+
+fn factorial(n: int) -> int {
+    if n <= 1 { return 1; }
+    let res: int = 1;
+    let i: int = 2;
+    while i <= n {
+        res = res * i;
+        i = i + 1;
+    }
+    return res;
+}
+
+fn power_int(base: int, exp: int) -> int {
+    if exp == 0 { return 1; }
+    let res: int = 1;
+    let i: int = 0;
+    while i < exp {
+        res = res * base;
+        i = i + 1;
+    }
+    return res;
+}
+
+fn is_prime(n: int) -> trit {
+    if n < 2 { return -1; }
+    let i: int = 2;
+    // Basic primality test (loop to n/2)
+    let limit: int = n / 2;
+    while i <= limit {
+        if n % i == 0 { return -1; }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    println("Math Extended Showcase:");
+    
+    println("factorial(5):");
+    let f1: int = factorial(5);
+    println(f1);
+    if f1 == 120 { println("Correct."); } else { return conflict(); }
+    
+    println("power_int(2, 8):");
+    let p1: int = power_int(2, 8);
+    println(p1);
+    if p1 == 256 { println("Correct."); } else { return conflict(); }
+    
+    println("is_prime(17):");
+    let pr1: trit = is_prime(17);
+    println(pr1);
+    if pr1 == 1 { println("Yes (Correct)."); } else { return conflict(); }
+    
+    println("is_prime(15):");
+    let pr2: trit = is_prime(15);
+    println(pr2);
+    if pr2 == -1 { println("No (Correct). Success."); return truth(); }
+    
+    return conflict();
+}
