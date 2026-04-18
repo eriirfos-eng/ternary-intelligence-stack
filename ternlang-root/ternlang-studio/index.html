@@ -256,10 +256,17 @@
     .flow-node.external .fn-head { background: rgba(245,158,11,0.08); }
     .flow-node.gate { border-color: var(--cyan); }
     .flow-node.gate .fn-head { background: rgba(56,189,248,0.08); }
-    .flow-node .fn-status { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); margin-left: auto; flex-shrink: 0; }
+    .flow-node .fn-status { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); margin-left: auto; flex-shrink: 0; transition: background 0.2s; }
     .flow-node .fn-status.ok   { background: var(--green); box-shadow: 0 0 4px var(--green); }
     .flow-node .fn-status.err  { background: var(--red);   box-shadow: 0 0 4px var(--red); }
     .flow-node .fn-status.run  { background: var(--amber);  animation: pulse-node-hold 1s infinite; }
+    .flow-node.node-error { border-color: var(--red) !important; }
+    .flow-node.node-warn  { border-color: var(--amber) !important; }
+    .node-badge { position: absolute; top: -8px; right: -8px; width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; z-index: 20; }
+    .node-badge-error { background: var(--red);   color: #fff; }
+    .node-badge-warn  { background: var(--amber); color: #000; }
+    .flow-node.selected-multi { border-color: var(--cyan) !important; border-width: 2px; background: rgba(56,189,248,0.05); }
+    #rubber-band { position: absolute; border: 1px dashed var(--cyan); background: rgba(56,189,248,0.06); pointer-events: none; z-index: 200; display: none; }
 
     /* ─── Execution Inspector ────────────────────────────────────────── */
     #flow-inspector {
@@ -1377,9 +1384,12 @@
     <svg id="flow-svg-layer">
       <!-- Wires rendered here -->
     </svg>
-    <div id="flow-canvas" onclick="if(event.target===this||event.target.id==='flow-canvas'){selectedWireId=null;selectedNodeId=null;document.querySelectorAll('.flow-node').forEach(n=>n.classList.remove('selected'));updateWireStyles();if(document.getElementById('prop-header-label'))document.getElementById('prop-header-label').textContent='Node Properties';updatePropertyPanel();}">
+    <div id="flow-canvas" onclick="if(event.target===this||event.target.id==='flow-canvas')clearSelection();">
       <!-- Nodes injected via JS -->
     </div>
+    <!-- Rubber-band selection rectangle -->
+    <div id="rubber-band"></div>
+
     <!-- Empty state hint -->
     <div id="canvas-hint" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:8px;opacity:0.4;">
       <div style="font-size:32px;">⊕</div>
@@ -1414,6 +1424,10 @@
         <!-- Run + Export -->
         <button class="btn btn-ghost" onclick="runSimulation()" title="Run simulation" style="color:var(--green); gap:5px;">
           <i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Simulate</span>
+        </button>
+        <button class="btn btn-ghost" id="validateBtn" onclick="const r=validateGraph();showValidationPanel(r.errors,r.warnings);updateValidateBadge(r);" title="Validate graph" style="color:var(--muted); gap:5px; position:relative;">
+          <i data-lucide="shield-check" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Validate</span>
+          <span id="validateBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:800;align-items:center;justify-content:center;"></span>
         </button>
         <button class="btn btn-ghost" onclick="exportFlowCode()" title="Export as .tern file" style="color:var(--muted); gap:5px;">
           <i data-lucide="download" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Export</span>
@@ -1998,17 +2012,65 @@ function initCanvasInteraction() {
       panOriginX = CT.x;     panOriginY = CT.y;
       wrap.classList.add("panning");
       e.preventDefault();
+    } else if (e.button === 0 && (e.target === wrap || e.target.id === "flow-canvas") && !spaceDown) {
+      // Rubber-band selection start
+      rbActive = true;
+      rbStart = { x: e.clientX, y: e.clientY };
+      const rb = document.getElementById("rubber-band");
+      if (rb) { rb.style.display = "block"; rb.style.left = (e.clientX - wrap.getBoundingClientRect().left) + "px"; rb.style.top = (e.clientY - wrap.getBoundingClientRect().top) + "px"; rb.style.width = "0"; rb.style.height = "0"; }
+      if (!e.shiftKey) clearSelection();
     }
   });
+
+  let rbActive = false, rbStart = {};
   document.addEventListener("mousemove", (e) => {
-    if (!panActive) return;
-    CT.x = panOriginX + (e.clientX - panStartX);
-    CT.y = panOriginY + (e.clientY - panStartY);
-    applyTransform();
-    updateWires();
+    if (panActive) {
+      CT.x = panOriginX + (e.clientX - panStartX);
+      CT.y = panOriginY + (e.clientY - panStartY);
+      applyTransform(); updateWires();
+    }
+    if (rbActive) {
+      const rect = wrap.getBoundingClientRect();
+      const x1 = Math.min(rbStart.x, e.clientX) - rect.left;
+      const y1 = Math.min(rbStart.y, e.clientY) - rect.top;
+      const x2 = Math.max(rbStart.x, e.clientX) - rect.left;
+      const y2 = Math.max(rbStart.y, e.clientY) - rect.top;
+      const rb = document.getElementById("rubber-band");
+      if (rb) { rb.style.left = x1+"px"; rb.style.top = y1+"px"; rb.style.width = (x2-x1)+"px"; rb.style.height = (y2-y1)+"px"; }
+    }
   });
   document.addEventListener("mouseup", (e) => {
     if (panActive) { panActive = false; wrap.classList.remove("panning"); }
+    if (rbActive) {
+      rbActive = false;
+      const rb = document.getElementById("rubber-band");
+      if (rb) rb.style.display = "none";
+      // Find nodes inside rubber-band
+      const wRect = wrap.getBoundingClientRect();
+      const rx1 = Math.min(rbStart.x, e.clientX), rx2 = Math.max(rbStart.x, e.clientX);
+      const ry1 = Math.min(rbStart.y, e.clientY), ry2 = Math.max(rbStart.y, e.clientY);
+      if (rx2 - rx1 > 5 || ry2 - ry1 > 5) {
+        flowNodes.forEach(n => {
+          const el = document.getElementById(n.id);
+          if (!el) return;
+          const nr = el.getBoundingClientRect();
+          if (nr.left < rx2 && nr.right > rx1 && nr.top < ry2 && nr.bottom > ry1) {
+            selectNode(n.id, true);
+          }
+        });
+      }
+    }
+  });
+
+  // Delete / Backspace → delete selected
+  document.addEventListener("keydown", e => {
+    if ((e.key === "Delete" || e.key === "Backspace") &&
+        document.activeElement.tagName !== "INPUT" &&
+        document.activeElement.tagName !== "TEXTAREA") {
+      deleteSelected();
+    }
+    // Escape → clear selection
+    if (e.key === "Escape") clearSelection();
   });
 }
 
@@ -2095,6 +2157,7 @@ function clearCanvas() {
   flowWires = [];
   selectedNodeId = null;
   selectedWireId = null;
+  selectedIds = new Set();
   document.querySelectorAll(".edge-badge").forEach(b => b.remove());
   updatePropertyPanel();
   updateWires();
@@ -2271,26 +2334,47 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   let startMouseX, startMouseY, startNodeX, startNodeY;
 
   node.onmousedown = (e) => {
-    selectNode(id);
     if (e.target.closest('button') || e.target.classList.contains('flow-port')) return;
+    selectNode(id, e.shiftKey);
     isDragging = true;
     startMouseX = e.clientX; startMouseY = e.clientY;
     startNodeX  = parseFloat(node.style.left) || 0;
     startNodeY  = parseFloat(node.style.top)  || 0;
+    // Capture starting positions of all selected nodes for group drag
+    multiDragOffsets = {};
+    selectedIds.forEach(sid => {
+      const sel = document.getElementById(sid);
+      if (sel) multiDragOffsets[sid] = { x: parseFloat(sel.style.left)||0, y: parseFloat(sel.style.top)||0 };
+    });
     node.style.zIndex = 1000;
     e.preventDefault();
   };
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    // Divide mouse delta by scale so drag feels 1:1 regardless of zoom
-    node.style.left = (startNodeX + (e.clientX - startMouseX) / CT.scale) + "px";
-    node.style.top  = (startNodeY + (e.clientY - startMouseY) / CT.scale) + "px";
+    const dx = (e.clientX - startMouseX) / CT.scale;
+    const dy = (e.clientY - startMouseY) / CT.scale;
+    if (selectedIds.size > 1) {
+      // Move all selected nodes together
+      selectedIds.forEach(sid => {
+        const sel = document.getElementById(sid);
+        const off = multiDragOffsets[sid];
+        if (sel && off) { sel.style.left = (off.x + dx) + "px"; sel.style.top = (off.y + dy) + "px"; }
+      });
+    } else {
+      node.style.left = (startNodeX + dx) + "px";
+      node.style.top  = (startNodeY + dy) + "px";
+    }
     updateWires();
   });
 
   document.addEventListener('mouseup', () => {
-    if (isDragging) { isDragging = false; saveCanvasState(); }
+    if (isDragging) {
+      isDragging = false;
+      // Sync all selected-multi nodes offsets too
+      if (selectedIds.size > 1) syncMultiDragEnd();
+      saveCanvasState();
+    }
     node.style.zIndex = 10;
   });
 
@@ -2303,12 +2387,60 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   saveCanvasState();
 }
 
-function selectNode(id) {
-  selectedNodeId = id;
-  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
+// ─── Multi-select ─────────────────────────────────────────────────────────────
+let selectedIds = new Set(); // all selected node IDs
+let multiDragOffsets = {}; // id → {ox, oy} initial offsets at drag start
+
+function selectNode(id, addToSelection = false) {
+  if (!addToSelection) {
+    selectedIds.clear();
+    document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected','selected-multi'));
+  }
+  selectedIds.add(id);
+  selectedNodeId = id; // primary selection for props panel
   const el = document.getElementById(id);
-  if (el) el.classList.add('selected');
+  if (el) el.classList.add(addToSelection && selectedIds.size > 1 ? 'selected-multi' : 'selected');
+  if (addToSelection && selectedIds.size > 1) {
+    // Mark primary with selected, rest with selected-multi
+    selectedIds.forEach(sid => {
+      const sel = document.getElementById(sid);
+      if (sel) { sel.classList.remove('selected','selected-multi'); sel.classList.add(sid === id ? 'selected' : 'selected-multi'); }
+    });
+  }
   updatePropertyPanel();
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  selectedNodeId = null;
+  selectedWireId = null;
+  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected','selected-multi'));
+  updateWireStyles();
+  const h = document.getElementById('prop-header-label');
+  if (h) h.textContent = 'Node Properties';
+  updatePropertyPanel();
+}
+
+function deleteSelected() {
+  if (selectedIds.size === 0 && !selectedWireId) return;
+  if (selectedWireId) { deleteWire(selectedWireId); return; }
+  selectedIds.forEach(id => deleteNode(id));
+  selectedIds.clear();
+}
+
+function syncMultiDragEnd() {
+  // After dragging primary node, sync offsets of other selected nodes
+  // (they were dragged via the group-move handler below)
+}
+
+function updateValidateBadge({ errors, warnings }) {
+  const badge = document.getElementById("validateBadge");
+  if (!badge) return;
+  const total = errors.length + warnings.length;
+  if (total === 0) { badge.style.display = "none"; return; }
+  badge.style.display = "flex";
+  badge.textContent = total > 9 ? "!" : total;
+  badge.style.background = errors.length > 0 ? "var(--red)" : "var(--amber)";
 }
 
 function deleteNode(id) {
@@ -2316,8 +2448,9 @@ function deleteNode(id) {
   flowWires = flowWires.filter(w => w.fromId !== id && w.toId !== id);
   const el = document.getElementById(id);
   if (el) el.remove();
+  selectedIds.delete(id);
   if (selectedNodeId === id) {
-    selectedNodeId = null;
+    selectedNodeId = selectedIds.size > 0 ? [...selectedIds][selectedIds.size-1] : null;
     updatePropertyPanel();
   }
   const hint = document.getElementById("canvas-hint");
@@ -2729,7 +2862,119 @@ function logInspector(nodeName, msg) {
   body.prepend(row);
 }
 
+// ─── Topological Sort (Kahn's algorithm) ─────────────────────────────────────
+function topoSort() {
+  const inDeg = {}, adj = {};
+  flowNodes.forEach(n => { inDeg[n.id] = 0; adj[n.id] = []; });
+  flowWires.forEach(w => { if (adj[w.fromId]) { adj[w.fromId].push(w.toId); inDeg[w.toId] = (inDeg[w.toId] || 0) + 1; } });
+  const queue = flowNodes.filter(n => inDeg[n.id] === 0).map(n => n.id);
+  const order = [];
+  while (queue.length) {
+    const id = queue.shift();
+    order.push(id);
+    (adj[id] || []).forEach(to => { if (--inDeg[to] === 0) queue.push(to); });
+  }
+  const hasCycle = order.length < flowNodes.length;
+  const cycleNodes = hasCycle ? flowNodes.filter(n => !order.includes(n.id)) : [];
+  return { order, hasCycle, cycleNodes };
+}
+
+// ─── Graph Validation ─────────────────────────────────────────────────────────
+function validateGraph() {
+  const errors = [], warnings = [];
+  // Clear previous validation markers
+  document.querySelectorAll('.flow-node').forEach(el => el.classList.remove('node-error','node-warn'));
+  document.querySelectorAll('.node-badge').forEach(b => b.remove());
+
+  if (flowNodes.length === 0) { errors.push({ msg: "Canvas is empty", nodeId: null }); return { errors, warnings }; }
+
+  // Topo sort → cycle detection
+  const { hasCycle, cycleNodes } = topoSort();
+  if (hasCycle) {
+    cycleNodes.forEach(n => {
+      errors.push({ msg: `Cycle detected at "${n.name}"`, nodeId: n.id });
+      markNode(n.id, "error", "↺");
+    });
+  }
+
+  flowNodes.forEach(n => {
+    const inW  = flowWires.filter(w => w.toId   === n.id);
+    const outW = flowWires.filter(w => w.fromId  === n.id);
+    const isEntry = inW.length === 0;
+    const isExit  = outW.length === 0;
+
+    // Isolated node (no wires at all)
+    if (isEntry && isExit && flowNodes.length > 1) {
+      warnings.push({ msg: `"${n.name}" is isolated — not connected`, nodeId: n.id });
+      markNode(n.id, "warn", "⚠");
+    }
+
+    // Agent with no code
+    if (n.type === 'agent' && !n.props.code?.trim()) {
+      warnings.push({ msg: `"${n.name}" has no .tern code`, nodeId: n.id });
+      if (!outW.length) markNode(n.id, "warn", "?");
+    }
+
+    // Schema mismatch on incoming wires
+    inW.forEach(w => {
+      const src = flowNodes.find(f => f.id === w.fromId);
+      if (src && src.props.output_schema && n.props.input_schema &&
+          src.props.output_schema.trim() !== n.props.input_schema.trim()) {
+        warnings.push({ msg: `Schema mismatch: "${src.name}" → "${n.name}"`, nodeId: n.id });
+        markNode(n.id, "warn", "≠");
+      }
+    });
+
+    // Multiple entry nodes with conflicting signals not going through gate
+    if (inW.length > 1 && n.type === 'agent') {
+      warnings.push({ msg: `"${n.name}" has ${inW.length} inputs — consider a Gate node for consensus`, nodeId: n.id });
+    }
+  });
+
+  return { errors, warnings };
+}
+
+function markNode(id, level, badge) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add(level === "error" ? "node-error" : "node-warn");
+  const b = document.createElement("div");
+  b.className = "node-badge node-badge-" + level;
+  b.textContent = badge;
+  el.appendChild(b);
+}
+
+function showValidationPanel(errors, warnings) {
+  const header = document.getElementById("prop-header-label");
+  const body   = document.getElementById("prop-body");
+  if (header) header.textContent = "Graph Validation";
+  const total = errors.length + warnings.length;
+  if (total === 0) {
+    body.innerHTML = `<div style="color:var(--green);font-size:13px;text-align:center;margin-top:40px;">✓ Graph is valid</div><div style="color:var(--muted);font-size:11px;text-align:center;margin-top:8px;">No errors or warnings found.</div>`;
+    return;
+  }
+  const items = [...errors.map(e => ({ ...e, level: "error" })), ...warnings.map(w => ({ ...w, level: "warn" }))];
+  body.innerHTML = `
+    <div style="font-size:11px;color:var(--muted2);margin-bottom:12px;">${errors.length} error${errors.length!==1?'s':''}, ${warnings.length} warning${warnings.length!==1?'s':''}</div>
+    ${items.map(i => `
+      <div style="display:flex;gap:8px;padding:8px;margin-bottom:4px;border-radius:6px;background:${i.level==='error'?'rgba(239,68,68,0.08)':'rgba(245,158,11,0.08)'};border:1px solid ${i.level==='error'?'var(--red)':'var(--amber)'};cursor:${i.nodeId?'pointer':'default'};"
+           ${i.nodeId ? `onclick="selectNode('${i.nodeId}');updatePropertyPanel()"` : ''}>
+        <span style="color:${i.level==='error'?'var(--red)':'var(--amber)'};font-size:14px;flex-shrink:0;">${i.level==='error'?'✗':'⚠'}</span>
+        <span style="font-size:11px;color:var(--text);line-height:1.5;">${i.msg}</span>
+      </div>`).join('')}
+    <button class="btn btn-ghost" style="width:100%;margin-top:12px;font-size:11px;" onclick="document.querySelectorAll('.flow-node').forEach(el=>el.classList.remove('node-error','node-warn'));document.querySelectorAll('.node-badge').forEach(b=>b.remove());updatePropertyPanel();">Clear markers</button>
+  `;
+}
+
 async function runSimulation() {
+  // Validate first
+  const { errors, warnings } = validateGraph();
+  if (errors.length > 0) {
+    showValidationPanel(errors, warnings);
+    showToast(`${errors.length} error${errors.length>1?'s':''} — fix before simulating`, "error");
+    return;
+  }
+
   const ins = document.getElementById("flow-inspector");
   ins.classList.add("active");
   ins.style.display = "flex";
@@ -2740,25 +2985,58 @@ async function runSimulation() {
     return;
   }
 
-  // Reset all visual state
-  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('pulse-affirm','pulse-reject','pulse-hold'));
+  // Reset visual state
+  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('pulse-affirm','pulse-reject','pulse-hold','node-error','node-warn'));
+  document.querySelectorAll('.node-badge').forEach(b => b.remove());
   flowNodes.forEach(n => setNodeStatus(n.id, ""));
 
-  const wasmTag = window.wasmReady ? "⚡ WASM" : "⚠ passthrough (no WASM)";
-  logInspector("SYSTEM", `Simulation start — ${wasmTag} — ${flowNodes.length} nodes`);
+  // Topological execution order
+  const { order, hasCycle, cycleNodes } = topoSort();
+  const wasmTag = window.wasmReady ? "⚡ WASM" : "passthrough";
+  logInspector("SYSTEM", `Start — ${wasmTag} · ${flowNodes.length} nodes · topo order`);
+  if (hasCycle) logInspector("WARN", `Cycle detected in: ${cycleNodes.map(n=>n.name).join(', ')} — skipped`);
+  if (warnings.length) logInspector("WARN", `${warnings.length} warning${warnings.length>1?'s':''} — check validation`);
 
-  // Find entry nodes (no incoming wires)
-  const startNodes = flowNodes.filter(n => !flowWires.some(w => w.toId === n.id));
-  if (startNodes.length === 0) {
-    logInspector("SYSTEM", "No entry nodes (all have incoming wires). Add an unconnected source node.");
-    return;
+  // Signal state: map nodeId → outgoing trit value
+  const signals = {};
+
+  // Execute in topological order
+  const entryIds = order.filter(id => !flowWires.some(w => w.toId === id));
+  for (const id of entryIds) signals[id] = 1; // seed entries with affirm
+
+  for (const id of order) {
+    const node = flowNodes.find(n => n.id === id);
+    if (!node) continue;
+
+    // Determine input signal: majority of incoming wire signals
+    const inWires = flowWires.filter(w => w.toId === id);
+    let inSignal = signals[id] ?? 1;
+    if (inWires.length > 0) {
+      const incoming = inWires.map(w => signals[w.fromId] ?? 1);
+      const sum = incoming.reduce((a, b) => a + b, 0);
+      inSignal = sum > 0 ? 1 : (sum < 0 ? -1 : 0);
+    }
+
+    const outSignal = await simulateNode(node, inSignal);
+    signals[id] = outSignal;
+
+    // Propagate to outgoing wires
+    flowWires.filter(w => w.fromId === id).forEach(w => {
+      let sig = outSignal;
+      // Apply edge condition
+      if (w.condition && w.condition !== "all") {
+        const pass = (w.condition==="affirm"&&sig===1)||(w.condition==="tend"&&sig===0)||(w.condition==="reject"&&sig===-1)||(w.condition==="!reject"&&sig!==-1)||(w.condition==="!tend"&&sig!==0);
+        if (!pass) {
+          if (w.transform==="block") { sig = null; }
+          else if (w.transform==="flip") sig = -1;
+          else if (w.transform==="hold") sig = 0;
+        }
+      }
+      if (sig !== null) signals[w.toId] = sig;
+    });
   }
 
-  for (const node of startNodes) {
-    await simulateNode(node, 1);
-  }
-
-  logInspector("SYSTEM", "✓ Simulation complete");
+  logInspector("SYSTEM", "✓ Complete");
 }
 
 function setNodeStatus(id, status) {
