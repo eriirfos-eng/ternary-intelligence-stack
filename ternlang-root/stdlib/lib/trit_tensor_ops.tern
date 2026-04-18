@@ -1,0 +1,46 @@
+// stdlib/lib/trit_tensor_ops.tern
+// Demonstrates: Utility operations like fill and copy for trit tensors.
+// Tier: 1 - Open Core
+
+fn tensor_fill(data: trittensor<10>, size: int, val: trit) -> trit {
+    let i: int = 0;
+    while i < size {
+        data[i] = val;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn tensor_copy(src: trittensor<10>, dst: trittensor<10>, size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        dst[i] = src[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let t1: trittensor<10> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let t2: trittensor<10> = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    
+    println("Trit Tensor Ops Showcase:");
+    
+    println("Filling t1 with Reject (-1):");
+    tensor_fill(t1, 10, -1);
+    println("t1[0] (expected -1):");
+    println(t1[0]);
+    if t1[0] == -1 { println("Fill OK."); } else { return conflict(); }
+    
+    println("Copying t1 to t2:");
+    tensor_copy(t1, t2, 10);
+    println("t2[9] (expected -1):");
+    println(t2[9]);
+    
+    if t2[9] == -1 {
+        println("Copy OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
