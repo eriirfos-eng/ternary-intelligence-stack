@@ -1,0 +1,42 @@
+// stdlib/lib/tensor_utils.tern
+// Demonstrates: Basic utility functions for operating on trittensors.
+// Tier: 1
+
+fn sum_tensor(t: trittensor<5>) -> int {
+    let sum: int = 0;
+    let i: int = 0;
+    while i < 5 {
+        sum = sum + cast(t[i]);
+        i = i + 1;
+    }
+    return sum;
+}
+
+fn contains(t: trittensor<5>, val: trit) -> trit {
+    let i: int = 0;
+    while i < 5 {
+        if t[i] == val {
+            return 1;
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let tensor: trittensor<5>;
+    tensor[0] = 1;
+    tensor[1] = 0;
+    tensor[2] = -1;
+    tensor[3] = 1;
+    tensor[4] = 1;
+
+    println("Sum of tensor:");
+    println(sum_tensor(tensor));
+
+    println("Tensor contains -1:");
+    println(contains(tensor, -1));
+    
+    println("Program exited successfully.");
+    return 1;
+}
