@@ -315,11 +315,17 @@
     .dash-grid {
       display: grid;
       grid-template-columns: 300px 1fr 300px;
+      grid-template-rows: auto auto auto;
       gap: 24px;
       max-width: 1400px;
       margin: 0 auto;
     }
     .dash-col { display: flex; flex-direction: column; gap: 24px; }
+    .dash-col-1 { grid-column: 1; grid-row: 1 / span 3; }
+    .dash-col-2 { grid-column: 2; }
+    .dash-col-3 { grid-column: 3; }
+    .dash-footer { grid-column: 2 / span 2; }
+
     .dash-section-title {
       font-size: 11px; font-weight: 700; color: var(--muted);
       text-transform: uppercase; letter-spacing: 0.1em;
@@ -328,7 +334,8 @@
     .dash-card {
       background: var(--bg1); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 24px;
-      box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: var(--shadow); display: flex; flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
     .dash-card-title {
       font-size: 13px; font-weight: 600; color: var(--text);
@@ -337,6 +344,22 @@
     .dash-card-title i { width: 16px; color: var(--cyan); }
     .dash-stat { font-size: 32px; font-weight: 700; color: var(--text); }
     .dash-stat-sub { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+    
+    /* REPL Style */
+    .repl-input-wrap {
+      background: var(--bg); border: 1px solid var(--border2);
+      border-radius: 6px; display: flex; align-items: center; padding: 4px 8px;
+      margin-top: 12px;
+    }
+    .repl-input {
+      background: none; border: none; color: var(--cyan); flex: 1;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none;
+    }
+    .repl-res {
+      margin-top: 8px; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--green); min-height: 16px;
+    }
+
     .dash-pill {
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--bg2); padding: 6px 14px; border-radius: 20px;
@@ -346,7 +369,7 @@
     .dash-pill .dot.err { background: var(--red); }
     .dash-pill .dot.warn { background: var(--amber); }
 
-    .dash-quick-btns { display: grid; gap: 10px; }
+    .dash-quick-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .dash-quick-btn {
       background: var(--bg2); border: 1px solid var(--border2);
       color: var(--text); font-family: inherit; font-size: 12px;
@@ -354,10 +377,10 @@
       text-align: left; transition: all 0.2s;
       display: flex; align-items: center; gap: 12px;
     }
-    .dash-quick-btn:hover { background: var(--bg3); border-color: var(--cyan); transform: translateX(4px); }
+    .dash-quick-btn:hover { background: var(--bg3); border-color: var(--cyan); transform: translateY(-2px); }
     .dash-quick-btn i { width: 16px; color: var(--muted); }
 
-    .dash-run-list { display: flex; flex-direction: column; gap: 4px; }
+    .dash-run-list { display: flex; flex-direction: column; gap: 6px; }
     .dash-run-item {
       display: flex; align-items: center; gap: 10px;
       font-size: 12px; padding: 10px 12px;
@@ -369,7 +392,7 @@
     .run-ok   { color: var(--green); }
     .run-err  { color: var(--red); }
     .dash-run-empty {
-      padding: 32px; text-align: center; color: var(--muted2); font-size: 12px;
+      padding: 40px; text-align: center; color: var(--muted2); font-size: 12px;
       border: 1px dashed var(--border2); border-radius: 10px;
     }
 
@@ -757,7 +780,7 @@
   </div>
 
   <div style="padding: 0 10px; height: 100%; display: flex; align-items: center; border-left: 1px solid var(--border);">
-    <input type="hidden" id="apiEndpoint" value="https://ternlang-api.fly.dev" />
+    <input type="hidden" id="apiEndpoint" value="https://ternlang.com" />
     <span id="vmStatus" class="status-pill status-idle">● Idle</span>
   </div>
 </div>
@@ -776,7 +799,7 @@
   <div class="dash-grid">
 
     <!-- Column 1: Environment -->
-    <div class="dash-col">
+    <div class="dash-col dash-col-1">
       <div class="dash-section-title">Environment</div>
       
       <!-- VM Status -->
@@ -802,14 +825,26 @@
           <div class="usage-meta" id="dashUsageMeta" style="font-size:10px">Enter API key to see quota</div>
         </div>
         <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
-        <button class="dash-quick-btn" style="margin-top: 16px; border-color: var(--amber); color: var(--amber);" onclick="openUpskillModal()">
-          <i data-lucide="arrow-up-circle"></i> <span>Upskill Plan</span>
-        </button>
+      </div>
+
+      <!-- Ternary Playground (REPL) -->
+      <div class="dash-card" style="flex:1">
+        <div class="dash-card-title"><i data-lucide="terminal"></i> Ternary Playground</div>
+        <div style="font-size:11px; color:var(--muted)">Quickly evaluate trit expressions or convert decimal to ternary.</div>
+        <div class="repl-input-wrap">
+          <span style="color:var(--muted); font-family:monospace; margin-right:6px;">&gt;</span>
+          <input type="text" class="repl-input" placeholder="e.g. 1 && 0 || -1" id="dashReplInput" onkeydown="if(event.key==='Enter')runReplExpr()">
+        </div>
+        <div class="repl-res" id="dashReplRes"></div>
+        <div style="margin-top:auto; display:flex; gap:8px;">
+          <button class="btn btn-ghost" style="font-size:10px; padding:4px 8px;" onclick="document.getElementById('dashReplInput').value='13'; runReplExpr()">Dec 13</button>
+          <button class="btn btn-ghost" style="font-size:10px; padding:4px 8px;" onclick="document.getElementById('dashReplInput').value='1 && -1'; runReplExpr()">AND</button>
+        </div>
       </div>
     </div>
 
-    <!-- Column 2: Action -->
-    <div class="dash-col">
+    <!-- Column 2: Work (Top) -->
+    <div class="dash-col dash-col-2">
       <div class="dash-section-title">Work</div>
       
       <!-- Quick Actions -->
@@ -830,18 +865,10 @@
           </button>
         </div>
       </div>
-
-      <!-- Recent Runs -->
-      <div class="dash-card" style="flex:1">
-        <div class="dash-card-title"><i data-lucide="history"></i> Recent Activity</div>
-        <div class="dash-run-list" id="dashRunList">
-          <div class="dash-run-empty">No runs yet this session</div>
-        </div>
-      </div>
     </div>
 
-    <!-- Column 3: Health & Resources -->
-    <div class="dash-col">
+    <!-- Column 3: Analytics (Top) -->
+    <div class="dash-col dash-col-3">
       <div class="dash-section-title">Analytics</div>
 
       <!-- Session Stats -->
@@ -856,38 +883,51 @@
             <div class="dash-stat" id="statOk" style="color: var(--green);">0</div>
             <div class="dash-stat-sub">Success</div>
           </div>
-          <div>
-            <div class="dash-stat" id="statErr" style="color: var(--red);">0</div>
-            <div class="dash-stat-sub">Errors</div>
-          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Stdlib Explorer -->
-      <div class="dash-card">
+    <!-- Column 2: Recent Activity (Center) -->
+    <div class="dash-col dash-col-2" style="grid-row: 2;">
+      <div class="dash-card" style="height:100%">
+        <div class="dash-card-title"><i data-lucide="history"></i> Recent Activity</div>
+        <div class="dash-run-list" id="dashRunList" style="flex:1">
+          <div class="dash-run-empty">No runs yet this session</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Stdlib (Center) -->
+    <div class="dash-col dash-col-3" style="grid-row: 2;">
+      <div class="dash-card" style="height:100%">
         <div class="dash-card-title"><i data-lucide="library"></i> Stdlib Coverage</div>
-        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px;">
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px; flex:1">
           <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">core/</span><span style="color:var(--green); font-weight:600">12 modules</span></div>
           <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">math/</span><span style="color:var(--green); font-weight:600">8 modules</span></div>
           <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">agents/</span><span style="color:var(--cyan); font-weight:600">15 modules</span></div>
           <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">safety/</span><span style="color:var(--cyan); font-weight:600">5 modules</span></div>
           <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">ml/bitnet</span><span style="color:var(--amber); font-weight:600">v1.58b</span></div>
-          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">errors/</span><span style="color:var(--green); font-weight:600">27 modules</span></div>
         </div>
-        <button class="dash-quick-btn" style="margin-top: 16px;" onclick="switchSidebarPanel('explorer'); switchView('editor')">
+        <button class="dash-quick-btn" style="margin-top: 16px; justify-content: center;" onclick="switchSidebarPanel('explorer'); switchView('editor')">
           <i data-lucide="search"></i> <span>Browse Library</span>
         </button>
       </div>
+    </div>
 
-      <!-- Ternary Logic Visualizer (Bottom Right) -->
+    <!-- Spanned Footer: Logic Field -->
+    <div class="dash-footer" style="grid-row: 3;">
       <div class="dash-card" style="background: linear-gradient(135deg, var(--bg1) 0%, #1e1b4b 100%);">
-        <div class="dash-card-title" style="color:var(--cyan)"><i data-lucide="binary"></i> Logic Field</div>
-        <div style="display:flex; justify-content: space-around; align-items:center; height:60px;">
-           <div style="text-align:center;"><div style="color:var(--red); font-weight:bold; font-size:18px;">-1</div><div style="font-size:8px; color:var(--muted)">REJECT</div></div>
-           <div style="text-align:center;"><div style="color:var(--amber); font-weight:bold; font-size:18px;">0</div><div style="font-size:8px; color:var(--muted)">HOLD</div></div>
-           <div style="text-align:center;"><div style="color:var(--green); font-weight:bold; font-size:18px;">+1</div><div style="font-size:8px; color:var(--muted)">AFFIRM</div></div>
+        <div style="display:flex; justify-content: space-between; align-items:center;">
+          <div>
+            <div class="dash-card-title" style="color:var(--cyan); margin-bottom:4px;"><i data-lucide="binary"></i> Logic Field Visualizer</div>
+            <div style="font-size:10px; color:var(--muted2)">Real-time state monitoring of the Balanced Ternary Engine</div>
+          </div>
+          <div style="display:flex; gap:40px; margin-right:20px;">
+             <div style="text-align:center;"><div style="color:var(--red); font-weight:bold; font-size:24px;">-1</div><div style="font-size:9px; color:var(--muted)">REJECT</div></div>
+             <div style="text-align:center;"><div style="color:var(--amber); font-weight:bold; font-size:24px;">0</div><div style="font-size:9px; color:var(--muted)">HOLD</div></div>
+             <div style="text-align:center;"><div style="color:var(--green); font-weight:bold; font-size:24px;">+1</div><div style="font-size:9px; color:var(--muted)">AFFIRM</div></div>
+          </div>
         </div>
-        <div style="font-size:9px; color:var(--muted2); text-align:center; margin-top:10px;">Balanced Ternary Engine Active</div>
       </div>
     </div>
 
@@ -997,7 +1037,7 @@
         <!-- API tab -->
         <div class="out-panel" id="panel-api">
           <div class="api-block">
-            <div class="usage-label" style="margin-bottom: 6px;">Endpoint: <span id="apiEndpointBase" style="color:var(--cyan);">https://ternlang-api.fly.dev</span></div>
+            <div class="usage-label" style="margin-bottom: 6px;">Endpoint: <span id="apiEndpointBase" style="color:var(--cyan);">https://ternlang.com</span></div>
             <div class="api-route">
               <span class="api-method">GET</span>
               <span class="api-path">/health</span>
@@ -1129,7 +1169,7 @@
     <div class="settings-section-title">API Connection</div>
     <div class="settings-row">
       <div class="settings-label">Endpoint URL</div>
-      <input class="settings-input" id="settingsEndpoint" value="https://ternlang-api.fly.dev" placeholder="https://…" />
+      <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" />
       <button class="settings-btn" onclick="applyEndpoint()">Apply</button>
     </div>
     <div class="settings-row">
@@ -1187,7 +1227,7 @@
       TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
       Runtime: BET VM (27 registers · balanced ternary)<br/>
       License: LGPL-3.0-or-later<br/>
-      <a href="https://ternlang-api.fly.dev" style="color: var(--cyan);" target="_blank">ternlang.com</a>
+      <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
       &nbsp;·&nbsp;
       <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
     </div>
@@ -2400,6 +2440,58 @@ async function tryApiRun() {
     document.getElementById("apiResponse").textContent = JSON.stringify(d, null, 2);
   } catch (e) {
     document.getElementById("apiResponse").textContent = String(e);
+  }
+}
+
+async function runReplExpr() {
+  const input = document.getElementById("dashReplInput").value.trim();
+  const resEl = document.getElementById("dashReplRes");
+  if (!input) return;
+
+  resEl.style.color = "var(--muted)";
+  resEl.textContent = "evaluating…";
+
+  // Case 1: Pure number (convert to balanced ternary)
+  if (/^-?\d+$/.test(input)) {
+    let num = parseInt(input);
+    if (num === 0) { resEl.textContent = "0 (tend)"; return; }
+    let res = "";
+    let n = num;
+    while (n !== 0) {
+      let rem = n % 3;
+      n = Math.floor(n / 3);
+      if (rem < 0) { rem += 3; n -= 1; }
+      if (rem === 2) { rem = -1; n += 1; }
+      res = (rem === 1 ? "+" : (rem === -1 ? "-" : "0")) + res;
+    }
+    resEl.style.color = "var(--cyan)";
+    resEl.textContent = `${res} (balanced)`;
+    return;
+  }
+
+  // Case 2: Expression (send to /api/run as a return statement)
+  try {
+    const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+    const key = document.getElementById("apiKey").value.trim();
+    const code = `return ${input};`;
+    
+    const response = await fetch(`${endpoint}/api/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, key })
+    });
+    
+    const data = await response.json();
+    if (data.status === "ok" && data.registers && data.registers[0]) {
+      resEl.style.color = "var(--green)";
+      resEl.textContent = data.registers[0];
+    } else {
+      resEl.style.color = "var(--red)";
+      resEl.textContent = data.error || "Eval failed";
+    }
+  } catch (e) {
+    resEl.style.color = "var(--red)";
+    resEl.textContent = "Connection error";
   }
 }
 
