@@ -1,0 +1,29 @@
+// stdlib/agents/float_threshold.tern
+// Demonstrates: Float Threshold agent pattern
+// Tier: 1
+
+agent FloatThreshold {
+    fn handle(val: float) -> trit {
+        // Returns 'affirm' if float value is above 0.5
+        // Using if-else as fallback since match on floats can be tricky
+        if val > 0.5 {
+            return affirm;
+        }
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let t: agentref = spawn FloatThreshold;
+    
+    send t 0.8;
+    let r1: trit = await t;
+    
+    send t 0.2;
+    let r2: trit = await t;
+    
+    if r1 == affirm && r2 == reject {
+        return affirm;
+    }
+    return reject;
+}
