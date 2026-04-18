@@ -1,0 +1,89 @@
+// stdlib/lib/stack.tern
+// Demonstrates: A LIFO stack implementation using a fixed-size trittensor.
+// Tier: 1 - Open Core
+
+fn stack_push(buffer: trittensor<5>, size: int, curr_ptr: int, val: trit) -> int {
+    if curr_ptr >= size {
+        return -1; // Overflow
+    }
+    buffer[curr_ptr] = val;
+    return curr_ptr + 1;
+}
+
+fn stack_pop_index(curr_ptr: int) -> int {
+    if curr_ptr <= 0 {
+        return -1; // Underflow
+    }
+    return curr_ptr - 1;
+}
+
+fn main() -> trit {
+    let size: int = 5;
+    let buffer: trittensor<5> = [0, 0, 0, 0, 0];
+    let stack_ptr: int = 0;
+
+    println("Pushing 1");
+    stack_ptr = stack_push(buffer, size, stack_ptr, 1);
+    println("Ptr after 1:");
+    println(stack_ptr);
+
+    println("Pushing -1");
+    stack_ptr = stack_push(buffer, size, stack_ptr, -1);
+    println("Ptr after -1:");
+    println(stack_ptr);
+
+    println("Pushing 0");
+    stack_ptr = stack_push(buffer, size, stack_ptr, 0);
+    println("Ptr after 0:");
+    println(stack_ptr);
+
+    println("Current stack size:");
+    println(stack_ptr);
+
+    match stack_ptr {
+        3 => { println("Size is 3 as expected."); }
+        -1 => { println("Stack overflow."); return conflict(); }
+        _ => { 
+            println("Unexpected state. Size was:");
+            println(stack_ptr);
+            return conflict(); 
+        }
+    }
+
+    println("Popping element");
+    if stack_ptr > 0 {
+        stack_ptr = stack_pop_index(stack_ptr);
+        let val: trit = buffer[stack_ptr];
+        println("Popped value (expected 0):");
+        match val {
+            1 => { println("Affirm (+1)"); }
+            0 => { println("Tend (0)"); }
+            -1 => { println("Reject (-1)"); }
+        }
+        
+        if val == 0 {
+            println("Stack pop successful.");
+        } else {
+            println("Unexpected value popped.");
+            return conflict();
+        }
+    }
+
+    println("Popping remaining elements");
+    stack_ptr = stack_pop_index(stack_ptr);
+    stack_ptr = stack_pop_index(stack_ptr);
+
+    println("Final stack size:");
+    println(stack_ptr);
+
+    match stack_ptr {
+        0 => { 
+            println("Stack is empty. Success.");
+            return truth(); 
+        }
+        _ => { 
+            println("Stack should be empty.");
+            return conflict(); 
+        }
+    }
+}
