@@ -1,0 +1,28 @@
+{
+  "name": "ternlang-wasm",
+  "type": "module",
+  "collaborators": [
+    "Simeon Kepp <rfi.irfos@gmail.com>",
+    "Nikoletta Csonka <csonikoletta@ternlang.com>",
+    "Zabih Karimi <z.karimi@ternlang.com>",
+    "RFI-IRFOS <licensing@ternlang.com>"
+  ],
+  "description": "WebAssembly bindings for the Ternlang BET VM — runs real .tern programs in the browser.",
+  "version": "1.0.0",
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+  },
+  "files": [
+    "ternlang_wasm_bg.wasm",
+    "ternlang_wasm.js",
+    "ternlang_wasm.d.ts"
+  ],
+  "main": "ternlang_wasm.js",
+  "homepage": "https://ternlang.com",
+  "types": "ternlang_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
