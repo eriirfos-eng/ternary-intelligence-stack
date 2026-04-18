@@ -1,0 +1,46 @@
+// stdlib/agents/deliberator.tern
+// Demonstrates: Simple Deliberation agent pattern
+// Tier: 1
+
+agent Optimist {
+    fn handle(input: trit) -> trit {
+        return affirm;
+    }
+}
+
+agent Pessimist {
+    fn handle(input: trit) -> trit {
+        return reject;
+    }
+}
+
+agent Deliberator {
+    fn handle(input: trit) -> trit {
+        let o: agentref = spawn Optimist;
+        let p: agentref = spawn Pessimist;
+
+        send o input;
+        let r1: trit = await o;
+
+        send p input;
+        let r2: trit = await p;
+
+        // Deliberation: consensus between optimist and pessimist
+        // If they disagree (which they always do here), return 'tend' (0).
+        if r1 == r2 {
+            return r1;
+        }
+        return tend;
+    }
+}
+
+fn main() -> trit {
+    let d: agentref = spawn Deliberator;
+    send d tend;
+    let res: trit = await d;
+    
+    match res {
+        tend => { return affirm; } // Success: deliberation reached 'tend'
+        _    => { return reject; }
+    }
+}
