@@ -1,0 +1,51 @@
+// stdlib/agents/majority_5.tern
+// Demonstrates: Majority-of-5 Consensus agent pattern
+// Tier: 1
+
+agent Voter {
+    fn handle(input: trit) -> trit {
+        return input;
+    }
+}
+
+agent Majority5 {
+    fn handle(input: trit) -> trit {
+        let v1: agentref = spawn Voter;
+        let v2: agentref = spawn Voter;
+        let v3: agentref = spawn Voter;
+        let v4: agentref = spawn Voter;
+        let v5: agentref = spawn Voter;
+
+        send v1 input; send v2 input; send v3 input; send v4 input; send v5 input;
+
+        let r1: trit = await v1;
+        let r2: trit = await v2;
+        let r3: trit = await v3;
+        let r4: trit = await v4;
+        let r5: trit = await v5;
+
+        let pos: int = 0;
+        let neg: int = 0;
+
+        if r1 == affirm { pos = pos + 1; } if r1 == reject { neg = neg + 1; }
+        if r2 == affirm { pos = pos + 1; } if r2 == reject { neg = neg + 1; }
+        if r3 == affirm { pos = pos + 1; } if r3 == reject { neg = neg + 1; }
+        if r4 == affirm { pos = pos + 1; } if r4 == reject { neg = neg + 1; }
+        if r5 == affirm { pos = pos + 1; } if r5 == reject { neg = neg + 1; }
+
+        if pos >= 3 { return affirm; }
+        if neg >= 3 { return reject; }
+        return tend;
+    }
+}
+
+fn main() -> trit {
+    let m: agentref = spawn Majority5;
+    send m affirm;
+    let res: trit = await m;
+    
+    match res {
+        affirm => { return affirm; }
+        _      => { return reject; }
+    }
+}
