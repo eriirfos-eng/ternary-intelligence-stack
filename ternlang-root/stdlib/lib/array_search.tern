@@ -1,0 +1,49 @@
+// stdlib/lib/array_search.tern
+// Demonstrates: Linear search functions for trit and integer arrays.
+// Tier: 1 - Open Core
+
+fn search_trit(data: trittensor<5>, size: int, target: trit) -> int {
+    let i: int = 0;
+    while i < size {
+        if data[i] == target { return i; }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn search_int(data: int[5], size: int, target: int) -> int {
+    let i: int = 0;
+    while i < size {
+        if data[i] == target { return i; }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let td: trittensor<5> = [0, 0, -1, 0, 0];
+    let id: int[5];
+    id[0] = 10; id[1] = 20; id[2] = 30; id[3] = 40; id[4] = 50;
+    
+    println("Array Search Showcase:");
+    
+    println("Searching for -1 in trit tensor:");
+    let r1: int = search_trit(td, 5, -1);
+    println(r1);
+    if r1 == 2 { println("Found at index 2 (Correct)."); } else { return conflict(); }
+    
+    println("Searching for 30 in int array:");
+    let r2: int = search_int(id, 5, 30);
+    println(r2);
+    if r2 == 2 { println("Found at index 2 (Correct)."); } else { return conflict(); }
+    
+    println("Searching for 99 in int array:");
+    let r3: int = search_int(id, 5, 99);
+    println(r3);
+    if r3 == -1 {
+        println("Not found (Correct). Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
