@@ -1,0 +1,55 @@
+// stdlib/lib/priority_queue.tern
+// Demonstrates: A basic priority queue implementation on a fixed-size trittensor.
+// Tier: 1 - Open Core
+
+fn find_highest_priority_index(buffer: trittensor<10>, count: int) -> int {
+    if count <= 0 { return -1; }
+    
+    let highest_idx: int = 0;
+    let highest_val: trit = buffer[0];
+    
+    let i: int = 1;
+    while i < count {
+        if buffer[i] > highest_val {
+            highest_val = buffer[i];
+            highest_idx = i;
+        }
+        i = i + 1;
+    }
+    return highest_idx;
+}
+
+fn pq_remove_at(buffer: trittensor<10>, count: int, idx: int) -> int {
+    if idx < 0 { return count; }
+    // Shift elements to fill the gap
+    let i: int = idx;
+    let limit: int = count - 1;
+    while i < limit {
+        buffer[i] = buffer[i + 1];
+        i = i + 1;
+    }
+    return count - 1;
+}
+
+fn main() -> trit {
+    let buffer: trittensor<10> = [0, -1, 1, 0, 1, -1, 0, 0, 0, 0];
+    let count: int = 6;
+
+    println("Priority Queue initial elements (first 6):");
+    println("0, -1, 1, 0, 1, -1");
+
+    // Dequeue all
+    while count > 0 {
+        let idx: int = find_highest_priority_index(buffer, count);
+        let val: trit = buffer[idx];
+        match val {
+            1 => { println("Dequeued: Affirm (1)"); }
+            0 => { println("Dequeued: Tend (0)"); }
+           -1 => { println("Dequeued: Reject (-1)"); }
+        }
+        count = pq_remove_at(buffer, count, idx);
+    }
+
+    println("Queue empty. Success.");
+    return truth();
+}
