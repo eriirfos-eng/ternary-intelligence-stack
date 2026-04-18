@@ -1,0 +1,39 @@
+// stdlib/tutorials/08_error_propagation.tern
+// Demonstrates: How conflicts (-1) propagate through ternary logical operations.
+// Tier: 1 - Open Core
+
+fn main() -> trit {
+    println("Ternary Error Propagation Tutorial");
+    
+    let a: trit = 1;  // Affirm
+    let b: trit = -1; // Conflict/Reject
+    
+    println("AND (min) propagation:");
+    // AND(1, -1) = -1
+    let r_and: trit = a && b;
+    println("AND(1, -1) result:");
+    println(r_and);
+    
+    println("OR (max) propagation:");
+    // OR(1, -1) = 1 (Affirm wins over Reject in OR)
+    let r_or: trit = a || b;
+    println("OR(1, -1) result:");
+    println(r_or);
+
+    println("Consensus propagation:");
+    // consensus(1, -1) = 0 (Neutralization)
+    let r_cons: trit = consensus(a, b);
+    println("consensus(1, -1) result:");
+    println(r_cons);
+    
+    match r_cons {
+        0 => { println("Conflict neutralized to Tend. Success."); }
+        _ => { 
+            println("Neutralization failed.");
+            return conflict(); 
+        }
+    }
+
+    println("Verification complete.");
+    return truth();
+}
