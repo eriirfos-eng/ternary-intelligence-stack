@@ -1,0 +1,53 @@
+// stdlib/showcase/fibonacci_showcase.tern
+// Demonstrates: Fibonacci sequence calculation using both iterative and recursive methods.
+// Tier: 1 - Open Core
+
+fn fib_recursive(n: int) -> int {
+    if n <= 1 {
+        return n;
+    }
+    return fib_recursive(n - 1) + fib_recursive(n - 2);
+}
+
+fn fib_iterative(n: int) -> int {
+    if n <= 1 { return n; }
+    let a: int = 0;
+    let b: int = 1;
+    let i: int = 2;
+    while i <= n {
+        let temp: int = a + b;
+        a = b;
+        b = temp;
+        i = i + 1;
+    }
+    return b;
+}
+
+fn main() -> trit {
+    let n: int = 10;
+    
+    println("Fibonacci Showcase (n=10):");
+    
+    println("Iterative result:");
+    let res_i: int = fib_iterative(n);
+    println(res_i);
+    
+    if res_i == 55 {
+        println("Iterative correct.");
+    } else {
+        println("Iterative failed.");
+        return conflict();
+    }
+
+    println("Recursive result:");
+    let res_r: int = fib_recursive(n);
+    println(res_r);
+
+    if res_r == 55 {
+        println("Recursive correct. Success.");
+        return truth();
+    } else {
+        println("Recursive failed.");
+        return conflict();
+    }
+}
