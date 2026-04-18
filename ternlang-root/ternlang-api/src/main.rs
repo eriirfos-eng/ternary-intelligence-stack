@@ -324,6 +324,8 @@ async fn require_api_key(
         || path == "/stripe/webhook"
         || path == "/pricing"
         || path == "/studio"
+        || path == "/playground"
+        || path.starts_with("/playground/pkg/")
         || path == "/activate"
         || path == "/api/run"
         || path == "/api/github/activate"
