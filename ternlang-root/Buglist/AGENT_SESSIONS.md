@@ -1,3 +1,9 @@
+## 2026-04-18 — agentic session — 21 files
+Patterns implemented: consensus, pipeline, retry, router, aggregator, supervisor, broadcast, logger, gatekeeper, weighted_consensus, filter, transformer, mapper, validator, echo, majority_5, range_validator, float_threshold, string_validator, deliberator, scaler
+Open-core (public): 21 files
+Spawn/await patterns used: blocking await in stateless shim
+Notable multi-agent designs: Weighted consensus, Hierarchical supervisor, Multi-opinion deliberator
+
 # AGENT_SESSIONS.md — Ternlang Stdlib Session Log
 # Read this at the START of every session. Append your entry at the END.
 # Purpose: prevent category overlap across sessions, track breadth coverage.
@@ -599,3 +605,9 @@ Status: 50 files verified and committed. Build clean.
 - `in` is a reserved keyword.
 
 **Status:** 50 files verified and committed. Build clean.
+## 2026-04-18 — agentic session — 10 files
+Patterns implemented: consensus, pipeline, retry, router, aggregator, supervisor, broadcast, logger, gatekeeper, weighted_consensus
+Open-core (public): 10 files
+Spawn/await patterns used: blocking await in stateless shim
+Notable multi-agent designs: Weighted consensus, Hierarchical supervisor
+
