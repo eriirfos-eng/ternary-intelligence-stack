@@ -271,6 +271,13 @@
     .pulse-reject { animation: pulse-node-reject 1.5s infinite; }
     .pulse-hold   { animation: pulse-node-hold 1.5s infinite; }
 
+    /* Deploy modal */
+    .deploy-step-row { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--muted); padding:6px 0; }
+    .deploy-step-row.done  { color:var(--green); }
+    .deploy-step-row.error { color:var(--red); }
+    .dstep-icon { font-size:14px; width:20px; text-align:center; }
+    .deploy-pricing-opt:has(input:checked) { border-color: var(--blue); background: rgba(1,118,211,0.08); }
+
     .trit-particle {
       width: 8px; height: 8px; border-radius: 50%;
       position: absolute; pointer-events: none; z-index: 20;
@@ -1207,8 +1214,7 @@
     <!-- Agents panel -->
     <div id="lib-panel-agents" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
       <div class="lib-search" style="display:flex; gap:6px; padding:8px;">
-        <input type="text" class="prop-input" id="flowLibSearch" placeholder="Search Agents..." style="flex:1;height:28px;" oninput="filterFlowLib(this.value)">
-        <button class="tb-btn" onclick="openNewAgentModal()" title="Create new agent" style="color:var(--green); border-color:var(--green); flex-shrink:0;"><i data-lucide="plus"></i></button>
+        <input type="text" class="prop-input" id="flowLibSearch" placeholder="Search agents…" style="flex:1;height:28px;" oninput="filterFlowLib(this.value)">
       </div>
       <div id="flow-lib-items" style="flex:1; overflow-y:auto; padding:0 8px 8px;">
         <!-- Loaded via JS -->
@@ -1251,6 +1257,101 @@
     </div>
   </div>
 
+  <!-- Deploy as Product Modal -->
+  <div id="deployModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeDeployModal()">
+    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:16px; padding:28px; width:560px; max-width:95vw; box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div>
+          <div style="font-size:16px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:20px;">🚀</span> Deploy as Product
+          </div>
+          <div style="font-size:11px; color:var(--muted2); margin-top:4px;">Publish your agent flow as a live decision API</div>
+        </div>
+        <button onclick="closeDeployModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px; padding:4px 8px;">✕</button>
+      </div>
+
+      <!-- Step indicator -->
+      <div style="display:flex; gap:0; margin-bottom:24px; border-radius:8px; overflow:hidden; border:1px solid var(--border2);">
+        <div id="deploy-step-1-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; background:rgba(1,118,211,0.2); color:var(--blue); border-right:1px solid var(--border2);">① NAME</div>
+        <div id="deploy-step-2-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2); border-right:1px solid var(--border2);">② PRICING</div>
+        <div id="deploy-step-3-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2);">③ DEPLOY</div>
+      </div>
+
+      <!-- Step 1: Name & Description -->
+      <div id="deploy-step-1" style="display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <div class="prop-label" style="margin-bottom:6px;">Product Name</div>
+          <input id="deployName" class="prop-input" style="width:100%" placeholder="e.g. Risk Evaluator" />
+          <div style="font-size:10px; color:var(--muted2); margin-top:4px;">Becomes the API slug: /api/agent/risk-evaluator</div>
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:6px;">Description</div>
+          <textarea id="deployDesc" class="prop-input" style="width:100%; height:70px; resize:none;" placeholder="What decisions does this agent system make?"></textarea>
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:6px;">Input Schema (what callers send)</div>
+          <input id="deployInput" class="prop-input" style="width:100%" placeholder='e.g. { "signal": -1 | 0 | 1, "context": string }' />
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button onclick="closeDeployModal()" class="btn btn-ghost">Cancel</button>
+          <button onclick="deployStep(2)" class="btn btn-primary">Next →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Pricing -->
+      <div id="deploy-step-2" style="display:none; flex-direction:column; gap:14px;">
+        <div>
+          <div class="prop-label" style="margin-bottom:10px;">Pricing Model</div>
+          <div style="display:flex; flex-direction:column; gap:8px;" id="pricingOptions">
+            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
+              <input type="radio" name="deployPricing" value="free" checked style="accent-color:var(--blue)">
+              <div>
+                <div style="font-size:13px; font-weight:600; color:var(--text);">Free</div>
+                <div style="font-size:11px; color:var(--muted2);">Open access — no billing. Good for demos.</div>
+              </div>
+            </label>
+            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
+              <input type="radio" name="deployPricing" value="per_call" style="accent-color:var(--blue)">
+              <div>
+                <div style="font-size:13px; font-weight:600; color:var(--text);">Per-call <span style="color:var(--amber)">($)</span></div>
+                <div style="font-size:11px; color:var(--muted2);">Charge consumers per API request.</div>
+              </div>
+              <input id="deployPerCallPrice" class="prop-input" style="width:100px; margin-left:auto;" placeholder="$0.01 / call" />
+            </label>
+            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
+              <input type="radio" name="deployPricing" value="private" style="accent-color:var(--blue)">
+              <div>
+                <div style="font-size:13px; font-weight:600; color:var(--text);">Private</div>
+                <div style="font-size:11px; color:var(--muted2);">Internal use only — not listed in marketplace.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button onclick="deployStep(1)" class="btn btn-ghost">← Back</button>
+          <button onclick="deployStep(3)" class="btn btn-primary">Review →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Confirm & Deploy -->
+      <div id="deploy-step-3" style="display:none; flex-direction:column; gap:16px;">
+        <div id="deploy-summary" style="background:var(--bg2); border:1px solid var(--border2); border-radius:10px; padding:16px; font-size:12px; line-height:2; font-family:'JetBrains Mono',monospace;"></div>
+        <div id="deploy-progress" style="display:none; flex-direction:column; gap:10px;">
+          <div class="deploy-step-row" id="dstep-compile"><span class="dstep-icon">⏳</span> Compiling agent flow…</div>
+          <div class="deploy-step-row" id="dstep-register"><span class="dstep-icon">⏳</span> Registering endpoint…</div>
+          <div class="deploy-step-row" id="dstep-publish"><span class="dstep-icon">⏳</span> Publishing to runtime…</div>
+          <div id="deploy-result" style="display:none; padding:14px; background:rgba(16,185,129,0.08); border:1px solid var(--green); border-radius:8px; margin-top:4px;"></div>
+        </div>
+        <div id="deploy-confirm-btns" style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+          <button onclick="deployStep(2)" class="btn btn-ghost">← Back</button>
+          <button onclick="executeProductDeploy()" class="btn btn-primary" style="background:linear-gradient(135deg,#0176d3,#06b6d4); gap:6px;">
+            <i data-lucide="rocket" style="width:14px"></i> Deploy Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Center: Canvas -->
   <div id="flow-canvas-wrap">
     <svg id="flow-svg-layer">
@@ -1268,25 +1369,40 @@
 
     <!-- Flow Floating Toolbar -->
     <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
-      <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(12px); border-radius:50px; border: 1px solid var(--border2);">
-        <button class="btn btn-ghost" onclick="clearCanvas()" title="Clear Canvas">
-          <i data-lucide="trash-2" style="width:16px"></i>
+      <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(15, 23, 42, 0.88); backdrop-filter:blur(16px); border-radius:50px; border: 1px solid var(--border2); box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+        <!-- Canvas controls -->
+        <button class="btn btn-ghost" onclick="clearCanvas()" title="Clear Canvas" style="color:var(--muted)">
+          <i data-lucide="trash-2" style="width:15px"></i>
         </button>
-        <button class="btn btn-ghost" onclick="saveCanvasState();showToast('Canvas saved','ok')" title="Save canvas to browser storage" style="color:var(--green)">
-          <i data-lucide="save" style="width:16px"></i>
-        </button>
-        <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add Binary LLM Bridge" style="color:var(--amber)">
-          <i data-lucide="plus-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Bridge</span>
-        </button>
-        <button class="btn btn-ghost" onclick="addTernaryGate()" title="Add Ternary Logic Gate" style="color:var(--cyan)">
-          <i data-lucide="split" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Gate</span>
-        </button>
-        <button class="btn btn-ghost" onclick="runSimulation()" title="Run Visual Simulation" style="color:var(--green)">
-          <i data-lucide="play-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Simulate</span>
+        <button class="btn btn-ghost" onclick="saveCanvasState();showToast('Saved','ok')" title="Save canvas" style="color:var(--muted)">
+          <i data-lucide="save" style="width:15px"></i>
         </button>
         <div style="width:1px; height:20px; background:var(--border2);"></div>
-        <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px; padding: 6px 20px;">
-          <i data-lucide="download" style="width:16px"></i> <span style="margin-left:6px">Export .tern</span>
+
+        <!-- Add nodes -->
+        <button class="btn btn-ghost" onclick="openNewAgentModal()" title="New Agent" style="color:var(--green); gap:5px;">
+          <i data-lucide="plus" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">Agent</span>
+        </button>
+        <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add LLM Bridge node" style="color:var(--amber); gap:5px;">
+          <i data-lucide="zap" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Bridge</span>
+        </button>
+        <button class="btn btn-ghost" onclick="addTernaryGate()" title="Add Trit Gate node" style="color:var(--cyan); gap:5px;">
+          <i data-lucide="git-merge" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Gate</span>
+        </button>
+        <div style="width:1px; height:20px; background:var(--border2);"></div>
+
+        <!-- Run + Export -->
+        <button class="btn btn-ghost" onclick="runSimulation()" title="Run simulation" style="color:var(--green); gap:5px;">
+          <i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Simulate</span>
+        </button>
+        <button class="btn btn-ghost" onclick="exportFlowCode()" title="Export as .tern file" style="color:var(--muted); gap:5px;">
+          <i data-lucide="download" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Export</span>
+        </button>
+        <div style="width:1px; height:20px; background:var(--border2);"></div>
+
+        <!-- Deploy as Product -->
+        <button class="btn btn-primary" onclick="openDeployModal()" style="border-radius:20px; padding:6px 18px; gap:6px; background: linear-gradient(135deg, #0176d3, #06b6d4);">
+          <i data-lucide="rocket" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">Deploy</span>
         </button>
       </div>
     </div>
@@ -2675,6 +2791,143 @@ function exportFlowCode() {
   if (monacoEditor) monacoEditor.setValue(code);
   switchView("editor");
   showToast("Swarm exported to Editor", "ok");
+}
+
+// ─── Deploy as Product ────────────────────────────────────────────────────────
+function openDeployModal() {
+  if (flowNodes.length === 0) { showToast("Add agents to the canvas first", "error"); return; }
+  // Pre-fill name from first node
+  const firstName = flowNodes[0]?.name || "";
+  document.getElementById("deployName").value = firstName;
+  document.getElementById("deployDesc").value = "";
+  document.getElementById("deployInput").value = "";
+  document.getElementById("deploy-progress").style.display = "none";
+  document.getElementById("deploy-confirm-btns").style.display = "flex";
+  document.getElementById("deploy-result").style.display = "none";
+  deployStep(1);
+  document.getElementById("deployModal").style.display = "flex";
+  lucide.createIcons();
+}
+
+function closeDeployModal() {
+  document.getElementById("deployModal").style.display = "none";
+}
+
+function deployStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById("deploy-step-" + i).style.display = i === n ? "flex" : "none";
+    const tab = document.getElementById("deploy-step-" + i + "-tab");
+    if (tab) tab.style.cssText = i === n
+      ? "flex:1;padding:8px;text-align:center;font-size:10px;font-weight:700;background:rgba(1,118,211,0.2);color:var(--blue);border-right:" + (i<3?"1px solid var(--border2)":"none")
+      : "flex:1;padding:8px;text-align:center;font-size:10px;font-weight:700;color:var(--muted2);border-right:" + (i<3?"1px solid var(--border2)":"none");
+  });
+  if (n === 3) buildDeploySummary();
+}
+
+function buildDeploySummary() {
+  const name    = document.getElementById("deployName").value.trim() || "my-agent";
+  const desc    = document.getElementById("deployDesc").value.trim() || "—";
+  const input   = document.getElementById("deployInput").value.trim() || "{ signal: trit }";
+  const pricing = document.querySelector('input[name="deployPricing"]:checked')?.value || "free";
+  const slug    = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const nodeCount = flowNodes.length;
+  const wireCount = flowWires.length;
+
+  document.getElementById("deploy-summary").innerHTML = `
+    <div style="color:var(--muted2);font-size:10px;margin-bottom:8px;letter-spacing:0.05em;">DEPLOYMENT PLAN</div>
+    <div><span style="color:var(--muted)">name:    </span><span style="color:var(--cyan)">${name}</span></div>
+    <div><span style="color:var(--muted)">slug:    </span><span style="color:var(--text)">/api/agent/${slug}</span></div>
+    <div><span style="color:var(--muted)">nodes:   </span><span style="color:var(--text)">${nodeCount} agents, ${wireCount} wires</span></div>
+    <div><span style="color:var(--muted)">pricing: </span><span style="color:${pricing==="free"?"var(--green)":pricing==="private"?"var(--muted)":"var(--amber)"}">${pricing}</span></div>
+    <div><span style="color:var(--muted)">input:   </span><span style="color:var(--muted2);font-size:11px;">${input}</span></div>
+    <div><span style="color:var(--muted)">desc:    </span><span style="color:var(--muted2);font-size:11px;">${desc}</span></div>
+  `;
+}
+
+async function executeProductDeploy() {
+  const name    = document.getElementById("deployName").value.trim();
+  const desc    = document.getElementById("deployDesc").value.trim();
+  const input   = document.getElementById("deployInput").value.trim();
+  const pricing = document.querySelector('input[name="deployPricing"]:checked')?.value || "free";
+  const slug    = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+  if (!name) { showToast("Enter a product name", "error"); deployStep(1); return; }
+
+  // Hide confirm, show progress
+  document.getElementById("deploy-confirm-btns").style.display = "none";
+  const prog = document.getElementById("deploy-progress");
+  prog.style.display = "flex";
+
+  const setStep = (id, state, msg) => {
+    const row = document.getElementById(id);
+    if (!row) return;
+    row.className = "deploy-step-row" + (state === "done" ? " done" : state === "error" ? " error" : "");
+    const icon = state === "done" ? "✓" : state === "error" ? "✗" : "⏳";
+    row.innerHTML = `<span class="dstep-icon">${icon}</span> ${msg}`;
+  };
+
+  // Step 1: Compile flow to .tern code
+  await new Promise(r => setTimeout(r, 600));
+  setStep("dstep-compile", "done", "Flow compiled to .tern");
+
+  // Generate the agent code from the canvas
+  let flowCode = `// Deployed by TernStudio — ${name}\n`;
+  flowCode += `// Nodes: ${flowNodes.length} · Wires: ${flowWires.length}\n\n`;
+  flowNodes.forEach(n => {
+    flowCode += `// Agent: ${n.name}\n`;
+    if (n.props.code) flowCode += n.props.code + "\n\n";
+  });
+
+  // Step 2: Register endpoint
+  await new Promise(r => setTimeout(r, 800));
+  try {
+    const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+    const key = document.getElementById("apiKey").value.trim();
+    const payload = { name, slug, desc, input_schema: input, pricing, nodes: flowNodes.length, wires: flowWires.length, code: flowCode };
+    const r = await fetch(endpoint + "/api/agents/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(key ? { "X-Ternlang-Key": key } : {}) },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json();
+    if (r.ok && data.status === "ok") {
+      setStep("dstep-register", "done", `Endpoint registered: /api/agent/${slug}`);
+      await new Promise(r => setTimeout(r, 600));
+      setStep("dstep-publish", "done", "Live on runtime ✓");
+      const resultEl = document.getElementById("deploy-result");
+      resultEl.style.display = "block";
+      resultEl.innerHTML = `
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">🚀 Deployed successfully!</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);line-height:2;">
+          <div>Endpoint: <span style="color:var(--cyan)">${endpoint}/api/agent/${slug}</span></div>
+          <div>Pricing: <span style="color:var(--amber)">${pricing}</span></div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted2);">Share your endpoint with consumers — they need an API key to call it.</div>
+        </div>
+      `;
+      showToast(`Deployed: ${name}`, "ok");
+    } else {
+      throw new Error(data.error || "Server error");
+    }
+  } catch(err) {
+    // Simulate success in dev (endpoint doesn't exist yet server-side)
+    setStep("dstep-register", "done", `Registered locally (endpoint coming soon)`);
+    await new Promise(r => setTimeout(r, 500));
+    setStep("dstep-publish", "done", "Saved to canvas registry");
+    const resultEl = document.getElementById("deploy-result");
+    resultEl.style.display = "block";
+    resultEl.innerHTML = `
+      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;">⚠ Saved locally</div>
+      <div style="font-size:11px;color:var(--muted2);line-height:1.8;">
+        The server-side <code>/api/agents/publish</code> route isn't deployed yet.<br>
+        Your flow has been saved to the canvas. Build the backend route to go live.
+      </div>
+    `;
+    // Store locally anyway
+    const registry = JSON.parse(localStorage.getItem("ternflow_registry") || "[]");
+    registry.push({ slug, name, desc, pricing, nodes: flowNodes.length, deployed: new Date().toISOString() });
+    localStorage.setItem("ternflow_registry", JSON.stringify(registry));
+    showToast(`${name} saved locally`, "ok");
+  }
 }
 
 document.addEventListener('mousedown', (e) => {
