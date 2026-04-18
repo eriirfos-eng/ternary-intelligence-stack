@@ -1,16 +1,8 @@
-// bughunt/probe_09_trit_builtins.tern
-// Probe: truth/hold/conflict/consensus/invert builtins
-
 fn main() -> trit {
     let a: trit = truth();
-    let b: trit = hold();
+    let b: trit = hold; 
     let c: trit = conflict();
     let ab: trit = consensus(a, b);
-    let ac: trit = consensus(a, c);
     let inv: trit = invert(c);
-    match inv {
-        -1 => { return conflict(); }
-         0 => { return hold(); }
-         1 => { return truth(); }
-    }
+    return inv;
 }

@@ -1,6 +1,13 @@
 // stdlib/bughunt/retest_float_binary_ops.tern
-// Demonstrates: Re-testing float literals/expressions in binary operations.
+// Demonstrates: Re-testing float literals/expressions in binary operations with epsilon.
 // Tier: 1
+
+fn float_near(a: float, b: float, epsilon: float) -> trit {
+    let diff: float = a - b;
+    if diff < 0.0 { diff = 0.0 - diff; }
+    if diff <= epsilon { return 1; }
+    return -1;
+}
 
 fn main() -> trit {
     let a: float = 0.1;
@@ -13,14 +20,15 @@ fn main() -> trit {
     
     // Test case 2: Division and comparison
     let expected_d: float = 0.3333333;
+    let eps: float = 0.0001;
 
-    // If parsing and execution succeed, we check the results.
-    // If parsing fails, the test will error out.
-    // Note: Direct float equality checks can be unreliable due to precision.
-    // This test primarily checks if the expressions parse and run.
-    if sum_ab == c && d == expected_d { 
+    // Use epsilon comparison for float results
+    let sum_ok: trit = float_near(sum_ab, c, eps);
+    let div_ok: trit = float_near(d, expected_d, eps);
+
+    if sum_ok == 1 && div_ok == 1 { 
         return truth();
     } else {
-        return reject; // Indicates potential precision issues or comparison bugs.
+        return reject; // Indicates potential parsing issue or severe logic bug
     }
 }

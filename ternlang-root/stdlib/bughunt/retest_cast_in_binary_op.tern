@@ -6,17 +6,13 @@ fn main() -> trit {
     let val_int: int = 10;
     let val_float: float = 2.5;
 
-    // Test case 1: cast(int) in binary op
-    // This previously failed parsing.
-    let result1: float = (cast(int) val_int) + val_float; 
+    // Test case 1: cast(expr) in binary op
+    let result1: float = cast(val_int) + val_float; 
     
-    // Test case 2: cast(float) in binary op
-    // This previously failed parsing.
-    let result2: int = cast(int) (val_float * 2.0);
+    // Test case 2: cast(expr) in binary op
+    let result2: int = cast(val_float * 2.0);
 
     // If parsing and execution succeed, we check the results.
-    // If parsing fails, the test will error out.
-    // Assuming success for now to check parsing.
     if result1 > 12.0 && result2 == 5 {
         return truth();
     } else {

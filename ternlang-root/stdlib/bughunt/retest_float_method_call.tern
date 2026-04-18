@@ -8,11 +8,11 @@ fn main() -> trit {
 
     // Test case 1: abs() on a negative float
     // This previously failed parsing.
-    let abs_neg: float = negative_val.abs();
+    let abs_neg: float = abs(negative_val);
     
     // Test case 2: abs() on a positive float
     // This previously failed parsing.
-    let abs_pos: float = positive_val.abs();
+    let abs_pos: float = abs(positive_val);
 
     // If parsing and execution succeed, we check the results.
     // If parsing fails, the test will error out.

@@ -3,6 +3,6 @@
 // Tier: 1
 
 fn main() -> trit {
-    let empty_tensor = trittensor<0>;
+    let empty_tensor: trittensor<0>;
     return truth();
 }
