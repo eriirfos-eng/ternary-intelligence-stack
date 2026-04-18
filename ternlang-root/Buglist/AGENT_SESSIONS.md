@@ -619,3 +619,35 @@ Premium agents: 3 files (federated_consensus, constitutional_monitor, swarm_opti
 Spawn/await patterns used: nested spawn, cross-agent message passing
 Notable multi-agent designs: Constitutional Veto Chain, Swarm Iterative Convergence, Federated nodeid tracking
 Findings: Agents are currently stateless across await calls; persistence achieved via file I/O or multi-step loops within a single handle call.
+
+## 2026-04-18 — stdlib session — 20 files
+Dirs covered: stdlib/lib, stdlib/std, stdlib/classical, stdlib/showcase, stdlib/tutorials
+Files written:
+1. stdlib/lib/queue.tern — fixed-size FIFO circular buffer [tier1]
+2. stdlib/lib/stack.tern — fixed-size LIFO buffer [tier1]
+3. stdlib/std/complex.tern — float complex arithmetic [tier1]
+4. stdlib/classical/bubble_sort_ternary.tern — classical sort on trittensor [tier1]
+5. stdlib/classical/euclidean_algorithm.tern — GCD of two integers [tier1]
+6. stdlib/showcase/fibonacci_showcase.tern — iterative and recursive fibonacci [tier1]
+7. stdlib/showcase/cellular_automata.tern — 1D automata with string display [tier1]
+8. stdlib/lib/priority_queue.tern — basic priority removal on trittensor [tier1]
+9. stdlib/std/matrix_ops.tern — addition and scalar multiplication on float tensors [tier1]
+10. stdlib/lib/linked_list.tern — index-based list simulation [tier1]
+11. stdlib/lib/validation_helpers.tern — range check and clamping [tier1]
+12. stdlib/lib/retry_logic.tern — retry loop for unreliable operations [tier1]
+13. stdlib/lib/event_emitter.tern — event dispatch pattern [tier1]
+14. stdlib/std/stats_trit.tern — frequency and majority on trit tensors [tier1]
+15. stdlib/lib/bit_ops.tern — bit-wise logic simulation [tier1]
+16. stdlib/lib/string_builder.tern — concatenation-based builder pattern [tier1]
+17. stdlib/tutorials/08_error_propagation.tern — ternary logic and consensus [tier1]
+18. stdlib/lib/set_trit.tern — simple trit set logic [tier1]
+19. stdlib/lib/lru_cache.tern — index-based LRU logic simulation [tier1]
+20. stdlib/lib/ring_buffer.tern — circular buffer for trits [tier1]
+
+Compiler/VM findings:
+- [RESERVED] 'push' and 'pop' are VM built-in stubs; renaming to stack_push/stack_pop fixed conflicts.
+- [PARSER] Unassigned function calls in main (e.g. 'handle_event(101, 0);') trigger 'ExpectedToken("Semicolon", "LParen")' error. Always assign result or fix parser.
+- [INITIALIZATION] 'int[N] = [...]' literals can fail or saturate elements incorrectly. Element-by-element assignment is verified stable.
+- [STABLE] String concatenation 's = s + "+"' and float[N] parameters are fully functional.
+
+Do not work in these categories next session: lib, std, classical, showcase, tutorials.
