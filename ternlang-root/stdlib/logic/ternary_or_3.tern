@@ -1,0 +1,31 @@
+// stdlib/logic/ternary_or_3.tern
+// Demonstrates: A 3-input Kleene OR gate (maximum of three trits).
+// Tier: 1 - Open Core
+
+fn ternary_or_3(a: trit, b: trit, c: trit) -> trit {
+    return a || b || c;
+}
+
+fn main() -> trit {
+    println("3-input Kleene OR Showcase:");
+    
+    println("OR(-1, -1, -1):");
+    let r1: trit = ternary_or_3(-1, -1, -1);
+    println(r1);
+    if r1 == -1 { println("OK."); } else { return conflict(); }
+    
+    println("OR(-1, 0, -1):");
+    let r2: trit = ternary_or_3(-1, 0, -1);
+    println(r2);
+    if r2 == 0 { println("OK."); } else { return conflict(); }
+    
+    println("OR(-1, 0, 1):");
+    let r3: trit = ternary_or_3(-1, 0, 1);
+    println(r3);
+    if r3 == 1 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
