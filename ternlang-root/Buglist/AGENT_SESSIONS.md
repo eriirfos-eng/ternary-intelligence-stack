@@ -685,3 +685,28 @@ Compiler/VM findings:
 - [TYPES] 'trit[]' in parameters sometimes triggers 'ExpectedToken("RBracket", "Int(N)")' when a fixed-size tensor is expected; switching to 'trittensor<N>' in signatures resolves this for fixed-width library functions.
 
 Do not work in these categories next session: lib, std, classical, showcase, tutorials, errors.
+
+## 2026-04-18 20:30 — stdlib session — 13 files (Batch 3)
+Dirs covered: stdlib/logic, stdlib/ternary, stdlib/testing, stdlib/bench, stdlib/lib
+Files written:
+44. stdlib/logic/ternary_xnor.tern — equality gate for trits [tier1]
+45. stdlib/logic/ternary_and_3.tern — 3-input Kleene AND gate [tier1]
+46. stdlib/logic/ternary_or_3.tern — 3-input Kleene OR gate [tier1]
+47. stdlib/ternary/ternary_abs_diff.tern — absolute difference for trits [tier1]
+48. stdlib/ternary/ternary_max_3.tern — maximum of three trits [tier1]
+49. stdlib/ternary/ternary_min_3.tern — minimum of three trits [tier1]
+50. stdlib/testing/tensor_equality_test.tern — check equality of trit tensors [tier1]
+51. stdlib/testing/float_comparison_test.tern — epsilon-based float near check [tier1]
+52. stdlib/bench/match_latency_test.tern — functional match loop benchmark [tier1]
+53. stdlib/bench/tensor_access_bench.tern — functional tensor read/write benchmark [tier1]
+54. stdlib/lib/set_float.tern — epsilon-based float set logic [tier1]
+55. stdlib/lib/map_trit_int.tern — key-value mapping from trits [tier1]
+56. stdlib/lib/trit_string_conv.tern — convert trit sequence to string [tier1]
+57. stdlib/lib/trit_bool_conv.tern — convert trits to boolean ints [tier1]
+
+Compiler/VM findings:
+- [MATH] Integer addition with trits 'sum = sum + cast(trit)' is stable, but for multi-operand logical gates, using an intermediate sum helper function with explicit match arms is safer than chained casting in complex expressions.
+- [TYPES] Fixed-size tensor parameters 'trittensor<N>' remain the most reliable way to pass arrays between functions.
+- [BENCH] Loop-based functional benchmarks are useful for verifying VM stability under iteration stress.
+
+Do not work in these categories next session: lib, std, classical, showcase, tutorials, errors, logic, ternary, testing, bench.
