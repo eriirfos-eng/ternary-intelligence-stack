@@ -366,13 +366,25 @@ For inquiries: `enterprise@ternlang.com`
 
 **API key:** [ternlang.com/pricing](https://ternlang.com/pricing) · Tier 2 (€24/month): 10,000 calls/month, calendar-month reset
 
-### MCP Server — v0.3.0 (19 tools)
+### MCP Server — v1.1.0 (30 tools — all free)
 
-The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, and any HTTP MCP client.
+The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, Cursor, Gemini CLI, and any HTTP MCP client.
 
-**10 free tools (no key):** `trit_decide` · `trit_consensus` · `trit_eval` · `ternlang_run` · `quantize_weights` · `sparse_benchmark` · `moe_orchestrate` · `moe_deliberate` · `trit_action_gate` · `trit_upgrade`
+**All 30 tools are free — no API key required.** An optional API key (`X-Ternlang-Key`) upgrades memory to server-side persistent storage (instead of stateless blob mode) and unlocks the REST API with rate-limited quota.
 
-**9 premium tools (X-Ternlang-Key):** `trit_mem_write` · `trit_mem_read` · `trit_mem_consolidate` · `trit_debate` · `trit_uncertainty_map` · `trit_calibrate` · `trit_translate` · `trit_eco_check` · `trit_audit`
+**Core trit primitives:** `trit_decide` · `trit_vector` · `trit_consensus` · `trit_eval` · `trit_action_gate`
+
+**BET VM:** `ternlang_run` · `trit_translate`
+
+**MoE-13 orchestration:** `moe_orchestrate` · `moe_deliberate` · `moe_full` · `trit_debate` · `trit_calibrate` · `trit_uncertainty_map`
+
+**3-layer memory:** `trit_mem_write` · `trit_mem_read` · `trit_mem_consolidate` · `trit_mem_stats` · `trit_mem_compress`
+
+**Context & planning:** `trit_compress` · `trit_triage` · `trit_plan` · `trit_factcheck`
+
+**EcoCore + Audit:** `trit_eco_check` · `trit_audit` · `audit_ternary_logic`
+
+**ML primitives:** `quantize_weights` · `sparse_benchmark` · `tsql_join` · `get_industrial_standards` · `trit_upgrade`
 
 **New in v0.3.0 — Phase 11A & Phase 13 tools:**
 
@@ -397,7 +409,9 @@ The `trit_mem_*` tools implement a server-side three-layer memory system modelle
 
 **Ternary attention on read:** `score = key_overlap×0.35 + value_overlap×0.55 + trit_bias×0.10`
 
-Memory is stored server-side keyed to your API key — no state blob to pass between calls.
+**Without API key (stateless blob mode):** `trit_mem_write` returns a `state` blob — pass it back in subsequent calls. All computation still works; data just lives client-side.
+
+**With API key (server-side mode):** Memory is stored server-side keyed to your API key — no state blob to pass between calls. Persistent across sessions.
 
 ```json
 {
@@ -570,7 +584,7 @@ The premium repo includes all paid-tier directories: `agents/`, `ml/`, `nn/`, `n
 ## Licensing Tiers
 
 ### Tier 2 — Pro Standard
-For developers and startups building AI agents with uncertainty-aware reasoning. Includes 10,000 API calls/month, `@sparseskip` inference acceleration, server-side 3-layer memory, and MoE-13 consolidation. **€99/month** · [Subscribe](https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608)
+For developers and startups building AI agents. **All 30 MCP tools are free** for every tier. Tier 2 adds: REST API (10,000 calls/month), server-side persistent 3-layer memory, SSE streaming, and production SLA. **€99/month** · [Subscribe](https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608)
 
 ### Tier 3 — Industrial
 Production-grade deployment for teams requiring EU AI Act-compliant safety gating, audit trails, and high-volume inference. Includes 50,000 API calls/month, QNN & SEC modules, T-HAL silicon bindings, and TernAudit log access. **€349/month** · [Subscribe](https://buy.stripe.com/eVq7sNfle0bl86937a7N609)
@@ -586,15 +600,13 @@ On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimite
 │  Free to use, modify, and distribute under LGPL.                │
 ├─────────────────────────────────────────────────────────────────┤
 │  TIER 2 — Pro Standard (BSL-1.1)                  €99/mo        │
-│  ★ 19 MCP tools (full stack)                                    │
-│  ✓ 10,000 API calls/month · @sparseskip inference               │
-│  ✓ Server-side 3-layer memory · MoE-13 consolidation            │
-│  Auto-converts to Apache-2.0 on 2030-04-03.                     │
+│  ★ 30 MCP tools (all free) + REST API (10,000 calls/month)     │
+│  ✓ Server-side persistent 3-layer memory                        │
+│  ✓ SSE streaming · MoE-13 consolidation · production SLA        │
 ├─────────────────────────────────────────────────────────────────┤
 │  TIER 3 — Industrial (BSL-1.1)                  €349/mo         │
 │  ✓ 50,000 API calls/month · QNN & SEC modules                   │
 │  ✓ T-HAL silicon bindings · TernAudit · Full premium stdlib     │
-│  Auto-converts to Apache-2.0 on 2030-04-03.                     │
 ├─────────────────────────────────────────────────────────────────┤
 │  TIER 4 — Enterprise (Proprietary)      from €2,500/mo          │
 │  On-premise BET-VM clusters · Custom FPGA · Enterprise SLA      │

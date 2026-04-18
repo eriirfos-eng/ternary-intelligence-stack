@@ -144,8 +144,6 @@ After purchasing: visit **[ternlang.com/activate](https://ternlang.com/activate)
 | Industrial (BSL-1.1) | €349/month | 50,000 API calls, QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
 | Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + full Tier 4 stdlib |
 
-BSL-1.1 crates auto-convert to Apache-2.0 on 2030-04-03.
-
 Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
 
 ---
