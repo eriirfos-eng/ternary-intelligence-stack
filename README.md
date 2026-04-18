@@ -41,6 +41,9 @@ Ternlang provides a machine-readable path to human escalation instead of a force
 
 → **[ROADMAP.md](ternlang-root/ROADMAP.md)** (Phases 1–18, session log, priority matrix)
 
+
+→ **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)**  
+
 ---
 
 ## Team
