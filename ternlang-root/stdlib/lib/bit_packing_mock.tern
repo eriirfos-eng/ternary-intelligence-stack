@@ -1,0 +1,43 @@
+// stdlib/lib/bit_packing_mock.tern
+// Demonstrates: Mock simulation of bit-packing trits into bit pairs.
+// Tier: 1 - Open Core
+
+fn pack_trit_to_bits(t: trit) -> int {
+    // Mock: 1 -> 10 (2), 0 -> 11 (3), -1 -> 01 (1)
+    match t {
+        1 => { return 2; }
+        0 => { return 3; }
+       -1 => { return 1; }
+    }
+}
+
+fn unpack_bits_to_trit(b: int) -> trit {
+    if b == 2 { return 1; }
+    if b == 3 { return 0; }
+    if b == 1 { return -1; }
+    return 0; // Fallback
+}
+
+fn main() -> trit {
+    println("Bit-Packing Mock Showcase:");
+    
+    println("Packing Affirm (1):");
+    let p1: int = pack_trit_to_bits(1);
+    println(p1);
+    if p1 == 2 { println("OK."); } else { return conflict(); }
+    
+    println("Unpacking 1 (Reject):");
+    let u1: trit = unpack_bits_to_trit(1);
+    println(u1);
+    if u1 == -1 { println("OK."); } else { return conflict(); }
+    
+    println("Unpacking 3 (Tend):");
+    let u2: trit = unpack_bits_to_trit(3);
+    println(u2);
+    if u2 == 0 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
