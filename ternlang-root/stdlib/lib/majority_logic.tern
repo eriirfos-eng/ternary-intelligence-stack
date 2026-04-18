@@ -1,0 +1,42 @@
+// stdlib/lib/majority_logic.tern
+// Demonstrates: Majority logic gates and reduction for trits.
+// Tier: 1 - Open Core
+
+fn sum_trits(a: trit, b: trit, c: trit) -> int {
+    let s: int = 0;
+    match a { 1 => { s = s + 1; } -1 => { s = s - 1; } _ => {} }
+    match b { 1 => { s = s + 1; } -1 => { s = s - 1; } _ => {} }
+    match c { 1 => { s = s + 1; } -1 => { s = s - 1; } _ => {} }
+    return s;
+}
+
+fn majority_gate_3(a: trit, b: trit, c: trit) -> trit {
+    let s: int = sum_trits(a, b, c);
+    if s >= 1 { return 1; }
+    if s <= -1 { return -1; }
+    return 0;
+}
+
+fn main() -> trit {
+    println("Majority Logic (3-input gate):");
+    
+    println("MAJ(1, 1, -1):");
+    let m1: trit = majority_gate_3(1, 1, -1);
+    println(m1);
+    if m1 == 1 { println("OK."); } else { return conflict(); }
+    
+    println("MAJ(-1, 0, -1):");
+    let m2: trit = majority_gate_3(-1, 0, -1);
+    println(m2);
+    if m2 == -1 { println("OK."); } else { return conflict(); }
+    
+    println("MAJ(1, 0, -1):");
+    let m3: trit = majority_gate_3(1, 0, -1);
+    println(m3);
+    if m3 == 0 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
