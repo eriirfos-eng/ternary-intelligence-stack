@@ -1,0 +1,37 @@
+// stdlib/lib/map_trit_int.tern
+// Demonstrates: A simple key-value mapping from trits to integers.
+// Tier: 1 - Open Core
+
+fn map_get(keys: trittensor<3>, values: int[3], target_key: trit) -> int {
+    let i: int = 0;
+    while i < 3 {
+        if keys[i] == target_key { return values[i]; }
+        i = i + 1;
+    }
+    return -999; // Not found
+}
+
+fn main() -> trit {
+    let keys: trittensor<3> = [1, 0, -1];
+    let values: int[3];
+    values[0] = 100;
+    values[1] = 0;
+    values[2] = -100;
+    
+    println("Trit-to-Int Map Showcase:");
+    
+    println("Value for Affirm (1):");
+    let v1: int = map_get(keys, values, 1);
+    println(v1);
+    if v1 == 100 { println("OK."); } else { return conflict(); }
+    
+    println("Value for Reject (-1):");
+    let v2: int = map_get(keys, values, -1);
+    println(v2);
+    if v2 == -100 { 
+        println("OK. Success."); 
+        return truth(); 
+    }
+    
+    return conflict();
+}
