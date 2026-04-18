@@ -6,6 +6,7 @@ on:
     paths:
       - 'ternlang-root/ternlang-web/**'
       - 'ternlang-root/ternlang-api/**'
+      - 'ternlang-root/ternlang-studio/**'
       - 'ternlang-root/Dockerfile'
       - 'ternlang-root/fly.toml'
       - 'ternlang-root/playground/**'

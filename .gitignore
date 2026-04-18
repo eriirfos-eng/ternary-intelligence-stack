@@ -27,6 +27,7 @@ venv/
 # Secrets / env
 .env
 *.env
+ternlang-root/ternlang-studio/.ternstudio-local.js
 legacy_archive/
 
 # TIS logs
