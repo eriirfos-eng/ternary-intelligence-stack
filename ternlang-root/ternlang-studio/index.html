@@ -524,12 +524,20 @@
     #editorTabsBar::-webkit-scrollbar { height: 0; }
     #editorTabs { display: flex; height: 100%; }
     .tab {
-      padding: 0 14px; height: 100%; display: flex; align-items: center;
+      padding: 0 10px 0 14px; height: 100%; display: flex; align-items: center; gap: 6px;
       font-size: 11px; color: var(--muted); cursor: pointer; white-space: nowrap;
       border-right: 1px solid var(--border); transition: all 0.1s;
     }
     .tab:hover { color: var(--text); background: var(--bg2); }
     .tab.active { color: var(--text); background: var(--bg); border-bottom: 2px solid var(--cyan); }
+    .tab-close {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 3px; border: none;
+      background: none; color: var(--muted2); cursor: pointer; font-size: 11px;
+      opacity: 0; transition: opacity 0.1s, background 0.1s; padding: 0; flex-shrink: 0;
+    }
+    .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
+    .tab-close:hover { background: var(--bg3); color: var(--text); }
     .tabs-new-btn {
       width: 34px; height: 100%; display: flex; align-items: center; justify-content: center;
       background: none; border: none; border-right: 1px solid var(--border);
@@ -980,8 +988,12 @@
     <div class="sidebar-panel active" id="panel-explorer">
       <div class="sidebar-header">
         Explorer
-        <button class="sidebar-new-btn" onclick="newFile()" title="New file">+</button>
+        <div style="display:flex;gap:2px;">
+          <button class="sidebar-new-btn" onclick="triggerImportFile()" title="Import local file">↑</button>
+          <button class="sidebar-new-btn" onclick="newFile()" title="New scratch file">+</button>
+        </div>
       </div>
+      <input type="file" id="localFileInput" accept=".tern,.json,.txt" style="display:none" onchange="importLocalFile(event)">
       <div id="file-tree"></div>
     </div>
 
@@ -1182,6 +1194,12 @@
     <div id="flow-canvas">
       <!-- Nodes injected via JS -->
     </div>
+    <!-- Empty state hint -->
+    <div id="canvas-hint" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:8px;opacity:0.4;">
+      <div style="font-size:32px;">⊕</div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted);">Drag agents from the library or click + to create</div>
+      <div style="font-size:11px;color:var(--muted2);">Connect agents by dragging from the right port ● to the left port ● of another</div>
+    </div>
 
     <!-- Flow Floating Toolbar -->
     <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
@@ -1316,9 +1334,9 @@
         <h1 style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:-0.02em;">TernWiki</h1>
         <p style="font-size:14px; color:var(--muted)">Technical Reference for Balanced Ternary Intelligence</p>
         <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
-          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/Language-Reference.md" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="book" style="width:13px;height:13px;"></i> Language Reference</a>
-          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/QUICKSTART.md" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="zap" style="width:13px;height:13px;"></i> Quickstart</a>
-          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/stdlib" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="library" style="width:13px;height:13px;"></i> Browse Stdlib</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/examples" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="book" style="width:13px;height:13px;"></i> Examples</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/QUICKSTART.md" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="zap" style="width:13px;height:13px;"></i> Quickstart</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="library" style="width:13px;height:13px;"></i> Browse Stdlib</a>
           <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="github" style="width:13px;height:13px;"></i> GitHub</a>
         </div>
       </div>
@@ -1613,6 +1631,8 @@ function renderFlow() {
   updatePropertyPanel();
   renderFlowLibrary();
   updateWires();
+  const hint = document.getElementById("canvas-hint");
+  if (hint) hint.style.display = "flex";
 }
 
 let _flowLibPaths = []; // cache for search + new-agent picker
@@ -1634,7 +1654,7 @@ async function renderFlowLibrary() {
     // Fallback to GitHub if empty
     if (paths.length === 0) {
       try {
-        const gr = await fetch("https://api.github.com/repos/eriirfos-eng/ternary-intelligence-stack/contents/stdlib/agents");
+        const gr = await fetch(GH_API_BASE + "stdlib/agents");
         if (gr.ok) {
           const gfiles = await gr.json();
           if (Array.isArray(gfiles)) paths = gfiles.filter(f => f.name.endsWith(".tern")).map(f => `stdlib/agents/${f.name}`);
@@ -1702,7 +1722,7 @@ async function loadNewAgentTemplate() {
   const path = document.getElementById("newAgentLibPick").value;
   if (!path) { document.getElementById("newAgentCode").value = 'fn main() -> trit {\n    return affirm;\n}'; return; }
   try {
-    const r = await fetch(GH_RAW + path);
+    const r = await fetch(GH_TERNROOT + path);
     if (r.ok) document.getElementById("newAgentCode").value = await r.text();
   } catch(e) {}
 }
@@ -1773,7 +1793,9 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   });
 
   canvas.appendChild(node);
-  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7 } });
+  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7, max_trits: 512, routing: "affirm→next", code: "" } });
+  const hint = document.getElementById("canvas-hint");
+  if (hint) hint.style.display = "none";
   lucide.createIcons();
 }
 
@@ -1794,35 +1816,88 @@ function deleteNode(id) {
     selectedNodeId = null;
     updatePropertyPanel();
   }
+  const hint = document.getElementById("canvas-hint");
+  if (hint) hint.style.display = flowNodes.length === 0 ? "flex" : "none";
   updateWires();
 }
 
 function updatePropertyPanel() {
   const body = document.getElementById("prop-body");
   if (!selectedNodeId) {
-    body.innerHTML = `<div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px;">Select a node to configure</div>`;
+    body.innerHTML = `
+      <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px; padding:0 12px; line-height:1.8;">
+        Select a node to configure<br>
+        <span style="font-size:10px; color:var(--muted2);">Drag output port → input port to wire agents</span>
+      </div>`;
     return;
   }
-  
+
   const node = flowNodes.find(n => n.id === selectedNodeId);
+  const temp = node.props.temperature ?? 0.7;
+  const maxTrits = node.props.max_trits ?? 512;
+  const routing = node.props.routing ?? "affirm→next";
+  const code = (node.props.code || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
   body.innerHTML = `
     <div class="prop-group">
       <label class="prop-label">Node Name</label>
-      <input type="text" class="prop-input" value="${node.name}" onchange="updateNodeProp('name', this.value)">
+      <input type="text" class="prop-input" value="${node.name}" oninput="updateNodeProp('name', this.value)">
     </div>
     <div class="prop-group">
       <label class="prop-label">System Instructions</label>
-      <textarea class="prop-input" style="height:80px; resize:none;" onchange="updateNodeProp('system_prompt', this.value)">${node.props.system_prompt || ""}</textarea>
+      <textarea class="prop-input" style="height:70px; resize:vertical;" oninput="updateNodeProp('system_prompt', this.value)">${node.props.system_prompt || ""}</textarea>
     </div>
     <div class="prop-group">
-      <label class="prop-label">Trit Sensitivity</label>
-      <input type="range" min="0" max="1" step="0.1" value="${node.props.temperature}" onchange="updateNodeProp('temperature', this.value)">
+      <label class="prop-label" style="display:flex;justify-content:space-between;">
+        <span>Trit Sensitivity (Temperature)</span>
+        <span id="tempVal" style="color:var(--cyan)">${temp}</span>
+      </label>
+      <input type="range" min="0" max="2" step="0.05" value="${temp}" style="width:100%"
+        oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(2);updateNodeProp('temperature', parseFloat(this.value))">
+    </div>
+    <div class="prop-group">
+      <label class="prop-label" style="display:flex;justify-content:space-between;">
+        <span>Max Output Trits</span>
+        <span style="color:var(--amber)">${maxTrits}</span>
+      </label>
+      <input type="number" class="prop-input" min="1" max="4096" value="${maxTrits}" style="width:100%"
+        oninput="updateNodeProp('max_trits', parseInt(this.value))">
+    </div>
+    <div class="prop-group">
+      <label class="prop-label">Output Routing Rule</label>
+      <select class="prop-input" style="width:100%" onchange="updateNodeProp('routing', this.value)">
+        <option value="affirm→next" ${routing==="affirm→next"?"selected":""}>affirm → pass to next</option>
+        <option value="tend→next" ${routing==="tend→next"?"selected":""}>tend → pass to next</option>
+        <option value="all→next" ${routing==="all→next"?"selected":""}>all trits → pass to next</option>
+        <option value="affirm→branch" ${routing==="affirm→branch"?"selected":""}>affirm → branch A, else B</option>
+        <option value="reject→stop" ${routing==="reject→stop"?"selected":""}>reject → halt flow</option>
+      </select>
+    </div>
+    <div class="prop-group">
+      <label class="prop-label">Agent Code (.tern)</label>
+      <textarea class="prop-input" style="height:110px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:10px;"
+        oninput="updateNodeProp('code', this.value)">${code}</textarea>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:4px;">
+      <button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="openAgentInEditor()">Open in Editor</button>
+      <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red);" onclick="deleteNode('${selectedNodeId}')">Remove</button>
     </div>
   `;
 }
 
+function openAgentInEditor() {
+  const node = flowNodes.find(n => n.id === selectedNodeId);
+  if (!node) return;
+  const path = `flow/${node.name.replace(/\s+/g,'_')}.tern`;
+  const code = node.props.code || `fn main() -> trit {\n    // ${node.name}\n    return affirm;\n}`;
+  fileBuffers[path] = code;
+  loadToEditor(path, code);
+  switchView('editor');
+}
+
 function updateNodeProp(key, val) {
   const node = flowNodes.find(n => n.id === selectedNodeId);
+  if (!node) return;
   if (key === 'name') {
     node.name = val;
     const titleEl = document.querySelector(`#${node.id} .fn-body div`);
@@ -2067,6 +2142,8 @@ document.addEventListener('mouseup', (e) => {
 
 // ─── GitHub raw content base (Tier 1 public fallback) ────────────────────────
 const GH_RAW = "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/";
+const GH_TERNROOT = GH_RAW + "ternlang-root/";
+const GH_API_BASE = "https://api.github.com/repos/eriirfos-eng/ternary-intelligence-stack/contents/ternlang-root/";
 // Static Tier 1 directory list (public stdlib dirs) — used when no API key
 const TIER1_DIRS = ["core","ternary","std","showcase","bughunt","testing","bench","benchmarks","classical","errors","tutorials","lib"];
 
@@ -2074,11 +2151,11 @@ async function loadGithubTree() {
   const tree = document.getElementById("file-tree");
   tree.innerHTML = '<div style="padding:10px; color:var(--muted); font-size:11px;">Loading from GitHub…</div>';
   try {
-    // Use GitHub API to list all files in each Tier 1 dir
     const allFiles = [];
+    // Load stdlib Tier 1 dirs
     for (const dir of TIER1_DIRS) {
       try {
-        const r = await fetch(`https://api.github.com/repos/eriirfos-eng/ternary-intelligence-stack/contents/stdlib/${dir}`);
+        const r = await fetch(GH_API_BASE + `stdlib/${dir}`);
         if (!r.ok) continue;
         const files = await r.json();
         if (Array.isArray(files)) {
@@ -2086,6 +2163,17 @@ async function loadGithubTree() {
         }
       } catch(e) {}
     }
+    // Load examples
+    try {
+      const r = await fetch(GH_API_BASE + "examples");
+      if (r.ok) {
+        const files = await r.json();
+        if (Array.isArray(files)) {
+          files.filter(f => f.name.endsWith(".tern")).forEach(f => allFiles.push(`examples/${f.name}`));
+        }
+      }
+    } catch(e) {}
+
     if (allFiles.length === 0) { showNoKeyMessage(tree); return; }
     renderFileTree(tree, allFiles, true);
   } catch(e) { showNoKeyMessage(tree); }
@@ -2197,10 +2285,44 @@ function renderTabs() {
   tabs.forEach(({ name, path }) => {
     const tab = document.createElement("div");
     tab.className = "tab" + (path === activeFile ? " active" : "");
-    tab.textContent = name;
+    tab.innerHTML = `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">${name}</span><button class="tab-close" onclick="closeTab('${CSS.escape(path)}',event)" title="Close">✕</button>`;
     tab.onclick = () => switchToTab(path);
     container.appendChild(tab);
   });
+}
+
+function closeTab(path, e) {
+  if (e) { e.stopPropagation(); }
+  const idx = tabs.findIndex(t => t.path === path);
+  if (idx === -1) return;
+  tabs.splice(idx, 1);
+  if (tabs.length === 0) { newFile(); return; }
+  if (activeFile === path) {
+    const next = tabs[Math.min(idx, tabs.length - 1)];
+    switchToTab(next.path);
+  } else {
+    renderTabs();
+  }
+}
+
+function triggerImportFile() {
+  document.getElementById("localFileInput").click();
+}
+
+function importLocalFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    const path = "local/" + file.name;
+    fileBuffers[path] = content;
+    loadToEditor(path, content);
+    switchView('editor');
+    showToast(`Imported ${file.name}`, "ok");
+  };
+  reader.readAsText(file);
+  event.target.value = "";
 }
 
 function switchToTab(path) {
@@ -2224,7 +2346,7 @@ async function openFile(path, useGithub = false) {
   const treeEl = document.querySelector(`.tree-file[data-path="${CSS.escape(path)}"]`);
   if (useGithub || (treeEl && treeEl.dataset.github === "1")) {
     try {
-      const r = await fetch(GH_RAW + path);
+      const r = await fetch(GH_TERNROOT + path);
       if (r.ok) {
         const content = await r.text();
         fileBuffers[path] = content;
