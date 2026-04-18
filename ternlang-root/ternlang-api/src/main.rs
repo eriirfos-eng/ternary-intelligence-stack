@@ -4017,19 +4017,70 @@ async fn run_program(headers: HeaderMap, Json(body): Json<Value>) -> Response {
             // Fallback: statement-by-statement parse
             let mut p2 = Parser::new(&code);
             loop {
-                match p2.parse_stmt() {
-                    Ok(stmt) => emitter.emit_stmt(&stmt),
+                let peek = match p2.peek_token() {
+                    Ok(t) => t,
                     Err(e) => {
                         let msg = format!("{:?}", e);
                         if msg.contains("EOF") { break; }
                         return (StatusCode::OK, Json(json!({
                             "status": "error",
                             "error": format!("parse error: {}", msg),
-                            "output": [],
-                            "registers": [],
-                            "bytecode_bytes": 0,
-                            "instructions": 0,
+                            "output": [], "registers": [], "bytecode_bytes": 0, "instructions": 0,
                         }))).into_response();
+                    }
+                };
+
+                match peek {
+                    Token::Fn => {
+                        match p2.parse_function() {
+                            Ok(f) => emitter.emit_function(&f),
+                            Err(e) => return (StatusCode::OK, Json(json!({
+                                "status": "error",
+                                "error": format!("parse error in fn: {:?}", e),
+                                "output": [], "registers": [], "bytecode_bytes": 0, "instructions": 0,
+                            }))).into_response(),
+                        }
+                    }
+                    Token::Agent => {
+                        match p2.parse_agent_def() {
+                            Ok(a) => {
+                                // For simplicity in fallback, we just emit methods. 
+                                // Proper agent registration usually needs emit_program.
+                                for m in a.methods { emitter.emit_function(&m); }
+                            }
+                            Err(e) => return (StatusCode::OK, Json(json!({
+                                "status": "error",
+                                "error": format!("parse error in agent: {:?}", e),
+                                "output": [], "registers": [], "bytecode_bytes": 0, "instructions": 0,
+                            }))).into_response(),
+                        }
+                    }
+                    Token::Struct => {
+                        match p2.parse_struct_def() {
+                            Ok(s) => {
+                                let names: Vec<String> = s.fields.iter().map(|(n, _)| n.clone()).collect();
+                                emitter.struct_layouts.insert(s.name, names);
+                            }
+                            Err(e) => return (StatusCode::OK, Json(json!({
+                                "status": "error",
+                                "error": format!("parse error in struct: {:?}", e),
+                                "output": [], "registers": [], "bytecode_bytes": 0, "instructions": 0,
+                            }))).into_response(),
+                        }
+                    }
+                    _ => {
+                        match p2.parse_stmt() {
+                            Ok(stmt) => emitter.emit_stmt(&stmt),
+                            Err(e) => {
+                                let msg = format!("{:?}", e);
+                                if msg.contains("EOF") { break; }
+                                return (StatusCode::OK, Json(json!({
+                                    "status": "error",
+                                    "error": format!("parse error: {}", msg),
+                                    "output": [], "registers": [], "bytecode_bytes": 0, "instructions": 0,
+                                }))).into_response();
+                            }
+                        }
                     }
                 }
             }
