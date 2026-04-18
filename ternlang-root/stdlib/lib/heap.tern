@@ -1,0 +1,51 @@
+// stdlib/lib/heap.tern
+// Demonstrates: A simple binary max-heap implementation on a trittensor.
+// Tier: 1 - Open Core
+
+fn heap_push(heap: trittensor<10>, count: int, val: trit) -> int {
+    if count >= 10 { return -1; }
+    
+    let curr: int = count;
+    heap[curr] = val;
+    
+    while curr > 0 {
+        let parent: int = (curr - 1) / 2;
+        if heap[curr] > heap[parent] {
+            // Swap
+            let temp: trit = heap[curr];
+            heap[curr] = heap[parent];
+            heap[parent] = temp;
+            curr = parent;
+        } else {
+            return count + 1;
+        }
+    }
+    return count + 1;
+}
+
+fn main() -> trit {
+    let heap: trittensor<10> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let count: int = 0;
+    
+    println("Pushing elements into max-heap: 0, -1, 1, 0, 1");
+    count = heap_push(heap, count, 0);
+    count = heap_push(heap, count, -1);
+    count = heap_push(heap, count, 1);
+    count = heap_push(heap, count, 0);
+    count = heap_push(heap, count, 1);
+    
+    println("Heap root (should be 1):");
+    match heap[0] {
+        1 => { println("Affirm (1) - OK"); }
+        0 => { println("Tend (0)"); }
+       -1 => { println("Reject (-1)"); }
+    }
+    
+    if heap[0] == 1 {
+        println("Heap property maintained at root. Success.");
+        return truth();
+    }
+    
+    println("Heap root incorrect.");
+    return conflict();
+}
