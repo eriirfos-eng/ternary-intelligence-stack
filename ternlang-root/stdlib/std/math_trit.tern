@@ -1,0 +1,48 @@
+// stdlib/std/math_trit.tern
+// Demonstrates: Mathematical functions operating on individual trits.
+// Tier: 1 - Open Core
+
+fn trit_abs(a: trit) -> trit {
+    if a == -1 { return 1; }
+    return a;
+}
+
+fn trit_neg(a: trit) -> trit {
+    match a {
+        1 => { return -1; }
+        0 => { return 0; }
+       -1 => { return 1; }
+    }
+}
+
+fn trit_sign(a: trit) -> trit {
+    // Already normalized, but as an example
+    return a;
+}
+
+fn main() -> trit {
+    println("Trit Math Showcase:");
+    
+    println("Abs(-1):");
+    let a1: trit = trit_abs(-1);
+    println(a1);
+    
+    println("Neg(1):");
+    let n1: trit = trit_neg(1);
+    println(n1);
+    
+    println("Neg(-1):");
+    let n2: trit = trit_neg(-1);
+    println(n2);
+    
+    if a1 == 1 {
+        if n1 == -1 {
+            if n2 == 1 {
+                println("Trit math verified. Success.");
+                return truth();
+            }
+        }
+    }
+    
+    return conflict();
+}
