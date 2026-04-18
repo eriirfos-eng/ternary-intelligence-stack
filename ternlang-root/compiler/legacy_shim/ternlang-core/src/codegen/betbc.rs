@@ -10,7 +10,7 @@ pub struct BytecodeEmitter {
     break_patches: Vec<usize>,
     continue_patches: Vec<usize>,
     next_reg: usize,
-    struct_layouts: std::collections::HashMap<String, Vec<String>>,
+    pub struct_layouts: std::collections::HashMap<String, Vec<String>>,
     agent_type_ids: std::collections::HashMap<String, u16>,
     agent_handlers: Vec<(u16, u16)>,
     /// Snapshots of the local symbol table for each function, keyed by function name.

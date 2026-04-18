@@ -99,7 +99,7 @@ impl<'a> Parser<'a> {
         Ok(Program { imports, import_specs, structs, agents, functions })
     }
 
-    fn parse_agent_def(&mut self) -> Result<AgentDef, ParseError> {
+    pub fn parse_agent_def(&mut self) -> Result<AgentDef, ParseError> {
         self.expect(Token::Agent)?;
         let name = match self.next_token()? {
             Token::Ident(n) => n,
@@ -114,7 +114,7 @@ impl<'a> Parser<'a> {
         Ok(AgentDef { name, methods })
     }
 
-    fn parse_struct_def(&mut self) -> Result<StructDef, ParseError> {
+    pub fn parse_struct_def(&mut self) -> Result<StructDef, ParseError> {
         self.expect(Token::Struct)?;
         let name = match self.next_token()? {
             Token::Ident(n) => n,
@@ -186,7 +186,7 @@ impl<'a> Parser<'a> {
             .ok_or(ParseError::UnexpectedToken("EOF".into()))
     }
 
-    fn peek_token(&mut self) -> Result<Token, ParseError> {
+    pub fn peek_token(&mut self) -> Result<Token, ParseError> {
         let mut cloned = self.lex.clone();
         cloned.next()
             .map(|res| res.map_err(|_| ParseError::UnexpectedToken("Invalid token".into())))

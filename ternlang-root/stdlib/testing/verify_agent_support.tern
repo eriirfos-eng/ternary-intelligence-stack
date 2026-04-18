@@ -1,0 +1,20 @@
+// stdlib/testing/verify_agent_support.tern
+// Demonstrates: agent support check
+// Tier: 1
+
+agent EchoAgent {
+    fn tick(input: trit) -> trit {
+        match input {
+            -1 => { return -1; }
+             0 => { return 0;  }
+             1 => { return 1;  }
+        }
+    }
+}
+
+fn main() -> trit {
+    let a: agentref = spawn EchoAgent;
+    send a 1;
+    let res: trit = await a;
+    return res;
+}

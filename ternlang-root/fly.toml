@@ -11,6 +11,7 @@ primary_region = 'fra'
 
 [env]
   PORT = '8080'
+  STDLIB_PATH = '/stdlib'
 
 [http_service]
   internal_port = 8080

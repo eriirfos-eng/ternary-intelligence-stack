@@ -66,6 +66,7 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /build/target/release/ternlang-api /usr/local/bin/ternlang-api
+COPY --from=builder /build/stdlib /stdlib
 
 # Fly.io injects PORT; our app reads it (default 3731)
 ENV PORT=8080

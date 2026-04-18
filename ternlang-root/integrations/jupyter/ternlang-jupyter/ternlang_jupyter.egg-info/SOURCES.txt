@@ -1,0 +1,12 @@
+pyproject.toml
+ternlang_jupyter/__init__.py
+ternlang_jupyter/__main__.py
+ternlang_jupyter/install.py
+ternlang_jupyter/kernel.py
+ternlang_jupyter.egg-info/PKG-INFO
+ternlang_jupyter.egg-info/SOURCES.txt
+ternlang_jupyter.egg-info/dependency_links.txt
+ternlang_jupyter.egg-info/entry_points.txt
+ternlang_jupyter.egg-info/requires.txt
+ternlang_jupyter.egg-info/top_level.txt
+ternlang_jupyter/../kernelspec/kernel.json
