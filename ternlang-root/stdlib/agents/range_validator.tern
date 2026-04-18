@@ -1,0 +1,28 @@
+// stdlib/agents/range_validator.tern
+// Demonstrates: Range Validator agent pattern (Int input)
+// Tier: 1
+
+agent RangeValidator {
+    fn handle(val: int) -> trit {
+        // Validates that an integer is within the range [0, 10]
+        if val >= 0 && val <= 10 {
+            return affirm;
+        }
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let v: agentref = spawn RangeValidator;
+    
+    send v 5;
+    let r1: trit = await v;
+    
+    send v 20;
+    let r2: trit = await v;
+    
+    if r1 == affirm && r2 == reject {
+        return affirm;
+    }
+    return reject;
+}
