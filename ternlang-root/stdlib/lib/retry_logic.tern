@@ -1,0 +1,43 @@
+// stdlib/lib/retry_logic.tern
+// Demonstrates: A simple retry mechanism for unreliable operations.
+// Tier: 1 - Open Core
+
+fn unreliable_op(attempts: int) -> trit {
+    // Fails twice, succeeds on 3rd attempt (attempts index 2)
+    if attempts < 2 {
+        return -1;
+    }
+    return 1;
+}
+
+fn retry_op(max_retries: int) -> trit {
+    let attempts: int = 0;
+    while attempts < max_retries {
+        print("Attempt: ");
+        println(attempts);
+        
+        let res: trit = unreliable_op(attempts);
+        if res == 1 {
+            println("Operation succeeded!");
+            return 1;
+        }
+        
+        println("Operation failed, retrying...");
+        attempts = attempts + 1;
+    }
+    println("Max retries reached.");
+    return -1;
+}
+
+fn main() -> trit {
+    println("Starting retry test (max 5 retries):");
+    let success: trit = retry_op(5);
+    
+    if success == 1 {
+        println("Retry test passed. Success.");
+        return truth();
+    } else {
+        println("Retry test failed.");
+        return conflict();
+    }
+}
