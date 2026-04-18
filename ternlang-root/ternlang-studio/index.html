@@ -746,52 +746,44 @@
 
 <!-- ═══ TOPBAR ═══════════════════════════════════════════════════════════════ -->
 <div id="topbar">
-  <div class="tb-logo">
-    <span class="logo-mark">⊕</span>
-    <div>
-      <div>TernStudio</div>
-      <div class="logo-sub">v0.3.0</div>
+  <div class="tb-left">
+    <div class="tb-logo" onclick="switchView('dashboard')">
+      <span>⊕ TIS</span> <span class="logo-v">v1.0</span>
+    </div>
+    <div class="tb-nav">
+      <button class="nav-tab active" id="vt-dashboard" onclick="switchView('dashboard')"><i data-lucide="layout-dashboard"></i> Dash</button>
+      <button class="nav-tab"        id="vt-editor"    onclick="switchView('editor')"><i data-lucide="code-2"></i> Editor</button>
+      <button class="nav-tab"        id="vt-flow"      onclick="switchView('flow')"><i data-lucide="brain-circuit"></i> Lab</button>
+      <button class="nav-tab"        id="vt-docs"      onclick="switchView('docs')"><i data-lucide="book-open"></i> Docs</button>
+      <button class="nav-tab"        id="vt-debugger"  onclick="switchView('debugger')"><i data-lucide="bug"></i> Tracer</button>
+      <button class="nav-tab"        id="vt-modules"   onclick="switchView('modules')"><i data-lucide="package"></i> Registry</button>
+      <button class="nav-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings"></i> Config</button>
     </div>
   </div>
 
-  <div style="padding: 0 8px; display: flex; gap: 6px; align-items: center; border-right: 1px solid var(--border); height: 100%;">
-    <button class="tb-btn" onclick="shareCode()" title="Share code via URL">⬆ Share</button>
-    <button class="tb-btn" onclick="downloadCode()" title="Download as .tern file">↓ Download</button>
-  </div>
-
-  <div style="padding: 0 8px; display: flex; gap: 6px; align-items: center; border-right: 1px solid var(--border); height: 100%;">
-    <button class="tb-btn run-btn" id="runBtn" onclick="runCode()">
-      <span>▶ Run</span><span class="kbd">Ctrl+↵</span>
+  <div class="tb-center">
+    <button class="btn-hero run" id="runBtn" onclick="runCode()">
+      <i data-lucide="play"></i> <span>RUN</span>
     </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="shareCode()" title="Share Swarm"><i data-lucide="share-2"></i></button>
+    <button class="tb-btn" onclick="downloadCode()" title="Download .tern"><i data-lucide="download"></i></button>
   </div>
 
-  <div class="tb-spacer"></div>
-
-  <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme" style="margin-right: 4px;">●</button>
-
-  <div class="tb-key-wrap">
-    <label for="apiKey">API Key</label>
-    <input class="tb-key-input" id="apiKey" type="password" placeholder="tern_…" autocomplete="off" />
-    <span id="tierBadge" class="tb-badge badge-free">Tier 1</span>
-  </div>
-
-  <div style="padding: 0 8px; height: 100%; display: flex; align-items: center;">
-    <button class="tb-btn upskill-btn" id="topbarUpskillBtn" onclick="openUpskillModal()">⬆ Upskill</button>
-  </div>
-
-  <div style="padding: 0 10px; height: 100%; display: flex; align-items: center; border-left: 1px solid var(--border);">
+  <div class="tb-right">
+    <div class="tb-status-wrap">
+      <div class="status-pill"><span class="dot" id="vmDot"></span> <span id="vmStatusLabel">System</span></div>
+      <div id="tierBadge" class="tier-badge">Tier 1</div>
+    </div>
+    <button class="btn btn-hero secondary" style="color:var(--amber); border-color:var(--amber)" onclick="openUpskillModal()">Upskill</button>
+    <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Theme">●</button>
     <input type="hidden" id="apiEndpoint" value="https://ternlang.com" />
-    <span id="vmStatus" class="status-pill status-idle">● Idle</span>
+    <input type="password" id="apiKey" style="display:none;" />
   </div>
 </div>
 
-<!-- ═══ VIEW BAR ══════════════════════════════════════════════════════════════ -->
-<div id="viewbar">
-  <button class="view-tab active" id="vt-dashboard" onclick="switchView('dashboard')"><i data-lucide="layout-dashboard" style="width:14px"></i> Dashboard</button>
-  <button class="view-tab"        id="vt-editor"    onclick="switchView('editor')"><i data-lucide="code-2" style="width:14px"></i> Editor</button>
-  <button class="view-tab"        id="vt-flow"      onclick="switchView('flow')"><i data-lucide="brain-circuit" style="width:14px"></i> Flow</button>
-  <button class="view-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings" style="width:14px"></i> Settings</button>
-</div>
+<!-- ═══ HIDING OLD VIEWBAR ════════════════════════════════════════════════════ -->
+<div id="viewbar" style="display:none"></div>
 
 <!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
 <div class="view active" id="view-dashboard">
@@ -825,6 +817,9 @@
           <div class="usage-meta" id="dashUsageMeta" style="font-size:10px">Enter API key to see quota</div>
         </div>
         <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
+        <button class="dash-quick-btn" style="margin-top: 16px; border-color: var(--amber); color: var(--amber); justify-content: center;" onclick="openUpskillModal()">
+          <i data-lucide="arrow-up-circle"></i> <span>Upskill Plan</span>
+        </button>
       </div>
 
       <!-- Ternary Playground (REPL) -->
@@ -874,14 +869,18 @@
       <!-- Session Stats -->
       <div class="dash-card">
         <div class="dash-card-title"><i data-lucide="bar-chart-3"></i> Session Stats</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
           <div>
             <div class="dash-stat" id="statRuns">0</div>
-            <div class="dash-stat-sub">Total Runs</div>
+            <div class="dash-stat-sub">Runs</div>
           </div>
           <div>
             <div class="dash-stat" id="statOk" style="color: var(--green);">0</div>
-            <div class="dash-stat-sub">Success</div>
+            <div class="dash-stat-sub">Ok</div>
+          </div>
+          <div>
+            <div class="dash-stat" id="statErr" style="color: var(--red);">0</div>
+            <div class="dash-stat-sub">Err</div>
           </div>
         </div>
       </div>
@@ -1233,6 +1232,53 @@
     </div>
   </div>
 
+</div>
+
+<!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
+<div class="view" id="view-docs">
+  <div class="empty-state">
+    <i data-lucide="book-open"></i>
+    <div>
+      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">TernWiki</div>
+      <div style="font-size:13px;">The definitive guide to balanced ternary systems.</div>
+    </div>
+    <div style="max-width:600px; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div class="card" style="text-align:left">
+        <div style="font-weight:600; font-size:12px; margin-bottom:4px; color:var(--cyan)">Syntax Guide</div>
+        <div style="font-size:11px; color:var(--muted)">Master fn, agent, and match statements.</div>
+      </div>
+      <div class="card" style="text-align:left">
+        <div style="font-weight:600; font-size:12px; margin-bottom:4px; color:var(--amber)">Truth Tables</div>
+        <div style="font-size:11px; color:var(--muted)">Balanced ternary logic gates (-1, 0, +1).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEBUGGER VIEW (Tracer) ═══════════════════════════════════════════════ -->
+<div class="view" id="view-debugger">
+  <div class="empty-state">
+    <i data-lucide="bug"></i>
+    <div>
+      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">Execution Tracer</div>
+      <div style="font-size:13px;">Step-through debugging and register monitoring.</div>
+    </div>
+    <button class="btn btn-primary" onclick="switchView('editor')" style="margin-top:10px;">Run code to start trace</button>
+  </div>
+</div>
+
+<!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
+<div class="view" id="view-modules">
+  <div class="empty-state">
+    <i data-lucide="package"></i>
+    <div>
+      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">TernPkg Registry</div>
+      <div style="font-size:13px;">Discover and manage ternary standard library modules.</div>
+    </div>
+    <div style="width:100%; max-width:500px; margin-top:20px;">
+       <input type="text" class="prop-input" placeholder="Search math, safety, hardware..." style="width:100%">
+    </div>
+  </div>
 </div>
 
 <!-- ═══ STATUSBAR ════════════════════════════════════════════════════════════ -->
@@ -1623,9 +1669,13 @@ let sessionRuns = 0, sessionOk = 0, sessionErr = 0;
 // ─── View switching ───────────────────────────────────────────────────────────
 function switchView(name) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
-  document.getElementById("view-" + name).classList.add("active");
-  document.getElementById("vt-" + name).classList.add("active");
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+  
+  const viewEl = document.getElementById("view-" + name);
+  const tabEl = document.getElementById("vt-" + name);
+  
+  if (viewEl) viewEl.classList.add("active");
+  if (tabEl) tabEl.classList.add("active");
   if (name === "editor" && monacoEditor) {
     setTimeout(() => monacoEditor.layout(), 50);
   }
