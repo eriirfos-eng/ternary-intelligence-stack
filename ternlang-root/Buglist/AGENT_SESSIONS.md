@@ -651,3 +651,37 @@ Compiler/VM findings:
 - [STABLE] String concatenation 's = s + "+"' and float[N] parameters are fully functional.
 
 Do not work in these categories next session: lib, std, classical, showcase, tutorials.
+
+## 2026-04-18 19:30 — stdlib session — 30 files (Batch 2)
+Dirs covered: stdlib/lib, stdlib/std, stdlib/errors
+Files written:
+21. stdlib/lib/trie.tern — simple prefix tree for trit sequences [tier1]
+22. stdlib/lib/heap.tern — simple binary max-heap on trittensor [tier1]
+23. stdlib/errors/error_logger.tern — string-based error formatting [tier1]
+24. stdlib/lib/bloom_filter.tern — simple trit membership check [tier1]
+25. stdlib/std/math_trit.tern — basic mathematical ops on trits [tier1]
+26. stdlib/std/int_utils.tern — common integer utility functions [tier1]
+27. stdlib/lib/set_int.tern — simple integer set logic simulation [tier1]
+28. stdlib/lib/sort_utils.tern — common sorting and ordering utilities [tier1]
+29. stdlib/std/fs_utils.tern — mock filesystem utilities [tier1]
+30. stdlib/lib/memoization_stub.tern — recursive pattern with tensor cache [tier1]
+31. stdlib/std/math_extended.tern — factorial, power, and prime check [tier1]
+32. stdlib/lib/stats_int.tern — sum, mean, and variance for int arrays [tier1]
+33. stdlib/lib/tensor_math.tern — min, max, and all reductions [tier1]
+34. stdlib/lib/data_stream.tern — filter and transform trit sequence [tier1]
+35. stdlib/lib/checksum.tern — basic ternary checksum sum [tier1]
+36. stdlib/lib/majority_logic.tern — 3-input trit majority gate [tier1]
+37. stdlib/std/complex_utils.tern — modulus and conjugate for complex floats [tier1]
+38. stdlib/lib/tensor_stats_extended.tern — mode and mock entropy for trits [tier1]
+39. stdlib/lib/array_search.tern — linear search for trits and ints [tier1]
+40. stdlib/lib/bit_packing_mock.tern — mock simulation of trit-to-bit mapping [tier1]
+41. stdlib/lib/trit_vector_math.tern — sum and dot product for trits [tier1]
+42. stdlib/lib/trit_matrix_math.tern — consensus-based matrix addition [tier1]
+43. stdlib/lib/trit_tensor_ops.tern — fill and copy for trit tensors [tier1]
+
+Compiler/VM findings:
+- [OPERATORS] Ternary logical AND/OR use '&&' and '||' tokens in the stable release.
+- [CASTING] cast(trit) to int/float requires careful handling; sum-based logic with match or consensus is often more robust for gates.
+- [TYPES] 'trit[]' in parameters sometimes triggers 'ExpectedToken("RBracket", "Int(N)")' when a fixed-size tensor is expected; switching to 'trittensor<N>' in signatures resolves this for fixed-width library functions.
+
+Do not work in these categories next session: lib, std, classical, showcase, tutorials, errors.
