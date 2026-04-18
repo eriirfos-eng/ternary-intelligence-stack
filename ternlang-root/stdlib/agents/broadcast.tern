@@ -1,0 +1,41 @@
+// stdlib/agents/broadcast.tern
+// Demonstrates: Broadcast agent pattern (one-to-many)
+// Tier: 1
+
+agent Subscriber {
+    fn handle(msg: trit) -> trit {
+        // Subscriber logic
+        return affirm;
+    }
+}
+
+agent Broadcast {
+    fn handle(msg: trit) -> trit {
+        let s1: agentref = spawn Subscriber;
+        let s2: agentref = spawn Subscriber;
+        let s3: agentref = spawn Subscriber;
+
+        // Broadcast the message to all subscribers
+        send s1 msg;
+        send s2 msg;
+        send s3 msg;
+
+        // Synchronization point: await all to ensure delivery
+        await s1;
+        await s2;
+        await s3;
+
+        return affirm;
+    }
+}
+
+fn main() -> trit {
+    let b: agentref = spawn Broadcast;
+    send b affirm;
+    let res: trit = await b;
+    
+    match res {
+        affirm => { return affirm; }
+        _      => { return reject; }
+    }
+}
