@@ -1357,7 +1357,7 @@ async fn mcp_server_card() -> Json<Value> {
                 "apiKey": {
                     "type": "string",
                     "title": "Ternlang API Key (optional — Tier 2 €99/mo · Tier 3 €349/mo)",
-                    "description": "Core 10 MCP tools are free with no key. Premium key unlocks 10 additional tools: server-side three-layer memory with ternary attention, ternary context compression, full MoE-13 deliberation, ternary planning/triage/factcheck, and 10k REST API calls/month. Get a key at https://ternlang.com/pricing"
+                    "description": "All 30 MCP tools are free — no key needed. An API key upgrades memory to server-side persistent storage and unlocks the REST API (10k–50k calls/month), SSE streaming, and production SLA. Get a key at https://ternlang.com/pricing"
                 }
             },
             "required": []
@@ -1367,14 +1367,13 @@ async fn mcp_server_card() -> Json<Value> {
             "quantize_weights", "sparse_benchmark", "moe_orchestrate", "moe_deliberate",
             "trit_action_gate", "trit_debate", "trit_uncertainty_map", "trit_calibrate",
             "trit_translate", "trit_eco_check", "trit_audit", "audit_ternary_logic",
-            "tsql_join", "get_industrial_standards"
-        ],
-        "premium_tools": [
+            "tsql_join", "get_industrial_standards", "trit_upgrade",
             "trit_compress", "trit_triage", "trit_plan", "trit_factcheck",
             "moe_full", "trit_mem_write", "trit_mem_read", "trit_mem_consolidate",
             "trit_mem_stats", "trit_mem_compress"
         ],
-        "highlight": "Three-layer memory (working/session/core) with ternary attention + MoE-13 consolidation — the first MCP server with stateful AI memory backed by balanced ternary logic"
+        "premium_tools": [],
+        "highlight": "30 tools, all free. 3-layer memory (working/session/core) with ternary attention + MoE-13 consolidation. API key adds persistent server-side storage and REST API access."
     }))
 }
 
@@ -1388,10 +1387,10 @@ async fn mcp_info() -> Json<Value> {
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
         "usage":       "POST JSON-RPC 2.0 — methods: initialize, tools/list, tools/call",
-        "tools":         25,
-        "free_tools":    15,
-        "premium_tools": 10,
-        "auth":        "free: no key required | Tier 2 €99/mo (10k/mo) | Tier 3 €349/mo (50k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
+        "tools":         30,
+        "free_tools":    30,
+        "premium_tools": 0,
+        "auth":        "all MCP tools free — no key required | upgrade for REST API: Tier 2 €99/mo (10k/mo) | Tier 3 €349/mo (50k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
         "highlight":   "server-side 3-layer memory (working/session/core) + ternary attention + MoE-13 deliberation + ternary compression",
         "upgrade":     "https://ternlang.com/pricing",
     }))
@@ -1418,11 +1417,9 @@ struct McpRpcRequest {
     params:  Option<Value>,
 }
 
-const MCP_PREMIUM_TOOLS: &[&str] = &[
-    "trit_compress", "trit_triage", "trit_plan", "trit_factcheck",
-    "moe_full", "trit_mem_write", "trit_mem_read", "trit_mem_consolidate",
-    "trit_mem_stats", "trit_mem_compress",
-];
+// All 30 MCP tools are free — no API key required.
+// Premium upsell is via the REST API (rate limits, SSE streaming, SLA).
+const MCP_PREMIUM_TOOLS: &[&str] = &[];
 
 async fn mcp_handler(
     State(state): State<Arc<AppState>>,
@@ -1454,12 +1451,12 @@ async fn mcp_handler(
                     "configSchema": {
                         "type": "object",
                         "title": "Ternlang MCP Configuration",
-                        "description": "19 core tools are fully free — no key needed. Optional API key unlocks server-side 3-layer memory, ternary compression, and higher call volumes.",
+                        "description": "All 30 MCP tools are free — no key needed. Optional API key unlocks server-side persistent memory, REST API access, SSE streaming, and production SLA.",
                         "properties": {
                             "apiKey": {
                                 "type":  "string",
                                 "title": "API Key (optional — Pro/Industrial/Enterprise)",
-                                "description": "Unlocks trit_mem_write/read/consolidate, trit_compress, trit_plan, trit_factcheck, and 10k–50k+ API calls/month. Get a key at https://ternlang.com/activate.",
+                                "description": "Optional. Unlocks server-side persistent 3-layer memory (instead of stateless blob mode), REST API calls (10k–50k+/month), SSE streaming, and production SLA. Get a key at https://ternlang.com/activate.",
                                 "x-smithery-secret": true
                             }
                         },
@@ -1470,7 +1467,7 @@ async fn mcp_handler(
                     "name":        "ternlang-mcp",
                     "displayName": "Ternary Intelligence Stack",
                     "version":     "1.0.0",
-                    "description": "Turns binary AI agents into ternary decision engines. 30 tools: 19 free (community tier, no key required) + 11 premium (Tier 2/3/4 — trit_mem, trit_compress, trit_triage, trit_plan, trit_factcheck, moe_full). First-class hold (trit=0): not null — an active routing instruction to gather more evidence. MoE-13 orchestration, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM. Built by RFI-IRFOS, Graz, Austria. v1.0.0",
+                    "description": "Turns binary AI agents into ternary decision engines. 30 tools, all free. First-class hold (trit=0): not null — an active routing instruction to gather more evidence before committing. MoE-13 orchestration, 3-layer memory, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM execution. Built by RFI-IRFOS, Graz, Austria. v1.0.0",
                     "homepage":    "https://ternlang.com",
                     "icon":        "https://ternlang.com/favicon.ico",
                     "author": {
@@ -1935,11 +1932,13 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
         ],
 
         "quick_start": "Add header X-Ternlang-Key: <your-key> to any POST https://ternlang.com/api/* request.",
-        "premium_mcp_tools": [
-            "trit_compress", "trit_triage", "trit_plan", "trit_factcheck",
-            "moe_full", "trit_mem_write", "trit_mem_read", "trit_mem_consolidate",
+        "all_mcp_tools_free": true,
+        "api_key_unlocks": [
+            "Server-side persistent 3-layer memory (instead of stateless blob mode)",
+            "REST API access with rate-limited quota (10k–50k calls/month)",
+            "SSE streaming — watch MoE deliberation in real time",
+            "Production SLA suitable for user-facing applications",
         ],
-        "premium_mcp_note": "Premium MCP tools require X-Ternlang-Key header directly in your MCP calls. Same key as the REST API.",
     }))
 }
 
@@ -2516,7 +2515,15 @@ fn mcp_trit_mem_consolidate(params: &Value, api_key: &str, mem: &MemStore) -> Re
 // ─── Premium tool: trit_mem_stats ────────────────────────────────────────────
 
 fn mcp_trit_mem_stats(api_key: &str, mem: &MemStore) -> Result<Value, String> {
-    if api_key.is_empty() { return Err("trit_mem_stats requires a premium API key".into()); }
+    // No key → return empty stats (stateless blob mode has no server-side store to inspect)
+    if api_key.is_empty() {
+        let empty = json!({"count":0,"expired":0,"live":0,"trit_dist":{"affirm":0,"tend":0,"reject":0},"oldest_secs":0,"newest_secs":0});
+        return Ok(json!({
+            "working": empty.clone(), "session": empty.clone(), "core": empty.clone(),
+            "total_entries": {"working":0,"session":0,"core":0},
+            "note": "No API key — running in stateless blob mode. Pass the 'state' blob returned by trit_mem_write to maintain memory across calls. Upgrade to Tier 2 for persistent server-side storage.",
+        }));
+    }
     let state = mem.read().unwrap().get(api_key).cloned().unwrap_or_default();
     let now   = mem_now();
 
@@ -2569,14 +2576,13 @@ fn mcp_trit_mem_stats(api_key: &str, mem: &MemStore) -> Result<Value, String> {
 // if `drop_reject` is set, and reports the byte savings.
 
 fn mcp_trit_mem_compress(params: &Value, api_key: &str, mem: &MemStore) -> Result<Value, String> {
-    if api_key.is_empty() { return Err("trit_mem_compress requires a premium API key".into()); }
     let layer = params["layer"].as_str().ok_or("layer must be 'working', 'session', or 'core'")?;
     if !["working","session","core"].contains(&layer) {
         return Err(format!("invalid layer '{}'", layer));
     }
     let drop_reject = params["drop_reject"].as_bool().unwrap_or(false);
 
-    let mut state = mem.read().unwrap().get(api_key).cloned().unwrap_or_default();
+    let mut state = mem_load(api_key, mem, params);
     let entries: Vec<Value> = state.get(layer).and_then(|v| v.as_array()).cloned().unwrap_or_default();
 
     let mut original_bytes: usize = 0;
@@ -2602,7 +2608,9 @@ fn mcp_trit_mem_compress(params: &Value, api_key: &str, mem: &MemStore) -> Resul
     }
 
     state.insert(layer.to_string(), json!(new_entries));
-    mem.write().unwrap().insert(api_key.to_string(), state);
+    let server_side = !api_key.is_empty();
+    let state_blob  = if server_side { Value::Null } else { json!(state.clone()) };
+    mem_save(api_key, mem, state);
 
     let saved = original_bytes.saturating_sub(compressed_bytes);
     let ratio  = if original_bytes > 0 { compressed_bytes as f32 / original_bytes as f32 } else { 1.0 };
@@ -2614,6 +2622,8 @@ fn mcp_trit_mem_compress(params: &Value, api_key: &str, mem: &MemStore) -> Resul
         "compressed_bytes":  compressed_bytes,
         "saved_bytes":       saved,
         "compression_ratio": (ratio * 1000.0).round() / 1000.0,
+        "server_side":       server_side,
+        "state":             state_blob,
         "note": format!("{}% size reduction via ternary sparsity compression.", (100.0 - ratio*100.0).round() as u32),
     }))
 }
