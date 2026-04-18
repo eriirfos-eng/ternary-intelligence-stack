@@ -1,0 +1,27 @@
+// stdlib/bench/tensor_access_bench.tern
+// Demonstrates: A functional benchmark for tensor read/write access.
+// Tier: 1 - Open Core
+
+fn run_access_bench(iterations: int, t: trittensor<10>) -> trit {
+    let i: int = 0;
+    while i < iterations {
+        let idx: int = i % 10;
+        t[idx] = consensus(t[idx], 1);
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let t: trittensor<10> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let iterations: int = 1000;
+    
+    println("Running tensor access bench (1000 iterations)...");
+    let r: trit = run_access_bench(iterations, t);
+    
+    if r == 1 {
+        println("Benchmark completed successfully.");
+        return truth();
+    }
+    return conflict();
+}
