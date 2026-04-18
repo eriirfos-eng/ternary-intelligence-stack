@@ -1,0 +1,35 @@
+// stdlib/lib/trit_string_conv.tern
+// Demonstrates: Conversion between trit sequences and string representations.
+// Tier: 1 - Open Core
+
+fn trits_to_string(data: trittensor<5>, size: int) -> string {
+    let s: string = "";
+    let i: int = 0;
+    while i < size {
+        match data[i] {
+            1 => { s = s + "+"; }
+            0 => { s = s + "0"; }
+           -1 => { s = s + "-"; }
+        }
+        i = i + 1;
+    }
+    return s;
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [1, 0, -1, 1, 0];
+    
+    println("Trit to String Conversion Showcase:");
+    println("Input: 1, 0, -1, 1, 0");
+    
+    let res: string = trits_to_string(data, 5);
+    println("Resulting string:");
+    println(res);
+    
+    if res == "+0-+0" {
+        println("Conversion OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
