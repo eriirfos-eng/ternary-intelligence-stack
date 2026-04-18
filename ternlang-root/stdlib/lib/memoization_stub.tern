@@ -1,0 +1,40 @@
+// stdlib/lib/memoization_stub.tern
+// Demonstrates: A simple memoization pattern for recursive functions using tensors.
+// Tier: 1 - Open Core
+
+fn fib_memo(n: int, cache: int[20]) -> int {
+    if n <= 1 { return n; }
+    
+    // Check cache (assume -1 means not calculated)
+    if cache[n] != -1 {
+        return cache[n];
+    }
+    
+    let res: int = fib_memo(n - 1, cache) + fib_memo(n - 2, cache);
+    cache[n] = res;
+    return res;
+}
+
+fn main() -> trit {
+    let cache: int[20];
+    let i: int = 0;
+    while i < 20 { cache[i] = -1; i = i + 1; }
+    
+    println("Calculating Fibonacci(10) with memoization:");
+    let res: int = fib_memo(10, cache);
+    println(res);
+    
+    if res == 55 {
+        println("Result 55 correct.");
+    } else { return conflict(); }
+    
+    println("Verifying cache entry for 10:");
+    println(cache[10]);
+    
+    if cache[10] == 55 {
+        println("Memoization successful. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
