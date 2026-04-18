@@ -1,0 +1,27 @@
+// stdlib/lib/error_handling_utils.tern
+// Demonstrates: Utilities for handling ternary states as error codes.
+// Tier: 1
+
+fn check_status(status: trit) -> trit {
+    match status {
+        1 => {
+            println("Operation Successful.");
+        }
+        0 => {
+            println("Operation Pending or Inconclusive.");
+        }
+        -1 => {
+            println("Operation Failed.");
+        }
+    }
+    return 0;
+}
+
+fn main() -> trit {
+    check_status(1);
+    check_status(0);
+    check_status(-1);
+    
+    println("Program exited successfully.");
+    return 1;
+}
