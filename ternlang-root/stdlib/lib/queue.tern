@@ -1,0 +1,74 @@
+// stdlib/lib/queue.tern
+// Demonstrates: A fixed-size FIFO queue implementation using a circular buffer.
+// Tier: 1 - Open Core
+
+// Note: Ternary doesn't support structs or dynamic resizing yet.
+// We use a trittensor for data and separate variables for state.
+
+fn enqueue(buffer: trittensor<5>, size: int, head: int, count: int, val: trit) -> int {
+    if count >= size {
+        return -1; // Full
+    }
+    let tail: int = (head + count) % size;
+    buffer[tail] = val;
+    return count + 1;
+}
+
+fn dequeue_count(count: int) -> int {
+    if count <= 0 {
+        return -1; // Empty
+    }
+    return count - 1;
+}
+
+fn main() -> trit {
+    let size: int = 5;
+    let buffer: trittensor<5> = [0, 0, 0, 0, 0];
+    let head: int = 0;
+    let count: int = 0;
+
+    println("Enqueuing 1, 0, -1");
+    count = enqueue(buffer, size, head, count, 1);
+    count = enqueue(buffer, size, head, count, 0);
+    count = enqueue(buffer, size, head, count, -1);
+
+    println("Current count:");
+    println(count);
+
+    match count {
+        3 => { println("Count is 3 as expected."); }
+        -1 => { println("Queue full error."); return conflict(); }
+        _ => { println("Unexpected count."); return conflict(); }
+    }
+
+    println("Dequeuing one element");
+    let val: trit = buffer[head];
+    println("Dequeued value:");
+    match val {
+        1 => { println("Affirm (+1)"); }
+        0 => { println("Tend (0)"); }
+        -1 => { println("Reject (-1)"); }
+    }
+    
+    let next_count: int = dequeue_count(count);
+    if next_count >= 0 {
+        count = next_count;
+        head = (head + 1) % size;
+    }
+
+    println("New head index:");
+    println(head);
+    println("New count:");
+    println(count);
+
+    match count {
+        2 => { 
+            println("Final count is 2. Success.");
+            return truth(); 
+        }
+        _ => { 
+            println("Final count unexpected.");
+            return conflict(); 
+        }
+    }
+}
