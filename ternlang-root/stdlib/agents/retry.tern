@@ -1,0 +1,44 @@
+// stdlib/agents/retry.tern
+// Demonstrates: Retry agent pattern
+// Tier: 1
+
+agent FlakyWorker {
+    fn handle(input: trit) -> trit {
+        // In a stateless shim, we can't easily simulate stateful flakiness
+        // but we can demonstrate the retry loop logic.
+        return 0; // Always returns 'hold' to trigger retry logic
+    }
+}
+
+agent RetryAgent {
+    fn handle(input: trit) -> trit {
+        let worker: agentref = spawn FlakyWorker;
+        let i: int = 0;
+        let max_retries: int = 3;
+        
+        while i < max_retries {
+            send worker input;
+            let res: trit = await worker;
+            
+            // If result is not 'hold' (0), we succeeded or failed definitely
+            if res != 0 {
+                return res;
+            }
+            
+            i = i + 1;
+        }
+        
+        return -1; // Final rejection after N retries
+    }
+}
+
+fn main() -> trit {
+    let r: agentref = spawn RetryAgent;
+    send r 1;
+    let result: trit = await r;
+    
+    match result {
+        -1 => { return 1; } // Success: exhausted retries as expected
+        _  => { return -1; }
+    }
+}
