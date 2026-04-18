@@ -247,7 +247,7 @@
             The world isn't <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-t_teal to-t_blue">binary.</span>
           </h1>
           <p class="text-xl md:text-3xl text-t_muted font-light mb-12 max-w-2xl mx-auto leading-relaxed">
-            A programming language and execution VM built on balanced ternary logic: <em class="text-t_text not-italic font-bold underline decoration-t_teal underline-offset-8">−1, 0, +1</em>. The zero state is a first-class instruction, not an error condition.
+            A programming language, compiler, and virtual machine built on three states: <em class="text-t_text not-italic font-bold underline decoration-t_teal underline-offset-8">−1 reject, 0 hold, +1 affirm</em>. When evidence is insufficient, the program says so — instead of guessing.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <button onclick="navTo(1)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)]">MEET AGENT ALBERT</button>
@@ -262,34 +262,34 @@
           <div class="text-center mb-12">
             <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Why Three States</p>
             <h2 class="text-3xl md:text-5xl font-light text-t_text mb-6">You already think <strong class="font-black text-t_teal">in three states.</strong></h2>
-            <p class="text-lg text-t_text max-w-2xl mx-auto mb-6">Your software doesn't. Here's the cost.</p>
+            <p class="text-lg text-t_text max-w-2xl mx-auto mb-6">Every AI system that forced a yes/no answer when evidence wasn't there has made a wrong call. That is a design flaw, not a model flaw.</p>
             <div class="bg-t_bg3 border border-t_border p-6 rounded-2xl max-w-3xl mx-auto shadow-lg text-left">
-              <p class="text-t_text opacity-90 text-sm md:text-base leading-relaxed"><strong class="text-t_text font-black">The structural problem:</strong> Binary ML systems must return an output even when evidence is insufficient. Ternlang encodes a third return state — <code class="text-t_teal font-bold">trit = 0</code> — meaning "confidence below commit threshold." This eliminates the architectural cause of LLM hallucination: forced binary resolution under uncertainty.</p>
+              <p class="text-t_text opacity-90 text-sm md:text-base leading-relaxed"><strong class="text-t_text font-black">The root cause of AI hallucination:</strong> Binary systems must produce an output — even when they don't have enough information. Ternlang adds a third return value: <code class="text-t_teal font-bold">trit = 0</code>, meaning "not enough evidence to commit." The system stops and says so, instead of making up an answer. This is a compile-time enforcement, not a prompt instruction.</p>
             </div>
           </div>
           <div class="grid md:grid-cols-3 gap-8">
-            <div class="glass-card rounded-xl p-8 border-t-2 border-transparent hover:border-t_blue transition-all">
-              <div class="font-mono text-xs font-bold text-t_muted uppercase tracking-widest mb-4">Engineering</div>
-              <h3 class="text-lg font-black text-t_text mb-3">A traffic light with only two states causes accidents.</h3>
-              <p class="text-t_text opacity-80 text-sm leading-relaxed">Red and green are not sufficient. Yellow is not an error — it is the correct output for a system in transition. <span class="text-t_blue font-bold cursor-pointer border-b border-dashed border-t_blue hover:bg-t_blue/10 px-1 rounded transition-colors" onclick="toggleExp('exp-eng')">Most distributed system failures</span> happen during state transitions that binary logic cannot represent.</p>
+            <div class="glass-card rounded-xl p-6 border-t-2 border-transparent hover:border-t_blue transition-all">
+              <div class="font-mono text-xs font-bold text-t_muted uppercase tracking-widest mb-3">Engineering</div>
+              <h3 class="text-lg font-black text-t_text mb-3">A traffic light with two states causes accidents.</h3>
+              <p class="text-t_text opacity-80 text-sm leading-relaxed">Yellow is not an error — it is the correct output for a system mid-transition. <span class="text-t_blue font-bold cursor-pointer border-b border-dashed border-t_blue hover:bg-t_blue/10 px-1 rounded transition-colors" onclick="toggleExp('exp-eng')">Most distributed system failures</span> happen during state transitions that binary logic has no way to represent cleanly.</p>
               <div id="exp-eng" class="hidden mt-4 p-4 bg-t_blue/10 border border-t_blue/30 rounded-xl text-t_text text-xs leading-relaxed">
                 <strong class="text-t_blue block mb-1">In practice:</strong>
                 The BET VM instruction <code class="font-mono">THOLD</code> suspends the program counter and gates the ALU clock while a state is volatile. This is a deterministic mutex with no speculative branch — the CPU simply does not execute the conflicting instruction.
               </div>
             </div>
-            <div class="glass-card rounded-xl p-8 border-t-2 border-transparent hover:border-t_teal transition-all">
-              <div class="font-mono text-xs font-bold text-t_muted uppercase tracking-widest mb-4">Medicine</div>
-              <h3 class="text-lg font-black text-t_text mb-3">Clinical hold is not a refusal. It is a protocol.</h3>
-              <p class="text-t_text opacity-80 text-sm leading-relaxed">When a physician orders additional workup, that is the correct decision given the available data. Binary inference systems are not allowed that answer. <span class="text-t_teal font-bold cursor-pointer border-b border-dashed border-t_teal hover:bg-t_teal/10 px-1 rounded transition-colors" onclick="toggleExp('exp-med')"><code class="font-mono text-t_teal">trit = 0</code> is a machine-readable escalation signal</span>, not a failure state.</p>
+            <div class="glass-card rounded-xl p-6 border-t-2 border-transparent hover:border-t_teal transition-all">
+              <div class="font-mono text-xs font-bold text-t_muted uppercase tracking-widest mb-3">Medicine</div>
+              <h3 class="text-lg font-black text-t_text mb-3">Clinical hold is a protocol, not a failure.</h3>
+              <p class="text-t_text opacity-80 text-sm leading-relaxed">"Order more tests" is a valid clinical answer. Binary AI has no type for it — it must pick a diagnosis or refuse. <span class="text-t_teal font-bold cursor-pointer border-b border-dashed border-t_teal hover:bg-t_teal/10 px-1 rounded transition-colors" onclick="toggleExp('exp-med')"><code class="font-mono text-t_teal">trit = 0</code> is a typed escalation signal</span> that routes to a human or secondary pass, instead of fabricating a result.</p>
               <div id="exp-med" class="hidden mt-4 p-4 bg-t_teal/10 border border-t_teal/30 rounded-xl text-t_text text-xs leading-relaxed">
                 <strong class="text-t_teal block mb-1">In practice:</strong>
                 The MoE-13 Safety gate returns <code class="font-mono">trit = 0</code> when confidence falls below the commit threshold. The calling system receives a typed "insufficient evidence" response and routes to a human escalation handler or secondary inference pass — instead of fabricating an answer.
               </div>
             </div>
-            <div class="glass-card rounded-xl p-8 border-t-2 border-transparent hover:border-t_red transition-all">
-              <div class="font-mono text-xs font-bold text-t_muted uppercase tracking-widest mb-4">Law</div>
+            <div class="glass-card rounded-xl p-6 border-t-2 border-transparent hover:border-t_red transition-all">
+              <div class="font-mono text-xs font-bold text-t_muted uppercase tracking-widest mb-3">Law</div>
               <h3 class="text-lg font-black text-t_text mb-3">"Insufficient evidence" is a verdict.</h3>
-              <p class="text-t_text opacity-80 text-sm leading-relaxed">A case dismissed for insufficient evidence is a valid verdict, not a system error. Standard ML architectures have no type for this. Ternlang's <code class="font-mono text-t_red">trit</code> type gives ambiguity <span class="text-t_red font-bold cursor-pointer border-b border-dashed border-t_red hover:bg-t_red/10 px-1 rounded transition-colors" onclick="toggleExp('exp-law')">a concrete numerical value that propagates through the call stack.</span></p>
+              <p class="text-t_text opacity-80 text-sm leading-relaxed">A dismissed case is a valid outcome — not a system error. Standard AI has no data type for this. Ternlang's <code class="font-mono text-t_red">trit</code> type gives ambiguity <span class="text-t_red font-bold cursor-pointer border-b border-dashed border-t_red hover:bg-t_red/10 px-1 rounded transition-colors" onclick="toggleExp('exp-law')">a concrete numerical value that propagates through the call stack.</span> The compiler forces you to handle it.</p>
               <div id="exp-law" class="hidden mt-4 p-4 bg-t_red/10 border border-t_red/30 rounded-xl text-t_text text-xs leading-relaxed">
                 <strong class="text-t_red block mb-1">In practice:</strong>
                 <code class="font-mono">trit</code> is a 2-bit type: {−1, 0, +1}. It is not a float, not a nullable bool. The compiler enforces exhaustive 3-way match — if your code doesn't handle the zero case, it does not compile. Uncertainty becomes a handled code path.
@@ -354,10 +354,10 @@
     <!-- PAGE 1: AGENT ALBERT & INTERACTIVE LABS -->
     <div class="slide-page bg-t_bg2">
       <div class="max-w-7xl mx-auto px-6 py-20">
-        <div class="text-center mb-16 reveal active">
+        <div class="text-center mb-10 reveal active">
           <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4">Core Implementation</p>
-          <h2 class="text-7xl font-black text-t_text mb-8 leading-none uppercase">Agent <span class="text-t_blue">Albert.</span></h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed">A local AI agent built on Ollama (Qwen 2.5 3B, runs fully offline). General reasoning stays on device. Safety-critical decisions are routed to the Ternlang MoE-13 API for triadic verification before any action is taken.</p>
+          <h2 class="text-7xl font-black text-t_text mb-6 leading-none uppercase">Agent <span class="text-t_blue">Albert.</span></h2>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed">A local AI agent running fully offline via Ollama (Qwen 2.5 3B). Your data never leaves the machine. When a decision is safety-critical, albert forwards it to the MoE-13 API — 13 expert models vote on it — and waits for a trit verdict before taking any action.</p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-12 items-start mb-24">
@@ -481,8 +481,8 @@
         <div class="text-center mb-16 reveal active">
           <p class="font-mono text-t_red text-xs font-bold tracking-widest uppercase mb-4">Governance & Observability · EU AI Act Art. 13 / 14 / 15</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Tern<span class="text-t_red">Audit.</span></h2>
-          <p class="text-2xl text-t_text max-w-4xl mx-auto font-bold leading-snug mb-4">Every decision your AI makes is now traceable, timestamped, and explainable.</p>
-          <p class="text-lg text-t_muted max-w-3xl mx-auto font-medium">TernAudit logs every trit=0 hold and trit=−1 veto with full trace: which expert fired, at what confidence, on what input. No silent overrides. No guessing after the fact. <span class="text-t_red font-bold">This is what EU regulators ask for.</span></p>
+          <p class="text-2xl text-t_text max-w-4xl mx-auto font-bold leading-snug mb-4">Every AI decision: traceable, timestamped, explainable — before and after it happens.</p>
+          <p class="text-lg text-t_muted max-w-3xl mx-auto font-medium">TernAudit logs every <code class="font-mono text-t_red">trit=0</code> hold and <code class="font-mono text-t_red">trit=−1</code> veto with a full trace: which expert voted, at what confidence, on which input, and why. No silent overrides. Permanent log to AxisMemory. <span class="text-t_red font-bold">This is the audit trail the EU AI Act (Articles 13, 14, 15) requires — built in, not bolted on.</span></p>
         </div>
 
         <div class="glass-card rounded-[3rem] p-10 md:p-16 text-left shadow-[0_0_100px_rgba(255,77,77,0.05)] border-t_red/10 relative max-w-5xl mx-auto reveal">
@@ -588,11 +588,11 @@
           <div>
             <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">The Integration</p>
             <h2 class="text-5xl font-black text-t_text mb-6 uppercase">Your agent.<br/><span class="text-t_teal">Now it can say hold.</span></h2>
-            <p class="text-lg text-t_muted mb-6 font-medium">Claude, Cursor, any MCP-compatible agent — add one header, get a native third state. No Ternlang code to write. No new language to learn.</p>
+            <p class="text-lg text-t_muted mb-6 font-medium">One HTTP call. Works with Claude, Cursor, or any MCP-compatible agent. No new language to learn — just add the header and your agent gains a native third return state.</p>
             <ul class="space-y-3 mb-8 text-sm font-medium">
-              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">When evidence is insufficient, the API returns <code class="font-mono text-t_teal bg-t_teal/10 px-1 rounded">trit=0</code> — "gather more data before acting" — instead of forcing a binary guess.</span></li>
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">When evidence is insufficient, the API returns <code class="font-mono text-t_teal bg-t_teal/10 px-1 rounded">trit=0</code> — "not enough data to act" — instead of forcing a yes/no guess. Your agent waits. It does not hallucinate.</span></li>
               <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Persistent 3-layer memory keyed to your API key. No state blob to pass between calls.</span></li>
-              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Safety hard veto: if the Safety expert returns −1 at confidence &gt; 0.90, the chain terminates before any action executes.</span></li>
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Hard safety veto: if the Safety expert fires −1 at confidence &gt; 0.90, the entire chain terminates before any action executes. No override.</span></li>
             </ul>
             
             <div class="space-y-2 font-mono text-[10px] sm:text-xs bg-t_bg p-6 rounded-xl border border-t_border shadow-sm">
@@ -644,19 +644,19 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
     <!-- PAGE 6: BENCHMARKS -->
     <div class="slide-page bg-t_bg">
       <div class="max-w-7xl mx-auto px-6 py-20">
-        <div class="text-center mb-20 reveal active">
+        <div class="text-center mb-10 reveal active">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Laboratory 05</p>
-          <h2 class="text-7xl font-black text-t_text mb-8 uppercase leading-none">Benchmarks.</h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">Performance measurements for the Ternary Intelligence Stack running on the BET VM. Figures are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root.</p>
+          <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Benchmarks.</h2>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">Measured performance of the BET VM. All results are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root to verify on your own hardware.</p>
         </div>
 
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 reveal">
-          
+
           <!-- Card 1 -->
-          <div class="glass-card rounded-[2rem] p-8 border-t-2 border-t_teal flex flex-col shadow-sm">
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_teal flex flex-col shadow-sm">
              <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
              <h3 class="text-2xl font-black text-t_text mb-1">TRCE Compute</h3>
-             <p class="text-sm text-t_muted font-medium mb-6">NVIDIA CUDA Core Parity</p>
+             <p class="text-sm text-t_muted font-medium mb-4">NVIDIA CUDA Core Parity</p>
              
              <div class="mt-auto space-y-2 mb-6">
                <div class="flex justify-between text-[10px] text-t_muted font-bold uppercase tracking-widest border-b border-t_border pb-1"><span>Sparsity</span><span>512² Yield</span></div>
@@ -676,12 +676,12 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Card 2 -->
-          <div class="glass-card rounded-[2rem] p-8 border-t-2 border-t_blue flex flex-col shadow-sm">
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_blue flex flex-col shadow-sm">
              <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
              <h3 class="text-2xl font-black text-t_text mb-1">Thermal Load</h3>
-             <p class="text-sm text-t_muted font-medium mb-6">Intel x86 Pipeline Parity</p>
+             <p class="text-sm text-t_muted font-medium mb-4">Intel x86 Pipeline Parity</p>
 
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-6">
+             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
                Measures strict Joule output across a standard execution loop. The BET-ISA architecture directly maps structural zeros to hardware bypass circuits.
              </p>
 
@@ -695,10 +695,10 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Card 3 -->
-          <div class="glass-card rounded-[2rem] p-8 border-t-2 border-t_text flex flex-col shadow-sm">
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_text flex flex-col shadow-sm">
              <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
              <h3 class="text-2xl font-black text-t_text mb-1">Context Cache</h3>
-             <p class="text-sm text-t_muted font-medium mb-6">L2 Session Memory Parity</p>
+             <p class="text-sm text-t_muted font-medium mb-4">L2 Session Memory Parity</p>
              
              <div class="mt-auto space-y-2 mb-6">
                <div class="flex justify-between text-[10px] text-t_muted font-bold uppercase tracking-widest border-b border-t_border pb-1"><span>Payload Type</span><span>Compression</span></div>
@@ -721,12 +721,12 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Card 4 -->
-          <div class="glass-card rounded-[2rem] p-8 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
              <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
              <h3 class="text-2xl font-black text-t_text mb-1">Memory Clamp</h3>
-             <p class="text-sm text-t_muted font-medium mb-6">32-bit Float Limits</p>
+             <p class="text-sm text-t_muted font-medium mb-4">32-bit Float Limits</p>
 
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-6">
+             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
                Measures VM memory usage under continuous allocation load. Because the hold state (trit=0) skips propagation entirely, peak allocation stays lower than equivalent binary workloads.
              </p>
 
@@ -740,12 +740,12 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Card 5 -->
-          <div class="glass-card rounded-[2rem] p-8 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
              <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
              <h3 class="text-2xl font-black text-t_text mb-1">Thread Storm</h3>
-             <p class="text-sm text-t_muted font-medium mb-6">Linux CFS Scheduler</p>
+             <p class="text-sm text-t_muted font-medium mb-4">Linux CFS Scheduler</p>
 
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-6">
+             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
                Tests the VM under high thread contention. The BET VM's ternary state transitions have no shared mutable boolean flags, so concurrent dispatch does not produce data races at the opcode level.
              </p>
 
@@ -759,12 +759,12 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Card 6 -->
-          <div class="glass-card rounded-[2rem] p-8 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
              <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
              <h3 class="text-2xl font-black text-t_text mb-1">Safety Gate</h3>
-             <p class="text-sm text-t_muted font-medium mb-6">Execution Constraints</p>
+             <p class="text-sm text-t_muted font-medium mb-4">Execution Constraints</p>
 
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-6">
+             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
                Measures cycle penalties for multi-dimensional safety constraints. Hard-gate enforcement maps directly to the opcode level.
              </p>
 
@@ -789,10 +789,10 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
     <!-- PAGE 7: ARCHITECTURE -->
     <div class="slide-page bg-t_bg2">
       <div class="max-w-7xl mx-auto px-6 py-20">
-        <div class="text-center mb-24 reveal active">
+        <div class="text-center mb-12 reveal active">
           <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4">Deep Dive</p>
-          <h2 class="text-7xl font-black text-t_text mb-8 uppercase leading-none">The <span class="text-t_blue">Stack.</span></h2>
-          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto leading-relaxed">The software and compiler ecosystem deficit ends here. Over 30 specialized crates mapping standard computing, AI, and frontier hardware natively to the {-1, 0, +1} continuum.</p>
+          <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">The <span class="text-t_blue">Stack.</span></h2>
+          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto leading-relaxed">Over 30 crates covering the full stack — from the compiler and BET VM to AI inference middleware, FPGA codegen, quantum bridges, and domain-specific libraries. All built around one type: <code class="font-mono text-t_blue">{−1, 0, +1}</code>.</p>
         </div>
 
         <div class="space-y-16">
@@ -804,27 +804,27 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="text-[10px] font-mono font-bold bg-t_teal/10 text-t_teal px-2 py-1 rounded">LGPL-3.0 · crates.io</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <a href="https://crates.io/crates/ternlang-core" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://crates.io/crates/ternlang-core" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-core</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Lexer, parser, AST, and 53-opcode BET VM. The compiler core — all .tern programs pass through here before bytecode emission.</span>
               </a>
-              <a href="https://crates.io/crates/ternlang-cli" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://crates.io/crates/ternlang-cli" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-cli</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
                 <span class="text-xs text-t_muted leading-relaxed"><code class="text-t_text">ternlang</code> launches the REPL. <code class="text-t_text">ternlang file.tern</code> runs directly. Full subcommands: <code class="text-t_text">run</code> · <code class="text-t_text">build</code> · <code class="text-t_text">sim</code> · <code class="text-t_text">fmt</code> · <code class="text-t_text">repl</code> · <code class="text-t_text">compat</code>. CLI frontend for the BET VM.</span>
               </a>
-              <a href="https://crates.io/crates/ternlang-lsp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://crates.io/crates/ternlang-lsp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-lsp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">LSP 3.17 server: hover types, trit exhaustiveness diagnostics, and completions. Works with VS Code, Neovim, Zed, any LSP client.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternpkg" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternpkg" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternpkg</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Package manager with GitHub-backed registry. Resolves .tern module manifests and dependency graphs at compile time.</span>
               </a>
-              <a href="https://pypi.org/project/ternlang-jupyter/" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://pypi.org/project/ternlang-jupyter/" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-jupyter</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ PyPI</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Jupyter kernel for JupyterLab, VS Code notebooks, and any Jupyter-compatible environment. Run <code class="text-t_text">.tern</code> cells with the real BET VM — color-coded AFFIRM / HOLD / REJECT output blocks. <code class="text-t_text">pip install ternlang-jupyter</code></span>
               </a>
-              <a href="https://crates.io/crates/ternlang-compat" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://crates.io/crates/ternlang-compat" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_teal font-black text-sm">ternlang-compat</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗ crates.io</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">9-trit RISC assembler bridge. Translates Brandon Smith ternary assembly and Owlet S-expressions to BET bytecode.</span>
               </a>
@@ -838,27 +838,27 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="text-[10px] font-mono font-bold bg-t_blue/20 text-t_blue px-2 py-1 rounded">BSL-1.1 · API key required</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <a href="https://crates.io/crates/ternlang-moe" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://crates.io/crates/ternlang-moe" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-moe</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Mixture-of-Experts orchestrator: 13 specialist models vote via weighted EMA convergence. Hard veto rule — Safety at conf &gt; 0.90 terminates the chain unconditionally.</span>
               </a>
-              <a href="https://crates.io/crates/ternlang-ml" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://crates.io/crates/ternlang-ml" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-ml</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Sparse matmul kernel, BitNet b1.58 weight quantization, EMA deliberation engine, coalition vote, hallucination scoring, and scalar temperature.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mkl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mkl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mkl</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Math Kernel Library. Implements <code class="text-t_teal">TSPARSE_MATMUL</code> — skips multiply-accumulate when weight = 0. Patent-pending zero-MAC bypass (RFI-IRFOS).</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mcp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mcp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mcp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">19-tool MCP server over stdio + HTTP. JSON-RPC 2.0. Connects Claude Desktop, Cursor, or any MCP client to the ternary decision engine. Includes TernAudit (EU AI Act Art.13/14).</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-api" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-api" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-api</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Axum REST + SSE API on Fly.io. Multi-tenant key provisioning via Stripe webhook. Rate-limited by tier (10k / 50k / unlimited calls/month).</span>
               </a>
-              <a href="https://crates.io/crates/ternlang-hdl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://crates.io/crates/ternlang-hdl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-hdl</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Verilog-2001 codegen from .tern HDL descriptions. Simulates a BET processor on FPGA. Trit-encoded register file and ALU.</span>
               </a>
@@ -872,27 +872,27 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="text-[10px] font-mono font-bold bg-t_red/20 text-t_red px-2 py-1 rounded">BSL-1.1 / Proprietary</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-qutrit" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-qutrit" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-qutrit</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Quantum-classical bridge. Maps qutrit states {|−1⟩, |0⟩, |+1⟩} to BET trit space. Enables hybrid quantum circuits with ternary control flow.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-bci" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-bci" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-bci</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Brain-computer interface decoder. Maps inhibitory / excitatory / ambiguous neuron firing states to trit = −1/+1/0. Eliminates forced binary decoding.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-astro" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-astro" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-astro</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Interplanetary delay-tolerant networking (DTN). Hold state buffers packets during signal blackout windows instead of dropping or retrying blindly.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-bio" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-bio" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-bio</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Genomic sequencing pipeline. DNA methylation state (methylated / unmethylated / ambiguous) maps natively to trit — no forced binary call on ambiguous reads.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-sec" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-sec" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-sec</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Post-quantum cryptography over ternary lattices. Signature verification returns trit — valid / invalid / tamper-indeterminate, not a forced bool.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-swarm" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col min-h-[120px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-swarm" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-swarm</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Robotic swarm kinematics. Models biological hesitation — trit = 0 when proximity sensors conflict, suspending actuation until the contradiction resolves.</span>
               </a>
@@ -906,27 +906,27 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
             </div>
             <p class="text-xs text-t_muted font-mono mb-6">Open proposals — not yet ratified by external standards bodies. Published for community review and adoption.</p>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/TSON-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/TSON-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">TSON</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
                 <span class="text-[11px] text-t_muted leading-relaxed">Ternary serialization format. 2-bit trit packing is ~30% denser than JSON float64 for numerical payloads.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/TTP-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/TTP-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">TTP</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
                 <span class="text-[11px] text-t_muted leading-relaxed">Transfer protocol with a hold-state response code (000) for in-progress deliberation. Replaces timeout errors with structured wait.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-POSIX-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-POSIX-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">T-POSIX</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
                 <span class="text-[11px] text-t_muted leading-relaxed">OS interface standard: ternary process signals, 3-state scheduler, and trit-valued syscall return codes.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/BET-ISA-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/BET-ISA-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">BET-ISA</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
                 <span class="text-[11px] text-t_muted leading-relaxed">9-trit RISC instruction set architecture. 53 opcodes, unbounded register file, THOLD as a first-class pipeline gate.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-BIO-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-BIO-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">T-BIO</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
                 <span class="text-[11px] text-t_muted leading-relaxed">Genomic sequencing standard: methylation, expression, and SNP states encoded as trit arrays.</span>
               </a>
-              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-SEC-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col min-h-[110px] shadow-sm group">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec/standards/T-SEC-v1.0.md" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">T-SEC</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_teal transition-colors">↗</span></div>
                 <span class="text-[11px] text-t_muted leading-relaxed">Post-quantum cryptography spec: ternary lattice key exchange and trit-valued signature verification.</span>
               </a>
@@ -940,20 +940,20 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
     <!-- PAGE 8: PRICING -->
     <div class="slide-page bg-t_bg">
       <div class="max-w-7xl mx-auto px-6 py-20">
-        <div class="text-center mb-24">
+        <div class="text-center mb-12">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Deployment Model</p>
-          <h2 class="text-7xl font-black text-t_text mb-8 uppercase leading-none">Open Core. <span class="text-t_teal">Paid API.</span></h2>
-          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto">The compiler, VM, and CLI are open source under LGPL-3.0. The MoE-13 inference API and MCP server are commercial — revenue funds continued R&amp;D at RFI-IRFOS.</p>
+          <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Open Core. <span class="text-t_teal">Paid API.</span></h2>
+          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto">The compiler, VM, and CLI are free and open source (LGPL-3.0). The MoE-13 inference API and MCP server require an API key — subscription revenue funds ongoing development at RFI-IRFOS in Graz, Austria.</p>
         </div>
         
-        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
           <!-- Tier 1 -->
-          <div class="bg-t_bg3 p-8 rounded-[2.5rem] border border-t_border flex flex-col hover:border-t_muted transition-all shadow-sm">
-            <div class="text-[10px] font-black text-t_muted uppercase tracking-widest mb-6 border border-t_border self-start px-4 py-1 rounded-full">Tier 1</div>
-            <h3 class="text-2xl font-black text-t_text mb-2 uppercase">Open Core</h3>
-            <p class="text-t_teal text-xs font-mono font-bold mb-6">LGPL-3.0-or-later</p>
-            <div class="text-3xl font-black text-t_text mb-8 uppercase tracking-tighter italic">Free</div>
-            <ul class="space-y-3 mb-10 flex-grow text-sm text-t_muted font-bold">
+          <div class="bg-t_bg3 p-6 rounded-[2rem] border border-t_border flex flex-col hover:border-t_muted transition-all shadow-sm">
+            <div class="text-[10px] font-black text-t_muted uppercase tracking-widest mb-4 border border-t_border self-start px-4 py-1 rounded-full">Tier 1</div>
+            <h3 class="text-2xl font-black text-t_text mb-1 uppercase">Open Core</h3>
+            <p class="text-t_teal text-xs font-mono font-bold mb-4">LGPL-3.0-or-later</p>
+            <div class="text-3xl font-black text-t_text mb-5 uppercase tracking-tighter italic">Free</div>
+            <ul class="space-y-2 mb-6 flex-grow text-sm text-t_muted font-bold">
               <li class="flex items-center gap-3">✓ ternlang-core (compiler + VM)</li>
               <li class="flex items-center gap-3">✓ ternpkg manager</li>
               <li class="flex items-center gap-3">✓ 293 open-core stdlib modules</li>
@@ -963,13 +963,13 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Tier 2 — featured -->
-          <div class="bg-t_bg p-8 rounded-[2.5rem] border-2 border-t_teal relative flex flex-col xl:-translate-y-4 shadow-[0_0_50px_rgba(0,245,196,0.1)]">
+          <div class="bg-t_bg p-6 rounded-[2rem] border-2 border-t_teal relative flex flex-col xl:-translate-y-4 shadow-[0_0_50px_rgba(0,245,196,0.1)]">
             <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-t_teal text-black text-[10px] font-black px-6 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-sm whitespace-nowrap">Most Popular</div>
-            <div class="text-[10px] font-black text-t_teal uppercase tracking-widest mb-6 border border-t_teal/40 self-start px-4 py-1 rounded-full">Tier 2</div>
-            <h3 class="text-2xl font-black text-t_text mb-2 uppercase">Pro Standard</h3>
-            <p class="text-t_teal text-xs font-mono font-bold mb-6">BSL 1.1 (→ Apache 2030)</p>
-            <div class="text-3xl font-black text-t_text mb-8 uppercase tracking-tighter italic">€99<span class="text-t_muted text-sm font-bold">/MO</span></div>
-            <ul class="space-y-3 mb-10 flex-grow text-sm text-t_text font-bold leading-relaxed">
+            <div class="text-[10px] font-black text-t_teal uppercase tracking-widest mb-4 border border-t_teal/40 self-start px-4 py-1 rounded-full">Tier 2</div>
+            <h3 class="text-2xl font-black text-t_text mb-1 uppercase">Pro Standard</h3>
+            <p class="text-t_teal text-xs font-mono font-bold mb-4">BSL 1.1 (→ Apache 2030)</p>
+            <div class="text-3xl font-black text-t_text mb-5 uppercase tracking-tighter italic">€99<span class="text-t_muted text-sm font-bold">/MO</span></div>
+            <ul class="space-y-2 mb-6 flex-grow text-sm text-t_text font-bold leading-relaxed">
               <li class="flex items-center gap-3 font-black">★ 10,000 API calls/month</li>
               <li class="flex items-center gap-3">✓ Server-side 3-layer memory</li>
               <li class="flex items-center gap-3">✓ MoE-13 orchestration at scale</li>
@@ -980,12 +980,12 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Tier 3 -->
-          <div class="bg-t_bg3 p-8 rounded-[2.5rem] border border-t_teal/30 flex flex-col hover:border-t_teal transition-all shadow-sm">
-            <div class="text-[10px] font-black text-t_teal bg-t_teal/10 border border-t_teal/20 uppercase tracking-widest mb-6 self-start px-4 py-1 rounded-full">Tier 3</div>
-            <h3 class="text-2xl font-black text-t_text mb-2 uppercase">Industrial</h3>
-            <p class="text-t_teal text-xs font-mono font-bold mb-6">BSL 1.1 (→ Apache 2030)</p>
-            <div class="text-3xl font-black text-t_text mb-8 uppercase tracking-tighter italic">€349<span class="text-t_muted text-sm font-bold">/MO</span></div>
-            <ul class="space-y-3 mb-10 flex-grow text-sm text-t_muted font-bold">
+          <div class="bg-t_bg3 p-6 rounded-[2rem] border border-t_teal/30 flex flex-col hover:border-t_teal transition-all shadow-sm">
+            <div class="text-[10px] font-black text-t_teal bg-t_teal/10 border border-t_teal/20 uppercase tracking-widest mb-4 self-start px-4 py-1 rounded-full">Tier 3</div>
+            <h3 class="text-2xl font-black text-t_text mb-1 uppercase">Industrial</h3>
+            <p class="text-t_teal text-xs font-mono font-bold mb-4">BSL 1.1 (→ Apache 2030)</p>
+            <div class="text-3xl font-black text-t_text mb-5 uppercase tracking-tighter italic">€349<span class="text-t_muted text-sm font-bold">/MO</span></div>
+            <ul class="space-y-2 mb-6 flex-grow text-sm text-t_muted font-bold">
               <li class="flex items-center gap-3">✓ Everything in Tier 2</li>
               <li class="flex items-center gap-3">✓ 50,000 API calls/month</li>
               <li class="flex items-center gap-3">✓ Elevated production SLA</li>
@@ -995,12 +995,12 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           </div>
 
           <!-- Tier 4 -->
-          <div class="bg-[#020205] p-8 rounded-[2.5rem] border border-t_blue/30 flex flex-col hover:border-t_blue transition-all shadow-sm">
-            <div class="text-[10px] font-black text-t_blue bg-t_blue/10 border border-t_blue/20 uppercase tracking-widest mb-6 self-start px-4 py-1 rounded-full">Tier 4</div>
-            <h3 class="text-2xl font-black text-t_text mb-2 uppercase tracking-tight leading-none">Enterprise</h3>
-            <p class="text-t_muted text-xs font-mono font-bold mb-6">Proprietary</p>
-            <div class="text-3xl font-black text-t_text mb-8 uppercase tracking-tighter italic">Quote</div>
-            <ul class="space-y-3 mb-10 flex-grow text-sm text-t_muted font-bold">
+          <div class="bg-[#020205] p-6 rounded-[2rem] border border-t_blue/30 flex flex-col hover:border-t_blue transition-all shadow-sm">
+            <div class="text-[10px] font-black text-t_blue bg-t_blue/10 border border-t_blue/20 uppercase tracking-widest mb-4 self-start px-4 py-1 rounded-full">Tier 4</div>
+            <h3 class="text-2xl font-black text-t_text mb-1 uppercase tracking-tight leading-none">Enterprise</h3>
+            <p class="text-t_muted text-xs font-mono font-bold mb-4">Proprietary</p>
+            <div class="text-3xl font-black text-t_text mb-5 uppercase tracking-tighter italic">Quote</div>
+            <ul class="space-y-2 mb-6 flex-grow text-sm text-t_muted font-bold">
               <li class="flex items-center gap-3">~ From €2,500/month</li>
               <li class="flex items-center gap-3">~ Custom FPGA implementations</li>
               <li class="flex items-center gap-3">~ Dedicated SLA + uptime</li>
