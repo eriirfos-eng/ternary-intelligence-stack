@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "compiler/legacy_shim/ternlang-core",
+    "ternlang-wasm",
     "compiler/legacy_shim/ternlang-codegen",
     "compiler/legacy_shim/ternlang-runtime",
     "compiler/legacy_shim/ternlang-cli",

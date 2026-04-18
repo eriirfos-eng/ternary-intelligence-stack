@@ -400,12 +400,27 @@ async fn require_admin_key(
 
 // ─── GET / ───────────────────────────────────────────────────────────────────
 
-static INDEX_HTML:   &str = include_str!("../../ternlang-web/index.html");
-static PRICING_HTML: &str = include_str!("../../ternlang-web/pricing.html");
-static STUDIO_HTML:  &str = include_str!("../../ternlang-studio/index.html");
+static INDEX_HTML:      &str = include_str!("../../ternlang-web/index.html");
+static PRICING_HTML:    &str = include_str!("../../ternlang-web/pricing.html");
+static STUDIO_HTML:     &str = include_str!("../../ternlang-studio/index.html");
+static PLAYGROUND_HTML: &str = include_str!("../../playground/index.html");
+static WASM_JS:         &str = include_str!("../../playground/pkg/ternlang_wasm.js");
+static WASM_BYTES:      &[u8] = include_bytes!("../../playground/pkg/ternlang_wasm_bg.wasm");
 
 async fn studio_page() -> Html<&'static str> {
     Html(STUDIO_HTML)
+}
+
+async fn playground_page() -> Html<&'static str> {
+    Html(PLAYGROUND_HTML)
+}
+
+async fn wasm_js() -> impl axum::response::IntoResponse {
+    ([(axum::http::header::CONTENT_TYPE, "application/javascript")], WASM_JS)
+}
+
+async fn wasm_binary() -> impl axum::response::IntoResponse {
+    ([(axum::http::header::CONTENT_TYPE, "application/wasm")], WASM_BYTES)
 }
 
 async fn pricing_page() -> Html<&'static str> {
@@ -4161,6 +4176,9 @@ async fn main() {
         .route("/stripe/webhook",       post(stripe_webhook))
         .route("/pricing",              get(pricing_page))
         .route("/studio",               get(studio_page))
+        .route("/playground",           get(playground_page))
+        .route("/playground/pkg/ternlang_wasm.js",       get(wasm_js))
+        .route("/playground/pkg/ternlang_wasm_bg.wasm",  get(wasm_binary))
         .route("/activate",             get(activate_page))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))

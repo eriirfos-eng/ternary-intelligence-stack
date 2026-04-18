@@ -424,6 +424,24 @@ match result {
   <span style="margin-left:auto;">BET VM · balanced ternary · RFI-IRFOS</span>
 </div>
 
+<!-- WASM loader: initialises the real BET VM, then exposes window.wasmRunTern -->
+<script type="module">
+  import init, { run_tern, check_tern } from './pkg/ternlang_wasm.js';
+  try {
+    await init();
+    window.wasmRunTern   = run_tern;
+    window.wasmCheckTern = check_tern;
+    window.wasmReady     = true;
+    // Un-disable the Run button now that the real VM is loaded
+    const btn = document.getElementById('btn-run');
+    if (btn) btn.disabled = false;
+    console.log('[ternlang] BET VM (WASM) ready');
+  } catch (e) {
+    console.warn('[ternlang] WASM load failed, falling back to JS interpreter:', e);
+    window.wasmReady = false;
+  }
+</script>
+
 <script>
 'use strict';
 
@@ -2760,36 +2778,54 @@ function runProgram() {
   document.getElementById('btn-run').disabled = true;
   setResult('running', '...', 'compiling');
 
-  // Build overrides from params panel
-  const overrides = {};
-  for (const p of currentParams) {
-    if (p.type === 'trit') {
-      overrides[p.name] = {k:'trit', v:p.currentVal};
-    } else if (p.type === 'int') {
-      overrides[p.name] = {k:'int', v:p.currentVal};
-    } else {
-      overrides[p.name] = {k:'float', v:p.currentVal};
-    }
-  }
-
-  // Slight async to let the UI update
   setTimeout(() => {
-    const result = interp.run(src, overrides);
+    // ── Real BET VM (WASM) path ──────────────────────────────────────────
+    if (window.wasmReady && window.wasmRunTern) {
+      let result;
+      try {
+        result = JSON.parse(window.wasmRunTern(src));
+      } catch (e) {
+        result = { ok: false, error: String(e) };
+      }
 
-    // Push interpreter logs to output
-    for (const l of interp.logs) addLog(l.kind==='sys'?'sys':l.kind==='err'?'err':l.kind, l.msg, l.time);
+      addLog('sys', 'BET VM (WASM) · real compiler · v1.0.0');
+      if (result.output) result.output.forEach(l => addLog('out', l));
 
-    if (result.state === 'error') {
-      setResult('error', 'ERROR', result.code || 'ERR');
-      addLog('err', `→ details: stdlib/errors/${result.code}.tern`);
-      setStatus('error');
+      if (!result.ok) {
+        addLog('err', result.error || 'unknown error');
+        setResult('error', 'ERROR', '');
+        setStatus('error');
+      } else {
+        if (result.trit === 1)       setResult('affirm',   'AFFIRM  +1', '');
+        else if (result.trit === -1) setResult('conflict', 'CONFLICT  −1', '');
+        else                         setResult('hold',     'HOLD  0', '');
+        if (result.cycles) addLog('sys', `${result.cycles} bytecode bytes`);
+        setStatus('ready');
+      }
+
+    // ── JS interpreter fallback (WASM not loaded) ────────────────────────
     } else {
-      const v = result.value;
-      const n = interp._tri(v);
-      if (n === 1) setResult('affirm', 'AFFIRM  +1', '');
-      else if (n === -1) setResult('conflict', 'CONFLICT  −1', '');
-      else setResult('hold', 'HOLD  0', '');
-      setStatus('ready');
+      addLog('sys', 'JS interpreter (WASM not loaded)');
+      const overrides = {};
+      for (const p of currentParams) {
+        overrides[p.name] = p.type === 'trit' ? {k:'trit', v:p.currentVal}
+                          : p.type === 'int'  ? {k:'int',  v:p.currentVal}
+                          :                     {k:'float',v:p.currentVal};
+      }
+      const result = interp.run(src, overrides);
+      for (const l of interp.logs) addLog(l.kind==='sys'?'sys':l.kind==='err'?'err':l.kind, l.msg, l.time);
+
+      if (result.state === 'error') {
+        setResult('error', 'ERROR', result.code || 'ERR');
+        addLog('err', `→ details: stdlib/errors/${result.code}.tern`);
+        setStatus('error');
+      } else {
+        const n = interp._tri(result.value);
+        if (n === 1)       setResult('affirm',   'AFFIRM  +1', '');
+        else if (n === -1) setResult('conflict', 'CONFLICT  −1', '');
+        else               setResult('hold',     'HOLD  0', '');
+        setStatus('ready');
+      }
     }
 
     document.getElementById('btn-run').disabled = false;
