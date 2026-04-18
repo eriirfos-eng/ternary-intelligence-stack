@@ -1,0 +1,64 @@
+// stdlib/lib/set_trit.tern
+// Demonstrates: A simple set of trits simulation using a small trittensor.
+// Tier: 1 - Open Core
+
+fn set_add(s: trittensor<3>, val: trit) -> trit {
+    match val {
+        1 => { s[0] = 1; }
+        0 => { s[1] = 1; }
+       -1 => { s[2] = 1; }
+    }
+    return 1;
+}
+
+fn set_contains(s: trittensor<3>, val: trit) -> trit {
+    match val {
+        1 => { return s[0]; }
+        0 => { return s[1]; }
+       -1 => { return s[2]; }
+    }
+}
+
+fn main() -> trit {
+    let s: trittensor<3> = [-1, -1, -1];
+    
+    println("Trit Set (initial: empty)");
+    println("Adding Affirm (1) and Reject (-1)...");
+    let r1: trit = set_add(s, 1);
+    let r2: trit = set_add(s, -1);
+    
+    println("Checking contents:");
+    
+    let c1: trit = set_contains(s, 1);
+    print("Contains Affirm (1): "); 
+    match c1 {
+        1 => { println("Yes"); }
+        _ => { println("No"); }
+    }
+    
+    let c0: trit = set_contains(s, 0);
+    print("Contains Tend (0):   "); 
+    match c0 {
+        1 => { println("Yes"); }
+        _ => { println("No"); }
+    }
+    
+    let cm1: trit = set_contains(s, -1);
+    print("Contains Reject (-1):"); 
+    match cm1 {
+        1 => { println("Yes"); }
+        _ => { println("No"); }
+    }
+    
+    if c1 == 1 {
+        if c0 == -1 {
+            if cm1 == 1 {
+                println("Set operations verified. Success.");
+                return truth();
+            }
+        }
+    }
+    
+    println("Verification failed.");
+    return conflict();
+}
