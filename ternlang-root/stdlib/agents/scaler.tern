@@ -1,0 +1,36 @@
+// stdlib/agents/scaler.tern
+// Demonstrates: Trit Scaler agent pattern (Int to Trit)
+// Tier: 1
+
+agent TritScaler {
+    fn handle(val: int) -> trit {
+        // Scales any integer to a trit signal.
+        // Positive -> affirm, Negative -> reject, Zero -> tend.
+        if val > 0 {
+            return affirm;
+        }
+        if val < 0 {
+            return reject;
+        }
+        return tend;
+    }
+}
+
+fn main() -> trit {
+    let s: agentref = spawn TritScaler;
+    
+    send s 100;
+    let r1: trit = await s;
+    
+    let neg_val: int = -50;
+    send s neg_val;
+    let r2: trit = await s;
+    
+    send s 0;
+    let r3: trit = await s;
+    
+    if r1 == affirm && r2 == reject && r3 == tend {
+        return affirm;
+    }
+    return reject;
+}
