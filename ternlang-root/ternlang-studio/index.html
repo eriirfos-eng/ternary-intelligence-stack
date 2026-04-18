@@ -154,10 +154,38 @@
     .flow-wire {
       fill: none; stroke: var(--border2); stroke-width: 2;
       stroke-linecap: round; transition: stroke 0.3s, stroke-width 0.3s;
+      cursor: pointer;
     }
-    .flow-wire.active-1 { stroke: var(--green); stroke-width: 3; filter: drop-shadow(0 0 4px var(--green)); }
-    .flow-wire.active-0 { stroke: var(--amber); stroke-width: 3; }
+    .flow-wire:hover { stroke: var(--cyan); stroke-width: 3; }
+    .flow-wire.selected-wire { stroke: var(--blue); stroke-width: 3; stroke-dasharray: 6 3; }
+    .flow-wire.cond-affirm { stroke: var(--green); }
+    .flow-wire.cond-tend   { stroke: var(--amber); }
+    .flow-wire.cond-reject { stroke: var(--red); }
+    .flow-wire.cond-all    { stroke: var(--cyan); }
+    .flow-wire.active-1  { stroke: var(--green); stroke-width: 3; filter: drop-shadow(0 0 4px var(--green)); }
+    .flow-wire.active-0  { stroke: var(--amber); stroke-width: 3; }
     .flow-wire.active-n1 { stroke: var(--red); stroke-width: 3; }
+
+    /* Edge condition badge on wire midpoint */
+    .edge-badge {
+      position: absolute; background: var(--bg1); border: 1px solid var(--border2);
+      border-radius: 10px; padding: 1px 7px; font-size: 9px; font-weight: 700;
+      color: var(--muted); pointer-events: none; transform: translate(-50%,-50%);
+      white-space: nowrap;
+    }
+    .edge-badge.cond-affirm { border-color: var(--green); color: var(--green); }
+    .edge-badge.cond-tend   { border-color: var(--amber); color: var(--amber); }
+    .edge-badge.cond-reject { border-color: var(--red);   color: var(--red); }
+
+    /* Archetype panel */
+    .archetype-card {
+      background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px;
+      padding: 10px 12px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 6px;
+    }
+    .archetype-card:hover { border-color: var(--cyan); background: rgba(56,189,248,0.05); }
+    .archetype-card-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .archetype-card-desc  { font-size: 10px; color: var(--muted2); line-height: 1.5; }
 
     /* Flow Properties (Right) */
     #flow-props {
@@ -1162,12 +1190,26 @@
 <div class="view" id="view-flow">
   <!-- Left: Library -->
   <div id="flow-library">
-    <div class="lib-search" style="display:flex; gap:6px;">
-      <input type="text" class="prop-input" id="flowLibSearch" placeholder="Search Agents..." style="flex:1" oninput="filterFlowLib(this.value)">
-      <button class="tb-btn" onclick="openNewAgentModal()" title="Create new agent" style="color:var(--green); border-color:var(--green); flex-shrink:0;"><i data-lucide="plus"></i></button>
+    <!-- Library tabs -->
+    <div style="display:flex; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <button class="lib-tab active" id="libtab-agents" onclick="switchLibTab('agents')" style="flex:1;background:none;border:none;padding:8px;font-size:10px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:2px solid var(--cyan);text-transform:uppercase;">Agents</button>
+      <button class="lib-tab" id="libtab-archetypes" onclick="switchLibTab('archetypes')" style="flex:1;background:none;border:none;padding:8px;font-size:10px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;">Archetypes</button>
     </div>
-    <div id="flow-lib-items" style="flex:1; overflow-y:auto;">
-      <!-- Loaded via JS -->
+
+    <!-- Agents panel -->
+    <div id="lib-panel-agents" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="lib-search" style="display:flex; gap:6px; padding:8px;">
+        <input type="text" class="prop-input" id="flowLibSearch" placeholder="Search Agents..." style="flex:1;height:28px;" oninput="filterFlowLib(this.value)">
+        <button class="tb-btn" onclick="openNewAgentModal()" title="Create new agent" style="color:var(--green); border-color:var(--green); flex-shrink:0;"><i data-lucide="plus"></i></button>
+      </div>
+      <div id="flow-lib-items" style="flex:1; overflow-y:auto; padding:0 8px 8px;">
+        <!-- Loaded via JS -->
+      </div>
+    </div>
+
+    <!-- Archetypes panel -->
+    <div id="lib-panel-archetypes" style="display:none;flex:1;overflow-y:auto;padding:8px;">
+      <!-- Rendered via JS -->
     </div>
   </div>
 
@@ -1206,7 +1248,7 @@
     <svg id="flow-svg-layer">
       <!-- Wires rendered here -->
     </svg>
-    <div id="flow-canvas">
+    <div id="flow-canvas" onclick="if(event.target===this||event.target.id==='flow-canvas'){selectedWireId=null;selectedNodeId=null;document.querySelectorAll('.flow-node').forEach(n=>n.classList.remove('selected'));updateWireStyles();if(document.getElementById('prop-header-label'))document.getElementById('prop-header-label').textContent='Node Properties';updatePropertyPanel();}">
       <!-- Nodes injected via JS -->
     </div>
     <!-- Empty state hint -->
@@ -1250,11 +1292,14 @@
     </div>
   </div>
 
-  <!-- Right: Properties -->
+  <!-- Right: Properties (Node or Edge) -->
   <div id="flow-props">
-    <div class="prop-header">Node Properties</div>
-    <div id="prop-body" class="prop-body">
-      <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px;">Select a node to configure</div>
+    <div class="prop-header" id="prop-header-label">Node Properties</div>
+    <div id="prop-body" class="prop-body" style="overflow-y:auto;">
+      <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px; padding:0 12px; line-height:1.8;">
+        Select a node to configure<br>
+        <span style="font-size:10px;color:var(--muted2);">Drag ● output → ● input to wire</span>
+      </div>
     </div>
   </div>
 </div>
@@ -1537,6 +1582,42 @@ const TIER_BADGE_CLASS = { 1: "badge-free", 2: "badge-t2", 3: "badge-t3", 4: "ba
 // ─── Templates ────────────────────────────────────────────────────────────────
 const TEMPLATES = {
   hello: `fn main() -> trit {\n    print("⊕ Hello Ternary World");\n    return affirm;\n}\n`,
+  consensus: `// Ternary consensus: majority of N agents
+fn main() -> trit {
+    let a: trit = affirm;
+    let b: trit = tend;
+    let c: trit = affirm;
+    // 2x affirm beats 1x tend → affirm
+    print("⊕ Consensus: affirm");
+    return affirm;
+}`,
+  gate: `// Ternary logic gate — routes on signal value
+fn gate(signal: trit) -> trit {
+    match signal {
+        affirm => { print("● PASS — forwarding"); return affirm; }
+        tend   => { print("○ HOLD — deliberating"); return tend; }
+        reject => { print("✕ BLOCK — rejected"); return reject; }
+    }
+}
+
+fn main() -> trit {
+    return gate(affirm);
+}`,
+  agent: `// Basic agent pattern
+agent Sensor {
+    handle(s: trit) {
+        match s {
+            affirm => { spawn Actuator(affirm); }
+            tend   => { spawn Deliberator(tend); }
+            reject => { return; }
+        }
+    }
+}
+
+fn main() -> trit {
+    print("⊕ Agent spawned");
+    return affirm;
+}`,
   match: `fn classify(x: int) -> trit {
     if x > 0 { return truth();    }
     if x < 0 { return conflict(); }
@@ -1924,12 +2005,257 @@ function updateNodeProp(key, val) {
 
 function addExternalBridge() {
   const id = "bridge_" + Date.now();
-  createFlowNode("OpenAI Gateway", "external", 100, 100, 'external', id);
+  createFlowNode("LLM Bridge", "external", 100 + Math.random()*60, 100 + Math.random()*60, 'external', id);
 }
 
 function addTernaryGate() {
   const id = "gate_" + Date.now();
-  createFlowNode("Consensus Gate", "logic", 100, 100, 'gate', id);
+  createFlowNode("Consensus Gate", "gate", 100 + Math.random()*60, 100 + Math.random()*60, 'gate', id);
+}
+
+// ─── Library tab switching ────────────────────────────────────────────────────
+function switchLibTab(tab) {
+  document.querySelectorAll('.lib-tab').forEach(t => {
+    t.style.color = 'var(--muted)';
+    t.style.borderBottomColor = 'transparent';
+  });
+  const active = document.getElementById('libtab-' + tab);
+  if (active) { active.style.color = 'var(--text)'; active.style.borderBottomColor = 'var(--cyan)'; }
+  document.getElementById('lib-panel-agents').style.display     = tab === 'agents'     ? 'flex' : 'none';
+  document.getElementById('lib-panel-archetypes').style.display = tab === 'archetypes' ? 'block' : 'none';
+  if (tab === 'archetypes') renderArchetypes();
+}
+
+// ─── Archetype System ─────────────────────────────────────────────────────────
+const ARCHETYPES = [
+  {
+    id: "consensus",
+    name: "Consensus Pipeline",
+    desc: "N agents vote → Consensus Gate → Actuator. Classic ternary majority routing.",
+    icon: "git-merge",
+    color: "var(--green)",
+    nodes: [
+      { name: "Sensor A",       type: "agent",    dx: 60,   dy: 60  },
+      { name: "Sensor B",       type: "agent",    dx: 60,   dy: 180 },
+      { name: "Sensor C",       type: "agent",    dx: 60,   dy: 300 },
+      { name: "Consensus Gate", type: "gate",     dx: 320,  dy: 180 },
+      { name: "Actuator",       type: "agent",    dx: 540,  dy: 180 },
+    ],
+    wires: [[0,3],[1,3],[2,3],[3,4]],
+    edgeConds: ["affirm","all","reject","affirm"],
+  },
+  {
+    id: "guardrail",
+    name: "Guardrail Chain",
+    desc: "Input → Safety Gate → LLM Bridge → Output Guard. Reject bypasses LLM entirely.",
+    icon: "shield-check",
+    color: "var(--amber)",
+    nodes: [
+      { name: "Input",        type: "agent",    dx: 40,  dy: 160 },
+      { name: "Safety Gate",  type: "gate",     dx: 240, dy: 160 },
+      { name: "LLM Bridge",   type: "external", dx: 440, dy: 80  },
+      { name: "Output Guard", type: "gate",     dx: 440, dy: 240 },
+      { name: "Output",       type: "agent",    dx: 640, dy: 160 },
+    ],
+    wires: [[0,1],[1,2],[1,3],[2,4],[3,4]],
+    edgeConds: ["all","affirm","reject","affirm","affirm"],
+  },
+  {
+    id: "filter_rank",
+    name: "Filter → Rank → Decide",
+    desc: "Raw signals → Filter (tend/reject pruned) → Ranker → Decision node.",
+    icon: "funnel",
+    color: "var(--cyan)",
+    nodes: [
+      { name: "Raw Signal",  type: "agent", dx: 40,  dy: 160 },
+      { name: "Filter",      type: "gate",  dx: 240, dy: 160 },
+      { name: "Ranker",      type: "agent", dx: 440, dy: 160 },
+      { name: "Decision",    type: "gate",  dx: 640, dy: 160 },
+    ],
+    wires: [[0,1],[1,2],[2,3]],
+    edgeConds: ["all","affirm","all"],
+  },
+  {
+    id: "debate",
+    name: "Multi-Agent Debate",
+    desc: "Proposer + Challenger feed Arbiter. Arbiter routes: affirm=Proposer wins, reject=Challenger wins, tend=Retry.",
+    icon: "message-square",
+    color: "var(--muted)",
+    nodes: [
+      { name: "Proposer",    type: "agent",    dx: 60,  dy: 80  },
+      { name: "Challenger",  type: "agent",    dx: 60,  dy: 260 },
+      { name: "Arbiter",     type: "gate",     dx: 300, dy: 170 },
+      { name: "Accept",      type: "agent",    dx: 520, dy: 80  },
+      { name: "Reject",      type: "agent",    dx: 520, dy: 260 },
+    ],
+    wires: [[0,2],[1,2],[2,3],[2,4]],
+    edgeConds: ["all","all","affirm","reject"],
+  },
+  {
+    id: "sensor_gate",
+    name: "Sensor → Gate → Actuator",
+    desc: "Simple deterministic agent chain: read → decide → act. Your first production pattern.",
+    icon: "cpu",
+    color: "var(--blue)",
+    nodes: [
+      { name: "Sensor",    type: "agent",    dx: 60,  dy: 160 },
+      { name: "Gate",      type: "gate",     dx: 280, dy: 160 },
+      { name: "Actuator",  type: "agent",    dx: 500, dy: 80  },
+      { name: "Fallback",  type: "agent",    dx: 500, dy: 240 },
+    ],
+    wires: [[0,1],[1,2],[1,3]],
+    edgeConds: ["all","affirm","reject"],
+  },
+];
+
+function renderArchetypes() {
+  const panel = document.getElementById("lib-panel-archetypes");
+  panel.innerHTML = `<div style="font-size:10px;color:var(--muted2);margin-bottom:10px;line-height:1.6;">Click to spawn a wired agent architecture on the canvas.</div>`;
+  ARCHETYPES.forEach(arch => {
+    const card = document.createElement("div");
+    card.className = "archetype-card";
+    card.innerHTML = `
+      <div class="archetype-card-title" style="display:flex;align-items:center;gap:6px;">
+        <i data-lucide="${arch.icon}" style="width:12px;height:12px;color:${arch.color}"></i>
+        ${arch.name}
+      </div>
+      <div class="archetype-card-desc">${arch.desc}</div>
+    `;
+    card.onclick = () => spawnArchetype(arch);
+    panel.appendChild(card);
+  });
+  lucide.createIcons();
+}
+
+function spawnArchetype(arch) {
+  const canvas = document.getElementById("flow-canvas");
+  // Clear hint
+  const hint = document.getElementById("canvas-hint");
+  if (hint) hint.style.display = "none";
+
+  // Offset from center of canvas
+  const cx = (canvas.parentElement.clientWidth  / 2) - 300;
+  const cy = (canvas.parentElement.clientHeight / 2) - 200;
+
+  const ids = [];
+  arch.nodes.forEach((n, i) => {
+    const id = "node_" + Date.now() + "_" + i;
+    ids.push(id);
+    createFlowNode(n.name, "__arch__", cx + n.dx, cy + n.dy, n.type, id);
+  });
+
+  // Wire them with conditions
+  arch.wires.forEach(([from, to], i) => {
+    const wireId = "wire_" + Date.now() + "_" + i;
+    const cond = (arch.edgeConds || [])[i] || "all";
+    flowWires.push({ id: wireId, fromId: ids[from], toId: ids[to], signal: 0, condition: cond, transform: "pass", label: cond !== "all" ? cond : "" });
+  });
+
+  updateWires();
+  showToast(`Spawned: ${arch.name}`, "ok");
+}
+
+// ─── Edge Logic System ────────────────────────────────────────────────────────
+let selectedWireId = null;
+
+function selectWire(wireId) {
+  selectedWireId = wireId;
+  selectedNodeId = null;
+  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
+  updateWireStyles();
+  updateEdgePanel();
+}
+
+function updateWireStyles() {
+  document.querySelectorAll('.flow-wire').forEach(el => {
+    el.classList.remove('selected-wire');
+    const id = el.getAttribute('data-wire-id');
+    const wire = flowWires.find(w => w.id === id);
+    if (!wire) return;
+    el.classList.remove('cond-affirm','cond-tend','cond-reject','cond-all');
+    if (wire.condition && wire.condition !== "all") el.classList.add('cond-' + wire.condition);
+    if (id === selectedWireId) el.classList.add('selected-wire');
+  });
+}
+
+function updateEdgePanel() {
+  const header = document.getElementById("prop-header-label");
+  const body   = document.getElementById("prop-body");
+  const wire   = flowWires.find(w => w.id === selectedWireId);
+  if (!wire) { updatePropertyPanel(); return; }
+
+  if (header) header.textContent = "Edge Properties";
+  const cond      = wire.condition  || "all";
+  const transform = wire.transform  || "pass";
+  const label     = wire.label      || "";
+  const fromNode  = flowNodes.find(n => n.id === wire.fromId);
+  const toNode    = flowNodes.find(n => n.id === wire.toId);
+
+  body.innerHTML = `
+    <div style="font-size:10px;color:var(--muted2);margin-bottom:4px;">
+      ${fromNode ? fromNode.name : "?"} → ${toNode ? toNode.name : "?"}
+    </div>
+
+    <div class="prop-group">
+      <label class="prop-label">Pass condition</label>
+      <select class="prop-input" style="width:100%" onchange="updateWireProp('condition', this.value)">
+        <option value="all"    ${cond==="all"    ?"selected":""}>All trits (pass everything)</option>
+        <option value="affirm" ${cond==="affirm" ?"selected":""}>affirm only (+1)</option>
+        <option value="tend"   ${cond==="tend"   ?"selected":""}>tend only (0)</option>
+        <option value="reject" ${cond==="reject" ?"selected":""}>reject only (-1)</option>
+        <option value="!reject"${cond==="!reject"?"selected":""}>affirm or tend (not reject)</option>
+        <option value="!tend"  ${cond==="!tend"  ?"selected":""}>affirm or reject (decisive)</option>
+      </select>
+    </div>
+
+    <div class="prop-group">
+      <label class="prop-label">On condition fail</label>
+      <select class="prop-input" style="width:100%" onchange="updateWireProp('transform', this.value)">
+        <option value="pass"  ${transform==="pass"  ?"selected":""}>Pass anyway (ignore condition)</option>
+        <option value="block" ${transform==="block" ?"selected":""}>Block — drop signal</option>
+        <option value="flip"  ${transform==="flip"  ?"selected":""}>Flip to reject</option>
+        <option value="hold"  ${transform==="hold"  ?"selected":""}>Force to tend (hold)</option>
+      </select>
+    </div>
+
+    <div class="prop-group">
+      <label class="prop-label">Edge label</label>
+      <input type="text" class="prop-input" value="${label}" placeholder="e.g. conf > 0.7"
+        oninput="updateWireProp('label', this.value)">
+    </div>
+
+    <div class="prop-group">
+      <label class="prop-label">Priority weight</label>
+      <input type="range" min="1" max="10" step="1" value="${wire.priority || 5}" style="width:100%"
+        oninput="updateWireProp('priority', parseInt(this.value)); this.nextElementSibling.textContent=this.value">
+      <span style="font-size:10px;color:var(--cyan)">${wire.priority || 5}</span>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-top:4px;">
+      <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red)" onclick="deleteWire('${selectedWireId}')">Remove Edge</button>
+    </div>
+  `;
+}
+
+function updateWireProp(key, val) {
+  const wire = flowWires.find(w => w.id === selectedWireId);
+  if (!wire) return;
+  wire[key] = val;
+  if (key === 'condition') {
+    wire.label = val !== 'all' ? val : '';
+    updateEdgePanel(); // re-render to update label field
+  }
+  updateWireStyles();
+  updateWires();
+}
+
+function deleteWire(id) {
+  flowWires = flowWires.filter(w => w.id !== id);
+  selectedWireId = null;
+  updateWires();
+  updatePropertyPanel();
+  if (document.getElementById("prop-header-label"))
+    document.getElementById("prop-header-label").textContent = "Node Properties";
 }
 
 // ─── Wiring System ────────────────────────────────────────────────────────────
@@ -2002,7 +2328,9 @@ function updateWires() {
   const svg = document.getElementById("flow-svg-layer");
   if (!svg) return;
   svg.innerHTML = "";
-  
+  // Clear edge badges
+  document.querySelectorAll(".edge-badge").forEach(b => b.remove());
+
   flowWires.forEach(w => {
     const fromNode = document.getElementById(w.fromId);
     const toNode = document.getElementById(w.toId);
@@ -2013,13 +2341,13 @@ function updateWires() {
 
     const start = getPortPos(fromPort);
     const end = getPortPos(toPort);
-    drawWire(start, end, w.id, w.signal);
+    drawWire(start, end, w.id, w.signal, w);
   });
 
   if (activeWire) {
     const start = activeWire.start;
     const end = activeWire.end;
-    drawWire(start, end, 'active-wire', 0);
+    drawWire(start, end, 'active-wire', 0, null);
   }
 }
 
@@ -2061,17 +2389,53 @@ function getPortPos(port) {
   };
 }
 
-function drawWire(start, end, id, signal) {
+function drawWire(start, end, id, signal, wire) {
   const svg = document.getElementById("flow-svg-layer");
+  const wrap = document.getElementById("flow-canvas-wrap");
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  
+
   const dx = Math.abs(end.x - start.x) * 0.5;
   const d = `M ${start.x} ${start.y} C ${start.x + dx} ${start.y}, ${end.x - dx} ${end.y}, ${end.x} ${end.y}`;
-  
+
   path.setAttribute("d", d);
-  path.setAttribute("class", "flow-wire" + (signal !== undefined ? ` active-${signal === 1 ? '1' : (signal === -1 ? 'n1' : '0')}` : ''));
+  path.setAttribute("data-wire-id", id);
+
+  let cls = "flow-wire";
+  if (signal !== undefined) cls += ` active-${signal === 1 ? '1' : (signal === -1 ? 'n1' : '0')}`;
+  if (wire && wire.condition && wire.condition !== "all") cls += " cond-" + wire.condition.replace("!","");
+  if (id === selectedWireId) cls += " selected-wire";
+  path.setAttribute("class", cls);
   path.setAttribute("id", id);
+
+  if (id !== 'active-wire' && wire) {
+    path.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectWire(id);
+    });
+    // Invisible fat hitbox path for easier clicking
+    const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    hit.setAttribute("d", d);
+    hit.setAttribute("fill", "none");
+    hit.setAttribute("stroke", "transparent");
+    hit.setAttribute("stroke-width", "14");
+    hit.setAttribute("style", "cursor:pointer");
+    hit.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); });
+    svg.appendChild(hit);
+  }
+
   svg.appendChild(path);
+
+  // Edge label badge
+  if (wire && wire.label) {
+    const midX = (start.x + end.x) / 2;
+    const midY = (start.y + end.y) / 2;
+    const badge = document.createElement("div");
+    badge.className = "edge-badge" + (wire.condition && wire.condition !== "all" ? " cond-" + wire.condition.replace("!","") : "");
+    badge.style.left = midX + "px";
+    badge.style.top  = midY + "px";
+    badge.textContent = wire.label;
+    wrap.appendChild(badge);
+  }
 }
 
 function exportFlowCode() {
@@ -2195,11 +2559,42 @@ async function loadGithubTree() {
 }
 
 function showNoKeyMessage(tree) {
-  tree.innerHTML = `<div style="padding:20px 12px; color:var(--muted2); font-size:11px; text-align:center; line-height:1.8;">
-    No library files available.<br>
-    <span style="color:var(--cyan); cursor:pointer;" onclick="toggleKeyInput()">Enter your API key</span><br>
-    to unlock the full stdlib.
-  </div>`;
+  // Always show built-in templates so explorer is never empty
+  renderBuiltinTree(tree);
+}
+
+function renderBuiltinTree(tree) {
+  tree.innerHTML = "";
+  const banner = document.createElement("div");
+  banner.style.cssText = "padding:6px 12px; font-size:10px; color:var(--muted2); background:rgba(255,255,255,0.02); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;";
+  banner.innerHTML = `<span>Built-in Examples</span><span style="cursor:pointer;color:var(--cyan)" onclick="toggleKeyInput()">+ Add key</span>`;
+  tree.appendChild(banner);
+
+  const builtins = [
+    { name: "hello_trit.tern",    path: "examples/hello_trit.tern",    key: "hello" },
+    { name: "consensus.tern",     path: "examples/consensus.tern",      key: "consensus" },
+    { name: "match_signal.tern",  path: "examples/match_signal.tern",   key: "match" },
+    { name: "trit_gate.tern",     path: "examples/trit_gate.tern",      key: "gate" },
+    { name: "agent_basic.tern",   path: "examples/agent_basic.tern",    key: "agent" },
+  ];
+
+  builtins.forEach(({ name, path, key }) => {
+    const fileEl = document.createElement("div");
+    fileEl.className = "tree-file";
+    fileEl.dataset.path = path;
+    fileEl.dataset.builtin = "1";
+    fileEl.innerHTML = `<i data-lucide="file-code" style="width:12px;height:12px"></i> ${name}`;
+    fileEl.onclick = () => {
+      fileBuffers[path] = fileBuffers[path] || TEMPLATES[key] || TEMPLATES.hello;
+      loadToEditor(path, fileBuffers[path]);
+      switchView('editor');
+    };
+    tree.appendChild(fileEl);
+  });
+
+  tree.dataset.loaded = "true";
+  refreshTreeHighlight();
+  lucide.createIcons();
 }
 
 function renderFileTree(tree, files, isGitHub = false) {
@@ -3253,6 +3648,7 @@ require(["vs/editor/editor.main"], function () {
   window.addEventListener("resize", () => monacoEditor.layout());
 
   monacoEditor.addCommand(monaco.KeyCode.F5, () => runCode());
+  monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runCode());
 
   // Initialization: load saved state
   initKeyPersistence();
