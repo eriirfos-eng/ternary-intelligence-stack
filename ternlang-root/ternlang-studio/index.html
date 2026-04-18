@@ -10,6 +10,16 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Local dev config: sets window.TERNSTUDIO_DEV_KEY — gitignored, never committed -->
   <script src=".ternstudio-local.js" onerror="void 0"></script>
+  <!-- WASM BET VM — load from same server, enables local execution with zero API calls -->
+  <script type="module">
+    import init, { run_tern, check_tern } from '/playground/pkg/ternlang_wasm.js';
+    init().then(() => {
+      window.wasmRunTern   = run_tern;
+      window.wasmCheckTern = check_tern;
+      window.wasmReady     = true;
+      window.dispatchEvent(new Event('wasmready'));
+    }).catch(() => { window.wasmReady = false; });
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
@@ -335,13 +345,13 @@
     .view.active { display: flex; }
 
     /* ─── Dashboard ────────────────────────────────────────────────── */
-    #view-dashboard { overflow-y: auto; padding: 32px 40px; }
+    #view-dashboard { overflow-y: auto; padding: 40px 48px; }
     .dash-grid {
       display: grid;
-      grid-template-columns: 300px 1fr 300px;
+      grid-template-columns: 360px 1fr 360px;
       grid-template-rows: auto auto auto;
-      gap: 24px;
-      max-width: 1400px;
+      gap: 28px;
+      max-width: 1600px;
       margin: 0 auto;
     }
     .dash-col { display: flex; flex-direction: column; gap: 24px; }
@@ -856,23 +866,28 @@
           <div class="usage-meta" id="dashUsageMeta" style="font-size:10px">Enter API key to see quota</div>
         </div>
         <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
-        <button class="dash-quick-btn" style="margin-top: 16px; border-color: var(--amber); color: var(--amber); justify-content: center;" onclick="openUpskillModal()">
-          <i data-lucide="arrow-up-circle"></i> <span>Upskill Plan</span>
-        </button>
+        <div style="margin-top:14px; font-size:10px; color:var(--muted2); text-align:center;">
+          Need more? Use <span style="color:var(--amber); cursor:pointer;" onclick="openUpskillModal()">Upskill ↑</span> in the top bar
+        </div>
       </div>
 
-      <!-- Ternary Playground (REPL) -->
-      <div class="dash-card" style="flex:1">
-        <div class="dash-card-title"><i data-lucide="terminal"></i> Ternary Playground</div>
-        <div style="font-size:11px; color:var(--muted)">Quickly evaluate trit expressions or convert decimal to ternary.</div>
-        <div class="repl-input-wrap">
-          <span style="color:var(--muted); font-family:monospace; margin-right:6px;">&gt;</span>
-          <input type="text" class="repl-input" placeholder="e.g. 1 && 0 || -1" id="dashReplInput" onkeydown="if(event.key==='Enter')runReplExpr()">
+      <!-- Ternary Playground (WASM REPL) -->
+      <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
+        <div class="dash-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span><i data-lucide="terminal"></i> Ternary Playground</span>
+          <span id="wasmBadge" style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.1);border:1px solid var(--green);color:var(--green);opacity:0;transition:opacity 0.3s">⚡ WASM</span>
         </div>
-        <div class="repl-res" id="dashReplRes"></div>
-        <div style="margin-top:auto; display:flex; gap:8px;">
-          <button class="btn btn-ghost" style="font-size:10px; padding:4px 8px;" onclick="document.getElementById('dashReplInput').value='13'; runReplExpr()">Dec 13</button>
-          <button class="btn btn-ghost" style="font-size:10px; padding:4px 8px;" onclick="document.getElementById('dashReplInput').value='1 && -1'; runReplExpr()">AND</button>
+        <textarea id="dashReplInput" class="prop-input" style="flex:1;min-height:140px;resize:none;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin-top:10px;"
+          onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();runReplExpr();}"
+          placeholder="fn main() -> trit {&#10;    print(&quot;@ Hello&quot;);&#10;    return affirm;&#10;}"></textarea>
+        <div id="dashReplRes" class="repl-res" style="min-height:28px;margin-top:8px;white-space:pre;"></div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary" style="font-size:11px;padding:5px 14px;border-radius:6px;" onclick="runReplExpr()">▶ Run <span style="font-size:9px;opacity:0.7">Ctrl+↵</span></button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('hello')">Hello</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('consensus')">Consensus</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('match')">Match</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('dec13')">13→trit</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;margin-left:auto;" onclick="openReplInEditor()" title="Open in Editor">↗</button>
         </div>
       </div>
     </div>
@@ -891,7 +906,7 @@
           <button class="dash-quick-btn" onclick="switchView('editor'); openFile('examples/hello_trit.tern')">
             <i data-lucide="play"></i> <span>Run Hello Trit</span>
           </button>
-          <button class="dash-quick-btn" onclick="window.open('https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/Language-Reference.md', '_blank')">
+          <button class="dash-quick-btn" onclick="switchView('docs')">
             <i data-lucide="book-open"></i> <span>Documentation</span>
           </button>
           <button class="dash-quick-btn" onclick="switchView('flow')">
@@ -2480,12 +2495,21 @@ function clearOutput() {
   document.getElementById("section-error").style.display = "none";
 }
 
+window.addEventListener('wasmready', () => {
+  const badge = document.getElementById("wasmBadge");
+  if (badge) badge.style.opacity = "1";
+  // Update statusbar to show WASM is live
+  const sb = document.getElementById("vmStatus");
+  if (sb && sb.textContent.includes("Idle")) sb.textContent = "⚡ WASM ready";
+});
+
 function showResult(data) {
   const ok = data.status === "ok";
-  setStatus(ok ? "ok" : "error", ok ? "✓ OK" : "✕ Error");
+  setStatus(ok ? "ok" : "error", ok ? (data._wasm ? "⚡ OK (WASM)" : "✓ OK") : "✕ Error");
 
   document.getElementById("section-meta").style.display = "block";
-  document.getElementById("metaBytes").textContent = data.bytecode_bytes != null ? data.bytecode_bytes + "B" : "—";
+  const bytesLabel = data._wasm ? (data._ms != null ? `${data._ms}ms WASM` : "WASM") : (data.bytecode_bytes != null ? data.bytecode_bytes + "B" : "—");
+  document.getElementById("metaBytes").textContent = bytesLabel;
   document.getElementById("metaStatus").textContent = ok ? "exited ok" : "vm error";
   document.getElementById("metaStatus").style.color = ok ? "var(--green)" : "var(--red)";
 
@@ -2550,6 +2574,30 @@ async function runCode() {
   setStatus("running", "● Running…");
 
   const startTime = Date.now();
+
+  // Try WASM first — zero latency, no network required
+  if (window.wasmReady && window.wasmRunTern) {
+    try {
+      const raw = window.wasmRunTern(code);
+      const r = JSON.parse(raw);
+      const ms = Date.now() - startTime;
+      const data = {
+        status: r.ok ? "ok" : "error",
+        output: r.output || [],
+        trit: r.trit ?? 0,
+        label: r.label || "tend",
+        error: r.error || null,
+        bytecode_bytes: r.cycles || 0,
+        _ms: ms,
+        _wasm: true,
+      };
+      showResult(data);
+      addRunToHistory(activeFile, data.status === "ok", ms, data);
+      runBtn.classList.remove("running");
+      runBtn.innerHTML = '<span>▶ Run</span><span class="kbd">Ctrl+↵</span>';
+      return;
+    } catch(e) { /* fall through to API */ }
+  }
 
   try {
     const body = { code };
@@ -2737,55 +2785,88 @@ async function tryApiRun() {
   }
 }
 
+const REPL_SNIPPETS = {
+  hello: `fn main() -> trit {\n    print("@ Hello Ternary World");\n    return affirm;\n}`,
+  consensus: `fn main() -> trit {\n    let a: trit = affirm;\n    let b: trit = tend;\n    let c: trit = affirm;\n    // Majority: 2 affirm, 1 tend → affirm\n    return a;\n}`,
+  match: `fn main() -> trit {\n    let sig: trit = tend;\n    match sig {\n        affirm => { print("YES"); }\n        tend   => { print("HOLD — deliberate"); }\n        reject => { print("NO"); }\n    }\n    return sig;\n}`,
+  dec13: `fn main() -> trit {\n    // 13 in balanced ternary = +-+  (+9 -3 +1)\n    let val: int = 13;\n    print("13 = +-+ (balanced ternary)");\n    return affirm;\n}`,
+};
+
+function setReplSnippet(key) {
+  document.getElementById("dashReplInput").value = REPL_SNIPPETS[key] || "";
+}
+
+function openReplInEditor() {
+  const code = document.getElementById("dashReplInput").value.trim();
+  if (!code) return;
+  const path = "playground/repl.tern";
+  fileBuffers[path] = code;
+  loadToEditor(path, code);
+  switchView('editor');
+}
+
 async function runReplExpr() {
   const input = document.getElementById("dashReplInput").value.trim();
   const resEl = document.getElementById("dashReplRes");
   if (!input) return;
 
   resEl.style.color = "var(--muted)";
-  resEl.textContent = "evaluating…";
+  resEl.textContent = "running…";
+  const t0 = Date.now();
 
-  // Case 1: Pure number (convert to balanced ternary)
-  if (/^-?\d+$/.test(input)) {
-    let num = parseInt(input);
-    if (num === 0) { resEl.textContent = "0 (tend)"; return; }
-    let res = "";
-    let n = num;
-    while (n !== 0) {
-      let rem = n % 3;
-      n = Math.floor(n / 3);
-      if (rem < 0) { rem += 3; n -= 1; }
-      if (rem === 2) { rem = -1; n += 1; }
-      res = (rem === 1 ? "+" : (rem === -1 ? "-" : "0")) + res;
-    }
-    resEl.style.color = "var(--cyan)";
-    resEl.textContent = `${res} (balanced)`;
-    return;
+  // Detect if it's a full fn main() program or just an expression
+  const isFullProgram = /fn\s+main\s*\(/.test(input);
+  const src = isFullProgram ? input : `fn main() -> trit { return ${input}; }`;
+
+  // Try WASM first (zero latency, no network)
+  if (window.wasmReady && window.wasmRunTern) {
+    try {
+      const r = JSON.parse(window.wasmRunTern(src));
+      const ms = Date.now() - t0;
+      if (r.ok) {
+        const trit = r.trit;
+        const label = r.label || (trit === 1 ? "affirm" : trit === -1 ? "reject" : "tend");
+        const color = trit === 1 ? "var(--green)" : (trit === -1 ? "var(--red)" : "var(--amber)");
+        const sign  = trit === 1 ? "+1" : (trit === -1 ? "-1" : "0");
+        resEl.style.color = color;
+        let out = `${sign}  ${label.toUpperCase()}  [${ms}ms WASM]`;
+        if (r.output && r.output.length) out += "\n" + r.output.join("\n");
+        resEl.textContent = out;
+      } else {
+        resEl.style.color = "var(--red)";
+        resEl.textContent = r.error || "Error";
+      }
+      return;
+    } catch(e) { /* fall through */ }
   }
 
-  // Case 2: Expression (send to /api/run as a return statement)
+  // API fallback
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
     const key = document.getElementById("apiKey").value.trim();
-    const code = `return ${input};`;
-    
-    const response = await fetch(`${endpoint}/api/run`, {
+    const res = await fetch(`${endpoint}/api/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, key })
+      body: JSON.stringify({ code: src, key })
     });
-    
-    const data = await response.json();
-    if (data.status === "ok" && data.registers && data.registers[0]) {
-      resEl.style.color = "var(--green)";
-      resEl.textContent = data.registers[0];
+    const data = await res.json();
+    const ms = Date.now() - t0;
+    if (data.status === "ok") {
+      const trit = data.trit ?? 1;
+      const label = data.label || "affirm";
+      const color = trit === 1 ? "var(--green)" : (trit === -1 ? "var(--red)" : "var(--amber)");
+      const sign  = trit === 1 ? "+1" : (trit === -1 ? "-1" : "0");
+      resEl.style.color = color;
+      let out = `${sign}  ${label.toUpperCase()}  [${ms}ms API]`;
+      if (data.output && data.output.length) out += "\n" + data.output.join("\n");
+      resEl.textContent = out;
     } else {
       resEl.style.color = "var(--red)";
-      resEl.textContent = data.error || "Eval failed";
+      resEl.textContent = data.error || "Error";
     }
   } catch (e) {
     resEl.style.color = "var(--red)";
-    resEl.textContent = "Connection error";
+    resEl.textContent = "No connection — WASM not loaded yet";
   }
 }
 
