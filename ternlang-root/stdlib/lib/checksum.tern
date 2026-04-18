@@ -1,0 +1,40 @@
+// stdlib/lib/checksum.tern
+// Demonstrates: A basic checksum algorithm for trit sequences.
+// Tier: 1 - Open Core
+
+fn calculate_checksum(data: trittensor<5>, size: int) -> int {
+    let sum: int = 0;
+    let i: int = 0;
+    while i < size {
+        // Convert trits -1, 0, 1 to positive weights 0, 1, 2 for checksum
+        let weight: int = 0;
+        match data[i] {
+            -1 => { weight = 0; }
+             0 => { weight = 1; }
+             1 => { weight = 2; }
+        }
+        sum = sum + weight;
+        i = i + 1;
+    }
+    return sum % 3;
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [1, -1, 0, 1, 1];
+    
+    println("Ternary Checksum Simulation:");
+    println("Data: 1, -1, 0, 1, 1");
+    
+    // Weights: 2, 0, 1, 2, 2 -> sum 7 -> 7 % 3 = 1
+    let sum_mod: int = calculate_checksum(data, 5);
+    println("Checksum result:");
+    println(sum_mod);
+    
+    if sum_mod == 1 {
+        println("Checksum verified. Success.");
+        return truth();
+    }
+    
+    println("Checksum failed.");
+    return conflict();
+}
