@@ -1,0 +1,60 @@
+// stdlib/classical/bubble_sort_ternary.tern
+// Demonstrates: Classical bubble sort algorithm implemented on a trittensor.
+// Tier: 1 - Open Core
+
+fn bubble_sort(data: trittensor<5>, size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        let j: int = 0;
+        let limit: int = size - i - 1;
+        while j < limit {
+            if data[j] > data[j + 1] {
+                // Swap
+                let temp: trit = data[j];
+                data[j] = data[j + 1];
+                data[j + 1] = temp;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return truth();
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [1, -1, 0, 1, -1];
+    let size: int = 5;
+
+    println("Unsorted tensor:");
+    println(data[0]);
+    println(data[1]);
+    println(data[2]);
+    println(data[3]);
+    println(data[4]);
+
+    bubble_sort(data, size);
+
+    println("Sorted tensor:");
+    println(data[0]);
+    println(data[1]);
+    println(data[2]);
+    println(data[3]);
+    println(data[4]);
+
+    // Expected: -1, -1, 0, 1, 1
+    if data[0] == -1 {
+        if data[1] == -1 {
+            if data[2] == 0 {
+                if data[3] == 1 {
+                    if data[4] == 1 {
+                        println("Sort verified.");
+                        return truth();
+                    }
+                }
+            }
+        }
+    }
+
+    println("Sort failed.");
+    return conflict();
+}
