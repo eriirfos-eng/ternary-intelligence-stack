@@ -1,41 +1,44 @@
 // stdlib/agents/broadcast.tern
-// Demonstrates: Broadcast agent pattern (one-to-many)
-// Tier: 1
+// Demonstrates: Broadcast pattern (All-or-nothing consensus)
+// Tier: 1 — Open Core
 
-agent Subscriber {
+agent Worker {
     fn handle(msg: trit) -> trit {
-        // Subscriber logic
-        return affirm;
+        return msg;
     }
 }
 
 agent Broadcast {
     fn handle(msg: trit) -> trit {
-        let s1: agentref = spawn Subscriber;
-        let s2: agentref = spawn Subscriber;
-        let s3: agentref = spawn Subscriber;
-
-        // Broadcast the message to all subscribers
-        send s1 msg;
-        send s2 msg;
-        send s3 msg;
-
-        // Synchronization point: await all to ensure delivery
-        await s1;
-        await s2;
-        await s3;
-
-        return affirm;
+        let w1: agentref = spawn Worker;
+        let w2: agentref = spawn Worker;
+        let w3: agentref = spawn Worker;
+        
+        send w1 msg;
+        send w2 msg;
+        send w3 msg;
+        
+        let r1: trit = await w1;
+        let r2: trit = await w2;
+        let r3: trit = await w3;
+        
+        // Logical AND: all must be affirm (+1) to return affirm
+        // Balanced Ternary AND (min): 1 && 1 && 1 = 1
+        let res: trit = r1 && r2 && r3;
+        return res;
     }
 }
 
 fn main() -> trit {
     let b: agentref = spawn Broadcast;
+    
+    // All affirm -> affirm
     send b affirm;
     let res: trit = await b;
     
     match res {
-        affirm => { return affirm; }
-        _      => { return reject; }
+        1  => { return affirm; }
+        0  => { return reject; }
+        -1 => { return reject; }
     }
 }
