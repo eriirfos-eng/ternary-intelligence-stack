@@ -99,46 +99,136 @@
     }
     .card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
 
-    /* ─── Flow Canvas (TernFlow) ────────────────────────────────────── */
+    /* ─── Flow Lab Layout (TernFlow) ────────────────────────────────── */
     #view-flow {
-      flex: 1; display: none; position: relative;
-      overflow: hidden; background: var(--bg);
-      background-image: radial-gradient(var(--border2) 1px, transparent 1px);
-      background-size: 24px 24px;
+      flex: 1; display: none; overflow: hidden;
+      flex-direction: row; background: var(--bg);
     }
     #view-flow.active { display: flex; }
+
+    /* Flow Library (Left) */
+    #flow-library {
+      width: 200px; background: var(--bg1);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .lib-search {
+      padding: 12px; border-bottom: 1px solid var(--border);
+    }
+    .lib-item {
+      padding: 10px 16px; font-size: 12px; color: var(--muted);
+      cursor: grab; display: flex; align-items: center; gap: 8px;
+      transition: all 0.15s; border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+    .lib-item:hover { background: var(--bg2); color: var(--text); }
+    .lib-item i { width: 14px; color: var(--cyan); }
+
+    /* Flow Canvas (Center) */
+    #flow-canvas-wrap {
+      flex: 1; position: relative; overflow: hidden;
+      background-image: radial-gradient(var(--border2) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
     #flow-canvas {
-      width: 10000px; height: 10000px;
+      width: 5000px; height: 5000px;
       position: absolute; top: 0; left: 0;
       transform-origin: 0 0;
     }
+    #flow-svg-layer {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; pointer-events: none;
+      z-index: 5;
+    }
+    .flow-wire {
+      fill: none; stroke: var(--border2); stroke-width: 2;
+      stroke-linecap: round; transition: stroke 0.3s, stroke-width 0.3s;
+    }
+    .flow-wire.active-1 { stroke: var(--green); stroke-width: 3; filter: drop-shadow(0 0 4px var(--green)); }
+    .flow-wire.active-0 { stroke: var(--amber); stroke-width: 3; }
+    .flow-wire.active-n1 { stroke: var(--red); stroke-width: 3; }
+
+    /* Flow Properties (Right) */
+    #flow-props {
+      width: 280px; background: var(--bg1);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .prop-header {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 700; color: var(--text);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .prop-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .prop-group { display: flex; flex-direction: column; gap: 6px; }
+    .prop-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+    .prop-input {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 4px; color: var(--text); padding: 8px;
+      font-family: inherit; font-size: 12px; outline: none;
+    }
+    .prop-input:focus { border-color: var(--blue); }
+
     .flow-node {
-      position: absolute; min-width: 180px;
-      background: var(--bg1); border: 2px solid var(--border2);
-      border-radius: var(--radius); padding: 12px;
+      position: absolute; min-width: 200px;
+      background: var(--bg1); border: 1px solid var(--border2);
+      border-radius: 10px; padding: 0;
       cursor: grab; user-select: none; box-shadow: var(--shadow);
-      z-index: 10; transition: border-color 0.2s;
+      z-index: 10; overflow: hidden;
     }
     .flow-node:active { cursor: grabbing; }
-    .flow-node:hover { border-color: var(--blue); }
-    .flow-node-header {
-      font-size: 10px; font-weight: 700; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.05em;
-      margin-bottom: 8px; display: flex; justify-content: space-between;
+    .flow-node.selected { border-color: var(--blue); border-width: 2px; }
+    .fn-head {
+      background: rgba(255,255,255,0.03); padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .flow-node-title { font-weight: 600; color: var(--text); margin-bottom: 12px; font-size: 14px; }
+    .fn-body { padding: 12px; }
     .flow-port {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--border2); position: absolute;
-      border: 2px solid var(--bg1);
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--bg2); position: absolute;
+      border: 2px solid var(--bg1); cursor: crosshair;
+      transition: background 0.2s;
     }
-    .flow-port-in  { left: -6px; top: 50%; transform: translateY(-50%); }
-    .flow-port-out { right: -6px; top: 50%; transform: translateY(-50%); }
-    .flow-node.active-1 { border-color: var(--green); }
-    .flow-node.active-0 { border-color: var(--amber); }
-    .flow-node.active-n1 { border-color: var(--red); }
+    .flow-port:hover { background: var(--cyan); }
     .flow-node.external { border-color: var(--amber); border-style: dashed; }
     .flow-node.external .flow-node-header { color: var(--amber); }
+
+    /* ─── Execution Inspector ────────────────────────────────────────── */
+    #flow-inspector {
+      position: absolute; bottom: 80px; left: 20px; right: 300px;
+      height: 180px; background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px); border: 1px solid var(--border2);
+      border-radius: var(--radius); display: none; flex-direction: column;
+      z-index: 100; overflow: hidden; box-shadow: var(--shadow);
+    }
+    #flow-inspector.active { display: flex; }
+    .ins-head {
+      padding: 8px 16px; border-bottom: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase;
+    }
+    .ins-body { flex: 1; overflow-y: auto; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text); }
+    .ins-row { display: flex; gap: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px; }
+    .ins-time { color: var(--muted); width: 60px; }
+    .ins-node { color: var(--cyan); font-weight: 600; width: 120px; }
+    .ins-msg  { flex: 1; }
+
+    /* Signal Animations */
+    @keyframes pulse-node-affirm { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+    @keyframes pulse-node-reject { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    @keyframes pulse-node-hold   { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+
+    .pulse-affirm { animation: pulse-node-affirm 1.5s infinite; }
+    .pulse-reject { animation: pulse-node-reject 1.5s infinite; }
+    .pulse-hold   { animation: pulse-node-hold 1.5s infinite; }
+
+    .trit-particle {
+      width: 8px; height: 8px; border-radius: 50%;
+      position: absolute; pointer-events: none; z-index: 20;
+      offset-path: path(var(--d)); animation: move-particle 2s linear infinite;
+    }
+    @keyframes move-particle { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
 
     /* ─── Topbar ───────────────────────────────────────────────────── */
     #topbar {
@@ -912,24 +1002,64 @@
 
 <!-- ═══ FLOW VIEW (TernFlow) ═════════════════════════════════════════════════ -->
 <div class="view" id="view-flow">
-  <div id="flow-canvas-wrap" style="flex:1; position:relative; overflow:hidden;">
+  <!-- Left: Library -->
+  <div id="flow-library">
+    <div class="lib-search">
+      <input type="text" class="prop-input" placeholder="Search Agents..." style="width:100%">
+    </div>
+    <div id="flow-lib-items" style="flex:1; overflow-y:auto;">
+      <!-- Loaded via JS -->
+    </div>
+  </div>
+
+  <!-- Center: Canvas -->
+  <div id="flow-canvas-wrap">
+    <svg id="flow-svg-layer">
+      <!-- Wires rendered here -->
+    </svg>
     <div id="flow-canvas">
       <!-- Nodes injected via JS -->
     </div>
+
+    <!-- Flow Floating Toolbar -->
+    <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
+      <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(15, 23, 42, 0.85); backdrop-filter:blur(12px); border-radius:50px; border: 1px solid var(--border2);">
+        <button class="btn btn-ghost" onclick="renderFlow()" title="Reset Canvas">
+          <i data-lucide="refresh-cw" style="width:16px"></i>
+        </button>
+        <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add Binary LLM Bridge" style="color:var(--amber)">
+          <i data-lucide="plus-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Bridge</span>
+        </button>
+        <button class="btn btn-ghost" onclick="addTernaryGate()" title="Add Ternary Logic Gate" style="color:var(--cyan)">
+          <i data-lucide="split" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Gate</span>
+        </button>
+        <button class="btn btn-ghost" onclick="runSimulation()" title="Run Visual Simulation" style="color:var(--green)">
+          <i data-lucide="play-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Simulate</span>
+        </button>
+        <div style="width:1px; height:20px; background:var(--border2);"></div>
+        <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px; padding: 6px 20px;">
+          <i data-lucide="download" style="width:16px"></i> <span style="margin-left:6px">Export .tern</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Execution Inspector Overlay -->
+    <div id="flow-inspector">
+      <div class="ins-head">
+        <span>Execution Inspector</span>
+        <button class="btn-ghost" onclick="toggleInspector()" style="padding:2px"><i data-lucide="chevron-down" style="width:14px"></i></button>
+      </div>
+      <div id="ins-body" class="ins-body">
+        <!-- Logs injected via JS -->
+      </div>
+    </div>
   </div>
-  <!-- Flow Toolbar -->
-  <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
-    <div class="card" style="padding:8px 16px; display:flex; gap:12px; align-items:center; background:rgba(30, 41, 59, 0.85); backdrop-filter:blur(12px); border-radius:50px; border: 1px solid var(--border2);">
-      <button class="btn btn-ghost" onclick="renderFlow()" title="Refresh Nodes">
-        <i data-lucide="refresh-cw" style="width:16px"></i>
-      </button>
-      <button class="btn btn-ghost" onclick="addExternalBridge()" title="Add Binary LLM Bridge" style="color:var(--amber)">
-        <i data-lucide="plus-circle" style="width:16px"></i> <span style="font-size:12px; font-weight:600">Bridge</span>
-      </button>
-      <div style="width:1px; height:20px; background:var(--border2);"></div>
-      <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px; padding: 6px 18px;">
-        <i data-lucide="download" style="width:16px"></i> <span style="margin-left:4px">Export .tern</span>
-      </button>
+
+  <!-- Right: Properties -->
+  <div id="flow-props">
+    <div class="prop-header">Node Properties</div>
+    <div id="prop-body" class="prop-body">
+      <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px;">Select a node to configure</div>
     </div>
   </div>
 </div>
@@ -1411,65 +1541,91 @@ function switchView(name) {
 
 // ─── TernFlow Logic ───────────────────────────────────────────────────────────
 let flowNodes = [];
+let flowWires = [];
+let selectedNodeId = null;
+let activeWire = null;
 
 function renderFlow() {
   const canvas = document.getElementById("flow-canvas");
   canvas.innerHTML = "";
   flowNodes = [];
+  flowWires = [];
+  selectedNodeId = null;
+  updatePropertyPanel();
+  renderFlowLibrary();
+  updateWires();
+}
 
-  // 1. Scan current code and stdlib for Agents
+function renderFlowLibrary() {
+  const lib = document.getElementById("flow-lib-items");
+  lib.innerHTML = "";
+  
   const allSources = { ...STDLIB, ...fileBuffers };
-  let x = 40, y = 40;
+  const agents = [];
 
   Object.entries(allSources).forEach(([path, code]) => {
     const agentMatches = [...code.matchAll(/agent\s+(\w+)\s*\{/g)];
     agentMatches.forEach(match => {
-      const name = match[1];
-      createFlowNode(name, path, x, y);
-      x += 220;
-      if (x > 800) { x = 40; y += 180; }
+      agents.push({ name: match[1], path });
     });
   });
+
+  agents.forEach(a => {
+    const div = document.createElement("div");
+    div.className = "lib-item";
+    div.innerHTML = `<i data-lucide="bot"></i> <span>${a.name}</span>`;
+    div.onclick = () => {
+      const id = "node_" + Date.now();
+      createFlowNode(a.name, a.path, 100, 100, 'agent', id);
+    };
+    lib.appendChild(div);
+  });
+  lucide.createIcons();
 }
 
-function createFlowNode(name, path, x, y, type = 'agent') {
+function createFlowNode(name, path, x, y, type = 'agent', id) {
   const canvas = document.getElementById("flow-canvas");
   const node = document.createElement("div");
+  node.id = id;
   node.className = "flow-node" + (type === 'external' ? ' external' : '');
   node.style.left = x + "px";
   node.style.top = y + "px";
   
-  const headerText = type === 'external' ? 'EXTERNAL AI' : 'AGENT';
-  const subText = type === 'external' ? 'OpenAI / Claude' : path.split('/').pop();
-  const signature = type === 'external' ? 'Output: raw string' : 'fn handle(msg: trit) -> trit';
+  const icon = type === 'external' ? 'zap' : (type === 'gate' ? 'split' : 'bot');
 
   node.innerHTML = `
-    <div class="flow-node-header">
-      <span>${headerText}</span>
-      <span style="color:var(--cyan)">${subText}</span>
+    <div class="fn-head">
+      <div style="display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; color:var(--muted)">
+        <i data-lucide="${icon}" style="width:12px"></i>
+        ${type.toUpperCase()}
+      </div>
+      <button class="btn-ghost" onclick="deleteNode('${id}')" style="padding:2px; background:none; border:none; cursor:pointer; color:var(--muted)"><i data-lucide="x" style="width:12px"></i></button>
     </div>
-    <div class="flow-node-title">${name}</div>
-    <div class="flow-port flow-port-in"></div>
-    <div class="flow-port flow-port-out"></div>
-    <div style="font-size:10px; color:var(--muted)">${signature}</div>
+    <div class="fn-body">
+      <div style="font-weight:600; color:var(--text); font-size:13px; margin-bottom:4px;">${name}</div>
+      <div style="font-size:10px; color:var(--muted)">${path.split('/').pop()}</div>
+    </div>
+    <div class="flow-port flow-port-in" style="left:-6px; top:50%; margin-top:-6px;"></div>
+    <div class="flow-port flow-port-out" style="right:-6px; top:50%; margin-top:-6px;"></div>
   `;
 
-  // Basic Dragging
   let isDragging = false;
-  let offsetX, offsetY;
+  let startX, startY;
 
   node.onmousedown = (e) => {
-    if (e.target.classList.contains('flow-port')) return;
+    selectNode(id);
+    if (e.target.closest('button') || e.target.classList.contains('flow-port')) return;
     isDragging = true;
-    offsetX = e.clientX - node.offsetLeft;
-    offsetY = e.clientY - node.offsetTop;
+    startX = e.clientX - node.offsetLeft;
+    startY = e.clientY - node.offsetTop;
     node.style.zIndex = 1000;
   };
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    node.style.left = (e.clientX - offsetX) + "px";
-    node.style.top = (e.clientY - offsetY) + "px";
+    node.style.left = (e.clientX - startX) + "px";
+    node.style.top = (e.clientY - startY) + "px";
+    updateWires();
   });
 
   document.addEventListener('mouseup', () => {
@@ -1478,60 +1634,297 @@ function createFlowNode(name, path, x, y, type = 'agent') {
   });
 
   canvas.appendChild(node);
-  flowNodes.push({ name, path, type, element: node });
+  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7 } });
+  lucide.createIcons();
+}
+
+function selectNode(id) {
+  selectedNodeId = id;
+  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('selected');
+  updatePropertyPanel();
+}
+
+function deleteNode(id) {
+  flowNodes = flowNodes.filter(n => n.id !== id);
+  flowWires = flowWires.filter(w => w.fromId !== id && w.toId !== id);
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  if (selectedNodeId === id) {
+    selectedNodeId = null;
+    updatePropertyPanel();
+  }
+  updateWires();
+}
+
+function updatePropertyPanel() {
+  const body = document.getElementById("prop-body");
+  if (!selectedNodeId) {
+    body.innerHTML = `<div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px;">Select a node to configure</div>`;
+    return;
+  }
+  
+  const node = flowNodes.find(n => n.id === selectedNodeId);
+  body.innerHTML = `
+    <div class="prop-group">
+      <label class="prop-label">Node Name</label>
+      <input type="text" class="prop-input" value="${node.name}" onchange="updateNodeProp('name', this.value)">
+    </div>
+    <div class="prop-group">
+      <label class="prop-label">System Instructions</label>
+      <textarea class="prop-input" style="height:80px; resize:none;" onchange="updateNodeProp('system_prompt', this.value)">${node.props.system_prompt || ""}</textarea>
+    </div>
+    <div class="prop-group">
+      <label class="prop-label">Trit Sensitivity</label>
+      <input type="range" min="0" max="1" step="0.1" value="${node.props.temperature}" onchange="updateNodeProp('temperature', this.value)">
+    </div>
+  `;
+}
+
+function updateNodeProp(key, val) {
+  const node = flowNodes.find(n => n.id === selectedNodeId);
+  if (key === 'name') {
+    node.name = val;
+    const titleEl = document.querySelector(`#${node.id} .fn-body div`);
+    if (titleEl) titleEl.textContent = val;
+  } else {
+    node.props[key] = val;
+  }
 }
 
 function addExternalBridge() {
-  const name = "External_LLM_" + (flowNodes.filter(n => n.type === 'external').length + 1);
-  createFlowNode(name, "external", 100, 100, 'external');
+  const id = "bridge_" + Date.now();
+  createFlowNode("OpenAI Gateway", "external", 100, 100, 'external', id);
+}
+
+function addTernaryGate() {
+  const id = "gate_" + Date.now();
+  createFlowNode("Consensus Gate", "logic", 100, 100, 'gate', id);
+}
+
+// ─── Wiring System ────────────────────────────────────────────────────────────
+function toggleInspector() {
+  const ins = document.getElementById("flow-inspector");
+  ins.style.display = ins.style.display === "flex" ? "none" : "flex";
+  lucide.createIcons();
+}
+
+function logInspector(nodeName, msg) {
+  const body = document.getElementById("ins-body");
+  const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const row = document.createElement("div");
+  row.className = "ins-row";
+  row.innerHTML = `
+    <span class="ins-time">[${time}]</span>
+    <span class="ins-node">${nodeName}</span>
+    <span class="ins-msg">${msg}</span>
+  `;
+  body.prepend(row);
+}
+
+async function runSimulation() {
+  const ins = document.getElementById("flow-inspector");
+  ins.classList.add("active");
+  ins.style.display = "flex";
+  document.getElementById("ins-body").innerHTML = "";
+  
+  logInspector("SYSTEM", "Initializing Swarm Simulation...");
+  
+  // Clear all pulses
+  document.querySelectorAll('.flow-node').forEach(n => {
+    n.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
+  });
+
+  if (flowNodes.length === 0) {
+    logInspector("ERROR", "No nodes found on canvas.");
+    return;
+  }
+
+  // Simple BFS-like simulation of signal flow
+  const startNodes = flowNodes.filter(n => n.type === 'external' || !flowWires.some(w => w.toId === n.id));
+  
+  for (const node of startNodes) {
+    await simulateNode(node, 1); // Start with affirm signal
+  }
+}
+
+async function simulateNode(node, signal) {
+  const el = document.getElementById(node.id);
+  const pulseClass = signal === 1 ? 'pulse-affirm' : (signal === -1 ? 'pulse-reject' : 'pulse-hold');
+  const signalLabel = signal === 1 ? '+1 AFFIRM' : (signal === -1 ? '-1 REJECT' : '0 HOLD');
+
+  logInspector(node.name, `Processing signal: ${signalLabel}`);
+  el.classList.add(pulseClass);
+  
+  await new Promise(r => setTimeout(r, 1000));
+
+  const outWires = flowWires.filter(w => w.fromId === node.id);
+  for (const wire of outWires) {
+    const nextNode = flowNodes.find(n => n.id === wire.toId);
+    if (nextNode) {
+      await animateSignal(wire, signal);
+      await simulateNode(nextNode, signal);
+    }
+  }
+}
+
+function updateWires() {
+  const svg = document.getElementById("flow-svg-layer");
+  if (!svg) return;
+  svg.innerHTML = "";
+  
+  flowWires.forEach(w => {
+    const fromNode = document.getElementById(w.fromId);
+    const toNode = document.getElementById(w.toId);
+    if (!fromNode || !toNode) return;
+
+    const fromPort = fromNode.querySelector('.flow-port-out');
+    const toPort = toNode.querySelector('.flow-port-in');
+
+    const start = getPortPos(fromPort);
+    const end = getPortPos(toPort);
+    drawWire(start, end, w.id, w.signal);
+  });
+
+  if (activeWire) {
+    const start = activeWire.start;
+    const end = activeWire.end;
+    drawWire(start, end, 'active-wire', 0);
+  }
+}
+
+async function animateSignal(wire, signal) {
+  const svg = document.getElementById("flow-svg-layer");
+  const fromNode = document.getElementById(wire.fromId);
+  const toNode = document.getElementById(wire.toId);
+  if (!fromNode || !toNode) return;
+
+  const fromPort = fromNode.querySelector('.flow-port-out');
+  const toPort = toNode.querySelector('.flow-port-in');
+  const start = getPortPos(fromPort);
+  const end = getPortPos(toPort);
+
+  const dx = Math.abs(end.x - start.x) * 0.5;
+  const d = `M ${start.x} ${start.y} C ${start.x + dx} ${start.y}, ${end.x - dx} ${end.y}, ${end.x} ${end.y}`;
+
+  const particle = document.createElement("div");
+  particle.className = "trit-particle";
+  particle.style.setProperty("--d", `"${d}"`);
+  particle.style.background = signal === 1 ? 'var(--green)' : (signal === -1 ? 'var(--red)' : 'var(--amber)');
+  
+  document.getElementById("flow-canvas-wrap").appendChild(particle);
+  
+  // Highlight wire
+  const wireEl = document.getElementById(wire.id);
+  if (wireEl) wireEl.setAttribute("class", `flow-wire active-${signal === 1 ? '1' : (signal === -1 ? 'n1' : '0')}`);
+
+  await new Promise(r => setTimeout(r, 2000));
+  particle.remove();
+}
+
+function getPortPos(port) {
+  const rect = port.getBoundingClientRect();
+  const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
+  return {
+    x: rect.left - wrapRect.left + rect.width / 2,
+    y: rect.top - wrapRect.top + rect.height / 2
+  };
+}
+
+function drawWire(start, end, id, signal) {
+  const svg = document.getElementById("flow-svg-layer");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  
+  const dx = Math.abs(end.x - start.x) * 0.5;
+  const d = `M ${start.x} ${start.y} C ${start.x + dx} ${start.y}, ${end.x - dx} ${end.y}, ${end.x} ${end.y}`;
+  
+  path.setAttribute("d", d);
+  path.setAttribute("class", "flow-wire" + (signal !== undefined ? ` active-${signal === 1 ? '1' : (signal === -1 ? 'n1' : '0')}` : ''));
+  path.setAttribute("id", id);
+  svg.appendChild(path);
 }
 
 function exportFlowCode() {
-  let code = "// Generated by TernFlow Orchestrator\n";
-  code += "// Swarm definition with Binary-to-Ternary Bridge\n\n";
-  
-  // Imports
-  const agentNodes = flowNodes.filter(n => n.type === 'agent');
-  agentNodes.forEach(n => {
-    code += `// from "${n.path}" import ${n.name};\n`;
-  });
-
-  // Check if we need the bridge stdlib
-  if (flowNodes.some(n => n.type === 'external')) {
-    code += "use stdlib::agents::binary_bridge;\n\n";
+  if (flowNodes.length === 0) {
+    showToast("No nodes to export", "error");
+    return;
   }
 
+  let code = "// Generated by TernFlow Orchestrator\n";
+  code += "// Swarm definition\n\n";
+  
+  const imports = new Set();
+  flowNodes.forEach(n => { if (n.type === 'agent') imports.add(n.path); });
+  if (flowNodes.some(n => n.type === 'external')) imports.add("stdlib/agents/binary_bridge.tern");
+  
+  imports.forEach(p => { code += `// from \"${p}\" import *;\n`; });
   code += "\nfn main() -> trit {\n";
   
-  // 1. Spawn agents
-  flowNodes.forEach((n, i) => {
-    if (n.type === 'agent') {
-      code += `    let a${i}: agentref = spawn ${n.name};\n`;
-    } else {
-      code += `    let bridge${i}: agentref = spawn binary_bridge::LLMGateway;\n`;
-    }
+  flowNodes.forEach(n => {
+    const varName = n.id.replace('node_', 'a').replace('bridge_', 'br').replace('gate_', 'g');
+    if (n.type === 'agent') code += `    let ${varName}: agentref = spawn ${n.name};\n`;
+    else if (n.type === 'external') code += `    let ${varName}: agentref = spawn LLMGateway;\n`;
+    else code += `    let ${varName}: agentref = spawn TritVote;\n`;
+  });
+  
+  code += "\n    // Execution logic\n";
+  flowWires.forEach((w, i) => {
+    const fv = w.fromId.replace('node_', 'a').replace('bridge_', 'br').replace('gate_', 'g');
+    const tv = w.toId.replace('node_', 'a').replace('bridge_', 'br').replace('gate_', 'g');
+    code += `    send ${fv} affirm;\n    let res_${i}: trit = await ${fv};\n    send ${tv} res_${i};\n`;
   });
 
-  // 2. Logic chain (Example: first bridge feeds first agent)
-  if (flowNodes.length >= 2) {
-      code += "\n    // Bridging Binary -> Ternary\n";
-      code += "    send bridge0 \"AFFIRM\"; // Mock external result\n";
-      code += "    let signal: trit = await bridge0;\n\n";
-      code += "    // Process through Ternary Swarm\n";
-      code += "    send a0 signal;\n";
-      code += "    let result: trit = await a0;\n";
-      code += "    return result;\n";
-  } else {
-      code += "\n    return affirm;\n";
-  }
-  
-  code += "}\n";
+  code += "\n    return affirm;\n}\n";
 
   newFile();
   if (monacoEditor) monacoEditor.setValue(code);
   switchView("editor");
-  showToast("Flow exported with Bridge logic", "ok");
+  showToast("Swarm exported to Editor", "ok");
 }
+
+document.addEventListener('mousedown', (e) => {
+  if (e.target.classList.contains('flow-port-out')) {
+    const port = e.target;
+    const nodeEl = port.closest('.flow-node');
+    const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
+    activeWire = {
+      fromId: nodeEl.id,
+      start: getPortPos(port),
+      end: { x: e.clientX - wrapRect.left, y: e.clientY - wrapRect.top }
+    };
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (activeWire) {
+    const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
+    activeWire.end = {
+      x: e.clientX - wrapRect.left,
+      y: e.clientY - wrapRect.top
+    };
+    updateWires();
+  }
+});
+
+document.addEventListener('mouseup', (e) => {
+  if (activeWire) {
+    if (e.target.classList.contains('flow-port-in')) {
+      const toNode = e.target.closest('.flow-node');
+      if (toNode.id !== activeWire.fromId) {
+        const wireId = "wire_" + Date.now();
+        flowWires.push({
+          id: wireId,
+          fromId: activeWire.fromId,
+          toId: toNode.id,
+          signal: 0
+        });
+      }
+    }
+    activeWire = null;
+    updateWires();
+  }
+});
 
 // ─── Build file tree ──────────────────────────────────────────────────────────
 function buildFileTree() {
