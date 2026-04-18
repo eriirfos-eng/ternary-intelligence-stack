@@ -335,6 +335,8 @@ async fn require_api_key(
         || path == "/activate"
         || path == "/api/run"
         || path == "/api/github/activate"
+        || path == "/api/stdlib/list"
+        || path.starts_with("/api/stdlib/read/")
         || path.starts_with("/admin") {
         return next.run(request).await;
     }
@@ -1344,42 +1346,18 @@ async fn stream_deliberate(
 // Without it, Smithery tries GET /mcp which returns 405.
 
 async fn mcp_server_card() -> Json<Value> {
+    // Smithery expects exactly this shape at /.well-known/mcp/server-card.json
+    // to bypass the live scan and use the static card instead.
+    // Format confirmed from Smithery CLI output (.smithery/shttp/manifest.json → serverCard).
+    let tools = mcp_tools_manifest()["tools"].clone();
     Json(json!({
-        "name":        "ternlang",
-        "displayName": "Ternary Intelligence Stack",
-        "version":     "0.3.3",
-        "description": "Turns binary AI agents into ternary decision engines. 30 tools, all free — no API key needed. Adds hold (trit=0) as a first-class outcome — not null, an active routing instruction to gather more evidence. MoE-13 orchestration, 3-layer memory, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM, BitNet quantizer, multi-dimensional safety gate. Built by RFI-IRFOS, Graz, Austria.",
-        "homepage":    "https://ternlang.com",
-        "icon":        "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack--tis-/main/ternlang-root/ternlang-web/favicon.svg",
-        "repository":  "https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-",
-        "protocol":    "2024-11-05",
-        "transport":   "http",
-        "endpoint":    "https://ternlang.com/mcp",
-        "auth":        { "type": "none" },
-        "tags":        ["ai", "reasoning", "decision", "ternary", "memory", "moe", "safety", "ml", "deliberation", "compression", "balanced-ternary", "programming-language", "compiler"],
-        "configSchema": {
-            "type": "object",
-            "properties": {
-                "apiKey": {
-                    "type": "string",
-                    "title": "Ternlang API Key (optional — Tier 2 €99/mo · Tier 3 €349/mo)",
-                    "description": "All 30 MCP tools are free — no key needed. An API key upgrades memory to server-side persistent storage and unlocks the REST API (10k–50k calls/month), SSE streaming, and production SLA. Get a key at https://ternlang.com/pricing"
-                }
-            },
-            "required": []
+        "serverInfo": {
+            "name":    "ternlang-mcp",
+            "version": "1.1.6"
         },
-        "free_tools": [
-            "trit_decide", "trit_vector", "trit_consensus", "trit_eval", "ternlang_run",
-            "quantize_weights", "sparse_benchmark", "moe_orchestrate", "moe_deliberate",
-            "trit_action_gate", "trit_debate", "trit_uncertainty_map", "trit_calibrate",
-            "trit_translate", "trit_eco_check", "trit_audit", "audit_ternary_logic",
-            "tsql_join", "get_industrial_standards", "trit_upgrade",
-            "trit_compress", "trit_triage", "trit_plan", "trit_factcheck",
-            "moe_full", "trit_mem_write", "trit_mem_read", "trit_mem_consolidate",
-            "trit_mem_stats", "trit_mem_compress"
-        ],
-        "premium_tools": [],
-        "highlight": "30 tools, all free. 3-layer memory (working/session/core) with ternary attention + MoE-13 consolidation. API key adds persistent server-side storage and REST API access."
+        "tools":     tools,
+        "resources": [],
+        "prompts":   []
     }))
 }
 
@@ -1389,7 +1367,7 @@ async fn mcp_info() -> Json<Value> {
     Json(json!({
         "name":        "ternlang-mcp",
         "version":     "0.3.3",
-        "protocol":    "2024-11-05",
+        "protocol":    "2025-03-26",
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
         "usage":       "POST JSON-RPC 2.0 — methods: initialize, tools/list, tools/call",
@@ -4347,7 +4325,7 @@ async fn main() {
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))
         .route("/api/stdlib/list", get(stdlib_list))
-        .route("/api/stdlib/read/*path", get(stdlib_read))
+        .route("/api/stdlib/read/{*path}", get(stdlib_read))
         .route("/api/run",        post(run_program))
         // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))
