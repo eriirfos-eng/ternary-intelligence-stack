@@ -1,0 +1,58 @@
+// stdlib/std/fs_utils.tern
+// Demonstrates: Mock filesystem utility functions based on string matching.
+// Tier: 1 - Open Core
+
+fn fs_exists(path: string) -> trit {
+    // Simple mock: if path starts with "/", assume it exists for simulation
+    // No real 'starts_with' so using manual comparison if fixed length or just non-empty
+    if path == "" { return -1; }
+    return 1;
+}
+
+fn fs_is_dir(path: string) -> trit {
+    // Mock: assume paths ending in "/" are directories
+    // We don't have end_with, but can check for common strings if we had length.
+    // Let's just mock based on specific known names for this showcase.
+    if path == "/home/" { return 1; }
+    if path == "/tmp/" { return 1; }
+    return -1;
+}
+
+fn fs_permission_check(path: string, mode: string) -> trit {
+    // Mock: everyone has "r", only /tmp/ has "w"
+    if mode == "r" { return 1; }
+    if mode == "w" {
+        if path == "/tmp/" { return 1; }
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let p1: string = "/home/";
+    let p2: string = "/etc/passwd";
+    
+    println("FS Utils Mock Showcase:");
+    
+    println("Checking if /home/ exists:");
+    if fs_exists(p1) == 1 {
+        println("Yes.");
+    }
+    
+    println("Checking if /home/ is directory:");
+    if fs_is_dir(p1) == 1 {
+        println("Yes.");
+    }
+    
+    println("Checking write permission on /home/:");
+    if fs_permission_check(p1, "w") == -1 {
+        println("Denied (Correct).");
+    }
+    
+    println("Checking write permission on /tmp/:");
+    if fs_permission_check("/tmp/", "w") == 1 {
+        println("Allowed (Correct). Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
