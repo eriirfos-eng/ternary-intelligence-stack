@@ -1,35 +1,41 @@
 // stdlib/agents/logger.tern
-// Demonstrates: Logger agent pattern
-// Tier: 1
+// Demonstrates: Side-effecting agent (Audit Logging)
+// Tier: 1 — Open Core
 
 agent Logger {
     fn handle(msg: trit) -> trit {
-        match msg {
-            1 => {
-                print("LOG [+1]: Affirmative signal detected.");
-            }
-            0 => {
-                print("LOG [ 0]: Neutral/Tentative signal detected.");
-            }
-            -1 => {
-                print("LOG [-1]: Rejection/Conflict signal detected.");
-            }
+        // Open audit.trit in Append mode (2)
+        let h: int = opent("audit.trit", 2);
+        
+        if h > -1 {
+            writet(h, msg);
+            return affirm;
         }
-        return 1;
+        
+        return reject;
     }
 }
 
 fn main() -> trit {
     let l: agentref = spawn Logger;
     
+    // Log a sequence of trits
     send l affirm;
-    await l;
+    let r1: trit = await l;
     
     send l tend;
-    await l;
+    let r2: trit = await l;
     
     send l reject;
-    await l;
+    let r3: trit = await l;
     
-    return affirm;
+    if r1 == affirm {
+        if r2 == affirm {
+            if r3 == affirm {
+                return affirm;
+            }
+        }
+    }
+    
+    return reject;
 }
