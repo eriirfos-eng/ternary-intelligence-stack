@@ -1,0 +1,67 @@
+// stdlib/lib/tensor_stats_extended.tern
+// Demonstrates: Mode and simple entropy simulation for trit tensors.
+// Tier: 1 - Open Core
+
+fn tensor_mode(data: trittensor<10>, size: int) -> trit {
+    let c_pos: int = 0;
+    let c_zero: int = 0;
+    let c_neg: int = 0;
+    
+    let i: int = 0;
+    while i < size {
+        match data[i] {
+            1 => { c_pos = c_pos + 1; }
+            0 => { c_zero = c_zero + 1; }
+           -1 => { c_neg = c_neg + 1; }
+        }
+        i = i + 1;
+    }
+    
+    if c_pos >= c_zero {
+        if c_pos >= c_neg { return 1; }
+    }
+    if c_neg >= c_zero {
+        if c_neg >= c_pos { return -1; }
+    }
+    return 0;
+}
+
+fn tensor_entropy_mock(data: trittensor<10>, size: int) -> int {
+    // Returns 1 if mixed, 0 if all same (very simple mock)
+    let first: trit = data[0];
+    let i: int = 1;
+    while i < size {
+        if data[i] != first { return 1; }
+        i = i + 1;
+    }
+    return 0;
+}
+
+fn main() -> trit {
+    let data: trittensor<10> = [1, 1, 0, 0, -1, 1, 1, 1, 0, 0];
+    
+    println("Tensor Stats Extended (10 elements):");
+    
+    let mode: trit = tensor_mode(data, 10);
+    print("Mode (expected Affirm): ");
+    match mode {
+        1 => { println("Affirm (+1)"); }
+        0 => { println("Tend (0)"); }
+       -1 => { println("Reject (-1)"); }
+    }
+    
+    if mode == 1 {
+        println("Mode correct.");
+    } else { return conflict(); }
+    
+    let ent: int = tensor_entropy_mock(data, 10);
+    println("Entropy mock (expected 1 for mixed):");
+    println(ent);
+    
+    if ent == 1 {
+        println("Stats verified. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
