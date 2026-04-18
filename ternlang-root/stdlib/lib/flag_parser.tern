@@ -1,0 +1,28 @@
+// stdlib/lib/flag_parser.tern
+// Demonstrates: A conceptual CLI flag parser.
+// Tier: 1
+
+// Note: This is a conceptual example. Full CLI arg parsing requires VM enhancements.
+fn parse_flag(arg: string) -> trit {
+    if arg == "--verbose" {
+        return 1;
+    }
+    if arg == "--quiet" {
+        return -1;
+    }
+    return 0; // Unrecognized
+}
+
+fn main() -> trit {
+    let flag1: string = "--verbose";
+    let flag2: string = "--foo";
+
+    println("Parsing '--verbose':");
+    println(parse_flag(flag1));
+
+    println("Parsing '--foo':");
+    println(parse_flag(flag2));
+    
+    println("Program exited successfully.");
+    return 1;
+}
