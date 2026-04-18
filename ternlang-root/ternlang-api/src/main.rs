@@ -1424,17 +1424,35 @@ const MCP_PREMIUM_TOOLS: &[&str] = &[];
 async fn mcp_handler(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
-    body: Result<Json<McpRpcRequest>, JsonRejection>,
+    raw: Bytes,
 ) -> Json<Value> {
-    let req = match body {
-        Ok(Json(r)) => r,
-        Err(_) => return Json(json!({
-            "jsonrpc": "2.0", "id": null,
-            "error": { "code": -32600, "message": "Invalid Request — expected JSON-RPC 2.0 with method field" }
-        })),
+    // Log every incoming MCP request body for debugging
+    let snippet = String::from_utf8_lossy(&raw);
+    eprintln!("[MCP] request ({} bytes) ct={:?}: {}",
+        raw.len(),
+        headers.get("content-type").and_then(|v| v.to_str().ok()).unwrap_or("-"),
+        &snippet[..snippet.len().min(400)]);
+
+    // Parse body — accept any JSON (object, array, empty)
+    let parsed: Value = if raw.is_empty() {
+        Value::Object(Default::default())
+    } else {
+        match serde_json::from_slice(&raw) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("[MCP] parse error: {e}");
+                return Json(json!({
+                    "jsonrpc": "2.0", "id": null,
+                    "error": { "code": -32700, "message": "Parse error — invalid JSON" }
+                }));
+            }
+        }
     };
-    let id     = req.id.unwrap_or(Value::Null);
-    let params = req.params.unwrap_or(Value::Object(Default::default()));
+
+    let id     = parsed.get("id").cloned().unwrap_or(Value::Null);
+    let params = parsed.get("params").cloned().unwrap_or(Value::Object(Default::default()));
+    let method_owned = parsed.get("method").and_then(|m| m.as_str()).unwrap_or("").to_string();
+    let req_method   = method_owned.as_str();
 
     // Resolve premium access: check X-Ternlang-Key header
     let raw_key = headers.get("x-ternlang-key")
@@ -1447,7 +1465,7 @@ async fn mcp_handler(
         matches!(state.keys.validate_and_bump(raw_key).await, KeyCheckResult::Valid(_))
     };
 
-    let result: Value = match req.method.as_str() {
+    let result: Value = match req_method {
 
         "initialize" => json!({
             "jsonrpc": "2.0", "id": id,
