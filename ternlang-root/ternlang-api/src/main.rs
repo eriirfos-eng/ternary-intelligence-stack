@@ -1428,7 +1428,7 @@ async fn mcp_handler(
 ) -> Json<Value> {
     // Log every incoming MCP request body for debugging
     let snippet = String::from_utf8_lossy(&raw);
-    eprintln!("[MCP] request ({} bytes) ct={:?}: {}",
+    println!("[MCP] request ({} bytes) ct={:?}: {}",
         raw.len(),
         headers.get("content-type").and_then(|v| v.to_str().ok()).unwrap_or("-"),
         &snippet[..snippet.len().min(400)]);
@@ -1440,7 +1440,7 @@ async fn mcp_handler(
         match serde_json::from_slice(&raw) {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("[MCP] parse error: {e}");
+                println!("[MCP] parse error: {e}");
                 return Json(json!({
                     "jsonrpc": "2.0", "id": null,
                     "error": { "code": -32700, "message": "Parse error — invalid JSON" }
@@ -1467,42 +1467,29 @@ async fn mcp_handler(
 
     let result: Value = match req_method {
 
-        "initialize" => json!({
-            "jsonrpc": "2.0", "id": id,
-            "result": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "tools": {},
-                    "configSchema": {
-                        "type": "object",
-                        "title": "Ternlang MCP Configuration",
-                        "description": "All 30 MCP tools are free — no key needed. Optional API key unlocks server-side persistent memory, REST API access, SSE streaming, and production SLA.",
-                        "properties": {
-                            "apiKey": {
-                                "type":  "string",
-                                "title": "API Key (optional — Pro/Industrial/Enterprise)",
-                                "description": "Optional. Unlocks server-side persistent 3-layer memory (instead of stateless blob mode), REST API calls (10k–50k+/month), SSE streaming, and production SLA. Get a key at https://ternlang.com/activate.",
-                                "x-smithery-secret": true
-                            }
-                        },
-                        "required": []
-                    }
-                },
-                "serverInfo": {
-                    "name":        "ternlang-mcp",
-                    "displayName": "Ternary Intelligence Stack",
-                    "version":     "1.0.0",
-                    "description": "Turns binary AI agents into ternary decision engines. 30 tools, all free. First-class hold (trit=0): not null — an active routing instruction to gather more evidence before committing. MoE-13 orchestration, 3-layer memory, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM execution. Built by RFI-IRFOS, Graz, Austria. v1.0.0",
-                    "homepage":    "https://ternlang.com",
-                    "icon":        "https://ternlang.com/favicon.ico",
-                    "author": {
-                        "name":  "RFI-IRFOS",
-                        "email": "rfi.irfos@gmail.com",
-                        "url":   "https://ternlang.com"
+        "initialize" => {
+            // Echo back whatever protocolVersion the client requested.
+            // Smithery requires 2025-03-26 (Streamable HTTP); older clients send 2024-11-05.
+            // Strict MCP validators reject a version mismatch, so we always honour the client.
+            let client_version = params
+                .get("protocolVersion")
+                .and_then(|v| v.as_str())
+                .unwrap_or("2025-03-26");
+            println!("[MCP] initialize from {:?} proto={}",
+                params.get("clientInfo").and_then(|c| c.get("name")).and_then(|n| n.as_str()).unwrap_or("?"),
+                client_version);
+            json!({
+                "jsonrpc": "2.0", "id": id,
+                "result": {
+                    "protocolVersion": client_version,
+                    "capabilities": { "tools": {} },
+                    "serverInfo": {
+                        "name":    "ternlang-mcp",
+                        "version": "1.1.4"
                     }
                 }
-            }
-        }),
+            })
+        },
 
         "notifications/initialized" => json!({ "jsonrpc": "2.0", "id": id, "result": {} }),
 
