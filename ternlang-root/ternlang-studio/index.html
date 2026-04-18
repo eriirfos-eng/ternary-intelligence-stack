@@ -310,56 +310,72 @@
     .view { display: none; flex: 1; overflow: hidden; flex-direction: column; }
     .view.active { display: flex; }
 
-    /* ─── Dashboard view ───────────────────────────────────────────── */
-    #view-dashboard { overflow-y: auto; padding: 20px; gap: 16px; }
-    .dash-section-title {
-      font-size: 10px; color: var(--muted); letter-spacing: 0.1em;
-      text-transform: uppercase; margin-bottom: 10px;
-    }
+    /* ─── Dashboard ────────────────────────────────────────────────── */
+    #view-dashboard { overflow-y: auto; padding: 32px 40px; }
     .dash-grid {
-      display: grid; gap: 12px;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .dash-col { display: flex; flex-direction: column; gap: 24px; }
+    .dash-section-title {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
     }
     .dash-card {
       background: var(--bg1); border: 1px solid var(--border);
-      border-radius: 6px; padding: 16px;
+      border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
     }
     .dash-card-title {
-      font-size: 10px; color: var(--muted); letter-spacing: 0.08em;
-      text-transform: uppercase; margin-bottom: 12px;
+      font-size: 13px; font-weight: 600; color: var(--text);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
     }
-    .dash-stat { font-size: 28px; font-weight: 700; color: var(--cyan); line-height: 1; margin-bottom: 4px; }
-    .dash-stat-sub { font-size: 10px; color: var(--muted); }
+    .dash-card-title i { width: 16px; color: var(--cyan); }
+    .dash-stat { font-size: 32px; font-weight: 700; color: var(--text); }
+    .dash-stat-sub { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
     .dash-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: 11px; padding: 4px 10px; border-radius: 4px;
-      border: 1px solid var(--border2); background: var(--bg2);
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg2); padding: 6px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 500;
     }
-    .dash-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .dash-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
     .dash-pill .dot.err { background: var(--red); }
     .dash-pill .dot.warn { background: var(--amber); }
-    .dash-quick-btns { display: flex; flex-direction: column; gap: 6px; }
+
+    .dash-quick-btns { display: grid; gap: 10px; }
     .dash-quick-btn {
       background: var(--bg2); border: 1px solid var(--border2);
-      color: var(--text); font-family: inherit; font-size: 11px;
-      padding: 7px 12px; border-radius: 4px; cursor: pointer;
-      text-align: left; transition: all 0.15s;
+      color: var(--text); font-family: inherit; font-size: 12px;
+      padding: 12px 16px; border-radius: 8px; cursor: pointer;
+      text-align: left; transition: all 0.2s;
+      display: flex; align-items: center; gap: 12px;
     }
-    .dash-quick-btn:hover { background: var(--bg3); border-color: var(--cyan); color: var(--cyan); }
+    .dash-quick-btn:hover { background: var(--bg3); border-color: var(--cyan); transform: translateX(4px); }
+    .dash-quick-btn i { width: 16px; color: var(--muted); }
+
     .dash-run-list { display: flex; flex-direction: column; gap: 4px; }
     .dash-run-item {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 11px; padding: 5px 8px;
-      background: var(--bg2); border-radius: 3px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; padding: 10px 12px;
+      background: var(--bg2); border-radius: 6px;
+      border: 1px solid transparent; transition: border-color 0.2s;
     }
-    .dash-run-item .run-name { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .dash-run-item .run-status { font-size: 10px; }
+    .dash-run-item:hover { border-color: var(--border2); }
+    .dash-run-item .run-name { flex: 1; color: var(--text); font-weight: 500; }
     .run-ok   { color: var(--green); }
     .run-err  { color: var(--red); }
-    .dash-run-empty { font-size: 11px; color: var(--muted); font-style: italic; }
-    .usage-bar-wrap { background: var(--bg3); border-radius: 3px; height: 6px; margin: 8px 0 4px; }
-    .usage-bar-fill { height: 6px; border-radius: 3px; background: var(--cyan); transition: width 0.4s; }
+    .dash-run-empty {
+      padding: 32px; text-align: center; color: var(--muted2); font-size: 12px;
+      border: 1px dashed var(--border2); border-radius: 10px;
+    }
+
+    .usage-bar-wrap { background: var(--bg3); border-radius: 4px; height: 8px; margin: 12px 0 6px; overflow: hidden; }
+    .usage-bar-fill { height: 100%; width: 0; background: var(--blue); transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .usage-bar-fill.ok   { background: var(--green); box-shadow: 0 0 10px var(--green); }
     .usage-bar-fill.warn { background: var(--amber); }
     .usage-bar-fill.crit { background: var(--red); }
 
@@ -741,7 +757,7 @@
   </div>
 
   <div style="padding: 0 10px; height: 100%; display: flex; align-items: center; border-left: 1px solid var(--border);">
-    <input type="hidden" id="apiEndpoint" value="https://ternlang.com" />
+    <input type="hidden" id="apiEndpoint" value="https://ternlang-api.fly.dev" />
     <span id="vmStatus" class="status-pill status-idle">● Idle</span>
   </div>
 </div>
@@ -757,79 +773,121 @@
 <!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
 <div class="view active" id="view-dashboard">
 
-  <div class="dash-section-title">Overview</div>
   <div class="dash-grid">
 
-    <!-- VM Status -->
-    <div class="dash-card">
-      <div class="dash-card-title">VM Status</div>
-      <div id="dash-vm-stat" class="dash-pill"><span class="dot" id="dashVmDot"></span><span id="dashVmLabel">Checking…</span></div>
-      <div style="margin-top: 10px; font-size: 10px; color: var(--muted);">
-        Endpoint: <span id="dashEndpoint" style="color: var(--cyan);">ternlang.com</span>
-      </div>
-      <button class="dash-quick-btn" style="margin-top: 10px;" onclick="checkConnection(); showToast('Connection check triggered', 'ok')">↺ Recheck</button>
-    </div>
-
-    <!-- Tier / Quota -->
-    <div class="dash-card">
-      <div class="dash-card-title">Plan &amp; Quota</div>
-      <div id="dashTierBadge" class="tb-badge badge-free" style="margin-bottom: 8px; display: inline-block;">Tier 1 — Free</div>
-      <div id="dash-quota-wrap">
-        <div class="usage-label">Calls this month</div>
-        <div class="usage-bar-wrap"><div class="usage-bar-fill" id="dashUsageBar" style="width:0%"></div></div>
-        <div class="usage-meta" id="dashUsageMeta">Enter API key to see quota</div>
-      </div>
-      <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="dash-card">
-      <div class="dash-card-title">Quick Actions</div>
-      <div class="dash-quick-btns">
-        <button class="dash-quick-btn" onclick="switchView('editor'); newFile()">+ New scratch file</button>
-        <button class="dash-quick-btn" onclick="switchView('editor'); openFile('examples/hello_trit.tern')">▶ Run Hello Trit</button>
-        <button class="dash-quick-btn" onclick="switchView('editor')">💻 Open Editor</button>
-        <button class="dash-quick-btn" onclick="switchView('settings')">⚙ Settings</button>
-      </div>
-    </div>
-
-    <!-- Recent Runs -->
-    <div class="dash-card">
-      <div class="dash-card-title">Recent Runs</div>
-      <div class="dash-run-list" id="dashRunList">
-        <div class="dash-run-empty">No runs yet this session</div>
-      </div>
-    </div>
-
-    <!-- Stdlib Coverage -->
-    <div class="dash-card">
-      <div class="dash-card-title">Stdlib Coverage</div>
-      <div style="display: flex; flex-direction: column; gap: 5px; font-size: 11px;">
-        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">core/</span><span style="color:var(--green)">1 module</span></div>
-        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">math/</span><span style="color:var(--green)">2 modules</span></div>
-        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">safety/</span><span style="color:var(--cyan)">2 modules</span></div>
-        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">nn/</span><span style="color:var(--amber)">3 modules</span></div>
-        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">qnn/</span><span style="color:var(--muted)">planned</span></div>
-        <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">errors/</span><span style="color:var(--green)">2 modules</span></div>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="dash-card">
-      <div class="dash-card-title">Session Stats</div>
-      <div style="display:flex; gap: 20px;">
-        <div>
-          <div class="dash-stat" id="statRuns">0</div>
-          <div class="dash-stat-sub">runs</div>
+    <!-- Column 1: Environment -->
+    <div class="dash-col">
+      <div class="dash-section-title">Environment</div>
+      
+      <!-- VM Status -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="server"></i> VM Status</div>
+        <div id="dash-vm-stat" class="dash-pill"><span class="dot" id="dashVmDot"></span><span id="dashVmLabel">Checking…</span></div>
+        <div style="margin-top: 14px; font-size: 11px; color: var(--muted); line-height: 1.6;">
+          Endpoint: <span id="dashEndpoint" style="color: var(--cyan);">ternlang-api.fly.dev</span><br>
+          Node ID: <span style="color:var(--text)">bet-node-013</span>
         </div>
-        <div>
-          <div class="dash-stat" id="statOk" style="color: var(--green);">0</div>
-          <div class="dash-stat-sub">ok</div>
+        <button class="dash-quick-btn" style="margin-top: 16px; justify-content: center;" onclick="checkConnection(); showToast('Connection check triggered', 'ok')">
+          <i data-lucide="refresh-cw"></i> <span>Recheck System</span>
+        </button>
+      </div>
+
+      <!-- Plan & Quota -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="credit-card"></i> Plan &amp; Quota</div>
+        <div id="dashTierBadge" class="tb-badge badge-free" style="margin-bottom: 12px; display: inline-block;">Tier 1 — Free</div>
+        <div id="dash-quota-wrap">
+          <div class="usage-label" style="font-size:11px">Monthly calls</div>
+          <div class="usage-bar-wrap"><div class="usage-bar-fill" id="dashUsageBar" style="width:0%"></div></div>
+          <div class="usage-meta" id="dashUsageMeta" style="font-size:10px">Enter API key to see quota</div>
         </div>
-        <div>
-          <div class="dash-stat" id="statErr" style="color: var(--red);">0</div>
-          <div class="dash-stat-sub">errors</div>
+        <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
+        <button class="dash-quick-btn" style="margin-top: 16px; border-color: var(--amber); color: var(--amber);" onclick="openUpskillModal()">
+          <i data-lucide="arrow-up-circle"></i> <span>Upskill Plan</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Column 2: Action -->
+    <div class="dash-col">
+      <div class="dash-section-title">Work</div>
+      
+      <!-- Quick Actions -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="zap"></i> Quick Actions</div>
+        <div class="dash-quick-btns">
+          <button class="dash-quick-btn" onclick="switchView('editor'); newFile()">
+            <i data-lucide="file-plus"></i> <span>New scratch file</span>
+          </button>
+          <button class="dash-quick-btn" onclick="switchView('editor'); openFile('examples/hello_trit.tern')">
+            <i data-lucide="play"></i> <span>Run Hello Trit</span>
+          </button>
+          <button class="dash-quick-btn" onclick="window.open('https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/Language-Reference.md', '_blank')">
+            <i data-lucide="book-open"></i> <span>Documentation</span>
+          </button>
+          <button class="dash-quick-btn" onclick="switchView('flow')">
+            <i data-lucide="brain-circuit"></i> <span>Open Flow Lab</span>
+          </button>
         </div>
+      </div>
+
+      <!-- Recent Runs -->
+      <div class="dash-card" style="flex:1">
+        <div class="dash-card-title"><i data-lucide="history"></i> Recent Activity</div>
+        <div class="dash-run-list" id="dashRunList">
+          <div class="dash-run-empty">No runs yet this session</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Health & Resources -->
+    <div class="dash-col">
+      <div class="dash-section-title">Analytics</div>
+
+      <!-- Session Stats -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="bar-chart-3"></i> Session Stats</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div>
+            <div class="dash-stat" id="statRuns">0</div>
+            <div class="dash-stat-sub">Total Runs</div>
+          </div>
+          <div>
+            <div class="dash-stat" id="statOk" style="color: var(--green);">0</div>
+            <div class="dash-stat-sub">Success</div>
+          </div>
+          <div>
+            <div class="dash-stat" id="statErr" style="color: var(--red);">0</div>
+            <div class="dash-stat-sub">Errors</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stdlib Explorer -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="library"></i> Stdlib Coverage</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px;">
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">core/</span><span style="color:var(--green); font-weight:600">12 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">math/</span><span style="color:var(--green); font-weight:600">8 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">agents/</span><span style="color:var(--cyan); font-weight:600">15 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">safety/</span><span style="color:var(--cyan); font-weight:600">5 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">ml/bitnet</span><span style="color:var(--amber); font-weight:600">v1.58b</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">errors/</span><span style="color:var(--green); font-weight:600">27 modules</span></div>
+        </div>
+        <button class="dash-quick-btn" style="margin-top: 16px;" onclick="switchSidebarPanel('explorer'); switchView('editor')">
+          <i data-lucide="search"></i> <span>Browse Library</span>
+        </button>
+      </div>
+
+      <!-- Ternary Logic Visualizer (Bottom Right) -->
+      <div class="dash-card" style="background: linear-gradient(135deg, var(--bg1) 0%, #1e1b4b 100%);">
+        <div class="dash-card-title" style="color:var(--cyan)"><i data-lucide="binary"></i> Logic Field</div>
+        <div style="display:flex; justify-content: space-around; align-items:center; height:60px;">
+           <div style="text-align:center;"><div style="color:var(--red); font-weight:bold; font-size:18px;">-1</div><div style="font-size:8px; color:var(--muted)">REJECT</div></div>
+           <div style="text-align:center;"><div style="color:var(--amber); font-weight:bold; font-size:18px;">0</div><div style="font-size:8px; color:var(--muted)">HOLD</div></div>
+           <div style="text-align:center;"><div style="color:var(--green); font-weight:bold; font-size:18px;">+1</div><div style="font-size:8px; color:var(--muted)">AFFIRM</div></div>
+        </div>
+        <div style="font-size:9px; color:var(--muted2); text-align:center; margin-top:10px;">Balanced Ternary Engine Active</div>
       </div>
     </div>
 
@@ -939,7 +997,7 @@
         <!-- API tab -->
         <div class="out-panel" id="panel-api">
           <div class="api-block">
-            <div class="usage-label" style="margin-bottom: 6px;">Endpoint: <span id="apiEndpointBase" style="color:var(--cyan);">https://ternlang.com</span></div>
+            <div class="usage-label" style="margin-bottom: 6px;">Endpoint: <span id="apiEndpointBase" style="color:var(--cyan);">https://ternlang-api.fly.dev</span></div>
             <div class="api-route">
               <span class="api-method">GET</span>
               <span class="api-path">/health</span>
@@ -1071,7 +1129,7 @@
     <div class="settings-section-title">API Connection</div>
     <div class="settings-row">
       <div class="settings-label">Endpoint URL</div>
-      <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" />
+      <input class="settings-input" id="settingsEndpoint" value="https://ternlang-api.fly.dev" placeholder="https://…" />
       <button class="settings-btn" onclick="applyEndpoint()">Apply</button>
     </div>
     <div class="settings-row">
@@ -1129,7 +1187,7 @@
       TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
       Runtime: BET VM (27 registers · balanced ternary)<br/>
       License: LGPL-3.0-or-later<br/>
-      <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
+      <a href="https://ternlang-api.fly.dev" style="color: var(--cyan);" target="_blank">ternlang.com</a>
       &nbsp;·&nbsp;
       <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
     </div>
@@ -1533,6 +1591,7 @@ function switchView(name) {
   }
   if (name === "flow") {
     renderFlow();
+    renderFlowLibrary();
   }
   if (name === "settings") syncSettingsUI();
 
@@ -2519,12 +2578,13 @@ async function fetchUsage() {
       document.getElementById("usageLimit").textContent = limit.toLocaleString();
       const fill = document.getElementById("usageBarFill");
       fill.style.width = pct + "%";
-      fill.className = "usage-bar-fill" + (pct >= 90 ? " crit" : pct >= 70 ? " warn" : "");
+      fill.className = "usage-bar-fill " + (pct >= 90 ? "crit" : pct >= 70 ? "warn" : "ok");
       document.getElementById("usageMeta").textContent =
         `${pct}% used · ${remaining.toLocaleString()} remaining · resets 1st of month`;
       // Dashboard
-      document.getElementById("dashUsageBar").style.width = pct + "%";
-      document.getElementById("dashUsageBar").className = "usage-bar-fill" + (pct >= 90 ? " crit" : pct >= 70 ? " warn" : "");
+      const dashFill = document.getElementById("dashUsageBar");
+      dashFill.style.width = pct + "%";
+      dashFill.className = "usage-bar-fill " + (pct >= 90 ? "crit" : pct >= 70 ? "warn" : "ok");
       document.getElementById("dashUsageMeta").textContent =
         `${used.toLocaleString()} / ${limit.toLocaleString()} · ${pct}%`;
     }
