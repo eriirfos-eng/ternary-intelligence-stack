@@ -1,0 +1,41 @@
+// stdlib/std/complex_utils.tern
+// Demonstrates: Utility functions for complex numbers emulated as float tensors.
+// Tier: 1 - Open Core
+
+fn complex_modulus_sq(a: float[2]) -> float {
+    // |a + bi|^2 = a^2 + b^2
+    return (a[0] * a[0]) + (a[1] * a[1]);
+}
+
+fn complex_conj(a: float[2], res: float[2]) -> trit {
+    res[0] = a[0];
+    res[1] = 0.0 - a[1];
+    return 1;
+}
+
+fn main() -> trit {
+    let a: float[2];
+    a[0] = 3.0;
+    a[1] = 4.0; // 3 + 4i
+    
+    println("Complex Utils Showcase (3 + 4i):");
+    
+    let m2: float = complex_modulus_sq(a);
+    println("Modulus squared (expected 25.0):");
+    println(m2);
+    if m2 == 25.0 { println("Modulus OK."); } else { return conflict(); }
+    
+    let res: float[2];
+    complex_conj(a, res);
+    println("Conjugate Real (expected 3.0):");
+    println(res[0]);
+    println("Conjugate Imag (expected -4.0):");
+    println(res[1]);
+    
+    if res[1] == -4.0 {
+        println("Conjugate OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
