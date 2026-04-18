@@ -1,0 +1,52 @@
+// stdlib/lib/set_float.tern
+// Demonstrates: A simple set of floats simulation using a fixed-size array and epsilon comparison.
+// Tier: 1 - Open Core
+
+fn set_float_contains(s: float[5], count: int, val: float, eps: float) -> trit {
+    let i: int = 0;
+    while i < count {
+        let diff: float = s[i] - val;
+        if diff < 0.0 { diff = 0.0 - diff; }
+        if diff <= eps { return 1; }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn set_float_add(s: float[5], count: int, val: float, eps: float) -> int {
+    let exists: trit = set_float_contains(s, count, val, eps);
+    if exists == 1 { return count; }
+    
+    if count < 5 {
+        s[count] = val;
+        return count + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let s: float[5];
+    let count: int = 0;
+    let eps: float = 0.0001;
+    
+    println("Float Set Showcase:");
+    println("Adding 1.5, 2.7, 1.5...");
+    count = set_float_add(s, count, 1.5, eps);
+    count = set_float_add(s, count, 2.7, eps);
+    count = set_float_add(s, count, 1.5000001, eps); // Duplicate within eps
+    
+    println("Current count (expected 2):");
+    println(count);
+    
+    if count == 2 {
+        println("Count correct.");
+    } else { return conflict(); }
+    
+    println("Checking if 2.7 is present:");
+    if set_float_contains(s, count, 2.7, eps) == 1 {
+        println("Yes (Correct). Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
