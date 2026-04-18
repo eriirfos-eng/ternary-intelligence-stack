@@ -1,0 +1,22 @@
+// stdlib/lib/trit_arithmetic.tern
+// Demonstrates: Basic arithmetic operations on trits.
+// Tier: 1
+
+fn add(a: trit, b: trit) -> int {
+    return cast(a) + cast(b);
+}
+
+fn multiply(a: trit, b: trit) -> int {
+    return cast(a) * cast(b);
+}
+
+fn main() -> trit {
+    println("1 + -1:");
+    println(add(1, -1));
+
+    println("-1 * 1:");
+    println(multiply(-1, 1));
+    
+    println("Program exited successfully.");
+    return 1;
+}
