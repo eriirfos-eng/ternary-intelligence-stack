@@ -1,0 +1,20 @@
+// stdlib/lib/range_iterator.tern
+// Demonstrates: A simple range iterator using a while loop.
+// Tier: 1
+
+fn iterate_range(start: int, end: int) -> trit {
+    let i: int = start;
+    while i <= end {
+        println(i);
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    println("Iterating from 1 to 5:");
+    iterate_range(1, 5);
+    
+    println("Program exited successfully.");
+    return 1;
+}
