@@ -41,6 +41,8 @@ Ternlang adds the third state.
 The `tend` state is not indecision. It is a **first-class routing instruction** — a computational directive to remain in deliberation until evidence crosses a threshold. This makes ternlang the natural foundation for AI agents that must reason honestly under uncertainty.
 
 → **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
+
+→ **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)**  
 ---
 
 ## What's in This Repository
