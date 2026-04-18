@@ -44,6 +44,9 @@ COPY ternlang-api/src       ternlang-api/src
 COPY ternlang-web/index.html      ternlang-web/index.html
 COPY ternlang-web/pricing.html    ternlang-web/pricing.html
 COPY ternlang-studio/index.html   ternlang-studio/index.html
+COPY playground/index.html        playground/index.html
+COPY playground/pkg/ternlang_wasm.js       playground/pkg/ternlang_wasm.js
+COPY playground/pkg/ternlang_wasm_bg.wasm  playground/pkg/ternlang_wasm_bg.wasm
 COPY ternlang-mcp/src       ternlang-mcp/src
 COPY ternlang-moe/src       ternlang-moe/src
 COPY ternlang-test/src      ternlang-test/src

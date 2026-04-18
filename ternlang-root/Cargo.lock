@@ -1831,6 +1831,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-wasm"
+version = "1.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ternlang-core",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "ternpkg"
 version = "1.0.0"
 dependencies = [
