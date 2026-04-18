@@ -1,0 +1,64 @@
+// stdlib/lib/validation_helpers.tern
+// Demonstrates: Utility functions for range validation and safe data conversion.
+// Tier: 1 - Open Core
+
+fn is_in_range(val: int, lower: int, upper: int) -> trit {
+    if val < lower { return -1; }
+    if val > upper { return -1; }
+    return 1;
+}
+
+fn safe_trit_to_int(t: trit) -> int {
+    match t {
+        1 => { return 1; }
+        0 => { return 0; }
+       -1 => { return -1; }
+    }
+}
+
+fn clamp_int(val: int, lower: int, upper: int) -> int {
+    if val < lower { return lower; }
+    if val > upper { return upper; }
+    return val;
+}
+
+fn main() -> trit {
+    let v: int = 42;
+    println("Checking if 42 is in [0, 100]:");
+    let r: trit = is_in_range(v, 0, 100);
+    if r == 1 {
+        println("In range.");
+    } else { 
+        println("Range check failed.");
+        return conflict(); 
+    }
+
+    println("Checking if 150 is in [0, 100]:");
+    r = is_in_range(150, 0, 100);
+    if r == -1 {
+        println("Out of range (correct).");
+    } else { 
+        println("Range check failed.");
+        return conflict(); 
+    }
+
+    println("Clamping 150 to [0, 100]:");
+    let c: int = clamp_int(150, 0, 100);
+    println(c);
+    if c == 100 {
+        println("Clamped to 100 OK.");
+    } else { 
+        println("Clamp failed.");
+        return conflict(); 
+    }
+
+    println("Safe trit to int (affirm):");
+    let i: int = safe_trit_to_int(1);
+    println(i);
+    if i == 1 {
+        println("Success.");
+        return truth();
+    } else {
+        return conflict();
+    }
+}
