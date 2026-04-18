@@ -1,0 +1,32 @@
+// stdlib/agents/mapper.tern
+// Demonstrates: Mapper agent pattern (Cyclic shift)
+// Tier: 1
+
+agent CyclicMapper {
+    fn handle(msg: trit) -> trit {
+        // Cyclic shift: -1 -> 0, 0 -> 1, 1 -> -1
+        match msg {
+            reject => { return tend;   }
+            tend   => { return affirm; }
+            affirm => { return reject; }
+        }
+    }
+}
+
+fn main() -> trit {
+    let m: agentref = spawn CyclicMapper;
+    
+    send m reject;
+    let res1: trit = await m;
+    
+    send m tend;
+    let res2: trit = await m;
+    
+    send m affirm;
+    let res3: trit = await m;
+    
+    if res1 == tend && res2 == affirm && res3 == reject {
+        return affirm;
+    }
+    return reject;
+}
