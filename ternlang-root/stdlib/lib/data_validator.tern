@@ -1,0 +1,31 @@
+// stdlib/lib/data_validator.tern
+// Demonstrates: A simple data validation utility.
+// Tier: 1
+
+fn is_within_bounds(value: int, min: int, max: int) -> trit {
+    if value < min {
+        return -1;
+    }
+    if value > max {
+        return -1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let val1: int = 50;
+    let min_val: int = 0;
+    let max_val: int = 100;
+
+    let status1: trit = is_within_bounds(val1, min_val, max_val);
+    println("Status for 50 (in [0, 100]):");
+    println(status1);
+
+    let val2: int = -10;
+    let status2: trit = is_within_bounds(val2, min_val, max_val);
+    println("Status for -10 (in [0, 100]):");
+    println(status2);
+    
+    println("Program exited successfully.");
+    return 1;
+}
