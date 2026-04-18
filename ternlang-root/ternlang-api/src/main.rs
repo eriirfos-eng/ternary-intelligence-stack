@@ -276,6 +276,74 @@ impl KeyStore {
     }
 }
 
+// ─── Agent Registry ──────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentProduct {
+    pub slug:        String,
+    pub name:        String,
+    pub desc:        String,
+    pub input_schema: String,
+    pub pricing:     String,   // "free" | "per_call" | "private"
+    pub code:        String,
+    pub nodes:       u32,
+    pub wires:       u32,
+    pub owner_key:   String,   // raw API key of publisher
+    pub created_at:  String,
+    pub calls:       u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct AgentRegistryData {
+    agents: HashMap<String, AgentProduct>,
+}
+
+pub struct AgentRegistry {
+    data: RwLock<AgentRegistryData>,
+    path: PathBuf,
+}
+
+impl AgentRegistry {
+    pub async fn load(path: PathBuf) -> Arc<Self> {
+        let data = if path.exists() {
+            let raw = tokio::fs::read_to_string(&path).await.unwrap_or_default();
+            serde_json::from_str(&raw).unwrap_or_default()
+        } else {
+            AgentRegistryData::default()
+        };
+        Arc::new(Self { data: RwLock::new(data), path })
+    }
+
+    async fn save(&self) {
+        let data = self.data.read().await;
+        let json = serde_json::to_string_pretty(&*data).unwrap_or_default();
+        let _ = tokio::fs::write(&self.path, json).await;
+    }
+
+    pub async fn publish(&self, product: AgentProduct) -> String {
+        let slug = product.slug.clone();
+        self.data.write().await.agents.insert(slug.clone(), product);
+        self.save().await;
+        slug
+    }
+
+    pub async fn get(&self, slug: &str) -> Option<AgentProduct> {
+        self.data.read().await.agents.get(slug).cloned()
+    }
+
+    pub async fn list(&self) -> Vec<Value> {
+        self.data.read().await.agents.values().map(|a| json!({
+            "slug": a.slug, "name": a.name, "desc": a.desc,
+            "pricing": a.pricing, "nodes": a.nodes, "calls": a.calls,
+        })).collect()
+    }
+
+    pub async fn bump_calls(&self, slug: &str) {
+        if let Some(a) = self.data.write().await.agents.get_mut(slug) { a.calls += 1; }
+        self.save().await;
+    }
+}
+
 // ─── App state ───────────────────────────────────────────────────────────────
 
 /// Three-layer memory blob: working / session / core arrays of MemEntry.
@@ -294,6 +362,8 @@ pub struct AppState {
     github_token:           String,
     /// Server-side three-layer memory, keyed by API key string.
     memory_store:           MemStore,
+
+    agent_registry:         Arc<AgentRegistry>,
 
     pub total_instructions: Arc<std::sync::atomic::AtomicU64>,
     pub total_nodes:        Arc<std::sync::atomic::AtomicU64>,
@@ -3612,6 +3682,90 @@ fn get_path_tier(path: &str) -> u8 {
     3 // Default for industrial tiers (bio, crypto, etc)
 }
 
+// ─── Agent Product Routes ─────────────────────────────────────────────────────
+
+/// POST /api/agents/publish — register a deployed agent product
+async fn publish_agent(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<Value>,
+) -> Response {
+    let raw_key = headers.get("X-Ternlang-Key").and_then(|v| v.to_str().ok()).unwrap_or("");
+    // Require at least Tier 2 to publish
+    let entry = state.keys.peek(raw_key).await;
+    if raw_key.is_empty() || entry.map(|e| e.tier).unwrap_or(1) < 2 {
+        return (axum::http::StatusCode::FORBIDDEN, Json(json!({ "status": "error", "error": "Tier 2+ required to publish agent products" }))).into_response();
+    }
+
+    let name     = body.get("name").and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
+    let desc     = body.get("desc").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let input    = body.get("input_schema").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let pricing  = body.get("pricing").and_then(|v| v.as_str()).unwrap_or("free").to_string();
+    let code     = body.get("code").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let nodes    = body.get("nodes").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+    let wires    = body.get("wires").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+
+    if name.is_empty() {
+        return (axum::http::StatusCode::BAD_REQUEST, Json(json!({ "status": "error", "error": "name is required" }))).into_response();
+    }
+
+    let slug = name.to_lowercase().replace(' ', "-").chars().filter(|c| c.is_alphanumeric() || *c == '-').collect::<String>();
+    let slug = slug.trim_matches('-').to_string();
+
+    let product = AgentProduct {
+        slug: slug.clone(), name, desc, input_schema: input, pricing,
+        code, nodes, wires, owner_key: raw_key.to_string(),
+        created_at: chrono::Utc::now().to_rfc3339(),
+        calls: 0,
+    };
+
+    state.agent_registry.publish(product).await;
+    Json(json!({ "status": "ok", "slug": slug, "endpoint": format!("/api/agent/{}", slug) })).into_response()
+}
+
+/// GET /api/agents — list all published (non-private) agents
+async fn list_agents(State(state): State<Arc<AppState>>) -> Json<Value> {
+    let agents = state.agent_registry.list().await;
+    Json(json!({ "status": "ok", "agents": agents }))
+}
+
+/// POST /api/agent/:slug — call a deployed agent
+async fn call_agent(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    axum::extract::Path(slug): axum::extract::Path<String>,
+    body: axum::body::Bytes,
+) -> Response {
+    let raw_key = headers.get("X-Ternlang-Key").and_then(|v| v.to_str().ok()).unwrap_or("");
+
+    let product = match state.agent_registry.get(&slug).await {
+        Some(p) => p,
+        None => return (axum::http::StatusCode::NOT_FOUND, Json(json!({ "status": "error", "error": format!("Agent '{}' not found", slug) }))).into_response(),
+    };
+
+    // Private agents: only owner can call
+    if product.pricing == "private" && product.owner_key != raw_key {
+        return (axum::http::StatusCode::FORBIDDEN, Json(json!({ "status": "error", "error": "Private agent — owner key required" }))).into_response();
+    }
+
+    state.agent_registry.bump_calls(&slug).await;
+
+    // Parse caller input
+    let caller_input: Value = serde_json::from_slice(&body).unwrap_or(json!({}));
+
+    Json(json!({
+        "status": "ok",
+        "slug": slug,
+        "agent": product.name,
+        "input_received": caller_input,
+        "result": {
+            "trit": 1,
+            "label": "affirm",
+            "note": "Agent runtime execution coming in next deploy — WASM VM integration pending"
+        }
+    })).into_response()
+}
+
 async fn stdlib_list(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -4317,7 +4471,10 @@ async fn main() {
         .and_then(|p| p.parse().ok())
         .unwrap_or(3731);   // 3731 — ternary
 
-    let keys = KeyStore::load(keys_file).await;
+    let keys = KeyStore::load(keys_file.clone()).await;
+
+    let agents_file = keys_file.with_file_name("ternlang_agents.json");
+    let agent_registry = AgentRegistry::load(agents_file).await;
 
     let stripe_webhook_secret = env::var("STRIPE_WEBHOOK_SECRET").unwrap_or_else(|_| {
         eprintln!("[ternlang-api] WARNING: STRIPE_WEBHOOK_SECRET not set — webhook signature verification disabled");
@@ -4341,6 +4498,7 @@ async fn main() {
         stripe_webhook_secret,
         resend_api_key,
         github_token,
+        agent_registry,
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
         total_instructions: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         total_nodes:        Arc::new(std::sync::atomic::AtomicU64::new(0)),
@@ -4369,6 +4527,9 @@ async fn main() {
         .route("/api/usage",      get(api_usage))
         .route("/api/stdlib/list", get(stdlib_list))
         .route("/api/stdlib/read/{*path}", get(stdlib_read))
+        .route("/api/agents",          get(list_agents))
+        .route("/api/agents/publish",  post(publish_agent))
+        .route("/api/agent/{slug}",    post(call_agent))
         .route("/api/run",        post(run_program))
         // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))
