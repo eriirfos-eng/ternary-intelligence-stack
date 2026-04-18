@@ -39,7 +39,7 @@ use axum::{
     Router,
     Json,
     body::Bytes,
-    extract::{Path, Query, State},
+    extract::{Path, Query, State, rejection::JsonRejection},
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
     response::{sse::{Event, Sse}, Html, IntoResponse, Response},
@@ -1424,8 +1424,15 @@ const MCP_PREMIUM_TOOLS: &[&str] = &[];
 async fn mcp_handler(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
-    Json(req): Json<McpRpcRequest>,
+    body: Result<Json<McpRpcRequest>, JsonRejection>,
 ) -> Json<Value> {
+    let req = match body {
+        Ok(Json(r)) => r,
+        Err(_) => return Json(json!({
+            "jsonrpc": "2.0", "id": null,
+            "error": { "code": -32600, "message": "Invalid Request — expected JSON-RPC 2.0 with method field" }
+        })),
+    };
     let id     = req.id.unwrap_or(Value::Null);
     let params = req.params.unwrap_or(Value::Object(Default::default()));
 
