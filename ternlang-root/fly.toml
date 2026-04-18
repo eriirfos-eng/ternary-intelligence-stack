@@ -12,6 +12,11 @@ primary_region = 'fra'
 [env]
   PORT = '8080'
   STDLIB_PATH = '/stdlib'
+  KEYS_FILE = '/data/ternlang_keys.json'
+
+[mounts]
+  source = 'ternlang_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
