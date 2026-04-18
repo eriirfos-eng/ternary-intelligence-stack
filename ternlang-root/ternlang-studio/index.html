@@ -4,55 +4,64 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TernStudio — Ternary Intelligence Stack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
     body {
-      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-      font-size: 12px;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
       background: var(--bg);
       color: var(--text);
       display: flex;
       flex-direction: column;
       transition: background 0.2s, color 0.2s;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ─── Color vars — Dark (default) ─────────────────────────────── */
+    /* ─── Color vars — Salesforce/Enterprise Dark ─────────────────── */
     :root {
-      --bg:        #080b10;
-      --bg1:       #0d1219;
-      --bg2:       #111820;
-      --bg3:       #161e28;
-      --border:    #1d2835;
-      --border2:   #253040;
-      --cyan:      #00c8ff;
-      --green:     #00e87a;
-      --red:       #ff3b55;
-      --amber:     #ffaa00;
-      --text:      #c8d4e0;
-      --muted:     #4a5a6a;
-      --muted2:    #2a3a4a;
-      --active-file-bg: #0d1e2e;
-      --sidebar-w: 220px;
+      --bg:        #0f172a; /* Slate 900 */
+      --bg1:       #1e293b; /* Slate 800 */
+      --bg2:       #334155; /* Slate 700 */
+      --bg3:       #475569; /* Slate 600 */
+      --border:    #1e293b;
+      --border2:   #334155;
+      --cyan:      #38bdf8; /* Sky 400 */
+      --blue:      #0176d3; /* Salesforce Blue */
+      --green:     #10b981; /* Emerald 500 */
+      --red:       #ef4444; /* Red 500 */
+      --amber:     #f59e0b; /* Amber 500 */
+      --text:      #f1f5f9; /* Slate 100 */
+      --muted:     #94a3b8; /* Slate 400 */
+      --muted2:    #64748b; /* Slate 500 */
+      --active-file-bg: #0c4a6e; /* Sky 900 */
+      --sidebar-w: 240px;
       --output-h:  220px;
+      --radius:    8px;
+      --shadow:    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
 
-    /* ─── Color vars — Light ───────────────────────────────────────── */
+    /* ─── Color vars — Salesforce Light ──────────────────────────── */
     html[data-theme="light"] {
-      --bg:        #f0f2f5;
+      --bg:        #f8fafc; /* Slate 50 */
       --bg1:       #ffffff;
-      --bg2:       #e8ebef;
-      --bg3:       #dde0e5;
-      --border:    #cdd2d8;
-      --border2:   #b8bec6;
-      --cyan:      #0070cc;
-      --green:     #1a7f4b;
-      --red:       #c8001a;
-      --amber:     #b85c00;
-      --text:      #1a2535;
-      --muted:     #6a7888;
-      --muted2:    #d0d5db;
-      --active-file-bg: #dceeff;
+      --bg2:       #f1f5f9; /* Slate 100 */
+      --bg3:       #e2e8f0; /* Slate 200 */
+      --border:    #e2e8f0;
+      --border2:   #cbd5e1;
+      --cyan:      #0284c7; /* Sky 600 */
+      --blue:      #0176d3;
+      --green:     #059669;
+      --red:       #dc2626;
+      --amber:     #d97706;
+      --text:      #0f172a; /* Slate 900 */
+      --muted:     #64748b; /* Slate 500 */
+      --muted2:    #94a3b8;
+      --active-file-bg: #e0f2fe; /* Sky 100 */
+      --shadow:    0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     }
     html[data-theme="light"] body { background: var(--bg); }
     html[data-theme="light"] .tree-file.active { background: var(--active-file-bg); }
@@ -68,6 +77,65 @@
     html[data-theme="light"] #statusbar { background: #e0e4e8; }
     html[data-theme="light"] .dash-card { background: var(--bg1); border-color: var(--border); }
     html[data-theme="light"] .activity-bar { background: #e8ebef; border-color: var(--border); }
+
+    /* ─── Modern Components ────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 6px 12px; border-radius: var(--radius);
+      font-weight: 500; cursor: pointer; transition: all 0.2s;
+      border: 1px solid transparent; outline: none;
+      font-family: inherit; font-size: 13px;
+    }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: #005fb2; transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .btn-ghost:hover { background: var(--bg2); color: var(--text); }
+
+    .card {
+      background: var(--bg1); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+
+    /* ─── Flow Canvas (TernFlow) ────────────────────────────────────── */
+    #view-flow {
+      flex: 1; display: none; position: relative;
+      overflow: hidden; background: var(--bg);
+      background-image: radial-gradient(var(--border2) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    #view-flow.active { display: flex; }
+    #flow-canvas {
+      width: 10000px; height: 10000px;
+      position: absolute; top: 0; left: 0;
+      transform-origin: 0 0;
+    }
+    .flow-node {
+      position: absolute; min-width: 180px;
+      background: var(--bg1); border: 2px solid var(--border2);
+      border-radius: var(--radius); padding: 12px;
+      cursor: grab; user-select: none; box-shadow: var(--shadow);
+      z-index: 10; transition: border-color 0.2s;
+    }
+    .flow-node:active { cursor: grabbing; }
+    .flow-node:hover { border-color: var(--blue); }
+    .flow-node-header {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 8px; display: flex; justify-content: space-between;
+    }
+    .flow-node-title { font-weight: 600; color: var(--text); margin-bottom: 12px; font-size: 14px; }
+    .flow-port {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--border2); position: absolute;
+      border: 2px solid var(--bg1);
+    }
+    .flow-port-in  { left: -6px; top: 50%; transform: translateY(-50%); }
+    .flow-port-out { right: -6px; top: 50%; transform: translateY(-50%); }
+    .flow-node.active-1 { border-color: var(--green); }
+    .flow-node.active-0 { border-color: var(--amber); }
+    .flow-node.active-n1 { border-color: var(--red); }
 
     /* ─── Topbar ───────────────────────────────────────────────────── */
     #topbar {
@@ -589,6 +657,7 @@
 <div id="viewbar">
   <button class="view-tab active" id="vt-dashboard" onclick="switchView('dashboard')">📊 Dashboard</button>
   <button class="view-tab"        id="vt-editor"    onclick="switchView('editor')">💻 Editor</button>
+  <button class="view-tab"        id="vt-flow"      onclick="switchView('flow')">🧠 Flow</button>
   <button class="view-tab"        id="vt-settings"  onclick="switchView('settings')">⚙ Settings</button>
 </div>
 
@@ -834,6 +903,23 @@
         </div>
 
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FLOW VIEW (TernFlow) ═════════════════════════════════════════════════ -->
+<div class="view" id="view-flow">
+  <div id="flow-canvas-wrap" style="flex:1; position:relative; overflow:hidden;">
+    <div id="flow-canvas">
+      <!-- Nodes injected via JS -->
+    </div>
+  </div>
+  <!-- Flow Toolbar -->
+  <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100;">
+    <div class="card" style="padding:10px; display:flex; gap:10px; align-items:center; background:rgba(30, 41, 59, 0.8); backdrop-filter:blur(8px); border-radius:50px;">
+      <button class="btn btn-ghost" onclick="renderFlow()" title="Refresh Nodes">↺</button>
+      <div style="width:1px; height:20px; background:var(--border2);"></div>
+      <button class="btn btn-primary" onclick="exportFlowCode()" style="border-radius:20px;">Export .tern</button>
     </div>
   </div>
 </div>
@@ -1305,7 +1391,98 @@ function switchView(name) {
   if (name === "editor" && monacoEditor) {
     setTimeout(() => monacoEditor.layout(), 50);
   }
+  if (name === "flow") {
+    renderFlow();
+  }
   if (name === "settings") syncSettingsUI();
+}
+
+// ─── TernFlow Logic ───────────────────────────────────────────────────────────
+let flowNodes = [];
+
+function renderFlow() {
+  const canvas = document.getElementById("flow-canvas");
+  canvas.innerHTML = "";
+  flowNodes = [];
+
+  // 1. Scan current code and stdlib for Agents
+  const allSources = { ...STDLIB, ...fileBuffers };
+  let x = 40, y = 40;
+
+  Object.entries(allSources).forEach(([path, code]) => {
+    const agentMatches = [...code.matchAll(/agent\s+(\w+)\s*\{/g)];
+    agentMatches.forEach(match => {
+      const name = match[1];
+      createFlowNode(name, path, x, y);
+      x += 220;
+      if (x > 800) { x = 40; y += 180; }
+    });
+  });
+}
+
+function createFlowNode(name, path, x, y) {
+  const canvas = document.getElementById("flow-canvas");
+  const node = document.createElement("div");
+  node.className = "flow-node";
+  node.style.left = x + "px";
+  node.style.top = y + "px";
+  
+  node.innerHTML = `
+    <div class="flow-node-header">
+      <span>AGENT</span>
+      <span style="color:var(--cyan)">${path.split('/').pop()}</span>
+    </div>
+    <div class="flow-node-title">${name}</div>
+    <div class="flow-port flow-port-in"></div>
+    <div class="flow-port flow-port-out"></div>
+    <div style="font-size:10px; color:var(--muted)">fn handle(msg: trit) -> trit</div>
+  `;
+
+  // Basic Dragging
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  node.onmousedown = (e) => {
+    if (e.target.classList.contains('flow-port')) return;
+    isDragging = true;
+    offsetX = e.clientX - node.offsetLeft;
+    offsetY = e.clientY - node.offsetTop;
+    node.style.zIndex = 1000;
+  };
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    node.style.left = (e.clientX - offsetX) + "px";
+    node.style.top = (e.clientY - offsetY) + "px";
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    node.style.zIndex = 10;
+  });
+
+  canvas.appendChild(node);
+  flowNodes.push({ name, path, element: node });
+}
+
+function exportFlowCode() {
+  let code = "// Generated by TernFlow Orchestrator\n";
+  code += "// Swarm definition\n\n";
+  
+  flowNodes.forEach(n => {
+    code += `// from "${n.path}" import ${n.name};\n`;
+  });
+
+  code += "\nfn main() -> trit {\n";
+  flowNodes.forEach((n, i) => {
+    code += `    let a${i}: agentref = spawn ${n.name};\n`;
+  });
+  code += "\n    return affirm;\n}\n";
+
+  newFile();
+  if (monacoEditor) monacoEditor.setValue(code);
+  switchView("editor");
+  showToast("Flow exported to Editor", "ok");
 }
 
 // ─── Build file tree ──────────────────────────────────────────────────────────
