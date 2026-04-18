@@ -1,0 +1,52 @@
+// stdlib/agents/consensus.tern
+// Demonstrates: Consensus agent pattern
+// Tier: 1
+
+agent Voter {
+    fn handle(input: trit) -> trit {
+        // Simple voter that just returns the input
+        // In a real scenario, this would have complex logic
+        return input;
+    }
+}
+
+agent Consensus {
+    fn handle(input: trit) -> trit {
+        let v1: agentref = spawn Voter;
+        let v2: agentref = spawn Voter;
+        let v3: agentref = spawn Voter;
+
+        send v1 input;
+        send v2 input;
+        send v3 input;
+
+        let r1: trit = await v1;
+        let r2: trit = await v2;
+        let r3: trit = await v3;
+
+        // Simple majority logic for 3 voters
+        if r1 == r2 {
+            return r1;
+        }
+        if r1 == r3 {
+            return r1;
+        }
+        if r2 == r3 {
+            return r2;
+        }
+        
+        return 0; // No consensus (hold)
+    }
+}
+
+fn main() -> trit {
+    let c: agentref = spawn Consensus;
+    send c 1;
+    let result: trit = await c;
+    
+    match result {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
