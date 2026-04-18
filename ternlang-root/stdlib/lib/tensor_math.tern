@@ -1,0 +1,58 @@
+// stdlib/lib/tensor_math.tern
+// Demonstrates: Minimum, maximum, and logical reductions on trit tensors.
+// Tier: 1 - Open Core
+
+fn tensor_min(data: trittensor<5>, size: int) -> trit {
+    let m: trit = 1;
+    let i: int = 0;
+    while i < size {
+        if data[i] < m { m = data[i]; }
+        i = i + 1;
+    }
+    return m;
+}
+
+fn tensor_max(data: trittensor<5>, size: int) -> trit {
+    let m: trit = -1;
+    let i: int = 0;
+    while i < size {
+        if data[i] > m { m = data[i]; }
+        i = i + 1;
+    }
+    return m;
+}
+
+fn tensor_all(data: trittensor<5>, size: int, target: trit) -> trit {
+    let i: int = 0;
+    while i < size {
+        if data[i] != target { return -1; }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [1, 0, -1, 0, 1];
+    
+    println("Tensor Math Showcase (1, 0, -1, 0, 1):");
+    
+    let tmin: trit = tensor_min(data, 5);
+    println("Min (expected -1):");
+    println(tmin);
+    if tmin == -1 { println("Min OK."); } else { return conflict(); }
+    
+    let tmax: trit = tensor_max(data, 5);
+    println("Max (expected 1):");
+    println(tmax);
+    if tmax == 1 { println("Max OK."); } else { return conflict(); }
+    
+    let data2: trittensor<5> = [1, 1, 1, 1, 1];
+    println("Checking if all are Affirm in [1, 1, 1, 1, 1]:");
+    let all1: trit = tensor_all(data2, 5, 1);
+    if all1 == 1 {
+        println("Yes (Correct). Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
