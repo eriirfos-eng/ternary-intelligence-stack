@@ -1,0 +1,75 @@
+// stdlib/agents/weighted_consensus.tern
+// Demonstrates: Weighted Consensus agent pattern
+// Tier: 1
+
+agent ReliableExpert {
+    fn handle(msg: trit) -> trit {
+        return affirm;
+    }
+}
+
+agent MediocreExpert {
+    fn handle(msg: trit) -> trit {
+        return reject;
+    }
+}
+
+agent UncertainExpert {
+    fn handle(msg: trit) -> trit {
+        return tend;
+    }
+}
+
+agent WeightedConsensus {
+    fn handle(msg: trit) -> trit {
+        let e1: agentref = spawn ReliableExpert;
+        let e2: agentref = spawn MediocreExpert;
+        let e3: agentref = spawn UncertainExpert;
+
+        send e1 msg;
+        send e2 msg;
+        send e3 msg;
+
+        let r1: trit = await e1;
+        let r2: trit = await e2;
+        let r3: trit = await e3;
+
+        // Weights: Reliable=3, Mediocre=2, Uncertain=1
+        let sum: int = 0;
+
+        match r1 {
+            affirm => { sum = sum + 3; }
+            reject => { sum = sum - 3; }
+            tend   => { }
+        }
+        match r2 {
+            affirm => { sum = sum + 2; }
+            reject => { sum = sum - 2; }
+            tend   => { }
+        }
+        match r3 {
+            affirm => { sum = sum + 1; }
+            reject => { sum = sum - 1; }
+            tend   => { }
+        }
+
+        if sum > 0 {
+            return affirm;
+        }
+        if sum < 0 {
+            return reject;
+        }
+        return tend;
+    }
+}
+
+fn main() -> trit {
+    let c: agentref = spawn WeightedConsensus;
+    send c affirm;
+    let res: trit = await c;
+    
+    match res {
+        affirm => { return affirm; }
+        _      => { return reject; }
+    }
+}
