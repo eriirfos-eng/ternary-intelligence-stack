@@ -1,0 +1,46 @@
+// stdlib/std/int_utils.tern
+// Demonstrates: Utility functions for integer operations.
+// Tier: 1 - Open Core
+
+fn is_even(n: int) -> trit {
+    if n % 2 == 0 { return 1; }
+    return -1;
+}
+
+fn signum(n: int) -> trit {
+    if n > 0 { return 1; }
+    if n < 0 { return -1; }
+    return 0;
+}
+
+fn abs_int(n: int) -> int {
+    if n < 0 { return 0 - n; }
+    return n;
+}
+
+fn main() -> trit {
+    println("Int Utils Showcase:");
+    
+    println("is_even(42):");
+    let e1: trit = is_even(42);
+    println(e1);
+    
+    println("signum(-500):");
+    let s1: trit = signum(-500);
+    println(s1);
+    
+    println("abs_int(-123):");
+    let a1: int = abs_int(-123);
+    println(a1);
+    
+    if e1 == 1 {
+        if s1 == -1 {
+            if a1 == 123 {
+                println("Int utils verified. Success.");
+                return truth();
+            }
+        }
+    }
+    
+    return conflict();
+}
