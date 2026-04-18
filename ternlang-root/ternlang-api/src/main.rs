@@ -474,7 +474,7 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "url":         "https://ternlang.com/mcp",
             "transport":   "HTTP JSON-RPC 2.0",
             "smithery":    "https://smithery.ai/server/ternlang",
-            "description": "POST /mcp — 19 free tools + 10 premium server-side tools. Pass X-Ternlang-Key for memory/compression tier.",
+            "description": "POST /mcp — 30 tools, all free. Pass X-Ternlang-Key for server-side persistent memory and REST API access.",
         },
         "acquire_key": "https://ternlang.com/#licensing"
     })).into_response()
@@ -1342,7 +1342,7 @@ async fn mcp_server_card() -> Json<Value> {
         "name":        "ternlang",
         "displayName": "Ternary Intelligence Stack",
         "version":     "0.3.3",
-        "description": "Turns binary AI agents into ternary decision engines. 19 free tools (no key required) + 10 server-side premium tools. Adds hold (trit=0) as a first-class outcome — not null, an active routing instruction to gather more evidence. 13-expert MoE orchestration, EcoCore ecocentric reasoning, TernAudit (EU AI Act Art.13/14/15), BET VM, BitNet quantizer, multi-dimensional safety gate. First programming language + MCP server with a native triadic ISA (BET-ISA-SPEC). Built by RFI-IRFOS, Graz, Austria.",
+        "description": "Turns binary AI agents into ternary decision engines. 30 tools, all free — no API key needed. Adds hold (trit=0) as a first-class outcome — not null, an active routing instruction to gather more evidence. MoE-13 orchestration, 3-layer memory, EcoCore, TernAudit (EU AI Act Art.13/14/15), BET VM, BitNet quantizer, multi-dimensional safety gate. Built by RFI-IRFOS, Graz, Austria.",
         "homepage":    "https://ternlang.com",
         "icon":        "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack--tis-/main/ternlang-root/ternlang-web/favicon.svg",
         "repository":  "https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-",
@@ -3489,7 +3489,7 @@ fn mcp_tools_manifest() -> Value {
         },
         {
           "name": "trit_compress",
-          "description": "Ternary context compression. Score each text chunk by information density: high-signal chunks are kept verbatim (+1), medium-signal chunks are truncated to their first sentence (0/tend), low-signal chunks are dropped (-1). Returns a manifest with actions and estimated token savings. Premium tool — requires API key.",
+          "description": "Ternary context compression. Score each text chunk by information density: high-signal chunks are kept verbatim (+1), medium-signal chunks are truncated to their first sentence (0/tend), low-signal chunks are dropped (-1). Returns a manifest with actions and estimated token savings.",
           "annotations": { "title": "Trit Compress — Ternary Context Compression", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["chunks"],
             "properties": {
@@ -3500,7 +3500,7 @@ fn mcp_tools_manifest() -> Value {
         },
         {
           "name": "trit_triage",
-          "description": "Ternary triage and prioritisation. Score an array of text chunks against a query by word overlap, then sort: affirm (+1) = highly relevant, tend (0) = partially relevant, reject (-1) = not relevant. Returns sorted manifest with relevance trit and score. Premium tool — requires API key.",
+          "description": "Ternary triage and prioritisation. Score an array of text chunks against a query by word overlap, then sort: affirm (+1) = highly relevant, tend (0) = partially relevant, reject (-1) = not relevant. Returns sorted manifest with relevance trit and score.",
           "annotations": { "title": "Trit Triage — Ternary Relevance Prioritisation", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
           "inputSchema": { "type": "object", "required": ["chunks","query"],
             "properties": {
@@ -3518,7 +3518,7 @@ fn mcp_tools_manifest() -> Value {
         },
         {
           "name": "trit_plan",
-          "description": "Ternary task planner. Decomposes a goal into subtasks, scores each subtask by confidence and feasibility, and routes uncertain tasks into a deliberation queue. Returns an ordered plan with trit verdicts and a hold queue for tasks needing more context. Premium tool — requires API key.",
+          "description": "Ternary task planner. Decomposes a goal into subtasks, scores each subtask by confidence and feasibility, and routes uncertain tasks into a deliberation queue. Returns an ordered plan with trit verdicts and a hold queue for tasks needing more context.",
           "annotations": { "title": "Trit Plan — Ternary Task Decomposition", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
           "inputSchema": { "type": "object", "required": ["goal"],
             "properties": {
@@ -3530,7 +3530,7 @@ fn mcp_tools_manifest() -> Value {
         },
         {
           "name": "trit_factcheck",
-          "description": "Ternary fact-check engine. Decomposes a claim into sub-claims, scores each against an optional evidence corpus using word overlap, and returns an overall verdict: affirm (claim supported), tend (partially supported — needs more evidence), reject (claim contradicted). Premium tool — requires API key.",
+          "description": "Ternary fact-check engine. Decomposes a claim into sub-claims, scores each against an optional evidence corpus using word overlap, and returns an overall verdict: affirm (claim supported), tend (partially supported — needs more evidence), reject (claim contradicted).",
           "annotations": { "title": "Trit Factcheck — Ternary Claim Verification", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": true },
           "inputSchema": { "type": "object", "required": ["claim"],
             "properties": {
@@ -3541,7 +3541,7 @@ fn mcp_tools_manifest() -> Value {
         },
         {
           "name": "moe_full",
-          "description": "Full 13-expert MoE orchestration with complete triad field, routing pair, per-expert verdicts, synergy scores, and deliberation trace. Unlike the free moe_orchestrate preview, returns the complete response including all expert voices and the emergent triad field computation. Premium tool — requires API key.",
+          "description": "Full 13-expert MoE orchestration with complete triad field, routing pair, per-expert verdicts, synergy scores, and deliberation trace. Returns the complete response including all expert voices and the emergent triad field computation.",
           "annotations": { "title": "MoE Full — Complete 13-Expert Orchestration", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true },
           "inputSchema": { "type": "object", "required": ["query"],
             "properties": {
