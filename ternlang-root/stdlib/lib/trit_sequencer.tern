@@ -1,0 +1,30 @@
+// stdlib/lib/trit_sequencer.tern
+// Demonstrates: A simple state machine that cycles through trit values.
+// Tier: 1
+
+fn cycle_trit(current: trit) -> trit {
+    // -1 -> 0 -> 1 -> -1
+    match current {
+        -1 => { return 0; }
+        0 => { return 1; }
+        1 => { return -1; }
+    }
+    return 0;
+}
+
+fn main() -> trit {
+    let mut state: trit = 0;
+    println(state);
+    
+    state = cycle_trit(state);
+    println(state);
+
+    state = cycle_trit(state);
+    println(state);
+
+    state = cycle_trit(state);
+    println(state);
+    
+    println("Program exited successfully.");
+    return 1;
+}
