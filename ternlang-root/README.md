@@ -42,7 +42,7 @@ The `tend` state is not indecision. It is a **first-class routing instruction** 
 ---
 → **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
 
-→ **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)** — our work-in-progress developer dash
+→ **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress developer dash
 
 
 ## What's in This Repository
