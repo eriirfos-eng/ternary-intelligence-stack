@@ -1,0 +1,62 @@
+// stdlib/lib/set_int.tern
+// Demonstrates: A simple set of integers simulation using a fixed-size array.
+// Tier: 1 - Open Core
+
+fn set_int_add(s: int[10], count: int, val: int) -> int {
+    // Check if already exists
+    let i: int = 0;
+    while i < count {
+        if s[i] == val { return count; }
+        i = i + 1;
+    }
+    
+    if count < 10 {
+        s[count] = val;
+        return count + 1;
+    }
+    return -1; // Full
+}
+
+fn set_int_contains(s: int[10], count: int, val: int) -> trit {
+    let i: int = 0;
+    while i < count {
+        if s[i] == val { return 1; }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let s: int[10];
+    let count: int = 0;
+    
+    println("Int Set Showcase:");
+    println("Adding 42, 7, 42, 123...");
+    count = set_int_add(s, count, 42);
+    count = set_int_add(s, count, 7);
+    count = set_int_add(s, count, 42); // Duplicate
+    count = set_int_add(s, count, 123);
+    
+    println("Current count (expected 3):");
+    println(count);
+    
+    if count == 3 {
+        println("Count correct.");
+    } else { return conflict(); }
+    
+    println("Checking if 7 is present:");
+    let c1: trit = set_int_contains(s, count, 7);
+    if c1 == 1 {
+        println("Yes (Correct).");
+    } else { return conflict(); }
+    
+    println("Checking if 99 is present:");
+    let c2: trit = set_int_contains(s, count, 99);
+    if c2 == -1 {
+        println("No (Correct).");
+        println("Int set verified. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
