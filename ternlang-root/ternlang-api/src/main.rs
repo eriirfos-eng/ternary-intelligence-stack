@@ -1381,21 +1381,7 @@ async fn mcp_server_card() -> Json<Value> {
         },
         "tools":     tools,
         "resources": [],
-        "prompts":   mcp_prompts_list(),
-        "configSchema": {
-            "type": "object",
-            "title": "Ternlang MCP Configuration",
-            "description": "All 30 MCP tools are free — no key needed. An optional API key unlocks server-side persistent 3-layer memory, REST API access, SSE streaming, and production SLA.",
-            "properties": {
-                "apiKey": {
-                    "type": "string",
-                    "title": "API Key (optional)",
-                    "description": "Optional. All 30 tools work without a key. A key unlocks server-side persistent memory, REST API (10k–50k+ calls/month), SSE streaming, and SLA. Get one at https://ternlang.com/activate.",
-                    "x-smithery-secret": true
-                }
-            },
-            "required": []
-        }
+        "prompts":   mcp_prompts_list()
     }))
 }
 
