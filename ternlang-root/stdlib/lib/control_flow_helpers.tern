@@ -1,0 +1,26 @@
+// stdlib/lib/control_flow_helpers.tern
+// Demonstrates: Ternary logic applied to control flow structures.
+// Tier: 1
+
+fn ternary_if(condition: trit, on_affirm: int, on_reject: int) -> int {
+    if condition == 1 {
+        return on_affirm;
+    }
+    if condition == -1 {
+        return on_reject;
+    }
+    return 0; // on_tend
+}
+
+fn main() -> trit {
+    let res1: int = ternary_if(1, 100, -100);
+    println("ternary_if(1):");
+    println(res1);
+
+    let res2: int = ternary_if(0, 100, -100);
+    println("ternary_if(0):");
+    println(res2);
+    
+    println("Program exited successfully.");
+    return 1;
+}
