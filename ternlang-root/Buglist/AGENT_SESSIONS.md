@@ -584,3 +584,18 @@ Findings:
 - Assignment of expression to 'let' before 'if' condition remains safest for complex float logic.
 
 Status: 50 files verified and committed. Build clean.
+
+## 2026-04-18 01:00 — 50 files committed (15 public, 35 premium)
+**Batches:**
+- Tier 1 (public): logic/ (15 files) — propositional_validator, consensus_aggregator, ternary_demux, ternary_mux, ternary_decoder, ternary_encoder, ternary_inverter, ternary_buffer, ternary_nor, ternary_nand, consensus_voting_gate, ternary_xor_consensus, ternary_latch, ternary_flip_flop, ternary_shifter.
+- Tier 2 (premium): qnn/ (10 files), apps/ (10 files) — ternary_weight_binarizer, ternary_activation_norm, ternary_gradient_mask, ternary_clamping_gate, ternary_scaling_factor_eval, sparsity_aware_eval, ternary_clamping_consensus, ternary_quantization_drift, ternary_weight_clipping_gate, ternary_training_scheduler, smart_irrigation_gate, vessel_traffic_monitor, air_quality_index_mask, smart_lock_evaluator, vitals_monitor_mask, credit_score_evaluator, ticket_pricing_engine, recommendation_filter_gate, subscription_renewal_gate, inventory_reorder_gate.
+- Tier 3 (premium): research/ (5 files), bio/ (5 files), hardware/ (5 files) — quantum_decoherence_eval, replication_confidence_mask, hypothesis_falsification_gate, citation_impact_eval, peer_review_consensus, dna_sequence_aligner, protein_folding_eval, genetic_algorithm_gate, enzyme_kinetics_eval, drug_efficacy_evaluator, ternary_alu_simulation, memory_controller_sim, clock_gating_simulation, voltage_scaling_eval, experimental_error_mask.
+
+**Do not work in these categories next session:** logic, qnn, apps, research, bio, hardware.
+
+**Compiler findings:**
+- `ExpectedToken("Semicolon", "LParen")` workaround of using literals and direct assignment instead of `return truth()` or `return hold()` confirmed.
+- `ExpectedToken("RBracket", "Int(5)")` for `trit[5]` fixed by using `trittensor<5>`.
+- `in` is a reserved keyword.
+
+**Status:** 50 files verified and committed. Build clean.
