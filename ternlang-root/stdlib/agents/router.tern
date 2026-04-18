@@ -1,0 +1,59 @@
+// stdlib/agents/router.tern
+// Demonstrates: Router agent pattern
+// Tier: 1
+
+agent AffirmativeHandler {
+    fn handle(msg: trit) -> trit {
+        return affirm;
+    }
+}
+
+agent RejectionHandler {
+    fn handle(msg: trit) -> trit {
+        return reject;
+    }
+}
+
+agent Router {
+    fn handle(msg: trit) -> trit {
+        match msg {
+            affirm => {
+                let h: agentref = spawn AffirmativeHandler;
+                send h msg;
+                let res: trit = await h;
+                return res;
+            }
+            reject => {
+                let h: agentref = spawn RejectionHandler;
+                send h msg;
+                let res: trit = await h;
+                return res;
+            }
+            tend => {
+                return tend;
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let r: agentref = spawn Router;
+    
+    send r affirm;
+    let res1: trit = await r;
+    
+    send r reject;
+    let res2: trit = await r;
+    
+    match res1 {
+        affirm => {
+            match res2 {
+                reject => { return affirm; }
+                tend => { return tend; }
+                affirm => { return reject; }
+            }
+        }
+        tend => { return tend; }
+        reject => { return reject; }
+    }
+}
