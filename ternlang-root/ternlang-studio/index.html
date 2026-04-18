@@ -1566,6 +1566,23 @@
   </div>
 </div>
 
+<!-- ═══ STATUS BAR ════════════════════════════════════════════════════════════ -->
+<div id="statusbar">
+  <div class="sb-item">
+    <span class="sb-dot" id="connDot"></span>
+    <span id="vmStatus" class="status-pill status-idle">● Idle</span>
+  </div>
+  <div class="sb-item" id="sbFileWrap">
+    <span id="sbFile">hello_trit.tern</span>
+  </div>
+  <div class="sb-item">
+    <span id="cursorPos">Ln 1, Col 1</span>
+  </div>
+  <div class="sb-item" style="border-right:none; margin-left:auto;">
+    <span id="sbWasmStatus" style="color:var(--muted2)">WASM loading…</span>
+  </div>
+</div>
+
 <!-- ═══ TOAST CONTAINER ══════════════════════════════════════════════════════ -->
 <div id="toast-container"></div>
 
@@ -2741,7 +2758,7 @@ function switchToTab(path) {
   if (monacoEditor) monacoEditor.setValue(fileBuffers[path] || "");
   renderTabs();
   refreshTreeHighlight();
-  document.getElementById("sbFile").textContent = path.split("/").pop();
+  const sbf = document.getElementById("sbFile"); if (sbf) sbf.textContent = path.split("/").pop();
 }
 
 async function openFile(path, useGithub = false) {
@@ -2799,7 +2816,7 @@ function loadToEditor(path, content) {
   }
   renderTabs();
   refreshTreeHighlight();
-  document.getElementById("sbFile").textContent = path.split("/").pop();
+  const sbf = document.getElementById("sbFile"); if (sbf) sbf.textContent = path.split("/").pop();
 }
 
 function newFile() {
@@ -2875,10 +2892,9 @@ function switchOutTab(id, el) {
 // ─── VM Output helpers ────────────────────────────────────────────────────────
 function setStatus(type, text) {
   const el = document.getElementById("vmStatus");
-  el.className = "status-pill status-" + type;
-  el.textContent = text;
+  if (el) { el.className = "status-pill status-" + type; el.textContent = text; }
   const dot = document.getElementById("connDot");
-  dot.className = "sb-dot" + (type === "error" ? " err" : type === "running" ? " warn" : "");
+  if (dot) dot.className = "sb-dot" + (type === "error" ? " err" : type === "running" ? " warn" : "");
 }
 
 function clearOutput() {
@@ -2893,9 +2909,8 @@ function clearOutput() {
 window.addEventListener('wasmready', () => {
   const badge = document.getElementById("wasmBadge");
   if (badge) badge.style.opacity = "1";
-  // Update statusbar to show WASM is live
-  const sb = document.getElementById("vmStatus");
-  if (sb && sb.textContent.includes("Idle")) sb.textContent = "⚡ WASM ready";
+  const sbw = document.getElementById("sbWasmStatus");
+  if (sbw) { sbw.textContent = "⚡ WASM"; sbw.style.color = "var(--green)"; }
 });
 
 function showResult(data) {
@@ -3471,14 +3486,14 @@ async function checkConnection() {
   try {
     const r = await fetch(endpoint + "/health", { signal: AbortSignal.timeout(4000) });
     if (r.ok) {
-      document.getElementById("connLabel").textContent = "Connected · " + endpoint.replace("https://", "");
-      document.getElementById("connDot").className = "sb-dot";
+      const cl = document.getElementById("connLabel"); if (cl) cl.textContent = "Connected · " + endpoint.replace("https://", "");
+      const cd = document.getElementById("connDot");   if (cd) cd.className = "sb-dot";
       if (dot)   dot.className   = "dot";
       if (label) label.textContent = "Online · " + endpoint.replace("https://", "");
     } else { throw new Error("not ok"); }
   } catch {
-    document.getElementById("connLabel").textContent = "Offline";
-    document.getElementById("connDot").className = "sb-dot err";
+    const cl = document.getElementById("connLabel"); if (cl) cl.textContent = "Offline";
+    const cd = document.getElementById("connDot");   if (cd) cd.className = "sb-dot err";
     if (dot)   dot.className   = "dot err";
     if (label) label.textContent = "Offline";
   }
@@ -3641,8 +3656,8 @@ require(["vs/editor/editor.main"], function () {
   });
 
   monacoEditor.onDidChangeCursorPosition(e => {
-    document.getElementById("cursorPos").textContent =
-      `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+    const cp = document.getElementById("cursorPos");
+    if (cp) cp.textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
   });
 
   window.addEventListener("resize", () => monacoEditor.layout());
