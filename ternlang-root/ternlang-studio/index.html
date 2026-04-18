@@ -137,22 +137,35 @@
 
     /* Flow Canvas (Center) */
     #flow-canvas-wrap {
-      flex: 1; position: relative; overflow: hidden;
+      flex: 1; position: relative; overflow: hidden; cursor: default;
       background-image: radial-gradient(var(--border2) 1px, transparent 1px);
       background-size: 32px 32px;
     }
+    #flow-canvas-wrap.panning { cursor: grabbing; }
     #flow-canvas {
       width: 5000px; height: 5000px;
       position: absolute; top: 0; left: 0;
       transform-origin: 0 0;
+      will-change: transform;
     }
+    /* SVG stays in screen-space (100% of wrap) — wires drawn in screen coords */
     #flow-svg-layer {
       position: absolute; top: 0; left: 0;
-      width: 5000px; height: 5000px; pointer-events: none;
+      width: 100%; height: 100%; pointer-events: none;
       z-index: 5;
     }
     #flow-svg-layer path { pointer-events: stroke; }
     #flow-svg-layer .wire-hit { pointer-events: stroke; cursor: pointer; }
+    /* Zoom indicator */
+    #zoom-indicator {
+      position: absolute; bottom: 80px; right: 16px;
+      background: rgba(15,23,42,0.8); backdrop-filter: blur(8px);
+      border: 1px solid var(--border2); border-radius: 20px;
+      padding: 4px 12px; font-size: 11px; font-weight: 600;
+      color: var(--muted); z-index: 50; display: flex; gap: 6px; align-items: center;
+    }
+    #zoom-indicator button { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px 4px; font-size: 14px; line-height: 1; border-radius: 3px; }
+    #zoom-indicator button:hover { background: var(--bg2); color: var(--text); }
     .flow-wire {
       fill: none; stroke: var(--border2); stroke-width: 2;
       stroke-linecap: round; transition: stroke 0.3s, stroke-width 0.3s;
@@ -231,7 +244,14 @@
       border: 2px solid var(--bg1); cursor: crosshair;
       transition: background 0.2s;
     }
-    .flow-port:hover { background: var(--cyan); }
+    .flow-port:hover { background: var(--cyan); transform: scale(1.4); }
+    .flow-port-label {
+      position: absolute; font-size: 8px; font-weight: 600; color: var(--muted2);
+      white-space: nowrap; pointer-events: none; line-height: 1;
+    }
+    .flow-port-in  + .flow-port-label { left: 10px; top: 50%; transform: translateY(-50%); }
+    .flow-port-out + .flow-port-label { right: 10px; top: 50%; transform: translateY(-50%); text-align: right; }
+    .fn-schema { font-size: 9px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; margin-top: 4px; line-height: 1.5; }
     .flow-node.external { border-color: var(--amber); border-style: dashed; }
     .flow-node.external .fn-head { background: rgba(245,158,11,0.08); }
     .flow-node.gate { border-color: var(--cyan); }
@@ -1407,6 +1427,14 @@
       </div>
     </div>
 
+    <!-- Zoom indicator -->
+    <div id="zoom-indicator">
+      <button onclick="zoomStep(-1)" title="Zoom out">−</button>
+      <span id="zoomLabel">100%</span>
+      <button onclick="zoomStep(1)" title="Zoom in">+</button>
+      <button onclick="fitToView()" title="Fit to view" style="font-size:11px; padding:2px 6px;">⊡</button>
+    </div>
+
     <!-- Execution Inspector Overlay -->
     <div id="flow-inspector">
       <div class="ins-head">
@@ -1868,6 +1896,122 @@ let flowWires = [];
 let selectedNodeId = null;
 let activeWire = null;
 
+// ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
+const CT = { scale: 1, x: 0, y: 0 };
+const SCALE_MIN = 0.15, SCALE_MAX = 2.5;
+
+function applyTransform() {
+  const canvas = document.getElementById("flow-canvas");
+  if (canvas) canvas.style.transform = `translate(${CT.x}px,${CT.y}px) scale(${CT.scale})`;
+  const lbl = document.getElementById("zoomLabel");
+  if (lbl) lbl.textContent = Math.round(CT.scale * 100) + "%";
+  // Dot grid scales with canvas
+  const wrap = document.getElementById("flow-canvas-wrap");
+  if (wrap) {
+    const gs = Math.max(8, 32 * CT.scale);
+    wrap.style.backgroundSize = `${gs}px ${gs}px`;
+    wrap.style.backgroundPosition = `${CT.x}px ${CT.y}px`;
+  }
+}
+
+function zoomAt(mx, my, delta) {
+  const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, CT.scale * delta));
+  CT.x = mx - (mx - CT.x) * (newScale / CT.scale);
+  CT.y = my - (my - CT.y) * (newScale / CT.scale);
+  CT.scale = newScale;
+  applyTransform();
+  updateWires();
+}
+
+function zoomStep(dir) {
+  const wrap = document.getElementById("flow-canvas-wrap");
+  const cx = wrap.clientWidth / 2, cy = wrap.clientHeight / 2;
+  zoomAt(cx, cy, dir > 0 ? 1.2 : 1 / 1.2);
+}
+
+function fitToView() {
+  if (flowNodes.length === 0) { CT.scale = 1; CT.x = 0; CT.y = 0; applyTransform(); return; }
+  const canvas = document.getElementById("flow-canvas");
+  const wrap   = document.getElementById("flow-canvas-wrap");
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  flowNodes.forEach(n => {
+    const el = document.getElementById(n.id);
+    if (!el) return;
+    const x = parseFloat(el.style.left) || 0;
+    const y = parseFloat(el.style.top)  || 0;
+    const w = el.offsetWidth  || 200;
+    const h = el.offsetHeight || 80;
+    minX = Math.min(minX, x);       minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + w);   maxY = Math.max(maxY, y + h);
+  });
+  const pad = 60;
+  const fw = wrap.clientWidth  - pad * 2;
+  const fh = wrap.clientHeight - pad * 2;
+  const cw = maxX - minX, ch = maxY - minY;
+  const scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.min(fw / (cw || 1), fh / (ch || 1))));
+  CT.scale = scale;
+  CT.x = pad + (fw - cw * scale) / 2 - minX * scale;
+  CT.y = pad + (fh - ch * scale) / 2 - minY * scale;
+  applyTransform();
+  updateWires();
+}
+
+// Screen point → canvas local coordinates
+function screenToCanvas(sx, sy) {
+  return { x: (sx - CT.x) / CT.scale, y: (sy - CT.y) / CT.scale };
+}
+
+// ─── Pan & Zoom event setup ───────────────────────────────────────────────────
+function initCanvasInteraction() {
+  const wrap = document.getElementById("flow-canvas-wrap");
+  if (!wrap) return;
+
+  // Wheel → zoom toward cursor
+  wrap.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const delta = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+    zoomAt(mx, my, delta);
+  }, { passive: false });
+
+  // Middle-mouse or Space+drag → pan
+  let panActive = false, panStartX = 0, panStartY = 0, panOriginX = 0, panOriginY = 0;
+  let spaceDown = false;
+
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+      spaceDown = true;
+      wrap.style.cursor = "grab";
+      e.preventDefault();
+    }
+  });
+  document.addEventListener("keyup", e => {
+    if (e.code === "Space") { spaceDown = false; wrap.style.cursor = ""; wrap.classList.remove("panning"); }
+  });
+
+  wrap.addEventListener("mousedown", (e) => {
+    if (e.button === 1 || (e.button === 0 && spaceDown)) {
+      panActive = true;
+      panStartX = e.clientX; panStartY = e.clientY;
+      panOriginX = CT.x;     panOriginY = CT.y;
+      wrap.classList.add("panning");
+      e.preventDefault();
+    }
+  });
+  document.addEventListener("mousemove", (e) => {
+    if (!panActive) return;
+    CT.x = panOriginX + (e.clientX - panStartX);
+    CT.y = panOriginY + (e.clientY - panStartY);
+    applyTransform();
+    updateWires();
+  });
+  document.addEventListener("mouseup", (e) => {
+    if (panActive) { panActive = false; wrap.classList.remove("panning"); }
+  });
+}
+
 // ─── Built-in Agent Library ──────────────────────────────────────────────────
 const BUILTIN_AGENTS = {
   "Sensor": {
@@ -1936,10 +2080,10 @@ function restoreCanvasState() {
     const state = JSON.parse(raw);
     if (!state.nodes || state.nodes.length === 0) return false;
     state.nodes.forEach(n => createFlowNode(n.name, n.path, n.x, n.y, n.type, n.id));
-    // Restore props
-    state.nodes.forEach(n => { const node = flowNodes.find(f => f.id === n.id); if (node) node.props = n.props; });
+    state.nodes.forEach(n => { const node = flowNodes.find(f => f.id === n.id); if (node) { node.props = n.props; updateNodeSchemaDisplay(n.id); } });
     flowWires = state.wires || [];
     updateWires();
+    if (flowNodes.length > 0) { const hint = document.getElementById("canvas-hint"); if (hint) hint.style.display = "none"; }
     return true;
   } catch(e) { return false; }
 }
@@ -1960,7 +2104,9 @@ function clearCanvas() {
   showToast("Canvas cleared", "ok");
 }
 
+let _canvasInteractionInited = false;
 function renderFlow() {
+  if (!_canvasInteractionInited) { initCanvasInteraction(); applyTransform(); _canvasInteractionInited = true; }
   renderFlowLibrary();
   // Restore canvas from localStorage (don't wipe on every view switch)
   if (flowNodes.length === 0) {
@@ -2003,12 +2149,10 @@ function renderBuiltinLibItems() {
     div.innerHTML = `<i data-lucide="${agent.icon}" style="color:${agent.color}"></i> <span>${name}</span>`;
     div.onclick = () => {
       const id = "node_" + Date.now();
-      const canvas = document.getElementById("flow-canvas");
-      const cx = Math.max(40, (canvas.parentElement.clientWidth / 2) - 100 + (Math.random()-0.5)*160);
-      const cy = Math.max(40, (canvas.parentElement.clientHeight / 2) - 60 + (Math.random()-0.5)*120);
-      createFlowNode(name, "__builtin__", cx, cy, 'agent', id);
+      const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
+      createFlowNode(name, "__builtin__", pos.x, pos.y, 'agent', id);
       const node = flowNodes.find(n => n.id === id);
-      if (node) node.props.code = agent.code;
+      if (node) { node.props.code = agent.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "result: trit"; }
     };
     lib.appendChild(div);
   });
@@ -2072,13 +2216,18 @@ async function loadNewAgentTemplate() {
   } catch(e) {}
 }
 
+function viewportCenterInCanvas(offX = 0, offY = 0) {
+  const wrap = document.getElementById("flow-canvas-wrap");
+  const sx = wrap.clientWidth  / 2 + offX;
+  const sy = wrap.clientHeight / 2 + offY;
+  return screenToCanvas(sx, sy);
+}
+
 function addAgentFromModal() {
   const name = document.getElementById("newAgentName").value.trim() || "Agent";
   const code = document.getElementById("newAgentCode").value;
   const id = "node_" + Date.now();
-  const canvas = document.getElementById("flow-canvas");
-  const cx = (canvas.parentElement.clientWidth / 2) - 100 + Math.random() * 100;
-  const cy = (canvas.parentElement.clientHeight / 2) - 60 + Math.random() * 80;
+  const { x: cx, y: cy } = viewportCenterInCanvas((Math.random()-0.5)*100, (Math.random()-0.5)*80);
   createFlowNode(name, "__custom__", cx, cy, 'agent', id);
   // Store code in the node
   const node = flowNodes.find(n => n.id === id);
@@ -2119,21 +2268,24 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   `;
 
   let isDragging = false;
-  let startX, startY;
+  let startMouseX, startMouseY, startNodeX, startNodeY;
 
   node.onmousedown = (e) => {
     selectNode(id);
     if (e.target.closest('button') || e.target.classList.contains('flow-port')) return;
     isDragging = true;
-    startX = e.clientX - node.offsetLeft;
-    startY = e.clientY - node.offsetTop;
+    startMouseX = e.clientX; startMouseY = e.clientY;
+    startNodeX  = parseFloat(node.style.left) || 0;
+    startNodeY  = parseFloat(node.style.top)  || 0;
     node.style.zIndex = 1000;
+    e.preventDefault();
   };
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    node.style.left = (e.clientX - startX) + "px";
-    node.style.top = (e.clientY - startY) + "px";
+    // Divide mouse delta by scale so drag feels 1:1 regardless of zoom
+    node.style.left = (startNodeX + (e.clientX - startMouseX) / CT.scale) + "px";
+    node.style.top  = (startNodeY + (e.clientY - startMouseY) / CT.scale) + "px";
     updateWires();
   });
 
@@ -2144,7 +2296,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
 
   canvas.appendChild(node);
   const builtinCode = BUILTIN_AGENTS[name] ? BUILTIN_AGENTS[name].code : '';
-  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7, max_trits: 512, routing: "affirm→next", code: builtinCode } });
+  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7, max_trits: 512, routing: "affirm→next", code: builtinCode, input_schema: "signal: trit", output_schema: "result: trit" } });
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = "none";
   lucide.createIcons();
@@ -2189,6 +2341,15 @@ function updatePropertyPanel() {
   const maxTrits = node.props.max_trits ?? 512;
   const routing = node.props.routing ?? "affirm→next";
   const code = (node.props.code || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const inSchema  = (node.props.input_schema  || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const outSchema = (node.props.output_schema || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  // Validate wired edges for schema compatibility
+  const inWires  = flowWires.filter(w => w.toId   === selectedNodeId);
+  const outWires = flowWires.filter(w => w.fromId  === selectedNodeId);
+  const schemaWarning = inWires.some(w => {
+    const src = flowNodes.find(n => n.id === w.fromId);
+    return src && src.props.output_schema && node.props.input_schema && src.props.output_schema !== node.props.input_schema;
+  }) ? `<div style="font-size:10px;color:var(--amber);padding:6px 0;">⚠ Schema mismatch on incoming wire</div>` : "";
 
   body.innerHTML = `
     <div class="prop-group">
@@ -2226,8 +2387,27 @@ function updatePropertyPanel() {
       </select>
     </div>
     <div class="prop-group">
+      <label class="prop-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>I/O Contract</span>
+        <span style="font-size:9px;color:var(--muted2);font-weight:400;text-transform:none;">${inWires.length} in · ${outWires.length} out</span>
+      </label>
+      ${schemaWarning}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div>
+          <div style="font-size:9px;color:var(--green);font-weight:600;margin-bottom:3px;">▶ INPUT</div>
+          <input class="prop-input" style="width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;" value="${inSchema}"
+            placeholder="signal: trit" oninput="updateNodeProp('input_schema',this.value);updateNodeSchemaDisplay('${selectedNodeId}')">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--cyan);font-weight:600;margin-bottom:3px;">◀ OUTPUT</div>
+          <input class="prop-input" style="width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;" value="${outSchema}"
+            placeholder="result: trit" oninput="updateNodeProp('output_schema',this.value);updateNodeSchemaDisplay('${selectedNodeId}')">
+        </div>
+      </div>
+    </div>
+    <div class="prop-group">
       <label class="prop-label">Agent Code (.tern)</label>
-      <textarea class="prop-input" style="height:110px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:10px;"
+      <textarea class="prop-input" style="height:100px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:10px;"
         oninput="updateNodeProp('code', this.value)">${code}</textarea>
     </div>
     <div style="display:flex;gap:6px;margin-top:4px;">
@@ -2247,6 +2427,18 @@ function openAgentInEditor() {
   switchView('editor');
 }
 
+function updateNodeSchemaDisplay(nodeId) {
+  const node = flowNodes.find(n => n.id === nodeId);
+  if (!node) return;
+  const el = document.getElementById(nodeId);
+  if (!el) return;
+  let schema = el.querySelector('.fn-schema');
+  if (!schema) { schema = document.createElement('div'); schema.className = 'fn-schema'; el.querySelector('.fn-body').appendChild(schema); }
+  const ins  = node.props.input_schema  ? `<span style="color:var(--green)">▶ ${node.props.input_schema}</span>` : '';
+  const outs = node.props.output_schema ? `<span style="color:var(--cyan)">◀ ${node.props.output_schema}</span>` : '';
+  schema.innerHTML = [ins, outs].filter(Boolean).join('<br>');
+}
+
 function updateNodeProp(key, val) {
   const node = flowNodes.find(n => n.id === selectedNodeId);
   if (!node) return;
@@ -2262,12 +2454,14 @@ function updateNodeProp(key, val) {
 
 function addExternalBridge() {
   const id = "bridge_" + Date.now();
-  createFlowNode("LLM Bridge", "external", 100 + Math.random()*60, 100 + Math.random()*60, 'external', id);
+  const pos = viewportCenterInCanvas((Math.random()-0.5)*100, (Math.random()-0.5)*80);
+  createFlowNode("LLM Bridge", "external", pos.x, pos.y, 'external', id);
 }
 
 function addTernaryGate() {
   const id = "gate_" + Date.now();
-  createFlowNode("Consensus Gate", "gate", 100 + Math.random()*60, 100 + Math.random()*60, 'gate', id);
+  const pos = viewportCenterInCanvas((Math.random()-0.5)*100, (Math.random()-0.5)*80);
+  createFlowNode("Consensus Gate", "gate", pos.x, pos.y, 'gate', id);
 }
 
 // ─── Library tab switching ────────────────────────────────────────────────────
