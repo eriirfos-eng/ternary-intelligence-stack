@@ -340,12 +340,13 @@ Most potential users have binary decision trees they've been running for years. 
 
 ## 📚 Phase 15: Distribution, Academia, Community
 
-### 15A — Jupyter Kernel
-- [ ] `ternlang-jupyter`: ZeroMQ-based Jupyter kernel wrapping `ternlang-cli`
-- [ ] `.tern` cells in Jupyter notebooks — execute, display trit state of all variables
-- [ ] Rich output: trittensor visualized as colored grid (Affirm=green, Tend=amber, Reject=red)
-- [ ] Install: `pip install ternlang-jupyter && python -m ternlang_jupyter.install`
-- [ ] Target: AI safety researchers, ML students, anyone working on uncertainty quantification
+### 15A — Jupyter Kernel ✅ COMPLETE (2026-04-18)
+- [x] `ternlang-jupyter`: ipykernel-based Jupyter kernel wrapping `ternlang-cli`
+- [x] `.tern` cells in Jupyter notebooks — execute, stream print() output, display trit result
+- [x] Rich output: color-coded AFFIRM/HOLD/REJECT blocks with byte count
+- [x] Install: `pip install ternlang-jupyter && ternlang-jupyter-install`
+- [x] Tab completion, hover docs, %version/%help magic commands
+- [x] Handles all three exit codes correctly (reject RC=1 is valid result, not error)
 
 ### 15B — ternpkg Curated Registry
 - [ ] Move beyond GitHub-backed install — add a curated `registry.ternlang.com` index
@@ -404,12 +405,13 @@ The standalone web IDE — Monaco editor + real BET VM (WASM, Phase 17) + integr
 
 **Why this matters:** TernGround Lab 05 currently runs `.tern` in a hand-written JS interpreter. The semantics drift from the real compiler. The fix is to compile `ternlang-core` to WebAssembly — the real BET VM, running in the browser, no installation. This is also the Hacker News launch vehicle.
 
-- [x] `cargo build --target wasm32-unknown-unknown -p ternlang-core` — **VERIFIED** compiles with zero errors (2026-04-12). ternlang-core has no OS deps, pure Rust. WASM target added via `rustup target add wasm32-unknown-unknown`.
-- [ ] `wasm-bindgen` wrapper: expose `run_tern(source: &str) -> String` (returns stdout + register dump)
-- [ ] Replace `playground/index.html` JS interpreter with WASM call
-- [ ] TernGround Lab 05: "Real BET VM, actually running" — accurate, not approximate
-- [ ] Performance: BET VM in WASM should be fast enough for the 5 demo programs instantly
-- [ ] CI: build WASM artifact on release, embed in `ternlang-api` static assets or serve from CDN
+- [x] `cargo build --target wasm32-unknown-unknown -p ternlang-core` — **VERIFIED** compiles with zero errors (2026-04-12).
+- [x] `wasm-bindgen` wrapper: `run_tern(src) -> String` and `check_tern(src) -> String` exposed (2026-04-18)
+- [x] Replace `playground/index.html` JS interpreter with WASM call — real BET VM in browser (2026-04-18)
+- [x] TernGround playground: "BET VM (WASM) · real compiler · v1.0.0" — accurate, not approximate
+- [x] Performance: real compiler instantaneous for all demo programs
+- [x] WASM artifact embedded in `ternlang-api` via `include_bytes!`, served at `/playground/pkg/`
+- [x] Auth middleware whitelisted for `/playground` and `/playground/pkg/*` — publicly accessible
 
 ---
 
@@ -480,10 +482,10 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 |---------|------------|--------|--------|
 | Q2 2026 | 5 new MCP tools (Phase 11A) | 🟠 High | Medium |
 | Q2 2026 | EcoCore in MoE-13 (Phase 11B) | 🟠 High | High |
-| Q2 2026 | WASM runtime (Phase 17) | 🟠 High | Medium |
+| ~~Q2 2026~~ **DONE** | WASM runtime (Phase 17) ✅ | 🟢 Complete | — |
 | Q3 2026 | TernAudit VS Code inline (Phase 18) | 🔴 Critical (commercial) | Medium |
 | Q3 2026 | TernTranslator VS Code panel (Phase 14) | 🟠 High | Medium |
-| Q3 2026 | Jupyter kernel (Phase 15A) | 🟡 Medium | Medium |
+| ~~Q3 2026~~ **DONE** | Jupyter kernel (Phase 15A) ✅ | 🟢 Complete | — |
 | Q3 2026 | Hacker News launch (Phase 15D) | 🔴 Critical (distribution) | Low |
 | Q4 2026 | VS Code extension v0.5.0 — BET debugger (Phase 16) | 🟠 High | High |
 | Q4 2026 | TernStudio v1.0 (Phase 16) | 🟠 High | Very High |
