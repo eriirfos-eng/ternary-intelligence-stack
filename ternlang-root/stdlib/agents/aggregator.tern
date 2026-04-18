@@ -1,0 +1,52 @@
+// stdlib/agents/aggregator.tern
+// Demonstrates: Aggregator agent pattern
+// Tier: 1
+
+agent Sensor {
+    fn handle(input: trit) -> trit {
+        // Simulates a sensor reading
+        return input;
+    }
+}
+
+agent Aggregator {
+    fn handle(input: trit) -> trit {
+        let s1: agentref = spawn Sensor;
+        let s2: agentref = spawn Sensor;
+        let s3: agentref = spawn Sensor;
+
+        // Send to all "parallel" sensors
+        send s1 input;
+        send s2 input;
+        send s3 input;
+
+        // Collect results
+        let r1: trit = await s1;
+        let r2: trit = await s2;
+        let r3: trit = await s3;
+
+        // Aggregate via consensus
+        if r1 == r2 {
+            return r1;
+        }
+        if r1 == r3 {
+            return r1;
+        }
+        if r2 == r3 {
+            return r2;
+        }
+        
+        return tend;
+    }
+}
+
+fn main() -> trit {
+    let a: agentref = spawn Aggregator;
+    send a affirm;
+    let res: trit = await a;
+    
+    match res {
+        affirm => { return affirm; }
+        _      => { return reject; }
+    }
+}
