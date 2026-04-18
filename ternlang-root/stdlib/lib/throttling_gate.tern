@@ -1,0 +1,34 @@
+// stdlib/lib/throttling_gate.tern
+// Demonstrates: A conceptual rate-limiting mechanism.
+// Tier: 1
+
+fn check_rate_limit(requests_per_minute: int, current_rate: int) -> trit {
+    // 1: Allow, 0: Throttle, -1: Block
+    if current_rate > requests_per_minute {
+        return -1; // Block if exceeding limit
+    } else {
+        if current_rate > requests_per_minute * 0.8 {
+            return 0; // Throttle if approaching limit
+        }
+    }
+    return 1; // Allow
+}
+
+fn main() -> trit {
+    let limit: int = 100;
+    let rate1: int = 50;
+    let rate2: int = 90;
+    let rate3: int = 110;
+
+    println("Rate limit check (50/100):");
+    println(check_rate_limit(limit, rate1));
+
+    println("Rate limit check (90/100):");
+    println(check_rate_limit(limit, rate2));
+
+    println("Rate limit check (110/100):");
+    println(check_rate_limit(limit, rate3));
+    
+    println("Program exited successfully.");
+    return 1;
+}
