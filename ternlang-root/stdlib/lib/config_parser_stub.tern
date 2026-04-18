@@ -1,0 +1,25 @@
+// stdlib/lib/config_parser_stub.tern
+// Demonstrates: A conceptual key-value config parser.
+// Tier: 1
+
+// This is a stub; a real implementation would need more advanced string/file ops.
+fn get_config_value(key: string) -> string {
+    if key == "TIMEOUT" {
+        return "1000";
+    }
+    if key == "HOST" {
+        return "127.0.0.1";
+    }
+    return "NOT_FOUND";
+}
+
+fn main() -> trit {
+    println("Config value for TIMEOUT:");
+    println(get_config_value("TIMEOUT"));
+
+    println("Config value for USER:");
+    println(get_config_value("USER"));
+    
+    println("Program exited successfully.");
+    return 1;
+}
