@@ -3428,9 +3428,10 @@ document.addEventListener('mousemove', (e) => {
 
 document.addEventListener('mouseup', (e) => {
   if (activeWire) {
-    if (e.target.classList.contains('flow-port-in')) {
-      const toNode = e.target.closest('.flow-node');
-      if (toNode.id !== activeWire.fromId) {
+    const targetPort = e.target.closest('.flow-port-in');
+    if (targetPort) {
+      const toNode = targetPort.closest('.flow-node');
+      if (toNode && toNode.id !== activeWire.fromId) {
         const wireId = "wire_" + Date.now();
         flowWires.push({
           id: wireId,
@@ -4589,6 +4590,25 @@ require(["vs/editor/editor.main"], function () {
     document.getElementById("apiKey").value = window.TERNSTUDIO_DEV_KEY;
     document.getElementById("topbarKeyInput").value = window.TERNSTUDIO_DEV_KEY;
     localStorage.setItem("ternstudio-key", window.TERNSTUDIO_DEV_KEY);
+    fetchUsage();
+  } else {
+    renderUsageAnon();
+    buildFileTree();
+  }
+
+  renderTabs();
+  checkConnection();
+  setInterval(checkConnection, 30000);
+
+  // Load from hash after Monaco is ready
+  loadFromHash();
+  lucide.createIcons();
+});
+</script>
+
+</body>
+</html>
+  localStorage.setItem("ternstudio-key", window.TERNSTUDIO_DEV_KEY);
     fetchUsage();
   } else {
     renderUsageAnon();
