@@ -4325,7 +4325,7 @@ async function animateSignal(wire, signal, confidence = 1.0) {
   const start = getPortPos(fromPort);
   const end = getPortPos(toPort);
 
-  const d = computeWirePath(start, end);
+  const d = computeWirePath(start, end, wire);
 
   const particle = document.createElement("div");
   particle.className = "trit-particle";
