@@ -334,7 +334,7 @@
     .trit-particle {
       width: 8px; height: 8px; border-radius: 50%;
       position: absolute; pointer-events: none; z-index: 20;
-      offset-path: path(var(--d)); animation: move-particle 2s linear infinite;
+      offset-path: path(var(--d)); animation: move-particle var(--speed) linear infinite;
     }
     @keyframes move-particle { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
 
@@ -1459,6 +1459,13 @@
           <i data-lucide="download" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Export</span>
         </button>
         <div style="width:1px; height:20px; background:var(--border2);"></div>
+        
+        <!-- Speed Control -->
+        <div style="display:flex; align-items:center; gap:8px;" title="Simulation Speed">
+          <i data-lucide="fast-forward" style="width:14px; color:var(--muted);"></i>
+          <input type="range" min="100" max="2000" step="100" value="2000" style="width:60px; height:2px; accent-color:var(--cyan);" oninput="simSpeed = 2100 - parseInt(this.value)">
+        </div>
+        <div style="width:1px; height:20px; background:var(--border2);"></div>
 
         <!-- Deploy as Product -->
         <button class="btn btn-primary" onclick="openDeployModal()" style="border-radius:20px; padding:6px 18px; gap:6px; background: linear-gradient(135deg, #0176d3, #06b6d4);">
@@ -2071,16 +2078,19 @@ function initCanvasInteraction() {
       rbActive = false;
       const rb = document.getElementById("rubber-band");
       if (rb) rb.style.display = "none";
-      // Find nodes inside rubber-band
-      const wRect = wrap.getBoundingClientRect();
+      // Find nodes inside rubber-band using pure screen coords
       const rx1 = Math.min(rbStart.x, e.clientX), rx2 = Math.max(rbStart.x, e.clientX);
       const ry1 = Math.min(rbStart.y, e.clientY), ry2 = Math.max(rbStart.y, e.clientY);
+      
       if (rx2 - rx1 > 5 || ry2 - ry1 > 5) {
         flowNodes.forEach(n => {
           const el = document.getElementById(n.id);
           if (!el) return;
           const nr = el.getBoundingClientRect();
-          if (nr.left < rx2 && nr.right > rx1 && nr.top < ry2 && nr.bottom > ry1) {
+          // Check if bounding box centers are inside the selection box (more forgiving than full inclusion)
+          const cx = nr.left + nr.width / 2;
+          const cy = nr.top + nr.height / 2;
+          if (cx >= rx1 && cx <= rx2 && cy >= ry1 && cy <= ry2) {
             selectNode(n.id, true);
           }
         });
@@ -2379,7 +2389,16 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
 
   node.onmousedown = (e) => {
     if (e.target.closest('button') || e.target.classList.contains('flow-port')) return;
-    selectNode(id, e.shiftKey);
+    if (!e.shiftKey && !selectedIds.has(id)) {
+      selectNode(id, false);
+    } else if (e.shiftKey) {
+      selectNode(id, true);
+    } else {
+      // It's already selected and shift is not pressed: just make it the primary for props without clearing
+      selectedNodeId = id;
+      updatePropertyPanel();
+    }
+    
     isDragging = true;
     startMouseX = e.clientX; startMouseY = e.clientY;
     startNodeX  = parseFloat(node.style.left) || 0;
@@ -3543,6 +3562,8 @@ function computeWirePath(start, end) {
   return `M ${start.x} ${start.y} C ${start.x + curve} ${start.y}, ${end.x - curve} ${end.y}, ${end.x} ${end.y}`;
 }
 
+let simSpeed = 2000;
+
 async function animateSignal(wire, signal) {
   const fromNode = document.getElementById(wire.fromId);
   const toNode = document.getElementById(wire.toId);
@@ -3558,15 +3579,17 @@ async function animateSignal(wire, signal) {
   const particle = document.createElement("div");
   particle.className = "trit-particle";
   particle.style.setProperty("--d", `"${d}"`);
+  particle.style.setProperty("--speed", `${simSpeed}ms`);
   particle.style.background = signal === 1 ? 'var(--green)' : (signal === -1 ? 'var(--red)' : 'var(--amber)');
   
-  document.getElementById("flow-canvas-wrap").appendChild(particle);
+  // Attach particle to canvas so it zooms/pans with the path
+  document.getElementById("flow-canvas").appendChild(particle);
   
   // Highlight wire
   const wireEl = document.getElementById(wire.id);
   if (wireEl) wireEl.setAttribute("class", `flow-wire active-${signal === 1 ? '1' : (signal === -1 ? 'n1' : '0')}`);
 
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, simSpeed));
   particle.remove();
 }
 
@@ -3574,8 +3597,8 @@ function getPortPos(port) {
   const rect = port.getBoundingClientRect();
   const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
   return {
-    x: (rect.left - wrapRect.left + rect.width / 2) / CT.scale,
-    y: (rect.top - wrapRect.top + rect.height / 2) / CT.scale
+    x: (rect.left - wrapRect.left - CT.x + rect.width / 2) / CT.scale,
+    y: (rect.top - wrapRect.top - CT.y + rect.height / 2) / CT.scale
   };
 }
 
