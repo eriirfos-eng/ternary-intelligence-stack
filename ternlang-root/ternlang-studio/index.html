@@ -1438,8 +1438,7 @@
       <svg id="flow-svg-layer">
         <!-- Wires rendered here -->
       </svg>
-      <div id="wire-handle-1" class="wire-handle" title="Drag to shape curve"></div>
-      <div id="wire-handle-2" class="wire-handle" title="Drag to shape curve"></div>
+      <div id="wire-handle" class="wire-handle" title="Drag to shape curve"></div>
       <!-- Nodes injected via JS -->
     </div>
     <!-- Rubber-band selection rectangle -->
@@ -2890,8 +2889,7 @@ function clearSelection() {
   selectedNodeId = null;
   selectedWireId = null;
   document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected','selected-multi'));
-  document.getElementById("wire-handle-1").classList.remove("active");
-  document.getElementById("wire-handle-2").classList.remove("active");
+  document.getElementById("wire-handle").classList.remove("active");
   updateWireStyles();
   const h = document.getElementById('prop-header-label');
   if (h) h.textContent = 'Node Properties';
@@ -4068,9 +4066,9 @@ function computeWirePath(start, end, wire) {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
 
-  // Use manual control points if they exist
-  if (wire && wire.cp1 && wire.cp2) {
-    return `M ${start.x} ${start.y} C ${wire.cp1.x} ${wire.cp1.y}, ${wire.cp2.x} ${wire.cp2.y}, ${end.x} ${end.y}`;
+  // Use single manual control point (Quadratic Bezier)
+  if (wire && wire.cp) {
+    return `M ${start.x} ${start.y} Q ${wire.cp.x} ${wire.cp.y} ${end.x} ${end.y}`;
   }
 
   // Cycle / Backward connection: push control points horizontally to create a large round loop
@@ -4151,7 +4149,6 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
   if (id === selectedWireId) cls += " selected-wire";
   path.setAttribute("class", cls);
 
-  // Visualizing confidence: opacity and stroke-width
   path.style.opacity = 0.2 + (0.8 * confidence);
   path.style.strokeWidth = 1.5 + (2.5 * confidence);
   path.style.transition = "opacity 0.3s, stroke-width 0.3s, stroke 0.3s";
@@ -4163,7 +4160,6 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
   if (isNew && id !== 'active-wire' && wire) {
     path.style.pointerEvents = 'stroke';
     path.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); showWireHandles(id); });
-    // Fat transparent hitbox
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
     hit.setAttribute("d", d);
     hit.setAttribute("fill", "none");
@@ -4175,30 +4171,27 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
     hit.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); showWireHandles(id); });
     svg.appendChild(hit);
   } else if (!isNew && wire) {
-     // Update hitbox path
      const hit = document.getElementById("hit-" + id);
      if (hit) hit.setAttribute("d", d);
   }
 
   if (isNew) svg.appendChild(path);
 
+  // Position label/handle at the ACTUAL midpoint of the curve
+  let midX, midY;
+  if (wire && wire.cp) {
+    // Quadratic Bezier midpoint at t=0.5: P = (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
+    midX = 0.25 * start.x + 0.5 * wire.cp.x + 0.25 * end.x;
+    midY = 0.25 * start.y + 0.5 * wire.cp.y + 0.25 * end.y;
+  } else {
+    midX = (start.x + end.x) / 2;
+    midY = (start.y + end.y) / 2;
+    const dx = end.x - start.x;
+    if (dx < 60) midX += 60; // Offset for cycles
+  }
+
   // Edge label badge
   if (wire && wire.label) {
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    
-    // Position badge on the midpoint of the Bezier curve
-    // For simplicity, we use the average of start, end and CPs if they exist
-    let midX, midY;
-    if (wire.cp1 && wire.cp2) {
-      midX = (start.x + wire.cp1.x + wire.cp2.x + end.x) / 4;
-      midY = (start.y + wire.cp1.y + wire.cp2.y + end.y) / 4;
-    } else {
-      midX = (start.x + end.x) / 2;
-      midY = (start.y + end.y) / 2;
-      if (dx < 60) midX += 80;
-    }
-
     let badge = document.getElementById("badge-" + id);
     if (!badge) {
       badge = document.createElement("div");
@@ -4211,6 +4204,13 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
     badge.style.top  = midY + "px";
     badge.textContent = wire.label;
     badge.style.opacity = 0.4 + (0.6 * confidence);
+  }
+
+  // Sync handle if active
+  if (id === selectedWireId) {
+    const h = document.getElementById("wire-handle");
+    h.style.left = midX + "px";
+    h.style.top = midY + "px";
   }
 }
 
@@ -4225,24 +4225,26 @@ function showWireHandles(wireId) {
   const start = getPortPos(fromNode.querySelector('.flow-port-out'));
   const end = getPortPos(toNode.querySelector('.flow-port-in'));
 
-  // Initialize control points if they don't exist
-  if (!wire.cp1) {
-    const dx = end.x - start.x;
-    const curve = Math.max(100, dx * 0.5);
-    wire.cp1 = { x: start.x + curve, y: start.y };
-    wire.cp2 = { x: end.x - curve, y: end.y };
+  // Initialize control point if missing (center of P0 and P2)
+  if (!wire.cp) {
+    wire.cp = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
   }
 
-  const h1 = document.getElementById("wire-handle-1");
-  const h2 = document.getElementById("wire-handle-2");
+  const h = document.getElementById("wire-handle");
+  // Visual midpoint (as calculated in drawWire)
+  const mx = 0.25 * start.x + 0.5 * wire.cp.x + 0.25 * end.x;
+  const my = 0.25 * start.y + 0.5 * wire.cp.y + 0.25 * end.y;
 
-  h1.style.left = wire.cp1.x + "px"; h1.style.top = wire.cp1.y + "px";
-  h2.style.left = wire.cp2.x + "px"; h2.style.top = wire.cp2.y + "px";
-  h1.classList.add("active"); h2.classList.add("active");
+  h.style.left = mx + "px"; h.style.top = my + "px";
+  h.classList.add("active");
 
-  // Interaction logic for handles
-  setupHandleDrag(h1, (x, y) => { wire.cp1 = {x, y}; updateWires(); });
-  setupHandleDrag(h2, (x, y) => { wire.cp2 = {x, y}; updateWires(); });
+  setupHandleDrag(h, (nx, ny) => {
+    // Convert visual midpoint back to Quadratic Control Point
+    // P1 = (Mid - 0.25*P0 - 0.25*P2) / 0.5
+    wire.cp.x = (nx - 0.25 * start.x - 0.25 * end.x) / 0.5;
+    wire.cp.y = (ny - 0.25 * start.y - 0.25 * end.y) / 0.5;
+    updateWires();
+  });
 }
 
 function setupHandleDrag(el, onDrag) {
@@ -4255,7 +4257,6 @@ function setupHandleDrag(el, onDrag) {
       const dx = (me.clientX - startX) / CT.scale;
       const dy = (me.clientY - startY) / CT.scale;
       const nx = initialX + dx, ny = initialY + dy;
-      el.style.left = nx + "px"; el.style.top = ny + "px";
       onDrag(nx, ny);
     };
     const up = () => {
