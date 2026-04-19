@@ -186,7 +186,7 @@
       position: absolute; background: var(--bg1); border: 1px solid var(--border2);
       border-radius: 10px; padding: 1px 7px; font-size: 9px; font-weight: 700;
       color: var(--muted); pointer-events: none; transform: translate(-50%,-50%);
-      white-space: nowrap;
+      white-space: nowrap; z-index: 25;
     }
     .edge-badge.cond-affirm { border-color: var(--green); color: var(--green); }
     .edge-badge.cond-tend   { border-color: var(--amber); color: var(--amber); }
@@ -1407,7 +1407,7 @@
 
   <!-- Center: Canvas -->
   <div id="flow-canvas-wrap">
-    <div id="flow-canvas" onclick="if(event.target===this||event.target.id==='flow-canvas')clearSelection();">
+    <div id="flow-canvas">
       <svg id="flow-svg-layer">
         <!-- Wires rendered here -->
       </svg>
@@ -1485,8 +1485,14 @@
     <!-- Execution Inspector Overlay -->
     <div id="flow-inspector">
       <div class="ins-head">
-        <span>Execution Inspector</span>
-        <button class="btn-ghost" onclick="toggleInspector()" style="padding:2px"><i data-lucide="chevron-down" style="width:14px"></i></button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i data-lucide="activity" style="width:14px;"></i>
+          Execution Inspector
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn btn-ghost" style="color:var(--red); font-size:9px; padding:2px 6px;" onclick="stopSimulation()">Stop</button>
+          <button class="btn-ghost" onclick="toggleInspector()" style="padding:2px"><i data-lucide="chevron-down" style="width:14px"></i></button>
+        </div>
       </div>
       <div id="ins-body" class="ins-body">
         <!-- Logs injected via JS -->
@@ -2067,6 +2073,7 @@ let flowNodes = [];
 let flowWires = [];
 let selectedNodeId = null;
 let activeWire = null;
+let simulationAborted = false;
 
 // ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
 let CT = { scale: 1, x: 0, y: 0 };
@@ -2205,7 +2212,9 @@ function initCanvasInteraction() {
       const rx1 = Math.min(rbStart.x, e.clientX), rx2 = Math.max(rbStart.x, e.clientX);
       const ry1 = Math.min(rbStart.y, e.clientY), ry2 = Math.max(rbStart.y, e.clientY);
       
-      if (rx2 - rx1 > 5 || ry2 - ry1 > 5) {
+      const dist = Math.sqrt(Math.pow(e.clientX - rbStart.x, 2) + Math.pow(e.clientY - rbStart.y, 2));
+
+      if (dist > 5) {
         flowNodes.forEach(n => {
           const el = document.getElementById(n.id);
           if (!el) return;
@@ -2217,6 +2226,12 @@ function initCanvasInteraction() {
             selectNode(n.id, true);
           }
         });
+      } else {
+        // Simple click on background → clear selection
+        const wrap = document.getElementById("flow-canvas-wrap");
+        if (e.target === wrap || e.target.id === "flow-canvas") {
+          clearSelection();
+        }
       }
     }
   });
@@ -2331,6 +2346,7 @@ function clearCanvas() {
 
 let _canvasInteractionInited = false;
 function renderFlow() {
+  simulationAborted = false;
   if (!_canvasInteractionInited) { initCanvasInteraction(); applyTransform(); _canvasInteractionInited = true; }
   renderFlowLibrary();
   // Restore canvas from localStorage (don't wipe on every view switch)
@@ -3501,6 +3517,7 @@ function showValidationPanel(errors, warnings) {
 }
 
 async function runSimulation() {
+  simulationAborted = false;
   // Validate first
   const { errors, warnings } = validateGraph();
   if (errors.length > 0) {
@@ -3539,6 +3556,7 @@ async function runSimulation() {
   for (const id of entryIds) signals[id] = 1; // seed entries with affirm
 
   for (const id of order) {
+    if (simulationAborted) break;
     const node = flowNodes.find(n => n.id === id);
     if (!node) continue;
 
@@ -3552,6 +3570,7 @@ async function runSimulation() {
     }
 
     const outSignal = await simulateNode(node, inSignal);
+    if (simulationAborted) break;
     signals[id] = outSignal;
 
     // Propagate to outgoing wires
@@ -3570,7 +3589,12 @@ async function runSimulation() {
     });
   }
 
-  logInspector("SYSTEM", "✓ Complete");
+  logInspector("SYSTEM", simulationAborted ? "⨯ Aborted" : "✓ Complete");
+}
+
+function stopSimulation() {
+  simulationAborted = true;
+  showToast("Simulation stopping...", "warn");
 }
 
 function setNodeStatus(id, status) {
@@ -3579,6 +3603,7 @@ function setNodeStatus(id, status) {
 }
 
 async function simulateNode(node, inSignal) {
+  if (simulationAborted) return inSignal;
   const el = document.getElementById(node.id);
   if (!el) return inSignal;
 
@@ -3590,6 +3615,7 @@ async function simulateNode(node, inSignal) {
   const code = node.props.code || "";
   if (code.trim() && window.wasmReady && window.wasmRunTern) {
     try {
+      if (simulationAborted) return inSignal;
       logInspector(node.name, "⚡ Running via WASM…");
       const raw = window.wasmRunTern(code);
       const r = JSON.parse(raw);
@@ -3609,10 +3635,12 @@ async function simulateNode(node, inSignal) {
       outSignal = inSignal; // pass through
     }
   } else {
+    if (simulationAborted) return inSignal;
     const lbl = inSignal === 1 ? '+1 AFFIRM' : (inSignal === -1 ? '-1 REJECT' : '0 TEND');
     logInspector(node.name, `→ ${lbl} (passthrough)`);
   }
 
+  if (simulationAborted) return outSignal;
   const pulseClass = outSignal === 1 ? 'pulse-affirm' : (outSignal === -1 ? 'pulse-reject' : 'pulse-hold');
   el.classList.add(pulseClass);
   setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : "run"));
@@ -3620,6 +3648,7 @@ async function simulateNode(node, inSignal) {
 
   const outWires = flowWires.filter(w => w.fromId === node.id);
   for (const wire of outWires) {
+    if (simulationAborted) break;
     // Apply edge condition logic
     let pass = true;
     if (wire.condition && wire.condition !== "all") {
@@ -3638,10 +3667,11 @@ async function simulateNode(node, inSignal) {
     const nextNode = flowNodes.find(n => n.id === wire.toId);
     if (nextNode) {
       await animateSignal(wire, outSignal);
-      await simulateNode(nextNode, outSignal);
+      if (!simulationAborted) await simulateNode(nextNode, outSignal);
     }
   }
 
+  if (simulationAborted) return outSignal;
   await new Promise(r => setTimeout(r, 400));
   el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
   setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : ""));
@@ -3788,7 +3818,8 @@ function drawWire(start, end, id, signal, wire) {
     badge.style.left = (midX + offX) + "px";
     badge.style.top  = (midY + offY) + "px";
     badge.textContent = wire.label;
-    wrap.appendChild(badge);
+    const canvas = document.getElementById("flow-canvas");
+    if (canvas) canvas.appendChild(badge);
   }
 }
 
