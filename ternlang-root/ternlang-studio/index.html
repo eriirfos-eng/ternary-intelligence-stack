@@ -1964,7 +1964,7 @@ function renderTracerView() {
           <td style="padding:10px 16px; color:var(--muted2);">${time}</td>
           <td style="padding:10px 16px; color:var(--cyan); font-family:'JetBrains Mono',monospace;">${run.file}</td>
           <td style="padding:10px 16px; color:${stColor}; font-weight:700;">${run.status.toUpperCase()}</td>
-          <td style="padding:10px 16px; color:var(--text);">${run.trit !== undefined ? \`Trit: \${run.trit}\` : 'N/A'}</td>
+          <td style="padding:10px 16px; color:var(--text);">${run.trit !== undefined ? `Trit: ${run.trit}` : 'N/A'}</td>
           <td style="padding:10px 16px; color:var(--muted);">${run.ms || '<1'}ms</td>
         </tr>`;
     });
