@@ -2564,6 +2564,22 @@ async function renderFlowLibrary() {
   } catch (e) { /* built-ins already shown */ }
 }
 
+function getAgentIcon(name) {
+  const n = name.toLowerCase();
+  if (n.includes('sensor') || n.includes('input') || n.includes('read')) return { icon: 'radio', color: 'var(--cyan)' };
+  if (n.includes('safety') || n.includes('guard') || n.includes('check')) return { icon: 'shield-check', color: 'var(--green)' };
+  if (n.includes('consens') || n.includes('vote') || n.includes('aggregate')) return { icon: 'git-pull-request', color: 'var(--blue)' };
+  if (n.includes('classif') || n.includes('match') || n.includes('sort')) return { icon: 'layers', color: 'var(--amber)' };
+  if (n.includes('actuat') || n.includes('output') || n.includes('emit')) return { icon: 'zap-off', color: 'var(--red)' };
+  if (n.includes('rank') || n.includes('score')) return { icon: 'bar-chart-2', color: 'var(--cyan)' };
+  if (n.includes('propos') || n.includes('speak')) return { icon: 'message-square', color: 'var(--blue)' };
+  if (n.includes('challeng') || n.includes('debat')) return { icon: 'flame', color: 'var(--amber)' };
+  if (n.includes('logic') || n.includes('math') || n.includes('calc')) return { icon: 'variable', color: 'var(--cyan)' };
+  if (n.includes('finance') || n.includes('econ') || n.includes('price')) return { icon: 'trending-up', color: 'var(--green)' };
+  if (n.includes('hardware') || n.includes('cpu') || n.includes('fpga')) return { icon: 'cpu', color: 'var(--cyan)' };
+  return { icon: 'bot', color: 'var(--blue)' };
+}
+
 function renderFlowLibItems(paths, q = "") {
   const lib = document.getElementById("flow-lib-items");
   lib.innerHTML = "";
@@ -2581,7 +2597,7 @@ function renderFlowLibItems(paths, q = "") {
       const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
       createFlowNode(name, "__builtin__", pos.x, pos.y, 'agent', id);
       const node = flowNodes.find(n => n.id === id);
-      if (node) { node.props.code = agent.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "result: trit"; }
+      if (node) { node.props.code = agent.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "signal: trit"; }
     };
     lib.appendChild(div);
   });
@@ -2589,10 +2605,12 @@ function renderFlowLibItems(paths, q = "") {
   // 2. Render Fetched API Agents
   paths.forEach(path => {
     const name = path.split('/').pop().replace('.tern', '');
+    if (q && !name.toLowerCase().includes(q.toLowerCase())) return;
     const div = document.createElement("div");
     div.className = "lib-item";
     div.dataset.name = name.toLowerCase();
-    div.innerHTML = `<i data-lucide="bot"></i> <span>${name}</span>`;
+    const info = getAgentIcon(name);
+    div.innerHTML = `<i data-lucide="${info.icon}" style="color:${info.color}"></i> <span>${name}</span>`;
     div.onclick = async () => {
       const id = "node_" + Date.now();
       const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
