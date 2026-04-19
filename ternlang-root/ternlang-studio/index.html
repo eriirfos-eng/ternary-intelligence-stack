@@ -199,8 +199,27 @@
       margin-bottom: 6px;
     }
     .archetype-card:hover { border-color: var(--cyan); background: rgba(56,189,248,0.05); }
-    .archetype-card-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
-    .archetype-card-desc  { font-size: 10px; color: var(--muted2); line-height: 1.5; }
+    .lib-tab {
+      flex: 1; background: none; border: none; padding: 8px;
+      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+      color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .lib-tab.active { color: var(--text); border-bottom-color: var(--cyan); }
+
+    .flow-node.external {
+      border-color: var(--amber);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.15), var(--shadow);
+    }
+    .flow-node.external.selected { border-color: var(--amber); border-width: 2px; box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+    
+    .node-badge-llm {
+      position: absolute; top: -8px; left: -8px;
+      background: var(--amber); color: #000;
+      font-size: 8px; font-weight: 900; padding: 2px 5px;
+      border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      z-index: 20;
+    }
 
     /* Flow Properties (Right) */
     #flow-props {
@@ -1241,8 +1260,8 @@
   <div id="flow-library">
     <!-- Library tabs -->
     <div style="display:flex; border-bottom:1px solid var(--border); flex-shrink:0;">
-      <button class="lib-tab active" id="libtab-agents" onclick="switchLibTab('agents')" style="flex:1;background:none;border:none;padding:8px;font-size:10px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:2px solid var(--cyan);text-transform:uppercase;">Agents</button>
-      <button class="lib-tab" id="libtab-archetypes" onclick="switchLibTab('archetypes')" style="flex:1;background:none;border:none;padding:8px;font-size:10px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;">Archetypes</button>
+      <button class="lib-tab active" id="libtab-agents" onclick="switchLibTab('agents')">Agents</button>
+      <button class="lib-tab" id="libtab-archetypes" onclick="switchLibTab('archetypes')">Archetypes</button>
     </div>
 
     <!-- Agents panel -->
@@ -2336,8 +2355,10 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   const label = type === 'external' ? 'LLM BRIDGE' : (type === 'gate' ? 'TRIT GATE' : 'AGENT');
   const iconColor = type === 'external' ? 'var(--amber)' : (type === 'gate' ? 'var(--cyan)' : 'var(--muted)');
   const subtitle  = path === '__custom__' || path === '__arch__' ? 'inline code' : path.split('/').pop();
+  const llmBadge  = type === 'external' ? '<div class="node-badge-llm">LLM</div>' : '';
 
   node.innerHTML = `
+    ${llmBadge}
     <div class="fn-head">
       <div style="display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; color:${iconColor}">
         <i data-lucide="${icon}" style="width:12px"></i>
@@ -2404,7 +2425,24 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
 
   canvas.appendChild(node);
   const builtinCode = BUILTIN_AGENTS[name] ? BUILTIN_AGENTS[name].code : '';
-  flowNodes.push({ id, name, path, type, props: { system_prompt: "", temperature: 0.7, max_trits: 512, routing: "affirm→next", code: builtinCode, input_schema: "signal: trit", output_schema: "result: trit" } });
+  const defaultProps = {
+    system_prompt: "",
+    routing: "affirm→next",
+    code: builtinCode,
+    input_schema: "signal: trit",
+    output_schema: "result: trit"
+  };
+  
+  if (type === 'external') {
+    defaultProps.temperature = 0.5;
+    defaultProps.max_trits = 1024;
+    defaultProps.provider = "openai";
+    defaultProps.api_key = "";
+    defaultProps.mapping = "classification";
+    defaultProps.template = "Evaluate this signal: {{input}}";
+  }
+
+  flowNodes.push({ id, name, path, type, props: defaultProps });
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = "none";
   lucide.createIcons();
@@ -2489,13 +2527,15 @@ const NodePanelController = {
     if (!ENABLE_NEW_PROPERTIES_UI) {
       this.renderLegacy(node, bodyEl, inWires, outWires, schemaWarning);
     } else {
-      this.renderSemantic(node, bodyEl, inWires, outWires, schemaWarning);
+      if (node.type === 'external') {
+        this.renderLLMSemantic(node, bodyEl, inWires, outWires, schemaWarning);
+      } else {
+        this.renderSemantic(node, bodyEl, inWires, outWires, schemaWarning);
+      }
     }
   },
 
   renderLegacy(node, bodyEl, inWires, outWires, schemaWarning) {
-    const temp = node.props.temperature ?? 0.7;
-    const maxTrits = node.props.max_trits ?? 512;
     const routing = node.props.routing ?? "affirm→next";
     const code = (node.props.code || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     const inSchema  = (node.props.input_schema  || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -2509,22 +2549,6 @@ const NodePanelController = {
       <div class="prop-group">
         <label class="prop-label">System Instructions</label>
         <textarea class="prop-input" style="height:70px; resize:vertical;" oninput="updateNodeProp('system_prompt', this.value)">${node.props.system_prompt || ""}</textarea>
-      </div>
-      <div class="prop-group">
-        <label class="prop-label" style="display:flex;justify-content:space-between;">
-          <span>Trit Sensitivity (Temperature)</span>
-          <span id="tempVal" style="color:var(--cyan)">${temp}</span>
-        </label>
-        <input type="range" min="0" max="2" step="0.05" value="${temp}" style="width:100%"
-          oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(2);updateNodeProp('temperature', parseFloat(this.value))">
-      </div>
-      <div class="prop-group">
-        <label class="prop-label" style="display:flex;justify-content:space-between;">
-          <span>Max Output Trits</span>
-          <span style="color:var(--amber)">${maxTrits}</span>
-        </label>
-        <input type="number" class="prop-input" min="1" max="4096" value="${maxTrits}" style="width:100%"
-          oninput="updateNodeProp('max_trits', parseInt(this.value))">
       </div>
       <div class="prop-group">
         <label class="prop-label">Output Routing Rule</label>
@@ -2569,10 +2593,6 @@ const NodePanelController = {
 
   renderSemantic(node, bodyEl, inWires, outWires, schemaWarning) {
     const intent = node.props.system_prompt || node.props.intent || "";
-    // Map temperature to sensitivity
-    const temp = node.props.temperature ?? 0.7;
-    const sensitivity = temp < 0.3 ? "Conservative" : (temp > 1.2 ? "Aggressive" : "Balanced");
-    const outMode = node.props.max_trits > 1 ? (node.props.max_trits > 1024 ? "stream" : "multi") : "single";
     const inSchema  = (node.props.input_schema  || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     const outSchema = (node.props.output_schema || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
@@ -2585,35 +2605,16 @@ const NodePanelController = {
       <div class="prop-group" style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
         <label class="prop-label" style="display:flex;justify-content:space-between;align-items:center;">
           <span style="color:var(--text); font-size:11px;">What does this node do?</span>
-          <button class="btn btn-ghost" style="padding:0;font-size:10px;height:14px;color:var(--blue);" title="Explain this node" onclick="alert('This node decides its output based on its intent and input signal.')">Explain</button>
+          <button class="btn btn-ghost" style="padding:0;font-size:10px;height:14px;color:var(--blue);" title="Explain this node" onclick="alert('Deterministic Node: Executes verified Ternary logic based on its code.')">Explain</button>
         </label>
         <textarea class="prop-input" style="height:60px; resize:vertical; margin-top:8px; background:var(--bg1);" placeholder="e.g. Evaluates risk based on prior transactions..." oninput="updateNodeProp('system_prompt', this.value)">${intent}</textarea>
       </div>
 
       <div class="prop-group">
         <label class="prop-label">Decision Mode</label>
-        <div style="display:flex; gap:12px;">
-          <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="radio" name="dmode" value="deterministic" ${temp === 0 ? "checked" : ""} onchange="updateNodeProp('temperature', 0.0)"> Deterministic</label>
-          <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="radio" name="dmode" value="exploratory" ${temp !== 0 ? "checked" : ""} onchange="updateNodeProp('temperature', 0.7)"> Exploratory</label>
+        <div style="font-size:11px; color:var(--green); font-weight:600; display:flex; align-items:center; gap:6px;">
+          <i data-lucide="shield-check" style="width:14px"></i> Deterministic (Signal-native)
         </div>
-      </div>
-
-      <div class="prop-group">
-        <label class="prop-label">Decision Sensitivity</label>
-        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted2); padding:0 4px; margin-bottom:4px;">
-          <span>Conservative</span> <span>Balanced</span> <span>Aggressive</span>
-        </div>
-        <input type="range" min="0" max="2" step="1" value="${sensitivity === 'Conservative' ? 0 : (sensitivity === 'Aggressive' ? 2 : 1)}" style="width:100%"
-          oninput="const map = {0: 0.1, 1: 0.7, 2: 1.5}; updateNodeProp('temperature', map[this.value])">
-      </div>
-
-      <div class="prop-group">
-        <label class="prop-label">Output Mode</label>
-        <select class="prop-input" style="width:100%" onchange="const map = {single: 1, multi: 512, stream: 4096}; updateNodeProp('max_trits', map[this.value])">
-          <option value="single" ${outMode === 'single' ? "selected" : ""}>Single Decision</option>
-          <option value="multi" ${outMode === 'multi' ? "selected" : ""}>Multi-Signal</option>
-          <option value="stream" ${outMode === 'stream' ? "selected" : ""}>Stream (experimental)</option>
-        </select>
       </div>
 
       <div class="prop-group" style="margin-top:10px;">
@@ -2645,8 +2646,89 @@ const NodePanelController = {
         <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red);" onclick="deleteNode('${node.id}')">Remove</button>
       </div>
     `;
+    this.updateInlineSummary(node, intent);
+    lucide.createIcons();
+  },
 
-    // Real-time update inline summary
+  renderLLMSemantic(node, bodyEl, inWires, outWires, schemaWarning) {
+    const intent = node.props.system_prompt || "";
+    const provider = node.props.provider || "openai";
+    const apiKey = node.props.api_key || "";
+    const mapping = node.props.mapping || "classification";
+    const temp = node.props.temperature ?? 0.5;
+    const tokens = node.props.max_trits ?? 1024;
+    const template = node.props.template || "Evaluate this signal: {{input}}";
+
+    bodyEl.innerHTML = `
+      <div class="prop-group">
+        <label class="prop-label">Bridge Name</label>
+        <input type="text" class="prop-input" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+      </div>
+
+      <!-- Section A: Provider -->
+      <div class="prop-group" style="border-left: 2px solid var(--amber); padding-left: 12px;">
+        <label class="prop-label">🔑 Provider & Connection</label>
+        <select class="prop-input" style="width:100%; margin-top:4px;" onchange="updateNodeProp('provider', this.value)">
+          <option value="openai" ${provider==='openai'?'selected':''}>OpenAI</option>
+          <option value="anthropic" ${provider==='anthropic'?'selected':''}>Anthropic</option>
+          <option value="local" ${provider==='local'?'selected':''}>Local HTTP Endpoint</option>
+        </select>
+        <input type="password" class="prop-input" style="width:100%; margin-top:6px; font-size:10px;" value="${apiKey}" placeholder="API Key (masked)" oninput="updateNodeProp('api_key', this.value)">
+      </div>
+
+      <!-- Section B: Prompting -->
+      <div class="prop-group">
+        <label class="prop-label">🧠 Prompting Layer</label>
+        <textarea class="prop-input" style="height:50px; font-size:11px; margin-top:4px;" placeholder="System Instructions..." oninput="updateNodeProp('system_prompt', this.value)">${intent}</textarea>
+        <textarea class="prop-input" style="height:40px; font-size:10px; margin-top:4px; font-family:monospace;" placeholder="Template: {{input}}" oninput="updateNodeProp('template', this.value)">${template}</textarea>
+      </div>
+
+      <!-- Section C: Generation Controls -->
+      <div class="prop-group">
+        <label class="prop-label" style="display:flex; justify-content:space-between;">
+          <span>🎛️ Generation</span>
+          <span style="color:var(--amber); font-size:9px;">Probabilistic</span>
+        </label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:4px;">
+          <div>
+            <div style="font-size:9px; color:var(--muted2);">Temperature</div>
+            <input type="number" class="prop-input" style="width:100%" step="0.1" min="0" max="1" value="${temp}" oninput="updateNodeProp('temperature', parseFloat(this.value))">
+          </div>
+          <div>
+            <div style="font-size:9px; color:var(--muted2);">Max Tokens</div>
+            <input type="number" class="prop-input" style="width:100%" value="${tokens}" oninput="updateNodeProp('max_trits', parseInt(this.value))">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section D: Output Parsing (Critical) -->
+      <div class="prop-group" style="background:rgba(245,158,11,0.05); padding:10px; border-radius:6px; border:1px solid rgba(245,158,11,0.2);">
+        <label class="prop-label">🔄 Output Mapping (Signal-Adapter)</label>
+        <select class="prop-input" style="width:100%; margin-top:4px;" onchange="updateNodeProp('mapping', this.value)">
+          <option value="classification" ${mapping==='classification'?'selected':''}>Classification (+1, 0, -1)</option>
+          <option value="score" ${mapping==='score'?'selected':''}>Numeric Score (0.0 - 1.0)</option>
+          <option value="json" ${mapping==='json'?'selected':''}>Structured JSON</option>
+        </select>
+        <div style="font-size:9px; color:var(--muted2); margin-top:6px;">
+          <i data-lucide="info" style="width:10px; vertical-align:middle;"></i> Parsed text MUST resolve to a Signal.
+        </div>
+      </div>
+
+      <!-- Section E: Reliability -->
+      <div style="margin-top:8px; padding:6px 10px; background:var(--bg2); border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:10px; font-weight:700; color:var(--muted);">Reliability:</span>
+        <span style="font-size:10px; font-weight:800; color:${temp > 0.7 ? 'var(--red)' : 'var(--green)'};">${temp > 0.7 ? 'LOW' : 'HIGH'}</span>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-top:12px;">
+        <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red);" onclick="deleteNode('${node.id}')">Remove Bridge</button>
+      </div>
+    `;
+    this.updateInlineSummary(node, intent);
+    lucide.createIcons();
+  },
+
+  updateInlineSummary(node, intent) {
     const titleEl = document.querySelector(`#${node.id} .fn-title`);
     if (titleEl && !titleEl.dataset.semantic) {
       titleEl.dataset.semantic = "true";
@@ -2656,7 +2738,7 @@ const NodePanelController = {
       titleEl.parentNode.insertBefore(desc, titleEl.nextSibling);
     }
     const descEl = document.querySelector(`#${node.id} .semantic-desc`);
-    if (descEl) descEl.textContent = intent ? `→ ${intent}` : "→ (No intent defined)";
+    if (descEl) descEl.textContent = intent ? `→ ${intent}` : (node.type==='external' ? "→ Waiting for prompt..." : "→ (No intent defined)");
   }
 };
 
@@ -2867,12 +2949,9 @@ function addTernaryGate() {
 
 // ─── Library tab switching ────────────────────────────────────────────────────
 function switchLibTab(tab) {
-  document.querySelectorAll('.lib-tab').forEach(t => {
-    t.style.color = 'var(--muted)';
-    t.style.borderBottomColor = 'transparent';
-  });
+  document.querySelectorAll('.lib-tab').forEach(t => t.classList.remove('active'));
   const active = document.getElementById('libtab-' + tab);
-  if (active) { active.style.color = 'var(--text)'; active.style.borderBottomColor = 'var(--cyan)'; }
+  if (active) active.classList.add('active');
   document.getElementById('lib-panel-agents').style.display     = tab === 'agents'     ? 'flex' : 'none';
   document.getElementById('lib-panel-archetypes').style.display = tab === 'archetypes' ? 'block' : 'none';
   if (tab === 'archetypes') renderArchetypes();
