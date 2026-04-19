@@ -4731,15 +4731,22 @@ async function executeProductDeploy() {
       const resultEl = document.getElementById("deploy-result");
       resultEl.style.display = "block";
       resultEl.innerHTML = `
-        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">🚀 Deployed successfully!</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);line-height:2;">
-          <div>Endpoint: <span style="color:var(--cyan)">${endpoint}/api/agent/${slug}</span></div>
-          <div>Pricing: <span style="color:var(--amber)">${pricing}</span></div>
-          <div style="margin-top:8px;font-size:10px;color:var(--muted2);">Share your endpoint with consumers — they need an API key to call it.</div>
-        </div>
+       <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">🚀 Deployed successfully!</div>
+       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);line-height:2;">
+         <div>Endpoint: <span style="color:var(--cyan)">${endpoint}/api/agent/${slug}</span></div>
+         <div>Pricing: <span style="color:var(--amber)">${pricing}</span></div>
+         <div style="margin-top:8px;font-size:10px;color:var(--muted2);">Share your endpoint with consumers — they need an API key to call it.</div>
+       </div>
       `;
-      showToast(`Deployed: ${name}`, "ok");
-    } else {
+
+      // Sync with Fleet registry
+      const registry = JSON.parse(localStorage.getItem("ternflow_registry") || "[]");
+      if (!registry.find(r => r.slug === slug)) {
+       registry.push({ id: slug, slug, name, desc, pricing, nodes: flowNodes.length, deployed: new Date().toISOString() });
+       localStorage.setItem("ternflow_registry", JSON.stringify(registry));
+      }
+
+      showToast(`Deployed: ${name}`, "ok");    } else {
       throw new Error(data.error || "Server error");
     }
   } catch(err) {
@@ -4758,9 +4765,18 @@ async function executeProductDeploy() {
     `;
     // Store locally anyway
     const registry = JSON.parse(localStorage.getItem("ternflow_registry") || "[]");
-    registry.push({ slug, name, desc, pricing, nodes: flowNodes.length, deployed: new Date().toISOString() });
+    const newEntry = { 
+      id: slug, 
+      slug, 
+      name, 
+      desc, 
+      pricing, 
+      nodes: flowNodes.length, 
+      deployed: new Date().toISOString() 
+    };
+    registry.push(newEntry);
     localStorage.setItem("ternflow_registry", JSON.stringify(registry));
-    showToast(`${name} saved locally`, "ok");
+    showToast(`${name} saved to Fleet`, "ok");
   }
 }
 
