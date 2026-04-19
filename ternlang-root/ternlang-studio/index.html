@@ -3530,8 +3530,20 @@ function updateWires() {
   }
 }
 
+function computeWirePath(start, end) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  // Cycle / Backward connection: push control points horizontally to create a large round loop
+  if (dx < 60) {
+    const horizontalOffset = Math.max(120, Math.abs(dy) * 0.4);
+    return `M ${start.x} ${start.y} C ${start.x + horizontalOffset} ${start.y}, ${end.x - horizontalOffset} ${end.y}, ${end.x} ${end.y}`;
+  }
+  // Standard forward connection: smooth S-curve
+  const curve = dx * 0.5;
+  return `M ${start.x} ${start.y} C ${start.x + curve} ${start.y}, ${end.x - curve} ${end.y}, ${end.x} ${end.y}`;
+}
+
 async function animateSignal(wire, signal) {
-  const svg = document.getElementById("flow-svg-layer");
   const fromNode = document.getElementById(wire.fromId);
   const toNode = document.getElementById(wire.toId);
   if (!fromNode || !toNode) return;
@@ -3541,8 +3553,7 @@ async function animateSignal(wire, signal) {
   const start = getPortPos(fromPort);
   const end = getPortPos(toPort);
 
-  const dx = Math.abs(end.x - start.x) * 0.5;
-  const d = `M ${start.x} ${start.y} C ${start.x + dx} ${start.y}, ${end.x - dx} ${end.y}, ${end.x} ${end.y}`;
+  const d = computeWirePath(start, end);
 
   const particle = document.createElement("div");
   particle.className = "trit-particle";
@@ -3563,18 +3574,16 @@ function getPortPos(port) {
   const rect = port.getBoundingClientRect();
   const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
   return {
-    x: rect.left - wrapRect.left + rect.width / 2,
-    y: rect.top - wrapRect.top + rect.height / 2
+    x: (rect.left - wrapRect.left + rect.width / 2) / CT.scale,
+    y: (rect.top - wrapRect.top + rect.height / 2) / CT.scale
   };
 }
 
 function drawWire(start, end, id, signal, wire) {
   const svg = document.getElementById("flow-svg-layer");
   const wrap = document.getElementById("flow-canvas-wrap");
+  const d = computeWirePath(start, end);
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-
-  const dx = Math.abs(end.x - start.x) * 0.5;
-  const d = `M ${start.x} ${start.y} C ${start.x + dx} ${start.y}, ${end.x - dx} ${end.y}, ${end.x} ${end.y}`;
 
   path.setAttribute("d", d);
   path.setAttribute("data-wire-id", id);
@@ -3609,12 +3618,19 @@ function drawWire(start, end, id, signal, wire) {
 
   // Edge label badge
   if (wire && wire.label) {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
     const midX = (start.x + end.x) / 2;
     const midY = (start.y + end.y) / 2;
+    
+    // For cycles (backward), move label away from the straight line to be on the curve
+    const offX = dx < 60 ? 80 : 0;
+    const offY = dx < 60 ? 0 : -10;
+
     const badge = document.createElement("div");
     badge.className = "edge-badge" + (wire.condition && wire.condition !== "all" ? " cond-" + wire.condition.replace("!","") : "");
-    badge.style.left = midX + "px";
-    badge.style.top  = midY + "px";
+    badge.style.left = (midX + offX) + "px";
+    badge.style.top  = (midY + offY) + "px";
     badge.textContent = wire.label;
     wrap.appendChild(badge);
   }
