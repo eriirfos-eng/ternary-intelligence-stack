@@ -2592,13 +2592,21 @@ async function renderFlowLibrary() {
 
 function getAgentIcon(name) {
   const n = name.toLowerCase();
+  if (n.includes('aggregator') || n.includes('collect') || n.includes('unify')) return { icon: 'filter', color: '#a855f7' }; // Purple Funnel
+  if (n.includes('binary_bridge') || n.includes('cross') || n.includes('legacy')) return { icon: 'shuffle', color: '#f97316' }; // Orange Split Path
+  if (n.includes('broadcast') || n.includes('emit') || n.includes('speak')) return { icon: 'megaphone', color: '#eab308' }; // Yellow Megaphone
+  if (n.includes('consensus') && !n.includes('gate')) return { icon: 'link-2', color: '#14b8a6' }; // Teal Interlocking Rings
+  if (n.includes('deliberator') || n.includes('think') || n.includes('weight')) return { icon: 'brain-circuit', color: '#d946ef' }; // Magenta Brain/Gears
+  if (n.includes('echo') || n.includes('mirror') || n.includes('repeat')) return { icon: 'waves', color: '#22c55e' }; // Light Green Mirrored Waves
+  if (n.includes('filter') || n.includes('sieve') || n.includes('isolate')) return { icon: 'layers', color: '#b91c1c' }; // Dark Red Sieve/Sorting
+
   if (n.includes('sensor') || n.includes('input') || n.includes('read')) return { icon: 'radio', color: 'var(--cyan)' };
   if (n.includes('safety') || n.includes('guard') || n.includes('check')) return { icon: 'shield-check', color: 'var(--green)' };
   if (n.includes('consens') || n.includes('vote') || n.includes('aggregate')) return { icon: 'git-pull-request', color: 'var(--blue)' };
   if (n.includes('classif') || n.includes('match') || n.includes('sort')) return { icon: 'layers', color: 'var(--amber)' };
-  if (n.includes('actuat') || n.includes('output') || n.includes('emit')) return { icon: 'zap-off', color: 'var(--red)' };
+  if (n.includes('actuat') || n.includes('output')) return { icon: 'zap-off', color: 'var(--red)' };
   if (n.includes('rank') || n.includes('score')) return { icon: 'bar-chart-2', color: 'var(--cyan)' };
-  if (n.includes('propos') || n.includes('speak')) return { icon: 'message-square', color: 'var(--blue)' };
+  if (n.includes('propos')) return { icon: 'message-square', color: 'var(--blue)' };
   if (n.includes('challeng') || n.includes('debat')) return { icon: 'flame', color: 'var(--amber)' };
   if (n.includes('logic') || n.includes('math') || n.includes('calc')) return { icon: 'variable', color: 'var(--cyan)' };
   if (n.includes('finance') || n.includes('econ') || n.includes('price')) return { icon: 'trending-up', color: 'var(--green)' };
@@ -2741,20 +2749,10 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   } else if (type === 'gate') {
     icon = 'git-merge'; iconColor = 'var(--cyan)'; label = 'TRIT GATE';
   } else {
-    // Agent name based coloring
-    const n = name.toLowerCase();
-    if (n.includes('sensor') || n.includes('input') || n.includes('read')) { icon = 'radio'; iconColor = 'var(--cyan)'; }
-    else if (n.includes('safety') || n.includes('guard') || n.includes('check')) { icon = 'shield-check'; iconColor = 'var(--green)'; }
-    else if (n.includes('consens') || n.includes('vote') || n.includes('aggregate')) { icon = 'git-pull-request'; iconColor = 'var(--blue)'; }
-    else if (n.includes('classif') || n.includes('match') || n.includes('sort')) { icon = 'layers'; iconColor = 'var(--amber)'; }
-    else if (n.includes('actuat') || n.includes('output') || n.includes('emit')) { icon = 'zap-off'; iconColor = 'var(--red)'; }
-    else if (n.includes('rank') || n.includes('score')) { icon = 'bar-chart-2'; iconColor = 'var(--cyan)'; }
-    else if (n.includes('propos') || n.includes('speak')) { icon = 'message-square'; iconColor = 'var(--blue)'; }
-    else if (n.includes('challeng') || n.includes('debat')) { icon = 'flame'; iconColor = 'var(--amber)'; }
-    else if (n.includes('logic') || n.includes('math') || n.includes('calc')) { icon = 'variable'; iconColor = 'var(--cyan)'; }
-    else if (n.includes('finance') || n.includes('econ') || n.includes('price')) { icon = 'trending-up'; iconColor = 'var(--green)'; }
-    else if (n.includes('hardware') || n.includes('cpu') || n.includes('fpga')) { icon = 'cpu'; iconColor = 'var(--cyan)'; }
-    else { icon = 'bot'; iconColor = 'var(--blue)'; }
+    const info = getAgentIcon(name);
+    icon = info.icon;
+    iconColor = info.color;
+    label = 'AGENT';
   }
 
   const subtitle  = path === '__custom__' || path === '__arch__' ? 'inline code' : path.split('/').pop();
