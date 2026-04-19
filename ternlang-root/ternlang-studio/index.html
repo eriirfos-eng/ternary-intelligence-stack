@@ -893,6 +893,7 @@
       <button class="nav-tab active" id="vt-dashboard" onclick="switchView('dashboard')"><i data-lucide="layout-dashboard"></i> Dash</button>
       <button class="nav-tab"        id="vt-editor"    onclick="switchView('editor')"><i data-lucide="code-2"></i> Editor</button>
       <button class="nav-tab"        id="vt-flow"      onclick="switchView('flow')"><i data-lucide="brain-circuit"></i> Lab</button>
+      <button class="nav-tab"        id="vt-fleet"     onclick="switchView('fleet')"><i data-lucide="tower-control"></i> Fleet</button>
       <button class="nav-tab"        id="vt-docs"      onclick="switchView('docs')"><i data-lucide="book-open"></i> Docs</button>
       <button class="nav-tab"        id="vt-debugger"  onclick="switchView('debugger')"><i data-lucide="bug"></i> Tracer</button>
       <button class="nav-tab"        id="vt-modules"   onclick="switchView('modules')"><i data-lucide="package"></i> Registry</button>
@@ -1714,6 +1715,10 @@
 <div class="view" id="view-debugger">
 </div>
 
+<!-- ═══ FLEET VIEW (Ops / Control Tower) ════════════════════════════════════════ -->
+<div class="view" id="view-fleet">
+</div>
+
 <!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
 <div class="view" id="view-modules">
 </div>
@@ -1922,8 +1927,8 @@ function switchView(name) {
   }
   if (name === "debugger") renderTracerView();
   if (name === "modules") renderRegistryView();
+  if (name === "fleet") renderFleetView();
   if (name === "settings") syncSettingsUI();
-
   lucide.createIcons();
 }
 
@@ -2066,6 +2071,167 @@ function renderRegistryView() {
 
   html += `</div></div></div>`;
   view.innerHTML = html;
+}
+
+// ─── Fleet (Ops / Control Tower) ─────────────────────────────────────────────
+
+let selectedFleetAgentId = null;
+let fleetStats = {}; // id -> { runs: 0, errors: 0, avgConf: 0, cost: 0 }
+
+function renderFleetView() {
+  const view = document.getElementById("view-fleet");
+  if (!view) return;
+
+  let localReg = [];
+  try { localReg = JSON.parse(localStorage.getItem("ternflow_registry") || "[]"); } catch(e){}
+
+  if (localReg.length === 0) {
+    view.innerHTML = `
+      <div style="padding: 100px 40px; text-align: center; color:var(--text);">
+        <i data-lucide="tower-control" style="width:64px; height:64px; opacity:0.1; margin-bottom:20px;"></i>
+        <h2 style="font-size: 20px; font-weight: 700;">Fleet is empty</h2>
+        <p style="color: var(--muted); max-width:400px; margin: 10px auto;">Deploy your agent architectures from the Flow Lab to manage them as live fleet units.</p>
+        <button class="btn btn-primary" style="margin-top:20px;" onclick="switchView('flow')">Go to Flow Lab</button>
+      </div>
+    `;
+    return;
+  }
+
+  if (!selectedFleetAgentId && localReg.length > 0) selectedFleetAgentId = localReg[0].id;
+
+  const agent = localReg.find(a => a.id === selectedFleetAgentId) || localReg[0];
+  const stats = fleetStats[agent.id] || { runs: Math.floor(Math.random()*100) + 1, errors: Math.floor(Math.random()*5), avgConf: 0.85 + Math.random()*0.1, latency: 120 + Math.random()*200 };
+
+  let html = `
+    <div style="display: flex; height: 100%; width:100%; overflow:hidden; color:var(--text);">
+      <!-- Fleet Sidebar -->
+      <div style="width: 280px; border-right: 1px solid var(--border); background: var(--bg1); display: flex; flex-direction: column; flex-shrink: 0;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
+          Live Fleet Units
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 8px;">
+          ${localReg.map(a => `
+            <div onclick="selectedFleetAgentId='${a.id}'; renderFleetView();" 
+                 style="padding: 12px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; transition: all 0.2s;
+                        background: ${selectedFleetAgentId === a.id ? 'var(--active-file-bg)' : 'transparent'};
+                        border: 1px solid ${selectedFleetAgentId === a.id ? 'var(--cyan)' : 'transparent'};">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                <div style="font-weight: 700; font-size: 13px; color: ${selectedFleetAgentId === a.id ? '#fff' : 'var(--text)'}">${a.name}</div>
+                <div style="width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); margin-top:4px;"></div>
+              </div>
+              <div style="font-size: 10px; color: var(--muted); display:flex; justify-content:space-between;">
+                <span>v1.0.${a.id.substring(0,4)}</span>
+                <span>Active</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Main Ops Panel -->
+      <div style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg);">
+        <!-- Ops Header -->
+        <div style="padding: 24px 32px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 800;">${agent.name}</h2>
+            <div style="display:flex; gap:12px; margin-top:4px; font-size:11px; color:var(--muted);">
+              <span>ID: <code style="color:var(--cyan)">${agent.id}</code></span>
+              <span>•</span>
+              <span>Deployed: ${new Date(agent.deployed).toLocaleString()}</span>
+              <span>•</span>
+              <span style="color:var(--green)">● RUNNING</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost" onclick="switchView('flow')"><i data-lucide="edit-3" style="width:14px;"></i> Edit Graph</button>
+            <button class="btn btn-ghost" style="color:var(--red)"><i data-lucide="pause-circle" style="width:14px;"></i> Pause Agent</button>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 24px 32px;">
+          <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
+            <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Executions (24h)</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace;">${stats.runs}</div>
+            <div style="font-size:10px; color:var(--green); margin-top:4px;">↑ 12% vs baseline</div>
+          </div>
+          <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
+            <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Success Rate</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--green);">${((stats.runs - stats.errors)/stats.runs * 100).toFixed(1)}%</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px;">${stats.errors} rejections</div>
+          </div>
+          <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
+            <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Avg Confidence</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--cyan);">${stats.avgConf.toFixed(3)}</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px;">Stochastic Drift: 0.002</div>
+          </div>
+          <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
+            <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Latency (p95)</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace;">${stats.latency.toFixed(0)}ms</div>
+            <div style="font-size:10px; color:var(--amber); margin-top:4px;">LLM overhead: 84%</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 380px; gap: 24px; padding: 0 32px 32px 32px; flex:1; min-height:0;">
+          <!-- Left: Live Stream -->
+          <div style="display:flex; flex-direction:column; min-height:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-size:14px; font-weight:700;">Live Execution Stream</h3>
+              <div style="display:flex; gap:6px;">
+                <span style="font-size:9px; padding:2px 6px; background:var(--bg2); border-radius:4px; color:var(--muted2);">FILTER: ALL EVENTS</span>
+              </div>
+            </div>
+            <div style="flex:1; background:#000; border:1px solid var(--border2); border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:11px; padding:16px; overflow-y:auto; color:#a5f3fc;">
+              <div style="color:var(--muted2); margin-bottom:8px;">// Initializing stream for agent ${agent.id}...</div>
+              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--green)">SYSTEM</span> Execution sequence started (ID: ex_82f1)</div>
+              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--cyan)">NODE</span> Sensor Input → emitted signal [+1, c:1.0]</div>
+              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--cyan)">EDGE</span> Condition passed [affirm]</div>
+              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--amber)">NODE</span> Safety Guard → executing WASM...</div>
+              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--cyan)">NODE</span> Safety Guard → result [0, c:0.88] (TEND)</div>
+              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--green)">SYSTEM</span> Sequence complete (Latency: 42ms)</div>
+              <div style="color:var(--cyan); border-left:2px solid var(--cyan); padding-left:8px; margin:12px 0;">New execution incoming...</div>
+            </div>
+          </div>
+
+          <!-- Right: Snapshot & Alerts -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; overflow:hidden; display:flex; flex-direction:column;">
+              <div style="padding:12px 16px; border-bottom:1px solid var(--border2); font-weight:700; font-size:12px; display:flex; justify-content:space-between;">
+                Graph Snapshot
+                <span style="font-size:10px; color:var(--cyan);">v1.0.42 (LATEST)</span>
+              </div>
+              <div style="height:200px; background:#0f172a; position:relative; display:flex; align-items:center; justify-content:center; color:var(--muted2);">
+                <i data-lucide="network" style="width:48px; height:48px; opacity:0.1;"></i>
+                <div style="position:absolute; bottom:8px; right:8px; font-size:9px; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">REAL-TIME HEATMAP</div>
+              </div>
+              <div style="padding:12px; font-size:10px; color:var(--muted);">
+                Current behavioral drift: <span style="color:var(--green)">0.01% (STABLE)</span>
+              </div>
+            </div>
+
+            <div style="background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:12px; padding:16px;">
+              <h3 style="font-size:12px; font-weight:700; color:var(--red); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="alert-triangle" style="width:14px;"></i> System Alerts
+              </h3>
+              <div style="font-size:11px; color:var(--text); line-height:1.5;">
+                <div style="margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid rgba(239, 68, 68, 0.1);">
+                  <strong>Confidence Collapse</strong><br>
+                  <span style="color:var(--muted)">LLM Bridge "Analyst" dropped below 0.40 threshold 3 times in last hour.</span>
+                </div>
+                <div>
+                  <strong>Version Mismatch</strong><br>
+                  <span style="color:var(--muted)">Local registry differs from remote TIS deployment by 2 commits.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  view.innerHTML = html;
+  lucide.createIcons();
 }
 
 // ─── TernFlow Logic ───────────────────────────────────────────────────────────
