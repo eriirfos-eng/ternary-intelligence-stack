@@ -296,6 +296,32 @@
       box-shadow: 0 0 15px var(--green); 
       border-color: #fff;
     }
+
+    /* Signal Injectors (God Mode) */
+    .fn-injectors {
+      position: absolute; left: -55px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 2px;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .flow-node:hover .fn-injectors { opacity: 1; pointer-events: auto; }
+    .inj-btn {
+      width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--border2);
+      font-size: 9px; font-weight: 800; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; background: var(--bg1);
+      transition: all 0.1s; color: var(--muted);
+    }
+    .inj-btn:hover { transform: scale(1.2); color: #fff; z-index: 50; }
+    .inj-neg { border-color: var(--red); }
+    .inj-neg:hover { background: var(--red); }
+    .inj-zero { border-color: var(--amber); }
+    .inj-zero:hover { background: var(--amber); }
+    .inj-pos { border-color: var(--green); }
+    .inj-pos:hover { background: var(--green); }
+
+    /* Causal Tracing */
+    .causal-path { stroke: var(--cyan) !important; stroke-width: 5px !important; filter: drop-shadow(0 0 8px var(--cyan)); }
+    .causal-node { border-color: var(--cyan) !important; box-shadow: 0 0 20px rgba(56,189,248,0.4) !important; }
+    .dimmed { opacity: 0.15 !important; filter: grayscale(0.8); }
     .flow-port-label {
       position: absolute; font-size: 8px; font-weight: 600; color: var(--muted2);
       white-space: nowrap; pointer-events: none; line-height: 1;
@@ -2286,6 +2312,73 @@ function toggleSimulation() {
   else runSimulation();
 }
 
+// ─── God Mode: Signal Injection ──────────────────────────────────────────────
+async function injectSignal(nodeId, val) {
+  event?.stopPropagation();
+  logInspector("SYSTEM", `⚡ Manual injection: [v:${val}, c:1.0] -> ${nodeId}`);
+  
+  engineQueue.push({ toId: nodeId, val, conf: 1.0, origin: "MANUAL_INJECTOR" });
+  
+  if (!simulationRunning) {
+    runSimulation();
+  }
+}
+
+// ─── Full Observability: Causal Reverse-Trace ────────────────────────────────
+function traceCausalPath(targetNodeId) {
+  // Clear existing trace
+  document.querySelectorAll('.causal-path, .causal-node, .dimmed').forEach(el => {
+    el.classList.remove('causal-path','causal-node','dimmed');
+  });
+
+  const activeNodes = new Set();
+  const activeWires = new Set();
+
+  function findParents(nodeId) {
+    activeNodes.add(nodeId);
+    // Find wires that contribute to this node
+    const parents = flowWires.filter(w => w.toId === nodeId);
+    parents.forEach(w => {
+      // Only trace back if this wire was actually "pulsed" or has a signal
+      activeWires.add(w.id);
+      if (!activeNodes.has(w.fromId)) findParents(w.fromId);
+    });
+  }
+
+  findParents(targetNodeId);
+
+  // Apply visual styles
+  flowNodes.forEach(n => {
+    const el = document.getElementById(n.id);
+    if (!el) return;
+    if (activeNodes.has(n.id)) el.classList.add('causal-node');
+    else el.classList.add('dimmed');
+  });
+
+  flowWires.forEach(w => {
+    const el = document.getElementById(w.id);
+    const hit = document.getElementById("hit-" + w.id);
+    if (!el) return;
+    if (activeWires.has(w.id)) {
+      el.classList.add('causal-path');
+    } else {
+      el.classList.add('dimmed');
+      if (hit) hit.classList.add('dimmed');
+    }
+  });
+
+  showToast("Showing causal path for " + targetNodeId, "ok");
+  
+  // Add clear listener to background
+  const clearTrace = () => {
+    document.querySelectorAll('.causal-path, .causal-node, .dimmed').forEach(el => {
+      el.classList.remove('causal-path','causal-node','dimmed');
+    });
+    document.getElementById("flow-canvas").removeEventListener("mousedown", clearTrace);
+  };
+  document.getElementById("flow-canvas").addEventListener("mousedown", clearTrace);
+}
+
 // ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
 let CT = { scale: 1, x: 0, y: 0 };
 const SCALE_MIN = 0.15, SCALE_MAX = 2.5;
@@ -2766,11 +2859,17 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
         ${label}
       </div>
       <div class="fn-status" id="status-${id}" title="idle"></div>
+      <button onclick="event.stopPropagation(); traceCausalPath('${id}')" style="padding:2px 4px; background:none; border:none; cursor:pointer; color:var(--cyan); line-height:1; margin-left:4px;" title="Causal Trace">🔍</button>
       <button onclick="deleteNode('${id}')" style="padding:2px 4px; background:none; border:none; cursor:pointer; color:var(--muted); line-height:1; margin-left:4px;" title="Remove">✕</button>
     </div>
     <div class="fn-body">
       <div style="font-weight:600; color:var(--text); font-size:13px; margin-bottom:3px;" class="fn-title">${name}</div>
       <div style="font-size:10px; color:var(--muted2); font-family:'JetBrains Mono',monospace;">${subtitle}</div>
+    </div>
+    <div class="fn-injectors">
+      <div class="inj-btn inj-pos" onclick="injectSignal('${id}', 1)" title="Inject +1 Affirm">+1</div>
+      <div class="inj-btn inj-zero" onclick="injectSignal('${id}', 0)" title="Inject 0 Tend">0</div>
+      <div class="inj-btn inj-neg" onclick="injectSignal('${id}', -1)" title="Inject -1 Reject">-1</div>
     </div>
     <div class="flow-port flow-port-in"  style="left:-7px;  top:50%; margin-top:-6px;" title="Input"></div>
     <div class="flow-port flow-port-out" style="right:-7px; top:50%; margin-top:-6px;" title="Output"></div>
