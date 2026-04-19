@@ -149,6 +149,14 @@
       will-change: transform;
       z-index: 10;
     }
+    #flow-fog-canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1; /* Behind SVG and Nodes */
+      mix-blend-mode: multiply;
+      opacity: 0.6;
+    }
     /* SVG follows canvas transform to prevent clipping */
     #flow-svg-layer {
       position: absolute; top: 0; left: 0;
@@ -1485,6 +1493,7 @@
   <!-- Center: Canvas -->
   <div id="flow-canvas-wrap">
     <div id="flow-canvas">
+      <canvas id="flow-fog-canvas"></canvas>
       <svg id="flow-svg-layer">
         <!-- Wires rendered here -->
       </svg>
@@ -4161,6 +4170,72 @@ class SignalQueue {
 const engineQueue = new SignalQueue();
 const MAX_ENGINE_TICKS = 100;
 
+/**
+ * Confidence Fog Heatmap Renderer
+ * Visualizes the "weather" of the logic swarm.
+ */
+function updateFogHeatmap() {
+  const canvas = document.getElementById("flow-fog-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  
+  // Sync canvas size to container (5000x5000)
+  if (canvas.width !== 5000) { canvas.width = 5000; canvas.height = 5000; }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background "Static" / Base Fog
+  // In the dark theme, we use a very subtle dark indigo as base fog
+  ctx.fillStyle = "rgba(15, 15, 20, 0.4)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  flowNodes.forEach(node => {
+    // Determine node confidence color from visual status
+    const statusDot = document.getElementById("status-" + node.id);
+    let trit = 0; 
+    if (statusDot) {
+      if (statusDot.classList.contains("ok")) trit = 1;
+      else if (statusDot.classList.contains("err")) trit = -1;
+      else if (statusDot.classList.contains("run")) trit = 0;
+    }
+
+    const x = node.x + 80;
+    const y = node.y + 40;
+
+    const grad = ctx.createRadialGradient(x, y, 40, x, y, 350);
+    
+    if (trit === 1) {
+      // Clear Green Light (Affirm)
+      grad.addColorStop(0, "rgba(34, 197, 94, 0.25)");
+      grad.addColorStop(1, "rgba(10, 12, 16, 0)");
+    } else if (trit === -1) {
+      // Clear Red Light (Reject)
+      grad.addColorStop(0, "rgba(239, 68, 68, 0.25)");
+      grad.addColorStop(1, "rgba(10, 12, 16, 0)");
+    } else {
+      // Purple Fog (Tend/Uncertainty)
+      grad.addColorStop(0, "rgba(168, 85, 247, 0.15)");
+      grad.addColorStop(1, "rgba(10, 12, 16, 0)");
+    }
+
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, 350, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Subtle Noise Texture Overlay (Industrial look)
+    if (Math.random() > 0.8) {
+      ctx.globalAlpha = 0.03;
+      for (let i = 0; i < 20; i++) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(x + (Math.random() - 0.5) * 600, y + (Math.random() - 0.5) * 600, 1, 1);
+      }
+      ctx.globalAlpha = 1.0;
+    }
+  });
+}
+
 // ─── End of v2 Core Modules ──────────────────────────────────────────────────
 
 async function runSimulation() {
@@ -4187,6 +4262,7 @@ async function runSimulation() {
 
   engineQueue.clear();
   logInspector("SYSTEM", "🚀 TernFlow Engine v2 initialized");
+  updateFogHeatmap();
 
   // Initial Seed: Find nodes with no inputs and fire them with initial signal
   const roots = flowNodes.filter(n => !flowWires.some(w => w.toId === n.id));
@@ -4228,6 +4304,7 @@ async function runSimulation() {
       if (transformed) {
         await animateSignal(wire, transformed.val, transformed.conf);
         engineQueue.push({ toId: wire.toId, ...transformed });
+        updateFogHeatmap(); // Update "weather"
       } else {
         logInspector(node.name, `⊗ Edge condition blocked propagation to ${wire.toId}`);
       }
@@ -4343,6 +4420,7 @@ async function simulateNode(node, inSignal) {
 }
 
 function updateWires() {
+  updateFogHeatmap(); // Sync fog to node positions
   let svg = document.getElementById("flow-svg-layer");
   if (!svg) {
     const canvas = document.getElementById("flow-canvas");
