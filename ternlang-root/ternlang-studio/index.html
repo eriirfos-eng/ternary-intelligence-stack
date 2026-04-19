@@ -2242,10 +2242,23 @@ function renderFlowLibItems(paths) {
     div.className = "lib-item";
     div.dataset.name = name.toLowerCase();
     div.innerHTML = `<i data-lucide="bot"></i> <span>${name}</span>`;
-    div.onclick = () => {
+    div.onclick = async () => {
       const id = "node_" + Date.now();
       const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
       createFlowNode(name, path, pos.x, pos.y, 'agent', id);
+      
+      try {
+        const r = await fetch(GH_TERNROOT + path);
+        if (r.ok) {
+          const code = await r.text();
+          const node = flowNodes.find(n => n.id === id);
+          if (node) {
+            node.props.code = code;
+            if (selectedNodeId === id) updatePropertyPanel();
+            saveCanvasState();
+          }
+        }
+      } catch(e) {}
     };
     lib.appendChild(div);
   });
