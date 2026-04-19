@@ -755,11 +755,30 @@
     .status-ok      { background: #0a2010; color: var(--green); border-color: #1a5030; }
     .status-error   { background: #200008; color: var(--red);   border-color: #600020; }
     .print-output {
-      font-family: inherit; font-size: 12px; white-space: pre-wrap;
-      padding: 10px; border-radius: 4px; border: 1px solid var(--border);
-      background: var(--bg2); color: var(--text); margin: 8px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; color: #a5f3fc;
+      line-height: 1.6; white-space: pre-wrap;
+      background: #020617; border: 1px solid #1e293b;
+      padding: 16px; border-radius: 4px;
+      flex: 1; overflow-y: auto;
+      position: relative;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+      min-height: 200px;
     }
-    .print-output.empty { color: var(--muted); font-style: italic; }
+    .print-output::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+      pointer-events: none; z-index: 10;
+    }
+    .print-output.empty { color: #475569; font-style: italic; }
+    .term-line { display: flex; gap: 8px; margin-bottom: 2px; position: relative; z-index: 5; }
+    .term-prompt { color: var(--cyan); font-weight: 700; opacity: 0.7; }
+    .term-err-line { color: #f87171; background: rgba(248,113,113,0.1); padding: 4px 8px; border-left: 3px solid #f87171; margin: 8px 0; font-size: 12px; }
+    .term-success { color: #4ade80; font-weight: 700; }
+    .term-dim { color: #475569; }
+    .term-header { color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
     .error-output {
       font-family: inherit; font-size: 12px; white-space: pre-wrap;
       padding: 10px; border-radius: 4px; border: 1px solid #400010;
@@ -5193,12 +5212,52 @@ function showResult(data) {
   document.getElementById("metaStatus").style.color = ok ? "var(--green)" : "var(--red)";
 
   const printEl = document.getElementById("printOutput");
+  printEl.innerHTML = "";
+  printEl.className = "print-output";
+
+  // Virtual Terminal Header
+  const header = document.createElement("div");
+  header.className = "term-header";
+  header.textContent = `Ternary Intelligence Stack — BET-VM v1.0.0 (${data._wasm ? 'WASM' : 'API'})`;
+  printEl.appendChild(header);
+
+  // Print outputs
   if (data.output && data.output.length > 0) {
-    printEl.textContent = data.output.join("\n");
-    printEl.className = "print-output";
+    data.output.forEach(line => {
+      const row = document.createElement("div");
+      row.className = "term-line";
+      row.innerHTML = `<span class="term-prompt">></span><span>${line}</span>`;
+      printEl.appendChild(row);
+    });
+  }
+
+  if (ok) {
+    const success = document.createElement("div");
+    success.className = "term-line term-success";
+    success.style.marginTop = "8px";
+    success.textContent = `● Program exited successfully. [trit:${data.trit}]`;
+    printEl.appendChild(success);
   } else {
-    printEl.textContent = "— no print output —";
-    printEl.className = "print-output empty";
+    const errBox = document.createElement("div");
+    errBox.className = "term-err-line";
+    let errMsg = data.error || "Unknown runtime error";
+    
+    // Humanize common compiler errors
+    if (errMsg.includes("ExpectedToken")) {
+      const match = errMsg.match(/ExpectedToken\("(.*?)",\s+"(.*?)"\)/);
+      if (match) errMsg = `Syntax Error: Expected ${match[1]}, but found ${match[2]}. Check your semicolons!`;
+    } else if (errMsg.includes("UndefinedSymbol")) {
+       const match = errMsg.match(/UndefinedSymbol\("(.*?)"\)/);
+       if (match) errMsg = `Reference Error: Symbol '${match[1]}' is not defined.`;
+    }
+
+    errBox.innerHTML = `<strong>VM_ERROR:</strong> ${errMsg}`;
+    printEl.appendChild(errBox);
+
+    const fail = document.createElement("div");
+    fail.className = "term-line term-dim";
+    fail.textContent = "● Process terminated with non-zero exit code.";
+    printEl.appendChild(fail);
   }
 
   if (data.registers && data.registers.length > 0) {
@@ -5232,14 +5291,20 @@ function prepareTernCode(src) {
   src = src.trim();
   if (!src) return src;
   
-  // If user already defined a main function, or any function at top level, send as is
   if (src.includes("fn main") || src.match(/^fn\s+\w+/m)) {
     return src;
   }
   
-  // Otherwise, wrap in main() to allow running raw expressions/statements
-  // We return the last expression's value as the result trit.
-  return `fn main() -> trit {\n${src}\n    return hold;\n}`;
+  // Clean up lines: ensure semicolons for common statements
+  const lines = src.split('\n').map(l => {
+    let t = l.trim();
+    if (t && !t.endsWith(';') && !t.endsWith('}') && !t.endsWith('{')) {
+      return l + ';';
+    }
+    return l;
+  });
+
+  return `fn main() -> trit {\n${lines.join('\n')}\n    return hold;\n}`;
 }
 
 // ─── Run ──────────────────────────────────────────────────────────────────────
