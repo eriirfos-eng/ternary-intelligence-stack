@@ -65,27 +65,56 @@ fn parse_and_check(src: &str) -> Result<(), String> {
 }
 
 fn execute(src: &str) -> Result<RunResult, String> {
-    // 1. Parse
-    let program = Parser::new(src)
-        .parse_program()
-        .map_err(|e| format!("parse error: {e:?}"))?;
-
-    // 2. Semantic analysis
-    let mut sa = SemanticAnalyzer::new();
-    sa.check_program(&program)
-        .map_err(|e| format!("type error: {e:?}"))?;
-
-    // 3. Compile to bytecode (mirrors CLI run pipeline)
+    // 1-3. Parse & Compile (Mirrors CLI Run logic)
     let mut emitter = BytecodeEmitter::new();
     let header_patch = emitter.emit_header_jump();
-    emitter.emit_program(&program);
-    emitter.patch_header_jump(header_patch);
-    emitter.emit_entry_call("main");
+
+    let mut parser = Parser::new(src);
+    match parser.parse_program() {
+        Ok(prog) => {
+            // TODO: In the future, pass a ModuleResolver if we support imports in WASM
+            emitter.emit_program(&prog);
+            emitter.patch_header_jump(header_patch);
+            emitter.emit_entry_call("main");
+        }
+        Err(e) => {
+            let error_str = format!("{:?}", e);
+            if error_str.contains("ExpectedToken(\"Fn\"") || error_str.contains("UnexpectedToken(\"Let\"") {
+                // Fallback for scripts/snippets
+                let mut parser = Parser::new(src);
+                emitter.patch_header_jump(header_patch);
+                let mut found_functions = false;
+                loop {
+                    match parser.parse_stmt() {
+                        Ok(stmt) => emitter.emit_stmt(&stmt),
+                        Err(e) => {
+                            let e_str = format!("{:?}", e);
+                            if e_str.contains("EOF") { break; }
+                            if e_str.contains("UnexpectedToken(\"Fn\")") {
+                                if let Ok(func) = parser.parse_function() {
+                                    emitter.emit_function(&func);
+                                    found_functions = true;
+                                    continue;
+                                }
+                            }
+                            return Err(format!("parse error: {e:?}"));
+                        }
+                    }
+                }
+                if found_functions { emitter.emit_entry_call("main"); }
+            } else {
+                return Err(format!("parse error: {e:?}"));
+            }
+        }
+    }
+
     let bytecode = emitter.finalize();
     let cycles = bytecode.len();
 
     // 4. Run on BET VM
     let mut vm = BetVm::new(bytecode);
+    emitter.register_agents(&mut vm);
+    
     vm.run().map_err(|e| format!("runtime error: {e:?}"))?;
 
     // 5. Collect output + result trit

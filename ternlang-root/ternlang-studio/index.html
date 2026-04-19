@@ -4313,25 +4313,19 @@ async function simulateNode(node, inSignal) {
   } else {
     // Standard Agent or Gate
     const code = node.props.code || "";
-    if (code.trim() && window.wasmReady && window.wasmRunTern) {
-      try {
-        logInspector(node.name, "⚡ Running via WASM…");
-        const raw = window.wasmRunTern(code);
-        const r = JSON.parse(raw);
-        if (r.ok) {
-          outSignal = r.trit === 1 ? 1 : (r.trit === -1 ? -1 : 0);
-          const lbl = outSignal === 1 ? '+1 AFFIRM' : (outSignal === -1 ? '-1 REJECT' : '0 TEND');
-          logInspector(node.name, `→ ${lbl}${r.output && r.output.length ? ' · ' + r.output.join(', ') : ''}`);
-        } else {
-          logInspector(node.name, `✗ ${r.error || "error"}`);
-          setNodeStatus(node.id, "err");
-          el.classList.add('pulse-reject');
-          await new Promise(r => setTimeout(r, 600));
-          return -1;
-        }
-      } catch(e) {
-        logInspector(node.name, `⚠ WASM error: ${e.message}`);
-        outSignal = inSignal;
+    if (code.trim()) {
+      logInspector(node.name, "⚡ Executing logic…");
+      const r = runTernCode(code);
+      if (r.ok) {
+        outSignal = r.trit === 1 ? 1 : (r.trit === -1 ? -1 : 0);
+        const lbl = outSignal === 1 ? '+1 AFFIRM' : (outSignal === -1 ? '-1 REJECT' : '0 TEND');
+        logInspector(node.name, `→ ${lbl}${r.output && r.output.length ? ' · ' + r.output.join(', ') : ''}`);
+      } else {
+        logInspector(node.name, `✗ ${r.error || "error"}`);
+        setNodeStatus(node.id, "err");
+        el.classList.add('pulse-reject');
+        await new Promise(r => setTimeout(r, 600));
+        return -1;
       }
     } else {
       const lbl = inSignal === 1 ? '+1 AFFIRM' : (inSignal === -1 ? '-1 REJECT' : '0 TEND');
@@ -5307,20 +5301,53 @@ function prepareTernCode(src) {
   src = src.trim();
   if (!src) return src;
   
-  if (src.includes("fn main") || src.match(/^fn\s+\w+/m)) {
-    return src;
+  // High-fidelity pattern matching for function definitions
+  const hasFnMain = /fn\s+main\s*\(/.test(src);
+  const hasFunctions = /^fn\s+\w+/m.test(src);
+  
+  if (hasFnMain) return src;
+  
+  // If user has other functions but no main, append a main call
+  if (hasFunctions) {
+    return src + "\n\nfn main() -> trit { return hold; }";
   }
   
-  // Clean up lines: ensure semicolons for common statements
+  // Otherwise, wrap raw script logic
   const lines = src.split('\n').map(l => {
     let t = l.trim();
-    if (t && !t.endsWith(';') && !t.endsWith('}') && !t.endsWith('{')) {
+    if (t && !t.endsWith(';') && !t.endsWith('}') && !t.endsWith('{') && !t.startsWith('//')) {
       return l + ';';
     }
     return l;
   });
 
   return `fn main() -> trit {\n${lines.join('\n')}\n    return hold;\n}`;
+}
+
+/**
+ * Universal TIS Execution Wrapper
+ * Mirrors CLI 'run' logic: prepare -> wasm -> parse results
+ */
+function runTernCode(rawCode) {
+  if (!window.wasmReady || !window.wasmRunTern) {
+    return { ok: false, error: "BET-VM (WASM) not loaded. Check network." };
+  }
+  
+  const prepared = prepareTernCode(rawCode);
+  try {
+    const rawResult = window.wasmRunTern(prepared);
+    const r = JSON.parse(rawResult);
+    return {
+      ok: r.ok,
+      output: r.output || [],
+      trit: r.trit ?? 0,
+      label: r.label || "hold",
+      error: r.error || null,
+      cycles: r.cycles || 0
+    };
+  } catch (e) {
+    return { ok: false, error: "VM_CRASH: " + e.message };
+  }
 }
 
 // ─── Run ──────────────────────────────────────────────────────────────────────
@@ -5330,71 +5357,37 @@ async function runCode() {
   const rawCode = monacoEditor.getValue();
   if (!rawCode.trim()) return;
 
-  const code = prepareTernCode(rawCode);
-
-  // Switch to editor view if on dashboard
-  if (!document.getElementById("view-editor").classList.contains("active")) {
-    switchView("editor");
-  }
-
-  // Switch to output tab
-  document.querySelectorAll(".out-tab").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".out-panel").forEach(p => p.classList.remove("visible"));
-  document.querySelector(".out-tab").classList.add("active");
-  document.getElementById("panel-output").classList.add("visible");
-
-  const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-  const key = document.getElementById("apiKey").value.trim();
+  const startTime = Date.now();
   const runBtn = document.getElementById("runBtn");
   runBtn.classList.add("running");
   runBtn.textContent = "● Running…";
   setStatus("running", "● Running…");
 
-  const startTime = Date.now();
+  // Switch views
+  if (!document.getElementById("view-editor").classList.contains("active")) switchView("editor");
+  document.querySelectorAll(".out-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".out-panel").forEach(p => p.classList.remove("visible"));
+  document.querySelector(".out-tab").classList.add("active");
+  document.getElementById("panel-output").classList.add("visible");
 
-  // Try WASM first — zero latency, no network required
-  if (window.wasmReady && window.wasmRunTern) {
-    try {
-      const raw = window.wasmRunTern(code);
-      const r = JSON.parse(raw);
-      const ms = Date.now() - startTime;
-      const data = {
-        status: r.ok ? "ok" : "error",
-        output: r.output || [],
-        trit: r.trit ?? 0,
-        label: r.label || "tend",
-        error: r.error || null,
-        bytecode_bytes: r.cycles || 0,
-        _ms: ms,
-        _wasm: true,
-      };
-      showResult(data);
-      addRunToHistory(activeFile, data.status === "ok", ms, data);
-      runBtn.classList.remove("running");
-      runBtn.innerHTML = '<span>▶ Run</span><span class="kbd">Ctrl+↵</span>';
-      return;
-    } catch(e) { /* fall through to API */ }
-  }
+  const r = runTernCode(rawCode);
+  const ms = Date.now() - startTime;
 
-  try {
-    const body = { code };
-    if (key) body.key = key;
-    const res = await fetch(endpoint + "/api/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = res.ok ? await res.json() : { status: "error", error: `HTTP ${res.status}: ${await res.text()}`, output: [], bytecode_bytes: 0 };
-    showResult(data);
-    addRunToHistory(activeFile, data.status === "ok", Date.now() - startTime, data);
-  } catch (err) {
-    const data = { status: "error", error: String(err), output: [], bytecode_bytes: 0 };
-    showResult(data);
-    addRunToHistory(activeFile, false, Date.now() - startTime, data);
-  } finally {
-    runBtn.classList.remove("running");
-    runBtn.innerHTML = '<span>▶ Run</span><span class="kbd">Ctrl+↵</span>';
-  }
+  const data = {
+    status: r.ok ? "ok" : "error",
+    output: r.output,
+    trit: r.trit,
+    label: r.label,
+    error: r.error,
+    bytecode_bytes: r.cycles,
+    _ms: ms,
+    _wasm: true,
+  };
+
+  showResult(data);
+  addRunToHistory(activeFile, r.ok, ms, data);
+  runBtn.classList.remove("running");
+  runBtn.innerHTML = '<span>▶ Run</span><span class="kbd">Ctrl+↵</span>';
 }
 
 // ─── Run history ──────────────────────────────────────────────────────────────
@@ -5591,59 +5584,21 @@ async function runReplExpr() {
   resEl.textContent = "running…";
   const t0 = Date.now();
 
-  // Detect if it's a full fn main() program or just an expression
-  const isFullProgram = /fn\s+main\s*\(/.test(input);
-  const src = isFullProgram ? input : `fn main() -> trit { return ${input}; }`;
+  const r = runTernCode(input);
+  const ms = Date.now() - t0;
 
-  // Try WASM first (zero latency, no network)
-  if (window.wasmReady && window.wasmRunTern) {
-    try {
-      const r = JSON.parse(window.wasmRunTern(src));
-      const ms = Date.now() - t0;
-      if (r.ok) {
-        const trit = r.trit;
-        const label = r.label || (trit === 1 ? "affirm" : trit === -1 ? "reject" : "tend");
-        const color = trit === 1 ? "var(--green)" : (trit === -1 ? "var(--red)" : "var(--amber)");
-        const sign  = trit === 1 ? "+1" : (trit === -1 ? "-1" : "0");
-        resEl.style.color = color;
-        let out = `${sign}  ${label.toUpperCase()}  [${ms}ms WASM]`;
-        if (r.output && r.output.length) out += "\n" + r.output.join("\n");
-        resEl.textContent = out;
-      } else {
-        resEl.style.color = "var(--red)";
-        resEl.textContent = r.error || "Error";
-      }
-      return;
-    } catch(e) { /* fall through */ }
-  }
-
-  // API fallback
-  try {
-    const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-    const key = document.getElementById("apiKey").value.trim();
-    const res = await fetch(`${endpoint}/api/run`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: src, key })
-    });
-    const data = await res.json();
-    const ms = Date.now() - t0;
-    if (data.status === "ok") {
-      const trit = data.trit ?? 1;
-      const label = data.label || "affirm";
-      const color = trit === 1 ? "var(--green)" : (trit === -1 ? "var(--red)" : "var(--amber)");
-      const sign  = trit === 1 ? "+1" : (trit === -1 ? "-1" : "0");
-      resEl.style.color = color;
-      let out = `${sign}  ${label.toUpperCase()}  [${ms}ms API]`;
-      if (data.output && data.output.length) out += "\n" + data.output.join("\n");
-      resEl.textContent = out;
-    } else {
-      resEl.style.color = "var(--red)";
-      resEl.textContent = data.error || "Error";
-    }
-  } catch (e) {
+  if (r.ok) {
+    const trit = r.trit;
+    const label = r.label || (trit === 1 ? "affirm" : trit === -1 ? "reject" : "tend");
+    const color = trit === 1 ? "var(--green)" : (trit === -1 ? "var(--red)" : "var(--amber)");
+    const sign  = trit === 1 ? "+1" : (trit === -1 ? "-1" : "0");
+    resEl.style.color = color;
+    let out = `${sign}  ${label.toUpperCase()}  [${ms}ms WASM]`;
+    if (r.output && r.output.length) out += "\n" + r.output.join("\n");
+    resEl.textContent = out;
+  } else {
     resEl.style.color = "var(--red)";
-    resEl.textContent = "No connection — WASM not loaded yet";
+    resEl.textContent = r.error || "Error";
   }
 }
 
