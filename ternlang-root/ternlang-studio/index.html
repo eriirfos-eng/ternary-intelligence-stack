@@ -3558,86 +3558,144 @@ function showValidationPanel(errors, warnings) {
   `;
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// 🧩 TernFlow v2 Core: Signal Algebra & Event Queue
+// ══════════════════════════════════════════════════════════════════════════════
+
+const TernaryAlgebra = {
+  // Merge multiple incoming signals into a single state
+  merge(signals) {
+    if (!signals.length) return { val: 0, conf: 0 };
+    
+    // Weighted mean approach for confidence-aware merging
+    let totalWeight = 0;
+    let weightedVal = 0;
+    
+    signals.forEach(s => {
+      weightedVal += s.val * s.conf;
+      totalWeight += s.conf;
+    });
+    
+    if (totalWeight === 0) return { val: 0, conf: 0 };
+    
+    const rawVal = weightedVal / totalWeight;
+    const finalVal = rawVal > 0.33 ? 1 : (rawVal < -0.33 ? -1 : 0);
+    const finalConf = totalWeight / signals.length; // Normalized confidence
+    
+    return { val: finalVal, conf: Math.min(1, finalConf) };
+  },
+
+  // Apply edge transformations (Flip, Block, Hold) and scale confidence
+  transform(signal, wire) {
+    let out = { ...signal };
+    
+    // Every "hop" through a wire slightly decays confidence unless it's a high-priority path
+    const decay = wire.priority ? (11 - wire.priority) * 0.02 : 0.05;
+    out.conf = Math.max(0, out.conf - decay);
+
+    if (wire.condition && wire.condition !== "all") {
+      const pass = (wire.condition==="affirm"&&out.val===1)||(wire.condition==="tend"&&out.val===0)||(wire.condition==="reject"&&out.val===-1)||(wire.condition==="!reject"&&out.val!==-1)||(wire.condition==="!tend"&&out.val!==0);
+      if (!pass) {
+        if (wire.transform === "block") return null;
+        if (wire.transform === "flip")  { out.val = -out.val; out.conf *= 0.8; }
+        if (wire.transform === "hold")  { out.val = 0; out.conf *= 0.5; }
+      }
+    }
+    return out;
+  }
+};
+
+class SignalQueue {
+  constructor() {
+    this.queue = [];
+    this.history = [];
+  }
+  push(signal) {
+    this.queue.push(signal);
+    this.history.push({ ...signal, time: Date.now() });
+  }
+  pop() { return this.queue.shift(); }
+  get length() { return this.queue.length; }
+  clear() { this.queue = []; this.history = []; }
+}
+
+const engineQueue = new SignalQueue();
+const MAX_ENGINE_TICKS = 100;
+
+// ─── End of v2 Core Modules ──────────────────────────────────────────────────
+
 async function runSimulation() {
   if (simulationRunning) return;
   simulationAborted = false;
   simulationRunning = true;
   updateSimUI();
 
-  // Validate first
   const { errors, warnings } = validateGraph();
   if (errors.length > 0) {
     showValidationPanel(errors, warnings);
     showToast(`${errors.length} error${errors.length>1?'s':''} — fix before simulating`, "error");
-    simulationRunning = false;
-    updateSimUI();
-    return;
+    simulationRunning = false; updateSimUI(); return;
   }
-  
-  // ... rest of the setup ...
+
   const ins = document.getElementById("flow-inspector");
   ins.classList.add("active");
   ins.style.display = "flex";
   document.getElementById("ins-body").innerHTML = "";
 
-  if (flowNodes.length === 0) {
-    logInspector("SYSTEM", "No nodes on canvas — drag agents from the library.");
-    simulationRunning = false;
-    updateSimUI();
-    return;
-  }
-
   // Reset visual state
   document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('pulse-affirm','pulse-reject','pulse-hold','node-error','node-warn'));
-  document.querySelectorAll('.node-badge').forEach(b => b.remove());
   flowNodes.forEach(n => setNodeStatus(n.id, ""));
 
-  // Topological execution order
-  const { order, hasCycle, cycleNodes } = topoSort();
-  const wasmTag = window.wasmReady ? "⚡ WASM" : "passthrough";
-  logInspector("SYSTEM", `Start — ${wasmTag} · ${flowNodes.length} nodes · topo order`);
-  if (hasCycle) logInspector("WARN", `Cycle detected in: ${cycleNodes.map(n=>n.name).join(', ')} — skipped`);
-  if (warnings.length) logInspector("WARN", `${warnings.length} warning${warnings.length>1?'s':''} — check validation`);
+  engineQueue.clear();
+  logInspector("SYSTEM", "🚀 TernFlow Engine v2 initialized");
 
-  // Signal state: map nodeId → outgoing trit value
-  const signals = {};
+  // Initial Seed: Find nodes with no inputs and fire them with initial signal
+  const roots = flowNodes.filter(n => !flowWires.some(w => w.toId === n.id));
+  roots.forEach(root => {
+    engineQueue.push({ toId: root.id, val: 1, conf: 1.0, origin: "ROOT" });
+  });
 
-  // Execute in topological order
-  const entryIds = order.filter(id => !flowWires.some(w => w.toId === id));
-  for (const id of entryIds) signals[id] = 1; // seed entries with affirm
+  let tick = 0;
+  const nodeState = {}; // nodeID -> last merged signal
 
-  for (const id of order) {
-    if (simulationAborted) break;
-    const node = flowNodes.find(n => n.id === id);
+  while (engineQueue.length > 0 && tick < MAX_ENGINE_TICKS && !simulationAborted) {
+    const signal = engineQueue.pop();
+    const node = flowNodes.find(n => n.id === signal.toId);
     if (!node) continue;
 
-    // Determine input signal: majority of incoming wire signals
-    const inWires = flowWires.filter(w => w.toId === id);
-    let inSignal = signals[id] ?? 1;
-    if (inWires.length > 0) {
-      const incoming = inWires.map(w => signals[w.fromId] ?? 1);
-      const sum = incoming.reduce((a, b) => a + b, 0);
-      inSignal = sum > 0 ? 1 : (sum < 0 ? -1 : 0);
+    logInspector(node.name, `📥 Signal received [v:${signal.val}, c:${signal.conf.toFixed(2)}] from ${signal.origin}`);
+
+    // Merge incoming signals if node has multiple inputs
+    const inWires = flowWires.filter(w => w.toId === node.id);
+    let merged = signal;
+    if (inWires.length > 1) {
+      // In v2, we could wait for all inputs, but for "reactive" behavior, we merge with last known state
+      nodeState[node.id] = nodeState[node.id] || [];
+      nodeState[node.id].push(signal);
+      merged = TernaryAlgebra.merge(nodeState[node.id]);
+      logInspector(node.name, `∑ Algebraic Merge: [v:${merged.val}, c:${merged.conf.toFixed(2)}]`);
     }
 
-    const outSignal = await simulateNode(node, inSignal);
+    // Execute Node
+    const outVal = await simulateNode(node, merged.val);
     if (simulationAborted) break;
-    signals[id] = outSignal;
 
-    // Propagate to outgoing wires
-    flowWires.filter(w => w.fromId === id).forEach(w => {
-      let sig = outSignal;
-      // Apply edge condition
-      if (w.condition && w.condition !== "all") {
-        const pass = (w.condition==="affirm"&&sig===1)||(w.condition==="tend"&&sig===0)||(w.condition==="reject"&&sig===-1)||(w.condition==="!reject"&&sig!==-1)||(w.condition==="!tend"&&sig!==0);
-        if (!pass) {
-          if (w.transform==="block") { sig = null; }
-          else if (w.transform==="flip") sig = -1;
-          else if (w.transform==="hold") sig = 0;
-        }
+    const outSignal = { val: outVal, conf: merged.conf, origin: node.id };
+
+    // Propagate to outputs
+    const outWires = flowWires.filter(w => w.fromId === node.id);
+    for (const wire of outWires) {
+      const transformed = TernaryAlgebra.transform(outSignal, wire);
+      if (transformed) {
+        await animateSignal(wire, transformed.val, transformed.conf);
+        engineQueue.push({ toId: wire.toId, ...transformed });
+      } else {
+        logInspector(node.name, `⊗ Edge condition blocked propagation to ${wire.toId}`);
       }
-      if (sig !== null) signals[w.toId] = sig;
-    });
+    }
+
+    tick++;
+    if (tick === MAX_ENGINE_TICKS) logInspector("SYSTEM", "⚠ MAX_ENGINE_TICKS reached — cycle protection triggered");
   }
 
   logInspector("SYSTEM", simulationAborted ? "⨯ Aborted" : "✓ Complete");
@@ -3657,6 +3715,47 @@ function setNodeStatus(id, status) {
   if (dot) { dot.className = "fn-status" + (status ? " " + status : ""); dot.title = status || "idle"; }
 }
 
+async function executeLLMNode(node, inSignal) {
+  const prompt = (node.props.template || "{{input}}").replace("{{input}}", inSignal === 1 ? "affirm" : (inSignal === -1 ? "reject" : "tend"));
+  const system = node.props.system_prompt || "You are a ternary logic processor. Output only +1 (affirm), 0 (tend), or -1 (reject).";
+  
+  logInspector(node.name, `🌐 Calling LLM [${node.props.provider || 'openai'}]…`);
+
+  try {
+    const response = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: `// LLM Bridge Proxy\nfn main() -> trit { return hold; }`, // Stub for security compatibility
+        llm_config: {
+          system,
+          prompt,
+          provider: node.props.provider,
+          temperature: node.props.temperature,
+          max_tokens: node.props.max_trits
+        }
+      })
+    });
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const r = await response.json();
+    
+    // Mapping response text/result to trit
+    let val = 0;
+    const txt = String(r.result || r.text || "").toLowerCase();
+    if (txt.includes("+1") || txt.includes("affirm") || txt.includes("yes")) val = 1;
+    else if (txt.includes("-1") || txt.includes("reject") || txt.includes("no")) val = -1;
+    
+    logInspector(node.name, `🤖 LLM Result: ${val} (${txt.substring(0, 20)}…)`);
+    return val;
+  } catch (e) {
+    logInspector(node.name, `❌ LLM Error: ${e.message}. Falling back to deterministic mapper.`);
+    // Fallback heuristic: basic keyword mapping on intent
+    if (node.props.system_prompt?.toLowerCase().includes("safety")) return 1; // Default safe
+    return inSignal;
+  }
+}
+
 async function simulateNode(node, inSignal) {
   if (simulationAborted) return inSignal;
   const el = document.getElementById(node.id);
@@ -3665,71 +3764,46 @@ async function simulateNode(node, inSignal) {
   setNodeStatus(node.id, "run");
   el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
 
-  // Try WASM execution if node has code
   let outSignal = inSignal;
-  const code = node.props.code || "";
-  if (code.trim() && window.wasmReady && window.wasmRunTern) {
-    try {
-      if (simulationAborted) return inSignal;
-      logInspector(node.name, "⚡ Running via WASM…");
-      const raw = window.wasmRunTern(code);
-      const r = JSON.parse(raw);
-      if (r.ok) {
-        outSignal = r.trit === 1 ? 1 : (r.trit === -1 ? -1 : 0);
-        const lbl = outSignal === 1 ? '+1 AFFIRM' : (outSignal === -1 ? '-1 REJECT' : '0 TEND');
-        logInspector(node.name, `→ ${lbl}${r.output && r.output.length ? ' · ' + r.output.join(', ') : ''}`);
-      } else {
-        logInspector(node.name, `✗ ${r.error || "error"}`);
-        setNodeStatus(node.id, "err");
-        el.classList.add('pulse-reject');
-        await new Promise(r => setTimeout(r, 600));
-        return -1;
-      }
-    } catch(e) {
-      logInspector(node.name, `⚠ WASM error: ${e.message}`);
-      outSignal = inSignal; // pass through
-    }
+
+  // Branch by type
+  if (node.type === 'external') {
+    outSignal = await executeLLMNode(node, inSignal);
   } else {
-    if (simulationAborted) return inSignal;
-    const lbl = inSignal === 1 ? '+1 AFFIRM' : (inSignal === -1 ? '-1 REJECT' : '0 TEND');
-    logInspector(node.name, `→ ${lbl} (passthrough)`);
+    // Standard Agent or Gate
+    const code = node.props.code || "";
+    if (code.trim() && window.wasmReady && window.wasmRunTern) {
+      try {
+        logInspector(node.name, "⚡ Running via WASM…");
+        const raw = window.wasmRunTern(code);
+        const r = JSON.parse(raw);
+        if (r.ok) {
+          outSignal = r.trit === 1 ? 1 : (r.trit === -1 ? -1 : 0);
+          const lbl = outSignal === 1 ? '+1 AFFIRM' : (outSignal === -1 ? '-1 REJECT' : '0 TEND');
+          logInspector(node.name, `→ ${lbl}${r.output && r.output.length ? ' · ' + r.output.join(', ') : ''}`);
+        } else {
+          logInspector(node.name, `✗ ${r.error || "error"}`);
+          setNodeStatus(node.id, "err");
+          el.classList.add('pulse-reject');
+          await new Promise(r => setTimeout(r, 600));
+          return -1;
+        }
+      } catch(e) {
+        logInspector(node.name, `⚠ WASM error: ${e.message}`);
+        outSignal = inSignal;
+      }
+    } else {
+      const lbl = inSignal === 1 ? '+1 AFFIRM' : (inSignal === -1 ? '-1 REJECT' : '0 TEND');
+      logInspector(node.name, `→ ${lbl} (passthrough)`);
+    }
   }
 
   if (simulationAborted) return outSignal;
   const pulseClass = outSignal === 1 ? 'pulse-affirm' : (outSignal === -1 ? 'pulse-reject' : 'pulse-hold');
   el.classList.add(pulseClass);
   setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : "run"));
-  await new Promise(r => setTimeout(r, 700));
-
-  const outWires = flowWires.filter(w => w.fromId === node.id);
-  for (const wire of outWires) {
-    if (simulationAborted) break;
-    // Apply edge condition logic
-    let pass = true;
-    if (wire.condition && wire.condition !== "all") {
-      const wc = wire.condition;
-      if (wc === "affirm" && outSignal !== 1)  pass = false;
-      if (wc === "tend"   && outSignal !== 0)  pass = false;
-      if (wc === "reject" && outSignal !== -1) pass = false;
-      if (wc === "!reject" && outSignal === -1) pass = false;
-      if (wc === "!tend"   && outSignal === 0)  pass = false;
-      if (!pass) {
-        if (wire.transform === "block") { logInspector(node.name, `⊗ Wire blocked (condition: ${wc})`); continue; }
-        if (wire.transform === "flip")  { logInspector(node.name, `⇄ Flipped to reject`); outSignal = -1; }
-        if (wire.transform === "hold")  { logInspector(node.name, `⏸ Forced to tend`); outSignal = 0; }
-      }
-    }
-    const nextNode = flowNodes.find(n => n.id === wire.toId);
-    if (nextNode) {
-      await animateSignal(wire, outSignal);
-      if (!simulationAborted) await simulateNode(nextNode, outSignal);
-    }
-  }
-
-  if (simulationAborted) return outSignal;
-  await new Promise(r => setTimeout(r, 400));
-  el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
-  setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : ""));
+  await new Promise(r => setTimeout(r, 500));
+  
   return outSignal;
 }
 
@@ -3757,7 +3831,7 @@ function updateWires() {
 
     const start = getPortPos(fromPort);
     const end = getPortPos(toPort);
-    drawWire(start, end, w.id, w.signal, w);
+    drawWire(start, end, w.id, w.signal, w, w.confidence);
   });
 
   if (activeWire) {
@@ -3782,7 +3856,7 @@ function computeWirePath(start, end) {
 
 let simSpeed = 2000;
 
-async function animateSignal(wire, signal) {
+async function animateSignal(wire, signal, confidence = 1.0) {
   const fromNode = document.getElementById(wire.fromId);
   const toNode = document.getElementById(wire.toId);
   if (!fromNode || !toNode) return;
@@ -3802,12 +3876,17 @@ async function animateSignal(wire, signal) {
   particle.style.background = color;
   particle.style.setProperty("--glow", color);
   
+  // Scale particle by confidence
+  const size = 6 + (8 * confidence);
+  particle.style.width = size + "px";
+  particle.style.height = size + "px";
+  particle.style.opacity = 0.3 + (0.7 * confidence);
+
   // Attach particle to canvas so it zooms/pans with the path
   document.getElementById("flow-canvas").appendChild(particle);
   
-  // Highlight wire
-  const wireEl = document.getElementById(wire.id);
-  if (wireEl) wireEl.setAttribute("class", `flow-wire active-${signal === 1 ? '1' : (signal === -1 ? 'n1' : '0')}`);
+  // Highlight wire with confidence
+  drawWire(start, end, wire.id, signal, wire, confidence);
 
   await new Promise(r => setTimeout(r, simSpeed));
   particle.remove();
@@ -3822,11 +3901,17 @@ function getPortPos(port) {
   };
 }
 
-function drawWire(start, end, id, signal, wire) {
+function drawWire(start, end, id, signal, wire, confidence = 1.0) {
   const svg = document.getElementById("flow-svg-layer");
-  const wrap = document.getElementById("flow-canvas-wrap");
   const d = computeWirePath(start, end);
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  
+  let path = svg.querySelector(`path[id="${id}"]`);
+  let isNew = false;
+  if (!path) {
+    path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("id", id);
+    isNew = true;
+  }
 
   path.setAttribute("d", d);
   path.setAttribute("data-wire-id", id);
@@ -3836,16 +3921,20 @@ function drawWire(start, end, id, signal, wire) {
   if (wire && wire.condition && wire.condition !== "all") cls += " cond-" + wire.condition.replace("!","");
   if (id === selectedWireId) cls += " selected-wire";
   path.setAttribute("class", cls);
-  path.setAttribute("id", id);
+
+  // Visualizing confidence: opacity and stroke-width
+  path.style.opacity = 0.2 + (0.8 * confidence);
+  path.style.strokeWidth = 1.5 + (2.5 * confidence);
+  path.style.transition = "opacity 0.3s, stroke-width 0.3s, stroke 0.3s";
 
   if (id === 'active-wire') {
     path.style.pointerEvents = 'none';
   }
 
-  if (id !== 'active-wire' && wire) {
+  if (isNew && id !== 'active-wire' && wire) {
     path.style.pointerEvents = 'stroke';
     path.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); });
-    // Fat transparent hitbox for easier clicking
+    // Fat transparent hitbox
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
     hit.setAttribute("d", d);
     hit.setAttribute("fill", "none");
@@ -3857,7 +3946,7 @@ function drawWire(start, end, id, signal, wire) {
     svg.appendChild(hit);
   }
 
-  svg.appendChild(path);
+  if (isNew) svg.appendChild(path);
 
   // Edge label badge
   if (wire && wire.label) {
@@ -3865,18 +3954,21 @@ function drawWire(start, end, id, signal, wire) {
     const dy = end.y - start.y;
     const midX = (start.x + end.x) / 2;
     const midY = (start.y + end.y) / 2;
-    
-    // For cycles (backward), move label away from the straight line to be on the curve
     const offX = dx < 60 ? 80 : 0;
     const offY = dx < 60 ? 0 : -10;
 
-    const badge = document.createElement("div");
+    let badge = document.getElementById("badge-" + id);
+    if (!badge) {
+      badge = document.createElement("div");
+      badge.id = "badge-" + id;
+      const canvas = document.getElementById("flow-canvas");
+      if (canvas) canvas.appendChild(badge);
+    }
     badge.className = "edge-badge" + (wire.condition && wire.condition !== "all" ? " cond-" + wire.condition.replace("!","") : "");
     badge.style.left = (midX + offX) + "px";
     badge.style.top  = (midY + offY) + "px";
     badge.textContent = wire.label;
-    const canvas = document.getElementById("flow-canvas");
-    if (canvas) canvas.appendChild(badge);
+    badge.style.opacity = 0.4 + (0.6 * confidence);
   }
 }
 
