@@ -3403,13 +3403,14 @@ async function executeProductDeploy() {
 }
 
 document.addEventListener('mousedown', (e) => {
-  if (e.target.classList.contains('flow-port-out')) {
-    const port = e.target;
-    const nodeEl = port.closest('.flow-node');
+  const sourcePort = e.target.closest('.flow-port');
+  if (sourcePort) {
+    const nodeEl = sourcePort.closest('.flow-node');
     const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
     activeWire = {
       fromId: nodeEl.id,
-      start: getPortPos(port),
+      fromIsOutput: sourcePort.classList.contains('flow-port-out'),
+      start: getPortPos(sourcePort),
       end: { x: e.clientX - wrapRect.left, y: e.clientY - wrapRect.top }
     };
   }
