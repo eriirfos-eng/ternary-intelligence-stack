@@ -2069,7 +2069,7 @@ let selectedNodeId = null;
 let activeWire = null;
 
 // ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
-const CT = { scale: 1, x: 0, y: 0 };
+let CT = { scale: 1, x: 0, y: 0 };
 const SCALE_MIN = 0.15, SCALE_MAX = 2.5;
 
 function applyTransform() {
@@ -2310,14 +2310,17 @@ function restoreCanvasState() {
 }
 
 function clearCanvas() {
-  const canvas = document.getElementById("flow-canvas");
-  canvas.innerHTML = "";
+  document.querySelectorAll(".flow-node").forEach(n => n.remove());
+  document.querySelectorAll(".edge-badge").forEach(b => b.remove());
+  const svg = document.getElementById("flow-svg-layer");
+  if (svg) svg.innerHTML = "";
+
   flowNodes = [];
   flowWires = [];
   selectedNodeId = null;
   selectedWireId = null;
   selectedIds = new Set();
-  document.querySelectorAll(".edge-badge").forEach(b => b.remove());
+  
   updatePropertyPanel();
   updateWires();
   const hint = document.getElementById("canvas-hint");
@@ -3646,8 +3649,14 @@ async function simulateNode(node, inSignal) {
 }
 
 function updateWires() {
-  const svg = document.getElementById("flow-svg-layer");
-  if (!svg) return;
+  let svg = document.getElementById("flow-svg-layer");
+  if (!svg) {
+    const canvas = document.getElementById("flow-canvas");
+    if (!canvas) return;
+    svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "flow-svg-layer";
+    canvas.prepend(svg);
+  }
   svg.innerHTML = "";
   // Clear edge badges
   document.querySelectorAll(".edge-badge").forEach(b => b.remove());
@@ -3659,6 +3668,7 @@ function updateWires() {
 
     const fromPort = fromNode.querySelector('.flow-port-out');
     const toPort = toNode.querySelector('.flow-port-in');
+    if (!fromPort || !toPort) return;
 
     const start = getPortPos(fromPort);
     const end = getPortPos(toPort);
@@ -3966,7 +3976,7 @@ document.addEventListener('mousedown', (e) => {
       fromId: nodeEl.id,
       fromIsOutput: sourcePort.classList.contains('flow-port-out'),
       start: getPortPos(sourcePort),
-      end: { x: e.clientX - wrapRect.left, y: e.clientY - wrapRect.top }
+      end: screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top)
     };
   }
 });
@@ -3974,10 +3984,7 @@ document.addEventListener('mousedown', (e) => {
 document.addEventListener('mousemove', (e) => {
   if (activeWire) {
     const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
-    activeWire.end = {
-      x: e.clientX - wrapRect.left,
-      y: e.clientY - wrapRect.top
-    };
+    activeWire.end = screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top);
     updateWires();
   }
 });

@@ -1,0 +1,4 @@
+fn main() -> trit {
+    let c: trit = conflict();
+    return c;
+}

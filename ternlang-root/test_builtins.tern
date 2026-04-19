@@ -1,0 +1,4 @@
+fn main() -> trit {
+    let a: trit = truth();
+    return a;
+}
