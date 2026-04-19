@@ -3084,11 +3084,19 @@ const NodePanelController = {
       <div class="prop-group" style="border-left: 2px solid var(--amber); padding-left: 12px;">
         <label class="prop-label">🔑 Provider & Connection</label>
         <select class="prop-input" style="width:100%; margin-top:4px;" onchange="updateNodeProp('provider', this.value)">
-          <option value="openai" ${provider==='openai'?'selected':''}>OpenAI</option>
-          <option value="anthropic" ${provider==='anthropic'?'selected':''}>Anthropic</option>
-          <option value="local" ${provider==='local'?'selected':''}>Local HTTP Endpoint</option>
+          <option value="openai" ${provider==='openai'?'selected':''}>OpenAI (GPT-4o/o1)</option>
+          <option value="anthropic" ${provider==='anthropic'?'selected':''}>Anthropic (Claude 3.5)</option>
+          <option value="google" ${provider==='google'?'selected':''}>Google (Gemini 1.5)</option>
+          <option value="ollama" ${provider==='ollama'?'selected':''}>Ollama (Local Llama 3)</option>
+          <option value="groq" ${provider==='groq'?'selected':''}>Groq (Llama 3 / Mixtral)</option>
+          <option value="custom" ${provider==='custom'?'selected':''}>Custom (OpenAI-Compatible)</option>
         </select>
-        <input type="password" class="prop-input" style="width:100%; margin-top:6px; font-size:10px;" value="${apiKey}" placeholder="API Key (masked)" oninput="updateNodeProp('api_key', this.value)">
+        <input type="password" class="prop-input" style="width:100%; margin-top:6px; font-size:10px;" value="${apiKey}" placeholder="API Key / Token (masked)" oninput="updateNodeProp('api_key', this.value)">
+        ${provider === 'custom' || provider === 'ollama' ? `
+          <input type="text" class="prop-input" style="width:100%; margin-top:6px; font-size:10px;" 
+                 value="${node.props.base_url || ''}" placeholder="Base URL (e.g. http://localhost:11434)" 
+                 oninput="updateNodeProp('base_url', this.value)">
+        ` : ''}
       </div>
 
       <!-- Section B: Prompting -->
@@ -3944,6 +3952,8 @@ async function executeLLMNode(node, inSignal) {
           system,
           prompt,
           provider: node.props.provider,
+          api_key: node.props.api_key,
+          base_url: node.props.base_url,
           temperature: node.props.temperature,
           max_tokens: node.props.max_trits
         }
