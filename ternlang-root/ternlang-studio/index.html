@@ -2781,6 +2781,8 @@ const EdgePanelController = {
     `;
   }
 };
+
+function updatePropertyPanel() {
   const body = document.getElementById("prop-body");
   if (!selectedNodeId) {
     body.innerHTML = `
@@ -2794,7 +2796,7 @@ const EdgePanelController = {
   const node = flowNodes.find(n => n.id === selectedNodeId);
   if (!node) return;
   const inWires  = flowWires.filter(w => w.toId   === selectedNodeId);
-  const outWires = flowWires.filter(w => w.fromId  === selectedNodeId);
+  const outWires = flowWires.filter(w => w.fromId === selectedNodeId);
   const schemaWarning = inWires.some(w => {
     const src = flowNodes.find(n => n.id === w.fromId);
     return src && src.props.output_schema && node.props.input_schema && src.props.output_schema !== node.props.input_schema;
