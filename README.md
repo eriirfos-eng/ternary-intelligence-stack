@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="200">
+  <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
 </div>
 
 # Ternary Intelligence Stack (TIS)
