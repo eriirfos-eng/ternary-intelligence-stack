@@ -228,7 +228,7 @@
       background: var(--bg1); border: 1px solid var(--border2);
       border-radius: 10px; padding: 0;
       cursor: grab; user-select: none; box-shadow: var(--shadow);
-      z-index: 10; overflow: hidden;
+      z-index: 10;
     }
     .flow-node:active { cursor: grabbing; }
     .flow-node.selected { border-color: var(--blue); border-width: 2px; }
@@ -236,6 +236,7 @@
       background: rgba(255,255,255,0.03); padding: 8px 12px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
+      border-top-left-radius: 9px; border-top-right-radius: 9px;
     }
     .fn-body { padding: 12px; }
     .flow-port {
@@ -243,6 +244,12 @@
       background: var(--bg2); position: absolute;
       border: 2px solid var(--bg1); cursor: crosshair;
       transition: background 0.2s;
+      z-index: 20;
+    }
+    .flow-port::after {
+      content: ""; position: absolute;
+      top: -8px; left: -8px; right: -8px; bottom: -8px;
+      border-radius: 50%;
     }
     .flow-port:hover { background: var(--cyan); transform: scale(1.4); }
     .flow-port-label {
@@ -2235,7 +2242,11 @@ function renderFlowLibItems(paths) {
     div.className = "lib-item";
     div.dataset.name = name.toLowerCase();
     div.innerHTML = `<i data-lucide="bot"></i> <span>${name}</span>`;
-    div.onclick = () => { const id = "node_" + Date.now(); createFlowNode(name, path, 120 + Math.random()*200, 80 + Math.random()*200, 'agent', id); };
+    div.onclick = () => {
+      const id = "node_" + Date.now();
+      const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
+      createFlowNode(name, path, pos.x, pos.y, 'agent', id);
+    };
     lib.appendChild(div);
   });
   lucide.createIcons();
@@ -2458,7 +2469,318 @@ function deleteNode(id) {
   updateWires();
 }
 
-function updatePropertyPanel() {
+const ENABLE_NEW_PROPERTIES_UI = false;
+
+const NodePanelController = {
+  render(node, bodyEl, inWires, outWires, schemaWarning) {
+    if (!ENABLE_NEW_PROPERTIES_UI) {
+      this.renderLegacy(node, bodyEl, inWires, outWires, schemaWarning);
+    } else {
+      this.renderSemantic(node, bodyEl, inWires, outWires, schemaWarning);
+    }
+  },
+
+  renderLegacy(node, bodyEl, inWires, outWires, schemaWarning) {
+    const temp = node.props.temperature ?? 0.7;
+    const maxTrits = node.props.max_trits ?? 512;
+    const routing = node.props.routing ?? "affirm→next";
+    const code = (node.props.code || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const inSchema  = (node.props.input_schema  || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const outSchema = (node.props.output_schema || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+    bodyEl.innerHTML = `
+      <div class="prop-group">
+        <label class="prop-label">Node Name</label>
+        <input type="text" class="prop-input" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+      </div>
+      <div class="prop-group">
+        <label class="prop-label">System Instructions</label>
+        <textarea class="prop-input" style="height:70px; resize:vertical;" oninput="updateNodeProp('system_prompt', this.value)">${node.props.system_prompt || ""}</textarea>
+      </div>
+      <div class="prop-group">
+        <label class="prop-label" style="display:flex;justify-content:space-between;">
+          <span>Trit Sensitivity (Temperature)</span>
+          <span id="tempVal" style="color:var(--cyan)">${temp}</span>
+        </label>
+        <input type="range" min="0" max="2" step="0.05" value="${temp}" style="width:100%"
+          oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(2);updateNodeProp('temperature', parseFloat(this.value))">
+      </div>
+      <div class="prop-group">
+        <label class="prop-label" style="display:flex;justify-content:space-between;">
+          <span>Max Output Trits</span>
+          <span style="color:var(--amber)">${maxTrits}</span>
+        </label>
+        <input type="number" class="prop-input" min="1" max="4096" value="${maxTrits}" style="width:100%"
+          oninput="updateNodeProp('max_trits', parseInt(this.value))">
+      </div>
+      <div class="prop-group">
+        <label class="prop-label">Output Routing Rule</label>
+        <select class="prop-input" style="width:100%" onchange="updateNodeProp('routing', this.value)">
+          <option value="affirm→next" ${routing==="affirm→next"?"selected":""}>affirm → pass to next</option>
+          <option value="tend→next" ${routing==="tend→next"?"selected":""}>tend → pass to next</option>
+          <option value="all→next" ${routing==="all→next"?"selected":""}>all trits → pass to next</option>
+          <option value="affirm→branch" ${routing==="affirm→branch"?"selected":""}>affirm → branch A, else B</option>
+          <option value="reject→stop" ${routing==="reject→stop"?"selected":""}>reject → halt flow</option>
+        </select>
+      </div>
+      <div class="prop-group">
+        <label class="prop-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>I/O Contract</span>
+          <span style="font-size:9px;color:var(--muted2);font-weight:400;text-transform:none;">${inWires.length} in · ${outWires.length} out</span>
+        </label>
+        ${schemaWarning}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div>
+            <div style="font-size:9px;color:var(--green);font-weight:600;margin-bottom:3px;">▶ INPUT</div>
+            <input class="prop-input" style="width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;" value="${inSchema}"
+              placeholder="signal: trit" oninput="updateNodeProp('input_schema',this.value);updateNodeSchemaDisplay('${node.id}')">
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--cyan);font-weight:600;margin-bottom:3px;">◀ OUTPUT</div>
+            <input class="prop-input" style="width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;" value="${outSchema}"
+              placeholder="result: trit" oninput="updateNodeProp('output_schema',this.value);updateNodeSchemaDisplay('${node.id}')">
+          </div>
+        </div>
+      </div>
+      <div class="prop-group">
+        <label class="prop-label">Agent Code (.tern)</label>
+        <textarea class="prop-input" style="height:100px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:10px;"
+          oninput="updateNodeProp('code', this.value)">${code}</textarea>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="openAgentInEditor()">Open in Editor</button>
+        <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red);" onclick="deleteNode('${node.id}')">Remove</button>
+      </div>
+    `;
+  },
+
+  renderSemantic(node, bodyEl, inWires, outWires, schemaWarning) {
+    const intent = node.props.system_prompt || node.props.intent || "";
+    // Map temperature to sensitivity
+    const temp = node.props.temperature ?? 0.7;
+    const sensitivity = temp < 0.3 ? "Conservative" : (temp > 1.2 ? "Aggressive" : "Balanced");
+    const outMode = node.props.max_trits > 1 ? (node.props.max_trits > 1024 ? "stream" : "multi") : "single";
+    const inSchema  = (node.props.input_schema  || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const outSchema = (node.props.output_schema || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+    bodyEl.innerHTML = `
+      <div class="prop-group">
+        <label class="prop-label">Node Name</label>
+        <input type="text" class="prop-input" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+      </div>
+
+      <div class="prop-group" style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+        <label class="prop-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:var(--text); font-size:11px;">What does this node do?</span>
+          <button class="btn btn-ghost" style="padding:0;font-size:10px;height:14px;color:var(--blue);" title="Explain this node" onclick="alert('This node decides its output based on its intent and input signal.')">Explain</button>
+        </label>
+        <textarea class="prop-input" style="height:60px; resize:vertical; margin-top:8px; background:var(--bg1);" placeholder="e.g. Evaluates risk based on prior transactions..." oninput="updateNodeProp('system_prompt', this.value)">${intent}</textarea>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Decision Mode</label>
+        <div style="display:flex; gap:12px;">
+          <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="radio" name="dmode" value="deterministic" ${temp === 0 ? "checked" : ""} onchange="updateNodeProp('temperature', 0.0)"> Deterministic</label>
+          <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="radio" name="dmode" value="exploratory" ${temp !== 0 ? "checked" : ""} onchange="updateNodeProp('temperature', 0.7)"> Exploratory</label>
+        </div>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Decision Sensitivity</label>
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted2); padding:0 4px; margin-bottom:4px;">
+          <span>Conservative</span> <span>Balanced</span> <span>Aggressive</span>
+        </div>
+        <input type="range" min="0" max="2" step="1" value="${sensitivity === 'Conservative' ? 0 : (sensitivity === 'Aggressive' ? 2 : 1)}" style="width:100%"
+          oninput="const map = {0: 0.1, 1: 0.7, 2: 1.5}; updateNodeProp('temperature', map[this.value])">
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Output Mode</label>
+        <select class="prop-input" style="width:100%" onchange="const map = {single: 1, multi: 512, stream: 4096}; updateNodeProp('max_trits', map[this.value])">
+          <option value="single" ${outMode === 'single' ? "selected" : ""}>Single Decision</option>
+          <option value="multi" ${outMode === 'multi' ? "selected" : ""}>Multi-Signal</option>
+          <option value="stream" ${outMode === 'stream' ? "selected" : ""}>Stream (experimental)</option>
+        </select>
+      </div>
+
+      <div class="prop-group" style="margin-top:10px;">
+        <label class="prop-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>I/O Contract</span>
+          <span style="font-size:9px;color:var(--muted2);font-weight:400;text-transform:none;">${inWires.length} in · ${outWires.length} out</span>
+        </label>
+        ${schemaWarning}
+        <div style="background:var(--bg2); padding:10px; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:10px;">
+          <div style="color:var(--muted); margin-bottom:4px;">Inputs:</div>
+          <input class="prop-input" style="width:100%; border:none; border-bottom:1px solid var(--border); border-radius:0; padding:2px 4px; margin-bottom:8px; background:transparent;" value="${inSchema}" placeholder="- Signal (ternary)" oninput="updateNodeProp('input_schema',this.value);updateNodeSchemaDisplay('${node.id}')">
+          <div style="color:var(--muted); margin-bottom:4px;">Outputs:</div>
+          <input class="prop-input" style="width:100%; border:none; border-bottom:1px solid var(--border); border-radius:0; padding:2px 4px; background:transparent;" value="${outSchema}" placeholder="- Decision Signal (+conf)" oninput="updateNodeProp('output_schema',this.value);updateNodeSchemaDisplay('${node.id}')">
+        </div>
+      </div>
+
+      <!-- Tabs system for Logic/Trace/Code -->
+      <div style="margin-top:16px;">
+        <div style="display:flex; border-bottom:1px solid var(--border); gap:12px; margin-bottom:12px;">
+          <button style="background:none; border:none; color:var(--cyan); font-size:11px; font-weight:600; padding-bottom:4px; border-bottom:2px solid var(--cyan);">Logic / Code</button>
+          <button style="background:none; border:none; color:var(--muted); font-size:11px; font-weight:600; padding-bottom:4px; border-bottom:2px solid transparent; cursor:not-allowed;" title="Requires trace execution">Trace</button>
+        </div>
+        <textarea class="prop-input" style="width:100%; height:120px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:10px; background:var(--bg1);"
+          oninput="updateNodeProp('code', this.value)">${node.props.code || ""}</textarea>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-top:12px;">
+        <button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="openAgentInEditor()">Open in Editor</button>
+        <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red);" onclick="deleteNode('${node.id}')">Remove</button>
+      </div>
+    `;
+
+    // Real-time update inline summary
+    const titleEl = document.querySelector(`#${node.id} .fn-title`);
+    if (titleEl && !titleEl.dataset.semantic) {
+      titleEl.dataset.semantic = "true";
+      const desc = document.createElement("div");
+      desc.className = "semantic-desc";
+      desc.style = "font-size:9px; color:var(--muted2); font-weight:400; max-height:24px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;";
+      titleEl.parentNode.insertBefore(desc, titleEl.nextSibling);
+    }
+    const descEl = document.querySelector(`#${node.id} .semantic-desc`);
+    if (descEl) descEl.textContent = intent ? `→ ${intent}` : "→ (No intent defined)";
+  }
+};
+
+const EdgePanelController = {
+  render(wire, bodyEl, fromNode, toNode) {
+    if (!ENABLE_NEW_PROPERTIES_UI) {
+      this.renderLegacy(wire, bodyEl, fromNode, toNode);
+    } else {
+      this.renderSemantic(wire, bodyEl, fromNode, toNode);
+    }
+  },
+
+  renderLegacy(wire, bodyEl, fromNode, toNode) {
+    const cond      = wire.condition  || "all";
+    const transform = wire.transform  || "pass";
+    const label     = wire.label      || "";
+
+    bodyEl.innerHTML = `
+      <div style="font-size:10px;color:var(--muted2);margin-bottom:4px;">
+        ${fromNode ? fromNode.name : "?"} → ${toNode ? toNode.name : "?"}
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Pass condition</label>
+        <select class="prop-input" style="width:100%" onchange="updateWireProp('condition', this.value)">
+          <option value="all"    ${cond==="all"    ?"selected":""}>All trits (pass everything)</option>
+          <option value="affirm" ${cond==="affirm" ?"selected":""}>affirm only (+1)</option>
+          <option value="tend"   ${cond==="tend"   ?"selected":""}>tend only (0)</option>
+          <option value="reject" ${cond==="reject" ?"selected":""}>reject only (-1)</option>
+          <option value="!reject"${cond==="!reject"?"selected":""}>affirm or tend (not reject)</option>
+          <option value="!tend"  ${cond==="!tend"  ?"selected":""}>affirm or reject (decisive)</option>
+        </select>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">On condition fail</label>
+        <select class="prop-input" style="width:100%" onchange="updateWireProp('transform', this.value)">
+          <option value="pass"  ${transform==="pass"  ?"selected":""}>Pass anyway (ignore condition)</option>
+          <option value="block" ${transform==="block" ?"selected":""}>Block — drop signal</option>
+          <option value="flip"  ${transform==="flip"  ?"selected":""}>Flip to reject</option>
+          <option value="hold"  ${transform==="hold"  ?"selected":""}>Force to tend (hold)</option>
+        </select>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Edge label</label>
+        <input type="text" class="prop-input" value="${label}" placeholder="e.g. conf > 0.7"
+          oninput="updateWireProp('label', this.value)">
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Priority weight</label>
+        <input type="range" min="1" max="10" step="1" value="${wire.priority || 5}" style="width:100%"
+          oninput="updateWireProp('priority', parseInt(this.value)); this.nextElementSibling.textContent=this.value">
+        <span style="font-size:10px;color:var(--cyan)">${wire.priority || 5}</span>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button class="btn btn-ghost" style="width:100%;font-size:11px;color:var(--red)" onclick="deleteWire('${wire.id}')">Remove Edge</button>
+      </div>
+    `;
+  },
+
+  renderSemantic(wire, bodyEl, fromNode, toNode) {
+    const cond      = wire.condition  || "all";
+    const transform = wire.transform  || "pass";
+    const priority  = wire.priority   || 5;
+    const prioLabel = priority < 4 ? "Low" : (priority > 7 ? "High" : "Normal");
+    
+    // Auto edge labeling logic
+    let autoLabel = "All signals";
+    if (cond === "affirm") autoLabel = "+1 only";
+    else if (cond === "tend") autoLabel = "0 only";
+    else if (cond === "reject") autoLabel = "-1 only";
+    else if (cond === "!reject") autoLabel = "+1 or 0";
+    else if (cond === "!tend") autoLabel = "decisive only";
+    if (transform === "hold") autoLabel = "uncertainty route";
+
+    bodyEl.innerHTML = `
+      <div style="font-size:10px;color:var(--muted2);margin-bottom:12px; font-weight:600;">
+        ${fromNode ? fromNode.name : "?"} <span style="color:var(--cyan)">→</span> ${toNode ? toNode.name : "?"}
+      </div>
+
+      <div class="prop-group" style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+        <label class="prop-label" style="color:var(--text); margin-bottom:8px;">When should this connection activate?</label>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button class="btn ${cond==='affirm' ? 'btn-primary' : 'btn-ghost'}" style="font-size:10px; padding:4px 8px; border:1px solid ${cond==='affirm'?'var(--blue)':'var(--border)'};" onclick="updateWireProp('condition','affirm');updateWireProp('label','+1 only');">value == +1</button>
+          <button class="btn ${cond==='tend' ? 'btn-primary' : 'btn-ghost'}" style="font-size:10px; padding:4px 8px; border:1px solid ${cond==='tend'?'var(--blue)':'var(--border)'};" onclick="updateWireProp('condition','tend');updateWireProp('label','0 only');">value == 0</button>
+          <button class="btn ${cond==='reject' ? 'btn-primary' : 'btn-ghost'}" style="font-size:10px; padding:4px 8px; border:1px solid ${cond==='reject'?'var(--blue)':'var(--border)'};" onclick="updateWireProp('condition','reject');updateWireProp('label','-1 only');">value == -1</button>
+          <button class="btn ${cond==='!reject' ? 'btn-primary' : 'btn-ghost'}" style="font-size:10px; padding:4px 8px; border:1px solid ${cond==='!reject'?'var(--blue)':'var(--border)'};" onclick="updateWireProp('condition','!reject');updateWireProp('label','+1 or 0');">value != -1</button>
+          <button class="btn ${cond==='all' ? 'btn-primary' : 'btn-ghost'}" style="font-size:10px; padding:4px 8px; border:1px solid ${cond==='all'?'var(--blue)':'var(--border)'};" onclick="updateWireProp('condition','all');updateWireProp('label','All signals');">All</button>
+        </div>
+        <div style="margin-top:8px; display:flex; align-items:center; gap:6px;">
+          <span style="font-size:10px; font-weight:700; color:var(--cyan);">AND</span>
+          <div style="font-size:10px; padding:4px 8px; background:var(--bg1); border:1px solid var(--border); border-radius:4px; color:var(--muted);">[ confidence > 0.0 ]</div>
+        </div>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">If condition fails:</label>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:11px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="wfail" value="block" ${transform==='block'||transform==='pass'?'checked':''} onchange="updateWireProp('transform','block')"> Drop signal</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="wfail" value="flip" ${transform==='flip'?'checked':''} onchange="updateWireProp('transform','flip')"> Route to fallback (Reject)</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="wfail" value="hold" ${transform==='hold'?'checked':''} onchange="updateWireProp('transform','hold');updateWireProp('label','uncertainty route');"> Convert to uncertainty (0)</label>
+        </div>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Transform signal:</label>
+        <select class="prop-input" style="width:100%" onchange="/* Future hook */">
+          <option value="none">none</option>
+          <option value="adjust">adjust confidence</option>
+          <option value="map">map value</option>
+        </select>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Priority</label>
+        <div style="display:flex; gap:0; border-radius:4px; overflow:hidden; border:1px solid var(--border2);">
+          <button class="btn ${priority<4 ? 'btn-primary' : 'btn-ghost'}" style="flex:1; border-radius:0; font-size:10px;" onclick="updateWireProp('priority', 2)">Low</button>
+          <button class="btn ${(priority>=4 && priority<=7) ? 'btn-primary' : 'btn-ghost'}" style="flex:1; border-radius:0; font-size:10px;" onclick="updateWireProp('priority', 5)">Normal</button>
+          <button class="btn ${priority>7 ? 'btn-primary' : 'btn-ghost'}" style="flex:1; border-radius:0; font-size:10px;" onclick="updateWireProp('priority', 10)">High</button>
+        </div>
+      </div>
+
+      <div class="prop-group">
+        <label class="prop-label">Edge label (Auto-generated)</label>
+        <input type="text" class="prop-input" value="${wire.label || autoLabel}" placeholder="Auto"
+          oninput="updateWireProp('label', this.value)">
+      </div>
+
+      <div style="margin-top:16px;">
+        <button class="btn btn-ghost" style="width:100%;font-size:11px;color:var(--red); border:1px solid rgba(239, 68, 68, 0.2);" onclick="deleteWire('${wire.id}')">Remove Edge</button>
+      </div>
+    `;
+  }
+};
   const body = document.getElementById("prop-body");
   if (!selectedNodeId) {
     body.innerHTML = `
@@ -2470,13 +2792,7 @@ function updatePropertyPanel() {
   }
 
   const node = flowNodes.find(n => n.id === selectedNodeId);
-  const temp = node.props.temperature ?? 0.7;
-  const maxTrits = node.props.max_trits ?? 512;
-  const routing = node.props.routing ?? "affirm→next";
-  const code = (node.props.code || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const inSchema  = (node.props.input_schema  || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const outSchema = (node.props.output_schema || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  // Validate wired edges for schema compatibility
+  if (!node) return;
   const inWires  = flowWires.filter(w => w.toId   === selectedNodeId);
   const outWires = flowWires.filter(w => w.fromId  === selectedNodeId);
   const schemaWarning = inWires.some(w => {
@@ -2484,70 +2800,7 @@ function updatePropertyPanel() {
     return src && src.props.output_schema && node.props.input_schema && src.props.output_schema !== node.props.input_schema;
   }) ? `<div style="font-size:10px;color:var(--amber);padding:6px 0;">⚠ Schema mismatch on incoming wire</div>` : "";
 
-  body.innerHTML = `
-    <div class="prop-group">
-      <label class="prop-label">Node Name</label>
-      <input type="text" class="prop-input" value="${node.name}" oninput="updateNodeProp('name', this.value)">
-    </div>
-    <div class="prop-group">
-      <label class="prop-label">System Instructions</label>
-      <textarea class="prop-input" style="height:70px; resize:vertical;" oninput="updateNodeProp('system_prompt', this.value)">${node.props.system_prompt || ""}</textarea>
-    </div>
-    <div class="prop-group">
-      <label class="prop-label" style="display:flex;justify-content:space-between;">
-        <span>Trit Sensitivity (Temperature)</span>
-        <span id="tempVal" style="color:var(--cyan)">${temp}</span>
-      </label>
-      <input type="range" min="0" max="2" step="0.05" value="${temp}" style="width:100%"
-        oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(2);updateNodeProp('temperature', parseFloat(this.value))">
-    </div>
-    <div class="prop-group">
-      <label class="prop-label" style="display:flex;justify-content:space-between;">
-        <span>Max Output Trits</span>
-        <span style="color:var(--amber)">${maxTrits}</span>
-      </label>
-      <input type="number" class="prop-input" min="1" max="4096" value="${maxTrits}" style="width:100%"
-        oninput="updateNodeProp('max_trits', parseInt(this.value))">
-    </div>
-    <div class="prop-group">
-      <label class="prop-label">Output Routing Rule</label>
-      <select class="prop-input" style="width:100%" onchange="updateNodeProp('routing', this.value)">
-        <option value="affirm→next" ${routing==="affirm→next"?"selected":""}>affirm → pass to next</option>
-        <option value="tend→next" ${routing==="tend→next"?"selected":""}>tend → pass to next</option>
-        <option value="all→next" ${routing==="all→next"?"selected":""}>all trits → pass to next</option>
-        <option value="affirm→branch" ${routing==="affirm→branch"?"selected":""}>affirm → branch A, else B</option>
-        <option value="reject→stop" ${routing==="reject→stop"?"selected":""}>reject → halt flow</option>
-      </select>
-    </div>
-    <div class="prop-group">
-      <label class="prop-label" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>I/O Contract</span>
-        <span style="font-size:9px;color:var(--muted2);font-weight:400;text-transform:none;">${inWires.length} in · ${outWires.length} out</span>
-      </label>
-      ${schemaWarning}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-        <div>
-          <div style="font-size:9px;color:var(--green);font-weight:600;margin-bottom:3px;">▶ INPUT</div>
-          <input class="prop-input" style="width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;" value="${inSchema}"
-            placeholder="signal: trit" oninput="updateNodeProp('input_schema',this.value);updateNodeSchemaDisplay('${selectedNodeId}')">
-        </div>
-        <div>
-          <div style="font-size:9px;color:var(--cyan);font-weight:600;margin-bottom:3px;">◀ OUTPUT</div>
-          <input class="prop-input" style="width:100%;font-size:10px;font-family:'JetBrains Mono',monospace;" value="${outSchema}"
-            placeholder="result: trit" oninput="updateNodeProp('output_schema',this.value);updateNodeSchemaDisplay('${selectedNodeId}')">
-        </div>
-      </div>
-    </div>
-    <div class="prop-group">
-      <label class="prop-label">Agent Code (.tern)</label>
-      <textarea class="prop-input" style="height:100px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:10px;"
-        oninput="updateNodeProp('code', this.value)">${code}</textarea>
-    </div>
-    <div style="display:flex;gap:6px;margin-top:4px;">
-      <button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="openAgentInEditor()">Open in Editor</button>
-      <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red);" onclick="deleteNode('${selectedNodeId}')">Remove</button>
-    </div>
-  `;
+  NodePanelController.render(node, body, inWires, outWires, schemaWarning);
 }
 
 function openAgentInEditor() {
@@ -2769,56 +3022,10 @@ function updateEdgePanel() {
   if (!wire) { updatePropertyPanel(); return; }
 
   if (header) header.textContent = "Edge Properties";
-  const cond      = wire.condition  || "all";
-  const transform = wire.transform  || "pass";
-  const label     = wire.label      || "";
   const fromNode  = flowNodes.find(n => n.id === wire.fromId);
   const toNode    = flowNodes.find(n => n.id === wire.toId);
 
-  body.innerHTML = `
-    <div style="font-size:10px;color:var(--muted2);margin-bottom:4px;">
-      ${fromNode ? fromNode.name : "?"} → ${toNode ? toNode.name : "?"}
-    </div>
-
-    <div class="prop-group">
-      <label class="prop-label">Pass condition</label>
-      <select class="prop-input" style="width:100%" onchange="updateWireProp('condition', this.value)">
-        <option value="all"    ${cond==="all"    ?"selected":""}>All trits (pass everything)</option>
-        <option value="affirm" ${cond==="affirm" ?"selected":""}>affirm only (+1)</option>
-        <option value="tend"   ${cond==="tend"   ?"selected":""}>tend only (0)</option>
-        <option value="reject" ${cond==="reject" ?"selected":""}>reject only (-1)</option>
-        <option value="!reject"${cond==="!reject"?"selected":""}>affirm or tend (not reject)</option>
-        <option value="!tend"  ${cond==="!tend"  ?"selected":""}>affirm or reject (decisive)</option>
-      </select>
-    </div>
-
-    <div class="prop-group">
-      <label class="prop-label">On condition fail</label>
-      <select class="prop-input" style="width:100%" onchange="updateWireProp('transform', this.value)">
-        <option value="pass"  ${transform==="pass"  ?"selected":""}>Pass anyway (ignore condition)</option>
-        <option value="block" ${transform==="block" ?"selected":""}>Block — drop signal</option>
-        <option value="flip"  ${transform==="flip"  ?"selected":""}>Flip to reject</option>
-        <option value="hold"  ${transform==="hold"  ?"selected":""}>Force to tend (hold)</option>
-      </select>
-    </div>
-
-    <div class="prop-group">
-      <label class="prop-label">Edge label</label>
-      <input type="text" class="prop-input" value="${label}" placeholder="e.g. conf > 0.7"
-        oninput="updateWireProp('label', this.value)">
-    </div>
-
-    <div class="prop-group">
-      <label class="prop-label">Priority weight</label>
-      <input type="range" min="1" max="10" step="1" value="${wire.priority || 5}" style="width:100%"
-        oninput="updateWireProp('priority', parseInt(this.value)); this.nextElementSibling.textContent=this.value">
-      <span style="font-size:10px;color:var(--cyan)">${wire.priority || 5}</span>
-    </div>
-
-    <div style="display:flex;gap:6px;margin-top:4px;">
-      <button class="btn btn-ghost" style="flex:1;font-size:11px;color:var(--red)" onclick="deleteWire('${selectedWireId}')">Remove Edge</button>
-    </div>
-  `;
+  EdgePanelController.render(wire, body, fromNode, toNode);
 }
 
 function updateWireProp(key, val) {
@@ -3196,6 +3403,10 @@ function drawWire(start, end, id, signal, wire) {
   if (id === selectedWireId) cls += " selected-wire";
   path.setAttribute("class", cls);
   path.setAttribute("id", id);
+
+  if (id === 'active-wire') {
+    path.style.pointerEvents = 'none';
+  }
 
   if (id !== 'active-wire' && wire) {
     path.style.pointerEvents = 'stroke';
