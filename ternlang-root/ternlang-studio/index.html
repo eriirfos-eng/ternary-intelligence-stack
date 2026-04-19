@@ -333,6 +333,11 @@
     .flow-node.external .fn-head { background: rgba(245,158,11,0.08); }
     .flow-node.gate { border-color: var(--cyan); }
     .flow-node.gate .fn-head { background: rgba(56,189,248,0.08); }
+    .flow-node.macro { border-color: var(--blue); border-style: dashed; background: rgba(1,118,211,0.05); }
+    .flow-node.macro::after {
+      content: "MACRO"; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+      font-size: 8px; font-weight: 800; color: var(--blue); letter-spacing: 1px;
+    }
     .flow-node .fn-status { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); margin-left: auto; flex-shrink: 0; transition: background 0.2s; }
     .flow-node .fn-status.ok   { background: var(--green); box-shadow: 0 0 4px var(--green); }
     .flow-node .fn-status.err  { background: var(--red);   box-shadow: 0 0 4px var(--red); }
@@ -1504,6 +1509,10 @@
         <!-- Run + Export -->
         <button class="btn btn-ghost" id="simBtn" onclick="toggleSimulation()" title="Run simulation" style="color:var(--green); gap:5px;">
           <i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Simulate</span>
+        </button>
+        
+        <button class="btn btn-primary" id="groupBtn" onclick="groupSelectedNodes()" title="Group into Macro" style="display:none; gap:5px; background:var(--blue); border:none; padding:4px 12px; height:32px;">
+          <i data-lucide="box" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">Group</span>
         </button>        <button class="btn btn-ghost" id="validateBtn" onclick="const r=validateGraph();showValidationPanel(r.errors,r.warnings);updateValidateBadge(r);" title="Validate graph" style="color:var(--muted); gap:5px; position:relative;">
           <i data-lucide="shield-check" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Validate</span>
           <span id="validateBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:800;align-items:center;justify-content:center;"></span>
@@ -2379,6 +2388,105 @@ function traceCausalPath(targetNodeId) {
   document.getElementById("flow-canvas").addEventListener("mousedown", clearTrace);
 }
 
+// ─── Graph Macros (Collapsing Logic) ─────────────────────────────────────────
+function groupSelectedNodes() {
+  if (selectedIds.size < 2) return;
+
+  const macroId = "macro_" + Date.now();
+  const nodesToGroup = flowNodes.filter(n => selectedIds.has(n.id));
+  const otherNodes = flowNodes.filter(n => !selectedIds.has(n.id));
+
+  // Calculate bounding box for Macro position
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  nodesToGroup.forEach(n => {
+    const el = document.getElementById(n.id);
+    const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+    minX = Math.min(minX, x); minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + 180); maxY = Math.max(maxY, y + 100);
+  });
+
+  const midX = (minX + maxX) / 2 - 90;
+  const midY = (minY + maxY) / 2 - 50;
+
+  // Identify internal and external wires
+  const internalWires = flowWires.filter(w => selectedIds.has(w.fromId) && selectedIds.has(w.toId));
+  const externalIn    = flowWires.filter(w => !selectedIds.has(w.fromId) && selectedIds.has(w.toId));
+  const externalOut   = flowWires.filter(w => selectedIds.has(w.fromId) && !selectedIds.has(w.toId));
+  const unrelatedWires = flowWires.filter(w => !selectedIds.has(w.fromId) && !selectedIds.has(w.toId));
+
+  // Create Macro Node
+  const macroName = prompt("Macro Name:", "Logic Module") || "Logic Module";
+  const macroNode = {
+    id: macroId,
+    name: macroName,
+    path: "__macro__",
+    type: "macro",
+    props: {
+      nodes: nodesToGroup,
+      wires: internalWires,
+      input_schema: "macro_in: trit",
+      output_schema: "macro_out: trit",
+      code: `// Encapsulated logic: ${nodesToGroup.length} nodes\n// Internal routing preserved.`
+    }
+  };
+
+  // Re-map external wires to point to the new Macro node
+  const newWires = [...unrelatedWires];
+  externalIn.forEach(w => newWires.push({ ...w, toId: macroId, id: "wire_ext_in_" + Date.now() + Math.random() }));
+  externalOut.forEach(w => newWires.push({ ...w, fromId: macroId, id: "wire_ext_out_" + Date.now() + Math.random() }));
+
+  // Update State
+  flowNodes = [...otherNodes, macroNode];
+  flowWires = newWires;
+
+  // Sync DOM
+  const canvas = document.getElementById("flow-canvas");
+  nodesToGroup.forEach(n => document.getElementById(n.id)?.remove());
+  internalWires.forEach(w => {
+    document.getElementById(w.id)?.remove();
+    document.getElementById("hit-"+w.id)?.remove();
+    document.getElementById("badge-"+w.id)?.remove();
+  });
+  
+  createFlowNode(macroNode.name, macroNode.path, midX, midY, "macro", macroId);
+  const instantiated = flowNodes.find(n => n.id === macroId);
+  if (instantiated) instantiated.props = macroNode.props;
+
+  clearSelection();
+  updateWires();
+  saveCanvasState();
+  showToast(`Grouped ${nodesToGroup.length} nodes into ${macroName}`, "ok");
+}
+
+function explodeMacro(macroId) {
+  const macroNode = flowNodes.find(n => n.id === macroId);
+  if (!macroNode || macroNode.type !== 'macro') return;
+
+  const internal = macroNode.props;
+  if (!internal || !internal.nodes) return;
+
+  // 1. Remove Macro
+  flowNodes = flowNodes.filter(n => n.id !== macroId);
+  document.getElementById(macroId)?.remove();
+
+  // 2. Clear external-to-macro wires
+  flowWires = flowWires.filter(w => w.fromId !== macroId && w.toId !== macroId);
+
+  // 3. Restore nodes
+  internal.nodes.forEach(n => {
+    createFlowNode(n.name, n.path, n.x, n.y, n.type, n.id);
+    const restored = flowNodes.find(fn => fn.id === n.id);
+    if (restored) restored.props = n.props;
+  });
+
+  // 4. Restore internal wires
+  flowWires = [...flowWires, ...internal.wires];
+
+  updateWires();
+  saveCanvasState();
+  showToast("Macro expanded", "ok");
+}
+
 // ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
 let CT = { scale: 1, x: 0, y: 0 };
 const SCALE_MIN = 0.15, SCALE_MAX = 2.5;
@@ -2841,6 +2949,8 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
     icon = 'zap'; iconColor = 'var(--amber)'; label = 'LLM BRIDGE';
   } else if (type === 'gate') {
     icon = 'git-merge'; iconColor = 'var(--cyan)'; label = 'TRIT GATE';
+  } else if (type === 'macro') {
+    icon = 'box'; iconColor = 'var(--blue)'; label = 'MACRO UNIT';
   } else {
     const info = getAgentIcon(name);
     icon = info.icon;
@@ -2877,6 +2987,10 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
 
   let isDragging = false;
   let startMouseX, startMouseY, startNodeX, startNodeY;
+
+  node.ondblclick = (e) => {
+    if (type === 'macro') { e.stopPropagation(); explodeMacro(id); }
+  };
 
   node.onmousedown = (e) => {
     if (e.target.closest('button') || e.target.classList.contains('flow-port')) return;
@@ -2926,7 +3040,20 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
     if (isDragging) {
       isDragging = false;
       // Sync all selected-multi nodes offsets too
-      if (selectedIds.size > 1) syncMultiDragEnd();
+      if (selectedIds.size > 1) {
+        selectedIds.forEach(sid => {
+          const selNode = flowNodes.find(fn => fn.id === sid);
+          const selEl = document.getElementById(sid);
+          if (selNode && selEl) {
+             selNode.x = parseFloat(selEl.style.left);
+             selNode.y = parseFloat(selEl.style.top);
+          }
+        });
+        syncMultiDragEnd();
+      } else {
+        const fn = flowNodes.find(f => f.id === id);
+        if (fn) { fn.x = parseFloat(node.style.left); fn.y = parseFloat(node.style.top); }
+      }
       saveCanvasState();
     }
     node.style.zIndex = 10;
@@ -2951,7 +3078,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
     defaultProps.template = "Evaluate this signal: {{input}}";
   }
 
-  flowNodes.push({ id, name, path, type, props: defaultProps });
+  flowNodes.push({ id, name, path, type, x, y, props: defaultProps });
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = "none";
   lucide.createIcons();
@@ -2978,6 +3105,10 @@ function selectNode(id, addToSelection = false) {
       if (sel) { sel.classList.remove('selected','selected-multi'); sel.classList.add(sid === id ? 'selected' : 'selected-multi'); }
     });
   }
+  
+  const gbtn = document.getElementById("groupBtn");
+  if (gbtn) gbtn.style.display = selectedIds.size > 1 ? "flex" : "none";
+
   updatePropertyPanel();
 }
 
@@ -2990,6 +3121,10 @@ function clearSelection() {
   updateWireStyles();
   const h = document.getElementById('prop-header-label');
   if (h) h.textContent = 'Node Properties';
+  
+  const gbtn = document.getElementById("groupBtn");
+  if (gbtn) gbtn.style.display = "none";
+
   updatePropertyPanel();
 }
 
