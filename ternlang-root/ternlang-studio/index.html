@@ -1449,10 +1449,9 @@
         <div style="width:1px; height:20px; background:var(--border2);"></div>
 
         <!-- Run + Export -->
-        <button class="btn btn-ghost" onclick="runSimulation()" title="Run simulation" style="color:var(--green); gap:5px;">
+        <button class="btn btn-ghost" id="simBtn" onclick="toggleSimulation()" title="Run simulation" style="color:var(--green); gap:5px;">
           <i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Simulate</span>
-        </button>
-        <button class="btn btn-ghost" id="validateBtn" onclick="const r=validateGraph();showValidationPanel(r.errors,r.warnings);updateValidateBadge(r);" title="Validate graph" style="color:var(--muted); gap:5px; position:relative;">
+        </button>        <button class="btn btn-ghost" id="validateBtn" onclick="const r=validateGraph();showValidationPanel(r.errors,r.warnings);updateValidateBadge(r);" title="Validate graph" style="color:var(--muted); gap:5px; position:relative;">
           <i data-lucide="shield-check" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Validate</span>
           <span id="validateBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:800;align-items:center;justify-content:center;"></span>
         </button>
@@ -2075,6 +2074,25 @@ let flowWires = [];
 let selectedNodeId = null;
 let activeWire = null;
 let simulationAborted = false;
+let simulationRunning = false;
+
+function updateSimUI() {
+  const btn = document.getElementById("simBtn");
+  if (!btn) return;
+  if (simulationRunning) {
+    btn.innerHTML = `<i data-lucide="stop-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">Stop</span>`;
+    btn.style.color = "var(--red)";
+  } else {
+    btn.innerHTML = `<i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Simulate</span>`;
+    btn.style.color = "var(--green)";
+  }
+  lucide.createIcons();
+}
+
+function toggleSimulation() {
+  if (simulationRunning) stopSimulation();
+  else runSimulation();
+}
 
 // ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
 let CT = { scale: 1, x: 0, y: 0 };
@@ -2608,13 +2626,13 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   });
 
   canvas.appendChild(node);
-  const builtinCode = BUILTIN_AGENTS[name] ? BUILTIN_AGENTS[name].code : '';
+  const builtinCode = BUILTIN_AGENTS[name] ? BUILTIN_AGENTS[name].code : (path === "__arch__" ? 'fn main() -> trit {\n    return affirm;\n}' : '');
   const defaultProps = {
     system_prompt: "",
     routing: "affirm→next",
     code: builtinCode,
     input_schema: "signal: trit",
-    output_schema: "result: trit"
+    output_schema: "signal: trit"
   };
   
   if (type === 'external') {
@@ -3541,15 +3559,22 @@ function showValidationPanel(errors, warnings) {
 }
 
 async function runSimulation() {
+  if (simulationRunning) return;
   simulationAborted = false;
+  simulationRunning = true;
+  updateSimUI();
+
   // Validate first
   const { errors, warnings } = validateGraph();
   if (errors.length > 0) {
     showValidationPanel(errors, warnings);
     showToast(`${errors.length} error${errors.length>1?'s':''} — fix before simulating`, "error");
+    simulationRunning = false;
+    updateSimUI();
     return;
   }
-
+  
+  // ... rest of the setup ...
   const ins = document.getElementById("flow-inspector");
   ins.classList.add("active");
   ins.style.display = "flex";
@@ -3557,6 +3582,8 @@ async function runSimulation() {
 
   if (flowNodes.length === 0) {
     logInspector("SYSTEM", "No nodes on canvas — drag agents from the library.");
+    simulationRunning = false;
+    updateSimUI();
     return;
   }
 
@@ -3614,11 +3641,15 @@ async function runSimulation() {
   }
 
   logInspector("SYSTEM", simulationAborted ? "⨯ Aborted" : "✓ Complete");
+  simulationRunning = false;
+  updateSimUI();
 }
 
 function stopSimulation() {
   simulationAborted = true;
   showToast("Simulation stopping...", "warn");
+  simulationRunning = false;
+  updateSimUI();
 }
 
 function setNodeStatus(id, status) {
