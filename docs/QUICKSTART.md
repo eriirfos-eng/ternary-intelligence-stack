@@ -78,6 +78,7 @@ Explore them in `stdlib/`.
 ---
 
 ## Next Steps
+- 🌐 **[Launch Ternlang Studio (TernFlow)](https://ternlang.com/studio)** — Visually orchestrate and deploy ternary architectures.
 - 📚 [Read the Whitepaper](https://ternlang.com/whitepaper.pdf)
 - 🧪 [Browse Examples](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/examples)
 - 🏛 [Join RFI-IRFOS](https://osf.io)
