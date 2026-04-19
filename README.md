@@ -20,10 +20,6 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ---
 
-<div align="center">
-  <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
-</div>
-
 ## Technical Pillars
 
 - **Deterministic Uncertainty**: Ternlang's `trit` (affirm/tend/reject) provides a first-class routing mechanism for **Uncertainty-Aware AI**, eliminating "hallucinated confidence."
@@ -154,4 +150,6 @@ Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
 
 ---
 
-*RFI-IRFOS (ZVR: 1015608684) · Graz, Austria · EU AI Act Article 13/14 compliant design*
+<div align="center">
+  <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
+</div>
