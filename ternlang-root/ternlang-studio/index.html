@@ -3428,21 +3428,24 @@ document.addEventListener('mousemove', (e) => {
 
 document.addEventListener('mouseup', (e) => {
   if (activeWire) {
-    const targetPort = e.target.closest('.flow-port-in');
+    const targetPort = e.target.closest('.flow-port');
     if (targetPort) {
       const toNode = targetPort.closest('.flow-node');
+      // Ensure we are connecting to a different node
       if (toNode && toNode.id !== activeWire.fromId) {
-        const wireId = "wire_" + Date.now();
-        flowWires.push({
-          id: wireId,
-          fromId: activeWire.fromId,
-          toId: toNode.id,
-          signal: 0,
-          condition: "all",
-          transform: "pass",
-          label: ""
-        });
-        saveCanvasState();
+        const targetIsOutput = targetPort.classList.contains('flow-port-out');
+        // Ensure ports are compatible (in -> out or out -> in)
+        if (activeWire.fromIsOutput !== targetIsOutput) {
+          const wireId = "wire_" + Date.now();
+          // Ensure correct directionality (always from output to input)
+          const fromId = activeWire.fromIsOutput ? activeWire.fromId : toNode.id;
+          const toId   = activeWire.fromIsOutput ? toNode.id : activeWire.fromId;
+          flowWires.push({
+            id: wireId, fromId, toId,
+            signal: 0, condition: "all", transform: "pass", label: ""
+          });
+          saveCanvasState();
+        }
       }
     }
     activeWire = null;
