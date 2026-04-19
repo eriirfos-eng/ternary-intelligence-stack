@@ -1706,28 +1706,10 @@
 
 <!-- ═══ DEBUGGER VIEW (Tracer) ═══════════════════════════════════════════════ -->
 <div class="view" id="view-debugger">
-  <div class="empty-state">
-    <i data-lucide="bug" style="width:48px; height:48px; opacity:0.2;"></i>
-    <div>
-      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">Execution Tracer</div>
-      <div style="font-size:13px;">Step-through debugging and register monitoring.</div>
-    </div>
-    <button class="btn btn-primary" onclick="switchView('editor')" style="margin-top:10px;">Run code to start trace</button>
-  </div>
 </div>
 
 <!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
 <div class="view" id="view-modules">
-  <div class="empty-state">
-    <i data-lucide="package" style="width:48px; height:48px; opacity:0.2;"></i>
-    <div>
-      <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:4px;">TernPkg Registry</div>
-      <div style="font-size:13px;">Discover and manage ternary standard library modules.</div>
-    </div>
-    <div style="width:100%; max-width:500px; margin-top:20px;">
-       <input type="text" class="prop-input" placeholder="Search math, safety, hardware..." style="width:100%">
-    </div>
-  </div>
 </div>
 
 <div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
@@ -1932,9 +1914,152 @@ function switchView(name) {
     renderFlow();
     renderFlowLibrary();
   }
+  if (name === "debugger") renderTracerView();
+  if (name === "modules") renderRegistryView();
   if (name === "settings") syncSettingsUI();
 
   lucide.createIcons();
+}
+
+// ─── Tracer & Registry Views ──────────────────────────────────────────────────
+
+function renderTracerView() {
+  const view = document.getElementById("view-debugger");
+  if (!view) return;
+  
+  let html = `
+    <div style="padding: 40px; overflow-y: auto; align-items: flex-start; justify-content: flex-start; width:100%;">
+      <div style="max-width: 900px; width: 100%; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 24px;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">Execution Tracer</h2>
+            <p style="color: var(--muted); font-size:13px;">Historical trace of compiled Ternlang executions.</p>
+          </div>
+          <button class="btn btn-ghost" onclick="clearHistory(); renderTracerView();">Clear Trace</button>
+        </div>
+        
+        <div style="background:rgba(15,23,42,0.6); border:1px solid var(--border2); border-radius:8px; overflow:hidden;">
+  `;
+
+  if (runHistory.length === 0) {
+    html += `<div style="padding:40px; text-align:center; color:var(--muted2); font-size:12px;">No executions traced in this session.<br>Run code in the Editor or Flow Lab.</div>`;
+  } else {
+    html += `<table style="width:100%; border-collapse:collapse; font-size:11px; text-align:left;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border2); background:rgba(255,255,255,0.03);">
+          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Time</th>
+          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Node / Module</th>
+          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Status</th>
+          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Result</th>
+          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Latency</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+    [...runHistory].reverse().forEach(run => {
+      const time = new Date(run.time).toLocaleTimeString();
+      const stColor = run.status === 'ok' ? 'var(--green)' : 'var(--red)';
+      html += `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+          <td style="padding:10px 16px; color:var(--muted2);">${time}</td>
+          <td style="padding:10px 16px; color:var(--cyan); font-family:'JetBrains Mono',monospace;">${run.file}</td>
+          <td style="padding:10px 16px; color:${stColor}; font-weight:700;">${run.status.toUpperCase()}</td>
+          <td style="padding:10px 16px; color:var(--text);">${run.trit !== undefined ? \`Trit: \${run.trit}\` : 'N/A'}</td>
+          <td style="padding:10px 16px; color:var(--muted);">${run.ms || '<1'}ms</td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+
+  html += `</div></div></div>`;
+  view.innerHTML = html;
+}
+
+function renderRegistryView() {
+  const view = document.getElementById("view-modules");
+  if (!view) return;
+  
+  let localReg = [];
+  try { localReg = JSON.parse(localStorage.getItem("ternflow_registry") || "[]"); } catch(e){}
+
+  let html = `
+    <div style="padding: 40px; overflow-y: auto; align-items: flex-start; justify-content: flex-start; width:100%;">
+      <div style="max-width: 900px; width: 100%; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 24px;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">TernPkg Registry</h2>
+            <p style="color: var(--muted); font-size:13px;">Manage deployed node architectures and standard library modules.</p>
+          </div>
+          <button class="btn btn-primary" style="gap:6px;" onclick="switchView('flow')"><i data-lucide="plus" style="width:14px;"></i> Create Agent</button>
+        </div>
+        
+        <!-- Local Flows -->
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; border-bottom: 1px solid var(--border2); padding-bottom: 8px; margin-top:30px;">Deployed Architectures (Local Node)</h3>
+  `;
+
+  if (localReg.length === 0) {
+    html += `<div style="padding:30px; text-align:center; border:1px dashed var(--border2); border-radius:8px; color:var(--muted2); font-size:12px; margin-bottom:40px;">No custom architectures deployed yet.<br>Click "Deploy" in the Flow Lab to publish one.</div>`;
+  } else {
+    html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom:40px;">`;
+    localReg.forEach(r => {
+      html += `
+        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-weight:700; color:var(--cyan); font-size:14px;">${r.name}</div>
+            <div style="font-size:10px; padding:2px 6px; background:rgba(6,182,212,0.1); border-radius:4px; color:var(--cyan); border:1px solid var(--cyan);">${r.pricing}</div>
+          </div>
+          <div style="font-size:11px; color:var(--muted); margin-bottom:12px; height:32px; overflow:hidden;">${r.desc || "Custom ternary pipeline"}</div>
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted2);">
+            <span>Nodes: ${r.nodes}</span>
+            <span>${new Date(r.deployed).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  html += `
+        <!-- Stdlib -->
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; border-bottom: 1px solid var(--border2); padding-bottom: 8px;">Standard Library (Remote)</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom:40px;">
+  `;
+
+  Object.entries(BUILTIN_AGENTS).forEach(([name, agent]) => {
+    html += `
+        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <i data-lucide="${agent.icon}" style="color:${agent.color}; width:16px;"></i>
+            <div style="font-weight:700; color:var(--text); font-size:14px;">${name}</div>
+          </div>
+          <div style="font-size:11px; color:var(--muted); margin-bottom:12px; height:32px; overflow:hidden;">${agent.desc}</div>
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted2);">
+            <span style="color:var(--green)">Built-in</span>
+            <span>TernFlow v1.0</span>
+          </div>
+        </div>
+    `;
+  });
+
+  _flowLibPaths.forEach(p => {
+    const name = p.split('/').pop().replace('.tern', '');
+    html += `
+        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <i data-lucide="bot" style="color:var(--muted); width:16px;"></i>
+            <div style="font-weight:700; color:var(--text); font-size:14px;">${name}</div>
+          </div>
+          <div style="font-size:11px; color:var(--muted); margin-bottom:12px; height:32px; overflow:hidden; word-break:break-all;">${p}</div>
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted2);">
+            <span style="color:var(--amber)">GitHub</span>
+            <span>Remote Sync</span>
+          </div>
+        </div>
+    `;
+  });
+
+  html += `</div></div></div>`;
+  view.innerHTML = html;
 }
 
 // ─── TernFlow Logic ───────────────────────────────────────────────────────────
