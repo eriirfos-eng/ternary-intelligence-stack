@@ -4925,12 +4925,29 @@ function showResult(data) {
   }
 }
 
+// ─── Code preparation for BET VM (Auto-main) ─────────────────────────────────
+function prepareTernCode(src) {
+  src = src.trim();
+  if (!src) return src;
+  
+  // If user already defined a main function, or any function at top level, send as is
+  if (src.includes("fn main") || src.match(/^fn\s+\w+/m)) {
+    return src;
+  }
+  
+  // Otherwise, wrap in main() to allow running raw expressions/statements
+  // We return the last expression's value as the result trit.
+  return `fn main() -> trit {\n${src}\n    return hold;\n}`;
+}
+
 // ─── Run ──────────────────────────────────────────────────────────────────────
 async function runCode() {
   if (!monacoEditor) return;
   fileBuffers[activeFile] = monacoEditor.getValue();
-  const code = monacoEditor.getValue();
-  if (!code.trim()) return;
+  const rawCode = monacoEditor.getValue();
+  if (!rawCode.trim()) return;
+
+  const code = prepareTernCode(rawCode);
 
   // Switch to editor view if on dashboard
   if (!document.getElementById("view-editor").classList.contains("active")) {
