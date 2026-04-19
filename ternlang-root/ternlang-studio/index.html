@@ -332,9 +332,10 @@
     .deploy-pricing-opt:has(input:checked) { border-color: var(--blue); background: rgba(1,118,211,0.08); }
 
     .trit-particle {
-      width: 8px; height: 8px; border-radius: 50%;
-      position: absolute; pointer-events: none; z-index: 20;
+      width: 10px; height: 10px; border-radius: 50%;
+      position: absolute; pointer-events: none; z-index: 30;
       offset-path: path(var(--d)); animation: move-particle var(--speed) linear infinite;
+      box-shadow: 0 0 12px var(--glow);
     }
     @keyframes move-particle { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
 
@@ -2502,9 +2503,32 @@ function createFlowNode(name, path, x, y, type = 'agent', id) {
   node.style.left = x + "px";
   node.style.top = y + "px";
 
-  const icon  = type === 'external' ? 'zap' : (type === 'gate' ? 'git-merge' : 'bot');
-  const label = type === 'external' ? 'LLM BRIDGE' : (type === 'gate' ? 'TRIT GATE' : 'AGENT');
-  const iconColor = type === 'external' ? 'var(--amber)' : (type === 'gate' ? 'var(--cyan)' : 'var(--muted)');
+  // Determine Icon & Color
+  let icon = 'bot';
+  let iconColor = 'var(--cyan)';
+  let label = 'AGENT';
+  
+  if (type === 'external') {
+    icon = 'zap'; iconColor = 'var(--amber)'; label = 'LLM BRIDGE';
+  } else if (type === 'gate') {
+    icon = 'git-merge'; iconColor = 'var(--cyan)'; label = 'TRIT GATE';
+  } else {
+    // Agent name based coloring
+    const n = name.toLowerCase();
+    if (n.includes('sensor') || n.includes('input') || n.includes('read')) { icon = 'radio'; iconColor = 'var(--cyan)'; }
+    else if (n.includes('safety') || n.includes('guard') || n.includes('check')) { icon = 'shield-check'; iconColor = 'var(--green)'; }
+    else if (n.includes('consens') || n.includes('vote') || n.includes('aggregate')) { icon = 'git-pull-request'; iconColor = 'var(--blue)'; }
+    else if (n.includes('classif') || n.includes('match') || n.includes('sort')) { icon = 'layers'; iconColor = 'var(--amber)'; }
+    else if (n.includes('actuat') || n.includes('output') || n.includes('emit')) { icon = 'zap-off'; iconColor = 'var(--red)'; }
+    else if (n.includes('rank') || n.includes('score')) { icon = 'bar-chart-2'; iconColor = 'var(--cyan)'; }
+    else if (n.includes('propos') || n.includes('speak')) { icon = 'message-square'; iconColor = 'var(--blue)'; }
+    else if (n.includes('challeng') || n.includes('debat')) { icon = 'flame'; iconColor = 'var(--amber)'; }
+    else if (n.includes('logic') || n.includes('math') || n.includes('calc')) { icon = 'variable'; iconColor = 'var(--cyan)'; }
+    else if (n.includes('finance') || n.includes('econ') || n.includes('price')) { icon = 'trending-up'; iconColor = 'var(--green)'; }
+    else if (n.includes('hardware') || n.includes('cpu') || n.includes('fpga')) { icon = 'cpu'; iconColor = 'var(--cyan)'; }
+    else { icon = 'bot'; iconColor = 'var(--blue)'; }
+  }
+
   const subtitle  = path === '__custom__' || path === '__arch__' ? 'inline code' : path.split('/').pop();
   const llmBadge  = type === 'external' ? '<div class="node-badge-llm">LLM</div>' : '';
 
@@ -3743,7 +3767,9 @@ async function animateSignal(wire, signal) {
   particle.className = "trit-particle";
   particle.style.setProperty("--d", `"${d}"`);
   particle.style.setProperty("--speed", `${simSpeed}ms`);
-  particle.style.background = signal === 1 ? 'var(--green)' : (signal === -1 ? 'var(--red)' : 'var(--amber)');
+  const color = signal === 1 ? 'var(--green)' : (signal === -1 ? 'var(--red)' : 'var(--amber)');
+  particle.style.background = color;
+  particle.style.setProperty("--glow", color);
   
   // Attach particle to canvas so it zooms/pans with the path
   document.getElementById("flow-canvas").appendChild(particle);
