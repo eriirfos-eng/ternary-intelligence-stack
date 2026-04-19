@@ -5044,22 +5044,3 @@ require(["vs/editor/editor.main"], function () {
 
 </body>
 </html>
-  localStorage.setItem("ternstudio-key", window.TERNSTUDIO_DEV_KEY);
-    fetchUsage();
-  } else {
-    renderUsageAnon();
-    buildFileTree();
-  }
-
-  renderTabs();
-  checkConnection();
-  setInterval(checkConnection, 30000);
-
-  // Load from hash after Monaco is ready
-  loadFromHash();
-  lucide.createIcons();
-});
-</script>
-
-</body>
-</html>
