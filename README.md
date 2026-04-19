@@ -17,11 +17,12 @@ Ternlang is a systems programming language, compiler, and high-performance infer
 
 Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
+
+---
+
 <div align="center">
   <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
 </div>
-
----
 
 ## Technical Pillars
 
