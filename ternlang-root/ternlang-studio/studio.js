@@ -2357,7 +2357,12 @@ const EdgePanelController = {
         <i data-lucide="arrow-right" style="width:10px; height:10px; color:var(--cyan)"></i> 
         <span style="color:var(--text)">${toNode ? toNode.name : "?"}</span>
         <div style="flex:1"></div>
-        <input type="color" class="prop-input-strict" style="width:24px; padding:2px; height:24px; cursor:pointer;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value)" title="Custom Wire Color">
+      </div>
+
+      <!-- Color Pick Rail -->
+      <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Wire Color</div>
+        <input type="color" class="prop-input-strict" style="width:32px; padding:2px; height:24px; cursor:pointer;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value)" title="Custom Wire Color">
       </div>
 
       <!-- Condition Rail -->
@@ -3319,15 +3324,20 @@ async function runSimulation() {
 
   // GC sweep - removed clearResultArtifacts() to support branch extension
   resetSimHistory();
-  document.getElementById("sim-timeline").style.display = "none";
-  document.getElementById("simStopBtn").style.display = "inline-flex";
+  const timeline = document.getElementById("global-timeline");
+  if (timeline) timeline.style.display = "none";
+  const stopBtn = document.getElementById("simStopBtn");
+  if (stopBtn) stopBtn.style.display = "inline-flex";
 
   const ins = document.getElementById("flow-inspector");
-  ins.classList.add("active");
-  if (ins.classList.contains("inspector-minimized")) {
-    ins.classList.replace("inspector-minimized", "inspector-expanded");
+  if (ins) {
+    ins.classList.add("active");
+    if (ins.classList.contains("inspector-minimized")) {
+      ins.classList.replace("inspector-minimized", "inspector-expanded");
+    }
   }
-  document.getElementById("ins-body").innerHTML = "";
+  const insBody = document.getElementById("ins-body");
+  if (insBody) insBody.innerHTML = "";
 
   // Reset visual state
   document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
