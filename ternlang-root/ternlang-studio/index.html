@@ -184,6 +184,21 @@
   </div>
 </div>
 
+<!-- Macro Name Modal -->
+<div id="macro-name-modal" class="modal-overlay" style="z-index:99999; display:none;">
+  <div class="modal-box" style="width:400px; background:var(--bg1); border:1px solid var(--cyan); box-shadow:0 0 20px rgba(6,182,212,0.2);">
+    <div class="modal-title" style="color:var(--cyan);"><i data-lucide="box" style="width:18px; vertical-align:middle; margin-right:8px;"></i> Group into Macro</div>
+    <div class="modal-sub">Define a name for this encapsulated logic module.</div>
+    <div class="prop-group">
+      <input type="text" id="macro-name-input" class="prop-input-strict" placeholder="e.g. Data_Validator_V2" style="font-size:14px; border-color:var(--border2);">
+    </div>
+    <div style="display:flex; gap:12px; margin-top:24px; justify-content:flex-end;">
+      <button onclick="closeMacroModal()" class="btn btn-ghost">Cancel</button>
+      <button onclick="confirmGroupNodes()" class="btn btn-primary" style="background:var(--cyan); color:var(--bg); border:none; box-shadow:0 0 10px rgba(6,182,212,0.3);">Create Macro</button>
+    </div>
+  </div>
+</div>
+
 <div id="viewbar" style="display:none"></div>
 <!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
 <div class="view active" id="view-dashboard">
@@ -741,7 +756,7 @@
         </button>
         
         <div style="display:flex; align-items:center; gap:8px; padding:0 8px;" title="Simulation Latency">
-          <input type="range" min="100" max="2000" step="100" value="100" style="width:50px; height:2px; accent-color:var(--cyan);" oninput="simSpeed = 2100 - parseInt(this.value)">
+          <input type="range" id="simSpeedSlider" min="0" max="1000" step="1" value="500" class="speed-slider-industrial" oninput="updateSimSpeed(this.value)">
         </div>
 
         <button class="btn-pill" id="validateBtn" onclick="const r=validateGraph();showValidationPanel(r.errors,r.warnings);updateValidateBadge(r);" title="Structural Integrity Check">

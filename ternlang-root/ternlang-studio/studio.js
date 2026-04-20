@@ -136,6 +136,28 @@ let activeFile = localStorage.getItem("ternstudio-active-file") || "examples/hel
 let tabs = JSON.parse(localStorage.getItem("ternstudio-tabs") || JSON.stringify([{ name: "hello_trit.tern", path: "examples/hello_trit.tern" }]));
 let fileBuffers = JSON.parse(localStorage.getItem("ternstudio-file-buffers") || JSON.stringify({ "examples/hello_trit.tern": TEMPLATES.hello }));
 
+let simSpeed = 200; // Efficient industrial baseline
+function updateSimSpeed(val) {
+  const sliderVal = parseInt(val);
+  // Aggressive Scale: 0 is slow-ish (500ms), 1000 is instant (0ms)
+  // Mapping: 1000 -> 0ms, 0 -> 1000ms. But we want aggressive, so maybe exponential.
+  // Linear for now but with 0 delay at max.
+  simSpeed = Math.max(0, 1000 - sliderVal);
+  localStorage.setItem("ternflow_sim_speed", sliderVal);
+  const slider = document.getElementById("simSpeedSlider");
+  if (slider) slider.value = sliderVal;
+}
+window.updateSimSpeed = updateSimSpeed;
+
+function hydrateSimSpeed() {
+  const saved = localStorage.getItem("ternflow_sim_speed");
+  if (saved !== null) {
+    updateSimSpeed(saved);
+  } else {
+    updateSimSpeed(800); // Default to fast
+  }
+}
+
 function saveEditorState() {
   if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
   localStorage.setItem("ternstudio-active-file", activeFile);
@@ -808,9 +830,24 @@ function traceCausalPath(targetNodeId) {
 window.traceCausalPath = traceCausalPath;
 
 // ─── Graph Macros (Collapsing Logic) ─────────────────────────────────────────
-function groupSelectedNodes() {
-  if (selectedIds.size < 2) return;
+function closeMacroModal() {
+  document.getElementById("macro-name-modal").style.display = "none";
+}
+window.closeMacroModal = closeMacroModal;
 
+function groupSelectedNodes() {
+  if (selectedIds.size < 2) {
+    showToast("Select at least 2 nodes to group", "error");
+    return;
+  }
+  document.getElementById("macro-name-modal").style.display = "flex";
+  document.getElementById("macro-name-input").value = "Logic_Module_" + Math.floor(Math.random()*1000);
+  setTimeout(() => document.getElementById("macro-name-input").focus(), 10);
+}
+window.groupSelectedNodes = groupSelectedNodes;
+
+function confirmGroupNodes() {
+  const macroName = document.getElementById("macro-name-input").value.trim() || "Logic Module";
   const macroId = "macro_" + Date.now();
   const nodesToGroup = flowNodes.filter(n => selectedIds.has(n.id));
   const otherNodes = flowNodes.filter(n => !selectedIds.has(n.id));
@@ -824,8 +861,18 @@ function groupSelectedNodes() {
     maxX = Math.max(maxX, x + 180); maxY = Math.max(maxY, y + 100);
   });
 
-  const midX = (minX + maxX) / 2 - 90;
-  const midY = (minY + maxY) / 2 - 50;
+  const midX = (minX + maxX) / 2;
+  const midY = (minY + maxY) / 2;
+
+  // Serialize relative positions for expansion
+  const serializedNodes = nodesToGroup.map(n => {
+    const el = document.getElementById(n.id);
+    return {
+      ...n,
+      ox: parseFloat(el.style.left) - midX,
+      oy: parseFloat(el.style.top) - midY
+    };
+  });
 
   // Identify internal and external wires
   const internalWires = flowWires.filter(w => selectedIds.has(w.fromId) && selectedIds.has(w.toId));
@@ -833,33 +880,27 @@ function groupSelectedNodes() {
   const externalOut   = flowWires.filter(w => selectedIds.has(w.fromId) && !selectedIds.has(w.toId));
   const unrelatedWires = flowWires.filter(w => !selectedIds.has(w.fromId) && !selectedIds.has(w.toId));
 
-  // Create Macro Node
-  const macroName = prompt("Macro Name:", "Logic Module") || "Logic Module";
-  const macroNode = {
-    id: macroId,
-    name: macroName,
-    path: "__macro__",
-    type: "macro",
-    props: {
-      nodes: nodesToGroup,
-      wires: internalWires,
-      input_schema: "macro_in: trit",
-      output_schema: "macro_out: trit",
-      code: `// Encapsulated logic: ${nodesToGroup.length} nodes\n// Internal routing preserved.`
-    }
+  // Create Macro Node State
+  const macroNodeProps = {
+    internal_graph: {
+      nodes: serializedNodes,
+      wires: internalWires
+    },
+    input_schema: "macro_in: trit",
+    output_schema: "macro_out: trit",
+    code: `// Encapsulated logic: ${nodesToGroup.length} nodes\n// Internal routing preserved.`
   };
 
-  // Re-map external wires to point to the new Macro node
+  // Re-map external wires
   const newWires = [...unrelatedWires];
-  externalIn.forEach(w => newWires.push({ ...w, toId: macroId, id: "wire_ext_in_" + Date.now() + Math.random() }));
-  externalOut.forEach(w => newWires.push({ ...w, fromId: macroId, id: "wire_ext_out_" + Date.now() + Math.random() }));
+  externalIn.forEach(w => newWires.push({ ...w, toId: macroId, id: "wire_ext_in_" + Date.now() + Math.random(), originalToId: w.toId }));
+  externalOut.forEach(w => newWires.push({ ...w, fromId: macroId, id: "wire_ext_out_" + Date.now() + Math.random(), originalFromId: w.fromId }));
 
   // Update State
-  flowNodes = [...otherNodes, macroNode];
+  flowNodes = otherNodes;
   flowWires = newWires;
 
   // Sync DOM
-  const canvas = document.getElementById("flow-canvas");
   nodesToGroup.forEach(n => document.getElementById(n.id)?.remove());
   internalWires.forEach(w => {
     document.getElementById(w.id)?.remove();
@@ -867,46 +908,65 @@ function groupSelectedNodes() {
     document.getElementById("badge-"+w.id)?.remove();
   });
   
-  createFlowNode(macroNode.name, macroNode.path, midX, midY, "macro", macroId);
+  createFlowNode(macroName, "__macro__", midX, midY, "macro", macroId);
   const instantiated = flowNodes.find(n => n.id === macroId);
-  if (instantiated) instantiated.props = macroNode.props;
+  if (instantiated) instantiated.props = macroNodeProps;
 
+  closeMacroModal();
   clearSelection();
   updateWires();
   saveCanvasState();
   showToast(`Grouped ${nodesToGroup.length} nodes into ${macroName}`, "ok");
 }
+window.confirmGroupNodes = confirmGroupNodes;
 window.groupSelectedNodes = groupSelectedNodes;
 
-function explodeMacro(macroId) {
+function expandMacro(macroId) {
   const macroNode = flowNodes.find(n => n.id === macroId);
-  if (!macroNode || macroNode.type !== 'macro') return;
+  if (!macroNode || !macroNode.props.internal_graph) {
+    // Support legacy macros if any
+    if (macroNode && macroNode.props.nodes) {
+        // Fallback for non-internal_graph
+    } else return;
+  }
 
-  const internal = macroNode.props;
-  if (!internal || !internal.nodes) return;
+  const internal = macroNode.props.internal_graph;
+  const mx = macroNode.x;
+  const my = macroNode.y;
 
-  // 1. Remove Macro
+  // 1. Identify external wires connected to this macro
+  const extWires = flowWires.filter(w => w.fromId === macroId || w.toId === macroId);
+
+  // 2. Remove Macro from state and DOM
   flowNodes = flowNodes.filter(n => n.id !== macroId);
   document.getElementById(macroId)?.remove();
 
-  // 2. Clear external-to-macro wires
-  flowWires = flowWires.filter(w => w.fromId !== macroId && w.toId !== macroId);
-
-  // 3. Restore nodes
+  // 3. Re-inject child nodes using serialized offsets
   internal.nodes.forEach(n => {
-    createFlowNode(n.name, n.path, n.x, n.y, n.type, n.id);
+    const nx = mx + (n.ox || 0);
+    const ny = my + (n.oy || 0);
+    createFlowNode(n.name, n.path, nx, ny, n.type, n.id);
     const restored = flowNodes.find(fn => fn.id === n.id);
     if (restored) restored.props = n.props;
   });
 
   // 4. Restore internal wires
-  flowWires = [...flowWires, ...internal.wires];
+  flowWires = [...flowWires.filter(w => w.fromId !== macroId && w.toId !== macroId), ...internal.wires];
+
+  // 5. Re-stitch external wires to correct internal entry/exit nodes
+  extWires.forEach(w => {
+    if (w.toId === macroId && w.originalToId) {
+      flowWires.push({ ...w, toId: w.originalToId, id: "wire_restitch_in_" + Date.now() + Math.random() });
+    } else if (w.fromId === macroId && w.originalFromId) {
+      flowWires.push({ ...w, fromId: w.originalFromId, id: "wire_restitch_out_" + Date.now() + Math.random() });
+    }
+  });
 
   updateWires();
   saveCanvasState();
-  showToast("Macro expanded", "ok");
+  showToast(`Expanded "${macroNode.name}"`, "ok");
 }
-window.explodeMacro = explodeMacro;
+window.expandMacro = expandMacro;
 
 // ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
 let CT = { scale: 1, x: 0, y: 0 };
@@ -1669,13 +1729,19 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
     nodeDraggingId = id;
     startMouseX = e.clientX; startMouseY = e.clientY;
     
-    multiDragOffsets = {};
+         multiDragOffsets = {};
     selectedIds.forEach(sid => {
       const sel = document.getElementById(sid);
       if (sel) multiDragOffsets[sid] = { x: parseFloat(sel.style.left)||0, y: parseFloat(sel.style.top)||0 };
     });
     node.style.zIndex = 1000;
     e.preventDefault();
+  };
+
+  node.ondblclick = (e) => {
+    if (type === 'macro') {
+      expandMacro(id);
+    }
   };
 
   canvas.appendChild(node);
@@ -6160,6 +6226,7 @@ require(["vs/editor/editor.main"], function () {
   if (changed) localStorage.setItem("ternflow_registry", JSON.stringify(reg));
 
   const lastView = localStorage.getItem("ternstudio-last-view") || "dashboard";
+  hydrateSimSpeed();
   switchView(lastView);
 
   // Initialize visualizer with empty state
