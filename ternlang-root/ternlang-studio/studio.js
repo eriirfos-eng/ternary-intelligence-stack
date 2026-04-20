@@ -3362,7 +3362,7 @@ async function runSimulation() {
   document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('pulse-affirm','pulse-reject','pulse-hold','node-error','node-warn'));
   flowNodes.forEach(n => setNodeStatus(n.id, ""));
 
-  engineQueue.clear();
+  engineQueue.length = 0;
   logInspector("SYSTEM", "🚀 TernFlow Engine v2 initialized");
   updateFogHeatmap();
 
@@ -3386,7 +3386,7 @@ async function runSimulationCore() {
   
   // Phase 1: FAST Logic Solve (Topological traversal)
   // We use a local queue for the dry-run
-  const dryQueue = [...engineQueue.toArray()];
+  const dryQueue = [...engineQueue];
   const nodeTimings = {}; // id -> endTime
 
   while (dryQueue.length > 0 && scheduledEvents.length < MAX_ENGINE_TICKS && !simulationAborted) {
@@ -3432,7 +3432,7 @@ async function runSimulationCore() {
   }
 
   // Clear global queue as we have pre-calculated everything
-  engineQueue.clear();
+  engineQueue.length = 0;
 
   // Phase 2: Playback Setup
   const scrubber = document.getElementById("global-timeline");
@@ -6090,9 +6090,12 @@ function applySettingsKey() {
 window.applySettingsKey = applySettingsKey;
 
 function syncSettingsKeyDisplay() {
-  const key = document.getElementById("apiKey").value.trim();
+  const key = (document.getElementById("apiKey") || {value:""}).value.trim();
   const masked = key.length > 12 ? key.slice(0, 8) + "…" + key.slice(-4) : (key || "—");
-  document.getElementById("settingsKeyDisplay").textContent = masked;
+  const display = document.getElementById("settingsKeyDisplay");
+  if (display) {
+    display.textContent = masked;
+  }
 }
 window.syncSettingsKeyDisplay = syncSettingsKeyDisplay;
 
