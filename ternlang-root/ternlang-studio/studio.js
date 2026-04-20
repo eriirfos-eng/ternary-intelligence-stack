@@ -738,6 +738,8 @@ let selectedNodeId = null;
 let activeWire = null;
 let simulationAborted = false;
 let simulationRunning = false;
+let virtualClock = 0;
+let lastRealTime = 0;
 
 function updateSimUI() {
   const btn = document.getElementById("simBtn");
@@ -756,9 +758,29 @@ function updateSimUI() {
 window.updateSimUI = updateSimUI;
 
 function toggleSimulation() {
+  const scrubber = document.getElementById('global-timeline');
+  const canvas = document.getElementById("scrub-layer");
+
   if (simulationRunning) {
     stopSimulation();
   } else {
+    // 1. Graph Memory Wipe
+    flowNodes.forEach(n => { n.visited = false; n.executed = false; });
+    flowWires.forEach(e => { e.active = false; });
+
+    // 2. Clock & UI Reset
+    if (scrubber) scrubber.value = 0;
+    virtualClock = 0;
+    lastRealTime = performance.now();
+    
+    // 4. Canvas Scrub
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    // Wipe ghost dots immediately
+    document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
+
     runSimulation();
   }
 }
@@ -3480,8 +3502,8 @@ async function runSimulationCore(scheduledEvents, maxSimDuration) {
     scrubber.max = maxSimDuration; 
   }
   
-  let lastRealTime = performance.now();
-  let virtualClock = 0;
+  lastRealTime = performance.now();
+  virtualClock = 0;
   simulationRunning = true;
 
   const driveTimeline = () => {
@@ -3811,15 +3833,19 @@ window.scrubSimulation = scrubSimulation;
 function stopSimulation() {
   simulationAborted = true;
   simulationRunning = false;
+  virtualClock = 0;
+  lastRealTime = performance.now();
   showToast("Simulation stopping...", "warn");
   updateSimUI();
-  
+
   // Clear canvas overlay immediately
   const canvas = document.getElementById("scrub-layer");
   if (canvas) {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
+  // Wipe ghost dots
+  document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
 }
 window.stopSimulation = stopSimulation;
 
