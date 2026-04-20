@@ -3247,21 +3247,7 @@ const TernaryAlgebra = {
   }
 };
 
-class SignalQueue {
-  constructor() {
-    this.queue = [];
-    this.history = [];
-  }
-  push(signal) {
-    this.queue.push(signal);
-    this.history.push({ ...signal, time: Date.now() });
-  }
-  pop() { return this.queue.shift(); }
-  get length() { return this.queue.length; }
-  clear() { this.queue = []; this.history = []; }
-}
-
-const engineQueue = new SignalQueue();
+const engineQueue = [];
 const MAX_ENGINE_TICKS = 2000;
 
 /**
