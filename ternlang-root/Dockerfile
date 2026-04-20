@@ -36,8 +36,11 @@ RUN for crate in compiler/legacy_shim/ternlang-core compiler/legacy_shim/ternlan
 # Pre-fetch dependencies (cached layer)
 RUN cargo fetch
 
-# Now copy the real source (Rust & API core)
+# Now copy the real source (Rust & API core + required assets for include_str!)
 COPY stdlib/                stdlib/
+COPY ternlang-web/          ternlang-web/
+COPY ternlang-studio/       ternlang-studio/
+COPY playground/            playground/
 COPY compiler/legacy_shim/ternlang-core/src      compiler/legacy_shim/ternlang-core/src
 COPY compiler/legacy_shim/ternlang-core/stdlib   compiler/legacy_shim/ternlang-core/stdlib
 COPY ternlang-ml/src        ternlang-ml/src
@@ -52,16 +55,8 @@ COPY ternlang-compat/src    ternlang-compat/src
 COPY ternlang-compress/src  ternlang-compress/src
 COPY ternlang-wasm/src      ternlang-wasm/src
 
-# Compile backend API first (cached separately from UI)
+# Compile backend API with embedded assets
 RUN cargo build --release -p ternlang-api
-
-# ─── Stage UI: final layer copy ─────────────────────────────────────────────
-# We copy UI assets AFTER compilation so JS tweaks don't trigger Rust rebuilds.
-COPY ternlang-web/      ternlang-web/
-COPY ternlang-studio/   ternlang-studio/
-COPY playground/index.html        playground/index.html
-COPY playground/pkg/ternlang_wasm.js       playground/pkg/ternlang_wasm.js
-COPY playground/pkg/ternlang_wasm_bg.wasm  playground/pkg/ternlang_wasm_bg.wasm
 
 # ─── Stage 2: runtime ────────────────────────────────────────────────────────
 FROM debian:bookworm-slim
