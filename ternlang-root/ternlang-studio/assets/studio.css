@@ -312,6 +312,13 @@
     .btn-pill.simulate:hover { background: #34d399; transform: translateY(-1px); }
     .btn-pill.simulate.running { background: var(--amber); animation: pulse-node-hold 1s infinite; }
 
+    .speed-slider-industrial {
+      width: 120px !important; /* Base 50px + 140% for ergonomic manipulation */
+      height: 2px;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
     /* ─── Property Panel Industrial Polish ────────────────────────── */
     .prop-section { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
     .prop-input-strict {
