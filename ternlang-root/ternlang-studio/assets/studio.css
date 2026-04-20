@@ -1165,25 +1165,69 @@
     }
     .plan-note { font-size: 10px; color: var(--muted); text-align: center; }
 
-    /* ─── Toast ────────────────────────────────────────────────────── */
-    #toast-container {
-      position: fixed; bottom: 32px; right: 16px; z-index: 2000;
-      display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+    /* ─── Config View Visual Identity ────────────────────────── */
+    #config-view {
+      background-color: #0f131a !important;
     }
-    .toast {
-      background: var(--bg1); border: 1px solid var(--border2);
-      color: var(--text); font-size: 11px; padding: 8px 14px;
-      border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-      animation: toast-in 0.2s ease;
+    
+    .nav-tab.active#vt-settings {
+      border-bottom-color: var(--amber) !important;
+      color: var(--amber) !important;
     }
-    .toast.ok  { border-color: var(--green); }
-    .toast.err { border-color: var(--red); }
-    @keyframes toast-in {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
+    
+    .nav-tab#vt-settings:hover {
+      color: var(--amber) !important;
     }
-    .spin { animation: spin 2s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    .industrial-card {
+      background: #0f131a !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      padding: 32px !important;
+      border-radius: 4px !important;
+      margin-bottom: 32px !important;
+      width: 100% !important;
+      max-width: 900px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 24px !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+      position: relative;
+    }
+    
+    .industrial-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--amber);
+      opacity: 0.3;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .industrial-title {
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      color: #ffffff !important;
+      letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      margin-bottom: 4px !important;
+    }
+
+    .industrial-desc {
+      font-size: 11px !important;
+      color: var(--muted2) !important;
+      margin-bottom: 16px !important;
+    }
+    
+    .settings-input, .settings-select {
+      background: #161b22 !important;
+      border: 1px solid #30363d !important;
+      color: #c9d1d9 !important;
+    }
+    
+    .settings-input:focus, .settings-select:focus {
+      border-color: var(--amber) !important;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+    }
 
 /* --- Dual-Tree Explorer --- */
 .tree-root-header {
