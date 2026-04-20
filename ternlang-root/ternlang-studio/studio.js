@@ -3807,6 +3807,21 @@ function renderScrubLayer(currentTime, scheduledEvents = [], loggedEvents = null
           const lbl = event.val === 1 ? '+1 (Affirm)' : (event.val === -1 ? '-1 (Reject)' : '0 (Tend)');
           logInspector(toNode.name, `Signal arrival from ${fromNode ? fromNode.name : 'ROOT'} -> ${lbl}`);
           loggedEvents.add(event.wireId + "_" + event.endTime);
+
+          // JIT Artifact Spawning/Updating
+          const nodeOutWires = flowWires.filter(w => w.fromId === toNode.id);
+          if (nodeOutWires.length === 0 && toNode.type !== 'artifact') {
+              // The dot hit the end of the line — spawn the card!
+              spawnResultArtifact(toNode, event.val);
+          } else if (toNode.type === 'artifact') {
+              // REPLAY LOGIC: Update existing artifact dynamically
+              const artEl = document.getElementById(`art-body-${toNode.id}`);
+              if (artEl) {
+                  const statusTxt = event.val === 1 ? 'AFFIRM' : (event.val === -1 ? 'REJECT' : 'TEND');
+                  artEl.textContent = `Source: ${fromNode ? fromNode.name : 'Unknown'}\nResolved Signal: ${statusTxt}\nStatus: Resolved`;
+                  artEl.style.color = event.val === 1 ? 'var(--green)' : (event.val === -1 ? 'var(--red)' : 'var(--text)');
+              }
+          }
         }
       }
     });
@@ -4191,7 +4206,6 @@ async function simulateNode(node, inSignal, isPhantom = false) {
   // TAP Protocol: Detection of Pending Actuator (State 0 Suspension)
   if (node.props.pending_actuator) {
     if (!isPhantom) {
-      spawnResultArtifact(node, outSignal);
       logInspector("SYSTEM", `🟡 TAP: State 0 Suspension at "${node.name}". Awaiting Operator…`);
       simulationAborted = true; // Freeze graph
     }
@@ -4204,7 +4218,6 @@ async function simulateNode(node, inSignal, isPhantom = false) {
 
   if (outWires.length === 0 && node.type !== 'artifact') {
     if (!isPhantom) {
-      spawnResultArtifact(node, outSignal);
       logInspector("SYSTEM", "🛑 Terminal Payload Detected — Hard Halt engaged.");
       simulationAborted = true; // Hard Halt
     }
