@@ -3377,6 +3377,7 @@ window.runSimulation = runSimulation;
 async function runSimulationCore() {
   let tick = simHistory.length > 0 ? simHistory[simHistory.length-1].tick : 0;
   const nodeState = {};
+  let currentSimTime = 0; // Cumulative duration in ms
 
   while (engineQueue.length > 0 && tick < MAX_ENGINE_TICKS && !simulationAborted) {
     const signal = engineQueue.pop();
@@ -3404,13 +3405,19 @@ async function runSimulationCore() {
       const transformed = TernaryAlgebra.transform(outSignal, wire);
       if (transformed) {
         currentTickSignals.push({ id: wire.id, val: transformed.val, conf: transformed.conf });
+        // The signal starts traversing now
         await animateSignal(wire, transformed.val, transformed.conf);
         engineQueue.push({ toId: wire.toId, ...transformed });
       }
     }
 
     tick++;
-    captureSimSnapshot(tick, currentTickSignals);
+    // Capture snapshot with the current absolute time and animation duration
+    captureSimSnapshot(tick, currentTickSignals, currentSimTime, simSpeed);
+
+    // Increment virtual time by simSpeed (one animation hop)
+    currentSimTime += simSpeed;
+
     updateFogHeatmap();
   }
 
@@ -3421,8 +3428,6 @@ async function runSimulationCore() {
     updateSimUI();
     if (simHistory.length > 0) showTimeline();
   } else {
-    // If aborted (Halt), we keep simulationRunning potentially true if we want to resume?
-    // Actually, simulationRunning=false is safer, resume will flip it back.
     simulationRunning = false;
     updateSimUI();
   }
@@ -3447,7 +3452,7 @@ function resetSimHistory() {
 }
 window.resetSimHistory = resetSimHistory;
 
-function captureSimSnapshot(tick, activeSignals = []) {
+function captureSimSnapshot(tick, activeSignals = [], startTime = 0, duration = 500) {
   if (simHistory.length === 0 || !simBaseState) {
     simBaseState = {
       nodes: flowNodes.map(n => {
@@ -3460,13 +3465,20 @@ function captureSimSnapshot(tick, activeSignals = []) {
     currentSimState = JSON.parse(JSON.stringify(simBaseState));
   }
 
-  const delta = { tick, activeSignals, nodeDeltas: [], wireDeltas: [] };
+  const delta = { 
+    tick, 
+    activeSignals, 
+    nodeDeltas: [], 
+    wireDeltas: [],
+    startTime,
+    duration
+  };
 
   flowNodes.forEach(n => {
     const el = document.getElementById(n.id);
     const pulse = el ? (el.classList.contains('pulse-affirm') ? 'affirm' : (el.classList.contains('pulse-reject') ? 'reject' : (el.classList.contains('pulse-hold') ? 'hold' : ''))) : "";
     const status = n.props.status || "";
-    
+
     const currNode = currentSimState.nodes.find(cn => cn.id === n.id);
     if (currNode && (currNode.status !== status || currNode.pulse !== pulse)) {
        delta.nodeDeltas.push({ id: n.id, status, pulse });
@@ -3498,40 +3510,42 @@ function captureSimSnapshot(tick, activeSignals = []) {
     });
   }
 
-  // Real-time Timeline Sync
+  // Real-time Timeline Sync (using absolute time)
   const scrubber = document.getElementById("global-timeline");
   const tlLabel = document.getElementById("timeline-tick-label");
+  const totalDuration = startTime + duration;
   if (scrubber) {
-    scrubber.max = tick;
-    scrubber.value = tick;
+    scrubber.max = totalDuration;
+    scrubber.value = totalDuration;
   }
-  if (tlLabel) tlLabel.textContent = `TICK: ${String(tick).padStart(4, '0')}`;
+  if (tlLabel) tlLabel.textContent = `TIME: ${(totalDuration / 1000).toFixed(2)}s`;
 }
 window.captureSimSnapshot = captureSimSnapshot;
 
 function showTimeline() {
   const scrubber = document.getElementById("global-timeline");
   const label = document.getElementById("timeline-tick-label");
-  
+
   if (simHistory.length === 0) return;
-  
-  const minTick = simHistory[0].tick;
-  const maxTick = simHistory[simHistory.length - 1].tick;
-  
+
+  const minTime = simHistory[0].startTime;
+  const lastSnapshot = simHistory[simHistory.length - 1];
+  const maxTime = lastSnapshot.startTime + lastSnapshot.duration;
+
   if (scrubber) {
-    scrubber.min = minTick;
-    scrubber.max = maxTick;
-    scrubber.value = maxTick;
+    scrubber.min = minTime;
+    scrubber.max = maxTime;
+    scrubber.value = maxTime;
   }
-  if (label) label.textContent = `TICK: ${String(maxTick).padStart(4, '0')}`;
+  if (label) label.textContent = `TIME: ${(maxTime / 1000).toFixed(2)}s`;
 }
 window.showTimeline = showTimeline;
 
 function scrubToTimeline(val) {
-  const tick = parseInt(val);
+  const time = parseFloat(val);
   const label = document.getElementById("timeline-tick-label");
-  if (label) label.textContent = `TICK: ${String(tick).padStart(4, '0')}`;
-  requestScrub(tick);
+  if (label) label.textContent = `TIME: ${(time / 1000).toFixed(2)}s`;
+  requestScrub(time);
 }
 window.scrubToTimeline = scrubToTimeline;
 
@@ -3549,38 +3563,44 @@ window.requestScrub = requestScrub;
 
 function performScrub() {
   scrubAnimFrame = null;
-  const val = currentScrubValue;
+  const time = currentScrubValue;
   if (simHistory.length === 0 || !simBaseState) return;
-  
-  const minTick = simHistory[0].tick;
-  const maxTick = simHistory[simHistory.length - 1].tick;
-  
-  const label = document.getElementById("sim-tick-label");
-  if(label) label.textContent = `Tick ${Math.floor(val)}/${maxTick}`;
 
-  const floorTick = Math.floor(val);
-  const frac = val - floorTick;
+  // Find the snapshot that covers this absolute time
+  let snapshotIdx = simHistory.findIndex(h => time >= h.startTime && time < (h.startTime + h.duration));
+  if (snapshotIdx === -1) {
+    // If it's exactly the end or out of bounds
+    if (time >= simHistory[simHistory.length - 1].startTime) {
+      snapshotIdx = simHistory.length - 1;
+    } else {
+      snapshotIdx = 0;
+    }
+  }
+
+  const state = simHistory[snapshotIdx];
+  const floorTick = state.tick;
+  // Progress within this tick's animation [0.0 - 1.0]
+  const frac = Math.min(1, Math.max(0, (time - state.startTime) / state.duration));
 
   // 1. Rebuild DOM state only if integer tick changed
   if (floorTick !== lastRenderedTick) {
     lastRenderedTick = floorTick;
-    
-    const state = JSON.parse(JSON.stringify(simBaseState));
-    const targetIdx = floorTick - minTick;
-    for (let i = 0; i <= targetIdx && i < simHistory.length; i++) {
+
+    const domState = JSON.parse(JSON.stringify(simBaseState));
+    for (let i = 0; i <= snapshotIdx && i < simHistory.length; i++) {
       const delta = simHistory[i];
       delta.nodeDeltas.forEach(nd => {
-        const sn = state.nodes.find(n => n.id === nd.id);
+        const sn = domState.nodes.find(n => n.id === nd.id);
         if (sn) { sn.status = nd.status; sn.pulse = nd.pulse; }
       });
       delta.wireDeltas.forEach(wd => {
-        const sw = state.wires.find(w => w.id === wd.id);
+        const sw = domState.wires.find(w => w.id === wd.id);
         if (sw) sw.signal = wd.signal;
       });
     }
 
     // Apply to DOM
-    state.nodes.forEach(ns => {
+    domState.nodes.forEach(ns => {
       const el = document.getElementById(ns.id);
       if (el) {
         el.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
@@ -3590,28 +3610,26 @@ function performScrub() {
       const node = flowNodes.find(n => n.id === ns.id);
       if (node) node.props.status = ns.status;
     });
-    
-    state.wires.forEach(ws => {
+
+    domState.wires.forEach(ws => {
       const wire = flowWires.find(w => w.id === ws.id);
       if (wire) wire.signal = ws.signal;
     });
-    
-    // Clear old ghost divs just in case they persist from before
-    document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
 
+    document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
     updateWires();
     updateFogHeatmap();
   }
 
   // 2. Hardware-accelerated Canvas Overlay (Transient + Multiverse Ghosting)
-  renderScrubLayer(floorTick, frac);
+  renderScrubLayer(snapshotIdx, frac);
 }
 
-function renderScrubLayer(floorTick, frac) {
+function renderScrubLayer(snapshotIdx, frac) {
   const canvas = document.getElementById("scrub-layer");
   const wrap = document.getElementById("flow-canvas-wrap");
   if (!canvas || !wrap) return;
-  
+
   const ctx = canvas.getContext("2d");
   if (canvas.width !== wrap.clientWidth || canvas.height !== wrap.clientHeight) {
     canvas.width = wrap.clientWidth; 
@@ -3619,11 +3637,7 @@ function renderScrubLayer(floorTick, frac) {
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const minTick = simHistory[0].tick;
-  const targetIdx = floorTick - minTick;
-  if (targetIdx < 0 || targetIdx >= simHistory.length) return;
-
-  const state = simHistory[targetIdx];
+  const state = simHistory[snapshotIdx];
   const maxState = simHistory[simHistory.length - 1];
 
   // Multiverse Ghosting: Draw Final Outcomes at low opacity
@@ -3634,14 +3648,14 @@ function renderScrubLayer(floorTick, frac) {
       if (!wire) return;
       const svgPath = document.getElementById(wire.id);
       if (!svgPath) return;
-      
+
       try {
         const totalLength = svgPath.getTotalLength();
         const pt = svgPath.getPointAtLength(totalLength);
-        
+
         const canvasX = pt.x * CT.scale + CT.x;
         const canvasY = pt.y * CT.scale + CT.y;
-        
+
         ctx.beginPath();
         const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
         ctx.fillStyle = color;
@@ -3658,24 +3672,24 @@ function renderScrubLayer(floorTick, frac) {
     state.activeSignals.forEach(sig => {
       const wire = flowWires.find(w => w.id === sig.id);
       if (!wire) return;
-      
+
       const svgPath = document.getElementById(wire.id);
       if (!svgPath) return;
-      
+
       try {
         const totalLength = svgPath.getTotalLength();
-        // Transient moves from 0 to 1 based on frac
+        // Liquid Time: physically accurate position along path
         const pt = svgPath.getPointAtLength(frac * totalLength);
-        
+
         const canvasX = pt.x * CT.scale + CT.x;
         const canvasY = pt.y * CT.scale + CT.y;
-        
+
         ctx.beginPath();
         const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
         ctx.fillStyle = color;
         ctx.shadowColor = color;
         ctx.shadowBlur = 10 * CT.scale;
-        
+
         const size = (6 + (8 * sig.conf)) * CT.scale;
         ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
         ctx.fill();
@@ -3684,7 +3698,6 @@ function renderScrubLayer(floorTick, frac) {
     });
   }
 }
-
 function scrubSimulation(index) {
   requestScrub(index);
 }
