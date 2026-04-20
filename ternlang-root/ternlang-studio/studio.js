@@ -2086,10 +2086,7 @@ const NodePanelController = {
     bodyEl.innerHTML = `
       <div class="prop-section">
         <div class="prop-label-strict">Node Identity</div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <input type="text" class="prop-input-strict" style="flex:1" value="${node.name}" oninput="updateNodeProp('name', this.value)">
-          <input type="color" class="prop-input-strict" style="width:32px; padding:2px; height:32px; cursor:pointer;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value)" title="Custom Base Color">
-        </div>
+        <input type="text" class="prop-input-strict" style="width:100%" value="${node.name}" oninput="updateNodeProp('name', this.value)">
       </div>
 
       <div class="prop-section">
@@ -2136,13 +2133,22 @@ const NodePanelController = {
 
       <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2); display:flex; flex-direction:column; gap:8px;">
         <div class="prop-label-strict">Morph Archetype</div>
-        <select class="prop-input-strict" style="font-size:11px; font-weight:700; color:var(--cyan);" onchange="morphNodeArchetype('${node.id}', this.value)">
+        <select class="prop-input-strict" style="font-size:11px; font-weight:700; color:var(--cyan); margin-bottom:4px;" onchange="morphNodeArchetype('${node.id}', this.value)">
           <option value="">-- Generic Agent --</option>
           <option value="sensor">SENSOR (Input Capture)</option>
           <option value="gate">GATE (Ternary Logic)</option>
           <option value="guardrail">GUARDRAIL (Veto Logic)</option>
           <option value="deliberator">DELIBERATOR (Weighted)</option>
         </select>
+
+        <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); padding:6px; border-radius:4px; border:1px solid var(--border2);">
+          <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Node Color</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <code style="font-size:10px; color:var(--muted2);">${customColor}</code>
+            <input type="color" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Node Color">
+          </div>
+        </div>
+
         <div style="display:flex; gap:6px;">
           <button class="btn-pill" style="flex:1; background:var(--bg2);" onclick="openAgentInEditor()">Editor</button>
           <button class="btn-pill" style="flex:1; background:rgba(239,68,68,0.1); color:var(--red);" onclick="deleteNode('${node.id}')">Remove</button>
@@ -2359,12 +2365,6 @@ const EdgePanelController = {
         <div style="flex:1"></div>
       </div>
 
-      <!-- Color Pick Rail -->
-      <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Wire Color</div>
-        <input type="color" class="prop-input-strict" style="width:32px; padding:2px; height:24px; cursor:pointer;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value)" title="Custom Wire Color">
-      </div>
-
       <!-- Condition Rail -->
       <div class="prop-group" style="margin-bottom:8px;">
         <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Activation Logic</div>
@@ -2421,7 +2421,15 @@ const EdgePanelController = {
         <label for="wire-feedback-sem" class="prop-label-strict" style="margin:0; font-size:10px; cursor:pointer;">Feedback Loop</label>
       </div>
 
-      <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2);">
+      <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); padding:6px; border-radius:4px; border:1px solid var(--border2); margin-top:auto;">
+        <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Wire Color</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <code style="font-size:10px; color:var(--muted2);">${customColor}</code>
+          <input type="color" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value); updatePropertyPanel()" title="Custom Wire Color">
+        </div>
+      </div>
+
+      <div style="padding-top:8px;">
         <button class="btn btn-ghost" style="width:100%; height:28px; font-size:11px; color:var(--red); border:1px solid rgba(239, 68, 68, 0.1);" onclick="deleteWire('${wire.id}')">Remove Edge</button>
       </div>
     `;
