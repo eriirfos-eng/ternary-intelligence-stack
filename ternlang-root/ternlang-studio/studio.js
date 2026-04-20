@@ -262,7 +262,7 @@ async function switchView(name) {
   
   if (configView) {
     if (name === "settings") {
-      configView.style.display = "block";
+      configView.style.display = "flex";
     } else {
       configView.style.display = "none";
     }
