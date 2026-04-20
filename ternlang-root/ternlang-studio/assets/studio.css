@@ -510,7 +510,17 @@
       flex: 1; height: 4px; accent-color: var(--cyan); cursor: pointer;
       background: rgba(74, 74, 74, 0.4); border-radius: 2px; outline: none;
     }
-    .timeline-slider::-webkit-slider-runnable-track { background: transparent; height: 4px; border-radius: 2px; }
+    
+    /* Explicit browser-specific track targeting for luminosity calibration */
+    #global-timeline::-webkit-slider-runnable-track {
+        background: rgba(255, 255, 255, 0.1) !important;
+        height: 4px; border-radius: 2px;
+    }
+    #global-timeline::-moz-range-track {
+        background: rgba(255, 255, 255, 0.1) !important;
+        height: 4px; border-radius: 2px;
+    }
+
     .timeline-slider::-webkit-slider-thumb { margin-top: -6px; }
     .ins-head {
       padding: 8px 16px; border-bottom: 1px solid var(--border2);

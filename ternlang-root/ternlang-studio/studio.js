@@ -6114,7 +6114,6 @@ function applyEndpoint() {
 window.applyEndpoint = applyEndpoint;
 
 function syncSettingsUI() {
-  document.getElementById("settingsEndpoint").value = document.getElementById("apiEndpoint").value;
   document.getElementById("saveKeyCheck").checked = localStorage.getItem("ternstudio-save-key") === "1";
   syncSettingsKeyDisplay();
   const theme = document.documentElement.getAttribute("data-theme") || "dark";
