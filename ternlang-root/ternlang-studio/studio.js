@@ -3328,10 +3328,29 @@ async function runSimulation() {
     simulationRunning = false; updateSimUI(); return;
   }
 
-  // GC sweep - removed clearResultArtifacts() to support branch extension
+  // 1. Graph Memory Wipe (Reset execution states)
+  flowNodes.forEach(n => {
+    n.visited = false;
+    n.executed = false;
+    if (n.props) n.props.status = "";
+  });
+  flowWires.forEach(w => {
+    w.active = false;
+    w.signal = 0;
+  });
+
+  // 2. Canvas Scrub (Wipe ghost dots immediately)
+  const canvas = document.getElementById("scrub-layer");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // 3. UI & Clock Reset
+  const scrubber = document.getElementById("global-timeline");
+  if (scrubber) scrubber.value = 0;
+  
   resetSimHistory();
-  const timeline = document.getElementById("global-timeline");
-  // Keep timeline visible as requested
   const stopBtn = document.getElementById("simStopBtn");
   if (stopBtn) stopBtn.style.display = "inline-flex";
 
@@ -3370,6 +3389,9 @@ async function runSimulation() {
   // VISUAL PASS: Pure Rendering & Playback
   if (!simulationAborted) {
     await runSimulationCore(scheduledEvents, maxSimDuration);
+  } else {
+    simulationRunning = false;
+    updateSimUI();
   }
 }
 window.runSimulation = runSimulation;
