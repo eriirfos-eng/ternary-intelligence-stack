@@ -743,19 +743,24 @@ function updateSimUI() {
   const btn = document.getElementById("simBtn");
   if (!btn) return;
   if (simulationRunning) {
-    btn.innerHTML = `<i data-lucide="stop-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">Stop</span>`;
+    btn.innerHTML = `<i data-lucide="square" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">STOP</span>`;
     btn.style.color = "var(--red)";
+    btn.classList.add("running");
   } else {
-    btn.innerHTML = `<i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">Simulate</span>`;
+    btn.innerHTML = `<i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">SIMULATE</span>`;
     btn.style.color = "var(--green)";
+    btn.classList.remove("running");
   }
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 window.updateSimUI = updateSimUI;
 
 function toggleSimulation() {
-  if (simulationRunning) stopSimulation();
-  else runSimulation();
+  if (simulationRunning) {
+    stopSimulation();
+  } else {
+    runSimulation();
+  }
 }
 window.toggleSimulation = toggleSimulation;
 
@@ -2143,12 +2148,11 @@ const NodePanelController = {
 
         <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <input type="color" class="prop-input-strict" style="width:30px; padding:0; border:none; height:24px; cursor:pointer; background:none;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
-            <code style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace;">${customColor.toUpperCase()}</code>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="color" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
+            <code style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
           </div>
         </div>
-
         <div style="display:flex; gap:6px;">
           <button class="btn-pill" style="flex:1; background:var(--bg2);" onclick="openAgentInEditor()">Editor</button>
           <button class="btn-pill" style="flex:1; background:rgba(239,68,68,0.1); color:var(--red);" onclick="deleteNode('${node.id}')">Remove</button>
@@ -2259,12 +2263,11 @@ const NodePanelController = {
       <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2); display:flex; flex-direction:column; gap:12px;">
         <div style="display:flex; flex-direction:column; gap:4px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <input type="color" class="prop-input-strict" style="width:30px; padding:0; border:none; height:24px; cursor:pointer; background:none;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
-            <code style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace;">${customColor.toUpperCase()}</code>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="color" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
+            <code style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
           </div>
         </div>
-
         <div style="display:flex; gap:6px;">
           <button class="btn-pill" style="flex:1; background:var(--bg2);" onclick="openAgentInEditor()">Editor</button>
           <button class="btn-pill" style="flex:1; background:rgba(239,68,68,0.1); color:var(--red);" onclick="deleteNode('${node.id}')">Remove</button>
@@ -3053,14 +3056,16 @@ window.deleteWire = deleteWire;
 function toggleInspector() {
   const ins = document.getElementById("flow-inspector");
   const icon = document.getElementById("ins-toggle-icon");
+  if (!ins) return;
   if (ins.classList.contains("inspector-minimized")) {
     ins.classList.replace("inspector-minimized", "inspector-expanded");
     if (icon) icon.setAttribute("data-lucide", "chevron-down");
   } else {
     ins.classList.replace("inspector-expanded", "inspector-minimized");
     if (icon) icon.setAttribute("data-lucide", "chevron-up");
+    ins.style.height = ""; // Clear inline override
   }
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 window.toggleInspector = toggleInspector;
 
@@ -3405,7 +3410,28 @@ async function runSimulationCore() {
       const transformed = TernaryAlgebra.transform(outSignal, wire);
       if (transformed) {
         currentTickSignals.push({ id: wire.id, val: transformed.val, conf: transformed.conf });
-        // The signal starts traversing now
+        
+        // Progressive Slider Drive
+        const startT = currentSimTime;
+        const dur = simSpeed;
+        const scrubber = document.getElementById("global-timeline");
+        const animStart = performance.now();
+        
+        const driveSlider = () => {
+           if (!simulationRunning || simulationAborted) return;
+           const now = performance.now();
+           const elapsed = now - animStart;
+           const progress = Math.min(1, elapsed / dur);
+           if (scrubber) {
+             scrubber.max = Math.max(parseFloat(scrubber.max), startT + dur);
+             scrubber.value = startT + (progress * dur);
+             const tlLabel = document.getElementById("timeline-tick-label");
+             if (tlLabel) tlLabel.textContent = `TIME: ${(parseFloat(scrubber.value) / 1000).toFixed(2)}s`;
+           }
+           if (progress < 1) requestAnimationFrame(driveSlider);
+        };
+        requestAnimationFrame(driveSlider);
+
         await animateSignal(wire, transformed.val, transformed.conf);
         engineQueue.push({ toId: wire.toId, ...transformed });
       }
@@ -3765,10 +3791,10 @@ function initInspectorDraggable() {
       ins.style.top = (e.clientY - offsetY) + "px";
     } else if (isResizing) {
       const rect = ins.getBoundingClientRect();
-      const newWidth  = e.clientX - rect.left;
-      const newHeight = e.clientY - offsetY; // Use stored offset
-      if (newWidth > 300) ins.style.width = newWidth + "px";
-      if (newHeight > 100) ins.style.height = newHeight + "px";
+      const newWidth  = Math.max(250, e.clientX - rect.left);
+      const newHeight = Math.max(32, e.clientY - offsetY); 
+      ins.style.width = newWidth + "px";
+      ins.style.height = newHeight + "px";
     }
   }
 
