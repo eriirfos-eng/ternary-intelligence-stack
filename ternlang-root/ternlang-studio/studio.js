@@ -3387,6 +3387,10 @@ async function runSimulationCore() {
   // Centralized Playhead Drive
   const scrubber = document.getElementById("global-timeline");
   const tlLabel = document.getElementById("timeline-tick-label");
+  if (scrubber) {
+    scrubber.value = 0;
+    scrubber.max = simSpeed; // Initial window
+  }
   let lastRealTime = performance.now();
 
   const driveTimeline = () => {
@@ -3540,13 +3544,10 @@ function captureSimSnapshot(tick, activeSignals = [], startTime = 0, duration = 
 
   // Real-time Timeline Sync (using absolute time)
   const scrubber = document.getElementById("global-timeline");
-  const tlLabel = document.getElementById("timeline-tick-label");
   const totalDuration = startTime + duration;
   if (scrubber) {
     scrubber.max = totalDuration;
-    scrubber.value = totalDuration;
   }
-  if (tlLabel) tlLabel.textContent = `TIME: ${(totalDuration / 1000).toFixed(2)}s`;
 }
 window.captureSimSnapshot = captureSimSnapshot;
 
