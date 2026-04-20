@@ -832,126 +832,122 @@
 </div>
 
 <!-- ═══ SETTINGS VIEW ════════════════════════════════════════════════════════ -->
-<div id="config-view" style="display: none; position: relative; width: 100%; height: 100%; overflow-y: auto; z-index: 100; background: var(--bg1);">
-<div class="view" id="view-settings" style="padding:40px 0; display:flex; flex-direction:column; gap:24px;">
-
-
-        <div style="font-size:10px; color:var(--muted2);">Enter a new 'tern_...' key to authenticate.</div>
+<div id="config-view" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; overflow-y: auto; z-index: 100; background: var(--bg);">
+  <div id="view-settings" style="display: flex; flex-direction: column; align-items: center; width: 100%; padding: 60px 20px;">
+    
+    <!-- Workspace Authorization -->
+    <div style="background: rgba(20, 25, 35, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; margin-bottom: 24px; width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;">
+      <div>
+        <div style="font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; margin-bottom: 4px;">Workspace Authorization</div>
+        <div style="font-size: 10px; color: var(--muted2);">Enter a new 'tern_...' key to authenticate.</div>
       </div>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="width:280px;" onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="width: 280px;" onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
         <button class="settings-btn btn-primary" onclick="applySettingsKey()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
       </div>
-    </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div style="flex:1;">
-        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Save Key Locally</div>
-        <div style="font-size:10px; color:var(--muted2);">Persists your key securely in localStorage across sessions.</div>
-      </div>
-      <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" style="width:20px; height:20px; cursor:pointer;" />
-    </div>
-  </div>
-
-  <!-- Local Secrets Vault -->
-  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:20px;">
-    <div>
-      <div style="font-size:14px; font-weight:800; color:var(--text); letter-spacing:0.5px; margin-bottom:4px;">Local Secrets Vault</div>
-      <div style="font-size:11px; color:var(--muted2);">Manage API credentials for external LLM routing. Stored securely in localStorage.</div>
-    </div>
-    
-    <div id="secretsVaultList" style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:8px;">
-      <!-- Dynamically populated -->
-    </div>
-    
-    <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px;">
-      <div style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">Add / Update Secret</div>
-      <div style="display:grid; grid-template-columns:140px 1fr auto; gap:12px; align-items:center;">
-        <select id="newSecretProvider" class="settings-select" style="width:100%;">
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic</option>
-          <option value="google">Google</option>
-          <option value="custom">Custom</option>
-          <option value="mcp">MCP</option>
-        </select>
-        <input type="password" id="newSecretKey" class="settings-input" placeholder="Enter API Key..." style="width:100%;" onkeydown="if(event.key==='Enter'){event.preventDefault();addVaultSecret();}" />
-        <button class="settings-btn btn-primary" onclick="addVaultSecret()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Editor Configuration -->
-  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:24px;">
-    <div>
-      <div style="font-size:14px; font-weight:800; color:var(--text); letter-spacing:0.5px; margin-bottom:4px;">Editor Configuration</div>
-      <div style="font-size:11px; color:var(--muted2);">Customize the Monaco Code Editor and global application theme.</div>
-    </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; row-gap:32px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
-        <div>
-          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Font Size</div>
-          <div style="font-size:10px; color:var(--muted2);">Code editor text scale.</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+        <div style="flex: 1;">
+          <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Save Key Locally</div>
+          <div style="font-size: 10px; color: var(--muted2);">Persists your key securely in localStorage across sessions.</div>
         </div>
-        <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()" style="width:120px;">
-          <option value="11">11px</option>
-          <option value="12">12px</option>
-          <option value="13" selected>13px</option>
-          <option value="14">14px</option>
-          <option value="16">16px</option>
-        </select>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
-        <div>
-          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Minimap</div>
-          <div style="font-size:10px; color:var(--muted2);">Show code minimap strip.</div>
-        </div>
-        <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()" style="width:120px;">
-          <option value="false" selected>Off</option>
-          <option value="true">On</option>
-        </select>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Word Wrap</div>
-          <div style="font-size:10px; color:var(--muted2);">Wrap long lines of code.</div>
-        </div>
-        <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()" style="width:120px;">
-          <option value="off" selected>Off</option>
-          <option value="on">On</option>
-          <option value="wordWrapColumn">At column</option>
-        </select>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Theme</div>
-          <div style="font-size:10px; color:var(--muted2);">Global application theme.</div>
-        </div>
-        <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()" style="width:120px;">
-          <option value="dark" selected>Dark</option>
-          <option value="light">Light</option>
-        </select>
+        <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" style="width: 20px; height: 20px; cursor: pointer;" />
       </div>
     </div>
-  </div>
 
-  <!-- About -->
-  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; text-align:center; margin-top:16px;">
-    <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
-      TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
-      Runtime: BET VM (27 registers · balanced ternary)<br/>
-      License: LGPL-3.0-or-later<br/>
-      <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
-      &nbsp;·&nbsp;
-      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
+    <!-- Local Secrets Vault -->
+    <div style="background: rgba(20, 25, 35, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; margin-bottom: 24px; width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;">
+      <div>
+        <div style="font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; margin-bottom: 4px;">Local Secrets Vault</div>
+        <div style="font-size: 11px; color: var(--muted2);">Manage API credentials for external LLM routing. Stored securely in localStorage.</div>
+      </div>
+      <div id="secretsVaultList" style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px;">
+        <!-- Dynamically populated -->
+      </div>
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 16px;">
+        <div style="font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">Add / Update Secret</div>
+        <div style="display: grid; grid-template-columns: 140px 1fr auto; gap: 12px; align-items: center;">
+          <select id="newSecretProvider" class="settings-select" style="width: 100%;">
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="google">Google</option>
+            <option value="custom">Custom</option>
+            <option value="mcp">MCP</option>
+          </select>
+          <input type="password" id="newSecretKey" class="settings-input" placeholder="Enter API Key..." style="width: 100%;" onkeydown="if(event.key==='Enter'){event.preventDefault();addVaultSecret();}" />
+          <button class="settings-btn btn-primary" onclick="addVaultSecret()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
+        </div>
+      </div>
     </div>
-  </div>
 
+    <!-- Editor Configuration -->
+    <div style="background: rgba(20, 25, 35, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; margin-bottom: 24px; width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 24px;">
+      <div>
+        <div style="font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; margin-bottom: 4px;">Editor Configuration</div>
+        <div style="font-size: 11px; color: var(--muted2);">Customize the Monaco Code Editor and global application theme.</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; row-gap: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Font Size</div>
+            <div style="font-size: 10px; color: var(--muted2);">Code editor text scale.</div>
+          </div>
+          <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()" style="width: 120px;">
+            <option value="11">11px</option>
+            <option value="12">12px</option>
+            <option value="13" selected>13px</option>
+            <option value="14">14px</option>
+            <option value="16">16px</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Minimap</div>
+            <div style="font-size: 10px; color: var(--muted2);">Show code minimap strip.</div>
+          </div>
+          <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()" style="width: 120px;">
+            <option value="false" selected>Off</option>
+            <option value="true">On</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Word Wrap</div>
+            <div style="font-size: 10px; color: var(--muted2);">Wrap long lines of code.</div>
+          </div>
+          <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()" style="width: 120px;">
+            <option value="off" selected>Off</option>
+            <option value="on">On</option>
+            <option value="wordWrapColumn">At column</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Theme</div>
+            <div style="font-size: 10px; color: var(--muted2);">Global application theme.</div>
+          </div>
+          <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()" style="width: 120px;">
+            <option value="dark" selected>Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- About / Footer Info -->
+    <div style="background: rgba(20, 25, 35, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; width: 100%; max-width: 800px; text-align: center;">
+      <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
+        TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
+        Runtime: BET VM (27 registers · balanced ternary)<br/>
+        License: LGPL-3.0-or-later<br/>
+        <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
+      </div>
+    </div>
+
+  </div>
 </div>
-</div>
+
 
 <!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
 <div class="view" id="view-docs">
