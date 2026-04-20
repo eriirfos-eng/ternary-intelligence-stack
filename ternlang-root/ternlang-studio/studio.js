@@ -7,6 +7,39 @@ init().then(() => {
   window.dispatchEvent(new Event('wasmready'));
 }).catch(() => { window.wasmReady = false; });
 
+// ─── Pyodide (Python WASM) Initialization ─────────────────────────────────────
+let pyodideInstance = null;
+async function getPyodide() {
+  if (pyodideInstance) return pyodideInstance;
+  try {
+    const sb = document.getElementById('sbWasmStatus');
+    if (sb) sb.textContent = "Pyodide loading…";
+    pyodideInstance = await loadPyodide();
+    if (sb) sb.textContent = "TernVM + Pyodide Ready";
+    return pyodideInstance;
+  } catch (e) {
+    console.error("Pyodide Load Error:", e);
+    return null;
+  }
+}
+
+async function runPythonActuator(code) {
+  const py = await getPyodide();
+  if (!py) return { ok: false, error: "Pyodide not available" };
+
+  let stdout = "";
+  py.setStdout({ batched: (str) => { stdout += str + "\n"; } });
+  py.setStderr({ batched: (str) => { stdout += "ERR: " + str + "\n"; } });
+
+  try {
+    await py.runPythonAsync(code);
+    return { ok: true, output: stdout.trim() };
+  } catch (e) {
+    return { ok: false, error: e.message, traceback: String(e) };
+  }
+}
+window.runPythonActuator = runPythonActuator;
+
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   const devScript = document.createElement('script');
   devScript.src = '.ternstudio-local.js';
@@ -1587,7 +1620,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
          </div>
        </div>
        <div id="art-body-${id}" class="art-display" style="flex:1; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid var(--border2); white-space:pre-wrap;">(Awaiting signal...)</div>
-       <textarea id="art-edit-${id}" class="art-editor" style="display:none; flex:1; background:var(--bg2); color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; border:1px solid var(--cyan); padding:8px; border-radius:4px; outline:none; resize:none;"></textarea>
+       <textarea id="art-edit-${id}" class="art-editor" style="display:none; flex:1; background:var(--bg2); color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; border:1px solid var(--cyan); padding:8px; border-radius:4px; outline:none; resize:none;" oninput="updateArtifactPayload('${id}', this.value)"></textarea>
        <div id="art-socket-label-${id}" style="margin-top:8px; display:none; justify-content:flex-end;">
          <div style="font-size:9px; color:var(--green); font-weight:800; border:1px solid var(--green); padding:2px 4px; border-radius:3px;">EXTEND SOCKET ACTIVE</div>
        </div>
@@ -3808,7 +3841,11 @@ function spawnResultArtifact(sourceNode, val) {
   const isSuspended = !!sourceNode.props.pending_actuator;
   if (isSuspended) {
     const tap = sourceNode.props.pending_actuator;
-    payloadStr = `⚠️  TAP SUSPENSION (STATE 0)\n\nProposed Actuator Logic:\n${tap.code}\n\nDivergent Paths:\n- ${tap.paths.join('\n- ')}\n\nAction: Awaiting Operator Approval.`;
+    if (tap.error) {
+      payloadStr = `❌ WASM RUNTIME ERROR\n\nTraceback:\n${tap.error}\n\nFailed Code:\n${tap.last_failed_code}\n\nAction: Please edit in 'transmute' mode or reject.`;
+    } else {
+      payloadStr = `⚠️  TAP SUSPENSION (STATE 0)\n\nProposed Actuator Logic:\n${tap.code}\n\nDivergent Paths:\n- ${tap.paths.join('\n- ')}\n\nAction: Awaiting Operator Approval.`;
+    }
   }
   
   // Singleton / Upsert pattern: Bind to parent UUID
@@ -3882,17 +3919,58 @@ function renderActuatorControls(artId, sourceNodeId) {
   artBody.appendChild(ctrlDiv);
 }
 
-function resolveTAP(artId, sourceNodeId, val) {
+async function resolveTAP(artId, sourceNodeId, val) {
   const node = flowNodes.find(n => n.id === sourceNodeId);
-  if (node) {
-    delete node.props.pending_actuator; // Clear flag
+  if (!node) return;
+
+  const tap = node.props.pending_actuator;
+  
+  if (val === 1 && tap && tap.code) {
+    logInspector(node.name, "⚙️  TAP Execution Loop: Initiating WASM Sandbox...");
+    const res = await runPythonActuator(tap.code);
+    
+    if (res.ok) {
+      logInspector(node.name, `✅ WASM Success: Output captured (${res.output.length} bytes).`);
+      // Re-injection Loop: Feed result into buffer
+      node.props.runtime_buffer = { type: "text", data: res.output };
+      
+      delete node.props.pending_actuator; // Release
+      deleteNode(artId);
+      injectSignal(sourceNodeId, 1);
+    } else {
+      logInspector(node.name, "❌ WASM Runtime Error: Reverting to State 0...");
+      // Recursive Error State: Update the pending actuator with the error context
+      node.props.pending_actuator.error = res.traceback || res.error;
+      node.props.pending_actuator.last_failed_code = tap.code;
+      
+      // Re-summon the Artifact to display the traceback
+      spawnResultArtifact(node, 0);
+      updatePropertyPanel();
+    }
+  } else {
+    // Standard Resolve (Reject or Manual Overwrite)
+    delete node.props.pending_actuator;
     logInspector("SYSTEM", `✅ TAP RESOLVED: Operator injected ${val === 1 ? '+1' : '-1'} to "${node.name}".`);
+    deleteNode(artId);
     injectSignal(sourceNodeId, val);
   }
-  // Clear the artifact after resolution if desired, or update it
-  deleteNode(artId);
 }
 window.resolveTAP = resolveTAP;
+
+function updateArtifactPayload(id, val) {
+  const node = flowNodes.find(n => n.id === id);
+  if (!node) return;
+  node.props.payload = val;
+  
+  // TAP Integration: If this artifact is linked to a suspended actuator, sync the code
+  if (node.parentId) {
+    const parent = flowNodes.find(p => p.id === node.parentId);
+    if (parent && parent.props.pending_actuator) {
+      parent.props.pending_actuator.code = val;
+    }
+  }
+}
+window.updateArtifactPayload = updateArtifactPayload;
 
 function setArtifactState(id, state) {
   const node = flowNodes.find(n => n.id === id);
@@ -3913,7 +3991,10 @@ function setArtifactState(id, state) {
     display.style.display = 'block';
     editor.style.display  = 'none';
     socketLabel.style.display = 'none';
-    if (editor.value) display.textContent = editor.value;
+    if (editor.value) {
+      display.textContent = editor.value;
+      updateArtifactPayload(id, editor.value);
+    }
   } else if (state === 'transmute') {
     display.style.display = 'none';
     editor.style.display  = 'block';
@@ -3928,7 +4009,8 @@ function setArtifactState(id, state) {
   // Update Buttons
   el.querySelectorAll('.art-btn').forEach(b => b.classList.remove('active'));
   const btnIdx = state === 'lock' ? 0 : (state === 'transmute' ? 1 : 2);
-  el.querySelectorAll('.art-btn')[btnIdx].classList.add('active');
+  const btns = el.querySelectorAll('.art-btn');
+  if (btns[btnIdx]) btns[btnIdx].classList.add('active');
   
   updateWires();
   saveCanvasState();
