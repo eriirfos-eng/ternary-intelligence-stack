@@ -3321,77 +3321,90 @@ async function runSimulation() {
   simulationRunning = true;
   updateSimUI();
 
-  const { errors, warnings } = validateGraph();
-  if (errors.length > 0) {
-    showValidationPanel(errors, warnings);
-    showToast(`${errors.length} error${errors.length>1?'s':''} — fix before simulating`, "error");
-    simulationRunning = false; updateSimUI(); return;
-  }
-
-  // 1. Graph Memory Wipe (Reset execution states)
-  flowNodes.forEach(n => {
-    n.visited = false;
-    n.executed = false;
-    if (n.props) n.props.status = "";
-  });
-  flowWires.forEach(w => {
-    w.active = false;
-    w.signal = 0;
-  });
-
-  // 2. Canvas Scrub (Wipe ghost dots immediately)
-  const canvas = document.getElementById("scrub-layer");
-  if (canvas) {
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  // 3. UI & Clock Reset
-  const scrubber = document.getElementById("global-timeline");
-  if (scrubber) scrubber.value = 0;
-  
-  resetSimHistory();
-  const stopBtn = document.getElementById("simStopBtn");
-  if (stopBtn) stopBtn.style.display = "inline-flex";
-
-  const ins = document.getElementById("flow-inspector");
-  if (ins) {
-    ins.classList.add("active");
-    if (ins.classList.contains("inspector-minimized")) {
-      ins.classList.replace("inspector-minimized", "inspector-expanded");
+  try {
+    const { errors, warnings } = validateGraph();
+    if (errors.length > 0) {
+      showValidationPanel(errors, warnings);
+      showToast(`${errors.length} error${errors.length>1?'s':''} — fix before simulating`, "error");
+      return;
     }
-  }
-  const insBody = document.getElementById("ins-body");
-  if (insBody) insBody.innerHTML = "";
 
-  // Reset visual state
-  document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
-  document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('pulse-affirm','pulse-reject','pulse-hold','node-error','node-warn'));
-  flowNodes.forEach(n => setNodeStatus(n.id, ""));
+    // 1. Graph Memory Wipe (Reset execution states)
+    flowNodes.forEach(n => {
+      n.visited = false;
+      n.executed = false;
+      if (n.props) n.props.status = "";
+    });
+    flowWires.forEach(w => {
+      w.active = false;
+      w.signal = 0;
+    });
 
-  engineQueue.length = 0;
-  logInspector("SYSTEM", "🚀 TernFlow Engine v2 initialized");
-  updateFogHeatmap();
+    // 2. Canvas Scrub (Wipe ghost dots immediately)
+    const canvas = document.getElementById("scrub-layer");
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
-  // Snapshot: Initial State (Tick 0)
-  captureSimSnapshot(0);
+    // 3. UI & Clock Reset
+    const scrubber = document.getElementById("global-timeline");
+    if (scrubber) scrubber.value = 0;
+    
+    resetSimHistory();
+    const stopBtn = document.getElementById("simStopBtn");
+    if (stopBtn) stopBtn.style.display = "inline-flex";
 
-  // Initial Seed
-  const roots = flowNodes.filter(n => !flowWires.some(w => w.toId === n.id));
-  roots.forEach(root => {
-    engineQueue.push({ toId: root.id, val: 1, conf: 1.0, origin: "ROOT" });
-  });
+    const ins = document.getElementById("flow-inspector");
+    if (ins) {
+      ins.classList.add("active");
+      if (ins.classList.contains("inspector-minimized")) {
+        ins.classList.replace("inspector-minimized", "inspector-expanded");
+      }
+    }
+    const insBody = document.getElementById("ins-body");
+    if (insBody) insBody.innerHTML = "";
 
-  // PHANTOM PASS: Pure Logic & Timing Calculation
-  const { scheduledEvents, maxSimDuration } = await calculateGlobalTimeline();
-  window.globalScheduledEvents = scheduledEvents; // Persist for manual scrubbing
-  
-  // VISUAL PASS: Pure Rendering & Playback
-  if (!simulationAborted) {
-    await runSimulationCore(scheduledEvents, maxSimDuration);
-  } else {
-    simulationRunning = false;
-    updateSimUI();
+    // Reset visual state
+    document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
+    document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('pulse-affirm','pulse-reject','pulse-hold','node-error','node-warn'));
+    flowNodes.forEach(n => setNodeStatus(n.id, ""));
+
+    engineQueue.length = 0;
+    logInspector("SYSTEM", "🚀 TernFlow Engine v2 initialized");
+    updateFogHeatmap();
+
+    // Snapshot: Initial State (Tick 0)
+    captureSimSnapshot(0);
+
+    // Initial Seed
+    const roots = flowNodes.filter(n => !flowWires.some(w => w.toId === n.id));
+    roots.forEach(root => {
+      engineQueue.push({ toId: root.id, val: 1, conf: 1.0, origin: "ROOT" });
+    });
+
+    // PHANTOM PASS: Pure Logic & Timing Calculation
+    const { scheduledEvents, maxSimDuration } = await calculateGlobalTimeline();
+    window.globalScheduledEvents = scheduledEvents; // Persist for manual scrubbing
+    
+    // VISUAL PASS: Pure Rendering & Playback
+    if (!simulationAborted) {
+      await runSimulationCore(scheduledEvents, maxSimDuration);
+    }
+  } catch (err) {
+    console.error("Simulation Start Failure:", err);
+    showToast("Simulation failed to initialize", "err");
+    if (window.TERNLANG_CRITICAL_DEBUG) {
+      window.TERNLANG_CRITICAL_DEBUG.push({ ts: Date.now(), msg: "runSimulation Crash", error: err.message });
+    }
+  } finally {
+    // Note: runSimulationCore manages its own simulationRunning = false
+    // But if we failed before starting the core, we must reset it here.
+    const isCoreRunning = (simulationRunning && !simulationAborted);
+    if (!isCoreRunning) {
+       simulationRunning = false;
+       updateSimUI();
+    }
   }
 }
 window.runSimulation = runSimulation;
@@ -3797,9 +3810,16 @@ window.scrubSimulation = scrubSimulation;
 
 function stopSimulation() {
   simulationAborted = true;
-  showToast("Simulation stopping...", "warn");
   simulationRunning = false;
+  showToast("Simulation stopping...", "warn");
   updateSimUI();
+  
+  // Clear canvas overlay immediately
+  const canvas = document.getElementById("scrub-layer");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 }
 window.stopSimulation = stopSimulation;
 
