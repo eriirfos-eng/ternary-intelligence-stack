@@ -3382,7 +3382,30 @@ window.runSimulation = runSimulation;
 async function runSimulationCore() {
   let tick = simHistory.length > 0 ? simHistory[simHistory.length-1].tick : 0;
   const nodeState = {};
-  let currentSimTime = 0; // Cumulative duration in ms
+  let currentSimTime = 0; // Virtual timeline anchor in ms
+
+  // Centralized Playhead Drive
+  const scrubber = document.getElementById("global-timeline");
+  const tlLabel = document.getElementById("timeline-tick-label");
+  let lastRealTime = performance.now();
+
+  const driveTimeline = () => {
+    if (!simulationRunning || simulationAborted) return;
+    const now = performance.now();
+    const delta = now - lastRealTime;
+    lastRealTime = now;
+
+    if (scrubber) {
+      const cur = parseFloat(scrubber.value) || 0;
+      scrubber.value = cur + delta;
+      if (tlLabel) tlLabel.textContent = `TIME: ${(parseFloat(scrubber.value) / 1000).toFixed(2)}s`;
+      
+      // Physically drive the dot interpolation from the clock
+      requestScrub(scrubber.value);
+    }
+    requestAnimationFrame(driveTimeline);
+  };
+  requestAnimationFrame(driveTimeline);
 
   while (engineQueue.length > 0 && tick < MAX_ENGINE_TICKS && !simulationAborted) {
     const signal = engineQueue.pop();
@@ -3411,29 +3434,11 @@ async function runSimulationCore() {
       if (transformed) {
         currentTickSignals.push({ id: wire.id, val: transformed.val, conf: transformed.conf });
         
-        // Stabilize: Capture snapshot BEFORE animation to set the startTime baseline
+        // Record the event window for continuous interpolation
         captureSimSnapshot(tick, currentTickSignals, currentSimTime, simSpeed);
 
-        // Progressive Slider Drive
-        const startT = currentSimTime;
-        const dur = simSpeed;
-        const scrubber = document.getElementById("global-timeline");
-        const animStart = performance.now();
-        
-        const driveSlider = () => {
-           if (!simulationRunning || simulationAborted) return;
-           const now = performance.now();
-           const elapsed = now - animStart;
-           const progress = Math.min(1, elapsed / dur);
-           if (scrubber) {
-             scrubber.max = Math.max(parseFloat(scrubber.max), startT + dur);
-             scrubber.value = startT + (progress * dur);
-             const tlLabel = document.getElementById("timeline-tick-label");
-             if (tlLabel) tlLabel.textContent = `TIME: ${(parseFloat(scrubber.value) / 1000).toFixed(2)}s`;
-           }
-           if (progress < 1) requestAnimationFrame(driveSlider);
-        };
-        requestAnimationFrame(driveSlider);
+        // Update timeline max to encompass new future
+        if (scrubber) scrubber.max = currentSimTime + simSpeed;
 
         await animateSignal(wire, transformed.val, transformed.conf);
         engineQueue.push({ toId: wire.toId, ...transformed });
@@ -3441,10 +3446,7 @@ async function runSimulationCore() {
     }
 
     tick++;
-
-    // Increment virtual time by simSpeed (one animation hop)
     currentSimTime += simSpeed;
-
     updateFogHeatmap();
   }
 
@@ -3664,37 +3666,9 @@ function renderScrubLayer(snapshotIdx, frac) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const state = simHistory[snapshotIdx];
-  const maxState = simHistory[simHistory.length - 1];
 
-  // Multiverse Ghosting: Draw Final Outcomes at low opacity
-  if (maxState && maxState.activeSignals) {
-    ctx.globalAlpha = 0.15;
-    maxState.activeSignals.forEach(sig => {
-      const wire = flowWires.find(w => w.id === sig.id);
-      if (!wire) return;
-      const svgPath = document.getElementById(wire.id);
-      if (!svgPath) return;
-
-      try {
-        const totalLength = svgPath.getTotalLength();
-        const pt = svgPath.getPointAtLength(totalLength);
-
-        const canvasX = pt.x * CT.scale + CT.x;
-        const canvasY = pt.y * CT.scale + CT.y;
-
-        ctx.beginPath();
-        const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
-        ctx.fillStyle = color;
-        const size = (6 + (8 * sig.conf)) * CT.scale;
-        ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
-        ctx.fill();
-      } catch(e) {}
-    });
-    ctx.globalAlpha = 1.0;
-  }
-
-  // Transient Interpolation: physically slide along the wires
-  if (state.activeSignals) {
+  // Transient Interpolation: physically slide along the wires (Global Clock slave)
+  if (state && state.activeSignals) {
     state.activeSignals.forEach(sig => {
       const wire = flowWires.find(w => w.id === sig.id);
       if (!wire) return;
@@ -3710,8 +3684,9 @@ function renderScrubLayer(snapshotIdx, frac) {
         const canvasX = pt.x * CT.scale + CT.x;
         const canvasY = pt.y * CT.scale + CT.y;
 
-        ctx.beginPath();
         const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
+        
+        ctx.beginPath();
         ctx.fillStyle = color;
         ctx.shadowColor = color;
         ctx.shadowBlur = 10 * CT.scale;
@@ -4500,32 +4475,24 @@ async function animateSignal(wire, signal, confidence = 1.0) {
   const start = getPortPos(fromPort);
   const end = getPortPos(toPort);
 
-  const d = computeWirePath(start, end, wire);
-
-  const particle = document.createElement("div");
-  particle.className = "trit-particle";
-  particle.style.setProperty("--d", `"${d}"`);
-  particle.style.setProperty("--speed", `${simSpeed}ms`);
-  const color = signal === 1 ? 'var(--green)' : (signal === -1 ? 'var(--red)' : 'var(--amber)');
-  particle.style.background = color;
-  particle.style.setProperty("--glow", color);
-  
-  // Scale particle by confidence
-  const size = 6 + (8 * confidence);
-  particle.style.width = size + "px";
-  particle.style.height = size + "px";
-  particle.style.opacity = 0.3 + (0.7 * confidence);
-
-  // Attach particle to canvas so it zooms/pans with the path
-  document.getElementById("flow-canvas").appendChild(particle);
-  
   // Highlight wire with confidence
   drawWire(start, end, wire.id, signal, wire, confidence);
 
-  await new Promise(r => setTimeout(r, simSpeed));
-  particle.remove();
-}
-window.animateSignal = animateSignal;
+  // Instead of setTimeout, we wait for the Global Clock to advance past the current simSpeed window
+  await new Promise(r => {
+    const check = () => {
+      const scrubber = document.getElementById("global-timeline");
+      const cur = parseFloat(scrubber.value) || 0;
+      const history = simHistory[simHistory.length-1];
+      if (!simulationRunning || simulationAborted || (history && cur >= history.startTime + history.duration)) {
+        r();
+      } else {
+        requestAnimationFrame(check);
+      }
+    };
+    check();
+  });
+}window.animateSignal = animateSignal;
 
 function getPortPos(port) {
   const rect = port.getBoundingClientRect();
