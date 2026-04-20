@@ -1,66 +1,55 @@
-# Ternlang Studio — The Visual SDK for the Ternary Intelligence Stack
+# Ternlang Studio
+## The Visual IDE & SDK for the Ternary Intelligence Stack
 
-Ternlang Studio is the flagship industrial IDE and orchestration platform for the **Ternary Intelligence Stack (TIS)**. It provides a high-density, visual environment for designing, simulating, and deploying agents based on a non-binary, state-based execution paradigm.
+Welcome to **Ternlang Studio**, the flagship orchestration platform for the Ternary Intelligence Stack (TIS). This isn't just a code editor; it is a high-density, visual environment designed for architecting, simulating, and deploying neurosymbolic AI swarms.
 
-Unlike classical binary systems, Ternlang operates on **Balanced Ternary Logic**:
-- **+1 (Affirm / Truth)**: Positive signal or consensus.
-- **0 (Tend / Hold)**: Uncertainty, pending state, or neutral signal.
-- **-1 (Reject / Conflict)**: Veto, error, or hard rejection.
-
-## Core Architecture
-
-Ternlang Studio is engineered for high-performance orchestration of massive agent swarms.
-
-### JIT (Just-In-Time) DOM Hydration
-To support industrial-scale projects, the Studio's Explorer utilizes a **Lazy Hydration** engine. It can manage directories containing up to 30,000 files while maintaining a footprint of fewer than 1000 active DOM nodes. 
-- **On Collapse**: Child nodes are strictly pruned via `innerHTML = ""` to reclaim memory and prevent DOM thrashing.
-- **On Expand**: Nodes are dynamically injected only for the visible branch, ensuring a sub-10ms UI response time even in deep hierarchies.
-
-### Secure Fly.io API Proxy
-Production deployments and premium asset delivery are handled via a hardened **Rust-based API (Axum)** hosted on Fly.io. This backend acts as a secure proxy for GitHub PAT-restricted assets and provides the registry gateway for Fleet synchronization, ensuring that sensitive credentials never reach the client-side execution context.
-
-## The Local Secrets Vault
-
-The Studio implements a bidirectional, persistent **Local Secrets Vault** managed via `localStorage` (key: `ternflow_secrets`). 
-
-- **Provider-Agnostic**: Supports centralized management for OpenAI, Anthropic, Google, Grok, and Custom Webhooks.
-- **Hot-Syncing**: Entering an API key in the Config UI immediately updates the global vault. Conversely, adding an LLM Bridge node automatically pulls the relevant key from the vault based on the selected protocol.
-- **Zero-Leak Policy**: Keys are injected only at the moment of the proxy call and are never stored within the `.flow` or `.tern` source files.
-
-## XML-Shielded LLM Bridge
-
-The **LLM Bridge** acts as a probabilistic routing engine between deterministic ternary logic and stochastic large language models.
-
-### Contextual Shielding
-To prevent prompt poisoning and ensure structural integrity, injected downstream payloads from `runtime_buffer` are wrapped in strict XML tags:
-```xml
-<context>
-  <data_payload>
-    {{INJECTED_DATA}}
-  </data_payload>
-</context>
-```
-
-### Token Safety Circuit Breakers
-Before execution, a heuristic token counter estimates the payload size. If the estimate exceeds **80% of the target model's context window** (e.g., 128k for GPT-4, 1M for Gemini 1.5), the Studio triggers a **Safety Halt**, logs an error to the Inspector, and emits a `-1` (Reject) signal to prevent execution failure or massive token wastage.
-
-## The Ternary Multiverse Scrubber
-
-The simulation engine features a high-performance **Time Travel** debugger powered by a hardware-accelerated HTML5 Canvas overlay (`#scrub-layer`).
-
-- **Delta-Logging Ring Buffer**: Instead of expensive full-state snapshots, the engine records state deltas in a **2000-tick ring buffer**.
-- **Hardware Acceleration**: The canvas overlay renders interpolated signal particles and "multiverse ghosts" (terminal outcomes) at 60FPS using `requestAnimationFrame`, bypassing the performance bottlenecks of DOM-based rendering.
-- **Transient Scrubbing**: Developers can visually scrub through micro-second transit pulses, observing how signals diverge and converge across the graph in real-time.
-
-## Build & Deploy Pipeline
-
-Ternlang Studio provides a seamless transition from visual design to production runtime.
-
-1. **Visual Canvas**: Design the agent swarm using the industrial drag-and-drop interface.
-2. **Graph Validation**: Automated checks for circular dependencies (Kahn's algorithm), isolated nodes, and schema mismatches.
-3. **.tern Code Compilation**: The visual graph is compiled into a unified `.tern` manifest, preserving the topological integrity of the swarm.
-4. **Local Export**: Download the compiled `.tern` source for local execution via `ternlang-cli`.
-5. **Direct API Deployment**: Publish directly to the Fly.io production registry. This registers the agent slug (e.g., `/api/agent/my-agent`), syncs it with your Fleet Dashboard, and activates the live endpoint for authenticated API consumers.
+By moving away from binary constraints (True/False) and embracing **Balanced Ternary Logic** (+1 Affirm, 0 Tend, -1 Reject), Ternlang Studio allows operators to model uncertainty, consensus, and conflict natively within their agent workflows.
 
 ---
-*© 2026 RFI-IRFOS. All rights reserved. Managed by the Ternary Intelligence Stack.*
+
+## 🖥️ The IDE Experience
+
+Ternlang Studio seamlessly bridges visual node-based programming with raw, code-first development. The workspace is divided into specialized modules to handle every phase of the engineering lifecycle:
+
+*   📊 **Dash**: Your high-level command center. View active fleet metrics, recent compilations, and global workspace health.
+*   **</> Editor**: A fully-featured code environment for writing raw `.tern` scripts. Includes syntax highlighting, linting for ternary exhaustiveness, and instant compilation to the BET VM.
+*   🧬 **Lab (Canvas)**: The visual orchestration engine. Drag and drop Data Sources, LLM Bridges, and Logic Gates to draw your flow. Hit "Simulate" to watch data navigate the network.
+*   🛰️ **Fleet**: Manage your local and remote `albert-agents`. Monitor telemetry, sync offline nodes, and assign compiled workflows to specific agents in the field.
+*   📖 **Docs**: Integrated, offline-first documentation. Instantly search the Standard Library (STDLIB) or your authenticated Premium Modules without leaving the IDE.
+*   🐞 **Tracer**: The visual debugger. A hardware-accelerated time-travel scrubber that lets you rewind simulations and inspect exact signal states (-1, 0, +1) at any millisecond.
+*   📦 **Registry**: The GUI for `ternpkg`. Search, install, and manage modular dependencies and community crates directly from the TIS ecosystem.
+*   ⚙️ **Config**: Your persistent, Tier-3 workspace settings. Manage your Fly.io API connections and your local Secrets Vault.
+
+---
+
+## 🧠 Core SDK Capabilities
+
+Ternlang Studio is more than an IDE; it is a complete pipeline for turning visual logic into deployable software.
+
+### 1. Build & Deploy Pipeline
+Transition from visual design to production effortlessly. The Studio validates your drawn graph using automated checks for circular dependencies (**Kahn's algorithm**), isolated nodes, and schema mismatches. It then compiles the logic into a strict `.tern` manifest, allowing you to export code locally or deploy directly to the live **Fly.io proxy registry** (powered by a hardened Rust/Axum backend).
+
+### 2. XML-Shielded LLM Bridge
+Connect deterministic logic to probabilistic LLMs safely. When injecting payloads, the Bridge automatically wraps data in strict `<context>` XML tags to prevent prompt poisoning. Built-in **Token Safety circuit breakers** prevent massive credit wastage by aborting executions that exceed 80% of a model's context window.
+
+### 3. The Ternary Multiverse Scrubber
+Debug like never before. The Studio uses a GPU-accelerated HTML5 canvas overlay and a **2000-tick delta-logging ring buffer** to let you scrub backward and forward through a simulation. Watch signals pulse along the wires, branch into parallel multiverses, and observe transient states at 60FPS without lagging the browser.
+
+### 4. High-Performance DOM Hydration
+Working with the massive Premium Library? The Explorer uses **Just-In-Time (JIT) Lazy Hydration**, allowing you to seamlessly navigate directories with up to 30,000 files while keeping the browser's active DOM footprint well under 1,000 nodes by strictly pruning collapsed branches.
+
+### 5. Local Secrets Vault
+Never hardcode an API key again. The Config tab features a bidirectional, encrypted `localStorage` vault (`ternflow_secrets`). Save your OpenAI, Anthropic, Grok, or Custom Webhook keys once, and all your LLM Bridges will dynamically inherit them securely at runtime without leaking them into source files.
+
+---
+
+## 🚀 Getting Started
+
+1.  **Configure**: Set your Endpoint URL and API Key in the **Config** tab.
+2.  **Persist**: Ensure "Save Key Locally" is checked so your session persists across reloads.
+3.  **Design**: Open the **Lab** to start dragging nodes, or open the **Editor** to write raw `.tern` code.
+4.  **Deploy**: Click **Compile** to generate your payload, and **Deploy** to push it to the swarm.
+
+---
+
+*© 2026 RFI-IRFOS. All rights reserved. Technology must serve people, not their surveillance.*
