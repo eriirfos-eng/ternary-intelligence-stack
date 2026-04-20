@@ -42,9 +42,8 @@ COPY compiler/legacy_shim/ternlang-core/src      compiler/legacy_shim/ternlang-c
 COPY compiler/legacy_shim/ternlang-core/stdlib   compiler/legacy_shim/ternlang-core/stdlib
 COPY ternlang-ml/src        ternlang-ml/src
 COPY ternlang-api/src       ternlang-api/src
-COPY ternlang-web/index.html      ternlang-web/index.html
-COPY ternlang-web/pricing.html    ternlang-web/pricing.html
-COPY ternlang-studio/index.html   ternlang-studio/index.html
+COPY ternlang-web/      ternlang-web/
+COPY ternlang-studio/   ternlang-studio/
 COPY playground/index.html        playground/index.html
 COPY playground/pkg/ternlang_wasm.js       playground/pkg/ternlang_wasm.js
 COPY playground/pkg/ternlang_wasm_bg.wasm  playground/pkg/ternlang_wasm_bg.wasm
@@ -65,8 +64,12 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /
+
 COPY --from=builder /build/target/release/ternlang-api /usr/local/bin/ternlang-api
 COPY --from=builder /build/stdlib /stdlib
+COPY --from=builder /build/ternlang-web /ternlang-web
+COPY --from=builder /build/ternlang-studio /ternlang-studio
 
 # Fly.io injects PORT; our app reads it (default 3731)
 ENV PORT=8080

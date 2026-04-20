@@ -4243,6 +4243,117 @@ async fn github_activate(
     }))).into_response()
 }
 
+#[derive(serde::Deserialize)]
+struct PremiumFileQuery {
+    path: String,
+}
+
+async fn premium_list(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> Response {
+    let raw_key = headers.get("x-ternlang-key").or_else(|| headers.get("X-Ternlang-Key"))
+        .and_then(|v| v.to_str().ok()).unwrap_or("");
+    
+    let is_premium = if raw_key.is_empty() {
+        false
+    } else {
+        match state.keys.peek(raw_key).await {
+            Some(e) if e.is_active && e.tier >= 2 => true,
+            _ => false,
+        }
+    };
+
+    if !is_premium {
+        return api_error(StatusCode::FORBIDDEN, "Premium access requires Tier 2+ API key.");
+    }
+
+    if state.github_token.is_empty() {
+        return api_error(StatusCode::INTERNAL_SERVER_ERROR, "GITHUB_TOKEN not configured.");
+    }
+
+    let client = reqwest::Client::new();
+    let url = "https://api.github.com/repos/eriirfos-eng/ternlang-premium/git/trees/main?recursive=1";
+    let resp = match client.get(url)
+        .header("Authorization", format!("Bearer {}", state.github_token))
+        .header("User-Agent", "ternlang-api")
+        .send().await {
+            Ok(r) => r,
+            Err(e) => return api_error(StatusCode::BAD_GATEWAY, &format!("GitHub API error: {}", e)),
+        };
+
+    if !resp.status().is_success() {
+        let err_text = resp.text().await.unwrap_or_default();
+        return api_error(StatusCode::BAD_GATEWAY, &format!("GitHub API failed: {}", err_text));
+    }
+
+    let tree_data: Value = match resp.json().await {
+        Ok(v) => v,
+        Err(_) => return api_error(StatusCode::INTERNAL_SERVER_ERROR, "Failed to parse GitHub JSON"),
+    };
+
+    let mut files = Vec::new();
+    if let Some(arr) = tree_data["tree"].as_array() {
+        for item in arr {
+            if item["type"].as_str() == Some("blob") {
+                if let Some(path) = item["path"].as_str() {
+                    files.push(path.to_string());
+                }
+            }
+        }
+    }
+    
+    files.sort();
+    (StatusCode::OK, Json(json!({ "status": "ok", "files": files }))).into_response()
+}
+
+async fn premium_file(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Query(query): Query<PremiumFileQuery>,
+) -> Response {
+    let raw_key = headers.get("x-ternlang-key").or_else(|| headers.get("X-Ternlang-Key"))
+        .and_then(|v| v.to_str().ok()).unwrap_or("");
+    
+    let is_premium = if raw_key.is_empty() {
+        false
+    } else {
+        match state.keys.peek(raw_key).await {
+            Some(e) if e.is_active && e.tier >= 2 => true,
+            _ => false,
+        }
+    };
+
+    if !is_premium {
+        return api_error(StatusCode::FORBIDDEN, "Premium access requires Tier 2+ API key.");
+    }
+
+    if state.github_token.is_empty() {
+        return api_error(StatusCode::INTERNAL_SERVER_ERROR, "GITHUB_TOKEN not configured.");
+    }
+
+    let client = reqwest::Client::new();
+    let url = format!("https://raw.githubusercontent.com/eriirfos-eng/ternlang-premium/main/{}", query.path);
+    let resp = match client.get(&url)
+        .header("Authorization", format!("token {}", state.github_token))
+        .header("User-Agent", "ternlang-api")
+        .send().await {
+            Ok(r) => r,
+            Err(e) => return api_error(StatusCode::BAD_GATEWAY, &format!("GitHub raw API error: {}", e)),
+        };
+
+    if !resp.status().is_success() {
+        return api_error(StatusCode::NOT_FOUND, "File not found in premium library.");
+    }
+
+    let content = match resp.text().await {
+        Ok(t) => t,
+        Err(_) => return api_error(StatusCode::INTERNAL_SERVER_ERROR, "Failed to read content"),
+    };
+
+    (StatusCode::OK, Json(json!({ "status": "ok", "content": content }))).into_response()
+}
+
 // ─── TaaS Payloads ────────────────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
@@ -4594,6 +4705,8 @@ async fn main() {
         .route("/api/agents/publish",  post(publish_agent))
         .route("/api/agent/{slug}",    post(call_agent).delete(delete_agent))
         .route("/api/run",        post(run_program))
+        .route("/api/premium/list", get(premium_list))
+        .route("/api/premium/file", get(premium_file))
         // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))
         .route("/api/trit_vector",       post(trit_vector))

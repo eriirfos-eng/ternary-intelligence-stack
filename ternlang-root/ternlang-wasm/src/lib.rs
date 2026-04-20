@@ -12,12 +12,13 @@ use ternlang_core::vm::Value;
 
 #[derive(Serialize)]
 struct RunResult {
-    ok:     bool,
-    output: Vec<String>,
-    trit:   i8,       // -1 / 0 / +1
-    label:  String,   // "affirm" / "hold" / "reject"
-    error:  Option<String>,
-    cycles: usize,    // bytecode bytes (proxy for complexity)
+    ok:        bool,
+    output:    Vec<String>,
+    trit:      i8,       // -1 / 0 / +1
+    label:     String,   // "affirm" / "hold" / "reject"
+    registers: Vec<String>, // debug state
+    error:     Option<String>,
+    cycles:    usize,    // bytecode bytes (proxy for complexity)
 }
 
 /// Run a complete .tern source program through the real BET VM.
@@ -25,6 +26,7 @@ struct RunResult {
 /// Returns JSON:
 /// ```json
 /// { "ok": true, "output": ["hello"], "trit": 1, "label": "affirm",
+///   "registers": ["Trit(Affirm)", "Int(42)"],
 ///   "error": null, "cycles": 42 }
 /// ```
 /// On any error `ok` is false and `error` carries the message.
@@ -34,7 +36,7 @@ pub fn run_tern(src: &str) -> String {
         Ok(r)  => r,
         Err(e) => RunResult {
             ok: false, output: vec![], trit: 0,
-            label: "hold".into(), error: Some(e), cycles: 0,
+            label: "hold".into(), registers: vec![], error: Some(e), cycles: 0,
         },
     };
     serde_json::to_string(&r).unwrap_or_else(|e| format!(r#"{{"ok":false,"error":"{e}"}}"#))
@@ -119,6 +121,7 @@ fn execute(src: &str) -> Result<RunResult, String> {
 
     // 5. Collect output + result trit
     let output = vm.take_output();
+    let registers = vm.get_registers().into_iter().map(|v| format!("{:?}", v)).collect();
     let trit_val: i8 = match vm.peek_stack() {
         Some(Value::Trit(t))  => t as i8,
         Some(Value::Int(n))   => n.clamp(-1, 1) as i8,
@@ -127,5 +130,5 @@ fn execute(src: &str) -> Result<RunResult, String> {
     };
     let label = match trit_val { 1 => "affirm", -1 => "reject", _ => "hold" }.into();
 
-    Ok(RunResult { ok: true, output, trit: trit_val, label, error: None, cycles })
+    Ok(RunResult { ok: true, output, trit: trit_val, label, registers, error: None, cycles })
 }

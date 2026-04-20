@@ -138,9 +138,60 @@ function updateApiKey(val) {
   if (val) {
     showToast("API Key updated", "ok");
     toggleKeyInput();
+    loadPremiumTree(); // Fetch premium content when key is entered
   }
 }
 window.updateApiKey = updateApiKey;
+
+function toggleStdlibVisibility(show) {
+  const container = document.getElementById('stdlib-tree-container');
+  if (container) {
+    container.style.display = show ? 'block' : 'none';
+  }
+}
+window.toggleStdlibVisibility = toggleStdlibVisibility;
+
+async function loadPremiumTree() {
+  const key = document.getElementById("apiKey").value.trim();
+  const container = document.getElementById('premium-tree-container');
+  const treeEl = document.getElementById("premium-file-tree");
+
+  if (!key || !container || !treeEl) {
+    if (container) container.style.display = 'none';
+    return;
+  }
+  
+  container.style.display = 'block';
+  treeEl.innerHTML = '<div class="tree-file" style="color:var(--muted)">Syncing premium assets...</div>';
+
+  try {
+    const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+    const r = await fetch(`${endpoint}/api/premium/list`, {
+      headers: { 'X-Ternlang-Key': localStorage.getItem('ternstudio-key') || '' }
+    });
+
+    if (!r.ok) {
+      const errTextRaw = await r.text();
+      console.error(`Premium fetch failed | Status: ${r.status} | URL: ${r.url} | Raw Response:`, errTextRaw);
+      const errorText = r.status === 403 ? "Auth Failed. Invalid Key." : `HTTP Error ${r.status}`;
+      treeEl.innerHTML = `<div class="tree-file" style="color:var(--red)">${errorText}</div>`;
+      return;
+    }
+
+    const d = await r.json();
+    console.log('Premium Tree Payload:', d);
+    if (d.status === "ok" && Array.isArray(d.files)) {
+      renderFileTree(treeEl, d.files, false, true); // container, files, isGithub, isPremium
+    } else {
+      treeEl.innerHTML = `<div class="tree-file" style="color:var(--red)">Error: ${d.error || 'Failed to load structure'}</div>`;
+    }
+  } catch (e) {
+    treeEl.innerHTML = '<div class="tree-file" style="color:var(--red)">Connection to API failed.</div>';
+    console.error("Premium fetch error:", e);
+  }
+}
+window.loadPremiumTree = loadPremiumTree;
+
 
 async function switchView(name) {
   localStorage.setItem("ternstudio-last-view", name);
@@ -149,9 +200,19 @@ async function switchView(name) {
   
   const viewEl = document.getElementById("view-" + name);
   const tabEl = document.getElementById("vt-" + name);
+  const configView = document.getElementById("config-view");
   
   if (viewEl) viewEl.classList.add("active");
   if (tabEl) tabEl.classList.add("active");
+  
+  if (configView) {
+    if (name === "settings") {
+      configView.style.display = "block";
+    } else {
+      configView.style.display = "none";
+    }
+  }
+
   if (name === "editor" && monacoEditor) {
     setTimeout(() => monacoEditor.layout(), 50);
   }
@@ -278,7 +339,9 @@ window.deleteAgent = deleteAgent;
 
 async function syncFleetRegistry() {
   try {
-    const r = await fetch("https://ternlang-api.fly.dev/api/agents");
+    const r = await fetch("https://ternlang-api.fly.dev/api/agents", {
+      headers: { 'X-Ternlang-Key': localStorage.getItem('ternstudio-key') || '' }
+    });
     const d = await r.json();
     console.log('Raw Fleet API Response:', d);
     if (d.status === "ok" && d.agents) {
@@ -1448,9 +1511,13 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
   const canvas = document.getElementById("flow-canvas");
   const node = document.createElement("div");
   node.id = id;
-  const typeClass = type === 'external' ? ' external' : (type === 'gate' ? ' gate' : (type === 'artifact' ? ' artifact' : (type === 'moe13' ? ' moe13' : '')));
+  const typeClass = type === 'external' ? ' external' : (type === 'gate' ? ' gate' : (type === 'artifact' ? ' artifact' : (type === 'moe13' ? ' moe13' : (type === 'datasource' ? ' datasource' : ''))));
   node.className = "flow-node" + typeClass;
   if (isStub) node.classList.add('artifact-stub');
+  if (type === 'datasource') {
+    node.style.borderLeft = "4px solid #f43f5e";
+    node.style.borderRadius = "0 8px 8px 0";
+  }
   
   // Dynamic Sizing
   const nodeW = type === 'artifact' ? 300 : (type === 'moe13' ? 320 : 180);
@@ -1481,6 +1548,8 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
     icon = 'brain-circuit'; iconColor = 'var(--magenta)'; label = 'MOE-13 ORCHESTRATOR';
   } else if (type === 'artifact') {
     icon = 'file-text'; iconColor = 'var(--green)'; label = 'RESULT ARTIFACT';
+  } else if (type === 'datasource') {
+    icon = 'database'; iconColor = '#f43f5e'; label = 'DATA SOURCE';
   }
 
   let bodyContent = `
@@ -1548,7 +1617,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
       <div class="inj-btn inj-zero" onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); injectSignal('${id}', 0)" title="Inject 0 Tend">0</div>
       <div class="inj-btn inj-neg" onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); injectSignal('${id}', -1)" title="Inject -1 Reject">-1</div>
     </div>
-    <div class="flow-port flow-port-in"  style="left:-7px;  top:50%; margin-top:-6px;" title="Input"></div>
+    ${type !== 'datasource' ? `<div class="flow-port flow-port-in"  style="left:-7px;  top:50%; margin-top:-6px;" title="Input"></div>` : ''}
     <div class="flow-port flow-port-out" style="right:-7px; top:50%; margin-top:-6px;" title="Output"></div>
     ${type === 'artifact' ? '<div class="inspector-resizer" style="width:10px; height:10px;"></div>' : ''}
   `;
@@ -1755,6 +1824,8 @@ const NodePanelController = {
         this.renderLLMSemantic(node, bodyEl, inWires, outWires, schemaWarning);
       } else if (node.type === 'artifact') {
         this.renderArtifactSemantic(node, bodyEl, inWires, outWires, schemaWarning);
+      } else if (node.type === 'datasource') {
+        this.renderDataSourceSemantic(node, bodyEl, inWires, outWires, schemaWarning);
       } else {
         this.renderSemantic(node, bodyEl, inWires, outWires, schemaWarning);
       }
@@ -1783,6 +1854,33 @@ const NodePanelController = {
             ${node.isStub ? 'Expand UI (Restore)' : 'Collapse to Checkpoint'}
           </button>
           <button class="btn-pill" style="flex:1; background:rgba(239,68,68,0.1); color:var(--red);" onclick="deleteNode('${node.id}')">Purge Data</button>
+      </div>
+    `;
+    lucide.createIcons();
+  },
+
+  renderDataSourceSemantic(node, bodyEl, inWires, outWires, schemaWarning) {
+    const dataType = node.props.data_type || "text";
+    const payload = node.props.payload || "";
+
+    bodyEl.innerHTML = `
+      <div class="prop-section">
+        <div class="prop-label-strict">Node Name</div>
+        <input type="text" class="prop-input" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+      </div>
+      <div class="prop-section">
+        <div class="prop-label-strict">Data Type</div>
+        <select class="prop-input" onchange="updateNodeProp('data_type', this.value)">
+          <option value="text" ${dataType === 'text' ? 'selected' : ''}>Raw Text</option>
+          <option value="json" ${dataType === 'json' ? 'selected' : ''}>JSON Array</option>
+          <option value="csv" ${dataType === 'csv' ? 'selected' : ''}>CSV Data</option>
+          <option value="markdown" ${dataType === 'markdown' ? 'selected' : ''}>Markdown</option>
+        </select>
+      </div>
+      <div class="prop-section" style="flex:1; display:flex; flex-direction:column;">
+        <div class="prop-label-strict">Payload Injector (Semantic Data)</div>
+        <textarea class="prop-input" style="flex:1; resize:vertical; min-height:200px; font-family:'JetBrains Mono', monospace; font-size:12px; line-height:1.4;" placeholder="Paste raw semantic payload here..." oninput="updateNodeProp('payload', this.value)">${payload}</textarea>
+        <div style="font-size:10px; color:var(--muted2); margin-top:4px;">Injected directly into downstream runtime buffer on Simulation.</div>
       </div>
     `;
     lucide.createIcons();
@@ -1905,12 +2003,20 @@ const NodePanelController = {
 
   renderLLMSemantic(node, bodyEl, inWires, outWires, schemaWarning) {
     const intent = node.props.system_prompt || "";
-    const provider = node.props.provider || "openai";
-    const apiKey = node.props.api_key || "";
-    const mapping = node.props.mapping || "classification";
+    const protocol = node.props.protocol || "openai";
+    const modelId = node.props.model_id || "";
+    const baseUrl = node.props.base_url || "";
     const temp = node.props.temperature ?? 0.5;
     const tokens = node.props.max_trits ?? 1024;
-    const template = node.props.template || "Evaluate this signal: {{input}}";
+    
+    // Pull from vault if not set or when protocol changes
+    const secrets = getTernflowSecrets();
+    const apiKey = node.props.api_key || secrets[protocol] || "";
+    
+    // Auto-populate node prop if it was empty
+    if (apiKey && !node.props.api_key) node.props.api_key = apiKey;
+
+    const showBaseUrl = (protocol === "openai" || protocol === "webhook");
 
     bodyEl.innerHTML = `
       <div class="prop-section">
@@ -1931,14 +2037,35 @@ const NodePanelController = {
       </div>
 
       <div class="prop-section" style="margin-top:8px;">
-        <div class="prop-label-strict">Connection Settings</div>
-        <select class="prop-input-strict" style="margin-bottom:6px;" onchange="updateNodeProp('provider', this.value)">
-          <option value="openai" ${provider==='openai'?'selected':''}>OpenAI (GPT-4o)</option>
-          <option value="anthropic" ${provider==='anthropic'?'selected':''}>Anthropic (Claude 3.5)</option>
-          <option value="gemini" ${provider==='gemini'?'selected':''}>Google (Gemini 1.5 Pro)</option>
-          <option value="custom" ${provider==='custom'?'selected':''}>Custom / Local (Ollama)</option>
-        </select>
-        <input type="password" class="prop-input-strict" value="${apiKey}" placeholder="API Key" oninput="updateNodeProp('api_key', this.value)">
+        <div class="prop-label-strict">Routing Configuration</div>
+        
+        <div style="margin-bottom:8px;">
+          <div class="prop-label-strict" style="font-size:9px; color:var(--muted2);">Transport Protocol</div>
+          <select class="prop-input-strict" onchange="updateBridgeProtocol('${node.id}', this.value)">
+            <option value="openai" ${protocol==='openai'?'selected':''}>OpenAI-Compatible REST</option>
+            <option value="anthropic" ${protocol==='anthropic'?'selected':''}>Anthropic Native</option>
+            <option value="google" ${protocol==='google'?'selected':''}>Google Native</option>
+            <option value="webhook" ${protocol==='webhook'?'selected':''}>Custom Webhook</option>
+            <option value="mcp" ${protocol==='mcp'?'selected':''}>MCP (Model Context Protocol)</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div class="prop-label-strict" style="font-size:9px; color:var(--muted2);">Target Model ID</div>
+          <input type="text" class="prop-input-strict" value="${modelId}" placeholder="e.g. grok-3 or claude-3-7-sonnet" oninput="updateNodeProp('model_id', this.value)">
+        </div>
+
+        ${showBaseUrl ? `
+        <div style="margin-bottom:8px;">
+          <div class="prop-label-strict" style="font-size:9px; color:var(--muted2);">Base URL</div>
+          <input type="text" class="prop-input-strict" value="${baseUrl}" placeholder="https://api.openai.com/v1" oninput="updateNodeProp('base_url', this.value)">
+        </div>
+        ` : ''}
+
+        <div style="margin-bottom:8px;">
+          <div class="prop-label-strict" style="font-size:9px; color:var(--muted2);">Provider API Key</div>
+          <input type="password" class="prop-input-strict" value="${apiKey}" placeholder="Linked to ${protocol} vault" oninput="updateNodeProp('api_key', this.value)">
+        </div>
       </div>
 
       <div class="prop-section">
@@ -2184,9 +2311,30 @@ function updateNodeProp(key, val) {
   } else {
     node.props[key] = val;
   }
+
+  // Bidirectional Secret Sync: Push mutation to global vault
+  if (node.type === 'external' && key === 'api_key') {
+    const protocol = node.props.protocol || 'openai';
+    setTernflowSecret(protocol, val);
+  }
+
   saveCanvasState();
 }
 window.updateNodeProp = updateNodeProp;
+
+function updateBridgeProtocol(nodeId, protocol) {
+  const node = flowNodes.find(n => n.id === nodeId);
+  if (!node) return;
+  node.props.protocol = protocol;
+  
+  // Dynamically pull key from vault for the new protocol
+  const secrets = getTernflowSecrets();
+  node.props.api_key = secrets[protocol] || "";
+  
+  updatePropertyPanel(); // Refresh UI to show correct key and conditional fields
+  saveCanvasState();
+}
+window.updateBridgeProtocol = updateBridgeProtocol;
 
 function addExternalBridge() {
   const id = "bridge_" + Date.now();
@@ -2201,6 +2349,13 @@ function addTernaryGate() {
   createFlowNode("Consensus Gate", "gate", pos.x, pos.y, 'gate', id);
 }
 window.addTernaryGate = addTernaryGate;
+
+function addDataSource() {
+  const id = "data_" + Date.now();
+  const pos = viewportCenterInCanvas((Math.random()-0.5)*100, (Math.random()-0.5)*80);
+  createFlowNode("Data Source", "source", pos.x, pos.y, 'datasource', id);
+}
+window.addDataSource = addDataSource;
 
 // ─── Library tab switching ────────────────────────────────────────────────────
 function switchLibTab(tab) {
@@ -2873,7 +3028,7 @@ class SignalQueue {
 }
 
 const engineQueue = new SignalQueue();
-const MAX_ENGINE_TICKS = 100;
+const MAX_ENGINE_TICKS = 2000;
 
 /**
  * Confidence Fog Heatmap Renderer
@@ -2952,7 +3107,7 @@ async function runSimulation() {
   }
 
   // GC sweep - removed clearResultArtifacts() to support branch extension
-  simHistory = [];
+  resetSimHistory();
   document.getElementById("sim-timeline").style.display = "none";
   document.getElementById("simStopBtn").style.display = "inline-flex";
 
@@ -3040,26 +3195,74 @@ async function runSimulationCore() {
 }
 window.runSimulationCore = runSimulationCore;
 
+// ─── DELTA RING TIMELINE ─────────────────────────────────────────────────────────
+
+let simBaseState = null;
+let currentSimState = null;
+
+function resetSimHistory() {
+  simHistory = [];
+  simBaseState = null;
+  currentSimState = null;
+  lastRenderedTick = -1;
+  const canvas = document.getElementById("scrub-layer");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+window.resetSimHistory = resetSimHistory;
+
 function captureSimSnapshot(tick, activeSignals = []) {
-  const snapshot = {
-    tick: tick,
-    activeSignals: activeSignals, // [{wireId, val, conf}]
-    nodes: flowNodes.map(n => {
-      const el = document.getElementById(n.id);
-      return {
-        id: n.id,
-        status: n.props.status || "",
-        pulse: el ? (el.classList.contains('pulse-affirm') ? 'affirm' : (el.classList.contains('pulse-reject') ? 'reject' : (el.classList.contains('pulse-hold') ? 'hold' : ''))) : ""
-      };
-    }),
-    wires: flowWires.map(w => ({
-      id: w.id,
-      signal: w.signal || 0,
-      condition: w.condition || "all"
-    })),
-    fog: []
-  };
-  simHistory.push(snapshot);
+  if (simHistory.length === 0 || !simBaseState) {
+    simBaseState = {
+      nodes: flowNodes.map(n => {
+        const el = document.getElementById(n.id);
+        const pulse = el ? (el.classList.contains('pulse-affirm') ? 'affirm' : (el.classList.contains('pulse-reject') ? 'reject' : (el.classList.contains('pulse-hold') ? 'hold' : ''))) : "";
+        return { id: n.id, status: n.props.status || "", pulse };
+      }),
+      wires: flowWires.map(w => ({ id: w.id, signal: w.signal || 0 }))
+    };
+    currentSimState = JSON.parse(JSON.stringify(simBaseState));
+  }
+
+  const delta = { tick, activeSignals, nodeDeltas: [], wireDeltas: [] };
+
+  flowNodes.forEach(n => {
+    const el = document.getElementById(n.id);
+    const pulse = el ? (el.classList.contains('pulse-affirm') ? 'affirm' : (el.classList.contains('pulse-reject') ? 'reject' : (el.classList.contains('pulse-hold') ? 'hold' : ''))) : "";
+    const status = n.props.status || "";
+    
+    const currNode = currentSimState.nodes.find(cn => cn.id === n.id);
+    if (currNode && (currNode.status !== status || currNode.pulse !== pulse)) {
+       delta.nodeDeltas.push({ id: n.id, status, pulse });
+       currNode.status = status; currNode.pulse = pulse;
+    }
+  });
+
+  flowWires.forEach(w => {
+    const sig = w.signal || 0;
+    const currWire = currentSimState.wires.find(cw => cw.id === w.id);
+    if (currWire && currWire.signal !== sig) {
+       delta.wireDeltas.push({ id: w.id, signal: sig });
+       currWire.signal = sig;
+    }
+  });
+
+  simHistory.push(delta);
+
+  // Strict 2000-tick Circular Buffer
+  if (simHistory.length > MAX_ENGINE_TICKS) {
+    const oldest = simHistory.shift();
+    oldest.nodeDeltas.forEach(nd => {
+       const bn = simBaseState.nodes.find(n => n.id === nd.id);
+       if (bn) { bn.status = nd.status; bn.pulse = nd.pulse; }
+    });
+    oldest.wireDeltas.forEach(wd => {
+       const bw = simBaseState.wires.find(w => w.id === wd.id);
+       if (bw) bw.signal = wd.signal;
+    });
+  }
 }
 window.captureSimSnapshot = captureSimSnapshot;
 
@@ -3069,75 +3272,168 @@ function showTimeline() {
   const label = document.getElementById("sim-tick-label");
   
   tl.style.display = "flex";
-  scrubber.max = simHistory.length - 1;
-  scrubber.value = simHistory.length - 1;
-  label.textContent = `Tick ${simHistory.length - 1}/${simHistory.length - 1}`;
+  const minTick = simHistory.length > 0 ? simHistory[0].tick : 0;
+  const maxTick = simHistory.length > 0 ? simHistory[simHistory.length - 1].tick : 0;
+  
+  scrubber.min = minTick;
+  scrubber.max = maxTick;
+  scrubber.value = maxTick;
+  label.textContent = `Tick ${maxTick}/${maxTick}`;
 }
 window.showTimeline = showTimeline;
 
-function scrubSimulation(index) {
-  const idx = parseInt(index);
-  const state = simHistory[idx];
-  if (!state) return;
-  
-  document.getElementById("sim-tick-label").textContent = `Tick ${idx}/${simHistory.length - 1}`;
-  
-  // Clear old ghost particles
-  document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
+let lastRenderedTick = -1;
+let scrubAnimFrame = null;
+let currentScrubValue = 0;
 
-  // Apply history state to UI
-  state.nodes.forEach(ns => {
-    const el = document.getElementById(ns.id);
-    if (el) {
-      el.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
-      if (ns.pulse) el.classList.add('pulse-' + ns.pulse);
-      setNodeStatus(ns.id, ns.status);
-    }
-    const node = flowNodes.find(n => n.id === ns.id);
-    if (node) node.props.status = ns.status;
-  });
-  
-  state.wires.forEach(ws => {
-    const wire = flowWires.find(w => w.id === ws.id);
-    if (wire) {
-      wire.signal = ws.signal;
-    }
-  });
+function requestScrub(val) {
+  currentScrubValue = parseFloat(val);
+  if (!scrubAnimFrame) {
+    scrubAnimFrame = requestAnimationFrame(performScrub);
+  }
+}
+window.requestScrub = requestScrub;
 
-  // Render Historical Dots (Reverse Flow)
+function performScrub() {
+  scrubAnimFrame = null;
+  const val = currentScrubValue;
+  if (simHistory.length === 0 || !simBaseState) return;
+  
+  const minTick = simHistory[0].tick;
+  const maxTick = simHistory[simHistory.length - 1].tick;
+  
+  const label = document.getElementById("sim-tick-label");
+  if(label) label.textContent = `Tick ${Math.floor(val)}/${maxTick}`;
+
+  const floorTick = Math.floor(val);
+  const frac = val - floorTick;
+
+  // 1. Rebuild DOM state only if integer tick changed
+  if (floorTick !== lastRenderedTick) {
+    lastRenderedTick = floorTick;
+    
+    const state = JSON.parse(JSON.stringify(simBaseState));
+    const targetIdx = floorTick - minTick;
+    for (let i = 0; i <= targetIdx && i < simHistory.length; i++) {
+      const delta = simHistory[i];
+      delta.nodeDeltas.forEach(nd => {
+        const sn = state.nodes.find(n => n.id === nd.id);
+        if (sn) { sn.status = nd.status; sn.pulse = nd.pulse; }
+      });
+      delta.wireDeltas.forEach(wd => {
+        const sw = state.wires.find(w => w.id === wd.id);
+        if (sw) sw.signal = wd.signal;
+      });
+    }
+
+    // Apply to DOM
+    state.nodes.forEach(ns => {
+      const el = document.getElementById(ns.id);
+      if (el) {
+        el.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
+        if (ns.pulse) el.classList.add('pulse-' + ns.pulse);
+        setNodeStatus(ns.id, ns.status);
+      }
+      const node = flowNodes.find(n => n.id === ns.id);
+      if (node) node.props.status = ns.status;
+    });
+    
+    state.wires.forEach(ws => {
+      const wire = flowWires.find(w => w.id === ws.id);
+      if (wire) wire.signal = ws.signal;
+    });
+    
+    // Clear old ghost divs just in case they persist from before
+    document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
+
+    updateWires();
+    updateFogHeatmap();
+  }
+
+  // 2. Hardware-accelerated Canvas Overlay (Transient + Multiverse Ghosting)
+  renderScrubLayer(floorTick, frac);
+}
+
+function renderScrubLayer(floorTick, frac) {
+  const canvas = document.getElementById("scrub-layer");
+  const wrap = document.getElementById("flow-canvas-wrap");
+  if (!canvas || !wrap) return;
+  
+  const ctx = canvas.getContext("2d");
+  if (canvas.width !== wrap.clientWidth || canvas.height !== wrap.clientHeight) {
+    canvas.width = wrap.clientWidth; 
+    canvas.height = wrap.clientHeight;
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const minTick = simHistory[0].tick;
+  const targetIdx = floorTick - minTick;
+  if (targetIdx < 0 || targetIdx >= simHistory.length) return;
+
+  const state = simHistory[targetIdx];
+  const maxState = simHistory[simHistory.length - 1];
+
+  // Multiverse Ghosting: Draw Final Outcomes at low opacity
+  if (maxState && maxState.activeSignals) {
+    ctx.globalAlpha = 0.15;
+    maxState.activeSignals.forEach(sig => {
+      const wire = flowWires.find(w => w.id === sig.id);
+      if (!wire) return;
+      const svgPath = document.getElementById(wire.id);
+      if (!svgPath) return;
+      
+      try {
+        const totalLength = svgPath.getTotalLength();
+        const pt = svgPath.getPointAtLength(totalLength);
+        
+        const canvasX = pt.x * CT.scale + CT.x;
+        const canvasY = pt.y * CT.scale + CT.y;
+        
+        ctx.beginPath();
+        const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
+        ctx.fillStyle = color;
+        const size = (6 + (8 * sig.conf)) * CT.scale;
+        ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
+        ctx.fill();
+      } catch(e) {}
+    });
+    ctx.globalAlpha = 1.0;
+  }
+
+  // Transient Interpolation: physically slide along the wires
   if (state.activeSignals) {
     state.activeSignals.forEach(sig => {
       const wire = flowWires.find(w => w.id === sig.id);
       if (!wire) return;
-      const fromNode = document.getElementById(wire.fromId);
-      const toNode = document.getElementById(wire.toId);
-      if (!fromNode || !toNode) return;
-
-      const start = getPortPos(fromNode.querySelector('.flow-port-out'));
-      const end = getPortPos(toNode.querySelector('.flow-port-in'));
-      const d = computeWirePath(start, end, wire);
-
-      const ghost = document.createElement("div");
-      ghost.className = "trit-particle trit-particle-ghost";
-      ghost.style.setProperty("--d", `"${d}"`);
-      ghost.style.animation = "none";
-      ghost.style.offsetDistance = "100%"; // Position at target
       
-      const color = sig.val === 1 ? 'var(--green)' : (sig.val === -1 ? 'var(--red)' : 'var(--amber)');
-      ghost.style.background = color;
-      ghost.style.setProperty("--glow", color);
+      const svgPath = document.getElementById(wire.id);
+      if (!svgPath) return;
       
-      const size = 6 + (8 * sig.conf);
-      ghost.style.width = size + "px";
-      ghost.style.height = size + "px";
-      ghost.style.opacity = 0.8;
-      
-      document.getElementById("flow-canvas").appendChild(ghost);
+      try {
+        const totalLength = svgPath.getTotalLength();
+        // Transient moves from 0 to 1 based on frac
+        const pt = svgPath.getPointAtLength(frac * totalLength);
+        
+        const canvasX = pt.x * CT.scale + CT.x;
+        const canvasY = pt.y * CT.scale + CT.y;
+        
+        ctx.beginPath();
+        const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10 * CT.scale;
+        
+        const size = (6 + (8 * sig.conf)) * CT.scale;
+        ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } catch(e) {}
     });
   }
-  
-  updateWires(); // This will re-render paths based on current signal state
-  updateFogHeatmap();
+}
+
+function scrubSimulation(index) {
+  requestScrub(index);
 }
 window.scrubSimulation = scrubSimulation;
 
@@ -3249,10 +3545,40 @@ function setNodeStatus(id, status) {
 window.setNodeStatus = setNodeStatus;
 
 async function executeLLMNode(node, inSignal) {
-  const prompt = (node.props.template || "{{input}}").replace("{{input}}", inSignal === 1 ? "affirm" : (inSignal === -1 ? "reject" : "tend"));
+  let querySignal = (node.props.template || "{{input}}").replace("{{input}}", inSignal === 1 ? "affirm" : (inSignal === -1 ? "reject" : "tend"));
   const system = node.props.system_prompt || "You are a ternary logic processor. Output only +1 (affirm), 0 (tend), or -1 (reject).";
+
+  const protocol = node.props.protocol || 'openai';
+  const modelId = node.props.model_id || '';
+
+  let finalPrompt = querySignal;
+
+  // 1. Structural XML Wrapper
+  if (node.props.runtime_buffer && node.props.runtime_buffer.data) {
+    const injectedData = node.props.runtime_buffer.data;
+    finalPrompt = `Here is the ingested data for your analysis:\n\n<context><data_payload>\n${injectedData}\n</data_payload></context>\n\nUser: ${querySignal}`;
+  }
+
+  // 2. Token Safety Check
+  const estimatedTokens = Math.ceil((system.length + finalPrompt.length) / 4);
+  let contextWindow = 8192; // Default fallback
+  const lowerId = modelId.toLowerCase();
   
-  logInspector(node.name, `🌐 Calling LLM [${node.props.provider || 'openai'}]…`);
+  if (lowerId.includes("gemini-1.5")) contextWindow = 1048576;
+  else if (lowerId.includes("gemini")) contextWindow = 32768;
+  else if (lowerId.includes("claude-3")) contextWindow = 200000;
+  else if (lowerId.includes("gpt-4")) contextWindow = 128000;
+  else if (lowerId.includes("gpt-3.5") || lowerId.includes("gpt-35")) contextWindow = 16384;
+  else if (lowerId.includes("grok")) contextWindow = 131072;
+  else if (protocol === "anthropic") contextWindow = 200000;
+  else if (protocol === "google") contextWindow = 1048576;
+
+  if (estimatedTokens > contextWindow * 0.8) {
+    logInspector(node.name, `❌ Token Safety Halt: Payload (${estimatedTokens} tk) exceeds 80% of ${contextWindow} tk context window.`);
+    return -1;
+  }
+
+  logInspector(node.name, `🌐 Calling LLM [${protocol}:${modelId || 'default'}] (${estimatedTokens} tk)…`);
 
   try {
     const response = await fetch('/api/run', {
@@ -3262,8 +3588,9 @@ async function executeLLMNode(node, inSignal) {
         source: `// LLM Bridge Proxy\nfn main() -> trit { return hold; }`, // Stub for security compatibility
         llm_config: {
           system,
-          prompt,
-          provider: node.props.provider,
+          prompt: finalPrompt,
+          protocol,
+          model_id: modelId,
           api_key: node.props.api_key,
           base_url: node.props.base_url,
           temperature: node.props.temperature,
@@ -3271,7 +3598,6 @@ async function executeLLMNode(node, inSignal) {
         }
       })
     });
-    
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const r = await response.json();
     
@@ -3307,6 +3633,18 @@ async function simulateNode(node, inSignal) {
     outSignal = await executeLLMNode(node, inSignal);
   } else if (node.type === 'moe13') {
     outSignal = await executeMOE13(node, inSignal);
+  } else if (node.type === 'datasource') {
+    const payloadData = node.props.payload || "";
+    logInspector(node.name, `📡 Injecting Payload: [${node.props.data_type || 'text'}] ${payloadData.substring(0, 20)}...`);
+    const outWires = flowWires.filter(w => w.fromId === node.id);
+    outWires.forEach(w => {
+      const downNode = flowNodes.find(n => n.id === w.toId);
+      if (downNode) {
+        downNode.props.runtime_buffer = { type: node.props.data_type || 'text', data: payloadData };
+        logInspector("SYSTEM", `💾 Buffered ${payloadData.length} bytes to ${downNode.name}`);
+      }
+    });
+    outSignal = 1; // Affirm data dispatched
   } else {
     // Standard Agent or Gate
     const code = node.props.code || "";
@@ -4350,7 +4688,7 @@ function renderBuiltinTree(tree) {
 }
 window.renderBuiltinTree = renderBuiltinTree;
 
-function renderFileTree(tree, files, isGitHub = false) {
+function renderFileTree(tree, files, isGitHub = false, isPremium = false) {
   const groups = {};
   files.forEach(path => {
     const parts = path.split('/');
@@ -4359,7 +4697,10 @@ function renderFileTree(tree, files, isGitHub = false) {
     if (!groups[dir]) groups[dir] = [];
     groups[dir].push(path);
   });
-  if (Object.keys(groups).length === 0) { showNoKeyMessage(tree); return; }
+  if (Object.keys(groups).length === 0) { 
+    if (!isPremium) showNoKeyMessage(tree); 
+    return; 
+  }
   tree.innerHTML = "";
   if (isGitHub) {
     const banner = document.createElement("div");
@@ -4373,31 +4714,43 @@ function renderFileTree(tree, files, isGitHub = false) {
     const dirEl = document.createElement("div");
     dirEl.className = "tree-dir collapsed"; // Start collapsed
     dirEl.innerHTML = `<span class="arrow">▸</span> <i data-lucide="folder" style="width:12px; height:12px"></i> ${dir}/`;
+    
+    const filesEl = document.createElement("div");
+    filesEl.className = "tree-files hidden"; // Start hidden
+
     dirEl.onclick = () => {
-      const filesEl = section.querySelector(".tree-files");
       const isHidden = filesEl.classList.toggle("hidden");
       dirEl.classList.toggle("collapsed", isHidden);
       dirEl.querySelector(".arrow").textContent = isHidden ? "▸" : "▾";
+      
+      if (isHidden) {
+        // Explicitly remove children from DOM to save nodes
+        filesEl.innerHTML = "";
+      } else {
+        // Lazy Hydration: inject DOM nodes only when expanded
+        groups[dir].forEach(path => {
+          const name = path.split('/').pop();
+          const fileEl = document.createElement("div");
+          fileEl.className = "tree-file";
+          fileEl.dataset.path = path;
+          fileEl.dataset.github = isGitHub ? "1" : "";
+          fileEl.dataset.premium = isPremium ? "1" : "";
+          fileEl.innerHTML = `<i data-lucide="file-code" style="width:12px; height:12px"></i> ${name}`;
+          fileEl.onclick = () => { openFile(path, isGitHub, isPremium); switchView('editor'); };
+          filesEl.appendChild(fileEl);
+        });
+        refreshTreeHighlight();
+        lucide.createIcons({ root: filesEl });
+      }
     };
+    
     section.appendChild(dirEl);
-    const filesEl = document.createElement("div");
-    filesEl.className = "tree-files hidden"; // Start hidden
-    groups[dir].forEach(path => {
-      const name = path.split('/').pop();
-      const fileEl = document.createElement("div");
-      fileEl.className = "tree-file";
-      fileEl.dataset.path = path;
-      fileEl.dataset.github = isGitHub ? "1" : "";
-      fileEl.innerHTML = `<i data-lucide="file-code" style="width:12px; height:12px"></i> ${name}`;
-      fileEl.onclick = () => { openFile(path, isGitHub); switchView('editor'); };
-      filesEl.appendChild(fileEl);
-    });
     section.appendChild(filesEl);
     tree.appendChild(section);
   });
   tree.dataset.loaded = "true";
   refreshTreeHighlight();
-  lucide.createIcons();
+  lucide.createIcons({ root: tree });
 }
 window.renderFileTree = renderFileTree;
 
@@ -4506,17 +4859,40 @@ function switchToTab(path) {
 }
 window.switchToTab = switchToTab;
 
-async function openFile(path, useGithub = false) {
+async function openFile(path, useGithub = false, usePremium = false) {
   if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
 
   if (fileBuffers[path]) {
     loadToEditor(path, fileBuffers[path]);
     return;
   }
-
-  // Check if the tree loaded this from GitHub
+  
   const treeEl = document.querySelector(`.tree-file[data-path="${CSS.escape(path)}"]`);
-  if (useGithub || (treeEl && treeEl.dataset.github === "1")) {
+  const isPremium = usePremium || (treeEl && treeEl.dataset.premium === "1");
+  const isGithub = useGithub || (treeEl && treeEl.dataset.github === "1");
+
+  if (isPremium) {
+    try {
+      const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
+      const r = await fetch(`${endpoint}/api/premium/file?path=${encodeURIComponent(path)}`, {
+        headers: { 'X-Ternlang-Key': localStorage.getItem('ternstudio-key') || '' }
+      });
+      if (!r.ok) throw new Error(`Auth failed or file not found (${r.status})`);
+      const d = await r.json();
+      if (d.content) {
+        fileBuffers[path] = d.content;
+        loadToEditor(path, d.content);
+      } else {
+        throw new Error("Invalid response from server");
+      }
+      return;
+    } catch (e) {
+      showToast(`Failed to load premium file: ${e.message}`, 'err');
+      return;
+    }
+  }
+  
+  if (isGithub) {
     try {
       const r = await fetch(GH_TERNROOT + path);
       if (r.ok) {
@@ -4526,11 +4902,11 @@ async function openFile(path, useGithub = false) {
         return;
       }
     } catch(e) {}
-    showToast("Failed to load from GitHub", "error");
+    showToast("Failed to load from GitHub", "err");
     return;
   }
 
-  // Fetch from API
+  // Fallback to standard API
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
     const key = document.getElementById("apiKey").value.trim();
@@ -4542,10 +4918,10 @@ async function openFile(path, useGithub = false) {
       fileBuffers[path] = d.content;
       loadToEditor(path, d.content);
     } else {
-      showToast(d.error || "Failed to read file", "error");
+      showToast(d.error || "Failed to read file", "err");
     }
   } catch (e) {
-    showToast("Connection Error", "error");
+    showToast("Connection Error", "err");
   }
 }
 window.openFile = openFile;
@@ -5136,8 +5512,13 @@ function toggleSaveKey() {
   const checked = document.getElementById("saveKeyCheck").checked;
   localStorage.setItem("ternstudio-save-key", checked ? "1" : "0");
   if (checked) {
-    const key = document.getElementById("apiKey").value.trim();
-    if (key) localStorage.setItem("ternstudio-key", key);
+    let key = (document.getElementById("settingsNewKey") || {}).value || "";
+    if (!key.trim()) key = document.getElementById("apiKey").value.trim();
+    if (key) {
+      document.getElementById("apiKey").value = key.trim();
+      localStorage.setItem("ternstudio-key", key.trim());
+      syncSettingsKeyDisplay();
+    }
   } else {
     localStorage.removeItem("ternstudio-key");
   }
@@ -5191,6 +5572,7 @@ function syncSettingsUI() {
   syncSettingsKeyDisplay();
   const theme = document.documentElement.getAttribute("data-theme") || "dark";
   document.getElementById("settingsTheme").value = theme;
+  renderVaultUI();
 }
 window.syncSettingsUI = syncSettingsUI;
 
@@ -5210,6 +5592,55 @@ function applyThemeFromSettings() {
   if (monacoEditor) monaco.editor.setTheme(val === "light" ? "ternstudio-light" : "ternstudio-dark");
 }
 window.applyThemeFromSettings = applyThemeFromSettings;
+
+// ─── Local Secrets Vault (TernFlow) ──────────────────────────────────────────
+function getTernflowSecrets() {
+  try {
+    return JSON.parse(localStorage.getItem("ternflow_secrets") || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+function setTernflowSecret(provider, key) {
+  const secrets = getTernflowSecrets();
+  if (key) secrets[provider] = key;
+  else delete secrets[provider];
+  localStorage.setItem("ternflow_secrets", JSON.stringify(secrets));
+  renderVaultUI();
+}
+window.setTernflowSecret = setTernflowSecret;
+
+function addVaultSecret() {
+  const provider = document.getElementById("newSecretProvider").value;
+  const key = document.getElementById("newSecretKey").value.trim();
+  if (key) {
+    setTernflowSecret(provider, key);
+    document.getElementById("newSecretKey").value = "";
+    showToast(`Secret for ${provider} updated`, "ok");
+  }
+}
+window.addVaultSecret = addVaultSecret;
+
+function renderVaultUI() {
+  const listEl = document.getElementById("secretsVaultList");
+  if (!listEl) return;
+  const secrets = getTernflowSecrets();
+  const providers = ["openai", "anthropic", "google", "custom"];
+  
+  listEl.innerHTML = providers.map(p => {
+    const key = secrets[p] || "";
+    const masked = key ? (key.slice(0, 8) + "…" + key.slice(-4)) : "Not set";
+    return `
+      <div style="display:grid; grid-template-columns:140px 1fr auto; gap:12px; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--border2);">
+        <div style="font-size:12px; font-weight:600; color:var(--text); text-transform:capitalize;">${p}</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:${key ? 'var(--cyan)' : 'var(--muted2)'};">${masked}</div>
+        <button class="settings-btn" onclick="setTernflowSecret('${p}', '')" style="color:var(--red); border-color:rgba(239,68,68,0.2); transition:background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear</button>
+      </div>
+    `;
+  }).join("");
+}
+window.renderVaultUI = renderVaultUI;
 
 // ─── Usage dashboard ──────────────────────────────────────────────────────────
 const TIER_BENEFITS = {
@@ -5536,12 +5967,16 @@ require(["vs/editor/editor.main"], function () {
     document.getElementById("apiKey").value = savedKey;
     document.getElementById("topbarKeyInput").value = savedKey;
     fetchUsage();
+    syncFleetRegistry();
+    loadPremiumTree();
   } else if (window.TERNSTUDIO_DEV_KEY) {
     // Auto-load dev key from local config (.ternstudio-local.js, gitignored)
     document.getElementById("apiKey").value = window.TERNSTUDIO_DEV_KEY;
     document.getElementById("topbarKeyInput").value = window.TERNSTUDIO_DEV_KEY;
     localStorage.setItem("ternstudio-key", window.TERNSTUDIO_DEV_KEY);
     fetchUsage();
+    syncFleetRegistry();
+    loadPremiumTree();
   } else {
     renderUsageAnon();
     buildFileTree();

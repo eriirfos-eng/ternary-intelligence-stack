@@ -351,16 +351,32 @@
   <div id="editor-sidebar">
 
     <!-- Explorer panel -->
-    <div class="sidebar-panel active" id="panel-explorer">
+    <div class="sidebar-panel active" id="panel-explorer" style="display:flex; flex-direction:column;">
       <div class="sidebar-header">
         Explorer
-        <div style="display:flex;gap:2px;">
+        <div style="display:flex;gap:8px; align-items: center;">
+          <label title="Toggle Standard Library" for="show-stdlib-toggle" style="font-size:10px; color:var(--muted); display:flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="checkbox" id="show-stdlib-toggle" onchange="toggleStdlibVisibility(this.checked)" checked> Stdlib
+          </label>
           <button class="sidebar-new-btn" onclick="triggerImportFile()" title="Import local file">↑</button>
           <button class="sidebar-new-btn" onclick="newFile()" title="New scratch file">+</button>
         </div>
       </div>
       <input type="file" id="localFileInput" accept=".tern,.json,.txt" style="display:none" onchange="importLocalFile(event)">
-      <div id="file-tree"></div>
+      <div id="explorer-trees" style="flex:1; overflow-y:auto;">
+        <div id="stdlib-tree-container">
+          <div class="tree-root-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            Standard Library
+          </div>
+          <div id="file-tree" class="file-tree-body"></div>
+        </div>
+        <div id="premium-tree-container" style="display:none;">
+          <div class="tree-root-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            Premium Library
+          </div>
+          <div id="premium-file-tree" class="file-tree-body"></div>
+        </div>
+      </div>
     </div>
 
     <!-- History panel -->
@@ -673,6 +689,7 @@
   <!-- Main View Area -->
   <div id="flow-canvas-wrap">
     <canvas id="flow-fog-canvas"></canvas>
+    <canvas id="scrub-layer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10;"></canvas>
     <div id="flow-canvas">
       <svg id="flow-svg-layer">
         <!-- Wires rendered here -->
@@ -708,6 +725,9 @@
         </button>
         <button class="btn-pill" onclick="addTernaryGate()" title="Ternary Gate" style="color:var(--cyan);">
           <i data-lucide="git-merge" style="width:14px"></i> <span>Gate</span>
+        </button>
+        <button class="btn-pill" onclick="addDataSource()" title="Data Source" style="color:#f43f5e;">
+          <i data-lucide="database" style="width:14px"></i> <span>Source</span>
         </button>
       </div>
 
@@ -772,7 +792,7 @@
       <!-- Timeline Scrubber -->
       <div id="sim-timeline" style="display:none; padding:8px 12px; background:var(--bg1); border-bottom:1px solid var(--border); align-items:center; gap:12px;">
         <span style="font-size:10px; font-weight:700; color:var(--cyan); white-space:nowrap;">TIME TRAVEL</span>
-        <input type="range" id="sim-scrubber" min="0" max="0" value="0" step="1" style="flex:1;" oninput="scrubSimulation(this.value)">
+        <input type="range" id="sim-scrubber" min="0" max="0" value="0" step="0.01" style="flex:1;" oninput="requestScrub(this.value)">
         <span id="sim-tick-label" style="font-size:10px; font-family:'JetBrains Mono',monospace; min-width:60px; text-align:right; color:var(--muted2);">Tick 0/0</span>
       </div>
 
@@ -796,72 +816,146 @@
 </div>
 
 <!-- ═══ SETTINGS VIEW ════════════════════════════════════════════════════════ -->
-<div class="view" id="view-settings">
+<div id="config-view" style="display: none; position: relative; width: 100%; height: 100%; overflow-y: auto; z-index: 100; background: var(--bg1);">
+<div class="view" id="view-settings" style="padding:40px 0; display:flex; flex-direction:column; gap:24px;">
 
-  <div class="settings-section">
-    <div class="settings-section-title">API Connection</div>
-    <div class="settings-row">
-      <div class="settings-label">Endpoint URL</div>
-      <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" />
-      <button class="settings-btn" onclick="applyEndpoint()">Apply</button>
+  <!-- Global Workspace Configuration -->
+  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:20px;">
+    <div>
+      <div style="font-size:14px; font-weight:800; color:var(--text); letter-spacing:0.5px; margin-bottom:4px;">Workspace Authorization</div>
+      <div style="font-size:11px; color:var(--muted2);">Configure primary remote endpoints and TIS commercial credentials.</div>
     </div>
-    <div class="settings-row">
-      <div class="settings-label">API Key</div>
-      <div class="key-display" id="settingsKeyDisplay">—</div>
-      <button class="settings-btn" onclick="copyKey()">Copy</button>
-      <button class="settings-btn" onclick="clearKey()">Clear</button>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
+      <div style="flex:1;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Endpoint URL</div>
+        <div style="font-size:10px; color:var(--muted2);">The primary API host for tier validation.</div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" style="width:280px;" />
+        <button class="settings-btn btn-primary" onclick="applyEndpoint()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
+      </div>
     </div>
-    <div class="settings-row">
-      <div class="settings-label">Set new key</div>
-      <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="flex:1"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
-      <button class="settings-btn" onclick="applySettingsKey()">Apply</button>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
+      <div style="flex:1;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Current API Key</div>
+        <div style="font-size:10px; color:var(--muted2);">Active tier authorization key.</div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div class="key-display" id="settingsKeyDisplay" style="width:160px; text-align:center;">—</div>
+        <button class="settings-btn" onclick="copyKey()">Copy</button>
+        <button class="settings-btn" onclick="clearKey()" style="color:var(--red); border-color:rgba(239,68,68,0.2);">Clear</button>
+      </div>
     </div>
-    <div class="settings-row">
-      <div class="settings-label">Save key locally</div>
-      <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" />
-      <div class="settings-desc">Stored in localStorage — never sent anywhere except the API endpoint</div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
+      <div style="flex:1;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Set New Key</div>
+        <div style="font-size:10px; color:var(--muted2);">Enter a new 'tern_...' key to authenticate.</div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="width:280px;" onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
+        <button class="settings-btn btn-primary" onclick="applySettingsKey()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="flex:1;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Save Key Locally</div>
+        <div style="font-size:10px; color:var(--muted2);">Persists your key securely in localStorage across sessions.</div>
+      </div>
+      <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" style="width:20px; height:20px; cursor:pointer;" />
     </div>
   </div>
 
-  <div class="settings-section">
-    <div class="settings-section-title">Editor</div>
-    <div class="settings-row">
-      <div class="settings-label">Font size</div>
-      <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()">
-        <option value="11">11px</option>
-        <option value="12">12px</option>
-        <option value="13" selected>13px</option>
-        <option value="14">14px</option>
-        <option value="16">16px</option>
-      </select>
+  <!-- Local Secrets Vault -->
+  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:20px;">
+    <div>
+      <div style="font-size:14px; font-weight:800; color:var(--text); letter-spacing:0.5px; margin-bottom:4px;">Local Secrets Vault</div>
+      <div style="font-size:11px; color:var(--muted2);">Manage API credentials for external LLM routing. Stored securely in localStorage.</div>
     </div>
-    <div class="settings-row">
-      <div class="settings-label">Minimap</div>
-      <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()">
-        <option value="false" selected>Off</option>
-        <option value="true">On</option>
-      </select>
+    
+    <div id="secretsVaultList" style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:8px;">
+      <!-- Dynamically populated -->
     </div>
-    <div class="settings-row">
-      <div class="settings-label">Word wrap</div>
-      <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()">
-        <option value="off" selected>Off</option>
-        <option value="on">On</option>
-        <option value="wordWrapColumn">At column</option>
-      </select>
-    </div>
-    <div class="settings-row">
-      <div class="settings-label">Theme</div>
-      <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()">
-        <option value="dark" selected>Dark</option>
-        <option value="light">Light</option>
-      </select>
+    
+    <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px;">
+      <div style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">Add / Update Secret</div>
+      <div style="display:grid; grid-template-columns:140px 1fr auto; gap:12px; align-items:center;">
+        <select id="newSecretProvider" class="settings-select" style="width:100%;">
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="google">Google</option>
+          <option value="custom">Custom</option>
+          <option value="mcp">MCP</option>
+        </select>
+        <input type="password" id="newSecretKey" class="settings-input" placeholder="Enter API Key..." style="width:100%;" onkeydown="if(event.key==='Enter'){event.preventDefault();addVaultSecret();}" />
+        <button class="settings-btn btn-primary" onclick="addVaultSecret()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
+      </div>
     </div>
   </div>
 
-  <div class="settings-section">
-    <div class="settings-section-title">About</div>
+  <!-- Editor Configuration -->
+  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:24px;">
+    <div>
+      <div style="font-size:14px; font-weight:800; color:var(--text); letter-spacing:0.5px; margin-bottom:4px;">Editor Configuration</div>
+      <div style="font-size:11px; color:var(--muted2);">Customize the Monaco Code Editor and global application theme.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; row-gap:32px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Font Size</div>
+          <div style="font-size:10px; color:var(--muted2);">Code editor text scale.</div>
+        </div>
+        <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()" style="width:120px;">
+          <option value="11">11px</option>
+          <option value="12">12px</option>
+          <option value="13" selected>13px</option>
+          <option value="14">14px</option>
+          <option value="16">16px</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Minimap</div>
+          <div style="font-size:10px; color:var(--muted2);">Show code minimap strip.</div>
+        </div>
+        <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()" style="width:120px;">
+          <option value="false" selected>Off</option>
+          <option value="true">On</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Word Wrap</div>
+          <div style="font-size:10px; color:var(--muted2);">Wrap long lines of code.</div>
+        </div>
+        <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()" style="width:120px;">
+          <option value="off" selected>Off</option>
+          <option value="on">On</option>
+          <option value="wordWrapColumn">At column</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Theme</div>
+          <div style="font-size:10px; color:var(--muted2);">Global application theme.</div>
+        </div>
+        <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()" style="width:120px;">
+          <option value="dark" selected>Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; text-align:center; margin-top:16px;">
     <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
       TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
       Runtime: BET VM (27 registers · balanced ternary)<br/>
@@ -872,6 +966,7 @@
     </div>
   </div>
 
+</div>
 </div>
 
 <!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
