@@ -3808,14 +3808,14 @@ function renderScrubLayer(currentTime, scheduledEvents = [], loggedEvents = null
           logInspector(toNode.name, `Signal arrival from ${fromNode ? fromNode.name : 'ROOT'} -> ${lbl}`);
           loggedEvents.add(event.wireId + "_" + event.endTime);
 
-          // JIT Artifact Spawning/Updating
-          const nodeOutWires = flowWires.filter(w => w.fromId === toNode.id);
-          if (nodeOutWires.length === 0 && toNode.type !== 'artifact') {
-              // The dot hit the end of the line — spawn the card!
-              spawnResultArtifact(toNode, event.val);
-          } else if (toNode.type === 'artifact') {
+          // JIT Artifact Spawning
+          const outWiresCheck = flowWires.filter(w => w.fromId === event.toId);
+          const targetNode = flowNodes.find(n => n.id === event.toId);
+          if (outWiresCheck.length === 0 && targetNode && targetNode.type !== 'artifact') {
+              spawnResultArtifact(targetNode, event.val);
+          } else if (targetNode && targetNode.type === 'artifact') {
               // REPLAY LOGIC: Update existing artifact dynamically
-              const artEl = document.getElementById(`art-body-${toNode.id}`);
+              const artEl = document.getElementById(`art-body-${targetNode.id}`);
               if (artEl) {
                   const statusTxt = event.val === 1 ? 'AFFIRM' : (event.val === -1 ? 'REJECT' : 'TEND');
                   artEl.textContent = `Source: ${fromNode ? fromNode.name : 'Unknown'}\nResolved Signal: ${statusTxt}\nStatus: Resolved`;
