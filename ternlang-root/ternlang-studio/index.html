@@ -832,14 +832,14 @@
 </div>
 
 <!-- ═══ SETTINGS VIEW ════════════════════════════════════════════════════════ -->
-<div id="config-view" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; overflow-y: auto; z-index: 100; background: #0f131a;">
+<div id="config-view" class="view-content" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; overflow-y: auto; z-index: 100;">
   <div id="view-settings" style="display: flex; flex-direction: column; align-items: center; width: 100%; padding: 60px 20px;">
     
     <!-- Workspace Authorization -->
-    <div style="background: #0f131a; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; margin-bottom: 24px; width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;">
+    <div class="industrial-card">
       <div>
-        <div style="font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; margin-bottom: 4px;">Workspace Authorization</div>
-        <div style="font-size: 10px; color: var(--muted2);">Enter a new 'tern_...' key to authenticate.</div>
+        <div class="industrial-title">Workspace Authorization</div>
+        <div class="industrial-desc">Enter a new 'tern_...' key to authenticate.</div>
       </div>
       <div style="display: flex; gap: 12px; align-items: center;">
         <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="width: 280px;" onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
@@ -855,10 +855,10 @@
     </div>
 
     <!-- Local Secrets Vault -->
-    <div style="background: #0f131a; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; margin-bottom: 24px; width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;">
+    <div class="industrial-card">
       <div>
-        <div style="font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; margin-bottom: 4px;">Local Secrets Vault</div>
-        <div style="font-size: 11px; color: var(--muted2);">Manage API credentials for external LLM routing. Stored securely in localStorage.</div>
+        <div class="industrial-title">Local Secrets Vault</div>
+        <div class="industrial-desc">Manage API credentials for external LLM routing. Stored securely in localStorage.</div>
       </div>
       <div id="secretsVaultList" style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px;">
         <!-- Dynamically populated -->
@@ -880,10 +880,10 @@
     </div>
 
     <!-- Editor Configuration -->
-    <div style="background: #0f131a; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; margin-bottom: 24px; width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 24px;">
+    <div class="industrial-card">
       <div>
-        <div style="font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; margin-bottom: 4px;">Editor Configuration</div>
-        <div style="font-size: 11px; color: var(--muted2);">Customize the Monaco Code Editor and global application theme.</div>
+        <div class="industrial-title">Editor Configuration</div>
+        <div class="industrial-desc">Customize the Monaco Code Editor and global application theme.</div>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; row-gap: 32px;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px;">
