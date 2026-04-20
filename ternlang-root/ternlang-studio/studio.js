@@ -4368,8 +4368,6 @@ function computeWirePath(start, end, wire) {
 }
 window.computeWirePath = computeWirePath;
 
-let simSpeed = 2000;
-
 async function animateSignal(wire, signal, confidence = 1.0) {
   const fromNode = document.getElementById(wire.fromId);
   const toNode = document.getElementById(wire.toId);
