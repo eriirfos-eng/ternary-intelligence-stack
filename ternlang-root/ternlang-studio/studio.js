@@ -3361,17 +3361,23 @@ async function runSimulation() {
     engineQueue.push({ toId: root.id, val: 1, conf: 1.0, origin: "ROOT" });
   });
 
-  await runSimulationCore();
+  // PHANTOM PASS: Pure Logic & Timing Calculation
+  const { scheduledEvents, maxSimDuration } = await calculateGlobalTimeline();
+  
+  // VISUAL PASS: Pure Rendering & Playback
+  if (!simulationAborted) {
+    await runSimulationCore(scheduledEvents, maxSimDuration);
+  }
 }
 window.runSimulation = runSimulation;
 
-async function runSimulationCore() {
-  const nodeState = {};
-  const scheduledEvents = []; // Every signal traversal event with absolute times
+/**
+ * Phase 1: Phantom Pass
+ * Mathematical dry-run to find Total Simulation Duration without DOM side-effects.
+ */
+async function calculateGlobalTimeline() {
+  const scheduledEvents = [];
   let maxSimDuration = 0;
-  
-  // Phase 1: FAST Logic Solve (Topological traversal)
-  // We use a local queue for the dry-run
   const dryQueue = [...engineQueue];
   const nodeTimings = {}; // id -> endTime
 
@@ -3386,7 +3392,8 @@ async function runSimulationCore() {
     const nodeEndTime = nodeStartTime + nodeProcessingTime;
     nodeTimings[node.id] = Math.max(nodeTimings[node.id] || 0, nodeEndTime);
 
-    const outVal = await simulateNode(node, signal.val);
+    // Call simulateNode with isPhantom=true to suppress DOM/CSS/Logs
+    const outVal = await simulateNode(node, signal.val, true);
     if (simulationAborted) break;
 
     const outSignal = { val: outVal, conf: signal.conf, origin: node.id };
@@ -3411,7 +3418,6 @@ async function runSimulationCore() {
         };
         scheduledEvents.push(event);
         maxSimDuration = Math.max(maxSimDuration, wireEndTime);
-
         dryQueue.push({ toId: wire.toId, ...transformed, absEndTime: wireEndTime });
       }
     }
@@ -3419,14 +3425,22 @@ async function runSimulationCore() {
 
   // Clear global queue as we have pre-calculated everything
   engineQueue.length = 0;
+  return { scheduledEvents, maxSimDuration };
+}
 
-  // Phase 2: Playback Setup
+/**
+ * Phase 2: Visual Pass
+ * Pure playback driven by requestAnimationFrame.
+ */
+async function runSimulationCore(scheduledEvents, maxSimDuration) {
   const scrubber = document.getElementById("global-timeline");
   const tlLabel = document.getElementById("timeline-tick-label");
+  
   if (scrubber) {
     scrubber.value = 0;
     scrubber.max = maxSimDuration; 
   }
+  
   let lastRealTime = performance.now();
   let virtualClock = 0;
   simulationRunning = true;
@@ -4014,13 +4028,15 @@ async function executeLLMNode(node, inSignal) {
 }
 window.executeLLMNode = executeLLMNode;
 
-async function simulateNode(node, inSignal) {
+async function simulateNode(node, inSignal, isPhantom = false) {
   if (simulationAborted) return inSignal;
   const el = document.getElementById(node.id);
-  if (!el) return inSignal;
+  if (!el && !isPhantom) return inSignal;
 
-  setNodeStatus(node.id, "run");
-  el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
+  if (!isPhantom) {
+    setNodeStatus(node.id, "run");
+    if (el) el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
+  }
 
   let outSignal = inSignal;
 
@@ -4031,13 +4047,15 @@ async function simulateNode(node, inSignal) {
     outSignal = await executeMOE13(node, inSignal);
   } else if (node.type === 'datasource') {
     const payloadData = node.props.payload || "";
-    logInspector(node.name, `📡 Injecting Payload: [${node.props.data_type || 'text'}] ${payloadData.substring(0, 20)}...`);
+    if (!isPhantom) {
+      logInspector(node.name, `📡 Injecting Payload: [${node.props.data_type || 'text'}] ${payloadData.substring(0, 20)}...`);
+    }
     const outWires = flowWires.filter(w => w.fromId === node.id);
     outWires.forEach(w => {
       const downNode = flowNodes.find(n => n.id === w.toId);
       if (downNode) {
         downNode.props.runtime_buffer = { type: node.props.data_type || 'text', data: payloadData };
-        logInspector("SYSTEM", `💾 Buffered ${payloadData.length} bytes to ${downNode.name}`);
+        if (!isPhantom) logInspector("SYSTEM", `💾 Buffered ${payloadData.length} bytes to ${downNode.name}`);
       }
     });
     outSignal = 1; // Affirm data dispatched
@@ -4045,37 +4063,47 @@ async function simulateNode(node, inSignal) {
     // Standard Agent or Gate
     const code = node.props.code || "";
     if (code.trim()) {
-      logInspector(node.name, "⚡ Executing logic…");
+      if (!isPhantom) logInspector(node.name, "⚡ Executing logic…");
       const r = runTernCode(code);
       if (r.ok) {
         outSignal = r.trit === 1 ? 1 : (r.trit === -1 ? -1 : 0);
         const lbl = outSignal === 1 ? '+1 AFFIRM' : (outSignal === -1 ? '-1 REJECT' : '0 TEND');
-        logInspector(node.name, `→ ${lbl}${r.output && r.output.length ? ' · ' + r.output.join(', ') : ''}`);
+        if (!isPhantom) logInspector(node.name, `→ ${lbl}${r.output && r.output.length ? ' · ' + r.output.join(', ') : ''}`);
       } else {
-        logInspector(node.name, `✗ ${r.error || "error"}`);
-        setNodeStatus(node.id, "err");
-        el.classList.add('pulse-reject');
-        await new Promise(r => setTimeout(r, 600));
+        if (!isPhantom) {
+          logInspector(node.name, `✗ ${r.error || "error"}`);
+          setNodeStatus(node.id, "err");
+          if (el) el.classList.add('pulse-reject');
+        }
+        if (!isPhantom) await new Promise(r => setTimeout(r, 600));
         return -1;
       }
     } else {
       const lbl = inSignal === 1 ? '+1 AFFIRM' : (inSignal === -1 ? '-1 REJECT' : '0 TEND');
-      logInspector(node.name, `→ ${lbl} (passthrough)`);
+      if (!isPhantom) logInspector(node.name, `→ ${lbl} (passthrough)`);
     }
   }
 
   if (simulationAborted) return outSignal;
-  const pulseClass = outSignal === 1 ? 'pulse-affirm' : (outSignal === -1 ? 'pulse-reject' : 'pulse-hold');
-  el.classList.add(pulseClass);
-  setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : "run"));
+  
+  if (!isPhantom) {
+    const pulseClass = outSignal === 1 ? 'pulse-affirm' : (outSignal === -1 ? 'pulse-reject' : 'pulse-hold');
+    if (el) el.classList.add(pulseClass);
+    setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : "run"));
+  }
   
   // TAP Protocol: Detection of Pending Actuator (State 0 Suspension)
   if (node.props.pending_actuator) {
-    spawnResultArtifact(node, outSignal);
-    logInspector("SYSTEM", `🟡 TAP: State 0 Suspension at "${node.name}". Awaiting Operator…`);
+    if (!isPhantom) {
+      spawnResultArtifact(node, outSignal);
+      logInspector("SYSTEM", `🟡 TAP: State 0 Suspension at "${node.name}". Awaiting Operator…`);
+    }
     simulationAborted = true; // Freeze graph
     return 0; // Suspend
   }
+
+  return outSignal;
+}
 
   // Terminal Node Interceptor: Spawn/Update Result Artifact
   const outWires = flowWires.filter(w => w.fromId === node.id);
