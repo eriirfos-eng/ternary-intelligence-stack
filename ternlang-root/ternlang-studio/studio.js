@@ -3611,12 +3611,35 @@ async function executeLLMNode(node, inSignal) {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const r = await response.json();
     
-    // Mapping response text/result to trit
+    // Mapping response text/result to trit with TAP Confidence
     let val = 0;
+    let confidence = 0.5; // Default to 'Tend' (Ambiguity)
+    
     const txt = String(r.result || r.text || "").toLowerCase();
+    
+    // Pattern detection for TAP Confidence
+    if (txt.includes("confidence: 1.0") || txt.includes("conf: 1.0") || txt.includes("score: 1.0")) {
+      confidence = 1.0;
+    } else if (txt.includes("confidence: -1.0") || txt.includes("conf: -1.0")) {
+      confidence = -1.0;
+    }
+
     if (txt.includes("+1") || txt.includes("affirm") || txt.includes("yes")) val = 1;
     else if (txt.includes("-1") || txt.includes("reject") || txt.includes("no")) val = -1;
-    
+
+    // TAP Protocol: If confidence is 1.0, we proceed silently.
+    // If confidence is 0.0 (or not 1.0), we force a 'tend' and flag for suspension.
+    if (confidence === 1.0) {
+      logInspector(node.name, `✅ TAP: High Confidence (+1) -> Autonomous Execution.`);
+      return val;
+    } else {
+      logInspector(node.name, `🟡 TAP: Ambiguity detected (conf: ${confidence}) -> Freezing for Operator.`);
+      node.props.pending_actuator = {
+        code: r.code || r.result || r.text,
+        paths: ["Affirm (+1)", "Reject (-1)"]
+      };
+      return 0; // Force State 0 (Hold)
+    }
     logInspector(node.name, `🤖 LLM Result: ${val} (${txt.substring(0, 20)}…)`);
     return val;
   } catch (e) {
@@ -3683,6 +3706,14 @@ async function simulateNode(node, inSignal) {
   el.classList.add(pulseClass);
   setNodeStatus(node.id, outSignal === 1 ? "ok" : (outSignal === -1 ? "err" : "run"));
   
+  // TAP Protocol: Detection of Pending Actuator (State 0 Suspension)
+  if (node.props.pending_actuator) {
+    spawnResultArtifact(node, outSignal);
+    logInspector("SYSTEM", `🟡 TAP: State 0 Suspension at "${node.name}". Awaiting Operator…`);
+    simulationAborted = true; // Freeze graph
+    return 0; // Suspend
+  }
+
   // Terminal Node Interceptor: Spawn/Update Result Artifact
   const outWires = flowWires.filter(w => w.fromId === node.id);
   const artifacts = flowNodes.filter(fn => fn.type === 'artifact' && fn.parentId === node.id);
@@ -3772,7 +3803,13 @@ async function executeMOE13(node, inSignal) {
 window.executeMOE13 = executeMOE13;
 
 function spawnResultArtifact(sourceNode, val) {
-  const payloadStr = `Source: ${sourceNode.name}\nResolved Signal: ${val === 1 ? 'AFFIRM' : (val === -1 ? 'REJECT' : 'TEND')}\nNodes Traversed: (Auto-calc)\nLatency: 84ms\nIntegrity: Verified`;
+  let payloadStr = `Source: ${sourceNode.name}\nResolved Signal: ${val === 1 ? 'AFFIRM' : (val === -1 ? 'REJECT' : 'TEND')}\nStatus: Resolved`;
+  
+  const isSuspended = !!sourceNode.props.pending_actuator;
+  if (isSuspended) {
+    const tap = sourceNode.props.pending_actuator;
+    payloadStr = `⚠️  TAP SUSPENSION (STATE 0)\n\nProposed Actuator Logic:\n${tap.code}\n\nDivergent Paths:\n- ${tap.paths.join('\n- ')}\n\nAction: Awaiting Operator Approval.`;
+  }
   
   // Singleton / Upsert pattern: Bind to parent UUID
   const existing = flowNodes.find(n => n.type === 'artifact' && n.parentId === sourceNode.id);
@@ -3782,7 +3819,8 @@ function spawnResultArtifact(sourceNode, val) {
      const artEl = document.getElementById(`art-body-${existing.id}`);
      if (artEl) {
         artEl.textContent = payloadStr;
-        artEl.style.color = val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)');
+        artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
+        if (isSuspended) renderActuatorControls(existing.id, sourceNode.id);
      }
      if (selectedNodeId === existing.id) updatePropertyPanel();
      return;
@@ -3794,7 +3832,7 @@ function spawnResultArtifact(sourceNode, val) {
   const sy = parseFloat(sourceEl.style.top);
   
   const id = "art_" + Date.now();
-  const name = "Result: " + sourceNode.name;
+  const name = isSuspended ? "TAP: " + sourceNode.name : "Result: " + sourceNode.name;
   
   // Requirement 1: Bounding-Box Collision Matrix
   const clearPos = findClearSpace(sx + 350, sy, 300, 200);
@@ -3814,19 +3852,47 @@ function spawnResultArtifact(sourceNode, val) {
   const artEl = document.getElementById(`art-body-${id}`);
   if (artEl) {
      artEl.textContent = payloadStr;
-     artEl.style.color = val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)');
+     artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
+     if (isSuspended) renderActuatorControls(id, sourceNode.id);
   }
   
   const wireId = "wire_art_" + Date.now();
   flowWires.push({
      id: wireId, fromId: sourceNode.id, toId: id,
-     condition: "all", transform: "none", label: "RESULT", priority: 10
+     condition: "all", transform: "none", label: isSuspended ? "TAP PENDING" : "RESULT", priority: 10
   });
   updateWires();
   saveCanvasState();
   lucide.createIcons();
 }
-window.spawnResultArtifact = spawnResultArtifact;
+
+function renderActuatorControls(artId, sourceNodeId) {
+  const artBody = document.getElementById(`art-body-${artId}`);
+  if (!artBody) return;
+  
+  const ctrlDiv = document.createElement("div");
+  ctrlDiv.style.marginTop = "12px";
+  ctrlDiv.style.display = "flex";
+  ctrlDiv.style.gap = "8px";
+  
+  ctrlDiv.innerHTML = `
+    <button class="btn-pill" style="background:var(--green); color:white; border:none; padding:4px 12px; font-size:10px; cursor:pointer;" onclick="resolveTAP('${artId}', '${sourceNodeId}', 1)">Approve (+1)</button>
+    <button class="btn-pill" style="background:var(--red); color:white; border:none; padding:4px 12px; font-size:10px; cursor:pointer;" onclick="resolveTAP('${artId}', '${sourceNodeId}', -1)">Reject (-1)</button>
+  `;
+  artBody.appendChild(ctrlDiv);
+}
+
+function resolveTAP(artId, sourceNodeId, val) {
+  const node = flowNodes.find(n => n.id === sourceNodeId);
+  if (node) {
+    delete node.props.pending_actuator; // Clear flag
+    logInspector("SYSTEM", `✅ TAP RESOLVED: Operator injected ${val === 1 ? '+1' : '-1'} to "${node.name}".`);
+    injectSignal(sourceNodeId, val);
+  }
+  // Clear the artifact after resolution if desired, or update it
+  deleteNode(artId);
+}
+window.resolveTAP = resolveTAP;
 
 function setArtifactState(id, state) {
   const node = flowNodes.find(n => n.id === id);
