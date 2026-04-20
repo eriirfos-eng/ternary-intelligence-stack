@@ -109,6 +109,7 @@ function saveEditorState() {
   localStorage.setItem("ternstudio-tabs", JSON.stringify(tabs));
   localStorage.setItem("ternstudio-file-buffers", JSON.stringify(fileBuffers));
 }
+window.saveEditorState = saveEditorState;
 let scratchCounter = 1;
 let runHistory = [];
 let sessionRuns = 0, sessionOk = 0, sessionErr = 0;
@@ -127,6 +128,7 @@ function toggleKeyInput() {
     setTimeout(() => input.focus(), 10);
   }
 }
+window.toggleKeyInput = toggleKeyInput;
 
 function updateApiKey(val) {
   val = val.trim();
@@ -138,6 +140,7 @@ function updateApiKey(val) {
     toggleKeyInput();
   }
 }
+window.updateApiKey = updateApiKey;
 
 async function switchView(name) {
   localStorage.setItem("ternstudio-last-view", name);
@@ -162,6 +165,7 @@ async function switchView(name) {
   if (name === "settings") syncSettingsUI();
   lucide.createIcons();
 }
+window.switchView = switchView;
 
 // ─── Tracer & Registry Views ──────────────────────────────────────────────────
 
@@ -217,6 +221,7 @@ function renderTracerView() {
   view.innerHTML = html;
   lucide.createIcons();
 }
+window.renderTracerView = renderTracerView;
 
 let agentToDeleteId = null;
 function confirmDeleteAgent(id, name) {
@@ -224,10 +229,12 @@ function confirmDeleteAgent(id, name) {
   document.getElementById("deleteAgentName").textContent = name;
   document.getElementById("deleteModal").style.display = "flex";
 }
+window.confirmDeleteAgent = confirmDeleteAgent;
 function closeDeleteModal() {
   document.getElementById("deleteModal").style.display = "none";
   agentToDeleteId = null;
 }
+window.closeDeleteModal = closeDeleteModal;
 async function deleteAgent() {
   if (!agentToDeleteId) return;
   const key = document.getElementById("apiKey").value.trim();
@@ -267,6 +274,7 @@ async function deleteAgent() {
     console.error("Causal state failure:", e);
   }
 }
+window.deleteAgent = deleteAgent;
 
 async function syncFleetRegistry() {
   try {
@@ -302,6 +310,7 @@ async function syncFleetRegistry() {
     }
   } catch(e) { console.warn("Fleet remote sync failed", e); }
 }
+window.syncFleetRegistry = syncFleetRegistry;
 
 async function renderRegistryView() {
   const view = document.getElementById("view-modules");
@@ -395,6 +404,7 @@ async function renderRegistryView() {
   view.innerHTML = html;
   lucide.createIcons();
 }
+window.renderRegistryView = renderRegistryView;
 
 // ─── Fleet (Ops / Control Tower) ─────────────────────────────────────────────
 
@@ -594,6 +604,7 @@ async function renderFleetView() {
   view.innerHTML = html;
   lucide.createIcons();
 }
+window.renderFleetView = renderFleetView;
 
 // ─── TernFlow Logic ───────────────────────────────────────────────────────────
 let flowNodes = [];
@@ -617,11 +628,13 @@ function updateSimUI() {
   }
   lucide.createIcons();
 }
+window.updateSimUI = updateSimUI;
 
 function toggleSimulation() {
   if (simulationRunning) stopSimulation();
   else runSimulation();
 }
+window.toggleSimulation = toggleSimulation;
 
 // ─── God Mode: Signal Injection ──────────────────────────────────────────────
 async function injectSignal(nodeId, val) {
@@ -634,6 +647,7 @@ async function injectSignal(nodeId, val) {
     runSimulation();
   }
 }
+window.injectSignal = injectSignal;
 
 // ─── Full Observability: Causal Reverse-Trace ────────────────────────────────
 const causalNodes = new Set();
@@ -647,6 +661,7 @@ function findParents(nodeId) {
     if (!causalNodes.has(w.fromId)) findParents(w.fromId);
   });
 }
+window.findParents = findParents;
 
 function traceCausalPath(targetNodeId) {
   // Clear existing trace
@@ -689,6 +704,7 @@ function traceCausalPath(targetNodeId) {
   };
   document.getElementById("flow-canvas").addEventListener("mousedown", clearTrace);
 }
+window.traceCausalPath = traceCausalPath;
 
 // ─── Graph Macros (Collapsing Logic) ─────────────────────────────────────────
 function groupSelectedNodes() {
@@ -759,6 +775,7 @@ function groupSelectedNodes() {
   saveCanvasState();
   showToast(`Grouped ${nodesToGroup.length} nodes into ${macroName}`, "ok");
 }
+window.groupSelectedNodes = groupSelectedNodes;
 
 function explodeMacro(macroId) {
   const macroNode = flowNodes.find(n => n.id === macroId);
@@ -788,6 +805,7 @@ function explodeMacro(macroId) {
   saveCanvasState();
   showToast("Macro expanded", "ok");
 }
+window.explodeMacro = explodeMacro;
 
 // ─── Canvas Transform (zoom + pan) ───────────────────────────────────────────
 let CT = { scale: 1, x: 0, y: 0 };
@@ -806,6 +824,7 @@ function applyTransform() {
     wrap.style.backgroundPosition = `${CT.x}px ${CT.y}px`;
   }
 }
+window.applyTransform = applyTransform;
 
 function zoomAt(mx, my, delta) {
   const newScale = CT.scale * delta;
@@ -816,12 +835,14 @@ function zoomAt(mx, my, delta) {
   applyTransform();
   updateFogHeatmap();
 }
+window.zoomAt = zoomAt;
 
 function zoomStep(dir) {
   const wrap = document.getElementById("flow-canvas-wrap");
   const cx = wrap.clientWidth / 2, cy = wrap.clientHeight / 2;
   zoomAt(cx, cy, dir > 0 ? 1.2 : 1 / 1.2);
 }
+window.zoomStep = zoomStep;
 
 function fitToView() {
   if (flowNodes.length === 0) { CT.scale = 1; CT.x = 0; CT.y = 0; applyTransform(); return; }
@@ -848,11 +869,13 @@ function fitToView() {
   CT.y = pad + (fh - ch * scale) / 2 - minY * scale;
   applyTransform();
 }
+window.fitToView = fitToView;
 
 // Screen point → canvas local coordinates
 function screenToCanvas(sx, sy) {
   return { x: (sx - CT.x) / CT.scale, y: (sy - CT.y) / CT.scale };
 }
+window.screenToCanvas = screenToCanvas;
 
 // ─── Pan & Zoom event setup ───────────────────────────────────────────────────
 function initCanvasInteraction() {
@@ -1004,6 +1027,7 @@ function initCanvasInteraction() {
     if (e.key === "Escape") clearSelection();
   });
 }
+window.initCanvasInteraction = initCanvasInteraction;
 
 // ─── Built-in Agent Library ──────────────────────────────────────────────────
 const BUILTIN_AGENTS = {
@@ -1065,6 +1089,7 @@ function saveCanvasState() {
     localStorage.setItem("ternflow_canvas", JSON.stringify(state));
   } catch(e) {}
 }
+window.saveCanvasState = saveCanvasState;
 
 function restoreCanvasState() {
   try {
@@ -1080,6 +1105,7 @@ function restoreCanvasState() {
     return true;
   } catch(e) { return false; }
 }
+window.restoreCanvasState = restoreCanvasState;
 
 function clearCanvas() {
   document.querySelectorAll(".flow-node").forEach(n => n.remove());
@@ -1101,6 +1127,7 @@ function clearCanvas() {
   localStorage.removeItem("ternflow_canvas");
   showToast("Canvas cleared", "ok");
 }
+window.clearCanvas = clearCanvas;
 
 let _canvasInteractionInited = false;
 function renderFlow() {
@@ -1122,6 +1149,7 @@ function renderFlow() {
     }
   }
 }
+window.renderFlow = renderFlow;
 
 let _flowLibPaths = []; // cache for search + new-agent picker
 
@@ -1142,6 +1170,7 @@ async function renderFlowLibrary() {
     }
   } catch (e) { /* built-ins already shown */ }
 }
+window.renderFlowLibrary = renderFlowLibrary;
 
 function getAgentIcon(name) {
   const n = name.toLowerCase();
@@ -1184,6 +1213,7 @@ function getAgentIcon(name) {
   if (n.includes('hardware') || n.includes('cpu') || n.includes('fpga')) return { icon: 'cpu', color: 'var(--cyan)' };
   return { icon: 'bot', color: 'var(--blue)' };
 }
+window.getAgentIcon = getAgentIcon;
 
 function renderFlowLibItems(paths, q = "") {
   const lib = document.getElementById("flow-lib-items");
@@ -1255,11 +1285,13 @@ function renderFlowLibItems(paths, q = "") {
   }
   lucide.createIcons();
 }
+window.renderFlowLibItems = renderFlowLibItems;
 
 function filterFlowLib(q) {
   const filtered = q ? _flowLibPaths.filter(p => p.toLowerCase().includes(q.toLowerCase())) : _flowLibPaths;
   renderFlowLibItems(filtered, q);
 }
+window.filterFlowLib = filterFlowLib;
 
 function populateNewAgentPicker(paths) {
   const sel = document.getElementById("newAgentLibPick");
@@ -1272,16 +1304,19 @@ function populateNewAgentPicker(paths) {
     sel.appendChild(opt);
   });
 }
+window.populateNewAgentPicker = populateNewAgentPicker;
 
 function openNewAgentModal() {
   document.getElementById("newAgentModal").style.display = "flex";
   document.getElementById("newAgentName").value = "";
   document.getElementById("newAgentCode").value = 'fn main() -> trit {\n    return affirm;\n}';
 }
+window.openNewAgentModal = openNewAgentModal;
 
 function closeNewAgentModal() {
   document.getElementById("newAgentModal").style.display = "none";
 }
+window.closeNewAgentModal = closeNewAgentModal;
 
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeNewAgentModal(); });
 
@@ -1293,6 +1328,7 @@ async function loadNewAgentTemplate() {
     if (r.ok) document.getElementById("newAgentCode").value = await r.text();
   } catch(e) {}
 }
+window.loadNewAgentTemplate = loadNewAgentTemplate;
 
 function viewportCenterInCanvas(offX = 0, offY = 0) {
   const wrap = document.getElementById("flow-canvas-wrap");
@@ -1303,6 +1339,7 @@ function viewportCenterInCanvas(offX = 0, offY = 0) {
   // Use inverse transform: (viewCoord - pan) / scale
   return { x: (centerX - CT.x) / CT.scale, y: (centerY - CT.y) / CT.scale };
 }
+window.viewportCenterInCanvas = viewportCenterInCanvas;
 
 function addAgentFromModal() {
   const name = document.getElementById("newAgentName").value.trim() || "Agent";
@@ -1316,6 +1353,7 @@ function addAgentFromModal() {
   closeNewAgentModal();
   showToast(`Agent "${name}" added`, "ok");
 }
+window.addAgentFromModal = addAgentFromModal;
 
 const MOE13_AXES = [
   { id: "safety", label: "Safety", weight: 0.15, crit: true },
@@ -1365,6 +1403,7 @@ function findClearSpace(targetX, targetY, width, height) {
   }
   return { x: targetX, y: finalY };
 }
+window.findClearSpace = findClearSpace;
 
 /**
  * Frontier Camera: Smoothly pans the viewport to center on a target logical coordinate.
@@ -1398,6 +1437,7 @@ function panToCenter(lx, ly) {
   }
   requestAnimationFrame(step);
 }
+window.panToCenter = panToCenter;
 
 function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
   const canvas = document.getElementById("flow-canvas");
@@ -1556,6 +1596,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
   lucide.createIcons();
   saveCanvasState();
 }
+window.createFlowNode = createFlowNode;
 
 // ─── Multi-select & Node Dragging ─────────────────────────────────────────────
 let selectedIds = new Set(); // all selected node IDs
@@ -1586,6 +1627,7 @@ function selectNode(id, addToSelection = false) {
 
   updatePropertyPanel();
 }
+window.selectNode = selectNode;
 
 function clearSelection() {
   selectedIds.clear();
@@ -1602,6 +1644,7 @@ function clearSelection() {
 
   updatePropertyPanel();
 }
+window.clearSelection = clearSelection;
 
 function deleteSelected() {
   if (selectedIds.size === 0 && !selectedWireId) return;
@@ -1609,11 +1652,13 @@ function deleteSelected() {
   selectedIds.forEach(id => deleteNode(id));
   selectedIds.clear();
 }
+window.deleteSelected = deleteSelected;
 
 function syncMultiDragEnd() {
   // After dragging primary node, sync offsets of other selected nodes
   // (they were dragged via the group-move handler below)
 }
+window.syncMultiDragEnd = syncMultiDragEnd;
 
 function updateValidateBadge({ errors, warnings }) {
   const badge = document.getElementById("validateBadge");
@@ -1624,6 +1669,7 @@ function updateValidateBadge({ errors, warnings }) {
   badge.textContent = total > 9 ? "!" : total;
   badge.style.background = errors.length > 0 ? "var(--red)" : "var(--amber)";
 }
+window.updateValidateBadge = updateValidateBadge;
 
 function morphNodeArchetype(id, archetype) {
   const node = flowNodes.find(n => n.id === id);
@@ -1653,6 +1699,7 @@ function morphNodeArchetype(id, archetype) {
     showToast(`Morphed to ${p.name}`, "ok");
   }
 }
+window.morphNodeArchetype = morphNodeArchetype;
 
 function collapseArtifactToStub(id) {
   const node = flowNodes.find(n => n.id === id);
@@ -1674,6 +1721,7 @@ function collapseArtifactToStub(id) {
   if (selectedNodeId === id) updatePropertyPanel();
   saveCanvasState();
 }
+window.collapseArtifactToStub = collapseArtifactToStub;
 
 function deleteNode(id) {
   flowNodes = flowNodes.filter(n => n.id !== id);
@@ -1689,6 +1737,7 @@ function deleteNode(id) {
   if (hint) hint.style.display = flowNodes.length === 0 ? "flex" : "none";
   updateWires();
 }
+window.deleteNode = deleteNode;
 
 const ENABLE_NEW_PROPERTIES_UI = true;
 
@@ -2094,6 +2143,7 @@ function updatePropertyPanel() {
 
   NodePanelController.render(node, body, inWires, outWires, schemaWarning);
 }
+window.updatePropertyPanel = updatePropertyPanel;
 
 function openAgentInEditor() {
   const node = flowNodes.find(n => n.id === selectedNodeId);
@@ -2104,6 +2154,7 @@ function openAgentInEditor() {
   loadToEditor(path, code);
   switchView('editor');
 }
+window.openAgentInEditor = openAgentInEditor;
 
 function updateNodeSchemaDisplay(nodeId) {
   const node = flowNodes.find(n => n.id === nodeId);
@@ -2116,6 +2167,7 @@ function updateNodeSchemaDisplay(nodeId) {
   const outs = node.props.output_schema ? `<span style="color:var(--cyan)">◀ ${node.props.output_schema}</span>` : '';
   schema.innerHTML = [ins, outs].filter(Boolean).join('<br>');
 }
+window.updateNodeSchemaDisplay = updateNodeSchemaDisplay;
 
 function updateNodeProp(key, val) {
   const node = flowNodes.find(n => n.id === selectedNodeId);
@@ -2129,18 +2181,21 @@ function updateNodeProp(key, val) {
   }
   saveCanvasState();
 }
+window.updateNodeProp = updateNodeProp;
 
 function addExternalBridge() {
   const id = "bridge_" + Date.now();
   const pos = viewportCenterInCanvas((Math.random()-0.5)*100, (Math.random()-0.5)*80);
   createFlowNode("LLM Bridge", "external", pos.x, pos.y, 'external', id);
 }
+window.addExternalBridge = addExternalBridge;
 
 function addTernaryGate() {
   const id = "gate_" + Date.now();
   const pos = viewportCenterInCanvas((Math.random()-0.5)*100, (Math.random()-0.5)*80);
   createFlowNode("Consensus Gate", "gate", pos.x, pos.y, 'gate', id);
 }
+window.addTernaryGate = addTernaryGate;
 
 // ─── Library tab switching ────────────────────────────────────────────────────
 function switchLibTab(tab) {
@@ -2151,6 +2206,7 @@ function switchLibTab(tab) {
   document.getElementById('lib-panel-archetypes').style.display = tab === 'archetypes' ? 'block' : 'none';
   if (tab === 'archetypes') renderArchetypes();
 }
+window.switchLibTab = switchLibTab;
 
 // ─── Archetype System ─────────────────────────────────────────────────────────
 const ARCHETYPES = [
@@ -2449,6 +2505,7 @@ function renderArchetypes() {
   });
   lucide.createIcons();
 }
+window.renderArchetypes = renderArchetypes;
 
 function spawnArchetype(arch, forcedX, forcedY) {
   const canvas = document.getElementById("flow-canvas");
@@ -2492,6 +2549,7 @@ function spawnArchetype(arch, forcedX, forcedY) {
   saveCanvasState();
   showToast(`Architecture "${arch.name}" spawned`, "ok");
 }
+window.spawnArchetype = spawnArchetype;
 
 function getArchetypeCode(archId, nodeName, type) {
   const n = nodeName.toLowerCase();
@@ -2537,6 +2595,7 @@ function getArchetypeCode(archId, nodeName, type) {
   // Default functional template
   return `fn main() -> trit {\n    return affirm;\n}`;
 }
+window.getArchetypeCode = getArchetypeCode;
 
 // ─── Edge Logic System ────────────────────────────────────────────────────────
 let selectedWireId = null;
@@ -2548,6 +2607,7 @@ function selectWire(wireId) {
   updateWireStyles();
   updateEdgePanel();
 }
+window.selectWire = selectWire;
 
 function updateWireStyles() {
   document.querySelectorAll('.flow-wire').forEach(el => {
@@ -2560,6 +2620,7 @@ function updateWireStyles() {
     if (id === selectedWireId) el.classList.add('selected-wire');
   });
 }
+window.updateWireStyles = updateWireStyles;
 
 function updateEdgePanel() {
   const header = document.getElementById("prop-header-label");
@@ -2573,6 +2634,7 @@ function updateEdgePanel() {
 
   EdgePanelController.render(wire, body, fromNode, toNode);
 }
+window.updateEdgePanel = updateEdgePanel;
 
 function updateWireProp(key, val) {
   const wire = flowWires.find(w => w.id === selectedWireId);
@@ -2585,6 +2647,7 @@ function updateWireProp(key, val) {
   updateWireStyles();
   updateWires();
 }
+window.updateWireProp = updateWireProp;
 
 function deleteWire(id) {
   flowWires = flowWires.filter(w => w.id !== id);
@@ -2595,6 +2658,7 @@ function deleteWire(id) {
   if (document.getElementById("prop-header-label"))
     document.getElementById("prop-header-label").textContent = "Node Properties";
 }
+window.deleteWire = deleteWire;
 
 // ─── Wiring System ────────────────────────────────────────────────────────────
 function toggleInspector() {
@@ -2609,6 +2673,7 @@ function toggleInspector() {
   }
   lucide.createIcons();
 }
+window.toggleInspector = toggleInspector;
 
 function logInspector(nodeName, msg) {
   const body = document.getElementById("ins-body");
@@ -2622,6 +2687,7 @@ function logInspector(nodeName, msg) {
   `;
   body.prepend(row);
 }
+window.logInspector = logInspector;
 
 // ─── Topological Sort (Kahn's algorithm) ─────────────────────────────────────
 function topoSort() {
@@ -2648,6 +2714,7 @@ function topoSort() {
   const cycleNodes = hasCycle ? flowNodes.filter(n => !order.includes(n.id)) : [];
   return { order, hasCycle, cycleNodes };
 }
+window.topoSort = topoSort;
 
 // ─── Graph Validation ─────────────────────────────────────────────────────────
 function validateGraph() {
@@ -2703,6 +2770,7 @@ function validateGraph() {
 
   return { errors, warnings };
 }
+window.validateGraph = validateGraph;
 
 function markNode(id, level, badge) {
   const el = document.getElementById(id);
@@ -2713,6 +2781,7 @@ function markNode(id, level, badge) {
   b.textContent = badge;
   el.appendChild(b);
 }
+window.markNode = markNode;
 
 function showValidationPanel(errors, warnings) {
   const header = document.getElementById("prop-header-label");
@@ -2735,6 +2804,7 @@ function showValidationPanel(errors, warnings) {
     <button class="btn btn-ghost" style="width:100%;margin-top:12px;font-size:11px;" onclick="document.querySelectorAll('.flow-node').forEach(el=>el.classList.remove('node-error','node-warn'));document.querySelectorAll('.node-badge').forEach(b=>b.remove());updatePropertyPanel();">Clear markers</button>
   `;
 }
+window.showValidationPanel = showValidationPanel;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 🧩 TernFlow v2 Core: Signal Algebra & Event Queue
@@ -2860,6 +2930,7 @@ function updateFogHeatmap() {
     ctx.fill();
   });
 }
+window.updateFogHeatmap = updateFogHeatmap;
 // ─── End of v2 Core Modules ──────────────────────────────────────────────────
 
 async function runSimulation() {
@@ -2907,6 +2978,7 @@ async function runSimulation() {
 
   await runSimulationCore();
 }
+window.runSimulation = runSimulation;
 
 async function runSimulationCore() {
   let tick = simHistory.length > 0 ? simHistory[simHistory.length-1].tick : 0;
@@ -2961,6 +3033,7 @@ async function runSimulationCore() {
     updateSimUI();
   }
 }
+window.runSimulationCore = runSimulationCore;
 
 function captureSimSnapshot(tick, activeSignals = []) {
   const snapshot = {
@@ -2983,6 +3056,7 @@ function captureSimSnapshot(tick, activeSignals = []) {
   };
   simHistory.push(snapshot);
 }
+window.captureSimSnapshot = captureSimSnapshot;
 
 function showTimeline() {
   const tl = document.getElementById("sim-timeline");
@@ -2994,6 +3068,7 @@ function showTimeline() {
   scrubber.value = simHistory.length - 1;
   label.textContent = `Tick ${simHistory.length - 1}/${simHistory.length - 1}`;
 }
+window.showTimeline = showTimeline;
 
 function scrubSimulation(index) {
   const idx = parseInt(index);
@@ -3059,6 +3134,7 @@ function scrubSimulation(index) {
   updateWires(); // This will re-render paths based on current signal state
   updateFogHeatmap();
 }
+window.scrubSimulation = scrubSimulation;
 
 function stopSimulation() {
   simulationAborted = true;
@@ -3066,6 +3142,7 @@ function stopSimulation() {
   simulationRunning = false;
   updateSimUI();
 }
+window.stopSimulation = stopSimulation;
 
 /**
  * Draggable Inspector Logic
@@ -3131,6 +3208,7 @@ function initInspectorDraggable() {
     document.removeEventListener("mouseup", onMouseUp);
   }
 }
+window.initInspectorDraggable = initInspectorDraggable;
 
 /**
  * Sidebar Resizer Logic
@@ -3157,11 +3235,13 @@ function initSidebarResizer() {
     document.addEventListener("mouseup", onMouseUp);
   });
 }
+window.initSidebarResizer = initSidebarResizer;
 
 function setNodeStatus(id, status) {
   const dot = document.getElementById("status-" + id);
   if (dot) { dot.className = "fn-status" + (status ? " " + status : ""); dot.title = status || "idle"; }
 }
+window.setNodeStatus = setNodeStatus;
 
 async function executeLLMNode(node, inSignal) {
   const prompt = (node.props.template || "{{input}}").replace("{{input}}", inSignal === 1 ? "affirm" : (inSignal === -1 ? "reject" : "tend"));
@@ -3205,6 +3285,7 @@ async function executeLLMNode(node, inSignal) {
     return inSignal;
   }
 }
+window.executeLLMNode = executeLLMNode;
 
 async function simulateNode(node, inSignal) {
   if (simulationAborted) return inSignal;
@@ -3271,6 +3352,7 @@ async function simulateNode(node, inSignal) {
   await new Promise(r => setTimeout(r, 500));
   return outSignal;
 }
+window.simulateNode = simulateNode;
 
 async function executeMOE13(node, inSignal) {
   logInspector(node.name, "🧠 MOE-13: Initiating Deliberation Cycle...");
@@ -3334,6 +3416,7 @@ async function executeMOE13(node, inSignal) {
   logInspector(node.name, `✓ Deliberation Complete. Verdict: ${finalTrit} (Score: ${weightedSum.toFixed(3)})`);
   return finalTrit;
 }
+window.executeMOE13 = executeMOE13;
 
 function spawnResultArtifact(sourceNode, val) {
   const payloadStr = `Source: ${sourceNode.name}\nResolved Signal: ${val === 1 ? 'AFFIRM' : (val === -1 ? 'REJECT' : 'TEND')}\nNodes Traversed: (Auto-calc)\nLatency: 84ms\nIntegrity: Verified`;
@@ -3390,6 +3473,7 @@ function spawnResultArtifact(sourceNode, val) {
   saveCanvasState();
   lucide.createIcons();
 }
+window.spawnResultArtifact = spawnResultArtifact;
 
 function setArtifactState(id, state) {
   const node = flowNodes.find(n => n.id === id);
@@ -3430,6 +3514,7 @@ function setArtifactState(id, state) {
   updateWires();
   saveCanvasState();
 }
+window.setArtifactState = setArtifactState;
 
 function clearResultArtifacts() {
   const artifactNodes = flowNodes.filter(n => n.type === 'artifact');
@@ -3444,6 +3529,7 @@ function clearResultArtifacts() {
   flowNodes = flowNodes.filter(n => n.type !== 'artifact');
   updateWires();
 }
+window.clearResultArtifacts = clearResultArtifacts;
 
 function updateWires() {
   updateFogHeatmap(); // Sync fog to node positions
@@ -3531,6 +3617,7 @@ function updateWires() {
     if (ghost) ghost.style.display = "none";
   }
 }
+window.updateWires = updateWires;
 
 function computeWirePath(start, end, wire) {
   const dx = end.x - start.x;
@@ -3587,6 +3674,7 @@ function computeWirePath(start, end, wire) {
   const curve = dx * 0.5;
   return `M ${start.x} ${start.y} C ${start.x + curve} ${start.y}, ${end.x - curve} ${end.y}, ${end.x} ${end.y}`;
 }
+window.computeWirePath = computeWirePath;
 
 let simSpeed = 2000;
 
@@ -3625,6 +3713,7 @@ async function animateSignal(wire, signal, confidence = 1.0) {
   await new Promise(r => setTimeout(r, simSpeed));
   particle.remove();
 }
+window.animateSignal = animateSignal;
 
 function getPortPos(port) {
   const rect = port.getBoundingClientRect();
@@ -3634,6 +3723,7 @@ function getPortPos(port) {
     y: (rect.top - wrapRect.top - CT.y + rect.height / 2) / CT.scale
   };
 }
+window.getPortPos = getPortPos;
 
 function drawWire(start, end, id, signal, wire, confidence = 1.0) {
   const svg = document.getElementById("flow-svg-layer");
@@ -3720,6 +3810,7 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
     h.style.top = midY + "px";
   }
 }
+window.drawWire = drawWire;
 
 function showWireHandles(wireId) {
   const wire = flowWires.find(w => w.id === wireId);
@@ -3753,6 +3844,7 @@ function showWireHandles(wireId) {
     updateWires();
   });
 }
+window.showWireHandles = showWireHandles;
 
 function setupHandleDrag(el, onDrag) {
   el.onmousedown = (e) => {
@@ -3775,6 +3867,7 @@ function setupHandleDrag(el, onDrag) {
     document.addEventListener("mouseup", up);
   };
 }
+window.setupHandleDrag = setupHandleDrag;
 
 function exportFlowCode() {
   if (flowNodes.length === 0) {
@@ -3813,6 +3906,7 @@ function exportFlowCode() {
   switchView("editor");
   showToast("Swarm exported to Editor", "ok");
 }
+window.exportFlowCode = exportFlowCode;
 
 // ─── Deploy as Product ────────────────────────────────────────────────────────
 function openDeployModal() {
@@ -3829,10 +3923,12 @@ function openDeployModal() {
   document.getElementById("deployModal").style.display = "flex";
   lucide.createIcons();
 }
+window.openDeployModal = openDeployModal;
 
 function closeDeployModal() {
   document.getElementById("deployModal").style.display = "none";
 }
+window.closeDeployModal = closeDeployModal;
 
 function deployStep(n) {
   [1,2,3].forEach(i => {
@@ -3844,6 +3940,7 @@ function deployStep(n) {
   });
   if (n === 3) buildDeploySummary();
 }
+window.deployStep = deployStep;
 
 function buildDeploySummary() {
   const name    = document.getElementById("deployName").value.trim() || "my-agent";
@@ -3864,6 +3961,7 @@ function buildDeploySummary() {
     <div><span style="color:var(--muted)">desc:    </span><span style="color:var(--muted2);font-size:11px;">${desc}</span></div>
   `;
 }
+window.buildDeploySummary = buildDeploySummary;
 
 async function executeProductDeploy() {
   // GC sweep: clear old visual results before building deployment
@@ -3976,7 +4074,8 @@ async function executeProductDeploy() {
     localStorage.setItem("ternflow_registry", JSON.stringify(registry));
   }
 }
-document.addEventListener('mousedown', (e) => {
+window.executeProductDeploy = executeProductDeploy;
+function onMouseDown(e) {
   if (e.button !== 0) return; // Only left-click starts wires
   
   const sourcePort = e.target.closest('.flow-port');
@@ -3993,9 +4092,11 @@ document.addEventListener('mousedown', (e) => {
     // Clear state if clicking empty space (prevent stuck wires)
     activeWire = null;
   }
-});
+}
+document.addEventListener('mousedown', onMouseDown);
+window.onMouseDown = onMouseDown;
 
-document.addEventListener('mousemove', (e) => {
+function onMouseMove(e) {
   const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
 
   if (activeWire) {
@@ -4034,9 +4135,11 @@ document.addEventListener('mousemove', (e) => {
     }
     updateWires();
   }
-});
+}
+document.addEventListener('mousemove', onMouseMove);
+window.onMouseMove = onMouseMove;
 
-document.addEventListener('mouseup', (e) => {
+function onMouseUp(e) {
   // --- Node Dragging End ---
   if (isDraggingNode) {
     if (selectedIds.size > 1) {
@@ -4141,7 +4244,9 @@ document.addEventListener('mouseup', (e) => {
       updateWires();
     }
   }
-});
+}
+document.addEventListener('mouseup', onMouseUp);
+window.onMouseUp = onMouseUp;
 
 async function resumeSimulationFrom(targetId) {
    simulationAborted = false;
@@ -4157,6 +4262,7 @@ async function resumeSimulationFrom(targetId) {
    // For now, we trigger a "soft" runSimulation that doesn't clear the graph
    await runSimulationCore();
 }
+window.resumeSimulationFrom = resumeSimulationFrom;
 
 // ─── GitHub raw content base (Tier 1 public fallback) ────────────────────────
 const GH_RAW = "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/";
@@ -4196,11 +4302,13 @@ async function loadGithubTree() {
     renderFileTree(tree, allFiles, true);
   } catch(e) { showNoKeyMessage(tree); }
 }
+window.loadGithubTree = loadGithubTree;
 
 function showNoKeyMessage(tree) {
   // Always show built-in templates so explorer is never empty
   renderBuiltinTree(tree);
 }
+window.showNoKeyMessage = showNoKeyMessage;
 
 function renderBuiltinTree(tree) {
   tree.innerHTML = "";
@@ -4235,6 +4343,7 @@ function renderBuiltinTree(tree) {
   refreshTreeHighlight();
   lucide.createIcons();
 }
+window.renderBuiltinTree = renderBuiltinTree;
 
 function renderFileTree(tree, files, isGitHub = false) {
   const groups = {};
@@ -4285,6 +4394,7 @@ function renderFileTree(tree, files, isGitHub = false) {
   refreshTreeHighlight();
   lucide.createIcons();
 }
+window.renderFileTree = renderFileTree;
 
 // ─── Build file tree ──────────────────────────────────────────────────────────
 async function buildFileTree(force = false) {
@@ -4320,12 +4430,14 @@ async function buildFileTree(force = false) {
     await loadGithubTree();
   }
 }
+window.buildFileTree = buildFileTree;
 
 function refreshTreeHighlight() {
   document.querySelectorAll(".tree-file").forEach(el => {
     el.classList.toggle("active", el.dataset.path === activeFile);
   });
 }
+window.refreshTreeHighlight = refreshTreeHighlight;
 
 // ─── Tab management ───────────────────────────────────────────────────────────
 function renderTabs() {
@@ -4339,6 +4451,7 @@ function renderTabs() {
     container.appendChild(tab);
   });
 }
+window.renderTabs = renderTabs;
 
 function closeTab(path, e) {
   if (e) { e.stopPropagation(); }
@@ -4353,10 +4466,12 @@ function closeTab(path, e) {
     renderTabs();
   }
 }
+window.closeTab = closeTab;
 
 function triggerImportFile() {
   document.getElementById("localFileInput").click();
 }
+window.triggerImportFile = triggerImportFile;
 
 function importLocalFile(event) {
   const file = event.target.files[0];
@@ -4373,6 +4488,7 @@ function importLocalFile(event) {
   reader.readAsText(file);
   event.target.value = "";
 }
+window.importLocalFile = importLocalFile;
 
 function switchToTab(path) {
   if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
@@ -4383,6 +4499,7 @@ function switchToTab(path) {
   saveEditorState();
   const sbf = document.getElementById("sbFile"); if (sbf) sbf.textContent = path.split("/").pop();
 }
+window.switchToTab = switchToTab;
 
 async function openFile(path, useGithub = false) {
   if (monacoEditor) fileBuffers[activeFile] = monacoEditor.getValue();
@@ -4426,6 +4543,7 @@ async function openFile(path, useGithub = false) {
     showToast("Connection Error", "error");
   }
 }
+window.openFile = openFile;
 
 function loadToEditor(path, content) {
   const existing = tabs.find(t => t.path === path);
@@ -4442,6 +4560,7 @@ function loadToEditor(path, content) {
   saveEditorState();
   const sbf = document.getElementById("sbFile"); if (sbf) sbf.textContent = path.split("/").pop();
 }
+window.loadToEditor = loadToEditor;
 
 function newFile() {
   const name = `scratch_${scratchCounter++}.tern`;
@@ -4451,10 +4570,12 @@ function newFile() {
   switchToTab(path);
   saveEditorState();
 }
+window.newFile = newFile;
 
 function insertTemplate(key) {
   if (monacoEditor) monacoEditor.setValue(TEMPLATES[key] || "");
 }
+window.insertTemplate = insertTemplate;
 
 // ─── Sidebar panel switching ──────────────────────────────────────────────────
 function switchSidebarPanel(name) {
@@ -4463,6 +4584,7 @@ function switchSidebarPanel(name) {
   document.getElementById("panel-" + name).classList.add("active");
   document.getElementById("act-" + name).classList.add("active");
 }
+window.switchSidebarPanel = switchSidebarPanel;
 
 // ─── Sidebar resize ───────────────────────────────────────────────────────────
 function startSidebarResize(e) {
@@ -4482,6 +4604,7 @@ function startSidebarResize(e) {
   document.addEventListener("mousemove", onMove);
   document.addEventListener("mouseup", onUp);
 }
+window.startSidebarResize = startSidebarResize;
 
 // ─── Output resize ────────────────────────────────────────────────────────────
 function startOutputResize(e) {
@@ -4501,6 +4624,7 @@ function startOutputResize(e) {
   document.addEventListener("mousemove", onMove);
   document.addEventListener("mouseup", onUp);
 }
+window.startOutputResize = startOutputResize;
 
 // ─── Output tabs ──────────────────────────────────────────────────────────────
 function switchOutTab(id, el) {
@@ -4513,6 +4637,7 @@ function switchOutTab(id, el) {
       document.getElementById("apiEndpoint").value;
   }
 }
+window.switchOutTab = switchOutTab;
 
 // ─── VM Output helpers ────────────────────────────────────────────────────────
 function setStatus(type, text) {
@@ -4521,6 +4646,7 @@ function setStatus(type, text) {
   const dot = document.getElementById("connDot");
   if (dot) dot.className = "sb-dot" + (type === "error" ? " err" : type === "running" ? " warn" : "");
 }
+window.setStatus = setStatus;
 
 function clearOutput() {
   setStatus("idle", "● Idle");
@@ -4530,6 +4656,7 @@ function clearOutput() {
   document.getElementById("section-regs").style.display = "none";
   document.getElementById("section-error").style.display = "none";
 }
+window.clearOutput = clearOutput;
 
 window.addEventListener('wasmready', () => {
   const badge = document.getElementById("wasmBadge");
@@ -4625,6 +4752,7 @@ function showResult(data) {
   // Update Logic Field Visualizer
   renderLogicField(data.registers || []);
 }
+window.showResult = showResult;
 
 function renderLogicField(registers = []) {
   const grid = document.getElementById("logic-field-grid");
@@ -4658,6 +4786,7 @@ function renderLogicField(registers = []) {
     grid.appendChild(cell);
   }
 }
+window.renderLogicField = renderLogicField;
 
 // ─── Code preparation for BET VM (Auto-main) ─────────────────────────────────
 function prepareTernCode(src) {
@@ -4686,6 +4815,7 @@ function prepareTernCode(src) {
 
   return `fn main() -> trit {\n${lines.join('\n')}\n    return hold;\n}`;
 }
+window.prepareTernCode = prepareTernCode;
 
 /**
  * Universal TIS Execution Wrapper
@@ -4713,6 +4843,7 @@ function runTernCode(rawCode) {
     return { ok: false, error: "VM_CRASH: " + e.message };
   }
 }
+window.runTernCode = runTernCode;
 
 // ─── Run ──────────────────────────────────────────────────────────────────────
 async function runCode() {
@@ -4754,6 +4885,7 @@ async function runCode() {
   runBtn.classList.remove("running");
   runBtn.innerHTML = '<span>▶ Run</span><span class="kbd">Ctrl+↵</span>';
 }
+window.runCode = runCode;
 
 // ─── Run history ──────────────────────────────────────────────────────────────
 function addRunToHistory(path, ok, ms, data) {
@@ -4773,6 +4905,7 @@ function addRunToHistory(path, ok, ms, data) {
   renderHistory();
   updateDashboardRuns();
 }
+window.addRunToHistory = addRunToHistory;
 
 function renderHistory() {
   const el = document.getElementById("history-list");
@@ -4790,6 +4923,7 @@ function renderHistory() {
       </div>
     </div>`).join("");
 }
+window.renderHistory = renderHistory;
 
 function restoreRun(i) {
   const e = runHistory[i];
@@ -4803,11 +4937,13 @@ function restoreRun(i) {
   showResult(e.data);
   switchView("editor");
 }
+window.restoreRun = restoreRun;
 
 function clearHistory() {
   runHistory = [];
   renderHistory();
 }
+window.clearHistory = clearHistory;
 
 function updateDashboardRuns() {
   const el = document.getElementById("dashRunList");
@@ -4822,6 +4958,7 @@ function updateDashboardRuns() {
       <span style="font-size:10px; color:var(--muted);">${e.ts}</span>
     </div>`).join("");
 }
+window.updateDashboardRuns = updateDashboardRuns;
 
 // ─── Share + Download ────────────────────────────────────────────────────────
 function shareCode() {
@@ -4831,6 +4968,7 @@ function shareCode() {
   const url = location.origin + location.pathname + hash;
   navigator.clipboard.writeText(url).then(() => showToast("Share URL copied to clipboard", "ok")).catch(() => showToast("Copy failed — check browser permissions", "err"));
 }
+window.shareCode = shareCode;
 
 function downloadCode() {
   if (!monacoEditor) return;
@@ -4844,6 +4982,7 @@ function downloadCode() {
   URL.revokeObjectURL(a.href);
   showToast("Downloaded " + name, "ok");
 }
+window.downloadCode = downloadCode;
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 function showToast(msg, type = "") {
@@ -4854,6 +4993,7 @@ function showToast(msg, type = "") {
   c.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
+window.showToast = showToast;
 
 // ─── Load code from URL hash ──────────────────────────────────────────────────
 function loadFromHash() {
@@ -4874,6 +5014,7 @@ function loadFromHash() {
     } catch (e) { showToast("Failed to decode shared URL", "err"); }
   }
 }
+window.loadFromHash = loadFromHash;
 
 // ─── API Explorer try buttons ─────────────────────────────────────────────────
 async function tryHealth() {
@@ -4886,6 +5027,7 @@ async function tryHealth() {
     document.getElementById("apiResponse").textContent = String(e);
   }
 }
+window.tryHealth = tryHealth;
 
 async function tryApiUsage() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
@@ -4900,6 +5042,7 @@ async function tryApiUsage() {
     document.getElementById("apiResponse").textContent = String(e);
   }
 }
+window.tryApiUsage = tryApiUsage;
 
 async function tryApiRun() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
@@ -4919,6 +5062,7 @@ async function tryApiRun() {
     document.getElementById("apiResponse").textContent = String(e);
   }
 }
+window.tryApiRun = tryApiRun;
 
 const REPL_SNIPPETS = {
   hello: `fn main() -> trit {\n    print("@ Hello Ternary World");\n    return affirm;\n}`,
@@ -4930,6 +5074,7 @@ const REPL_SNIPPETS = {
 function setReplSnippet(key) {
   document.getElementById("dashReplInput").value = REPL_SNIPPETS[key] || "";
 }
+window.setReplSnippet = setReplSnippet;
 
 function openReplInEditor() {
   const code = document.getElementById("dashReplInput").value.trim();
@@ -4939,6 +5084,7 @@ function openReplInEditor() {
   loadToEditor(path, code);
   switchView('editor');
 }
+window.openReplInEditor = openReplInEditor;
 
 async function runReplExpr() {
   const input = document.getElementById("dashReplInput").value.trim();
@@ -4966,6 +5112,7 @@ async function runReplExpr() {
     resEl.textContent = r.error || "Error";
   }
 }
+window.runReplExpr = runReplExpr;
 
 // ─── Key persistence ──────────────────────────────────────────────────────────
 function initKeyPersistence() {
@@ -4978,6 +5125,7 @@ function initKeyPersistence() {
     document.getElementById("saveKeyCheck").checked = saveEnabled;
   }
 }
+window.initKeyPersistence = initKeyPersistence;
 
 function toggleSaveKey() {
   const checked = document.getElementById("saveKeyCheck").checked;
@@ -4989,6 +5137,7 @@ function toggleSaveKey() {
     localStorage.removeItem("ternstudio-key");
   }
 }
+window.toggleSaveKey = toggleSaveKey;
 
 function applySettingsKey() {
   const val = (document.getElementById("settingsNewKey") || {}).value || "";
@@ -4997,17 +5146,20 @@ function applySettingsKey() {
     document.getElementById("settingsNewKey").value = "";
   }
 }
+window.applySettingsKey = applySettingsKey;
 
 function syncSettingsKeyDisplay() {
   const key = document.getElementById("apiKey").value.trim();
   const masked = key.length > 12 ? key.slice(0, 8) + "…" + key.slice(-4) : (key || "—");
   document.getElementById("settingsKeyDisplay").textContent = masked;
 }
+window.syncSettingsKeyDisplay = syncSettingsKeyDisplay;
 
 function copyKey() {
   const key = document.getElementById("apiKey").value.trim();
   if (key) navigator.clipboard.writeText(key).then(() => showToast("Key copied", "ok"));
 }
+window.copyKey = copyKey;
 
 function clearKey() {
   document.getElementById("apiKey").value = "";
@@ -5016,6 +5168,7 @@ function clearKey() {
   syncSettingsKeyDisplay();
   showToast("Key cleared", "ok");
 }
+window.clearKey = clearKey;
 
 function applyEndpoint() {
   const val = document.getElementById("settingsEndpoint").value.trim();
@@ -5025,6 +5178,7 @@ function applyEndpoint() {
     showToast("Endpoint updated", "ok");
   }
 }
+window.applyEndpoint = applyEndpoint;
 
 function syncSettingsUI() {
   document.getElementById("settingsEndpoint").value = document.getElementById("apiEndpoint").value;
@@ -5033,6 +5187,7 @@ function syncSettingsUI() {
   const theme = document.documentElement.getAttribute("data-theme") || "dark";
   document.getElementById("settingsTheme").value = theme;
 }
+window.syncSettingsUI = syncSettingsUI;
 
 function applyEditorSettings() {
   if (!monacoEditor) return;
@@ -5041,6 +5196,7 @@ function applyEditorSettings() {
   const wordWrap = document.getElementById("settingsWordWrap").value;
   monacoEditor.updateOptions({ fontSize, minimap: { enabled: minimap }, wordWrap });
 }
+window.applyEditorSettings = applyEditorSettings;
 
 function applyThemeFromSettings() {
   const val = document.getElementById("settingsTheme").value;
@@ -5048,6 +5204,7 @@ function applyThemeFromSettings() {
   applyTheme(val);
   if (monacoEditor) monaco.editor.setTheme(val === "light" ? "ternstudio-light" : "ternstudio-dark");
 }
+window.applyThemeFromSettings = applyThemeFromSettings;
 
 // ─── Usage dashboard ──────────────────────────────────────────────────────────
 const TIER_BENEFITS = {
@@ -5067,6 +5224,7 @@ function renderUsageAnon() {
   renderTierBenefits(1);
   updateTopbarTier(1);
 }
+window.renderUsageAnon = renderUsageAnon;
 
 function renderTierBenefits(tier) {
   const list = document.getElementById("tierBenefitsList");
@@ -5078,6 +5236,7 @@ function renderTierBenefits(tier) {
   const upgradeBtn = document.getElementById("upgradeBtn");
   upgradeBtn.style.display = tier >= 4 ? "none" : "inline-block";
 }
+window.renderTierBenefits = renderTierBenefits;
 
 function updateTopbarTier(tier) {
   const badge = document.getElementById("tierBadge");
@@ -5092,6 +5251,7 @@ function updateTopbarTier(tier) {
     dashBadge.className = "tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free");
   }
 }
+window.updateTopbarTier = updateTopbarTier;
 
 async function fetchUsage() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
@@ -5163,6 +5323,7 @@ async function fetchUsage() {
     document.getElementById("usageErrorMsg").textContent = String(e);
   }
 }
+window.fetchUsage = fetchUsage;
 
 // ─── Connection status ────────────────────────────────────────────────────────
 async function checkConnection() {
@@ -5184,6 +5345,7 @@ async function checkConnection() {
     if (label) label.textContent = "Offline";
   }
 }
+window.checkConnection = checkConnection;
 
 // ─── Upskill modal ────────────────────────────────────────────────────────────
 function openUpskillModal()  { document.getElementById("upskillModal").style.display = "flex"; document.body.style.overflow = "hidden"; }
@@ -5207,6 +5369,7 @@ function applyTheme(mode) {
   }
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+window.applyTheme = applyTheme;
 
 function toggleTheme() {
   const current = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
@@ -5215,6 +5378,7 @@ function toggleTheme() {
   applyTheme(next);
   if (monacoEditor) monaco.editor.setTheme(next === "light" ? "ternstudio-light" : "ternstudio-dark");
 }
+window.toggleTheme = toggleTheme;
 
 (function() {
   const saved = localStorage.getItem("ternstudio-theme") || "dark";
@@ -5410,145 +5574,3 @@ require(["vs/editor/editor.main"], function () {
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 });
-
-// Global Exports
-window.addAgentFromModal = addAgentFromModal;
-window.addExternalBridge = addExternalBridge;
-window.addRunToHistory = addRunToHistory;
-window.addTernaryGate = addTernaryGate;
-window.applyEditorSettings = applyEditorSettings;
-window.applyEndpoint = applyEndpoint;
-window.applySettingsKey = applySettingsKey;
-window.applyTheme = applyTheme;
-window.applyThemeFromSettings = applyThemeFromSettings;
-window.applyTransform = applyTransform;
-window.buildDeploySummary = buildDeploySummary;
-window.captureSimSnapshot = captureSimSnapshot;
-window.clearCanvas = clearCanvas;
-window.clearHistory = clearHistory;
-window.clearKey = clearKey;
-window.clearOutput = clearOutput;
-window.clearResultArtifacts = clearResultArtifacts;
-window.clearSelection = clearSelection;
-window.closeDeleteModal = closeDeleteModal;
-window.closeDeployModal = closeDeployModal;
-window.closeNewAgentModal = closeNewAgentModal;
-window.closeTab = closeTab;
-window.closeUpskillModal = closeUpskillModal;
-window.collapseArtifactToStub = collapseArtifactToStub;
-window.computeWirePath = computeWirePath;
-window.confirmDeleteAgent = confirmDeleteAgent;
-window.copyKey = copyKey;
-window.createFlowNode = createFlowNode;
-window.deleteNode = deleteNode;
-window.deleteSelected = deleteSelected;
-window.deleteWire = deleteWire;
-window.deployStep = deployStep;
-window.downloadCode = downloadCode;
-window.drawWire = drawWire;
-window.explodeMacro = explodeMacro;
-window.exportFlowCode = exportFlowCode;
-window.filterFlowLib = filterFlowLib;
-window.findClearSpace = findClearSpace;
-window.findParents = findParents;
-window.fitToView = fitToView;
-window.getAgentIcon = getAgentIcon;
-window.getArchetypeCode = getArchetypeCode;
-window.getPortPos = getPortPos;
-window.groupSelectedNodes = groupSelectedNodes;
-window.importLocalFile = importLocalFile;
-window.initCanvasInteraction = initCanvasInteraction;
-window.initInspectorDraggable = initInspectorDraggable;
-window.initKeyPersistence = initKeyPersistence;
-window.initSidebarResizer = initSidebarResizer;
-window.insertTemplate = insertTemplate;
-window.loadFromHash = loadFromHash;
-window.loadToEditor = loadToEditor;
-window.logInspector = logInspector;
-window.markNode = markNode;
-window.morphNodeArchetype = morphNodeArchetype;
-window.newFile = newFile;
-window.onMouseMove = onMouseMove;
-window.onMouseUp = onMouseUp;
-window.openAgentInEditor = openAgentInEditor;
-window.openDeployModal = openDeployModal;
-window.openNewAgentModal = openNewAgentModal;
-window.openReplInEditor = openReplInEditor;
-window.openUpskillModal = openUpskillModal;
-window.panToCenter = panToCenter;
-window.populateNewAgentPicker = populateNewAgentPicker;
-window.prepareTernCode = prepareTernCode;
-window.refreshTreeHighlight = refreshTreeHighlight;
-window.renderArchetypes = renderArchetypes;
-window.renderBuiltinTree = renderBuiltinTree;
-window.renderFileTree = renderFileTree;
-window.renderFlow = renderFlow;
-window.renderFlowLibItems = renderFlowLibItems;
-window.renderHistory = renderHistory;
-window.renderLogicField = renderLogicField;
-window.renderTabs = renderTabs;
-window.renderTierBenefits = renderTierBenefits;
-window.renderTracerView = renderTracerView;
-window.renderUsageAnon = renderUsageAnon;
-window.restoreCanvasState = restoreCanvasState;
-window.restoreRun = restoreRun;
-window.runCode = runCode;
-window.runTernCode = runTernCode;
-window.saveCanvasState = saveCanvasState;
-window.saveEditorState = saveEditorState;
-window.screenToCanvas = screenToCanvas;
-window.scrubSimulation = scrubSimulation;
-window.selectNode = selectNode;
-window.selectWire = selectWire;
-window.selectedFleetAgentId = typeof window.selectedFleetAgentId !== 'undefined' ? window.selectedFleetAgentId : null;
-window.setArtifactState = setArtifactState;
-window.setNodeStatus = setNodeStatus;
-window.setReplSnippet = setReplSnippet;
-window.setStatus = setStatus;
-window.setupHandleDrag = setupHandleDrag;
-window.shareCode = shareCode;
-window.showNoKeyMessage = showNoKeyMessage;
-window.showResult = showResult;
-window.showTimeline = showTimeline;
-window.showToast = showToast;
-window.showValidationPanel = showValidationPanel;
-window.showWireHandles = showWireHandles;
-window.spawnArchetype = spawnArchetype;
-window.spawnResultArtifact = spawnResultArtifact;
-window.startOutputResize = startOutputResize;
-window.startSidebarResize = startSidebarResize;
-window.step = step;
-window.stopSimulation = stopSimulation;
-window.switchLibTab = switchLibTab;
-window.switchOutTab = switchOutTab;
-window.switchSidebarPanel = switchSidebarPanel;
-window.switchToTab = switchToTab;
-window.switchView = switchView;
-window.syncMultiDragEnd = syncMultiDragEnd;
-window.syncSettingsKeyDisplay = syncSettingsKeyDisplay;
-window.syncSettingsUI = syncSettingsUI;
-window.toggleInspector = toggleInspector;
-window.toggleKeyInput = toggleKeyInput;
-window.toggleSaveKey = toggleSaveKey;
-window.toggleSimulation = toggleSimulation;
-window.toggleTheme = toggleTheme;
-window.topoSort = topoSort;
-window.traceCausalPath = traceCausalPath;
-window.triggerImportFile = triggerImportFile;
-window.updateApiKey = updateApiKey;
-window.updateDashboardRuns = updateDashboardRuns;
-window.updateEdgePanel = updateEdgePanel;
-window.updateFogHeatmap = updateFogHeatmap;
-window.updateNodeProp = updateNodeProp;
-window.updateNodeSchemaDisplay = updateNodeSchemaDisplay;
-window.updatePropertyPanel = updatePropertyPanel;
-window.updateSimUI = updateSimUI;
-window.updateTopbarTier = updateTopbarTier;
-window.updateValidateBadge = updateValidateBadge;
-window.updateWireProp = updateWireProp;
-window.updateWireStyles = updateWireStyles;
-window.updateWires = updateWires;
-window.validateGraph = validateGraph;
-window.viewportCenterInCanvas = viewportCenterInCanvas;
-window.zoomAt = zoomAt;
-window.zoomStep = zoomStep;
