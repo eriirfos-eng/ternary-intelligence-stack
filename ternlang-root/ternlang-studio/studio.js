@@ -3365,6 +3365,7 @@ async function runSimulation() {
 
   // PHANTOM PASS: Pure Logic & Timing Calculation
   const { scheduledEvents, maxSimDuration } = await calculateGlobalTimeline();
+  window.globalScheduledEvents = scheduledEvents; // Persist for manual scrubbing
   
   // VISUAL PASS: Pure Rendering & Playback
   if (!simulationAborted) {
