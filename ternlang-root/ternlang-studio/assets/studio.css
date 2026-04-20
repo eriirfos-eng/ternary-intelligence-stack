@@ -1203,6 +1203,18 @@
       border-radius: 4px 0 0 4px;
     }
 
+    .config-card {
+      background: rgba(20, 25, 35, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+    }
+
     .industrial-title {
       font-size: 14px !important;
       font-weight: 800 !important;

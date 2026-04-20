@@ -3446,32 +3446,26 @@ async function runSimulationCore() {
   simulationRunning = true;
 
   const driveTimeline = () => {
-    if (!simulationRunning || simulationAborted) {
-      // Final cleanup if stopped
-      return;
-    }
+    if (!simulationRunning || simulationAborted) return;
+    
     const now = performance.now();
     const delta = now - lastRealTime;
     lastRealTime = now;
 
-    const nextClock = virtualClock + delta;
-    if (nextClock >= maxSimDuration) {
+    virtualClock += delta;
+    if (virtualClock >= maxSimDuration) {
       virtualClock = maxSimDuration;
       simulationRunning = false;
       updateSimUI();
       logInspector("SYSTEM", "✓ Pre-flight playback complete");
-    } else {
-      virtualClock = nextClock;
     }
 
     if (scrubber) {
       scrubber.value = virtualClock;
       if (tlLabel) tlLabel.textContent = `TIME: ${(virtualClock / 1000).toFixed(2)}s`;
-      
-      // Physically drive the dot interpolation from the master clock
-      // Instead of tick-based scrubbing, we use the absolute clock
-      requestAnimationFrame(() => renderScrubLayer(virtualClock, scheduledEvents));
     }
+    
+    renderScrubLayer(virtualClock, scheduledEvents);
 
     if (simulationRunning) {
       requestAnimationFrame(driveTimeline);
@@ -3670,90 +3664,96 @@ function performScrub() {
 }
 
 function renderScrubLayer(currentTime, scheduledEvents = []) {
-  const canvas = document.getElementById("scrub-layer");
-  const wrap = document.getElementById("flow-canvas-wrap");
-  if (!canvas || !wrap) return;
+  try {
+    const canvas = document.getElementById("scrub-layer");
+    const wrap = document.getElementById("flow-canvas-wrap");
+    if (!canvas || !wrap) return;
 
-  const ctx = canvas.getContext("2d");
-  if (canvas.width !== wrap.clientWidth || canvas.height !== wrap.clientHeight) {
-    canvas.width = wrap.clientWidth; 
-    canvas.height = wrap.clientHeight;
-  }
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext("2d");
+    if (canvas.width !== wrap.clientWidth || canvas.height !== wrap.clientHeight) {
+      canvas.width = wrap.clientWidth; 
+      canvas.height = wrap.clientHeight;
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Use global variable if not passed (for scrubber dragging)
-  const events = scheduledEvents.length > 0 ? scheduledEvents : (window.globalScheduledEvents || []);
-  if (scheduledEvents.length > 0) window.globalScheduledEvents = scheduledEvents;
+    // Use global variable if not passed (for scrubber dragging)
+    const events = scheduledEvents.length > 0 ? scheduledEvents : (window.globalScheduledEvents || []);
+    if (scheduledEvents.length > 0) window.globalScheduledEvents = scheduledEvents;
 
-  // Track which nodes/wires are active at this millisecond
-  const activeNodeIds = new Set();
-  const activeWireStates = {}; // wireId -> { signal, alpha }
+    // Track which nodes/wires are active at this millisecond
+    const activeNodeIds = new Set();
+    const activeWireStates = {}; // wireId -> { signal, alpha }
 
-  events.forEach(event => {
-    // 1. SIGNAL INTERPOLATION (Dots)
-    const isSignalInFlight = (currentTime >= event.startTime && currentTime <= event.endTime);
-    if (isSignalInFlight) {
-      const frac = (currentTime - event.startTime) / event.duration;
-      const wire = flowWires.find(w => w.id === event.wireId);
-      if (wire) {
-        activeWireStates[wire.id] = { signal: event.val, alpha: 1.0 };
-        const svgPath = document.getElementById(wire.id);
-        if (svgPath) {
-          try {
-            const totalLength = svgPath.getTotalLength();
-            const pt = svgPath.getPointAtLength(frac * totalLength);
-            const canvasX = pt.x * CT.scale + CT.x;
-            const canvasY = pt.y * CT.scale + CT.y;
-            const color = event.val === 1 ? '#22c55e' : (event.val === -1 ? '#ef4444' : '#f59e0b');
-            
-            ctx.beginPath();
-            ctx.fillStyle = color;
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 10 * CT.scale;
-            const size = (6 + (8 * (event.conf || 1.0))) * CT.scale;
-            ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-          } catch(e) {}
+    events.forEach(event => {
+      // 1. SIGNAL INTERPOLATION (Dots)
+      const isSignalInFlight = (currentTime >= event.startTime && currentTime <= event.endTime);
+      if (isSignalInFlight) {
+        const frac = (currentTime - event.startTime) / event.duration;
+        const wire = flowWires.find(w => w.id === event.wireId);
+        if (wire) {
+          activeWireStates[wire.id] = { signal: event.val, alpha: 1.0 };
+          const svgPath = document.getElementById(wire.id);
+          if (svgPath) {
+            try {
+              const totalLength = svgPath.getTotalLength();
+              const pt = svgPath.getPointAtLength(frac * totalLength);
+              const canvasX = pt.x * CT.scale + CT.x;
+              const canvasY = pt.y * CT.scale + CT.y;
+              const color = event.val === 1 ? '#22c55e' : (event.val === -1 ? '#ef4444' : '#f59e0b');
+              
+              ctx.beginPath();
+              ctx.fillStyle = color;
+              ctx.shadowColor = color;
+              ctx.shadowBlur = 10 * CT.scale;
+              const size = (6 + (8 * (event.conf || 1.0))) * CT.scale;
+              ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.shadowBlur = 0;
+            } catch(e) {}
+          }
         }
       }
-    }
 
-    // 2. NODE ACTIVATION (Pulse)
-    // A node is 'processing' between the arrival of a signal and the dispatch of the next
-    // For this UI, we'll pulse it if current time is within [nodeStartTime, nodeEndTime]
-    // Note: event.startTime is when the wire starts, so node processing happened just before.
-    const nodeProcessingWindow = 150; 
-    if (currentTime >= event.startTime - nodeProcessingWindow && currentTime <= event.startTime) {
-       activeNodeIds.add(event.fromId);
-    }
-    // Also include the very last destination node
-    if (currentTime >= event.endTime && currentTime <= event.endTime + nodeProcessingWindow) {
-       activeNodeIds.add(event.toId);
-    }
-  });
-
-  // Update DOM visuals (Pulse & Wire colors)
-  // Optimization: only update DOM if we are in playback mode or explicitly scrubbing
-  document.querySelectorAll('.flow-node').forEach(node => {
-    const id = node.getAttribute('id');
-    node.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
-    if (activeNodeIds.has(id)) {
-       // We'd need to know the 'val' that caused the pulse. For now, default to affirm pulse
-       node.classList.add('pulse-affirm');
-    }
-  });
-
-  flowWires.forEach(wire => {
-    const state = activeWireStates[wire.id];
-    const path = document.getElementById(wire.id);
-    if (path) {
-      path.classList.remove('active-1', 'active-n1', 'active-0');
-      if (state) {
-        path.classList.add(`active-${state.signal === 1 ? '1' : (state.signal === -1 ? 'n1' : '0')}`);
+      // 2. NODE ACTIVATION (Pulse)
+      // A node is 'processing' between the arrival of a signal and the dispatch of the next
+      const nodeProcessingWindow = 150; 
+      if (currentTime >= event.startTime - nodeProcessingWindow && currentTime <= event.startTime) {
+         activeNodeIds.add(event.fromId);
       }
+      // Also include the very last destination node
+      if (currentTime >= event.endTime && currentTime <= event.endTime + nodeProcessingWindow) {
+         activeNodeIds.add(event.toId);
+      }
+    });
+
+    // Update DOM visuals (Pulse & Wire colors)
+    document.querySelectorAll('.flow-node').forEach(node => {
+      const id = node.getAttribute('id');
+      node.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
+      if (activeNodeIds.has(id)) {
+         node.classList.add('pulse-affirm');
+      }
+    });
+
+    flowWires.forEach(wire => {
+      const state = activeWireStates[wire.id];
+      const path = document.getElementById(wire.id);
+      if (path) {
+        path.classList.remove('active-1', 'active-n1', 'active-0');
+        if (state) {
+          path.classList.add(`active-${state.signal === 1 ? '1' : (state.signal === -1 ? 'n1' : '0')}`);
+        }
+      }
+    });
+  } catch (err) {
+    if (window.TERNLANG_CRITICAL_DEBUG) {
+      window.TERNLANG_CRITICAL_DEBUG.push({
+        ts: performance.now(),
+        msg: "renderScrubLayer Silent Crash Prevented",
+        error: err.message
+      });
     }
-  });
+  }
 }
 function scrubSimulation(index) {
   requestScrub(index);
