@@ -3071,6 +3071,7 @@ window.toggleInspector = toggleInspector;
 
 function logInspector(nodeName, msg) {
   const body = document.getElementById("ins-body");
+  if (!body) return;
   const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const row = document.createElement("div");
   row.className = "ins-row";
@@ -3079,7 +3080,8 @@ function logInspector(nodeName, msg) {
     <span class="ins-node">${nodeName}</span>
     <span class="ins-msg">${msg}</span>
   `;
-  body.prepend(row);
+  body.appendChild(row);
+  body.scrollTop = body.scrollHeight;
 }
 window.logInspector = logInspector;
 
@@ -3435,6 +3437,7 @@ async function calculateGlobalTimeline() {
 async function runSimulationCore(scheduledEvents, maxSimDuration) {
   const scrubber = document.getElementById("global-timeline");
   const tlLabel = document.getElementById("timeline-tick-label");
+  const loggedEvents = new Set(); // To track which events have been logged in this pass
   
   if (scrubber) {
     scrubber.value = 0;
@@ -3465,7 +3468,7 @@ async function runSimulationCore(scheduledEvents, maxSimDuration) {
       if (tlLabel) tlLabel.textContent = `TIME: ${(virtualClock / 1000).toFixed(2)}s`;
     }
     
-    renderScrubLayer(virtualClock, scheduledEvents);
+    renderScrubLayer(virtualClock, scheduledEvents, loggedEvents);
 
     if (simulationRunning) {
       requestAnimationFrame(driveTimeline);
@@ -3663,7 +3666,7 @@ function performScrub() {
   renderScrubLayer(time);
 }
 
-function renderScrubLayer(currentTime, scheduledEvents = []) {
+function renderScrubLayer(currentTime, scheduledEvents = [], loggedEvents = null) {
   try {
     const canvas = document.getElementById("scrub-layer");
     const wrap = document.getElementById("flow-canvas-wrap");
@@ -3715,14 +3718,23 @@ function renderScrubLayer(currentTime, scheduledEvents = []) {
       }
 
       // 2. NODE ACTIVATION (Pulse)
-      // A node is 'processing' between the arrival of a signal and the dispatch of the next
       const nodeProcessingWindow = 150; 
       if (currentTime >= event.startTime - nodeProcessingWindow && currentTime <= event.startTime) {
          activeNodeIds.add(event.fromId);
       }
-      // Also include the very last destination node
       if (currentTime >= event.endTime && currentTime <= event.endTime + nodeProcessingWindow) {
          activeNodeIds.add(event.toId);
+      }
+
+      // 3. LOG TRIGGER (Live Terminal Flow)
+      if (loggedEvents && currentTime >= event.endTime && !loggedEvents.has(event.wireId + "_" + event.endTime)) {
+        const toNode = flowNodes.find(n => n.id === event.toId);
+        const fromNode = flowNodes.find(n => n.id === event.fromId);
+        if (toNode) {
+          const lbl = event.val === 1 ? '+1 (Affirm)' : (event.val === -1 ? '-1 (Reject)' : '0 (Tend)');
+          logInspector(toNode.name, `Signal arrival from ${fromNode ? fromNode.name : 'ROOT'} -> ${lbl}`);
+          loggedEvents.add(event.wireId + "_" + event.endTime);
+        }
       }
     });
 
