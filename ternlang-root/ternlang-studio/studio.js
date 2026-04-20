@@ -5641,10 +5641,14 @@ function runTernCode(rawCode) {
       cycles: r.cycles || 0
     };
   } catch (e) {
-    console.error('🛑 WASM PANIC DETECTED');
-    console.group('WASM_BACKTRACE');
-    console.error(e.stack || e.message);
-    console.groupEnd();
+    const debug = {
+      type: "WASM_PANIC",
+      error: e.message,
+      stack: e.stack,
+      payload_len: prepared.length,
+      timestamp: new Date().toISOString()
+    };
+    console.error('🛑 TERNLANG_CRITICAL_DEBUG:', debug);
     return { ok: false, error: "VM_PANIC: " + e.message, traceback: e.stack };
   }
 }
