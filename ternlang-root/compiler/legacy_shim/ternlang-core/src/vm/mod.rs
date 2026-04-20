@@ -192,6 +192,10 @@ impl BetVm {
         self.stack.last().cloned()
     }
 
+    pub fn get_registers(&self) -> Vec<Value> {
+        self.registers.clone()
+    }
+
     pub fn get_register(&self, reg: u8) -> Value {
         self.registers.get(reg as usize).cloned().unwrap_or_default()
     }

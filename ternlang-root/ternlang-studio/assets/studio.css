@@ -1135,3 +1135,52 @@
     }
     .spin { animation: spin 2s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* --- Dual-Tree Explorer --- */
+.tree-root-header {
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+}
+.tree-root-header:hover {
+  background: var(--bg3);
+  color: var(--text);
+}
+.tree-root-header::before {
+  content: '▼';
+  display: inline-block;
+  font-size: 8px;
+  margin-right: 6px;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+#stdlib-tree-container.collapsed > .tree-root-header::before,
+#premium-tree-container.collapsed > .tree-root-header::before {
+  transform: rotate(-90deg);
+}
+#stdlib-tree-container.collapsed > .file-tree-body,
+#premium-tree-container.collapsed > .file-tree-body {
+  display: none;
+}
+#explorer-trees {
+  display: flex;
+  flex-direction: column;
+}
+.file-tree-body {
+  padding: 4px 0;
+}
+#premium-file-tree .tree-file.active {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--amber);
+}
+#premium-file-tree .tree-dir {
+  color: var(--amber);
+}
