@@ -1912,6 +1912,23 @@ function deleteNode(id) {
 }
 window.deleteNode = deleteNode;
 
+function handleDataSourceFileUpload(nodeId, file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    const node = flowNodes.find(n => n.id === nodeId);
+    if (node) {
+      node.props.payload = content;
+      saveCanvasState();
+      if (selectedNodeId === nodeId) updatePropertyPanel();
+      showToast(`Ingested ${file.name} (${content.length} bytes)`, "ok");
+    }
+  };
+  reader.readAsText(file);
+}
+window.handleDataSourceFileUpload = handleDataSourceFileUpload;
+
 const ENABLE_NEW_PROPERTIES_UI = true;
 
 const NodePanelController = {
@@ -1968,6 +1985,13 @@ const NodePanelController = {
         <input type="text" class="prop-input" value="${node.name}" oninput="updateNodeProp('name', this.value)">
       </div>
       <div class="prop-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div class="prop-label-strict" style="margin-bottom:0;">Data Source Configuration</div>
+          <button class="btn btn-primary" style="font-size:10px; padding:2px 8px; height:24px; background:var(--blue); border:none;" onclick="document.getElementById('datasource-file-input').click()">
+            <i data-lucide="upload" style="width:12px; margin-right:4px;"></i> Upload File
+          </button>
+          <input type="file" id="datasource-file-input" style="display:none;" accept=".txt,.md,.csv,.json" onchange="handleDataSourceFileUpload('${node.id}', this.files[0])">
+        </div>
         <div class="prop-label-strict">Data Type</div>
         <select class="prop-input" onchange="updateNodeProp('data_type', this.value)">
           <option value="text" ${dataType === 'text' ? 'selected' : ''}>Raw Text</option>
