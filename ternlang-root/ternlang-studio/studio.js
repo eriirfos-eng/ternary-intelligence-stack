@@ -280,6 +280,7 @@ async function syncFleetRegistry() {
   try {
     const r = await fetch("https://ternlang-api.fly.dev/api/agents");
     const d = await r.json();
+    console.log('Raw Fleet API Response:', d);
     if (d.status === "ok" && d.agents) {
       let localReg = [];
       try { localReg = JSON.parse(localStorage.getItem("ternflow_registry") || "[]"); } catch(e){}
@@ -469,21 +470,25 @@ async function renderFleetView() {
           Live Fleet Units
         </div>
         <div style="flex: 1; overflow-y: auto; padding: 8px;">
-          ${localReg.map(a => `
+          ${localReg.map(a => {
+            if (!a || !a.id) return '<div style="padding:12px; color:var(--red); border:1px solid var(--red); border-radius:6px; margin-bottom:4px;">Unknown Node</div>';
+            const displayId = (a.id || a.name || a.endpoint || 'unknown').substring(0, 8);
+            return `
             <div onclick="window.selectedFleetAgentId='${a.id}'; renderFleetView();" 
                  style="padding: 12px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; transition: all 0.2s;
                         background: ${window.selectedFleetAgentId === a.id ? 'var(--active-file-bg)' : 'transparent'};
                         border: 1px solid ${window.selectedFleetAgentId === a.id ? 'var(--cyan)' : 'transparent'};">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                <div style="font-weight: 700; font-size: 13px; color: ${window.selectedFleetAgentId === a.id ? '#fff' : 'var(--text)'}">${a.name}</div>
+                <div style="font-weight: 700; font-size: 13px; color: ${window.selectedFleetAgentId === a.id ? '#fff' : 'var(--text)'}">${a.name || 'Unnamed Agent'}</div>
                 <div style="width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); margin-top:4px;"></div>
               </div>
               <div style="font-size: 10px; color: var(--muted); display:flex; justify-content:space-between;">
-                <span>v1.0.${a.id.substring(0,4)}</span>
+                <span>v1.0.${displayId.substring(0, 4)}</span>
                 <span>Active</span>
               </div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       </div>
 
