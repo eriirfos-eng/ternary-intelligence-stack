@@ -3413,13 +3413,15 @@ async function runSimulation() {
     // 1. The Print Probe
     console.log('DEBUG -> Events generated:', scheduledEvents.length, '| Total Duration:', maxSimDuration);
     
+    // 2. Fix runSimulation Handoff: Ensure the visual pass is not blocked by phantom-triggered aborts
+    simulationAborted = false; 
+
     // VISUAL PASS: Pure Rendering & Playback
-    if (!simulationAborted) {
-      if (scheduledEvents.length === 0 || maxSimDuration === 0) {
-        console.warn("[DIAGNOSTIC] Simulation data empty. Check roots and latencies.");
-      }
-      await runSimulationCore(scheduledEvents, maxSimDuration);
+    if (scheduledEvents.length === 0 || maxSimDuration === 0) {
+      console.warn("[DIAGNOSTIC] Simulation data empty. Check roots and latencies.");
     }
+    await runSimulationCore(scheduledEvents, maxSimDuration);
+
   } catch (err) {
     console.error("Simulation Start Failure:", err);
     showToast("Simulation failed to initialize", "err");
@@ -4191,8 +4193,8 @@ async function simulateNode(node, inSignal, isPhantom = false) {
     if (!isPhantom) {
       spawnResultArtifact(node, outSignal);
       logInspector("SYSTEM", `🟡 TAP: State 0 Suspension at "${node.name}". Awaiting Operator…`);
+      simulationAborted = true; // Freeze graph
     }
-    simulationAborted = true; // Freeze graph
     return 0; // Suspend
   }
 
@@ -4204,8 +4206,8 @@ async function simulateNode(node, inSignal, isPhantom = false) {
     if (!isPhantom) {
       spawnResultArtifact(node, outSignal);
       logInspector("SYSTEM", "🛑 Terminal Payload Detected — Hard Halt engaged.");
+      simulationAborted = true; // Hard Halt
     }
-    simulationAborted = true; // Hard Halt
   }
   
   // Update linked artifacts
