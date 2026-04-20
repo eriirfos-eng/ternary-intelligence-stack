@@ -3405,12 +3405,14 @@ async function runSimulation() {
       engineQueue.push({ toId: root.id, val: 1, conf: 1.0, origin: "ROOT" });
     });
 
-    // PHANTOM PASS: Pure Logic & Timing Calculation
-    const { scheduledEvents, maxSimDuration } = await calculateGlobalTimeline();
+    // PHANTOM PASS: Pure Logic & Timing Calculation (Memory Locked)
+    const masterQueueClone = [...engineQueue]; 
+    const { scheduledEvents, maxSimDuration } = await calculateGlobalTimeline(masterQueueClone);
     window.globalScheduledEvents = scheduledEvents; // Persist for manual scrubbing
     
     // VISUAL PASS: Pure Rendering & Playback
     if (!simulationAborted) {
+      console.log(`[MEMORY_LOCK] Master Events: ${scheduledEvents.length}, Max Duration: ${maxSimDuration}ms`);
       await runSimulationCore(scheduledEvents, maxSimDuration);
     }
   } catch (err) {
@@ -3434,11 +3436,12 @@ window.runSimulation = runSimulation;
 /**
  * Phase 1: Phantom Pass
  * Mathematical dry-run to find Total Simulation Duration without DOM side-effects.
+ * Receives cloned masterQueue to avoid destructive consumption.
  */
-async function calculateGlobalTimeline() {
+async function calculateGlobalTimeline(masterQueue) {
   const scheduledEvents = [];
   let maxSimDuration = 0;
-  const dryQueue = [...engineQueue];
+  const dryQueue = masterQueue; 
   const nodeTimings = {}; // id -> endTime
 
   while (dryQueue.length > 0 && scheduledEvents.length < MAX_ENGINE_TICKS && !simulationAborted) {
