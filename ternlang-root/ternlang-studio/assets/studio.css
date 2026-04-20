@@ -479,8 +479,23 @@
       transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.1s linear;
     }
     #flow-inspector.inspector-expanded { height: 220px; }
-    #flow-inspector.inspector-minimized { height: 32px !important; }
+    #flow-inspector.inspector-minimized { height: 32px !important; min-height: 32px; border-bottom: 1px solid var(--border2); }
+    #flow-inspector.inspector-minimized .ins-body { display: none; }
     #flow-inspector.active { display: flex; }
+
+    /* DAW-Style Multiverse Timeline */
+    .timeline-container {
+      position: absolute; bottom: 84px; left: 0; right: 0;
+      height: 32px; background: var(--bg1); border-top: 1px solid var(--border2);
+      display: flex; align-items: center; padding: 0 20px; z-index: 90;
+      backdrop-filter: blur(10px);
+    }
+    .timeline-slider {
+      flex: 1; height: 4px; accent-color: var(--cyan); cursor: pointer;
+      background: var(--bg2); border-radius: 2px; outline: none;
+    }
+    .timeline-slider::-webkit-slider-runnable-track { background: var(--bg2); height: 4px; border-radius: 2px; }
+    .timeline-slider::-webkit-slider-thumb { margin-top: -6px; }
     .ins-head {
       padding: 8px 16px; border-bottom: 1px solid var(--border2);
       display: flex; align-items: center; justify-content: space-between;

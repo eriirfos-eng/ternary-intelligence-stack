@@ -2404,27 +2404,25 @@ const EdgePanelController = {
           <button class="rail-btn ${priority>=10 ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 10); updateEdgePanel();">High</button>
         </div>
       </div>
-    `;
-    lucide.createIcons();
-  }
 
       <div class="prop-group" style="margin-bottom:8px;">
-        <label class="prop-label" style="font-size:10px; margin-bottom:4px;">Label</label>
-        <input type="text" class="prop-input" style="font-size:9px; height:20px;" value="${wire.label || autoLabel}" placeholder="Auto"
+        <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Custom Label</div>
+        <input type="text" class="prop-input-strict" style="font-size:11px; height:24px;" value="${wire.label || ''}" placeholder="e.g. data_stream"
           oninput="updateWireProp('label', this.value)">
       </div>
 
       <div class="prop-group" style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-        <input type="checkbox" id="wire-feedback-sem" style="width:10px; height:10px;" ${wire.isFeedback ? "checked" : ""} onchange="updateWireProp('isFeedback', this.checked)">
-        <label for="wire-feedback-sem" class="prop-label" style="margin:0; font-size:9px; cursor:pointer; color:var(--text);">Feedback Loop</label>
+        <input type="checkbox" id="wire-feedback-sem" style="width:12px; height:12px;" ${wire.isFeedback ? "checked" : ""} onchange="updateWireProp('isFeedback', this.checked)">
+        <label for="wire-feedback-sem" class="prop-label-strict" style="margin:0; font-size:10px; cursor:pointer;">Feedback Loop</label>
       </div>
 
-      <div style="margin-top:12px; padding-top:8px; border-top:1px solid var(--border);">
-        <button class="btn btn-ghost" style="width:100%; height:24px; font-size:10px; color:var(--red); border:1px solid rgba(239, 68, 68, 0.2);" onclick="deleteWire('${wire.id}')">Remove Edge</button>
+      <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2);">
+        <button class="btn btn-ghost" style="width:100%; height:28px; font-size:11px; color:var(--red); border:1px solid rgba(239, 68, 68, 0.1);" onclick="deleteWire('${wire.id}')">Remove Edge</button>
       </div>
     `;
     lucide.createIcons();
-  }};
+  }
+};
 
 function updatePropertyPanel() {
   const body = document.getElementById("prop-body");
@@ -3476,24 +3474,43 @@ function captureSimSnapshot(tick, activeSignals = []) {
        if (bw) bw.signal = wd.signal;
     });
   }
+
+  // Real-time Timeline Sync
+  const scrubber = document.getElementById("global-timeline");
+  const tlLabel = document.getElementById("timeline-tick-label");
+  if (scrubber) {
+    scrubber.max = tick;
+    scrubber.value = tick;
+  }
+  if (tlLabel) tlLabel.textContent = `TICK: ${String(tick).padStart(4, '0')}`;
 }
 window.captureSimSnapshot = captureSimSnapshot;
 
 function showTimeline() {
-  const tl = document.getElementById("sim-timeline");
-  const scrubber = document.getElementById("sim-scrubber");
-  const label = document.getElementById("sim-tick-label");
+  const scrubber = document.getElementById("global-timeline");
+  const label = document.getElementById("timeline-tick-label");
   
-  tl.style.display = "flex";
-  const minTick = simHistory.length > 0 ? simHistory[0].tick : 0;
-  const maxTick = simHistory.length > 0 ? simHistory[simHistory.length - 1].tick : 0;
+  if (simHistory.length === 0) return;
   
-  scrubber.min = minTick;
-  scrubber.max = maxTick;
-  scrubber.value = maxTick;
-  label.textContent = `Tick ${maxTick}/${maxTick}`;
+  const minTick = simHistory[0].tick;
+  const maxTick = simHistory[simHistory.length - 1].tick;
+  
+  if (scrubber) {
+    scrubber.min = minTick;
+    scrubber.max = maxTick;
+    scrubber.value = maxTick;
+  }
+  if (label) label.textContent = `TICK: ${String(maxTick).padStart(4, '0')}`;
 }
 window.showTimeline = showTimeline;
+
+function scrubToTimeline(val) {
+  const tick = parseInt(val);
+  const label = document.getElementById("timeline-tick-label");
+  if (label) label.textContent = `TICK: ${String(tick).padStart(4, '0')}`;
+  requestScrub(tick);
+}
+window.scrubToTimeline = scrubToTimeline;
 
 let lastRenderedTick = -1;
 let scrubAnimFrame = null;
@@ -3693,9 +3710,13 @@ function initInspectorDraggable() {
   };
 
   // Resizing
+  let startResH = 0;
+  let startResY = 0;
   if (resizer) {
     resizer.onmousedown = (e) => {
       isResizing = true;
+      const rect = ins.getBoundingClientRect();
+      offsetY = e.clientY - rect.top; // Store grab offset
       e.preventDefault();
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
@@ -3709,7 +3730,7 @@ function initInspectorDraggable() {
     } else if (isResizing) {
       const rect = ins.getBoundingClientRect();
       const newWidth  = e.clientX - rect.left;
-      const newHeight = e.clientY - rect.top;
+      const newHeight = e.clientY - offsetY; // Use stored offset
       if (newWidth > 300) ins.style.width = newWidth + "px";
       if (newHeight > 100) ins.style.height = newHeight + "px";
     }
