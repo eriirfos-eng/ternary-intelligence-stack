@@ -3380,59 +3380,25 @@ async function runSimulation() {
 window.runSimulation = runSimulation;
 
 async function runSimulationCore() {
-  let tick = simHistory.length > 0 ? simHistory[simHistory.length-1].tick : 0;
   const nodeState = {};
-  let currentSimTime = 0; // The virtual time (ms) when a signal *starts*
-  let maxSimDuration = 0; // Tracks the absolute latest end-point of any signal
+  const scheduledEvents = []; // Every signal traversal event with absolute times
+  let maxSimDuration = 0;
+  
+  // Phase 1: FAST Logic Solve (Topological traversal)
+  // We use a local queue for the dry-run
+  const dryQueue = [...engineQueue.toArray()];
+  const nodeTimings = {}; // id -> endTime
 
-  // Centralized Playhead Drive (Visual Clock)
-  const scrubber = document.getElementById("global-timeline");
-  const tlLabel = document.getElementById("timeline-tick-label");
-  if (scrubber) {
-    scrubber.value = 0;
-    scrubber.max = simSpeed; 
-  }
-  let lastRealTime = performance.now();
-  let virtualClock = 0;
-
-  const driveTimeline = () => {
-    if (!simulationRunning || simulationAborted) return;
-    const now = performance.now();
-    const delta = now - lastRealTime;
-    lastRealTime = now;
-
-    // Advance virtual clock, but do not exceed discovered duration if logic is done
-    const nextClock = virtualClock + delta;
-    const logicFinished = (engineQueue.length === 0);
-
-    if (logicFinished && nextClock >= maxSimDuration) {
-      virtualClock = maxSimDuration;
-    } else {
-      virtualClock = nextClock;
-    }
-
-    if (scrubber) {
-      scrubber.value = virtualClock;
-      if (tlLabel) tlLabel.textContent = `TIME: ${(virtualClock / 1000).toFixed(2)}s`;
-      // Physically drive the dot interpolation from the master clock
-      requestScrub(virtualClock);
-    }
-
-    if (!logicFinished || virtualClock < maxSimDuration) {
-      requestAnimationFrame(driveTimeline);
-    } else {
-      simulationRunning = false;
-      updateSimUI();
-      logInspector("SYSTEM", "✓ Visual playback complete");
-    }
-  };
-  requestAnimationFrame(driveTimeline);
-
-  // Logic Loop
-  while (engineQueue.length > 0 && tick < MAX_ENGINE_TICKS && !simulationAborted) {
-    const signal = engineQueue.pop();
+  while (dryQueue.length > 0 && scheduledEvents.length < MAX_ENGINE_TICKS && !simulationAborted) {
+    const signal = dryQueue.shift();
     const node = flowNodes.find(n => n.id === signal.toId);
     if (!node) continue;
+
+    // Node Timing: starts when latest input signal arrives
+    const nodeStartTime = signal.absEndTime || 0;
+    const nodeProcessingTime = 150; // ms
+    const nodeEndTime = nodeStartTime + nodeProcessingTime;
+    nodeTimings[node.id] = Math.max(nodeTimings[node.id] || 0, nodeEndTime);
 
     const outVal = await simulateNode(node, signal.val);
     if (simulationAborted) break;
@@ -3443,23 +3409,75 @@ async function runSimulationCore() {
     for (const wire of outWires) {
       const transformed = TernaryAlgebra.transform(outSignal, wire);
       if (transformed) {
-        // Record the event window for continuous interpolation
-        captureSimSnapshot(tick, [{ id: wire.id, ...transformed }], currentSimTime, simSpeed);
-        
-        maxSimDuration = Math.max(maxSimDuration, currentSimTime + simSpeed);
-        if (scrubber) scrubber.max = maxSimDuration;
+        const wireStartTime = nodeTimings[node.id];
+        const wireDuration = simSpeed;
+        const wireEndTime = wireStartTime + wireDuration;
 
-        animateSignal(wire, transformed.val, transformed.conf);
-        engineQueue.push({ toId: wire.toId, ...transformed });
+        const event = {
+          wireId: wire.id,
+          val: transformed.val,
+          conf: transformed.conf,
+          startTime: wireStartTime,
+          endTime: wireEndTime,
+          duration: wireDuration,
+          fromId: wire.fromId,
+          toId: wire.toId
+        };
+        scheduledEvents.push(event);
+        maxSimDuration = Math.max(maxSimDuration, wireEndTime);
+
+        dryQueue.push({ toId: wire.toId, ...transformed, absEndTime: wireEndTime });
       }
     }
-
-    tick++;
-    // Small artificial pause to keep logic sequential in snapshots
-    // but we don't 'await' the full animation time here anymore.
-    await new Promise(r => setTimeout(r, 20)); 
-    currentSimTime += simSpeed;
   }
+
+  // Clear global queue as we have pre-calculated everything
+  engineQueue.clear();
+
+  // Phase 2: Playback Setup
+  const scrubber = document.getElementById("global-timeline");
+  const tlLabel = document.getElementById("timeline-tick-label");
+  if (scrubber) {
+    scrubber.value = 0;
+    scrubber.max = maxSimDuration; 
+  }
+  let lastRealTime = performance.now();
+  let virtualClock = 0;
+  simulationRunning = true;
+
+  const driveTimeline = () => {
+    if (!simulationRunning || simulationAborted) {
+      // Final cleanup if stopped
+      return;
+    }
+    const now = performance.now();
+    const delta = now - lastRealTime;
+    lastRealTime = now;
+
+    const nextClock = virtualClock + delta;
+    if (nextClock >= maxSimDuration) {
+      virtualClock = maxSimDuration;
+      simulationRunning = false;
+      updateSimUI();
+      logInspector("SYSTEM", "✓ Pre-flight playback complete");
+    } else {
+      virtualClock = nextClock;
+    }
+
+    if (scrubber) {
+      scrubber.value = virtualClock;
+      if (tlLabel) tlLabel.textContent = `TIME: ${(virtualClock / 1000).toFixed(2)}s`;
+      
+      // Physically drive the dot interpolation from the master clock
+      // Instead of tick-based scrubbing, we use the absolute clock
+      requestAnimationFrame(() => renderScrubLayer(virtualClock, scheduledEvents));
+    }
+
+    if (simulationRunning) {
+      requestAnimationFrame(driveTimeline);
+    }
+  };
+  requestAnimationFrame(driveTimeline);
 }
 window.runSimulationCore = runSimulationCore;
 
@@ -3651,7 +3669,7 @@ function performScrub() {
   renderScrubLayer(time);
 }
 
-function renderScrubLayer(currentTime) {
+function renderScrubLayer(currentTime, scheduledEvents = []) {
   const canvas = document.getElementById("scrub-layer");
   const wrap = document.getElementById("flow-canvas-wrap");
   if (!canvas || !wrap) return;
@@ -3663,43 +3681,77 @@ function renderScrubLayer(currentTime) {
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Multi-Signal Handling: Find every signal in history that should be active at currentTime
-  simHistory.forEach(state => {
-    const isInsideWindow = (currentTime >= state.startTime && currentTime <= state.startTime + state.duration);
-    if (!isInsideWindow) return;
+  // Use global variable if not passed (for scrubber dragging)
+  const events = scheduledEvents.length > 0 ? scheduledEvents : (window.globalScheduledEvents || []);
+  if (scheduledEvents.length > 0) window.globalScheduledEvents = scheduledEvents;
 
-    // Calculate individual interpolation for this dot
-    const frac = Math.min(1, Math.max(0, (currentTime - state.startTime) / state.duration));
+  // Track which nodes/wires are active at this millisecond
+  const activeNodeIds = new Set();
+  const activeWireStates = {}; // wireId -> { signal, alpha }
 
-    if (state.activeSignals) {
-      state.activeSignals.forEach(sig => {
-        const wire = flowWires.find(w => w.id === sig.id);
-        if (!wire) return;
-
+  events.forEach(event => {
+    // 1. SIGNAL INTERPOLATION (Dots)
+    const isSignalInFlight = (currentTime >= event.startTime && currentTime <= event.endTime);
+    if (isSignalInFlight) {
+      const frac = (currentTime - event.startTime) / event.duration;
+      const wire = flowWires.find(w => w.id === event.wireId);
+      if (wire) {
+        activeWireStates[wire.id] = { signal: event.val, alpha: 1.0 };
         const svgPath = document.getElementById(wire.id);
-        if (!svgPath) return;
+        if (svgPath) {
+          try {
+            const totalLength = svgPath.getTotalLength();
+            const pt = svgPath.getPointAtLength(frac * totalLength);
+            const canvasX = pt.x * CT.scale + CT.x;
+            const canvasY = pt.y * CT.scale + CT.y;
+            const color = event.val === 1 ? '#22c55e' : (event.val === -1 ? '#ef4444' : '#f59e0b');
+            
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 10 * CT.scale;
+            const size = (6 + (8 * (event.conf || 1.0))) * CT.scale;
+            ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          } catch(e) {}
+        }
+      }
+    }
 
-        try {
-          const totalLength = svgPath.getTotalLength();
-          // Liquid Time: physically accurate position along path
-          const pt = svgPath.getPointAtLength(frac * totalLength);
+    // 2. NODE ACTIVATION (Pulse)
+    // A node is 'processing' between the arrival of a signal and the dispatch of the next
+    // For this UI, we'll pulse it if current time is within [nodeStartTime, nodeEndTime]
+    // Note: event.startTime is when the wire starts, so node processing happened just before.
+    const nodeProcessingWindow = 150; 
+    if (currentTime >= event.startTime - nodeProcessingWindow && currentTime <= event.startTime) {
+       activeNodeIds.add(event.fromId);
+    }
+    // Also include the very last destination node
+    if (currentTime >= event.endTime && currentTime <= event.endTime + nodeProcessingWindow) {
+       activeNodeIds.add(event.toId);
+    }
+  });
 
-          const canvasX = pt.x * CT.scale + CT.x;
-          const canvasY = pt.y * CT.scale + CT.y;
+  // Update DOM visuals (Pulse & Wire colors)
+  // Optimization: only update DOM if we are in playback mode or explicitly scrubbing
+  document.querySelectorAll('.flow-node').forEach(node => {
+    const id = node.getAttribute('id');
+    node.classList.remove('pulse-affirm', 'pulse-reject', 'pulse-hold');
+    if (activeNodeIds.has(id)) {
+       // We'd need to know the 'val' that caused the pulse. For now, default to affirm pulse
+       node.classList.add('pulse-affirm');
+    }
+  });
 
-          const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
-          
-          ctx.beginPath();
-          ctx.fillStyle = color;
-          ctx.shadowColor = color;
-          ctx.shadowBlur = 10 * CT.scale;
-
-          const size = (6 + (8 * sig.conf)) * CT.scale;
-          ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        } catch(e) {}
-      });
+  flowWires.forEach(wire => {
+    const state = activeWireStates[wire.id];
+    const path = document.getElementById(wire.id);
+    if (path) {
+      path.classList.remove('active-1', 'active-n1', 'active-0');
+      if (state) {
+        path.classList.add(`active-${state.signal === 1 ? '1' : (state.signal === -1 ? 'n1' : '0')}`);
+      }
     }
   });
 }
