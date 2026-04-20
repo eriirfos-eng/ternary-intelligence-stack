@@ -835,39 +835,7 @@
 <div id="config-view" style="display: none; position: relative; width: 100%; height: 100%; overflow-y: auto; z-index: 100; background: var(--bg1);">
 <div class="view" id="view-settings" style="padding:40px 0; display:flex; flex-direction:column; gap:24px;">
 
-  <!-- Global Workspace Configuration -->
-  <div style="max-width: 800px; margin: 20px auto; width: 100%; background:var(--bg1); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:20px;">
-    <div>
-      <div style="font-size:14px; font-weight:800; color:var(--text); letter-spacing:0.5px; margin-bottom:4px;">Workspace Authorization</div>
-      <div style="font-size:11px; color:var(--muted2);">Configure primary remote endpoints and TIS commercial credentials.</div>
-    </div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
-      <div style="flex:1;">
-        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Endpoint URL</div>
-        <div style="font-size:10px; color:var(--muted2);">The primary API host for tier validation.</div>
-      </div>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <input class="settings-input" id="settingsEndpoint" value="https://ternlang.com" placeholder="https://…" style="width:280px;" />
-        <button class="settings-btn btn-primary" onclick="applyEndpoint()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
-      </div>
-    </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
-      <div style="flex:1;">
-        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Current API Key</div>
-        <div style="font-size:10px; color:var(--muted2);">Active tier authorization key.</div>
-      </div>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <div class="key-display" id="settingsKeyDisplay" style="width:160px; text-align:center;">—</div>
-        <button class="settings-btn" onclick="copyKey()">Copy</button>
-        <button class="settings-btn" onclick="clearKey()" style="color:var(--red); border-color:rgba(239,68,68,0.2);">Clear</button>
-      </div>
-    </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border2); padding-bottom:16px;">
-      <div style="flex:1;">
-        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:4px;">Set New Key</div>
         <div style="font-size:10px; color:var(--muted2);">Enter a new 'tern_...' key to authenticate.</div>
       </div>
       <div style="display:flex; gap:12px; align-items:center;">

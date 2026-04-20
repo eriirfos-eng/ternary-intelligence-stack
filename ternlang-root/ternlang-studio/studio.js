@@ -234,7 +234,7 @@ async function loadPremiumTree() {
     }
 
     const d = await r.json();
-    console.log('Premium Tree Payload:', d);
+
     if (d.status === "ok" && Array.isArray(d.files)) {
       renderFileTree(treeEl, d.files, false, true); // container, files, isGithub, isPremium
     } else {
@@ -398,7 +398,7 @@ async function syncFleetRegistry() {
       headers: { 'X-Ternlang-Key': localStorage.getItem('ternstudio-key') || '' }
     });
     const d = await r.json();
-    console.log('Raw Fleet API Response:', d);
+
     if (d.status === "ok" && d.agents) {
       let localReg = [];
       try { localReg = JSON.parse(localStorage.getItem("ternflow_registry") || "[]"); } catch(e){}
@@ -3411,6 +3411,9 @@ async function runSimulationCore() {
       if (transformed) {
         currentTickSignals.push({ id: wire.id, val: transformed.val, conf: transformed.conf });
         
+        // Stabilize: Capture snapshot BEFORE animation to set the startTime baseline
+        captureSimSnapshot(tick, currentTickSignals, currentSimTime, simSpeed);
+
         // Progressive Slider Drive
         const startT = currentSimTime;
         const dur = simSpeed;
@@ -3438,8 +3441,6 @@ async function runSimulationCore() {
     }
 
     tick++;
-    // Capture snapshot with the current absolute time and animation duration
-    captureSimSnapshot(tick, currentTickSignals, currentSimTime, simSpeed);
 
     // Increment virtual time by simSpeed (one animation hop)
     currentSimTime += simSpeed;
@@ -3450,7 +3451,6 @@ async function runSimulationCore() {
   if (!simulationAborted || engineQueue.length === 0) {
     logInspector("SYSTEM", simulationAborted ? "🛑 Halted at Terminal Node" : "✓ Complete");
     simulationRunning = false;
-    document.getElementById("simStopBtn").style.display = "none";
     updateSimUI();
     if (simHistory.length > 0) showTimeline();
   } else {
@@ -5743,10 +5743,7 @@ function runTernCode(rawCode) {
   // WASM_PAYLOAD_MIRROR: Focused Execution Audit
   /*
   console.group('WASM_PAYLOAD_MIRROR');
-  console.log('Raw .tern Payload:');
-  console.log(prepared);
-  console.log('Payload Length:', prepared.length);
-  console.log('Encoding Check (Escape check):', JSON.stringify(prepared).substring(0, 100) + '...');
+
   console.groupEnd();
   */
 
