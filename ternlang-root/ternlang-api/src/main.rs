@@ -39,7 +39,7 @@ use axum::{
     Router,
     Json,
     body::Bytes,
-    extract::{Path, Query, State, rejection::JsonRejection},
+    extract::{Path, Query, State},
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
     response::{sse::{Event, Sse}, Html, IntoResponse, Response},
@@ -59,12 +59,12 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::RwLock;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{cors::{Any, CorsLayer}, services::ServeDir};
 use uuid::Uuid;
 
 use ternlang_core::{
     trit::Trit,
-    parser::{Parser, ParseError},
+    parser::Parser,
     lexer::Token,
     codegen::betbc::BytecodeEmitter,
     vm::BetVm
@@ -331,16 +331,26 @@ impl AgentRegistry {
         self.data.read().await.agents.get(slug).cloned()
     }
 
-    pub async fn list(&self) -> Vec<Value> {
-        self.data.read().await.agents.values().map(|a| json!({
-            "slug": a.slug, "name": a.name, "desc": a.desc,
-            "pricing": a.pricing, "nodes": a.nodes, "calls": a.calls,
-        })).collect()
+    pub async fn list(&self) -> Vec<AgentProduct> {
+        self.data.read().await.agents.values().cloned().collect()
     }
 
     pub async fn bump_calls(&self, slug: &str) {
         if let Some(a) = self.data.write().await.agents.get_mut(slug) { a.calls += 1; }
         self.save().await;
+    }
+
+    pub async fn delete(&self, slug: &str, owner_key: &str) -> bool {
+        let mut guard = self.data.write().await;
+        if let Some(a) = guard.agents.get(slug) {
+            if a.owner_key == owner_key {
+                guard.agents.remove(slug);
+                drop(guard);
+                self.save().await;
+                return true;
+            }
+        }
+        false
     }
 }
 
@@ -400,6 +410,7 @@ async fn require_api_key(
         || path == "/stripe/webhook"
         || path == "/pricing"
         || path == "/studio"
+        || path == "/studio.js"
         || path == "/playground"
         || path.starts_with("/playground/pkg/")
         || path == "/activate"
@@ -407,7 +418,10 @@ async fn require_api_key(
         || path == "/api/github/activate"
         || path == "/api/stdlib/list"
         || path.starts_with("/api/stdlib/read/")
-        || path.starts_with("/admin") {
+        || path.starts_with("/assets/")
+        || path == "/favicon.ico"
+        || path.starts_with("/admin")
+    {
         return next.run(request).await;
     }
 
@@ -483,12 +497,17 @@ async fn require_admin_key(
 static INDEX_HTML:      &str = include_str!("../../ternlang-web/index.html");
 static PRICING_HTML:    &str = include_str!("../../ternlang-web/pricing.html");
 static STUDIO_HTML:     &str = include_str!("../../ternlang-studio/index.html");
+static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
 static PLAYGROUND_HTML: &str = include_str!("../../playground/index.html");
 static WASM_JS:         &str = include_str!("../../playground/pkg/ternlang_wasm.js");
 static WASM_BYTES:      &[u8] = include_bytes!("../../playground/pkg/ternlang_wasm_bg.wasm");
 
 async fn studio_page() -> Html<&'static str> {
     Html(STUDIO_HTML)
+}
+
+async fn studio_js() -> impl axum::response::IntoResponse {
+    ([(axum::http::header::CONTENT_TYPE, "application/javascript")], STUDIO_JS)
 }
 
 async fn playground_page() -> Html<&'static str> {
@@ -3723,10 +3742,53 @@ async fn publish_agent(
     Json(json!({ "status": "ok", "slug": slug, "endpoint": format!("/api/agent/{}", slug) })).into_response()
 }
 
-/// GET /api/agents — list all published (non-private) agents
-async fn list_agents(State(state): State<Arc<AppState>>) -> Json<Value> {
-    let agents = state.agent_registry.list().await;
-    Json(json!({ "status": "ok", "agents": agents }))
+/// GET /api/agents — list all published agents. Supports ?owner_key= to filter.
+async fn list_agents(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Json<Value> {
+    let owner_filter = params.get("owner_key");
+    let mut agents = state.agent_registry.list().await;
+    
+    if let Some(key) = owner_filter {
+        agents.retain(|a| &a.owner_key == key);
+    } else {
+        // Public view: redact owner keys and hide private agents
+        agents.retain(|a| a.pricing != "private");
+    }
+
+    // Redact sensitive fields
+    let safe_agents: Vec<Value> = agents.into_iter().map(|a| {
+        let mut v = serde_json::to_value(a).unwrap();
+        if let Some(obj) = v.as_object_mut() {
+            obj.remove("owner_key");
+            // Public listing: redact code. Filtered (owner) listing: keep code.
+            if owner_filter.is_none() {
+                obj.remove("code");
+            }
+        }
+        v
+    }).collect();
+
+    Json(json!({ "status": "ok", "agents": safe_agents }))
+}
+
+/// DELETE /api/agent/:slug — remove a deployed agent
+async fn delete_agent(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    axum::extract::Path(slug): axum::extract::Path<String>,
+) -> Response {
+    let raw_key = headers.get("X-Ternlang-Key").and_then(|v| v.to_str().ok()).unwrap_or("");
+    if raw_key.is_empty() {
+        return api_error(StatusCode::UNAUTHORIZED, "API key required");
+    }
+
+    if state.agent_registry.delete(&slug, raw_key).await {
+        Json(json!({ "status": "ok", "deleted": slug })).into_response()
+    } else {
+        api_error(StatusCode::NOT_FOUND, "Agent not found or ownership mismatch")
+    }
 }
 
 /// POST /api/agent/:slug — call a deployed agent
@@ -4519,6 +4581,7 @@ async fn main() {
         .route("/stripe/webhook",       post(stripe_webhook))
         .route("/pricing",              get(pricing_page))
         .route("/studio",               get(studio_page))
+        .route("/studio.js",            get(studio_js))
         .route("/playground",           get(playground_page))
         .route("/playground/pkg/ternlang_wasm.js",       get(wasm_js))
         .route("/playground/pkg/ternlang_wasm_bg.wasm",  get(wasm_binary))
@@ -4529,7 +4592,7 @@ async fn main() {
         .route("/api/stdlib/read/{*path}", get(stdlib_read))
         .route("/api/agents",          get(list_agents))
         .route("/api/agents/publish",  post(publish_agent))
-        .route("/api/agent/{slug}",    post(call_agent))
+        .route("/api/agent/{slug}",    post(call_agent).delete(delete_agent))
         .route("/api/run",        post(run_program))
         // API (requires X-Ternlang-Key)
         .route("/api/trit_decide",       post(trit_decide))
@@ -4558,6 +4621,8 @@ async fn main() {
         // Admin (requires X-Admin-Key)
         .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
         .route("/admin/keys/{key}",      delete(admin_revoke_key))
+        .nest_service("/assets", ServeDir::new("ternlang-web/assets")
+            .fallback(ServeDir::new("ternlang-studio/assets")))
         .fallback(not_found)
         .layer(middleware::from_fn_with_state(state.clone(), require_admin_key))
         .layer(middleware::from_fn_with_state(state.clone(), require_api_key))
