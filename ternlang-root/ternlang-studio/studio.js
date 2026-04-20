@@ -2373,7 +2373,7 @@ const ARCHETYPES = [
   {
     id: "moe_13_flagship",
     name: "MoE-13: Mixture-of-Experts",
-    desc: "Flagship Industrial Orchestrator: 13 expert agents coordinated via weighted EMA convergence. The star of the Stack. [Tier 2+]",
+    desc: "Flagship Industrial Orchestrator: 13 expert agents coordinated via weighted EMA convergence. Now with Data Ingestion context. [Tier 2+]",
     icon: "sparkles",
     color: "var(--cyan)",
     nodes: [
@@ -2385,22 +2385,26 @@ const ARCHETYPES = [
       { name: "Expert_05",     type: "agent",    dx: 40,  dy: 300 },
       { name: "Consensus",     type: "gate",     dx: 240, dy: 160 },
       { name: "Decision",      type: "gate",     dx: 640, dy: 160 },
-      { name: "Feedback",      type: "agent",    dx: 440, dy: 300 }
+      { name: "Feedback",      type: "agent",    dx: 440, dy: 300 },
+      { name: "Context Source", type: "datasource", dx: -160, dy: 160, props: { payload: "# TIS GROUNDING\n- Mode: MoE-13\n- Logic: Balanced Ternary", data_type: "markdown" } },
+      { name: "Expert Coordinator", type: "external", dx: 40, dy: 400 }
     ],
     wires: [
       [1,6],[2,6],[3,6],[4,6],[5,6], // Experts to Consensus
       [6,0],                         // Consensus to Orchestrator
       [0,7],                         // Orchestrator to Decision
       [7,8],                         // Decision to Feedback (if uncertain)
-      [8,0]                          // Feedback loop
+      [8,0],                         // Feedback loop
+      [9,10],                        // Data Source to LLM Bridge
+      [10,6]                         // LLM Bridge to Consensus
     ],
     feedbackWires: [8],
-    edgeConds: ["all","all","all","all","all","affirm","affirm","tend","all"]
+    edgeConds: ["all","all","all","all","all","affirm","affirm","tend","all","all","all"]
   },
   {
     id: "consensus",
     name: "Consensus Pipeline",
-    desc: "N agents vote → Consensus Gate → Actuator. Classic ternary majority routing.",
+    desc: "N agents vote → Consensus Gate → Actuator. Now includes LLM-augmented data ingestion.",
     icon: "git-merge",
     color: "var(--green)",
     nodes: [
@@ -2409,14 +2413,16 @@ const ARCHETYPES = [
       { name: "Sensor C",       type: "agent",    dx: 60,   dy: 300 },
       { name: "Consensus Gate", type: "gate",     dx: 320,  dy: 180 },
       { name: "Actuator",       type: "agent",    dx: 540,  dy: 180 },
+      { name: "Ref Data",       type: "datasource", dx: 60, dy: 420, props: { payload: "# CONSENSUS REF\n- Majority: 2/3\n- Veto: -1", data_type: "markdown" } },
+      { name: "Audit Bridge",   type: "external", dx: 320, dy: 420 }
     ],
-    wires: [[0,3],[1,3],[2,3],[3,4]],
-    edgeConds: ["affirm","all","reject","affirm"],
+    wires: [[0,3],[1,3],[2,3],[3,4],[5,6],[6,3]],
+    edgeConds: ["affirm","all","reject","affirm","all","all"],
   },
   {
     id: "guardrail",
     name: "Guardrail Chain",
-    desc: "Input → Safety Gate → LLM Bridge → Output Guard. Reject bypasses LLM entirely.",
+    desc: "Input → Safety Gate → LLM Bridge → Output Guard. Upgraded with semantic data context.",
     icon: "shield-check",
     color: "var(--amber)",
     nodes: [
@@ -2425,9 +2431,10 @@ const ARCHETYPES = [
       { name: "LLM Bridge",   type: "external", dx: 440, dy: 80  },
       { name: "Output Guard", type: "gate",     dx: 440, dy: 240 },
       { name: "Output",       type: "agent",    dx: 640, dy: 160 },
+      { name: "Policy Source", type: "datasource", dx: 440, dy: -40, props: { payload: "# SAFETY POLICY\n- No PII leak\n- Respect Veto", data_type: "markdown" } }
     ],
-    wires: [[0,1],[1,2],[1,3],[2,4],[3,4]],
-    edgeConds: ["all","affirm","reject","affirm","affirm"],
+    wires: [[0,1],[1,2],[1,3],[2,4],[3,4],[5,2]],
+    edgeConds: ["all","affirm","reject","affirm","affirm","all"],
   },
   {
     id: "filter_rank",
@@ -2688,6 +2695,9 @@ function spawnArchetype(arch, forcedX, forcedY) {
     const node = flowNodes.find(fn => fn.id === id);
     if (node) {
       node.props.code = getArchetypeCode(arch.id, n.name, n.type);
+      if (n.props) {
+        node.props = { ...node.props, ...n.props };
+      }
       updateNodeSchemaDisplay(id);
     }
   });
