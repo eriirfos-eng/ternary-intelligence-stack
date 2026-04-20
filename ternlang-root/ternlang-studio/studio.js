@@ -4102,20 +4102,19 @@ async function simulateNode(node, inSignal, isPhantom = false) {
     return 0; // Suspend
   }
 
-  return outSignal;
-}
-
   // Terminal Node Interceptor: Spawn/Update Result Artifact
   const outWires = flowWires.filter(w => w.fromId === node.id);
   const artifacts = flowNodes.filter(fn => fn.type === 'artifact' && fn.parentId === node.id);
 
   if (outWires.length === 0 && node.type !== 'artifact') {
-     spawnResultArtifact(node, outSignal);
-     logInspector("SYSTEM", "🛑 Terminal Payload Detected — Hard Halt engaged.");
-     simulationAborted = true; // Hard Halt
+    if (!isPhantom) {
+      spawnResultArtifact(node, outSignal);
+      logInspector("SYSTEM", "🛑 Terminal Payload Detected — Hard Halt engaged.");
+    }
+    simulationAborted = true; // Hard Halt
   }
   
-  // Update linked artifacts (always update if they exist, but don't spawn new ones from artifacts)
+  // Update linked artifacts
   artifacts.forEach(target => {
     const artEl = document.getElementById(`art-body-${target.id}`);
     if (artEl) {
@@ -4124,7 +4123,7 @@ async function simulateNode(node, inSignal, isPhantom = false) {
     }
   });
 
-  await new Promise(r => setTimeout(r, 500));
+  if (!isPhantom) await new Promise(r => setTimeout(r, 500));
   return outSignal;
 }
 window.simulateNode = simulateNode;
