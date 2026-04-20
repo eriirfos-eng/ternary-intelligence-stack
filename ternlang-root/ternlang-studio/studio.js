@@ -2131,9 +2131,9 @@ const NodePanelController = {
           oninput="updateNodeProp('code', this.value)">${node.props.code || ""}</textarea>
       </div>
 
-      <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2); display:flex; flex-direction:column; gap:8px;">
+      <div class="prop-section" style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2);">
         <div class="prop-label-strict">Morph Archetype</div>
-        <select class="prop-input-strict" style="font-size:11px; font-weight:700; color:var(--cyan); margin-bottom:4px;" onchange="morphNodeArchetype('${node.id}', this.value)">
+        <select class="prop-input-strict" style="font-size:11px; font-weight:700; color:var(--cyan); margin-bottom:12px;" onchange="morphNodeArchetype('${node.id}', this.value)">
           <option value="">-- Generic Agent --</option>
           <option value="sensor">SENSOR (Input Capture)</option>
           <option value="gate">GATE (Ternary Logic)</option>
@@ -2141,11 +2141,11 @@ const NodePanelController = {
           <option value="deliberator">DELIBERATOR (Weighted)</option>
         </select>
 
-        <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); padding:6px; border-radius:4px; border:1px solid var(--border2);">
-          <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Node Color</div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <code style="font-size:10px; color:var(--muted2);">${customColor}</code>
-            <input type="color" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Node Color">
+        <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+          <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="color" class="prop-input-strict" style="width:30px; padding:0; border:none; height:24px; cursor:pointer; background:none;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
+            <code style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace;">${customColor.toUpperCase()}</code>
           </div>
         </div>
 
@@ -2181,10 +2181,7 @@ const NodePanelController = {
     bodyEl.innerHTML = `
       <div class="prop-section">
         <div class="prop-label-strict">Bridge Identity</div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <input type="text" class="prop-input-strict" style="flex:1" value="${node.name}" oninput="updateNodeProp('name', this.value)">
-          <input type="color" class="prop-input-strict" style="width:32px; padding:2px; height:32px; cursor:pointer;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value)" title="Custom Base Color">
-        </div>
+        <input type="text" class="prop-input-strict" style="width:100%" value="${node.name}" oninput="updateNodeProp('name', this.value)">
       </div>
 
       <div class="prop-section">
@@ -2259,7 +2256,15 @@ const NodePanelController = {
         </div>
       </div>
 
-      <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2); display:flex; flex-direction:column; gap:8px;">
+      <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2); display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="color" class="prop-input-strict" style="width:30px; padding:0; border:none; height:24px; cursor:pointer; background:none;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
+            <code style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace;">${customColor.toUpperCase()}</code>
+          </div>
+        </div>
+
         <div style="display:flex; gap:6px;">
           <button class="btn-pill" style="flex:1; background:var(--bg2);" onclick="openAgentInEditor()">Editor</button>
           <button class="btn-pill" style="flex:1; background:rgba(239,68,68,0.1); color:var(--red);" onclick="deleteNode('${node.id}')">Remove</button>
@@ -3333,7 +3338,7 @@ async function runSimulation() {
   // GC sweep - removed clearResultArtifacts() to support branch extension
   resetSimHistory();
   const timeline = document.getElementById("global-timeline");
-  if (timeline) timeline.style.display = "none";
+  // Keep timeline visible as requested
   const stopBtn = document.getElementById("simStopBtn");
   if (stopBtn) stopBtn.style.display = "inline-flex";
 
@@ -3766,6 +3771,25 @@ window.initInspectorDraggable = initInspectorDraggable;
 /**
  * Sidebar Resizer Logic
  */
+function updateTimelineBridge() {
+  const leftSidebar = document.getElementById("flow-library");
+  const rightSidebar = document.getElementById("flow-props");
+  const timeline = document.querySelector(".timeline-container");
+  if (!leftSidebar || !rightSidebar || !timeline) return;
+
+  const leftW = leftSidebar.offsetWidth;
+  const rightW = rightSidebar.offsetWidth;
+  
+  timeline.style.left = leftW + "px";
+  timeline.style.width = `calc(100% - ${leftW + rightW}px)`;
+  
+  // Also nudge canvas viewbox if needed
+  if (window.fitToView) {
+    // Only fit if explicitly needed, but sidebar change affects visible area
+  }
+}
+window.updateTimelineBridge = updateTimelineBridge;
+
 function initSidebarResizer() {
   const sidebar = document.getElementById("flow-library");
   const resizer = document.getElementById("flow-sidebar-resizer");
@@ -3777,6 +3801,47 @@ function initSidebarResizer() {
       const newWidth = me.clientX;
       if (newWidth >= 180 && newWidth <= 500) {
         sidebar.style.width = newWidth + "px";
+        updateTimelineBridge();
+      }
+    };
+    const onMouseUp = () => {
+      resizer.classList.remove("active");
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
+  
+  initRightSidebarResizer();
+  
+  // Use ResizeObserver for more robust telescoping
+  const ro = new ResizeObserver(() => updateTimelineBridge());
+  ro.observe(sidebar);
+  const rs = document.getElementById("flow-props");
+  if (rs) ro.observe(rs);
+  
+  updateTimelineBridge();
+}
+window.initSidebarResizer = initSidebarResizer;
+
+function initRightSidebarResizer() {
+  const sidebar = document.getElementById("flow-props");
+  const resizer = document.getElementById("flow-props-resizer");
+  if (!sidebar || !resizer) return;
+
+  resizer.addEventListener("mousedown", (e) => {
+    resizer.classList.add("active");
+    
+    const rect = sidebar.getBoundingClientRect();
+    const offsetRight = e.clientX - rect.left; // Distance from the left edge of the sidebar (where the resizer is)
+
+    const onMouseMove = (me) => {
+      const windowWidth = window.innerWidth;
+      const newWidth = windowWidth - me.clientX;
+      if (newWidth >= 250 && newWidth <= 500) {
+        sidebar.style.width = newWidth + "px";
+        updateTimelineBridge();
       }
     };
     const onMouseUp = () => {
@@ -3788,7 +3853,7 @@ function initSidebarResizer() {
     document.addEventListener("mouseup", onMouseUp);
   });
 }
-window.initSidebarResizer = initSidebarResizer;
+window.initRightSidebarResizer = initRightSidebarResizer;
 
 function setNodeStatus(id, status) {
   const dot = document.getElementById("status-" + id);
@@ -5637,12 +5702,14 @@ function runTernCode(rawCode) {
   const prepared = prepareTernCode(rawCode);
   
   // WASM_PAYLOAD_MIRROR: Focused Execution Audit
+  /*
   console.group('WASM_PAYLOAD_MIRROR');
   console.log('Raw .tern Payload:');
   console.log(prepared);
   console.log('Payload Length:', prepared.length);
   console.log('Encoding Check (Escape check):', JSON.stringify(prepared).substring(0, 100) + '...');
   console.groupEnd();
+  */
 
   try {
     const rawResult = window.wasmRunTern(prepared);
