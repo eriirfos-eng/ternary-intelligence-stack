@@ -3382,16 +3382,18 @@ window.runSimulation = runSimulation;
 async function runSimulationCore() {
   let tick = simHistory.length > 0 ? simHistory[simHistory.length-1].tick : 0;
   const nodeState = {};
-  let currentSimTime = 0; // Virtual timeline anchor in ms
+  let currentSimTime = 0; // The virtual time (ms) when a signal *starts*
+  let maxSimDuration = 0; // Tracks the absolute latest end-point of any signal
 
-  // Centralized Playhead Drive
+  // Centralized Playhead Drive (Visual Clock)
   const scrubber = document.getElementById("global-timeline");
   const tlLabel = document.getElementById("timeline-tick-label");
   if (scrubber) {
     scrubber.value = 0;
-    scrubber.max = simSpeed; // Initial window
+    scrubber.max = simSpeed; 
   }
   let lastRealTime = performance.now();
+  let virtualClock = 0;
 
   const driveTimeline = () => {
     if (!simulationRunning || simulationAborted) return;
@@ -3399,69 +3401,64 @@ async function runSimulationCore() {
     const delta = now - lastRealTime;
     lastRealTime = now;
 
-    if (scrubber) {
-      const cur = parseFloat(scrubber.value) || 0;
-      scrubber.value = cur + delta;
-      if (tlLabel) tlLabel.textContent = `TIME: ${(parseFloat(scrubber.value) / 1000).toFixed(2)}s`;
-      
-      // Physically drive the dot interpolation from the clock
-      requestScrub(scrubber.value);
+    // Advance virtual clock, but do not exceed discovered duration if logic is done
+    const nextClock = virtualClock + delta;
+    const logicFinished = (engineQueue.length === 0);
+
+    if (logicFinished && nextClock >= maxSimDuration) {
+      virtualClock = maxSimDuration;
+    } else {
+      virtualClock = nextClock;
     }
-    requestAnimationFrame(driveTimeline);
+
+    if (scrubber) {
+      scrubber.value = virtualClock;
+      if (tlLabel) tlLabel.textContent = `TIME: ${(virtualClock / 1000).toFixed(2)}s`;
+      // Physically drive the dot interpolation from the master clock
+      requestScrub(virtualClock);
+    }
+
+    if (!logicFinished || virtualClock < maxSimDuration) {
+      requestAnimationFrame(driveTimeline);
+    } else {
+      simulationRunning = false;
+      updateSimUI();
+      logInspector("SYSTEM", "✓ Visual playback complete");
+    }
   };
   requestAnimationFrame(driveTimeline);
 
+  // Logic Loop
   while (engineQueue.length > 0 && tick < MAX_ENGINE_TICKS && !simulationAborted) {
     const signal = engineQueue.pop();
     const node = flowNodes.find(n => n.id === signal.toId);
     if (!node) continue;
 
-    logInspector(node.name, `📥 Signal received [v:${signal.val}, c:${signal.conf.toFixed(2)}] from ${signal.origin}`);
-
-    const inWires = flowWires.filter(w => w.toId === node.id);
-    let merged = signal;
-    if (inWires.length > 1) {
-      nodeState[node.id] = nodeState[node.id] || [];
-      nodeState[node.id].push(signal);
-      merged = TernaryAlgebra.merge(nodeState[node.id]);
-    }
-
-    const outVal = await simulateNode(node, merged.val);
+    const outVal = await simulateNode(node, signal.val);
     if (simulationAborted) break;
 
-    const outSignal = { val: outVal, conf: merged.conf, origin: node.id };
-    const currentTickSignals = [];
-
+    const outSignal = { val: outVal, conf: signal.conf, origin: node.id };
     const outWires = flowWires.filter(w => w.fromId === node.id);
+
     for (const wire of outWires) {
       const transformed = TernaryAlgebra.transform(outSignal, wire);
       if (transformed) {
-        currentTickSignals.push({ id: wire.id, val: transformed.val, conf: transformed.conf });
-        
         // Record the event window for continuous interpolation
-        captureSimSnapshot(tick, currentTickSignals, currentSimTime, simSpeed);
+        captureSimSnapshot(tick, [{ id: wire.id, ...transformed }], currentSimTime, simSpeed);
+        
+        maxSimDuration = Math.max(maxSimDuration, currentSimTime + simSpeed);
+        if (scrubber) scrubber.max = maxSimDuration;
 
-        // Update timeline max to encompass new future
-        if (scrubber) scrubber.max = currentSimTime + simSpeed;
-
-        await animateSignal(wire, transformed.val, transformed.conf);
+        animateSignal(wire, transformed.val, transformed.conf);
         engineQueue.push({ toId: wire.toId, ...transformed });
       }
     }
 
     tick++;
+    // Small artificial pause to keep logic sequential in snapshots
+    // but we don't 'await' the full animation time here anymore.
+    await new Promise(r => setTimeout(r, 20)); 
     currentSimTime += simSpeed;
-    updateFogHeatmap();
-  }
-
-  if (!simulationAborted || engineQueue.length === 0) {
-    logInspector("SYSTEM", simulationAborted ? "🛑 Halted at Terminal Node" : "✓ Complete");
-    simulationRunning = false;
-    updateSimUI();
-    if (simHistory.length > 0) showTimeline();
-  } else {
-    simulationRunning = false;
-    updateSimUI();
   }
 }
 window.runSimulationCore = runSimulationCore;
@@ -3651,10 +3648,10 @@ function performScrub() {
   }
 
   // 2. Hardware-accelerated Canvas Overlay (Transient + Multiverse Ghosting)
-  renderScrubLayer(snapshotIdx, frac);
+  renderScrubLayer(time);
 }
 
-function renderScrubLayer(snapshotIdx, frac) {
+function renderScrubLayer(currentTime) {
   const canvas = document.getElementById("scrub-layer");
   const wrap = document.getElementById("flow-canvas-wrap");
   if (!canvas || !wrap) return;
@@ -3666,39 +3663,45 @@ function renderScrubLayer(snapshotIdx, frac) {
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const state = simHistory[snapshotIdx];
+  // Multi-Signal Handling: Find every signal in history that should be active at currentTime
+  simHistory.forEach(state => {
+    const isInsideWindow = (currentTime >= state.startTime && currentTime <= state.startTime + state.duration);
+    if (!isInsideWindow) return;
 
-  // Transient Interpolation: physically slide along the wires (Global Clock slave)
-  if (state && state.activeSignals) {
-    state.activeSignals.forEach(sig => {
-      const wire = flowWires.find(w => w.id === sig.id);
-      if (!wire) return;
+    // Calculate individual interpolation for this dot
+    const frac = Math.min(1, Math.max(0, (currentTime - state.startTime) / state.duration));
 
-      const svgPath = document.getElementById(wire.id);
-      if (!svgPath) return;
+    if (state.activeSignals) {
+      state.activeSignals.forEach(sig => {
+        const wire = flowWires.find(w => w.id === sig.id);
+        if (!wire) return;
 
-      try {
-        const totalLength = svgPath.getTotalLength();
-        // Liquid Time: physically accurate position along path
-        const pt = svgPath.getPointAtLength(frac * totalLength);
+        const svgPath = document.getElementById(wire.id);
+        if (!svgPath) return;
 
-        const canvasX = pt.x * CT.scale + CT.x;
-        const canvasY = pt.y * CT.scale + CT.y;
+        try {
+          const totalLength = svgPath.getTotalLength();
+          // Liquid Time: physically accurate position along path
+          const pt = svgPath.getPointAtLength(frac * totalLength);
 
-        const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
-        
-        ctx.beginPath();
-        ctx.fillStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 10 * CT.scale;
+          const canvasX = pt.x * CT.scale + CT.x;
+          const canvasY = pt.y * CT.scale + CT.y;
 
-        const size = (6 + (8 * sig.conf)) * CT.scale;
-        ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      } catch(e) {}
-    });
-  }
+          const color = sig.val === 1 ? '#22c55e' : (sig.val === -1 ? '#ef4444' : '#f59e0b');
+          
+          ctx.beginPath();
+          ctx.fillStyle = color;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 10 * CT.scale;
+
+          const size = (6 + (8 * sig.conf)) * CT.scale;
+          ctx.arc(canvasX, canvasY, size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        } catch(e) {}
+      });
+    }
+  });
 }
 function scrubSimulation(index) {
   requestScrub(index);
@@ -4478,21 +4481,6 @@ async function animateSignal(wire, signal, confidence = 1.0) {
 
   // Highlight wire with confidence
   drawWire(start, end, wire.id, signal, wire, confidence);
-
-  // Instead of setTimeout, we wait for the Global Clock to advance past the current simSpeed window
-  await new Promise(r => {
-    const check = () => {
-      const scrubber = document.getElementById("global-timeline");
-      const cur = parseFloat(scrubber.value) || 0;
-      const history = simHistory[simHistory.length-1];
-      if (!simulationRunning || simulationAborted || (history && cur >= history.startTime + history.duration)) {
-        r();
-      } else {
-        requestAnimationFrame(check);
-      }
-    };
-    check();
-  });
 }window.animateSignal = animateSignal;
 
 function getPortPos(port) {
