@@ -24,7 +24,7 @@ Ternlang Studio seamlessly bridges visual node-based programming with raw, code-
 
 ## 🧠 Core SDK Capabilities
 
-Ternlang Studio is more than an IDE; it is a complete pipeline for turning visual logic into deployable software.
+Ternlang Studio is a complete pipeline for turning visual logic into deployable software.
 
 ### 1. Build & Deploy Pipeline
 Transition from visual design to production effortlessly. The Studio validates your drawn graph using automated checks for circular dependencies (**Kahn's algorithm**), isolated nodes, and schema mismatches. It then compiles the logic into a strict `.tern` manifest, allowing you to export code locally or deploy directly to the live **Fly.io proxy registry** (powered by a hardened Rust/Axum backend).
