@@ -1714,6 +1714,15 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
     <div class="flow-port flow-port-out" style="right:-7px; top:50%; margin-top:-6px;" title="Output"></div>
     ${type === 'artifact' ? '<div class="inspector-resizer" style="width:10px; height:10px;"></div>' : ''}
   `;
+
+  if (type !== 'datasource' && !isStub && flowNodes.find(n => n.id === id)?.props?.customColor) {
+     const c = flowNodes.find(n => n.id === id).props.customColor;
+     node.style.borderColor = c;
+     node.style.boxShadow = `0 0 10px ${c}33`;
+     const head = node.querySelector('.fn-head');
+     if (head) head.style.borderBottomColor = c;
+  }
+
   node.onmousedown = (e) => {
     if (e.target.closest('button') || e.target.classList.contains('flow-port')) return;
     if (!e.shiftKey && !selectedIds.has(id)) {
@@ -2069,11 +2078,18 @@ const NodePanelController = {
     const intent = node.props.system_prompt || node.props.intent || "";
     const inSchema  = (node.props.input_schema  || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     const outSchema = (node.props.output_schema || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const timeout = node.props.timeout ?? 5000;
+    const retries = node.props.retries ?? 3;
+    const target = node.props.execution_target ?? "local";
+    const customColor = node.props.customColor || "#38bdf8";
 
     bodyEl.innerHTML = `
       <div class="prop-section">
         <div class="prop-label-strict">Node Identity</div>
-        <input type="text" class="prop-input-strict" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" class="prop-input-strict" style="flex:1" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+          <input type="color" class="prop-input-strict" style="width:32px; padding:2px; height:32px; cursor:pointer;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value)" title="Custom Base Color">
+        </div>
       </div>
 
       <div class="prop-section">
@@ -2082,10 +2098,22 @@ const NodePanelController = {
       </div>
 
       <div class="prop-section">
-        <div class="prop-label-strict">Decision Mode</div>
-        <div style="font-size:11px; color:var(--green); font-weight:700; display:flex; align-items:center; gap:6px; border:1px solid var(--green); padding:6px; border-radius:4px; background:rgba(16,185,129,0.05);">
-          <i data-lucide="shield-check" style="width:14px"></i> DETERMINISTIC (CORE-VERIFIED)
+        <div class="prop-label-strict">Runtime Constraints</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <div class="prop-label-strict" style="font-size:9px;">Timeout (ms)</div>
+            <input type="number" class="prop-input-strict" value="${timeout}" oninput="updateNodeProp('timeout', parseInt(this.value))">
+          </div>
+          <div>
+            <div class="prop-label-strict" style="font-size:9px;">Max Retries</div>
+            <input type="number" class="prop-input-strict" value="${retries}" oninput="updateNodeProp('retries', parseInt(this.value))">
+          </div>
         </div>
+        <div class="prop-label-strict" style="font-size:9px;">Execution Target</div>
+        <select class="prop-input-strict" onchange="updateNodeProp('execution_target', this.value)">
+          <option value="local" ${target==='local'?'selected':''}>Local VM (Albert)</option>
+          <option value="remote" ${target==='remote'?'selected':''}>Remote Proxy (API)</option>
+        </select>
       </div>
 
       <div class="prop-section">
@@ -2102,7 +2130,7 @@ const NodePanelController = {
 
       <div class="prop-section">
         <div class="prop-label-strict">Logic / Source</div>
-        <textarea class="prop-input-strict" style="height:100px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:11px;"
+        <textarea class="prop-input-strict" style="height:80px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:11px;"
           oninput="updateNodeProp('code', this.value)">${node.props.code || ""}</textarea>
       </div>
 
@@ -2131,6 +2159,9 @@ const NodePanelController = {
     const baseUrl = node.props.base_url || "";
     const temp = node.props.temperature ?? 0.5;
     const tokens = node.props.max_trits ?? 1024;
+    const timeout = node.props.timeout ?? 10000; // LLM nodes usually need more time
+    const retries = node.props.retries ?? 2;
+    const customColor = node.props.customColor || "#f59e0b";
     
     // Pull from vault if not set or when protocol changes
     const secrets = getTernflowSecrets();
@@ -2144,12 +2175,29 @@ const NodePanelController = {
     bodyEl.innerHTML = `
       <div class="prop-section">
         <div class="prop-label-strict">Bridge Identity</div>
-        <input type="text" class="prop-input-strict" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" class="prop-input-strict" style="flex:1" value="${node.name}" oninput="updateNodeProp('name', this.value)">
+          <input type="color" class="prop-input-strict" style="width:32px; padding:2px; height:32px; cursor:pointer;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value)" title="Custom Base Color">
+        </div>
       </div>
 
       <div class="prop-section">
         <div class="prop-label-strict">Intelligence Strategy</div>
         <textarea class="prop-input-strict" style="height:50px; resize:vertical; font-size:11px;" placeholder="System prompt for the bridge..." oninput="updateNodeProp('system_prompt', this.value)">${intent}</textarea>
+      </div>
+
+      <div class="prop-section">
+        <div class="prop-label-strict">Runtime Constraints</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div>
+            <div class="prop-label-strict" style="font-size:9px;">Timeout (ms)</div>
+            <input type="number" class="prop-input-strict" value="${timeout}" oninput="updateNodeProp('timeout', parseInt(this.value))">
+          </div>
+          <div>
+            <div class="prop-label-strict" style="font-size:9px;">Max Retries</div>
+            <input type="number" class="prop-input-strict" value="${retries}" oninput="updateNodeProp('retries', parseInt(this.value))">
+          </div>
+        </div>
       </div>
 
       <div class="prop-section" style="border:1px solid var(--amber); padding:8px; border-radius:4px; background:rgba(245,158,11,0.05);">
@@ -2299,40 +2347,34 @@ const EdgePanelController = {
     const cond      = wire.condition  || "all";
     const transform = wire.transform  || "pass";
     const priority  = wire.priority   || 5;
-    
-    // Auto edge labeling logic
-    let autoLabel = "All signals";
-    if (cond === "affirm") autoLabel = "+1 only";
-    else if (cond === "tend") autoLabel = "0 only";
-    else if (cond === "reject") autoLabel = "-1 only";
-    else if (cond === "!reject") autoLabel = "+1 or 0";
-    if (transform === "hold") autoLabel = "uncertainty route";
+    const weight    = wire.weight     || 1.0;
+    const latency   = wire.latency    || 0;
+    const customColor = wire.customColor || "#94a3b8";
 
     bodyEl.innerHTML = `
       <div style="font-size:10px; color:var(--muted2); margin-bottom:8px; font-weight:600; display:flex; align-items:center; gap:4px;">
         <span style="color:var(--text)">${fromNode ? fromNode.name : "?"}</span> 
         <i data-lucide="arrow-right" style="width:10px; height:10px; color:var(--cyan)"></i> 
         <span style="color:var(--text)">${toNode ? toNode.name : "?"}</span>
+        <div style="flex:1"></div>
+        <input type="color" class="prop-input-strict" style="width:24px; padding:2px; height:24px; cursor:pointer;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value)" title="Custom Wire Color">
       </div>
 
       <!-- Condition Rail -->
       <div class="prop-group" style="margin-bottom:8px;">
-        <label class="prop-label" style="font-size:10px; margin-bottom:4px;">Activation Logic</label>
+        <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Activation Logic</div>
         <div style="display:flex; align-items:stretch; height:24px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
           <button title="value == +1" class="rail-btn ${cond==='affirm'?'active':''}" onclick="updateWireProp('condition','affirm');updateWireProp('label','+1 only');">+1</button>
           <button title="value == 0"  class="rail-btn ${cond==='tend'?'active':''}"   onclick="updateWireProp('condition','tend');updateWireProp('label','0 only');">0</button>
           <button title="value == -1" class="rail-btn ${cond==='reject'?'active':''}" onclick="updateWireProp('condition','reject');updateWireProp('label','-1 only');">-1</button>
           <button title="value != -1" class="rail-btn ${cond==='!reject'?'active':''}" onclick="updateWireProp('condition','!reject');updateWireProp('label','+1 or 0');">!= -1</button>
           <button title="All signals" class="rail-btn ${cond==='all'?'active':''}"    onclick="updateWireProp('condition','all');updateWireProp('label','All signals');">ALL</button>
-          <div style="display:flex; align-items:center; gap:4px; padding:0 6px; border-left:1px solid var(--border2); background:var(--bg3); font-size:9px; font-weight:700; color:var(--cyan);">
-            AND [C > 0.0]
-          </div>
         </div>
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
         <div class="prop-group" style="margin:0;">
-          <label class="prop-label" style="font-size:10px; margin-bottom:4px;">On Fail</label>
+          <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">On Fail</div>
           <div style="display:flex; flex-direction:column; gap:2px; font-size:9px; line-height:1.2;">
             <label style="display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="radio" name="wfail" value="block" ${transform==='block'||transform==='pass'?'checked':''} onchange="updateWireProp('transform','block')"> Drop</label>
             <label style="display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="radio" name="wfail" value="flip" ${transform==='flip'?'checked':''} onchange="updateWireProp('transform','flip')"> Fallback</label>
@@ -2340,23 +2382,31 @@ const EdgePanelController = {
           </div>
         </div>
         <div class="prop-group" style="margin:0;">
-          <label class="prop-label" style="font-size:10px; margin-bottom:4px;">Transform</label>
-          <select class="prop-input" style="width:100%; font-size:9px; height:20px; padding:0 4px;" onchange="/* Future */">
-            <option value="none">None</option>
-            <option value="adjust">Confidence</option>
-            <option value="map">Map Value</option>
-          </select>
+          <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Temporal Dynamics</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div>
+               <div style="font-size:8px; color:var(--muted2)">Signal Weight</div>
+               <input type="number" step="0.1" class="prop-input-strict" style="height:20px; font-size:9px; padding:2px 4px;" value="${weight}" oninput="updateWireProp('weight', parseFloat(this.value))">
+            </div>
+            <div>
+               <div style="font-size:8px; color:var(--muted2)">Latency (ms)</div>
+               <input type="number" class="prop-input-strict" style="height:20px; font-size:9px; padding:2px 4px;" value="${latency}" oninput="updateWireProp('latency', parseInt(this.value))">
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="prop-group" style="margin-bottom:8px;">
-        <label class="prop-label" style="font-size:10px; margin-bottom:4px;">Priority</label>
-        <div style="display:flex; height:20px; border-radius:4px; overflow:hidden; border:1px solid var(--border2);">
-          <button class="rail-btn ${priority<4 ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 2)">Low</button>
-          <button class="rail-btn ${(priority>=4 && priority<=7) ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 5)">Norm</button>
-          <button class="rail-btn ${priority>7 ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 10)">High</button>
+        <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Priority</div>
+        <div style="display:flex; height:24px; border-radius:4px; overflow:hidden; border:1px solid var(--border2); background:var(--bg2);">
+          <button class="rail-btn ${priority<=2 ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 2); updateEdgePanel();">Low</button>
+          <button class="rail-btn ${(priority>2 && priority<10) ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 5); updateEdgePanel();">Norm</button>
+          <button class="rail-btn ${priority>=10 ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 10); updateEdgePanel();">High</button>
         </div>
       </div>
+    `;
+    lucide.createIcons();
+  }
 
       <div class="prop-group" style="margin-bottom:8px;">
         <label class="prop-label" style="font-size:10px; margin-bottom:4px;">Label</label>
@@ -2378,7 +2428,9 @@ const EdgePanelController = {
 
 function updatePropertyPanel() {
   const body = document.getElementById("prop-body");
+  const header = document.getElementById("prop-header-label");
   if (!selectedNodeId) {
+    if (header) header.textContent = "Node Properties";
     body.innerHTML = `
       <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px; padding:0 12px; line-height:1.8;">
         Select a node to configure<br>
@@ -2389,6 +2441,7 @@ function updatePropertyPanel() {
 
   const node = flowNodes.find(n => n.id === selectedNodeId);
   if (!node) return;
+  if (header) header.textContent = node.type === 'macro' ? "MACRO PROPERTIES" : "NODE PROPERTIES";
   const inWires  = flowWires.filter(w => w.toId   === selectedNodeId);
   const outWires = flowWires.filter(w => w.fromId === selectedNodeId);
   const schemaWarning = inWires.some(w => {
@@ -2398,6 +2451,31 @@ function updatePropertyPanel() {
 
   NodePanelController.render(node, body, inWires, outWires, schemaWarning);
 }
+
+function updateNodeColor(id, color) {
+  const node = flowNodes.find(n => n.id === id);
+  if (!node) return;
+  node.props.customColor = color;
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.borderColor = color;
+    el.style.boxShadow = `0 0 10px ${color}33`; // 20% alpha shadow
+    const head = el.querySelector('.fn-head');
+    if (head) head.style.borderBottomColor = color;
+  }
+  saveCanvasState();
+}
+window.updateNodeColor = updateNodeColor;
+
+function updateWireColor(id, color) {
+  const wire = flowWires.find(w => w.id === id);
+  if (!wire) return;
+  wire.customColor = color;
+  const path = document.querySelector(`path[id="${id}"]`);
+  if (path) path.style.stroke = color;
+  saveCanvasState();
+}
+window.updateWireColor = updateWireColor;
 window.updatePropertyPanel = updatePropertyPanel;
 
 function openAgentInEditor() {
@@ -2896,6 +2974,8 @@ let selectedWireId = null;
 function selectWire(wireId) {
   selectedWireId = wireId;
   selectedNodeId = null;
+  const header = document.getElementById("prop-header-label");
+  if (header) header.textContent = "EDGE PROPERTIES";
   document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
   updateWireStyles();
   updateEdgePanel();
@@ -4336,6 +4416,12 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
   if (wire && wire.condition && wire.condition !== "all") cls += " cond-" + wire.condition.replace("!","");
   if (id === selectedWireId) cls += " selected-wire";
   path.setAttribute("class", cls);
+
+  if (wire && wire.customColor && signal === undefined) {
+    path.style.stroke = wire.customColor;
+  } else {
+    path.style.stroke = ""; // Use CSS defaults
+  }
 
   path.style.opacity = 0.2 + (0.8 * confidence);
   path.style.strokeWidth = 1.5 + (2.5 * confidence);
