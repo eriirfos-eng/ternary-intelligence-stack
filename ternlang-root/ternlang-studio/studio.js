@@ -3408,11 +3408,16 @@ async function runSimulation() {
     // PHANTOM PASS: Pure Logic & Timing Calculation (Memory Locked)
     const masterQueueClone = [...engineQueue]; 
     const { scheduledEvents, maxSimDuration } = await calculateGlobalTimeline(masterQueueClone);
-    window.globalScheduledEvents = scheduledEvents; // Persist for manual scrubbing
+    window.globalScheduledEvents = scheduledEvents; 
+    
+    // 1. The Print Probe
+    console.log('DEBUG -> Events generated:', scheduledEvents.length, '| Total Duration:', maxSimDuration);
     
     // VISUAL PASS: Pure Rendering & Playback
     if (!simulationAborted) {
-      console.log(`[MEMORY_LOCK] Master Events: ${scheduledEvents.length}, Max Duration: ${maxSimDuration}ms`);
+      if (scheduledEvents.length === 0 || maxSimDuration === 0) {
+        console.warn("[DIAGNOSTIC] Simulation data empty. Check roots and latencies.");
+      }
       await runSimulationCore(scheduledEvents, maxSimDuration);
     }
   } catch (err) {
@@ -3454,6 +3459,9 @@ async function calculateGlobalTimeline(masterQueue) {
     const nodeProcessingTime = 150; // ms
     const nodeEndTime = nodeStartTime + nodeProcessingTime;
     nodeTimings[node.id] = Math.max(nodeTimings[node.id] || 0, nodeEndTime);
+    
+    // Safety: Ensure maxSimDuration accounts for the node itself, not just outgoing wires
+    maxSimDuration = Math.max(maxSimDuration, nodeEndTime);
 
     // Call simulateNode with isPhantom=true to suppress DOM/CSS/Logs
     const outVal = await simulateNode(node, signal.val, true);
@@ -3466,7 +3474,9 @@ async function calculateGlobalTimeline(masterQueue) {
       const transformed = TernaryAlgebra.transform(outSignal, wire);
       if (transformed) {
         const wireStartTime = nodeTimings[node.id];
-        const wireDuration = simSpeed;
+        // 3. The NaN / Zero Trap (Safe latency parsing)
+        const latency = parseFloat(wire.latency);
+        const wireDuration = !isNaN(latency) ? latency : simSpeed;
         const wireEndTime = wireStartTime + wireDuration;
 
         const event = {
