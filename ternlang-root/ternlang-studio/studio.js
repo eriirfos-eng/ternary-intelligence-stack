@@ -636,33 +636,33 @@ async function injectSignal(nodeId, val) {
 }
 
 // ─── Full Observability: Causal Reverse-Trace ────────────────────────────────
+const causalNodes = new Set();
+const causalWires = new Set();
+
+function findParents(nodeId) {
+  causalNodes.add(nodeId);
+  const parents = flowWires.filter(w => w.toId === nodeId);
+  parents.forEach(w => {
+    causalWires.add(w.id);
+    if (!causalNodes.has(w.fromId)) findParents(w.fromId);
+  });
+}
+
 function traceCausalPath(targetNodeId) {
   // Clear existing trace
   document.querySelectorAll('.causal-path, .causal-node, .dimmed').forEach(el => {
     el.classList.remove('causal-path','causal-node','dimmed');
   });
 
-  const activeNodes = new Set();
-  const activeWires = new Set();
-
-  function findParents(nodeId) {
-    activeNodes.add(nodeId);
-    // Find wires that contribute to this node
-    const parents = flowWires.filter(w => w.toId === nodeId);
-    parents.forEach(w => {
-      // Only trace back if this wire was actually "pulsed" or has a signal
-      activeWires.add(w.id);
-      if (!activeNodes.has(w.fromId)) findParents(w.fromId);
-    });
-  }
-
+  causalNodes.clear();
+  causalWires.clear();
   findParents(targetNodeId);
 
   // Apply visual styles
   flowNodes.forEach(n => {
     const el = document.getElementById(n.id);
     if (!el) return;
-    if (activeNodes.has(n.id)) el.classList.add('causal-node');
+    if (causalNodes.has(n.id)) el.classList.add('causal-node');
     else el.classList.add('dimmed');
   });
 
@@ -670,7 +670,7 @@ function traceCausalPath(targetNodeId) {
     const el = document.getElementById(w.id);
     const hit = document.getElementById("hit-" + w.id);
     if (!el) return;
-    if (activeWires.has(w.id)) {
+    if (causalWires.has(w.id)) {
       el.classList.add('causal-path');
     } else {
       el.classList.add('dimmed');
@@ -5403,9 +5403,13 @@ require(["vs/editor/editor.main"], function () {
   // Initialize visualizer with empty state
   renderLogicField([]);
 
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 
+// Final fallback for Lucide to ensure all icons (including dynamic ones) render
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+});
 
 // Global Exports
 window.addAgentFromModal = addAgentFromModal;
@@ -5488,6 +5492,7 @@ window.renderTracerView = renderTracerView;
 window.renderUsageAnon = renderUsageAnon;
 window.restoreCanvasState = restoreCanvasState;
 window.restoreRun = restoreRun;
+window.runCode = runCode;
 window.runTernCode = runTernCode;
 window.saveCanvasState = saveCanvasState;
 window.saveEditorState = saveEditorState;
@@ -5495,6 +5500,7 @@ window.screenToCanvas = screenToCanvas;
 window.scrubSimulation = scrubSimulation;
 window.selectNode = selectNode;
 window.selectWire = selectWire;
+window.selectedFleetAgentId = typeof window.selectedFleetAgentId !== 'undefined' ? window.selectedFleetAgentId : null;
 window.setArtifactState = setArtifactState;
 window.setNodeStatus = setNodeStatus;
 window.setReplSnippet = setReplSnippet;
@@ -5517,6 +5523,7 @@ window.switchLibTab = switchLibTab;
 window.switchOutTab = switchOutTab;
 window.switchSidebarPanel = switchSidebarPanel;
 window.switchToTab = switchToTab;
+window.switchView = switchView;
 window.syncMultiDragEnd = syncMultiDragEnd;
 window.syncSettingsKeyDisplay = syncSettingsKeyDisplay;
 window.syncSettingsUI = syncSettingsUI;
@@ -5545,4 +5552,3 @@ window.validateGraph = validateGraph;
 window.viewportCenterInCanvas = viewportCenterInCanvas;
 window.zoomAt = zoomAt;
 window.zoomStep = zoomStep;
-window.selectedFleetAgentId = typeof window.selectedFleetAgentId !== 'undefined' ? window.selectedFleetAgentId : null;
