@@ -1367,6 +1367,13 @@
 .lib-category-items {
   overflow: hidden;
 }
+#no-arch-matches {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  flex: 1;
+}
 /* Archetype Card Styling */
 .archetype-card {
   background: var(--bg1);
