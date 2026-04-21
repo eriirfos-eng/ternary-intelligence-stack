@@ -13,7 +13,7 @@ name = "ternlang-api"
 path = "src/main.rs"
 
 [dependencies]
-axum            = "0.8"
+axum            = { version = "0.8", features = ["ws"] }
 tokio           = { version = "1", features = ["full"] }
 tower           = "0.5"
 tower-http      = { version = "0.6", features = ["cors", "trace", "fs"] }
