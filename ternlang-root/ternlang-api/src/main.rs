@@ -39,7 +39,7 @@ use axum::{
     Router,
     Json,
     body::Bytes,
-    extract::{Path, Query, State},
+    extract::{Path, Query, State, ws::{WebSocketUpgrade, WebSocket, Message}},
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
     response::{sse::{Event, Sse}, Html, IntoResponse, Response},
@@ -67,7 +67,7 @@ use ternlang_core::{
     parser::Parser,
     lexer::Token,
     codegen::betbc::BytecodeEmitter,
-    vm::BetVm
+    vm::{BetVm, Value as VmValue}
 };
 use ternlang_moe::TernMoeOrchestrator;
 use ternlang_ml::{
@@ -375,6 +375,8 @@ pub struct AppState {
 
     agent_registry:         Arc<AgentRegistry>,
 
+    pub tracer_tx:          tokio::sync::broadcast::Sender<Value>,
+
     pub total_instructions: Arc<std::sync::atomic::AtomicU64>,
     pub total_nodes:        Arc<std::sync::atomic::AtomicU64>,
     pub active_nodes:       Arc<std::sync::RwLock<std::collections::HashSet<String>>>,
@@ -415,6 +417,7 @@ async fn require_api_key(
         || path.starts_with("/playground/pkg/")
         || path == "/activate"
         || path == "/api/run"
+        || path == "/api/tracer/ws"
         || path == "/api/github/activate"
         || path == "/api/stdlib/list"
         || path.starts_with("/api/stdlib/read/")
@@ -4434,7 +4437,11 @@ pub async fn taas_infer(
 /// Body: { "code": "...", "key": "tern_xxx" }   (key may also be in X-Ternlang-Key header)
 /// Response: { "status": "ok"|"error", "output": [...], "registers": [...],
 ///             "bytecode_bytes": N, "instructions": N, "error": null|"..." }
-async fn run_program(headers: HeaderMap, Json(body): Json<Value>) -> Response {
+async fn run_program(
+    headers: HeaderMap, 
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<Value>
+) -> Response {
     // Accept key from body OR header (studio sends it in the body for simplicity)
     let _key = body["key"].as_str()
         .map(|s| s.to_string())
@@ -4527,10 +4534,32 @@ async fn run_program(headers: HeaderMap, Json(body): Json<Value>) -> Response {
     let bytecode = emitter.finalize();
     let bytecode_len = bytecode.len();
     let mut vm = BetVm::new(bytecode);
+    
+    let start_time = std::time::Instant::now();
+    let vm_res = vm.run();
+    let latency_ms = start_time.elapsed().as_millis() as u64;
 
-    match vm.run() {
+    match vm_res {
         Ok(()) => {
             let output = vm.take_output();
+            let final_trit = match vm.peek_stack() {
+                Some(VmValue::Trit(t)) => t as i8,
+                _ => 0,
+            };
+
+            // Emit telemetry
+            let telemetry = json!({
+                "trace_id": Uuid::new_v4().to_string(),
+                "timestamp_ms": Utc::now().timestamp_millis(),
+                "node_id": vm.node_id(),
+                "event_type": "Evaluate",
+                "signal_in": [], // State array would go here if we had it
+                "signal_out": final_trit,
+                "sparse_dropped": vm.sparse_dropped,
+                "latency_ms": latency_ms
+            });
+            let _ = state.tracer_tx.send(telemetry);
+
             let registers: Vec<Value> = (0..10)
                 .map(|i| format!("{:?}", vm.get_register(i)).into())
                 .collect();
@@ -4585,6 +4614,29 @@ async fn translate_endpoint(Json(body): Json<Value>) -> Response {
 
 async fn not_found() -> Response {
     api_error(StatusCode::NOT_FOUND, "Endpoint not found. See GET / for available routes.")
+}
+
+// ─── WebSocket Tracer ─────────────────────────────────────────────────────────
+
+async fn tracer_ws_handler(
+    ws: WebSocketUpgrade,
+    State(state): State<Arc<AppState>>,
+) -> Response {
+    ws.on_upgrade(|socket| handle_tracer_socket(socket, state)).into_response()
+}
+
+async fn handle_tracer_socket(mut socket: WebSocket, state: Arc<AppState>) {
+    let mut rx = state.tracer_tx.subscribe();
+    
+    // Send a welcome message or initial state if needed
+    let _ = socket.send(Message::Text("connected".into())).await;
+
+    while let Ok(msg) = rx.recv().await {
+        let text = serde_json::to_string(&msg).unwrap_or_default();
+        if socket.send(Message::Text(text.into())).await.is_err() {
+            break;
+        }
+    }
 }
 
 // ─── Heartbeat ──────────────────────────────────────────────────────────────
@@ -4664,6 +4716,8 @@ async fn main() {
         String::new()
     });
 
+    let (tracer_tx, _rx) = tokio::sync::broadcast::channel(1000);
+
     let state = Arc::new(AppState {
         admin_key,
         keys,
@@ -4672,6 +4726,7 @@ async fn main() {
         resend_api_key,
         github_token,
         agent_registry,
+        tracer_tx,
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
         total_instructions: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         total_nodes:        Arc::new(std::sync::atomic::AtomicU64::new(0)),
@@ -4705,6 +4760,7 @@ async fn main() {
         .route("/api/agents/publish",  post(publish_agent))
         .route("/api/agent/{slug}",    post(call_agent).delete(delete_agent))
         .route("/api/run",        post(run_program))
+        .route("/api/tracer/ws", get(tracer_ws_handler))
         .route("/api/premium/list", get(premium_list))
         .route("/api/premium/file", get(premium_file))
         // API (requires X-Ternlang-Key)

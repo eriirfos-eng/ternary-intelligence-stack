@@ -16,8 +16,9 @@ pub struct TSparseMatmul;
 impl TSparseMatmul {
     /// Executes the sparse matmul logic.
     /// Bypasses 0-weights using the @sparseskip mechanism.
-    pub fn execute(a_rows: usize, a_cols: usize, a_data: &[Trit], b_cols: usize, b_data: &[Trit]) -> Vec<Trit> {
+    pub fn execute(a_rows: usize, a_cols: usize, a_data: &[Trit], b_cols: usize, b_data: &[Trit]) -> (Vec<Trit>, bool) {
         let mut result = vec![Trit::Tend; a_rows * b_cols];
+        let mut skipped = false;
 
         for i in 0..a_rows {
             for k in 0..a_cols {
@@ -25,6 +26,7 @@ impl TSparseMatmul {
                 
                 // @sparseskip: If the weight is State 0 (Tend), skip the entire dot-product contribution.
                 if a_val == Trit::Tend {
+                    skipped = true;
                     continue;
                 }
 
@@ -40,6 +42,6 @@ impl TSparseMatmul {
                 }
             }
         }
-        result
+        (result, skipped)
     }
 }

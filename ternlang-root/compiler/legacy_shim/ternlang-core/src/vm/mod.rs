@@ -143,6 +143,7 @@ pub struct BetVm {
     pc: usize,
     code: Vec<u8>,
     node_id: String,
+    pub sparse_dropped: bool,
     remote: Option<Arc<dyn RemoteTransport>>,
     open_files: Vec<Option<std::fs::File>>,
     _instructions_count: u64,
@@ -163,6 +164,7 @@ impl BetVm {
             pc: 0,
             code,
             node_id: "127.0.0.1".into(),
+            sparse_dropped: false,
             remote: None,
             open_files: Vec::new(),
             _instructions_count: 0,
@@ -198,6 +200,10 @@ impl BetVm {
 
     pub fn get_register(&self, reg: u8) -> Value {
         self.registers.get(reg as usize).cloned().unwrap_or_default()
+    }
+
+    pub fn node_id(&self) -> &str {
+        &self.node_id
     }
 
     pub fn run(&mut self) -> Result<(), VmError> {
@@ -926,6 +932,64 @@ impl BetVm {
                     };
                     if !is_affirm {
                         return Err(VmError::AssertionFailed);
+                    }
+                }
+                0x38 => { // TSparseMatmul (@sparseskip)
+                    // Layout: [opcode] [a_rows: u8] [a_cols: u8] [b_cols: u8]
+                    // Pops: A_tensor, B_tensor
+                    // Pushes: Result_tensor
+                    let a_rows = self.read_u8()? as usize;
+                    let a_cols = self.read_u8()? as usize;
+                    let b_cols = self.read_u8()? as usize;
+                    let b_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    
+                    if let (Value::TensorRef(a_idx), Value::TensorRef(b_idx)) = (a_ref, b_ref) {
+                        let (a_data, b_data) = {
+                            let a = self.tensors.get(a_idx).ok_or(VmError::TensorNotAllocated(a_idx))?;
+                            let b = self.tensors.get(b_idx).ok_or(VmError::TensorNotAllocated(b_idx))?;
+                            
+                            let a_data = match &a.data {
+                                TensorData::Trit(v) => v,
+                                _ => return Err(VmError::TypeMismatch { expected: "TritTensor".into(), found: "Other".into() }),
+                            };
+                            let b_data = match &b.data {
+                                TensorData::Trit(v) => v,
+                                _ => return Err(VmError::TypeMismatch { expected: "TritTensor".into(), found: "Other".into() }),
+                            };
+                            (a_data.clone(), b_data.clone())
+                        };
+
+                        let mut result = vec![Trit::Tend; a_rows * b_cols];
+                        let mut skipped = false;
+
+                        for i in 0..a_rows {
+                            for k in 0..a_cols {
+                                let a_val = a_data[i * a_cols + k];
+                                if a_val == Trit::Tend {
+                                    skipped = true;
+                                    continue;
+                                }
+                                for j in 0..b_cols {
+                                    let b_val = b_data[k * b_cols + j];
+                                    if b_val == Trit::Tend { continue; }
+                                    let prod = a_val * b_val;
+                                    let (sum, _) = result[i * b_cols + j] + prod;
+                                    result[i * b_cols + j] = sum;
+                                }
+                            }
+                        }
+
+                        if skipped { self.sparse_dropped = true; }
+                        let res_idx = self.tensors.len();
+                        self.tensors.push(TensorInstance {
+                            data: TensorData::Trit(result),
+                            rows: a_rows,
+                            cols: b_cols,
+                        });
+                        self.stack.push(Value::TensorRef(res_idx));
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "TensorRef, TensorRef".into(), found: "Unknown".into() });
                     }
                 }
                 0x00 => return Ok(()),
