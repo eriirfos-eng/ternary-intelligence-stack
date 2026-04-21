@@ -343,7 +343,7 @@ function TracerView({ apiEndpoint }) {
         ),
         React.createElement('tbody', {},
           telemetry.length === 0 ? React.createElement('tr', {}, 
-            React.createElement('td', { colSpan: 5, style: { padding: '40px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' } }, 'Awaiting telemetry firehose...')
+            React.createElement('td', { colSpan: 5, style: { padding: '4rem', textAlign: 'center', color: 'var(--muted)', fontStyle: 'italic', fontSize: '1.1rem' } }, 'Awaiting telemetry firehose...')
           ) : telemetry.map(event => React.createElement('tr', { key: event.trace_id, style: { borderBottom: '1px solid #334155', opacity: event.sparse_dropped ? 0.5 : 1 } },
             React.createElement('td', { style: { padding: '12px 16px', color: '#cbd5e1' } }, new Date(event.timestamp_ms).toLocaleTimeString()),
             React.createElement('td', { style: { padding: '12px 16px', fontWeight: '700' } }, event.node_id),
@@ -950,7 +950,7 @@ function ControlBar() {
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     background: active ? color : 'transparent',
-    color: active ? '#fff' : 'var(--muted)',
+    color: active ? '#fff' : 'var(--text)',
     borderRight: '1px solid var(--border2)',
     pointerEvents: 'auto' // Ensure clicks are captured
   });
@@ -2148,14 +2148,22 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
 
   if (type !== 'datasource' && !isStub) {
     const defaultColor = iconColor.startsWith('var') ? iconColor : iconColor;
-    node.style.backgroundColor = `color-mix(in srgb, ${defaultColor}, transparent 80%)`;
+    if (defaultColor.startsWith('#')) {
+      node.style.backgroundColor = defaultColor + '33'; // Hex 20% alpha
+    } else {
+      node.style.backgroundColor = `color-mix(in srgb, ${defaultColor}, transparent 80%)`;
+    }
     node.style.borderColor = defaultColor;
   }
 
   if (type !== 'datasource' && !isStub && flowNodes.find(n => n.id === id)?.props?.customColor) {
      const c = flowNodes.find(n => n.id === id).props.customColor;
      node.style.borderColor = c;
-     node.style.backgroundColor = `color-mix(in srgb, ${c}, transparent 80%)`;
+     if (c.startsWith('#')) {
+       node.style.backgroundColor = c + '33';
+     } else {
+       node.style.backgroundColor = `color-mix(in srgb, ${c}, transparent 80%)`;
+     }
      node.style.boxShadow = `0 0 10px ${c}33`;
      const head = node.querySelector('.fn-head');
      if (head) head.style.borderBottomColor = c;
