@@ -1256,104 +1256,134 @@ let _archetypeOpen = {
   "External Interoperability": false
 };
 
+const TooltipController = {
+  delayTimer: null,
+  show: function(text, x, y) {
+    const el = document.getElementById("global-tooltip");
+    if (!el) return;
+    el.textContent = text;
+    el.style.left = (x + 15) + "px";
+    el.style.top = (y + 10) + "px";
+    el.classList.add("visible");
+    
+    // Adjust if clipping right
+    const rect = el.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+      el.style.left = (x - rect.width - 15) + "px";
+    }
+  },
+  hide: function() {
+    if (this.delayTimer) clearTimeout(this.delayTimer);
+    const el = document.getElementById("global-tooltip");
+    if (el) el.classList.remove("visible");
+  },
+  startDelay: function(text, x, y) {
+    this.hide();
+    this.delayTimer = setTimeout(() => {
+      this.show(text, x, y);
+    }, 400);
+  }
+};
+window.TooltipController = TooltipController;
+
 const BUILTIN_AGENTS = {
   "Sensor": {
-    desc: "Reads and validates an input trit signal",
+    desc: "The starting point. It reads external data and brings it into the ternary workflow.",
     code: `fn main() -> trit {\n    // Sensor: validate input\n    let raw: trit = read_input();\n    if raw == affirm { return affirm; }\n    return tend;\n}`,
     icon: "radio", color: "var(--cyan)"
   },
   "SafetyGate": {
-    desc: "Blocks reject signals, passes affirm/tend",
+    desc: "A strict bouncer. It immediately kills the workflow if the incoming signal is flagged as dangerous.",
     code: `fn main() -> trit {\n    let sig: trit = read_input();\n    if sig == reject { return reject; }\n    return affirm;\n}`,
     icon: "shield-check", color: "var(--green)"
   },
   "ConsensusGate": {
-    desc: "Aggregates N trit votes — majority wins",
+    desc: "The decider. It looks at multiple opinions and moves forward with the majority vote.",
     code: `fn main() -> trit {\n    let a: trit = read_input();\n    let b: trit = read_input();\n    let c: trit = read_input();\n    if a == affirm && b == affirm { return affirm; }\n    if a == reject && b == reject { return reject; }\n    return tend;\n}`,
     icon: "git-merge", color: "var(--cyan)"
   },
   "Classifier": {
-    desc: "Classifies input into one of three ternary classes",
+    desc: "The sorter. It looks at raw data and categorizes it into true, false, or uncertain.",
     code: `fn main() -> trit {\n    let input: trit = read_input();\n    match input {\n        affirm => return affirm,\n        tend   => return tend,\n        reject => return reject,\n    }\n}`,
     icon: "layers", color: "var(--amber)"
   },
   "Actuator": {
-    desc: "Terminal node: acts on final trit signal",
+    desc: "The final step. It triggers real-world actions like sending an email or saving a file.",
     code: `fn main() -> trit {\n    let decision: trit = read_input();\n    if decision == affirm {\n        emit \"ACTION: execute\";\n        return affirm;\n    }\n    emit \"ACTION: skip\";\n    return tend;\n}`,
     icon: "zap-off", color: "var(--green)"
   },
   "Ranker": {
-    desc: "Scores candidates and outputs affirm/tend/reject",
+    desc: "The judge. It scores different options and picks the best one based on your rules.",
     code: `fn main() -> trit {\n    let score: trit = read_input();\n    if score == affirm { return affirm; }\n    if score == tend   { return tend;   }\n    return reject;\n}`,
     icon: "bar-chart-2", color: "var(--muted)"
   },
   "Proposer": {
-    desc: "Generates a proposal signal for debate pattern",
+    desc: "The idea generator. It throws out a potential solution for other agents to debate.",
     code: `fn main() -> trit {\n    emit \"PROPOSE: candidate solution\";\n    return affirm;\n}`,
     icon: "message-square", color: "var(--blue)"
   },
   "Challenger": {
-    desc: "Challenges the proposal, outputs counter-signal",
+    desc: "The devil's advocate. It deliberately tries to find flaws in proposed solutions.",
     code: `fn main() -> trit {\n    emit \"CHALLENGE: counter-argument\";\n    return tend;\n}`,
     icon: "swords", color: "var(--red)"
   },
   "Arbiter": {
-    desc: "Decides between competing signals — debate final node",
+    desc: "The final judge in a debate. It listens to all sides and makes the ultimate call.",
     code: `fn main() -> trit {\n    let a: trit = read_input();\n    let b: trit = read_input();\n    if a == affirm && b == tend { return affirm; }\n    if a == tend   && b == tend { return tend;   }\n    return reject;\n}`,
     icon: "scale", color: "var(--amber)"
   },
   "OutputGuard": {
-    desc: "Final output filter — sanitizes signal before emission",
+    desc: "The last line of defense. It checks the final output before the AI is allowed to act.",
     code: `fn main() -> trit {\n    let sig: trit = read_input();\n    if sig == reject { emit \"BLOCKED\"; return reject; }\n    emit \"PASS\";\n    return affirm;\n}`,
     icon: "shield", color: "var(--green)"
   },
   "ContextBuffer": {
-    desc: "Maintains local session context for ternary reasoning",
+    desc: "Short-term memory. It holds onto recent inputs so the AI remembers what you just talked about.",
     code: `fn main() -> trit {\n    let ctx: string = read_context();\n    if ctx.length > 0 { return affirm; }\n    return tend;\n}`,
     icon: "database", color: "var(--cyan)"
   },
   "EpisodicRecall": {
-    desc: "Retrieves past states based on current signal similarity",
+    desc: "Long-term memory. It searches past conversations to find similar situations.",
     code: `fn main() -> trit {\n    let key: trit = read_input();\n    let found: bool = recall(key);\n    return found ? affirm : reject;\n}`,
     icon: "history", color: "var(--amber)"
   },
   "StateInjector": {
-    desc: "Forces a specific state into the current execution thread",
+    desc: "The override switch. It forces the AI into a specific state, ignoring normal logic.",
     code: `fn main() -> trit {\n    inject_state(affirm);\n    return affirm;\n}`,
     icon: "microchip", color: "var(--blue)"
   },
   "sqlite_bridge": {
-    desc: "High-performance local I/O for structured state persistence",
+    desc: "The database connector. It saves and loads information directly from your local hard drive.",
     code: `fn main() -> trit {\n    db_execute(\"INSERT INTO logs (val) VALUES (+1)\");\n    return affirm;\n}`,
     icon: "table", color: "var(--muted)"
   },
   "SparseMatMul": {
-    desc: "Optimized ternary matrix multiplication (trit=0 skip)",
+    desc: "The math engine. It multiplies numbers but skips zero-states entirely to run incredibly fast on the Albert VM.",
     code: `@sparseskip\nfn main() -> trit {\n    return matmul_step();\n}`,
     icon: "grid", color: "var(--cyan)"
   },
   "WeightPruner": {
-    desc: "Actively zeroes out weights with low confidence",
+    desc: "The optimizer. It cleans up the AI's brain by deleting weak connections to make it run faster.",
     code: `fn main() -> trit {\n    prune_weights(0.1);\n    return affirm;\n}`,
     icon: "scissors", color: "var(--red)"
   },
   "TernaryQuantizer": {
-    desc: "Quantizes continuous float signals into discrete trits",
+    desc: "The simplifier. It turns messy, complex numbers into simple true, false, or uncertain signals.",
     code: `fn main() -> trit {\n    let val: float = read_float();\n    return quantize(val);\n}`,
     icon: "binary", color: "var(--blue)"
   },
   "MCPBridge": {
-    desc: "Protocol bridge for Model Context Protocol tools",
+    desc: "The tool connector. It allows your agents to talk to external apps and APIs.",
     code: `fn main() -> trit {\n    return mcp_call(\"identity\");\n}`,
     icon: "external-link", color: "var(--green)"
   },
   "LocalNodeSync": {
-    desc: "Synchronizes state across local cluster nodes",
+    desc: "The network cable. It keeps multiple AI brains on the same page so they can work together.",
     code: `fn main() -> trit {\n    sync_fleet();\n    return affirm;\n}`,
     icon: "refresh-cw", color: "var(--cyan)"
   },
   "VetoOrchestrator": {
-    desc: "Strict rejection gate: any -1 signal triggers hard stop",
+    desc: "The ultimate kill switch. If even one agent says no, the whole process shuts down immediately.",
     code: `fn main() -> trit {\n    let votes: trit[] = read_all();\n    if votes.contains(reject) { return reject; }\n    return affirm;\n}`,
     icon: "octagon", color: "var(--red)"
   }
@@ -1572,6 +1602,13 @@ function renderFlowLibItems(paths, q = "") {
         };
         
         div.innerHTML = `<i data-lucide="${icon}" style="color:${color}"></i> <span>${item.name}</span>`;
+        
+        div.onmouseenter = (e) => {
+          const desc = item.type === "builtin" ? item.agent.desc : "Custom ternary pipeline defined in " + item.path;
+          TooltipController.startDelay(desc, e.clientX, e.clientY);
+        };
+        div.onmouseleave = () => TooltipController.hide();
+        
         div.onclick = async () => {
           const id = "node_" + Date.now();
           const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
@@ -2794,9 +2831,9 @@ window.switchLibTab = switchLibTab;
 const ARCHETYPES = [
   {
     id: "moe_13_flagship",
-    name: "MoE-13: Mixture-of-Experts",
-    desc: "Flagship Industrial Orchestrator: 13 expert agents coordinated via weighted EMA convergence. Now with Data Ingestion context. [Tier 2+]",
-    icon: "sparkles",
+    name: "MoE-13 Flagship",
+    desc: "The ultimate AI brain. It uses 13 specialized experts working together to solve incredibly complex problems.",
+    icon: "layers",
     color: "var(--cyan)",
     nodes: [
       { name: "Orchestrator",  type: "agent",    dx: 440, dy: 160 },
@@ -2826,7 +2863,7 @@ const ARCHETYPES = [
   {
     id: "consensus",
     name: "Consensus Pipeline",
-    desc: "N agents vote → Consensus Gate → Actuator. Now includes LLM-augmented data ingestion.",
+    desc: "A team of voters. Multiple agents look at the same data and use majority rule to make a safe decision.",
     icon: "git-merge",
     color: "var(--green)",
     nodes: [
@@ -2844,7 +2881,7 @@ const ARCHETYPES = [
   {
     id: "guardrail",
     name: "Guardrail Chain",
-    desc: "Input → Safety Gate → LLM Bridge → Output Guard. Upgraded with semantic data context.",
+    desc: "A high-security pipeline. It checks data before and after the AI processes it to ensure absolute safety.",
     icon: "shield-check",
     color: "var(--amber)",
     nodes: [
@@ -2861,7 +2898,7 @@ const ARCHETYPES = [
   {
     id: "filter_rank",
     name: "Filter → Rank → Decide",
-    desc: "Raw signals → Filter (tend/reject pruned) → Ranker → Decision node.",
+    desc: "The sorting machine. It quickly filters out bad options and ranks the good ones to find the winner.",
     icon: "funnel",
     color: "var(--cyan)",
     nodes: [
@@ -2876,7 +2913,7 @@ const ARCHETYPES = [
   {
     id: "debate",
     name: "Multi-Agent Debate",
-    desc: "Proposer + Challenger feed Arbiter. Arbiter routes: affirm=Proposer wins, reject=Challenger wins, tend=Retry.",
+    desc: "A virtual courtroom. One agent proposes an idea, another attacks it, and a judge decides the winner.",
     icon: "message-square",
     color: "var(--muted)",
     nodes: [
@@ -2892,7 +2929,7 @@ const ARCHETYPES = [
   {
     id: "sensor_gate",
     name: "Sensor → Gate → Actuator",
-    desc: "Simple deterministic agent chain: read → decide → act. Your first production pattern.",
+    desc: "The simplest AI workflow. It reads data, makes one decision, and takes an action.",
     icon: "cpu",
     color: "var(--blue)",
     nodes: [
@@ -2907,7 +2944,7 @@ const ARCHETYPES = [
   {
     id: "kmu_process_opt",
     name: "KMU: Process Optimization Loop",
-    desc: "Continuous improvement loop (IST → SOLL → iterate) with fallback tracking.",
+    desc: "An automated manager. It constantly analyzes a business process and loops back to improve it.",
     icon: "refresh-cw",
     color: "var(--amber)",
     nodes: [
@@ -2925,7 +2962,7 @@ const ARCHETYPES = [
   {
     id: "kmu_supplier_score",
     name: "KMU: Supplier Scoring",
-    desc: "Evaluate and rank suppliers based on parallel multi-criteria assessment.",
+    desc: "The purchasing agent. It automatically grades suppliers based on price, quality, and delivery speed.",
     icon: "truck",
     color: "var(--blue)",
     nodes: [
@@ -2943,7 +2980,7 @@ const ARCHETYPES = [
   {
     id: "kmu_customer_qual",
     name: "KMU: Customer Qualification",
-    desc: "Determine if a lead is worth pursuing using parallel scoring checks.",
+    desc: "The sales assistant. It checks incoming leads to see if they match your ideal customer profile.",
     icon: "users",
     color: "var(--cyan)",
     nodes: [
@@ -2961,7 +2998,7 @@ const ARCHETYPES = [
   {
     id: "kmu_invoice_fraud",
     name: "KMU: Invoice Fraud Detection",
-    desc: "Detect anomalies and potential fraud in incoming invoices.",
+    desc: "The accountant. It scans incoming invoices for weird numbers or mismatched vendor details.",
     icon: "file-warning",
     color: "var(--red)",
     nodes: [
@@ -2979,7 +3016,7 @@ const ARCHETYPES = [
   {
     id: "kmu_hiring_decision",
     name: "KMU: Hiring Decision System",
-    desc: "Evaluate candidates based on structured criteria and CV analysis.",
+    desc: "The HR screener. It reads resumes and scores candidates to save you time.",
     icon: "briefcase",
     color: "var(--green)",
     nodes: [
@@ -2997,7 +3034,7 @@ const ARCHETYPES = [
   {
     id: "industry_sme_pipeline",
     name: "SME: Precision Data Pipeline",
-    desc: "Optimized for small teams: sensor-input → threshold logic → automated report.",
+    desc: "A quick data processor. It grabs numbers, checks if they cross a line, and spits out a report.",
     icon: "rows",
     color: "#4ade80",
     nodes: [
@@ -3012,7 +3049,7 @@ const ARCHETYPES = [
   {
     id: "industry_enterprise_risk",
     name: "Enterprise: Risk Assessment Swarm",
-    desc: "Massive scale: multi-source vetting → supervisor oversight → secure gatekeeper.",
+    desc: "A corporate risk team. It sends data through multiple legal and financial checks before moving forward.",
     icon: "eye",
     color: "#000000",
     nodes: [
@@ -3029,7 +3066,7 @@ const ARCHETYPES = [
   {
     id: "recursive_refiner",
     name: "Recursive Multi-Stage Refiner",
-    desc: "Industrial-grade iterative loop: input → multi-stage vetting → feedback loop (tend/reject re-processes) → high-confidence exit.",
+    desc: "The perfectionist. It loops a task over and over until the AI is 100 percent sure it got it right.",
     icon: "refresh-ccw",
     color: "var(--amber)",
     nodes: [
@@ -3055,7 +3092,7 @@ const ARCHETYPES = [
   {
     id: "industry_iot_grid",
     name: "Industrial: IoT Sensor Grid",
-    desc: "Hardened real-time monitoring: mesh nodes → watchdog → emergency stop.",
+    desc: "The factory monitor. It watches live sensors and hits the emergency stop if things look dangerous.",
     icon: "bell",
     color: "#ef4444",
     nodes: [
@@ -3072,7 +3109,7 @@ const ARCHETYPES = [
   {
     id: "local_rag_pipeline",
     name: "Local RAG Pipeline",
-    desc: "Sovereign knowledge retrieval: Sensor → SQLite bridge (local vector lookup) → ContextBuffer → Evaluation layer.",
+    desc: "A private researcher. It reads your local files to answer questions without sending data to the cloud.",
     icon: "database",
     color: "var(--cyan)",
     nodes: [
@@ -3087,7 +3124,7 @@ const ARCHETYPES = [
   {
     id: "episodic_reflection",
     name: "Episodic Reflection Loop",
-    desc: "Continuous self-correction: routes output back through EpisodicRecall and StateInjector for temporal grounding.",
+    desc: "A self-improving AI. It looks at its past mistakes and automatically corrects itself over time.",
     icon: "history",
     color: "var(--amber)",
     nodes: [
@@ -3103,7 +3140,7 @@ const ARCHETYPES = [
   {
     id: "quantized_sparse_accelerator",
     name: "Quantized Sparse Accelerator",
-    desc: "High-performance compute: TernaryQuantizer → SparseMatMul → Filter (aggressive neutral pruning).",
+    desc: "The speed demon. It strips away useless data so the AI can run incredibly fast on weak hardware.",
     icon: "zap",
     color: "var(--cyan)",
     nodes: [
@@ -3118,7 +3155,7 @@ const ARCHETYPES = [
   {
     id: "hard_gated_mcp",
     name: "Hard-Gated MCP Bridge",
-    desc: "Secure tool access: MCPBridge (external) → VetoOrchestrator (hard stop on hallucinations).",
+    desc: "A safe tool-user. It lets the AI use external apps but will instantly pull the plug if it acts weird.",
     icon: "shield-alert",
     color: "var(--red)",
     nodes: [
@@ -3132,7 +3169,7 @@ const ARCHETYPES = [
   {
     id: "swarm_consensus",
     name: "Swarm Consensus (Albert)",
-    desc: "Decentralized mesh: multi-node sync using LocalNodeSync → strict ConsensusGate.",
+    desc: "A decentralized network. It forces multiple independent computers to agree before taking action.",
     icon: "network",
     color: "var(--green)",
     nodes: [
@@ -3200,6 +3237,12 @@ function renderArchetypes(q = "") {
       items.forEach(arch => {
         const card = document.createElement("div");
         card.className = "archetype-card";
+        
+        card.onmouseenter = (e) => {
+          TooltipController.startDelay(arch.desc, e.clientX, e.clientY);
+        };
+        card.onmouseleave = () => TooltipController.hide();
+        
         card.draggable = true;
         card.ondragstart = (e) => {
           e.dataTransfer.setData("tern-node-type", "archetype");
