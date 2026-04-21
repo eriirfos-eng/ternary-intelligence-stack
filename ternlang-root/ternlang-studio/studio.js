@@ -4374,6 +4374,9 @@ function performScrub() {
 
   // 2. Hardware-accelerated Canvas Overlay (Transient + Multiverse Ghosting)
   renderScrubLayer(time);
+
+  // Sync virtual clock so Play resumes from here
+  virtualClock = time;
 }
 
 function renderScrubLayer(currentTime, scheduledEvents = [], loggedEvents = null) {
