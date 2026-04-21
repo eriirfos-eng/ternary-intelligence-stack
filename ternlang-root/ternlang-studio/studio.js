@@ -934,11 +934,11 @@ function ControlBar() {
     alignItems: 'center',
     height: '32px',
     width: '140px',
-    background: '#1e293b', // Slate 800
-    border: '1px solid #334155', // Slate 700
+    background: 'var(--bg1)',
+    border: '1px solid var(--border2)',
     borderRadius: '16px',
     overflow: 'hidden',
-    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+    boxShadow: 'var(--shadow)'
   };
 
   const segmentStyle = (active, color) => ({
@@ -950,8 +950,8 @@ function ControlBar() {
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     background: active ? color : 'transparent',
-    color: active ? '#000' : '#f1f5f9',
-    borderRight: '1px solid rgba(255,255,255,0.05)',
+    color: active ? '#fff' : 'var(--muted)',
+    borderRight: '1px solid var(--border2)',
     pointerEvents: 'auto' // Ensure clicks are captured
   });
 
@@ -2146,9 +2146,16 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
     ${type === 'artifact' ? '<div class="inspector-resizer" style="width:10px; height:10px;"></div>' : ''}
   `;
 
+  if (type !== 'datasource' && !isStub) {
+    const defaultColor = iconColor.startsWith('var') ? iconColor : iconColor;
+    node.style.backgroundColor = `color-mix(in srgb, ${defaultColor}, transparent 80%)`;
+    node.style.borderColor = defaultColor;
+  }
+
   if (type !== 'datasource' && !isStub && flowNodes.find(n => n.id === id)?.props?.customColor) {
      const c = flowNodes.find(n => n.id === id).props.customColor;
      node.style.borderColor = c;
+     node.style.backgroundColor = `color-mix(in srgb, ${c}, transparent 80%)`;
      node.style.boxShadow = `0 0 10px ${c}33`;
      const head = node.querySelector('.fn-head');
      if (head) head.style.borderBottomColor = c;
