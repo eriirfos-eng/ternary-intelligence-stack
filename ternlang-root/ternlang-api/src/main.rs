@@ -4493,6 +4493,56 @@ pub async fn taas_infer(
     })
 }
 
+#[derive(Deserialize, Debug)]
+struct LlmConfig {
+    system: String,
+    prompt: String,
+    _protocol: String,
+    model_id: String,
+    api_key: Option<String>,
+    _base_url: Option<String>,
+    temperature: Option<f32>,
+    max_tokens: Option<u32>,
+}
+
+async fn call_gemini(config: &LlmConfig) -> Result<String, String> {
+    let api_key = config.api_key.as_ref().ok_or("Gemini API Key missing")?;
+    let model = if config.model_id.is_empty() { "gemini-1.5-flash" } else { &config.model_id };
+    let url = format!("https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}", model, api_key);
+
+    let client = reqwest::Client::new();
+    let payload = json!({
+        "contents": [{
+            "parts": [
+                { "text": format!("SYSTEM: {}\n\nUSER: {}", config.system, config.prompt) }
+            ]
+        }],
+        "generationConfig": {
+            "temperature": config.temperature.unwrap_or(0.1),
+            "maxOutputTokens": config.max_tokens.unwrap_or(100)
+        }
+    });
+
+    let resp = client.post(url)
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {}", e))?;
+
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let err_body = resp.text().await.unwrap_or_default();
+        return Err(format!("Gemini API error ({}): {}", status, err_body));
+    }
+
+    let data: Value = resp.json().await.map_err(|e| format!("JSON error: {}", e))?;
+    let text = data["candidates"][0]["content"]["parts"][0]["text"]
+        .as_str()
+        .ok_or("Invalid response format from Gemini")?;
+
+    Ok(text.to_string())
+}
+
 // ─── /api/run — execute arbitrary .tern source (TernStudio) ──────────────────
 
 /// POST /api/run
@@ -4509,9 +4559,20 @@ async fn run_program(
         .map(|s| s.to_string())
         .or_else(|| headers.get("x-ternlang-key").and_then(|v| v.to_str().ok()).map(|s| s.to_string()));
 
-    let code = match body["code"].as_str() {
+    // Task 2: Gemini API Integration
+    let mut llm_result = None;
+    if let Some(config_val) = body.get("llm_config") {
+        if let Ok(config) = serde_json::from_value::<LlmConfig>(config_val.clone()) {
+            match call_gemini(&config).await {
+                Ok(text) => llm_result = Some(text),
+                Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "status": "error", "error": e }))).into_response(),
+            }
+        }
+    }
+
+    let code = match body["code"].as_str().or(body["source"].as_str()) {
         Some(c) => c.to_string(),
-        None => return (StatusCode::BAD_REQUEST, Json(json!({ "status": "error", "error": "code field required" }))).into_response(),
+        None => return (StatusCode::BAD_REQUEST, Json(json!({ "status": "error", "error": "code/source field required" }))).into_response(),
     };
 
     // Parse
@@ -4647,6 +4708,7 @@ async fn run_program(
                 "registers": registers,
                 "bytecode_bytes": bytecode_len,
                 "sql_trits": sql_data.iter().map(|t| trit_to_i8(*t)).collect::<Vec<i8>>(),
+                "result": llm_result,
                 "error": null,
             }))).into_response()
         }

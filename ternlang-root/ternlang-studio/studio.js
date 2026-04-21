@@ -338,12 +338,12 @@ function TracerView({ apiEndpoint }) {
       React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' } },
         React.createElement('thead', { style: { background: '#334155', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.05em' } },
           React.createElement('tr', {},
-            ['Timestamp', 'Node ID', 'Event', 'Result', 'Latency'].map(h => React.createElement('th', { key: h, style: { padding: '12px 16px' } }, h))
+            ['Timestamp', 'Node ID', 'Event', 'Result', 'Latency', 'Causal'].map(h => React.createElement('th', { key: h, style: { padding: '12px 16px' } }, h))
           )
         ),
         React.createElement('tbody', {},
           telemetry.length === 0 ? React.createElement('tr', {}, 
-            React.createElement('td', { colSpan: 5, style: { padding: '4rem', textAlign: 'center', color: 'var(--muted)', fontStyle: 'italic', fontSize: '1.1rem' } }, 'Awaiting telemetry firehose...')
+            React.createElement('td', { colSpan: 6, style: { padding: '4rem', textAlign: 'center', color: 'var(--muted)', fontStyle: 'italic', fontSize: '1.1rem' } }, 'Awaiting telemetry firehose...')
           ) : telemetry.map(event => React.createElement('tr', { key: event.trace_id, style: { borderBottom: '1px solid #334155', opacity: event.sparse_dropped ? 0.5 : 1 } },
             React.createElement('td', { style: { padding: '12px 16px', color: '#cbd5e1' } }, new Date(event.timestamp_ms).toLocaleTimeString()),
             React.createElement('td', { style: { padding: '12px 16px', fontWeight: '700' } }, event.node_id),
@@ -356,6 +356,13 @@ function TracerView({ apiEndpoint }) {
             React.createElement('td', { style: { padding: '12px 16px' } }, 
               `${event.latency_ms}ms`,
               event.sparse_dropped && React.createElement('span', { style: { marginLeft: '8px', background: '#38bdf8', color: '#0f172a', fontSize: '9px', padding: '2px 6px', borderRadius: '4px', fontWeight: '900' } }, 'BYPASSED')
+            ),
+            React.createElement('td', { style: { padding: '8px 16px' } }, 
+              React.createElement('button', { 
+                className: 'btn', 
+                style: { fontSize: '9px', height: '20px', background: 'var(--bg2)', border: '1px solid var(--border2)', color: 'var(--cyan)' },
+                onClick: () => window.downloadCausalArtifact(event.trace_id)
+              }, 'Artifact')
             )
           ))
         )
@@ -2384,6 +2391,58 @@ function handleDataSourceFileUpload(nodeId, file) {
 }
 window.handleDataSourceFileUpload = handleDataSourceFileUpload;
 
+async function runSqlQuery(nodeId) {
+  const node = flowNodes.find(n => n.id === nodeId);
+  const sql = document.getElementById(`sql-input-${nodeId}`).value;
+  if (!sql) return;
+
+  node.props.sql_query = sql;
+  showToast("Executing SQL Query...", "ok");
+
+  try {
+    const response = await fetch('/api/data/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sql })
+    });
+    const r = await response.json();
+    if (r.status === 'ok') {
+      node.props.payload = JSON.stringify(r.results, null, 2);
+      saveCanvasState();
+      if (selectedNodeId === nodeId) updatePropertyPanel();
+      showToast(`Query successful. ${r.results.length} rows injected.`, "ok");
+    } else {
+      showToast(`SQL Error: ${r.error}`, "err");
+    }
+  } catch (e) {
+    showToast(`Bridge Error: ${e.message}`, "err");
+  }
+}
+window.runSqlQuery = runSqlQuery;
+
+async function downloadCausalArtifact(traceId) {
+  if (!traceId) return;
+  showToast("Generating Causal Artifact...", "ok");
+  try {
+    const r = await fetch(`/api/data/artifact/${traceId}`);
+    if (!r.ok) throw new Error("Artifact not found in session memory.");
+    const text = await r.text();
+    
+    const blob = new Blob([text], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `causal-artifact-${traceId.substring(0,8)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    showToast(e.message, "err");
+  }
+}
+window.downloadCausalArtifact = downloadCausalArtifact;
+
 const ENABLE_NEW_PROPERTIES_UI = true;
 
 const NodePanelController = {
@@ -2456,6 +2515,10 @@ const NodePanelController = {
         </select>
       </div>
       <div class="prop-section" style="flex:1; display:flex; flex-direction:column;">
+        <div class="prop-label-strict">SQL Bridge (Persistent SQLite)</div>
+        <textarea id="sql-input-${node.id}" class="prop-input" style="height:60px; font-family:monospace; margin-bottom:8px;" placeholder="SELECT * FROM table...">${node.props.sql_query || ''}</textarea>
+        <button class="btn btn-primary" style="height:28px; font-size:11px; margin-bottom:12px;" onclick="runSqlQuery('${node.id}')">Execute Query</button>
+
         <div class="prop-label-strict">Payload Injector (Semantic Data)</div>
         <textarea class="prop-input" style="flex:1; resize:vertical; min-height:200px; font-family:'JetBrains Mono', monospace; font-size:12px; line-height:1.4;" placeholder="Paste raw semantic payload here..." oninput="updateNodeProp('payload', this.value)">${payload}</textarea>
         <div style="font-size:10px; color:var(--muted2); margin-top:4px;">Injected directly into downstream runtime buffer on Simulation.</div>
@@ -4728,26 +4791,27 @@ async function executeLLMNode(node, inSignal) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         source: `// LLM Bridge Proxy\nfn main() -> trit { return hold; }`, // Stub for security compatibility
+        sql: node.props.sql_query || "", // Task 4: Injection
         llm_config: {
           system,
           prompt: finalPrompt,
           protocol,
           model_id: modelId,
-          api_key: node.props.api_key,
+          api_key: localStorage.getItem("ternstudio-gemini-key") || node.props.api_key || "",
           base_url: node.props.base_url,
-          temperature: node.props.temperature,
-          max_tokens: node.props.max_trits
+          temperature: 0.1,
+          max_tokens: 150
         }
       })
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const r = await response.json();
+
+    const txt = String(r.result || "").toLowerCase();
     
-    // Mapping response text/result to trit with TAP Confidence
+    // Mapping response text to trit with TAP Confidence
     let val = 0;
     let confidence = 0.5; // Default to 'Tend' (Ambiguity)
-    
-    const txt = String(r.result || r.text || "").toLowerCase();
     
     // Pattern detection for TAP Confidence
     if (txt.includes("confidence: 1.0") || txt.includes("conf: 1.0") || txt.includes("score: 1.0")) {
@@ -4759,21 +4823,37 @@ async function executeLLMNode(node, inSignal) {
     if (txt.includes("+1") || txt.includes("affirm") || txt.includes("yes")) val = 1;
     else if (txt.includes("-1") || txt.includes("reject") || txt.includes("no")) val = -1;
 
-    // TAP Protocol: If confidence is 1.0, we proceed silently.
-    // If confidence is 0.0 (or not 1.0), we force a 'tend' and flag for suspension.
+    // Task 3: Hard Veto Enforcement (Global Abort)
+    if (val === -1 && confidence > 0.90) {
+      logInspector(node.name, `🛑 HARD REJECT: LLM returned high-confidence rejection. Aborting simulation.`);
+      simulationAborted = true;
+    }
+
+    // Task 4: Sync real reasoning to Tracer
+    window.dispatchEvent(new CustomEvent('ternlang_local_trace', {
+      detail: {
+        trace_id: "llm-" + Date.now(),
+        timestamp_ms: Date.now(),
+        node_id: node.id,
+        event_type: 'LLM_Bridge_Reasoning',
+        signal_in: inSignal,
+        signal_out: val,
+        latency_ms: 500,
+        reasoning: r.result || "No reasoning path returned."
+      }
+    }));
+
     if (confidence === 1.0) {
-      logInspector(node.name, `✅ TAP: High Confidence (+1) -> Autonomous Execution.`);
+      logInspector(node.name, `✅ TAP: High Confidence (${val === 1 ? '+1' : (val === -1 ? '-1' : '0')}) -> Autonomous Execution.`);
       return val;
     } else {
       logInspector(node.name, `🟡 TAP: Ambiguity detected (conf: ${confidence}) -> Freezing for Operator.`);
       node.props.pending_actuator = {
-        code: r.code || r.result || r.text,
+        code: r.result,
         paths: ["Affirm (+1)", "Reject (-1)"]
       };
       return 0; // Force State 0 (Hold)
     }
-    logInspector(node.name, `🤖 LLM Result: ${val} (${txt.substring(0, 20)}…)`);
-    return val;
   } catch (e) {
     logInspector(node.name, `❌ LLM Error: ${e.message}. Falling back to deterministic mapper.`);
     // Fallback heuristic: basic keyword mapping on intent
@@ -4900,66 +4980,80 @@ async function simulateNode(node, inSignal, isPhantom = false) {
 window.simulateNode = simulateNode;
 
 async function executeMOE13(node, inSignal) {
-  logInspector(node.name, "🧠 MOE-13: Initiating Deliberation Cycle...");
+  logInspector(node.name, "🧠 MOE-13: Initiating Live Deliberation Cycle...");
   
-  let weightedSum = 0;
-  let safetyVeto = false;
   const id = node.id;
-  
   const vetoAlert = document.getElementById(`moe-veto-alert-${id}`);
   const verdictEl = document.getElementById(`moe-verdict-${id}`);
   if (vetoAlert) vetoAlert.style.display = "none";
-  if (verdictEl) { verdictEl.textContent = "DELIBERATING..."; verdictEl.style.color = "var(--magenta)"; }
+  if (verdictEl) { verdictEl.textContent = "QUERYING BACKEND..."; verdictEl.style.color = "var(--magenta)"; }
 
-  for (const axis of MOE13_AXES) {
-    // Simulate complex expert deliberation
-    await new Promise(r => setTimeout(r, 80 + Math.random() * 150));
-    
-    // Logic: experts are influenced by input signal but have internal biases
-    let vote = 0;
-    if (inSignal === 1) vote = Math.random() > 0.3 ? 1 : (Math.random() > 0.5 ? 0 : -1);
-    else if (inSignal === -1) vote = Math.random() > 0.3 ? -1 : (Math.random() > 0.5 ? 0 : 1);
-    else vote = Math.random() > 0.8 ? 1 : (Math.random() > 0.8 ? -1 : 0);
-    
-    const confidence = 0.6 + Math.random() * 0.39; // 60% to 99%
-    
-    // UI Update for Axis
-    const voteEl = document.getElementById(`moe-vote-${id}-${axis.id}`);
-    const confEl = document.getElementById(`moe-conf-${id}-${axis.id}`);
-    
-    if (voteEl) {
-      voteEl.textContent = vote === 1 ? "+1" : (vote === -1 ? "-1" : "0");
-      voteEl.style.color = vote === 1 ? "var(--green)" : (vote === -1 ? "var(--red)" : "var(--muted2)");
+  try {
+    const response = await fetch('/api/moe/orchestrate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: node.props.system_prompt || "Evaluate the current triadic signal state.",
+        evidence: [inSignal === 1 ? 1.0 : (inSignal === -1 ? -1.0 : 0.0), 0.5, 0.5, 0.5, 0.5, 0.5]
+      })
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const r = await response.json();
+
+    // 1. Expert Verdict UI Update
+    if (r.verdicts) {
+      r.verdicts.forEach(v => {
+        const voteEl = document.getElementById(`moe-vote-${id}-${v.expert_id}`);
+        const confEl = document.getElementById(`moe-conf-${id}-${v.expert_id}`);
+        if (voteEl) {
+          voteEl.textContent = v.trit === 1 ? "+1" : (v.trit === -1 ? "-1" : "0");
+          voteEl.style.color = v.trit === 1 ? "var(--green)" : (v.trit === -1 ? "var(--red)" : "var(--muted2)");
+        }
+        if (confEl) confEl.textContent = Math.round(v.confidence * 100) + "%";
+      });
     }
-    if (confEl) confEl.textContent = Math.round(confidence * 100) + "%";
 
-    // Hard Safety Veto Logic
-    if (axis.crit && vote === -1 && confidence > 0.90) {
-      safetyVeto = true;
+    // 2. Hard Safety Veto Enforcement
+    if (r.safety_vetoed) {
       if (vetoAlert) vetoAlert.style.display = "block";
-      logInspector(node.name, `🛑 CRITICAL VETO: Axis [${axis.label}] rejected with ${(confidence*100).toFixed(1)}% confidence.`);
+      logInspector(node.name, `🛑 CRITICAL VETO: Safety experts triggered Hard Halt.`);
+      simulationAborted = true; // Task 3: Global Abort
     }
+
+    // 3. High Confidence Rejection Veto
+    if (r.trit === -1 && r.confidence > 0.90) {
+      logInspector(node.name, `🛑 HARD REJECT: High-confidence rejection (${(r.confidence*100).toFixed(1)}%) triggered Hard Halt.`);
+      simulationAborted = true; // Task 3: Global Abort
+    }
+
+    if (verdictEl) {
+      verdictEl.textContent = r.label.toUpperCase();
+      verdictEl.style.color = r.trit === 1 ? "var(--green)" : (r.trit === -1 ? "var(--red)" : "var(--amber)");
+    }
+
+    logInspector(node.name, `✓ Deliberation Complete. Verdict: ${r.trit} (${r.label}) | Conf: ${(r.confidence*100).toFixed(1)}%`);
     
-    weightedSum += vote * axis.weight * (confidence * 2); // Confidence weighted EMA logic
-  }
+    // Task 4: Sync real reasoning to Tracer
+    window.dispatchEvent(new CustomEvent('ternlang_local_trace', {
+      detail: {
+        trace_id: "moe-" + Date.now(),
+        timestamp_ms: Date.now(),
+        node_id: node.id,
+        event_type: 'MoE-13_Orchestration',
+        signal_in: inSignal,
+        signal_out: r.trit,
+        latency_ms: 150,
+        reasoning: r.verdicts ? r.verdicts.map(v => `${v.expert_name}: ${v.reasoning}`).join(" | ") : ""
+      }
+    }));
 
-  let finalTrit = 0;
-  if (safetyVeto) {
-    finalTrit = -1;
-  } else {
-    // Threshold deliberation
-    if (weightedSum > 0.2) finalTrit = 1;
-    else if (weightedSum < -0.2) finalTrit = -1;
-    else finalTrit = 0;
+    return r.trit;
+  } catch (err) {
+    logInspector(node.name, `❌ MoE-13 Error: ${err.message}. Falling back to Tend.`);
+    if (verdictEl) { verdictEl.textContent = "OFFLINE"; verdictEl.style.color = "var(--muted2)"; }
+    return 0;
   }
-
-  if (verdictEl) {
-    verdictEl.textContent = finalTrit === 1 ? "AFFIRMED" : (finalTrit === -1 ? "REJECTED" : "TENDED");
-    verdictEl.style.color = finalTrit === 1 ? "var(--green)" : (finalTrit === -1 ? "var(--red)" : "var(--amber)");
-  }
-  
-  logInspector(node.name, `✓ Deliberation Complete. Verdict: ${finalTrit} (Score: ${weightedSum.toFixed(3)})`);
-  return finalTrit;
 }
 window.executeMOE13 = executeMOE13;
 
