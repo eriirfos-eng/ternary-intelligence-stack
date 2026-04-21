@@ -799,6 +799,7 @@ window.updateSimUI = updateSimUI;
 
 function setExecutionState(state) {
   if (window.executionState === state) return;
+  const prevState = window.executionState;
   console.log(`[TernFlow] Execution State -> ${state}`);
   window.executionState = state;
   executionState = state;
@@ -808,6 +809,14 @@ function setExecutionState(state) {
     simulationAborted = true;
   } else {
     simulationAborted = false;
+  }
+
+  // UI Feedback Toasts
+  if (state === 'running') {
+    if (prevState === 'paused') showToast("Execution resumed", "info");
+    else showToast("Simulation started", "info");
+  } else if (state === 'paused') {
+    showToast("Execution paused", "warn");
   }
   
   updateSimUI();
