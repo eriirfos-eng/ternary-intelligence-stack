@@ -1222,6 +1222,9 @@ const AGENT_ONTOLOGY = {
   "Guardrails & Safety": ["SafetyGate", "OutputGuard", "gatekeeper", "range_validator", "string_validator", "validator", "float_threshold", "watchdog", "supervisor", "retry"],
   "Deliberation & Evaluation": ["Classifier", "Ranker", "Proposer", "Challenger", "Arbiter", "deliberator"],
   "Routing & Aggregation": ["ConsensusGate", "consensus", "aggregator", "filter", "binary_bridge", "router", "pipeline", "majority_5", "weighted_consensus", "mapper", "transformer"],
+  "Memory & Persistence": ["ContextBuffer", "EpisodicRecall", "StateInjector", "sqlite_bridge"],
+  "Sparse Math & Compute": ["SparseMatMul", "WeightPruner", "TernaryQuantizer"],
+  "Interoperability & Protocol": ["MCPBridge", "LocalNodeSync", "VetoOrchestrator"],
   "I/O & Execution": ["Sensor", "Actuator", "broadcast", "echo", "logger", "scaler"]
 };
 
@@ -1229,6 +1232,9 @@ let _flowLibOpen = {
   "Guardrails & Safety": false,
   "Deliberation & Evaluation": false,
   "Routing & Aggregation": false,
+  "Memory & Persistence": false,
+  "Sparse Math & Compute": false,
+  "Interoperability & Protocol": false,
   "I/O & Execution": false
 };
 
@@ -1295,6 +1301,56 @@ const BUILTIN_AGENTS = {
     code: `fn main() -> trit {\n    let sig: trit = read_input();\n    if sig == reject { emit \"BLOCKED\"; return reject; }\n    emit \"PASS\";\n    return affirm;\n}`,
     icon: "shield", color: "var(--green)"
   },
+  "ContextBuffer": {
+    desc: "Maintains local session context for ternary reasoning",
+    code: `fn main() -> trit {\n    let ctx: string = read_context();\n    if ctx.length > 0 { return affirm; }\n    return tend;\n}`,
+    icon: "database", color: "var(--cyan)"
+  },
+  "EpisodicRecall": {
+    desc: "Retrieves past states based on current signal similarity",
+    code: `fn main() -> trit {\n    let key: trit = read_input();\n    let found: bool = recall(key);\n    return found ? affirm : reject;\n}`,
+    icon: "history", color: "var(--amber)"
+  },
+  "StateInjector": {
+    desc: "Forces a specific state into the current execution thread",
+    code: `fn main() -> trit {\n    inject_state(affirm);\n    return affirm;\n}`,
+    icon: "microchip", color: "var(--blue)"
+  },
+  "sqlite_bridge": {
+    desc: "High-performance local I/O for structured state persistence",
+    code: `fn main() -> trit {\n    db_execute(\"INSERT INTO logs (val) VALUES (+1)\");\n    return affirm;\n}`,
+    icon: "table", color: "var(--muted)"
+  },
+  "SparseMatMul": {
+    desc: "Optimized ternary matrix multiplication (trit=0 skip)",
+    code: `@sparseskip\nfn main() -> trit {\n    return matmul_step();\n}`,
+    icon: "grid", color: "var(--cyan)"
+  },
+  "WeightPruner": {
+    desc: "Actively zeroes out weights with low confidence",
+    code: `fn main() -> trit {\n    prune_weights(0.1);\n    return affirm;\n}`,
+    icon: "scissors", color: "var(--red)"
+  },
+  "TernaryQuantizer": {
+    desc: "Quantizes continuous float signals into discrete trits",
+    code: `fn main() -> trit {\n    let val: float = read_float();\n    return quantize(val);\n}`,
+    icon: "binary", color: "var(--blue)"
+  },
+  "MCPBridge": {
+    desc: "Protocol bridge for Model Context Protocol tools",
+    code: `fn main() -> trit {\n    return mcp_call(\"identity\");\n}`,
+    icon: "external-link", color: "var(--green)"
+  },
+  "LocalNodeSync": {
+    desc: "Synchronizes state across local cluster nodes",
+    code: `fn main() -> trit {\n    sync_fleet();\n    return affirm;\n}`,
+    icon: "refresh-cw", color: "var(--cyan)"
+  },
+  "VetoOrchestrator": {
+    desc: "Strict rejection gate: any -1 signal triggers hard stop",
+    code: `fn main() -> trit {\n    let votes: trit[] = read_all();\n    if votes.contains(reject) { return reject; }\n    return affirm;\n}`,
+    icon: "octagon", color: "var(--red)"
+  }
 };
 
 function saveCanvasState() {
@@ -1442,20 +1498,15 @@ function renderFlowLibItems(paths, q = "") {
     for (const [cat, agents] of Object.entries(AGENT_ONTOLOGY)) {
       if (agents.some(a => a.toLowerCase() === name.toLowerCase())) return cat;
     }
-    // If we've made it here, it might be a newly created agent from a search result path
-    // We try to match partials for dynamic paths too
-    const n = name.toLowerCase();
-    if (n.includes('gate') || n.includes('guard') || n.includes('validator') || n.includes('check') || n.includes('watchdog')) return "Guardrails & Safety";
-    if (n.includes('consensus') || n.includes('aggregator') || n.includes('filter') || n.includes('router') || n.includes('pipeline') || n.includes('mapper')) return "Routing & Aggregation";
-    if (n.includes('sensor') || n.includes('actuator') || n.includes('logger') || n.includes('scaler') || n.includes('emit')) return "I/O & Execution";
-    return "Deliberation & Evaluation"; // Fallback to deliberation rather than Uncategorized
+    console.warn(`[Taxonomy] Agent "${name}" is not mapped to any strict category. Dropping from render tree.`);
+    return null;
   };
 
   // 1. Process Built-ins
   Object.entries(BUILTIN_AGENTS).forEach(([name, agent]) => {
     if (q && !name.toLowerCase().includes(q.toLowerCase())) return;
     const cat = categorize(name);
-    groups[cat].push({ name, agent, type: "builtin" });
+    if (cat) groups[cat].push({ name, agent, type: "builtin" });
   });
 
   // 2. Process API Agents
@@ -1463,7 +1514,7 @@ function renderFlowLibItems(paths, q = "") {
     const name = path.split('/').pop().replace('.tern', '');
     if (q && !name.toLowerCase().includes(q.toLowerCase())) return;
     const cat = categorize(name);
-    groups[cat].push({ name, path, type: "api" });
+    if (cat) groups[cat].push({ name, path, type: "api" });
   });
 
   // 3. Render Groups
