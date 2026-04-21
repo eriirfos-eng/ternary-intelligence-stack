@@ -2467,6 +2467,48 @@ const EdgePanelController = {
   }
 };
 
+function showHelpCard() {
+  const popover = document.getElementById("helpPopover");
+  const title   = document.getElementById("helpPopoverTitle");
+  const content = document.getElementById("helpPopoverContent");
+  const header  = document.getElementById("prop-header-label");
+
+  if (!popover || !title || !content || !header) return;
+
+  const isEdge = header.textContent.toLowerCase().includes("edge");
+  
+  if (isEdge) {
+    title.innerHTML = `<i data-lucide="git-branch" style="width:16px; color:var(--amber)"></i> What is an Edge?`;
+    content.innerHTML = `
+      <p style="margin-bottom:12px;">Think of an Edge as a <b>smart pipe</b> connecting your workers. It does not just carry information; it acts like a bouncer at a door.</p>
+      <div style="margin-bottom:12px;">
+        <b style="color:var(--green); display:block; margin-bottom:4px;">Activation Logic</b>
+        You tell the bouncer who gets through. Setting it to '+1' means only absolute 'Yes' answers pass. Setting it to '!= -1' means 'Yes' and 'I am not sure' can pass, but a hard 'No' gets blocked.
+      </div>
+      <div>
+        <b style="color:var(--red); display:block; margin-bottom:4px;">On Fail</b>
+        If a signal is blocked, what happens? 'Drop' throws it in the trash. 'Fallback' sends it to a backup plan. 'Hold (0)' turns it into a neutral 'I don't know' state so the system keeps moving without crashing.
+      </div>
+    `;
+  } else {
+    title.innerHTML = `<i data-lucide="component" style="width:16px; color:var(--cyan)"></i> What is a Node?`;
+    content.innerHTML = `
+      <p style="margin-bottom:12px;">Think of a Node as a <b>mini-worker</b> or a tiny brain in your network. It receives a task, thinks about it, and spits out a ternary answer: Yes (+1), I am not sure (0), or No (-1).</p>
+      <p>Here you give this worker its instructions. You tell it where to do its thinking (like your local Albert VM) and give it safety rules, like 'do not take longer than 5 seconds' so it does not freeze your whole system.</p>
+    `;
+  }
+  
+  popover.style.display = "block";
+  if (window.lucide) lucide.createIcons();
+}
+window.showHelpCard = showHelpCard;
+
+function closeHelpCard() {
+  const popover = document.getElementById("helpPopover");
+  if (popover) popover.style.display = "none";
+}
+window.closeHelpCard = closeHelpCard;
+
 function updatePropertyPanel() {
   const body = document.getElementById("prop-body");
   const header = document.getElementById("prop-header-label");
@@ -2474,10 +2516,7 @@ function updatePropertyPanel() {
 
   if (!selectedNodeId) {
     if (header) header.textContent = "Node Properties";
-    if (help) {
-      help.style.display = "flex";
-      help.title = "Dictates the behavior of an isolated computation unit. Configures the execution target (e.g., Local Albert VM), the exact ternary logic function to evaluate incoming state, and runtime constraints like timeouts to prevent system hangs.";
-    }
+    if (help) help.style.display = "flex";
     body.innerHTML = `
       <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px; padding:0 12px; line-height:1.8;">
         Select a node to configure<br>
@@ -2489,10 +2528,7 @@ function updatePropertyPanel() {
   const node = flowNodes.find(n => n.id === selectedNodeId);
   if (!node) return;
   if (header) header.textContent = node.type === 'macro' ? "MACRO PROPERTIES" : "NODE PROPERTIES";
-  if (help) {
-    help.style.display = "flex";
-    help.title = "Dictates the behavior of an isolated computation unit. Configures the execution target (e.g., Local Albert VM), the exact ternary logic function to evaluate incoming state, and runtime constraints like timeouts to prevent system hangs.";
-  }
+  if (help) help.style.display = "flex";
   const inWires  = flowWires.filter(w => w.toId   === selectedNodeId);
   const outWires = flowWires.filter(w => w.fromId === selectedNodeId);
   const schemaWarning = inWires.some(w => {
@@ -3028,10 +3064,7 @@ function selectWire(wireId) {
   const header = document.getElementById("prop-header-label");
   const help = document.getElementById("prop-help-icon");
   if (header) header.textContent = "EDGE PROPERTIES";
-  if (help) {
-    help.style.display = "flex";
-    help.title = "Governs signal routing and physical constraints between nodes. Controls ternary activation logic, temporal dynamics for asynchronous pipelines, and grants permissions for recursive execution loops.";
-  }
+  if (help) help.style.display = "flex";
   document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
   updateWireStyles();
   updateEdgePanel();
@@ -3059,10 +3092,7 @@ function updateEdgePanel() {
   if (!wire) { updatePropertyPanel(); return; }
 
   if (header) header.textContent = "Edge Properties";
-  if (help) {
-    help.style.display = "flex";
-    help.title = "Governs signal routing and physical constraints between nodes. Controls ternary activation logic, temporal dynamics for asynchronous pipelines, and grants permissions for recursive execution loops.";
-  }
+  if (help) help.style.display = "flex";
   const fromNode  = flowNodes.find(n => n.id === wire.fromId);
   const toNode    = flowNodes.find(n => n.id === wire.toId);
 

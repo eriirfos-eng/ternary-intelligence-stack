@@ -823,8 +823,8 @@
   <div id="flow-props">
     <div class="prop-header" style="display:flex; justify-content:space-between; align-items:center;">
       <span id="prop-header-label">Node Properties</span>
-      <div id="prop-help-icon" style="cursor:help; display:flex; align-items:center; color:var(--muted2); transition:color 0.2s;" title="Dictates the behavior of an isolated computation unit. Configures the execution target (e.g., Local Albert VM), the exact ternary logic function to evaluate incoming state, and runtime constraints like timeouts to prevent system hangs.">
-        <i data-lucide="help-circle" style="width:14px; height:14px;"></i>
+      <div id="prop-help-icon" style="cursor:pointer; display:flex; align-items:center; color:var(--muted2); transition:color 0.2s;" onclick="showHelpCard()" title="Click for help">
+        <i data-lucide="info" style="width:14px; height:14px;"></i>
       </div>
     </div>
     <div id="prop-body" class="prop-body" style="overflow-y:auto;">
@@ -1079,31 +1079,28 @@
           <div>
             <div style="margin-bottom:24px;">
               <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                <i data-lucide="component" style="width:14px; color:var(--cyan)"></i> Node Properties
+                <i data-lucide="component" style="width:14px; color:var(--cyan)"></i> Node Properties (The Workers)
               </h3>
               <p style="font-size:12px; color:var(--muted); line-height:1.6;">
-                The physics of isolated computation. Nodes execute logic and emit a ternary signal (+1, 0, -1). 
-                They are constrained by local runtime rules to ensure the orchestrator never freezes during complex semantic evaluations.
+                Nodes are the individual brains of your AI. They evaluate data and make a decision: +1 (True), 0 (Uncertain), or -1 (False). You use this panel to set their rules, ensuring they do not get stuck thinking forever.
               </p>
             </div>
 
             <div style="margin-bottom:24px;">
               <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                <i data-lucide="git-branch" style="width:14px; color:var(--amber)"></i> Edge Properties
+                <i data-lucide="git-branch" style="width:14px; color:var(--amber)"></i> Edge Properties (The Smart Pipes)
               </h3>
               <p style="font-size:12px; color:var(--muted); line-height:1.6;">
-                The active routing cables of your causal graph. They do not just carry signals — they evaluate them on the fly.
+                Edges connect your nodes, but they also filter the traffic. They decide which decisions are allowed to travel to the next worker.
               </p>
             </div>
 
             <div style="margin-bottom:0;">
               <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                <i data-lucide="filter" style="width:14px; color:var(--green)"></i> Activation Logic & != -1
+                <i data-lucide="filter" style="width:14px; color:var(--green)"></i> Activation Logic (The Bouncer)
               </h3>
               <p style="font-size:12px; color:var(--muted); line-height:1.6;">
-                The primary ternary filter. Selecting <b>+1</b> demands absolute truth to pass. 
-                Selecting <b>!= -1</b> acts as a soft gate — it blocks definitive failures (hard rejections) but permits 
-                the workflow to continue if the evaluating node outputs a +1 (True) OR a 0 (Neutral/Uncertain).
+                This is how you filter. If you want a strict system, use <b>+1</b> so only perfect matches pass. If you want a flexible system, use <b>!= -1</b>. This allows 0 (Uncertainty) to pass through, letting the AI continue working even if it is not 100 percent sure.
               </p>
             </div>
           </div>
@@ -1111,12 +1108,15 @@
           <div>
             <div style="margin-bottom:24px;">
               <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                <i data-lucide="shield-alert" style="width:14px; color:var(--red)"></i> On Fail Constraints
+                <i data-lucide="shield-alert" style="width:14px; color:var(--red)"></i> Handling Failures (On Fail)
               </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:12px;">
+                When a signal fails your logic check, you have choices.
+              </p>
               <div style="display:flex; flex-direction:column; gap:12px;">
                 <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
                   <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Drop</div>
-                  <div style="font-size:11px; color:var(--muted);">Silently kills the execution branch to save compute cycles.</div>
+                  <div style="font-size:11px; color:var(--muted);">Silently kills the execution branch to save computer power.</div>
                 </div>
                 <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
                   <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Fallback</div>
@@ -1124,19 +1124,17 @@
                 </div>
                 <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
                   <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Hold (0)</div>
-                  <div style="font-size:11px; color:var(--muted);">Coerces the failed state into a neutral 0. It keeps the graph alive, passing down an indeterminate result without triggering an error.</div>
+                  <div style="font-size:11px; color:var(--muted);">Converts the failure into a neutral state. This is the magic of ternary computing: a failure does not have to break the machine; it can just mean 'pending'.</div>
                 </div>
               </div>
             </div>
 
             <div style="margin-bottom:0;">
               <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                <i data-lucide="refresh-cw" style="width:14px; color:var(--cyan)"></i> The Feedback Loop
+                <i data-lucide="refresh-cw" style="width:14px; color:var(--cyan)"></i> The Feedback Loop (Thinking Twice)
               </h3>
               <p style="font-size:12px; color:var(--muted); line-height:1.6;">
-                A strict safety valve. By default, the orchestrator assumes a forward-flowing DAG. 
-                Checking this box suspends those rules, granting the network permission to think iteratively and loop back on itself. 
-                The VM wraps this specific recurrent connection in strict cycle-breaking constraints to prevent infinite memory consumption.
+                Normally, an AI just spits out an answer and stops. Checking this box allows the AI to loop its thoughts backwards and re-evaluate its own work. It is a safety feature that gives the AI permission to think iteratively until it is sure.
               </p>
             </div>
           </div>
@@ -1145,6 +1143,32 @@
     </div>
   </div>
 </div>
+
+<!-- ═══ HELP POPOVER ══════════════════════════════════════════════════════════ -->
+<div id="helpPopover" class="modal-overlay" style="display:none; z-index:100000; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);" onclick="if(event.target===this)closeHelpCard()">
+  <div style="position:absolute; right:320px; top:100px; width:340px; background:var(--bg1); border:1px solid var(--border2); border-radius:12px; box-shadow:0 20px 50px rgba(0,0,0,0.5); overflow:hidden; animation:popIn 0.2s ease-out;">
+    <div style="padding:20px; border-bottom:1px solid var(--border2); display:flex; justify-content:space-between; align-items:center; background:var(--bg2);">
+      <div id="helpPopoverTitle" style="font-size:14px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+        <i data-lucide="info" style="width:16px; color:var(--cyan)"></i>
+        Help
+      </div>
+      <button onclick="closeHelpCard()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:18px;">✕</button>
+    </div>
+    <div id="helpPopoverContent" style="padding:24px; font-size:13px; color:var(--text); line-height:1.6;">
+      <!-- Content injected via JS -->
+    </div>
+    <div style="padding:16px; background:var(--bg2); text-align:right;">
+      <button class="btn btn-primary" onclick="closeHelpCard()" style="padding:6px 16px; font-size:12px;">Got it</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.95) translateX(20px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+}
+</style>
 
 <!-- ═══ DEBUGGER VIEW (Tracer) ═══════════════════════════════════════════════ -->
 <div class="view" id="view-debugger">
