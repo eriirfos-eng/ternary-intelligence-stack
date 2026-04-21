@@ -61,6 +61,8 @@ use std::{
 use tokio::sync::RwLock;
 use tower_http::{cors::{Any, CorsLayer}, services::ServeDir};
 use uuid::Uuid;
+use rusqlite::Connection;
+use serde_rusqlite::from_rows;
 
 use ternlang_core::{
     trit::Trit,
@@ -361,6 +363,32 @@ type MemBlob = serde_json::Map<String, Value>;
 /// Per-key server-side memory store.
 type MemStore = Arc<std::sync::RwLock<std::collections::HashMap<String, MemBlob>>>;
 
+pub struct DatabaseManager {
+    pub db_path: PathBuf,
+}
+
+impl DatabaseManager {
+    pub fn new(path: PathBuf) -> Self {
+        Self { db_path: path }
+    }
+
+    pub fn query(&self, sql: &str) -> Result<Value, String> {
+        let conn = Connection::open(&self.db_path)
+            .map_err(|e| format!("DB Connection failed: {}", e))?;
+        
+        let mut stmt = conn.prepare(sql)
+            .map_err(|e| format!("SQL Prepare failed: {}", e))?;
+
+        let rows = stmt.query([])
+            .map_err(|e| format!("SQL Query failed: {}", e))?;
+
+        let deser_rows = from_rows::<Value>(rows);
+
+        let result: Vec<Value> = deser_rows.filter_map(|r| r.ok()).collect();
+        Ok(json!(result))
+    }
+}
+
 pub struct AppState {
     pub admin_key: String,
 
@@ -376,13 +404,47 @@ pub struct AppState {
     agent_registry:         Arc<AgentRegistry>,
 
     pub tracer_tx:          tokio::sync::broadcast::Sender<Value>,
+    pub telemetry_history: Arc<std::sync::RwLock<Vec<Value>>>,
 
     pub total_instructions: Arc<std::sync::atomic::AtomicU64>,
     pub total_nodes:        Arc<std::sync::atomic::AtomicU64>,
     pub active_nodes:       Arc<std::sync::RwLock<std::collections::HashSet<String>>>,
+
+    pub db_manager:         Arc<DatabaseManager>,
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+pub trait TernaryEncoder {
+    fn encode(&self, val: &Value) -> Trit;
+}
+
+pub struct StandardMap;
+impl TernaryEncoder for StandardMap {
+    fn encode(&self, val: &Value) -> Trit {
+        match val {
+            Value::Bool(true) => Trit::Affirm,
+            Value::Bool(false) => Trit::Reject,
+            Value::Number(n) => {
+                if let Some(f) = n.as_f64() {
+                    if f > 0.0 { Trit::Affirm }
+                    else if f < 0.0 { Trit::Reject }
+                    else { Trit::Tend }
+                } else { Trit::Tend }
+            }
+            Value::Null => Trit::Tend,
+            Value::String(s) => {
+                if s.is_empty() { Trit::Tend }
+                else { Trit::Affirm }
+            }
+            Value::Array(a) => {
+                if a.is_empty() { Trit::Tend }
+                else { Trit::Affirm }
+            }
+            _ => Trit::Tend,
+        }
+    }
+}
 
 fn trit_to_i8(t: Trit) -> i8 {
     match t { Trit::Reject => -1, Trit::Tend => 0, Trit::Affirm => 1 }
@@ -4535,6 +4597,17 @@ async fn run_program(
     let bytecode_len = bytecode.len();
     let mut vm = BetVm::new(bytecode);
     
+    // Task 2: Pull SQL data if requested and encode it
+    let mut sql_data = Vec::new();
+    if let Some(sql) = body["sql"].as_str() {
+        if let Ok(results) = state.db_manager.query(sql) {
+            if let Some(arr) = results.as_array() {
+                let encoder = StandardMap;
+                sql_data = arr.iter().map(|v| encoder.encode(v)).collect();
+            }
+        }
+    }
+
     let start_time = std::time::Instant::now();
     let vm_res = vm.run();
     let latency_ms = start_time.elapsed().as_millis() as u64;
@@ -4553,12 +4626,17 @@ async fn run_program(
                 "timestamp_ms": Utc::now().timestamp_millis(),
                 "node_id": vm.node_id(),
                 "event_type": "Evaluate",
-                "signal_in": [], // State array would go here if we had it
+                "signal_in": sql_data.iter().map(|t| trit_to_i8(*t)).collect::<Vec<i8>>(),
                 "signal_out": final_trit,
                 "sparse_dropped": vm.sparse_dropped,
                 "latency_ms": latency_ms
             });
-            let _ = state.tracer_tx.send(telemetry);
+            let _ = state.tracer_tx.send(telemetry.clone());
+            {
+                let mut history = state.telemetry_history.write().unwrap();
+                history.push(telemetry);
+                if history.len() > 1000 { history.remove(0); }
+            }
 
             let registers: Vec<Value> = (0..10)
                 .map(|i| format!("{:?}", vm.get_register(i)).into())
@@ -4568,6 +4646,7 @@ async fn run_program(
                 "output": output,
                 "registers": registers,
                 "bytecode_bytes": bytecode_len,
+                "sql_trits": sql_data.iter().map(|t| trit_to_i8(*t)).collect::<Vec<i8>>(),
                 "error": null,
             }))).into_response()
         }
@@ -4607,6 +4686,56 @@ async fn translate_endpoint(Json(body): Json<Value>) -> Response {
     match mcp_trit_translate(&body) {
         Ok(result) => (StatusCode::OK, Json(result)).into_response(),
         Err(e)     => api_error(StatusCode::BAD_REQUEST, &e),
+    }
+}
+
+async fn data_query(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<Value>
+) -> Response {
+    let sql = match body["sql"].as_str() {
+        Some(s) => s,
+        None => return (StatusCode::BAD_REQUEST, Json(json!({ "error": "sql field required" }))).into_response(),
+    };
+
+    match state.db_manager.query(sql) {
+        Ok(results) => (StatusCode::OK, Json(json!({ "status": "ok", "results": results }))).into_response(),
+        Err(e) => (StatusCode::OK, Json(json!({ "status": "error", "error": e }))).into_response(),
+    }
+}
+
+async fn causal_artifact(
+    Path(trace_id): Path<String>,
+    State(state): State<Arc<AppState>>
+) -> Response {
+    let history = state.telemetry_history.read().unwrap();
+    let event = history.iter().find(|e| e["trace_id"].as_str() == Some(&trace_id));
+
+    match event {
+        Some(e) => {
+            let report = format!(
+                "# Ternlang Causal Artifact\n\n\
+                **Trace ID:** `{}`\n\
+                **Timestamp:** {}\n\n\
+                ## Execution Summary\n\
+                - **Node ID:** `{}`\n\
+                - **Event Type:** `{}`\n\
+                - **Signal In:** `{:?}`\n\
+                - **Signal Out:** `{}`\n\
+                - **Latency:** `{} ms`\n\n\
+                --- \n\
+                *Generated by Ternary Intelligence Stack CausalScanner*",
+                trace_id,
+                Utc::now().to_rfc3339(),
+                e["node_id"].as_str().unwrap_or("unknown"),
+                e["event_type"].as_str().unwrap_or("unknown"),
+                e["signal_in"].as_array().unwrap_or(&vec![]),
+                e["signal_out"].as_i64().unwrap_or(0),
+                e["latency_ms"].as_u64().unwrap_or(0)
+            );
+            (StatusCode::OK, report).into_response()
+        }
+        None => (StatusCode::NOT_FOUND, "Trace not found in active session history.").into_response()
     }
 }
 
@@ -4718,6 +4847,9 @@ async fn main() {
 
     let (tracer_tx, _rx) = tokio::sync::broadcast::channel(1000);
 
+    let db_path = PathBuf::from("ternlang.db");
+    let db_manager = Arc::new(DatabaseManager::new(db_path));
+
     let state = Arc::new(AppState {
         admin_key,
         keys,
@@ -4727,10 +4859,12 @@ async fn main() {
         github_token,
         agent_registry,
         tracer_tx,
+        telemetry_history: Arc::new(std::sync::RwLock::new(Vec::new())),
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
         total_instructions: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         total_nodes:        Arc::new(std::sync::atomic::AtomicU64::new(0)),
         active_nodes:       Arc::new(std::sync::RwLock::new(std::collections::HashSet::new())),
+        db_manager,
     });
 
     let cors = CorsLayer::new()
@@ -4760,6 +4894,8 @@ async fn main() {
         .route("/api/agents/publish",  post(publish_agent))
         .route("/api/agent/{slug}",    post(call_agent).delete(delete_agent))
         .route("/api/run",        post(run_program))
+        .route("/api/data/query", post(data_query))
+        .route("/api/data/artifact/{trace_id}", get(causal_artifact))
         .route("/api/tracer/ws", get(tracer_ws_handler))
         .route("/api/premium/list", get(premium_list))
         .route("/api/premium/file", get(premium_file))
