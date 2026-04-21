@@ -852,6 +852,7 @@ function startNewSimulation() {
 
   runSimulation();
 }
+window.startNewSimulation = startNewSimulation;
 
 function stopSimulation() {
   setExecutionState('idle');
@@ -919,11 +920,12 @@ function ControlBar() {
       style: segmentStyle(state === 'running', '#10b981'),
       title: 'Play / Resume',
       onClick: () => {
-        if (state === 'paused') {
+        console.log('[TernFlow] Play clicked, current state:', window.executionState);
+        if (window.executionState === 'paused') {
           window.setExecutionState('running');
           window.lastRealTime = performance.now();
           if (window.currentDriveTimeline) requestAnimationFrame(window.currentDriveTimeline);
-        } else if (state === 'idle') {
+        } else if (window.executionState === 'idle') {
           window.startNewSimulation();
         }
       }
@@ -933,14 +935,20 @@ function ControlBar() {
     React.createElement('div', {
       style: segmentStyle(state === 'paused', '#f59e0b'),
       title: 'Pause',
-      onClick: () => { if (state === 'running') window.setExecutionState('paused'); }
+      onClick: () => { 
+        console.log('[TernFlow] Pause clicked, current state:', window.executionState);
+        if (window.executionState === 'running') window.setExecutionState('paused'); 
+      }
     }, React.createElement('i', { 'data-lucide': 'pause', style: { width: '14px' } })),
     
     // STOP
     React.createElement('div', {
       style: { ...segmentStyle(false, 'transparent'), borderRight: 'none' },
       title: 'Stop & Reset',
-      onClick: () => window.stopSimulation(),
+      onClick: () => {
+        console.log('[TernFlow] Stop clicked');
+        window.stopSimulation();
+      },
       onMouseEnter: (e) => e.currentTarget.style.color = '#ef4444',
       onMouseLeave: (e) => e.currentTarget.style.color = '#f1f5f9'
     }, React.createElement('i', { 'data-lucide': 'square', style: { width: '14px' } }))
