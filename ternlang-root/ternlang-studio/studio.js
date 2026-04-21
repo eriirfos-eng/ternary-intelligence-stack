@@ -2470,8 +2470,14 @@ const EdgePanelController = {
 function updatePropertyPanel() {
   const body = document.getElementById("prop-body");
   const header = document.getElementById("prop-header-label");
+  const help = document.getElementById("prop-help-icon");
+
   if (!selectedNodeId) {
     if (header) header.textContent = "Node Properties";
+    if (help) {
+      help.style.display = "flex";
+      help.title = "Dictates the behavior of an isolated computation unit. Configures the execution target (e.g., Local Albert VM), the exact ternary logic function to evaluate incoming state, and runtime constraints like timeouts to prevent system hangs.";
+    }
     body.innerHTML = `
       <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px; padding:0 12px; line-height:1.8;">
         Select a node to configure<br>
@@ -2483,6 +2489,10 @@ function updatePropertyPanel() {
   const node = flowNodes.find(n => n.id === selectedNodeId);
   if (!node) return;
   if (header) header.textContent = node.type === 'macro' ? "MACRO PROPERTIES" : "NODE PROPERTIES";
+  if (help) {
+    help.style.display = "flex";
+    help.title = "Dictates the behavior of an isolated computation unit. Configures the execution target (e.g., Local Albert VM), the exact ternary logic function to evaluate incoming state, and runtime constraints like timeouts to prevent system hangs.";
+  }
   const inWires  = flowWires.filter(w => w.toId   === selectedNodeId);
   const outWires = flowWires.filter(w => w.fromId === selectedNodeId);
   const schemaWarning = inWires.some(w => {
@@ -3016,7 +3026,12 @@ function selectWire(wireId) {
   selectedWireId = wireId;
   selectedNodeId = null;
   const header = document.getElementById("prop-header-label");
+  const help = document.getElementById("prop-help-icon");
   if (header) header.textContent = "EDGE PROPERTIES";
+  if (help) {
+    help.style.display = "flex";
+    help.title = "Governs signal routing and physical constraints between nodes. Controls ternary activation logic, temporal dynamics for asynchronous pipelines, and grants permissions for recursive execution loops.";
+  }
   document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('selected'));
   updateWireStyles();
   updateEdgePanel();
@@ -3039,10 +3054,15 @@ window.updateWireStyles = updateWireStyles;
 function updateEdgePanel() {
   const header = document.getElementById("prop-header-label");
   const body   = document.getElementById("prop-body");
+  const help   = document.getElementById("prop-help-icon");
   const wire   = flowWires.find(w => w.id === selectedWireId);
   if (!wire) { updatePropertyPanel(); return; }
 
   if (header) header.textContent = "Edge Properties";
+  if (help) {
+    help.style.display = "flex";
+    help.title = "Governs signal routing and physical constraints between nodes. Controls ternary activation logic, temporal dynamics for asynchronous pipelines, and grants permissions for recursive execution loops.";
+  }
   const fromNode  = flowNodes.find(n => n.id === wire.fromId);
   const toNode    = flowNodes.find(n => n.id === wire.toId);
 
@@ -3204,7 +3224,9 @@ window.markNode = markNode;
 function showValidationPanel(errors, warnings) {
   const header = document.getElementById("prop-header-label");
   const body   = document.getElementById("prop-body");
+  const help   = document.getElementById("prop-help-icon");
   if (header) header.textContent = "Graph Validation";
+  if (help) help.style.display = "none";
   const total = errors.length + warnings.length;
   if (total === 0) {
     body.innerHTML = `<div style="color:var(--green);font-size:13px;text-align:center;margin-top:40px;">✓ Graph is valid</div><div style="color:var(--muted);font-size:11px;text-align:center;margin-top:8px;">No errors or warnings found.</div>`;
