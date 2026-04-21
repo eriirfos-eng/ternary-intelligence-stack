@@ -290,6 +290,14 @@ function useTracerTelemetry(wsUrl) {
   const [isConnected, setIsConnected] = React.useState(false);
 
   React.useEffect(() => {
+    const handleLocalTrace = (e) => {
+      setTelemetry(prev => [e.detail, ...prev].slice(0, 1000));
+    };
+    window.addEventListener('ternlang_local_trace', handleLocalTrace);
+    return () => window.removeEventListener('ternlang_local_trace', handleLocalTrace);
+  }, []);
+
+  React.useEffect(() => {
     if (!wsUrl) return;
     const socket = new WebSocket(wsUrl);
     socket.onopen = () => {
@@ -4773,6 +4781,19 @@ async function simulateNode(node, inSignal, isPhantom = false) {
   if (!isPhantom) {
     setNodeStatus(node.id, "run");
     if (el) el.classList.remove('pulse-affirm','pulse-reject','pulse-hold');
+
+    // Emit local trace event for TracerView
+    window.dispatchEvent(new CustomEvent('ternlang_local_trace', {
+      detail: {
+        trace_id: "local-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5),
+        timestamp_ms: Date.now(),
+        node_id: node.id,
+        event_type: node.type === 'external' ? 'LLM_Bridge' : 'Logic_Eval',
+        signal_in: inSignal,
+        signal_out: 0, // Will be updated if deterministic
+        latency_ms: node.type === 'external' ? 0 : 50 // Est latency for local
+      }
+    }));
   }
 
   let outSignal = inSignal;
