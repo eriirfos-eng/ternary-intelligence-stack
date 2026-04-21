@@ -1225,11 +1225,11 @@ const AGENT_ONTOLOGY = {
   "I/O & Execution": ["Sensor", "Actuator", "broadcast", "echo", "logger", "scaler"]
 };
 
-let _flowLibCollapsed = {
-  "Guardrails & Safety": true,
-  "Deliberation & Evaluation": false,
-  "Routing & Aggregation": false,
-  "I/O & Execution": true
+let _flowLibOpen = {
+  "Guardrails & Safety": false,
+  "Deliberation & Evaluation": true,
+  "Routing & Aggregation": true,
+  "I/O & Execution": false
 };
 
 const ARCHETYPE_ONTOLOGY = {
@@ -1238,10 +1238,10 @@ const ARCHETYPE_ONTOLOGY = {
   "Safety & Guardrails": ["guardrail", "kmu_invoice_fraud", "industry_iot_grid"]
 };
 
-let _archetypeCollapsed = {
-  "Orchestration & Consensus": false,
-  "Evaluation & Debate": true,
-  "Safety & Guardrails": false
+let _archetypeOpen = {
+  "Orchestration & Consensus": true,
+  "Evaluation & Debate": false,
+  "Safety & Guardrails": true
 };
 
 const BUILTIN_AGENTS = {
@@ -1431,6 +1431,7 @@ window.getAgentIcon = getAgentIcon;
 
 function renderFlowLibItems(paths, q = "") {
   const lib = document.getElementById("flow-lib-items");
+  if (!lib) return;
   lib.innerHTML = "";
 
   const groups = {};
@@ -1470,10 +1471,10 @@ function renderFlowLibItems(paths, q = "") {
     if (items.length === 0) return;
 
     // Expand if searching
-    const isCollapsed = q ? false : _flowLibCollapsed[cat];
+    const isOpen = q ? true : _flowLibOpen[cat];
 
     const catDiv = document.createElement("div");
-    catDiv.className = "lib-category" + (isCollapsed ? " collapsed" : "");
+    catDiv.className = "lib-category" + (isOpen ? "" : " collapsed");
     
     const header = document.createElement("div");
     header.className = "lib-category-header";
@@ -1482,70 +1483,66 @@ function renderFlowLibItems(paths, q = "") {
     header.style.alignItems = "center";
     header.innerHTML = `<span>${cat}</span><i data-lucide="chevron-down"></i>`;
     header.onclick = () => {
-      catDiv.classList.toggle("collapsed");
-      _flowLibCollapsed[cat] = catDiv.classList.contains("collapsed");
-      // Save state
-      localStorage.setItem("ternstudio-lib-collapsed", JSON.stringify(_flowLibCollapsed));
+      _flowLibOpen[cat] = !_flowLibOpen[cat];
+      renderFlowLibItems(paths, q);
     };
     catDiv.appendChild(header);
 
-    const itemsDiv = document.createElement("div");
-    itemsDiv.className = "lib-category-items";
-    
-    items.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "lib-item";
-      div.dataset.name = item.name.toLowerCase();
+    if (isOpen) {
+      const itemsDiv = document.createElement("div");
+      itemsDiv.className = "lib-category-items";
       
-      let icon, color, dragData;
-      if (item.type === "builtin") {
-        icon = item.agent.icon;
-        color = item.agent.color;
-        div.title = item.agent.desc;
-        dragData = { type: "agent", name: item.name, path: "__builtin__", code: item.agent.code };
-      } else {
-        const info = getAgentIcon(item.name);
-        icon = info.icon;
-        color = info.color;
-        dragData = { type: "agent", name: item.name, path: item.path };
-      }
-
-      div.draggable = true;
-      div.ondragstart = (e) => {
-        e.dataTransfer.setData("tern-node-type", "agent");
-        e.dataTransfer.setData("tern-node-name", item.name);
-        e.dataTransfer.setData("tern-node-path", item.type === "builtin" ? "__builtin__" : item.path);
-        if (item.type === "builtin") e.dataTransfer.setData("tern-node-code", item.agent.code);
-      };
-      
-      div.innerHTML = `<i data-lucide="${icon}" style="color:${color}"></i> <span>${item.name}</span>`;
-      div.onclick = async () => {
-        const id = "node_" + Date.now();
-        const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
-        createFlowNode(item.name, item.type === "builtin" ? "__builtin__" : item.path, pos.x, pos.y, 'agent', id);
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "lib-item";
         
+        let icon, color;
         if (item.type === "builtin") {
-          const node = flowNodes.find(n => n.id === id);
-          if (node) { node.props.code = item.agent.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "signal: trit"; }
+          icon = item.agent.icon;
+          color = item.agent.color;
         } else {
-          try {
-            const r = await fetch(GH_TERNROOT + item.path);
-            if (r.ok) {
-              const code = await r.text();
-              const node = flowNodes.find(n => n.id === id);
-              if (node) {
-                node.props.code = code;
-                if (selectedNodeId === id) updatePropertyPanel();
-                saveCanvasState();
-              }
-            }
-          } catch(e) {}
+          const info = getAgentIcon(item.name);
+          icon = info.icon;
+          color = info.color;
         }
-      };
-      itemsDiv.appendChild(div);
-    });
 
-    catDiv.appendChild(itemsDiv);
+        div.draggable = true;
+        div.ondragstart = (e) => {
+          e.dataTransfer.setData("tern-node-type", "agent");
+          e.dataTransfer.setData("tern-node-name", item.name);
+          e.dataTransfer.setData("tern-node-path", item.type === "builtin" ? "__builtin__" : item.path);
+          if (item.type === "builtin") e.dataTransfer.setData("tern-node-code", item.agent.code);
+        };
+        
+        div.innerHTML = `<i data-lucide="${icon}" style="color:${color}"></i> <span>${item.name}</span>`;
+        div.onclick = async () => {
+          const id = "node_" + Date.now();
+          const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
+          createFlowNode(item.name, item.type === "builtin" ? "__builtin__" : item.path, pos.x, pos.y, 'agent', id);
+          
+          if (item.type === "builtin") {
+            const node = flowNodes.find(n => n.id === id);
+            if (node) { node.props.code = item.agent.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "signal: trit"; }
+          } else {
+            try {
+              const r = await fetch(GH_TERNROOT + item.path);
+              if (r.ok) {
+                const code = await r.text();
+                const node = flowNodes.find(n => n.id === id);
+                if (node) {
+                  node.props.code = code;
+                  if (selectedNodeId === id) updatePropertyPanel();
+                  saveCanvasState();
+                }
+              }
+            } catch(e) {}
+          }
+        };
+        itemsDiv.appendChild(div);
+      });
+
+      catDiv.appendChild(itemsDiv);
+    }
     lib.appendChild(catDiv);
   });
 
@@ -3046,9 +3043,9 @@ function renderArchetypes(q = "") {
   Object.entries(groups).forEach(([cat, items]) => {
     if (items.length === 0) return;
 
-    const isCollapsed = q ? false : _archetypeCollapsed[cat];
+    const isOpen = q ? true : _archetypeOpen[cat];
     const catDiv = document.createElement("div");
-    catDiv.className = "lib-category" + (isCollapsed ? " collapsed" : "");
+    catDiv.className = "lib-category" + (isOpen ? "" : " collapsed");
 
     const header = document.createElement("div");
     header.className = "lib-category-header";
@@ -3057,35 +3054,36 @@ function renderArchetypes(q = "") {
     header.style.alignItems = "center";
     header.innerHTML = `<span>${cat}</span><i data-lucide="chevron-down"></i>`;
     header.onclick = () => {
-      catDiv.classList.toggle("collapsed");
-      _archetypeCollapsed[cat] = catDiv.classList.contains("collapsed");
+      _archetypeOpen[cat] = !_archetypeOpen[cat];
+      renderArchetypes(q);
     };
     catDiv.appendChild(header);
 
-    const itemsDiv = document.createElement("div");
-    itemsDiv.className = "lib-category-items";
-    itemsDiv.style.padding = "8px 0";
+    if (isOpen) {
+      const itemsDiv = document.createElement("div");
+      itemsDiv.className = "lib-category-items";
+      itemsDiv.style.padding = "8px 0";
 
-    items.forEach(arch => {
-      const card = document.createElement("div");
-      card.className = "archetype-card";
-      card.draggable = true;
-      card.ondragstart = (e) => {
-        e.dataTransfer.setData("tern-node-type", "archetype");
-        e.dataTransfer.setData("tern-arch-id", arch.id);
-      };
-      card.innerHTML = `
-        <div class="archetype-card-title" style="display:flex;align-items:center;gap:6px;">
-          <i data-lucide="${arch.icon}" style="width:12px;height:12px;color:${arch.color}"></i>
-          ${arch.name}
-        </div>
-        <div class="archetype-card-desc">${arch.desc}</div>
-      `;
-      card.onclick = () => spawnArchetype(arch);
-      itemsDiv.appendChild(card);
-    });
-
-    catDiv.appendChild(itemsDiv);
+      items.forEach(arch => {
+        const card = document.createElement("div");
+        card.className = "archetype-card";
+        card.draggable = true;
+        card.ondragstart = (e) => {
+          e.dataTransfer.setData("tern-node-type", "archetype");
+          e.dataTransfer.setData("tern-arch-id", arch.id);
+        };
+        card.innerHTML = `
+          <div class="archetype-card-title" style="display:flex;align-items:center;gap:6px;">
+            <i data-lucide="${arch.icon}" style="width:12px;height:12px;color:${arch.color}"></i>
+            ${arch.name}
+          </div>
+          <div class="archetype-card-desc">${arch.desc}</div>
+        `;
+        card.onclick = () => spawnArchetype(arch);
+        itemsDiv.appendChild(card);
+      });
+      catDiv.appendChild(itemsDiv);
+    }
     lib.appendChild(catDiv);
   });
 
