@@ -1358,10 +1358,10 @@
 .lib-category-header i {
   width: 12px;
   height: 12px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease-in-out;
 }
 .lib-category.collapsed .lib-category-header i {
-  transform: rotate(-90deg);
+  transform: rotate(-180deg);
 }
 .lib-category-items {
   overflow: hidden;
