@@ -1349,6 +1349,7 @@
   justify-content: space-between;
   user-select: none;
   transition: background 0.2s, color 0.2s;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 .lib-category-header:hover {
   background: var(--bg2);
@@ -1357,14 +1358,43 @@
 .lib-category-header i {
   width: 12px;
   height: 12px;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
 }
 .lib-category.collapsed .lib-category-header i {
-  transform: rotate(-90deg);
+  transform: rotate(-180deg);
 }
 .lib-category-items {
   overflow: hidden;
+  transition: max-height 0.3s ease-out;
 }
 .lib-category.collapsed .lib-category-items {
   display: none;
+}
+/* Archetype Card Styling */
+.archetype-card {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.archetype-card:hover {
+  background: var(--bg2);
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.archetype-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.archetype-card-desc {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.4;
 }

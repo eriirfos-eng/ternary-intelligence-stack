@@ -1219,10 +1219,10 @@ window.initCanvasInteraction = initCanvasInteraction;
 
 // ─── Built-in Agent Library ──────────────────────────────────────────────────
 const AGENT_ONTOLOGY = {
-  "Guardrails & Safety": ["SafetyGate", "OutputGuard"],
+  "Guardrails & Safety": ["SafetyGate", "OutputGuard", "gatekeeper", "range_validator", "string_validator", "validator", "float_threshold", "watchdog", "supervisor", "retry"],
   "Deliberation & Evaluation": ["Classifier", "Ranker", "Proposer", "Challenger", "Arbiter", "deliberator"],
-  "Routing & Aggregation": ["ConsensusGate", "consensus", "aggregator", "filter", "binary_bridge"],
-  "I/O & Execution": ["Sensor", "Actuator", "broadcast", "echo"]
+  "Routing & Aggregation": ["ConsensusGate", "consensus", "aggregator", "filter", "binary_bridge", "router", "pipeline", "majority_5", "weighted_consensus", "mapper", "transformer"],
+  "I/O & Execution": ["Sensor", "Actuator", "broadcast", "echo", "logger", "scaler"]
 };
 
 let _flowLibCollapsed = {
@@ -1230,6 +1230,18 @@ let _flowLibCollapsed = {
   "Deliberation & Evaluation": false,
   "Routing & Aggregation": false,
   "I/O & Execution": true
+};
+
+const ARCHETYPE_ONTOLOGY = {
+  "Orchestration & Consensus": ["moe_13_flagship", "consensus", "industry_enterprise_risk", "recursive_refiner", "kmu_hiring_decision", "kmu_supplier_score", "kmu_customer_qual"],
+  "Evaluation & Debate": ["debate", "filter_rank", "kmu_process_opt", "sensor_gate", "industry_sme_pipeline"],
+  "Safety & Guardrails": ["guardrail", "kmu_invoice_fraud", "industry_iot_grid"]
+};
+
+let _archetypeCollapsed = {
+  "Orchestration & Consensus": false,
+  "Evaluation & Debate": true,
+  "Safety & Guardrails": false
 };
 
 const BUILTIN_AGENTS = {
@@ -1423,14 +1435,19 @@ function renderFlowLibItems(paths, q = "") {
 
   const groups = {};
   Object.keys(AGENT_ONTOLOGY).forEach(cat => groups[cat] = []);
-  groups["Uncategorized"] = [];
 
   // Helper to categorize
   const categorize = (name) => {
     for (const [cat, agents] of Object.entries(AGENT_ONTOLOGY)) {
       if (agents.some(a => a.toLowerCase() === name.toLowerCase())) return cat;
     }
-    return "Uncategorized";
+    // If we've made it here, it might be a newly created agent from a search result path
+    // We try to match partials for dynamic paths too
+    const n = name.toLowerCase();
+    if (n.includes('gate') || n.includes('guard') || n.includes('validator') || n.includes('check') || n.includes('watchdog')) return "Guardrails & Safety";
+    if (n.includes('consensus') || n.includes('aggregator') || n.includes('filter') || n.includes('router') || n.includes('pipeline') || n.includes('mapper')) return "Routing & Aggregation";
+    if (n.includes('sensor') || n.includes('actuator') || n.includes('logger') || n.includes('scaler') || n.includes('emit')) return "I/O & Execution";
+    return "Deliberation & Evaluation"; // Fallback to deliberation rather than Uncategorized
   };
 
   // 1. Process Built-ins
@@ -1460,12 +1477,15 @@ function renderFlowLibItems(paths, q = "") {
     
     const header = document.createElement("div");
     header.className = "lib-category-header";
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
     header.innerHTML = `<span>${cat}</span><i data-lucide="chevron-down"></i>`;
     header.onclick = () => {
       catDiv.classList.toggle("collapsed");
-      if (cat !== "Uncategorized") {
-        _flowLibCollapsed[cat] = catDiv.classList.contains("collapsed");
-      }
+      _flowLibCollapsed[cat] = catDiv.classList.contains("collapsed");
+      // Save state
+      localStorage.setItem("ternstudio-lib-collapsed", JSON.stringify(_flowLibCollapsed));
     };
     catDiv.appendChild(header);
 
@@ -2997,27 +3017,88 @@ const ARCHETYPES = [
   }
 ];
 
-function renderArchetypes() {
-  const panel = document.getElementById("lib-panel-archetypes");
-  panel.innerHTML = `<div style="font-size:10px;color:var(--muted2);margin-bottom:10px;line-height:1.6;">Click to spawn a wired agent architecture on the canvas.</div>`;
+function renderArchetypes(q = "") {
+  const lib = document.getElementById("arch-lib-items");
+  if (!lib) return;
+  lib.innerHTML = `<div style="font-size:10px;color:var(--muted2);margin-bottom:10px;line-height:1.6;padding:8px 0;">Click to spawn a wired agent architecture on the canvas.</div>`;
+  
+  const searchInput = document.getElementById("archLibSearch");
+  if (searchInput && q && searchInput.value !== q) {
+    searchInput.value = q;
+  }
+
+  const groups = {};
+  Object.keys(ARCHETYPE_ONTOLOGY).forEach(cat => groups[cat] = []);
+
+  const categorize = (id) => {
+    for (const [cat, ids] of Object.entries(ARCHETYPE_ONTOLOGY)) {
+      if (ids.includes(id)) return cat;
+    }
+    return "Orchestration & Consensus"; // Default
+  };
+
   ARCHETYPES.forEach(arch => {
-    const card = document.createElement("div");
-    card.className = "archetype-card";
-    card.draggable = true;
-    card.ondragstart = (e) => {
-      e.dataTransfer.setData("tern-node-type", "archetype");
-      e.dataTransfer.setData("tern-arch-id", arch.id);
-    };
-    card.innerHTML = `
-      <div class="archetype-card-title" style="display:flex;align-items:center;gap:6px;">
-        <i data-lucide="${arch.icon}" style="width:12px;height:12px;color:${arch.color}"></i>
-        ${arch.name}
-      </div>
-      <div class="archetype-card-desc">${arch.desc}</div>
-    `;
-    card.onclick = () => spawnArchetype(arch);
-    panel.appendChild(card);
+    if (q && !arch.name.toLowerCase().includes(q.toLowerCase()) && !arch.desc.toLowerCase().includes(q.toLowerCase())) return;
+    const cat = categorize(arch.id);
+    groups[cat].push(arch);
   });
+
+  Object.entries(groups).forEach(([cat, items]) => {
+    if (items.length === 0) return;
+
+    const isCollapsed = q ? false : _archetypeCollapsed[cat];
+    const catDiv = document.createElement("div");
+    catDiv.className = "lib-category" + (isCollapsed ? " collapsed" : "");
+
+    const header = document.createElement("div");
+    header.className = "lib-category-header";
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.innerHTML = `<span>${cat}</span><i data-lucide="chevron-down"></i>`;
+    header.onclick = () => {
+      catDiv.classList.toggle("collapsed");
+      _archetypeCollapsed[cat] = catDiv.classList.contains("collapsed");
+    };
+    catDiv.appendChild(header);
+
+    const itemsDiv = document.createElement("div");
+    itemsDiv.className = "lib-category-items";
+    itemsDiv.style.padding = "8px 0";
+
+    items.forEach(arch => {
+      const card = document.createElement("div");
+      card.className = "archetype-card";
+      card.draggable = true;
+      card.ondragstart = (e) => {
+        e.dataTransfer.setData("tern-node-type", "archetype");
+        e.dataTransfer.setData("tern-arch-id", arch.id);
+      };
+      card.innerHTML = `
+        <div class="archetype-card-title" style="display:flex;align-items:center;gap:6px;">
+          <i data-lucide="${arch.icon}" style="width:12px;height:12px;color:${arch.color}"></i>
+          ${arch.name}
+        </div>
+        <div class="archetype-card-desc">${arch.desc}</div>
+      `;
+      card.onclick = () => spawnArchetype(arch);
+      itemsDiv.appendChild(card);
+    });
+
+    catDiv.appendChild(itemsDiv);
+    lib.appendChild(catDiv);
+  });
+
+  if (lib.querySelectorAll(".archetype-card").length === 0) {
+    const empty = document.createElement("div");
+    empty.style.padding = "20px";
+    empty.style.textAlign = "center";
+    empty.style.color = "var(--muted2)";
+    empty.style.fontSize = "11px";
+    empty.textContent = "No archetypes match your search.";
+    lib.appendChild(empty);
+  }
+
   lucide.createIcons();
 }
 window.renderArchetypes = renderArchetypes;
