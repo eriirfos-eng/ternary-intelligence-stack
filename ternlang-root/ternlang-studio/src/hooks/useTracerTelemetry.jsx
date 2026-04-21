@@ -14,11 +14,12 @@ export function useTracerTelemetry(wsUrl) {
     const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
-      console.log('⚡ Tracer WebSocket Handshake Successful');
+      console.log('[Tracer WS] Handshake successful. Listening for VM telemetry.');
       setIsConnected(true);
     };
 
     socket.onmessage = (event) => {
+      console.log('[Tracer WS] Payload received:', event.data);
       try {
         if (event.data === 'connected') return;
         const data = JSON.parse(event.data);
@@ -38,7 +39,7 @@ export function useTracerTelemetry(wsUrl) {
     };
 
     socket.onerror = (err) => {
-      console.error('Tracer WebSocket error:', err);
+      console.error('[Tracer WS] Connection failed.', err);
     };
 
     return () => {
