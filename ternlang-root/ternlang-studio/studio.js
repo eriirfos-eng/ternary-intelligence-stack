@@ -4303,25 +4303,6 @@ function scrubSimulation(index) {
 }
 window.scrubSimulation = scrubSimulation;
 
-function stopSimulation() {
-  simulationAborted = true;
-  simulationRunning = false;
-  virtualClock = 0;
-  lastRealTime = performance.now();
-  showToast("Simulation stopping...", "warn");
-  updateSimUI();
-
-  // Clear canvas overlay immediately
-  const canvas = document.getElementById("scrub-layer");
-  if (canvas) {
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-  // Wipe ghost dots
-  document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
-}
-window.stopSimulation = stopSimulation;
-
 /**
  * Draggable Inspector Logic
  */
