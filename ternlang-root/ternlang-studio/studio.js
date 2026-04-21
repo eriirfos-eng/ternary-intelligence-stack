@@ -1218,6 +1218,20 @@ function initCanvasInteraction() {
 window.initCanvasInteraction = initCanvasInteraction;
 
 // ─── Built-in Agent Library ──────────────────────────────────────────────────
+const AGENT_ONTOLOGY = {
+  "Guardrails & Safety": ["SafetyGate", "OutputGuard"],
+  "Deliberation & Evaluation": ["Classifier", "Ranker", "Proposer", "Challenger", "Arbiter", "deliberator"],
+  "Routing & Aggregation": ["ConsensusGate", "consensus", "aggregator", "filter", "binary_bridge"],
+  "I/O & Execution": ["Sensor", "Actuator", "broadcast", "echo"]
+};
+
+let _flowLibCollapsed = {
+  "Guardrails & Safety": true,
+  "Deliberation & Evaluation": false,
+  "Routing & Aggregation": false,
+  "I/O & Execution": true
+};
+
 const BUILTIN_AGENTS = {
   "Sensor": {
     desc: "Reads and validates an input trit signal",
@@ -1407,65 +1421,112 @@ function renderFlowLibItems(paths, q = "") {
   const lib = document.getElementById("flow-lib-items");
   lib.innerHTML = "";
 
-  // 1. Render Built-in Agents (with colorful icons)
+  const groups = {};
+  Object.keys(AGENT_ONTOLOGY).forEach(cat => groups[cat] = []);
+  groups["Uncategorized"] = [];
+
+  // Helper to categorize
+  const categorize = (name) => {
+    for (const [cat, agents] of Object.entries(AGENT_ONTOLOGY)) {
+      if (agents.some(a => a.toLowerCase() === name.toLowerCase())) return cat;
+    }
+    return "Uncategorized";
+  };
+
+  // 1. Process Built-ins
   Object.entries(BUILTIN_AGENTS).forEach(([name, agent]) => {
     if (q && !name.toLowerCase().includes(q.toLowerCase())) return;
-    const div = document.createElement("div");
-    div.className = "lib-item";
-    div.dataset.name = name.toLowerCase();
-    div.title = agent.desc;
-    div.draggable = true;
-    div.ondragstart = (e) => {
-      e.dataTransfer.setData("tern-node-type", "agent");
-      e.dataTransfer.setData("tern-node-name", name);
-      e.dataTransfer.setData("tern-node-path", "__builtin__");
-      e.dataTransfer.setData("tern-node-code", agent.code);
-    };
-    div.innerHTML = `<i data-lucide="${agent.icon}" style="color:${agent.color}"></i> <span>${name}</span>`;
-    div.onclick = () => {
-      const id = "node_" + Date.now();
-      const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
-      createFlowNode(name, "__builtin__", pos.x, pos.y, 'agent', id);
-      const node = flowNodes.find(n => n.id === id);
-      if (node) { node.props.code = agent.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "signal: trit"; }
-    };
-    lib.appendChild(div);
+    const cat = categorize(name);
+    groups[cat].push({ name, agent, type: "builtin" });
   });
 
-  // 2. Render Fetched API Agents
+  // 2. Process API Agents
   paths.forEach(path => {
     const name = path.split('/').pop().replace('.tern', '');
     if (q && !name.toLowerCase().includes(q.toLowerCase())) return;
-    const div = document.createElement("div");
-    div.className = "lib-item";
-    div.dataset.name = name.toLowerCase();
-    const info = getAgentIcon(name);
-    div.draggable = true;
-    div.ondragstart = (e) => {
-      e.dataTransfer.setData("tern-node-type", "agent");
-      e.dataTransfer.setData("tern-node-name", name);
-      e.dataTransfer.setData("tern-node-path", path);
+    const cat = categorize(name);
+    groups[cat].push({ name, path, type: "api" });
+  });
+
+  // 3. Render Groups
+  Object.entries(groups).forEach(([cat, items]) => {
+    if (items.length === 0) return;
+
+    // Expand if searching
+    const isCollapsed = q ? false : _flowLibCollapsed[cat];
+
+    const catDiv = document.createElement("div");
+    catDiv.className = "lib-category" + (isCollapsed ? " collapsed" : "");
+    
+    const header = document.createElement("div");
+    header.className = "lib-category-header";
+    header.innerHTML = `<span>${cat}</span><i data-lucide="chevron-down"></i>`;
+    header.onclick = () => {
+      catDiv.classList.toggle("collapsed");
+      if (cat !== "Uncategorized") {
+        _flowLibCollapsed[cat] = catDiv.classList.contains("collapsed");
+      }
     };
-    div.innerHTML = `<i data-lucide="${info.icon}" style="color:${info.color}"></i> <span>${name}</span>`;
-    div.onclick = async () => {
-      const id = "node_" + Date.now();
-      const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
-      createFlowNode(name, path, pos.x, pos.y, 'agent', id);
+    catDiv.appendChild(header);
+
+    const itemsDiv = document.createElement("div");
+    itemsDiv.className = "lib-category-items";
+    
+    items.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "lib-item";
+      div.dataset.name = item.name.toLowerCase();
       
-      try {
-        const r = await fetch(GH_TERNROOT + path);
-        if (r.ok) {
-          const code = await r.text();
+      let icon, color, dragData;
+      if (item.type === "builtin") {
+        icon = item.agent.icon;
+        color = item.agent.color;
+        div.title = item.agent.desc;
+        dragData = { type: "agent", name: item.name, path: "__builtin__", code: item.agent.code };
+      } else {
+        const info = getAgentIcon(item.name);
+        icon = info.icon;
+        color = info.color;
+        dragData = { type: "agent", name: item.name, path: item.path };
+      }
+
+      div.draggable = true;
+      div.ondragstart = (e) => {
+        e.dataTransfer.setData("tern-node-type", "agent");
+        e.dataTransfer.setData("tern-node-name", item.name);
+        e.dataTransfer.setData("tern-node-path", item.type === "builtin" ? "__builtin__" : item.path);
+        if (item.type === "builtin") e.dataTransfer.setData("tern-node-code", item.agent.code);
+      };
+      
+      div.innerHTML = `<i data-lucide="${icon}" style="color:${color}"></i> <span>${item.name}</span>`;
+      div.onclick = async () => {
+        const id = "node_" + Date.now();
+        const pos = viewportCenterInCanvas((Math.random()-0.5)*120, (Math.random()-0.5)*80);
+        createFlowNode(item.name, item.type === "builtin" ? "__builtin__" : item.path, pos.x, pos.y, 'agent', id);
+        
+        if (item.type === "builtin") {
           const node = flowNodes.find(n => n.id === id);
-          if (node) {
-            node.props.code = code;
-            if (selectedNodeId === id) updatePropertyPanel();
-            saveCanvasState();
-          }
+          if (node) { node.props.code = item.agent.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "signal: trit"; }
+        } else {
+          try {
+            const r = await fetch(GH_TERNROOT + item.path);
+            if (r.ok) {
+              const code = await r.text();
+              const node = flowNodes.find(n => n.id === id);
+              if (node) {
+                node.props.code = code;
+                if (selectedNodeId === id) updatePropertyPanel();
+                saveCanvasState();
+              }
+            }
+          } catch(e) {}
         }
-      } catch(e) {}
-    };
-    lib.appendChild(div);
+      };
+      itemsDiv.appendChild(div);
+    });
+
+    catDiv.appendChild(itemsDiv);
+    lib.appendChild(catDiv);
   });
 
   if (lib.children.length === 0) {
@@ -1476,8 +1537,7 @@ function renderFlowLibItems(paths, q = "") {
 window.renderFlowLibItems = renderFlowLibItems;
 
 function filterFlowLib(q) {
-  const filtered = q ? _flowLibPaths.filter(p => p.toLowerCase().includes(q.toLowerCase())) : _flowLibPaths;
-  renderFlowLibItems(filtered, q);
+  renderFlowLibItems(_flowLibPaths, q);
 }
 window.filterFlowLib = filterFlowLib;
 

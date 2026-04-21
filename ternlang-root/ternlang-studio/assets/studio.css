@@ -1330,3 +1330,41 @@
   color: #ffffff;
   opacity: 0.9;
 }
+
+/* ─── Agent Library Accordion ───────────────────────────────────── */
+.lib-category {
+  border-bottom: 1px solid var(--border);
+}
+.lib-category-header {
+  padding: 8px 12px;
+  background: var(--bg1);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  transition: background 0.2s, color 0.2s;
+}
+.lib-category-header:hover {
+  background: var(--bg2);
+  color: var(--text);
+}
+.lib-category-header i {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s;
+}
+.lib-category.collapsed .lib-category-header i {
+  transform: rotate(-90deg);
+}
+.lib-category-items {
+  overflow: hidden;
+}
+.lib-category.collapsed .lib-category-items {
+  display: none;
+}
