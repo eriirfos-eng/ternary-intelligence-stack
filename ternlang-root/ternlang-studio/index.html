@@ -821,7 +821,12 @@
   <div class="sidebar-resizer" id="flow-props-resizer"></div>
   <!-- Right: Properties (Node or Edge) -->
   <div id="flow-props">
-    <div class="prop-header" id="prop-header-label">Node Properties</div>
+    <div class="prop-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <span id="prop-header-label">Node Properties</span>
+      <div id="prop-help-icon" style="cursor:help; display:flex; align-items:center; color:var(--muted2); transition:color 0.2s;" title="Dictates the behavior of an isolated computation unit. Configures the execution target (e.g., Local Albert VM), the exact ternary logic function to evaluate incoming state, and runtime constraints like timeouts to prevent system hangs.">
+        <i data-lucide="help-circle" style="width:14px; height:14px;"></i>
+      </div>
+    </div>
     <div id="prop-body" class="prop-body" style="overflow-y:auto;">
       <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px; padding:0 12px; line-height:1.8;">
         Select a node to configure<br>
@@ -1061,6 +1066,79 @@
             <div style="font-weight:700; color:var(--text); margin-bottom:4px;">Did you know?</div>
             The <b>Consensus</b> operator is the ternary equivalent of a logical AND. It resolves to the <i>minimum</i> value of its inputs: 
             <code style="color:var(--cyan)">consensus(A, B) = min(A, B)</code> where <code style="color:var(--text)">+1 > 0 > -1</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graph Mechanics & Routing (New Section) -->
+    <div style="margin-top:40px;">
+      <div class="dash-section-title">Graph Mechanics & Routing</div>
+      <div class="dash-card" style="padding:32px">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
+          <div>
+            <div style="margin-bottom:24px;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="component" style="width:14px; color:var(--cyan)"></i> Node Properties
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                The physics of isolated computation. Nodes execute logic and emit a ternary signal (+1, 0, -1). 
+                They are constrained by local runtime rules to ensure the orchestrator never freezes during complex semantic evaluations.
+              </p>
+            </div>
+
+            <div style="margin-bottom:24px;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="git-branch" style="width:14px; color:var(--amber)"></i> Edge Properties
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                The active routing cables of your causal graph. They do not just carry signals — they evaluate them on the fly.
+              </p>
+            </div>
+
+            <div style="margin-bottom:0;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="filter" style="width:14px; color:var(--green)"></i> Activation Logic & != -1
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                The primary ternary filter. Selecting <b>+1</b> demands absolute truth to pass. 
+                Selecting <b>!= -1</b> acts as a soft gate — it blocks definitive failures (hard rejections) but permits 
+                the workflow to continue if the evaluating node outputs a +1 (True) OR a 0 (Neutral/Uncertain).
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <div style="margin-bottom:24px;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="shield-alert" style="width:14px; color:var(--red)"></i> On Fail Constraints
+              </h3>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                  <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Drop</div>
+                  <div style="font-size:11px; color:var(--muted);">Silently kills the execution branch to save compute cycles.</div>
+                </div>
+                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                  <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Fallback</div>
+                  <div style="font-size:11px; color:var(--muted);">Routes the failure to a designated secondary recovery path.</div>
+                </div>
+                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                  <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Hold (0)</div>
+                  <div style="font-size:11px; color:var(--muted);">Coerces the failed state into a neutral 0. It keeps the graph alive, passing down an indeterminate result without triggering an error.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:0;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="refresh-cw" style="width:14px; color:var(--cyan)"></i> The Feedback Loop
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                A strict safety valve. By default, the orchestrator assumes a forward-flowing DAG. 
+                Checking this box suspends those rules, granting the network permission to think iteratively and loop back on itself. 
+                The VM wraps this specific recurrent connection in strict cycle-breaking constraints to prevent infinite memory consumption.
+              </p>
+            </div>
           </div>
         </div>
       </div>
