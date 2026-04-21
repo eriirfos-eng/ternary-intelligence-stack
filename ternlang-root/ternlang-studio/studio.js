@@ -2728,7 +2728,7 @@ function switchLibTab(tab) {
   const active = document.getElementById('libtab-' + tab);
   if (active) active.classList.add('active');
   document.getElementById('lib-panel-agents').style.display     = tab === 'agents'     ? 'flex' : 'none';
-  document.getElementById('lib-panel-archetypes').style.display = tab === 'archetypes' ? 'block' : 'none';
+  document.getElementById('lib-panel-archetypes').style.display = tab === 'archetypes' ? 'flex' : 'none';
   if (tab === 'archetypes') renderArchetypes();
 }
 window.switchLibTab = switchLibTab;
