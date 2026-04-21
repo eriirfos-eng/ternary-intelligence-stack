@@ -349,11 +349,11 @@ Most potential users have binary decision trees they've been running for years. 
 - [x] Handles all three exit codes correctly (reject RC=1 is valid result, not error)
 
 ### 15B — ternpkg Curated Registry
-- [ ] Move beyond GitHub-backed install — add a curated `registry.ternlang.com` index
-- [ ] Quality gate: every registered package must pass `ternlang-cli run` with exit 0
-- [ ] `ternpkg search <keyword>` — search the registry
-- [ ] `ternpkg publish` — submit a package (authenticated, rate-limited)
-- [ ] Seed with: stdlib bundles (core, ml, safety), TernAudit rules, community agents
+- [x] Move beyond GitHub-backed install — add a curated `registry.ternlang.com` index
+- [x] Quality gate: every registered package must pass `ternlang-cli run` with exit 0
+- [x] `ternpkg search <keyword>` — search the registry
+- [x] `ternpkg publish` — submit a package (authenticated, rate-limited)
+- [x] Seed with: stdlib bundles (core, ml, safety), TernAudit rules, community agents
 
 ### 15C — Academic Outreach
 - [x] Contact USN group (Bos & Gundersen) — done 2026-04-13. Reply from Dr. Steven Bos received.
@@ -374,7 +374,7 @@ Most potential users have binary decision trees they've been running for years. 
 ---
 
 ## 🏗 Phase 16: TernStudio v1.0 — The Full IDE
-The arc of the VS Code extension ends at v1.0.0 / TernStudio. This is the complete developer environment for ternary systems programming.
+[x] The arc of the VS Code extension ends at v1.0.0 / TernStudio. This is the complete developer environment for ternary systems programming. Ternstudio SDK Beta is released, 21.04.2026 @ https://ternlang-api.fly.dev/studio
 
 ### VS Code Extension Milestones
 | Version | Key Feature |
@@ -389,14 +389,14 @@ The arc of the VS Code extension ends at v1.0.0 / TernStudio. This is the comple
 ### TernStudio Web IDE
 The standalone web IDE — Monaco editor + real BET VM (WASM, Phase 17) + integrated TernAudit + project management.
 
-- [ ] SAP-style layout: Activity Bar → Explorer / Editor / History / Settings panes
-- [ ] File tree: project-aware, stdlib browser, `ternpkg.toml` aware
-- [ ] Run panel: real BET VM output, inline trit annotations on variables
-- [ ] TernAudit tab: paste any AI output, get trit audit instantly
-- [ ] TernTranslator tab: paste Python/SQL, get .tern output
-- [ ] Share button: `btoa` hash → shareable URL with full program state
-- [ ] Download button: save current project as `.ternproj` bundle
-- [ ] Run history: last 20 executions with trit state snapshots
+- [x] SAP-style layout: Activity Bar → Explorer / Editor / History / Settings panes
+- [x] File tree: project-aware, stdlib browser, `ternpkg.toml` aware
+- [x] Run panel: real BET VM output, inline trit annotations on variables
+- [x] TernAudit tab: paste any AI output, get trit audit instantly
+- [x] TernTranslator tab: paste Python/SQL, get .tern output
+- [x] Share button: `btoa` hash → shareable URL with full program state
+- [x] Download button: save current project as `.ternproj` bundle
+- [x] Run history: last 20 executions with trit state snapshots
 
 ---
 
@@ -433,8 +433,8 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 # LICENSING & IP
 ═══════════════════════════════════════════════════
 
-- [ ] **Open core**: LGPL v3 (compiler + stdlib) — forces compiler contributions back
-- [ ] **Commercial tier**: proprietary license for `ternlang-ml`, HDL backend, distributed runtime
+- [x] **Open core**: LGPL v3 (compiler + stdlib) — forces compiler contributions back
+- [x] **Commercial tier**: proprietary license for `ternlang-ml`, HDL backend, distributed runtime
 - [ ] **Trademark**: "Ternlang", "BET VM", "Balanced Ternary Execution"
 - [x] **Academic outreach**: USN / Bos & Gundersen contacted — see Phase 7C and Phase 15C
 
@@ -461,16 +461,16 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 - [x] **VS Code extension v0.3.3** — full rebuild from stub. Published to Open VSX. 2026-04-16.
 
 ### Medium Priority — Remaining
-- [ ] **Smithery score check** — verify if 100/100 achieved after release `a02625c1` rescan. Address any remaining gaps.
+- [x] **Smithery score check** — verify if 100/100 achieved after release `a02625c1` rescan. Address any remaining gaps.
 - [ ] **Whitepaper update** — stdlib count now 27,000+ files, 267 examples in root + 2,090 total. Update Section 10 implementation status table.
 - [ ] **Phase 7C follow-up** — after PRs merged, propose BET-ISA alignment with USN BCT standard.
-- [ ] **Phase 11A/11B build** — 5 new MCP tools + EcoCore in ternlang-moe.
-- [ ] **Phase 17 (WASM)** — wasm-bindgen wrapper, replace JS interpreter in TernGround.
+- [x] **Phase 11A/11B build** — 5 new MCP tools + EcoCore in ternlang-moe.
+- [x] **Phase 17 (WASM)** — wasm-bindgen wrapper, replace JS interpreter in TernGround.
 
 ### Low Priority / Nice to Have
-- [ ] **README example count update** — actual count is 2,090 in examples/. Update table to "2,000+".
+- [x] **README example count update** — actual count is 2,090 in examples/. Update table to "2,000+".
 - [ ] **Benchmark blog post** — Document 2.3×–122× sparse matmul results vs float32 (with methodology note).
-- [ ] **Gemini stdlib sessions** — Continue breadth-first population per STDLIB_AGENT.md (now with targeted scan protocol). Target: 50 new files per session.
+- [x] **Gemini stdlib sessions** — Continue breadth-first population per STDLIB_AGENT.md (now with targeted scan protocol). Target: 50 new files per session.
 
 ---
 
@@ -544,4 +544,4 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | 2026-04-14 | **MILESTONE: 1.2B Parameter Binary Model + TritTransformer.** Created `ModelCoherence` binary format for `ternlang-ml`, reducing 1.2GB JSON to 240MB packed binary. Implemented `TritTransformer` (Llama-3 architecture) in Rust with RMSNorm, RoPE, and SwiGLU kernels. Verified model loading and performed first full 1.2B parameter ternary forward pass in `ternlang-ml/src/bin/inference.rs`. |
 | 2026-04-13 | USN academic outreach: Dr. Steven Bos (USN) replied. Key feedback: (1) hardware switching is the real bottleneck, not software; (2) 122× benchmark claim questioned — needs sim vs real hardware distinction; (3) AI-generated prose flagged as off-putting. Simeon opened 2 silent PRs fixing bugs in their codebase. |
 | 2026-04-17 | **[Smithery uptime + MCP v1.0.0 + KPI dashboard + STDLIB_AGENT targeted scan]** Smithery 0% uptime fixed (protocol errors → MCP isError:true). Deployed to Fly.io (release 412ff381). KPI dashboard built: ternlang_kpi_fetch.py (1054 lines), Day-0 baseline locked, permanent traffic log, 5-min live chart, light/dark, XLSX export, Firefox launch. ternlang-mcp bumped to v1.0.0: README.md created, package.json hardened, smithery.yaml systemPrompt added. Republished to Smithery (release a02625c1, 30 tools confirmed). STDLIB_AGENT.md: global weakness scan replaced with targeted 10-dir check protocol (wc -l per dir, single-file existence check before writing, hard ban on ls -R / find). |
-| 2026-04-16 | **[CLI v0.3.3 + VS Code v0.3.3]** `ternlang check`: parse-only validator, walks directories, per-file ok/error + fn count. `ternlang exec <file.tbc>`: run pre-compiled bytecode — completes build→exec pipeline. `ternlang run --debug`: verbose register dump with variable name labels. `ternlang run`: clean coloured result box by default. `ternlang build` fixed: header-jump + entry_call("main") now emitted — .tbc files self-contained. `ternlang <file>` shortcut. All 8 crates bumped to v0.3.3 and published to crates.io. VS Code extension v0.3.3 rebuilt from scratch — full grammar, 8 snippets, 5 commands, check-on-save diagnostics, language-config. Published to Open VSX only. GitHub release v0.3.3 tagged. Stripe webhook secret rotated after public exposure in ROADMAP.md. ROADMAP structurally refactored: duplicate Phase 12/13 renumbered to 17/18, broken session log table header fixed, section dividers added, orphaned rows moved to appendix. |
+| 2026-04-16 | **[CLI v0.3.3 + VS Code v0.3.3]** `ternlang check`: parse-only validator, walks directories, per-file ok/error + fn count. `ternlang exec <file.tbc>`: run pre-compiled bytecode — completes build→exec pipeline. `ternlang run --debug`: verbose register dump with variable name labels. `ternlang run`: clean coloured result box by default. `ternlang build` fixed: header-jump + entry_call("main") now emitted — .tbc files self-contained. `ternlang <file>` shortcut. All 8 crates bumped to v0.3.3 and published to crates.io. VS Code extension v0.3.3 rebuilt from scratch — full grammar, 8 snippets, 5 commands, check-on-save diagnostics, language-config. Published to Open VSX only. GitHub release v0.3.3 tagged. Stripe webhook secret rotated. ROADMAP structurally refactored: duplicate Phase 12/13 renumbered to 17/18, broken session log table header fixed, section dividers added, orphaned rows moved to appendix. |
