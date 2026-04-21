@@ -798,7 +798,9 @@ function updateSimUI() {
 window.updateSimUI = updateSimUI;
 
 function setExecutionState(state) {
+  if (window.executionState === state) return;
   console.log(`[TernFlow] Execution State -> ${state}`);
+  window.executionState = state;
   executionState = state;
   simulationRunning = (state === 'running');
   
@@ -814,6 +816,22 @@ function setExecutionState(state) {
   window.dispatchEvent(new CustomEvent('executionstatechange', { detail: { state } }));
 }
 window.setExecutionState = setExecutionState;
+
+/**
+ * Gatekeeper helper to pause the async engine.
+ */
+function awaitResumption() {
+  if (executionState !== 'paused') return Promise.resolve();
+  return new Promise(resolve => {
+    const listener = (e) => {
+      if (e.detail.state === 'running' || e.detail.state === 'idle') {
+        window.removeEventListener('executionstatechange', listener);
+        resolve();
+      }
+    };
+    window.addEventListener('executionstatechange', listener);
+  });
+}
 
 function toggleSimulation() {
   if (executionState === 'running') {
@@ -912,46 +930,61 @@ function ControlBar() {
     background: active ? color : 'transparent',
     color: active ? '#000' : '#f1f5f9',
     borderRight: '1px solid rgba(255,255,255,0.05)',
+    pointerEvents: 'auto' // Ensure clicks are captured
   });
+
+  const handlePlay = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[ControlBar] Play Invoked. Current state:', window.executionState);
+    if (window.executionState === 'paused') {
+      // Transition to running - the driveTimeline loop awaiting in runSimulationCore 
+      // will resolve its awaitResumption promise and continue automatically.
+      window.setExecutionState('running');
+    } else if (window.executionState === 'idle') {
+      window.startNewSimulation();
+    }
+  };
+
+  const handlePause = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[ControlBar] Pause Invoked. Current state:', window.executionState);
+    if (window.executionState === 'running') {
+      window.setExecutionState('paused');
+    }
+  };
+
+  const handleStop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[ControlBar] Stop Invoked.');
+    window.stopSimulation();
+  };
 
   return React.createElement('div', { style: pillStyle },
     // PLAY
     React.createElement('div', {
       style: segmentStyle(state === 'running', '#10b981'),
       title: 'Play / Resume',
-      onClick: () => {
-        console.log('[TernFlow] Play clicked, current state:', window.executionState);
-        if (window.executionState === 'paused') {
-          window.setExecutionState('running');
-          window.lastRealTime = performance.now();
-          if (window.currentDriveTimeline) requestAnimationFrame(window.currentDriveTimeline);
-        } else if (window.executionState === 'idle') {
-          window.startNewSimulation();
-        }
-      }
-    }, React.createElement('i', { 'data-lucide': 'play', style: { width: '14px' } })),
+      onClick: handlePlay
+    }, React.createElement('i', { 'data-lucide': 'play', style: { width: '14px', pointerEvents: 'none' } })),
     
     // PAUSE
     React.createElement('div', {
       style: segmentStyle(state === 'paused', '#f59e0b'),
       title: 'Pause',
-      onClick: () => { 
-        console.log('[TernFlow] Pause clicked, current state:', window.executionState);
-        if (window.executionState === 'running') window.setExecutionState('paused'); 
-      }
-    }, React.createElement('i', { 'data-lucide': 'pause', style: { width: '14px' } })),
+      onClick: handlePause
+    }, React.createElement('i', { 'data-lucide': 'pause', style: { width: '14px', pointerEvents: 'none' } })),
     
     // STOP
     React.createElement('div', {
       style: { ...segmentStyle(false, 'transparent'), borderRight: 'none' },
       title: 'Stop & Reset',
-      onClick: () => {
-        console.log('[TernFlow] Stop clicked');
-        window.stopSimulation();
-      },
+      onClick: handleStop,
       onMouseEnter: (e) => e.currentTarget.style.color = '#ef4444',
       onMouseLeave: (e) => e.currentTarget.style.color = '#f1f5f9'
-    }, React.createElement('i', { 'data-lucide': 'square', style: { width: '14px' } }))
+    }, React.createElement('i', { 'data-lucide': 'square', style: { width: '14px', pointerEvents: 'none' } }))
   );
 }
 
@@ -4018,7 +4051,13 @@ async function calculateGlobalTimeline(masterQueue) {
   const dryQueue = masterQueue; 
   const nodeTimings = {}; // id -> endTime
 
-  while (dryQueue.length > 0 && scheduledEvents.length < MAX_ENGINE_TICKS && !simulationAborted) {
+  while (dryQueue.length > 0 && scheduledEvents.length < MAX_ENGINE_TICKS) {
+    // Task 2: Fix the Async Latch (Gatekeeper)
+    if (executionState === 'idle') return { scheduledEvents: [], maxSimDuration: 0 };
+    if (executionState === 'paused') await awaitResumption();
+    if (executionState === 'idle') return { scheduledEvents: [], maxSimDuration: 0 };
+    if (simulationAborted) break;
+
     const signal = dryQueue.shift();
     const node = flowNodes.find(n => n.id === signal.toId);
     if (!node) continue;
@@ -4088,7 +4127,7 @@ async function runSimulationCore(scheduledEvents, maxSimDuration) {
   virtualClock = 0;
   setExecutionState('running');
 
-  const driveTimeline = () => {
+  const driveTimeline = async () => {
     // Task 3: Asynchronous Execution Latch
     // If stopped (idle), break loop immediately
     if (executionState === 'idle') {
@@ -4096,12 +4135,13 @@ async function runSimulationCore(scheduledEvents, maxSimDuration) {
       return;
     }
     
-    // If paused, yield and DO NOT schedule next frame
+    // If paused, yield and WAIT for resumption
     if (executionState === 'paused') {
-      // We don't return here to allow the timeline to be interactive
-      // but we STOP scheduling next frames.
-      console.log("[TernFlow] Engine Yielded (Paused).");
-      return;
+      console.log("[TernFlow] Engine Yielded (Paused). Awaiting resumption...");
+      await awaitResumption();
+      // Re-check after resumption
+      if (executionState === 'idle') return;
+      lastRealTime = performance.now(); // Reset delta base to avoid jump
     }
 
     const now = performance.now();
@@ -4703,6 +4743,11 @@ async function executeLLMNode(node, inSignal) {
 window.executeLLMNode = executeLLMNode;
 
 async function simulateNode(node, inSignal, isPhantom = false) {
+  // Task 2: Fix the Async Latch (Gatekeeper)
+  if (executionState === 'idle') return 0;
+  if (executionState === 'paused') await awaitResumption();
+  if (executionState === 'idle') return 0;
+  if (simulationAborted) return 0;
   if (simulationAborted) return inSignal;
   const el = document.getElementById(node.id);
   if (!el && !isPhantom) return inSignal;
