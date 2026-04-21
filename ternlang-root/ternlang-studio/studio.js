@@ -773,6 +773,11 @@ let activeWire = null;
 let simulationAborted = false;
 let simulationRunning = false;
 let executionState = 'idle'; // 'idle', 'running', 'paused'
+
+// Explicitly expose to window for React components
+window.executionState = 'idle';
+window.simulationRunning = false;
+window.simulationAborted = false;
 let virtualClock = 0;
 let lastRealTime = 0;
 
@@ -945,12 +950,13 @@ function ControlBar() {
   const handlePlay = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('[ControlBar] Play Invoked. Current state:', window.executionState);
-    if (window.executionState === 'paused') {
+    const currentState = window.executionState || 'idle';
+    console.log('[ControlBar] Play Invoked. Current state:', currentState);
+    if (currentState === 'paused') {
       // Transition to running - the driveTimeline loop awaiting in runSimulationCore 
       // will resolve its awaitResumption promise and continue automatically.
       window.setExecutionState('running');
-    } else if (window.executionState === 'idle') {
+    } else if (currentState === 'idle') {
       window.startNewSimulation();
     }
   };
