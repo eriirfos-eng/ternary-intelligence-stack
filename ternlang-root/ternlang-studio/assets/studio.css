@@ -444,23 +444,23 @@
     .flow-port-out + .flow-port-label { right: 10px; top: 50%; transform: translateY(-50%); text-align: right; }
     .fn-schema { font-size: 0.6923rem; color: var(--muted2); font-family: 'JetBrains Mono', monospace; margin-top: 4px; line-height: 1.5; }
     .flow-node.external { border-color: var(--amber); border-style: dashed; }
-    .flow-node.external .fn-head { background: rgba(245,158,11,0.08); }
+    .flow-node.external .fn-head { }
     .flow-node.gate { border-color: var(--cyan); }
-    .flow-node.gate .fn-head { background: rgba(56,189,248,0.08); }
+    .flow-node.gate .fn-head { }
     .flow-node.macro { border-color: var(--blue); border-style: dashed; background: rgba(1,118,211,0.05); }
     .flow-node.macro::after {
       content: "MACRO"; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
       font-size: 0.6154rem; font-weight: 800; color: var(--blue); letter-spacing: 1px;
     }
     .flow-node.artifact { border-color: var(--green); border-style: solid; box-shadow: 0 4px 20px rgba(16,185,129,0.1); }
-    .flow-node.artifact .fn-head { background: rgba(16,185,129,0.08); }
+    .flow-node.artifact .fn-head { }
     .flow-node.artifact .flow-port-out { display: none; }
     .flow-node.artifact.state-extend .flow-port-out,
     .flow-node.artifact.has-output .flow-port-out { display: block !important; }
     .flow-node.artifact:not(.state-extend) .flow-port-out { pointer-events: none; opacity: 0.5; }
 
     .flow-node.moe13 { border-color: var(--magenta); border-style: solid; box-shadow: 0 4px 30px rgba(217,70,239,0.15); }
-    .flow-node.moe13 .fn-head { background: rgba(217,70,239,0.1); }
+    .flow-node.moe13 .fn-head { }
     .flow-node.moe13 .fn-body { padding: 12px; }
 
     .art-btn {
