@@ -285,57 +285,26 @@ window.switchView = switchView;
 
 // ─── Tracer & Registry Views ──────────────────────────────────────────────────
 
-function renderTracerView() {
+let tracerRoot = null;
+
+async function renderTracerView() {
   const view = document.getElementById("view-debugger");
   if (!view) return;
   
-  let html = `
-    <div style="padding: 40px; overflow-y: auto; align-items: flex-start; justify-content: flex-start; width:100%;">
-      <div style="max-width: 900px; width: 100%; margin: 0 auto;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 24px;">
-          <div>
-            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">Execution Tracer</h2>
-            <p style="color: var(--muted); font-size:13px;">Historical trace of compiled Ternlang executions.</p>
-          </div>
-          <button class="btn btn-ghost" onclick="clearHistory(); renderTracerView();">Clear Trace</button>
-        </div>
-        
-        <div style="background:rgba(15,23,42,0.6); border:1px solid var(--border2); border-radius:8px; overflow:hidden;">
-  `;
-
-  if (runHistory.length === 0) {
-    html += `<div style="padding:40px; text-align:center; color:var(--muted2); font-size:12px;">No executions traced in this session.<br>Run code in the Editor or Flow Lab.</div>`;
-  } else {
-    html += `<table style="width:100%; border-collapse:collapse; font-size:11px; text-align:left;">
-      <thead>
-        <tr style="border-bottom:1px solid var(--border2); background:rgba(255,255,255,0.03);">
-          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Time</th>
-          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Node / Module</th>
-          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Status</th>
-          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Result</th>
-          <th style="padding:10px 16px; font-weight:600; color:var(--muted);">Latency</th>
-        </tr>
-      </thead>
-      <tbody>`;
-
-    [...runHistory].reverse().forEach(run => {
-      const time = new Date(run.time).toLocaleTimeString();
-      const stColor = run.status === 'ok' ? 'var(--green)' : 'var(--red)';
-      html += `
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
-          <td style="padding:10px 16px; color:var(--muted2);">${time}</td>
-          <td style="padding:10px 16px; color:var(--cyan); font-family:'JetBrains Mono',monospace;">${run.file}</td>
-          <td style="padding:10px 16px; color:${stColor}; font-weight:700;">${run.status.toUpperCase()}</td>
-          <td style="padding:10px 16px; color:var(--text);">${run.trit !== undefined ? `Trit: ${run.trit}` : 'N/A'}</td>
-          <td style="padding:10px 16px; color:var(--muted);">${run.ms || '<1'}ms</td>
-        </tr>`;
-    });
-    html += `</tbody></table>`;
+  const endpoint = document.getElementById("apiEndpoint").value;
+  
+  if (!tracerRoot) {
+    // Clear and mount React
+    view.innerHTML = '<div id="tracer-react-mount" style="width:100%;"></div>';
+    const mount = document.getElementById("tracer-react-mount");
+    tracerRoot = ReactDOM.createRoot(mount);
+    
+    // Import the component dynamically (assuming basic Babel/Unpkg setup for local ESM)
+    // For pure production without a bundler, we'll need to adapt this, 
+    // but in this dev environment we'll use the available React component.
+    const { TracerView } = await import('/src/components/TracerView.jsx');
+    tracerRoot.render(React.createElement(TracerView, { apiEndpoint: endpoint }));
   }
-
-  html += `</div></div></div>`;
-  view.innerHTML = html;
-  lucide.createIcons();
 }
 window.renderTracerView = renderTracerView;
 
