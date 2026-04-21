@@ -1227,8 +1227,8 @@ const AGENT_ONTOLOGY = {
 
 let _flowLibOpen = {
   "Guardrails & Safety": false,
-  "Deliberation & Evaluation": true,
-  "Routing & Aggregation": true,
+  "Deliberation & Evaluation": false,
+  "Routing & Aggregation": false,
   "I/O & Execution": false
 };
 
@@ -1239,9 +1239,9 @@ const ARCHETYPE_ONTOLOGY = {
 };
 
 let _archetypeOpen = {
-  "Orchestration & Consensus": true,
+  "Orchestration & Consensus": false,
   "Evaluation & Debate": false,
-  "Safety & Guardrails": true
+  "Safety & Guardrails": false
 };
 
 const BUILTIN_AGENTS = {
