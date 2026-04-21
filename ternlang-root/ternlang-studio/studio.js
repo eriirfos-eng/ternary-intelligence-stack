@@ -1241,13 +1241,19 @@ let _flowLibOpen = {
 const ARCHETYPE_ONTOLOGY = {
   "Orchestration & Consensus": ["moe_13_flagship", "consensus", "industry_enterprise_risk", "recursive_refiner", "kmu_hiring_decision", "kmu_supplier_score", "kmu_customer_qual"],
   "Evaluation & Debate": ["debate", "filter_rank", "kmu_process_opt", "sensor_gate", "industry_sme_pipeline"],
-  "Safety & Guardrails": ["guardrail", "kmu_invoice_fraud", "industry_iot_grid"]
+  "Safety & Guardrails": ["guardrail", "kmu_invoice_fraud", "industry_iot_grid"],
+  "Memory & Persistence": ["local_rag_pipeline", "episodic_reflection"],
+  "High-Performance Compute": ["quantized_sparse_accelerator"],
+  "External Interoperability": ["hard_gated_mcp", "swarm_consensus"]
 };
 
 let _archetypeOpen = {
   "Orchestration & Consensus": false,
   "Evaluation & Debate": false,
-  "Safety & Guardrails": false
+  "Safety & Guardrails": false,
+  "Memory & Persistence": false,
+  "High-Performance Compute": false,
+  "External Interoperability": false
 };
 
 const BUILTIN_AGENTS = {
@@ -3062,6 +3068,82 @@ const ARCHETYPES = [
     ],
     wires: [[0,2],[1,2],[2,3],[3,4],[3,5]],
     edgeConds: ["all","all","all","affirm","reject"]
+  },
+  {
+    id: "local_rag_pipeline",
+    name: "Local RAG Pipeline",
+    desc: "Sovereign knowledge retrieval: Sensor → SQLite bridge (local vector lookup) → ContextBuffer → Evaluation layer.",
+    icon: "database",
+    color: "var(--cyan)",
+    nodes: [
+      { name: "Input_Signal",   type: "agent",    dx: 40,  dy: 160 },
+      { name: "SQLite_Bridge",  type: "agent",    dx: 240, dy: 160 },
+      { name: "Context_Buffer", type: "agent",    dx: 440, dy: 160 },
+      { name: "Evaluator",      type: "agent",    dx: 640, dy: 160 }
+    ],
+    wires: [[0,1],[1,2],[2,3]],
+    edgeConds: ["all","affirm","all"]
+  },
+  {
+    id: "episodic_reflection",
+    name: "Episodic Reflection Loop",
+    desc: "Continuous self-correction: routes output back through EpisodicRecall and StateInjector for temporal grounding.",
+    icon: "history",
+    color: "var(--amber)",
+    nodes: [
+      { name: "Processor",     type: "agent",    dx: 40,  dy: 160 },
+      { name: "Episodic_Recall",type: "agent",    dx: 240, dy: 260 },
+      { name: "State_Injector", type: "agent",    dx: 240, dy: 60  },
+      { name: "Decision_Gate",  type: "gate",     dx: 440, dy: 160 }
+    ],
+    wires: [[0,1],[1,2],[2,0],[0,3]],
+    feedbackWires: [2],
+    edgeConds: ["all","all","tend","affirm"]
+  },
+  {
+    id: "quantized_sparse_accelerator",
+    name: "Quantized Sparse Accelerator",
+    desc: "High-performance compute: TernaryQuantizer → SparseMatMul → Filter (aggressive neutral pruning).",
+    icon: "zap",
+    color: "var(--cyan)",
+    nodes: [
+      { name: "Quantizer",      type: "agent",    dx: 40,  dy: 160 },
+      { name: "Sparse_Core",    type: "agent",    dx: 240, dy: 160 },
+      { name: "Weight_Filter",  type: "gate",     dx: 440, dy: 160 },
+      { name: "Accelerated_Out",type: "agent",    dx: 640, dy: 160 }
+    ],
+    wires: [[0,1],[1,2],[2,3]],
+    edgeConds: ["all","all","!tend"]
+  },
+  {
+    id: "hard_gated_mcp",
+    name: "Hard-Gated MCP Bridge",
+    desc: "Secure tool access: MCPBridge (external) → VetoOrchestrator (hard stop on hallucinations).",
+    icon: "shield-alert",
+    color: "var(--red)",
+    nodes: [
+      { name: "MCP_Bridge",     type: "agent",    dx: 40,  dy: 160 },
+      { name: "Veto_Orchestrator", type: "agent", dx: 240, dy: 160 },
+      { name: "Safe_Execution", type: "agent",    dx: 440, dy: 160 }
+    ],
+    wires: [[0,1],[1,2]],
+    edgeConds: ["all","affirm"]
+  },
+  {
+    id: "swarm_consensus",
+    name: "Swarm Consensus (Albert)",
+    desc: "Decentralized mesh: multi-node sync using LocalNodeSync → strict ConsensusGate.",
+    icon: "network",
+    color: "var(--green)",
+    nodes: [
+      { name: "Node_A",        type: "agent",    dx: 40,  dy: 60  },
+      { name: "Node_B",        type: "agent",    dx: 40,  dy: 260 },
+      { name: "Fleet_Sync",    type: "agent",    dx: 240, dy: 160 },
+      { name: "Consensus_Gate",type: "gate",     dx: 440, dy: 160 },
+      { name: "Unified_State", type: "agent",    dx: 640, dy: 160 }
+    ],
+    wires: [[0,2],[1,2],[2,3],[3,4]],
+    edgeConds: ["all","all","all","affirm"]
   }
 ];
 
@@ -3140,6 +3222,7 @@ function renderArchetypes(q = "") {
 
   if (lib.querySelectorAll(".archetype-card").length === 0) {
     const empty = document.createElement("div");
+    empty.id = "no-arch-matches";
     empty.style.padding = "20px";
     empty.style.textAlign = "center";
     empty.style.color = "var(--muted2)";
@@ -3238,6 +3321,30 @@ function getArchetypeCode(archId, nodeName, type) {
   if (archId === 'debate') {
     if (n.includes('proposer'))  return `fn main() -> trit {\n    emit \"PROPOSING_THESIS\";\n    return affirm;\n}`;
     if (n.includes('challenger'))return `fn main() -> trit {\n    emit \"COUNTER_ARGUMENT\";\n    return reject;\n}`;
+  }
+
+  if (archId === 'local_rag_pipeline') {
+    if (n.includes('sqlite')) return `fn main() -> trit {\n    db_execute(\"SELECT vector FROM index WHERE state = +1\");\n    return affirm;\n}`;
+    if (n.includes('context'))return `fn main() -> trit {\n    let ctx = read_context();\n    emit \"CTX_LENGTH: \" + ctx.length;\n    return affirm;\n}`;
+  }
+
+  if (archId === 'episodic_reflection') {
+    if (n.includes('recall'))  return `fn main() -> trit {\n    let res = recall(read_input());\n    return res ? affirm : tend;\n}`;
+    if (n.includes('injector'))return `fn main() -> trit {\n    inject_state(tend);\n    return tend;\n}`;
+  }
+
+  if (archId === 'quantized_sparse_accelerator') {
+    if (n.includes('quantizer')) return `fn main() -> trit {\n    return quantize(read_float());\n}`;
+    if (n.includes('sparse'))    return `@sparseskip\nfn main() -> trit {\n    return matmul_step();\n}`;
+  }
+
+  if (archId === 'hard_gated_mcp') {
+    if (n.includes('mcp'))  return `fn main() -> trit {\n    return mcp_call(\"tools/fetch\");\n}`;
+    if (n.includes('veto')) return `fn main() -> trit {\n    let v = read_input();\n    if v == reject { return reject; }\n    return affirm;\n}`;
+  }
+
+  if (archId === 'swarm_consensus') {
+    if (n.includes('fleet')) return `fn main() -> trit {\n    sync_fleet();\n    return affirm;\n}`;
   }
 
   // Default functional template
