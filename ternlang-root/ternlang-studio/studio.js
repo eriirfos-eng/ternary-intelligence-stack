@@ -285,24 +285,89 @@ window.switchView = switchView;
 
 // ─── Tracer & Registry Views ──────────────────────────────────────────────────
 
+function useTracerTelemetry(wsUrl) {
+  const [telemetry, setTelemetry] = React.useState([]);
+  const [isConnected, setIsConnected] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!wsUrl) return;
+    const socket = new WebSocket(wsUrl);
+    socket.onopen = () => {
+      console.log('[Tracer WS] Handshake successful.');
+      setIsConnected(true);
+    };
+    socket.onmessage = (event) => {
+      console.log('[Tracer WS] Payload:', event.data);
+      try {
+        if (event.data === 'connected') return;
+        const data = JSON.parse(event.data);
+        setTelemetry(prev => [data, ...prev].slice(0, 1000));
+      } catch (err) {}
+    };
+    socket.onclose = () => setIsConnected(false);
+    socket.onerror = () => console.error('[Tracer WS] Connection failed.');
+    return () => socket.close();
+  }, [wsUrl]);
+
+  return { telemetry, isConnected, clearTelemetry: () => setTelemetry([]) };
+}
+
+function TracerView({ apiEndpoint }) {
+  const wsUrl = apiEndpoint.replace('http', 'ws') + '/api/tracer/ws';
+  const { telemetry, isConnected, clearTelemetry } = useTracerTelemetry(wsUrl);
+
+  const tritColor = (val) => val === 1 ? '#10b981' : (val === -1 ? '#ef4444' : '#f59e0b');
+
+  return React.createElement('div', { style: { padding: '24px', color: '#f1f5f9', fontFamily: 'Inter, sans-serif' } },
+    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' } },
+      React.createElement('h2', { style: { fontSize: '18px', fontWeight: '800', margin: 0 } },
+        React.createElement('span', { style: { color: isConnected ? '#10b981' : '#ef4444', marginRight: '8px' } }, '●'),
+        'Execution Tracer Pipeline'
+      ),
+      React.createElement('button', { className: 'btn btn-ghost', onClick: clearTelemetry, style: { fontSize: '12px' } }, 'Clear Trace')
+    ),
+    React.createElement('div', { style: { background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden' } },
+      React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' } },
+        React.createElement('thead', { style: { background: '#334155', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.05em' } },
+          React.createElement('tr', {},
+            ['Timestamp', 'Node ID', 'Event', 'Result', 'Latency'].map(h => React.createElement('th', { key: h, style: { padding: '12px 16px' } }, h))
+          )
+        ),
+        React.createElement('tbody', {},
+          telemetry.length === 0 ? React.createElement('tr', {}, 
+            React.createElement('td', { colSpan: 5, style: { padding: '40px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' } }, 'Awaiting telemetry firehose...')
+          ) : telemetry.map(event => React.createElement('tr', { key: event.trace_id, style: { borderBottom: '1px solid #334155', opacity: event.sparse_dropped ? 0.5 : 1 } },
+            React.createElement('td', { style: { padding: '12px 16px', color: '#cbd5e1' } }, new Date(event.timestamp_ms).toLocaleTimeString()),
+            React.createElement('td', { style: { padding: '12px 16px', fontWeight: '700' } }, event.node_id),
+            React.createElement('td', { style: { padding: '12px 16px' } }, event.event_type),
+            React.createElement('td', { style: { padding: '12px 16px' } }, 
+              React.createElement('span', { style: { padding: '2px 8px', borderRadius: '4px', background: tritColor(event.signal_out)+'22', color: tritColor(event.signal_out), fontWeight: '800' } }, 
+                event.signal_out > 0 ? '+1' : (event.signal_out < 0 ? '-1' : '0')
+              )
+            ),
+            React.createElement('td', { style: { padding: '12px 16px' } }, 
+              `${event.latency_ms}ms`,
+              event.sparse_dropped && React.createElement('span', { style: { marginLeft: '8px', background: '#38bdf8', color: '#0f172a', fontSize: '9px', padding: '2px 6px', borderRadius: '4px', fontWeight: '900' } }, 'BYPASSED')
+            )
+          ))
+        )
+      )
+    )
+  );
+}
+
 let tracerRoot = null;
 
 async function renderTracerView() {
   const view = document.getElementById("view-debugger");
-  if (!view) return;
+  if (!view || !window.ReactDOM) return;
   
   const endpoint = document.getElementById("apiEndpoint").value;
   
   if (!tracerRoot) {
-    // Clear and mount React
     view.innerHTML = '<div id="tracer-react-mount" style="width:100%;"></div>';
     const mount = document.getElementById("tracer-react-mount");
     tracerRoot = ReactDOM.createRoot(mount);
-    
-    // Import the component dynamically (assuming basic Babel/Unpkg setup for local ESM)
-    // For pure production without a bundler, we'll need to adapt this, 
-    // but in this dev environment we'll use the available React component.
-    const { TracerView } = await import('/src/components/TracerView.jsx');
     tracerRoot.render(React.createElement(TracerView, { apiEndpoint: endpoint }));
   }
 }
@@ -809,18 +874,84 @@ window.stopSimulation = stopSimulation;
 
 // ─── Control Bar (React) ──────────────────────────────────────────────────
 
-async function mountControlBar() {
+function ControlBar() {
+  const [state, setState] = React.useState(window.executionState || 'idle');
+
+  React.useEffect(() => {
+    const handle = (e) => setState(e.detail.state);
+    window.addEventListener('executionstatechange', handle);
+    return () => window.removeEventListener('executionstatechange', handle);
+  }, []);
+
+  // Force Lucide re-draw on state change
+  React.useEffect(() => {
+    if (window.lucide) window.lucide.createIcons();
+  }, [state]);
+
+  const pillStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    height: '32px',
+    width: '140px',
+    background: '#1e293b', // Slate 800
+    border: '1px solid #334155', // Slate 700
+    borderRadius: '16px',
+    overflow: 'hidden',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+  };
+
+  const segmentStyle = (active, color) => ({
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    background: active ? color : 'transparent',
+    color: active ? '#000' : '#f1f5f9',
+    borderRight: '1px solid rgba(255,255,255,0.05)',
+  });
+
+  return React.createElement('div', { style: pillStyle },
+    // PLAY
+    React.createElement('div', {
+      style: segmentStyle(state === 'running', '#10b981'),
+      title: 'Play / Resume',
+      onClick: () => {
+        if (state === 'paused') {
+          window.setExecutionState('running');
+          window.lastRealTime = performance.now();
+          if (window.currentDriveTimeline) requestAnimationFrame(window.currentDriveTimeline);
+        } else if (state === 'idle') {
+          window.startNewSimulation();
+        }
+      }
+    }, React.createElement('i', { 'data-lucide': 'play', style: { width: '14px' } })),
+    
+    // PAUSE
+    React.createElement('div', {
+      style: segmentStyle(state === 'paused', '#f59e0b'),
+      title: 'Pause',
+      onClick: () => { if (state === 'running') window.setExecutionState('paused'); }
+    }, React.createElement('i', { 'data-lucide': 'pause', style: { width: '14px' } })),
+    
+    // STOP
+    React.createElement('div', {
+      style: { ...segmentStyle(false, 'transparent'), borderRight: 'none' },
+      title: 'Stop & Reset',
+      onClick: () => window.stopSimulation(),
+      onMouseEnter: (e) => e.currentTarget.style.color = '#ef4444',
+      onMouseLeave: (e) => e.currentTarget.style.color = '#f1f5f9'
+    }, React.createElement('i', { 'data-lucide': 'square', style: { width: '14px' } }))
+  );
+}
+
+function mountControlBar() {
   const mount = document.getElementById("control-bar-mount");
   if (!mount || !window.ReactDOM) return;
-  
   const root = ReactDOM.createRoot(mount);
-  // Using dynamic import for the JSX component
-  try {
-    const { ControlBar } = await import('/src/components/ControlBar.jsx');
-    root.render(React.createElement(ControlBar));
-  } catch (err) {
-    console.error("Failed to mount ControlBar:", err);
-  }
+  root.render(React.createElement(ControlBar));
 }
 window.mountControlBar = mountControlBar;
 
