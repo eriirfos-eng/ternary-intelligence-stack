@@ -1,8 +1,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 13px; }
     html, body { height: 100%; overflow: hidden; }
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      font-size: 13px;
+      font-size: 1rem;
       background: var(--bg);
       color: var(--text);
       display: flex;
@@ -78,7 +79,7 @@
       gap: 6px; padding: 6px 12px; border-radius: var(--radius);
       font-weight: 500; cursor: pointer; transition: all 0.2s;
       border: 1px solid transparent; outline: none;
-      font-family: inherit; font-size: 13px;
+      font-family: inherit; font-size: 1rem;
     }
     .btn-primary { background: var(--blue); color: white; }
     .btn-primary:hover { background: #005fb2; transform: translateY(-1px); box-shadow: var(--shadow); }
@@ -109,7 +110,7 @@
       padding: 12px; border-bottom: 1px solid var(--border);
     }
     .lib-item {
-      padding: 10px 16px; font-size: 12px; color: var(--muted);
+      padding: 10px 16px; font-size: 0.92rem; color: var(--muted);
       cursor: grab; display: flex; align-items: center; gap: 8px;
       transition: all 0.15s; border-bottom: 1px solid rgba(255,255,255,0.02);
     }
@@ -276,16 +277,16 @@
     }
     .prop-header {
       padding: 12px 16px; border-bottom: 1px solid var(--border);
-      font-size: 13px; font-weight: 700; color: var(--text);
+      font-size: 1rem; font-weight: 700; color: var(--text);
       text-transform: uppercase; letter-spacing: 0.05em;
     }
     .prop-body { padding: 16px; display: flex; flex-direction: column; gap: 18px; }
     .prop-group { display: flex; flex-direction: column; gap: 8px; }
-    .prop-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+    .prop-label { font-size: 0.92rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
     .prop-input {
       background: var(--bg2); border: 1px solid var(--border2);
       border-radius: 4px; color: var(--text); padding: 10px;
-      font-family: inherit; font-size: 14px; outline: none;
+      font-family: inherit; font-size: 1.08rem; outline: none;
       line-height: 1.5;
     }
     .prop-input:focus { border-color: var(--blue); }
@@ -590,8 +591,9 @@
       height: 32px; padding: 0 10px; border-radius: 4px;
       appearance: none; -webkit-appearance: none;
       background: transparent !important; border: none !important; outline: none;
-      color: var(--muted); font-family: inherit; font-size: 12px; font-weight: 600;
+      color: var(--muted); font-family: inherit; font-size: 0.92rem; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; gap: 6px;
+
       transition: all 0.2s;
     }
     .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.05) !important; }

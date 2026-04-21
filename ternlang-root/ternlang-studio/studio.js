@@ -6648,11 +6648,17 @@ function syncSettingsUI() {
 window.syncSettingsUI = syncSettingsUI;
 
 function applyEditorSettings() {
-  if (!monacoEditor) return;
   const fontSize = parseInt(document.getElementById("settingsFontSize").value);
   const minimap = document.getElementById("settingsMinimap").value === "true";
   const wordWrap = document.getElementById("settingsWordWrap").value;
-  monacoEditor.updateOptions({ fontSize, minimap: { enabled: minimap }, wordWrap });
+  
+  // Task 1: Apply global application text scale
+  document.documentElement.style.fontSize = fontSize + "px";
+  
+  // Task 2: Preserve Monaco Compatibility
+  if (monacoEditor) {
+    monacoEditor.updateOptions({ fontSize, minimap: { enabled: minimap }, wordWrap });
+  }
 }
 window.applyEditorSettings = applyEditorSettings;
 
