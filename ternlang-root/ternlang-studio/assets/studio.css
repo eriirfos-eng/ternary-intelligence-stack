@@ -29,8 +29,8 @@
       --red:       #ef4444; /* Red 500 */
       --amber:     #f59e0b; /* Amber 500 */
       --text:      #f1f5f9; /* Slate 100 */
-      --muted:     #94a3b8; /* Slate 400 */
-      --muted2:    #64748b; /* Slate 500 */
+      --muted:     #cbd5e1; /* Slate 300 */
+      --muted2:    #e2e8f0; /* Slate 200 */
       --active-file-bg: #0c4a6e; /* Sky 900 */
       --sidebar-w: 240px;
       --output-h:  220px;
@@ -1314,6 +1314,29 @@
 #explorer-trees {
   display: flex;
   flex-direction: column;
+}
+
+/* ─── Global Tooltip ────────────────────────────────────────────── */
+#global-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.95); /* Dark Slate with opacity */
+  color: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  font-size: 11px;
+  line-height: 1.4;
+  max-width: 250px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+#global-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 .file-tree-body {
   padding: 4px 0;
