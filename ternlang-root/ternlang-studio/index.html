@@ -572,8 +572,13 @@
     </div>
 
     <!-- Archetypes panel -->
-    <div id="lib-panel-archetypes" style="display:none;flex:1;overflow-y:auto;padding:8px;">
-      <!-- Rendered via JS -->
+    <div id="lib-panel-archetypes" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <div class="lib-search" style="display:flex; gap:6px; padding:8px;">
+        <input type="text" class="prop-input" id="archLibSearch" placeholder="Search templates…" style="flex:1;height:28px;" oninput="renderArchetypes(this.value)">
+      </div>
+      <div id="arch-lib-items" style="flex:1; overflow-y:auto; padding:0 8px 8px;">
+        <!-- Rendered via JS -->
+      </div>
     </div>
   </div>
   <div class="sidebar-resizer" id="flow-sidebar-resizer"></div>
