@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
  * Implementation of the 3-segment ternary execution control pill.
  */
 export const ControlBar = () => {
-  const [executionState, setExecutionState] = useState('idle');
+  const [executionState, setExecutionState] = useState(window.executionState || 'idle');
 
   useEffect(() => {
     const handleStateChange = (e) => {
@@ -14,6 +14,12 @@ export const ControlBar = () => {
     window.addEventListener('executionstatechange', handleStateChange);
     return () => window.removeEventListener('executionstatechange', handleStateChange);
   }, []);
+
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  }, [executionState]);
 
   const handlePlay = () => {
     if (executionState === 'paused') {
