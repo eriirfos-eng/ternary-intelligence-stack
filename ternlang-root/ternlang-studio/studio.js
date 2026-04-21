@@ -707,15 +707,21 @@ let selectedNodeId = null;
 let activeWire = null;
 let simulationAborted = false;
 let simulationRunning = false;
+let executionState = 'idle'; // 'idle', 'running', 'paused'
 let virtualClock = 0;
 let lastRealTime = 0;
 
 function updateSimUI() {
+  // Legacy UI sync - most logic moved to React ControlBar
   const btn = document.getElementById("simBtn");
   if (!btn) return;
-  if (simulationRunning) {
-    btn.innerHTML = `<i data-lucide="square" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">STOP</span>`;
-    btn.style.color = "var(--red)";
+  if (executionState === 'running') {
+    btn.innerHTML = `<i data-lucide="pause" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">PAUSE</span>`;
+    btn.style.color = "var(--amber)";
+    btn.classList.add("running");
+  } else if (executionState === 'paused') {
+    btn.innerHTML = `<i data-lucide="play" style="width:15px"></i> <span style="font-size:12px;font-weight:700;">RESUME</span>`;
+    btn.style.color = "var(--green)";
     btn.classList.add("running");
   } else {
     btn.innerHTML = `<i data-lucide="play-circle" style="width:15px"></i> <span style="font-size:12px;font-weight:600;">SIMULATE</span>`;
@@ -726,34 +732,97 @@ function updateSimUI() {
 }
 window.updateSimUI = updateSimUI;
 
-function toggleSimulation() {
-  const scrubber = document.getElementById('global-timeline');
-  const canvas = document.getElementById("scrub-layer");
-
-  if (simulationRunning) {
-    stopSimulation();
+function setExecutionState(state) {
+  console.log(`[TernFlow] Execution State -> ${state}`);
+  executionState = state;
+  simulationRunning = (state === 'running');
+  
+  if (state === 'idle') {
+    simulationAborted = true;
   } else {
-    // 1. Graph Memory Wipe
-    flowNodes.forEach(n => { n.visited = false; n.executed = false; });
-    flowWires.forEach(e => { e.active = false; });
+    simulationAborted = false;
+  }
+  
+  updateSimUI();
+  
+  // Trigger event for React components
+  window.dispatchEvent(new CustomEvent('executionstatechange', { detail: { state } }));
+}
+window.setExecutionState = setExecutionState;
 
-    // 2. Clock & UI Reset
-    if (scrubber) scrubber.value = 0;
-    virtualClock = 0;
+function toggleSimulation() {
+  if (executionState === 'running') {
+    setExecutionState('paused');
+  } else if (executionState === 'paused') {
+    setExecutionState('running');
+    // We need to kick off the loop again if it was stopped
     lastRealTime = performance.now();
-    
-    // 4. Canvas Scrub
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    // Wipe ghost dots immediately
-    document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
-
-    runSimulation();
+    requestAnimationFrame(window.currentDriveTimeline);
+  } else {
+    startNewSimulation();
   }
 }
 window.toggleSimulation = toggleSimulation;
+
+function startNewSimulation() {
+  const scrubber = document.getElementById('global-timeline');
+  const canvas = document.getElementById("scrub-layer");
+
+  // 1. Graph Memory Wipe
+  flowNodes.forEach(n => { n.visited = false; n.executed = false; });
+  flowWires.forEach(e => { e.active = false; });
+
+  // 2. Clock & UI Reset
+  if (scrubber) scrubber.value = 0;
+  virtualClock = 0;
+  lastRealTime = performance.now();
+  
+  // 4. Canvas Scrub
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  // Wipe ghost dots immediately
+  document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
+
+  runSimulation();
+}
+
+function stopSimulation() {
+  setExecutionState('idle');
+  showToast("Simulation stopped and reset", "warn");
+  
+  // Reset clock
+  virtualClock = 0;
+  const scrubber = document.getElementById("global-timeline");
+  if (scrubber) scrubber.value = 0;
+  
+  // Clear visuals
+  const canvas = document.getElementById("scrub-layer");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  document.querySelectorAll('.trit-particle-ghost').forEach(p => p.remove());
+}
+window.stopSimulation = stopSimulation;
+
+// ─── Control Bar (React) ──────────────────────────────────────────────────
+
+async function mountControlBar() {
+  const mount = document.getElementById("control-bar-mount");
+  if (!mount || !window.ReactDOM) return;
+  
+  const root = ReactDOM.createRoot(mount);
+  // Using dynamic import for the JSX component
+  try {
+    const { ControlBar } = await import('/src/components/ControlBar.jsx');
+    root.render(React.createElement(ControlBar));
+  } catch (err) {
+    console.error("Failed to mount ControlBar:", err);
+  }
+}
+window.mountControlBar = mountControlBar;
 
 // ─── God Mode: Signal Injection ──────────────────────────────────────────────
 async function injectSignal(nodeId, val) {
@@ -3699,10 +3768,8 @@ window.updateFogHeatmap = updateFogHeatmap;
 // ─── End of v2 Core Modules ──────────────────────────────────────────────────
 
 async function runSimulation() {
-  if (simulationRunning) return;
-  simulationAborted = false;
-  simulationRunning = true;
-  updateSimUI();
+  if (executionState === 'running') return;
+  setExecutionState('running');
 
   try {
     const { errors, warnings } = validateGraph();
@@ -3880,11 +3947,24 @@ async function runSimulationCore(scheduledEvents, maxSimDuration) {
   
   lastRealTime = performance.now();
   virtualClock = 0;
-  simulationRunning = true;
+  setExecutionState('running');
 
   const driveTimeline = () => {
-    if (!simulationRunning || simulationAborted) return;
+    // Task 3: Asynchronous Execution Latch
+    // If stopped (idle), break loop immediately
+    if (executionState === 'idle') {
+      console.log("[TernFlow] Engine Terminated (Stopped).");
+      return;
+    }
     
+    // If paused, yield and DO NOT schedule next frame
+    if (executionState === 'paused') {
+      // We don't return here to allow the timeline to be interactive
+      // but we STOP scheduling next frames.
+      console.log("[TernFlow] Engine Yielded (Paused).");
+      return;
+    }
+
     const now = performance.now();
     const delta = now - lastRealTime;
     lastRealTime = now;
@@ -3892,8 +3972,7 @@ async function runSimulationCore(scheduledEvents, maxSimDuration) {
     virtualClock += delta;
     if (virtualClock >= maxSimDuration) {
       virtualClock = maxSimDuration;
-      simulationRunning = false;
-      updateSimUI();
+      setExecutionState('idle');
       logInspector("SYSTEM", "✓ Pre-flight playback complete");
     }
 
@@ -3904,10 +3983,13 @@ async function runSimulationCore(scheduledEvents, maxSimDuration) {
     
     renderScrubLayer(virtualClock, scheduledEvents, loggedEvents);
 
-    if (simulationRunning) {
+    if (executionState === 'running') {
       requestAnimationFrame(driveTimeline);
     }
   };
+  
+  // Expose for resumption
+  window.currentDriveTimeline = driveTimeline;
   requestAnimationFrame(driveTimeline);
 }
 window.runSimulationCore = runSimulationCore;
@@ -7050,6 +7132,16 @@ require(["vs/editor/editor.main"], function () {
   const lastView = localStorage.getItem("ternstudio-last-view") || "dashboard";
   hydrateSimSpeed();
   switchView(lastView);
+
+  // Initialize Control Bar (React)
+  if (typeof mountControlBar === 'function') {
+    mountControlBar();
+  } else {
+    // Fallback if not defined yet in the file (hoisting check)
+    window.addEventListener('load', () => {
+      if (window.mountControlBar) window.mountControlBar();
+    });
+  }
 
   // Initialize visualizer with empty state
   renderLogicField([]);

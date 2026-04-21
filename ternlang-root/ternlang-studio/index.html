@@ -757,13 +757,15 @@
 
       <div class="toolbar-divider"></div>
 
-      <!-- TEST: Loop -->
+      <!-- Simulation Control Bar (React Mounted) -->
+      <div class="toolbar-group" id="control-bar-mount">
+        <!-- React ControlBar component mounts here -->
+      </div>
+      
+      <div class="toolbar-divider"></div>
+
       <div class="toolbar-group">
-        <button class="btn-pill simulate" id="simBtn" onclick="toggleSimulation()" title="Engage Simulation">
-          <i data-lucide="play-circle" style="width:15px"></i> <span>Simulate</span>
-        </button>
-        
-        <div style="display:flex; align-items:center; gap:8px; padding:0 8px;" title="Simulation Latency">
+        <div style="display:flex; align-items:center; gap:8px; padding:0 8px;" title="Simulation Speed">
           <input type="range" id="simSpeedSlider" min="0" max="1000" step="1" value="500" class="speed-slider-industrial" oninput="updateSimSpeed(this.value)">
         </div>
 
