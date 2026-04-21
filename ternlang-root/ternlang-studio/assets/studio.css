@@ -1361,14 +1361,10 @@
   transition: transform 0.2s ease;
 }
 .lib-category.collapsed .lib-category-header i {
-  transform: rotate(-180deg);
+  transform: rotate(-90deg);
 }
 .lib-category-items {
   overflow: hidden;
-  transition: max-height 0.3s ease-out;
-}
-.lib-category.collapsed .lib-category-items {
-  display: none;
 }
 /* Archetype Card Styling */
 .archetype-card {
