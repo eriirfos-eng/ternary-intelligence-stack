@@ -1,0 +1,68 @@
+// stdlib/classical/kmp_search_trit.tern
+// Demonstrates: Knuth-Morris-Pratt (KMP) pattern matching on trit tensors.
+// Tier: 1 - Open Core
+
+fn compute_lps(pat: trittensor<4>, m: int, lps: int[4]) -> trit {
+    let len_val: int = 0;
+    lps[0] = 0;
+    let i: int = 1;
+    while i < m {
+        if pat[i] == pat[len_val] {
+            len_val = len_val + 1;
+            lps[i] = len_val;
+            i = i + 1;
+        } else {
+            if len_val != 0 {
+                len_val = lps[len_val - 1];
+            } else {
+                lps[i] = 0;
+                i = i + 1;
+            }
+        }
+    }
+    return 1;
+}
+
+fn kmp_search(txt: trittensor<12>, pat: trittensor<4>, n: int, m: int) -> int {
+    let lps: int[4];
+    compute_lps(pat, m, lps);
+    
+    let i: int = 0; // index for txt
+    let j: int = 0; // index for pat
+    while i < n {
+        if pat[j] == txt[i] {
+            j = j + 1;
+            i = i + 1;
+        }
+        
+        if j == m {
+            return i - j;
+        } else if i < n && pat[j] != txt[i] {
+            if j != 0 {
+                j = lps[j - 1];
+            } else {
+                i = i + 1;
+            }
+        }
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    // txt: [1, 0, -1, 1, 0, -1, 1, 1, 0, -1, 1, 0]
+    // pat: [1, 1, 0, -1] (starts at index 6)
+    let txt: trittensor<12> = [1, 0, -1, 1, 0, -1, 1, 1, 0, -1, 1, 0];
+    let pat: trittensor<4> = [1, 1, 0, -1];
+    
+    println("KMP Search for pattern in trit sequence:");
+    let idx: int = kmp_search(txt, pat, 12, 4);
+    println("Found at index:");
+    println(idx);
+    
+    if idx == 6 {
+        println("KMP search OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
