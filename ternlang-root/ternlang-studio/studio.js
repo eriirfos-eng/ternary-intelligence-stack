@@ -277,6 +277,7 @@ async function switchView(name) {
   }
   if (name === "debugger") renderTracerView();
   if (name === "modules") await renderRegistryView();
+  if (name === "translator") await renderTranslatorView();
   if (name === "fleet") await renderFleetView();
   if (name === "settings") syncSettingsUI();
   lucide.createIcons();
@@ -371,14 +372,56 @@ function TracerView({ apiEndpoint }) {
   );
 }
 
+/**
+ * TranslatorView React Component
+ * Integrates the Ternlang Translator as a sovereign micro-frontend.
+ */
+function TranslatorView() {
+  const iframeRef = React.useRef(null);
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const translatorUrl = isDev ? 'http://localhost:5000' : 'https://translator.ternlang.com';
+
+  React.useEffect(() => {
+    const handleLoad = () => {
+      if (iframeRef.current) {
+        console.log('[TranslatorView] Iframe loaded, transmitting API key...');
+        const key = localStorage.getItem('ternstudio-key') || '';
+        iframeRef.current.contentWindow.postMessage({
+          type: 'TIS_AUTH_BRIDGE',
+          key: key
+        }, translatorUrl);
+      }
+    };
+
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.addEventListener('load', handleLoad);
+      return () => iframe.removeEventListener('load', handleLoad);
+    }
+  }, [translatorUrl]);
+
+  return React.createElement('div', { 
+    style: { width: '100%', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' } 
+  },
+    React.createElement('iframe', {
+      ref: iframeRef,
+      src: translatorUrl,
+      style: { width: '100%', height: '100%', border: '0' },
+      sandbox: "allow-scripts allow-same-origin allow-forms allow-popups",
+      title: "Ternlang Translator"
+    })
+  );
+}
+
 let tracerRoot = null;
+let translatorRoot = null;
 
 async function renderTracerView() {
   const view = document.getElementById("view-debugger");
   if (!view || !window.ReactDOM) return;
-  
+
   const endpoint = document.getElementById("apiEndpoint").value;
-  
+
   if (!tracerRoot) {
     view.innerHTML = '<div id="tracer-react-mount" style="width:100%;"></div>';
     const mount = document.getElementById("tracer-react-mount");
@@ -388,6 +431,18 @@ async function renderTracerView() {
 }
 window.renderTracerView = renderTracerView;
 
+async function renderTranslatorView() {
+  const view = document.getElementById("view-translator");
+  if (!view || !window.ReactDOM) return;
+
+  if (!translatorRoot) {
+    view.innerHTML = '<div id="translator-react-mount" style="width:100%;"></div>';
+    const mount = document.getElementById("translator-react-mount");
+    translatorRoot = ReactDOM.createRoot(mount);
+    translatorRoot.render(React.createElement(TranslatorView));
+  }
+}
+window.renderTranslatorView = renderTranslatorView;
 let agentToDeleteId = null;
 function confirmDeleteAgent(id, name) {
   agentToDeleteId = id;

@@ -31,6 +31,7 @@
       <button class="nav-tab"        id="vt-docs"      onclick="switchView('docs')"><i data-lucide="book-open"></i> Docs</button>
       <button class="nav-tab"        id="vt-debugger"  onclick="switchView('debugger')"><i data-lucide="bug"></i> Tracer</button>
       <button class="nav-tab"        id="vt-modules"   onclick="switchView('modules')"><i data-lucide="package"></i> Registry</button>
+      <button class="nav-tab"        id="vt-translator" onclick="switchView('translator')"><i data-lucide="languages"></i> Translator</button>
       <button class="nav-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings"></i> Config</button>
     </div>
   </div>
@@ -1189,8 +1190,8 @@
 </div>
 
 <!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
-<div class="view" id="view-modules">
-</div>
+<div class="view" id="view-modules"></div>
+<div class="view" id="view-translator"></div>
 
 <div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
   <div class="modal-box">
