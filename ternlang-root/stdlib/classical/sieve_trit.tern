@@ -1,0 +1,52 @@
+// stdlib/classical/sieve_trit.tern
+// Demonstrates: Sieve of Eratosthenes algorithm using a trit tensor.
+// Tier: 1 - Open Core
+
+fn sieve(primes: trittensor<30>, n: int) -> trit {
+    let i: int = 0;
+    while i < n {
+        primes[i] = 1; // Assume prime
+        i = i + 1;
+    }
+    primes[0] = 0; // 0 is not prime
+    primes[1] = 0; // 1 is not prime
+    
+    let p: int = 2;
+    while p * p < n {
+        if primes[p] == 1 {
+            // Update all multiples of p
+            let j: int = p * p;
+            while j < n {
+                primes[j] = 0;
+                j = j + p;
+            }
+        }
+        p = p + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let primes: trittensor<30> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    println("Sieve of Eratosthenes up to 30:");
+    sieve(primes, 30);
+    
+    println("Primes found:");
+    let k: int = 0;
+    while k < 30 {
+        if primes[k] == 1 {
+            print(k); print(" ");
+        }
+        k = k + 1;
+    }
+    println("");
+    
+    // Check 2, 3, 5, 7, 11, 13, 17, 19, 23, 29
+    if primes[2] == 1 && primes[29] == 1 && primes[4] == 0 && primes[25] == 0 {
+        println("Sieve OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
