@@ -1,0 +1,25 @@
+// stdlib/agents/archetypes/monitor_agent.tern
+// Tier: 1 — Open Core
+// Archetype: Guardian (Status/Safety Monitor)
+
+agent MonitorAgent {
+    fn handle(msg: trit) -> trit {
+        match msg {
+            reject => { return reject; }
+            affirm => { return affirm; }
+            tend   => { return tend; }
+        }
+    }
+}
+
+fn main() -> trit {
+    let m: agentref = spawn MonitorAgent;
+    send m reject;
+    let status: trit = await m;
+    
+    match status {
+        reject => { return reject; }
+        affirm => { return affirm; }
+        tend   => { return tend; }
+    }
+}
