@@ -1,0 +1,10 @@
+agent TestTick {
+    state: trit
+    fn tick(input: trit) -> trit {
+        return self.state;
+    }
+}
+
+fn main() -> trit {
+    return affirm;
+}

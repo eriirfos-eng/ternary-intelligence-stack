@@ -1,0 +1,10 @@
+agent TestState {
+    val: trit
+    fn handle(i: trit) -> trit {
+        return self.val;
+    }
+}
+
+fn main() -> trit {
+    return affirm;
+}
