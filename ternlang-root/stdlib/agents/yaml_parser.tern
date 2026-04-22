@@ -1,0 +1,23 @@
+// stdlib/agents/yaml_parser.tern
+// Demonstrates: Interfacing Ternlang agents with YAML payloads
+// Tier: 1 — Open Core
+
+agent YamlParser {
+    fn handle(msg: trit) -> trit {
+        // This agent simulates parsing a YAML payload passed from the studio
+        // Logic: Accept (+1), Uncertain (0), Reject (-1)
+        return affirm;
+    }
+}
+
+fn main() -> trit {
+    let p: agentref = spawn YamlParser;
+    send p 1;
+    let res: trit = await p;
+    
+    match res {
+        1  => { return affirm; }
+        0  => { return hold;   }
+        -1 => { return reject; }
+    }
+}
