@@ -5986,14 +5986,22 @@ function onMouseDown(e) {
   
   const sourcePort = e.target.closest('.flow-port');
   if (sourcePort) {
+    e.stopPropagation();
+    e.preventDefault();
     const nodeEl = sourcePort.closest('.flow-node');
     const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
     
     // Phase 3: Extract Routing Port Value for Ternary Routing
     let routingValue = "all";
-    if (sourcePort.classList.contains('port-affirm')) routingValue = 1;
-    else if (sourcePort.classList.contains('port-neutral')) routingValue = 0;
-    else if (sourcePort.classList.contains('port-reject')) routingValue = -1;
+    if (sourcePort.classList.contains('port-affirm')) {
+      routingValue = 1;
+    } else if (sourcePort.classList.contains('port-neutral')) {
+      routingValue = 0;
+    } else if (sourcePort.classList.contains('port-reject')) {
+      routingValue = -1;
+    }
+
+    console.log(`[Ternary] Wire Drag Start: node=${nodeEl.id}, value=${routingValue}`);
 
     activeWire = {
       fromId: nodeEl.id,
@@ -6002,7 +6010,8 @@ function onMouseDown(e) {
       end: screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top),
       routingValue: routingValue
     };
-    isDraggingNode = false; // Prevent node drag from blocking wire updates
+    isDraggingNode = false; 
+    nodeDraggingId = null; // Explicitly clear any node dragging context
   } else {
     // Clear state if clicking empty space (prevent stuck wires)
     activeWire = null;
