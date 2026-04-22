@@ -1,0 +1,61 @@
+// stdlib/classical/fibonacci_search_trit.tern
+// Demonstrates: Fibonacci Search algorithm on a sorted trit tensor.
+// Tier: 1 - Open Core
+
+fn min_int(a: int, b: int) -> int {
+    if a < b { return a; }
+    return b;
+}
+
+fn fibonacci_search(arr: trittensor<8>, x: trit, n: int) -> int {
+    let fibMM2: int = 0; // (m-2)th Fibonacci No.
+    let fibMM1: int = 1; // (m-1)th Fibonacci No.
+    let fibM: int = fibMM2 + fibMM1; // mth Fibonacci No.
+    
+    while fibM < n {
+        fibMM2 = fibMM1;
+        fibMM1 = fibM;
+        fibM = fibMM2 + fibMM1;
+    }
+    
+    let offset: int = -1;
+    
+    while fibM > 1 {
+        let i: int = min_int(offset + fibMM2, n - 1);
+        
+        if arr[i] < x {
+            fibM = fibMM1;
+            fibMM1 = fibMM2;
+            fibMM2 = fibM - fibMM1;
+            offset = i;
+        } else if arr[i] > x {
+            fibM = fibMM2;
+            fibMM1 = fibMM1 - fibMM2;
+            fibMM2 = fibM - fibMM1;
+        } else {
+            return i;
+        }
+    }
+    
+    if fibMM1 == 1 && arr[offset + 1] == x {
+        return offset + 1;
+    }
+    
+    return -1;
+}
+
+fn main() -> trit {
+    let arr: trittensor<8> = [-1, -1, 0, 0, 0, 1, 1, 1];
+    
+    println("Fibonacci Search for Tend (0):");
+    let idx: int = fibonacci_search(arr, 0, 8);
+    println("Found at index:");
+    println(idx);
+    
+    if idx >= 2 && idx <= 4 {
+        println("Fibonacci search OK.");
+        return truth();
+    }
+    
+    return conflict();
+}
