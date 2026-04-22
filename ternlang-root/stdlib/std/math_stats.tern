@@ -1,0 +1,26 @@
+// stdlib/std/math_stats.tern
+// Demonstrates: Basic statistical utilities for trit sequences.
+// Tier: 1 - Open Core
+
+fn mean(data: int[5]) -> float {
+    let sum: int = 0;
+    let i: int = 0;
+    while i < 5 {
+        sum = sum + data[i];
+        i = i + 1;
+    }
+    return cast(sum) / 5.0;
+}
+
+fn main() -> trit {
+    let data: int[5] = [1, 0, -1, 1, 0];
+    let avg: float = mean(data);
+    
+    // Mean of [1, 0, -1, 1, 0] is 0.2
+    if avg > 0.1 && avg < 0.3 {
+        println("Mean calculation OK.");
+        return truth();
+    }
+    
+    return conflict();
+}
