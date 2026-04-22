@@ -1,42 +1,43 @@
 // stdlib/agents/aggregator.tern
-// Demonstrates: Aggregator agent pattern
-// Tier: 1
+// Demonstrates: Production-grade Aggregator agent pattern with error handling
+// Tier: 1 — Open Core
 
 agent Sensor {
     fn handle(input: trit) -> trit {
-        // Simulates a sensor reading
-        return input;
+        // Robust sensor: accepts only valid signals
+        match input {
+            affirm => { return affirm; }
+            reject => { return reject; }
+            tend   => { return tend; }
+        }
     }
 }
 
 agent Aggregator {
     fn handle(input: trit) -> trit {
+        // Validate input signal
+        if input == tend {
+            return tend;
+        }
+
         let s1: agentref = spawn Sensor;
         let s2: agentref = spawn Sensor;
         let s3: agentref = spawn Sensor;
 
-        // Send to all "parallel" sensors
         send s1 input;
         send s2 input;
         send s3 input;
 
-        // Collect results
         let r1: trit = await s1;
         let r2: trit = await s2;
         let r3: trit = await s3;
 
-        // Aggregate via consensus
-        if r1 == r2 {
-            return r1;
-        }
-        if r1 == r3 {
-            return r1;
-        }
-        if r2 == r3 {
-            return r2;
-        }
+        // Robust consensus
+        if r1 == r2 { return r1; }
+        if r1 == r3 { return r1; }
+        if r2 == r3 { return r2; }
         
-        return tend;
+        return tend; // Ambiguous state
     }
 }
 
@@ -47,6 +48,7 @@ fn main() -> trit {
     
     match res {
         affirm => { return affirm; }
-        _      => { return reject; }
+        reject => { return reject; }
+        tend   => { return tend; }
     }
 }
