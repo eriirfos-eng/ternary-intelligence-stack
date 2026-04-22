@@ -1,6 +1,6 @@
 // stdlib/agents/transformer.tern
-// Demonstrates: Transformer agent pattern (Inversion)
-// Tier: 1
+// Demonstrates: Production-grade Inverter (Transformer) agent
+// Tier: 1 — Open Core
 
 agent Inverter {
     fn handle(msg: trit) -> trit {
@@ -22,8 +22,10 @@ fn main() -> trit {
     send t reject;
     let res2: trit = await t;
     
-    if res1 == reject && res2 == affirm {
-        return affirm;
+    if res1 == reject {
+        if res2 == affirm {
+            return affirm;
+        }
     }
     return reject;
 }
