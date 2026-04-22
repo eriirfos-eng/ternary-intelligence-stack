@@ -7,36 +7,36 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script>
-  tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        t_bg: '#0F131F',       // The deep slate Studio canvas
-        t_bg2: '#161B26',      // Studio panel headers
-        t_bg3: '#161B26',      // Studio inner cards/panels
-        t_teal: '#00d4aa',     // Your accent
-        t_blue: '#4a9eff',     // Your accent
-        t_muted: '#8B949E',    // Studio muted text
-        t_border: '#2A3143'    // Studio subtle borders
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            t_bg: '#0F131F',       // The deep slate Studio canvas
+            t_bg2: '#161B26',      // Studio panel headers
+            t_bg3: '#1A202C',      // Studio inner cards/panels
+            t_teal: '#00d4aa',
+            t_blue: '#4a9eff',
+            t_muted: '#8B949E',    // Studio muted text
+            t_border: '#2A3143'    // Studio subtle borders
+          }
+        }
       }
     }
-  }
-}
   </script>
   <style>
-    body { background-color: #05050A; color: #dde0f0; }
+    /* Removed the hardcoded body background here so Tailwind can take over */
     .glass-card {
-      background: linear-gradient(145deg, rgba(21, 21, 34, 0.8) 0%, rgba(13, 13, 22, 0.4) 100%);
-      border: 1px solid #232336;
+      background: linear-gradient(145deg, rgba(22, 27, 38, 0.8) 0%, rgba(15, 19, 31, 0.4) 100%);
+      border: 1px solid #2A3143;
       backdrop-filter: blur(8px);
     }
     textarea:focus { outline: none; border-color: #00d4aa; }
     ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #05050A; }
-    ::-webkit-scrollbar-thumb { background: #232336; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: #0F131F; }
+    ::-webkit-scrollbar-thumb { background: #2A3143; border-radius: 4px; }
   </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col items-center justify-center p-6">
+<body class="bg-t_bg text-gray-300 antialiased min-h-screen flex flex-col items-center justify-center p-6">
 
   <div class="max-w-6xl w-full">
     <header class="text-center mb-12">
@@ -48,7 +48,6 @@
     </header>
 
     <div class="glass-card rounded-2xl overflow-hidden shadow-2xl">
-      <!-- Toolbar -->
       <div class="flex flex-col md:flex-row border-b border-t_border bg-t_bg2 px-6 py-4 items-center gap-4">
         <div class="flex items-center gap-3">
           <span class="text-t_muted font-mono text-xs uppercase tracking-widest">Source:</span>
@@ -71,19 +70,17 @@
         </button>
       </div>
 
-      <!-- Editor Grid -->
       <div class="grid md:grid-cols-2 h-[500px]">
         <div class="border-r border-t_border flex flex-col">
           <div class="bg-t_bg3 px-6 py-2 border-b border-t_border font-mono text-[10px] text-t_muted uppercase tracking-widest">Input (Binary Logic)</div>
           <textarea id="trans-input" class="flex-1 bg-t_bg p-6 font-mono text-sm text-gray-300 resize-none" placeholder="Paste your source code here..."></textarea>
         </div>
-        <div class="flex flex-col bg-[#070710]">
+        <div class="flex flex-col bg-t_bg2">
           <div class="bg-t_bg3 px-6 py-2 border-b border-t_border font-mono text-[10px] text-t_teal uppercase tracking-widest">Output (Triadic .tern)</div>
           <div id="trans-output" class="flex-1 p-6 font-mono text-sm text-t_teal overflow-auto whitespace-pre"></div>
         </div>
       </div>
 
-      <!-- Insight Pane -->
       <div class="bg-t_bg3 border-t border-t_border p-8">
         <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
           <span class="text-t_blue">ℹ</span> Triadic Logic Insights
