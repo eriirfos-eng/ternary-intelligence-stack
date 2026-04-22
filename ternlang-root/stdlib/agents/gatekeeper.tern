@@ -1,43 +1,36 @@
 // stdlib/agents/gatekeeper.tern
-// Demonstrates: Gatekeeper agent pattern (Conditional authorization)
 // Tier: 1
-
 agent AuthGuard {
     fn handle(msg: trit) -> trit {
-        // Simulates an authentication/authorization check
-        // Returns affirm if authorized, reject otherwise
-        match msg {
-            affirm => { return affirm; }
-            _      => { return reject; }
-        }
+        if msg == affirm { return affirm; }
+        return reject;
     }
 }
 
 agent Gatekeeper {
     fn handle(msg: trit) -> trit {
         let guard: agentref = spawn AuthGuard;
-        
-        // Check authorization (passing a token/signal)
-        send guard affirm; 
+        send guard msg;
         let authorized: trit = await guard;
         
         if authorized == affirm {
-            // Forward the original message if authorized
             return msg;
         }
-        
-        return reject; // Unauthorized access attempt
+        return reject;
     }
 }
 
 fn main() -> trit {
     let g: agentref = spawn Gatekeeper;
-    
     send g affirm;
     let res1: trit = await g;
+    send g reject;
+    let res2: trit = await g;
     
-    match res1 {
-        affirm => { return affirm; }
-        _      => { return reject; }
+    if res1 == affirm {
+        if res2 == reject {
+            return affirm;
+        }
     }
+    return reject;
 }
