@@ -1,0 +1,73 @@
+// stdlib/classical/bfs_trit.tern
+// Demonstrates: Breadth-First Search (BFS) on a small graph using trit tensors.
+// Tier: 1 - Open Core
+
+// Graph: 4 nodes, Adjacency Matrix (flat 16)
+// 0: A, 1: B, 2: C, 3: D
+// A -> B, A -> C
+// B -> D
+// C -> D
+// Matrix:
+//   A B C D
+// A 0 1 1 0
+// B 0 0 0 1
+// C 0 0 0 1
+// D 0 0 0 0
+
+fn bfs(adj: trittensor<16>, start: int, target: int, visited: trittensor<4>) -> trit {
+    let queue: int[4];
+    let head: int = 0;
+    let tail: int = 0;
+    
+    queue[tail] = start;
+    tail = tail + 1;
+    visited[start] = 1;
+    
+    while head < tail {
+        let u: int = queue[head];
+        head = head + 1;
+        
+        println("Visiting node:");
+        println(u);
+        
+        if u == target {
+            return truth();
+        }
+        
+        // Check neighbors
+        let v: int = 0;
+        while v < 4 {
+            let edge: trit = adj[u * 4 + v];
+            if edge == 1 {
+                if visited[v] == 0 {
+                    visited[v] = 1;
+                    queue[tail] = v;
+                    tail = tail + 1;
+                }
+            }
+            v = v + 1;
+        }
+    }
+    
+    return conflict();
+}
+
+fn main() -> trit {
+    let adj: trittensor<16> = [
+        0, 1, 1, 0,
+        0, 0, 0, 1,
+        0, 0, 0, 1,
+        0, 0, 0, 0
+    ];
+    let visited: trittensor<4> = [0, 0, 0, 0];
+    
+    println("BFS from A (0) to D (3):");
+    let found: trit = bfs(adj, 0, 3, visited);
+    
+    if found == 1 {
+        println("Path to target found.");
+        return truth();
+    }
+    
+    return conflict();
+}
