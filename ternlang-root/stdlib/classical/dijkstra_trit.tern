@@ -1,0 +1,88 @@
+// stdlib/classical/dijkstra_trit.tern
+// Demonstrates: Dijkstra's Algorithm on a small graph using trit tensors for weights.
+// Tier: 1 - Open Core
+
+// Weights: 0 = no edge, 1 = weight 1, -1 = weight 2
+// (In this simulation, we use trits as weights: 1=1, -1=2)
+
+fn get_weight(t: trit) -> int {
+    match t {
+        -1 => { return 2; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn dijkstra(adj: trittensor<16>, start: int, target: int) -> int {
+    let dist: int[4];
+    let visited: trittensor<4> = [0, 0, 0, 0];
+    
+    let i: int = 0;
+    while i < 4 {
+        dist[i] = 999; // "Infinity"
+        i = i + 1;
+    }
+    dist[start] = 0;
+    
+    let count: int = 0;
+    while count < 4 {
+        // Find min distance unvisited node
+        let min_dist: int = 1000;
+        let u: int = -1;
+        let j: int = 0;
+        while j < 4 {
+            if visited[j] == 0 && dist[j] < min_dist {
+                min_dist = dist[j];
+                u = j;
+            }
+            j = j + 1;
+        }
+        
+        if u == -1 { break; }
+        visited[u] = 1;
+        
+        if u == target { return dist[u]; }
+        
+        // Update neighbors
+        let v: int = 0;
+        while v < 4 {
+            let edge: trit = adj[u * 4 + v];
+            if edge != 0 {
+                let weight: int = get_weight(edge);
+                if dist[u] + weight < dist[v] {
+                    dist[v] = dist[u] + weight;
+                }
+            }
+            v = v + 1;
+        }
+        count = count + 1;
+    }
+    
+    return dist[target];
+}
+
+fn main() -> trit {
+    // A (0) --1--> B (1) --1--> D (3)
+    // A (0) --2--> C (2) --1--> D (3)
+    // A->B weight 1, B->D weight 1: Path A-B-D = 2
+    // A->C weight 2 (-1), C->D weight 1: Path A-C-D = 3
+    let adj: trittensor<16> = [
+        0, 1, -1, 0,
+        0, 0,  0, 1,
+        0, 0,  0, 1,
+        0, 0,  0, 0
+    ];
+    
+    println("Dijkstra from A (0) to D (3):");
+    let d: int = dijkstra(adj, 0, 3);
+    
+    println("Shortest distance:");
+    println(d);
+    
+    if d == 2 {
+        println("Shortest path distance OK.");
+        return truth();
+    }
+    
+    return conflict();
+}
