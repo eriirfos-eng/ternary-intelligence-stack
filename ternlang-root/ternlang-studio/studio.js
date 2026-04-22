@@ -1031,13 +1031,9 @@ async function injectSignal(nodeId, val) {
   event?.stopPropagation();
   logInspector("SYSTEM", `⚡ Manual injection: [v:${val}, c:1.0] -> ${nodeId}`);
   
-  engineQueue.push({ toId: nodeId, val, conf: 1.0, origin: "MANUAL_INJECTOR" });
-  
-  if (!simulationRunning) {
-    runSimulation();
-  }
-}
-window.injectSignal = injectSignal;
+  // engineQueue.push({ toId: nodeId, val, conf: 1.0, origin: "MANUAL_INJECTOR" });
+  logInspector("SYSTEM", `⚡ Manual injection logged: [v:${val}, c:1.0] -> ${nodeId}. Awaiting explicit Play to execute.`);
+  }window.injectSignal = injectSignal;
 
 // ─── Full Observability: Causal Reverse-Trace ────────────────────────────────
 const causalNodes = new Set();
@@ -5954,10 +5950,9 @@ function onMouseUp(e) {
             if (fromNode && fromNode.type === 'artifact') collapseArtifactToStub(fromId);
 
             if (simulationAborted && !simulationRunning) {
-               logInspector("SYSTEM", "🔌 Continuation Detected — Resuming Engine.");
-               resumeSimulationFrom(toId);
-            }
-          }
+               logInspector("SYSTEM", "🔌 Continuation Detected — Awaiting Play.");
+               // resumeSimulationFrom(toId); // Removed auto-trigger to fix bug
+            }          }
         }
       } else if (activeWire.fromIsOutput) {
         // EDGE-DRIVEN EVOLUTION
@@ -6020,9 +6015,10 @@ async function resumeSimulationFrom(targetId) {
    // Re-enter the simulation loop (partial call)
    // We need to move the 'while' logic of runSimulation into a reusable core
    // For now, we trigger a "soft" runSimulation that doesn't clear the graph
-   await runSimulationCore();
-}
-window.resumeSimulationFrom = resumeSimulationFrom;
+   if (executionState !== 'running') {
+       await runSimulationCore();
+   }
+   }window.resumeSimulationFrom = resumeSimulationFrom;
 
 // ─── GitHub raw content base (Tier 1 public fallback) ────────────────────────
 const GH_RAW = "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/";
