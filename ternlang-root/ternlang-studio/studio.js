@@ -6002,6 +6002,7 @@ function onMouseDown(e) {
       end: screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top),
       routingValue: routingValue
     };
+    isDraggingNode = false; // Prevent node drag from blocking wire updates
   } else {
     // Clear state if clicking empty space (prevent stuck wires)
     activeWire = null;
@@ -6168,14 +6169,15 @@ function onMouseUp(e) {
       }
     } catch (err) {
       console.error("Critical error in mouseup:", err);
-    } finally {
-      document.querySelectorAll('.flow-port').forEach(p => p.classList.remove('magnet'));
-      activeWire = null;
-      isDraggingNode = false;
-      nodeDraggingId = null;
-      updateWires();
     }
   }
+
+  // Final Cleanup (Always run)
+  document.querySelectorAll('.flow-port').forEach(p => p.classList.remove('magnet'));
+  activeWire = null;
+  isDraggingNode = false;
+  nodeDraggingId = null;
+  updateWires();
 }
 document.addEventListener('mouseup', onMouseUp);
 window.onMouseUp = onMouseUp;
