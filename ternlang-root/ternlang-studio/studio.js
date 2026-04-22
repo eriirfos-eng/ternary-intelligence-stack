@@ -6056,7 +6056,8 @@ function onMouseUp(e) {
            const dropY = activeWire.end.y;
            const newNodeId = "node_" + Date.now();
            const artBody = document.getElementById(`art-body-${sourceNode.id}`);
-           const payloadRaw = artBody ? artBody.textContent : "";
+           const preTag = artBody ? artBody.querySelector('pre') : null;
+           const payloadRaw = preTag ? preTag.textContent : (artBody ? artBody.textContent : "");
            let contextBridge = {};
            let displayPayload = payloadRaw;
 
