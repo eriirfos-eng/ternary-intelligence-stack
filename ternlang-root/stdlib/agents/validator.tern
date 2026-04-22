@@ -1,15 +1,15 @@
 // stdlib/agents/validator.tern
-// Demonstrates: Validator agent pattern
-// Tier: 1
+// Demonstrates: Production-grade Validator agent
+// Tier: 1 — Open Core
 
 agent NonRejectValidator {
     fn handle(msg: trit) -> trit {
         // Validates that the signal is not 'reject' (-1).
-        // Returns 'affirm' (+1) if valid, 'reject' (-1) otherwise.
-        if msg != reject {
-            return affirm;
+        match msg {
+            affirm => { return affirm; }
+            tend   => { return affirm; }
+            reject => { return reject; }
         }
-        return reject;
     }
 }
 
@@ -25,8 +25,12 @@ fn main() -> trit {
     send v reject;
     let res3: trit = await v;
     
-    if res1 == affirm && res2 == affirm && res3 == reject {
-        return affirm;
+    if res1 == affirm {
+        if res2 == affirm {
+            if res3 == reject {
+                return affirm;
+            }
+        }
     }
     return reject;
 }
