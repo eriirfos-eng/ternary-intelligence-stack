@@ -379,7 +379,7 @@ function TracerView({ apiEndpoint }) {
 function TranslatorView() {
   const iframeRef = React.useRef(null);
   const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const translatorUrl = isDev ? 'http://localhost:5000' : 'https://translator.ternlang.com';
+  const translatorUrl = isDev ? 'http://localhost:5000' : 'https://ternlang-api.fly.dev/translator';
 
   React.useEffect(() => {
     const handleLoad = () => {

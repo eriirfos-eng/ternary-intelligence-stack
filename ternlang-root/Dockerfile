@@ -40,6 +40,7 @@ RUN cargo fetch
 COPY stdlib/                stdlib/
 COPY ternlang-web/          ternlang-web/
 COPY ternlang-studio/       ternlang-studio/
+COPY ternlang-translator/   ternlang-translator/
 COPY playground/            playground/
 COPY compiler/legacy_shim/ternlang-core/src      compiler/legacy_shim/ternlang-core/src
 COPY compiler/legacy_shim/ternlang-core/stdlib   compiler/legacy_shim/ternlang-core/stdlib
@@ -69,6 +70,7 @@ COPY --from=builder /build/target/release/ternlang-api /usr/local/bin/ternlang-a
 COPY --from=builder /build/stdlib /stdlib
 COPY --from=builder /build/ternlang-web /ternlang-web
 COPY --from=builder /build/ternlang-studio /ternlang-studio
+COPY --from=builder /build/ternlang-translator /ternlang-translator
 
 # Fly.io injects PORT; our app reads it (default 3731)
 ENV PORT=8080

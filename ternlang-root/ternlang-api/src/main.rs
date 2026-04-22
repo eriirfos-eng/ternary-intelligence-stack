@@ -475,6 +475,7 @@ async fn require_api_key(
         || path == "/pricing"
         || path == "/studio"
         || path == "/studio.js"
+        || path == "/translator"
         || path == "/playground"
         || path.starts_with("/playground/pkg/")
         || path == "/activate"
@@ -563,12 +564,17 @@ static INDEX_HTML:      &str = include_str!("../../ternlang-web/index.html");
 static PRICING_HTML:    &str = include_str!("../../ternlang-web/pricing.html");
 static STUDIO_HTML:     &str = include_str!("../../ternlang-studio/index.html");
 static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
+static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templates/index.html");
 static PLAYGROUND_HTML: &str = include_str!("../../playground/index.html");
 static WASM_JS:         &str = include_str!("../../playground/pkg/ternlang_wasm.js");
 static WASM_BYTES:      &[u8] = include_bytes!("../../playground/pkg/ternlang_wasm_bg.wasm");
 
 async fn studio_page() -> Html<&'static str> {
     Html(STUDIO_HTML)
+}
+
+async fn translator_page() -> Html<&'static str> {
+    Html(TRANSLATOR_HTML)
 }
 
 async fn studio_js() -> impl axum::response::IntoResponse {
@@ -4938,6 +4944,7 @@ async fn main() {
         // Public
         .route("/",       get(root))
         .route("/health", get(health))
+        .route("/translator", get(translator_page))
         .route("/mcp",    get(mcp_info).post(mcp_handler))
         .route("/.well-known/mcp/server-card.json", get(mcp_server_card))
         .route("/stripe/webhook",       post(stripe_webhook))
