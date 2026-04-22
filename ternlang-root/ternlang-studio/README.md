@@ -62,5 +62,72 @@ A bidirectional, encrypted `localStorage` vault (`ternflow_secrets`) manages API
 5.  **Deploy**: Click **Compile** to generate your payload and push it to the swarm.
 
 ---
+# TernFlow – Playground Capability Audit (v2 Upgrade)
+Date: Sunday, April 19, 2026
+Status: Production-Grade Engine Active
 
+## 1. System Overview
+
+*   **Architecture**: Event-driven asynchronous execution engine (`TernaryEngine v2`) using a `SignalQueue`.
+*   **Execution Trigger**: `runSimulation()` now initializes an event loop that supports feedback loops and complex causal chains.
+*   **Causal Model**: Move from simple topological sorting to a reactive, algebraic signal propagation model.
+
+---
+
+## 2. Node System
+
+### 2.1 Supported Node Types
+
+| Name | Purpose | Functional | Implementation Logic |
+| :--- | :--- | :--- | :--- |
+| **Agent** | Deterministic logic node | **YES** | Executes `.tern` code via browser WASM BET VM. |
+| **LLM Bridge** | Probabilistic adapter | **YES** | Real API integration via `/api/run` proxy. Maps text to signal. |
+| **Trit Gate** | Signal routing/consensus | **YES** | Uses `TernaryAlgebra.merge()` for multi-input resolution. |
+
+### 2.2 Node Configuration (v2 Updates)
+
+| Field | Status | Notes |
+| :--- | :--- | :--- |
+| **LLM Provider** | WORKING | Support for OpenAI, Anthropic, and Local endpoints. |
+| **Prompt Template** | WORKING | Supports `{{input}}` injection of incoming ternary state. |
+| **Algebraic Merge** | WORKING | Multi-input nodes automatically resolve conflicts using weighted mean logic. |
+
+---
+
+## 3. Edge System (Wiring)
+
+### 3.1 Edge Logic (Algebraic)
+
+| Feature | Status | Implementation |
+| :--- | :--- | :--- |
+| **Condition** | **WORKING** | Verified during event dispatch. |
+| **Transform** | **WORKING** | Flip, Block, and Hold now affect both value AND confidence. |
+| **Confidence Decay** | **WORKING** | Signals lose confidence based on wire priority and path length. |
+
+---
+
+## 4. Simulation Engine (v2)
+
+### 4.1 Execution Model
+*   **Event-Driven**: Nodes fire when they receive a signal, not just in fixed order.
+*   **Cycle Support**: Feedback loops are fully supported with a `MAX_ENGINE_TICKS` safety limit.
+*   **Signal Propagation**: Real-time signal objects: `{ val, conf, origin }`.
+
+### 4.2 Visual Simulation
+*   **Confidence Visualization**: Wire opacity and thickness scale dynamically with signal confidence.
+*   **Glowing Particles**: 10px glowing dots track signal movement with value-matched colors.
+
+---
+
+## 5. Summary Table
+
+| System Component | Status | Notes |
+| :--- | :--- | :--- |
+| **Node Execution** | WORKING | v2 Engine with event-loop support. |
+| **Edge Logic** | WORKING | Algebraic transforms and confidence decay. |
+| **Simulation** | WORKING | Real-time, async, supports feedback loops. |
+| **LLM Bridge** | WORKING | Real API connectivity with ternary mapping. |
+| **Archetypes** | WORKING | Fully valid, pre-wired causal templates. |
+
+---
 *© 2026 RFI-IRFOS. All rights reserved. Technology must serve people, not their surveillance.*
