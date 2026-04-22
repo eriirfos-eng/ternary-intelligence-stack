@@ -1,0 +1,18 @@
+// stdlib/agents/new_agents.tern
+// New Agents (1-5)
+
+agent Validator {
+    fn handle(msg: trit) -> trit { return msg == tend ? tend : affirm; }
+}
+agent Transformer {
+    fn handle(msg: trit) -> trit { return msg == affirm ? reject : affirm; }
+}
+agent Orchestrator {
+    fn handle(msg: trit) -> trit { return affirm; }
+}
+agent Logger {
+    fn handle(msg: trit) -> trit { return msg; }
+}
+agent Watchdog {
+    fn handle(msg: trit) -> trit { return msg == reject ? reject : tend; }
+}
