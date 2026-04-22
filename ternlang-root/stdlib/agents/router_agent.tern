@@ -1,0 +1,36 @@
+// stdlib/agents/router_agent.tern
+// Demonstrates: Router agent (Routes input based on trit signal)
+// Tier: 1 — Open Core
+
+agent DestinationA {
+    fn handle(msg: trit) -> trit { return 1; }
+}
+
+agent DestinationB {
+    fn handle(msg: trit) -> trit { return -1; }
+}
+
+agent RouterAgent {
+    fn handle(msg: trit) -> trit {
+        let da: agentref = spawn DestinationA;
+        let db: agentref = spawn DestinationB;
+        
+        match msg {
+            1  => { send da msg; return await da; }
+            -1 => { send db msg; return await db; }
+             0 => { return 0; }
+        }
+    }
+}
+
+fn main() -> trit {
+    let r: agentref = spawn RouterAgent;
+    
+    send r 1;
+    let res: trit = await r;
+    
+    if res == 1 {
+        return affirm;
+    }
+    return reject;
+}
