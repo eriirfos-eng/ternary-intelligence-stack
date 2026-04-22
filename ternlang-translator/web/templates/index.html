@@ -102,7 +102,7 @@
       <h1 class="text-4xl md:text-5xl font-bold text-t_text mb-3 tracking-tight">
         Tern<span class="text-t_teal">Translator</span>
       </h1>
-      <p class="text-t_subtext text-sm md:text-base">Migrate binary logic to balanced ternary syntax instantly.</p>
+      <p class="text-t_subtext text-sm md:text-base">Migrate logic cross-domain between binary architectures and balanced ternary.</p>
     </header>
 
     <!-- Main Workspace -->
@@ -111,10 +111,10 @@
       <!-- Top Toolbar -->
       <div class="flex flex-col md:flex-row border-b border-studio_border bg-studio_panel px-5 py-3 items-center justify-between gap-4">
         
-        <div class="flex items-center gap-4 w-full md:w-auto">
+        <div class="flex items-center gap-4 w-full md:w-auto flex-wrap">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full bg-t_teal animate-pulse"></div>
-            <span class="text-t_text font-mono text-[13px] uppercase tracking-widest">Source Engine</span>
+            <span id="mode-label" class="text-t_text font-mono text-[13px] uppercase tracking-widest min-w-[110px]">Source Engine</span>
           </div>
           <select id="trans-lang" class="bg-studio_editor border border-studio_border text-t_text focus:text-t_teal focus:border-t_teal transition-colors font-mono text-[15px] px-3 py-1.5 rounded-md outline-none cursor-pointer">
             <option value="python">Python</option>
@@ -124,12 +124,16 @@
             <option value="javascript">JavaScript</option>
           </select>
           
+          <button id="swap-direction-btn" class="p-1.5 rounded-md border border-studio_border bg-studio_editor text-t_subtext hover:text-t_teal hover:border-t_teal transition-all group" title="Swap Translation Direction">
+            <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+          </button>
+          
           <div class="h-4 w-px bg-studio_border hidden md:block"></div>
           
           <label class="cursor-pointer flex items-center gap-2 text-t_text hover:text-t_blue transition-colors font-mono text-[15px] group">
             <svg class="w-5 h-5 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
             <span>Upload</span>
-            <input type="file" id="trans-upload" class="hidden" accept=".py,.rs,.java,.cpp,.js,.ts,.html">
+            <input type="file" id="trans-upload" class="hidden" accept=".py,.rs,.java,.cpp,.js,.ts,.html,.tern">
           </label>
         </div>
 
@@ -141,8 +145,8 @@
           </button>
 
           <button id="trans-run-btn" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 border border-t_teal/50 text-t_teal font-mono text-[15px] font-bold uppercase tracking-wider rounded-md transition-all btn-glow bg-t_teal_dim">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            Translate
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span id="trans-run-text">Translate</span>
           </button>
         </div>
       </div>
@@ -152,13 +156,13 @@
         
         <!-- Input -->
         <div class="flex flex-col relative group min-h-0">
-          <div class="absolute top-3 right-4 font-mono text-[13px] text-t_subtext uppercase tracking-widest z-10 select-none bg-studio_editor/80 px-2 py-1 rounded">Input // Binary</div>
-          <textarea id="trans-input" class="editor-pane flex-1 w-full p-5 pt-12 font-mono text-[17px] text-t_subtext resize-none overflow-y-auto block" spellcheck="false" placeholder="// Paste standard binary architecture here..."></textarea>
+          <div id="input-label" class="absolute top-3 right-4 font-mono text-[13px] text-t_subtext uppercase tracking-widest z-10 select-none bg-studio_editor/80 px-2 py-1 rounded border border-studio_border/50">Input // Binary</div>
+          <textarea id="trans-input" class="editor-pane flex-1 w-full p-5 pt-12 font-mono text-[17px] text-t_subtext resize-none overflow-y-auto block" spellcheck="false" placeholder="// Paste architecture logic here..."></textarea>
         </div>
         
         <!-- Output -->
         <div class="flex flex-col relative min-h-0">
-          <div class="absolute top-3 right-4 font-mono text-[13px] text-t_teal uppercase tracking-widest z-10 select-none bg-studio_editor/80 px-2 py-1 rounded">Output // Ternary</div>
+          <div id="output-label" class="absolute top-3 right-4 font-mono text-[13px] text-t_teal uppercase tracking-widest z-10 select-none bg-studio_editor/80 px-2 py-1 rounded border border-studio_border/50">Output // Ternary</div>
           <div id="trans-output" class="editor-pane flex-1 w-full p-5 pt-12 font-mono text-[17px] text-t_teal overflow-y-auto whitespace-pre block"></div>
         </div>
         
@@ -182,31 +186,89 @@
   </div>
 
   <script>
-    // Pure Client-Side Theme Toggle 
+    // State Matrix
+    let isTernToBinary = false;
+
+    // UI Elements
     const themeToggle = document.getElementById('theme-toggle');
     const htmlElement = document.documentElement;
-    
-    themeToggle.addEventListener('click', () => {
-      htmlElement.classList.toggle('dark');
-    });
-
     const transInput = document.getElementById('trans-input');
     const transOutput = document.getElementById('trans-output');
     const transInsight = document.getElementById('trans-insight');
     const transBtn = document.getElementById('trans-run-btn');
+    const transBtnText = document.getElementById('trans-run-text');
     const transUpload = document.getElementById('trans-upload');
+    const swapBtn = document.getElementById('swap-direction-btn');
+    
+    // Labels
+    const modeLabel = document.getElementById('mode-label');
+    const inputLabel = document.getElementById('input-label');
+    const outputLabel = document.getElementById('output-label');
 
+    // Theme Toggle Logic
+    themeToggle.addEventListener('click', () => {
+      htmlElement.classList.toggle('dark');
+    });
+
+    // Swap Direction Logic
+    swapBtn.addEventListener('click', () => {
+      isTernToBinary = !isTernToBinary;
+      
+      // Physically swap the code buffers
+      const tempBuffer = transInput.value;
+      transInput.value = transOutput.textContent;
+      transOutput.textContent = tempBuffer;
+
+      // Update Polarity UI
+      if (isTernToBinary) {
+        modeLabel.textContent = "Target Engine";
+        inputLabel.textContent = "Input // Ternary";
+        inputLabel.classList.replace('text-t_subtext', 'text-t_teal');
+        
+        outputLabel.textContent = "Output // Binary";
+        outputLabel.classList.replace('text-t_teal', 'text-t_subtext');
+        
+        transOutput.classList.replace('text-t_teal', 'text-t_subtext');
+        transInput.classList.replace('text-t_subtext', 'text-t_teal');
+      } else {
+        modeLabel.textContent = "Source Engine";
+        inputLabel.textContent = "Input // Binary";
+        inputLabel.classList.replace('text-t_teal', 'text-t_subtext');
+        
+        outputLabel.textContent = "Output // Ternary";
+        outputLabel.classList.replace('text-t_subtext', 'text-t_teal');
+
+        transOutput.classList.replace('text-t_subtext', 'text-t_teal');
+        transInput.classList.replace('text-t_teal', 'text-t_subtext');
+      }
+      
+      transInsight.innerHTML = `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border rounded font-mono text-[13px] text-t_subtext">Vector polarity reversed. Awaiting input...</div>`;
+    });
+
+    // Translation Matrices
     const TERN_RULES = [
-      { regex: /bool/g, repl: 'trit', note: 'Mapped binary bool to triadic trit.' },
-      { regex: /true/g, repl: 'affirm', note: 'Mapped true to +1 (affirm).' },
-      { regex: /false/g, repl: 'reject', note: 'Mapped false to -1 (reject).' },
-      { regex: /None|null|undefined/g, repl: 'tend', note: 'Mapped null/empty to 0 (tend).' },
+      { regex: /\bbool\b/g, repl: 'trit', note: 'Mapped binary bool to triadic trit.' },
+      { regex: /\btrue\b/g, repl: 'affirm', note: 'Mapped true to +1 (affirm).' },
+      { regex: /\bfalse\b/g, repl: 'reject', note: 'Mapped false to -1 (reject).' },
+      { regex: /\bNone\b|\bnull\b|\bundefined\b/g, repl: 'tend', note: 'Mapped null/empty to 0 (tend).' },
       { regex: /if\s*\((.*)\)\s*\{/g, repl: 'match $1 {', note: 'Converted if-statement to exhaustive match block.' },
       { regex: /if\s+(.*):/g, repl: 'match $1 {', note: 'Python-style if converted to match.' },
       { regex: /else\s*\{|else:/g, repl: 'tend => { // auto-injected safety hold\n    }\n    reject => {', note: 'Injected state 0 (tend) for logic exhaustiveness.' },
-      { regex: /return\s+1|return\s+True/gi, repl: 'return affirm', note: 'Normalised positive return.' },
-      { regex: /return\s+0|return\s+False/gi, repl: 'return reject', note: 'Normalised negative return.' },
-      { regex: /void|def|fn/g, repl: 'fn', note: 'Unified function declaration.' },
+      { regex: /return\s+1\b|return\s+True\b/gi, repl: 'return affirm', note: 'Normalised positive return.' },
+      { regex: /return\s+0\b|return\s+False\b/gi, repl: 'return reject', note: 'Normalised negative return.' },
+      { regex: /\bvoid\b|\bdef\b|\bfn\b/g, repl: 'fn', note: 'Unified function declaration.' },
+    ];
+
+    const REVERSE_RULES = [
+      { regex: /\btrit\b/g, repl: 'bool', note: 'De-resolved triadic trit back to binary bool.' },
+      { regex: /\baffirm\b/g, repl: 'true', note: 'Flattened +1 (affirm) to binary true.' },
+      { regex: /\breject\b/g, repl: 'false', note: 'Flattened -1 (reject) to binary false.' },
+      { regex: /\btend\b/g, repl: 'null', note: 'Collapsed 0 (tend) to null/None dependency.' },
+      { regex: /match\s+(.*)\s*\{/g, repl: 'switch ($1) {', note: 'Reverted exhaustive match to standard switch/if.' },
+      { regex: /tend\s*=>\s*\{[\s\S]*?\}\s*reject\s*=>\s*\{/g, repl: 'default: {', note: 'Collapsed safety hold (tend) back into binary default/else block.' },
+      { regex: /return\s+affirm\b/g, repl: 'return true', note: 'Restored boolean positive return.' },
+      { regex: /return\s+reject\b/g, repl: 'return false', note: 'Restored boolean negative return.' },
+      { regex: /\bfn\b/g, repl: 'function', note: 'Reverted generic function declaration.' },
     ];
 
     function translate() {
@@ -214,20 +276,26 @@
       if (!code.trim()) return;
 
       transBtn.disabled = true;
-      transBtn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Parsing...';
+      transBtnText.textContent = 'Parsing...';
+      const originalSvg = transBtn.querySelector('svg').outerHTML;
+      transBtn.innerHTML = `<svg class="w-5 h-5 shrink-0 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><span id="trans-run-text">Parsing...</span>`;
       
       const insights = new Set();
       let translated = code;
+      const activeRules = isTernToBinary ? REVERSE_RULES : TERN_RULES;
 
-      TERN_RULES.forEach(rule => {
+      activeRules.forEach(rule => {
         if (rule.regex.test(translated)) {
           translated = translated.replace(rule.regex, rule.repl);
           insights.add(rule.note);
         }
       });
 
-      if (!translated.includes('fn main')) {
+      // Signature header adjustment based on polarity
+      if (!isTernToBinary && !translated.includes('fn main')) {
         translated = "// Translated via Ternlang BET VM Protocol\n\n" + translated;
+      } else if (isTernToBinary && !translated.includes('function main')) {
+        translated = "// De-resolved from Ternlang BET VM Protocol\n\n" + translated;
       }
 
       setTimeout(() => {
@@ -241,11 +309,11 @@
             </div>`
           ).join('');
         } else {
-          transInsight.innerHTML = `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border rounded font-mono text-[13px] text-t_text">System baseline logic detected. No triadic morphing required.</div>`;
+          transInsight.innerHTML = `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border rounded font-mono text-[13px] text-t_text">System baseline logic detected. No morphing required.</div>`;
         }
         
         transBtn.disabled = false;
-        transBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Translate';
+        transBtn.innerHTML = `${originalSvg}<span id="trans-run-text">Translate</span>`;
       }, 400);
     }
 
