@@ -1,0 +1,29 @@
+// stdlib/lib/bitset.tern
+// Demonstrates: Simple bitset implementation using trit array as bits.
+// Tier: 1 - Open Core
+
+fn set_bit(bits: trittensor<8>, pos: int) -> trit {
+    if pos >= 0 && pos < 8 {
+        bits[pos] = 1;
+        return truth();
+    }
+    return conflict();
+}
+
+fn get_bit(bits: trittensor<8>, pos: int) -> trit {
+    if pos >= 0 && pos < 8 {
+        if bits[pos] == 1 { return truth(); }
+    }
+    return conflict();
+}
+
+fn main() -> trit {
+    let bits: trittensor<8> = [0, 0, 0, 0, 0, 0, 0, 0];
+    
+    set_bit(bits, 3);
+    
+    if get_bit(bits, 3) == truth() && get_bit(bits, 0) == conflict() {
+        return truth();
+    }
+    return conflict();
+}
