@@ -1,0 +1,55 @@
+// stdlib/classical/shell_sort_ternary.tern
+// Demonstrates: Shell Sort algorithm on a trit tensor.
+// Tier: 1 - Open Core
+
+fn shell_sort(arr: trittensor<8>, n: int) -> trit {
+    let gap: int = n / 2;
+    while gap > 0 {
+        let i: int = gap;
+        while i < n {
+            let temp: trit = arr[i];
+            let j: int = i;
+            while j >= gap {
+                if arr[j - gap] > temp {
+                    arr[j] = arr[j - gap];
+                    j = j - gap;
+                } else {
+                    break;
+                }
+            }
+            arr[j] = temp;
+            i = i + 1;
+        }
+        gap = gap / 2;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let arr: trittensor<8> = [-1, 1, 0, 1, -1, 0, 1, 0];
+    
+    println("Original array:");
+    let k: int = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    shell_sort(arr, 8);
+    
+    println("Sorted array:");
+    k = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    if arr[0] == -1 && arr[1] == -1 && arr[7] == 1 {
+        println("Shell sort successful.");
+        return truth();
+    }
+    
+    return conflict();
+}
