@@ -1,0 +1,92 @@
+// stdlib/classical/prims_trit.tern
+// Demonstrates: Prim's Algorithm for Minimum Spanning Tree using trits.
+// Tier: 1 - Open Core
+
+fn get_weight(t: trit) -> int {
+    match t {
+        -1 => { return 2; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn prims(adj: trittensor<16>) -> int {
+    let parent: int[4];
+    let key: int[4];
+    let mstSet: trittensor<4> = [0, 0, 0, 0];
+    
+    let i: int = 0;
+    while i < 4 {
+        key[i] = 999;
+        i = i + 1;
+    }
+    key[0] = 0;
+    parent[0] = -1;
+    
+    let count: int = 0;
+    while count < 4 {
+        // Find min key vertex
+        let min_val: int = 1000;
+        let u: int = -1;
+        let j: int = 0;
+        while j < 4 {
+            if mstSet[j] == 0 && key[j] < min_val {
+                min_val = key[j];
+                u = j;
+            }
+            j = j + 1;
+        }
+        
+        if u == -1 { break; }
+        mstSet[u] = 1;
+        
+        // Update neighbors
+        let v: int = 0;
+        while v < 4 {
+            let edge: trit = adj[u * 4 + v];
+            if edge != 0 {
+                let weight: int = get_weight(edge);
+                if mstSet[v] == 0 && weight < key[v] {
+                    parent[v] = u;
+                    key[v] = weight;
+                }
+            }
+            v = v + 1;
+        }
+        count = count + 1;
+    }
+    
+    // Total MST weight
+    let total_weight: int = 0;
+    i = 1;
+    while i < 4 {
+        total_weight = total_weight + key[i];
+        i = i + 1;
+    }
+    return total_weight;
+}
+
+fn main() -> trit {
+    // 0 --1-- 1 --1-- 3
+    // |       |
+    // 2 (wt2) |
+    // 0 --2-- 2 --1-- 3
+    // MST should be 0-1, 1-3, 2-3 (weight 1+1+1 = 3)
+    let adj: trittensor<16> = [
+        0, 1, -1, 0,
+        1, 0,  0, 1,
+       -1, 0,  0, 1,
+        0, 1,  1, 0
+    ];
+    
+    println("Prim's MST Total Weight:");
+    let tw: int = prims(adj);
+    println(tw);
+    
+    if tw == 3 {
+        println("Prim's MST OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
