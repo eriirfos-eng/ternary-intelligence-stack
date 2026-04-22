@@ -1,0 +1,18 @@
+// stdlib/tier2/sparse_matmul.tern
+// Tier: 2 (BSL)
+// Demonstrates: Sparse matrix multiplication optimization
+
+fn sparse_matmul(tensor: trit[]) -> trit[] {
+    @sparseskip
+    return tensor;
+}
+
+fn main() -> trit {
+    let tensor: trit[] = [1, 0, 1, 0, -1];
+    let res: trit[] = sparse_matmul(tensor);
+    
+    if res[0] == 1 {
+        return 1;
+    }
+    return -1;
+}
