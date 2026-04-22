@@ -1,0 +1,10 @@
+agent MyAgent {
+    state: trit
+    fn tick(input: trit) -> trit {
+        return 1;
+    }
+}
+
+fn main() -> trit {
+    return 1;
+}

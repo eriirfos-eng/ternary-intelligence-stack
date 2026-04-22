@@ -1,0 +1,49 @@
+// stdlib/agents/retry_loop.tern
+// Demonstrates: Retry agent pattern using a while loop
+// Tier: 1 — Open Core
+
+agent UnreliableWorker {
+    fn handle(msg: trit) -> trit {
+        // Simulates a worker that is often busy (hold)
+        // In a real scenario, this might be based on random or state
+        return hold;
+    }
+}
+
+agent RetryAgent {
+    fn handle(msg: trit) -> trit {
+        let mut i: int = 0;
+        let mut result: trit = hold;
+        
+        while i < 3 {
+            let w: agentref = spawn UnreliableWorker;
+            send w msg;
+            let r: trit = await w;
+            
+            if r ? {
+                return 1;
+            } else {
+                // hold - continue
+            } else {
+                return -1;
+            }
+            
+            i = i + 1;
+        }
+        
+        return result; // Still hold after 3 retries
+    }
+}
+
+fn main() -> trit {
+    let r: agentref = spawn RetryAgent;
+    send r affirm;
+    let res: trit = await r;
+    
+    // In our test, it should return hold (0) after 3 attempts
+    match res {
+        1  => { return reject; }
+        0  => { return affirm; }
+        -1 => { return reject; }
+    }
+}

@@ -1,0 +1,20 @@
+agent TestState {
+    rounds: int
+    fn handle(msg: trit) -> trit {
+        rounds = rounds + 1;
+        return cast(rounds);
+    }
+}
+
+fn main() -> trit {
+    let ts: agentref = spawn TestState;
+    send ts affirm;
+    let r1: trit = await ts;
+    send ts affirm;
+    let r2: trit = await ts;
+    
+    if r1 == cast(1) && r2 == cast(2) {
+        return affirm;
+    }
+    return reject;
+}
