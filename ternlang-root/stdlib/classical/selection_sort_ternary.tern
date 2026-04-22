@@ -1,0 +1,53 @@
+// stdlib/classical/selection_sort_ternary.tern
+// Demonstrates: Selection Sort algorithm on a trit tensor.
+// Tier: 1 - Open Core
+
+fn selection_sort(arr: trittensor<8>, n: int) -> trit {
+    let i: int = 0;
+    while i < n - 1 {
+        let min_idx: int = i;
+        let j: int = i + 1;
+        while j < n {
+            if arr[j] < arr[min_idx] {
+                min_idx = j;
+            }
+            j = j + 1;
+        }
+        
+        let temp: trit = arr[min_idx];
+        arr[min_idx] = arr[i];
+        arr[i] = temp;
+        
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let arr: trittensor<8> = [1, 1, 0, -1, 0, 1, -1, 0];
+    
+    println("Original array:");
+    let k: int = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    selection_sort(arr, 8);
+    
+    println("Sorted array:");
+    k = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    if arr[0] == -1 && arr[1] == -1 && arr[7] == 1 {
+        println("Selection sort successful.");
+        return truth();
+    }
+    
+    return conflict();
+}
