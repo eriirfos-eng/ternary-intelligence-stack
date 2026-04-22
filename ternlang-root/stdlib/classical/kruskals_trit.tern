@@ -1,0 +1,90 @@
+// stdlib/classical/kruskals_trit.tern
+// Demonstrates: Kruskal's Algorithm for Minimum Spanning Tree using trits.
+// Tier: 1 - Open Core
+
+fn find_parent(parent: int[4], i: int) -> int {
+    if parent[i] == -1 {
+        return i;
+    }
+    return find_parent(parent, parent[i]);
+}
+
+fn union_sets(parent: int[4], x: int, y: int) -> trit {
+    let xset: int = find_parent(parent, x);
+    let yset: int = find_parent(parent, y);
+    if xset != yset {
+        parent[xset] = yset;
+    }
+    return 1;
+}
+
+fn kruskals(adj: trittensor<16>) -> int {
+    let parent: int[4];
+    let i: int = 0;
+    while i < 4 {
+        parent[i] = -1;
+        i = i + 1;
+    }
+    
+    let total_weight: int = 0;
+    let edge_count: int = 0;
+    
+    // Sort edges by weight: weight 1 (trit 1) then weight 2 (trit -1)
+    // We'll just iterate twice for simplicity in this small example
+    
+    // Pass 1: Weight 1
+    let u: int = 0;
+    while u < 4 {
+        let v: int = u + 1;
+        while v < 4 {
+            if adj[u * 4 + v] == 1 {
+                if find_parent(parent, u) != find_parent(parent, v) {
+                    union_sets(parent, u, v);
+                    total_weight = total_weight + 1;
+                    edge_count = edge_count + 1;
+                }
+            }
+            v = v + 1;
+        }
+        u = u + 1;
+    }
+    
+    // Pass 2: Weight 2 (trit -1)
+    u = 0;
+    while u < 4 {
+        let v: int = u + 1;
+        while v < 4 {
+            if adj[u * 4 + v] == -1 {
+                if find_parent(parent, u) != find_parent(parent, v) {
+                    union_sets(parent, u, v);
+                    total_weight = total_weight + 2;
+                    edge_count = edge_count + 1;
+                }
+            }
+            v = v + 1;
+        }
+        u = u + 1;
+    }
+    
+    return total_weight;
+}
+
+fn main() -> trit {
+    let adj: trittensor<16> = [
+        0, 1, -1, 0,
+        1, 0,  0, 1,
+       -1, 0,  0, 1,
+        0, 1,  1, 0
+    ];
+    
+    println("Kruskal's MST Total Weight:");
+    let tw: int = kruskals(adj);
+    println(tw);
+    
+    if tw == 3 {
+        println("Kruskal's MST OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
