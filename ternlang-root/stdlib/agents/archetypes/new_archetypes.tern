@@ -1,0 +1,28 @@
+// stdlib/agents/archetypes/filter_agent.tern
+// Archetype: Filter (Signal/Data processor)
+agent FilterAgent {
+    fn handle(msg: trit) -> trit {
+        if msg == reject { return tend; }
+        return msg;
+    }
+}
+// stdlib/agents/archetypes/buffer_agent.tern
+// Archetype: Buffer (Latency/Sync agent)
+agent BufferAgent {
+    fn handle(msg: trit) -> trit { return msg; }
+}
+// stdlib/agents/archetypes/gateway_agent.tern
+// Archetype: Gateway (Entry/Auth agent)
+agent GatewayAgent {
+    fn handle(msg: trit) -> trit { return msg == affirm ? affirm : reject; }
+}
+// stdlib/agents/archetypes/reporter_agent.tern
+// Archetype: Reporter (Telemetry/Audit agent)
+agent ReporterAgent {
+    fn handle(msg: trit) -> trit { return msg; }
+}
+// stdlib/agents/archetypes/executor_agent.tern
+// Archetype: Executor (Task Runner)
+agent ExecutorAgent {
+    fn handle(msg: trit) -> trit { return affirm; }
+}
