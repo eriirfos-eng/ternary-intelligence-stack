@@ -775,8 +775,12 @@ impl<'a> Parser<'a> {
             Token::TritType   => {
                 if let Ok(Token::LBracket) = self.peek_token() {
                     self.next_token()?;
+                    let dim = if let Ok(Token::Int(n)) = self.peek_token() {
+                        self.next_token()?;
+                        n as usize
+                    } else { 0 };
                     self.expect(Token::RBracket)?;
-                    Ok(Type::TritTensor { dims: vec![0] })
+                    Ok(Type::TritTensor { dims: vec![dim] })
                 } else {
                     Ok(Type::Trit)
                 }

@@ -1,0 +1,89 @@
+// stdlib/classical/merge_sort_ternary.tern
+// Demonstrates: Merge Sort algorithm on a trit tensor.
+// Tier: 1 - Open Core
+
+fn merge(arr: trittensor<8>, l: int, m: int, r: int) -> trit {
+    let n1: int = m - l + 1;
+    let n2: int = r - m;
+    
+    let L: trit[8];
+    let R: trit[8];
+    
+    let i: int = 0;
+    while i < n1 {
+        L[i] = arr[l + i];
+        i = i + 1;
+    }
+    let j: int = 0;
+    while j < n2 {
+        R[j] = arr[m + 1 + j];
+        j = j + 1;
+    }
+    
+    i = 0;
+    j = 0;
+    let k: int = l;
+    while i < n1 && j < n2 {
+        if L[i] < R[j] || L[i] == R[j] {
+            arr[k] = L[i];
+            i = i + 1;
+        } else {
+            arr[k] = R[j];
+            j = j + 1;
+        }
+        k = k + 1;
+    }
+    
+    while i < n1 {
+        arr[k] = L[i];
+        i = i + 1;
+        k = k + 1;
+    }
+    
+    while j < n2 {
+        arr[k] = R[j];
+        j = j + 1;
+        k = k + 1;
+    }
+    
+    return 1;
+}
+
+fn merge_sort(arr: trittensor<8>, l: int, r: int) -> trit {
+    if l < r {
+        let m: int = l + (r - l) / 2;
+        merge_sort(arr, l, m);
+        merge_sort(arr, m + 1, r);
+        merge(arr, l, m, r);
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let arr: trittensor<8> = [0, 1, -1, 1, 0, -1, 1, 0];
+    
+    println("Original array:");
+    let k: int = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    merge_sort(arr, 0, 7);
+    
+    println("Sorted array:");
+    k = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    if arr[0] == -1 && arr[1] == -1 && arr[7] == 1 {
+        println("Merge sort successful.");
+        return truth();
+    }
+    
+    return conflict();
+}
