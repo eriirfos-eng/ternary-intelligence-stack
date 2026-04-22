@@ -1,4 +1,5 @@
 import init, { run_tern, check_tern } from '/playground/pkg/ternlang_wasm.js';
+import jsyaml from 'js-yaml';
 
 init().then(() => {
   window.wasmRunTern   = run_tern;
@@ -2168,7 +2169,9 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
            <button class="art-btn" onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); setArtifactState('${id}', 'extend')" title="Extend Topology"><i data-lucide="external-link" style="width:10px"></i></button>
          </div>
        </div>
-       <div id="art-body-${id}" class="art-display" style="flex:1; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid var(--border2); white-space:pre-wrap;">(Awaiting signal...)</div>
+       <div id="art-body-${id}" class="art-display" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid var(--border2);">
+         <pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); white-space:pre-wrap;">(Awaiting signal...)</pre>
+       </div>
        <textarea id="art-edit-${id}" class="art-editor" style="display:none; flex:1; background:var(--bg2); color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; border:1px solid var(--cyan); padding:8px; border-radius:4px; outline:none; resize:none;" oninput="updateArtifactPayload('${id}', this.value)"></textarea>
        <div id="art-socket-label-${id}" style="margin-top:8px; display:none; justify-content:flex-end;">
          <div style="font-size:9px; color:var(--green); font-weight:800; border:1px solid var(--green); padding:2px 4px; border-radius:3px;">EXTEND SOCKET ACTIVE</div>
@@ -4594,8 +4597,16 @@ function renderScrubLayer(currentTime, scheduledEvents = [], loggedEvents = null
               // REPLAY LOGIC: Update existing artifact dynamically
               const artEl = document.getElementById(`art-body-${targetNode.id}`);
               if (artEl) {
-                  const statusTxt = event.val === 1 ? 'AFFIRM' : (event.val === -1 ? 'REJECT' : 'TEND');
-                  artEl.textContent = `Source: ${fromNode ? fromNode.name : 'Unknown'}\nResolved Signal: ${statusTxt}\nStatus: Resolved`;
+                  const payload = {
+                    source: fromNode ? fromNode.name : 'Unknown',
+                    resolved_signal: event.val,
+                    status: "Resolved",
+                    context_bridge: targetNode.props.runtime_buffer || {}
+                  };
+                  const yamlStr = jsyaml.dump(payload);
+                  const pre = artEl.querySelector('pre');
+                  if (pre) pre.textContent = yamlStr;
+                  else artEl.textContent = yamlStr;
                   artEl.style.color = event.val === 1 ? 'var(--green)' : (event.val === -1 ? 'var(--red)' : 'var(--text)');
               }
           }
@@ -5020,11 +5031,19 @@ async function simulateNode(node, inSignal, isPhantom = false) {
   artifacts.forEach(target => {
     const artEl = document.getElementById(`art-body-${target.id}`);
     if (artEl) {
-       artEl.textContent = `Source: ${node.name}\nResolved Signal: ${outSignal === 1 ? 'AFFIRM' : (outSignal === -1 ? 'REJECT' : 'TEND')}\nStatus: Halt Emitted`;
+       const payload = {
+         source: node.name,
+         resolved_signal: outSignal,
+         status: "Halt Emitted",
+         context_bridge: node.props.runtime_buffer || {}
+       };
+       const yamlStr = jsyaml.dump(payload);
+       const pre = artEl.querySelector('pre');
+       if (pre) pre.textContent = yamlStr;
+       else artEl.textContent = yamlStr;
        artEl.style.color = outSignal === 1 ? 'var(--green)' : (outSignal === -1 ? 'var(--red)' : 'var(--text)');
     }
   });
-
   if (!isPhantom) await new Promise(r => setTimeout(r, 500));
   return outSignal;
 }
@@ -5109,17 +5128,29 @@ async function executeMOE13(node, inSignal) {
 window.executeMOE13 = executeMOE13;
 
 function spawnResultArtifact(sourceNode, val) {
-  let payloadStr = `Source: ${sourceNode.name}\nResolved Signal: ${val === 1 ? 'AFFIRM' : (val === -1 ? 'REJECT' : 'TEND')}\nStatus: Resolved`;
-  
   const isSuspended = !!sourceNode.props.pending_actuator;
+  let status = isSuspended ? "Suspended" : "Resolved";
+  let contextBridge = sourceNode.props.runtime_buffer || {};
+
   if (isSuspended) {
     const tap = sourceNode.props.pending_actuator;
     if (tap.error) {
-      payloadStr = `❌ WASM RUNTIME ERROR\n\nTraceback:\n${tap.error}\n\nFailed Code:\n${tap.last_failed_code}\n\nAction: Please edit in 'transmute' mode or reject.`;
+      status = "WASM Runtime Error";
+      contextBridge = { error: tap.error, failed_code: tap.last_failed_code };
     } else {
-      payloadStr = `⚠️  TAP SUSPENSION (STATE 0)\n\nProposed Actuator Logic:\n${tap.code}\n\nDivergent Paths:\n- ${tap.paths.join('\n- ')}\n\nAction: Awaiting Operator Approval.`;
+      status = "TAP Suspension";
+      contextBridge = { proposed_logic: tap.code, divergent_paths: tap.paths };
     }
   }
+
+  const payload = {
+    source: sourceNode.name,
+    resolved_signal: val,
+    status: status,
+    context_bridge: contextBridge
+  };
+
+  const payloadStr = jsyaml.dump(payload);
   
   // Singleton / Upsert pattern: Bind to parent UUID
   const existing = flowNodes.find(n => n.type === 'artifact' && n.parentId === sourceNode.id);
@@ -5128,7 +5159,9 @@ function spawnResultArtifact(sourceNode, val) {
      existing.props.payload = payloadStr;
      const artEl = document.getElementById(`art-body-${existing.id}`);
      if (artEl) {
-        artEl.textContent = payloadStr;
+        const pre = artEl.querySelector('pre');
+        if (pre) pre.textContent = payloadStr;
+        else artEl.textContent = payloadStr;
         artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
         if (isSuspended) renderActuatorControls(existing.id, sourceNode.id);
      }
@@ -5161,7 +5194,9 @@ function spawnResultArtifact(sourceNode, val) {
 
   const artEl = document.getElementById(`art-body-${id}`);
   if (artEl) {
-     artEl.textContent = payloadStr;
+     const pre = artEl.querySelector('pre');
+     if (pre) pre.textContent = payloadStr;
+     else artEl.textContent = payloadStr;
      artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
      if (isSuspended) renderActuatorControls(id, sourceNode.id);
   }
@@ -5265,14 +5300,17 @@ function setArtifactState(id, state) {
     editor.style.display  = 'none';
     socketLabel.style.display = 'none';
     if (editor.value) {
-      display.textContent = editor.value;
+      const pre = display.querySelector('pre');
+      if (pre) pre.textContent = editor.value;
+      else display.textContent = editor.value;
       updateArtifactPayload(id, editor.value);
     }
   } else if (state === 'transmute') {
     display.style.display = 'none';
     editor.style.display  = 'block';
     socketLabel.style.display = 'none';
-    editor.value = display.textContent;
+    const pre = display.querySelector('pre');
+    editor.value = pre ? pre.textContent : display.textContent;
   } else if (state === 'extend') {
     display.style.display = 'block';
     editor.style.display  = 'none';
@@ -6023,18 +6061,31 @@ function onMouseUp(e) {
            const dropY = activeWire.end.y;
            const newNodeId = "node_" + Date.now();
            const artBody = document.getElementById(`art-body-${sourceNode.id}`);
-           const payload = artBody ? artBody.textContent : "";
-           
+           const payloadRaw = artBody ? artBody.textContent : "";
+           let contextBridge = {};
+           let displayPayload = payloadRaw;
+
+           try {
+              const parsed = jsyaml.load(payloadRaw);
+              if (parsed && typeof parsed === 'object') {
+                 contextBridge = parsed.context_bridge || {};
+                 displayPayload = jsyaml.dump(parsed);
+              }
+           } catch (e) {
+              console.warn("YAML Parse failed, falling back to legacy injection", e);
+           }
+
            createFlowNode("Transmuted Agent", "__custom__", dropX, dropY, 'agent', newNodeId);
            const newNode = flowNodes.find(n => n.id === newNodeId);
            if (newNode) {
-              newNode.props.code = `// Inherited Payload:\n/*\n${payload}\n*/\nreturn truth();`;
+              newNode.props.context_bridge = contextBridge;
+              const bridgeStr = jsyaml.dump(contextBridge);
+              newNode.props.code = `// Inherited Context Bridge:\n/*\n${bridgeStr}*/\n\n// Source Payload:\n/*\n${displayPayload}*/\n\nfn main() -> trit {\n    return truth();\n}`;
               const wireId = "wire_evo_" + Date.now();
               flowWires.push({
                 id: wireId, fromId: sourceNode.id, toId: newNodeId,
                 signal: 0, confidence: 1.0, condition: "all", transform: "pass", priority: 5, label: "EVOLUTION"
-              });
-              
+              });              
               // Automatically return to 'lock' state to prevent accidental multiple spawns
               setArtifactState(sourceNode.id, 'lock');
               

@@ -3,15 +3,17 @@
   "version": "2.0.0-industrial",
   "private": true,
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "lucide-react": "^0.284.0",
     "@monaco-editor/react": "^4.6.0",
-    "framer-motion": "^10.16.4"
+    "framer-motion": "^10.16.4",
+    "js-yaml": "^4.1.1",
+    "lucide-react": "^0.284.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "vite": "^4.4.9",
-    "@vitejs/plugin-react": "^4.0.4"
+    "@types/js-yaml": "^4.0.9",
+    "@vitejs/plugin-react": "^4.0.4",
+    "vite": "^4.4.9"
   },
   "scripts": {
     "dev": "vite",
