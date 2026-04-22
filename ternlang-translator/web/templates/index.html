@@ -38,7 +38,7 @@
       --border-color: #CBD5E1;
       --bg-editor: #F1F5F9;
       --text-main: #0F172A;
-      --text-sub: #1E293B; /* High contrast, no weak greys */
+      --text-sub: #1E293B; 
       --teal-dim: rgba(0, 212, 170, 0.15);
     }
     
@@ -49,7 +49,7 @@
       --border-color: #1E2536;
       --bg-editor: #05070A;
       --text-main: #FFFFFF;
-      --text-sub: #F8FAFC; /* Bright off-white, purged the grey */
+      --text-sub: #F8FAFC; 
       --teal-dim: rgba(0, 212, 170, 0.15);
     }
 
@@ -79,9 +79,11 @@
 
     textarea:focus { outline: none; }
     
+    /* Strict scrollbar enforcement */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00d4aa; }
     
     .btn-glow:hover {
       box-shadow: 0 0 15px rgba(0, 212, 170, 0.3);
@@ -92,13 +94,8 @@
 <body class="antialiased min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
 
   <div class="max-w-7xl w-full">
+    <!-- Header -->
     <header class="text-center mb-10 relative">
-      <div class="absolute right-0 top-0">
-        <button id="theme-toggle" class="p-2 rounded-md border border-studio_border bg-studio_panel text-t_text hover:text-t_teal transition-colors">
-          <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-          <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-        </button>
-      </div>
       <div class="inline-block px-3 py-1 mb-4 rounded-full border border-studio_border bg-studio_panel font-mono text-t_teal text-[10px] tracking-widest uppercase shadow-sm">
         Local Tool &middot; Ternary Intelligence Stack
       </div>
@@ -108,8 +105,10 @@
       <p class="text-t_subtext text-sm md:text-base">Migrate binary logic to balanced ternary syntax instantly.</p>
     </header>
 
+    <!-- Main Workspace -->
     <div class="glass-panel rounded-xl overflow-hidden flex flex-col">
       
+      <!-- Top Toolbar -->
       <div class="flex flex-col md:flex-row border-b border-studio_border bg-studio_panel px-5 py-3 items-center justify-between gap-4">
         
         <div class="flex items-center gap-4 w-full md:w-auto">
@@ -134,27 +133,39 @@
           </label>
         </div>
 
-        <button id="trans-run-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2 border border-t_teal/50 text-t_teal font-mono text-[15px] font-bold uppercase tracking-wider rounded-md transition-all btn-glow bg-t_teal_dim">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          Translate Output
-        </button>
+        <div class="flex items-center gap-4 w-full md:w-auto">
+          <!-- Highly visible Theme Toggle -->
+          <button id="theme-toggle" class="p-2 rounded-md border border-studio_border bg-studio_editor text-t_subtext hover:text-t_teal transition-colors" title="Toggle Polarity (+1 / -1)">
+            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+          </button>
+
+          <button id="trans-run-btn" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 border border-t_teal/50 text-t_teal font-mono text-[15px] font-bold uppercase tracking-wider rounded-md transition-all btn-glow bg-t_teal_dim">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Translate
+          </button>
+        </div>
       </div>
 
-      <div class="grid md:grid-cols-2 h-[550px] divide-y md:divide-y-0 md:divide-x divide-studio_border">
+      <!-- Code Areas with enforced min-h-0 for proper flex scrolling -->
+      <div class="grid md:grid-cols-2 h-[550px] divide-y md:divide-y-0 md:divide-x divide-studio_border min-h-0">
         
-        <div class="flex flex-col relative group">
-          <div class="absolute top-3 right-4 font-mono text-[13px] text-t_subtext uppercase tracking-widest z-10 select-none">Input // Binary</div>
-          <textarea id="trans-input" class="editor-pane flex-1 w-full p-5 pt-12 font-mono text-[17px] text-t_subtext resize-none" spellcheck="false" placeholder="// Paste standard binary architecture here..."></textarea>
+        <!-- Input -->
+        <div class="flex flex-col relative group min-h-0">
+          <div class="absolute top-3 right-4 font-mono text-[13px] text-t_subtext uppercase tracking-widest z-10 select-none bg-studio_editor/80 px-2 py-1 rounded">Input // Binary</div>
+          <textarea id="trans-input" class="editor-pane flex-1 w-full p-5 pt-12 font-mono text-[17px] text-t_subtext resize-none overflow-y-auto block" spellcheck="false" placeholder="// Paste standard binary architecture here..."></textarea>
         </div>
         
-        <div class="flex flex-col relative">
-          <div class="absolute top-3 right-4 font-mono text-[13px] text-t_teal uppercase tracking-widest z-10 select-none">Output // Ternary</div>
-          <div id="trans-output" class="editor-pane flex-1 w-full p-5 pt-12 font-mono text-[17px] text-t_teal overflow-auto whitespace-pre"></div>
+        <!-- Output -->
+        <div class="flex flex-col relative min-h-0">
+          <div class="absolute top-3 right-4 font-mono text-[13px] text-t_teal uppercase tracking-widest z-10 select-none bg-studio_editor/80 px-2 py-1 rounded">Output // Ternary</div>
+          <div id="trans-output" class="editor-pane flex-1 w-full p-5 pt-12 font-mono text-[17px] text-t_teal overflow-y-auto whitespace-pre block"></div>
         </div>
         
       </div>
 
-      <div class="bg-studio_panel border-t border-studio_border p-5">
+      <!-- Insight Footer -->
+      <div class="bg-studio_panel border-t border-studio_border p-5 shrink-0">
         <div class="flex items-center gap-2 mb-3">
           <svg class="w-4 h-4 text-t_blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           <h4 class="text-t_text font-mono text-[13px] uppercase tracking-widest">Topology Insights</h4>
@@ -171,7 +182,7 @@
   </div>
 
   <script>
-    // Theme Toggle Logic
+    // Pure Client-Side Theme Toggle 
     const themeToggle = document.getElementById('theme-toggle');
     const htmlElement = document.documentElement;
     
@@ -234,8 +245,7 @@
         }
         
         transBtn.disabled = false;
-        transBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Translate Output';
-        transOutput.scrollTop = 0;
+        transBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Translate';
       }, 400);
     }
 
