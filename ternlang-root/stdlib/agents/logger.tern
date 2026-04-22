@@ -1,17 +1,18 @@
 // stdlib/agents/logger.tern
-// Demonstrates: Side-effecting agent (Audit Logging)
+// Demonstrates: Production-grade side-effecting audit logger
 // Tier: 1 — Open Core
 
 agent Logger {
     fn handle(msg: trit) -> trit {
-        // Open audit.trit in Append mode (2)
+        // Attempt to open audit log in append mode
         let h: int = opent("audit.trit", 2);
         
-        if h > -1 {
+        if h != -1 {
             writet(h, msg);
             return affirm;
         }
         
+        // Log failure state
         return reject;
     }
 }
@@ -19,7 +20,7 @@ agent Logger {
 fn main() -> trit {
     let l: agentref = spawn Logger;
     
-    // Log a sequence of trits
+    // Log a sequence of signals
     send l affirm;
     let r1: trit = await l;
     
@@ -29,6 +30,7 @@ fn main() -> trit {
     send l reject;
     let r3: trit = await l;
     
+    // Success criteria: all log operations returned affirm
     if r1 == affirm {
         if r2 == affirm {
             if r3 == affirm {
