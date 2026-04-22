@@ -1,0 +1,43 @@
+// stdlib/tier2/moe_deliberator.tern
+// Tier: 2 (BSL)
+// Archetype: MoE-13 (Mixture of Experts)
+// 13-axis deliberation engine with -1 veto safety protocol
+
+fn expert_node(axis: int) -> trit {
+    // Simulated expert response
+    return 1;
+}
+
+fn moe_deliberate(input: trit) -> trit {
+    let axis: int = 0;
+    let confidence: int = 0;
+    
+    // Simulate 13-axis deliberation
+    while axis < 13 {
+        let res: trit = expert_node(axis);
+        if res == -1 {
+            // Safety mandate: Hard reject at any confidence level
+            return -1;
+        }
+        confidence = confidence + 1;
+        axis = axis + 1;
+    }
+    
+    // Safety check: Confidence saturation trigger (>0.90)
+    // 13 axes total; >11.7 triggers hard reject
+    if confidence > 11 {
+        return -1;
+    }
+    
+    return 1;
+}
+
+fn main() -> trit {
+    let res: trit = moe_deliberate(1);
+    
+    // Expecting hard reject due to safety trigger
+    if res == -1 {
+        return 1;
+    }
+    return -1;
+}
