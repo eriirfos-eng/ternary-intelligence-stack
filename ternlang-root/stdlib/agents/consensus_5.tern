@@ -1,0 +1,62 @@
+// stdlib/agents/consensus_5.tern
+// Demonstrates: 5-way Consensus agent pattern
+// Tier: 1 — Open Core
+
+agent Voter {
+    fn handle(msg: trit) -> trit {
+        return msg;
+    }
+}
+
+agent Consensus5 {
+    fn handle(msg: trit) -> trit {
+        let v1: agentref = spawn Voter;
+        let v2: agentref = spawn Voter;
+        let v3: agentref = spawn Voter;
+        let v4: agentref = spawn Voter;
+        let v5: agentref = spawn Voter;
+        
+        send v1 msg;
+        send v2 msg;
+        send v3 msg;
+        send v4 msg;
+        send v5 msg;
+        
+        let r1: trit = await v1;
+        let r2: trit = await v2;
+        let r3: trit = await v3;
+        let r4: trit = await v4;
+        let r5: trit = await v5;
+        
+        // Majority logic
+        let mut score: int = 0;
+        
+        if r1 == 1 { score = score + 1; } else { if r1 == -1 { score = score - 1; } else { } }
+        if r2 == 1 { score = score + 1; } else { if r2 == -1 { score = score - 1; } else { } }
+        if r3 == 1 { score = score + 1; } else { if r3 == -1 { score = score - 1; } else { } }
+        if r4 == 1 { score = score + 1; } else { if r4 == -1 { score = score - 1; } else { } }
+        if r5 == 1 { score = score + 1; } else { if r5 == -1 { score = score - 1; } else { } }
+        
+        if score > 0 {
+            return 1;
+        } else {
+            if score < 0 {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let c: agentref = spawn Consensus5;
+    send c 1;
+    let res: trit = await c;
+    
+    if res == 1 {
+        return 1;
+    } else {
+        return -1;
+    }
+}
