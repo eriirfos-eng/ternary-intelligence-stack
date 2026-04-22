@@ -5984,6 +5984,9 @@ window.executeProductDeploy = executeProductDeploy;
 function onMouseDown(e) {
   if (e.button !== 0) return; // Only left-click starts wires
   
+  // Ignore if clicking on a wire itself (let wire click handlers handle it)
+  if (e.target.classList.contains('flow-wire') || e.target.classList.contains('wire-hit')) return;
+
   const sourcePort = e.target.closest('.flow-port');
   if (sourcePort) {
     e.stopPropagation();
