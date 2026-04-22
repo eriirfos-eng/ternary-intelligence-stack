@@ -2863,7 +2863,7 @@ const EdgePanelController = {
   },
 
   renderLegacy(wire, bodyEl, fromNode, toNode) {
-    const cond      = wire.condition  || "all";
+    const cond      = String(wire.condition || "all");
     const transform = wire.transform  || "pass";
     const label     = wire.label      || "";
 
@@ -2875,10 +2875,10 @@ const EdgePanelController = {
       <div class="prop-group">
         <label class="prop-label">Pass condition</label>
         <select class="prop-input" style="width:100%" onchange="updateWireProp('condition', this.value)">
-          <option value="all"    ${cond==="all"    ?"selected":""}>All trits (pass everything)</option>
-          <option value="affirm" ${cond==="affirm" ?"selected":""}>affirm only (+1)</option>
-          <option value="tend"   ${cond==="tend"   ?"selected":""}>tend only (0)</option>
-          <option value="reject" ${cond==="reject" ?"selected":""}>reject only (-1)</option>
+          <option value="all" ${cond==="all" ?"selected":""}>All trits (pass everything)</option>
+          <option value="1"   ${cond==="1"   ?"selected":""}>affirm only (+1)</option>
+          <option value="0"   ${cond==="0"   ?"selected":""}>tend only (0)</option>
+          <option value="-1"  ${cond==="-1"  ?"selected":""}>reject only (-1)</option>
           <option value="!reject"${cond==="!reject"?"selected":""}>affirm or tend (not reject)</option>
           <option value="!tend"  ${cond==="!tend"  ?"selected":""}>affirm or reject (decisive)</option>
         </select>
@@ -2939,9 +2939,9 @@ const EdgePanelController = {
       <div class="prop-group" style="margin-bottom:8px;">
         <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Activation Logic</div>
         <div style="display:flex; align-items:stretch; height:24px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
-          <button title="value == +1" class="rail-btn ${cond==='affirm'?'active':''}" onclick="updateWireProp('condition','affirm');updateWireProp('label','+1 only');">+1</button>
-          <button title="value == 0"  class="rail-btn ${cond==='tend'?'active':''}"   onclick="updateWireProp('condition','tend');updateWireProp('label','0 only');">0</button>
-          <button title="value == -1" class="rail-btn ${cond==='reject'?'active':''}" onclick="updateWireProp('condition','reject');updateWireProp('label','-1 only');">-1</button>
+          <button title="value == +1" class="rail-btn ${String(cond)==='1'?'active':''}" onclick="updateWireProp('condition','1');updateWireProp('label','+1 only');">+1</button>
+          <button title="value == 0"  class="rail-btn ${String(cond)==='0'?'active':''}"   onclick="updateWireProp('condition','0');updateWireProp('label','0 only');">0</button>
+          <button title="value == -1" class="rail-btn ${String(cond)==='-1'?'active':''}" onclick="updateWireProp('condition','-1');updateWireProp('label','-1 only');">-1</button>
           <button title="value != -1" class="rail-btn ${cond==='!reject'?'active':''}" onclick="updateWireProp('condition','!reject');updateWireProp('label','+1 or 0');">!= -1</button>
           <button title="All signals" class="rail-btn ${cond==='all'?'active':''}"    onclick="updateWireProp('condition','all');updateWireProp('label','All signals');">ALL</button>
         </div>
@@ -4023,7 +4023,12 @@ const TernaryAlgebra = {
     out.conf = Math.max(0, out.conf - decay);
 
     if (wire.condition && wire.condition !== "all") {
-      const pass = (wire.condition==="affirm"&&out.val===1)||(wire.condition==="tend"&&out.val===0)||(wire.condition==="reject"&&out.val===-1)||(wire.condition==="!reject"&&out.val!==-1)||(wire.condition==="!tend"&&out.val!==0);
+      const cond = String(wire.condition);
+      const pass = (cond==="1"||cond==="affirm") && out.val===1 ||
+                   (cond==="0"||cond==="tend")   && out.val===0 ||
+                   (cond==="-1"||cond==="reject")&& out.val===-1 ||
+                   (cond==="!reject") && out.val!==-1 ||
+                   (cond==="!tend")   && out.val!==0;
       if (!pass) {
         if (wire.transform === "block") return null;
         if (wire.transform === "flip")  { out.val = -out.val; out.conf *= 0.8; }
@@ -5413,8 +5418,18 @@ function updateWires() {
     const toNode = document.getElementById(w.toId);
     if (!fromNode || !toNode) return;
 
-    const fromPort = fromNode.querySelector('.flow-port-out');
+    // Phase 3: Select specific ternary output port based on condition
+    let portSelector = '.flow-port-out';
+    if (String(w.condition) === "1") portSelector = '.port-affirm';
+    else if (String(w.condition) === "0") portSelector = '.port-neutral';
+    else if (String(w.condition) === "-1") portSelector = '.port-reject';
+    else if (String(w.condition) === "!reject") portSelector = '.port-affirm'; // Default to affirm for complex
+
+    let fromPort = fromNode.querySelector(portSelector);
+    // Fallback to any output port if specific not found
+    if (!fromPort) fromPort = fromNode.querySelector('.flow-port-out');
     const toPort = toNode.querySelector('.flow-port-in');
+    
     if (!fromPort || !toPort) return;
 
     const start = getPortPos(fromPort);
