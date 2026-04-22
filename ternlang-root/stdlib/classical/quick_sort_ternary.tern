@@ -1,0 +1,65 @@
+// stdlib/classical/quick_sort_ternary.tern
+// Demonstrates: Quick Sort algorithm on a trit tensor.
+// Tier: 1 - Open Core
+
+fn partition(arr: trittensor<8>, low: int, high: int) -> int {
+    let pivot: trit = arr[high];
+    let i: int = low - 1;
+    let j: int = low;
+    
+    while j < high {
+        // If current element is less than or equal to pivot
+        if arr[j] < pivot || arr[j] == pivot {
+            i = i + 1;
+            let temp: trit = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+        j = j + 1;
+    }
+    
+    let temp2: trit = arr[i + 1];
+    arr[i + 1] = arr[high];
+    arr[high] = temp2;
+    
+    return i + 1;
+}
+
+fn quick_sort(arr: trittensor<8>, low: int, high: int) -> trit {
+    if low < high {
+        let pi: int = partition(arr, low, high);
+        quick_sort(arr, low, pi - 1);
+        quick_sort(arr, pi + 1, high);
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let arr: trittensor<8> = [1, 0, -1, 1, -1, 0, 1, 0];
+    
+    println("Original array:");
+    let k: int = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    quick_sort(arr, 0, 7);
+    
+    println("Sorted array:");
+    k = 0;
+    while k < 8 {
+        print(arr[k]); print(" ");
+        k = k + 1;
+    }
+    println("");
+    
+    // Verify sorted: -1, -1, 0, 0, 0, 1, 1, 1
+    if arr[0] == -1 && arr[2] == 0 && arr[7] == 1 {
+        println("Quick sort successful.");
+        return truth();
+    }
+    
+    return conflict();
+}
