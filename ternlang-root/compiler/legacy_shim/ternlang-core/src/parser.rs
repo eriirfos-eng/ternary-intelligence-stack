@@ -188,10 +188,11 @@ impl<'a> Parser<'a> {
 
     pub fn peek_token(&mut self) -> Result<Token, ParseError> {
         let mut cloned = self.lex.clone();
-        cloned.next()
-            .map(|res| res.map_err(|_| ParseError::UnexpectedToken("Invalid token".into())))
-            .transpose()?
-            .ok_or(ParseError::UnexpectedToken("EOF".into()))
+        match cloned.next() {
+            Some(Ok(t)) => Ok(t),
+            Some(Err(_)) => Err(ParseError::UnexpectedToken("Invalid token during peek".into())),
+            None => Err(ParseError::UnexpectedToken("EOF".into())),
+        }
     }
 
     pub fn parse_expr(&mut self) -> Result<Expr, ParseError> {
@@ -806,29 +807,31 @@ impl<'a> Parser<'a> {
             }
             Token::Ident(ref name) => match name.as_str() {
                 "int"    => {
-                    if let Ok(Token::LBracket) = self.peek_token() {
-                        self.next_token()?; // consume [
-                        let dim = if let Ok(Token::Int(n)) = self.peek_token() {
-                            self.next_token()?;
-                            n as usize
-                        } else { 0 };
-                        self.expect(Token::RBracket)?;
-                        Ok(Type::IntTensor { dims: vec![dim] })
-                    } else {
-                        Ok(Type::Int)
+                    match self.peek_token() {
+                        Ok(Token::LBracket) => {
+                            self.next_token()?; // consume [
+                            let dim = if let Ok(Token::Int(n)) = self.peek_token() {
+                                self.next_token()?;
+                                n as usize
+                            } else { 0 };
+                            self.expect(Token::RBracket)?;
+                            Ok(Type::IntTensor { dims: vec![dim] })
+                        }
+                        _ => Ok(Type::Int)
                     }
                 }
                 "float"  => {
-                    if let Ok(Token::LBracket) = self.peek_token() {
-                        self.next_token()?; // consume [
-                        let dim = if let Ok(Token::Int(n)) = self.peek_token() {
-                            self.next_token()?;
-                            n as usize
-                        } else { 0 };
-                        self.expect(Token::RBracket)?;
-                        Ok(Type::FloatTensor { dims: vec![dim] })
-                    } else {
-                        Ok(Type::Float)
+                    match self.peek_token() {
+                        Ok(Token::LBracket) => {
+                            self.next_token()?; // consume [
+                            let dim = if let Ok(Token::Int(n)) = self.peek_token() {
+                                self.next_token()?;
+                                n as usize
+                            } else { 0 };
+                            self.expect(Token::RBracket)?;
+                            Ok(Type::FloatTensor { dims: vec![dim] })
+                        }
+                        _ => Ok(Type::Float)
                     }
                 }
                 "bool"   => Ok(Type::Bool),
