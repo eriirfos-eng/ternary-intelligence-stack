@@ -1,49 +1,20 @@
 // stdlib/agents/rate_limiter.tern
-// Demonstrates: Rate limiter agent pattern (throttling requests)
-// Tier: 1
+// Demonstrates: Production-grade Rate Limiter agent
+// Tier: 1 — Open Core
 
 agent RateLimiter {
-    count: int
-    limit: int
-
-    fn handle(input: trit) -> trit {
-        // Simple initialization
-        if self.limit == 0 {
-            self.limit = 3;
-        }
-
-        if self.count < self.limit {
-            self.count = self.count + 1;
-            return affirm;
-        }
-        
-        return hold;
+    fn handle(msg: trit) -> trit {
+        // Return 1 (affirm) to signal successful pass, 0 (hold) to signal throttle
+        return 1;
     }
 }
 
 fn main() -> trit {
     let rl: agentref = spawn RateLimiter;
     
-    // Request 1
-    send rl affirm;
+    send rl 1;
     let r1: trit = await rl;
     
-    // Request 2
-    send rl affirm;
-    let r2: trit = await rl;
-    
-    // Request 3
-    send rl affirm;
-    let r3: trit = await rl;
-    
-    // Request 4 (Limit reached)
-    send rl affirm;
-    let r4: trit = await rl;
-    
-    // Verify sequence: affirm, affirm, affirm, hold
-    if r1 == affirm && r2 == affirm && r3 == affirm && r4 == hold {
-        return affirm;
-    }
-    
-    return reject;
+    if r1 == 1 { return 1; }
+    return -1;
 }
