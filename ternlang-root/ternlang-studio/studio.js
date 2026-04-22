@@ -1,5 +1,4 @@
 import init, { run_tern, check_tern } from '/playground/pkg/ternlang_wasm.js';
-import jsyaml from 'js-yaml';
 
 init().then(() => {
   window.wasmRunTern   = run_tern;
