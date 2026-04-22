@@ -2203,7 +2203,10 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
       <div class="inj-btn inj-neg" onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); injectSignal('${id}', -1)" title="Inject -1 Reject">-1</div>
     </div>
     ${type !== 'datasource' ? `<div class="flow-port flow-port-in"  style="left:-7px;  top:50%; margin-top:-6px;" title="Input"></div>` : ''}
-    <div class="flow-port flow-port-out" style="right:-7px; top:50%; margin-top:-6px;" title="Output"></div>
+    <!-- Phase 3: Multi-Timeline Ternary Routing Ports -->
+    <div class="flow-port flow-port-out port-affirm" style="right:-7px; top:25%; margin-top:-6px; background:var(--green); border-color:var(--green);" title="Affirm (+1)"></div>
+    <div class="flow-port flow-port-out port-neutral" style="right:-7px; top:50%; margin-top:-6px; background:var(--muted); border-color:var(--muted);" title="Neutral (0)"></div>
+    <div class="flow-port flow-port-out port-reject" style="right:-7px; top:75%; margin-top:-6px; background:var(--red); border-color:var(--red);" title="Reject (-1)"></div>
     ${type === 'artifact' ? '<div class="inspector-resizer" style="width:10px; height:10px;"></div>' : ''}
   `;
 
@@ -2558,12 +2561,13 @@ const NodePanelController = {
           <button class="btn btn-primary" style="font-size:10px; padding:2px 8px; height:24px; background:var(--blue); border:none;" onclick="document.getElementById('datasource-file-input').click()">
             <i data-lucide="upload" style="width:12px; margin-right:4px;"></i> Upload File
           </button>
-          <input type="file" id="datasource-file-input" style="display:none;" accept=".txt,.md,.csv,.json" onchange="handleDataSourceFileUpload('${node.id}', this.files[0])">
+          <input type="file" id="datasource-file-input" style="display:none;" accept=".txt,.md,.csv,.json,.yaml,.yml" onchange="handleDataSourceFileUpload('${node.id}', this.files[0])">
         </div>
         <div class="prop-label-strict">Data Type</div>
         <select class="prop-input" onchange="updateNodeProp('data_type', this.value)">
           <option value="text" ${dataType === 'text' ? 'selected' : ''}>Raw Text</option>
           <option value="json" ${dataType === 'json' ? 'selected' : ''}>JSON Array</option>
+          <option value="yaml" ${dataType === 'yaml' ? 'selected' : ''}>YAML Logic</option>
           <option value="csv" ${dataType === 'csv' ? 'selected' : ''}>CSV Data</option>
           <option value="markdown" ${dataType === 'markdown' ? 'selected' : ''}>Markdown</option>
         </select>
@@ -4961,16 +4965,34 @@ async function simulateNode(node, inSignal, isPhantom = false) {
   } else if (node.type === 'moe13') {
     outSignal = await executeMOE13(node, inSignal);
   } else if (node.type === 'datasource') {
-    const payloadData = node.props.payload || "";
+    const payloadRaw = node.props.payload || "";
+    let dataType = node.props.data_type || 'text';
+    let finalData = payloadRaw;
+
+    // Phase 3: YAML/JSON Integration into Data Source Pipeline
+    if (dataType === 'yaml' || dataType === 'yml' || dataType === 'json') {
+      try {
+        if (dataType === 'json') {
+          finalData = JSON.parse(payloadRaw);
+        } else {
+          finalData = jsyaml.load(payloadRaw);
+        }
+        dataType = 'object'; // Standardize parsed data as 'object' in the pipeline
+      } catch (e) {
+        console.warn(`[DataSource] Parse failed for type ${dataType}:`, e);
+        // Fallback to raw text if parsing fails
+      }
+    }
+
     if (!isPhantom) {
-      logInspector(node.name, `📡 Injecting Payload: [${node.props.data_type || 'text'}] ${payloadData.substring(0, 20)}...`);
+      logInspector(node.name, `📡 Injecting Payload: [${dataType}] ${typeof finalData === 'object' ? 'Structured Object' : payloadRaw.substring(0, 20)}...`);
     }
     const outWires = flowWires.filter(w => w.fromId === node.id);
     outWires.forEach(w => {
       const downNode = flowNodes.find(n => n.id === w.toId);
       if (downNode) {
-        downNode.props.runtime_buffer = { type: node.props.data_type || 'text', data: payloadData };
-        if (!isPhantom) logInspector("SYSTEM", `💾 Buffered ${payloadData.length} bytes to ${downNode.name}`);
+        downNode.props.runtime_buffer = { type: dataType, data: finalData };
+        if (!isPhantom) logInspector("SYSTEM", `💾 Buffered ${typeof finalData === 'object' ? 'object' : payloadRaw.length + ' bytes'} to ${downNode.name}`);
       }
     });
     outSignal = 1; // Affirm data dispatched
@@ -5926,11 +5948,19 @@ function onMouseDown(e) {
   if (sourcePort) {
     const nodeEl = sourcePort.closest('.flow-node');
     const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
+    
+    // Phase 3: Extract Routing Port Value for Ternary Routing
+    let routingValue = "all";
+    if (sourcePort.classList.contains('port-affirm')) routingValue = 1;
+    else if (sourcePort.classList.contains('port-neutral')) routingValue = 0;
+    else if (sourcePort.classList.contains('port-reject')) routingValue = -1;
+
     activeWire = {
       fromId: nodeEl.id,
       fromIsOutput: sourcePort.classList.contains('flow-port-out'),
       start: getPortPos(sourcePort),
-      end: screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top)
+      end: screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top),
+      routingValue: routingValue
     };
   } else {
     // Clear state if clicking empty space (prevent stuck wires)
@@ -6028,9 +6058,13 @@ function onMouseUp(e) {
             const wireId = "wire_" + Date.now();
             const fromId = activeWire.fromIsOutput ? activeWire.fromId : toNode.id;
             const toId   = activeWire.fromIsOutput ? toNode.id : activeWire.fromId;
+            
+            const condition = (activeWire.routingValue === "all") ? "all" : activeWire.routingValue;
+            const label = condition === 1 ? "+1 Affirm" : (condition === -1 ? "-1 Reject" : (condition === 0 ? "0 Neutral" : "All signals"));
+
             flowWires.push({
               id: wireId, fromId, toId,
-              signal: 0, confidence: 1.0, condition: "all", transform: "pass", priority: 5, label: "All signals"
+              signal: 0, confidence: 1.0, condition: condition, transform: "pass", priority: 5, label: label
             });
             saveCanvasState();
 
