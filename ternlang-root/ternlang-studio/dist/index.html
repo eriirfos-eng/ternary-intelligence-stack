@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TernStudio — Ternary Intelligence Stack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Logic extracted to studio.js -->
+  
+  <script type="module" crossorigin src="/assets/index-69467930.js"></script>
+  <link rel="stylesheet" href="/assets/index-7d38b0a9.css">
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══════════════════════════════════════════════════════════════ -->
+<div id="topbar">
+  <div class="tb-left">
+    <div class="tb-logo" onclick="switchView('dashboard')">
+      <img src="/assets/ternlang_logo_notext-7ce14b6e.png" alt="Ternlang Logo" style="height: 60px;">
+    </div>
+    <div class="tb-nav">
+      <button class="nav-tab active" id="vt-dashboard" onclick="switchView('dashboard')"><i data-lucide="layout-dashboard"></i> Dash</button>
+      <button class="nav-tab"        id="vt-editor"    onclick="switchView('editor')"><i data-lucide="code-2"></i> Editor</button>
+      <button class="nav-tab"        id="vt-flow"      onclick="switchView('flow')"><i data-lucide="brain-circuit"></i> Lab</button>
+      <button class="nav-tab"        id="vt-fleet"     onclick="switchView('fleet')"><i data-lucide="tower-control"></i> Fleet</button>
+      <button class="nav-tab"        id="vt-docs"      onclick="switchView('docs')"><i data-lucide="book-open"></i> Docs</button>
+      <button class="nav-tab"        id="vt-debugger"  onclick="switchView('debugger')"><i data-lucide="bug"></i> Tracer</button>
+      <button class="nav-tab"        id="vt-modules"   onclick="switchView('modules')"><i data-lucide="package"></i> Registry</button>
+      <button class="nav-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings"></i> Config</button>
+    </div>
+  </div>
+
+  <div class="tb-center"></div>
+
+  <div class="tb-right">
+    <div id="keyToggleArea" style="display:none; align-items:center; gap:8px;">
+      <input type="password" id="topbarKeyInput" class="prop-input" style="width:220px; height:28px; font-size:11px" placeholder="Enter API Key (tern_...)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();updateApiKey(this.value);}" />
+      <button class="tb-btn" onclick="updateApiKey(document.getElementById('topbarKeyInput').value)" title="Apply key" style="color:var(--green); border-color:var(--green)"><i data-lucide="check"></i></button>
+      <button class="tb-btn" onclick="toggleKeyInput()" title="Close"><i data-lucide="x"></i></button>
+    </div>
+    
+    <div id="topbarActions" style="display:flex; align-items:center; gap:8px;">
+      <div id="tierBadge" class="tier-badge" onclick="toggleKeyInput()" style="cursor:pointer" title="Click to enter API Key">Tier 1</div>
+      <div class="tb-sep"></div>
+      <div style="display:flex; align-items:center; gap:2px;">
+        <button class="tb-btn" onclick="toggleKeyInput()" title="Account Settings"><i data-lucide="user-circle"></i></button>
+        <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme (Light/Dark)">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+      </div>
+      <div class="tb-sep"></div>
+      <button id="topbarUpskillBtn" class="btn btn-hero secondary" style="color:var(--amber); border-color:var(--amber); height:32px" onclick="openUpskillModal()">Upskill</button>
+    </div>    <!-- Auto-detect endpoint: same origin when served from the API server, else default to ternlang.com -->
+    <input type="hidden" id="apiEndpoint" value="https://ternlang-api.fly.dev" />
+    <input type="password" id="apiKey" style="display:none;" />
+  </div>
+</div>
+
+<!-- ═══ HIDING OLD VIEWBAR ════════════════════════════════════════════════════ -->
+<div id="viewbar" style="display:none"></div>
+
+<!-- ─── Modals (Global Context) ────────────────────────────────────────── -->
+<!-- Delete Agent Modal -->
+<div id="deleteModal" class="modal-overlay" style="z-index:99999; display:none;" onclick="if(event.target===this)closeDeleteModal()">
+  <div style="background:var(--bg1); border:1px solid var(--red); border-radius:12px; padding:32px; width:400px; max-width:95vw; text-align:center; box-shadow:0 20px 40px rgba(0,0,0,0.4);">
+    <div style="width:64px; height:64px; background:rgba(239, 68, 68, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+      <i data-lucide="alert-triangle" style="width:32px; height:32px; color:var(--red);"></i>
+    </div>
+    <h3 style="font-size:20px; font-weight:800; color:var(--text); margin-bottom:12px;">Delete Agent?</h3>
+    <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:24px;">
+      Are you sure you want to delete <strong id="deleteAgentName" style="color:var(--text)">Agent</strong>?<br>
+      This action is <span style="color:var(--red); font-weight:700;">permanent</span> and will purge it from the TIS registry.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button onclick="closeDeleteModal()" class="btn btn-ghost" style="padding:10px 24px;">Cancel</button>
+      <button onclick="deleteAgent()" class="btn btn-primary" style="background:var(--red); border-color:var(--red); color:#fff; padding:10px 24px;">Delete Permanently</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Agent Modal -->
+<div id="newAgentModal" class="modal-overlay" style="z-index:99999; display:none;">
+  <div class="modal-box" style="width:700px; max-width:95vw; background:var(--bg1); border-color:var(--border2); box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div style="font-size:14px; font-weight:700; color:var(--text);">⊕ New Agent</div>
+      <button class="modal-close" onclick="closeNewAgentModal()">✕</button>
+    </div>
+    <div style="display:grid; grid-template-columns: 240px 1fr; gap:20px;">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+         <label class="prop-label">Library Template</label>
+         <select class="prop-input" id="newAgentLibPick" onchange="loadNewAgentTemplate()">
+           <option value="">-- Custom Blank --</option>
+         </select>
+         <label class="prop-label">Agent Name</label>
+         <input type="text" class="prop-input" id="newAgentName" placeholder="e.g. ValidatorNode_A">
+         <div style="margin-top:12px; font-size:10px; color:var(--muted); line-height:1.5;">
+           Custom agents execute real .tern bytecode in the browser or your local cluster node.
+         </div>
+         <button onclick="addAgentFromModal()" class="btn btn-primary" style="margin-top:auto; height:36px;">Create Node</button>
+      </div>
+      <div>
+        <label class="prop-label">Ternlang Logic (Source)</label>
+        <textarea id="newAgentCode" style="width:100%; height:300px; background:var(--bg2); border:1px solid var(--border2); border-radius:6px; color:var(--cyan); padding:12px; font-family:'JetBrains Mono',monospace; font-size:11px; resize:none;"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Deploy Agent Modal (Multi-step) -->
+<div id="deployModal" class="modal-overlay" style="z-index:99999;">
+  <div class="modal-box" style="width:500px; max-width:95vw; background:var(--bg1); border-color:var(--border2); box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+         <i data-lucide="rocket" style="width:16px; color:var(--cyan)"></i>
+         <div style="font-size:14px; font-weight:700; color:var(--text);">Deploy Swarm Agent</div>
+      </div>
+      <button class="modal-close" onclick="closeDeployModal()">✕</button>
+    </div>
+
+    <!-- Stepper Header -->
+    <div style="display:flex; justify-content:space-between; margin-bottom:24px; position:relative;">
+      <div style="position:absolute; top:7px; left:10%; right:10%; height:1px; background:var(--border); z-index:1;"></div>
+      <div class="dstep-head active" id="dh-1" style="position:relative; z-index:2; background:var(--bg1); padding:0 8px; font-size:10px; font-weight:700; color:var(--cyan);">① IDENTITY</div>
+      <div class="dstep-head"        id="dh-2" style="position:relative; z-index:2; background:var(--bg1); padding:0 8px; font-size:10px; font-weight:700; color:var(--muted2);">② PRICING</div>
+      <div class="dstep-head"        id="dh-3" style="position:relative; z-index:2; background:var(--bg1); padding:0 8px; font-size:10px; font-weight:700; color:var(--muted2);">③ DEPLOY</div>
+    </div>
+
+    <div id="deploy-step-1" style="display:flex; flex-direction:column; gap:14px;">
+      <div class="prop-group">
+        <label class="prop-label">Agent Product Name</label>
+        <input type="text" class="prop-input" id="deploy-name" placeholder="e.g. My Industrial Vetting Agent">
+      </div>
+      <div class="prop-group">
+        <label class="prop-label">Service Description</label>
+        <textarea class="prop-input" id="deploy-desc" style="height:80px; resize:none;" placeholder="What does this pipeline do?"></textarea>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+        <button onclick="deployStep(2)" class="btn btn-primary" style="padding:0 24px; height:36px;">Continue →</button>
+      </div>
+    </div>
+
+    <div id="deploy-step-2" style="display:none; flex-direction:column; gap:14px;">
+      <div class="prop-label">Market Visibility & Pricing</div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <label class="deploy-pricing-opt" style="display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:8px; cursor:pointer;">
+           <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:700; font-size:12px; color:var(--text);">Private</span>
+              <input type="radio" name="deploy-pricing" value="private" checked>
+           </div>
+           <div style="font-size:10px; color:var(--muted); line-height:1.4;">Only you can see and call this agent. Free.</div>
+        </label>
+        <label class="deploy-pricing-opt" style="display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:8px; cursor:pointer;">
+           <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:700; font-size:12px; color:var(--cyan);">Per Call</span>
+              <input type="radio" name="deploy-pricing" value="per_call">
+           </div>
+           <div style="font-size:10px; color:var(--muted); line-height:1.4;">Published to Registry. Earn trits per inference.</div>
+        </label>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+        <button onclick="deployStep(1)" class="btn btn-ghost">← Back</button>
+        <button onclick="deployStep(3)" class="btn btn-primary" style="padding:0 24px; height:36px;">Final Review →</button>
+      </div>
+    </div>
+
+    <div id="deploy-step-3" style="display:none; flex-direction:column; gap:16px;">
+      <div id="deploy-summary" style="background:var(--bg2); border:1px solid var(--border2); border-radius:10px; padding:16px; font-size:12px; line-height:2; font-family:'JetBrains Mono',monospace;"></div>
+      <div id="deploy-progress" style="display:none; flex-direction:column; gap:10px;">
+        <div class="deploy-step-row" id="dstep-compile"><span class="dstep-icon">⏳</span> Compiling agent flow…</div>
+        <div class="deploy-step-row" id="dstep-register"><span class="dstep-icon">⏳</span> Registering endpoint…</div>
+        <div class="deploy-step-row" id="dstep-publish"><span class="dstep-icon">⏳</span> Publishing to runtime…</div>
+        <div id="deploy-result" style="display:none; padding:14px; background:rgba(16,185,129,0.08); border:1px solid var(--green); border-radius:8px; margin-top:4px;"></div>
+      </div>
+      <div id="deploy-confirm-btns" style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+        <button onclick="deployStep(2)" class="btn btn-ghost">← Back</button>
+        <button onclick="executeProductDeploy()" class="btn btn-primary" style="background:linear-gradient(135deg,#0176d3,#06b6d4); gap:6px;">
+          <i data-lucide="rocket" style="width:14px"></i> Deploy Now
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Macro Name Modal -->
+<div id="macro-name-modal" class="modal-overlay" style="z-index:99999; display:none;">
+  <div class="modal-box" style="width:400px; background:var(--bg1); border:1px solid var(--cyan); box-shadow:0 0 20px rgba(6,182,212,0.2);">
+    <div class="modal-title" style="color:var(--cyan);"><i data-lucide="box" style="width:18px; vertical-align:middle; margin-right:8px;"></i> Group into Macro</div>
+    <div class="modal-sub">Define a name for this encapsulated logic module.</div>
+    <div class="prop-group">
+      <input type="text" id="macro-name-input" class="prop-input-strict" placeholder="e.g. Data_Validator_V2" style="font-size:14px; border-color:var(--border2);">
+    </div>
+    <div style="display:flex; gap:12px; margin-top:24px; justify-content:flex-end;">
+      <button onclick="closeMacroModal()" class="btn btn-ghost">Cancel</button>
+      <button onclick="confirmGroupNodes()" class="btn btn-primary" style="background:var(--cyan); color:var(--bg); border:none; box-shadow:0 0 10px rgba(6,182,212,0.3);">Create Macro</button>
+    </div>
+  </div>
+</div>
+
+<div id="viewbar" style="display:none"></div>
+<!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
+<div class="view active" id="view-dashboard">
+
+  <div class="dash-grid">
+
+    <!-- Column 1: Environment -->
+    <div class="dash-col dash-col-1">
+      <div class="dash-section-title">Environment</div>
+      
+      <!-- VM Status -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="server"></i> VM Status</div>
+        <div id="dash-vm-stat" class="dash-pill"><span class="dot" id="dashVmDot"></span><span id="dashVmLabel">Checking…</span></div>
+        <div style="margin-top: 14px; font-size: 11px; color: var(--muted); line-height: 1.6;">
+          Endpoint: <span id="dashEndpoint" style="color: var(--cyan);">ternlang-api.fly.dev</span><br>
+          Node ID: <span style="color:var(--text)">bet-node-013</span>
+        </div>
+        <button class="dash-quick-btn" style="margin-top: 16px; justify-content: center;" onclick="checkConnection(); showToast('Connection check triggered', 'ok')">
+          <i data-lucide="refresh-cw"></i> <span>Recheck System</span>
+        </button>
+      </div>
+
+      <!-- Plan & Quota -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="credit-card"></i> Plan &amp; Quota</div>
+        <div id="dashTierBadge" class="tb-badge badge-free" style="margin-bottom: 12px; display: inline-block;">Tier 1 — Free</div>
+        <div id="dash-quota-wrap">
+          <div class="usage-label" style="font-size:11px">Monthly calls</div>
+          <div class="usage-bar-wrap"><div class="usage-bar-fill" id="dashUsageBar" style="width:0%"></div></div>
+          <div class="usage-meta" id="dashUsageMeta" style="font-size:10px">Enter API key to see quota</div>
+        </div>
+        <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
+        <div style="margin-top:14px; font-size:10px; color:var(--muted2); text-align:center;">
+          Need more? Use <span style="color:var(--amber); cursor:pointer;" onclick="openUpskillModal()">Upskill ↑</span> in the top bar
+        </div>
+      </div>
+
+      <!-- Ternary Playground (WASM REPL) -->
+      <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
+        <div class="dash-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span><i data-lucide="terminal"></i> Ternary Playground</span>
+          <span id="wasmBadge" style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.1);border:1px solid var(--green);color:var(--green);opacity:0;transition:opacity 0.3s">⚡ WASM</span>
+        </div>
+        <textarea id="dashReplInput" class="prop-input" style="flex:1;min-height:140px;resize:none;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin-top:10px;"
+          onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();runReplExpr();}"
+          placeholder="fn main() -> trit {&#10;    print(&quot;@ Hello&quot;);&#10;    return affirm;&#10;}"></textarea>
+        <div id="dashReplRes" class="repl-res" style="min-height:28px;margin-top:8px;white-space:pre;"></div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary" style="font-size:11px;padding:5px 14px;border-radius:6px;" onclick="runReplExpr()">▶ Run <span style="font-size:9px;opacity:0.7">Ctrl+↵</span></button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('hello')">Hello</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('consensus')">Consensus</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('match')">Match</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('dec13')">13→trit</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;margin-left:auto;" onclick="openReplInEditor()" title="Open in Editor">↗</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Work (Top) -->
+    <div class="dash-col dash-col-2">
+      <div class="dash-section-title">Work</div>
+      
+      <!-- Quick Actions -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="zap"></i> Quick Actions</div>
+        <div class="dash-quick-btns">
+          <button class="dash-quick-btn" onclick="switchView('editor'); newFile()">
+            <i data-lucide="file-plus"></i> <span>New scratch file</span>
+          </button>
+          <button class="dash-quick-btn" onclick="switchView('editor'); openFile('examples/hello_trit.tern')">
+            <i data-lucide="play"></i> <span>Run Hello Trit</span>
+          </button>
+          <button class="dash-quick-btn" onclick="switchView('docs')">
+            <i data-lucide="book-open"></i> <span>Documentation</span>
+          </button>
+          <button class="dash-quick-btn" onclick="switchView('flow')">
+            <i data-lucide="brain-circuit"></i> <span>Open Flow Lab</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Analytics (Top) -->
+    <div class="dash-col dash-col-3">
+      <div class="dash-section-title">Analytics</div>
+
+      <!-- Session Stats -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i data-lucide="bar-chart-3"></i> Session Stats</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+          <div>
+            <div class="dash-stat" id="statRuns">0</div>
+            <div class="dash-stat-sub">Runs</div>
+          </div>
+          <div>
+            <div class="dash-stat" id="statOk" style="color: var(--green);">0</div>
+            <div class="dash-stat-sub">Ok</div>
+          </div>
+          <div>
+            <div class="dash-stat" id="statErr" style="color: var(--red);">0</div>
+            <div class="dash-stat-sub">Err</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Recent Activity (Center) -->
+    <div class="dash-col dash-col-2" style="grid-row: 2;">
+      <div class="dash-card" style="height:100%">
+        <div class="dash-card-title"><i data-lucide="history"></i> Recent Activity</div>
+        <div class="dash-run-list" id="dashRunList" style="flex:1">
+          <div class="dash-run-empty">No runs yet this session</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Stdlib (Center) -->
+    <div class="dash-col dash-col-3" style="grid-row: 2;">
+      <div class="dash-card" style="height:100%">
+        <div class="dash-card-title"><i data-lucide="library"></i> Stdlib Coverage</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px; flex:1">
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">core/</span><span style="color:var(--green); font-weight:600">12 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">math/</span><span style="color:var(--green); font-weight:600">8 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">agents/</span><span style="color:var(--cyan); font-weight:600">15 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">safety/</span><span style="color:var(--cyan); font-weight:600">5 modules</span></div>
+          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">ml/bitnet</span><span style="color:var(--amber); font-weight:600">v1.58b</span></div>
+        </div>
+        <button class="dash-quick-btn" style="margin-top: 16px; justify-content: center;" onclick="switchSidebarPanel('explorer'); switchView('editor')">
+          <i data-lucide="search"></i> <span>Browse Library</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Spanned Footer: Logic Field -->
+    <div class="dash-footer" style="grid-row: 3;">
+      <div class="dash-card logic-field-card">
+        <div style="display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 20px;">
+          <div style="flex: 1; min-width: 280px;">
+            <div class="dash-card-title" style="color:var(--cyan); margin-bottom:4px;"><i data-lucide="binary"></i> Logic Field Visualizer</div>
+            <div style="font-size:10px; color:var(--muted2); margin-bottom:12px;">Real-time state monitoring of the Balanced Ternary Engine (BET-013)</div>
+            <div id="logic-field-grid" class="logic-field-grid"></div>
+          </div>
+          <div style="display:flex; gap:30px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; border: 1px solid var(--border);">
+             <div style="text-align:center;"><div style="color:var(--red); font-weight:900; font-size:28px; line-height:1;">-1</div><div style="font-size:9px; color:var(--muted); font-weight:700; margin-top:4px;">REJECT</div></div>
+             <div style="text-align:center;"><div style="color:var(--amber); font-weight:900; font-size:28px; line-height:1;">0</div><div style="font-size:9px; color:var(--muted); font-weight:700; margin-top:4px;">HOLD</div></div>
+             <div style="text-align:center;"><div style="color:var(--green); font-weight:900; font-size:28px; line-height:1;">+1</div><div style="font-size:9px; color:var(--muted); font-weight:700; margin-top:4px;">AFFIRM</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ EDITOR VIEW ═══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-editor">
+
+  <!-- Activity Bar -->
+  <div class="activity-bar">
+    <button class="act-btn active" id="act-explorer" title="Explorer" onclick="switchSidebarPanel('explorer')">☰</button>
+    <button class="act-btn"        id="act-history"  title="Run History" onclick="switchSidebarPanel('history')">⏱</button>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="editor-sidebar">
+
+    <!-- Explorer panel -->
+    <div class="sidebar-panel active" id="panel-explorer" style="display:flex; flex-direction:column;">
+      <div class="sidebar-header">
+        Explorer
+        <div style="display:flex;gap:8px; align-items: center;">
+          <label title="Toggle Standard Library" for="show-stdlib-toggle" style="font-size:10px; color:var(--muted); display:flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="checkbox" id="show-stdlib-toggle" onchange="toggleStdlibVisibility(this.checked)" checked> Stdlib
+          </label>
+          <button class="sidebar-new-btn" onclick="triggerImportFile()" title="Import local file">↑</button>
+          <button class="sidebar-new-btn" onclick="newFile()" title="New scratch file">+</button>
+        </div>
+      </div>
+      <input type="file" id="localFileInput" accept=".tern,.json,.txt" style="display:none" onchange="importLocalFile(event)">
+      <div id="explorer-trees" style="flex:1; overflow-y:auto;">
+        <div id="stdlib-tree-container">
+          <div class="tree-root-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            Standard Library
+          </div>
+          <div id="file-tree" class="file-tree-body"></div>
+        </div>
+        <div id="premium-tree-container" style="display:none;">
+          <div class="tree-root-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            Premium Library
+          </div>
+          <div id="premium-file-tree" class="file-tree-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History panel -->
+    <div class="sidebar-panel" id="panel-history">
+      <div class="sidebar-header">
+        Run History
+        <button class="sidebar-new-btn" onclick="clearHistory()" title="Clear history">✕</button>
+      </div>
+      <div id="history-list"><div style="padding:12px; font-size:11px; color:var(--muted); font-style:italic;">No runs yet</div></div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar resize handle -->
+  <div id="sidebar-resize" onmousedown="startSidebarResize(event)"></div>
+
+  <!-- Editor main -->
+  <div id="editor-main">
+
+    <!-- Tabs -->
+    <div id="editorTabsBar">
+      <button class="tabs-new-btn" onclick="newFile()" title="New file">+</button>
+      <div id="editorTabs"></div>
+    </div>
+
+    <!-- Monaco -->
+    <div id="monaco-container"></div>
+
+    <!-- Output panel resize handle -->
+    <div id="output-resize" onmousedown="startOutputResize(event)"></div>
+
+    <!-- Output panel -->
+    <div id="output-panel">
+      <div class="out-tabs-bar">
+        <button class="out-tab active" onclick="switchOutTab('output', this)">Output</button>
+        <button class="out-tab"        onclick="switchOutTab('usage', this)" id="usageTab">Usage</button>
+        <button class="out-tab"        onclick="switchOutTab('api', this)">API</button>
+        <button class="out-tab"        onclick="switchOutTab('ref', this)">Reference</button>
+        <div class="out-tab-spacer"></div>
+        
+        <div style="display:flex; align-items:center; gap:6px; margin-right:12px;">
+          <button class="btn btn-ghost" onclick="shareCode()" title="Share Swarm" style="height:24px; padding:0 8px;">
+            <i data-lucide="share-2" style="width:12px; height:12px"></i>
+          </button>
+          <button class="btn btn-ghost" onclick="downloadCode()" title="Download .tern" style="height:24px; padding:0 8px;">
+            <i data-lucide="download" style="width:12px; height:12px"></i>
+          </button>
+        </div>
+
+        <button class="btn btn-hero run" id="runBtn" style="height:24px; padding:0 12px; font-size:10px; margin-right:8px; border-radius:4px" onclick="runCode()">
+          <i data-lucide="play" style="width:12px; height:12px"></i> <span>RUN</span>
+        </button>
+        <button class="out-clear-btn" onclick="clearOutput()">Clear</button>
+      </div>
+      <div class="out-panels">
+
+        <!-- Output tab -->
+        <div class="out-panel visible" id="panel-output">
+          <div id="section-meta" style="display:none;">
+            <div class="meta-grid">
+              <div class="meta-item"><span class="mi-label">bytes</span><span id="metaBytes">—</span></div>
+              <div class="meta-item"><span class="mi-label">status</span><span id="metaStatus">—</span></div>
+            </div>
+          </div>
+          <pre id="printOutput" class="print-output empty">— no output —</pre>
+          <div id="section-regs" style="display:none;">
+            <div class="out-section-title">Registers</div>
+            <table class="reg-table"><tbody id="regTable"></tbody></table>
+          </div>
+          <div id="section-error" style="display:none;">
+            <div class="out-section-title">Error</div>
+            <pre id="errorOutput" class="error-output"></pre>
+          </div>
+        </div>
+
+        <!-- Usage tab -->
+        <div class="out-panel" id="panel-usage">
+          <div id="usageError" class="err-box" style="display:none; margin-bottom:10px;"><span id="usageErrorMsg"></span></div>
+          <div class="usage-label">Key</div>
+          <div class="usage-value" id="usageKeyDisplay">No key — anonymous access</div>
+          <span id="usageTierBadge" class="tb-badge badge-free" style="margin: 6px 0 10px; display:inline-block;">Tier 1</span>
+          <div id="usage-quota-section" style="display:none;">
+            <div class="usage-label">Calls: <span id="usageUsed">0</span> / <span id="usageLimit">0</span></div>
+            <div class="usage-bar-wrap"><div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div></div>
+            <div class="usage-meta" id="usageMeta"></div>
+          </div>
+          <div id="usage-unlimited-section" style="display:none;">
+            <div class="usage-unlimited">∞ Unlimited calls</div>
+          </div>
+          <div class="out-section-title" style="margin-top:14px;">Plan Features</div>
+          <div id="tierBenefitsList"></div>
+          <button class="upskill-inline-btn" id="upgradeBtn" onclick="openUpskillModal()">⬆ Upskill</button>
+        </div>
+
+        <!-- API tab -->
+        <div class="out-panel" id="panel-api">
+          <div class="api-block">
+            <div class="usage-label" style="margin-bottom: 6px;">Endpoint: <span id="apiEndpointBase" style="color:var(--cyan);">https://ternlang.com</span></div>
+            <div class="api-route">
+              <span class="api-method">GET</span>
+              <span class="api-path">/health</span>
+              <span class="api-desc">VM health check</span>
+              <button class="api-try-btn" onclick="tryHealth()">Try</button>
+            </div>
+            <div class="api-route">
+              <span class="api-method">POST</span>
+              <span class="api-path">/api/run</span>
+              <span class="api-desc">Execute .tern code</span>
+              <button class="api-try-btn" onclick="tryApiRun()">Try</button>
+            </div>
+            <div class="api-route">
+              <span class="api-method">GET</span>
+              <span class="api-path">/api/usage</span>
+              <span class="api-desc">Key quota</span>
+              <button class="api-try-btn" onclick="tryApiUsage()">Try</button>
+            </div>
+          </div>
+          <pre class="api-response" id="apiResponse">// Click Try to test an endpoint</pre>
+        </div>
+
+        <!-- Reference tab -->
+        <div class="out-panel" id="panel-ref">
+          <div class="ref-section">
+            <div class="ref-title">Builtins</div>
+            <table class="ref-table">
+              <tr><td>truth()</td><td>→ trit(+1)</td><td>Affirm signal</td></tr>
+              <tr><td>hold()</td><td>→ trit(0)</td><td>Neutral / pending</td></tr>
+              <tr><td>conflict()</td><td>→ trit(-1)</td><td>Reject signal</td></tr>
+              <tr><td>consensus(a,b)</td><td>→ trit</td><td>Ternary AND merge</td></tr>
+              <tr><td>print(v)</td><td></td><td>Print to output</td></tr>
+              <tr><td>println(v)</td><td></td><td>Print + newline</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">Types</div>
+            <table class="ref-table">
+              <tr><td>trit</td><td>-1 / 0 / 1</td><td>Balanced ternary value</td></tr>
+              <tr><td>int</td><td>i64</td><td>Integer</td></tr>
+              <tr><td>float</td><td>f64</td><td>Floating point</td></tr>
+              <tr><td>trittensor</td><td>N×M</td><td>Trit tensor (Tier 2+)</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">VM Error Codes</div>
+            <table class="ref-table">
+              <tr><td>BET-001</td><td>StackUnderflow</td><td>Missing return push</td></tr>
+              <tr><td>BET-007</td><td>TypeMismatch</td><td>Wrong type for op</td></tr>
+              <tr><td>BET-010</td><td>DivByZero</td><td>Integer divide by zero</td></tr>
+              <tr><td>BET-013</td><td>OutOfBounds</td><td>Register / tensor OOB</td></tr>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FLOW VIEW (TernFlow) ═════════════════════════════════════════════════ -->
+<div class="view" id="view-flow">
+  <!-- Left: Library -->
+  <div id="flow-library" style="min-width: 180px; max-width: 500px;">
+    <!-- Library tabs -->
+    <div style="display:flex; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <button class="lib-tab active" id="libtab-agents" onclick="switchLibTab('agents')">Agents</button>
+      <button class="lib-tab" id="libtab-archetypes" onclick="switchLibTab('archetypes')">Archetypes</button>
+    </div>
+
+    <!-- Agents panel -->
+    <div id="lib-panel-agents" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="lib-search" style="display:flex; gap:6px; padding:8px;">
+        <input type="text" class="prop-input" id="flowLibSearch" placeholder="Search agents…" style="flex:1;height:28px;" oninput="filterFlowLib(this.value)">
+      </div>
+      <div id="flow-lib-items" style="flex:1; overflow-y:auto; padding:0 8px 8px;">
+        <!-- Loaded via JS -->
+      </div>
+    </div>
+
+    <!-- Archetypes panel -->
+    <div id="lib-panel-archetypes" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <div class="lib-search" style="display:flex; gap:6px; padding:8px;">
+        <input type="text" class="prop-input" id="archLibSearch" placeholder="Search templates…" style="flex:1;height:28px;" oninput="renderArchetypes(this.value)">
+      </div>
+      <div id="arch-lib-items" style="flex:1; overflow-y:auto; padding:0 8px 8px; min-height:0;">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-resizer" id="flow-sidebar-resizer"></div>
+  <!-- New Agent Modal -->
+  <div id="newAgentModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeNewAgentModal()">
+    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:24px; width:500px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="font-size:14px; font-weight:700; color:var(--text);">⊕ New Agent</div>
+        <button onclick="closeNewAgentModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <div class="prop-label" style="margin-bottom:4px;">Agent Name</div>
+          <input id="newAgentName" class="prop-input" style="width:100%" placeholder="e.g. SentimentGate" />
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:4px;">Import from Library</div>
+          <select id="newAgentLibPick" class="prop-input" style="width:100%" onchange="loadNewAgentTemplate()">
+            <option value="">— Start blank —</option>
+          </select>
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:4px;">Agent Code (.tern)</div>
+          <textarea id="newAgentCode" class="prop-input" style="width:100%; height:160px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:11px;" placeholder="fn main() -> trit {&#10;    return affirm;&#10;}"></textarea>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+          <button onclick="closeNewAgentModal()" class="btn btn-ghost">Cancel</button>
+          <button onclick="addAgentFromModal()" class="btn btn-primary">Add to Canvas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deploy as Product Modal -->
+  <div id="deployModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeDeployModal()">
+    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:16px; padding:28px; width:560px; max-width:95vw; box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div>
+          <div style="font-size:16px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:20px;">🚀</span> Deploy as Product
+          </div>
+          <div style="font-size:11px; color:var(--muted2); margin-top:4px;">Publish your agent flow as a live decision API</div>
+        </div>
+        <button onclick="closeDeployModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px; padding:4px 8px;">✕</button>
+      </div>
+
+      <!-- Step indicator -->
+      <div style="display:flex; gap:0; margin-bottom:24px; border-radius:8px; overflow:hidden; border:1px solid var(--border2);">
+        <div id="deploy-step-1-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; background:rgba(1,118,211,0.2); color:var(--blue); border-right:1px solid var(--border2);">① NAME</div>
+        <div id="deploy-step-2-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2); border-right:1px solid var(--border2);">② PRICING</div>
+        <div id="deploy-step-3-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2);">③ DEPLOY</div>
+      </div>
+
+      <!-- Step 1: Name & Description -->
+      <div id="deploy-step-1" style="display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <div class="prop-label" style="margin-bottom:6px;">Product Name</div>
+          <input id="deployName" class="prop-input" style="width:100%" placeholder="e.g. Risk Evaluator" />
+          <div style="font-size:10px; color:var(--muted2); margin-top:4px;">Becomes the API slug: /api/agent/risk-evaluator</div>
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:6px;">Description</div>
+          <textarea id="deployDesc" class="prop-input" style="width:100%; height:70px; resize:none;" placeholder="What decisions does this agent system make?"></textarea>
+        </div>
+        <div>
+          <div class="prop-label" style="margin-bottom:6px;">Input Schema (what callers send)</div>
+          <input id="deployInput" class="prop-input" style="width:100%" placeholder='e.g. { "signal": -1 | 0 | 1, "context": string }' />
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button onclick="closeDeployModal()" class="btn btn-ghost">Cancel</button>
+          <button onclick="deployStep(2)" class="btn btn-primary">Next →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Pricing -->
+      <div id="deploy-step-2" style="display:none; flex-direction:column; gap:14px;">
+        <div>
+          <div class="prop-label" style="margin-bottom:10px;">Pricing Model</div>
+          <div style="display:flex; flex-direction:column; gap:8px;" id="pricingOptions">
+            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
+              <input type="radio" name="deployPricing" value="free" checked style="accent-color:var(--blue)">
+              <div>
+                <div style="font-size:13px; font-weight:600; color:var(--text);">Free</div>
+                <div style="font-size:11px; color:var(--muted2);">Open access — no billing. Good for demos.</div>
+              </div>
+            </label>
+            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
+              <input type="radio" name="deployPricing" value="per_call" style="accent-color:var(--blue)">
+              <div>
+                <div style="font-size:13px; font-weight:600; color:var(--text);">Per-call <span style="color:var(--amber)">($)</span></div>
+                <div style="font-size:11px; color:var(--muted2);">Charge consumers per API request.</div>
+              </div>
+              <input id="deployPerCallPrice" class="prop-input" style="width:100px; margin-left:auto;" placeholder="$0.01 / call" />
+            </label>
+            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
+              <input type="radio" name="deployPricing" value="private" style="accent-color:var(--blue)">
+              <div>
+                <div style="font-size:13px; font-weight:600; color:var(--text);">Private</div>
+                <div style="font-size:11px; color:var(--muted2);">Internal use only — not listed in marketplace.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button onclick="deployStep(1)" class="btn btn-ghost">← Back</button>
+          <button onclick="deployStep(3)" class="btn btn-primary">Review →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Confirm & Deploy -->
+      <div id="deploy-step-3" style="display:none; flex-direction:column; gap:16px;">
+        <div id="deploy-summary" style="background:var(--bg2); border:1px solid var(--border2); border-radius:10px; padding:16px; font-size:12px; line-height:2; font-family:'JetBrains Mono',monospace;"></div>
+        <div id="deploy-progress" style="display:none; flex-direction:column; gap:10px;">
+          <div class="deploy-step-row" id="dstep-compile"><span class="dstep-icon">⏳</span> Compiling agent flow…</div>
+          <div class="deploy-step-row" id="dstep-register"><span class="dstep-icon">⏳</span> Registering endpoint…</div>
+          <div class="deploy-step-row" id="dstep-publish"><span class="dstep-icon">⏳</span> Publishing to runtime…</div>
+          <div id="deploy-result" style="display:none; padding:14px; background:rgba(16,185,129,0.08); border:1px solid var(--green); border-radius:8px; margin-top:4px;"></div>
+        </div>
+        <div id="deploy-confirm-btns" style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+          <button onclick="deployStep(2)" class="btn btn-ghost">← Back</button>
+          <button onclick="executeProductDeploy()" class="btn btn-primary" style="background:linear-gradient(135deg,#0176d3,#06b6d4); gap:6px;">
+            <i data-lucide="rocket" style="width:14px"></i> Deploy Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main View Area -->
+  <div id="flow-canvas-wrap">
+    <canvas id="flow-fog-canvas"></canvas>
+    <canvas id="scrub-layer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10;"></canvas>
+    <div id="flow-canvas">
+      <svg id="flow-svg-layer">
+        <!-- Wires rendered here -->
+      </svg>
+      <div id="wire-handle" class="wire-handle" title="Drag to shape curve"></div>
+      <!-- Nodes injected via JS -->
+    </div>
+    <!-- Rubber-band selection rectangle -->
+    <div id="rubber-band"></div>
+
+    <!-- Empty state hint -->
+    <div id="canvas-hint" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:8px;opacity:0.4;">
+      <div style="font-size:32px;">⊕</div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted);">Drag agents from the library or click + to create</div>
+      <div style="font-size:11px;color:var(--muted2);">Connect agents by dragging from the right port ● to the left port ● of another</div>
+    </div>
+
+    <!-- Flow Floating Toolbar -->
+    <div class="flow-toolbar">
+      <!-- ISOLATE: Trash/Delete -->
+      <button class="btn-pill" onclick="clearCanvas()" title="Purge Local Canvas" style="color:var(--red); padding:0 8px;">
+        <i data-lucide="trash-2" style="width:14px"></i>
+      </button>
+      <div class="toolbar-divider"></div>
+
+      <!-- BUILD: Primitives -->
+      <div class="toolbar-group">
+        <button class="btn-pill" onclick="openNewAgentModal()" title="Instantiate New Agent" style="color:var(--green);">
+          <i data-lucide="plus" style="width:14px"></i> <span>Agent</span>
+        </button>
+        <button class="btn-pill" onclick="addExternalBridge()" title="LLM Bridge" style="color:var(--amber);">
+          <i data-lucide="zap" style="width:14px"></i> <span>Bridge</span>
+        </button>
+        <button class="btn-pill" onclick="addTernaryGate()" title="Ternary Gate" style="color:var(--cyan);">
+          <i data-lucide="git-merge" style="width:14px"></i> <span>Gate</span>
+        </button>
+        <button class="btn-pill" onclick="addDataSource()" title="Data Source" style="color:#f43f5e;">
+          <i data-lucide="database" style="width:14px"></i> <span>Source</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Simulation Control Bar (React Mounted) -->
+      <div class="toolbar-group" id="control-bar-mount">
+        <!-- React ControlBar component mounts here -->
+      </div>
+      
+      <div class="toolbar-divider"></div>
+
+      <div class="toolbar-group">
+        <div style="display:flex; align-items:center; gap:8px; padding:0 8px;" title="Simulation Speed">
+          <input type="range" id="simSpeedSlider" min="0" max="1000" step="1" value="500" class="speed-slider-industrial" oninput="updateSimSpeed(this.value)">
+        </div>
+
+        <button class="btn-pill" id="validateBtn" onclick="const r=validateGraph();showValidationPanel(r.errors,r.warnings);updateValidateBadge(r);" title="Structural Integrity Check">
+          <i data-lucide="shield-check" style="width:14px"></i> <span>Validate</span>
+        </button>
+      </div>
+
+      <button class="btn-pill primary" id="groupBtn" onclick="groupSelectedNodes()" title="Group into Macro" style="display:none; gap:5px;">
+        <i data-lucide="box" style="width:14px"></i> <span>Group</span>
+      </button>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- SHIP: Functions -->
+      <div class="toolbar-group">
+        <button class="btn-pill" onclick="saveCanvasState();showToast('Canvas Persistent','ok')" title="Commit State">
+          <i data-lucide="save" style="width:14px"></i> <span>Save</span>
+        </button>
+        <button class="btn-pill" onclick="exportFlowCode()" title="Export .tern Manifest">
+          <i data-lucide="download" style="width:14px"></i> <span>Export</span>
+        </button>
+        <button class="btn-pill" onclick="openDeployModal()" style="background:var(--blue); color:white; border-radius:20px; padding:0 16px;">
+          <i data-lucide="rocket" style="width:14px"></i> <span>Deploy</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Zoom indicator -->
+    <div id="zoom-indicator">
+      <button onclick="zoomStep(-1)" title="Zoom out">−</button>
+      <span id="zoomLabel">100%</span>
+      <button onclick="zoomStep(1)" title="Zoom in">+</button>
+      <button onclick="fitToView()" title="Fit to view" style="font-size:11px; padding:2px 6px;">⊡</button>
+    </div>
+
+    <!-- Execution Inspector Overlay -->
+    <div id="flow-inspector" class="inspector-expanded">
+      <div class="ins-head">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i data-lucide="activity" style="width:14px;"></i>
+          Execution Inspector
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-ghost" onclick="toggleInspector()" style="padding:2px"><i data-lucide="chevron-down" id="ins-toggle-icon" style="width:14px"></i></button>
+        </div>
+      </div>
+      
+      <div id="ins-body" class="ins-body">
+        <!-- Logs injected via JS -->
+      </div>
+      <div class="inspector-resizer" id="flow-inspector-resizer"></div>
+    </div>
+
+    <!-- Multiverse Timeline (DAW-style) -->
+    <div class="timeline-container">
+      <div style="font-size:9px; font-weight:800; color:var(--cyan); margin-right:12px; letter-spacing:1px; white-space:nowrap;">MULTIVERSE TIMELINE</div>
+      <input type="range" id="global-timeline" class="timeline-slider" min="0" max="0" value="0" step="1" oninput="scrubToTimeline(this.value)">
+      <div id="timeline-tick-label" style="font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--muted2); margin-left:12px; min-width:120px; text-align:right;">TIME: 0.00s</div>
+    </div>
+  </div>
+
+  <div class="sidebar-resizer" id="flow-props-resizer"></div>
+  <!-- Right: Properties (Node or Edge) -->
+  <div id="flow-props">
+    <div class="prop-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <span id="prop-header-label">Node Properties</span>
+      <div id="prop-help-icon" style="cursor:pointer; display:flex; align-items:center; color:var(--muted2); transition:color 0.2s;" onclick="showHelpCard()" title="Click for help">
+        <i data-lucide="info" style="width:14px; height:14px;"></i>
+      </div>
+    </div>
+    <div id="prop-body" class="prop-body" style="overflow-y:auto;">
+      <div style="color:var(--muted); font-size:12px; text-align:center; margin-top:40px; padding:0 12px; line-height:1.8;">
+        Select a node to configure<br>
+        <span style="font-size:10px;color:var(--muted2);">Drag ● output → ● input to wire</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS VIEW ════════════════════════════════════════════════════════ -->
+<div id="config-view" class="view-content" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; overflow-y: auto; z-index: 100;">
+  <div id="view-settings" style="display: flex; flex-direction: column; align-items: center; width: 100%; padding: 60px 20px;">
+    
+    <!-- Workspace Authorization -->
+    <div class="config-card">
+      <div>
+        <div class="industrial-title">Workspace Authorization</div>
+        <div class="industrial-desc">Enter a new 'tern_...' key to authenticate.</div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="width: 280px;" onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
+        <button class="settings-btn btn-primary" onclick="applySettingsKey()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+        <div style="flex: 1;">
+          <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Save Key Locally</div>
+          <div style="font-size: 10px; color: var(--muted2);">Persists your key securely in localStorage across sessions.</div>
+        </div>
+        <input type="checkbox" class="settings-checkbox" id="saveKeyCheck" onchange="toggleSaveKey()" style="width: 20px; height: 20px; cursor: pointer;" />
+      </div>
+    </div>
+
+    <!-- Local Secrets Vault -->
+    <div class="config-card">
+      <div>
+        <div class="industrial-title">Local Secrets Vault</div>
+        <div class="industrial-desc">Manage API credentials for external LLM routing. Stored securely in localStorage.</div>
+      </div>
+      <div id="secretsVaultList" style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px;">
+        <!-- Dynamically populated -->
+      </div>
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 16px;">
+        <div style="font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">Add / Update Secret</div>
+        <div style="display: grid; grid-template-columns: 140px 1fr auto; gap: 12px; align-items: center;">
+          <select id="newSecretProvider" class="settings-select" style="width: 100%;">
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="google">Google</option>
+            <option value="custom">Custom</option>
+            <option value="mcp">MCP</option>
+          </select>
+          <input type="password" id="newSecretKey" class="settings-input" placeholder="Enter API Key..." style="width: 100%;" onkeydown="if(event.key==='Enter'){event.preventDefault();addVaultSecret();}" />
+          <button class="settings-btn btn-primary" onclick="addVaultSecret()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Editor Configuration -->
+    <div class="config-card">
+      <div>
+        <div class="industrial-title">Editor Configuration</div>
+        <div class="industrial-desc">Customize the Monaco Code Editor and global application theme.</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; row-gap: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Font Size</div>
+            <div style="font-size: 10px; color: var(--muted2);">Global application and editor text scale.</div>
+          </div>
+          <select class="settings-select" id="settingsFontSize" onchange="applyEditorSettings()" style="width: 120px;">
+            <option value="11">11px</option>
+            <option value="12">12px</option>
+            <option value="13" selected>13px</option>
+            <option value="14">14px</option>
+            <option value="16">16px</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Minimap</div>
+            <div style="font-size: 10px; color: var(--muted2);">Show code minimap strip.</div>
+          </div>
+          <select class="settings-select" id="settingsMinimap" onchange="applyEditorSettings()" style="width: 120px;">
+            <option value="false" selected>Off</option>
+            <option value="true">On</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Word Wrap</div>
+            <div style="font-size: 10px; color: var(--muted2);">Wrap long lines of code.</div>
+          </div>
+          <select class="settings-select" id="settingsWordWrap" onchange="applyEditorSettings()" style="width: 120px;">
+            <option value="off" selected>Off</option>
+            <option value="on">On</option>
+            <option value="wordWrapColumn">At column</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Theme</div>
+            <div style="font-size: 10px; color: var(--muted2);">Global application theme.</div>
+          </div>
+          <select class="settings-select" id="settingsTheme" onchange="applyThemeFromSettings()" style="width: 120px;">
+            <option value="dark" selected>Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- About / Footer Info -->
+    <div style="background: #0f131a; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; width: 100%; max-width: 800px; text-align: center;">
+      <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
+        TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
+        Runtime: BET VM (27 registers · balanced ternary)<br/>
+        License: LGPL-3.0-or-later<br/>
+        <a href="https://ternlang.com" style="color: var(--cyan);" target="_blank">ternlang.com</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" style="color: var(--cyan);" target="_blank">GitHub</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
+<div class="view" id="view-docs">
+  <div style="padding: 40px; max-width: 1200px; margin: 0 auto; overflow-y: auto;">
+    <div style="display:flex; align-items:center; gap:20px; margin-bottom:48px;">
+      <div style="width:64px; height:64px; background:var(--bg1); border:1px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)">
+        <i data-lucide="book-open" style="width:32px; height:32px; color:var(--cyan)"></i>
+      </div>
+      <div>
+        <h1 style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:-0.02em;">TernWiki</h1>
+        <p style="font-size:14px; color:var(--muted)">Technical Reference for Balanced Ternary Intelligence</p>
+        <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/examples" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="book" style="width:13px;height:13px;"></i> Examples</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/QUICKSTART.md" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="zap" style="width:13px;height:13px;"></i> Quickstart</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="library" style="width:13px;height:13px;"></i> Browse Stdlib</a>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg> GitHub</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
+      
+      <!-- Syntax Guide -->
+      <div class="dash-col">
+        <div class="dash-section-title">Language Fundamentals</div>
+        <div class="dash-card" style="padding:32px">
+          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+            <i data-lucide="code-2" style="width:18px; color:var(--cyan)"></i> Syntax Guide
+          </h2>
+          
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Functions</div>
+            <pre style="background:var(--bg2); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); border:1px solid var(--border2)">fn add(a: int, b: int) -> int {
+  return a + b;
+}</pre>
+          </div>
+
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Control Flow</div>
+            <pre style="background:var(--bg2); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green); border:1px solid var(--border2)">match signal {
+  affirm => { println("YES"); }
+  tend   => { println("HOLD"); }
+  reject => { println("NO"); }
+}</pre>
+          </div>
+
+          <div style="margin-bottom:0;">
+            <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Agents</div>
+            <pre style="background:var(--bg2); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--amber); border:1px solid var(--border2)">agent Sensor {
+  handle(s: trit) {
+    spawn Consensus(s);
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logic Tables -->
+      <div class="dash-col">
+        <div class="dash-section-title">Logical Operations</div>
+        <div class="dash-card" style="padding:32px">
+          <h2 style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+            <i data-lucide="table" style="width:18px; color:var(--amber)"></i> Truth Tables
+          </h2>
+
+          <div style="background:var(--bg2); border-radius:8px; border:1px solid var(--border2); overflow:hidden;">
+            <table style="width:100%; border-collapse:collapse; font-size:12px; font-family:'JetBrains Mono',monospace;">
+              <thead style="background:var(--bg3);">
+                <tr style="border-bottom:1px solid var(--border2)">
+                  <th style="padding:12px; text-align:left; color:var(--muted)">Input A</th>
+                  <th style="padding:12px; text-align:left; color:var(--muted)">Input B</th>
+                  <th style="padding:12px; text-align:left; color:var(--cyan)">Consensus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--green)">+1</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:12px; color:var(--green)">+1 (Affirm)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--amber)"> 0</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:12px; color:var(--amber)"> 0 (Tend)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; color:var(--red)">-1 (Reject)</td>
+                  <td style="padding:12px; font-weight:700; color:var(--red)">-1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="margin-top:24px; padding:16px; background:var(--bg2); border-radius:8px; font-size:12px; color:var(--muted); line-height:1.6;">
+            <div style="font-weight:700; color:var(--text); margin-bottom:4px;">Did you know?</div>
+            The <b>Consensus</b> operator is the ternary equivalent of a logical AND. It resolves to the <i>minimum</i> value of its inputs: 
+            <code style="color:var(--cyan)">consensus(A, B) = min(A, B)</code> where <code style="color:var(--text)">+1 > 0 > -1</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graph Mechanics & Routing (New Section) -->
+    <div style="margin-top:40px;">
+      <div class="dash-section-title">Graph Mechanics & Routing</div>
+      <div class="dash-card" style="padding:32px">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
+          <div>
+            <div style="margin-bottom:24px;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="component" style="width:14px; color:var(--cyan)"></i> Node Properties (The Workers)
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                Nodes are the individual brains of your AI. They evaluate data and make a decision: +1 (True), 0 (Uncertain), or -1 (False). You use this panel to set their rules, ensuring they do not get stuck thinking forever.
+              </p>
+            </div>
+
+            <div style="margin-bottom:24px;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="git-branch" style="width:14px; color:var(--amber)"></i> Edge Properties (The Smart Pipes)
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                Edges connect your nodes, but they also filter the traffic. They decide which decisions are allowed to travel to the next worker.
+              </p>
+            </div>
+
+            <div style="margin-bottom:0;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="filter" style="width:14px; color:var(--green)"></i> Activation Logic (The Bouncer)
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                This is how you filter. If you want a strict system, use <b>+1</b> so only perfect matches pass. If you want a flexible system, use <b>!= -1</b>. This allows 0 (Uncertainty) to pass through, letting the AI continue working even if it is not 100 percent sure.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <div style="margin-bottom:24px;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="shield-alert" style="width:14px; color:var(--red)"></i> Handling Failures (On Fail)
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:12px;">
+                When a signal fails your logic check, you have choices.
+              </p>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                  <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Drop</div>
+                  <div style="font-size:11px; color:var(--muted);">Silently kills the execution branch to save computer power.</div>
+                </div>
+                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                  <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Fallback</div>
+                  <div style="font-size:11px; color:var(--muted);">Routes the failure to a designated secondary recovery path.</div>
+                </div>
+                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                  <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Hold (0)</div>
+                  <div style="font-size:11px; color:var(--muted);">Converts the failure into a neutral state. This is the magic of ternary computing: a failure does not have to break the machine; it can just mean 'pending'.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:0;">
+              <h3 style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="refresh-cw" style="width:14px; color:var(--cyan)"></i> The Feedback Loop (Thinking Twice)
+              </h3>
+              <p style="font-size:12px; color:var(--muted); line-height:1.6;">
+                Normally, an AI just spits out an answer and stops. Checking this box allows the AI to loop its thoughts backwards and re-evaluate its own work. It is a safety feature that gives the AI permission to think iteratively until it is sure.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HELP POPOVER ══════════════════════════════════════════════════════════ -->
+<div id="helpPopover" class="modal-overlay" style="display:none; z-index:100000; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);" onclick="if(event.target===this)closeHelpCard()">
+  <div style="position:absolute; right:320px; top:100px; width:340px; background:var(--bg1); border:1px solid var(--border2); border-radius:12px; box-shadow:0 20px 50px rgba(0,0,0,0.5); overflow:hidden; animation:popIn 0.2s ease-out;">
+    <div style="padding:20px; border-bottom:1px solid var(--border2); display:flex; justify-content:space-between; align-items:center; background:var(--bg2);">
+      <div id="helpPopoverTitle" style="font-size:14px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+        <i data-lucide="info" style="width:16px; color:var(--cyan)"></i>
+        Help
+      </div>
+      <button onclick="closeHelpCard()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:18px;">✕</button>
+    </div>
+    <div id="helpPopoverContent" style="padding:24px; font-size:13px; color:var(--text); line-height:1.6;">
+      <!-- Content injected via JS -->
+    </div>
+    <div style="padding:16px; background:var(--bg2); text-align:right;">
+      <button class="btn btn-primary" onclick="closeHelpCard()" style="padding:6px 16px; font-size:12px;">Got it</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.95) translateX(20px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+}
+</style>
+
+<!-- ═══ DEBUGGER VIEW (Tracer) ═══════════════════════════════════════════════ -->
+<div class="view" id="view-debugger">
+</div>
+
+<!-- ═══ FLEET VIEW (Ops / Control Tower) ════════════════════════════════════════ -->
+<div class="view" id="view-fleet">
+</div>
+
+<!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
+<div class="view" id="view-modules">
+</div>
+
+<div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeUpskillModal()">✕</button>
+    <div class="modal-title">⬆ Upskill your plan</div>
+    <div class="modal-sub">Unlock higher quotas, advanced endpoints, and industrial-grade TaaS.</div>
+    <div class="plan-grid">
+      <div class="plan-card">
+        <div class="plan-name">Pro Standard</div>
+        <div class="plan-price">€99<span>/mo</span></div>
+        <div class="plan-features">
+          ● 50,000 calls/mo<br/>
+          ● Trit decision endpoints<br/>
+          ● MoE-13 orchestrator<br/>
+          ● Deliberation engine<br/>
+          ● EMA gate + coalition API
+        </div>
+        <a class="plan-btn plan-btn-std" href="https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608" target="_blank">Get Pro Standard →</a>
+      </div>
+      <div class="plan-card highlight">
+        <div class="plan-name">Industrial</div>
+        <div class="plan-price">€349<span>/mo</span></div>
+        <div class="plan-features">
+          ● Unlimited calls<br/>
+          ● All Pro endpoints<br/>
+          ● TaaS /api/v1/taas/infer<br/>
+          ● SSE streaming<br/>
+          ● Sparse benchmark + quantization
+        </div>
+        <a class="plan-btn plan-btn-pro" href="https://buy.stripe.com/eVq7sNfle0bl86937a7N609" target="_blank">Get Industrial →</a>
+      </div>
+    </div>
+    <div style="text-align:center; margin-bottom: 12px;">
+      <a class="plan-btn plan-btn-ent" href="mailto:licensing@ternlang.com" style="display:inline-block; padding: 8px 24px; text-decoration:none;">Enterprise — contact licensing@ternlang.com</a>
+    </div>
+    <div class="plan-note">After payment you will receive an API key by email. Enter it in the key field.</div>
+  </div>
+</div>
+
+<!-- ═══ STATUS BAR ════════════════════════════════════════════════════════════ -->
+<div id="statusbar">
+  <div class="sb-item">
+    <span class="sb-dot" id="connDot"></span>
+    <span id="vmStatus" class="status-pill status-idle">● Idle</span>
+  </div>
+  <div class="sb-item" id="sbFileWrap">
+    <span id="sbFile">hello_trit.tern</span>
+  </div>
+  <div class="sb-item">
+    <span id="cursorPos">Ln 1, Col 1</span>
+  </div>
+  <div class="sb-item">
+    <span id="sbTier" style="color:var(--muted2)">Tier 1 — Open Core</span>
+  </div>
+  <div class="sb-item">
+    <span id="connLabel" style="color:var(--muted2)">Offline</span>
+  </div>
+  <div class="sb-item" style="border-right:none; margin-left:auto;">
+    <span id="sbWasmStatus" style="color:var(--muted2)">WASM loading…</span>
+  </div>
+</div>
+
+<!-- ═══ TOAST CONTAINER ══════════════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<!-- Global Hover Tooltip -->
+<div id="global-tooltip"></div>
+
+<!-- ═══ MONACO + APP LOGIC ══════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
+
+</body>
+</html>
