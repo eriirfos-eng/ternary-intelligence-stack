@@ -1,0 +1,35 @@
+// stdlib/tier3/crypto_primitive.tern
+// Tier: 3 (Bio/Crypto/Hardware)
+// Demonstrates: Ternary-based cryptographic permutation
+
+agent TernPermutator {
+    fn handle(state: trit[]) -> trit[] {
+        // Simple ternary permutation logic (state rotation)
+        let n: int = 5;
+        let next: trit[] = [0, 0, 0, 0, 0];
+        
+        // Cyclic shift
+        let i: int = 0;
+        while i < n - 1 {
+            next[i+1] = state[i];
+            i = i + 1;
+        }
+        next[0] = state[n-1];
+        
+        return next;
+    }
+}
+
+fn main() -> trit {
+    let p: agentref = spawn TernPermutator;
+    let state: trit[] = [1, 0, -1, 1, 0];
+    
+    send p state;
+    let res: trit[] = await p;
+    
+    // Validate permutation result
+    if res[0] == 0 {
+        return 1;
+    }
+    return -1;
+}
