@@ -1,0 +1,103 @@
+// stdlib/classical/astar_trit.tern
+// Demonstrates: A* Search algorithm on a small grid using trits.
+// Tier: 1 - Open Core
+
+fn abs_int(x: int) -> int {
+    if x < 0 { return 0 - x; }
+    return x;
+}
+
+fn manhattan(x1: int, y1: int, x2: int, y2: int) -> int {
+    return abs_int(x1 - x2) + abs_int(y1 - y2);
+}
+
+fn astar(grid: trittensor<16>, start_x: int, start_y: int, goal_x: int, goal_y: int) -> int {
+    let closedSet: trittensor<16> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let gScore: int[16];
+    let fScore: int[16];
+    
+    let i: int = 0;
+    while i < 16 {
+        gScore[i] = 999;
+        fScore[i] = 999;
+        i = i + 1;
+    }
+    
+    gScore[start_y * 4 + start_x] = 0;
+    fScore[start_y * 4 + start_x] = manhattan(start_x, start_y, goal_x, goal_y);
+    
+    let count: int = 0;
+    while count < 16 {
+        // Find node in openSet (fScore < 999 and not in closedSet) with lowest fScore
+        let current: int = -1;
+        let min_f: int = 1000;
+        i = 0;
+        while i < 16 {
+            if closedSet[i] == 0 && fScore[i] < min_f {
+                min_f = fScore[i];
+                current = i;
+            }
+            i = i + 1;
+        }
+        
+        if current == -1 { break; }
+        if current == (goal_y * 4 + goal_x) { return gScore[current]; }
+        
+        closedSet[current] = 1;
+        
+        let cur_x: int = current % 4;
+        let cur_y: int = current / 4;
+        
+        // Check 4 neighbors
+        let dx: int[4]; dx[0]=1; dx[1]=-1; dx[2]=0; dx[3]=0;
+        let dy: int[4]; dy[0]=0; dy[1]=0; dy[2]=1; dy[3]=-1;
+        
+        let n_idx: int = 0;
+        while n_idx < 4 {
+            let nx: int = cur_x + dx[n_idx];
+            let ny: int = cur_y + dy[n_idx];
+            
+            if nx >= 0 && nx < 4 && ny >= 0 && ny < 4 {
+                if grid[ny * 4 + nx] == 0 { // Passable
+                    let neighbor: int = ny * 4 + nx;
+                    if closedSet[neighbor] == 0 {
+                        let tentative_g: int = gScore[current] + 1;
+                        if tentative_g < gScore[neighbor] {
+                            gScore[neighbor] = tentative_g;
+                            fScore[neighbor] = gScore[neighbor] + manhattan(nx, ny, goal_x, goal_y);
+                        }
+                    }
+                }
+            }
+            n_idx = n_idx + 1;
+        }
+        count = count + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    // 0: path, 1: wall
+    // S 0 0 0
+    // 1 1 0 1
+    // 0 0 0 0
+    // 0 1 1 G
+    let grid: trittensor<16> = [
+        0, 0, 0, 0,
+        1, 1, 0, 1,
+        0, 0, 0, 0,
+        0, 1, 1, 0
+    ];
+    
+    println("A* Search from (0,0) to (3,3):");
+    let d: int = astar(grid, 0, 0, 3, 3);
+    println("Distance:");
+    println(d);
+    
+    if d == 6 {
+        println("A* path distance OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
