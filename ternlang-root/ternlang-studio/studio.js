@@ -3841,10 +3841,12 @@ function toggleInspector() {
   if (ins.classList.contains("inspector-minimized")) {
     ins.classList.replace("inspector-minimized", "inspector-expanded");
     if (icon) icon.setAttribute("data-lucide", "chevron-down");
+    localStorage.setItem("ternflow-inspector-minimized", "false");
   } else {
     ins.classList.replace("inspector-expanded", "inspector-minimized");
     if (icon) icon.setAttribute("data-lucide", "chevron-up");
     ins.style.height = ""; // Clear inline override
+    localStorage.setItem("ternflow-inspector-minimized", "true");
   }
   if (window.lucide) lucide.createIcons();
 }
@@ -4139,8 +4141,17 @@ async function runSimulation() {
     const ins = document.getElementById("flow-inspector");
     if (ins) {
       ins.classList.add("active");
-      if (ins.classList.contains("inspector-minimized")) {
+      const isMinimized = localStorage.getItem("ternflow-inspector-minimized") === "true";
+      if (!isMinimized && ins.classList.contains("inspector-minimized")) {
         ins.classList.replace("inspector-minimized", "inspector-expanded");
+        const icon = document.getElementById("ins-toggle-icon");
+        if (icon) icon.setAttribute("data-lucide", "chevron-down");
+        if (window.lucide) lucide.createIcons();
+      } else if (isMinimized && ins.classList.contains("inspector-expanded")) {
+        ins.classList.replace("inspector-expanded", "inspector-minimized");
+        const icon = document.getElementById("ins-toggle-icon");
+        if (icon) icon.setAttribute("data-lucide", "chevron-up");
+        if (window.lucide) lucide.createIcons();
       }
     }
     const insBody = document.getElementById("ins-body");
@@ -4657,9 +4668,23 @@ window.scrubSimulation = scrubSimulation;
  */
 function initInspectorDraggable() {
   const ins = document.getElementById("flow-inspector");
-  const head = ins.querySelector(".ins-head");
+  const head = ins ? ins.querySelector(".ins-head") : null;
   const resizer = document.getElementById("flow-inspector-resizer");
   if (!ins || !head) return;
+
+  // Apply saved state
+  const isMinimized = localStorage.getItem("ternflow-inspector-minimized") === "true";
+  if (isMinimized) {
+    ins.classList.replace("inspector-expanded", "inspector-minimized");
+    const icon = document.getElementById("ins-toggle-icon");
+    if (icon) icon.setAttribute("data-lucide", "chevron-up");
+    if (window.lucide) lucide.createIcons();
+  } else {
+    ins.classList.replace("inspector-minimized", "inspector-expanded");
+    const icon = document.getElementById("ins-toggle-icon");
+    if (icon) icon.setAttribute("data-lucide", "chevron-down");
+    if (window.lucide) lucide.createIcons();
+  }
 
   let isDragging = false;
   let isResizing = false;
