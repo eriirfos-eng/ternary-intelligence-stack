@@ -1,0 +1,51 @@
+// stdlib/classical/lcs_trit.tern
+// Demonstrates: Longest Common Subsequence (LCS) for trit sequences.
+// Tier: 1 - Open Core
+
+fn max_int(a: int, b: int) -> int {
+    if a > b { return a; }
+    return b;
+}
+
+fn lcs(s1: trittensor<4>, s2: trittensor<4>, n: int, m: int) -> int {
+    // DP table: (n+1) x (m+1) = 5x5 = 25
+    let dp: int[25];
+    
+    let i: int = 0;
+    while i <= n {
+        let j: int = 0;
+        while j <= m {
+            if i == 0 || j == 0 {
+                dp[i * 5 + j] = 0;
+            } else if s1[i - 1] == s2[j - 1] {
+                dp[i * 5 + j] = dp[(i - 1) * 5 + (j - 1)] + 1;
+            } else {
+                dp[i * 5 + j] = max_int(dp[(i - 1) * 5 + j], dp[i * 5 + (j - 1)]);
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    
+    return dp[n * 5 + m];
+}
+
+fn main() -> trit {
+    // s1: [1, 0, -1, 1]
+    // s2: [0, 1, 0, -1]
+    // Common: [1, 0, -1] or [0, -1] -> Length 3
+    let s1: trittensor<4> = [1, 0, -1, 1];
+    let s2: trittensor<4> = [0, 1, 0, -1];
+    
+    println("LCS of two trit sequences:");
+    let length: int = lcs(s1, s2, 4, 4);
+    println("Length:");
+    println(length);
+    
+    if length == 3 {
+        println("LCS OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
