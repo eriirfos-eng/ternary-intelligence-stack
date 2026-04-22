@@ -1,0 +1,61 @@
+// stdlib/agents/multi_supervisor.tern
+// Demonstrates: Multi-agent Supervisor pattern (Monitoring N child agents)
+// Tier: 1 — Open Core
+
+agent WorkerA {
+    fn handle(input: trit) -> trit {
+        // Simulates a worker that might fail on reject input
+        if input == reject { return reject; }
+        return affirm;
+    }
+}
+
+agent WorkerB {
+    fn handle(input: trit) -> trit {
+        // Simulates a worker that always affirms for this test
+        return affirm;
+    }
+}
+
+agent MultiSupervisor {
+    fn handle(input: trit) -> trit {
+        let w1: agentref = spawn WorkerA;
+        let w2: agentref = spawn WorkerB;
+        
+        // Dispatch task to multiple workers
+        send w1 input;
+        send w2 input;
+        
+        let res1: trit = await w1;
+        let res2: trit = await w2;
+        
+        // Supervisor strategy: if either fails, attempt recovery or escalate
+        if res1 == reject {
+            // "Restart" WorkerA and try with a neutral signal
+            let w1_new: agentref = spawn WorkerA;
+            send w1_new tend;
+            let res1_new: trit = await w1_new;
+            return res1_new;
+        }
+        
+        if res2 == reject {
+            return reject; // Escalation
+        }
+        
+        return consensus(res1, res2);
+    }
+}
+
+fn main() -> trit {
+    let s: agentref = spawn MultiSupervisor;
+    
+    // Test Case: Cause one worker to fail, supervisor should recover it
+    send s reject;
+    let result: trit = await s;
+    
+    match result {
+        affirm => { return affirm; }
+        tend   => { return affirm; } // Recovery success
+        reject => { return reject; } // Recovery failed
+    }
+}
