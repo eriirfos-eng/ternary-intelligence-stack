@@ -11,7 +11,8 @@
   <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
   <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.23.12/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
   <!-- Logic extracted to studio.js -->
   <link rel="stylesheet" href="/assets/studio.css">
 </head>
@@ -62,9 +63,6 @@
     <input type="password" id="apiKey" style="display:none;" />
   </div>
 </div>
-
-<!-- ═══ HIDING OLD VIEWBAR ════════════════════════════════════════════════════ -->
-<div id="viewbar" style="display:none"></div>
 
 <!-- ─── Modals (Global Context) ────────────────────────────────────────── -->
 <!-- Delete Agent Modal -->
@@ -586,131 +584,6 @@
     </div>
   </div>
   <div class="sidebar-resizer" id="flow-sidebar-resizer"></div>
-  <!-- New Agent Modal -->
-  <div id="newAgentModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeNewAgentModal()">
-    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:24px; width:500px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <div style="font-size:14px; font-weight:700; color:var(--text);">⊕ New Agent</div>
-        <button onclick="closeNewAgentModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <div>
-          <div class="prop-label" style="margin-bottom:4px;">Agent Name</div>
-          <input id="newAgentName" class="prop-input" style="width:100%" placeholder="e.g. SentimentGate" />
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:4px;">Import from Library</div>
-          <select id="newAgentLibPick" class="prop-input" style="width:100%" onchange="loadNewAgentTemplate()">
-            <option value="">— Start blank —</option>
-          </select>
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:4px;">Agent Code (.tern)</div>
-          <textarea id="newAgentCode" class="prop-input" style="width:100%; height:160px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:11px;" placeholder="fn main() -> trit {&#10;    return affirm;&#10;}"></textarea>
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
-          <button onclick="closeNewAgentModal()" class="btn btn-ghost">Cancel</button>
-          <button onclick="addAgentFromModal()" class="btn btn-primary">Add to Canvas</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Deploy as Product Modal -->
-  <div id="deployModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeDeployModal()">
-    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:16px; padding:28px; width:560px; max-width:95vw; box-shadow:0 24px 80px rgba(0,0,0,0.6);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <div>
-          <div style="font-size:16px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
-            <span style="font-size:20px;">🚀</span> Deploy as Product
-          </div>
-          <div style="font-size:11px; color:var(--muted2); margin-top:4px;">Publish your agent flow as a live decision API</div>
-        </div>
-        <button onclick="closeDeployModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px; padding:4px 8px;">✕</button>
-      </div>
-
-      <!-- Step indicator -->
-      <div style="display:flex; gap:0; margin-bottom:24px; border-radius:8px; overflow:hidden; border:1px solid var(--border2);">
-        <div id="deploy-step-1-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; background:rgba(1,118,211,0.2); color:var(--blue); border-right:1px solid var(--border2);">① NAME</div>
-        <div id="deploy-step-2-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2); border-right:1px solid var(--border2);">② PRICING</div>
-        <div id="deploy-step-3-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2);">③ DEPLOY</div>
-      </div>
-
-      <!-- Step 1: Name & Description -->
-      <div id="deploy-step-1" style="display:flex; flex-direction:column; gap:14px;">
-        <div>
-          <div class="prop-label" style="margin-bottom:6px;">Product Name</div>
-          <input id="deployName" class="prop-input" style="width:100%" placeholder="e.g. Risk Evaluator" />
-          <div style="font-size:10px; color:var(--muted2); margin-top:4px;">Becomes the API slug: /api/agent/risk-evaluator</div>
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:6px;">Description</div>
-          <textarea id="deployDesc" class="prop-input" style="width:100%; height:70px; resize:none;" placeholder="What decisions does this agent system make?"></textarea>
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:6px;">Input Schema (what callers send)</div>
-          <input id="deployInput" class="prop-input" style="width:100%" placeholder='e.g. { "signal": -1 | 0 | 1, "context": string }' />
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-          <button onclick="closeDeployModal()" class="btn btn-ghost">Cancel</button>
-          <button onclick="deployStep(2)" class="btn btn-primary">Next →</button>
-        </div>
-      </div>
-
-      <!-- Step 2: Pricing -->
-      <div id="deploy-step-2" style="display:none; flex-direction:column; gap:14px;">
-        <div>
-          <div class="prop-label" style="margin-bottom:10px;">Pricing Model</div>
-          <div style="display:flex; flex-direction:column; gap:8px;" id="pricingOptions">
-            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
-              <input type="radio" name="deployPricing" value="free" checked style="accent-color:var(--blue)">
-              <div>
-                <div style="font-size:13px; font-weight:600; color:var(--text);">Free</div>
-                <div style="font-size:11px; color:var(--muted2);">Open access — no billing. Good for demos.</div>
-              </div>
-            </label>
-            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
-              <input type="radio" name="deployPricing" value="per_call" style="accent-color:var(--blue)">
-              <div>
-                <div style="font-size:13px; font-weight:600; color:var(--text);">Per-call <span style="color:var(--amber)">($)</span></div>
-                <div style="font-size:11px; color:var(--muted2);">Charge consumers per API request.</div>
-              </div>
-              <input id="deployPerCallPrice" class="prop-input" style="width:100px; margin-left:auto;" placeholder="$0.01 / call" />
-            </label>
-            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
-              <input type="radio" name="deployPricing" value="private" style="accent-color:var(--blue)">
-              <div>
-                <div style="font-size:13px; font-weight:600; color:var(--text);">Private</div>
-                <div style="font-size:11px; color:var(--muted2);">Internal use only — not listed in marketplace.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-          <button onclick="deployStep(1)" class="btn btn-ghost">← Back</button>
-          <button onclick="deployStep(3)" class="btn btn-primary">Review →</button>
-        </div>
-      </div>
-
-      <!-- Step 3: Confirm & Deploy -->
-      <div id="deploy-step-3" style="display:none; flex-direction:column; gap:16px;">
-        <div id="deploy-summary" style="background:var(--bg2); border:1px solid var(--border2); border-radius:10px; padding:16px; font-size:12px; line-height:2; font-family:'JetBrains Mono',monospace;"></div>
-        <div id="deploy-progress" style="display:none; flex-direction:column; gap:10px;">
-          <div class="deploy-step-row" id="dstep-compile"><span class="dstep-icon">⏳</span> Compiling agent flow…</div>
-          <div class="deploy-step-row" id="dstep-register"><span class="dstep-icon">⏳</span> Registering endpoint…</div>
-          <div class="deploy-step-row" id="dstep-publish"><span class="dstep-icon">⏳</span> Publishing to runtime…</div>
-          <div id="deploy-result" style="display:none; padding:14px; background:rgba(16,185,129,0.08); border:1px solid var(--green); border-radius:8px; margin-top:4px;"></div>
-        </div>
-        <div id="deploy-confirm-btns" style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
-          <button onclick="deployStep(2)" class="btn btn-ghost">← Back</button>
-          <button onclick="executeProductDeploy()" class="btn btn-primary" style="background:linear-gradient(135deg,#0176d3,#06b6d4); gap:6px;">
-            <i data-lucide="rocket" style="width:14px"></i> Deploy Now
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Main View Area -->
   <div id="flow-canvas-wrap">
     <canvas id="flow-fog-canvas"></canvas>
@@ -1261,6 +1134,24 @@
 <div id="global-tooltip"></div>
 
 <!-- ═══ MONACO + APP LOGIC ══════════════════════════════════════════════════ -->
+<script>
+  // Transport Layer & Auth Handshake initialization
+  window.TERNSTUDIO_DEV_KEY = "tern_industrial_dev_013";
+  
+  function initSocket() {
+    const endpoint = document.getElementById("apiEndpoint").value;
+    const wsUrl = endpoint.replace("https://", "wss://").replace("http://", "ws://") + "/api/tracer/ws";
+    console.log("[Transport] Connecting to " + wsUrl);
+    const socket = new WebSocket(wsUrl);
+    socket.onopen = () => console.log("[Transport] Online.");
+    socket.onerror = (e) => console.error("[Transport] Connection failed", e);
+    window.studioSocket = socket;
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    initSocket();
+  });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
 <script type="module" src="/studio.js"></script>
 </body>

@@ -1089,7 +1089,8 @@ async function injectSignal(nodeId, val) {
   
   // engineQueue.push({ toId: nodeId, val, conf: 1.0, origin: "MANUAL_INJECTOR" });
   logInspector("SYSTEM", `⚡ Manual injection logged: [v:${val}, c:1.0] -> ${nodeId}. Awaiting explicit Play to execute.`);
-  }window.injectSignal = injectSignal;
+  }
+window.injectSignal = injectSignal;
 
 // ─── Full Observability: Causal Reverse-Trace ────────────────────────────────
 const causalNodes = new Set();
@@ -5038,9 +5039,7 @@ async function simulateNode(node, inSignal, isPhantom = false) {
          context_bridge: node.props.runtime_buffer || {}
        };
        const yamlStr = jsyaml.dump(payload);
-       const pre = artEl.querySelector('pre');
-       if (pre) pre.textContent = yamlStr;
-       else artEl.textContent = yamlStr;
+       artEl.innerHTML = `<pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap;">${yamlStr}</pre>`;
        artEl.style.color = outSignal === 1 ? 'var(--green)' : (outSignal === -1 ? 'var(--red)' : 'var(--text)');
     }
   });
@@ -5159,9 +5158,7 @@ function spawnResultArtifact(sourceNode, val) {
      existing.props.payload = payloadStr;
      const artEl = document.getElementById(`art-body-${existing.id}`);
      if (artEl) {
-        const pre = artEl.querySelector('pre');
-        if (pre) pre.textContent = payloadStr;
-        else artEl.textContent = payloadStr;
+        artEl.innerHTML = `<pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap;">${payloadStr}</pre>`;
         artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
         if (isSuspended) renderActuatorControls(existing.id, sourceNode.id);
      }
@@ -5194,9 +5191,7 @@ function spawnResultArtifact(sourceNode, val) {
 
   const artEl = document.getElementById(`art-body-${id}`);
   if (artEl) {
-     const pre = artEl.querySelector('pre');
-     if (pre) pre.textContent = payloadStr;
-     else artEl.textContent = payloadStr;
+     artEl.innerHTML = `<pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap;">${payloadStr}</pre>`;
      artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
      if (isSuspended) renderActuatorControls(id, sourceNode.id);
   }
@@ -5500,7 +5495,8 @@ async function animateSignal(wire, signal, confidence = 1.0) {
 
   // Highlight wire with confidence
   drawWire(start, end, wire.id, signal, wire, confidence);
-}window.animateSignal = animateSignal;
+}
+window.animateSignal = animateSignal;
 
 function getPortPos(port) {
   const rect = port.getBoundingClientRect();
@@ -6073,6 +6069,7 @@ function onMouseUp(e) {
               }
            } catch (e) {
               console.warn("YAML Parse failed, falling back to legacy injection", e);
+              displayPayload = "/*\n" + payloadRaw + "\n*/";
            }
 
            createFlowNode("Transmuted Agent", "__custom__", dropX, dropY, 'agent', newNodeId);
@@ -6124,7 +6121,8 @@ async function resumeSimulationFrom(targetId) {
    if (executionState !== 'running') {
        await runSimulationCore();
    }
-   }window.resumeSimulationFrom = resumeSimulationFrom;
+}
+window.resumeSimulationFrom = resumeSimulationFrom;
 
 // ─── GitHub raw content base (Tier 1 public fallback) ────────────────────────
 const GH_RAW = "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/";
