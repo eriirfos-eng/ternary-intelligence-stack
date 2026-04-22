@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,91 +8,147 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            t_bg: '#0F131F',       // The deep slate Studio canvas
-            t_bg2: '#161B26',      // Studio panel headers
-            t_bg3: '#1A202C',      // Studio inner cards/panels
+            studio_bg: '#0A0E17',       
+            studio_panel: '#111622',      
+            studio_border: '#1E2536',    
+            studio_editor: '#06080D',
             t_teal: '#00d4aa',
+            t_teal_dim: 'rgba(0, 212, 170, 0.15)',
             t_blue: '#4a9eff',
-            t_muted: '#8B949E',    // Studio muted text
-            t_border: '#2A3143'    // Studio subtle borders
+            t_muted: '#64748B',    
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
           }
         }
       }
     }
   </script>
   <style>
-    /* Removed the hardcoded body background here so Tailwind can take over */
-    .glass-card {
-      background: linear-gradient(145deg, rgba(22, 27, 38, 0.8) 0%, rgba(15, 19, 31, 0.4) 100%);
-      border: 1px solid #2A3143;
-      backdrop-filter: blur(8px);
+    /* Studio Grid Background */
+    body {
+      background-color: #0A0E17;
+      background-image: radial-gradient(#1E2536 1px, transparent 1px);
+      background-size: 24px 24px;
+      color: #E2E8F0;
     }
-    textarea:focus { outline: none; border-color: #00d4aa; }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #0F131F; }
-    ::-webkit-scrollbar-thumb { background: #2A3143; border-radius: 4px; }
+    
+    /* Sleek Glassmorphism */
+    .glass-panel {
+      background: rgba(17, 22, 34, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid #1E2536;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Recessed Editor Panes */
+    .editor-pane {
+      background: #06080D;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    textarea:focus { 
+      outline: none; 
+    }
+    
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1E2536; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    
+    /* Neon glow transitions */
+    .btn-glow:hover {
+      box-shadow: 0 0 15px rgba(0, 212, 170, 0.3);
+      background: rgba(0, 212, 170, 0.1);
+    }
   </style>
 </head>
-<body class="bg-t_bg text-gray-300 antialiased min-h-screen flex flex-col items-center justify-center p-6">
+<body class="antialiased min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
 
-  <div class="max-w-6xl w-full">
-    <header class="text-center mb-12">
-      <div class="font-mono text-t_teal text-xs tracking-widest uppercase mb-4">Local Tool &middot; Ternary Intelligence Stack</div>
-      <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">
+  <div class="max-w-7xl w-full">
+    <!-- Header -->
+    <header class="text-center mb-10">
+      <div class="inline-block px-3 py-1 mb-4 rounded-full border border-studio_border bg-studio_panel font-mono text-t_teal text-[10px] tracking-widest uppercase shadow-sm">
+        Local Tool &middot; Ternary Intelligence Stack
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
         Tern<span class="text-t_teal">Translator</span>
       </h1>
-      <p class="text-t_muted text-lg">Migrate binary logic to balanced ternary syntax instantly.</p>
+      <p class="text-t_muted text-sm md:text-base">Migrate binary logic to balanced ternary syntax instantly.</p>
     </header>
 
-    <div class="glass-card rounded-2xl overflow-hidden shadow-2xl">
-      <div class="flex flex-col md:flex-row border-b border-t_border bg-t_bg2 px-6 py-4 items-center gap-4">
-        <div class="flex items-center gap-3">
-          <span class="text-t_muted font-mono text-xs uppercase tracking-widest">Source:</span>
-          <select id="trans-lang" class="bg-t_bg border border-t_border text-t_teal font-mono text-xs px-3 py-1.5 rounded">
+    <!-- Main Workspace -->
+    <div class="glass-panel rounded-xl overflow-hidden flex flex-col">
+      
+      <!-- Top Toolbar -->
+      <div class="flex flex-col md:flex-row border-b border-studio_border bg-studio_panel/80 px-5 py-3 items-center justify-between gap-4">
+        
+        <div class="flex items-center gap-4 w-full md:w-auto">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-t_teal animate-pulse"></div>
+            <span class="text-t_muted font-mono text-[10px] uppercase tracking-widest">Source Engine</span>
+          </div>
+          <select id="trans-lang" class="bg-studio_editor border border-studio_border text-gray-300 focus:text-t_teal focus:border-t_teal transition-colors font-mono text-xs px-3 py-1.5 rounded-md outline-none">
             <option value="python">Python</option>
             <option value="rust">Rust</option>
             <option value="java">Java</option>
             <option value="cpp">C++</option>
             <option value="javascript">JavaScript</option>
           </select>
+          
+          <div class="h-4 w-px bg-studio_border hidden md:block"></div>
+          
+          <label class="cursor-pointer flex items-center gap-2 text-t_muted hover:text-white transition-colors font-mono text-xs group">
+            <svg class="w-4 h-4 group-hover:text-t_blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            <span>Upload</span>
+            <input type="file" id="trans-upload" class="hidden" accept=".py,.rs,.java,.cpp,.js,.ts,.html">
+          </label>
         </div>
-        
-        <label class="cursor-pointer bg-t_bg3 border border-t_border text-t_muted hover:text-white px-4 py-1.5 rounded font-mono text-xs transition-colors">
-          📁 Upload File
-          <input type="file" id="trans-upload" class="hidden" accept=".py,.rs,.java,.cpp,.js,.ts,.html">
-        </label>
 
-        <button id="trans-run-btn" class="md:ml-auto px-8 py-2 bg-t_teal text-black font-mono font-bold rounded hover:brightness-110 transition-all shadow-[0_0_20px_rgba(0,212,170,0.2)]">
-          ⚡ Translate to .tern
+        <button id="trans-run-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2 border border-t_teal/50 text-t_teal font-mono text-xs font-bold uppercase tracking-wider rounded-md transition-all btn-glow bg-t_teal_dim">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          Translate Output
         </button>
       </div>
 
-      <div class="grid md:grid-cols-2 h-[500px]">
-        <div class="border-r border-t_border flex flex-col">
-          <div class="bg-t_bg3 px-6 py-2 border-b border-t_border font-mono text-[10px] text-t_muted uppercase tracking-widest">Input (Binary Logic)</div>
-          <textarea id="trans-input" class="flex-1 bg-t_bg p-6 font-mono text-sm text-gray-300 resize-none" placeholder="Paste your source code here..."></textarea>
+      <!-- Code Areas -->
+      <div class="grid md:grid-cols-2 h-[550px] divide-y md:divide-y-0 md:divide-x divide-studio_border">
+        
+        <!-- Input -->
+        <div class="flex flex-col relative group">
+          <div class="absolute top-3 right-4 font-mono text-[10px] text-t_muted uppercase tracking-widest z-10 select-none">Input // Binary</div>
+          <textarea id="trans-input" class="editor-pane flex-1 w-full p-5 pt-10 font-mono text-sm text-gray-400 resize-none" spellcheck="false" placeholder="// Paste standard binary architecture here..."></textarea>
         </div>
-        <div class="flex flex-col bg-t_bg2">
-          <div class="bg-t_bg3 px-6 py-2 border-b border-t_border font-mono text-[10px] text-t_teal uppercase tracking-widest">Output (Triadic .tern)</div>
-          <div id="trans-output" class="flex-1 p-6 font-mono text-sm text-t_teal overflow-auto whitespace-pre"></div>
+        
+        <!-- Output -->
+        <div class="flex flex-col relative">
+          <div class="absolute top-3 right-4 font-mono text-[10px] text-t_teal uppercase tracking-widest z-10 select-none">Output // Ternary</div>
+          <div id="trans-output" class="editor-pane flex-1 w-full p-5 pt-10 font-mono text-sm text-t_teal overflow-auto whitespace-pre"></div>
         </div>
+        
       </div>
 
-      <div class="bg-t_bg3 border-t border-t_border p-8">
-        <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
-          <span class="text-t_blue">ℹ</span> Triadic Logic Insights
-        </h4>
-        <div id="trans-insight" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs text-t_muted leading-relaxed">
-          <div class="p-4 bg-t_bg border border-t_border rounded-lg italic">Awaiting input for analysis...</div>
+      <!-- Insight Footer -->
+      <div class="bg-studio_panel/90 border-t border-studio_border p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-4 h-4 text-t_blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <h4 class="text-white font-mono text-[10px] uppercase tracking-widest">Topology Insights</h4>
+        </div>
+        <div id="trans-insight" class="flex flex-wrap gap-2 text-xs text-t_muted">
+          <div class="px-3 py-1.5 bg-studio_editor border border-studio_border rounded text-[10px] font-mono">Awaiting logic vectors...</div>
         </div>
       </div>
     </div>
 
-    <footer class="mt-8 text-center text-t_muted font-mono text-[10px] uppercase tracking-[0.2em]">
-      &copy; 2026 RFI-IRFOS &middot; Balanced Ternary Systems
+    <!-- Minimal Footer -->
+    <footer class="mt-8 text-center text-[#475569] font-mono text-[10px] uppercase tracking-[0.2em]">
+      &copy; 2026 RFI-IRFOS &middot; Balanced Ternary Systems &middot; v2.0.0
     </footer>
   </div>
 
@@ -121,7 +177,7 @@
       if (!code.trim()) return;
 
       transBtn.disabled = true;
-      transBtn.textContent = '⏳ Thinking...';
+      transBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Parsing...';
       
       const insights = new Set();
       let translated = code;
@@ -134,22 +190,27 @@
       });
 
       if (!translated.includes('fn main')) {
-        translated = "// Translated to Ternlang\n\n" + translated;
+        translated = "// Translated via Ternlang BET VM Protocol\n\n" + translated;
       }
 
       setTimeout(() => {
         transOutput.textContent = translated;
-        transInsight.innerHTML = Array.from(insights).map(note => 
-          `<div class="p-4 bg-t_bg border border-t_border rounded-xl flex items-start gap-3 transition-all hover:border-t_teal/30">
-            <span class="text-t_teal mt-0.5">✓</span>
-            <span class="text-gray-300">${note}</span>
-          </div>`
-        ).join('') || '<div class="p-4 bg-t_bg border border-t_border rounded-lg">Pure logic detected. Minimal triadic mapping required.</div>';
+        
+        if (insights.size > 0) {
+          transInsight.innerHTML = Array.from(insights).map(note => 
+            `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border/50 rounded flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-t_teal"></span>
+              <span class="text-gray-400 font-mono text-[10px]">${note}</span>
+            </div>`
+          ).join('');
+        } else {
+          transInsight.innerHTML = `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border/50 rounded font-mono text-[10px] text-gray-400">System baseline logic detected. No triadic morphing required.</div>`;
+        }
         
         transBtn.disabled = false;
-        transBtn.textContent = '⚡ Translate to .tern';
+        transBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Translate Output';
         transOutput.scrollTop = 0;
-      }, 500);
+      }, 400);
     }
 
     transBtn.addEventListener('click', translate);
