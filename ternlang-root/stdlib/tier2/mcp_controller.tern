@@ -1,0 +1,26 @@
+// stdlib/tier2/mcp_controller.tern
+// Tier: 2 (BSL)
+agent ExternalDataStream {
+    fn handle(msg: trit) -> trit {
+        if msg == 1 { return 1; }
+        return -1;
+    }
+}
+
+agent MCPController {
+    fn handle(msg: trit) -> trit {
+        let stream: agentref = spawn ExternalDataStream;
+        send stream msg;
+        let data: trit = await stream;
+        return data;
+    }
+}
+
+fn main() -> trit {
+    let ctrl: agentref = spawn MCPController;
+    send ctrl 1;
+    let res: trit = await ctrl;
+    
+    if res == 1 { return 1; }
+    return -1;
+}
