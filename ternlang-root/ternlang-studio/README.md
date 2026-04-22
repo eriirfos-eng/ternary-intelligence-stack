@@ -30,6 +30,7 @@ Ternlang Studio bridges visual node-based programming with raw, code-first devel
 *   🐞 **Tracer (Inspector)**: The visual debugger. A hardware-accelerated time-travel scrubber for inspecting exact signal states (-1, 0, +1) at any millisecond.
 *   📦 **Registry**: GUI for `ternpkg`. Search, install, and manage modular dependencies and community crates.
 *   ⚙️ **Config**: Centered Industrial Dashboard for managing Fly.io API connections and the **Local Secrets Vault**.
+*   🔄 **TernTranslator**: Migrate logic **cross-domain** between binary architectures and balanced ternary.
 
 ---
 
