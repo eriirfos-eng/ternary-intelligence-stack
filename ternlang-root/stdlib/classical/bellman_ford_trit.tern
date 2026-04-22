@@ -1,0 +1,66 @@
+// stdlib/classical/bellman_ford_trit.tern
+// Demonstrates: Bellman-Ford Algorithm on a small graph using trit tensors.
+// Tier: 1 - Open Core
+
+fn get_weight(t: trit) -> int {
+    match t {
+        -1 => { return 2; }
+         0 => { return 0; }
+         1 => { return 1; }
+    }
+}
+
+fn bellman_ford(adj: trittensor<16>, start: int, target: int) -> int {
+    let dist: int[4];
+    let i: int = 0;
+    while i < 4 {
+        dist[i] = 999;
+        i = i + 1;
+    }
+    dist[start] = 0;
+    
+    // Relax edges |V| - 1 times
+    let count: int = 0;
+    while count < 3 {
+        let u: int = 0;
+        while u < 4 {
+            let v: int = 0;
+            while v < 4 {
+                let edge: trit = adj[u * 4 + v];
+                if edge != 0 {
+                    let weight: int = get_weight(edge);
+                    if dist[u] != 999 && dist[u] + weight < dist[v] {
+                        dist[v] = dist[u] + weight;
+                    }
+                }
+                v = v + 1;
+            }
+            u = u + 1;
+        }
+        count = count + 1;
+    }
+    
+    return dist[target];
+}
+
+fn main() -> trit {
+    let adj: trittensor<16> = [
+        0, 1, -1, 0,
+        0, 0,  0, 1,
+        0, 0,  0, 1,
+        0, 0,  0, 0
+    ];
+    
+    println("Bellman-Ford from A (0) to D (3):");
+    let d: int = bellman_ford(adj, 0, 3);
+    
+    println("Shortest distance:");
+    println(d);
+    
+    if d == 2 {
+        println("Shortest path distance OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
