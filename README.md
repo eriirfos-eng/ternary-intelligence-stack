@@ -144,7 +144,7 @@ After purchasing: visit **[ternlang.com/activate](https://ternlang.com/activate)
 | Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 293 stdlib modules + **30 MCP tools (all free)** |
 | Pro Standard (BSL-1.1) | €99/month | REST API (10,000 calls/month), server-side 3-layer memory, SSE streaming + Tier 2 stdlib |
 | Industrial (BSL-1.1) | €349/month | 50,000 API calls, QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
-| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + full Tier 4 stdlib |
+| Enterprise (Proprietary) | From €2,500/month | unlimited API calls | On-premise, FPGA, custom SLA + full Tier 4 stdlib | lifetime support|
 
 Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
 
