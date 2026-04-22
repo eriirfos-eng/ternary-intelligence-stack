@@ -1,0 +1,74 @@
+// stdlib/lib/trit_matrix_mul.tern
+// Demonstrates: Matrix multiplication for trit tensors using consensus-based accumulation.
+// Tier: 1 - Open Core
+
+// Helper: consensus accumulation for a dot product of two trit vectors
+fn trit_dot_consensus(a: trittensor<2>, b: trittensor<2>, size: int) -> trit {
+    let res: trit = 0;
+    let i: int = 0;
+    while i < size {
+        // Multiplicaton: standard multiplication
+        let prod: trit = a[i] * b[i];
+        // Accumulation: using consensus as it's a stable ternary addition analog
+        res = consensus(res, prod);
+        i = i + 1;
+    }
+    return res;
+}
+
+// 2x2 matrix multiplication: res = a * b
+// res[i*2 + j] = sum(a[i*2 + k] * b[k*2 + j])
+fn mat_mul_trit_2x2(a: trittensor<4>, b: trittensor<4>, res: trittensor<4>) -> trit {
+    let i: int = 0;
+    while i < 2 {
+        let j: int = 0;
+        while j < 2 {
+            let acc: trit = 0;
+            let k: int = 0;
+            while k < 2 {
+                let p: trit = a[i * 2 + k] * b[k * 2 + j];
+                acc = consensus(acc, p);
+                k = k + 1;
+            }
+            res[i * 2 + j] = acc;
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    // Identity * Matrix
+    let id: trittensor<4> = [1, 0, 0, 1];
+    let m: trittensor<4> = [1, -1, 0, 1];
+    let res: trittensor<4> = [0, 0, 0, 0];
+    
+    println("Trit Matrix Multiplication (2x2): Identity * M");
+    mat_mul_trit_2x2(id, m, res);
+    
+    println(res[0]); println(res[1]); println(res[2]); println(res[3]);
+    
+    // Identity * M should be M
+    if res[0] == 1 && res[1] == -1 && res[2] == 0 && res[3] == 1 {
+        println("Identity multiplication OK.");
+    } else {
+        return conflict();
+    }
+    
+    // M * M
+    // [1 -1] * [1 -1] = [cons(1*1, -1*0)  cons(1*-1, -1*1)] = [1  -1]
+    // [0  1]   [0  1]   [cons(0*1, 1*0)   cons(0*-1, 1*1)]   [0   1]
+    let res2: trittensor<4> = [0, 0, 0, 0];
+    mat_mul_trit_2x2(m, m, res2);
+    
+    println("M * M:");
+    println(res2[0]); println(res2[1]); println(res2[2]); println(res2[3]);
+    
+    if res2[0] == 1 && res2[1] == -1 && res2[2] == 0 && res2[3] == 1 {
+        println("M*M multiplication OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
