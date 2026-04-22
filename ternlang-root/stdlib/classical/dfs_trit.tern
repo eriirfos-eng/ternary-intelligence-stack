@@ -1,0 +1,53 @@
+// stdlib/classical/dfs_trit.tern
+// Demonstrates: Depth-First Search (DFS) on a small graph using trit tensors.
+// Tier: 1 - Open Core
+
+// Graph: 4 nodes, Adjacency Matrix (flat 16)
+// A -> B, B -> D, A -> C, C -> D
+
+fn dfs(adj: trittensor<16>, u: int, target: int, visited: trittensor<4>) -> trit {
+    println("Visiting node:");
+    println(u);
+    
+    if u == target {
+        return truth();
+    }
+    
+    visited[u] = 1;
+    
+    let v: int = 0;
+    while v < 4 {
+        let edge: trit = adj[u * 4 + v];
+        if edge == 1 {
+            if visited[v] == 0 {
+                let found: trit = dfs(adj, v, target, visited);
+                if found == 1 {
+                    return truth();
+                }
+            }
+        }
+        v = v + 1;
+    }
+    
+    return conflict();
+}
+
+fn main() -> trit {
+    let adj: trittensor<16> = [
+        0, 1, 1, 0,
+        0, 0, 0, 1,
+        0, 0, 0, 1,
+        0, 0, 0, 0
+    ];
+    let visited: trittensor<4> = [0, 0, 0, 0];
+    
+    println("DFS from A (0) to D (3):");
+    let found: trit = dfs(adj, 0, 3, visited);
+    
+    if found == 1 {
+        println("Path to target found.");
+        return truth();
+    }
+    
+    return conflict();
+}
