@@ -1,0 +1,34 @@
+// stdlib/agents/scheduler.tern
+// Demonstrates: Scheduler agent (Task queuing and time-stepped execution)
+// Tier: 1 — Open Core
+
+agent TaskWorker {
+    fn handle(task: trit) -> trit {
+        // Simple worker processing
+        return task;
+    }
+}
+
+agent Scheduler {
+    fn handle(msg: trit) -> trit {
+        let w: agentref = spawn TaskWorker;
+        // Simple scheduling queue: process one task and return result
+        send w msg;
+        let res: trit = await w;
+        return res;
+    }
+}
+
+fn main() -> trit {
+    let s: agentref = spawn Scheduler;
+    
+    // Schedule a task
+    send s 1;
+    let res: trit = await s;
+    
+    match res {
+        1  => { return affirm; }
+        0  => { return hold;   }
+        -1 => { return reject; }
+    }
+}
