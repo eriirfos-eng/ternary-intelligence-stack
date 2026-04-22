@@ -1,0 +1,48 @@
+// stdlib/classical/binary_search_trit.tern
+// Demonstrates: Binary Search algorithm on a sorted trit tensor.
+// Tier: 1 - Open Core
+
+fn binary_search(arr: trittensor<8>, l: int, r: int, x: trit) -> int {
+    while l <= r {
+        let m: int = l + (r - l) / 2;
+        
+        if arr[m] == x {
+            return m;
+        }
+        
+        if arr[m] < x {
+            l = m + 1;
+        } else {
+            r = m - 1;
+        }
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    // Sorted array of trits
+    let arr: trittensor<8> = [-1, -1, 0, 0, 0, 1, 1, 1];
+    
+    println("Searching for Tend (0):");
+    let idx: int = binary_search(arr, 0, 7, 0);
+    println("Found at index:");
+    println(idx);
+    
+    if idx >= 2 && idx <= 4 {
+        println("Binary search for 0 OK.");
+    } else {
+        return conflict();
+    }
+    
+    println("Searching for Affirm (1):");
+    let idx2: int = binary_search(arr, 0, 7, 1);
+    println("Found at index:");
+    println(idx2);
+    
+    if idx2 >= 5 {
+        println("Binary search for 1 OK. Success.");
+        return truth();
+    }
+    
+    return conflict();
+}
