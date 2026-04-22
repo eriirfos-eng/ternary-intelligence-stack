@@ -1,15 +1,7 @@
 // stdlib/agents/watchdog.tern
-// Demonstrates: Watchdog agent pattern (Monitoring and Recovery)
-// Tier: 1 — Open Core
-
+// Tier: 1
 agent UnreliableWorker {
-    fn handle(msg: trit) -> trit {
-        match msg {
-            1  => { return affirm; }
-            0  => { return tend;   }
-           -1  => { return reject; }
-        }
-    }
+    fn handle(msg: trit) -> trit { return msg; }
 }
 
 agent Watchdog {
@@ -19,27 +11,24 @@ agent Watchdog {
         let res: trit = await worker;
         
         match res {
-            1 => { return affirm; }
-            0 => { return tend; }
-            -1 => { return tend; }
+            1  => { return 1; }
+            0  => { return 0; }
+            -1 => { return 0; }
         }
     }
 }
 
 fn main() -> trit {
     let d: agentref = spawn Watchdog;
-    
-    send d affirm;
+    send d 1;
     let r1: trit = await d;
-    
-    send d reject;
+    send d -1;
     let r2: trit = await d;
     
-    if r1 == affirm {
-        if r2 == tend {
-            return affirm;
+    if r1 == 1 {
+        if r2 == 0 {
+            return 1;
         }
     }
-    
-    return reject;
+    return -1;
 }
