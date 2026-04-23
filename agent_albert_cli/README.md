@@ -8,6 +8,7 @@
 
 <p align="center">
   <b>Albert CLI — Ternlang Engine</b><br/>
+  <i>Operation Strip-Mine Edition</i>
 </p>
 
 ---
@@ -18,6 +19,10 @@
 
 The **Albert CLI** is the terminal-native evolution of the Albert agentic framework — now powered by the high-performance Rust-based **Ternlang Engine**.
 
+Following **Operation Strip-Mine**, the system has been aggressively hardened, expanded, and fully decoupled from proprietary dependencies.
+
+This is not a wrapper.  
+This is an **execution-grade AI runtime**.
 
 ---
 
@@ -76,3 +81,240 @@ Connect to any provider via:
 
 ```bash
 /auth
+````
+
+**Supported ecosystem:**
+
+* OpenAI
+* Anthropic
+* Google (Gemini)
+* Hugging Face
+* AWS
+* Azure
+* Ternlang (native)
+
+---
+
+## Dynamic Provider Resolution
+
+* Model names are auto-mapped to providers
+* Configuration is resolved at runtime
+* Seamless switching between models
+
+➡️ One interface. Entire LLM ecosystem.
+
+---
+
+# 🧠 Reasoning & Memory Arsenal
+
+## SequentialThinking
+
+Structured multi-step reasoning engine:
+
+* Tracks evolving thought chains
+* Allows revision and correction mid-process
+* Enables deeper planning loops
+
+---
+
+## Memory (Knowledge Graph)
+
+Persistent, local-first intelligence layer:
+
+* Stores entities, relationships, observations
+* Builds long-term project awareness
+* Survives across sessions
+
+---
+
+## RepoMap
+
+Automated codebase cognition:
+
+* Generates structured maps of repositories
+* Accelerates navigation and comprehension
+* Reduces token load dramatically
+
+---
+
+## MCP Client (Model Context Protocol)
+
+* Native MCP integration
+* Connect to external tool servers
+* Extend capabilities without modifying core
+
+---
+
+# 🏛️ System Architecture
+
+```
+                ┌──────────────────────────────┐
+                │       Ternlang Engine        │
+                │   (Rust Execution Core)      │
+                └────────────┬─────────────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+ ┌──────────────┐   ┌────────────────┐   ┌────────────────┐
+ │  API Client  │   │   Runtime Core │   │     Tools       │
+ │ (LLM Layer)  │   │ (Loop + Guard) │   │ (Arsenal + Core)│
+ └──────────────┘   └────────────────┘   └────────────────┘
+                             │
+                     ┌──────────────┐
+                     │  Ternary Loop │
+                     │ (+1 / 0 / -1) │
+                     └──────────────┘
+```
+
+---
+
+# 🔧 Key Components
+
+## Engine Block (`rust/`)
+
+* Hardened autonomous loop
+* Ternary validation system
+* Security enforcement layer
+
+---
+
+## RTK — Rust Token Killer
+
+* CLI-level token optimization proxy
+* 60–90% reduction in token usage
+* Context compression via sliding windows
+
+---
+
+## Multi-Provider API Client
+
+* Fully agnostic communication layer
+* Handles provider-specific quirks internally
+* Clean abstraction for agent logic
+
+---
+
+## Standardized Toolset
+
+### Core Tools
+
+* Bash
+* File Operations
+* Glob
+* Grep
+
+### Arsenal Tools
+
+* Memory
+* SequentialThinking
+* RepoMap
+
+---
+
+# 🚀 Quickstart
+
+## 1. Build & Install
+
+```bash
+cd rust
+cargo install --path crates/rusty-ternlang-cli --force
+```
+
+---
+
+## 2. Authenticate
+
+```bash
+ternlang-cli /auth
+```
+
+---
+
+## 3. Initialize Repository
+
+```bash
+ternlang-cli /init
+```
+
+---
+
+## 4. Launch REPL
+
+```bash
+ternlang-cli
+```
+
+---
+
+# 📂 Repository Layout
+
+```text
+.
+├── rust/           # High-performance Ternlang Engine
+│   ├── crates/
+│   │   ├── api/        # LLM-agnostic client layer
+│   │   ├── runtime/    # Core loop, security, memory
+│   │   ├── tools/      # Arsenal + core tools
+│   │   └── ...
+│
+├── src/            # Legacy Python agent (reference only)
+│
+└── README.md       # You are here
+```
+
+---
+
+# 🔁 Execution Loop (Conceptual)
+
+```
+[Research] → [Strategy] → [Execution]
+      ↓            ↓            ↓
+     (+1)        (0 Halt)      (-1 Retry)
+```
+
+* Research builds context
+* Strategy plans execution
+* Execution is validated through ternary state
+
+---
+
+# 🛡️ Threat Model
+
+Albert CLI is explicitly designed against:
+
+* Prompt injection attacks
+* Shell command smuggling
+* Unsafe piping & redirection
+* Context poisoning
+* Blind autonomous loops
+
+➡️ Security is not a feature — it is the baseline.
+
+---
+
+# 📜 License
+
+**Business Source License 1.1 (BSL-1.1)**
+Converts to **Apache 2.0** on **2030-04-03**
+
+---
+
+# 🏗️ Built By
+
+**RFI-IRFOS**
+*Research Focus Institute – Interdisciplinary Research Facility for Open Sciences*
+Graz, Styria 🇦🇹
+
+---
+
+# 💡 Final Note
+
+> Most AI systems scale by consuming more tokens.
+> This one scales by **needing less intelligence to waste**.
+
+Albert CLI is not trying to be bigger.
+
+It is trying to be **correct, efficient, and sovereign**.
+
+```
+```
