@@ -240,13 +240,19 @@
     }
     .sidebar-resizer:hover, .sidebar-resizer.active { background: var(--cyan); }
     
-    .inspector-resizer {
-      position: absolute; bottom: 0; right: 0;
-      width: 16px; height: 16px; cursor: nwse-resize;
-      background: linear-gradient(135deg, transparent 50%, var(--muted2) 50%);
-      opacity: 0.3;
+    /* 8-way resize handles for the Execution Inspector */
+    .ins-resize-handle {
+      position: absolute; z-index: 10; user-select: none;
     }
-    .inspector-resizer:hover { opacity: 1; }
+    .ins-r-n  { top: 0;    left: 12px;   right: 12px;  height: 6px; cursor: n-resize; }
+    .ins-r-s  { bottom: 0; left: 12px;   right: 12px;  height: 6px; cursor: s-resize; }
+    .ins-r-e  { right: 0;  top: 12px;    bottom: 12px; width: 6px;  cursor: e-resize; }
+    .ins-r-w  { left: 0;   top: 12px;    bottom: 12px; width: 6px;  cursor: w-resize; }
+    .ins-r-ne { top: 0;    right: 0;  width: 14px; height: 14px; cursor: ne-resize; }
+    .ins-r-nw { top: 0;    left: 0;   width: 14px; height: 14px; cursor: nw-resize; }
+    .ins-r-se { bottom: 0; right: 0;  width: 14px; height: 14px; cursor: se-resize; }
+    .ins-r-sw { bottom: 0; left: 0;   width: 14px; height: 14px; cursor: sw-resize; }
+    .ins-resize-handle:hover { background: rgba(100,200,255,0.07); }
     .lib-tab {
       flex: 1; background: none; border: none; padding: 8px;
       font-family: 'Inter', sans-serif; font-size: 0.8462rem; font-weight: 700;

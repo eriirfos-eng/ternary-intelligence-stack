@@ -4679,7 +4679,6 @@ window.scrubSimulation = scrubSimulation;
 function initInspectorDraggable() {
   const ins = document.getElementById("flow-inspector");
   const head = ins ? ins.querySelector(".ins-head") : null;
-  const resizer = document.getElementById("flow-inspector-resizer");
   if (!ins || !head) return;
 
   // Apply saved state
@@ -4699,60 +4698,103 @@ function initInspectorDraggable() {
   let isDragging = false;
   let isResizing = false;
   let offsetX, offsetY;
+  let activeEdge = null;
+  let startRect = null;
+  let startMouse = null;
+  let dragParentRect = null;
 
-  // Dragging
+  // Switch inspector from CSS centering to absolute pixel coords, capturing parent offset
+  function anchorToPixels() {
+    const rect = ins.getBoundingClientRect();
+    const parentEl = ins.offsetParent || document.documentElement;
+    dragParentRect = parentEl.getBoundingClientRect();
+    // Suppress the transform transition so removing translateX(-50%) doesn't animate
+    ins.style.transition = "max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1)";
+    ins.style.transform = "none";
+    ins.style.bottom = "auto";
+    ins.style.left = (rect.left - dragParentRect.left) + "px";
+    ins.style.top  = (rect.top  - dragParentRect.top)  + "px";
+    return rect;
+  }
+
+  // Dragging via header
   head.onmousedown = (e) => {
     if (e.target.closest('button')) return;
     isDragging = true;
-    
-    // Smooth grab: calculate cursor distance from element top-left
-    const rect = ins.getBoundingClientRect();
+    const rect = anchorToPixels();
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
-    
-    // Switch from auto/centered styles to absolute pixels for movement
-    ins.style.transform = "none";
-    ins.style.bottom = "auto";
-    ins.style.left = rect.left + "px";
-    ins.style.top = rect.top + "px";
-    
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
     e.preventDefault();
   };
 
-  // Resizing
-  let startResH = 0;
-  let startResY = 0;
-  if (resizer) {
-    resizer.onmousedown = (e) => {
-      isResizing = true;
-      const rect = ins.getBoundingClientRect();
-      offsetY = e.clientY - rect.top; // Store grab offset
+  // 8-way resize handles (created dynamically so overflow:hidden on inspector doesn't clip them)
+  const EDGES = [
+    { name: 'n',  dx:  0, dy: -1 }, { name: 's',  dx: 0,  dy:  1 },
+    { name: 'e',  dx:  1, dy:  0 }, { name: 'w',  dx: -1, dy:  0 },
+    { name: 'ne', dx:  1, dy: -1 }, { name: 'nw', dx: -1, dy: -1 },
+    { name: 'se', dx:  1, dy:  1 }, { name: 'sw', dx: -1, dy:  1 },
+  ];
+
+  const oldResizer = document.getElementById("flow-inspector-resizer");
+  if (oldResizer) oldResizer.remove();
+
+  EDGES.forEach(({ name, dx, dy }) => {
+    const h = document.createElement('div');
+    h.className = `ins-resize-handle ins-r-${name}`;
+    ins.appendChild(h);
+    h.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
       e.preventDefault();
+      isResizing = true;
+      activeEdge = { dx, dy };
+      startRect  = anchorToPixels();
+      startMouse = { x: e.clientX, y: e.clientY };
       document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
-    };
-  }
+      document.addEventListener("mouseup",   onMouseUp);
+    });
+  });
 
   function onMouseMove(e) {
     if (isDragging) {
-      ins.style.left = (e.clientX - offsetX) + "px";
-      ins.style.top = (e.clientY - offsetY) + "px";
-    } else if (isResizing) {
-      const rect = ins.getBoundingClientRect();
-      const newWidth  = Math.max(250, e.clientX - rect.left);
-      const newHeight = Math.max(32, e.clientY - offsetY); 
-      ins.style.width = newWidth + "px";
-      ins.style.height = newHeight + "px";
+      ins.style.left = (e.clientX - offsetX - dragParentRect.left) + "px";
+      ins.style.top  = (e.clientY - offsetY - dragParentRect.top)  + "px";
+    } else if (isResizing && activeEdge && startRect && startMouse) {
+      const mx = e.clientX - startMouse.x;
+      const my = e.clientY - startMouse.y;
+      const { dx, dy } = activeEdge;
+      const pr = dragParentRect;
+
+      if (dx === 1) {
+        ins.style.width = Math.max(250, startRect.width + mx) + "px";
+      } else if (dx === -1) {
+        const nw = Math.max(250, startRect.width - mx);
+        ins.style.width = nw + "px";
+        ins.style.left  = (startRect.right - nw - pr.left) + "px";
+      }
+      if (dy === 1) {
+        ins.style.height    = Math.max(80, startRect.height + my) + "px";
+        ins.style.maxHeight = "none";
+      } else if (dy === -1) {
+        const nh = Math.max(80, startRect.height - my);
+        ins.style.height    = nh + "px";
+        ins.style.maxHeight = "none";
+        ins.style.top = (startRect.bottom - nh - pr.top) + "px";
+      }
     }
   }
 
   function onMouseUp() {
-    isDragging = false;
-    isResizing = false;
+    isDragging     = false;
+    isResizing     = false;
+    activeEdge     = null;
+    startRect      = null;
+    startMouse     = null;
+    dragParentRect = null;
+    ins.style.transition = "";
     document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
+    document.removeEventListener("mouseup",   onMouseUp);
   }
 }
 window.initInspectorDraggable = initInspectorDraggable;
