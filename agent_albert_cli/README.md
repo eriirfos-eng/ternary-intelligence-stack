@@ -18,10 +18,6 @@
 
 The **Albert CLI** is the terminal-native evolution of the Albert agentic framework — now powered by the high-performance Rust-based **Ternlang Engine**.
 
-Following **Operation Strip-Mine**, the system has been aggressively hardened, expanded, and fully decoupled from proprietary dependencies.
-
-This is not a wrapper.  
-This is an **execution-grade AI runtime**.
 
 ---
 
