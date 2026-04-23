@@ -6,10 +6,6 @@
   <img src="https://img.shields.io/badge/License-BSL--1.1-lightgrey?style=for-the-badge" />
 </p>
 
-<p align="center">
-  <b>Albert CLI — Ternlang Engine</b><br/>
-</p>
-
 ---
 
 # 🧠 Albert CLI (Ternlang Engine)
@@ -17,6 +13,11 @@
 > **Sovereign. Hardened. Self-reasoning. Token-efficient.**
 
 The **Albert CLI** is the terminal-native evolution of the Albert agentic framework — now powered by the high-performance Rust-based **Ternlang Engine**.
+
+Following **Operation Strip-Mine**, the system has been aggressively hardened, expanded, and fully decoupled from proprietary dependencies.
+
+This is not a wrapper.  
+This is an **execution-grade AI runtime**.
 
 ---
 
