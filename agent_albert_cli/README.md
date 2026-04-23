@@ -1,7 +1,7 @@
 # 🧠 ALBERT  
 **Autonomous Local Brain & Execution Runtime**
 
-> Offline-first. Self-extending. Token-efficient by design.
+> Self-extending. Token-efficient by design.
 
 The era of bleeding tokens into bloated cloud APIs is over.
 
