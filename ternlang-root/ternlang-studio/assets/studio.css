@@ -1206,10 +1206,10 @@
     }
 
     .config-card {
-      background: rgba(20, 25, 35, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--bg1);
+      border: 1px solid var(--border);
       padding: 24px;
-      border-radius: 8px;
+      border-radius: 12px;
       margin-bottom: 24px;
       width: 100%;
       max-width: 800px;
@@ -1269,14 +1269,14 @@
     }
     
     .settings-input, .settings-select {
-      background: #161b22 !important;
-      border: 1px solid #30363d !important;
-      color: #c9d1d9 !important;
+      background: var(--bg) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
     }
-    
+
     .settings-input:focus, .settings-select:focus {
-      border-color: var(--amber) !important;
-      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+      border-color: var(--cyan) !important;
+      box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15) !important;
     }
 
 /* --- Dual-Tree Explorer --- */
