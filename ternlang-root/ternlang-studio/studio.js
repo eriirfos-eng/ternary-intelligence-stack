@@ -1705,6 +1705,9 @@ function clearCanvas() {
   const svg = document.getElementById("flow-svg-layer");
   if (svg) svg.innerHTML = "";
   document.getElementById("wire-handle").classList.remove("active");
+  const sl = document.getElementById("scrub-layer");
+  if (sl) { const ctx = sl.getContext("2d"); ctx.clearRect(0, 0, sl.width, sl.height); }
+  window.globalScheduledEvents = [];
 
   flowNodes = [];
   flowWires = [];
@@ -2421,6 +2424,12 @@ function deleteNode(id) {
   }
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = flowNodes.length === 0 ? "flex" : "none";
+  // Clear signal dots — deleted nodes leave orphaned scrub-layer arcs
+  if (flowNodes.length === 0) {
+    const sl = document.getElementById("scrub-layer");
+    if (sl) { const ctx = sl.getContext("2d"); ctx.clearRect(0, 0, sl.width, sl.height); }
+    window.globalScheduledEvents = [];
+  }
   updateWires();
   saveCanvasState();
 }
@@ -5605,7 +5614,7 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
     path.style.stroke = wire.customColor;
   } else {
     path.style.stroke = ""; // Use CSS defaults
-    path.style.pointerEvents = "";
+    // Do NOT reset pointerEvents here — it is set to 'stroke' on isNew and must persist
   }
 
   path.style.opacity = id === 'active-wire' ? 0.8 : (0.2 + (0.8 * confidence));
@@ -6116,6 +6125,13 @@ function onMouseUp(e) {
     }
     isDraggingNode = false;
     nodeDraggingId = null;
+    // Re-render scrub-layer so signal dots track with moved nodes
+    if (window.globalScheduledEvents && window.globalScheduledEvents.length > 0) {
+      renderScrubLayer(virtualClock);
+    } else {
+      const sl = document.getElementById("scrub-layer");
+      if (sl) { const ctx = sl.getContext("2d"); ctx.clearRect(0, 0, sl.width, sl.height); }
+    }
     saveCanvasState();
   }
 
