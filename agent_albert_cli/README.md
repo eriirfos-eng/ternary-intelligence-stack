@@ -1,77 +1,68 @@
-# 🧠 ALBERT  
-**Autonomous Local Brain & Execution Runtime**
+# Albert CLI (Ternlang Engine)
 
-> Self-extending. Token-efficient by design.
+The **Albert CLI** is the terminal-based evolution of the Albert agentic framework, now powered by the high-performance Rust-based **Ternlang Engine**. Following **Operation Strip-Mine**, the Albert node has been hardened, expanded, and fully decoupled from proprietary dependencies.
 
-The era of bleeding tokens into bloated cloud APIs is over.
+## Key Enhancements (v1.3.0+)
 
-**ALBERT** is a sovereign, local AI runtime engineered by RFI-IRFOS. Built on the **Ternary Intelligence Stack (TIS)**, it doesn’t just execute commands — it **plans, reasons, adapts, and evolves its own capabilities**.
+### 🛡️ Sovereign Security Architecture
+- **Deny-First AST Interception**: All shell commands are parsed by a native Rust interception pipeline. We proactively block command smuggling (substitution, backticks), dangerous pipes (e.g., `curl | bash`), and unauthorized system redirections before they hit the shell.
+- **Revoked Flag Access**: The LLM no longer has dynamic control over security flags like `dangerously_disable_sandbox`. Security is enforced at the policy level, neutralizing prompt injection attacks targeting the sandbox.
+- **Ternary Intelligence Stack (+1/0/-1)**: Every action is validated. 
+    - `+1 (Proceed)`: Success/Safe.
+    - ` 0 (Halt)`: Ambiguity or missing context detected; the agent pauses and prompts the user rather than hallucinating.
+    - `-1 (Retry)`: Failure; the agent self-corrects based on feedback.
 
-If your current agent needs 50,000 tokens to read a repo, that’s not scaling — that’s architectural debt.  
-**ALBERT fixes this at the root.**
+### 🌐 LLM Agnostic Core
+- **BYOK (Bring Your Own Key)**: Use the new `/auth` command to connect to any provider: **OpenAI, Anthropic, Google (Gemini), Hugging Face, AWS, Azure**, or **Ternlang**.
+- **Dynamic Resolution**: The engine automatically maps model names to their respective providers and configurations, ensuring seamless switching across the global LLM landscape.
 
----
+### 🧠 Advanced Reasoning & Memory Arsenal
+- **SequentialThinking**: Structured, multi-step reasoning that allows the agent to record and revise its internal thought chains sequentially.
+- **Memory (Knowledge Graph)**: Persistent, local-first knowledge graph that tracks entities, relations, and observations across sessions. Albert "remembers" project-specific context and logic.
+- **RepoMap**: Automated codebase navigation that generates structured maps of your project, helping the agent understand complex repositories instantly.
+- **MCP Client**: Native Support for the Model Context Protocol, allowing integration with any third-party MCP server.
 
-## ⚡ Key Capabilities
+## Overview
+This repository serves as the sovereign, local-first engine for the Ternary Intelligence Stack. It integrates a hardened agentic loop, a standardized tool harness, and sliding-window context management into a single, high-performance Rust binary.
 
-### 🧩 Native Context Compression *(“Token Killer”)*
-- Sliding-window deduplication embedded directly into the Rust I/O pipeline  
-- Eliminates redundant filesystem noise before model ingestion  
-- Converts massive outputs into compact semantic pointers  
-- Zero reprocessing when nothing changes  
+## Key Components
+- **Engine Block (`rust/`)**: The Rust-based core providing:
+  - **Hardened Autonomous Loop**: Research -> Strategy -> Execution with Ternary validation.
+  - **RTK (Rust Token Killer)**: Integrated token-optimized CLI proxy for 60-90% savings.
+  - **Multi-Provider API Client**: Agnostic LLM communication layer.
+- **Standardized Toolset**: Core tools (Bash, File Ops, Glob, Grep) + Arsenal tools (Memory, SequentialThinking, RepoMap).
 
----
+## Quickstart
+1. **Build and Install**:
+   ```bash
+   cd rust
+   cargo install --path crates/rusty-ternlang-cli --force
+   ```
+2. **Authenticate with Your Provider**:
+   ```bash
+   ternlang-cli /auth
+   ```
+3. **Initialize Repository**:
+   ```bash
+   ternlang-cli /init
+   ```
+4. **Enter the REPL**:
+   ```bash
+   ternlang-cli
+   ```
 
-### 🛠️ Auto-Skill Generation
-- Dynamically writes its own tools when capabilities are missing  
-- Supports **Rust + Python** skill generation  
-- Compiles and mounts tools via MCP (Model Context Protocol)  
-- Fully recursive feedback loop  
-
----
-
-### 🧠 Hybrid Reasoning Engine
-**ReAct + Ultraplan dual system:**
-- **ReAct (+1 / 0 / -1):** Fast iterative reasoning loop  
-- **/ultraplan:** Deep multi-step execution planning with:
-  - Risk vectors  
-  - Rollback strategies  
-  - Structural awareness  
-
----
-
-### 🌐 Deep Context Slurping
-ALBERT builds a live world model from:
-- Git diffs  
-- `.albert/ALBERT.md` directives  
-- XDG configuration layers  
-
-No blind execution. Full situational awareness.
-
----
-
-### ⚖️ Ternary Execution State
-Every action resolves to:
-- **+1 → Success**
-- **0 → Insufficient context (halts + adapts)**
-- **-1 → Failure (triggers reflection loop)**
-
-No hallucinated actions. No blind retries.
-
----
-
-## 🏛️ Architecture Overview
-
-- **Ternary Intelligence Stack (TIS)**
-- **BET VM (Binary-Encoded Ternary Virtual Machine)**
-- **MoE-13 Orchestrator (Mixture-of-Experts)**  
-- **MCP Tooling Layer**
-- **Rust-native runtime core**
+## Repository Layout
+```text
+.
+├── rust/           # High-performance, Hardened Rust Engine (Ternlang)
+│   ├── crates/
+│   │   ├── api/        # LLM Agnostic Client
+│   │   ├── runtime/    # Core Loop, Security, & Memory
+│   │   ├── tools/      # Arsenal (Memory, RepoMap, etc.)
+│   │   └── ...
+├── src/            # Legacy Python Agent source (Reference only)
+└── README.md       # This file
+```
 
 ---
-
-## ⚙️ Installation
-
-
-```bash
-cargo binstall albert-cli
+*A sovereign project of RFI-IRFOS. Standardizing high-performance, secure agentic engineering.*
