@@ -300,22 +300,31 @@ function useTracerTelemetry(wsUrl) {
 
   React.useEffect(() => {
     if (!wsUrl) return;
-    const socket = new WebSocket(wsUrl);
-    socket.onopen = () => {
-      console.log('[Tracer WS] Handshake successful.');
-      setIsConnected(true);
-    };
-    socket.onmessage = (event) => {
-      console.log('[Tracer WS] Payload:', event.data);
-      try {
-        if (event.data === 'connected') return;
-        const data = JSON.parse(event.data);
-        setTelemetry(prev => [data, ...prev].slice(0, 1000));
-      } catch (err) {}
-    };
-    socket.onclose = () => setIsConnected(false);
-    socket.onerror = () => console.error('[Tracer WS] Connection failed.');
-    return () => socket.close();
+    let socket;
+    let retryTimer;
+    let dead = false;
+
+    function connect() {
+      socket = new WebSocket(wsUrl);
+      socket.onopen = () => {
+        setIsConnected(true);
+      };
+      socket.onmessage = (event) => {
+        try {
+          if (event.data === 'connected') return;
+          const data = JSON.parse(event.data);
+          setTelemetry(prev => [data, ...prev].slice(0, 1000));
+        } catch (err) {}
+      };
+      socket.onclose = () => {
+        setIsConnected(false);
+        if (!dead) retryTimer = setTimeout(connect, 3000);
+      };
+      socket.onerror = () => {};
+    }
+
+    connect();
+    return () => { dead = true; clearTimeout(retryTimer); socket && socket.close(); };
   }, [wsUrl]);
 
   return { telemetry, isConnected, clearTelemetry: () => setTelemetry([]) };
@@ -682,7 +691,7 @@ async function renderFleetView() {
   const agent = localReg.find(a => a.id === window.selectedFleetAgentId) || localReg[0];
   if (!agent) return;
   
-  const stats = fleetStats[agent.id] || { runs: Math.floor(Math.random()*100) + 1, errors: Math.floor(Math.random()*5), avgConf: 0.85 + Math.random()*0.1, latency: 120 + Math.random()*200 };
+  const stats = fleetStats[agent.id] || null;
 
   let html = `
     <div style="display: flex; height: 100%; width:100%; overflow:hidden; color:var(--text);">
@@ -750,23 +759,23 @@ async function renderFleetView() {
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 24px 32px;">
           <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
             <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Executions (24h)</div>
-            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace;">${stats.runs}</div>
-            <div style="font-size:10px; color:var(--green); margin-top:4px;">↑ 12% vs baseline</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace;">${stats ? stats.runs : '—'}</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px;">${stats ? 'recorded runs' : 'no data yet'}</div>
           </div>
           <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
             <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Success Rate</div>
-            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--green);">${((stats.runs - stats.errors)/stats.runs * 100).toFixed(1)}%</div>
-            <div style="font-size:10px; color:var(--muted); margin-top:4px;">${stats.errors} rejections</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--green);">${stats ? ((stats.runs - stats.errors)/stats.runs * 100).toFixed(1)+'%' : '—'}</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px;">${stats ? stats.errors+' rejections' : 'run a simulation first'}</div>
           </div>
           <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
             <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Avg Confidence</div>
-            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--cyan);">${stats.avgConf.toFixed(3)}</div>
-            <div style="font-size:10px; color:var(--muted); margin-top:4px;">Stochastic Drift: 0.002</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--cyan);">${stats ? stats.avgConf.toFixed(3) : '—'}</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px;">${stats ? 'from completed runs' : 'no data yet'}</div>
           </div>
           <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:16px;">
             <div style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Latency (p95)</div>
-            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace;">${stats.latency.toFixed(0)}ms</div>
-            <div style="font-size:10px; color:var(--amber); margin-top:4px;">LLM overhead: 84%</div>
+            <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace;">${stats ? stats.latency.toFixed(0)+'ms' : '—'}</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px;">${stats ? 'measured' : 'no data yet'}</div>
           </div>
         </div>
 
@@ -779,15 +788,8 @@ async function renderFleetView() {
                 <span style="font-size:9px; padding:2px 6px; background:var(--bg2); border-radius:4px; color:var(--muted2);">FILTER: ALL EVENTS</span>
               </div>
             </div>
-            <div style="flex:1; background:#000; border:1px solid var(--border2); border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:11px; padding:16px; overflow-y:auto; color:#a5f3fc;">
-              <div style="color:var(--muted2); margin-bottom:8px;">// Initializing stream for agent ${agent.id}...</div>
-              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--green)">SYSTEM</span> Execution sequence started (ID: ex_82f1)</div>
-              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--cyan)">NODE</span> Sensor Input → emitted signal [+1, c:1.0]</div>
-              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--cyan)">EDGE</span> Condition passed [affirm]</div>
-              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--amber)">NODE</span> Safety Guard → executing WASM...</div>
-              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--cyan)">NODE</span> Safety Guard → result [0, c:0.88] (TEND)</div>
-              <div style="margin-bottom:4px;"><span style="color:var(--muted)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--green)">SYSTEM</span> Sequence complete (Latency: 42ms)</div>
-              <div style="color:var(--cyan); border-left:2px solid var(--cyan); padding-left:8px; margin:12px 0;">New execution incoming...</div>
+            <div style="flex:1; background:#000; border:1px solid var(--border2); border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:11px; padding:16px; overflow-y:auto; color:#a5f3fc;" id="fleet-stream-${agent.id}">
+              <div style="color:var(--muted2);">// Run a simulation in the Lab to see live events here.</div>
             </div>
           </div>
 
@@ -803,7 +805,7 @@ async function renderFleetView() {
                 <div style="position:absolute; bottom:8px; right:8px; font-size:9px; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">REAL-TIME HEATMAP</div>
               </div>
               <div style="padding:12px; font-size:10px; color:var(--muted);">
-                Current behavioral drift: <span style="color:var(--green)">0.01% (STABLE)</span>
+                Snapshot updates after each simulation run.
               </div>
             </div>
 
@@ -811,15 +813,8 @@ async function renderFleetView() {
               <h3 style="font-size:12px; font-weight:700; color:var(--red); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
                 <i data-lucide="alert-triangle" style="width:14px;"></i> System Alerts
               </h3>
-              <div style="font-size:11px; color:var(--text); line-height:1.5;">
-                <div style="margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid rgba(239, 68, 68, 0.1);">
-                  <strong>Confidence Collapse</strong><br>
-                  <span style="color:var(--muted)">LLM Bridge "Analyst" dropped below 0.40 threshold 3 times in last hour.</span>
-                </div>
-                <div>
-                  <strong>Version Mismatch</strong><br>
-                  <span style="color:var(--muted)">Local registry differs from remote TIS deployment by 2 commits.</span>
-                </div>
+              <div style="font-size:11px; color:var(--muted); line-height:1.5;">
+                No alerts. Alerts will appear here when agent thresholds are breached during simulation.
               </div>
             </div>
           </div>
@@ -1142,9 +1137,8 @@ function traceCausalPath(targetNodeId) {
     document.querySelectorAll('.causal-path, .causal-node, .dimmed').forEach(el => {
       el.classList.remove('causal-path','causal-node','dimmed');
     });
-    document.getElementById("flow-canvas").removeEventListener("mousedown", clearTrace);
   };
-  document.getElementById("flow-canvas").addEventListener("mousedown", clearTrace);
+  document.getElementById("flow-canvas").addEventListener("mousedown", clearTrace, { once: true });
 }
 window.traceCausalPath = traceCausalPath;
 
@@ -2428,6 +2422,7 @@ function deleteNode(id) {
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = flowNodes.length === 0 ? "flex" : "none";
   updateWires();
+  saveCanvasState();
 }
 window.deleteNode = deleteNode;
 
@@ -3787,7 +3782,8 @@ function updateWireStyles() {
     const wire = flowWires.find(w => w.id === id);
     if (!wire) return;
     el.classList.remove('cond-affirm','cond-tend','cond-reject','cond-all');
-    if (wire.condition && wire.condition !== "all") el.classList.add('cond-' + wire.condition);
+    const condClass = (String(wire.condition) === "1" ? "affirm" : (String(wire.condition) === "0" ? "tend" : (String(wire.condition) === "-1" ? "reject" : String(wire.condition).replace("!",""))));
+    if (wire.condition && wire.condition !== "all") el.classList.add('cond-' + condClass);
     if (id === selectedWireId) el.classList.add('selected-wire');
   });
 }
@@ -4881,34 +4877,39 @@ async function executeLLMNode(node, inSignal) {
 
   logInspector(node.name, `🌐 Calling LLM [${protocol}:${modelId || 'default'}] (${estimatedTokens} tk)…`);
 
+  const llmSecrets = getTernflowSecrets();
+  const resolvedKey = llmSecrets[protocol] || llmSecrets['google'] || node.props.api_key || "";
+
   try {
+    const llmStart = Date.now();
     const response = await fetch('/api/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        source: `// LLM Bridge Proxy\nfn main() -> trit { return hold; }`, // Stub for security compatibility
-        sql: node.props.sql_query || "", // Task 4: Injection
+        source: `// LLM Bridge Proxy\nfn main() -> trit { return hold; }`,
+        sql: node.props.sql_query || "",
         llm_config: {
           system,
           prompt: finalPrompt,
           protocol,
           model_id: modelId,
-          api_key: localStorage.getItem("ternstudio-gemini-key") || node.props.api_key || "",
+          api_key: resolvedKey,
           base_url: node.props.base_url,
-          temperature: 0.1,
-          max_tokens: 150
+          temperature: node.props.temperature ?? 0.1,
+          max_tokens: 512
         }
       })
     });
+    const llmLatency = Date.now() - llmStart;
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const r = await response.json();
 
     const txt = String(r.result || "").toLowerCase();
-    
+
     // Mapping response text to trit with TAP Confidence
     let val = 0;
     let confidence = 0.5; // Default to 'Tend' (Ambiguity)
-    
+
     // Pattern detection for TAP Confidence
     if (txt.includes("confidence: 1.0") || txt.includes("conf: 1.0") || txt.includes("score: 1.0")) {
       confidence = 1.0;
@@ -4934,7 +4935,8 @@ async function executeLLMNode(node, inSignal) {
         event_type: 'LLM_Bridge_Reasoning',
         signal_in: inSignal,
         signal_out: val,
-        latency_ms: 500,
+        latency_ms: llmLatency,
+        sparse_dropped: false,
         reasoning: r.result || "No reasoning path returned."
       }
     }));
@@ -5586,23 +5588,30 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
 
   let cls = "flow-wire";
   if (signal !== undefined) cls += ` active-${signal === 1 ? '1' : (signal === -1 ? 'n1' : '0')}`;
-  if (wire && wire.condition && wire.condition !== "all") cls += " cond-" + wire.condition.replace("!","");
+  if (wire && wire.condition && wire.condition !== "all") {
+    const condClass = (String(wire.condition) === "1" ? "affirm" : (String(wire.condition) === "0" ? "tend" : (String(wire.condition) === "-1" ? "reject" : String(wire.condition).replace("!",""))));
+    cls += " cond-" + condClass;
+  }
   if (id === selectedWireId) cls += " selected-wire";
   path.setAttribute("class", cls);
 
-  if (wire && wire.customColor && signal === undefined) {
+  if (id === 'active-wire') {
+    path.style.pointerEvents = "none";
+    path.style.stroke = "var(--cyan)";
+    path.style.strokeWidth = "3";
+    path.style.strokeDasharray = "5 3";
+    path.style.opacity = "0.8";
+  } else if (wire && wire.customColor && signal === undefined) {
     path.style.stroke = wire.customColor;
   } else {
     path.style.stroke = ""; // Use CSS defaults
+    path.style.pointerEvents = "";
   }
 
-  path.style.opacity = 0.2 + (0.8 * confidence);
-  path.style.strokeWidth = 1.5 + (2.5 * confidence);
+  path.style.opacity = id === 'active-wire' ? 0.8 : (0.2 + (0.8 * confidence));
+  path.style.strokeWidth = id === 'active-wire' ? 3 : (1.5 + (2.5 * confidence));
+
   path.style.transition = "opacity 0.3s, stroke-width 0.3s, stroke 0.3s";
-
-  if (id === 'active-wire') {
-    path.style.pointerEvents = 'none';
-  }
 
   if (isNew && id !== 'active-wire' && wire) {
     path.style.pointerEvents = 'stroke';
@@ -5646,7 +5655,8 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
       const canvas = document.getElementById("flow-canvas");
       if (canvas) canvas.appendChild(badge);
     }
-    badge.className = "edge-badge" + (wire.condition && wire.condition !== "all" ? " cond-" + wire.condition.replace("!","") : "");
+    const condClass = (wire.condition && wire.condition !== "all" ? " cond-" + (String(wire.condition) === "1" ? "affirm" : (String(wire.condition) === "0" ? "tend" : (String(wire.condition) === "-1" ? "reject" : String(wire.condition).replace("!","")))) : "");
+    badge.className = "edge-badge" + condClass;
     badge.style.left = midX + "px";
     badge.style.top  = midY + "px";
     badge.textContent = wire.label;
@@ -6015,24 +6025,34 @@ function onMouseDown(e) {
     };
     isDraggingNode = false; 
     nodeDraggingId = null; // Explicitly clear any node dragging context
+    updateWires(); // Force immediate draw of preview wire
   } else {
     // Clear state if clicking empty space (prevent stuck wires)
     activeWire = null;
+    updateWires();
   }
 }
 document.addEventListener('mousedown', onMouseDown);
 window.onMouseDown = onMouseDown;
 
 function onMouseMove(e) {
-  const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
+  const wrap = document.getElementById("flow-canvas-wrap");
+  if (!wrap) return;
+  const wrapRect = wrap.getBoundingClientRect();
 
   if (activeWire) {
     activeWire.end = screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top);
 
     // Magnetism: highlight nearest valid input port
-    document.querySelectorAll('.flow-port-in').forEach(p => p.classList.remove('magnet'));
+    document.querySelectorAll('.flow-port').forEach(p => p.classList.remove('magnet'));
     let nearest = null, minDist = 40;
-    document.querySelectorAll('.flow-port-in').forEach(p => {
+    document.querySelectorAll('.flow-port').forEach(p => {
+      // Don't magnetize to same node or same port type
+      const toNode = p.closest('.flow-node');
+      if (!toNode || toNode.id === activeWire.fromId) return;
+      const targetIsOutput = p.classList.contains('flow-port-out');
+      if (activeWire.fromIsOutput === targetIsOutput) return;
+
       const pr = p.getBoundingClientRect();
       const d = Math.sqrt(Math.pow(e.clientX - (pr.left + pr.width/2), 2) + Math.pow(e.clientY - (pr.top + pr.height/2), 2));
       if (d < minDist) { minDist = d; nearest = p; }
@@ -6074,8 +6094,10 @@ function onMouseUp(e) {
         const selNode = flowNodes.find(fn => fn.id === sid);
         const selEl = document.getElementById(sid);
         if (selNode && selEl) {
-          selNode.x = parseFloat(selEl.style.left) + (parseFloat(selEl.style.width)||180)/2; // logic is center-based
-          selNode.y = parseFloat(selEl.style.top) + (parseFloat(selEl.style.height)||80)/2;
+          const nw = selNode.type === 'artifact' ? 300 : (selNode.type === 'moe13' ? 320 : 180);
+          const nh = selNode.type === 'artifact' ? 200 : (selNode.type === 'moe13' ? 360 : 80);
+          selNode.x = parseFloat(selEl.style.left) + nw/2;
+          selNode.y = parseFloat(selEl.style.top) + nh/2;
         }
       });
     } else if (nodeDraggingId) {
@@ -6113,6 +6135,14 @@ function onMouseUp(e) {
             const toId   = activeWire.fromIsOutput ? toNode.id : activeWire.fromId;
             
             const condition = (activeWire.routingValue === "all") ? "all" : activeWire.routingValue;
+            
+            // Prevent duplicate wires between the same ports with the same condition
+            const exists = flowWires.some(w => w.fromId === fromId && w.toId === toId && String(w.condition) === String(condition));
+            if (exists) {
+              showToast("Connection already exists", "info");
+              return;
+            }
+
             const label = condition === 1 ? "+1 Affirm" : (condition === -1 ? "-1 Reject" : (condition === 0 ? "0 Neutral" : "All signals"));
 
             flowWires.push({
@@ -6123,11 +6153,7 @@ function onMouseUp(e) {
 
             const fromNode = flowNodes.find(n => n.id === fromId);
             if (fromNode && fromNode.type === 'artifact') collapseArtifactToStub(fromId);
-
-            if (simulationAborted && !simulationRunning) {
-               logInspector("SYSTEM", "🔌 Continuation Detected — Awaiting Play.");
-               // resumeSimulationFrom(toId); // Removed auto-trigger to fix bug
-            }          }
+          }
         }
       } else if (activeWire.fromIsOutput) {
         // EDGE-DRIVEN EVOLUTION
@@ -6137,7 +6163,6 @@ function onMouseUp(e) {
         const currentPos = screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top);
         const dist = Math.sqrt(Math.pow(currentPos.x - activeWire.start.x, 2) + Math.pow(currentPos.y - activeWire.start.y, 2));
 
-        // REQUIREMENT: Must be an artifact in 'extend' state, and moved enough to distinguish from a click
         if (sourceNode && sourceNode.type === 'artifact' && sourceNode.props.state === 'extend' && dist > 40) {
            const dropX = activeWire.end.x;
            const dropY = activeWire.end.y;
@@ -6155,7 +6180,6 @@ function onMouseUp(e) {
                  displayPayload = jsyaml.dump(parsed);
               }
            } catch (e) {
-              console.warn("YAML Parse failed, falling back to legacy injection", e);
               displayPayload = "/*\n" + payloadRaw + "\n*/";
            }
 
@@ -6170,11 +6194,7 @@ function onMouseUp(e) {
                 id: wireId, fromId: sourceNode.id, toId: newNodeId,
                 signal: 0, confidence: 1.0, condition: "all", transform: "pass", priority: 5, label: "EVOLUTION"
               });              
-              // Automatically return to 'lock' state to prevent accidental multiple spawns
               setArtifactState(sourceNode.id, 'lock');
-              
-              updateWires();
-              saveCanvasState();
               logInspector("SYSTEM", "🧬 Evolution Triggered — New node ready.");
            }
         }
