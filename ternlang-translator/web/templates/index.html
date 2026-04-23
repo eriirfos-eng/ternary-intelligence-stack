@@ -42,20 +42,18 @@
     }
     
     .dark {
-      /* State +1: Dark Mode */
-      --bg-canvas: #0C1322;
-      --bg-panel: #111622;
-      --border-color: #1E2536;
-      --bg-editor: #05070A;
-      --text-main: #FFFFFF;
-      --text-sub: #F8FAFC; 
-      --teal-dim: rgba(0, 212, 170, 0.15);
+      /* State +1: Dark Mode — matched to TernStudio --bg / --bg1 / --border */
+      --bg-canvas: #0f172a;
+      --bg-panel: #1e293b;
+      --border-color: #334155;
+      --bg-editor: #0f172a;
+      --text-main: #f1f5f9;
+      --text-sub: #cbd5e1;
+      --teal-dim: rgba(0, 212, 170, 0.12);
     }
 
     body {
       background-color: var(--bg-canvas);
-      background-image: radial-gradient(var(--border-color) 1.5px, transparent 1.5px);
-      background-size: 24px 24px;
       color: var(--text-main);
       transition: background-color 0.2s ease, color 0.2s ease;
     }
@@ -90,22 +88,12 @@
     }
   </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+<body class="antialiased min-h-screen flex flex-col p-0">
 
-  <div class="max-w-7xl w-full">
-    <!-- Header -->
-    <header class="text-center mb-10 relative">
-      <div class="inline-block px-3 py-1 mb-4 rounded-full border border-studio_border bg-studio_panel font-mono text-t_teal text-[10px] tracking-widest uppercase shadow-sm">
-        Local Tool &middot; Ternary Intelligence Stack
-      </div>
-      <h1 class="text-4xl md:text-5xl font-bold text-t_text mb-3 tracking-tight">
-        Tern<span class="text-t_teal">Translator</span>
-      </h1>
-      <p class="text-t_subtext text-sm md:text-base">Migrate logic cross-domain between binary architectures and balanced ternary.</p>
-    </header>
+  <div class="w-full h-screen flex flex-col">
 
     <!-- Main Workspace -->
-    <div class="glass-panel rounded-xl overflow-hidden flex flex-col">
+    <div class="glass-panel rounded-none flex flex-col flex-1 min-h-0">
       
       <!-- Top Toolbar -->
       <div class="flex flex-col md:flex-row border-b border-studio_border bg-studio_panel px-5 py-3 items-center justify-between gap-4">
@@ -150,8 +138,8 @@
         </div>
       </div>
 
-      <!-- Code Areas with enforced min-h-0 for proper flex scrolling -->
-      <div class="grid md:grid-cols-2 h-[550px] divide-y md:divide-y-0 md:divide-x divide-studio_border min-h-0">
+      <!-- Code Areas -->
+      <div class="grid md:grid-cols-2 flex-1 divide-y md:divide-y-0 md:divide-x divide-studio_border min-h-0" style="height: calc(100vh - 110px)">
         
         <!-- Input -->
         <div class="flex flex-col relative group min-h-0">
@@ -179,9 +167,6 @@
       </div>
     </div>
 
-    <footer class="mt-8 text-center text-t_subtext font-mono text-[10px] uppercase tracking-[0.2em]">
-      &copy; 2026 RFI-IRFOS &middot; Balanced Ternary Systems &middot; v2.0.0
-    </footer>
   </div>
 
   <script>

@@ -4503,50 +4503,101 @@ pub async fn taas_infer(
 struct LlmConfig {
     system: String,
     prompt: String,
-    _protocol: String,
+    protocol: String,
     model_id: String,
     api_key: Option<String>,
-    _base_url: Option<String>,
+    base_url: Option<String>,
     temperature: Option<f32>,
     max_tokens: Option<u32>,
 }
 
-async fn call_gemini(config: &LlmConfig) -> Result<String, String> {
-    let api_key = config.api_key.as_ref().ok_or("Gemini API Key missing")?;
-    let model = if config.model_id.is_empty() { "gemini-1.5-flash" } else { &config.model_id };
-    let url = format!("https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}", model, api_key);
-
+async fn call_llm(config: &LlmConfig) -> Result<String, String> {
     let client = reqwest::Client::new();
-    let payload = json!({
-        "contents": [{
-            "parts": [
-                { "text": format!("SYSTEM: {}\n\nUSER: {}", config.system, config.prompt) }
-            ]
-        }],
-        "generationConfig": {
-            "temperature": config.temperature.unwrap_or(0.1),
-            "maxOutputTokens": config.max_tokens.unwrap_or(100)
+    let temp = config.temperature.unwrap_or(0.1);
+    let max_tok = config.max_tokens.unwrap_or(512);
+    let api_key = config.api_key.as_deref().unwrap_or("");
+
+    match config.protocol.as_str() {
+        "google" | "gemini" | "" => {
+            if api_key.is_empty() { return Err("Google API key not set in vault".into()); }
+            let model = if config.model_id.is_empty() { "gemini-1.5-flash" } else { &config.model_id };
+            let url = format!(
+                "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+                model, api_key
+            );
+            let payload = json!({
+                "contents": [{ "parts": [{ "text": format!("SYSTEM: {}\n\nUSER: {}", config.system, config.prompt) }] }],
+                "generationConfig": { "temperature": temp, "maxOutputTokens": max_tok }
+            });
+            let resp = client.post(&url).json(&payload).send().await
+                .map_err(|e| format!("Network error: {}", e))?;
+            if !resp.status().is_success() {
+                let s = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Gemini error ({}): {}", s, body));
+            }
+            let data: Value = resp.json().await.map_err(|e| format!("JSON error: {}", e))?;
+            data["candidates"][0]["content"]["parts"][0]["text"]
+                .as_str().map(str::to_string)
+                .ok_or_else(|| "Invalid Gemini response format".into())
         }
-    });
 
-    let resp = client.post(url)
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| format!("Network error: {}", e))?;
+        "openai" => {
+            if api_key.is_empty() { return Err("OpenAI API key not set in vault".into()); }
+            let model = if config.model_id.is_empty() { "gpt-4o-mini" } else { &config.model_id };
+            let base = config.base_url.as_deref().unwrap_or("https://api.openai.com");
+            let url = format!("{}/v1/chat/completions", base.trim_end_matches('/'));
+            let payload = json!({
+                "model": model,
+                "messages": [
+                    { "role": "system", "content": config.system },
+                    { "role": "user",   "content": config.prompt }
+                ],
+                "temperature": temp,
+                "max_tokens": max_tok
+            });
+            let resp = client.post(&url)
+                .header("Authorization", format!("Bearer {}", api_key))
+                .json(&payload).send().await
+                .map_err(|e| format!("Network error: {}", e))?;
+            if !resp.status().is_success() {
+                let s = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("OpenAI error ({}): {}", s, body));
+            }
+            let data: Value = resp.json().await.map_err(|e| format!("JSON error: {}", e))?;
+            data["choices"][0]["message"]["content"]
+                .as_str().map(str::to_string)
+                .ok_or_else(|| "Invalid OpenAI response format".into())
+        }
 
-    if !resp.status().is_success() {
-        let status = resp.status();
-        let err_body = resp.text().await.unwrap_or_default();
-        return Err(format!("Gemini API error ({}): {}", status, err_body));
+        "anthropic" => {
+            if api_key.is_empty() { return Err("Anthropic API key not set in vault".into()); }
+            let model = if config.model_id.is_empty() { "claude-haiku-4-5-20251001" } else { &config.model_id };
+            let payload = json!({
+                "model": model,
+                "max_tokens": max_tok,
+                "system": config.system,
+                "messages": [{ "role": "user", "content": config.prompt }]
+            });
+            let resp = client.post("https://api.anthropic.com/v1/messages")
+                .header("x-api-key", api_key)
+                .header("anthropic-version", "2023-06-01")
+                .json(&payload).send().await
+                .map_err(|e| format!("Network error: {}", e))?;
+            if !resp.status().is_success() {
+                let s = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                return Err(format!("Anthropic error ({}): {}", s, body));
+            }
+            let data: Value = resp.json().await.map_err(|e| format!("JSON error: {}", e))?;
+            data["content"][0]["text"]
+                .as_str().map(str::to_string)
+                .ok_or_else(|| "Invalid Anthropic response format".into())
+        }
+
+        other => Err(format!("Unknown protocol '{}'. Supported: google, openai, anthropic", other)),
     }
-
-    let data: Value = resp.json().await.map_err(|e| format!("JSON error: {}", e))?;
-    let text = data["candidates"][0]["content"]["parts"][0]["text"]
-        .as_str()
-        .ok_or("Invalid response format from Gemini")?;
-
-    Ok(text.to_string())
 }
 
 // ─── /api/run — execute arbitrary .tern source (TernStudio) ──────────────────
@@ -4565,11 +4616,11 @@ async fn run_program(
         .map(|s| s.to_string())
         .or_else(|| headers.get("x-ternlang-key").and_then(|v| v.to_str().ok()).map(|s| s.to_string()));
 
-    // Task 2: Gemini API Integration
-    let mut llm_result = None;
+    // LLM Bridge — protocol-routed (google/openai/anthropic)
+    let mut llm_result: Option<String> = None;
     if let Some(config_val) = body.get("llm_config") {
         if let Ok(config) = serde_json::from_value::<LlmConfig>(config_val.clone()) {
-            match call_gemini(&config).await {
+            match call_llm(&config).await {
                 Ok(text) => llm_result = Some(text),
                 Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "status": "error", "error": e }))).into_response(),
             }
@@ -4726,6 +4777,7 @@ async fn run_program(
                 "output": output,
                 "registers": [],
                 "bytecode_bytes": bytecode_len,
+                "result": llm_result,
             }))).into_response()
         }
     }
@@ -4823,11 +4875,21 @@ async fn tracer_ws_handler(
 }
 
 async fn handle_tracer_socket(mut socket: WebSocket, state: Arc<AppState>) {
-    let mut rx = state.tracer_tx.subscribe();
-    
-    // Send a welcome message or initial state if needed
+    // Snapshot history synchronously (guard dropped before first await)
+    let history_snapshot: Vec<String> = {
+        let history = state.telemetry_history.read().unwrap();
+        history.iter().map(|e| serde_json::to_string(e).unwrap_or_default()).collect()
+    };
+
+    for text in history_snapshot {
+        if socket.send(Message::Text(text.into())).await.is_err() {
+            return;
+        }
+    }
+
     let _ = socket.send(Message::Text("connected".into())).await;
 
+    let mut rx = state.tracer_tx.subscribe();
     while let Ok(msg) = rx.recv().await {
         let text = serde_json::to_string(&msg).unwrap_or_default();
         if socket.send(Message::Text(text.into())).await.is_err() {
