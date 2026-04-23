@@ -8,7 +8,6 @@
 
 <p align="center">
   <b>Albert CLI — Ternlang Engine</b><br/>
-  <i>Operation Strip-Mine Edition</i>
 </p>
 
 ---
