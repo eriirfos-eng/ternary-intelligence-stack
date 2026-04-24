@@ -2868,9 +2868,8 @@ const NodePanelController = {
         <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" title="Preview Color">
+            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" onchange="updateNodeColor('${node.id}', this.value)" title="Custom Color">
             <code id="color-hex-${node.id}" style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
-            <button class="btn-pill" style="padding:0 8px; height:22px; font-size:10px; background:var(--cyan); color:var(--bg1);" onclick="updateNodeColor('${node.id}', document.getElementById('color-pick-${node.id}').value)">Apply</button>
           </div>
         </div>
         <div style="display:flex; gap:6px;">
@@ -2984,9 +2983,8 @@ const NodePanelController = {
         <div style="display:flex; flex-direction:column; gap:4px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" title="Preview Color">
+            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" onchange="updateNodeColor('${node.id}', this.value)" title="Custom Color">
             <code id="color-hex-${node.id}" style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
-            <button class="btn-pill" style="padding:0 8px; height:22px; font-size:10px; background:var(--cyan); color:var(--bg1);" onclick="updateNodeColor('${node.id}', document.getElementById('color-pick-${node.id}').value)">Apply</button>
           </div>
         </div>
         <div style="display:flex; gap:6px;">
@@ -3154,8 +3152,7 @@ const EdgePanelController = {
         <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Wire Color</div>
         <div style="display:flex; align-items:center; gap:8px;">
           <code id="color-hex-${wire.id}" style="font-size:10px; color:var(--muted2);">${customColor}</code>
-          <input type="color" id="color-pick-${wire.id}" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="previewWireColor('${wire.id}', this.value)" title="Preview Wire Color">
-          <button class="btn-pill" style="padding:0 8px; height:20px; font-size:10px; background:var(--cyan); color:var(--bg1);" onclick="updateWireColor('${wire.id}', document.getElementById('color-pick-${wire.id}').value)">Apply</button>
+          <input type="color" id="color-pick-${wire.id}" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="previewWireColor('${wire.id}', this.value)" onchange="updateWireColor('${wire.id}', this.value)" title="Custom Wire Color">
         </div>
       </div>
 
