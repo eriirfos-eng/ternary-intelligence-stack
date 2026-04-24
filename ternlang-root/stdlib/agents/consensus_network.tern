@@ -1,0 +1,43 @@
+// stdlib/agents/consensus_network.tern
+// Demonstrates: Consensus network pattern.
+// Tier: 1 — Open Core
+
+agent Voter {
+    fn handle(msg: trit) -> trit {
+        return msg;
+    }
+}
+
+agent ConsensusNetwork {
+    fn handle(msg: trit) -> trit {
+        let v1: agentref = spawn Voter;
+        let v2: agentref = spawn Voter;
+        let v3: agentref = spawn Voter;
+
+        send v1 msg;
+        send v2 msg;
+        send v3 msg;
+
+        let r1: trit = await v1;
+        let r2: trit = await v2;
+        let r3: trit = await v3;
+
+        if r1 == r2 { return r1; }
+        if r1 == r3 { return r1; }
+        if r2 == r3 { return r2; }
+        
+        return hold;
+    }
+}
+
+fn main() -> trit {
+    let network: agentref = spawn ConsensusNetwork;
+    
+    send network affirm;
+    let res: trit = await network;
+    
+    if res == affirm {
+        return affirm;
+    }
+    return reject;
+}
