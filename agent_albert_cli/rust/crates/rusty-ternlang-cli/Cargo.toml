@@ -1,26 +1,30 @@
 [package]
-name = "rusty-ternlang-cli"
+name = "albert"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Albert — the sovereign AI development CLI for the Ternary Intelligence Stack"
+keywords = ["ai", "cli", "llm", "agent", "ternary"]
+categories = ["command-line-utilities", "development-tools"]
 
 [[bin]]
-name = "ternlang-cli"
+name = "albert"
 path = "src/main.rs"
 
 [dependencies]
-api = { path = "../api" }
-commands = { path = "../commands" }
-compat-harness = { path = "../compat-harness" }
+api = { package = "albert-api", path = "../api", version = "0.1.0" }
+commands = { package = "albert-commands", path = "../commands", version = "0.1.0" }
+compat-harness = { package = "albert-compat", path = "../compat-harness", version = "0.1.0" }
 crossterm = "0.28"
 pulldown-cmark = "0.13"
 rustyline = "15"
-runtime = { path = "../runtime" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.0" }
 serde_json = "1"
 syntect = "5"
 tokio = { version = "1", features = ["rt-multi-thread", "time"] }
-tools = { path = "../tools" }
+tools = { package = "albert-tools", path = "../tools", version = "0.1.0" }
 dialoguer = "0.12.0"
 console = "0.15"
 indicatif = "0.17"
