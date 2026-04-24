@@ -35,7 +35,7 @@ impl From<ConfigError> for PromptBuildError {
 }
 
 pub const SYSTEM_PROMPT_DYNAMIC_BOUNDARY: &str = "__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__";
-pub const FRONTIER_MODEL_NAME: &str = "Ternlang Opus 4.6";
+pub const FRONTIER_MODEL_NAME: &str = "Albert";
 const MAX_INSTRUCTION_FILE_CHARS: usize = 4_000;
 const MAX_TOTAL_INSTRUCTION_CHARS: usize = 12_000;
 
