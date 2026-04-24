@@ -670,6 +670,9 @@
 
     <!-- Zoom indicator -->
     <div id="zoom-indicator">
+      <button onclick="undoStep()" title="Undo (Ctrl+Z)" style="font-size:13px;">↩</button>
+      <button onclick="redoStep()" title="Redo (Ctrl+Y)" style="font-size:13px;">↪</button>
+      <div style="width:1px; background:var(--border2); height:16px; margin:0 2px;"></div>
       <button onclick="zoomStep(-1)" title="Zoom out">−</button>
       <span id="zoomLabel">100%</span>
       <button onclick="zoomStep(1)" title="Zoom in">+</button>
@@ -1154,5 +1157,95 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
 <script type="module" src="/studio.js"></script>
+
+<!-- Albert F6 floating panel -->
+<div id="albert-panel" style="
+  display:none; position:fixed; z-index:9999;
+  width:360px; min-height:240px;
+  background:var(--bg1); border:1px solid var(--cyan);
+  border-radius:10px; box-shadow:0 0 24px rgba(6,182,212,0.18);
+  font-family:'JetBrains Mono',monospace; overflow:hidden;
+  top:120px; left:calc(50% - 180px);
+">
+  <div id="albert-panel-drag" style="
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 12px; background:rgba(6,182,212,0.08);
+    border-bottom:1px solid var(--border2); cursor:grab; user-select:none;
+  ">
+    <div style="display:flex; align-items:center; gap:8px; color:var(--cyan); font-size:12px; font-weight:700;">
+      <span style="font-size:14px;">🧠</span> ALBERT CLI
+      <span style="font-size:9px; color:var(--muted2); font-weight:400; padding:2px 6px; border:1px solid var(--border2); border-radius:4px;">F6</span>
+    </div>
+    <button onclick="document.getElementById('albert-panel').style.display='none'" style="
+      background:none; border:none; color:var(--muted2); cursor:pointer; font-size:16px; line-height:1;
+    ">×</button>
+  </div>
+  <div style="padding:16px 14px 8px;">
+    <div id="albert-output" style="
+      min-height:120px; max-height:320px; overflow-y:auto;
+      font-size:11px; color:var(--text); line-height:1.7;
+      margin-bottom:10px;
+    ">
+      <div style="color:var(--cyan); margin-bottom:6px;">Albert CLI — canvas co-pilot mode</div>
+      <div style="color:var(--muted2); font-size:10px;">Local agent integration coming soon.</div>
+      <div style="color:var(--muted2); font-size:10px;">This panel will let you prompt Albert directly from the canvas — create nodes, wire flows, and iterate from a single prompt.</div>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <input id="albert-input" type="text" placeholder="Ask Albert anything…" style="
+        flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:6px;
+        color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px;
+        padding:6px 10px; outline:none;
+      " onkeydown="if(event.key==='Enter') albertSend()">
+      <button onclick="albertSend()" style="
+        background:var(--cyan); color:var(--bg1); border:none; border-radius:6px;
+        padding:6px 12px; font-family:'JetBrains Mono',monospace; font-size:11px;
+        font-weight:700; cursor:pointer;
+      ">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Albert panel drag
+(function() {
+  const panel = document.getElementById('albert-panel');
+  const drag  = document.getElementById('albert-panel-drag');
+  if (!drag || !panel) return;
+  let ox = 0, oy = 0, dragging = false;
+  drag.addEventListener('mousedown', e => {
+    dragging = true;
+    ox = e.clientX - panel.offsetLeft;
+    oy = e.clientY - panel.offsetTop;
+    drag.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    panel.style.left = (e.clientX - ox) + 'px';
+    panel.style.top  = (e.clientY - oy) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; drag.style.cursor = 'grab'; });
+})();
+
+function albertSend() {
+  const input = document.getElementById('albert-input');
+  const output = document.getElementById('albert-output');
+  if (!input || !output || !input.value.trim()) return;
+  const msg = input.value.trim();
+  input.value = '';
+  output.innerHTML += `<div style="color:var(--text); margin-top:6px;"><span style="color:var(--cyan);">you →</span> ${msg}</div>`;
+  output.innerHTML += `<div style="color:var(--muted2); margin-top:2px; font-size:10px;">Albert CLI integration not yet live. Stay tuned.</div>`;
+  output.scrollTop = output.scrollHeight;
+}
+
+window.toggleAlbertPanel = function() {
+  const panel = document.getElementById('albert-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') {
+    const inp = document.getElementById('albert-input');
+    if (inp) setTimeout(() => inp.focus(), 50);
+  }
+};
+</script>
 </body>
 </html>
