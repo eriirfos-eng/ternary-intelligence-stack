@@ -1247,8 +1247,8 @@ impl LiveCli {
                 false
             }
             SlashCommand::Plan { task } => {
-                println!("Plan initiated: {}. I am restating requirements and assessing risks...", task.unwrap_or_else(|| "current task".to_string()));
-                false
+                self.run_plan(task.as_deref())?;
+                true
             }
             SlashCommand::Tdd { interface } => {
                 println!("TDD loop engaged for {}. Scaffold -> Failing Test -> Implement.", interface.unwrap_or_else(|| "target".to_string()));
@@ -1911,9 +1911,56 @@ Conversation context:
             
             thread::sleep(Duration::from_millis(500));
         }
-        
+
         Ok(())
     }
+
+    fn run_plan(&mut self, task: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+        let task = task.unwrap_or("").trim().to_string();
+        let task = if task.is_empty() {
+            "the current objective based on our conversation".to_string()
+        } else {
+            task
+        };
+
+        println!("\n{}", style("🗺  Generating plan...").bold().cyan());
+        let plan_prompt = format!(
+            "Create a precise numbered execution plan for: {task}\n\
+            Format each step as: N. <action>\n\
+            Include verification steps. Keep steps concrete and actionable. Max 8 steps.\n\
+            Output ONLY the numbered steps, no preamble.",
+        );
+        let plan_text = self.run_internal_prompt_text(&plan_prompt, false)?;
+
+        println!("\n{}\n{}", style("Plan").bold().green(), &plan_text);
+
+        let steps = parse_numbered_steps(&plan_text);
+        if steps.is_empty() {
+            return self.run_turn(&format!("Execute this plan for: {task}\n\n{plan_text}"));
+        }
+
+        println!("\n{} {} steps", style("Executing").bold().yellow(), steps.len());
+        for (i, step) in steps.iter().enumerate() {
+            println!("\n{} [{}/{}] {}", style("▶").bold().cyan(), i + 1, steps.len(), step);
+            self.run_turn(step)?;
+        }
+
+        println!("\n{}", style("✓ Plan complete").bold().green());
+        Ok(())
+    }
+}
+
+fn parse_numbered_steps(text: &str) -> Vec<String> {
+    text.lines()
+        .filter_map(|line| {
+            let trimmed = line.trim();
+            if trimmed.len() < 3 { return None; }
+            if !trimmed.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) { return None; }
+            let after_num = trimmed.trim_start_matches(|c: char| c.is_ascii_digit());
+            let after_sep = after_num.trim_start_matches(|c: char| c == '.' || c == ')' || c == ':').trim();
+            if after_sep.is_empty() { None } else { Some(after_sep.to_string()) }
+        })
+        .collect()
 }
 
 fn sessions_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
@@ -2453,7 +2500,7 @@ fn build_runtime(
         if let Some(key) = config.api_key {
             api::AuthSource::ApiKey(key)
         } else {
-            api::AuthSource::None
+            api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
         }
     } else {
         api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
@@ -2589,7 +2636,10 @@ fn map_conversation_message(message: ConversationMessage) -> InputMessage {
 fn map_content_block(block: ContentBlock) -> InputContentBlock {
     match block {
         ContentBlock::Text { text } => InputContentBlock::Text { text },
-        ContentBlock::ToolUse { id, name, input } => InputContentBlock::ToolUse { id, name, input: serde_json::Value::String(input) },
+        ContentBlock::ToolUse { id, name, input } => InputContentBlock::ToolUse {
+            id, name,
+            input: serde_json::from_str(&input).unwrap_or(serde_json::Value::Null),
+        },
         ContentBlock::ToolResult { tool_use_id, output, tool_name: _, is_error: _ } => InputContentBlock::ToolResult {
             tool_use_id,
             content: vec![ToolResultContentBlock::Text { text: output }],

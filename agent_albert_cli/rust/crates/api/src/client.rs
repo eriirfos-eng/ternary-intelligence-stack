@@ -429,6 +429,9 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
     }
 
     let mut body = json!({ "model": request.model, "messages": messages, "stream": request.stream });
+    if let Some(max) = request.max_tokens {
+        body["max_tokens"] = json!(max);
+    }
     if let Some(tools) = &request.tools {
         body["tools"] = json!(tools.iter().map(|t| {
             json!({ "type": "function", "function": { "name": t.name, "description": t.description, "parameters": t.input_schema } })
@@ -463,6 +466,9 @@ fn translate_to_gemini(request: &MessageRequest) -> serde_json::Value {
             json!({ "name": t.name, "description": t.description, "parameters": t.input_schema })
         }).collect();
         body["tools"] = json!([{ "functionDeclarations": declarations }]);
+    }
+    if let Some(max) = request.max_tokens {
+        body["generationConfig"] = json!({ "maxOutputTokens": max });
     }
     body
 }
@@ -587,10 +593,11 @@ fn request_id_from_headers(headers: &reqwest::header::HeaderMap) -> Option<Strin
 
 async fn expect_success(response: reqwest::Response) -> Result<reqwest::Response, ApiError> {
     if response.status().is_success() {
-        Ok(response)
-    } else {
-        Err(ApiError::Auth(format!("HTTP {}", response.status())))
+        return Ok(response);
     }
+    let status = response.status();
+    let body = response.text().await.unwrap_or_default();
+    Err(ApiError::Auth(format!("HTTP {status}: {body}")))
 }
 
 pub fn resolve_startup_auth_source() -> Result<AuthSource, ApiError> {
@@ -605,8 +612,8 @@ pub fn resolve_auth_for_provider(provider: LlmProvider) -> Result<AuthSource, Ap
     let key = match provider {
         LlmProvider::Anthropic => read_env_non_empty("ANTHROPIC_API_KEY")?,
         LlmProvider::Google => {
-            let k = read_env_non_empty("GEMINI_API_KEY")?;
-            if k.is_some() { k } else { read_env_non_empty("GOOGLE_API_KEY")? }
+            read_env_non_empty("GEMINI_API_KEY").ok().flatten()
+                .or_else(|| read_env_non_empty("GOOGLE_API_KEY").ok().flatten())
         }
         LlmProvider::OpenAi => read_env_non_empty("OPENAI_API_KEY")?,
         LlmProvider::Xai => read_env_non_empty("XAI_API_KEY")?,
