@@ -1,4 +1,4 @@
-# Albert CLI (Ternlang Engine) - Operation Strip-Mine Edition
+# Albert CLI (Ternlang Engine)
 
 The **Albert CLI** is the terminal-based evolution of the Albert agentic framework, now powered by the high-performance Rust-based **Ternlang Engine**. Following **Operation Strip-Mine**, the Albert node has been hardened, expanded, and fully decoupled from proprietary dependencies.
 
