@@ -3083,7 +3083,7 @@ const EdgePanelController = {
         <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Wire Color</div>
         <div style="display:flex; align-items:center; gap:8px;">
           <code style="font-size:10px; color:var(--muted2);">${customColor}</code>
-          <input type="color" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value); updatePropertyPanel()" title="Custom Wire Color">
+          <input type="color" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value); updateEdgePanel()" title="Custom Wire Color">
         </div>
       </div>
 
@@ -3174,7 +3174,8 @@ function updateNodeColor(id, color) {
   const el = document.getElementById(id);
   if (el) {
     el.style.borderColor = color;
-    el.style.boxShadow = `0 0 10px ${color}33`; // 20% alpha shadow
+    el.style.backgroundColor = color + '33';
+    el.style.boxShadow = `0 0 10px ${color}33`;
     const head = el.querySelector('.fn-head');
     if (head) head.style.borderBottomColor = color;
   }
