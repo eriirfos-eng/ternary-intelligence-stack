@@ -79,7 +79,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             output_format,
             allowed_tools,
             permission_mode,
-        } => LiveCli::new(model, true, allowed_tools, permission_mode)?
+        } => LiveCli::new(auto_select_model(&model), true, allowed_tools, permission_mode)?
             .run_turn_with_output(&prompt, output_format),
         CliAction::Login => run_login(),
         CliAction::Logout => run_logout(),
@@ -94,7 +94,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             if !config_path.exists() {
                 init::wake_sequence();
             }
-            run_repl(model, allowed_tools, permission_mode)
+            run_repl(auto_select_model(&model), allowed_tools, permission_mode)
         },
         CliAction::Help => {
             println!("{}", render_repl_help());
@@ -1612,27 +1612,63 @@ impl LiveCli {
         Ok(())
     }
 
-    fn run_auth(&mut self, provider_name: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-        let provider = match provider_name {
-            Some(name) => name.to_lowercase(),
-            None => {
-                println!("Available providers: openai, anthropic, huggingface, google, azure, aws");
-                print!("Choose provider: ");
-                io::stdout().flush()?;
-                let mut input = String::new();
-                io::stdin().read_line(&mut input)?;
-                input.trim().to_lowercase()
+    fn run_auth(&mut self, arg: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+        const KNOWN_PROVIDERS: &[&str] = &[
+            "openai", "anthropic", "google", "xai", "huggingface", "ternlang", "azure", "aws", "ollama",
+        ];
+        const PROVIDER_MENU: &[&str] = &[
+            "Anthropic (Claude)", "Google (Gemini)", "OpenAI (GPT-4o)",
+            "XAI (Grok)", "HuggingFace", "Ollama (local, no key)", "Ternlang",
+        ];
+        const PROVIDER_KEYS: &[&str] = &[
+            "anthropic", "google", "openai", "xai", "huggingface", "ollama", "ternlang",
+        ];
+
+        // If arg looks like an API key (not a known provider name), auto-detect and save
+        if let Some(key) = arg {
+            if !KNOWN_PROVIDERS.contains(&key.to_lowercase().as_str()) && key.len() > 8 {
+                let provider = detect_provider_from_key(key).unwrap_or("ternlang");
+                runtime::save_provider_config(provider, runtime::ProviderConfig {
+                    api_key: Some(key.to_string()),
+                    model: None,
+                    base_url: None,
+                })?;
+                println!("  ✓ {} key saved.", provider_display_name(provider));
+                return Ok(());
+            }
+        }
+
+        // Resolve provider name or show interactive menu
+        let provider = match arg.map(|s| s.to_lowercase()) {
+            Some(ref p) if KNOWN_PROVIDERS.contains(&p.as_str()) => p.clone(),
+            _ => {
+                let sel = Select::new()
+                    .with_prompt("  Choose provider")
+                    .items(PROVIDER_MENU)
+                    .default(0)
+                    .interact()?;
+                PROVIDER_KEYS[sel].to_string()
             }
         };
 
-        print!("Enter API Key for {provider}: ");
+        if provider == "ollama" {
+            runtime::save_provider_config("ollama", runtime::ProviderConfig {
+                api_key: None,
+                model: None,
+                base_url: Some("http://localhost:11434".to_string()),
+            })?;
+            println!("  ✓ Ollama (local) configured — no key needed.");
+            return Ok(());
+        }
+
+        print!("  Paste API key: ");
         io::stdout().flush()?;
         let mut api_key = String::new();
         io::stdin().read_line(&mut api_key)?;
         let api_key = api_key.trim().to_string();
 
         if api_key.is_empty() {
-            println!("Error: API Key cannot be empty.");
+            println!("  Error: key cannot be empty.");
             return Ok(());
         }
 
@@ -1642,7 +1678,7 @@ impl LiveCli {
             base_url: None,
         })?;
 
-        println!("Authentication configured for {provider}.");
+        println!("  ✓ {} key saved.", provider_display_name(&provider));
         Ok(())
     }
 
@@ -2330,6 +2366,51 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
     }
 }
 
+fn detect_provider_from_key(key: &str) -> Option<&'static str> {
+    if key.starts_with("sk-ant-") {
+        Some("anthropic")
+    } else if key.starts_with("AIza") {
+        Some("google")
+    } else if key.starts_with("sk-") {
+        Some("openai")
+    } else if key.starts_with("xai-") {
+        Some("xai")
+    } else if key.starts_with("hf_") {
+        Some("huggingface")
+    } else {
+        None
+    }
+}
+
+fn provider_display_name(provider: &str) -> &str {
+    match provider {
+        "anthropic"    => "Anthropic (Claude)",
+        "google"       => "Google (Gemini)",
+        "openai"       => "OpenAI",
+        "xai"          => "XAI (Grok)",
+        "huggingface"  => "HuggingFace",
+        "ollama"       => "Ollama",
+        _              => "Ternlang",
+    }
+}
+
+/// If the user is on the built-in default and hasn't set a Gemini key,
+/// switch to whatever provider they actually have a key for.
+fn auto_select_model(model: &str) -> String {
+    if model != DEFAULT_MODEL {
+        return model.to_string();
+    }
+    let gemini_set = std::env::var("GEMINI_API_KEY").ok().filter(|v| !v.is_empty()).is_some()
+        || std::env::var("GOOGLE_API_KEY").ok().filter(|v| !v.is_empty()).is_some();
+    if gemini_set {
+        return model.to_string();
+    }
+    if let Some((_, fallback_model)) = api::detect_provider_and_model_from_env() {
+        return fallback_model.to_string();
+    }
+    model.to_string()
+}
+
 fn resolve_provider_for_model(model: &str) -> api::LlmProvider {
     if model.contains("gpt-") || model.contains("o1-") || model.contains("o3-") {
         api::LlmProvider::OpenAi
@@ -2359,10 +2440,12 @@ fn build_runtime(
 
     let provider = resolve_provider_for_model(&model);
     let provider_config = runtime::load_provider_config(match provider {
-        api::LlmProvider::OpenAi => "openai",
         api::LlmProvider::Anthropic => "anthropic",
         api::LlmProvider::Google => "google",
+        api::LlmProvider::OpenAi => "openai",
+        api::LlmProvider::Xai => "xai",
         api::LlmProvider::HuggingFace => "huggingface",
+        api::LlmProvider::Ollama => "ollama",
         _ => "ternlang",
     }).unwrap_or(None);
 
@@ -2373,7 +2456,7 @@ fn build_runtime(
             api::AuthSource::None
         }
     } else {
-        api::resolve_startup_auth_source().unwrap_or(api::AuthSource::None)
+        api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
     };
 
     let client = TernlangClient::from_auth(auth_source).with_provider(provider);

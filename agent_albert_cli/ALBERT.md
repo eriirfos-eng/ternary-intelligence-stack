@@ -5,7 +5,7 @@ This file provides guidance to the **Albert** agent when working in this reposit
 ## Detected stack
 
 - **Primary language**: Rust (Cargo workspace, edition 2021)
-- **Binary**: `albert` (crate: `albert-cli`, path: `rust/crates/rusty-ternlang-cli`)
+- **Binary**: `albert` (crate: `albert-cli`, path: `rust/crates/albert-cli`)
 - **Workspace root**: `rust/`
 
 ## Verification
@@ -17,7 +17,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 
 # Install and run
-cargo install --path crates/rusty-ternlang-cli --force
+cargo install --path crates/albert-cli --force
 albert
 ```
 
@@ -31,7 +31,7 @@ rust/
     albert-commands/     — slash command library (/plan, /tdd, /loop, /compress ...)
     albert-tools/        — tool execution layer (read, write, edit, bash, glob, grep, MCP)
     albert-compat/       — upstream manifest extraction and path resolution
-    rusty-ternlang-cli/  — main binary (package: albert-cli, binary: albert)
+    albert-cli/  — main binary (package: albert-cli, binary: albert)
     rtk-integration/     — RTK token filter (vendored external project, publish = false)
 src/                     — Python + TypeScript legacy source
 tests/                   — validation surfaces

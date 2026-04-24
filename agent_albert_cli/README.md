@@ -91,7 +91,7 @@ git clone https://github.com/eriirfos-eng/ternary-intelligence-stack.git
 cd ternary-intelligence-stack/agent_albert_cli/rust
 
 # Build and install
-cargo install --path crates/rusty-ternlang-cli --force
+cargo install --path crates/albert-cli --force
 ```
 
 Verify:
