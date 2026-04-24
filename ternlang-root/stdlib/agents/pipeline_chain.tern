@@ -1,0 +1,60 @@
+// stdlib/agents/pipeline_chain.tern
+// Demonstrates: Multi-stage pipeline chain (Cleaner -> Analyzer -> Reporter)
+// Tier: 1 — Open Core
+
+agent Cleaner {
+    fn handle(msg: trit) -> trit {
+        // Simulates cleaning noise: maps 'tend' (0) to 'affirm' (1) if optimistic
+        if msg == hold { return affirm; }
+        return msg;
+    }
+}
+
+agent Analyzer {
+    fn handle(msg: trit) -> trit {
+        // Simulates analysis: inverts the signal for some processing reason
+        return invert(msg);
+    }
+}
+
+agent Reporter {
+    fn handle(msg: trit) -> trit {
+        // Final stage: confirms receipt
+        return msg;
+    }
+}
+
+agent PipelineChain {
+    fn handle(msg: trit) -> trit {
+        let cleaner: agentref = spawn Cleaner;
+        let analyzer: agentref = spawn Analyzer;
+        let reporter: agentref = spawn Reporter;
+
+        // Stage 1: Clean
+        send cleaner msg;
+        let res1: trit = await cleaner;
+
+        // Stage 2: Analyze
+        send analyzer res1;
+        let res2: trit = await analyzer;
+
+        // Stage 3: Report
+        send reporter res2;
+        let res3: trit = await reporter;
+
+        return res3;
+    }
+}
+
+fn main() -> trit {
+    let p: agentref = spawn PipelineChain;
+    
+    // Test: hold (0) -> Cleaner (affirm, 1) -> Analyzer (reject, -1) -> Reporter (reject, -1)
+    send p hold;
+    let res: trit = await p;
+    
+    if res == reject {
+        return affirm;
+    }
+    return reject;
+}
