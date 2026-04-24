@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "albert-api"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "albert-runtime",
  "reqwest",
@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "albert-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "albert-api",
  "albert-commands",
@@ -53,7 +53,7 @@ dependencies = [
 
 [[package]]
 name = "albert-commands"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "albert-runtime",
  "console 0.15.11",
@@ -61,7 +61,7 @@ dependencies = [
 
 [[package]]
 name = "albert-compat"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "albert-commands",
  "albert-runtime",
@@ -70,7 +70,7 @@ dependencies = [
 
 [[package]]
 name = "albert-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "glob",
  "regex",
@@ -83,7 +83,7 @@ dependencies = [
 
 [[package]]
 name = "albert-tools"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "albert-api",
  "albert-runtime",

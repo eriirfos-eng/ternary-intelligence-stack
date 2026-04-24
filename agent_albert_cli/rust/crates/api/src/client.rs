@@ -440,6 +440,32 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
     body
 }
 
+/// Gemini only supports a subset of JSON Schema — strip/normalize fields it rejects.
+fn strip_gemini_unsupported_schema_fields(schema: serde_json::Value) -> serde_json::Value {
+    match schema {
+        serde_json::Value::Object(mut map) => {
+            map.remove("additionalProperties");
+            // "type": ["string", "null"] → "type": "string" (Gemini requires a single type string)
+            if let Some(serde_json::Value::Array(types)) = map.get("type") {
+                let first = types.iter()
+                    .find(|t| t.as_str() != Some("null"))
+                    .or_else(|| types.first())
+                    .cloned()
+                    .unwrap_or(serde_json::Value::String("string".to_string()));
+                map.insert("type".to_string(), first);
+            }
+            let cleaned = map.into_iter()
+                .map(|(k, v)| (k, strip_gemini_unsupported_schema_fields(v)))
+                .collect();
+            serde_json::Value::Object(cleaned)
+        }
+        serde_json::Value::Array(arr) => {
+            serde_json::Value::Array(arr.into_iter().map(strip_gemini_unsupported_schema_fields).collect())
+        }
+        other => other,
+    }
+}
+
 fn translate_to_gemini(request: &MessageRequest) -> serde_json::Value {
     use serde_json::json;
     let contents: Vec<serde_json::Value> = request.messages.iter().map(|msg| {
@@ -463,7 +489,7 @@ fn translate_to_gemini(request: &MessageRequest) -> serde_json::Value {
     if let Some(system) = &request.system { body["systemInstruction"] = json!({ "parts": [{ "text": system }] }); }
     if let Some(tools) = &request.tools {
         let declarations: Vec<serde_json::Value> = tools.iter().map(|t| {
-            json!({ "name": t.name, "description": t.description, "parameters": t.input_schema })
+            json!({ "name": t.name, "description": t.description, "parameters": strip_gemini_unsupported_schema_fields(t.input_schema.clone()) })
         }).collect();
         body["tools"] = json!([{ "functionDeclarations": declarations }]);
     }

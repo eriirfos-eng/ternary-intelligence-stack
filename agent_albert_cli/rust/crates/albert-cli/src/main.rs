@@ -1089,6 +1089,10 @@ impl LiveCli {
                     &mut stdout,
                 )?;
                 println!();
+                let response_text = final_assistant_text(&summary);
+                if !response_text.is_empty() {
+                    println!("{}", TerminalRenderer::new().render_markdown(&response_text));
+                }
                 if let Some(event) = summary.auto_compaction {
                     println!(
                         "{}",
