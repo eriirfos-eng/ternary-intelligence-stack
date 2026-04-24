@@ -14,6 +14,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use dialoguer::Select;
 use console::style;
+use indicatif::{ProgressBar, ProgressStyle};
 
 use api::{
     TernlangClient, AuthSource, ContentBlockDelta, InputContentBlock,
@@ -23,7 +24,7 @@ use api::{
 use commands::{render_slash_command_help, slash_command_specs, SlashCommand};
 use compat_harness::{extract_manifest, UpstreamPaths};
 use init::initialize_repo;
-use render::{Spinner, TerminalRenderer};
+use render::TerminalRenderer;
 use runtime::{
     clear_oauth_credentials, generate_pkce_pair, generate_state, load_system_prompt,
     parse_oauth_callback_request_target, save_oauth_credentials, ApiClient, ApiRequest,
@@ -1070,25 +1071,22 @@ impl LiveCli {
     }
 
     fn run_turn(&mut self, input: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let mut spinner = Spinner::new();
-        let mut stdout = io::stdout();
-        spinner.tick(
-            "🦀 Thinking...",
-            TerminalRenderer::new().color_theme(),
-            &mut stdout,
-        )?;
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(
+            ProgressStyle::with_template("{spinner:.cyan.bold} {msg}")
+                .unwrap()
+                .tick_strings(&["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏","⠿"]),
+        );
+        pb.set_message("thinking...");
+        pb.enable_steady_tick(Duration::from_millis(80));
+
         let mut permission_prompter = CliPermissionPrompter::new(self.permission_mode, true);
         let result = self
             .runtime
             .run_turn(input.to_string(), Some(&mut permission_prompter));
         match result {
             Ok(summary) => {
-                spinner.finish(
-                    "✨ Done",
-                    TerminalRenderer::new().color_theme(),
-                    &mut stdout,
-                )?;
-                println!();
+                pb.finish_and_clear();
                 let response_text = final_assistant_text(&summary);
                 if !response_text.is_empty() {
                     println!("{}", TerminalRenderer::new().render_markdown(&response_text));
@@ -1103,11 +1101,8 @@ impl LiveCli {
                 Ok(())
             }
             Err(error) => {
-                spinner.fail(
-                    "❌ Request failed",
-                    TerminalRenderer::new().color_theme(),
-                    &mut stdout,
-                )?;
+                pb.finish_and_clear();
+                eprintln!("{} {}", style("✘ error:").red().bold(), error);
                 Err(Box::new(error))
             }
         }
