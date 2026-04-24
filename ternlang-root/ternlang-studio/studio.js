@@ -1131,14 +1131,27 @@ function traceCausalPath(targetNodeId) {
   });
 
   showToast("Showing causal path for " + targetNodeId, "ok");
-  
-  // Add clear listener to background
-  const clearTrace = () => {
-    document.querySelectorAll('.causal-path, .causal-node, .dimmed').forEach(el => {
-      el.classList.remove('causal-path','causal-node','dimmed');
-    });
-  };
-  document.getElementById("flow-canvas").addEventListener("mousedown", clearTrace, { once: true });
+
+  // Attach clear listener to the wrap (not #flow-canvas) so it fires even when the
+  // panned canvas doesn't cover the full visible area. Persist until a real canvas click.
+  const wrap = document.getElementById("flow-canvas-wrap");
+  if (wrap) {
+    const onClearTrace = (e) => {
+      // Only clear on genuine empty-canvas clicks; ignore overlay panels, nodes, and wires
+      if (e.target.closest('#flow-inspector')) return;
+      if (e.target.closest('.timeline-container')) return;
+      if (e.target.closest('.flow-node')) return;
+      if (e.target.classList.contains('flow-wire') || e.target.classList.contains('wire-hit')) return;
+      document.querySelectorAll('.causal-path, .causal-node, .dimmed').forEach(el => {
+        el.classList.remove('causal-path', 'causal-node', 'dimmed');
+      });
+      wrap.removeEventListener("mousedown", onClearTrace);
+    };
+    // Remove any stale listener from a previous trace before adding the new one
+    wrap._causalClearFn && wrap.removeEventListener("mousedown", wrap._causalClearFn);
+    wrap._causalClearFn = onClearTrace;
+    wrap.addEventListener("mousedown", onClearTrace);
+  }
 }
 window.traceCausalPath = traceCausalPath;
 
@@ -5666,7 +5679,8 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
 
   if (isNew && id !== 'active-wire' && wire) {
     path.style.pointerEvents = 'stroke';
-    path.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); showWireHandles(id); });
+    // Use mousedown (not click) so selection fires before onMouseUp clears the SVG
+    path.addEventListener("mousedown", (e) => { e.preventDefault(); selectWire(id); showWireHandles(id); });
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
     hit.setAttribute("d", d);
     hit.setAttribute("fill", "none");
@@ -5675,7 +5689,7 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
     hit.setAttribute("class", "wire-hit");
     hit.id = "hit-" + id;
     hit.style.pointerEvents = 'stroke';
-    hit.addEventListener("click", (e) => { e.stopPropagation(); selectWire(id); showWireHandles(id); });
+    hit.addEventListener("mousedown", (e) => { e.preventDefault(); selectWire(id); showWireHandles(id); });
     svg.appendChild(hit);
   } else if (!isNew && wire) {
      const hit = document.getElementById("hit-" + id);
