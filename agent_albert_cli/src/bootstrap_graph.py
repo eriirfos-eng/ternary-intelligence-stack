@@ -15,7 +15,7 @@ class BootstrapGraph:
 
 def build_bootstrap_graph() -> BootstrapGraph:
     return BootstrapGraph(
-        stages=( 
+        stages=(
             'top-level prefetch side effects',
             'warning handler and environment guards',
             'CLI parser and pre-action trust gate',

@@ -1,0 +1,13 @@
+# Runtime state
+.albert/sessions/
+.albert/settings.local.json
+.albert.json
+.claw/sessions/
+.ternlang/sessions/
+.sandbox-home/
+.clawd-todos.json
+
+# Build artifacts
+rust/target/
+__pycache__/
+*.pyc
