@@ -6,11 +6,12 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Slash command library for Albert CLI — /plan, /tdd, /loop, /compress, /code-review, /build-fix, /refactor and more"
+readme = "README.md"
 keywords = ["ai", "cli", "agent", "commands", "llm"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.0" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.1" }
 console = "0.15"
 
 [lints]

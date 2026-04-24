@@ -18,7 +18,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "albert"
+name = "albert-api"
+version = "0.1.0"
+dependencies = [
+ "albert-runtime",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "albert-cli"
 version = "0.1.0"
 dependencies = [
  "albert-api",
@@ -38,17 +49,6 @@ dependencies = [
  "syntect",
  "tokio",
  "toml",
-]
-
-[[package]]
-name = "albert-api"
-version = "0.1.0"
-dependencies = [
- "albert-runtime",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
 ]
 
 [[package]]

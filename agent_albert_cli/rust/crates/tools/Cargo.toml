@@ -6,12 +6,13 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Tool execution layer for Albert CLI — file ops, bash, grep/glob search and MCP tool dispatch"
+readme = "README.md"
 keywords = ["ai", "cli", "tools", "mcp", "agent"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-api = { package = "albert-api", path = "../api", version = "0.1.0" }
-runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.0" }
+api = { package = "albert-api", path = "../api", version = "0.1.1" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.1" }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

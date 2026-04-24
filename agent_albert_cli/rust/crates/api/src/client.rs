@@ -107,7 +107,7 @@ impl TernlangClient {
     ) -> Result<reqwest::Response, ApiError> {
         let path = self.provider.api_path();
         let mut request_url = format!("{}/{}", self.base_url.trim_end_matches('/'), path.trim_start_matches('/'));
-        
+
         let body = match self.provider {
             LlmProvider::Google => {
                 let model_id = if request.model.starts_with("models/") {
@@ -115,7 +115,12 @@ impl TernlangClient {
                 } else {
                     format!("models/{}", request.model)
                 };
-                request_url = format!("{}/{}:generateContent", self.base_url.trim_end_matches('/'), model_id);
+                let base = format!("{}/v1beta/{}:generateContent", self.base_url.trim_end_matches('/'), model_id);
+                request_url = if let Some(key) = self.auth.api_key() {
+                    format!("{}?key={}", base, key)
+                } else {
+                    base
+                };
                 translate_to_gemini(request)
             }
             LlmProvider::Anthropic => translate_to_anthropic(request),
@@ -169,12 +174,18 @@ impl TernlangClient {
         &mut self,
         request: &MessageRequest,
     ) -> Result<MessageStream, ApiError> {
+        // Gemini SSE format differs from Anthropic's — use non-streaming and wrap events
+        if self.provider == LlmProvider::Google {
+            let non_stream_req = MessageRequest { stream: false, ..request.clone() };
+            let buffered = self.send_message(&non_stream_req).await?;
+            return Ok(MessageStream::from_buffered_response(buffered));
+        }
         let response = self
             .send_with_retry(&request.clone().with_streaming())
             .await?;
         Ok(MessageStream {
             _request_id: request_id_from_headers(response.headers()),
-            response,
+            response: Some(response),
             parser: SseParser::new(),
             pending: VecDeque::new(),
             done: false,
@@ -278,24 +289,70 @@ impl TernlangClient {
 #[derive(Debug)]
 pub struct MessageStream {
     _request_id: Option<String>,
-    response: reqwest::Response,
+    response: Option<reqwest::Response>,
     parser: SseParser,
     pending: VecDeque<StreamEvent>,
     done: bool,
 }
 
 impl MessageStream {
+    fn from_buffered_response(response: MessageResponse) -> Self {
+        let mut pending = VecDeque::new();
+        pending.push_back(StreamEvent::MessageStart(MessageStartEvent {
+            message: response.clone(),
+        }));
+        for (i, block) in response.content.iter().enumerate() {
+            let index = i as u32;
+            pending.push_back(StreamEvent::ContentBlockStart(ContentBlockStartEvent {
+                index,
+                content_block: block.clone(),
+            }));
+            if let OutputContentBlock::Text { text } = block {
+                pending.push_back(StreamEvent::ContentBlockDelta(ContentBlockDeltaEvent {
+                    index,
+                    delta: ContentBlockDelta::TextDelta { text: text.clone() },
+                }));
+            }
+            pending.push_back(StreamEvent::ContentBlockStop(ContentBlockStopEvent { index }));
+        }
+        pending.push_back(StreamEvent::MessageDelta(MessageDeltaEvent {
+            delta: MessageDelta {
+                stop_reason: response.stop_reason,
+                stop_sequence: response.stop_sequence,
+            },
+            usage: response.usage,
+        }));
+        pending.push_back(StreamEvent::MessageStop(MessageStopEvent {}));
+        Self {
+            _request_id: None,
+            response: None,
+            parser: SseParser::new(),
+            pending,
+            done: true,
+        }
+    }
+
     pub async fn next_event(&mut self) -> Result<Option<StreamEvent>, ApiError> {
         loop {
             if let Some(event) = self.pending.pop_front() {
                 return Ok(Some(event));
             }
             if self.done { return Ok(None); }
-            let chunk = self.response.chunk().await?.ok_or_else(|| {
-                self.done = true;
-                ApiError::Auth("stream closed".to_string())
-            })?;
-            self.pending.extend(self.parser.push(&chunk)?);
+            match self.response.as_mut() {
+                None => {
+                    self.done = true;
+                    return Ok(None);
+                }
+                Some(response) => match response.chunk().await? {
+                    None => {
+                        self.done = true;
+                        return Ok(None);
+                    }
+                    Some(chunk) => {
+                        self.pending.extend(self.parser.push(&chunk)?);
+                    }
+                },
+            }
         }
     }
 }
@@ -541,6 +598,45 @@ pub fn resolve_startup_auth_source() -> Result<AuthSource, ApiError> {
         return Ok(AuthSource::ApiKey(api_key));
     }
     Ok(AuthSource::None)
+}
+
+/// Read the standard env var for `provider` and return the appropriate auth.
+pub fn resolve_auth_for_provider(provider: LlmProvider) -> Result<AuthSource, ApiError> {
+    let key = match provider {
+        LlmProvider::Anthropic => read_env_non_empty("ANTHROPIC_API_KEY")?,
+        LlmProvider::Google => {
+            let k = read_env_non_empty("GEMINI_API_KEY")?;
+            if k.is_some() { k } else { read_env_non_empty("GOOGLE_API_KEY")? }
+        }
+        LlmProvider::OpenAi => read_env_non_empty("OPENAI_API_KEY")?,
+        LlmProvider::Xai => read_env_non_empty("XAI_API_KEY")?,
+        LlmProvider::HuggingFace => read_env_non_empty("HUGGINGFACE_API_KEY")?,
+        LlmProvider::Ollama => return Ok(AuthSource::None),
+        _ => read_env_non_empty("TERNLANG_API_KEY")?,
+    };
+    Ok(key.map_or(AuthSource::None, AuthSource::ApiKey))
+}
+
+/// Scan well-known env vars and return the first available (provider, default-model) pair.
+/// Returns None if no recognised key is set (Ollama local is not detected here).
+pub fn detect_provider_and_model_from_env() -> Option<(LlmProvider, &'static str)> {
+    let env_set = |var: &str| std::env::var(var).ok().filter(|v| !v.is_empty()).is_some();
+    if env_set("ANTHROPIC_API_KEY") {
+        return Some((LlmProvider::Anthropic, "claude-sonnet-4-5"));
+    }
+    if env_set("GEMINI_API_KEY") || env_set("GOOGLE_API_KEY") {
+        return Some((LlmProvider::Google, "gemini-2.0-flash"));
+    }
+    if env_set("OPENAI_API_KEY") {
+        return Some((LlmProvider::OpenAi, "gpt-4o-mini"));
+    }
+    if env_set("XAI_API_KEY") {
+        return Some((LlmProvider::Xai, "grok-2-1212"));
+    }
+    if env_set("HUGGINGFACE_API_KEY") {
+        return Some((LlmProvider::HuggingFace, "meta-llama/Meta-Llama-3-8B-Instruct"));
+    }
+    None
 }
 
 #[derive(serde::Deserialize)]

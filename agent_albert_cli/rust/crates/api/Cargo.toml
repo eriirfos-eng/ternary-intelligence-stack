@@ -6,12 +6,13 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Multi-provider LLM client for Albert CLI — bridges Anthropic, OpenAI, Google Gemini, Ollama, XAI and the Ternlang API with unified streaming and auth"
+readme = "README.md"
 keywords = ["llm", "ai", "api", "anthropic", "openai"]
 categories = ["api-bindings", "asynchronous"]
 
 [dependencies]
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.0" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.1" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "time"] }
