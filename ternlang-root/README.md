@@ -198,6 +198,115 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ---
 
+## Agent Albert — AI Intelligence Layer
+
+[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](../agent_albert_cli/rust/LICENSE)
+
+Albert is the sovereign, model-agnostic AI coding CLI built as the intelligence layer of the Ternary Intelligence Stack. He runs as a standalone terminal agent or embedded directly inside TernStudio — wired into the flow canvas to generate, debug, and explain ternary workflows.
+
+### Two modes
+
+**Mode 1 — Standalone coding CLI**
+
+```bash
+cargo install albert-cli    # installs the `albert` binary
+albert                      # interactive REPL
+albert "refactor this"      # one-shot prompt
+```
+
+Albert boots with a one-time interview (name, role, cognitive archetype) and auto-generates an `ALBERT.md` in your workspace with baked-in project context. Every subsequent session starts with full memory of who you are and what your codebase does.
+
+**Mode 2 — Embedded in TernStudio** *(in development)*
+
+Press `F6` anywhere on the TernStudio flow canvas to summon Albert. From there you can:
+
+- Describe a workflow in plain language → Albert generates the full node graph
+- Select a node or wire → ask Albert to explain the signal path or debug the logic
+- Type `/plan` → Albert proposes an execution strategy before touching the canvas
+
+This makes Albert the intelligence behind every workflow — not just a chatbot bolted on the side.
+
+---
+
+### Model-agnostic — bring your own LLM
+
+Albert dispatches to whichever provider you configure. No default billing, no vendor lock-in.
+
+| Provider | Environment variable | Notes |
+|----------|---------------------|-------|
+| Google Gemini | `GEMINI_API_KEY` | Default model: `gemini-2.0-flash` |
+| Anthropic Claude | `ANTHROPIC_API_KEY` | Any Claude model |
+| OpenAI / GPT | `OPENAI_API_KEY` | GPT-4o and others |
+| XAI / Grok | `XAI_API_KEY` | Grok-2 and Grok-3 |
+| Ollama (local) | *(none needed)* | `ollama serve` — fully air-gapped |
+| HuggingFace | `HF_API_KEY` | Any HF inference endpoint |
+| Azure OpenAI | `AZURE_OPENAI_API_KEY` | Enterprise deployments |
+
+Keys are stored in `~/.config/albert/secrets.json` — never sent anywhere except directly to your chosen provider.
+
+---
+
+### Slash command library
+
+| Command | What it does |
+|---------|-------------|
+| `/plan` | Decompose a task into a structured execution plan before coding |
+| `/tdd` | Red-Green-Refactor loop — write the failing test first |
+| `/verify` | Run tests and validate correctness, report failures only |
+| `/code-review` | Full review pass: correctness, safety, idioms, edge cases |
+| `/build-fix` | Compile, read errors, fix, repeat until clean |
+| `/refactor` | Targeted cleanup without changing behaviour |
+| `/docs` | Generate documentation for the current scope |
+| `/loop` | Recursive mission loop — runs up to 10 iterations until `MISSION COMPLETE` |
+| `/compress` | Aggressive context compaction — keeps Albert's memory sharp and cheap |
+
+---
+
+### Architecture (5 published crates)
+
+```
+albert-cli  (binary: albert)
+  ├── albert-api       — multi-provider LLM client, SSE streaming, retry logic
+  ├── albert-commands  — slash command library
+  ├── albert-compat    — upstream manifest extraction and path resolution
+  ├── albert-runtime   — session management, MCP client, OAuth, bash execution,
+  │                      file ops, compaction, token usage tracking
+  └── albert-tools     — tool dispatch: read, write, edit, bash, glob/grep, MCP
+```
+
+All five crates are published on [crates.io](https://crates.io/crates/albert-cli). The workspace lives in [`agent_albert_cli/rust/`](../agent_albert_cli/rust/).
+
+---
+
+### RTK integration — 60–90% token savings
+
+Albert ships with [RTK (Rust Token Killer)](https://www.rtk-ai.app) integrated as a context filter. Every command output is compressed before it reaches the LLM context window — git logs, cargo output, test results, file trees — keeping sessions fast and cheap regardless of which provider you use.
+
+---
+
+### TernStudio integration (roadmap)
+
+Albert will be deployed as a sidecar service alongside the TernStudio API on Fly.io (`ternlang-api.fly.dev`). The Studio front-end will route `F6` prompts to Albert's `/api/albert` endpoint, with the full canvas state serialised as context. The integration surface:
+
+| Studio action | Albert behaviour |
+|--------------|-----------------|
+| `F6` → free prompt | Generate workflow nodes + wires from description |
+| `F6` with node selected | Explain node logic, suggest improvements |
+| `F6` with wire selected | Trace signal path, debug confidence values |
+| `/plan` in Albert panel | Propose execution strategy for current graph |
+| Run simulation → error | Albert auto-diagnoses and suggests fix |
+
+---
+
+### Source
+
+→ [`agent_albert_cli/`](../agent_albert_cli/) — top-level source  
+→ [`agent_albert_cli/rust/`](../agent_albert_cli/rust/) — Rust workspace  
+→ [crates.io/crates/albert-cli](https://crates.io/crates/albert-cli)
+
+---
+
 ## Sparse Ternary Inference
 
 The core performance claim of TIS rests on a single hardware primitive: `@sparseskip` — an opcode that skips computation on zero-state (`tend`) weights entirely.
