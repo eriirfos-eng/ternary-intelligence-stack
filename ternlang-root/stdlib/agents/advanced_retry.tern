@@ -1,0 +1,47 @@
+// stdlib/agents/advanced_retry.tern
+// Demonstrates: Advanced Retry agent with exponential-ish backoff simulation.
+// Tier: 1 — Open Core
+
+agent UnreliableService {
+    fn handle(attempt: int) -> trit {
+        if attempt < 3 {
+            return reject;
+        }
+        return affirm;
+    }
+}
+
+agent RetryManager {
+    fn handle(msg: trit) -> trit {
+        let service: agentref = spawn UnreliableService;
+        let mut attempt: int = 1;
+        let max_attempts: int = 5;
+        
+        while attempt <= max_attempts {
+            println("Attempting service call:");
+            println(attempt);
+            
+            send service attempt;
+            let res: trit = await service;
+            
+            if res == affirm {
+                return affirm;
+            }
+            
+            attempt = attempt + 1;
+        }
+        
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let manager: agentref = spawn RetryManager;
+    send manager 1;
+    let res: trit = await manager;
+    
+    if res == affirm {
+        return affirm;
+    }
+    return reject;
+}
