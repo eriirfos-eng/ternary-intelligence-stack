@@ -1505,9 +1505,18 @@ function initCanvasInteraction() {
 
   // Delete / Backspace → delete selected
   document.addEventListener("keydown", e => {
-    if ((e.key === "Delete" || e.key === "Backspace") &&
-        document.activeElement.tagName !== "INPUT" &&
-        document.activeElement.tagName !== "TEXTAREA") {
+    const inInput = document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA" || document.activeElement.isContentEditable;
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+      e.preventDefault();
+      undoStep();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
+      e.preventDefault();
+      redoStep();
+      return;
+    }
+    if ((e.key === "Delete" || e.key === "Backspace") && !inInput) {
       deleteSelected();
     }
     // Escape → clear selection
@@ -1690,7 +1699,7 @@ const BUILTIN_AGENTS = {
 
 function saveCanvasState() {
   try {
-    const state = { nodes: flowNodes.map(n => ({ id: n.id, name: n.name, path: n.path, type: n.type, props: n.props, x: parseInt(document.getElementById(n.id)?.style.left||0), y: parseInt(document.getElementById(n.id)?.style.top||0) })), wires: flowWires };
+    const state = { nodes: flowNodes.map(n => ({ id: n.id, name: n.name, path: n.path, type: n.type, props: n.props, x: parseInt(document.getElementById(n.id)?.style.left||0), y: parseInt(document.getElementById(n.id)?.style.top||0), parentId: n.parentId || null, isStub: n.isStub || false })), wires: flowWires };
     localStorage.setItem("ternflow_canvas", JSON.stringify(state));
   } catch(e) {}
 }
@@ -1703,7 +1712,7 @@ function restoreCanvasState() {
     const state = JSON.parse(raw);
     if (!state.nodes || state.nodes.length === 0) return false;
     state.nodes.forEach(n => createFlowNode(n.name, n.path, n.x, n.y, n.type, n.id, n.isStub));
-    state.nodes.forEach(n => { const node = flowNodes.find(f => f.id === n.id); if (node) { node.props = n.props; updateNodeSchemaDisplay(n.id); } });
+    state.nodes.forEach(n => { const node = flowNodes.find(f => f.id === n.id); if (node) { node.props = n.props; node.parentId = n.parentId || null; node.isStub = n.isStub || false; updateNodeSchemaDisplay(n.id); } });
     flowWires = state.wires || [];
     updateWires();
     if (flowNodes.length > 0) { const hint = document.getElementById("canvas-hint"); if (hint) hint.style.display = "none"; }
@@ -2101,6 +2110,7 @@ function panToCenter(lx, ly) {
 window.panToCenter = panToCenter;
 
 function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
+  pushUndoSnapshot();
   const canvas = document.getElementById("flow-canvas");
   const node = document.createElement("div");
   node.id = id;
@@ -2254,10 +2264,11 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
       updatePropertyPanel();
     }
     
+    pushUndoSnapshot();
     isDraggingNode = true;
     nodeDraggingId = id;
     startMouseX = e.clientX; startMouseY = e.clientY;
-    
+
          multiDragOffsets = {};
     selectedIds.forEach(sid => {
       const sel = document.getElementById(sid);
@@ -2356,11 +2367,72 @@ function deleteSelected() {
 }
 window.deleteSelected = deleteSelected;
 
-function syncMultiDragEnd() {
-  // After dragging primary node, sync offsets of other selected nodes
-  // (they were dragged via the group-move handler below)
+// ─── Undo / Redo ─────────────────────────────────────────────────────────────
+const undoStack = [];
+const redoStack = [];
+const MAX_UNDO = 50;
+let _undoRestoring = false;
+
+function _captureCanvasState() {
+  return {
+    nodes: flowNodes.map(n => ({
+      id: n.id, name: n.name, path: n.path, type: n.type,
+      props: JSON.parse(JSON.stringify(n.props)),
+      x: parseFloat(document.getElementById(n.id)?.style.left || 0),
+      y: parseFloat(document.getElementById(n.id)?.style.top || 0),
+      parentId: n.parentId || null,
+      isStub: n.isStub || false
+    })),
+    wires: JSON.parse(JSON.stringify(flowWires))
+  };
 }
-window.syncMultiDragEnd = syncMultiDragEnd;
+
+function pushUndoSnapshot() {
+  if (_undoRestoring) return;
+  undoStack.push(_captureCanvasState());
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  redoStack.length = 0;
+}
+
+function _applyUndoRedoState(state) {
+  _undoRestoring = true;
+  document.querySelectorAll(".flow-node").forEach(n => n.remove());
+  document.querySelectorAll(".edge-badge").forEach(b => b.remove());
+  const svg = document.getElementById("flow-svg-layer");
+  if (svg) svg.innerHTML = "";
+  const sl = document.getElementById("scrub-layer");
+  if (sl) { const ctx = sl.getContext("2d"); ctx.clearRect(0, 0, sl.width, sl.height); }
+  flowNodes = []; flowWires = [];
+  selectedNodeId = null; selectedWireId = null; selectedIds = new Set();
+  state.nodes.forEach(n => createFlowNode(n.name, n.path, n.x, n.y, n.type, n.id, n.isStub));
+  state.nodes.forEach(n => {
+    const node = flowNodes.find(f => f.id === n.id);
+    if (node) { node.props = JSON.parse(JSON.stringify(n.props)); node.parentId = n.parentId || null; updateNodeSchemaDisplay(n.id); }
+  });
+  flowWires = JSON.parse(JSON.stringify(state.wires));
+  updateWires();
+  updatePropertyPanel();
+  const hint = document.getElementById("canvas-hint");
+  if (hint) hint.style.display = flowNodes.length === 0 ? "flex" : "none";
+  saveCanvasState();
+  _undoRestoring = false;
+}
+
+function undoStep() {
+  if (undoStack.length === 0) { showToast("Nothing to undo", "info"); return; }
+  redoStack.push(_captureCanvasState());
+  _applyUndoRedoState(undoStack.pop());
+  showToast("Undo", "ok");
+}
+
+function redoStep() {
+  if (redoStack.length === 0) { showToast("Nothing to redo", "info"); return; }
+  undoStack.push(_captureCanvasState());
+  _applyUndoRedoState(redoStack.pop());
+  showToast("Redo", "ok");
+}
+window.undoStep = undoStep;
+window.redoStep = redoStep;
 
 function updateValidateBadge({ errors, warnings }) {
   const badge = document.getElementById("validateBadge");
@@ -2426,6 +2498,7 @@ function collapseArtifactToStub(id) {
 window.collapseArtifactToStub = collapseArtifactToStub;
 
 function deleteNode(id) {
+  pushUndoSnapshot();
   flowNodes = flowNodes.filter(n => n.id !== id);
   flowWires = flowWires.filter(w => w.fromId !== id && w.toId !== id);
   const el = document.getElementById(id);
@@ -2437,12 +2510,10 @@ function deleteNode(id) {
   }
   const hint = document.getElementById("canvas-hint");
   if (hint) hint.style.display = flowNodes.length === 0 ? "flex" : "none";
-  // Clear signal dots — deleted nodes leave orphaned scrub-layer arcs
-  if (flowNodes.length === 0) {
-    const sl = document.getElementById("scrub-layer");
-    if (sl) { const ctx = sl.getContext("2d"); ctx.clearRect(0, 0, sl.width, sl.height); }
-    window.globalScheduledEvents = [];
-  }
+  // Always clear signal dots — deleted nodes leave orphaned scrub-layer arcs
+  const sl = document.getElementById("scrub-layer");
+  if (sl) { const ctx = sl.getContext("2d"); ctx.clearRect(0, 0, sl.width, sl.height); }
+  if (flowNodes.length === 0) window.globalScheduledEvents = [];
   updateWires();
   saveCanvasState();
 }
@@ -3841,6 +3912,7 @@ function updateWireProp(key, val) {
 window.updateWireProp = updateWireProp;
 
 function deleteWire(id) {
+  pushUndoSnapshot();
   flowWires = flowWires.filter(w => w.id !== id);
   selectedWireId = null;
   document.getElementById("wire-handle").classList.remove("active");
@@ -5031,7 +5103,6 @@ async function simulateNode(node, inSignal, isPhantom = false) {
   if (executionState === 'paused') await awaitResumption();
   if (executionState === 'idle') return 0;
   if (simulationAborted) return 0;
-  if (simulationAborted) return inSignal;
   const el = document.getElementById(node.id);
   if (!el && !isPhantom) return inSignal;
 
@@ -6217,6 +6288,7 @@ function onMouseUp(e) {
 
             const label = condition === 1 ? "+1 Affirm" : (condition === -1 ? "-1 Reject" : (condition === 0 ? "0 Neutral" : "All signals"));
 
+            pushUndoSnapshot();
             flowWires.push({
               id: wireId, fromId, toId,
               signal: 0, confidence: 1.0, condition: condition, transform: "pass", priority: 5, label: label

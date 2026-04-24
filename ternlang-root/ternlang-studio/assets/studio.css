@@ -1175,7 +1175,7 @@
 
     /* ─── Config View Visual Identity ────────────────────────── */
     #config-view {
-      background-color: #0f131a !important;
+      background-color: var(--bg) !important;
     }
     
     .nav-tab.active#vt-settings {
