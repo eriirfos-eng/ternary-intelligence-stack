@@ -1,0 +1,52 @@
+// stdlib/agents/logical_router.tern
+// Demonstrates: Ternary Router agent (Routing based on trit signal)
+// Tier: 1 — Open Core
+
+agent PositiveHandler {
+    fn handle(msg: trit) -> trit { return affirm; }
+}
+
+agent NegativeHandler {
+    fn handle(msg: trit) -> trit { return reject; }
+}
+
+agent NeutralHandler {
+    fn handle(msg: trit) -> trit { return hold; }
+}
+
+agent LogicalRouter {
+    fn handle(input: trit) -> trit {
+        if input == affirm {
+            let h: agentref = spawn PositiveHandler;
+            send h input;
+            return await h;
+        }
+        if input == reject {
+            let h: agentref = spawn NegativeHandler;
+            send h input;
+            return await h;
+        }
+        
+        let h: agentref = spawn NeutralHandler;
+        send h input;
+        return await h;
+    }
+}
+
+fn main() -> trit {
+    let router: agentref = spawn LogicalRouter;
+    
+    send router affirm;
+    let r1: trit = await router;
+    
+    send router reject;
+    let r2: trit = await router;
+    
+    send router hold;
+    let r3: trit = await router;
+    
+    if r1 == affirm && r2 == reject && r3 == hold {
+        return affirm;
+    }
+    return reject;
+}
