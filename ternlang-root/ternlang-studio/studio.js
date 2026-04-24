@@ -1310,6 +1310,10 @@ function applyTransform() {
     wrap.style.backgroundSize = `${gs}px ${gs}px`;
     wrap.style.backgroundPosition = `${CT.x}px ${CT.y}px`;
   }
+  // Re-render signal dots when paused so they reposition after zoom/pan
+  if (executionState === 'paused' && typeof renderScrubLayer === 'function') {
+    renderScrubLayer(virtualClock);
+  }
 }
 window.applyTransform = applyTransform;
 
@@ -1519,9 +1523,72 @@ function initCanvasInteraction() {
     if ((e.key === "Delete" || e.key === "Backspace") && !inInput) {
       deleteSelected();
     }
+    // F6 → toggle Albert co-pilot panel
+    if (e.key === 'F6') {
+      e.preventDefault();
+      if (typeof window.toggleAlbertPanel === 'function') window.toggleAlbertPanel();
+    }
+    // Copy
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !inInput && selectedIds.size > 0) {
+      e.preventDefault();
+      const ids = [...selectedIds];
+      _nodeClipboard = ids.map(id => {
+        const node = flowNodes.find(n => n.id === id);
+        const el = document.getElementById(id);
+        return {
+          node: JSON.parse(JSON.stringify(node)),
+          x: el ? parseFloat(el.style.left) : 0,
+          y: el ? parseFloat(el.style.top) : 0,
+        };
+      });
+      // Also capture wires that connect two copied nodes
+      _nodeClipboard._internalWires = flowWires.filter(w =>
+        ids.includes(w.fromId) && ids.includes(w.toId)
+      ).map(w => JSON.parse(JSON.stringify(w)));
+      showToast(`Copied ${ids.length} node${ids.length > 1 ? 's' : ''}`, 'info');
+    }
+    // Paste
+    if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !inInput && _nodeClipboard.length > 0) {
+      e.preventDefault();
+      pushUndoSnapshot();
+      const PASTE_OFFSET = 40;
+      const idMap = {};
+      _nodeClipboard.forEach(({ node, x, y }) => {
+        const newId = 'node-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+        idMap[node.id] = newId;
+        const cloned = { ...JSON.parse(JSON.stringify(node)), id: newId };
+        flowNodes.push(cloned);
+        const canvas = document.getElementById('flow-canvas');
+        const el = document.createElement('div');
+        el.id = newId;
+        // Re-use createFlowNode logic by calling it — but we need DOM placement only
+        const dummy = document.getElementById(node.id);
+        const typeClass = dummy ? dummy.className.replace('flow-node', '').trim() : '';
+        el.className = 'flow-node' + (typeClass ? ' ' + typeClass : '');
+        el.style.left = (x + PASTE_OFFSET) + 'px';
+        el.style.top  = (y + PASTE_OFFSET) + 'px';
+        if (dummy) {
+          el.innerHTML = dummy.innerHTML;
+          el.style.cssText = dummy.style.cssText;
+          el.style.left = (x + PASTE_OFFSET) + 'px';
+          el.style.top  = (y + PASTE_OFFSET) + 'px';
+        }
+        el.id = newId;
+        canvas.appendChild(el);
+        // Re-attach drag/select behaviour via selectNode which uses event delegation
+        el.onmousedown = dummy ? dummy.onmousedown : null;
+      });
+      // Paste internal wires with remapped ids
+      (_nodeClipboard._internalWires || []).forEach(w => {
+        const newWire = { ...JSON.parse(JSON.stringify(w)), id: 'wire-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), fromId: idMap[w.fromId], toId: idMap[w.toId] };
+        flowWires.push(newWire);
+      });
+      saveCanvasState();
+      updateWires();
+      showToast(`Pasted ${_nodeClipboard.length} node${_nodeClipboard.length > 1 ? 's' : ''}`, 'info');
+    }
     // Escape → clear selection
     if (e.key === "Escape") clearSelection();
-  });
 }
 window.initCanvasInteraction = initCanvasInteraction;
 
@@ -2372,6 +2439,7 @@ const undoStack = [];
 const redoStack = [];
 const MAX_UNDO = 50;
 let _undoRestoring = false;
+let _nodeClipboard = []; // { nodeData, wires } for copy-paste
 
 function _captureCanvasState() {
   return {
@@ -2799,8 +2867,9 @@ const NodePanelController = {
         <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="color" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
-            <code style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
+            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" title="Preview Color">
+            <code id="color-hex-${node.id}" style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
+            <button class="btn-pill" style="padding:0 8px; height:22px; font-size:10px; background:var(--cyan); color:var(--bg1);" onclick="updateNodeColor('${node.id}', document.getElementById('color-pick-${node.id}').value)">Apply</button>
           </div>
         </div>
         <div style="display:flex; gap:6px;">
@@ -2914,8 +2983,9 @@ const NodePanelController = {
         <div style="display:flex; flex-direction:column; gap:4px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="color" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="updateNodeColor('${node.id}', this.value); updatePropertyPanel()" title="Custom Color">
-            <code style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
+            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" title="Preview Color">
+            <code id="color-hex-${node.id}" style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
+            <button class="btn-pill" style="padding:0 8px; height:22px; font-size:10px; background:var(--cyan); color:var(--bg1);" onclick="updateNodeColor('${node.id}', document.getElementById('color-pick-${node.id}').value)">Apply</button>
           </div>
         </div>
         <div style="display:flex; gap:6px;">
@@ -3082,8 +3152,9 @@ const EdgePanelController = {
       <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); padding:6px; border-radius:4px; border:1px solid var(--border2); margin-top:auto;">
         <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Wire Color</div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <code style="font-size:10px; color:var(--muted2);">${customColor}</code>
-          <input type="color" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="updateWireColor('${wire.id}', this.value); updateEdgePanel()" title="Custom Wire Color">
+          <code id="color-hex-${wire.id}" style="font-size:10px; color:var(--muted2);">${customColor}</code>
+          <input type="color" id="color-pick-${wire.id}" class="prop-input-strict" style="width:24px; padding:0; border:none; height:20px; cursor:pointer; background:none;" value="${customColor}" oninput="previewWireColor('${wire.id}', this.value)" title="Preview Wire Color">
+          <button class="btn-pill" style="padding:0 8px; height:20px; font-size:10px; background:var(--cyan); color:var(--bg1);" onclick="updateWireColor('${wire.id}', document.getElementById('color-pick-${wire.id}').value)">Apply</button>
         </div>
       </div>
 
@@ -3183,6 +3254,23 @@ function updateNodeColor(id, color) {
 }
 window.updateNodeColor = updateNodeColor;
 
+function previewNodeColor(id, color) {
+  const node = flowNodes.find(n => n.id === id);
+  if (!node) return;
+  node.props.customColor = color; // in-memory; not persisted until Apply
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.borderColor = color;
+    el.style.backgroundColor = color + '33';
+    el.style.boxShadow = `0 0 10px ${color}33`;
+    const head = el.querySelector('.fn-head');
+    if (head) head.style.borderBottomColor = color;
+  }
+  const hexEl = document.getElementById('color-hex-' + id);
+  if (hexEl) hexEl.textContent = color.toUpperCase();
+}
+window.previewNodeColor = previewNodeColor;
+
 function updateWireColor(id, color) {
   const wire = flowWires.find(w => w.id === id);
   if (!wire) return;
@@ -3192,6 +3280,17 @@ function updateWireColor(id, color) {
   saveCanvasState();
 }
 window.updateWireColor = updateWireColor;
+
+function previewWireColor(id, color) {
+  const wire = flowWires.find(w => w.id === id);
+  if (!wire) return;
+  wire.customColor = color; // in-memory; not persisted until Apply
+  const path = document.querySelector(`path[id="${id}"]`);
+  if (path) path.style.stroke = color;
+  const hexEl = document.getElementById('color-hex-' + id);
+  if (hexEl) hexEl.textContent = color.toUpperCase();
+}
+window.previewWireColor = previewWireColor;
 window.updatePropertyPanel = updatePropertyPanel;
 
 function openAgentInEditor() {
@@ -5737,8 +5836,8 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
     path.style.strokeWidth = "3";
     path.style.strokeDasharray = "5 3";
     path.style.opacity = "0.8";
-  } else if (wire && wire.customColor && signal === undefined) {
-    path.style.stroke = wire.customColor;
+  } else if (wire && wire.customColor) {
+    path.style.stroke = wire.customColor; // inline style wins over CSS signal classes; width/glow still apply
   } else {
     path.style.stroke = ""; // Use CSS defaults
     // Do NOT reset pointerEvents here — it is set to 'stroke' on isNew and must persist
