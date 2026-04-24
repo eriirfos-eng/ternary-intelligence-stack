@@ -1589,6 +1589,7 @@ function initCanvasInteraction() {
     }
     // Escape → clear selection
     if (e.key === "Escape") clearSelection();
+  });
 }
 window.initCanvasInteraction = initCanvasInteraction;
 
