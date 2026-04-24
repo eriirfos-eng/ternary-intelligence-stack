@@ -97,6 +97,61 @@ cargo build --release
 
 ---
 
+## Agent Albert — AI Intelligence Layer
+
+[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
+
+**Albert** is the model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He is fully sovereign — you bring your own API key and he never phones home.
+
+**Two deployment modes:**
+
+| Mode | How to use |
+|------|-----------|
+| **Standalone CLI** | `cargo install albert-cli` → set your LLM key → `albert` |
+| **Embedded in TernStudio** | Summon with `F6` inside the flow canvas to generate workflows from a prompt, debug signal paths, or explain node behaviour |
+
+**Model-agnostic — pick your LLM:**
+
+```bash
+# Anthropic Claude
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# OpenAI / GPT-4
+export OPENAI_API_KEY=sk-...
+
+# Google Gemini (default in Albert)
+export GEMINI_API_KEY=AIza...
+
+# Ollama (fully local, no key needed)
+# just run: ollama serve
+
+# XAI / Grok
+export XAI_API_KEY=xai-...
+```
+
+**Quick start:**
+
+```bash
+cargo install albert-cli     # installs the `albert` binary
+albert                       # starts the interactive REPL
+albert "refactor this file"  # one-shot prompt mode
+```
+
+**What Albert brings to the stack:**
+
+- Full agentic coding loop with session memory, tool use (file read/write/edit, bash, glob/grep search), and OAuth
+- RTK (Rust Token Killer) integration — 60–90% token savings on every dev operation
+- MCP (Model Context Protocol) client — connects to any MCP server
+- Slash command library: `/plan`, `/tdd`, `/verify`, `/code-review`, `/build-fix`, `/refactor`, `/docs`, `/loop`, `/compress`
+- Typewriter onboarding and cognitive archetype personalisation
+- Auto-generates `ALBERT.md` in your workspace to bake in project context
+
+→ **[Full Albert documentation](ternlang-root/README.md#agent-albert--ai-intelligence-layer)**  
+→ **[Source: agent_albert_cli/](agent_albert_cli/)**  
+→ **[crates.io: albert-cli](https://crates.io/crates/albert-cli)**
+
+---
+
 ## Repository layout
 
 | Directory | Contents |
@@ -106,6 +161,7 @@ cargo build --release
 | [`ternlang-root/examples/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/examples) | Runnable `.tern` examples (medical, finance, aerospace, etc.) |
 | [`ternlang-root/spec/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec) | BET-ISA spec, language reference, grammar, protocol specs |
 | [`ternlang-root/ternlang-web/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-web) | ternlang.com frontend (GitHub Pages) |
+| [`agent_albert_cli/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli) | Agent Albert — model-agnostic AI coding CLI + TernStudio intelligence layer |
 | `eriirfos-eng/ternlang-premium` *(private)* | 28,495+ proprietary `.tern` modules — Tier 2 / 3 / 4 |
 
 ---
