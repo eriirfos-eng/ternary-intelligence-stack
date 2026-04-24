@@ -6,6 +6,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Conversation runtime for Albert CLI — session management, MCP, OAuth, bash execution, tool use and compaction"
+readme = "README.md"
 keywords = ["ai", "agent", "cli", "mcp", "llm"]
 categories = ["command-line-utilities", "development-tools"]
 
