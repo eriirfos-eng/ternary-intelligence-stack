@@ -1,0 +1,54 @@
+// stdlib/agents/advanced_aggregator.tern
+// Demonstrates: Parallel signal aggregation with uncertainty handling.
+// Tier: 1 — Open Core
+
+agent DataPoint {
+    fn handle(id: int) -> trit {
+        if id == 1 { return affirm; }
+        if id == 2 { return hold; }
+        return reject;
+    }
+}
+
+agent AdvancedAggregator {
+    fn handle(msg: trit) -> trit {
+        let s1: agentref = spawn DataPoint;
+        let s2: agentref = spawn DataPoint;
+        let s3: agentref = spawn DataPoint;
+
+        send s1 1; // Affirm
+        send s2 2; // Hold
+        send s3 3; // Reject
+
+        let r1: trit = await s1;
+        let r2: trit = await s2;
+        let r3: trit = await s3;
+
+        // Logic: If any signal is 'reject', and we don't have clear consensus, 
+        // we might want to 'hold' or 'reject'.
+        // Here we implement a "safety-first" aggregation:
+        
+        if r1 == reject || r2 == reject || r3 == reject {
+            // If there's a disagreement including a reject, we hold for review.
+            return hold;
+        }
+        
+        if r1 == affirm && r2 == affirm { return affirm; }
+        if r1 == affirm && r3 == affirm { return affirm; }
+        if r2 == affirm && r3 == affirm { return affirm; }
+
+        return hold;
+    }
+}
+
+fn main() -> trit {
+    let agg: agentref = spawn AdvancedAggregator;
+    send agg affirm;
+    let res: trit = await agg;
+    
+    // In our test case, s3 returns reject, so result should be hold (0).
+    if res == hold {
+        return affirm;
+    }
+    return reject;
+}
