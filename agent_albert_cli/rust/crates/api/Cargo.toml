@@ -1,16 +1,25 @@
 [package]
-name = "api"
+name = "albert-api"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Multi-provider LLM client for Albert CLI — bridges Anthropic, OpenAI, Google Gemini, Ollama, XAI and the Ternlang API with unified streaming and auth"
+keywords = ["llm", "ai", "api", "anthropic", "openai"]
+categories = ["api-bindings", "asynchronous"]
 
 [dependencies]
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-runtime = { path = "../runtime" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "time"] }
+
+# ternlang feature: integrates with ternlang-api once it is published on crates.io
+# ternlang-api = { version = "1", optional = true }
+# [features]
+# ternlang = ["dep:ternlang-api"]
 
 [lints]
 workspace = true

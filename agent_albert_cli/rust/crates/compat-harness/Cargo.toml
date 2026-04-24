@@ -1,14 +1,18 @@
 [package]
-name = "compat-harness"
+name = "albert-compat"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Compatibility harness for Albert CLI — upstream manifest extraction and path resolution for the Ternary Intelligence Stack"
+keywords = ["ai", "cli", "ternary", "compat", "agent"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-commands = { path = "../commands" }
-tools = { path = "../tools" }
-runtime = { path = "../runtime" }
+commands = { package = "albert-commands", path = "../commands", version = "0.1.0" }
+tools = { package = "albert-tools", path = "../tools", version = "0.1.0" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.0" }
 
 [lints]
 workspace = true

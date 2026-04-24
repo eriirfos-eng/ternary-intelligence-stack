@@ -1,12 +1,14 @@
 [workspace]
 members = ["crates/*"]
+exclude = ["crates/rtk-integration"]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-publish = false
+repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+homepage = "https://ternlang.com"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

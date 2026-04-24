@@ -1,13 +1,17 @@
 [package]
-name = "commands"
+name = "albert-commands"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Slash command library for Albert CLI — /plan, /tdd, /loop, /compress, /code-review, /build-fix, /refactor and more"
+keywords = ["ai", "cli", "agent", "commands", "llm"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+runtime = { package = "albert-runtime", path = "../runtime", version = "0.1.0" }
+console = "0.15"
 
 [lints]
 workspace = true
-
-[dependencies]
-runtime = { path = "../runtime" }
-console = "0.15"
