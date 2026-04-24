@@ -1,0 +1,33 @@
+// stdlib/agents/sql_data_bridge.tern
+// Demonstrates: Automated Data Analysis pattern (NL to T-SQL).
+// Tier: 1 — Open Core
+
+agent SQLDataBridge {
+    fn handle(nl_query: string) -> trit {
+        // Bridges Natural Language to T-SQL queries.
+        // Returns affirm (+1) if data successfully retrieved.
+        // Returns hold (0) if query requires clarification.
+        // Returns reject (-1) if access denied or table not found.
+
+        if len(nl_query) == 0 {
+            return reject;
+        }
+
+        println("T-SQL: Translating NL query to triadic join logic:");
+        println(nl_query);
+
+        // Simulation: "SELECT * FROM fleet WHERE ..."
+        return affirm;
+    }
+}
+
+fn main() -> trit {
+    let db: agentref = spawn SQLDataBridge;
+    send db "average efficiency of electric trucks";
+    let res: trit = await db;
+    
+    if res == affirm {
+        return affirm;
+    }
+    return reject;
+}

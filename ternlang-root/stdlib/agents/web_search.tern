@@ -1,0 +1,33 @@
+// stdlib/agents/web_search.tern
+// Demonstrates: Standard Web Search agent pattern for all tiers.
+// Tier: 1 — Open Core
+
+agent WebSearch {
+    fn handle(query: string) -> trit {
+        // Orchestrates an external web search.
+        // Returns affirm (+1) if high-relevance results are indexed.
+        // Returns hold (0) if results are inconclusive or still loading.
+        // Returns reject (-1) if the query violates safety or has no results.
+
+        if len(query) == 0 {
+            return hold;
+        }
+
+        println("T-SEARCH: Querying global index for:");
+        println(query);
+
+        // Simulation of search success
+        return affirm;
+    }
+}
+
+fn main() -> trit {
+    let s: agentref = spawn WebSearch;
+    send s "ternlang autonomous agents";
+    let res: trit = await s;
+    
+    if res == affirm {
+        return affirm;
+    }
+    return reject;
+}
