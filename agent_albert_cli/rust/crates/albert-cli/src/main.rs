@@ -1254,6 +1254,8 @@ fn run_tui(
 
         // Reset cancel flag from any previous interrupt before starting.
         cancel_flag.store(false, Ordering::Relaxed);
+        // Wire the cancel flag into the runtime so run_turn() exits promptly on ESC.
+        cli.runtime.set_cancel_token(Arc::clone(&cancel_flag));
 
         let mut rx = cli.event_tx.subscribe();
         let tx = tui_event_tx.clone();
@@ -1384,6 +1386,8 @@ fn run_tui(
         }
 
         match turn_result {
+            // "cancelled" is expected on ESC — already shown as "interrupted" in the TUI.
+            Ok(Err(ref e)) if e.to_string() == "cancelled" => {}
             Ok(Err(e)) => {
                 let mut state = tui_state.lock().unwrap();
                 state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
