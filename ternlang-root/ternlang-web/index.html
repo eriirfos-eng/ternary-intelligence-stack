@@ -18,7 +18,7 @@
         "name": "Restricted API (BSL 1.1)"
       },
       "description": "Systems programming language, compiler, and inference runtime built on balanced ternary logic. Provides deterministic uncertainty (trit = −1/0/+1), sparsity-aware BET VM execution, and EU AI Act Article 13/14 compliant decision tracing.",
-      "softwareVersion": "0.3.3",
+      "softwareVersion": "1.1.1",
       "publisher": {
         "@type": "Organization",
         "name": "RFI-IRFOS",
@@ -306,7 +306,7 @@
         <div class="max-w-4xl mx-auto text-center reveal">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Playground</p>
           <h2 class="text-3xl md:text-4xl font-black text-t_text mb-4 uppercase">Want to see it <span class="text-t_teal">actually think?</span></h2>
-          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround is six live labs — MoE deliberation, memory consolidation, sparse matrix, deliberation engine, BET VM terminal, and a ternary truth table. No account. Just click.</p>
+          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround is six live labs — watch 13 AI experts vote on a decision, see an AI refuse an unsafe instruction, run real code in the BET VM. No account. Just click and explore.</p>
           <button onclick="navTo(9)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)] uppercase tracking-widest">Open TernGround →</button>
         </div>
       </section>
@@ -316,35 +316,35 @@
         <div class="max-w-4xl mx-auto px-6">
           <div class="text-center mb-12">
             <h2 class="text-4xl font-black mb-4 uppercase text-t_text">Get Started</h2>
-            <p class="text-t_muted">Install from crates.io or build from source. Run your first .tern program in under two minutes.</p>
+            <p class="text-t_muted">Everything installs from crates.io. Run your first .tern program — or have a full AI agent conversation — in under two minutes.</p>
           </div>
           <div class="bg-t_bg rounded-3xl border border-t_border p-8 md:p-10 font-mono text-sm shadow-2xl relative overflow-hidden group">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-t_teal via-t_blue to-t_red opacity-50"></div>
             <div class="space-y-6 text-t_text font-medium">
               <div>
-                <span class="text-t_muted block mb-1"># Install from crates.io (recommended)</span>
-                <span class="text-t_blue">cargo</span> install ternlang-cli<br>
-                <span class="text-t_teal">ternlang</span>                        <span class="text-t_muted"># → interactive REPL</span><br>
-                <span class="text-t_teal">ternlang</span> my_program.tern         <span class="text-t_muted"># → run a .tern file directly</span><br>
-                <span class="text-t_teal">ternlang</span> run my_program.tern      <span class="text-t_muted"># → same (explicit form)</span>
+                <span class="text-t_muted block mb-1"># Agent Albert — multi-provider AI agent (Gemini, Claude, GPT-4o, Ollama…)</span>
+                <span class="text-t_blue">cargo</span> install albert-cli<br>
+                <span class="text-t_teal">albert-cli</span>                      <span class="text-t_muted"># → wake sequence + interactive chat</span>
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># Or build from source</span>
+                <span class="text-t_muted block mb-1"># Ternlang VM + REPL</span>
+                <span class="text-t_blue">cargo</span> install ternlang-cli<br>
+                <span class="text-t_teal">ternlang</span>                        <span class="text-t_muted"># → interactive REPL</span><br>
+                <span class="text-t_teal">ternlang</span> my_program.tern         <span class="text-t_muted"># → run a .tern file directly</span>
+              </div>
+              <div>
+                <span class="text-t_muted block mb-1"># Or build everything from source</span>
                 <span class="text-t_teal">git</span> clone https://github.com/eriirfos-eng/ternary-intelligence-stack<br>
                 <span class="text-t_teal">cd</span> ternary-intelligence-stack/ternlang-root<br>
                 <span class="text-t_blue">cargo</span> build --release<br>
                 <span class="text-t_blue">cargo</span> test --workspace
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># Run a .tern program on the BET VM (from source)</span>
-                <span class="text-t_blue">cargo</span> run --bin ternlang -- run examples/03_rocket_launch.tern
-              </div>
-              <div>
-                <span class="text-t_muted block mb-1"># Boot the MCP Server (stdio)</span>
+                <span class="text-t_muted block mb-1"># Boot the MCP Server (30 tools, stdio — works with Claude Desktop, Cursor, VS Code)</span>
                 <span class="text-t_red">./target/release/ternlang-mcp</span>
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># Audit a decision log (EU AI Act Art.13/14)</span>
+                <span class="text-t_muted block mb-1"># Audit a decision log (EU AI Act Art.13/14 compliant output)</span>
                 <span class="text-t_blue">cargo</span> run --bin ternlang -- audit decisions.json --html
               </div>
             </div>
@@ -359,7 +359,7 @@
         <div class="text-center mb-10 reveal active">
           <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4">Core Implementation</p>
           <h2 class="text-7xl font-black text-t_text mb-6 leading-none uppercase">Agent <span class="text-t_blue">Albert.</span></h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed">A local AI agent running fully offline via Ollama (Qwen 2.5 3B). Your data never leaves the machine. When a decision is safety-critical, albert forwards it to the MoE-13 API — 13 expert models vote on it — and waits for a trit verdict before taking any action.</p>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed">A terminal AI agent that works with every major provider — Gemini, Claude, GPT-4o, Grok, and local Ollama models — all from one keyboard. Your conversation, your tools, your files: everything stays on your machine unless you say otherwise. When a decision needs a safety check, Albert forwards it to the MoE-13 API and waits for a real verdict before acting.</p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-12 items-start mb-24">
@@ -371,22 +371,24 @@
                 <span class="term-dot bg-t_red"></span><span class="term-dot bg-yellow-500"></span><span class="term-dot bg-t_teal"></span>
                 <span class="ml-4 text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest">albert-code — hybrid mode</span>
               </div>
-              <span class="text-[9px] text-t_blue border border-t_blue/30 bg-t_blue/10 px-2 rounded-full uppercase tracking-widest hidden sm:inline-block font-bold">qwen2.5:3b</span>
+              <span class="text-[9px] text-t_blue border border-t_blue/30 bg-t_blue/10 px-2 rounded-full uppercase tracking-widest hidden sm:inline-block font-bold">gemini-2.5-flash</span>
             </div>
             <div class="p-6 bg-t_bg font-mono text-xs overflow-y-auto h-[460px] text-t_text space-y-4">
-              <div><span class="text-t_blue font-bold">$</span> albert run --model albert:latest --mode hybrid</div>
+              <div><span class="text-t_blue font-bold">$</span> cargo install albert-cli &amp;&amp; albert-cli</div>
               <div class="text-t_muted font-medium">
-                [OLLAMA] Loaded local model (qwen2.5:3b) in 0.42s<br/>
-                [TERNARY] Connecting to wss://ternlang.com/api... <span class="text-t_teal font-bold">connected</span><br/>
-                [SQLITE] Mounted persistent memory vault.
+                ✦ Albert v1.1.1 — Ternary Intelligence Stack<br/>
+                ✦ Provider: Gemini · Model: gemini-2.5-flash<br/>
+                ✦ Memory loaded from ~/.ternlang/memory.md<br/>
+                ✦ 3 MCP servers active (gmail, filesystem, github)<br/>
+                ✦ Type /help for commands, /model to switch provider
               </div>
-              <div><span class="text-t_blue font-bold">></span> execute_bash: analyze local network traffic for 10s.</div>
-              <div class="text-t_muted italic">Running: sudo tcpdump -i wlan0 -c 100...</div>
-              <div><span class="text-t_blue font-bold">></span> Found unusual outbound connection to 192.168.1.104. Terminate?</div>
-              <div class="text-t_muted italic">Routing to MoE-13 API for triadic safety verification...</div>
+              <div><span class="text-t_blue font-bold">you &gt;</span> read my unread emails, flag anything that looks like a bug report, create github issues for those</div>
+              <div class="text-t_muted italic">⠸ Thinking... [MCP: gmail.list_messages]</div>
+              <div class="text-t_muted font-medium">Found 4 unread. Scanning subject lines...</div>
+              <div class="text-t_muted italic">⠸ [MCP: github.create_issue] "TypeError in checkout flow — user report"</div>
               <div class="p-4 bg-t_blue/5 border-l-2 border-t_blue text-t_text mt-2">
-                <span class="text-t_blue font-black block mb-1">[STATE 0] CONFLICT DETECTED.</span>
-                IP matches internal subnet (+1), but port behavior is irregular (-1). Ternary logic maps the contradiction natively. <span class="text-t_text font-bold italic">Holding at State 0.</span> Fetching MAC registry to resolve.
+                <span class="text-t_blue font-black block mb-1">✓ Done.</span>
+                Created 2 GitHub issues from bug reports. 1 email was a feature request — saved a draft reply asking for more detail. 1 was spam, ignored.
               </div>
               <div class="text-t_blue animate-pulse-slow">_</div>
             </div>
@@ -395,21 +397,21 @@
           <!-- Right: Features -->
           <div class="space-y-10">
             <div class="reveal active">
-              <h4 class="text-t_text font-black text-xl mb-3 uppercase tracking-tight flex items-center gap-3"><span class="w-8 h-8 rounded bg-t_teal/10 border border-t_teal/30 flex items-center justify-center font-mono text-xs text-t_teal font-bold">CLI</span> Albert-Code</h4>
-              <p class="text-t_muted text-sm leading-relaxed">CLI implementation over the Streamlit prototype. Ollama handles local inference with no internet required. Tool calls execute directly against the host OS — no sandboxing, no middleware. Fast because there's nothing between the model and the machine.</p>
+              <h4 class="text-t_text font-black text-xl mb-3 uppercase tracking-tight flex items-center gap-3"><span class="w-8 h-8 rounded bg-t_teal/10 border border-t_teal/30 flex items-center justify-center font-mono text-xs text-t_teal font-bold">CLI</span> Every Provider, One Terminal</h4>
+              <p class="text-t_muted text-sm leading-relaxed">Install once, talk to any model. Gemini, Claude, GPT-4o, Grok, xAI, or a local Ollama model — switch mid-session with <code class="text-t_teal font-bold">/model</code>. Your ALBERT.md persona, memory, and tool preferences travel with you across every provider. Albert remembers who he is regardless of which model is under the hood.</p>
             </div>
             <div class="reveal active" style="transition-delay: 100ms;">
-              <h4 class="text-t_text font-black text-xl mb-3 uppercase tracking-tight flex items-center gap-3"><span class="w-8 h-8 rounded bg-t_blue/10 border border-t_blue/30 flex items-center justify-center font-mono text-xs text-t_blue font-bold">⚡</span> Hybrid Intelligence</h4>
-              <p class="text-t_muted text-sm leading-relaxed">Text generation and general Q&amp;A run on the local model. When a decision requires a safety check, a factual assertion, or a multi-expert vote, the request is forwarded to the MoE-13 API and blocked until a trit verdict is returned. <em class="text-t_text opacity-80 not-italic font-semibold underline decoration-t_blue underline-offset-4">The API is a decision engine, not an LLM wrapper.</em></p>
+              <h4 class="text-t_text font-black text-xl mb-3 uppercase tracking-tight flex items-center gap-3"><span class="w-8 h-8 rounded bg-t_blue/10 border border-t_blue/30 flex items-center justify-center font-mono text-xs text-t_blue font-bold">🔌</span> MCP — Connect Everything</h4>
+              <p class="text-t_muted text-sm leading-relaxed">Albert connects to any MCP server — Gmail, GitHub, Google Drive, Slack, your database. Add a new integration in seconds with <code class="text-t_teal font-bold">/mcp add</code>. No config files to hand-edit. No restarts. Albert can read your emails, open issues, write files, and query APIs in the same turn. <em class="text-t_text opacity-80 not-italic font-semibold underline decoration-t_blue underline-offset-4">The agent and the tools are the same thing.</em></p>
             </div>
             <div class="reveal active" style="transition-delay: 200ms;">
-              <h4 class="text-t_text font-black text-xl mb-3 uppercase tracking-tight flex items-center gap-3"><span class="w-8 h-8 rounded bg-t_red/10 border border-t_red/30 flex items-center justify-center font-mono text-xs text-t_red font-bold">🛠</span> Functional Tool Harness</h4>
+              <h4 class="text-t_text font-black text-xl mb-3 uppercase tracking-tight flex items-center gap-3"><span class="w-8 h-8 rounded bg-t_red/10 border border-t_red/30 flex items-center justify-center font-mono text-xs text-t_red font-bold">🧠</span> Memory That Outlives the Session</h4>
               <ul class="text-t_muted text-xs space-y-2 font-mono bg-t_bg3 p-4 rounded-xl border border-t_border">
-                <li><span class="text-t_text font-bold">execute_bash</span> — Full OS shell integration.</li>
-                <li><span class="text-t_text font-bold">create_file/read_file</span> — Seamless local I/O.</li>
-                <li><span class="text-t_text font-bold">retrieve_memory</span> — Persistent SQLite vault.</li>
-                <li><span class="text-t_text font-bold">get_system_health</span> — Real-time telemetry.</li>
-                <li class="pt-2 mt-2 border-t border-t_border/50 text-t_teal font-bold">Context-window overflow routes to trit-compressed summary pass.</li>
+                <li><span class="text-t_text font-bold">~/.ternlang/memory.md</span> — persists across every update, never overwritten</li>
+                <li><span class="text-t_text font-bold">Self-reflection</span> — after each turn Albert distills a one-line memory via Gemini</li>
+                <li><span class="text-t_text font-bold">/plan</span> — break a big task into numbered steps and execute each one</li>
+                <li><span class="text-t_text font-bold">/loop</span> — give a goal, Albert keeps using tools until it's done</li>
+                <li class="pt-2 mt-2 border-t border-t_border/50 text-t_teal font-bold">Long conversations auto-compress — context never runs out mid-task.</li>
               </ul>
             </div>
           </div>
@@ -418,8 +420,8 @@
         <!-- TernGround CTA on Albert page -->
         <div class="reveal border-t border-t_border pt-20 pb-10 text-center">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Playground</p>
-          <h3 class="text-2xl md:text-3xl font-black text-t_text mb-4 uppercase">Watch the deliberation engine <span class="text-t_teal">run live.</span></h3>
-          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround has six interactive labs — run the EMA deliberation step by step, prune the sparse matrix, and execute real .tern programs in the BET VM terminal.</p>
+          <h3 class="text-2xl md:text-3xl font-black text-t_text mb-4 uppercase">See the AI actually <span class="text-t_teal">think out loud.</span></h3>
+          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround has six interactive labs — watch 13 expert agents vote on a decision, run real .tern programs in the BET VM, and see what happens when an AI says "I don't know yet" instead of guessing.</p>
           <button onclick="navTo(9)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)] uppercase tracking-widest">Open TernGround →</button>
         </div>
 
@@ -481,25 +483,25 @@
     <div class="slide-page bg-t_bg2">
       <div class="max-w-7xl mx-auto px-6 py-20">
         <div class="text-center mb-16 reveal active">
-          <p class="font-mono text-t_red text-xs font-bold tracking-widest uppercase mb-4">Governance & Observability · EU AI Act Art. 13 / 14 / 15</p>
+          <p class="font-mono text-t_red text-xs font-bold tracking-widest uppercase mb-4">Compliance · EU AI Act Art. 13 / 14 / 15</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Tern<span class="text-t_red">Audit.</span></h2>
-          <p class="text-2xl text-t_text max-w-4xl mx-auto font-bold leading-snug mb-4">Every AI decision: traceable, timestamped, explainable — before and after it happens.</p>
-          <p class="text-lg text-t_muted max-w-3xl mx-auto font-medium">TernAudit logs every <code class="font-mono text-t_red">trit=0</code> hold and <code class="font-mono text-t_red">trit=−1</code> veto with a full trace: which expert voted, at what confidence, on which input, and why. No silent overrides. Permanent log to AxisMemory. <span class="text-t_red font-bold">This is the audit trail the EU AI Act (Articles 13, 14, 15) requires — built in, not bolted on.</span></p>
+          <p class="text-2xl text-t_text max-w-4xl mx-auto font-bold leading-snug mb-4">When a regulator asks "how did your AI make that decision?" — you answer in seconds, not weeks.</p>
+          <p class="text-lg text-t_muted max-w-3xl mx-auto font-medium">The EU AI Act (Articles 13, 14, 15) requires that high-risk AI systems be explainable, human-overseen, and auditable. TernAudit makes this automatic: every decision is logged with the full trace — which expert voted, at what confidence, on which input, and why it was held or rejected. No reverse-engineering from logs. No "the model said so." <span class="text-t_red font-bold">The audit trail isn't a feature you add later. It's how the system works.</span></p>
         </div>
 
         <div class="glass-card rounded-[3rem] p-10 md:p-16 text-left shadow-[0_0_100px_rgba(255,77,77,0.05)] border-t_red/10 relative max-w-5xl mx-auto reveal">
           <div class="grid md:grid-cols-3 gap-12 mb-16">
             <div>
-              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Evidence Graph</h4>
-              <p class="text-sm text-t_muted font-medium leading-relaxed">See exactly which input dimensions pushed — or failed to push — your agent's confidence above threshold. Real-time, during inference. Not a post-mortem. You watch the decision form.</p>
+              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Why Did It Do That?</h4>
+              <p class="text-sm text-t_muted font-medium leading-relaxed">Every decision shows you which pieces of evidence pushed confidence up, and which ones weren't strong enough. You see the reasoning as it forms — not reconstructed afterwards. "The model felt it was right" is never a valid audit response here.</p>
             </div>
             <div>
-              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Veto Trace</h4>
-              <p class="text-sm text-t_muted font-medium leading-relaxed">Safety fired a −1 block. TernAudit gives you the expert name, its confidence score, and the exact input vector that triggered it — timestamped, permanently logged to AxisMemory. You don't debug it. You read it.</p>
+              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Why Did It Stop?</h4>
+              <p class="text-sm text-t_muted font-medium leading-relaxed">The Safety expert rejected the action. TernAudit gives you the expert name, its confidence level, and exactly what triggered it — timestamped, permanently logged. You hand this to your compliance officer. They can read it without a data scientist in the room.</p>
             </div>
             <div>
-              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">Resolution Path</h4>
-              <p class="text-sm text-t_muted font-medium leading-relaxed">Agent stuck on trit=0? TernAudit generates a typed evidence request: the exact dimensions that are under-threshold and what value they need to resolve. You supply the data. The hold clears. No guesswork, no manual log trawl.</p>
+              <h4 class="text-t_text font-black text-base uppercase mb-4 tracking-widest">What Does It Need to Continue?</h4>
+              <p class="text-sm text-t_muted font-medium leading-relaxed">System is waiting for more information? TernAudit tells you exactly what it needs — not a vague error, not a timeout. A typed list: "provide X to resolve the hold." You supply it. The decision resumes. Human oversight that actually works.</p>
             </div>
           </div>
           <div class="bg-t_bg rounded-3xl p-8 border border-t_red/20 font-mono text-sm relative group overflow-hidden">
@@ -518,9 +520,9 @@
     <div class="slide-page bg-t_bg">
       <div class="max-w-7xl mx-auto px-6 py-20">
         <div class="text-center mb-16">
-          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Source</p>
+          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Source · Logic Library</p>
           <h2 class="text-5xl md:text-7xl font-black text-t_text mb-8 uppercase leading-none">300+ <span class="text-t_teal">.tern</span> programs.</h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto mb-16 font-medium">Every high-stakes domain requires a native triadic implementation. Here are 300+ ready to deploy.</p>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto mb-16 font-medium">Real programs for real domains — each one built around the idea that "I need more information" is a valid, important answer. Browse, run, and adapt them freely.</p>
         </div>
 
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-24 reveal">
@@ -589,19 +591,19 @@
         <div class="grid lg:grid-cols-2 gap-16 items-start mb-24 reveal">
           <div>
             <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">The Integration</p>
-            <h2 class="text-5xl font-black text-t_text mb-6 uppercase">Your agent.<br/><span class="text-t_teal">Now it can say hold.</span></h2>
-            <p class="text-lg text-t_muted mb-6 font-medium">One HTTP call. Works with Claude, Cursor, or any MCP-compatible agent. No new language to learn — just add the header and your agent gains a native third return state.</p>
+            <h2 class="text-5xl font-black text-t_text mb-6 uppercase">Your agent.<br/><span class="text-t_teal">Now it can say "not yet."</span></h2>
+            <p class="text-lg text-t_muted mb-6 font-medium">One HTTP call. Works with Claude, Cursor, or any MCP-compatible agent. Your existing AI gains a third return state — and stops guessing when it shouldn't.</p>
             <ul class="space-y-3 mb-8 text-sm font-medium">
-              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">When evidence is insufficient, the API returns <code class="font-mono text-t_teal bg-t_teal/10 px-1 rounded">trit=0</code> — "not enough data to act" — instead of forcing a yes/no guess. Your agent waits. It does not hallucinate.</span></li>
-              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Persistent 3-layer memory keyed to your API key. No state blob to pass between calls.</span></li>
-              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Hard safety veto: if the Safety expert fires −1 at confidence &gt; 0.90, the entire chain terminates before any action executes. No override.</span></li>
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">When evidence is thin, the API returns <code class="font-mono text-t_teal bg-t_teal/10 px-1 rounded">trit=0</code> — "not enough data to act." Your agent waits and asks for more context. It does not make something up.</span></li>
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Persistent 3-layer memory keyed to your API key. Context carries across calls automatically — no state management in your code.</span></li>
+              <li class="flex items-start gap-3"><span class="text-t_teal font-black mt-0.5">✓</span><span class="text-t_muted">Hard safety veto: if the Safety expert votes no with more than 90% confidence, the entire chain stops before any action runs. There is no way to override it from the outside.</span></li>
             </ul>
             
             <div class="space-y-2 font-mono text-[10px] sm:text-xs bg-t_bg p-6 rounded-xl border border-t_border shadow-sm">
               <div class="text-t_muted font-bold uppercase tracking-widest pb-2 border-b border-t_border/30 mb-2">AI Reasoning Endpoints</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_deliberate</span></div><span class="text-t_muted font-medium">EMA convergence</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_gate</span></div><span class="text-t_muted font-medium">safety hard veto</span></div>
-              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.3.3 · 19 tools — all free</div>
+              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v1.1.1 · 19 tools — all free</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/mcp</span></div><span class="text-t_muted font-medium">JSON-RPC 2.0</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">trit_debate / trit_calibrate</span></div><span class="text-t_muted font-medium">multi-round EMA</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">trit_eco_check / trit_translate</span></div><span class="text-t_muted font-medium">EcoCore + code migration</span></div>
@@ -636,8 +638,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
 
         <div class="text-center reveal border-t border-t_border pt-20 pb-10">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Live Execution</p>
-          <h2 class="text-3xl md:text-4xl font-black text-t_text mb-4 uppercase">Want to run real <span class="text-t_teal">.tern code?</span></h2>
-          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround's BET VM terminal has five real programs — classify, pipeline, sparse neural inference, MoE voting, and medical uncertainty. Pick one. Press Run. Watch the opcodes execute.</p>
+          <h2 class="text-3xl md:text-4xl font-black text-t_text mb-4 uppercase">Want to see it <span class="text-t_teal">actually run?</span></h2>
+          <p class="text-t_text font-medium max-w-xl mx-auto mb-8 leading-relaxed">TernGround has a live BET VM terminal — pick from five real programs, press Run, and watch the instructions execute step by step. No account. No setup.</p>
           <button onclick="navTo(9)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)] uppercase tracking-widest">Open TernGround →</button>
         </div>
       </div>
@@ -647,9 +649,9 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
     <div class="slide-page bg-t_bg">
       <div class="max-w-7xl mx-auto px-6 py-20">
         <div class="text-center mb-10 reveal active">
-          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Laboratory 05</p>
+          <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Measured Performance</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Benchmarks.</h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">Measured performance of the BET VM. All results are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root to verify on your own hardware.</p>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">When you skip 60% of calculations entirely, the numbers speak for themselves. All results are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root to verify on your own hardware.</p>
         </div>
 
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 reveal">
@@ -794,7 +796,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <div class="text-center mb-12 reveal active">
           <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4">Deep Dive</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">The <span class="text-t_blue">Stack.</span></h2>
-          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto leading-relaxed">Over 30 crates covering the full stack — from the compiler and BET VM to AI inference middleware, FPGA codegen, quantum bridges, and domain-specific libraries. All built around one type: <code class="font-mono text-t_blue">{−1, 0, +1}</code>.</p>
+          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto leading-relaxed">Over 30 crates covering the entire stack — the compiler, BET virtual machine, AI inference middleware, MCP server, FPGA codegen, and domain libraries for medicine, law, finance, and beyond. Every single one built around one foundational idea: three states instead of two.</p>
         </div>
 
         <div class="space-y-16">
@@ -803,7 +805,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           <div class="reveal">
             <div class="flex items-center gap-4 mb-6 border-b border-t_border pb-3">
               <h3 class="text-xl font-black text-t_text uppercase tracking-tight">Tier 1 — Open Core</h3>
-              <span class="text-[10px] font-mono font-bold bg-t_teal/10 text-t_teal px-2 py-1 rounded">LGPL-3.0 · crates.io</span>
+              <span class="text-[10px] font-mono font-bold bg-t_teal/10 text-t_teal px-2 py-1 rounded">LGPL-2.1-or-later · crates.io</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <a href="https://crates.io/crates/ternlang-core" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_teal transition-colors flex flex-col shadow-sm group">
@@ -842,19 +844,19 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <a href="https://crates.io/crates/ternlang-moe" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-moe</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">Mixture-of-Experts orchestrator: 13 specialist models vote via weighted EMA convergence. Hard veto rule — Safety at conf &gt; 0.90 terminates the chain unconditionally.</span>
+                <span class="text-xs text-t_muted leading-relaxed">13 specialist agents vote on every decision — logician, safety officer, ethicist, domain experts and more. One hard safety veto at 90%+ confidence stops the entire chain. No majority vote can override it.</span>
               </a>
               <a href="https://crates.io/crates/ternlang-ml" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-ml</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">Sparse matmul kernel, BitNet b1.58 weight quantization, EMA deliberation engine, coalition vote, hallucination scoring, and scalar temperature.</span>
+                <span class="text-xs text-t_muted leading-relaxed">The math engine: sparse matrix multiply (skips zero-weights entirely), BitNet b1.58 quantization, round-by-round deliberation accumulator, coalition vote aggregation, and hallucination confidence scoring.</span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mkl" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mkl</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">Math Kernel Library. Implements <code class="text-t_teal">TSPARSE_MATMUL</code> — skips multiply-accumulate when weight = 0. Patent-pending zero-MAC bypass (RFI-IRFOS).</span>
+                <span class="text-xs text-t_muted leading-relaxed">Low-level math kernel. When a neural network weight is zero, the processor simply skips the calculation — no multiply, no memory fetch. This is the <code class="text-t_teal">TSPARSE_MATMUL</code> zero-MAC bypass. Patent-pending (RFI-IRFOS A50296/2026).</span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mcp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mcp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">19-tool MCP server over stdio + HTTP. JSON-RPC 2.0. Connects Claude Desktop, Cursor, or any MCP client to the ternary decision engine. Includes TernAudit (EU AI Act Art.13/14).</span>
+                <span class="text-xs text-t_muted leading-relaxed">30 tools over stdio + HTTP. Connects Claude Desktop, Cursor, VS Code, or any MCP client directly to the ternary decision engine. Includes TernAudit for EU AI Act Art.13/14 compliance trails — all 30 tools free, no API key. Available on Smithery.</span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-api" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-api</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
@@ -945,7 +947,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <div class="text-center mb-12">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Deployment Model</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Open Core. <span class="text-t_teal">Paid API.</span></h2>
-          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto">The compiler, VM, CLI, and all 30 MCP tools are free — no API key required. Tier 2+ unlocks the REST API with server-side persistent memory, SSE streaming, and SLA. Subscription revenue funds ongoing development at RFI-IRFOS in Graz, Austria.</p>
+          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto">The compiler, VM, CLI, Albert agent, and all 30 MCP tools are free — no API key, no account. Tier 2+ unlocks the cloud API: persistent memory, streaming responses, and the full MoE-13 deliberation engine at scale. Every tier includes EU AI Act Art.13/14 audit trails out of the box. Subscriptions fund ongoing research and development at RFI-IRFOS in Graz, Austria.</p>
         </div>
         
         <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
@@ -1025,7 +1027,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <div class="text-center mb-20 reveal active">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Open Playground · No Account Required</p>
           <h2 class="text-6xl md:text-7xl font-black text-t_text mb-6 uppercase leading-none">Tern<span class="text-t_teal">Ground.</span></h2>
-          <p class="text-xl text-t_text font-medium max-w-3xl mx-auto leading-relaxed">Six live labs. Each one shows a different part of how ternary logic works — click, change inputs, watch the system think in three states. No account. No signup. Just run.</p>
+          <p class="text-xl text-t_text font-medium max-w-3xl mx-auto leading-relaxed">Six live labs. Watch 13 AI experts vote on a real decision. See memory blocks reject unsafe instructions. Run actual code in the BET VM. No account. No signup. Everything works in your browser right now.</p>
         </div>
 
         <!-- LAB 01: MoE Deliberation -->
@@ -1035,8 +1037,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_blue text-[10px] font-black uppercase tracking-[0.2em] border border-t_blue/50 px-3 py-1 rounded-full bg-t_blue/10">Lab 01</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">13 Experts. <span class="text-t_blue">One Answer.</span></h3>
             </div>
-            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">LLMs process every query through the same weights regardless of what you're asking. Mixture-of-Experts routes each query only to the specialist that's relevant — isolating failure domains and cutting compute. In ternary, each expert votes {−1, 0, +1}: reject, hold, or affirm. No majority vote can override a Safety veto.</p>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_blue">Inject Query</strong> to fire a decision through 13 specialist agents. Each votes independently via weighted EMA convergence. If Safety or MetaSafety returns −1 at confidence &gt; 0.90, the entire chain terminates unconditionally — right there, before any action executes.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">A standard AI model answers every question with the same brain. Imagine instead having a room of 13 specialists — a lawyer, a doctor, a safety officer, a logician, an ethicist — and every decision goes around the table. Each one votes: yes, no, or "I need more information." No single enthusiastic yes can override a safety veto. That's the Mixture-of-Experts model, and it's what makes this system auditable instead of just confident.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_blue">Inject Query</strong> to send a decision through all 13 agents. Watch each one vote in real time. If the Safety expert votes no with more than 90% confidence, the whole chain stops — regardless of what everyone else said. One hard veto is enough.</p>
           </div>
           <div class="glass-card rounded-[2rem] border border-t_border p-8 grid lg:grid-cols-12 gap-8 shadow-2xl">
             <div class="lg:col-span-8 bg-t_bg2 rounded-xl border border-t_border p-6 relative">
@@ -1071,8 +1073,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 02</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Your Memory Stack <span class="text-t_teal">Just Said No.</span></h3>
             </div>
-            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Binary AI treats all memory as equal weight — a new instruction can silently overwrite a safety rule. Ternlang structures memory in three layers: L1 is hot working context (ephemeral), L2 holds ternary-compressed session patterns, L3 is immutable identity anchors that cannot be overridden. When L1 tries to promote something that contradicts an L3 veto, the system says no — loudly, traceably, never silently.</p>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_teal">Promote to L2</strong> to push a working-memory item up the stack. When it conflicts with a Core Identity Veto anchor in L3, the system doesn't crash — it rejects cleanly and logs exactly why.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">A standard AI agent can be told something in the same conversation that contradicts its safety rules — and it often just goes along with it. Ternlang structures memory in three layers: L1 is what you just said (temporary), L2 is what the agent has learned from your sessions (compressed), L3 is the core identity — rules that cannot be overwritten by anything in L1 or L2. When a new instruction conflicts with an L3 veto, the system rejects it clearly and logs why. There is no silent override.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Press <strong class="text-t_teal">Promote to L2</strong> to push a working-memory item up the stack. When it runs into a Core Identity veto in L3, you'll see the rejection — with the reason, not just an error code.</p>
           </div>
           <div class="grid md:grid-cols-3 gap-6 font-mono text-xs">
             <div class="glass-card rounded-2xl flex flex-col h-[400px]">
@@ -1124,8 +1126,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 03</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">It Doesn't Guess. <span class="text-t_teal">It Waits.</span></h3>
             </div>
-            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Binary inference must return an answer on every call — even when the evidence isn't there yet. The deliberation engine fixes this: it accumulates confidence across multiple rounds using an exponential moving average, and only commits once it crosses a threshold. Below that threshold it returns <code class="font-mono text-t_teal">trit=0</code> — "I need more data." That's not a failure state. That's the correct machine output under uncertainty.</p>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Pick a scenario. Press <strong class="text-t_teal">Deliberate</strong>. Watch confidence accumulate round by round via <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">S_r = 0.3·e + 0.7·S_{prev}</code>. It only commits to +1 or −1 when confident enough. Until then: <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">trit=0</code>. Waiting is the correct answer.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">A standard AI model must produce an answer every time you call it — even when the situation is ambiguous. The deliberation engine works differently: it collects evidence across multiple rounds, and only commits to a final decision once confidence crosses a threshold. Below that threshold it returns <code class="font-mono text-t_teal">trit=0</code> — "I need more information before I can tell you." That isn't a bug or a failure. That's the machine doing its job correctly under uncertainty.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Pick a scenario. Press <strong class="text-t_teal">Deliberate</strong>. Watch confidence build round by round. The system only commits to yes or no once it's sure enough. Until then: <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">trit=0</code> — "still thinking." Waiting for evidence is the right answer.</p>
           </div>
           <div class="glass-card rounded-xl p-6 md:p-10 border border-t_border shadow-2xl max-w-5xl mx-auto">
             <div class="mb-8">
@@ -1180,8 +1182,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_teal text-[10px] font-black uppercase tracking-[0.2em] border border-t_teal/50 px-3 py-1 rounded-full bg-t_teal/10">Lab 04</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Zero Means <span class="text-t_teal">Don't Bother.</span></h3>
             </div>
-            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Neural networks burn most of their power on matrix multiplications — billions of weight × activation multiplies per inference pass. In ternary BitNet, every weight is constrained to {−1, 0, +1}. A weight of zero requires no multiply at all: the BET VM skips it at the instruction level, no branch needed, no masking overhead. BitNet b1.58 puts roughly 60% of weights here by design. This is where the 60% power reduction comes from.</p>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Click any <strong class="text-t_blue">+1</strong> or <strong class="text-t_red">−1</strong> weight to prune it to zero. Every zero is a multiply-accumulate the BET VM skips entirely — no branch, no masking, just gone. Watch active compute and power consumption drop in real time as you prune.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">AI models burn energy on billions of tiny multiplications every time they answer a question. In ternary BitNet, every weight in the model is forced to be −1, 0, or +1. When a weight is zero, there's nothing to multiply — the processor simply skips it. No calculation, no memory read, no power draw. Modern ternary models put around 60% of weights at zero by design. That's where the dramatic efficiency gain comes from — not from doing the math faster, but from not doing it at all.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Click any <strong class="text-t_blue">+1</strong> or <strong class="text-t_red">−1</strong> cell to set it to zero. Every zero you add is a calculation the processor skips entirely. Watch the power meter drop in real time.</p>
           </div>
           <div class="glass-card rounded-[3rem] overflow-hidden shadow-2xl p-8 grid lg:grid-cols-2 gap-12 bg-t_bg2">
             <div>
@@ -1219,8 +1221,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_red text-[10px] font-black uppercase tracking-[0.2em] border border-t_red/50 px-3 py-1 rounded-full bg-t_red/10">Lab 05</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Real Code. <span class="text-t_red">Actually Running.</span></h3>
             </div>
-            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">The BET VM is a balanced ternary virtual machine — its registers, stack, and arithmetic all operate natively on {−1, 0, +1}. There is no binary-to-ternary conversion layer. <code class="font-mono text-t_teal">trit=0</code> is a first-class value that can suspend execution (THOLD), gate a branch, or propagate uncertainty up the call stack via the <code class="font-mono text-t_teal">?</code> operator. This is what makes ternary a runtime property, not just a data type.</p>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Select a <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">.tern</code> program and press <strong class="text-t_red">RUN</strong>. Five programs execute instruction by instruction in the BET VM — classifier, pipeline gate, sparse neural inference, MoE voting, and medical uncertainty resolution. Watch the opcodes fire.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">The BET VM is a virtual machine where everything — registers, arithmetic, program flow — runs on three states instead of two. There is no conversion layer, no compatibility shim. When a program reaches an uncertain state, the VM can literally pause and wait (<code class="font-mono text-t_teal">THOLD</code>), or pass the uncertainty up to the caller with the <code class="font-mono text-t_teal">?</code> operator. This is what it means for three-state logic to be a runtime property and not just a label on your data.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Pick a <code class="font-mono text-t_teal bg-t_teal/10 px-1.5 rounded">.tern</code> program and press <strong class="text-t_red">RUN</strong>. Five real programs run instruction by instruction: a classifier, a pipeline gate, sparse neural inference, MoE voting, and a medical uncertainty resolver. Watch the execution happen live.</p>
           </div>
           <div class="term-window max-w-5xl mx-auto shadow-2xl">
             <div class="term-titlebar">
@@ -1243,8 +1245,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="font-mono text-t_blue text-[10px] font-black uppercase tracking-[0.2em] border border-t_blue/50 px-3 py-1 rounded-full bg-t_blue/10">Lab 06</span>
               <h3 class="text-2xl md:text-3xl font-black text-t_text uppercase">Three States. <span class="text-t_blue">Nine Outcomes.</span></h3>
             </div>
-            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Every logic operation you know assumes two states: true or false. Adding a third state — unknown, withheld, uncertain — changes the entire truth table. The OR analog doesn't just return true or false anymore; it has to decide what to do when one input is uncertain. So does AND. So does addition. Ternary arithmetic has consistent, non-arbitrary rules for all of it.</p>
-            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Binary has a 2×2 truth table. Ternary has a 3×3. Pick an operation — TMAX is the OR analog, TMIN is AND, TADD is addition, TMUL is multiplication. Click any cell to see the exact inputs, the result, and the rule behind it explained in plain language.</p>
+            <p class="text-t_muted text-sm max-w-2xl leading-relaxed mb-3">Every logic operation you've ever used assumes exactly two states: true or false. The moment you add a third — uncertain, pending, unknown — every single operation has to be rethought. What does OR mean when one of the inputs isn't yes or no yet? What does addition mean? Ternary logic has a complete, consistent set of answers to all of these — not arbitrary choices, but mathematically principled rules that handle every combination cleanly.</p>
+            <p class="text-t_text text-base max-w-2xl leading-relaxed font-medium">Binary has a 2×2 truth table. Ternary has a 3×3. Pick an operation — TMAX is OR, TMIN is AND, TADD is addition, TMUL is multiplication. Click any cell to see the two inputs, the result, and the plain-English reason behind it.</p>
           </div>
           <div class="glass-card rounded-[2rem] p-8 md:p-12 border border-t_border shadow-xl max-w-3xl mx-auto">
             <div class="flex flex-wrap gap-3 mb-8" id="truth-op-btns">
