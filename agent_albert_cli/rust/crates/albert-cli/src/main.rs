@@ -2782,7 +2782,7 @@ fn map_conversation_message(message: ConversationMessage) -> InputMessage {
 fn map_content_block(block: ContentBlock) -> InputContentBlock {
     match block {
         ContentBlock::Text { text } => InputContentBlock::Text { text },
-        ContentBlock::ToolUse { id, name, input } => InputContentBlock::ToolUse { id, name, input: serde_json::Value::String(input) },
+        ContentBlock::ToolUse { id, name, input } => InputContentBlock::ToolUse { id, name, input: serde_json::from_str(&input).unwrap_or(serde_json::Value::Null) },
         ContentBlock::ToolResult { tool_use_id, output, tool_name: _, is_error: _ } => InputContentBlock::ToolResult {
             tool_use_id,
             content: vec![ToolResultContentBlock::Text { text: output }],
