@@ -1218,14 +1218,17 @@ fn run_tui(
         });
 
         // Always clear working state + deactivate any pending tool dot
-        {
+        let was_cancelled = cancel_flag.load(Ordering::Relaxed);
+        let turn_secs = {
             let mut state = tui_state.lock().unwrap();
+            let secs = state.turn_start.take().map(|t| t.elapsed().as_secs()).unwrap_or(0);
             state.working = false;
             state.deactivate_last_tool();
-            if cancel_flag.load(Ordering::Relaxed) {
+            if was_cancelled {
                 state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
             }
-        }
+            secs
+        };
         cancel_flag.store(false, Ordering::Relaxed);
 
         // Inject ToolOutput blocks: walk exec_log, insert human-readable output after each ToolUse.
@@ -1314,6 +1317,12 @@ fn run_tui(
                     }
                 }
             }
+        }
+
+        // Show elapsed time for non-cancelled turns
+        if !was_cancelled && turn_secs > 0 {
+            let mut state = tui_state.lock().unwrap();
+            state.push_exec(tui::ExecBlock::WorkedFor(turn_secs));
         }
 
         // Save session after each turn
