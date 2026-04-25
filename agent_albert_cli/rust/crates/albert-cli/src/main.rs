@@ -12,6 +12,7 @@ use std::process::Command;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use crossterm::execute;
 use dialoguer::Select;
 use console::style;
 
@@ -1090,12 +1091,19 @@ impl LiveCli {
         let mut stdout = io::stdout();
         match result {
             Ok(summary) => {
-                let mut done_spinner = Spinner::new();
-                done_spinner.finish(
-                    "Done",
-                    TerminalRenderer::new().color_theme(),
-                    &mut stdout,
+                // Clear spinner line
+                execute!(
+                    stdout,
+                    crossterm::cursor::MoveToColumn(0),
+                    crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
                 )?;
+
+                // Print tool call trace before response
+                let trace = render_tool_trace(&summary);
+                if !trace.is_empty() {
+                    println!("{trace}");
+                }
+
                 let response_text = final_assistant_text(&summary);
                 if !response_text.is_empty() {
                     typewriter_print(&TerminalRenderer::new().render_markdown(&response_text));
@@ -2950,6 +2958,82 @@ fn typewriter_print(text: &str) {
         thread::sleep(Duration::from_millis(delay));
     }
     println!();
+}
+
+fn render_tool_trace(summary: &runtime::TurnSummary) -> String {
+    use console::style;
+    use std::collections::HashMap;
+
+    // Build tool_use_id → output map from results
+    let mut results: HashMap<&str, &str> = HashMap::new();
+    for msg in &summary.tool_results {
+        for block in &msg.blocks {
+            if let ContentBlock::ToolResult { tool_use_id, output, .. } = block {
+                results.insert(tool_use_id.as_str(), output.as_str());
+            }
+        }
+    }
+
+    let mut lines = String::new();
+    for msg in &summary.assistant_messages {
+        for block in &msg.blocks {
+            if let ContentBlock::ToolUse { id, name, input } = block {
+                // Pretty label per tool type
+                let (label, color_fn): (&str, fn(&str) -> String) = match name.as_str() {
+                    n if n.contains("bash") || n.contains("shell") => ("Ran", |s| style(s).yellow().to_string()),
+                    n if n.contains("read") => ("Read", |s| style(s).cyan().to_string()),
+                    n if n.contains("write") || n.contains("create") => ("Write", |s| style(s).green().to_string()),
+                    n if n.contains("edit") || n.contains("patch") => ("Edit", |s| style(s).magenta().to_string()),
+                    n if n.contains("grep") || n.contains("search") => ("Search", |s| style(s).blue().to_string()),
+                    n if n.contains("glob") || n.contains("list") => ("List", |s| style(s).blue().to_string()),
+                    n if n.contains("web") || n.contains("fetch") || n.contains("http") => ("Fetch", |s| style(s).cyan().to_string()),
+                    n if n.contains("mcp") => ("MCP", |s| style(s).magenta().to_string()),
+                    _ => ("Tool", |s| style(s).dim().to_string()),
+                };
+
+                // Extract a short preview from input JSON
+                let input_preview = if let Ok(val) = serde_json::from_str::<serde_json::Value>(input) {
+                    val.get("command")
+                        .or_else(|| val.get("path"))
+                        .or_else(|| val.get("file_path"))
+                        .or_else(|| val.get("pattern"))
+                        .or_else(|| val.get("query"))
+                        .and_then(|v| v.as_str())
+                        .map(|s| {
+                            let s = s.lines().next().unwrap_or(s);
+                            if s.len() > 72 { format!("{}…", &s[..72]) } else { s.to_string() }
+                        })
+                        .unwrap_or_default()
+                } else {
+                    String::new()
+                };
+
+                lines.push_str(&format!(
+                    "\n  {} {}  {}",
+                    style("●").dim(),
+                    color_fn(label),
+                    style(&input_preview).dim(),
+                ));
+
+                // Show output — first 4 lines, truncated
+                if let Some(output) = results.get(id.as_str()) {
+                    let output_lines: Vec<&str> = output.lines().collect();
+                    let show = output_lines.len().min(4);
+                    for line in &output_lines[..show] {
+                        let trimmed = if line.len() > 100 { &line[..100] } else { line };
+                        lines.push_str(&format!("\n    {}", style(trimmed).dim()));
+                    }
+                    if output_lines.len() > 4 {
+                        lines.push_str(&format!(
+                            "\n    {}",
+                            style(format!("… +{} lines", output_lines.len() - 4)).dim().italic()
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    lines
 }
 
 fn final_assistant_text(summary: &runtime::TurnSummary) -> String {
