@@ -1043,6 +1043,30 @@ fn run_tui(
             break;
         }
 
+        // ── Auth flow: if waiting for an API key, treat this submission as the key ──
+        {
+            let auth_provider = tui_state.lock().unwrap().auth_flow.clone();
+            if let Some(provider) = auth_provider {
+                let api_key = input.trim().to_string();
+                let msg = if api_key.is_empty() {
+                    "auth: key cannot be empty — re-type /auth <provider> to retry".to_string()
+                } else {
+                    match runtime::save_provider_config(&provider, runtime::ProviderConfig {
+                        api_key: Some(api_key),
+                        model: None,
+                        base_url: None,
+                    }) {
+                        Ok(()) => format!("auth: API key saved for {provider}"),
+                        Err(e) => format!("auth: failed to save key — {e}"),
+                    }
+                };
+                let mut st = tui_state.lock().unwrap();
+                st.auth_flow = None;
+                st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                continue;
+            }
+        }
+
         // agent_override: /plan and /loop inject a richer prompt; plain input passes through.
         let mut agent_override: Option<String> = None;
 
@@ -1144,6 +1168,45 @@ fn run_tui(
                     ));
                     true
                 }
+                // /auth — inline key entry: activates masked input mode
+                commands::SlashCommand::Auth { provider } => {
+                    let mut st = tui_state.lock().unwrap();
+                    match provider {
+                        Some(p) => {
+                            st.push_exec(tui::ExecBlock::SystemMsg(
+                                format!("auth: enter API key for {p} in the input below"),
+                            ));
+                            st.auth_flow = Some(p.to_lowercase());
+                        }
+                        None => {
+                            st.push_exec(tui::ExecBlock::SystemMsg(
+                                "auth: choose a provider — openai · anthropic · google · xai\n\
+                                 type /auth <provider> to set its API key".to_string(),
+                            ));
+                        }
+                    }
+                    true
+                }
+                // /help — show command reference inline in the chat log
+                commands::SlashCommand::Help => {
+                    let help = render_repl_help();
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::RawText(help));
+                    true
+                }
+                // /compact and /compress — run inline and push result as a system note
+                commands::SlashCommand::Compact => {
+                    let msg = cli.compact_inline()?;
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Compress => {
+                    let msg = cli.compress_inline()?;
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
                 _ => false,
             };
 
@@ -1197,6 +1260,8 @@ fn run_tui(
         let done_flag = Arc::new(AtomicBool::new(false));
         let done_clone = done_flag.clone();
         let cancel_clone = Arc::clone(&cancel_flag);
+        // Clone so the async block can clear working state immediately on ESC.
+        let tui_state_cancel = Arc::clone(&tui_state);
 
         let mut prompter = CliPermissionPrompter::new(cli.permission_mode, false);
 
@@ -1216,6 +1281,15 @@ fn run_tui(
                     let is_cancelled = cancel_clone.load(Ordering::Relaxed);
 
                     if is_done || is_cancelled {
+                        if is_cancelled {
+                            // Immediately update TUI so it feels responsive — the agent thread
+                            // continues running in the background until handle.join() below.
+                            let mut state = tui_state_cancel.lock().unwrap();
+                            state.working = false;
+                            state.deactivate_last_tool();
+                            state.turn_start = None;
+                            state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
+                        }
                         // Drain any remaining queued events (skip on cancel)
                         if is_done {
                             while let Ok(ev) = rx.try_recv() {
@@ -1247,14 +1321,16 @@ fn run_tui(
             })
         });
 
-        // Always clear working state + deactivate any pending tool dot
+        // Always clear working state + deactivate any pending tool dot.
+        // If already cleared by the cancel path above, these are no-ops.
         let was_cancelled = cancel_flag.load(Ordering::Relaxed);
         let turn_secs = {
             let mut state = tui_state.lock().unwrap();
             let secs = state.turn_start.take().map(|t| t.elapsed().as_secs()).unwrap_or(0);
             state.working = false;
             state.deactivate_last_tool();
-            if was_cancelled {
+            // "interrupted" was already pushed in the cancel path above; skip here.
+            if was_cancelled && false {
                 state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
             }
             secs
@@ -2301,6 +2377,12 @@ User: {}\n\nAssistant: {}",
     }
 
     fn compact(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let msg = self.compact_inline()?;
+        println!("{msg}");
+        Ok(())
+    }
+
+    fn compact_inline(&mut self) -> Result<String, Box<dyn std::error::Error>> {
         let result = self.runtime.compact(CompactionConfig::default());
         let removed = result.removed_message_count;
         let kept = result.compacted_session.messages.len();
@@ -2316,11 +2398,16 @@ User: {}\n\nAssistant: {}",
             self.event_tx.clone(),
         )?;
         self.persist_session()?;
-        println!("{}", format_compact_report(removed, kept, skipped));
-        Ok(())
+        Ok(format_compact_report(removed, kept, skipped))
     }
 
     fn compress(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let msg = self.compress_inline()?;
+        println!("{msg}");
+        Ok(())
+    }
+
+    fn compress_inline(&mut self) -> Result<String, Box<dyn std::error::Error>> {
         let result = self.runtime.compact(CompactionConfig {
             preserve_recent_messages: 2,
             max_estimated_tokens: 1,
@@ -2340,14 +2427,13 @@ User: {}\n\nAssistant: {}",
         )?;
         self.persist_session()?;
         if skipped {
-            println!("Compression skipped: session is empty or too short.");
+            Ok("Compression skipped: session is empty or too short.".to_string())
         } else {
-            println!(
+            Ok(format!(
                 "Aggressively compressed {} messages. Albert's memory is now lean and sharp ({} kept).",
                 removed, kept
-            );
+            ))
         }
-        Ok(())
     }
 
     fn run_auth(&mut self, provider_name: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
