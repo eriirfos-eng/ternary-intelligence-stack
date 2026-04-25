@@ -1001,11 +1001,20 @@ fn run_tui(
     let tui_event_tx = tui_app.event_tx.clone();
     let cancel_flag = Arc::clone(&tui_app.cancel_flag);
 
-    // Show startup banner as a system message
+    // Show ASCII splash + model/permission line on startup
     {
         let mut state = tui_state.lock().unwrap();
+        let splash = concat!(
+            "  ██████╗  ██╗      ██████╗  ███████╗ ██████╗  ████████╗\n",
+            "  ██╔══██╗ ██║     ██╔══██╗ ██╔════╝ ██╔══██╗ ╚══██╔══╝\n",
+            "  ███████║ ██║     ██████╔╝ █████╗   ██████╔╝    ██║   \n",
+            "  ██╔══██║ ██║     ██╔══██╗ ██╔══╝   ██╔══██╗    ██║   \n",
+            "  ██║  ██║ ███████╗██████╔╝ ███████╗ ██║  ██║    ██║   \n",
+            "  ╚═╝  ╚═╝ ╚══════╝╚═════╝  ╚══════╝ ╚═╝  ╚═╝    ╚═╝   "
+        );
+        state.push_exec(tui::ExecBlock::AgentText(splash.to_string()));
         state.push_exec(tui::ExecBlock::SystemMsg(format!(
-            "albert {} · {} · {}",
+            "v{}  ·  {}  ·  {}  ·  type /help for commands",
             env!("CARGO_PKG_VERSION"),
             cli.model,
             cli.permission_mode.as_str(),
