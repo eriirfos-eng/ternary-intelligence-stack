@@ -1373,14 +1373,17 @@ function initCanvasInteraction() {
   const wrap = document.getElementById("flow-canvas-wrap");
   if (!wrap) return;
 
-  // Wheel → zoom toward cursor
+  // Wheel → liquid zoom toward cursor
+  let zoomRafId = null;
   wrap.addEventListener("wheel", (e) => {
     e.preventDefault();
     const rect = wrap.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    const delta = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-    zoomAt(mx, my, delta);
+    // Normalize delta across browsers/devices (trackpad gives tiny values, mouse wheel ~100)
+    const normalized = e.deltaY / (e.deltaMode === 1 ? 3 : 100);
+    const factor = Math.pow(0.9965, normalized * 100);
+    zoomAt(mx, my, factor);
   }, { passive: false });
 
   // Middle-mouse or Space+drag → pan
@@ -1404,6 +1407,9 @@ function initCanvasInteraction() {
       panStartX = e.clientX; panStartY = e.clientY;
       panOriginX = CT.x;     panOriginY = CT.y;
       wrap.classList.add("panning");
+      // Disable transition during pan for zero-lag tracking
+      const fc = document.getElementById("flow-canvas");
+      if (fc) fc.style.transition = "none";
       e.preventDefault();
     } else if (e.button === 0 && (e.target === wrap || e.target.id === "flow-canvas") && !spaceDown) {
       // Rubber-band selection start
@@ -1474,7 +1480,13 @@ function initCanvasInteraction() {
     }
   });
   document.addEventListener("mouseup", (e) => {
-    if (panActive) { panActive = false; wrap.classList.remove("panning"); }
+    if (panActive) {
+      panActive = false;
+      wrap.classList.remove("panning");
+      // Re-enable transition after pan ends
+      const fc = document.getElementById("flow-canvas");
+      if (fc) fc.style.transition = "";
+    }
     if (rbActive) {
       rbActive = false;
       const rb = document.getElementById("rubber-band");
@@ -2969,12 +2981,12 @@ const NodePanelController = {
         <div class="prop-label-strict">Hyperparameters</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <div>
-            <div style="font-size:9px; color:var(--muted2); margin-bottom:2px;">TEMP: ${temp}</div>
-            <input type="range" min="0" max="1" step="0.1" value="${temp}" style="width:100%" oninput="updateNodeProp('temperature', parseFloat(this.value)); updatePropertyPanel()">
+            <div id="lbl-temp-${node.id}" style="font-size:9px; color:var(--muted2); margin-bottom:2px;">TEMP: ${temp}</div>
+            <input type="range" min="0" max="2" step="0.01" value="${temp}" style="width:100%" oninput="updateNodeProp('temperature', parseFloat(this.value)); document.getElementById('lbl-temp-${node.id}').textContent='TEMP: '+parseFloat(this.value).toFixed(2)">
           </div>
           <div>
-            <div style="font-size:9px; color:var(--muted2); margin-bottom:2px;">TOKENS: ${tokens}</div>
-            <input type="range" min="128" max="4096" step="128" value="${tokens}" style="width:100%" oninput="updateNodeProp('max_trits', parseInt(this.value)); updatePropertyPanel()">
+            <div id="lbl-tokens-${node.id}" style="font-size:9px; color:var(--muted2); margin-bottom:2px;">TOKENS: ${tokens}</div>
+            <input type="range" min="128" max="16384" step="64" value="${tokens}" style="width:100%" oninput="updateNodeProp('max_trits', parseInt(this.value)); document.getElementById('lbl-tokens-${node.id}').textContent='TOKENS: '+this.value">
           </div>
         </div>
       </div>
