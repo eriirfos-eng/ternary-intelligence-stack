@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{
+    self, DisableBracketedPaste, EnableBracketedPaste, Event, KeyCode, KeyEvent, KeyModifiers,
+};
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
@@ -40,7 +42,11 @@ const POPUP_BORDER: Color = Color::Rgb(55, 55, 55);
 const POPUP_MATCH: Color = Color::Rgb(0, 180, 100);
 const POPUP_SEL_BG: Color = Color::Rgb(42, 42, 42);
 const CODE_FG: Color = Color::Rgb(100, 210, 255);    // inline code / code blocks
-const POPUP_WINDOW: usize = 7;                        // max items visible at once in popup
+const POPUP_WINDOW: usize = 16;                       // max items visible at once in popup
+const CATEGORY_FG: Color = Color::Rgb(60, 60, 60);   // greyed-out category headers in popup
+
+// Braille spinner frames — cycle at 100 ms per frame via Tick
+const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 // Tip lines shown below the working indicator — cycle by elapsed seconds
 const TIPS: &[&str] = &[
@@ -116,6 +122,10 @@ pub struct TuiState {
     pub popup_selected: usize,
     /// True while voice recording is active (Ctrl+Space toggle)
     pub is_recording: bool,
+    /// Set while waiting for an API key — input is masked + submitted as the key.
+    pub auth_flow: Option<String>,
+    /// Characters queued for the typewriter drip — drained 40 chars per Tick.
+    pub drip_buffer: String,
 }
 
 impl Default for TuiState {
@@ -135,6 +145,8 @@ impl Default for TuiState {
             scroll: 0,
             popup_selected: 0,
             is_recording: false,
+            auth_flow: None,
+            drip_buffer: String::new(),
         }
     }
 }
@@ -147,6 +159,14 @@ impl TuiState {
     pub fn push_exec(&mut self, block: ExecBlock) {
         if matches!(&block, ExecBlock::ToolUse { .. }) {
             self.deactivate_last_tool();
+        }
+        // Suppress consecutive identical SystemMsg entries (e.g. repeated voice errors).
+        if let ExecBlock::SystemMsg(ref msg) = block {
+            if let Some(ExecBlock::SystemMsg(ref last)) = self.exec_log.back() {
+                if last == msg {
+                    return;
+                }
+            }
         }
         self.exec_log.push_back(block);
         // Keep the log bounded so rendering stays fast — older blocks are trimmed.
@@ -224,25 +244,45 @@ pub enum TuiEvent {
     VoiceText(String),
     /// Voice transcription failed — show the error message.
     VoiceError(String),
+    /// Bracketed paste — insert without triggering submit on newlines.
+    PasteText(String),
 }
 
 // ── Popup items ───────────────────────────────────────────────────────────────
 
 #[derive(Clone)]
 struct PopupItem {
-    /// What the popup row displays (without leading /)
     display: String,
-    /// What to write into state.input when selected
     complete: String,
-    /// Right-hand description
     desc: String,
+    /// Category header row — not selectable, rendered differently.
+    is_header: bool,
 }
 
+impl PopupItem {
+    fn cmd(display: &str, complete: &str, desc: &str) -> Self {
+        Self { display: display.to_string(), complete: complete.to_string(), desc: desc.to_string(), is_header: false }
+    }
+    fn header(label: &str) -> Self {
+        Self { display: label.to_string(), complete: String::new(), desc: String::new(), is_header: true }
+    }
+}
+
+// Command groups for the categorised root view (shown when input == "/")
+const CMD_GROUPS: &[(&str, &[&str])] = &[
+    ("CONFIG",    &["model", "permissions", "auth"]),
+    ("SESSION",   &["status", "compact", "compress", "clear", "cost", "export", "session", "resume"]),
+    ("GIT",       &["commit", "pr", "issue", "diff"]),
+    ("AGENT",     &["plan", "loop", "tdd", "verify", "code-review", "build-fix", "bughunter", "ultraplan", "refactor"]),
+    ("WORKSPACE", &["init", "memory", "config", "docs", "learn", "checkpoint", "aside", "teleport", "debug-tool-call"]),
+    ("INFO",      &["help", "version"]),
+];
+
 /// Returns popup items for the current input:
-///   /           → all slash commands
-///   /partial    → matching slash commands
-///   /permissions[…] → mode picker (auto-submit on Enter)
-///   /model[…]   → model picker (auto-submit on Enter)
+///   /           → full categorised command list
+///   /partial    → flat filtered list (no categories)
+///   /permissions[…] → permission mode picker
+///   /model[…]   → model picker
 fn popup_items(input: &str) -> Vec<PopupItem> {
     if !input.starts_with('/') {
         return vec![];
@@ -262,11 +302,11 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
         return PERM_MODES
             .iter()
             .filter(|(mode, _)| partial.is_empty() || mode.starts_with(partial))
-            .map(|(mode, desc)| PopupItem {
-                display: format!("permissions {mode}"),
-                complete: format!("/permissions {mode}"),
-                desc: desc.to_string(),
-            })
+            .map(|(mode, desc)| PopupItem::cmd(
+                &format!("permissions {mode}"),
+                &format!("/permissions {mode}"),
+                desc,
+            ))
             .collect();
     }
 
@@ -284,32 +324,59 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
         return MODEL_ENTRIES
             .iter()
             .filter(|(id, _, _)| partial.is_empty() || id.contains(partial))
-            .take(12)
-            .map(|(id, provider, desc)| PopupItem {
-                display: format!("model  {id}"),
-                complete: format!("/model {id}"),
-                desc: format!("{provider}  ·  {desc}"),
-            })
+            .take(16)
+            .map(|(id, provider, desc)| PopupItem::cmd(
+                &format!("model  {id}"),
+                &format!("/model {id}"),
+                &format!("{provider}  ·  {desc}"),
+            ))
             .collect();
     }
 
-    // ── Regular slash command matching ────────────────────────────────────
-    let prefix = &input[1..];
+    let prefix = &input[1..]; // text after the "/"
+
+    // ── Root view: type "/" alone → categorised full list ─────────────────
+    if prefix.is_empty() {
+        let specs = slash_command_specs();
+        let mut items: Vec<PopupItem> = Vec::new();
+        for (label, names) in CMD_GROUPS {
+            let group_items: Vec<PopupItem> = names
+                .iter()
+                .filter_map(|&n| specs.iter().find(|s| s.name == n))
+                .map(|s| {
+                    let hint = match s.name {
+                        "model" | "permissions" => String::new(),
+                        _ => s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default(),
+                    };
+                    PopupItem::cmd(
+                        &format!("{}{hint}", s.name),
+                        &format!("/{}", s.name),
+                        s.summary,
+                    )
+                })
+                .collect();
+            if !group_items.is_empty() {
+                items.push(PopupItem::header(label));
+                items.extend(group_items);
+            }
+        }
+        return items;
+    }
+
+    // ── Prefix search: flat filtered list ─────────────────────────────────
     slash_command_specs()
         .iter()
         .filter(|s| s.name.starts_with(prefix))
-        .take(8)
         .map(|s| {
-            // Don't show <arg> placeholder for commands handled in-popup
             let hint = match s.name {
                 "model" | "permissions" => String::new(),
                 _ => s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default(),
             };
-            PopupItem {
-                display: format!("{}{hint}", s.name),
-                complete: format!("/{}", s.name),
-                desc: s.summary.to_string(),
-            }
+            PopupItem::cmd(
+                &format!("{}{hint}", s.name),
+                &format!("/{}", s.name),
+                s.summary,
+            )
         })
         .collect()
 }
@@ -470,14 +537,19 @@ fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
 
 pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     let area = f.area();
-    let items = popup_items(&state.input);
+    // No popup while waiting for an API key.
+    let items = if state.auth_flow.is_some() { vec![] } else { popup_items(&state.input) };
     let n_items = items.len();
     // Popup: up to POPUP_WINDOW items + 1 nav footer; placed BELOW input (Gemini-style)
     let popup_h = if n_items == 0 { 0u16 } else { (n_items.min(POPUP_WINDOW) + 1) as u16 };
 
-    // Input height: min 2 rows, expands as user types, capped at 5
+    // Input height: min 2 rows, expands as user types, capped at 5.
+    // Usable text width = total width - " > " prefix (3) - badge (≈15) - margin (1).
     let input_h = {
-        let usable = area.width.saturating_sub(20).max(10) as usize;
+        let badge_approx = git_branch_cached()
+            .map(|b| b.chars().count() as u16 + 2)
+            .unwrap_or(0);
+        let usable = area.width.saturating_sub(3 + badge_approx + 1).max(10) as usize;
         let n = state.input.chars().count();
         if n == 0 { 2u16 } else { ((n + usable - 1) / usable).max(2).min(5) as u16 }
     };
@@ -655,31 +727,47 @@ fn render_popup(f: &mut ratatui::Frame, area: Rect, items: &[PopupItem], selecte
         .min(total.saturating_sub(win_size));
     let win_end = (win_start + win_size).min(total);
 
+    let selectable_total = items.iter().filter(|i| !i.is_header).count();
+    let selectable_idx = items[..selected.min(total.saturating_sub(1))]
+        .iter()
+        .filter(|i| !i.is_header)
+        .count();
+
     let mut lines: Vec<Line<'static>> = Vec::new();
 
     for (abs_i, item) in items[win_start..win_end].iter().enumerate() {
         let i = win_start + abs_i;
-        let is_sel = i == selected;
-        let bg = if is_sel { POPUP_SEL_BG } else { POPUP_BG };
-        let name_col = if is_sel { GREEN } else { POPUP_MATCH };
-        let desc_col = if is_sel { FG } else { GREY };
-        lines.push(Line::from(vec![
-            Span::styled("  ", Style::default().bg(bg)),
-            Span::styled(
-                format!("/{}", item.display),
-                Style::default().fg(name_col).bg(bg).add_modifier(Modifier::BOLD),
-            ),
-            Span::styled("  ", Style::default().bg(bg)),
-            Span::styled(item.desc.clone(), Style::default().fg(desc_col).bg(bg)),
-        ]));
+        if item.is_header {
+            // Category separator — dim label with rule
+            let label = format!("  {} ", item.display);
+            lines.push(Line::from(Span::styled(label, Style::default().fg(CATEGORY_FG).bg(POPUP_BG))));
+        } else {
+            let is_sel = i == selected;
+            let bg = if is_sel { POPUP_SEL_BG } else { POPUP_BG };
+            let name_col = if is_sel { GREEN } else { POPUP_MATCH };
+            let desc_col = if is_sel { FG } else { GREY };
+            lines.push(Line::from(vec![
+                Span::styled("  ", Style::default().bg(bg)),
+                Span::styled(
+                    format!("/{}", item.display),
+                    Style::default().fg(name_col).bg(bg).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled("  ", Style::default().bg(bg)),
+                Span::styled(item.desc.clone(), Style::default().fg(desc_col).bg(bg)),
+            ]));
+        }
     }
 
-    // Nav footer: position counter + key hints
-    let nav = format!(
-        "  ({}/{})  ↑↓ navigate  ·  tab select  ·  esc dismiss",
-        selected + 1,
-        total,
-    );
+    // Nav footer
+    let nav = if selectable_total > 0 {
+        format!(
+            "  ({}/{})  ↑↓ navigate  ·  tab/enter select  ·  esc dismiss",
+            selectable_idx + 1,
+            selectable_total,
+        )
+    } else {
+        "  ↑↓ navigate  ·  esc dismiss".to_string()
+    };
     lines.push(Line::from(Span::styled(nav, Style::default().fg(DIM).bg(POPUP_BG))));
 
     let para = Paragraph::new(Text::from(lines)).style(Style::default().bg(POPUP_BG));
@@ -707,8 +795,26 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 
     let input_area = h_layout[0];
 
-    // Render input text with wrapping (or dim placeholder when empty)
-    let para = if state.input.is_empty() {
+    // Render input text with wrapping (or dim placeholder when empty).
+    // In auth_flow mode: show provider prompt and mask the typed key.
+    let para = if let Some(ref provider) = state.auth_flow {
+        if state.input.is_empty() {
+            Paragraph::new(Line::from(vec![
+                Span::styled(" 🔑 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    format!("API key for {provider}:"),
+                    Style::default().fg(ORANGE),
+                ),
+                Span::styled("  (press Enter to save)", Style::default().fg(DIM)),
+            ]))
+        } else {
+            let masked: String = "*".repeat(state.input.chars().count());
+            Paragraph::new(Line::from(vec![
+                Span::styled(" 🔑 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+                Span::styled(masked, Style::default().fg(ORANGE)),
+            ]))
+        }
+    } else if state.input.is_empty() {
         Paragraph::new(Line::from(vec![
             Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
             Span::styled("Type your message or @path/to/file", Style::default().fg(DIM)),
@@ -791,7 +897,8 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled("  ctrl+space to stop & transcribe", Style::default().fg(GREY)),
         ])
     } else if state.working {
-        let secs = state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0);
+        let elapsed_ms = state.turn_start.map(|t| t.elapsed().as_millis()).unwrap_or(0);
+        let secs = elapsed_ms / 1000;
         let timer = if secs >= 60 {
             format!("{}m {}s", secs / 60, secs % 60)
         } else {
@@ -803,16 +910,31 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             String::new()
         };
         let activity = current_activity(state);
+        // Animate spinner at ~100 ms per frame
+        let frame = (elapsed_ms / 100) as usize % SPINNER.len();
+        let spin = SPINNER[frame];
         Line::from(vec![
-            Span::styled(" * ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+            Span::styled(format!(" {spin} "), Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
             Span::styled(activity, Style::default().fg(ORANGE)),
             Span::styled(format!(" ({timer}{tok_str})"), Style::default().fg(GREY)),
         ])
     } else {
+        let last_worked = state.exec_log.iter().rev().find_map(|b| {
+            if let ExecBlock::WorkedFor(s) = b { Some(*s) } else { None }
+        });
+        let worked_part = last_worked.map(|secs| {
+            let dur = if secs >= 60 {
+                format!("{}m {}s", secs / 60, secs % 60)
+            } else {
+                format!("{secs}s")
+            };
+            format!("  ·  Worked for {dur}  ")
+        }).unwrap_or_else(|| "  ".to_string());
         Line::from(vec![
             Span::styled(" ◆ ", Style::default().fg(DIM).add_modifier(Modifier::BOLD)),
             Span::styled("Idle", Style::default().fg(DIM)),
-            Span::styled("  ·  type / for commands", Style::default().fg(DIM)),
+            Span::styled(worked_part, Style::default().fg(DIM)),
+            Span::styled("type / for commands", Style::default().fg(DIM)),
         ])
     };
     f.render_widget(Paragraph::new(line).style(Style::default().bg(STATUS_BG)), area);
@@ -824,7 +946,7 @@ fn render_tips(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let tip_idx = (secs / 8) as usize % TIPS.len();
     let tip = TIPS[tip_idx];
     let line = Line::from(vec![
-        Span::styled("   ⌐ ", Style::default().fg(DIM)),
+        Span::styled("⎿  ", Style::default().fg(DIM)),
         Span::styled(format!("Tip: {tip}"), Style::default().fg(DIM)),
     ]);
     f.render_widget(Paragraph::new(line).style(Style::default().bg(BG)), area);
@@ -977,6 +1099,7 @@ impl TuiApp {
     fn run_inner(mut self) -> Result<(), Box<dyn std::error::Error>> {
         enable_raw_mode()?;
         io::stdout().execute(EnterAlternateScreen)?;
+        io::stdout().execute(EnableBracketedPaste)?;
 
         let backend = CrosstermBackend::new(io::stdout());
         let mut terminal = Terminal::new(backend)?;
@@ -993,8 +1116,10 @@ impl TuiApp {
                 continue;
             }
             if event::poll(Duration::from_millis(50)).unwrap_or(false) {
-                if let Ok(Event::Key(k)) = event::read() {
-                    let _ = ktx.send(TuiEvent::Key(k));
+                match event::read() {
+                    Ok(Event::Key(k)) => { let _ = ktx.send(TuiEvent::Key(k)); }
+                    Ok(Event::Paste(text)) => { let _ = ktx.send(TuiEvent::PasteText(text)); }
+                    _ => {}
                 }
             }
         });
@@ -1069,21 +1194,32 @@ impl TuiApp {
                                     }
                                 }
 
-                                // Up / Down / Left / Right all navigate the popup when open
+                                // Up / Down / Left / Right all navigate the popup when open.
+                                // Header rows are skipped automatically.
                                 (KeyCode::Up, KeyModifiers::NONE)
                                 | (KeyCode::Left, KeyModifiers::NONE)
                                     if has_popup =>
                                 {
-                                    state.popup_selected =
-                                        state.popup_selected.saturating_sub(1);
+                                    let mut idx = state.popup_selected.saturating_sub(1);
+                                    while idx > 0 && items.get(idx).map(|i| i.is_header).unwrap_or(false) {
+                                        idx = idx.saturating_sub(1);
+                                    }
+                                    if !items.get(idx).map(|i| i.is_header).unwrap_or(true) {
+                                        state.popup_selected = idx;
+                                    }
                                 }
                                 (KeyCode::Down, KeyModifiers::NONE)
                                 | (KeyCode::Right, KeyModifiers::NONE)
                                     if has_popup =>
                                 {
                                     let max = items.len().saturating_sub(1);
-                                    state.popup_selected =
-                                        (state.popup_selected + 1).min(max);
+                                    let mut idx = (state.popup_selected + 1).min(max);
+                                    while idx < max && items.get(idx).map(|i| i.is_header).unwrap_or(false) {
+                                        idx = (idx + 1).min(max);
+                                    }
+                                    if !items.get(idx).map(|i| i.is_header).unwrap_or(true) {
+                                        state.popup_selected = idx;
+                                    }
                                 }
 
                                 // Scroll when no popup
@@ -1101,37 +1237,41 @@ impl TuiApp {
                                     if has_popup =>
                                 {
                                     let sel = state.popup_selected.min(items.len().saturating_sub(1));
-                                    let complete = items[sel].complete.clone();
-                                    // For permission mode: no trailing space, just complete + space
-                                    let with_space = if complete.starts_with("/permissions ") {
-                                        complete
-                                    } else {
-                                        format!("{complete} ")
-                                    };
-                                    state.input = with_space;
-                                    state.cursor = state.input.chars().count();
-                                    state.popup_selected = 0;
+                                    if !items[sel].is_header {
+                                        let complete = items[sel].complete.clone();
+                                        let with_space = if complete.starts_with("/permissions ") {
+                                            complete
+                                        } else {
+                                            format!("{complete} ")
+                                        };
+                                        state.input = with_space;
+                                        state.cursor = state.input.chars().count();
+                                        state.popup_selected = 0;
+                                    }
                                 }
 
                                 // Enter with popup:
-                                //   /permissions X  → auto-submit (inline handler applies immediately)
-                                //   /model X        → auto-submit (inline handler applies immediately)
+                                //   header row      → skip (no-op)
+                                //   /permissions X  → auto-submit
+                                //   /model X        → auto-submit
                                 //   anything else   → complete into input box
                                 (KeyCode::Enter, KeyModifiers::NONE) if has_popup => {
                                     let sel = state.popup_selected.min(items.len().saturating_sub(1));
-                                    let complete = items[sel].complete.clone();
-                                    let is_auto = complete.starts_with("/permissions ")
-                                        || complete.starts_with("/model ");
-                                    if is_auto {
-                                        state.input = complete;
-                                        state.cursor = state.input.chars().count();
-                                        state.popup_selected = 0;
-                                        let text = state.input_take();
-                                        submit_text = Some(text);
-                                    } else {
-                                        state.input = complete;
-                                        state.cursor = state.input.chars().count();
-                                        state.popup_selected = 0;
+                                    if !items[sel].is_header {
+                                        let complete = items[sel].complete.clone();
+                                        let is_auto = complete.starts_with("/permissions ")
+                                            || complete.starts_with("/model ");
+                                        if is_auto {
+                                            state.input = complete;
+                                            state.cursor = state.input.chars().count();
+                                            state.popup_selected = 0;
+                                            let text = state.input_take();
+                                            submit_text = Some(text);
+                                        } else {
+                                            state.input = complete;
+                                            state.cursor = state.input.chars().count();
+                                            state.popup_selected = 0;
+                                        }
                                     }
                                 }
                                 (KeyCode::Enter, KeyModifiers::NONE) => {
@@ -1145,11 +1285,18 @@ impl TuiApp {
                                     if m == KeyModifiers::NONE || m == KeyModifiers::SHIFT =>
                                 {
                                     state.input_insert(c);
-                                    state.popup_selected = 0;
+                                    // Reset to first selectable item (skip any header at 0)
+                                    let new_items = popup_items(&state.input);
+                                    state.popup_selected = new_items.iter()
+                                        .position(|i| !i.is_header)
+                                        .unwrap_or(0);
                                 }
                                 (KeyCode::Backspace, _) => {
                                     state.input_backspace();
-                                    state.popup_selected = 0;
+                                    let new_items = popup_items(&state.input);
+                                    state.popup_selected = new_items.iter()
+                                        .position(|i| !i.is_header)
+                                        .unwrap_or(0);
                                 }
                                 (KeyCode::Delete, _) => state.input_delete(),
                                 (KeyCode::Left, _) => {
@@ -1242,12 +1389,12 @@ impl TuiApp {
                         let mut state = self.state.lock().unwrap();
                         match ev {
                             AssistantEvent::TextDelta(delta) => {
-                                match state.exec_log.back_mut() {
-                                    Some(ExecBlock::AgentText(ref mut s)) => {
-                                        s.push_str(&delta);
-                                    }
-                                    _ => state.exec_log.push_back(ExecBlock::AgentText(delta)),
+                                // Queue into drip buffer — Tick drains it for typewriter effect.
+                                // Ensure the AgentText block exists so the drip has somewhere to land.
+                                if !matches!(state.exec_log.back(), Some(ExecBlock::AgentText(_))) {
+                                    state.exec_log.push_back(ExecBlock::AgentText(String::new()));
                                 }
+                                state.drip_buffer.push_str(&delta);
                             }
                             AssistantEvent::ToolUse { name, input, .. } => {
                                 let preview = tool_input_preview(&input);
@@ -1272,6 +1419,7 @@ impl TuiApp {
                     // ── terminal handoff for slash commands ───────────────────
                     Some(TuiEvent::Suspend { ack }) => {
                         self.key_paused.store(true, Ordering::Relaxed);
+                        io::stdout().execute(DisableBracketedPaste).ok();
                         disable_raw_mode().ok();
                         io::stdout().execute(LeaveAlternateScreen).ok();
                         io::stdout().flush().ok();
@@ -1284,6 +1432,7 @@ impl TuiApp {
                             }
                         }
                         enable_raw_mode().ok();
+                        io::stdout().execute(EnableBracketedPaste).ok();
                         io::stdout().execute(EnterAlternateScreen).ok();
                         terminal.clear().ok();
                         self.key_paused.store(false, Ordering::Relaxed);
@@ -1301,7 +1450,40 @@ impl TuiApp {
                         state.push_exec(ExecBlock::SystemMsg(msg));
                     }
 
-                    Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {}
+                    // ── bracketed paste ───────────────────────────────────────
+                    Some(TuiEvent::PasteText(text)) => {
+                        let mut state = self.state.lock().unwrap();
+                        for ch in text.chars() {
+                            if ch == '\n' || ch == '\r' {
+                                state.input_insert(' ');
+                            } else {
+                                state.input_insert(ch);
+                            }
+                        }
+                    }
+
+                    Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
+                        // Typewriter drip: flush up to N chars per tick into the current
+                        // AgentText block.  Short bursts look like smooth streaming;
+                        // large buffers drain quickly so we don't fall far behind.
+                        let mut state = self.state.lock().unwrap();
+                        if !state.drip_buffer.is_empty() {
+                            let buf_len = state.drip_buffer.chars().count();
+                            let n = if buf_len > 400 { 120 } else if buf_len > 80 { 60 } else { 30 };
+                            let n = n.min(buf_len);
+                            let byte_end = state.drip_buffer
+                                .char_indices()
+                                .nth(n)
+                                .map(|(i, _)| i)
+                                .unwrap_or(state.drip_buffer.len());
+                            let chunk = state.drip_buffer[..byte_end].to_string();
+                            state.drip_buffer.drain(..byte_end);
+                            match state.exec_log.back_mut() {
+                                Some(ExecBlock::AgentText(ref mut s)) => s.push_str(&chunk),
+                                _ => state.exec_log.push_back(ExecBlock::AgentText(chunk)),
+                            }
+                        }
+                    }
 
                     Some(TuiEvent::Quit) | None => break,
                 }
@@ -1309,6 +1491,7 @@ impl TuiApp {
             Ok::<(), Box<dyn std::error::Error>>(())
         })?;
 
+        io::stdout().execute(DisableBracketedPaste).ok();
         disable_raw_mode().ok();
         io::stdout().execute(LeaveAlternateScreen).ok();
         Ok(())

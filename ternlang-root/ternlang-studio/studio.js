@@ -7940,3 +7940,328 @@ require(["vs/editor/editor.main"], function () {
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ◆ Albert Co-Pilot Panel  (F6 toggle)
+// Floating canvas-attached chat panel with input/output wiring ports.
+// ══════════════════════════════════════════════════════════════════════════════
+
+(function initAlbertPanel() {
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let panelEl = null;
+  let visible = false;
+  const history = []; // { role: 'user'|'assistant', text: string }
+
+  // The node id that is wired into Albert's input port (if any)
+  let wiredNodeId = null;
+
+  // ── Build panel HTML ─────────────────────────────────────────────────────
+  function createPanel() {
+    const el = document.createElement('div');
+    el.id = 'albert-panel';
+    el.style.cssText = `
+      position: fixed;
+      right: 20px; top: 80px;
+      width: 380px; height: 480px;
+      background: #0d0d0d;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      display: flex; flex-direction: column;
+      z-index: 9500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      overflow: hidden;
+      user-select: none;
+    `;
+
+    el.innerHTML = `
+      <!-- Input port (left side) -->
+      <div class="flow-port flow-port-in" id="albert-port-in"
+           style="position:absolute; left:-7px; top:50%; margin-top:-6px;
+                  background:#00c878; border:2px solid #00c878;
+                  width:12px; height:12px; border-radius:50%; cursor:crosshair;
+                  z-index:10;" title="Workflow context input"></div>
+
+      <!-- Output port (right side) -->
+      <div class="flow-port flow-port-out" id="albert-port-out"
+           style="position:absolute; right:-7px; top:50%; margin-top:-6px;
+                  background:#00c8ff; border:2px solid #00c8ff;
+                  width:12px; height:12px; border-radius:50%; cursor:crosshair;
+                  z-index:10;" title="Albert output / workflow commands"></div>
+
+      <!-- Header -->
+      <div id="albert-header" style="
+        padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+        background: #111; border-bottom: 1px solid #222; cursor: grab; flex-shrink:0;
+      ">
+        <span style="color:#00dc78; font-weight:700; font-size:13px;">◆ Albert</span>
+        <span style="color:#444; font-size:11px; flex:1;">co-pilot</span>
+        <span id="albert-wired-badge" style="display:none; color:#00c8ff; font-size:10px;
+              background:#00c8ff18; padding:2px 6px; border-radius:4px; border:1px solid #00c8ff44;">
+          wired
+        </span>
+        <button id="albert-close" style="
+          background:none; border:none; color:#444; cursor:pointer; font-size:16px;
+          padding:0 4px; line-height:1;
+        " title="Close (F6)">✕</button>
+      </div>
+
+      <!-- Chat area -->
+      <div id="albert-chat" style="
+        flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px;
+        scrollbar-width:thin; scrollbar-color:#222 transparent;
+      ">
+        <div style="color:#333; font-size:11px; text-align:center; margin-top:20px;">
+          ◆ Albert is ready<br>
+          <span style="color:#222; font-size:10px;">Wire a node to give him workflow context</span>
+        </div>
+      </div>
+
+      <!-- Input bar -->
+      <div style="padding:10px; border-top:1px solid #1a1a1a; display:flex; gap:6px; flex-shrink:0;">
+        <input id="albert-input" type="text" placeholder="Prompt Albert…" style="
+          flex:1; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:6px;
+          color:#ddd; font-family:inherit; font-size:12px; padding:7px 10px;
+          outline:none;
+        "/>
+        <button id="albert-send" style="
+          background:#00dc7822; border:1px solid #00dc7844; border-radius:6px;
+          color:#00dc78; font-size:12px; padding:6px 10px; cursor:pointer; font-weight:700;
+        " title="Send (Enter)">↵</button>
+      </div>
+
+      <!-- Status strip -->
+      <div id="albert-status" style="
+        padding:4px 14px; font-size:10px; color:#333; background:#0a0a0a; flex-shrink:0;
+      ">⠸ idle</div>
+    `;
+
+    // ── Drag ──────────────────────────────────────────────────────────────
+    let dragStart = null;
+    const header = el.querySelector('#albert-header');
+    header.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      const r = el.getBoundingClientRect();
+      dragStart = { mx: e.clientX, my: e.clientY, ex: r.left, ey: r.top };
+      header.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', e => {
+      if (!dragStart) return;
+      const dx = e.clientX - dragStart.mx;
+      const dy = e.clientY - dragStart.my;
+      el.style.left = (dragStart.ex + dx) + 'px';
+      el.style.top  = (dragStart.ey + dy) + 'px';
+      el.style.right = 'auto';
+    });
+    document.addEventListener('mouseup', () => {
+      dragStart = null;
+      header.style.cursor = 'grab';
+    });
+
+    // ── Close ─────────────────────────────────────────────────────────────
+    el.querySelector('#albert-close').addEventListener('click', hidePanel);
+
+    // ── Send on Enter ──────────────────────────────────────────────────────
+    const inp = el.querySelector('#albert-input');
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    el.querySelector('#albert-send').addEventListener('click', sendMessage);
+
+    // ── Port wiring ──────────────────────────────────────────────────────
+    // Albert's ports participate in the existing wire drag system by having
+    // the correct classes (.flow-port / .flow-port-in / .flow-port-out).
+    // We listen for wire completions that target albert-panel and update wiredNodeId.
+    el.querySelector('#albert-port-in').addEventListener('mousedown', e => {
+      e.stopPropagation(); // handled by global wire drag
+    });
+
+    document.body.appendChild(el);
+    return el;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function setStatus(text) {
+    const s = document.getElementById('albert-status');
+    if (s) s.textContent = text;
+  }
+
+  function appendMessage(role, text) {
+    history.push({ role, text });
+    const chat = document.getElementById('albert-chat');
+    if (!chat) return;
+    const isUser = role === 'user';
+    const div = document.createElement('div');
+    div.style.cssText = `
+      display:flex; flex-direction:column;
+      align-items:${isUser ? 'flex-end' : 'flex-start'};
+      gap:2px;
+    `;
+    div.innerHTML = `
+      <div style="
+        max-width:90%; padding:7px 10px; border-radius:8px; font-size:11px; line-height:1.5;
+        background:${isUser ? '#001e12' : '#111'};
+        border:1px solid ${isUser ? '#00dc7830' : '#222'};
+        color:${isUser ? '#00dc78' : '#ccc'};
+        white-space:pre-wrap; word-break:break-word;
+      ">${escHtml(text)}</div>
+      <div style="font-size:9px; color:#333; padding:0 4px;">${isUser ? 'you' : '◆ albert'}</div>
+    `;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Build workflow context string for the system prompt
+  function buildWorkflowContext() {
+    if (!flowNodes || flowNodes.length === 0) return 'Canvas is empty.';
+    const nodeList = flowNodes.slice(0, 20).map(n =>
+      `- ${n.type} "${n.name || n.id}"${n.props?.code ? ` [has code]` : ''}`
+    ).join('\n');
+    const wiredCtx = wiredNodeId
+      ? `\nThe user wired node "${wiredNodeId}" directly to my input port.\n`
+      : '';
+    return `Canvas has ${flowNodes.length} node(s) and ${flowWires.length} wire(s).\nNodes:\n${nodeList}${wiredCtx}`;
+  }
+
+  // ── LLM call ─────────────────────────────────────────────────────────────
+  async function callGemini(messages) {
+    // Try to get a Gemini key from localStorage or the settings form
+    const key = localStorage.getItem('albert_gemini_key')
+              || (document.getElementById('geminiApiKey') || {}).value?.trim()
+              || '';
+    if (!key) {
+      return 'No Gemini API key found. Run /auth google in Albert CLI, or set localStorage.albert_gemini_key = "your-key".';
+    }
+
+    const contents = messages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.text }],
+    }));
+
+    const sysPrompt = `You are Albert, a sovereign AI co-pilot embedded in Ternlang Studio — a visual workflow canvas.
+You help users build, debug, and optimise Ternlang signal-flow workflows.
+Current workspace context:
+${buildWorkflowContext()}
+
+When asked to create a node, respond with a JSON action block:
+{"action":"create_node","type":"agent","name":"NodeName","x":400,"y":200}
+When asked to connect nodes:
+{"action":"create_wire","fromId":"nodeA","toId":"nodeB"}
+When asked to validate:
+{"action":"validate"}
+Otherwise, respond naturally and concisely.`;
+
+    const body = {
+      system_instruction: { parts: [{ text: sysPrompt }] },
+      contents,
+      generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
+    };
+
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    const data = await r.json();
+    if (!r.ok) return `API error: ${data.error?.message || r.status}`;
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '(empty response)';
+  }
+
+  // Execute JSON action blocks embedded in Albert's reply
+  function executeActions(text) {
+    const actionRe = /\{[^}]*"action"[^}]*\}/g;
+    let modified = text;
+    for (const match of text.matchAll(actionRe)) {
+      try {
+        const act = JSON.parse(match[0]);
+        if (act.action === 'create_node' && typeof addFlowNode === 'function') {
+          addFlowNode(act.type || 'agent', act.x || 300, act.y || 200, act.name);
+          modified = modified.replace(match[0], `[created node "${act.name || act.type}"]`);
+        } else if (act.action === 'create_wire' && act.fromId && act.toId) {
+          // Wire two existing nodes
+          const from = flowNodes.find(n => n.id === act.fromId || n.name === act.fromId);
+          const to   = flowNodes.find(n => n.id === act.toId   || n.name === act.toId);
+          if (from && to) {
+            flowWires.push({ id: `w-albert-${Date.now()}`, fromId: from.id, toId: to.id });
+            renderWires();
+            modified = modified.replace(match[0], `[wired "${act.fromId}" → "${act.toId}"]`);
+          }
+        } else if (act.action === 'validate' && typeof runValidation === 'function') {
+          runValidation();
+          modified = modified.replace(match[0], '[validation triggered]');
+        }
+      } catch (_) { /* not a valid action block */ }
+    }
+    return modified;
+  }
+
+  // ── Send message ──────────────────────────────────────────────────────────
+  async function sendMessage() {
+    const inp = document.getElementById('albert-input');
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+    inp.value = '';
+    inp.disabled = true;
+
+    appendMessage('user', text);
+    setStatus('⠼ Thinking…');
+
+    const msgs = history.map(m => ({ role: m.role, text: m.text }));
+
+    try {
+      const raw = await callGemini(msgs);
+      const reply = executeActions(raw);
+      appendMessage('assistant', reply);
+      setStatus('⠸ idle');
+    } catch (err) {
+      appendMessage('assistant', `Error: ${err.message}`);
+      setStatus('⠸ idle');
+    } finally {
+      inp.disabled = false;
+      inp.focus();
+    }
+  }
+
+  // ── Show / hide ───────────────────────────────────────────────────────────
+  function showPanel() {
+    if (!panelEl) panelEl = createPanel();
+    panelEl.style.display = 'flex';
+    visible = true;
+    setTimeout(() => document.getElementById('albert-input')?.focus(), 50);
+  }
+
+  function hidePanel() {
+    if (panelEl) panelEl.style.display = 'none';
+    visible = false;
+  }
+
+  window.toggleAlbertPanel = function() {
+    if (visible) hidePanel(); else showPanel();
+  };
+
+  // ── Wire-connection hook ──────────────────────────────────────────────────
+  // When the existing wire system drops a wire onto albert-port-in, track which
+  // node was the source so we can include it in the system prompt.
+  document.addEventListener('mouseup', (e) => {
+    const portIn = document.getElementById('albert-port-in');
+    if (!portIn || !panelEl) return;
+    const r = portIn.getBoundingClientRect();
+    const hit = e.clientX >= r.left - 10 && e.clientX <= r.right + 10
+             && e.clientY >= r.top  - 10 && e.clientY <= r.bottom + 10;
+    if (hit && window._activeWireFromId) {
+      wiredNodeId = window._activeWireFromId;
+      const badge = document.getElementById('albert-wired-badge');
+      const node = flowNodes?.find(n => n.id === wiredNodeId);
+      if (badge) {
+        badge.style.display = 'inline';
+        badge.textContent = `⟵ ${node?.name || wiredNodeId}`;
+      }
+    }
+  });
+
+})(); // end initAlbertPanel
