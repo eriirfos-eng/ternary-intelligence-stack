@@ -1,7 +1,7 @@
 [package]
 name        = "ternlang-compress"
 description = "LLM-to-ternary compression pipeline — quantize float models to {-1,0,+1}, build sparse zero-index, export .tern files for ternlang-ml inference."
-readme      = "README.md"
+readme      = false
 version.workspace   = true
 edition.workspace   = true
 license          = "LicenseRef-BSL-1.1"
