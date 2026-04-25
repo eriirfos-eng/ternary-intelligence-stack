@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 
 use serde::{Deserialize, Serialize};
 
@@ -116,6 +117,7 @@ pub struct ConversationRuntime<C, T> {
     usage_tracker: UsageTracker,
     hook_runner: HookRunner,
     auto_compaction_input_tokens_threshold: u32,
+    cancel_token: Option<Arc<AtomicBool>>,
 }
 
 impl<C, T> ConversationRuntime<C, T>
@@ -161,7 +163,20 @@ where
             usage_tracker,
             hook_runner: HookRunner::from_feature_config(&feature_config),
             auto_compaction_input_tokens_threshold: auto_compaction_threshold_from_env(),
+            cancel_token: None,
         }
+    }
+
+    /// Wire up an external cancellation flag. When `true`, `run_turn` exits at
+    /// the next safe checkpoint (between API calls), so `handle.join()` returns
+    /// promptly and the main submit loop can continue.
+    pub fn set_cancel_token(&mut self, token: Arc<AtomicBool>) {
+        self.cancel_token = Some(token);
+    }
+
+    #[inline]
+    fn is_cancelled(&self) -> bool {
+        self.cancel_token.as_ref().map_or(false, |t| t.load(Ordering::Relaxed))
     }
 
     #[must_use]
@@ -190,6 +205,11 @@ where
     let mut iterations = 0;
 
     loop {
+        // Bail out at every safe checkpoint so handle.join() returns promptly on ESC.
+        if self.is_cancelled() {
+            return Err(RuntimeError::new("cancelled"));
+        }
+
         iterations += 1;
         if iterations > self.max_iterations {
             return Err(RuntimeError::new(
@@ -202,6 +222,10 @@ where
             messages: self.session.messages.clone(),
         };
         let events = self.api_client.stream(request)?;
+        // Check again immediately after the blocking HTTP call returns.
+        if self.is_cancelled() {
+            return Err(RuntimeError::new("cancelled"));
+        }
         let (assistant_message, usage) = build_assistant_message(events)?;
         if let Some(usage) = usage {
             self.usage_tracker.record(usage);
