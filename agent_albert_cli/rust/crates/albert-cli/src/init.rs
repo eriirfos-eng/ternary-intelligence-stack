@@ -406,7 +406,7 @@ const STARTER_TERNLANG_JSON: &str = concat!(
     "  }\n",
     "}\n",
 );
-const GITIGNORE_COMMENT: &str = "# Claw Code local artifacts";
+const GITIGNORE_COMMENT: &str = "# Albert local artifacts";
 const GITIGNORE_ENTRIES: [&str; 2] = [".ternlang/settings.local.json", ".ternlang/sessions/"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -545,7 +545,7 @@ pub(crate) fn render_init_ternlang_md(cwd: &Path) -> String {
     let mut lines = vec![
         "# ALBERT.md".to_string(),
         String::new(),
-        "This file provides guidance to Claw Code (clawcode.dev) when working with code in this repository.".to_string(),
+        "This file provides guidance to Albert when working with code in this repository.".to_string(),
         String::new(),
     ];
 

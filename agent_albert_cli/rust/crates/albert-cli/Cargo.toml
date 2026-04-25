@@ -19,6 +19,7 @@ api = { package = "albert-api", path = "../api", version = "1.1.1" }
 commands = { package = "albert-commands", path = "../commands", version = "1.1.1" }
 compat-harness = { package = "albert-compat", path = "../compat-harness", version = "1.1.1" }
 crossterm = "0.28"
+ratatui = "0.29"
 pulldown-cmark = "0.13"
 rustyline = "15"
 runtime = { package = "albert-runtime", path = "../runtime", version = "1.1.1" }
