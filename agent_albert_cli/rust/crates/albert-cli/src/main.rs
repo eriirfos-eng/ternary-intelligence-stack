@@ -1070,6 +1070,9 @@ impl LiveCli {
     fn run_turn(&mut self, input: &str) -> Result<(), Box<dyn std::error::Error>> {
         use std::sync::atomic::{AtomicBool, Ordering};
 
+        // Redraw the user's message line as a styled dark-background box
+        let _ = render_user_message_box(input);
+
         let is_prompting = Arc::new(AtomicBool::new(false));
         let mut permission_prompter = CliPermissionPrompter {
             permission_mode: self.permission_mode,
@@ -1091,10 +1094,9 @@ impl LiveCli {
                 res
             });
 
-            let renderer = TerminalRenderer::new();
-            let mut spinner = Spinner::new();
             let mut out = io::stdout();
-            let mut state: u8 = 0; // 0=waiting, 1=streaming text
+            // 0=waiting, 1=streaming text, 2=after MessageStop
+            let mut state: u8 = 0;
             let mut tokens_in: u32 = 0;
             let mut tokens_out: u32 = 0;
             let turn_start = std::time::Instant::now();
@@ -1105,46 +1107,65 @@ impl LiveCli {
                 .unwrap();
 
             rt.block_on(async {
-                let mut interval = tokio::time::interval(Duration::from_millis(80));
+                let mut interval = tokio::time::interval(Duration::from_millis(250));
                 loop {
                     if is_done.load(Ordering::Relaxed) {
+                        if state == 0 {
+                            let _ = execute!(out,
+                                crossterm::cursor::MoveToColumn(0),
+                                crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+                            );
+                        }
                         break;
                     }
                     tokio::select! {
                         _ = interval.tick() => {
                             if state == 0 && !is_prompting.load(Ordering::Relaxed) {
-                                let _ = spinner.tick("Working...", renderer.color_theme(), &mut out);
+                                let secs = turn_start.elapsed().as_secs();
+                                let timer = if secs >= 60 {
+                                    format!("{}m {}s", secs / 60, secs % 60)
+                                } else {
+                                    format!("{}s", secs)
+                                };
+                                let label = format!("● Working ({timer} • esc to interrupt)");
+                                let _ = execute!(out,
+                                    crossterm::cursor::MoveToColumn(0),
+                                    crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+                                    crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey),
+                                    crossterm::style::Print(&label),
+                                    crossterm::style::ResetColor,
+                                );
+                                let _ = out.flush();
                             }
                         }
                         event = rx.recv() => {
                             match event {
                                 Ok(AssistantEvent::TextDelta(delta)) => {
-                                    if state == 0 {
+                                    if state != 1 {
                                         let _ = execute!(out,
                                             crossterm::cursor::MoveToColumn(0),
                                             crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
                                         );
+                                        let _ = writeln!(out);
                                         state = 1;
                                     }
                                     let _ = write!(out, "{delta}");
                                     let _ = out.flush();
                                 }
                                 Ok(AssistantEvent::ToolUse { name, input, .. }) => {
-                                    if state == 1 {
-                                        let _ = writeln!(out);
-                                    }
+                                    if state == 1 { let _ = writeln!(out); }
                                     if state == 0 {
                                         let _ = execute!(out,
                                             crossterm::cursor::MoveToColumn(0),
                                             crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
                                         );
                                     }
-                                    let preview: String = input.chars().take(72).collect();
-                                    let preview = if input.len() > 72 { format!("{preview}…") } else { preview };
-                                    let _ = writeln!(out, "{}  {}  {}",
-                                        style("●").cyan().bold(),
+                                    // Extract a readable arg preview from the JSON input
+                                    let arg_preview = tool_input_preview(&input);
+                                    let _ = writeln!(out, "\n{}  {} {}",
+                                        style("●").green().bold(),
                                         style(format!("Ran {name}")).bold(),
-                                        style(&preview).dim()
+                                        style(&arg_preview).dim()
                                     );
                                     let _ = out.flush();
                                     state = 0;
@@ -1154,16 +1175,8 @@ impl LiveCli {
                                     tokens_out += usage.output_tokens;
                                 }
                                 Ok(AssistantEvent::MessageStop) => {
-                                    if state == 1 {
-                                        let _ = writeln!(out);
-                                    }
-                                    if state == 0 {
-                                        let _ = execute!(out,
-                                            crossterm::cursor::MoveToColumn(0),
-                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
-                                        );
-                                    }
-                                    state = 0;
+                                    if state == 1 { let _ = writeln!(out); }
+                                    state = 2;
                                 }
                                 Err(_) => break,
                             }
@@ -1172,9 +1185,12 @@ impl LiveCli {
                 }
             });
 
+            // Render tool results from the completed summary (shown after each tool call)
+            // These are injected after run_turn returns, before status bar
+            let result = handle.join().unwrap();
+
             // Status bar
-            let elapsed = turn_start.elapsed();
-            let secs = elapsed.as_secs();
+            let secs = turn_start.elapsed().as_secs();
             let duration_str = if secs >= 60 {
                 format!("{}m{}s", secs / 60, secs % 60)
             } else {
@@ -1187,12 +1203,16 @@ impl LiveCli {
                     |n| n.to_string_lossy().into_owned(),
                 ),
             );
+            // Show tool outputs from summary before status bar
+            if let Ok(ref summary) = result {
+                render_tool_outputs(summary);
+            }
             let model_ref = &self.model;
-            println!("\n  {}", style(format!(
+            println!("\n{}", style(format!(
                 "{model_ref} · {cwd} · {tokens_in}in · {tokens_out}out · {duration_str}"
             )).dim());
 
-            handle.join().unwrap()
+            result
         });
 
         let mut stdout = io::stdout();
@@ -3047,6 +3067,88 @@ fn score_turn_importance(user_input: &str, response: &str) -> f32 {
     score.min(1.0)
 }
 
+
+/// Overwrite the readline prompt line with a styled dark-background user message box.
+fn render_user_message_box(input: &str) -> io::Result<()> {
+    let term_width = crossterm::terminal::size().map(|(w, _)| w as usize).unwrap_or(80);
+    let content = format!(" > {input} ");
+    let padding = term_width.saturating_sub(content.len());
+    let padded = format!("{content}{}", " ".repeat(padding));
+    let mut stdout = io::stdout();
+    execute!(
+        stdout,
+        crossterm::cursor::MoveUp(1),
+        crossterm::cursor::MoveToColumn(0),
+        crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+        crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(236)),
+        crossterm::style::SetForegroundColor(crossterm::style::Color::White),
+        crossterm::style::Print(&padded),
+        crossterm::style::ResetColor,
+        crossterm::style::Print("\n"),
+    )?;
+    stdout.flush()
+}
+
+/// Extract a short human-readable arg preview from a tool input JSON string.
+fn tool_input_preview(input: &str) -> String {
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(input) {
+        // Try common meaningful keys in priority order
+        let preview = val.get("command")
+            .or_else(|| val.get("path"))
+            .or_else(|| val.get("file_path"))
+            .or_else(|| val.get("pattern"))
+            .or_else(|| val.get("query"))
+            .or_else(|| val.get("url"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.lines().next().unwrap_or(s).to_string())
+            .unwrap_or_else(|| {
+                // Fallback: first string value in the object
+                if let serde_json::Value::Object(map) = &val {
+                    map.values()
+                        .find_map(|v| v.as_str())
+                        .map(|s| s.lines().next().unwrap_or(s).to_string())
+                        .unwrap_or_default()
+                } else {
+                    String::new()
+                }
+            });
+        if preview.len() > 80 { format!("{}…", &preview[..80]) } else { preview }
+    } else {
+        // Raw input, truncated
+        let s: String = input.chars().take(80).collect();
+        if input.len() > 80 { format!("{s}…") } else { s }
+    }
+}
+
+/// Print tool outputs from completed turn summary using └ indented lines.
+fn render_tool_outputs(summary: &runtime::TurnSummary) {
+    use std::collections::HashMap;
+    let mut results: HashMap<&str, &str> = HashMap::new();
+    for msg in &summary.tool_results {
+        for block in &msg.blocks {
+            if let ContentBlock::ToolResult { tool_use_id, output, .. } = block {
+                results.insert(tool_use_id.as_str(), output.as_str());
+            }
+        }
+    }
+    for msg in &summary.assistant_messages {
+        for block in &msg.blocks {
+            if let ContentBlock::ToolUse { id, .. } = block {
+                if let Some(output) = results.get(id.as_str()) {
+                    let lines: Vec<&str> = output.lines().collect();
+                    let show = lines.len().min(6);
+                    for line in &lines[..show] {
+                        let trimmed = if line.len() > 120 { &line[..120] } else { line };
+                        println!("{} {}", style("└").dim(), style(trimmed).dim());
+                    }
+                    if lines.len() > 6 {
+                        println!("{}", style(format!("  … +{} lines", lines.len() - 6)).dim().italic());
+                    }
+                }
+            }
+        }
+    }
+}
 
 fn final_assistant_text(summary: &runtime::TurnSummary) -> String {
     summary
