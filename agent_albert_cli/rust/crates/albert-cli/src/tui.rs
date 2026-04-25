@@ -13,7 +13,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Paragraph, Wrap};
+use ratatui::widgets::{Paragraph, Wrap};
 use ratatui::Terminal;
 
 use commands::slash_command_specs;
@@ -23,16 +23,29 @@ use runtime::AssistantEvent;
 
 const BG: Color = Color::Rgb(11, 11, 11);
 const FG: Color = Color::Rgb(220, 220, 220);
-const DIM: Color = Color::Rgb(80, 80, 80);       // separators / borders only
-const GREY: Color = Color::Rgb(145, 145, 145);   // completed tool text — visible
+const DIM: Color = Color::Rgb(80, 80, 80);
+const GREY: Color = Color::Rgb(145, 145, 145);
 const GREEN: Color = Color::Rgb(0, 220, 120);
 const CYAN: Color = Color::Rgb(0, 200, 255);
+const ORANGE: Color = Color::Rgb(255, 140, 50);   // working `*` indicator
 const USER_BOX_BG: Color = Color::Rgb(28, 28, 28);
 const STATUS_BG: Color = Color::Rgb(18, 18, 18);
+const BRANCH_BG: Color = Color::Rgb(35, 55, 35);  // git branch pill background
 const POPUP_BG: Color = Color::Rgb(26, 26, 26);
 const POPUP_BORDER: Color = Color::Rgb(55, 55, 55);
 const POPUP_MATCH: Color = Color::Rgb(0, 180, 100);
 const POPUP_SEL_BG: Color = Color::Rgb(42, 42, 42);
+
+// Tip lines shown below the working indicator — cycle by elapsed seconds
+const TIPS: &[&str] = &[
+    "Use /compress to free context space mid-session",
+    "Use /model to switch providers without losing session history",
+    "Use /permissions danger-full-access for unrestricted shell access",
+    "PageUp / PageDown to scroll through conversation history",
+    "Type /help to see all available slash commands",
+    "Press esc to interrupt a running turn at any time",
+    "Use /session list to see and switch between saved sessions",
+];
 
 // Permission modes (in display/cycle order)
 const PERM_MODES: &[(&str, &str)] = &[
@@ -123,7 +136,8 @@ impl TuiState {
             self.deactivate_last_tool();
         }
         self.exec_log.push_back(block);
-        while self.exec_log.len() > 1000 {
+        // Keep the log bounded so rendering stays fast — older blocks are trimmed.
+        while self.exec_log.len() > 120 {
             self.exec_log.pop_front();
         }
     }
@@ -334,14 +348,15 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     let area = f.area();
     let items = popup_items(&state.input);
     let popup_h = if items.is_empty() { 0u16 } else { items.len() as u16 + 1 };
-    let working_h = if state.working { 1u16 } else { 0u16 };
+    // Working zone: 2 rows (indicator + tip); absent when idle
+    let working_h = if state.working { 2u16 } else { 0u16 };
 
-    // Layout (bottom→top): status(2) | input(2) | [working?] | [popup?] | content(rest)
+    // Layout top→bottom: content(flex) | [popup?] | [working 2r?] | input(1r) | footer(1r)
     let mut constraints = vec![Constraint::Min(3)];
-    if popup_h > 0 { constraints.push(Constraint::Length(popup_h)); }
+    if popup_h > 0  { constraints.push(Constraint::Length(popup_h)); }
     if working_h > 0 { constraints.push(Constraint::Length(working_h)); }
-    constraints.push(Constraint::Length(2)); // input
-    constraints.push(Constraint::Length(2)); // status
+    constraints.push(Constraint::Length(1)); // input
+    constraints.push(Constraint::Length(1)); // footer
 
     let layout = Layout::default()
         .direction(Direction::Vertical)
@@ -361,7 +376,7 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     }
     render_input(f, layout[idx], state);
     idx += 1;
-    render_status(f, layout[idx], state);
+    render_footer(f, layout[idx], state);
 }
 
 fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
@@ -453,22 +468,23 @@ fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let lines = build_exec_lines(state, area.width);
     let w = area.width.max(1) as usize;
 
-    // Compute total rendered height accounting for line wrapping.
-    // Each logical line may wrap across multiple terminal rows.
-    let total_wrapped: u16 = lines
+    // Compute total rendered height in rows, accounting for text wrapping.
+    // Using usize to avoid u16 overflow with large logs.
+    let total_wrapped: usize = lines
         .iter()
         .map(|line| {
             let chars: usize = line.spans.iter().map(|s| s.content.chars().count()).sum();
-            let rows = if chars == 0 { 1 } else { (chars + w - 1) / w };
-            rows as u16
+            if chars == 0 { 1 } else { (chars + w - 1) / w }
         })
         .sum();
 
-    let visible = area.height;
-    let raw_offset = total_wrapped.saturating_sub(visible);
-    // Cap scroll so we never scroll past the very first line.
-    let effective_scroll = state.scroll.min(raw_offset);
-    let scroll_row = raw_offset.saturating_sub(effective_scroll);
+    let visible = area.height as usize;
+    // max_scroll is how many rows we can scroll up from the bottom
+    let max_scroll = total_wrapped.saturating_sub(visible);
+    // Clamp state.scroll so we never over-scroll past the top
+    let effective_scroll = (state.scroll as usize).min(max_scroll);
+    // scroll_row is the top row to pass to Paragraph (0 = top of content)
+    let scroll_row = max_scroll.saturating_sub(effective_scroll).min(u16::MAX as usize) as u16;
 
     let para = Paragraph::new(Text::from(lines))
         .style(Style::default().bg(BG).fg(FG))
@@ -508,7 +524,34 @@ fn render_popup(
     f.render_widget(para, area);
 }
 
+/// 1-row input bar with the git branch badge pinned to the right edge.
 fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
+    let branch = git_branch_cached();
+
+    // Branch badge width: " branch-name  " = name + 2 spaces padding + separator
+    let badge_text = branch
+        .as_deref()
+        .map(|b| format!(" {b} "))
+        .unwrap_or_default();
+    let badge_w = badge_text.chars().count() as u16;
+
+    // Split row: [input | branch badge]
+    let h_layout = if badge_w > 0 && area.width > badge_w + 4 {
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(4),
+                Constraint::Length(badge_w),
+            ])
+            .split(area)
+    } else {
+        // Terminal too narrow — no badge
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Min(1)])
+            .split(area)
+    };
+
     let before: String = state.input.chars().take(state.cursor).collect();
     let cursor_ch: String = state
         .input
@@ -518,86 +561,69 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         .unwrap_or_else(|| " ".to_string());
     let after: String = state.input.chars().skip(state.cursor + 1).collect();
 
-    let line = Line::from(vec![
+    let input_line = Line::from(vec![
         Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
         Span::styled(before, Style::default().fg(FG)),
         Span::styled(cursor_ch, Style::default().fg(BG).bg(FG)),
         Span::styled(after, Style::default().fg(FG)),
     ]);
 
-    let para = Paragraph::new(line)
-        .block(Block::default().style(Style::default().bg(USER_BOX_BG)))
-        .wrap(Wrap { trim: false });
-    f.render_widget(para, area);
+    f.render_widget(
+        Paragraph::new(input_line).style(Style::default().bg(USER_BOX_BG)),
+        h_layout[0],
+    );
+
+    // Branch pill (only if layout has 2 columns)
+    if h_layout.len() == 2 {
+        let badge_line = Line::from(Span::styled(
+            badge_text,
+            Style::default()
+                .fg(GREEN)
+                .bg(BRANCH_BG)
+                .add_modifier(Modifier::BOLD),
+        ));
+        f.render_widget(
+            Paragraph::new(badge_line).style(Style::default().bg(BRANCH_BG)),
+            h_layout[1],
+        );
+    }
 }
 
-/// Dedicated 1-row working indicator between content and input.
-/// Shows how long *this turn* has been running — cleared when turn ends.
+/// 2-row working zone shown only when a turn is in progress.
+/// Row 0: `* Thinking…  (elapsed · ↓ tokens)`  — matches Claude Code style
+/// Row 1: `⌐ Tip: …`  — rotating tip from TIPS list
 fn render_working(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let secs = state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0);
     let timer = if secs >= 60 {
-        format!("{}m{}s", secs / 60, secs % 60)
+        format!("{}m {}s", secs / 60, secs % 60)
     } else {
         format!("{secs}s")
     };
-    let tok = if state.tokens_out > 0 {
-        format!(" · {} out", fmt_tokens(state.tokens_out))
+    let tok_str = if state.tokens_out > 0 {
+        format!(" · ↓ {} tokens", fmt_tokens(state.tokens_out))
     } else {
         String::new()
     };
-    let line = Line::from(vec![
-        Span::styled(" ● ", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
+
+    // Rotating tip — changes every 8 seconds
+    let tip_idx = (secs / 8) as usize % TIPS.len();
+    let tip = TIPS[tip_idx];
+
+    let working_line = Line::from(vec![
+        Span::styled(" * ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+        Span::styled("Thinking… ", Style::default().fg(ORANGE)),
         Span::styled(
-            format!("thinking  {timer}{tok}  ·  esc to interrupt"),
-            Style::default().fg(FG),
+            format!("({timer}{tok_str})"),
+            Style::default().fg(GREY),
         ),
     ]);
-    let para = Paragraph::new(line).style(Style::default().bg(STATUS_BG));
-    f.render_widget(para, area);
-}
-
-/// 2-row telemetry bar:
-///   row 1: model · branch · tokens_in↑ tokens_out↓ · [last turn Xs | idle]
-///   row 2: albert vX.X.X · cwd · permission_mode
-fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
-    let branch = git_branch_cached();
-
-    // Show duration of the most-recent completed turn (turn_start is Some while working,
-    // cleared after turn ends — we want elapsed at completion).
-    // We keep track via turn_start: if working, show live timer in render_working.
-    // Here: show nothing extra when idle (keep it clean).
-    let tokens_in = fmt_tokens(state.tokens_in);
-    let tokens_out = fmt_tokens(state.tokens_out);
-    let branch_str = branch.map(|b| format!(" · {b}")).unwrap_or_default();
-
-    let tok_str = if state.tokens_in > 0 || state.tokens_out > 0 {
-        format!("  ·  {}↑ {}↓", tokens_in, tokens_out)
-    } else {
-        String::new()
-    };
-
-    let row1 = format!(
-        " {}{}{}",
-        state.model, branch_str, tok_str,
-    );
-
-    let dir = std::path::Path::new(&state.cwd)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or(&state.cwd);
-
-    let perm = if state.permission_mode.is_empty() {
-        String::new()
-    } else {
-        format!("  ·  {}", state.permission_mode)
-    };
-
-    let row2 = format!(
-        " albert v{}  ·  {}{}",
-        env!("CARGO_PKG_VERSION"),
-        dir,
-        perm,
-    );
+    let tip_line = Line::from(vec![
+        Span::styled("   ⌐ ", Style::default().fg(DIM)),
+        Span::styled(
+            format!("Tip: {tip}"),
+            Style::default().fg(DIM),
+        ),
+    ]);
 
     let layout = Layout::default()
         .direction(Direction::Vertical)
@@ -605,14 +631,56 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         .split(area);
 
     f.render_widget(
-        Paragraph::new(Line::from(Span::styled(row1, Style::default().fg(FG))))
-            .style(Style::default().bg(STATUS_BG)),
+        Paragraph::new(working_line).style(Style::default().bg(STATUS_BG)),
         layout[0],
     );
     f.render_widget(
-        Paragraph::new(Line::from(Span::styled(row2, Style::default().fg(GREY))))
-            .style(Style::default().bg(STATUS_BG)),
+        Paragraph::new(tip_line).style(Style::default().bg(STATUS_BG)),
         layout[1],
+    );
+}
+
+/// 1-row footer.
+/// When working : `▶▶  esc to interrupt  ·  ctrl+c to quit`
+/// When idle    : `▶▶  model  ·  dir  ·  perm  ·  tokens↑ tokens↓`
+fn render_footer(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
+    let line = if state.working {
+        Line::from(vec![
+            Span::styled(" ▶▶ ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled("esc to interrupt", Style::default().fg(CYAN)),
+            Span::styled(
+                "  ·  ctrl+c to quit",
+                Style::default().fg(DIM),
+            ),
+        ])
+    } else {
+        let dir = std::path::Path::new(&state.cwd)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or(&state.cwd);
+        let tok = if state.tokens_in > 0 {
+            format!(
+                "  ·  {}↑ {}↓",
+                fmt_tokens(state.tokens_in),
+                fmt_tokens(state.tokens_out)
+            )
+        } else {
+            String::new()
+        };
+        let perm = if state.permission_mode.is_empty() {
+            String::new()
+        } else {
+            format!("  ·  {}", state.permission_mode)
+        };
+        let text = format!(
+            " {}  ·  {}{}{}",
+            state.model, dir, perm, tok,
+        );
+        Line::from(Span::styled(text, Style::default().fg(GREY)))
+    };
+    f.render_widget(
+        Paragraph::new(line).style(Style::default().bg(STATUS_BG)),
+        area,
     );
 }
 

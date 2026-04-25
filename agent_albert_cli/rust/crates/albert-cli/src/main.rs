@@ -1219,7 +1219,7 @@ fn run_tui(
         }
         cancel_flag.store(false, Ordering::Relaxed);
 
-        // Inject ToolOutput blocks: walk exec_log, insert output after each ToolUse.
+        // Inject ToolOutput blocks: walk exec_log, insert human-readable output after each ToolUse.
         if let Ok(Ok(ref summary)) = turn_result {
             let outputs: Vec<String> = summary
                 .tool_results
@@ -1243,14 +1243,17 @@ fn run_tui(
                     state.exec_log.push_back(block);
                     if is_tool {
                         if let Some(raw) = out_iter.next() {
-                            let all: Vec<String> = raw
+                            // Extract human-readable text — bash outputs are JSON
+                            let display = extract_tool_display_text(&raw);
+                            let all: Vec<String> = display
                                 .lines()
                                 .map(|l| l.trim_end().to_string())
                                 .filter(|l| !l.is_empty())
                                 .collect();
                             let total = all.len();
                             if total > 0 {
-                                let shown: Vec<String> = all.into_iter().take(8).collect();
+                                // Show at most 5 lines; the "… +N lines" hint covers the rest
+                                let shown: Vec<String> = all.into_iter().take(5).collect();
                                 state.exec_log.push_back(tui::ExecBlock::ToolOutput {
                                     lines: shown,
                                     total,
@@ -1271,7 +1274,37 @@ fn run_tui(
                 let mut state = tui_state.lock().unwrap();
                 state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
             }
-            Ok(Ok(_)) => {}
+            Ok(Ok(ref summary)) => {
+                // Auto-compact when the session grows large to prevent TUI freeze and API rejection
+                let tokens = summary.usage.input_tokens;
+                if tokens > 60_000 {
+                    let compact_result = cli.runtime.compact(runtime::CompactionConfig::default());
+                    let removed = compact_result.removed_message_count;
+                    if removed > 0 {
+                        match build_runtime_with_mcp(
+                            compact_result.compacted_session,
+                            cli.model.clone(),
+                            cli.system_prompt.clone(),
+                            true,
+                            cli.allowed_tools.clone(),
+                            cli.permission_mode,
+                            Arc::clone(&cli.mcp_manager),
+                            cli.event_tx.clone(),
+                        ) {
+                            Ok(rt) => {
+                                cli.runtime = rt;
+                                let mut st = tui_state.lock().unwrap();
+                                st.tokens_in = 0;
+                                st.tokens_out = 0;
+                                st.push_exec(tui::ExecBlock::SystemMsg(format!(
+                                    "auto-compacted: removed {removed} messages to free context space"
+                                )));
+                            }
+                            Err(e) => eprintln!("auto-compact rebuild: {e}"),
+                        }
+                    }
+                }
+            }
         }
 
         // Save session after each turn
@@ -3760,3 +3793,35 @@ const KNOWN_MODELS: &[ModelEntry] = &[
         description: "Llama 3.3 70B — local or hosted",
     },
 ];
+
+/// Extract human-readable text from a tool result's `output` field.
+/// Bash commands return JSON-serialized BashCommandOutput — we extract stdout.
+fn extract_tool_display_text(raw: &str) -> String {
+    if let Ok(val) = serde_json::from_str::<serde_json::Value>(raw) {
+        // Bash: stdout is the primary output; stderr is the fallback
+        let stdout = val.get("stdout").and_then(|v| v.as_str()).unwrap_or("").trim();
+        if !stdout.is_empty() {
+            return stdout.to_string();
+        }
+        let stderr = val.get("stderr").and_then(|v| v.as_str()).unwrap_or("").trim();
+        if !stderr.is_empty() {
+            return format!("[stderr] {stderr}");
+        }
+        // File ops and other tools use "content", "output", "text", or "result"
+        for key in ["content", "output", "text", "result"] {
+            if let Some(s) = val.get(key).and_then(|v| v.as_str()) {
+                let s = s.trim();
+                if !s.is_empty() {
+                    return s.to_string();
+                }
+            }
+        }
+    }
+    // Not JSON or nothing extractable → return as-is (truncated)
+    let trimmed = raw.trim();
+    if trimmed.len() > 500 {
+        format!("{}…", &trimmed[..500])
+    } else {
+        trimmed.to_string()
+    }
+}
