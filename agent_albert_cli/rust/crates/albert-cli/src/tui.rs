@@ -1299,28 +1299,16 @@ impl TuiApp {
                                     }
                                 }
 
-                                // Enter with popup:
-                                //   header row      → skip (no-op)
-                                //   /permissions X  → auto-submit
-                                //   /model X        → auto-submit
-                                //   anything else   → complete into input box
+                                // Enter with popup: always submit the selected command.
+                                // Tab (above) is the "complete without submitting" key.
                                 (KeyCode::Enter, KeyModifiers::NONE) if has_popup => {
                                     let sel = state.popup_selected.min(items.len().saturating_sub(1));
                                     if !items[sel].is_header {
-                                        let complete = items[sel].complete.clone();
-                                        let is_auto = complete.starts_with("/permissions ")
-                                            || complete.starts_with("/model ");
-                                        if is_auto {
-                                            state.input = complete;
-                                            state.cursor = state.input.chars().count();
-                                            state.popup_selected = 0;
-                                            let text = state.input_take();
-                                            submit_text = Some(text);
-                                        } else {
-                                            state.input = complete;
-                                            state.cursor = state.input.chars().count();
-                                            state.popup_selected = 0;
-                                        }
+                                        state.input = items[sel].complete.clone();
+                                        state.cursor = state.input.chars().count();
+                                        state.popup_selected = 0;
+                                        let text = state.input_take();
+                                        submit_text = Some(text);
                                     }
                                 }
                                 (KeyCode::Enter, KeyModifiers::NONE) => {
