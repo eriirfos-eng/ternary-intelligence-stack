@@ -126,6 +126,9 @@ pub struct TuiState {
     pub auth_flow: Option<String>,
     /// Characters queued for the typewriter drip — drained 40 chars per Tick.
     pub drip_buffer: String,
+    /// Set when the current input arrived via a large paste (>= 3 lines).
+    /// Drives the compact "pasted text · N lines" badge in render_input.
+    pub paste_line_count: Option<usize>,
 }
 
 impl Default for TuiState {
@@ -147,6 +150,7 @@ impl Default for TuiState {
             is_recording: false,
             auth_flow: None,
             drip_buffer: String::new(),
+            paste_line_count: None,
         }
     }
 }
@@ -226,6 +230,7 @@ impl TuiState {
 
     pub fn input_take(&mut self) -> String {
         self.cursor = 0;
+        self.paste_line_count = None;
         std::mem::take(&mut self.input)
     }
 }
@@ -652,6 +657,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
             }
 
             // WorkedFor is displayed in the permanent status bar — not in the chat log.
+            // WorkedFor is displayed in the permanent status bar — not in the chat log.
             ExecBlock::WorkedFor(_) => {}
 
             ExecBlock::SystemMsg(msg) => {
@@ -809,6 +815,14 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         Paragraph::new(Line::from(vec![
             Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
             Span::styled("Type your message or @path/to/file", Style::default().fg(DIM)),
+        ]))
+    } else if let Some(lines) = state.paste_line_count {
+        // Large paste: show compact badge — full content is in state.input and will be sent.
+        Paragraph::new(Line::from(vec![
+            Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled("⌨  pasted text", Style::default().fg(CYAN)),
+            Span::styled(format!("  ·  {lines} lines"), Style::default().fg(DIM)),
+            Span::styled("  (press Enter to send, Esc to clear)", Style::default().fg(DIM)),
         ]))
     } else {
         Paragraph::new(Line::from(vec![
@@ -1211,10 +1225,15 @@ impl TuiApp {
                                     }
                                 }
 
-                                // ESC: interrupt running turn, dismiss popup, or reset scroll
+                                // ESC: interrupt running turn, dismiss popup, clear paste badge, or reset scroll
                                 (KeyCode::Esc, _) => {
                                     if state.working {
                                         cancel_flag.store(true, Ordering::Relaxed);
+                                    } else if state.paste_line_count.is_some() {
+                                        // Clear the pasted content
+                                        state.input.clear();
+                                        state.cursor = 0;
+                                        state.paste_line_count = None;
                                     } else if has_popup {
                                         state.input.clear();
                                         state.cursor = 0;
@@ -1469,11 +1488,21 @@ impl TuiApp {
                     // ── bracketed paste ───────────────────────────────────────
                     Some(TuiEvent::PasteText(text)) => {
                         let mut state = self.state.lock().unwrap();
-                        for ch in text.chars() {
-                            if ch == '\n' || ch == '\r' {
-                                state.input_insert(' ');
-                            } else {
-                                state.input_insert(ch);
+                        let line_count = text.lines().count();
+                        if line_count >= 3 {
+                            // Large paste: store raw, show compact badge in render_input.
+                            state.input = text;
+                            state.cursor = state.input.chars().count();
+                            state.paste_line_count = Some(line_count);
+                        } else {
+                            // Small paste: insert inline, convert newlines to spaces.
+                            state.paste_line_count = None;
+                            for ch in text.chars() {
+                                if ch == '\n' || ch == '\r' {
+                                    state.input_insert(' ');
+                                } else {
+                                    state.input_insert(ch);
+                                }
                             }
                         }
                     }
