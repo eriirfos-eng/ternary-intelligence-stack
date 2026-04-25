@@ -938,7 +938,8 @@ fn render_tips(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let tip = TIPS[tip_idx];
     let line = Line::from(vec![
         Span::styled("⎿  ", Style::default().fg(DIM)),
-        Span::styled(format!("Tip: {tip}"), Style::default().fg(DIM)),
+        Span::styled("Tip: ", Style::default().fg(DIM)),
+        Span::styled(tip, Style::default().fg(GREY)),
     ]);
     f.render_widget(Paragraph::new(line).style(Style::default().bg(BG)), area);
 }
