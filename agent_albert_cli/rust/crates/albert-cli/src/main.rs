@@ -1092,7 +1092,6 @@ impl LiveCli {
             });
 
             let renderer = TerminalRenderer::new();
-            let mut md_state = render::MarkdownStreamState::default();
             let mut spinner = Spinner::new();
             let mut out = io::stdout();
             let mut state: u8 = 0; // 0=waiting, 1=streaming text
@@ -1109,10 +1108,6 @@ impl LiveCli {
                 let mut interval = tokio::time::interval(Duration::from_millis(80));
                 loop {
                     if is_done.load(Ordering::Relaxed) {
-                        if let Some(rendered) = md_state.flush(&renderer) {
-                            let _ = write!(out, "{rendered}");
-                            let _ = out.flush();
-                        }
                         break;
                     }
                     tokio::select! {
@@ -1131,15 +1126,10 @@ impl LiveCli {
                                         );
                                         state = 1;
                                     }
-                                    if let Some(rendered) = md_state.push(&renderer, &delta) {
-                                        let _ = write!(out, "{rendered}");
-                                        let _ = out.flush();
-                                    }
+                                    let _ = write!(out, "{delta}");
+                                    let _ = out.flush();
                                 }
                                 Ok(AssistantEvent::ToolUse { name, input, .. }) => {
-                                    if let Some(rendered) = md_state.flush(&renderer) {
-                                        let _ = write!(out, "{rendered}");
-                                    }
                                     if state == 1 {
                                         let _ = writeln!(out);
                                     }
@@ -1164,10 +1154,6 @@ impl LiveCli {
                                     tokens_out += usage.output_tokens;
                                 }
                                 Ok(AssistantEvent::MessageStop) => {
-                                    if let Some(rendered) = md_state.flush(&renderer) {
-                                        let _ = write!(out, "{rendered}");
-                                        let _ = out.flush();
-                                    }
                                     if state == 1 {
                                         let _ = writeln!(out);
                                     }
