@@ -1,5 +1,6 @@
 [package]
 name = "ternlang-test"
+description = "Test harness and assertion utilities for ternlang programs — BET-VM test runner, trit assertions, and golden-file diffing."
 version.workspace = true
 edition.workspace = true
 license.workspace   = true

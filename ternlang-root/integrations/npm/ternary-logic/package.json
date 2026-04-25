@@ -1,6 +1,6 @@
 {
   "name": "@eriirfos-eng/ternary-logic",
-  "version": "0.1.2",
+  "version": "1.1.1",
   "description": "Official RFI-IRFOS Ternary Logic Implementation (BET-ISA)",
   "main": "index.js",
   "scripts": {

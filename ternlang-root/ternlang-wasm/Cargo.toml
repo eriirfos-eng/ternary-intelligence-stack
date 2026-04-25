@@ -1,6 +1,7 @@
 [package]
 name        = "ternlang-wasm"
 description = "WebAssembly bindings for the Ternlang BET VM — runs real .tern programs in the browser."
+publish           = false
 version.workspace   = true
 edition.workspace   = true
 license.workspace   = true
