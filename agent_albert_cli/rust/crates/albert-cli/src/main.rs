@@ -1000,6 +1000,7 @@ struct LiveCli {
     runtime: ConversationRuntime<TernlangRuntimeClient, CliToolExecutor>,
     session: SessionHandle,
     mcp_manager: Arc<Mutex<McpServerManager>>,
+    event_tx: tokio::sync::broadcast::Sender<AssistantEvent>,
 }
 
 impl LiveCli {
@@ -1013,15 +1014,16 @@ impl LiveCli {
         let session = create_managed_session_handle()?;
         let mcp_servers = load_mcp_servers();
         let mcp_manager = Arc::new(Mutex::new(McpServerManager::from_servers(&mcp_servers)));
+        let (event_tx, _) = tokio::sync::broadcast::channel::<AssistantEvent>(256);
         let runtime = build_runtime_with_mcp(
             Session::new(),
             model.clone(),
             system_prompt.clone(),
             enable_tools,
-            true,
             allowed_tools.clone(),
             permission_mode,
             Arc::clone(&mcp_manager),
+            event_tx.clone(),
         )?;
         let cli = Self {
             model,
@@ -1031,6 +1033,7 @@ impl LiveCli {
             runtime,
             session,
             mcp_manager,
+            event_tx,
         };
         cli.persist_session()?;
         Ok(cli)
@@ -1067,47 +1070,148 @@ impl LiveCli {
     fn run_turn(&mut self, input: &str) -> Result<(), Box<dyn std::error::Error>> {
         use std::sync::atomic::{AtomicBool, Ordering};
 
-        let spinning = Arc::new(AtomicBool::new(true));
-        let spin_clone = Arc::clone(&spinning);
-        let renderer = TerminalRenderer::new();
-        let theme = *renderer.color_theme();
-        let spinner_thread = thread::spawn(move || {
+        let is_prompting = Arc::new(AtomicBool::new(false));
+        let mut permission_prompter = CliPermissionPrompter {
+            permission_mode: self.permission_mode,
+            interactive: true,
+            is_prompting: Some(is_prompting.clone()),
+        };
+
+        let mut rx = self.event_tx.subscribe();
+        let input_string = input.to_string();
+
+        let result = std::thread::scope(|s| {
+            let runtime = &mut self.runtime;
+            let is_done = Arc::new(AtomicBool::new(false));
+            let is_done_clone = is_done.clone();
+
+            let handle = s.spawn(move || {
+                let res = runtime.run_turn(input_string, Some(&mut permission_prompter));
+                is_done_clone.store(true, Ordering::Relaxed);
+                res
+            });
+
+            let renderer = TerminalRenderer::new();
+            let mut md_state = render::MarkdownStreamState::default();
             let mut spinner = Spinner::new();
-            let mut stdout = io::stdout();
-            while spin_clone.load(Ordering::Relaxed) {
-                let _ = spinner.tick("Thinking...", &theme, &mut stdout);
-                thread::sleep(Duration::from_millis(80));
-            }
+            let mut out = io::stdout();
+            let mut state: u8 = 0; // 0=waiting, 1=streaming text
+            let mut tokens_in: u32 = 0;
+            let mut tokens_out: u32 = 0;
+            let turn_start = std::time::Instant::now();
+
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+
+            rt.block_on(async {
+                let mut interval = tokio::time::interval(Duration::from_millis(80));
+                loop {
+                    if is_done.load(Ordering::Relaxed) {
+                        if let Some(rendered) = md_state.flush(&renderer) {
+                            let _ = write!(out, "{rendered}");
+                            let _ = out.flush();
+                        }
+                        break;
+                    }
+                    tokio::select! {
+                        _ = interval.tick() => {
+                            if state == 0 && !is_prompting.load(Ordering::Relaxed) {
+                                let _ = spinner.tick("Working...", renderer.color_theme(), &mut out);
+                            }
+                        }
+                        event = rx.recv() => {
+                            match event {
+                                Ok(AssistantEvent::TextDelta(delta)) => {
+                                    if state == 0 {
+                                        let _ = execute!(out,
+                                            crossterm::cursor::MoveToColumn(0),
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+                                        );
+                                        state = 1;
+                                    }
+                                    if let Some(rendered) = md_state.push(&renderer, &delta) {
+                                        let _ = write!(out, "{rendered}");
+                                        let _ = out.flush();
+                                    }
+                                }
+                                Ok(AssistantEvent::ToolUse { name, input, .. }) => {
+                                    if let Some(rendered) = md_state.flush(&renderer) {
+                                        let _ = write!(out, "{rendered}");
+                                    }
+                                    if state == 1 {
+                                        let _ = writeln!(out);
+                                    }
+                                    if state == 0 {
+                                        let _ = execute!(out,
+                                            crossterm::cursor::MoveToColumn(0),
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+                                        );
+                                    }
+                                    let preview: String = input.chars().take(72).collect();
+                                    let preview = if input.len() > 72 { format!("{preview}…") } else { preview };
+                                    let _ = writeln!(out, "{}  {}  {}",
+                                        style("●").cyan().bold(),
+                                        style(format!("Ran {name}")).bold(),
+                                        style(&preview).dim()
+                                    );
+                                    let _ = out.flush();
+                                    state = 0;
+                                }
+                                Ok(AssistantEvent::Usage(usage)) => {
+                                    tokens_in = tokens_in.max(usage.input_tokens);
+                                    tokens_out += usage.output_tokens;
+                                }
+                                Ok(AssistantEvent::MessageStop) => {
+                                    if let Some(rendered) = md_state.flush(&renderer) {
+                                        let _ = write!(out, "{rendered}");
+                                        let _ = out.flush();
+                                    }
+                                    if state == 1 {
+                                        let _ = writeln!(out);
+                                    }
+                                    if state == 0 {
+                                        let _ = execute!(out,
+                                            crossterm::cursor::MoveToColumn(0),
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+                                        );
+                                    }
+                                    state = 0;
+                                }
+                                Err(_) => break,
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Status bar
+            let elapsed = turn_start.elapsed();
+            let secs = elapsed.as_secs();
+            let duration_str = if secs >= 60 {
+                format!("{}m{}s", secs / 60, secs % 60)
+            } else {
+                format!("{}s", secs)
+            };
+            let cwd = env::current_dir().map_or_else(
+                |_| "?".to_string(),
+                |p| p.file_name().map_or_else(
+                    || p.display().to_string(),
+                    |n| n.to_string_lossy().into_owned(),
+                ),
+            );
+            let model_ref = &self.model;
+            println!("\n  {}", style(format!(
+                "{model_ref} · {cwd} · {tokens_in}in · {tokens_out}out · {duration_str}"
+            )).dim());
+
+            handle.join().unwrap()
         });
-
-        let mut permission_prompter = CliPermissionPrompter::new(self.permission_mode, true);
-        let result = self
-            .runtime
-            .run_turn(input.to_string(), Some(&mut permission_prompter));
-
-        spinning.store(false, Ordering::Relaxed);
-        let _ = spinner_thread.join();
 
         let mut stdout = io::stdout();
         match result {
             Ok(summary) => {
-                // Clear spinner line
-                execute!(
-                    stdout,
-                    crossterm::cursor::MoveToColumn(0),
-                    crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
-                )?;
-
-                // Print tool call trace before response
-                let trace = render_tool_trace(&summary);
-                if !trace.is_empty() {
-                    println!("{trace}");
-                }
-
-                let response_text = final_assistant_text(&summary);
-                if !response_text.is_empty() {
-                    typewriter_print(&TerminalRenderer::new().render_markdown(&response_text));
-                }
                 if let Some(event) = summary.auto_compaction {
                     println!(
                         "{}",
@@ -1116,6 +1220,7 @@ impl LiveCli {
                 }
                 self.persist_session()?;
 
+                let response_text = final_assistant_text(&summary);
                 if !response_text.is_empty() {
                     if let Some(memory_line) = self.llm_reflect(input, &response_text) {
                         if let Err(e) = append_to_albert_memory(&memory_line) {
@@ -1536,14 +1641,15 @@ User: {}\n\nAssistant: {}",
         let previous = self.model.clone();
         let session = self.runtime.session().clone();
         let message_count = session.messages.len();
-        self.runtime = build_runtime(
+        self.runtime = build_runtime_with_mcp(
             session,
             model_id.clone(),
             self.system_prompt.clone(),
             true,
-            true,
             self.allowed_tools.clone(),
             self.permission_mode,
+            Arc::clone(&self.mcp_manager),
+            self.event_tx.clone(),
         )?;
         self.model.clone_from(&model_id);
         println!(
@@ -1579,14 +1685,15 @@ User: {}\n\nAssistant: {}",
         let previous = self.permission_mode.as_str().to_string();
         let session = self.runtime.session().clone();
         self.permission_mode = permission_mode_from_label(normalized);
-        self.runtime = build_runtime(
+        self.runtime = build_runtime_with_mcp(
             session,
             self.model.clone(),
             self.system_prompt.clone(),
             true,
-            true,
             self.allowed_tools.clone(),
             self.permission_mode,
+            Arc::clone(&self.mcp_manager),
+            self.event_tx.clone(),
         )?;
         println!(
             "{}",
@@ -1604,14 +1711,15 @@ User: {}\n\nAssistant: {}",
         }
 
         self.session = create_managed_session_handle()?;
-        self.runtime = build_runtime(
+        self.runtime = build_runtime_with_mcp(
             Session::new(),
             self.model.clone(),
             self.system_prompt.clone(),
             true,
-            true,
             self.allowed_tools.clone(),
             self.permission_mode,
+            Arc::clone(&self.mcp_manager),
+            self.event_tx.clone(),
         )?;
         println!(
             "Session cleared
@@ -1643,14 +1751,15 @@ User: {}\n\nAssistant: {}",
         let handle = resolve_session_reference(&session_ref)?;
         let session = Session::load_from_path(&handle.path)?;
         let message_count = session.messages.len();
-        self.runtime = build_runtime(
+        self.runtime = build_runtime_with_mcp(
             session,
             self.model.clone(),
             self.system_prompt.clone(),
             true,
-            true,
             self.allowed_tools.clone(),
             self.permission_mode,
+            Arc::clone(&self.mcp_manager),
+            self.event_tx.clone(),
         )?;
         self.session = handle;
         println!(
@@ -1719,14 +1828,15 @@ User: {}\n\nAssistant: {}",
                 let handle = resolve_session_reference(target)?;
                 let session = Session::load_from_path(&handle.path)?;
                 let message_count = session.messages.len();
-                self.runtime = build_runtime(
+                self.runtime = build_runtime_with_mcp(
                     session,
                     self.model.clone(),
                     self.system_prompt.clone(),
                     true,
-                    true,
                     self.allowed_tools.clone(),
                     self.permission_mode,
+                    Arc::clone(&self.mcp_manager),
+                    self.event_tx.clone(),
                 )?;
                 self.session = handle;
                 println!(
@@ -1752,14 +1862,15 @@ User: {}\n\nAssistant: {}",
         let removed = result.removed_message_count;
         let kept = result.compacted_session.messages.len();
         let skipped = removed == 0;
-        self.runtime = build_runtime(
+        self.runtime = build_runtime_with_mcp(
             result.compacted_session,
             self.model.clone(),
             self.system_prompt.clone(),
             true,
-            true,
             self.allowed_tools.clone(),
             self.permission_mode,
+            Arc::clone(&self.mcp_manager),
+            self.event_tx.clone(),
         )?;
         self.persist_session()?;
         println!("{}", format_compact_report(removed, kept, skipped));
@@ -1769,19 +1880,20 @@ User: {}\n\nAssistant: {}",
     fn compress(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let result = self.runtime.compact(CompactionConfig {
             preserve_recent_messages: 2,
-            max_estimated_tokens: 1, // Force aggressive
+            max_estimated_tokens: 1,
         });
         let removed = result.removed_message_count;
         let kept = result.compacted_session.messages.len();
         let skipped = removed == 0;
-        self.runtime = build_runtime(
+        self.runtime = build_runtime_with_mcp(
             result.compacted_session,
             self.model.clone(),
             self.system_prompt.clone(),
             true,
-            true,
             self.allowed_tools.clone(),
             self.permission_mode,
+            Arc::clone(&self.mcp_manager),
+            self.event_tx.clone(),
         )?;
         self.persist_session()?;
         if skipped {
@@ -2433,6 +2545,7 @@ git sha: {}",
 struct CliPermissionPrompter {
     permission_mode: PermissionMode,
     interactive: bool,
+    is_prompting: Option<Arc<std::sync::atomic::AtomicBool>>,
 }
 
 impl CliPermissionPrompter {
@@ -2440,6 +2553,7 @@ impl CliPermissionPrompter {
         Self {
             permission_mode,
             interactive,
+            is_prompting: None,
         }
     }
 }
@@ -2449,6 +2563,19 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
         &mut self,
         request: &runtime::PermissionRequest,
     ) -> runtime::PermissionPromptDecision {
+        struct PromptGuard(Option<Arc<std::sync::atomic::AtomicBool>>);
+        impl Drop for PromptGuard {
+            fn drop(&mut self) {
+                if let Some(f) = &self.0 {
+                    f.store(false, std::sync::atomic::Ordering::Relaxed);
+                }
+            }
+        }
+        if let Some(flag) = &self.is_prompting {
+            flag.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+        let _guard = PromptGuard(self.is_prompting.clone());
+
         let default = match self.permission_mode {
             PermissionMode::ReadOnly => runtime::PermissionPromptDecision::Deny {
                 reason: "read-only mode".to_string(),
@@ -2600,10 +2727,10 @@ fn build_runtime_with_mcp(
     model: String,
     system_prompt: Vec<String>,
     enable_tools: bool,
-    enable_stream_events: bool,
     allowed_tools: Option<AllowedToolSet>,
     permission_mode: PermissionMode,
     mcp_manager: Arc<Mutex<McpServerManager>>,
+    event_tx: tokio::sync::broadcast::Sender<AssistantEvent>,
 ) -> Result<ConversationRuntime<TernlangRuntimeClient, CliToolExecutor>, Box<dyn std::error::Error>>
 {
     let cwd = env::current_dir()?;
@@ -2634,14 +2761,7 @@ fn build_runtime_with_mcp(
         model: model.clone(),
         max_tokens: max_tokens_for_model(&model),
         tools: if enable_tools { filter_tool_specs(allowed_tools.as_ref()) } else { Vec::new() },
-        event_tx: if enable_stream_events {
-            Some(tokio::runtime::Runtime::new()?.block_on(async {
-                let (tx, _) = tokio::sync::broadcast::channel(128);
-                tx
-            }))
-        } else {
-            None
-        },
+        event_tx: Some(event_tx),
     };
 
     let tool_executor = CliToolExecutor::new(mcp_manager);
@@ -2941,100 +3061,6 @@ fn score_turn_importance(user_input: &str, response: &str) -> f32 {
     score.min(1.0)
 }
 
-fn typewriter_print(text: &str) {
-    use std::io::Write;
-    let stdout = std::io::stdout();
-    let mut out = stdout.lock();
-    let delay = if text.len() > 800 {
-        1
-    } else if text.len() > 300 {
-        2
-    } else {
-        3
-    };
-    for ch in text.chars() {
-        let _ = write!(out, "{ch}");
-        let _ = out.flush();
-        thread::sleep(Duration::from_millis(delay));
-    }
-    println!();
-}
-
-fn render_tool_trace(summary: &runtime::TurnSummary) -> String {
-    use console::style;
-    use std::collections::HashMap;
-
-    // Build tool_use_id → output map from results
-    let mut results: HashMap<&str, &str> = HashMap::new();
-    for msg in &summary.tool_results {
-        for block in &msg.blocks {
-            if let ContentBlock::ToolResult { tool_use_id, output, .. } = block {
-                results.insert(tool_use_id.as_str(), output.as_str());
-            }
-        }
-    }
-
-    let mut lines = String::new();
-    for msg in &summary.assistant_messages {
-        for block in &msg.blocks {
-            if let ContentBlock::ToolUse { id, name, input } = block {
-                // Pretty label per tool type
-                let (label, color_fn): (&str, fn(&str) -> String) = match name.as_str() {
-                    n if n.contains("bash") || n.contains("shell") => ("Ran", |s| style(s).yellow().to_string()),
-                    n if n.contains("read") => ("Read", |s| style(s).cyan().to_string()),
-                    n if n.contains("write") || n.contains("create") => ("Write", |s| style(s).green().to_string()),
-                    n if n.contains("edit") || n.contains("patch") => ("Edit", |s| style(s).magenta().to_string()),
-                    n if n.contains("grep") || n.contains("search") => ("Search", |s| style(s).blue().to_string()),
-                    n if n.contains("glob") || n.contains("list") => ("List", |s| style(s).blue().to_string()),
-                    n if n.contains("web") || n.contains("fetch") || n.contains("http") => ("Fetch", |s| style(s).cyan().to_string()),
-                    n if n.contains("mcp") => ("MCP", |s| style(s).magenta().to_string()),
-                    _ => ("Tool", |s| style(s).dim().to_string()),
-                };
-
-                // Extract a short preview from input JSON
-                let input_preview = if let Ok(val) = serde_json::from_str::<serde_json::Value>(input) {
-                    val.get("command")
-                        .or_else(|| val.get("path"))
-                        .or_else(|| val.get("file_path"))
-                        .or_else(|| val.get("pattern"))
-                        .or_else(|| val.get("query"))
-                        .and_then(|v| v.as_str())
-                        .map(|s| {
-                            let s = s.lines().next().unwrap_or(s);
-                            if s.len() > 72 { format!("{}…", &s[..72]) } else { s.to_string() }
-                        })
-                        .unwrap_or_default()
-                } else {
-                    String::new()
-                };
-
-                lines.push_str(&format!(
-                    "\n  {} {}  {}",
-                    style("●").dim(),
-                    color_fn(label),
-                    style(&input_preview).dim(),
-                ));
-
-                // Show output — first 4 lines, truncated
-                if let Some(output) = results.get(id.as_str()) {
-                    let output_lines: Vec<&str> = output.lines().collect();
-                    let show = output_lines.len().min(4);
-                    for line in &output_lines[..show] {
-                        let trimmed = if line.len() > 100 { &line[..100] } else { line };
-                        lines.push_str(&format!("\n    {}", style(trimmed).dim()));
-                    }
-                    if output_lines.len() > 4 {
-                        lines.push_str(&format!(
-                            "\n    {}",
-                            style(format!("… +{} lines", output_lines.len() - 4)).dim().italic()
-                        ));
-                    }
-                }
-            }
-        }
-    }
-    lines
-}
 
 fn final_assistant_text(summary: &runtime::TurnSummary) -> String {
     summary
