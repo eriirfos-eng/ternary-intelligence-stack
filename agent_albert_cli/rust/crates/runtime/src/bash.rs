@@ -1,6 +1,7 @@
 use std::env;
 use std::io;
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
@@ -14,6 +15,14 @@ use crate::sandbox::{
     SandboxConfig, SandboxStatus,
 };
 use crate::ConfigLoader;
+
+/// Set to true when the runtime operates in DangerFullAccess mode.
+/// Disables filesystem sandbox so the agent can reach all paths (e.g. ~/Desktop).
+static SANDBOX_BYPASS: AtomicBool = AtomicBool::new(false);
+
+pub fn set_sandbox_bypass(bypass: bool) {
+    SANDBOX_BYPASS.store(bypass, Ordering::Relaxed);
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BashCommandInput {
@@ -224,12 +233,21 @@ async fn execute_bash_async(
 }
 
 fn sandbox_status_for_input(input: &BashCommandInput, cwd: &std::path::Path) -> SandboxStatus {
+    // DangerFullAccess → no sandbox: agent must be able to reach all paths (e.g. ~/Desktop).
+    if SANDBOX_BYPASS.load(Ordering::Relaxed) {
+        return SandboxStatus {
+            enabled: false,
+            filesystem_active: false,
+            ..Default::default()
+        };
+    }
+
     let config = ConfigLoader::default_for(cwd).load().map_or_else(
         |_| SandboxConfig::default(),
         |runtime_config| runtime_config.sandbox().clone(),
     );
     let request = config.resolve_request(
-        Some(true), // Fixed to true to prevent disabling sandbox dynamically
+        Some(true),
         input.namespace_restrictions,
         input.isolate_network,
         input.filesystem_mode,

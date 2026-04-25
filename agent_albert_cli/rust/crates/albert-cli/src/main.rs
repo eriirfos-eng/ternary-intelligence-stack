@@ -1,6 +1,7 @@
 mod init;
 mod input;
 mod render;
+mod tui;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
@@ -58,7 +59,7 @@ fn main() {
         eprintln!(
             "error: {error}
 
-Run `claw --help` for usage."
+Run `albert-cli --help` for usage."
         );
         std::process::exit(1);
     }
@@ -96,7 +97,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             if !config_path.exists() {
                 init::wake_sequence();
             }
-            run_repl(model, allowed_tools, permission_mode)
+            run_tui(model, allowed_tools, permission_mode)
         },
         CliAction::Help => {
             println!("{}", render_repl_help());
@@ -977,6 +978,231 @@ fn run_repl(
     Ok(())
 }
 
+fn run_tui(
+    model: String,
+    allowed_tools: Option<AllowedToolSet>,
+    permission_mode: PermissionMode,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    // Disable sandbox when running unrestricted so the agent can reach all paths.
+    runtime::set_sandbox_bypass(permission_mode == PermissionMode::DangerFullAccess);
+
+    check_workspace_trust()?;
+
+    let cwd = env::current_dir()
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|_| "<unknown>".to_string());
+
+    let mut cli = LiveCli::new(model.clone(), true, allowed_tools, permission_mode)?;
+
+    let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd);
+    let tui_state = Arc::clone(&tui_app.state);
+    let tui_event_tx = tui_app.event_tx.clone();
+    let cancel_flag = Arc::clone(&tui_app.cancel_flag);
+
+    // Show startup banner as a system message
+    {
+        let mut state = tui_state.lock().unwrap();
+        state.push_exec(tui::ExecBlock::SystemMsg(format!(
+            "albert {} · {} · {}",
+            env!("CARGO_PKG_VERSION"),
+            cli.model,
+            cli.permission_mode.as_str(),
+        )));
+    }
+
+    // Spawn TUI thread — it owns its own tokio runtime + terminal
+    let tui_thread = std::thread::spawn(move || tui_app.run());
+
+    // Tokio runtime for async broadcast receiving
+    let async_rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?;
+
+    // Agent loop: receive submits → run turn → forward events to TUI
+    loop {
+        let input = match submit_rx.recv() {
+            Ok(s) => s,
+            Err(_) => break, // TUI thread exited
+        };
+
+        // Handle /exit and /quit without calling the agent
+        if matches!(input.trim(), "/exit" | "/quit") {
+            cli.persist_session()?;
+            let _ = tui_event_tx.send(tui::TuiEvent::Quit);
+            break;
+        }
+
+        // Slash commands: suspend TUI so it yields the terminal, then resume.
+        if let Some(command) = commands::SlashCommand::parse(&input) {
+            // Suspend: tell TUI to leave alternate screen and pause key thread
+            let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<()>(1);
+            let _ = tui_event_tx.send(tui::TuiEvent::Suspend { ack: ack_tx });
+            // Wait until TUI has cleared the screen
+            let _ = ack_rx.recv();
+
+            // Now we have clean terminal ownership — run the command normally
+            let should_persist = cli.handle_repl_command(command);
+
+            // Give terminal back to TUI
+            let _ = tui_event_tx.send(tui::TuiEvent::Resume);
+
+            match should_persist {
+                Ok(p) => { if p { cli.persist_session()?; } }
+                Err(e) => eprintln!("command error: {e}"),
+            }
+
+            // Sync updated model name into TUI state
+            {
+                let mut state = tui_state.lock().unwrap();
+                state.model = cli.model.clone();
+            }
+            continue;
+        }
+
+        // Push user message and set working
+        {
+            let mut state = tui_state.lock().unwrap();
+            state.push_exec(tui::ExecBlock::UserMessage(input.clone()));
+            state.working = true;
+            state.turn_start = Some(std::time::Instant::now());
+            state.tokens_out = 0;
+            state.scroll = 0; // auto-follow
+        }
+
+        // Reset cancel flag from any previous interrupt before starting.
+        cancel_flag.store(false, Ordering::Relaxed);
+
+        let mut rx = cli.event_tx.subscribe();
+        let tx = tui_event_tx.clone();
+        let done_flag = Arc::new(AtomicBool::new(false));
+        let done_clone = done_flag.clone();
+        let cancel_clone = Arc::clone(&cancel_flag);
+
+        let mut prompter = CliPermissionPrompter::new(cli.permission_mode, false);
+
+        let turn_result = std::thread::scope(|s| {
+            let runtime = &mut cli.runtime;
+            let handle = s.spawn(move || {
+                let r = runtime.run_turn(input.clone(), Some(&mut prompter));
+                done_clone.store(true, Ordering::Relaxed);
+                r
+            });
+
+            // Forward ALL broadcast events to TUI until the agent thread is done
+            // OR the user interrupts with ESC.
+            async_rt.block_on(async {
+                loop {
+                    let is_done = done_flag.load(Ordering::Relaxed);
+                    let is_cancelled = cancel_clone.load(Ordering::Relaxed);
+
+                    if is_done || is_cancelled {
+                        // Drain any remaining queued events (skip on cancel)
+                        if is_done {
+                            while let Ok(ev) = rx.try_recv() {
+                                let _ = tx.send(tui::TuiEvent::AgentEvent(ev));
+                            }
+                        }
+                        break;
+                    }
+
+                    tokio::select! {
+                        ev = rx.recv() => {
+                            match ev {
+                                Ok(ev) => {
+                                    let _ = tx.send(tui::TuiEvent::AgentEvent(ev));
+                                }
+                                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                                Err(_) => break,
+                            }
+                        }
+                        _ = tokio::time::sleep(Duration::from_millis(30)) => {
+                            // poll again on next tick — checks done/cancel at top of loop
+                        }
+                    }
+                }
+            });
+
+            handle.join().map_err(|_| -> Box<dyn std::error::Error> {
+                "agent thread panicked".into()
+            })
+        });
+
+        // Always clear working state + deactivate any pending tool dot
+        {
+            let mut state = tui_state.lock().unwrap();
+            state.working = false;
+            state.deactivate_last_tool();
+            if cancel_flag.load(Ordering::Relaxed) {
+                state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
+            }
+        }
+        cancel_flag.store(false, Ordering::Relaxed);
+
+        // Inject ToolOutput blocks: walk exec_log, insert output after each ToolUse.
+        if let Ok(Ok(ref summary)) = turn_result {
+            let outputs: Vec<String> = summary
+                .tool_results
+                .iter()
+                .flat_map(|msg| &msg.blocks)
+                .filter_map(|block| {
+                    if let ContentBlock::ToolResult { output, .. } = block {
+                        Some(output.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            if !outputs.is_empty() {
+                let mut state = tui_state.lock().unwrap();
+                let log: Vec<_> = std::mem::take(&mut state.exec_log).into_iter().collect();
+                let mut out_iter = outputs.into_iter();
+                for block in log {
+                    let is_tool = matches!(&block, tui::ExecBlock::ToolUse { .. });
+                    state.exec_log.push_back(block);
+                    if is_tool {
+                        if let Some(raw) = out_iter.next() {
+                            let all: Vec<String> = raw
+                                .lines()
+                                .map(|l| l.trim_end().to_string())
+                                .filter(|l| !l.is_empty())
+                                .collect();
+                            let total = all.len();
+                            if total > 0 {
+                                let shown: Vec<String> = all.into_iter().take(8).collect();
+                                state.exec_log.push_back(tui::ExecBlock::ToolOutput {
+                                    lines: shown,
+                                    total,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        match turn_result {
+            Ok(Err(e)) => {
+                let mut state = tui_state.lock().unwrap();
+                state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
+            }
+            Err(e) => {
+                let mut state = tui_state.lock().unwrap();
+                state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
+            }
+            Ok(Ok(_)) => {}
+        }
+
+        // Save session after each turn
+        let _ = cli.persist_session();
+    }
+
+    let _ = tui_thread.join();
+    Ok(())
+}
+
 #[derive(Debug, Clone)]
 struct SessionHandle {
     id: String,
@@ -1192,7 +1418,7 @@ impl LiveCli {
                                             crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
                                         );
                                     }
-                                    let arg_preview = tool_input_preview(&input);
+                                    let arg_preview = tui::tool_input_preview(&input);
                                     let _ = writeln!(out, "\n{}  {}  {}",
                                         style("●").green().bold(),
                                         style(format!("Ran {name}")).bold(),
@@ -1740,6 +1966,8 @@ User: {}\n\nAssistant: {}",
         let previous = self.permission_mode.as_str().to_string();
         let session = self.runtime.session().clone();
         self.permission_mode = permission_mode_from_label(normalized);
+        // Keep sandbox bypass in sync with the new permission mode.
+        runtime::set_sandbox_bypass(self.permission_mode == PermissionMode::DangerFullAccess);
         self.runtime = build_runtime_with_mcp(
             session,
             self.model.clone(),
@@ -2075,7 +2303,7 @@ Recent conversation context:
             return Err("generated commit message was empty".into());
         }
 
-        let path = write_temp_text_file("claw-commit-message.txt", &message)?;
+        let path = write_temp_text_file("albert-commit-message.txt", &message)?;
         let output = Command::new("git")
             .args(["commit", "--file"])
             .arg(&path)
@@ -2118,7 +2346,7 @@ Diff summary:
             .ok_or_else(|| "failed to parse generated PR title/body".to_string())?;
 
         if command_exists("gh") {
-            let body_path = write_temp_text_file("claw-pr-body.md", &body)?;
+            let body_path = write_temp_text_file("albert-pr-body.md", &body)?;
             let output = Command::new("gh")
                 .args(["pr", "create", "--title", &title, "--body-file"])
                 .arg(&body_path)
@@ -2163,7 +2391,7 @@ Conversation context:
             .ok_or_else(|| "failed to parse generated issue title/body".to_string())?;
 
         if command_exists("gh") {
-            let body_path = write_temp_text_file("claw-issue-body.md", &body)?;
+            let body_path = write_temp_text_file("albert-issue-body.md", &body)?;
             let output = Command::new("gh")
                 .args(["issue", "create", "--title", &title, "--body-file"])
                 .arg(&body_path)
@@ -3138,34 +3366,7 @@ fn render_user_message_box(input: &str) -> io::Result<()> {
     stdout.flush()
 }
 
-/// Extract a short human-readable arg preview from a tool input JSON string.
-fn tool_input_preview(input: &str) -> String {
-    const MAX: usize = 120;
-    if let Ok(val) = serde_json::from_str::<serde_json::Value>(input) {
-        let preview = val.get("command")
-            .or_else(|| val.get("path"))
-            .or_else(|| val.get("file_path"))
-            .or_else(|| val.get("pattern"))
-            .or_else(|| val.get("query"))
-            .or_else(|| val.get("url"))
-            .and_then(|v| v.as_str())
-            .map(|s| s.lines().next().unwrap_or(s).to_string())
-            .unwrap_or_else(|| {
-                if let serde_json::Value::Object(map) = &val {
-                    map.values()
-                        .find_map(|v| v.as_str())
-                        .map(|s| s.lines().next().unwrap_or(s).to_string())
-                        .unwrap_or_default()
-                } else {
-                    String::new()
-                }
-            });
-        if preview.len() > MAX { format!("{}…", &preview[..MAX]) } else { preview }
-    } else {
-        let s: String = input.chars().take(MAX).collect();
-        if input.len() > MAX { format!("{s}…") } else { s }
-    }
-}
+ 
 
 /// Print tool outputs from completed turn summary using └ / indent format.
 fn render_tool_outputs(summary: &runtime::TurnSummary) {
