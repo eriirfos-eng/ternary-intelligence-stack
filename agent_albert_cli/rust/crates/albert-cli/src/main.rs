@@ -1126,13 +1126,23 @@ impl LiveCli {
                                 } else {
                                     format!("{}s", secs)
                                 };
-                                let label = format!("● Working ({timer} • esc to interrupt)");
+                                let tw = crossterm::terminal::size().map(|(w, _)| w as usize).unwrap_or(80);
+                                let prompt_box = format!(" {:<width$} ", ">", width = tw.saturating_sub(3));
+                                // Overwrite: Working indicator line + prompt box below it
                                 let _ = execute!(out,
                                     crossterm::cursor::MoveToColumn(0),
                                     crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
-                                    crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey),
-                                    crossterm::style::Print(&label),
+                                    crossterm::style::SetForegroundColor(crossterm::style::Color::White),
+                                    crossterm::style::Print(format!("● Working ({timer} • esc to interrupt)")),
                                     crossterm::style::ResetColor,
+                                    crossterm::style::Print("\n"),
+                                    crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+                                    crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(240)),
+                                    crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey),
+                                    crossterm::style::Print(&prompt_box),
+                                    crossterm::style::ResetColor,
+                                    // Move back up so next tick overwrites these two lines
+                                    crossterm::cursor::MoveToPreviousLine(1),
                                 );
                                 let _ = out.flush();
                             }
@@ -1141,9 +1151,11 @@ impl LiveCli {
                             match event {
                                 Ok(AssistantEvent::TextDelta(delta)) => {
                                     if state != 1 {
+                                        // Clear the Working indicator + prompt box (2 lines)
                                         let _ = execute!(out,
                                             crossterm::cursor::MoveToColumn(0),
-                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
                                         );
                                         let _ = writeln!(out);
                                         state = 1;
@@ -1154,12 +1166,13 @@ impl LiveCli {
                                 Ok(AssistantEvent::ToolUse { name, input, .. }) => {
                                     if state == 1 { let _ = writeln!(out); }
                                     if state == 0 {
+                                        // Clear Working indicator + prompt box
                                         let _ = execute!(out,
                                             crossterm::cursor::MoveToColumn(0),
-                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
                                         );
                                     }
-                                    // Extract a readable arg preview from the JSON input
                                     let arg_preview = tool_input_preview(&input);
                                     let _ = writeln!(out, "\n{}  {} {}",
                                         style("●").green().bold(),
@@ -3069,19 +3082,19 @@ fn score_turn_importance(user_input: &str, response: &str) -> f32 {
 }
 
 
-/// Overwrite the readline prompt line with a styled dark-background user message box.
+/// Overwrite the readline prompt line with a styled user message box.
 fn render_user_message_box(input: &str) -> io::Result<()> {
     let term_width = crossterm::terminal::size().map(|(w, _)| w as usize).unwrap_or(80);
-    let content = format!(" > {input} ");
-    let padding = term_width.saturating_sub(content.len());
-    let padded = format!("{content}{}", " ".repeat(padding));
+    let label = format!("> {input}");
+    // Pad to full width so the background fills the line
+    let padded = format!(" {:<width$} ", label, width = term_width.saturating_sub(3));
     let mut stdout = io::stdout();
+    // Go back one line to overwrite the readline echo, then print styled box
     execute!(
         stdout,
-        crossterm::cursor::MoveUp(1),
-        crossterm::cursor::MoveToColumn(0),
+        crossterm::cursor::MoveToPreviousLine(1),
         crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
-        crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(236)),
+        crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(240)),
         crossterm::style::SetForegroundColor(crossterm::style::Color::White),
         crossterm::style::Print(&padded),
         crossterm::style::ResetColor,
