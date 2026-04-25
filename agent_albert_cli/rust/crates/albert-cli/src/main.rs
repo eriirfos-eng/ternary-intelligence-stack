@@ -24,7 +24,6 @@ use api::{
 use commands::{render_slash_command_help, slash_command_specs, SlashCommand};
 use compat_harness::{extract_manifest, UpstreamPaths};
 use init::initialize_repo;
-use render::{Spinner, TerminalRenderer};
 use runtime::{
     clear_oauth_credentials, generate_pkce_pair, generate_state, load_system_prompt,
     parse_oauth_callback_request_target, save_oauth_credentials, ApiClient, ApiRequest,
@@ -1240,12 +1239,14 @@ impl LiveCli {
                 Ok(())
             }
             Err(error) => {
-                let mut fail_spinner = Spinner::new();
-                fail_spinner.fail(
-                    "Request failed",
-                    TerminalRenderer::new().color_theme(),
-                    &mut stdout,
-                )?;
+                let _ = execute!(
+                    stdout,
+                    crossterm::cursor::MoveToColumn(0),
+                    crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+                    crossterm::style::SetForegroundColor(crossterm::style::Color::Red),
+                    crossterm::style::Print("✘ Request failed\n"),
+                    crossterm::style::ResetColor,
+                );
                 Err(Box::new(error))
             }
         }
@@ -3091,8 +3092,8 @@ fn render_user_message_box(input: &str) -> io::Result<()> {
 
 /// Extract a short human-readable arg preview from a tool input JSON string.
 fn tool_input_preview(input: &str) -> String {
+    const MAX: usize = 120;
     if let Ok(val) = serde_json::from_str::<serde_json::Value>(input) {
-        // Try common meaningful keys in priority order
         let preview = val.get("command")
             .or_else(|| val.get("path"))
             .or_else(|| val.get("file_path"))
@@ -3102,7 +3103,6 @@ fn tool_input_preview(input: &str) -> String {
             .and_then(|v| v.as_str())
             .map(|s| s.lines().next().unwrap_or(s).to_string())
             .unwrap_or_else(|| {
-                // Fallback: first string value in the object
                 if let serde_json::Value::Object(map) = &val {
                     map.values()
                         .find_map(|v| v.as_str())
@@ -3112,15 +3112,14 @@ fn tool_input_preview(input: &str) -> String {
                     String::new()
                 }
             });
-        if preview.len() > 80 { format!("{}…", &preview[..80]) } else { preview }
+        if preview.len() > MAX { format!("{}…", &preview[..MAX]) } else { preview }
     } else {
-        // Raw input, truncated
-        let s: String = input.chars().take(80).collect();
-        if input.len() > 80 { format!("{s}…") } else { s }
+        let s: String = input.chars().take(MAX).collect();
+        if input.len() > MAX { format!("{s}…") } else { s }
     }
 }
 
-/// Print tool outputs from completed turn summary using └ indented lines.
+/// Print tool outputs from completed turn summary using └ / indent format.
 fn render_tool_outputs(summary: &runtime::TurnSummary) {
     use std::collections::HashMap;
     let mut results: HashMap<&str, &str> = HashMap::new();
@@ -3135,14 +3134,21 @@ fn render_tool_outputs(summary: &runtime::TurnSummary) {
         for block in &msg.blocks {
             if let ContentBlock::ToolUse { id, .. } = block {
                 if let Some(output) = results.get(id.as_str()) {
-                    let lines: Vec<&str> = output.lines().collect();
+                    let lines: Vec<&str> = output.lines()
+                        .filter(|l| !l.trim().is_empty())
+                        .collect();
+                    if lines.is_empty() { continue; }
                     let show = lines.len().min(6);
-                    for line in &lines[..show] {
+                    for (i, line) in lines[..show].iter().enumerate() {
                         let trimmed = if line.len() > 120 { &line[..120] } else { line };
-                        println!("{} {}", style("└").dim(), style(trimmed).dim());
+                        if i == 0 {
+                            println!("  {} {}", style("└").dim(), style(trimmed).dim());
+                        } else {
+                            println!("    {}", style(trimmed).dim());
+                        }
                     }
                     if lines.len() > 6 {
-                        println!("{}", style(format!("  … +{} lines", lines.len() - 6)).dim().italic());
+                        println!("  {}", style(format!("… +{} lines", lines.len() - 6)).dim().italic());
                     }
                 }
             }
