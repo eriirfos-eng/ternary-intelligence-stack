@@ -651,17 +651,8 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 lines.extend(markdown_to_lines(text));
             }
 
-            ExecBlock::WorkedFor(secs) => {
-                let dur = if *secs >= 60 {
-                    format!("{}m {}s", secs / 60, secs % 60)
-                } else {
-                    format!("{secs}s")
-                };
-                lines.push(Line::from(Span::styled(
-                    format!("  Worked for {dur}"),
-                    Style::default().fg(DIM).add_modifier(Modifier::ITALIC),
-                )));
-            }
+            // WorkedFor is displayed in the permanent status bar — not in the chat log.
+            ExecBlock::WorkedFor(_) => {}
 
             ExecBlock::SystemMsg(msg) => {
                 lines.push(Line::default());
