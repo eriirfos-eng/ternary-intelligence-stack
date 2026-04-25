@@ -16,6 +16,10 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Paragraph, Wrap};
 use ratatui::Terminal;
 
+use pulldown_cmark::{
+    Event as MdEvent, HeadingLevel, Options as MdOptions, Parser as MdParser, Tag, TagEnd,
+};
+
 use commands::slash_command_specs;
 use runtime::AssistantEvent;
 
@@ -35,6 +39,8 @@ const POPUP_BG: Color = Color::Rgb(26, 26, 26);
 const POPUP_BORDER: Color = Color::Rgb(55, 55, 55);
 const POPUP_MATCH: Color = Color::Rgb(0, 180, 100);
 const POPUP_SEL_BG: Color = Color::Rgb(42, 42, 42);
+const CODE_FG: Color = Color::Rgb(100, 210, 255);    // inline code / code blocks
+const POPUP_WINDOW: usize = 7;                        // max items visible at once in popup
 
 // Tip lines shown below the working indicator — cycle by elapsed seconds
 const TIPS: &[&str] = &[
@@ -84,6 +90,8 @@ pub enum ExecBlock {
     AgentText(String),
     /// System / info note
     SystemMsg(String),
+    /// Post-turn elapsed time: "Worked for Xm Ys"
+    WorkedFor(u64),
 }
 
 #[derive(Clone, Debug)]
@@ -342,20 +350,129 @@ fn truncate(s: &str, max_chars: usize) -> String {
     format!("{}…", &s[..end])
 }
 
+// ── Markdown rendering ────────────────────────────────────────────────────────
+
+fn md_flush(spans: &mut Vec<Span<'static>>, lines: &mut Vec<Line<'static>>) {
+    if !spans.is_empty() {
+        lines.push(Line::from(std::mem::take(spans)));
+    }
+}
+
+/// Convert a markdown string to styled ratatui Lines.
+fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
+    let mut lines: Vec<Line<'static>> = Vec::new();
+    let mut spans: Vec<Span<'static>> = Vec::new();
+    let mut bold = false;
+    let mut italic = false;
+    let mut in_code_block = false;
+    let mut in_heading = false;
+    let mut heading_color = FG;
+    let mut list_depth: usize = 0;
+    let mut item_needs_bullet = false;
+
+    let opts = MdOptions::ENABLE_STRIKETHROUGH;
+    let parser = MdParser::new_ext(text, opts);
+
+    for event in parser {
+        match event {
+            MdEvent::Start(Tag::Heading { level, .. }) => {
+                in_heading = true;
+                heading_color = match level {
+                    HeadingLevel::H1 => GREEN,
+                    HeadingLevel::H2 => CYAN,
+                    _ => FG,
+                };
+            }
+            MdEvent::End(TagEnd::Heading(_)) => {
+                md_flush(&mut spans, &mut lines);
+                in_heading = false;
+            }
+            MdEvent::Start(Tag::Strong) => bold = true,
+            MdEvent::End(TagEnd::Strong) => bold = false,
+            MdEvent::Start(Tag::Emphasis) => italic = true,
+            MdEvent::End(TagEnd::Emphasis) => italic = false,
+            MdEvent::Start(Tag::CodeBlock(_)) => in_code_block = true,
+            MdEvent::End(TagEnd::CodeBlock) => {
+                md_flush(&mut spans, &mut lines);
+                in_code_block = false;
+            }
+            MdEvent::Start(Tag::List(_)) => list_depth += 1,
+            MdEvent::End(TagEnd::List(_)) => list_depth = list_depth.saturating_sub(1),
+            MdEvent::Start(Tag::Item) => item_needs_bullet = true,
+            MdEvent::End(TagEnd::Item) => md_flush(&mut spans, &mut lines),
+            MdEvent::Start(Tag::Paragraph) => {}
+            MdEvent::End(TagEnd::Paragraph) => {
+                md_flush(&mut spans, &mut lines);
+                lines.push(Line::default());
+            }
+            MdEvent::Text(t) => {
+                if item_needs_bullet {
+                    item_needs_bullet = false;
+                    let indent = "  ".repeat(list_depth.saturating_sub(1));
+                    spans.push(Span::styled(
+                        format!("{indent}• "),
+                        Style::default().fg(DIM),
+                    ));
+                }
+                if in_code_block {
+                    for line in t.lines() {
+                        lines.push(Line::from(Span::styled(
+                            format!("  {line}"),
+                            Style::default().fg(CODE_FG),
+                        )));
+                    }
+                } else {
+                    let mut style = Style::default().fg(FG);
+                    if in_heading {
+                        style = style.fg(heading_color).add_modifier(Modifier::BOLD);
+                    } else {
+                        if bold { style = style.add_modifier(Modifier::BOLD); }
+                        if italic { style = style.add_modifier(Modifier::ITALIC); }
+                    }
+                    spans.push(Span::styled(t.to_string(), style));
+                }
+            }
+            MdEvent::Code(c) => {
+                spans.push(Span::styled(
+                    format!("`{c}`"),
+                    Style::default().fg(CODE_FG),
+                ));
+            }
+            MdEvent::SoftBreak => {
+                spans.push(Span::styled(" ".to_string(), Style::default().fg(FG)));
+            }
+            MdEvent::HardBreak => md_flush(&mut spans, &mut lines),
+            MdEvent::Rule => {
+                md_flush(&mut spans, &mut lines);
+                lines.push(Line::from(Span::styled(
+                    "─".repeat(60),
+                    Style::default().fg(DIM),
+                )));
+            }
+            _ => {}
+        }
+    }
+
+    md_flush(&mut spans, &mut lines);
+    lines
+}
+
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
 pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     let area = f.area();
     let items = popup_items(&state.input);
-    let popup_h = if items.is_empty() { 0u16 } else { items.len() as u16 + 1 };
+    let n_items = items.len();
+    // Popup: up to POPUP_WINDOW items + 1 nav footer; placed BELOW input (Gemini-style)
+    let popup_h = if n_items == 0 { 0u16 } else { (n_items.min(POPUP_WINDOW) + 1) as u16 };
     // Working zone: 2 rows (indicator + tip); absent when idle
     let working_h = if state.working { 2u16 } else { 0u16 };
 
-    // Layout top→bottom: content(flex) | [popup?] | [working 2r?] | input(1r) | footer(1r)
+    // Layout top→bottom: content(flex) | [working 2r?] | input(1r) | [popup?] | footer(1r)
     let mut constraints = vec![Constraint::Min(3)];
-    if popup_h > 0  { constraints.push(Constraint::Length(popup_h)); }
     if working_h > 0 { constraints.push(Constraint::Length(working_h)); }
     constraints.push(Constraint::Length(1)); // input
+    if popup_h > 0 { constraints.push(Constraint::Length(popup_h)); }
     constraints.push(Constraint::Length(1)); // footer
 
     let layout = Layout::default()
@@ -366,16 +483,17 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     let mut idx = 0usize;
     render_content(f, layout[idx], state);
     idx += 1;
-    if popup_h > 0 {
-        render_popup(f, layout[idx], &items, state.popup_selected.min(items.len().saturating_sub(1)));
-        idx += 1;
-    }
     if working_h > 0 {
         render_working(f, layout[idx], state);
         idx += 1;
     }
     render_input(f, layout[idx], state);
     idx += 1;
+    if popup_h > 0 {
+        let sel = state.popup_selected.min(n_items.saturating_sub(1));
+        render_popup(f, layout[idx], &items, sel);
+        idx += 1;
+    }
     render_footer(f, layout[idx], state);
 }
 
@@ -441,12 +559,19 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
             ExecBlock::AgentText(text) => {
                 lines.push(Line::default());
-                for line in text.lines() {
-                    lines.push(Line::from(Span::styled(
-                        line.to_string(),
-                        Style::default().fg(FG),
-                    )));
-                }
+                lines.extend(markdown_to_lines(text));
+            }
+
+            ExecBlock::WorkedFor(secs) => {
+                let dur = if *secs >= 60 {
+                    format!("{}m {}s", secs / 60, secs % 60)
+                } else {
+                    format!("{secs}s")
+                };
+                lines.push(Line::from(Span::styled(
+                    format!("  Worked for {dur}"),
+                    Style::default().fg(DIM).add_modifier(Modifier::ITALIC),
+                )));
             }
 
             ExecBlock::SystemMsg(msg) => {
@@ -493,19 +618,20 @@ fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     f.render_widget(para, area);
 }
 
-fn render_popup(
-    f: &mut ratatui::Frame,
-    area: Rect,
-    items: &[PopupItem],
-    selected: usize,
-) {
+fn render_popup(f: &mut ratatui::Frame, area: Rect, items: &[PopupItem], selected: usize) {
+    let total = items.len();
+    let win_size = total.min(POPUP_WINDOW);
+
+    // Center the visible window around the selected item
+    let win_start = selected
+        .saturating_sub(win_size / 2)
+        .min(total.saturating_sub(win_size));
+    let win_end = (win_start + win_size).min(total);
+
     let mut lines: Vec<Line<'static>> = Vec::new();
-    // thin top border
-    lines.push(Line::from(Span::styled(
-        "─".repeat(area.width as usize),
-        Style::default().fg(POPUP_BORDER),
-    )));
-    for (i, item) in items.iter().enumerate() {
+
+    for (abs_i, item) in items[win_start..win_end].iter().enumerate() {
+        let i = win_start + abs_i;
         let is_sel = i == selected;
         let bg = if is_sel { POPUP_SEL_BG } else { POPUP_BG };
         let name_col = if is_sel { GREEN } else { POPUP_MATCH };
@@ -520,6 +646,15 @@ fn render_popup(
             Span::styled(item.desc.clone(), Style::default().fg(desc_col).bg(bg)),
         ]));
     }
+
+    // Nav footer: position counter + key hints
+    let nav = format!(
+        "  ({}/{})  ↑↓ navigate  ·  tab select  ·  esc dismiss",
+        selected + 1,
+        total,
+    );
+    lines.push(Line::from(Span::styled(nav, Style::default().fg(DIM).bg(POPUP_BG))));
+
     let para = Paragraph::new(Text::from(lines)).style(Style::default().bg(POPUP_BG));
     f.render_widget(para, area);
 }
@@ -552,21 +687,30 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             .split(area)
     };
 
-    let before: String = state.input.chars().take(state.cursor).collect();
-    let cursor_ch: String = state
-        .input
-        .chars()
-        .nth(state.cursor)
-        .map(|c| c.to_string())
-        .unwrap_or_else(|| " ".to_string());
-    let after: String = state.input.chars().skip(state.cursor + 1).collect();
-
-    let input_line = Line::from(vec![
-        Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
-        Span::styled(before, Style::default().fg(FG)),
-        Span::styled(cursor_ch, Style::default().fg(BG).bg(FG)),
-        Span::styled(after, Style::default().fg(FG)),
-    ]);
+    let input_line = if state.input.is_empty() {
+        Line::from(vec![
+            Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Type your message or @path/to/file",
+                Style::default().fg(DIM),
+            ),
+        ])
+    } else {
+        let before: String = state.input.chars().take(state.cursor).collect();
+        let cursor_ch: String = state
+            .input
+            .chars()
+            .nth(state.cursor)
+            .map(|c| c.to_string())
+            .unwrap_or_else(|| " ".to_string());
+        let after: String = state.input.chars().skip(state.cursor + 1).collect();
+        Line::from(vec![
+            Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(before, Style::default().fg(FG)),
+            Span::styled(cursor_ch, Style::default().fg(BG).bg(FG)),
+            Span::styled(after, Style::default().fg(FG)),
+        ])
+    };
 
     f.render_widget(
         Paragraph::new(input_line).style(Style::default().bg(USER_BOX_BG)),
