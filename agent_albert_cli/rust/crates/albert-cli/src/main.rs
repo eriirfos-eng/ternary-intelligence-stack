@@ -1187,11 +1187,10 @@ fn run_tui(
                     }
                     true
                 }
-                // /help — show command reference inline in the chat log
+                // /help is intercepted in the TUI before reaching main loop — this arm is unreachable in TUI mode.
                 commands::SlashCommand::Help => {
-                    let help = render_repl_help();
-                    let mut st = tui_state.lock().unwrap();
-                    st.push_exec(tui::ExecBlock::RawText(help));
+                    // Fallback for non-TUI REPL mode
+                    println!("{}", render_repl_help());
                     true
                 }
                 // /compact and /compress — run inline and push result as a system note
@@ -3173,18 +3172,107 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
     }
 }
 
-fn resolve_provider_for_model(model: &str) -> api::LlmProvider {
-    if model.contains("gpt-") || model.contains("o1-") || model.contains("o3-") {
-        api::LlmProvider::OpenAi
-    } else if model.contains("claude-") || model.contains("opus") || model.contains("sonnet") || model.contains("haiku") {
-        api::LlmProvider::Anthropic
-    } else if model.contains("gemini-") {
-        api::LlmProvider::Google
-    } else if model.contains("llama") || model.contains("mistral") {
-        api::LlmProvider::HuggingFace
-    } else {
-        api::LlmProvider::Ternlang
+fn provider_config_name(provider: api::LlmProvider) -> &'static str {
+    use api::LlmProvider::*;
+    match provider {
+        Anthropic    => "anthropic",
+        OpenAi       => "openai",
+        Google       => "google",
+        Xai          => "xai",
+        Groq         => "groq",
+        Mistral      => "mistral",
+        DeepSeek     => "deepseek",
+        Together     => "together",
+        Fireworks    => "fireworks",
+        DeepInfra    => "deepinfra",
+        OpenRouter   => "openrouter",
+        Perplexity   => "perplexity",
+        Cohere       => "cohere",
+        Cerebras     => "cerebras",
+        Novita       => "novita",
+        SambaNova    => "sambanova",
+        NvidiaNim    => "nvidia",
+        Zhipu        => "zhipu",
+        MiniMax      => "minimax",
+        Qwen         => "qwen",
+        Azure        => "azure",
+        Aws          => "aws",
+        HuggingFace  => "huggingface",
+        GitHub       => "github",
+        Ollama       => "ollama",
+        LmStudio     => "lmstudio",
+        OpenAiCompat => "openai-compat",
+        Ternlang     => "ternlang",
     }
+}
+
+fn resolve_provider_for_model(model: &str) -> api::LlmProvider {
+    let m = model.to_lowercase();
+    // First-party frontier models
+    if m.contains("gpt-") || m.contains("o1-") || m.contains("o3-") || m.contains("o4-") || m.contains("chatgpt") {
+        return api::LlmProvider::OpenAi;
+    }
+    if m.contains("claude-") || m.contains("opus") || m.contains("sonnet") || m.contains("haiku") {
+        return api::LlmProvider::Anthropic;
+    }
+    if m.contains("gemini-") {
+        return api::LlmProvider::Google;
+    }
+    if m.contains("grok-") {
+        return api::LlmProvider::Xai;
+    }
+    // Inference clouds — check BEFORE generic llama/mistral so named prefixes win
+    if m.contains("deepseek-") {
+        return api::LlmProvider::DeepSeek;
+    }
+    if m.contains("mistral-") || m.contains("mixtral-") || m.contains("pixtral-") {
+        return api::LlmProvider::Mistral;
+    }
+    if m.contains("command-r") || m.contains("cohere/") {
+        return api::LlmProvider::Cohere;
+    }
+    if m.starts_with("sonar") || m.contains("perplexity/") {
+        return api::LlmProvider::Perplexity;
+    }
+    if m.contains("qwen") || m.contains("qwq") {
+        return api::LlmProvider::Qwen;
+    }
+    if m.starts_with("glm-") || m.contains("zhipu/") {
+        return api::LlmProvider::Zhipu;
+    }
+    if m.starts_with("abab") || m.contains("minimax/") {
+        return api::LlmProvider::MiniMax;
+    }
+    if m.contains("nvidia/") || m.starts_with("nv-") || m.contains("nemotron") {
+        return api::LlmProvider::NvidiaNim;
+    }
+    if m.starts_with("@cf/") || m.contains("cloudflare/") {
+        return api::LlmProvider::OpenAiCompat; // Cloudflare AI uses OpenAI compat
+    }
+    // Groq: they host Llama, Gemma, etc. — detect by GROQ_API_KEY being set
+    if std::env::var("GROQ_API_KEY").ok().filter(|v| !v.is_empty()).is_some()
+        && (m.contains("llama") || m.contains("gemma") || m.contains("llava"))
+    {
+        return api::LlmProvider::Groq;
+    }
+    // Together/Fireworks: infer from model path format "org/model-name"
+    if m.contains('/') {
+        if let Some(host) = std::env::var("TOGETHER_API_KEY").ok().filter(|v| !v.is_empty()) {
+            let _ = host;
+            return api::LlmProvider::Together;
+        }
+        if std::env::var("FIREWORKS_API_KEY").ok().filter(|v| !v.is_empty()).is_some() {
+            return api::LlmProvider::Fireworks;
+        }
+        if std::env::var("OPENROUTER_API_KEY").ok().filter(|v| !v.is_empty()).is_some() {
+            return api::LlmProvider::OpenRouter;
+        }
+    }
+    // Local endpoints
+    if m.contains("llama") || m.contains("phi-") || m.contains("qwen") {
+        return api::LlmProvider::Ollama;
+    }
+    api::LlmProvider::Ternlang
 }
 
 fn build_runtime(
@@ -3201,13 +3289,7 @@ fn build_runtime(
     let _config = ConfigLoader::default_for(&cwd).load()?;
 
     let provider = resolve_provider_for_model(&model);
-    let provider_config = runtime::load_provider_config(match provider {
-        api::LlmProvider::OpenAi => "openai",
-        api::LlmProvider::Anthropic => "anthropic",
-        api::LlmProvider::Google => "google",
-        api::LlmProvider::HuggingFace => "huggingface",
-        _ => "ternlang",
-    }).unwrap_or(None);
+    let provider_config = runtime::load_provider_config(provider_config_name(provider)).unwrap_or(None);
 
     let auth_source = if let Some(config) = provider_config {
         if let Some(key) = config.api_key {
@@ -3272,13 +3354,7 @@ fn build_runtime_with_mcp(
     let _config = ConfigLoader::default_for(&cwd).load()?;
 
     let provider = resolve_provider_for_model(&model);
-    let provider_config = runtime::load_provider_config(match provider {
-        api::LlmProvider::OpenAi => "openai",
-        api::LlmProvider::Anthropic => "anthropic",
-        api::LlmProvider::Google => "google",
-        api::LlmProvider::HuggingFace => "huggingface",
-        _ => "ternlang",
-    }).unwrap_or(None);
+    let provider_config = runtime::load_provider_config(provider_config_name(provider)).unwrap_or(None);
 
     let auth_source = if let Some(config) = provider_config {
         if let Some(key) = config.api_key {
@@ -3915,21 +3991,50 @@ const KNOWN_MODELS: &[ModelEntry] = &[
         provider: "OpenAI",
         description: "o3 reasoning — efficient",
     },
-    ModelEntry {
-        id: "grok-3",
-        provider: "xAI",
-        description: "Grok 3 flagship",
-    },
-    ModelEntry {
-        id: "grok-3-mini",
-        provider: "xAI",
-        description: "Efficient Grok variant",
-    },
-    ModelEntry {
-        id: "llama-3.3-70b-versatile",
-        provider: "Ollama",
-        description: "Llama 3.3 70B — local or hosted",
-    },
+    ModelEntry { id: "gpt-5",             provider: "OpenAI",     description: "GPT-5 frontier flagship" },
+    ModelEntry { id: "o3",                 provider: "OpenAI",     description: "o3 full reasoning" },
+    ModelEntry { id: "grok-3",             provider: "xAI",        description: "Grok 3 flagship" },
+    ModelEntry { id: "grok-3-mini",        provider: "xAI",        description: "Efficient Grok" },
+    // ── Groq LPU ────────────────────────────────────────────────────────────
+    ModelEntry { id: "llama-3.3-70b-versatile", provider: "Groq", description: "Llama 3.3 70B — ultra-fast LPU" },
+    ModelEntry { id: "llama-3.1-8b-instant",    provider: "Groq", description: "Llama 3.1 8B — fastest/cheapest" },
+    ModelEntry { id: "mixtral-8x7b-32768",       provider: "Groq", description: "Mixtral MoE on Groq" },
+    ModelEntry { id: "gemma2-9b-it",             provider: "Groq", description: "Gemma2 9B on Groq" },
+    // ── Mistral ─────────────────────────────────────────────────────────────
+    ModelEntry { id: "mistral-large-latest",     provider: "Mistral", description: "Mistral Large 2" },
+    ModelEntry { id: "mistral-small-latest",     provider: "Mistral", description: "Mistral Small — fast & cheap" },
+    ModelEntry { id: "pixtral-large-latest",     provider: "Mistral", description: "Pixtral multimodal" },
+    ModelEntry { id: "codestral-latest",         provider: "Mistral", description: "Code specialist" },
+    // ── DeepSeek ────────────────────────────────────────────────────────────
+    ModelEntry { id: "deepseek-chat",            provider: "DeepSeek", description: "DeepSeek V3 flagship" },
+    ModelEntry { id: "deepseek-reasoner",        provider: "DeepSeek", description: "DeepSeek R1 chain-of-thought" },
+    // ── OpenRouter (route to any model) ─────────────────────────────────────
+    ModelEntry { id: "openai/gpt-4o",            provider: "OpenRouter", description: "GPT-4o via OpenRouter" },
+    ModelEntry { id: "anthropic/claude-sonnet-4-6", provider: "OpenRouter", description: "Claude Sonnet 4.6 via OpenRouter" },
+    ModelEntry { id: "google/gemini-2.5-flash",  provider: "OpenRouter", description: "Gemini Flash via OpenRouter" },
+    ModelEntry { id: "x-ai/grok-3-mini",         provider: "OpenRouter", description: "Grok 3 Mini via OpenRouter" },
+    // ── Together AI ─────────────────────────────────────────────────────────
+    ModelEntry { id: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", provider: "Together", description: "Llama 3.1 70B Turbo" },
+    ModelEntry { id: "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo", provider: "Together", description: "Llama 3.1 405B Turbo" },
+    // ── Perplexity ──────────────────────────────────────────────────────────
+    ModelEntry { id: "sonar-pro",                provider: "Perplexity", description: "Search-grounded Pro" },
+    ModelEntry { id: "sonar",                    provider: "Perplexity", description: "Search-grounded Fast" },
+    // ── Cohere ──────────────────────────────────────────────────────────────
+    ModelEntry { id: "command-r-plus",           provider: "Cohere", description: "Command R+ RAG flagship" },
+    ModelEntry { id: "command-r",                provider: "Cohere", description: "Command R — efficient" },
+    // ── Cerebras WSE ────────────────────────────────────────────────────────
+    ModelEntry { id: "llama3.3-70b",             provider: "Cerebras", description: "Llama 3.3 70B on Wafer-Scale Engine" },
+    // ── Qwen / Alibaba ──────────────────────────────────────────────────────
+    ModelEntry { id: "qwen-max",                 provider: "Qwen",  description: "Qwen Max — Alibaba flagship" },
+    ModelEntry { id: "qwen-plus",                provider: "Qwen",  description: "Qwen Plus — balanced" },
+    ModelEntry { id: "qwq-32b",                  provider: "Qwen",  description: "QwQ 32B chain-of-thought" },
+    // ── NVIDIA NIM ──────────────────────────────────────────────────────────
+    ModelEntry { id: "nvidia/llama-3.1-nemotron-70b-instruct", provider: "NVIDIA NIM", description: "Nemotron 70B — NVIDIA-tuned" },
+    // ── Local ───────────────────────────────────────────────────────────────
+    ModelEntry { id: "llama3.2",                 provider: "Ollama",   description: "Llama 3.2 — local (Ollama)" },
+    ModelEntry { id: "qwen2.5-coder:14b",        provider: "Ollama",   description: "Qwen2.5 Coder 14B — local" },
+    ModelEntry { id: "phi4",                     provider: "Ollama",   description: "Phi-4 — local (Ollama)" },
+    ModelEntry { id: "local-model",              provider: "LM Studio", description: "Active LM Studio model" },
 ];
 
 /// Extract human-readable text from a tool result's `output` field.

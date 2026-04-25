@@ -239,9 +239,12 @@ impl AuthSource {
     pub fn apply(&self, provider: crate::client::LlmProvider, rb: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
         use crate::client::LlmProvider;
         match (provider, self) {
+            // Google auth is added to the URL as ?key=, not a header.
             (LlmProvider::Google, _) => rb,
+            // Anthropic uses x-api-key header.
             (LlmProvider::Anthropic, Self::ApiKey(key)) => rb.header("x-api-key", key),
-            (LlmProvider::OpenAi | LlmProvider::Ollama | LlmProvider::Xai, Self::ApiKey(key)) => rb.bearer_auth(key),
+            // All OpenAI-compatible providers use Bearer auth.
+            (p, Self::ApiKey(key)) if p.is_openai_compat() => rb.bearer_auth(key),
             (_, Self::BearerToken(token)) => rb.bearer_auth(token),
             (_, Self::ApiKeyAndBearer { api_key, bearer_token }) => {
                 rb.header("x-api-key", api_key).bearer_auth(bearer_token)

@@ -66,20 +66,62 @@ const PERM_MODES: &[(&str, &str)] = &[
     ("danger-full-access",  "unrestricted · full shell"),
 ];
 
-// Known models for the in-popup model picker
+// Known models for the in-popup model picker — (id, provider, description)
 const MODEL_ENTRIES: &[(&str, &str, &str)] = &[
-    ("gemini-2.5-pro",            "Google",    "Most capable Gemini — complex reasoning"),
-    ("gemini-2.5-flash",          "Google",    "Fast & capable — recommended default"),
-    ("gemini-2.5-flash-lite",     "Google",    "Lightest Gemini — maximum speed"),
-    ("gemini-2.0-flash",          "Google",    "Previous Flash generation"),
-    ("claude-opus-4-7",           "Anthropic", "Most capable Claude"),
-    ("claude-sonnet-4-6",         "Anthropic", "Best balance of speed and capability"),
-    ("claude-haiku-4-5-20251001", "Anthropic", "Fastest Claude"),
-    ("gpt-4o",                    "OpenAI",    "GPT-4o multimodal flagship"),
-    ("gpt-4o-mini",               "OpenAI",    "Efficient GPT-4o variant"),
-    ("o3-mini",                   "OpenAI",    "o3 reasoning — efficient"),
-    ("grok-3",                    "xAI",       "Grok 3 flagship"),
-    ("grok-3-mini",               "xAI",       "Efficient Grok variant"),
+    // Google
+    ("gemini-2.5-pro",                              "Google",       "Most capable Gemini"),
+    ("gemini-2.5-flash",                            "Google",       "Fast & capable — recommended"),
+    ("gemini-2.5-flash-lite",                       "Google",       "Lightest Gemini"),
+    // Anthropic
+    ("claude-opus-4-7",                             "Anthropic",    "Most capable Claude"),
+    ("claude-sonnet-4-6",                           "Anthropic",    "Best balance"),
+    ("claude-haiku-4-5-20251001",                   "Anthropic",    "Fastest Claude"),
+    // OpenAI
+    ("gpt-4o",                                      "OpenAI",       "GPT-4o flagship"),
+    ("gpt-4o-mini",                                 "OpenAI",       "Efficient GPT-4o"),
+    ("gpt-5",                                       "OpenAI",       "GPT-5 frontier"),
+    ("o3",                                          "OpenAI",       "Full o3 reasoning"),
+    ("o3-mini",                                     "OpenAI",       "o3 reasoning — efficient"),
+    // xAI
+    ("grok-3",                                      "xAI",          "Grok 3 flagship"),
+    ("grok-3-mini",                                 "xAI",          "Efficient Grok"),
+    // Groq LPU
+    ("llama-3.3-70b-versatile",                     "Groq",         "Llama 3.3 70B — ultra-fast LPU"),
+    ("llama-3.1-8b-instant",                        "Groq",         "Llama 3.1 8B — fastest/cheapest"),
+    ("gemma2-9b-it",                                "Groq",         "Gemma2 9B on Groq"),
+    // Mistral
+    ("mistral-large-latest",                        "Mistral",      "Mistral Large 2"),
+    ("mistral-small-latest",                        "Mistral",      "Mistral Small — fast"),
+    ("codestral-latest",                            "Mistral",      "Code specialist"),
+    ("pixtral-large-latest",                        "Mistral",      "Pixtral multimodal"),
+    // DeepSeek
+    ("deepseek-chat",                               "DeepSeek",     "DeepSeek V3 flagship"),
+    ("deepseek-reasoner",                           "DeepSeek",     "DeepSeek R1 chain-of-thought"),
+    // OpenRouter
+    ("openai/gpt-4o",                               "OpenRouter",   "GPT-4o via OpenRouter"),
+    ("anthropic/claude-sonnet-4-6",                 "OpenRouter",   "Claude Sonnet 4.6"),
+    ("google/gemini-2.5-flash",                     "OpenRouter",   "Gemini Flash"),
+    ("x-ai/grok-3-mini",                            "OpenRouter",   "Grok 3 Mini"),
+    // Perplexity
+    ("sonar-pro",                                   "Perplexity",   "Search-grounded Pro"),
+    ("sonar",                                       "Perplexity",   "Search-grounded Fast"),
+    // Cohere
+    ("command-r-plus",                              "Cohere",       "Command R+ RAG flagship"),
+    ("command-r",                                   "Cohere",       "Command R — efficient"),
+    // Cerebras
+    ("llama3.3-70b",                                "Cerebras",     "Llama 3.3 70B on WSE"),
+    // Qwen
+    ("qwen-max",                                    "Qwen",         "Qwen Max flagship"),
+    ("qwq-32b",                                     "Qwen",         "QwQ 32B chain-of-thought"),
+    // NVIDIA NIM
+    ("nvidia/llama-3.1-nemotron-70b-instruct",      "NVIDIA NIM",   "Nemotron 70B"),
+    // Together AI
+    ("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo","Together",     "Llama 3.1 70B Turbo"),
+    // Local
+    ("llama3.2",                                    "Ollama",       "Llama 3.2 local"),
+    ("phi4",                                        "Ollama",       "Phi-4 local"),
+    ("qwen2.5-coder:14b",                           "Ollama",       "Qwen2.5 Coder local"),
+    ("local-model",                                 "LM Studio",    "Active LM Studio model"),
 ];
 
 // ── Data model ────────────────────────────────────────────────────────────────
@@ -129,6 +171,10 @@ pub struct TuiState {
     /// Set when the current input arrived via a large paste (>= 3 lines).
     /// Drives the compact "pasted text · N lines" badge in render_input.
     pub paste_line_count: Option<usize>,
+    /// Show the full help popup overlay (opened by /help, closed by Esc).
+    pub help_open: bool,
+    /// Scroll offset inside the help popup.
+    pub help_scroll: u16,
 }
 
 impl Default for TuiState {
@@ -151,6 +197,8 @@ impl Default for TuiState {
             auth_flow: None,
             drip_buffer: String::new(),
             paste_line_count: None,
+            help_open: false,
+            help_scroll: 0,
         }
     }
 }
@@ -589,6 +637,11 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     render_tips(f, layout[idx], state);
     idx += 1;
     render_footer(f, layout[idx], state);
+
+    // Help overlay floats on top of everything — rendered last so it covers all other widgets.
+    if state.help_open {
+        render_help_overlay(f, area, state.help_scroll);
+    }
 }
 
 fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
@@ -769,6 +822,100 @@ fn render_popup(f: &mut ratatui::Frame, area: Rect, items: &[PopupItem], selecte
 
     let para = Paragraph::new(Text::from(lines)).style(Style::default().bg(POPUP_BG));
     f.render_widget(para, area);
+}
+
+/// Full-screen help overlay — floats over the whole terminal, closed with Esc.
+fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
+    use ratatui::widgets::{Block, Borders, Clear};
+
+    // Semi-transparent frame: clear the background first, then draw the box
+    let overlay = Rect {
+        x: area.x + 2,
+        y: area.y + 1,
+        width: area.width.saturating_sub(4),
+        height: area.height.saturating_sub(2),
+    };
+    f.render_widget(Clear, overlay);
+
+    const SECTION: Color = Color::Rgb(0, 200, 120);
+    const CMD_C:   Color = Color::Rgb(0, 200, 255);
+    const HINT_C:  Color = Color::Rgb(120, 120, 120);
+
+    let mut lines: Vec<Line<'static>> = Vec::new();
+    let h = |s: &'static str| Line::from(Span::styled(s, Style::default().fg(SECTION).add_modifier(Modifier::BOLD)));
+    let c = |cmd: &'static str, desc: &'static str| Line::from(vec![
+        Span::styled(format!("  {cmd:<22}"), Style::default().fg(CMD_C).add_modifier(Modifier::BOLD)),
+        Span::styled(desc, Style::default().fg(FG)),
+    ]);
+    let hint_line = |s: &'static str| Line::from(Span::styled(format!("  {s}"), Style::default().fg(HINT_C)));
+    let blank = || Line::from("");
+
+    lines.push(blank());
+    lines.push(h("  MODELS & PROVIDERS"));
+    lines.push(c("/model <id>",          "switch model — opens picker when blank"));
+    lines.push(c("/auth <provider>",      "set API key for a provider"));
+    lines.push(c("/auth browser",         "OAuth browser login (Google / GitHub)"));
+    lines.push(hint_line("Providers: anthropic · openai · google · xai · groq · mistral · deepseek"));
+    lines.push(hint_line("           together · openrouter · perplexity · cohere · cerebras · qwen"));
+    lines.push(hint_line("           nvidia · fireworks · deepinfra · novita · sambanova · ollama"));
+    lines.push(blank());
+    lines.push(h("  SESSION"));
+    lines.push(c("/compact",              "summarise old context to free tokens"));
+    lines.push(c("/compress",             "aggressive compression — strip tool outputs"));
+    lines.push(c("/status",              "show token usage and session info"));
+    lines.push(c("/cost",                "show estimated API cost for this session"));
+    lines.push(c("/clear",               "wipe conversation history"));
+    lines.push(c("/export",              "save conversation to markdown file"));
+    lines.push(c("/session",             "list saved sessions"));
+    lines.push(c("/resume <id>",          "restore a previous session"));
+    lines.push(blank());
+    lines.push(h("  AGENT MODES"));
+    lines.push(c("/plan <task>",          "decompose task into numbered steps"));
+    lines.push(c("/loop <mission>",       "autonomous mode — runs until MISSION COMPLETE"));
+    lines.push(c("/tdd <spec>",           "test-driven development loop"));
+    lines.push(c("/code-review",          "review staged diff"));
+    lines.push(c("/bughunter",            "scan codebase for bugs"));
+    lines.push(c("/refactor",             "refactor current file"));
+    lines.push(blank());
+    lines.push(h("  WORKSPACE & GIT"));
+    lines.push(c("/commit",              "commit staged changes with AI message"));
+    lines.push(c("/pr",                  "create pull request"));
+    lines.push(c("/diff",                "show current git diff"));
+    lines.push(c("/init",                "scaffold ALBERT.md in current directory"));
+    lines.push(c("/memory",              "view/edit persistent memory"));
+    lines.push(blank());
+    lines.push(h("  PERMISSIONS"));
+    lines.push(c("/permissions",          "show current permission mode — picker when blank"));
+    lines.push(hint_line("Modes: read-only · workspace-write · danger-full-access"));
+    lines.push(blank());
+    lines.push(h("  KEYBOARD"));
+    lines.push(hint_line("Enter       send message"));
+    lines.push(hint_line("Tab         autocomplete command from popup"));
+    lines.push(hint_line("↑ ↓         navigate popup / scroll history"));
+    lines.push(hint_line("PageUp/Dn   scroll conversation"));
+    lines.push(hint_line("Esc         interrupt · dismiss popup · close this overlay"));
+    lines.push(hint_line("Ctrl+Space  toggle voice recording (whisper STT)"));
+    lines.push(hint_line("Ctrl+V      paste from clipboard"));
+    lines.push(hint_line("Ctrl+C      quit"));
+    lines.push(blank());
+    lines.push(Line::from(Span::styled("  Esc to close", Style::default().fg(DIM))));
+
+    let total = lines.len() as u16;
+    let visible = overlay.height.saturating_sub(2);
+    let max_scroll = total.saturating_sub(visible);
+    let scroll = scroll.min(max_scroll);
+
+    let block = Block::default()
+        .title(" ◆ Albert — Command Reference ")
+        .title_style(Style::default().fg(GREEN).add_modifier(Modifier::BOLD))
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Rgb(50, 50, 50)))
+        .style(Style::default().bg(Color::Rgb(8, 8, 8)));
+
+    let para = Paragraph::new(Text::from(lines))
+        .block(block)
+        .scroll((scroll, 0));
+    f.render_widget(para, overlay);
 }
 
 /// Multi-row expanding input bar with the git branch badge pinned to the right.
@@ -1225,12 +1372,14 @@ impl TuiApp {
                                     }
                                 }
 
-                                // ESC: interrupt running turn, dismiss popup, clear paste badge, or reset scroll
+                                // ESC: close help overlay → dismiss popup → clear paste → reset scroll
                                 (KeyCode::Esc, _) => {
                                     if state.working {
                                         cancel_flag.store(true, Ordering::Relaxed);
+                                    } else if state.help_open {
+                                        state.help_open = false;
+                                        state.help_scroll = 0;
                                     } else if state.paste_line_count.is_some() {
-                                        // Clear the pasted content
                                         state.input.clear();
                                         state.cursor = 0;
                                         state.paste_line_count = None;
@@ -1241,6 +1390,13 @@ impl TuiApp {
                                     } else {
                                         state.scroll = 0;
                                     }
+                                }
+                                // PageUp/Down in help popup
+                                (KeyCode::Up, _) | (KeyCode::PageUp, _) if state.help_open => {
+                                    state.help_scroll = state.help_scroll.saturating_sub(3);
+                                }
+                                (KeyCode::Down, _) | (KeyCode::PageDown, _) if state.help_open => {
+                                    state.help_scroll = state.help_scroll.saturating_add(3);
                                 }
 
                                 // Up / Down / Left / Right all navigate the popup when open.
@@ -1357,7 +1513,13 @@ impl TuiApp {
                             break;
                         }
                         if let Some(text) = submit_text {
-                            let _ = self.submit_tx.send(text);
+                            // /help and /version are handled entirely inside the TUI.
+                            let trimmed = text.trim();
+                            if trimmed == "/help" || trimmed == "/?" {
+                                self.state.lock().unwrap().help_open = true;
+                            } else {
+                                let _ = self.submit_tx.send(text);
+                            }
                         }
                         // Handle voice recording toggle outside the state lock
                         match voice_toggle {

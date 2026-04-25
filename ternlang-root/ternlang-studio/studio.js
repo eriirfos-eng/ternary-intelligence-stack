@@ -5674,7 +5674,9 @@ function updateWires() {
 
   flowWires.forEach(w => {
     const fromNode = document.getElementById(w.fromId);
-    const toNode = document.getElementById(w.toId);
+    const toNode   = document.getElementById(w.toId);
+    // Skip wires where either endpoint has been deleted.
+    // Albert panel wires are OK if the panel exists in the DOM.
     if (!fromNode || !toNode) return;
 
     // Phase 3: Select specific ternary output port based on condition
@@ -6397,14 +6399,25 @@ function onMouseUp(e) {
       const targetPort = magnet || e.target.closest('.flow-port');
 
       if (targetPort) {
-        // Albert panel ports are not inside .flow-node — handle them separately.
+        // Albert panel ports are not inside .flow-node — handle them directly.
         const isAlbertPortIn  = targetPort.id === 'albert-port-in';
         const isAlbertPortOut = targetPort.id === 'albert-port-out';
         if ((isAlbertPortIn || isAlbertPortOut) && activeWire.fromId !== 'albert-panel') {
-          // Record the wired source so Albert panel can inject workflow context.
-          window._activeWireFromId = activeWire.fromId;
-          const evt = new MouseEvent('mouseup', { clientX: e.clientX, clientY: e.clientY });
-          targetPort.dispatchEvent(evt);
+          const wireId = 'wire_albert_' + Date.now();
+          const fromId = activeWire.fromIsOutput ? activeWire.fromId : 'albert-panel';
+          const toId   = activeWire.fromIsOutput ? 'albert-panel' : activeWire.fromId;
+          // Deduplicate
+          const exists = flowWires.some(w => w.fromId === fromId && w.toId === toId);
+          if (exists) {
+            showToast('Already wired to Albert', 'info');
+          } else {
+            flowWires.push({ id: wireId, fromId, toId, signal: 0, confidence: 1.0, condition: 'all', transform: 'pass', priority: 5, label: 'Albert' });
+            saveCanvasState();
+            // Notify Albert panel which node is wired in
+            window._activeWireFromId = fromId;
+            const portEl = document.getElementById('albert-port-in');
+            if (portEl) portEl.dispatchEvent(new Event('mouseup'));
+          }
           activeWire = null;
           updateWires();
           return;
@@ -8049,14 +8062,31 @@ document.addEventListener('DOMContentLoaded', () => {
         " title="Send (Enter)">↵</button>
       </div>
 
-      <!-- API key setup row — hidden once key is saved -->
+      <!-- Provider/key setup row — hidden once configured -->
       <div id="albert-key-row" style="
-        padding:6px 10px; border-top:1px solid #1a1a1a; display:flex; gap:6px; flex-shrink:0;
-        align-items:center;
+        padding:6px 10px; border-top:1px solid #1a1a1a; display:flex; gap:5px; flex-shrink:0;
+        align-items:center; flex-wrap:wrap;
       ">
-        <span style="color:#555; font-size:10px; flex-shrink:0;">Gemini key</span>
-        <input id="albert-key-input" type="password" placeholder="AIzaSy…" style="
-          flex:1; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
+        <select id="albert-provider-select" style="
+          background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
+          color:#aaa; font-family:inherit; font-size:10px; padding:4px 6px; outline:none; cursor:pointer;
+        ">
+          <option value="gemini">Gemini</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="groq">Groq</option>
+          <option value="mistral">Mistral</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="xai">xAI / Grok</option>
+          <option value="custom">Custom (OpenAI-compat)</option>
+        </select>
+        <input id="albert-key-input" type="password" placeholder="API key…" style="
+          flex:1; min-width:80px; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
+          color:#aaa; font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
+        "/>
+        <input id="albert-model-input" type="text" placeholder="model" style="
+          width:80px; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
           color:#aaa; font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
         "/>
         <button id="albert-key-save" style="
@@ -8120,29 +8150,58 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Close ─────────────────────────────────────────────────────────────
     el.querySelector('#albert-close').addEventListener('click', hidePanel);
 
-    // ── API key setup ─────────────────────────────────────────────────────
-    const keyRow = el.querySelector('#albert-key-row');
-    const keyInp = el.querySelector('#albert-key-input');
+    // ── API key / provider setup ──────────────────────────────────────────
+    const keyRow    = el.querySelector('#albert-key-row');
+    const keyInp    = el.querySelector('#albert-key-input');
+    const provSel   = el.querySelector('#albert-provider-select');
+    const modelInp  = el.querySelector('#albert-model-input');
+
+    const PROVIDER_DEFAULTS = {
+      gemini:      { model: 'gemini-2.5-flash',           url: null },
+      openai:      { model: 'gpt-4o-mini',                url: 'https://api.openai.com/v1/chat/completions' },
+      anthropic:   { model: 'claude-haiku-4-5-20251001',  url: 'https://api.anthropic.com/v1/messages' },
+      groq:        { model: 'llama-3.3-70b-versatile',    url: 'https://api.groq.com/openai/v1/chat/completions' },
+      mistral:     { model: 'mistral-small-latest',       url: 'https://api.mistral.ai/v1/chat/completions' },
+      deepseek:    { model: 'deepseek-chat',              url: 'https://api.deepseek.com/v1/chat/completions' },
+      openrouter:  { model: 'openai/gpt-4o-mini',         url: 'https://openrouter.ai/api/v1/chat/completions' },
+      xai:         { model: 'grok-beta',                  url: 'https://api.x.ai/v1/chat/completions' },
+      custom:      { model: '',                           url: '' },
+    };
+
     function refreshKeyRow() {
-      const existing = localStorage.getItem('albert_gemini_key');
-      if (existing) {
+      const provider = localStorage.getItem('albert_provider') || 'gemini';
+      const key      = localStorage.getItem('albert_api_key')  || '';
+      const model    = localStorage.getItem('albert_model')    || '';
+      provSel.value  = PROVIDER_DEFAULTS[provider] ? provider : 'gemini';
+      if (model) modelInp.value = model;
+      if (key) {
         keyRow.style.display = 'none';
       } else {
         keyRow.style.display = 'flex';
       }
     }
-    refreshKeyRow();
+
+    provSel.addEventListener('change', () => {
+      const def = PROVIDER_DEFAULTS[provSel.value];
+      if (def && !modelInp.value) modelInp.placeholder = def.model || 'model';
+    });
+
     el.querySelector('#albert-key-save').addEventListener('click', () => {
-      const k = keyInp.value.trim();
-      if (!k) return;
-      localStorage.setItem('albert_gemini_key', k);
+      const provider = provSel.value.trim() || 'gemini';
+      const k        = keyInp.value.trim();
+      const m        = modelInp.value.trim();
+      if (!k) { setStatus('⚠ Enter an API key first'); return; }
+      localStorage.setItem('albert_provider', provider);
+      localStorage.setItem('albert_api_key',  k);
+      if (m) localStorage.setItem('albert_model', m);
       keyInp.value = '';
       refreshKeyRow();
-      setStatus('⠸ key saved — ready');
+      setStatus('⠸ config saved — ready');
     });
     keyInp.addEventListener('keydown', e => {
       if (e.key === 'Enter') el.querySelector('#albert-key-save').click();
     });
+    refreshKeyRow();
 
     // ── Send on Enter ──────────────────────────────────────────────────────
     const inp = el.querySelector('#albert-input');
@@ -8223,22 +8282,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── LLM call ─────────────────────────────────────────────────────────────
-  async function callGemini(messages) {
-    // Try to get a Gemini key from localStorage or the settings form
-    const key = localStorage.getItem('albert_gemini_key')
-              || (document.getElementById('geminiApiKey') || {}).value?.trim()
-              || '';
+  async function callLlm(messages) {
+    const provider = localStorage.getItem('albert_provider') || 'gemini';
+    const key      = localStorage.getItem('albert_api_key')
+                   || localStorage.getItem('albert_gemini_key') // legacy fallback
+                   || '';
+    const savedModel = localStorage.getItem('albert_model') || '';
+
     if (!key) {
-      // Show the key-setup row so the user can enter their key directly.
       const keyRow = document.getElementById('albert-key-row');
       if (keyRow) { keyRow.style.display = 'flex'; document.getElementById('albert-key-input')?.focus(); }
-      return 'No Gemini API key set. Enter your key in the row above and press Save.';
+      return `No API key set for ${provider}. Enter your key in the row above and press Save.`;
     }
-
-    const contents = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.text }],
-    }));
 
     const sysPrompt = `You are Albert, a sovereign AI co-pilot embedded in Ternlang Studio — a visual workflow canvas.
 You help users build, debug, and optimise Ternlang signal-flow workflows.
@@ -8253,19 +8308,81 @@ When asked to validate:
 {"action":"validate"}
 Otherwise, respond naturally and concisely.`;
 
-    const body = {
-      system_instruction: { parts: [{ text: sysPrompt }] },
-      contents,
-      generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
+    // ── Gemini ──────────────────────────────────────────────────────────────
+    if (provider === 'gemini') {
+      const model = savedModel || 'gemini-2.5-flash';
+      const contents = messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.text }],
+      }));
+      const body = {
+        system_instruction: { parts: [{ text: sysPrompt }] },
+        contents,
+        generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
+      };
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+      const data = await r.json();
+      if (!r.ok) return `Gemini error: ${data.error?.message || r.status}`;
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '(empty response)';
+    }
+
+    // ── Anthropic ───────────────────────────────────────────────────────────
+    if (provider === 'anthropic') {
+      const model = savedModel || 'claude-haiku-4-5-20251001';
+      const msgs = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text }));
+      const body = { model, max_tokens: 512, system: sysPrompt, messages: msgs };
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await r.json();
+      if (!r.ok) return `Anthropic error: ${data.error?.message || r.status}`;
+      return data.content?.[0]?.text || '(empty response)';
+    }
+
+    // ── OpenAI-compatible (all other providers) ─────────────────────────────
+    const URLS = {
+      openai:     'https://api.openai.com/v1/chat/completions',
+      groq:       'https://api.groq.com/openai/v1/chat/completions',
+      mistral:    'https://api.mistral.ai/v1/chat/completions',
+      deepseek:   'https://api.deepseek.com/v1/chat/completions',
+      openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+      xai:        'https://api.x.ai/v1/chat/completions',
+    };
+    const DEFAULT_MODELS = {
+      openai: 'gpt-4o-mini', groq: 'llama-3.3-70b-versatile',
+      mistral: 'mistral-small-latest', deepseek: 'deepseek-chat',
+      openrouter: 'openai/gpt-4o-mini', xai: 'grok-beta',
     };
 
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    );
+    const url = URLS[provider] || (localStorage.getItem('albert_custom_url') || '') + '/v1/chat/completions';
+    if (!url || url.startsWith('/')) return `Unknown provider "${provider}". Set a custom URL in settings.`;
+    const model = savedModel || DEFAULT_MODELS[provider] || 'gpt-4o-mini';
+
+    const msgs = [
+      { role: 'system', content: sysPrompt },
+      ...messages.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text })),
+    ];
+    const body = { model, messages: msgs, max_tokens: 512 };
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify(body),
+    });
     const data = await r.json();
-    if (!r.ok) return `API error: ${data.error?.message || r.status}`;
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '(empty response)';
+    if (!r.ok) return `${provider} error: ${data.error?.message || r.status}`;
+    return data.choices?.[0]?.message?.content || '(empty response)';
   }
 
   // Execute JSON action blocks embedded in Albert's reply
@@ -8311,7 +8428,7 @@ Otherwise, respond naturally and concisely.`;
     const msgs = history.map(m => ({ role: m.role, text: m.text }));
 
     try {
-      const raw = await callGemini(msgs);
+      const raw = await callLlm(msgs);
       const reply = executeActions(raw);
       appendMessage('assistant', reply);
       setStatus('⠸ idle');

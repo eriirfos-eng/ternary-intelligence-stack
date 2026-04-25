@@ -12,42 +12,123 @@ const DEFAULT_MAX_BACKOFF: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum LlmProvider {
+    // ── First-party ──────────────────────────────────────────────────────────
     Ternlang,
     Anthropic,
     OpenAi,
-    HuggingFace,
     Google,
+    Xai,
+    // ── Inference cloud (all OpenAI-compatible) ───────────────────────────────
+    Groq,
+    Mistral,
+    DeepSeek,
+    Together,
+    Fireworks,
+    DeepInfra,
+    OpenRouter,
+    Perplexity,
+    Cohere,
+    Cerebras,
+    Novita,
+    SambaNova,
+    NvidiaNim,
+    // ── Regional foundation models (OpenAI-compatible) ───────────────────────
+    Zhipu,
+    MiniMax,
+    Qwen,
+    // ── Enterprise cloud ─────────────────────────────────────────────────────
     Azure,
     Aws,
+    // ── Aggregators ──────────────────────────────────────────────────────────
+    HuggingFace,
+    GitHub,
+    // ── Local / offline ──────────────────────────────────────────────────────
     Ollama,
-    Xai,
+    LmStudio,
+    // ── Generic OpenAI-compatible (user-configured base URL) ─────────────────
+    OpenAiCompat,
 }
 
 impl LlmProvider {
+    /// Returns `true` for every provider that speaks the OpenAI /v1/chat/completions wire format.
+    pub fn is_openai_compat(self) -> bool {
+        !matches!(self, Self::Anthropic | Self::Google | Self::Ternlang | Self::Aws)
+    }
+
     pub fn default_base_url(&self) -> &'static str {
         match self {
-            Self::Ternlang => "https://api.ternlang.com",
-            Self::Anthropic => "https://api.anthropic.com",
-            Self::OpenAi => "https://api.openai.com",
-            Self::HuggingFace => "https://api-inference.huggingface.co",
-            Self::Google => "https://generativelanguage.googleapis.com",
-            Self::Azure => "https://api.azure.com",
-            Self::Aws => "https://bedrock-runtime.us-east-1.amazonaws.com",
-            Self::Ollama => "http://localhost:11434",
-            Self::Xai => "https://api.x.ai",
+            Self::Ternlang     => "https://api.ternlang.com",
+            Self::Anthropic    => "https://api.anthropic.com",
+            Self::OpenAi       => "https://api.openai.com",
+            Self::Google       => "https://generativelanguage.googleapis.com",
+            Self::Xai          => "https://api.x.ai",
+            Self::Groq         => "https://api.groq.com/openai",
+            Self::Mistral      => "https://api.mistral.ai",
+            Self::DeepSeek     => "https://api.deepseek.com",
+            Self::Together     => "https://api.together.xyz",
+            Self::Fireworks    => "https://api.fireworks.ai/inference",
+            Self::DeepInfra    => "https://api.deepinfra.com/v1/openai",
+            Self::OpenRouter   => "https://openrouter.ai/api",
+            Self::Perplexity   => "https://api.perplexity.ai",
+            Self::Cohere       => "https://api.cohere.ai",
+            Self::Cerebras     => "https://api.cerebras.ai",
+            Self::Novita       => "https://api.novita.ai/v3/openai",
+            Self::SambaNova    => "https://api.sambanova.ai",
+            Self::NvidiaNim    => "https://integrate.api.nvidia.com",
+            Self::Zhipu        => "https://open.bigmodel.cn/api/paas/v4",
+            Self::MiniMax      => "https://api.minimax.chat/v1",
+            Self::Qwen         => "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            Self::Azure        => "https://api.azure.com",
+            Self::Aws          => "https://bedrock-runtime.us-east-1.amazonaws.com",
+            Self::HuggingFace  => "https://api-inference.huggingface.co",
+            Self::GitHub       => "https://models.inference.ai.azure.com",
+            Self::Ollama       => "http://localhost:11434",
+            Self::LmStudio     => "http://localhost:1234",
+            Self::OpenAiCompat => "http://localhost:11434",
         }
     }
 
     pub fn api_path(&self) -> &'static str {
         match self {
-            Self::Ternlang => "/v1/messages",
-            Self::Anthropic => "/v1/messages",
-            Self::OpenAi => "/v1/chat/completions",
-            Self::HuggingFace => "/models",
+            Self::Ternlang | Self::Anthropic => "/v1/messages",
             Self::Google => "/v1beta",
-            Self::Ollama => "/v1/chat/completions",
-            Self::Xai => "/v1/chat/completions",
-            _ => "/v1/messages",
+            Self::HuggingFace => "/models",
+            // All OpenAI-compat providers share this path
+            _ => "/v1/chat/completions",
+        }
+    }
+
+    /// Canonical env-var name for this provider's API key (used for display / docs).
+    pub fn env_var(self) -> &'static str {
+        match self {
+            Self::Ternlang     => "TERNLANG_API_KEY",
+            Self::Anthropic    => "ANTHROPIC_API_KEY",
+            Self::OpenAi       => "OPENAI_API_KEY",
+            Self::Google       => "GEMINI_API_KEY",
+            Self::Xai          => "XAI_API_KEY",
+            Self::Groq         => "GROQ_API_KEY",
+            Self::Mistral      => "MISTRAL_API_KEY",
+            Self::DeepSeek     => "DEEPSEEK_API_KEY",
+            Self::Together     => "TOGETHER_API_KEY",
+            Self::Fireworks    => "FIREWORKS_API_KEY",
+            Self::DeepInfra    => "DEEPINFRA_API_KEY",
+            Self::OpenRouter   => "OPENROUTER_API_KEY",
+            Self::Perplexity   => "PERPLEXITY_API_KEY",
+            Self::Cohere       => "COHERE_API_KEY",
+            Self::Cerebras     => "CEREBRAS_API_KEY",
+            Self::Novita       => "NOVITA_API_KEY",
+            Self::SambaNova    => "SAMBANOVA_API_KEY",
+            Self::NvidiaNim    => "NVIDIA_API_KEY",
+            Self::Zhipu        => "ZHIPU_API_KEY",
+            Self::MiniMax      => "MINIMAX_API_KEY",
+            Self::Qwen         => "DASHSCOPE_API_KEY",
+            Self::Azure        => "AZURE_OPENAI_API_KEY",
+            Self::Aws          => "AWS_ACCESS_KEY_ID",
+            Self::HuggingFace  => "HUGGINGFACE_API_KEY",
+            Self::GitHub       => "GITHUB_TOKEN",
+            Self::Ollama       => "",
+            Self::LmStudio     => "",
+            Self::OpenAiCompat => "OPENAI_API_KEY",
         }
     }
 }
@@ -124,7 +205,10 @@ impl TernlangClient {
                 translate_to_gemini(request)
             }
             LlmProvider::Anthropic => translate_to_anthropic(request),
-            LlmProvider::OpenAi | LlmProvider::Ollama | LlmProvider::Xai => translate_to_openai(request),
+            LlmProvider::Ternlang | LlmProvider::Aws => {
+                serde_json::to_value(request).map_err(ApiError::from)?
+            }
+            _ if self.provider.is_openai_compat() => translate_to_openai(request),
             _ => serde_json::to_value(request).map_err(ApiError::from)?,
         };
 
@@ -160,7 +244,10 @@ impl TernlangClient {
         let mut final_response = match self.provider {
             LlmProvider::Google => translate_from_gemini(response_json, &request.model),
             LlmProvider::Anthropic => translate_from_anthropic(response_json, &request.model),
-            LlmProvider::OpenAi | LlmProvider::Ollama | LlmProvider::Xai => translate_from_openai(response_json, &request.model),
+            LlmProvider::Ternlang | LlmProvider::Aws => {
+                serde_json::from_value::<MessageResponse>(response_json).map_err(ApiError::from)?
+            }
+            _ if self.provider.is_openai_compat() => translate_from_openai(response_json, &request.model),
             _ => serde_json::from_value::<MessageResponse>(response_json).map_err(ApiError::from)?,
         };
 
@@ -635,39 +722,80 @@ pub fn resolve_startup_auth_source() -> Result<AuthSource, ApiError> {
 
 /// Read the standard env var for `provider` and return the appropriate auth.
 pub fn resolve_auth_for_provider(provider: LlmProvider) -> Result<AuthSource, ApiError> {
-    let key = match provider {
-        LlmProvider::Anthropic => read_env_non_empty("ANTHROPIC_API_KEY")?,
-        LlmProvider::Google => {
-            read_env_non_empty("GEMINI_API_KEY").ok().flatten()
-                .or_else(|| read_env_non_empty("GOOGLE_API_KEY").ok().flatten())
-        }
-        LlmProvider::OpenAi => read_env_non_empty("OPENAI_API_KEY")?,
-        LlmProvider::Xai => read_env_non_empty("XAI_API_KEY")?,
-        LlmProvider::HuggingFace => read_env_non_empty("HUGGINGFACE_API_KEY")?,
-        LlmProvider::Ollama => return Ok(AuthSource::None),
-        _ => read_env_non_empty("TERNLANG_API_KEY")?,
+    // No-auth local providers
+    if matches!(provider, LlmProvider::Ollama | LlmProvider::LmStudio | LlmProvider::OpenAiCompat) {
+        return Ok(AuthSource::None);
+    }
+    let env_var = provider.env_var();
+    let key = if provider == LlmProvider::Google {
+        // Google accepts either GEMINI_API_KEY or GOOGLE_API_KEY
+        read_env_non_empty("GEMINI_API_KEY").ok().flatten()
+            .or_else(|| read_env_non_empty("GOOGLE_API_KEY").ok().flatten())
+    } else if env_var.is_empty() {
+        None
+    } else {
+        read_env_non_empty(env_var)?
     };
     Ok(key.map_or(AuthSource::None, AuthSource::ApiKey))
 }
 
 /// Scan well-known env vars and return the first available (provider, default-model) pair.
-/// Returns None if no recognised key is set (Ollama local is not detected here).
+/// Returns None if no recognised key is set (Ollama/LM Studio local are not detected here).
 pub fn detect_provider_and_model_from_env() -> Option<(LlmProvider, &'static str)> {
     let env_set = |var: &str| std::env::var(var).ok().filter(|v| !v.is_empty()).is_some();
     if env_set("ANTHROPIC_API_KEY") {
-        return Some((LlmProvider::Anthropic, "claude-sonnet-4-5"));
+        return Some((LlmProvider::Anthropic, "claude-sonnet-4-6"));
     }
     if env_set("GEMINI_API_KEY") || env_set("GOOGLE_API_KEY") {
-        return Some((LlmProvider::Google, "gemini-2.0-flash"));
+        return Some((LlmProvider::Google, "gemini-2.5-flash"));
     }
     if env_set("OPENAI_API_KEY") {
         return Some((LlmProvider::OpenAi, "gpt-4o-mini"));
     }
     if env_set("XAI_API_KEY") {
-        return Some((LlmProvider::Xai, "grok-2-1212"));
+        return Some((LlmProvider::Xai, "grok-3-mini"));
+    }
+    if env_set("GROQ_API_KEY") {
+        return Some((LlmProvider::Groq, "llama-3.3-70b-versatile"));
+    }
+    if env_set("MISTRAL_API_KEY") {
+        return Some((LlmProvider::Mistral, "mistral-large-latest"));
+    }
+    if env_set("DEEPSEEK_API_KEY") {
+        return Some((LlmProvider::DeepSeek, "deepseek-chat"));
+    }
+    if env_set("TOGETHER_API_KEY") {
+        return Some((LlmProvider::Together, "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"));
+    }
+    if env_set("OPENROUTER_API_KEY") {
+        return Some((LlmProvider::OpenRouter, "openai/gpt-4o-mini"));
+    }
+    if env_set("PERPLEXITY_API_KEY") {
+        return Some((LlmProvider::Perplexity, "sonar-pro"));
+    }
+    if env_set("FIREWORKS_API_KEY") {
+        return Some((LlmProvider::Fireworks, "accounts/fireworks/models/llama-v3p1-70b-instruct"));
+    }
+    if env_set("COHERE_API_KEY") {
+        return Some((LlmProvider::Cohere, "command-r-plus"));
+    }
+    if env_set("CEREBRAS_API_KEY") {
+        return Some((LlmProvider::Cerebras, "llama3.3-70b"));
+    }
+    if env_set("NOVITA_API_KEY") {
+        return Some((LlmProvider::Novita, "meta-llama/llama-3.1-70b-instruct"));
+    }
+    if env_set("SAMBANOVA_API_KEY") {
+        return Some((LlmProvider::SambaNova, "Meta-Llama-3.3-70B-Instruct"));
+    }
+    if env_set("NVIDIA_API_KEY") {
+        return Some((LlmProvider::NvidiaNim, "nvidia/llama-3.1-nemotron-70b-instruct"));
     }
     if env_set("HUGGINGFACE_API_KEY") {
         return Some((LlmProvider::HuggingFace, "meta-llama/Meta-Llama-3-8B-Instruct"));
+    }
+    if env_set("GITHUB_TOKEN") {
+        return Some((LlmProvider::GitHub, "gpt-4o-mini"));
     }
     None
 }
