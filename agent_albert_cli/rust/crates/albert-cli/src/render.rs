@@ -1,10 +1,7 @@
 use std::fmt::Write as FmtWrite;
 use std::io::{self, Write};
 
-use crossterm::cursor::MoveToColumn;
-use crossterm::style::{Color, Print, ResetColor, SetForegroundColor, Stylize};
-use crossterm::terminal::{Clear, ClearType};
-use crossterm::{execute, queue};
+use crossterm::style::{Color, Stylize};
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{Theme, ThemeSet};
@@ -21,9 +18,6 @@ pub struct ColorTheme {
     quote: Color,
     table_border: Color,
     code_block_border: Color,
-    spinner_active: Color,
-    spinner_done: Color,
-    spinner_failed: Color,
 }
 
 impl Default for ColorTheme {
@@ -37,81 +31,10 @@ impl Default for ColorTheme {
             quote: Color::DarkGrey,
             table_border: Color::DarkCyan,
             code_block_border: Color::DarkGrey,
-            spinner_active: Color::Blue,
-            spinner_done: Color::Green,
-            spinner_failed: Color::Red,
         }
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct Spinner {
-    frame_index: usize,
-}
-
-impl Spinner {
-    const FRAMES: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn tick(
-        &mut self,
-        label: &str,
-        theme: &ColorTheme,
-        out: &mut impl Write,
-    ) -> io::Result<()> {
-        let frame = Self::FRAMES[self.frame_index % Self::FRAMES.len()];
-        self.frame_index += 1;
-        queue!(
-            out,
-            MoveToColumn(0),
-            Clear(ClearType::CurrentLine),
-            SetForegroundColor(theme.spinner_active),
-            Print(format!("{frame} {label}")),
-            ResetColor,
-        )?;
-        out.flush()
-    }
-
-    pub fn finish(
-        &mut self,
-        label: &str,
-        theme: &ColorTheme,
-        out: &mut impl Write,
-    ) -> io::Result<()> {
-        self.frame_index = 0;
-        execute!(
-            out,
-            MoveToColumn(0),
-            Clear(ClearType::CurrentLine),
-            SetForegroundColor(theme.spinner_done),
-            Print(format!("✔ {label}\n")),
-            ResetColor
-        )?;
-        out.flush()
-    }
-
-    pub fn fail(
-        &mut self,
-        label: &str,
-        theme: &ColorTheme,
-        out: &mut impl Write,
-    ) -> io::Result<()> {
-        self.frame_index = 0;
-        execute!(
-            out,
-            MoveToColumn(0),
-            Clear(ClearType::CurrentLine),
-            SetForegroundColor(theme.spinner_failed),
-            Print(format!("✘ {label}\n")),
-            ResetColor
-        )?;
-        out.flush()
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(dead_code)]
