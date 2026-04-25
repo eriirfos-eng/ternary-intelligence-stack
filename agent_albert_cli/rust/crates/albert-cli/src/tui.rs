@@ -41,6 +41,22 @@ const PERM_MODES: &[(&str, &str)] = &[
     ("danger-full-access",  "unrestricted · full shell"),
 ];
 
+// Known models for the in-popup model picker
+const MODEL_ENTRIES: &[(&str, &str, &str)] = &[
+    ("gemini-2.5-pro",            "Google",    "Most capable Gemini — complex reasoning"),
+    ("gemini-2.5-flash",          "Google",    "Fast & capable — recommended default"),
+    ("gemini-2.5-flash-lite",     "Google",    "Lightest Gemini — maximum speed"),
+    ("gemini-2.0-flash",          "Google",    "Previous Flash generation"),
+    ("claude-opus-4-7",           "Anthropic", "Most capable Claude"),
+    ("claude-sonnet-4-6",         "Anthropic", "Best balance of speed and capability"),
+    ("claude-haiku-4-5-20251001", "Anthropic", "Fastest Claude"),
+    ("gpt-4o",                    "OpenAI",    "GPT-4o multimodal flagship"),
+    ("gpt-4o-mini",               "OpenAI",    "Efficient GPT-4o variant"),
+    ("o3-mini",                   "OpenAI",    "o3 reasoning — efficient"),
+    ("grok-3",                    "xAI",       "Grok 3 flagship"),
+    ("grok-3-mini",               "xAI",       "Efficient Grok variant"),
+];
+
 // ── Data model ────────────────────────────────────────────────────────────────
 
 #[derive(Clone, Debug)]
@@ -66,7 +82,9 @@ pub struct TuiState {
     pub tokens_out: u32,
     pub model: String,
     pub cwd: String,
+    pub permission_mode: String,
     pub session_start: Instant,
+    /// Set when a turn starts, cleared when it ends — drives the working timer.
     pub turn_start: Option<Instant>,
     pub working: bool,
     /// Rows scrolled up from the bottom (0 = follow latest)
@@ -85,6 +103,7 @@ impl Default for TuiState {
             tokens_out: 0,
             model: String::new(),
             cwd: String::new(),
+            permission_mode: String::new(),
             session_start: Instant::now(),
             turn_start: None,
             working: false,
@@ -95,8 +114,8 @@ impl Default for TuiState {
 }
 
 impl TuiState {
-    pub fn new(model: String, cwd: String) -> Self {
-        Self { model, cwd, ..Default::default() }
+    pub fn new(model: String, cwd: String, permission_mode: String) -> Self {
+        Self { model, cwd, permission_mode, ..Default::default() }
     }
 
     pub fn push_exec(&mut self, block: ExecBlock) {
@@ -191,19 +210,18 @@ struct PopupItem {
 /// Returns popup items for the current input:
 ///   /           → all slash commands
 ///   /partial    → matching slash commands
-///   /permissions, /permissions → mode picker
+///   /permissions[…] → mode picker (auto-submit on Enter)
+///   /model[…]   → model picker (auto-submit on Enter)
 fn popup_items(input: &str) -> Vec<PopupItem> {
     if !input.starts_with('/') {
         return vec![];
     }
 
-    // Permission mode picker: `/permissions` (bare) or `/permissions <partial>`
+    // ── Permission mode picker ─────────────────────────────────────────────
     let perm_prefix = "/permissions";
     if input == perm_prefix
         || input.starts_with("/permissions ")
-        || perm_prefix.starts_with(input.trim_end_matches(' '))
-            && input.len() > 1
-            && perm_prefix.starts_with(input)
+        || (input.len() > 1 && perm_prefix.starts_with(input))
     {
         let partial = if input.starts_with("/permissions ") {
             input["/permissions ".len()..].trim()
@@ -212,7 +230,7 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
         };
         return PERM_MODES
             .iter()
-            .filter(|(mode, _)| mode.starts_with(partial))
+            .filter(|(mode, _)| partial.is_empty() || mode.starts_with(partial))
             .map(|(mode, desc)| PopupItem {
                 display: format!("permissions {mode}"),
                 complete: format!("/permissions {mode}"),
@@ -221,17 +239,44 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
             .collect();
     }
 
-    // Regular slash command matching
+    // ── Model picker ──────────────────────────────────────────────────────
+    let model_prefix = "/model";
+    if input == model_prefix
+        || input.starts_with("/model ")
+        || (input.len() > 1 && model_prefix.starts_with(input))
+    {
+        let partial = if input.starts_with("/model ") {
+            input["/model ".len()..].trim()
+        } else {
+            ""
+        };
+        return MODEL_ENTRIES
+            .iter()
+            .filter(|(id, _, _)| partial.is_empty() || id.contains(partial))
+            .take(12)
+            .map(|(id, provider, desc)| PopupItem {
+                display: format!("model  {id}"),
+                complete: format!("/model {id}"),
+                desc: format!("{provider}  ·  {desc}"),
+            })
+            .collect();
+    }
+
+    // ── Regular slash command matching ────────────────────────────────────
     let prefix = &input[1..];
     slash_command_specs()
         .iter()
         .filter(|s| s.name.starts_with(prefix))
         .take(8)
         .map(|s| {
-            let hint = s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default();
+            // Don't show <arg> placeholder for commands handled in-popup
+            let hint = match s.name {
+                "model" | "permissions" => String::new(),
+                _ => s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default(),
+            };
             PopupItem {
                 display: format!("{}{hint}", s.name),
-                complete: format!("/{}{hint}", s.name),
+                complete: format!("/{}", s.name),
                 desc: s.summary.to_string(),
             }
         })
@@ -406,15 +451,29 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
 fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let lines = build_exec_lines(state, area.width);
-    let total = lines.len() as u16;
+    let w = area.width.max(1) as usize;
+
+    // Compute total rendered height accounting for line wrapping.
+    // Each logical line may wrap across multiple terminal rows.
+    let total_wrapped: u16 = lines
+        .iter()
+        .map(|line| {
+            let chars: usize = line.spans.iter().map(|s| s.content.chars().count()).sum();
+            let rows = if chars == 0 { 1 } else { (chars + w - 1) / w };
+            rows as u16
+        })
+        .sum();
+
     let visible = area.height;
-    let raw_offset = total.saturating_sub(visible);
-    let scroll = raw_offset.saturating_sub(state.scroll);
+    let raw_offset = total_wrapped.saturating_sub(visible);
+    // Cap scroll so we never scroll past the very first line.
+    let effective_scroll = state.scroll.min(raw_offset);
+    let scroll_row = raw_offset.saturating_sub(effective_scroll);
 
     let para = Paragraph::new(Text::from(lines))
         .style(Style::default().bg(BG).fg(FG))
         .wrap(Wrap { trim: false })
-        .scroll((scroll, 0));
+        .scroll((scroll_row, 0));
     f.render_widget(para, area);
 }
 
@@ -473,22 +532,23 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 }
 
 /// Dedicated 1-row working indicator between content and input.
+/// Shows how long *this turn* has been running — cleared when turn ends.
 fn render_working(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let secs = state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0);
     let timer = if secs >= 60 {
-        format!("{}m {}s", secs / 60, secs % 60)
+        format!("{}m{}s", secs / 60, secs % 60)
     } else {
         format!("{secs}s")
     };
     let tok = if state.tokens_out > 0 {
-        format!(" · ↓ {} tokens", state.tokens_out)
+        format!(" · {} out", fmt_tokens(state.tokens_out))
     } else {
         String::new()
     };
     let line = Line::from(vec![
         Span::styled(" ● ", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
         Span::styled(
-            format!("Working ({timer}{tok} · esc to interrupt)"),
+            format!("thinking  {timer}{tok}  ·  esc to interrupt"),
             Style::default().fg(FG),
         ),
     ]);
@@ -497,42 +557,46 @@ fn render_working(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 }
 
 /// 2-row telemetry bar:
-///   row 1: model · branch · tokens_in↑ tokens_out↓ · session_time
-///   row 2: albert vX.X.X · cwd · permission · turns
+///   row 1: model · branch · tokens_in↑ tokens_out↓ · [last turn Xs | idle]
+///   row 2: albert vX.X.X · cwd · permission_mode
 fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
-    // git branch (best-effort, non-blocking)
     let branch = git_branch_cached();
 
-    let elapsed = state.session_start.elapsed();
-    let h = elapsed.as_secs() / 3600;
-    let m = (elapsed.as_secs() % 3600) / 60;
-    let s = elapsed.as_secs() % 60;
-    let time_str = if h > 0 {
-        format!("{h}h {m}m")
-    } else if m > 0 {
-        format!("{m}m {s}s")
-    } else {
-        format!("{s}s")
-    };
-
+    // Show duration of the most-recent completed turn (turn_start is Some while working,
+    // cleared after turn ends — we want elapsed at completion).
+    // We keep track via turn_start: if working, show live timer in render_working.
+    // Here: show nothing extra when idle (keep it clean).
     let tokens_in = fmt_tokens(state.tokens_in);
     let tokens_out = fmt_tokens(state.tokens_out);
     let branch_str = branch.map(|b| format!(" · {b}")).unwrap_or_default();
 
+    let tok_str = if state.tokens_in > 0 || state.tokens_out > 0 {
+        format!("  ·  {}↑ {}↓", tokens_in, tokens_out)
+    } else {
+        String::new()
+    };
+
     let row1 = format!(
-        " {}{}  ·  {}↑ {}↓  ·  {}",
-        state.model, branch_str, tokens_in, tokens_out, time_str
+        " {}{}{}",
+        state.model, branch_str, tok_str,
     );
 
     let dir = std::path::Path::new(&state.cwd)
         .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or(&state.cwd);
+
+    let perm = if state.permission_mode.is_empty() {
+        String::new()
+    } else {
+        format!("  ·  {}", state.permission_mode)
+    };
+
     let row2 = format!(
-        " albert v{}  ·  {}  ·  session {}",
+        " albert v{}  ·  {}{}",
         env!("CARGO_PKG_VERSION"),
         dir,
-        time_str,
+        perm,
     );
 
     let layout = Layout::default()
@@ -603,11 +667,11 @@ pub struct TuiApp {
 }
 
 impl TuiApp {
-    pub fn new(model: String, cwd: String) -> (Self, std::sync::mpsc::Receiver<String>) {
+    pub fn new(model: String, cwd: String, permission_mode: String) -> (Self, std::sync::mpsc::Receiver<String>) {
         let (event_tx, event_rx) = tokio::sync::mpsc::unbounded_channel();
         let (submit_tx, submit_rx) = std::sync::mpsc::channel();
         let app = Self {
-            state: Arc::new(Mutex::new(TuiState::new(model, cwd))),
+            state: Arc::new(Mutex::new(TuiState::new(model, cwd, permission_mode))),
             event_tx,
             event_rx,
             submit_tx,
@@ -739,20 +803,23 @@ impl TuiApp {
                                     state.popup_selected = 0;
                                 }
 
-                                // Enter with popup: for `/permissions X` auto-submit, else just complete
+                                // Enter with popup:
+                                //   /permissions X  → auto-submit (inline handler applies immediately)
+                                //   /model X        → auto-submit (inline handler applies immediately)
+                                //   anything else   → complete into input box
                                 (KeyCode::Enter, KeyModifiers::NONE) if has_popup => {
                                     let sel = state.popup_selected.min(items.len().saturating_sub(1));
                                     let complete = items[sel].complete.clone();
-                                    // Permission mode: auto-submit immediately
-                                    if complete.starts_with("/permissions ") {
+                                    let is_auto = complete.starts_with("/permissions ")
+                                        || complete.starts_with("/model ");
+                                    if is_auto {
                                         state.input = complete;
                                         state.cursor = state.input.chars().count();
                                         state.popup_selected = 0;
                                         let text = state.input_take();
                                         submit_text = Some(text);
                                     } else {
-                                        // Regular command: put in input box, let user see it
-                                        state.input = format!("{complete} ");
+                                        state.input = complete;
                                         state.cursor = state.input.chars().count();
                                         state.popup_selected = 0;
                                     }
