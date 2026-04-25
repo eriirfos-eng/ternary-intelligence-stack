@@ -1,0 +1,1 @@
+{"messages":[{"blocks":[{"text":"--output json","type":"text"}],"role":"user"},{"blocks":[{"text":"Please tell me what task you would like me to perform.","type":"text"}],"role":"assistant","usage":{"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":5463,"output_tokens":12}}],"version":1}

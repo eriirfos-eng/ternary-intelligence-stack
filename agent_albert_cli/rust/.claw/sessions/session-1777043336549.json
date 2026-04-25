@@ -1,0 +1,1 @@
+{"messages":[{"blocks":[{"text":"--prompt hello! what model are you? answer in one sentence","type":"text"}],"role":"user"},{"blocks":[{"text":"I am a large language model, trained by Google.","type":"text"}],"role":"assistant","usage":{"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":4578,"output_tokens":11}}],"version":1}

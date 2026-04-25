@@ -1,0 +1,1 @@
+{"messages":[{"blocks":[{"text":"--prompt who are you? one sentence","type":"text"}],"role":"user"},{"blocks":[{"text":"I am Gemini, a large language model built by Google.","type":"text"}],"role":"assistant","usage":{"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":3817,"output_tokens":12}}],"version":1}
