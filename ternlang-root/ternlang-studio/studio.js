@@ -1373,17 +1373,29 @@ function initCanvasInteraction() {
   const wrap = document.getElementById("flow-canvas-wrap");
   if (!wrap) return;
 
-  // Wheel → liquid zoom toward cursor
+  // Liquid zoom with momentum toward cursor
+  let zoomVelocity = 0;
+  let zoomMx = 0, zoomMy = 0;
   let zoomRafId = null;
+
+  function zoomMomentumTick() {
+    if (Math.abs(zoomVelocity) < 0.0001) { zoomRafId = null; return; }
+    zoomAt(zoomMx, zoomMy, 1 + zoomVelocity);
+    zoomVelocity *= 0.82; // friction — tune for feel
+    zoomRafId = requestAnimationFrame(zoomMomentumTick);
+  }
+
   wrap.addEventListener("wheel", (e) => {
     e.preventDefault();
     const rect = wrap.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    // Normalize delta across browsers/devices (trackpad gives tiny values, mouse wheel ~100)
-    const normalized = e.deltaY / (e.deltaMode === 1 ? 3 : 100);
-    const factor = Math.pow(0.9965, normalized * 100);
-    zoomAt(mx, my, factor);
+    zoomMx = e.clientX - rect.left;
+    zoomMy = e.clientY - rect.top;
+    // Normalize: deltaMode 1 = lines (~3px each), 0 = pixels
+    const pixels = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    // Each pixel of scroll = tiny zoom increment; sensitivity tuned for trackpad + mouse
+    const impulse = -pixels * 0.0008;
+    zoomVelocity = (zoomVelocity + impulse) * 0.6 + impulse * 0.4;
+    if (!zoomRafId) zoomRafId = requestAnimationFrame(zoomMomentumTick);
   }, { passive: false });
 
   // Middle-mouse or Space+drag → pan
