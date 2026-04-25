@@ -8,7 +8,7 @@
 use wasm_bindgen::prelude::*;
 use serde::Serialize;
 use ternlang_core::{Parser, SemanticAnalyzer, BytecodeEmitter, BetVm};
-use ternlang_core::vm::Value;
+use ternlang_core::vm::{Value, VmError};
 
 #[derive(Serialize)]
 struct RunResult {
@@ -81,8 +81,8 @@ fn execute(src: &str) -> Result<RunResult, String> {
         }
         Err(e) => {
             let error_str = format!("{:?}", e);
-            if error_str.contains("ExpectedToken(\"Fn\"") || error_str.contains("UnexpectedToken(\"Let\"") {
-                // Fallback for scripts/snippets
+            {
+                // Fallback for scripts/snippets: parse stmt-by-stmt
                 let mut parser = Parser::new(src);
                 emitter.patch_header_jump(header_patch);
                 let mut found_functions = false;
@@ -99,13 +99,18 @@ fn execute(src: &str) -> Result<RunResult, String> {
                                     continue;
                                 }
                             }
+                            if e_str.contains("UnexpectedToken(\"Agent\")") {
+                                if let Ok(agent) = parser.parse_agent_def() {
+                                    emitter.emit_agent_def(&agent);
+                                    found_functions = true;
+                                    continue;
+                                }
+                            }
                             return Err(format!("parse error: {e:?}"));
                         }
                     }
                 }
                 if found_functions { emitter.emit_entry_call("main"); }
-            } else {
-                return Err(format!("parse error: {e:?}"));
             }
         }
     }
@@ -117,7 +122,14 @@ fn execute(src: &str) -> Result<RunResult, String> {
     let mut vm = BetVm::new(bytecode);
     emitter.register_agents(&mut vm);
     
-    vm.run().map_err(|e| format!("runtime error: {e:?}"))?;
+    vm.run().map_err(|e| match e {
+        VmError::AgentTypeNotRegistered(id) => format!(
+            "Agent type {} is not defined in this program. \
+             Define it with: agent Type{} {{ fn run(...) -> trit {{ ... }} }}",
+            id, id
+        ),
+        other => format!("runtime error: {other:?}"),
+    })?;
 
     // 5. Collect output + result trit
     let output = vm.take_output();
