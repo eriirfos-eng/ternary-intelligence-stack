@@ -465,13 +465,14 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     let n_items = items.len();
     // Popup: up to POPUP_WINDOW items + 1 nav footer; placed BELOW input (Gemini-style)
     let popup_h = if n_items == 0 { 0u16 } else { (n_items.min(POPUP_WINDOW) + 1) as u16 };
-    // Working zone: 2 rows (indicator + tip); absent when idle
-    let working_h = if state.working { 2u16 } else { 0u16 };
 
-    // Layout top→bottom: content(flex) | [working 2r?] | input(1r) | [popup?] | footer(1r)
-    let mut constraints = vec![Constraint::Min(3)];
-    if working_h > 0 { constraints.push(Constraint::Length(working_h)); }
-    constraints.push(Constraint::Length(1)); // input
+    // Status strip is ALWAYS 2 rows — shows dynamic activity when working, Idle when not.
+    // Layout top→bottom: content(flex) | status(2r) | input(1r) | [popup?] | footer(1r)
+    let mut constraints = vec![
+        Constraint::Min(3),
+        Constraint::Length(2), // status strip — always present
+        Constraint::Length(1), // input
+    ];
     if popup_h > 0 { constraints.push(Constraint::Length(popup_h)); }
     constraints.push(Constraint::Length(1)); // footer
 
@@ -483,10 +484,8 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     let mut idx = 0usize;
     render_content(f, layout[idx], state);
     idx += 1;
-    if working_h > 0 {
-        render_working(f, layout[idx], state);
-        idx += 1;
-    }
+    render_status(f, layout[idx], state);
+    idx += 1;
     render_input(f, layout[idx], state);
     idx += 1;
     if popup_h > 0 {
@@ -733,54 +732,94 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     }
 }
 
-/// 2-row working zone shown only when a turn is in progress.
-/// Row 0: `* Thinking…  (elapsed · ↓ tokens)`  — matches Claude Code style
-/// Row 1: `⌐ Tip: …`  — rotating tip from TIPS list
-fn render_working(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
-    let secs = state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0);
-    let timer = if secs >= 60 {
-        format!("{}m {}s", secs / 60, secs % 60)
-    } else {
-        format!("{secs}s")
-    };
-    let tok_str = if state.tokens_out > 0 {
-        format!(" · ↓ {} tokens", fmt_tokens(state.tokens_out))
-    } else {
-        String::new()
-    };
+/// Derive a human-readable activity label from the currently running tool (if any).
+fn current_activity(state: &TuiState) -> &'static str {
+    for block in state.exec_log.iter().rev() {
+        if let ExecBlock::ToolUse { name, active, .. } = block {
+            if *active {
+                let n = name.as_str();
+                return if n.contains("read") {
+                    "Reading…"
+                } else if n.contains("write") || n.contains("edit") {
+                    "Writing…"
+                } else if n.contains("bash") || n.contains("execute") {
+                    "Running…"
+                } else if n.contains("grep") || n.contains("search") {
+                    "Searching…"
+                } else if n.contains("glob") || n.contains("scan") {
+                    "Scanning…"
+                } else if n.contains("web") || n.contains("fetch") {
+                    "Fetching…"
+                } else if n.contains("plan") {
+                    "Planning…"
+                } else {
+                    "Crunching…"
+                };
+            }
+        }
+    }
+    "Thinking…"
+}
 
-    // Rotating tip — changes every 8 seconds
-    let tip_idx = (secs / 8) as usize % TIPS.len();
+/// 2-row status strip — ALWAYS visible.
+/// Working: `* Reading… (2s · ↓ 42 tokens)`  +  rotating tip
+/// Idle:    `◆ Idle  ·  type / for commands`  +  rotating tip
+fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
+    // Choose tip index from turn elapsed (working) or session elapsed (idle)
+    let tip_secs = if state.working {
+        state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0)
+    } else {
+        state.session_start.elapsed().as_secs()
+    };
+    let tip_idx = (tip_secs / 8) as usize % TIPS.len();
     let tip = TIPS[tip_idx];
 
-    let working_line = Line::from(vec![
-        Span::styled(" * ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
-        Span::styled("Thinking… ", Style::default().fg(ORANGE)),
-        Span::styled(
-            format!("({timer}{tok_str})"),
-            Style::default().fg(GREY),
-        ),
-    ]);
+    let status_line = if state.working {
+        let secs = state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0);
+        let timer = if secs >= 60 {
+            format!("{}m {}s", secs / 60, secs % 60)
+        } else {
+            format!("{secs}s")
+        };
+        let tok_str = if state.tokens_out > 0 {
+            format!(" · ↓ {} tokens", fmt_tokens(state.tokens_out))
+        } else {
+            String::new()
+        };
+        let activity = current_activity(state);
+        Line::from(vec![
+            Span::styled(" * ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+            Span::styled(activity, Style::default().fg(ORANGE)),
+            Span::styled(
+                format!(" ({timer}{tok_str})"),
+                Style::default().fg(GREY),
+            ),
+        ])
+    } else {
+        Line::from(vec![
+            Span::styled(" ◆ ", Style::default().fg(DIM).add_modifier(Modifier::BOLD)),
+            Span::styled("Idle", Style::default().fg(DIM)),
+            Span::styled("  ·  type / for commands", Style::default().fg(DIM)),
+        ])
+    };
+
     let tip_line = Line::from(vec![
         Span::styled("   ⌐ ", Style::default().fg(DIM)),
-        Span::styled(
-            format!("Tip: {tip}"),
-            Style::default().fg(DIM),
-        ),
+        Span::styled(format!("Tip: {tip}"), Style::default().fg(DIM)),
     ]);
 
-    let layout = Layout::default()
+    let sub = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(1), Constraint::Length(1)])
         .split(area);
 
     f.render_widget(
-        Paragraph::new(working_line).style(Style::default().bg(STATUS_BG)),
-        layout[0],
+        Paragraph::new(status_line).style(Style::default().bg(STATUS_BG)),
+        sub[0],
     );
     f.render_widget(
         Paragraph::new(tip_line).style(Style::default().bg(STATUS_BG)),
-        layout[1],
+        sub[1],
     );
 }
 
