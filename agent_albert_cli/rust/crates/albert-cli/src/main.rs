@@ -996,7 +996,7 @@ fn run_tui(
 
     let mut cli = LiveCli::new(model.clone(), true, allowed_tools, permission_mode)?;
 
-    let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd);
+    let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd, permission_mode.as_str().to_string());
     let tui_state = Arc::clone(&tui_app.state);
     let tui_event_tx = tui_app.event_tx.clone();
     let cancel_flag = Arc::clone(&tui_app.cancel_flag);
@@ -1034,18 +1034,96 @@ fn run_tui(
             break;
         }
 
-        // Slash commands: suspend TUI so it yields the terminal, then resume.
+        // Slash commands: handle settings inline (no TUI suspend), heavy commands suspend.
         if let Some(command) = commands::SlashCommand::parse(&input) {
-            // Suspend: tell TUI to leave alternate screen and pause key thread
+            // ── Inline: permissions and model stay fully inside the TUI ──────────
+            let handled_inline = match &command {
+                commands::SlashCommand::Permissions { mode } => {
+                    let msg = if let Some(mode_str) = mode {
+                        if let Some(normalized) = normalize_permission_mode(mode_str) {
+                            if normalized == cli.permission_mode.as_str() {
+                                format!("permissions: already {normalized}")
+                            } else {
+                                let previous = cli.permission_mode.as_str().to_string();
+                                let session = cli.runtime.session().clone();
+                                cli.permission_mode = permission_mode_from_label(normalized);
+                                runtime::set_sandbox_bypass(
+                                    cli.permission_mode == PermissionMode::DangerFullAccess,
+                                );
+                                match build_runtime_with_mcp(
+                                    session,
+                                    cli.model.clone(),
+                                    cli.system_prompt.clone(),
+                                    true,
+                                    cli.allowed_tools.clone(),
+                                    cli.permission_mode,
+                                    Arc::clone(&cli.mcp_manager),
+                                    cli.event_tx.clone(),
+                                ) {
+                                    Ok(rt) => cli.runtime = rt,
+                                    Err(e) => eprintln!("runtime rebuild: {e}"),
+                                }
+                                format!("permissions: {previous} → {normalized}")
+                            }
+                        } else {
+                            format!("unknown permission mode: {mode_str}")
+                        }
+                    } else {
+                        format!("permissions: {}", cli.permission_mode.as_str())
+                    };
+                    {
+                        let mut st = tui_state.lock().unwrap();
+                        st.permission_mode = cli.permission_mode.as_str().to_string();
+                        st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    }
+                    true
+                }
+                commands::SlashCommand::Model { model: Some(m) } => {
+                    let resolved = resolve_model_alias(m).to_string();
+                    let msg = if resolved == cli.model {
+                        format!("model: already {resolved}")
+                    } else {
+                        let previous = cli.model.clone();
+                        let session = cli.runtime.session().clone();
+                        match build_runtime_with_mcp(
+                            session,
+                            resolved.clone(),
+                            cli.system_prompt.clone(),
+                            true,
+                            cli.allowed_tools.clone(),
+                            cli.permission_mode,
+                            Arc::clone(&cli.mcp_manager),
+                            cli.event_tx.clone(),
+                        ) {
+                            Ok(rt) => {
+                                cli.runtime = rt;
+                                cli.model.clone_from(&resolved);
+                                format!("model: {previous} → {resolved}")
+                            }
+                            Err(e) => format!("model switch failed: {e}"),
+                        }
+                    };
+                    {
+                        let mut st = tui_state.lock().unwrap();
+                        st.model = cli.model.clone();
+                        st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    }
+                    true
+                }
+                _ => false,
+            };
+
+            if handled_inline {
+                continue;
+            }
+
+            // ── All other commands: suspend TUI → run → resume ────────────────
             let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<()>(1);
             let _ = tui_event_tx.send(tui::TuiEvent::Suspend { ack: ack_tx });
-            // Wait until TUI has cleared the screen
             let _ = ack_rx.recv();
 
-            // Now we have clean terminal ownership — run the command normally
             let should_persist = cli.handle_repl_command(command);
 
-            // Give terminal back to TUI
             let _ = tui_event_tx.send(tui::TuiEvent::Resume);
 
             match should_persist {
@@ -1053,10 +1131,11 @@ fn run_tui(
                 Err(e) => eprintln!("command error: {e}"),
             }
 
-            // Sync updated model name into TUI state
+            // Sync any state changes back into TUI
             {
                 let mut state = tui_state.lock().unwrap();
                 state.model = cli.model.clone();
+                state.permission_mode = cli.permission_mode.as_str().to_string();
             }
             continue;
         }
@@ -2963,10 +3042,12 @@ fn build_runtime(
         if let Some(key) = config.api_key {
             api::AuthSource::ApiKey(key)
         } else {
-            api::AuthSource::None
+            // credentials.json has no key → fall through to env vars
+            api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
         }
     } else {
-        api::resolve_startup_auth_source().unwrap_or(api::AuthSource::None)
+        // No credentials file → try provider-specific env vars
+        api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
     };
 
     let client = TernlangClient::from_auth(auth_source).with_provider(provider);
@@ -3032,10 +3113,12 @@ fn build_runtime_with_mcp(
         if let Some(key) = config.api_key {
             api::AuthSource::ApiKey(key)
         } else {
-            api::AuthSource::None
+            // credentials.json has no key → fall through to env vars
+            api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
         }
     } else {
-        api::resolve_startup_auth_source().unwrap_or(api::AuthSource::None)
+        // No credentials file → try provider-specific env vars
+        api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
     };
 
     let client = TernlangClient::from_auth(auth_source).with_provider(provider);
