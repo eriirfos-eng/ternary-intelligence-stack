@@ -1100,19 +1100,38 @@ impl LiveCli {
             let mut tokens_out: u32 = 0;
             let turn_start = std::time::Instant::now();
 
+            // Draw Working indicator immediately (blank line + indicator + prompt box)
+            let tw = crossterm::terminal::size().map(|(w, _)| w as usize).unwrap_or(80);
+            let prompt_box = format!(" {:<width$} ", ">", width = tw.saturating_sub(3));
+            let _ = execute!(out,
+                crossterm::style::Print("\n"),
+                crossterm::style::SetForegroundColor(crossterm::style::Color::White),
+                crossterm::style::Print("● Working (0s • esc to interrupt)"),
+                crossterm::style::ResetColor,
+                crossterm::style::Print("\n"),
+                crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(240)),
+                crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey),
+                crossterm::style::Print(&prompt_box),
+                crossterm::style::ResetColor,
+                crossterm::cursor::MoveToPreviousLine(1),
+            );
+            let _ = out.flush();
+
             let rt = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
                 .build()
                 .unwrap();
 
             rt.block_on(async {
-                let mut interval = tokio::time::interval(Duration::from_millis(250));
+                let mut interval = tokio::time::interval(Duration::from_millis(200));
                 loop {
                     if is_done.load(Ordering::Relaxed) {
                         if state == 0 {
+                            // Clear Working indicator + blank prompt box (2 lines below current pos)
                             let _ = execute!(out,
                                 crossterm::cursor::MoveToColumn(0),
-                                crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine)
+                                crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+                                crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
                             );
                         }
                         break;
@@ -1151,13 +1170,13 @@ impl LiveCli {
                             match event {
                                 Ok(AssistantEvent::TextDelta(delta)) => {
                                     if state != 1 {
-                                        // Clear the Working indicator + prompt box (2 lines)
+                                        // Clear Working indicator + prompt box, then blank line before response
                                         let _ = execute!(out,
                                             crossterm::cursor::MoveToColumn(0),
                                             crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
                                             crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
                                         );
-                                        let _ = writeln!(out);
+                                        let _ = write!(out, "\n\n");
                                         state = 1;
                                     }
                                     let _ = write!(out, "{delta}");
@@ -1174,10 +1193,26 @@ impl LiveCli {
                                         );
                                     }
                                     let arg_preview = tool_input_preview(&input);
-                                    let _ = writeln!(out, "\n{}  {} {}",
+                                    let _ = writeln!(out, "\n{}  {}  {}",
                                         style("●").green().bold(),
                                         style(format!("Ran {name}")).bold(),
-                                        style(&arg_preview).dim()
+                                        style(&arg_preview).cyan()
+                                    );
+                                    let _ = out.flush();
+                                    // Redraw Working + prompt box for next round
+                                    let tw = crossterm::terminal::size().map(|(w, _)| w as usize).unwrap_or(80);
+                                    let pb = format!(" {:<width$} ", ">", width = tw.saturating_sub(3));
+                                    let secs = turn_start.elapsed().as_secs();
+                                    let timer = if secs >= 60 { format!("{}m {}s", secs/60, secs%60) } else { format!("{}s", secs) };
+                                    let _ = execute!(out,
+                                        crossterm::style::SetForegroundColor(crossterm::style::Color::White),
+                                        crossterm::style::Print(format!("\n● Working ({timer} • esc to interrupt)\n")),
+                                        crossterm::style::ResetColor,
+                                        crossterm::style::SetBackgroundColor(crossterm::style::Color::AnsiValue(240)),
+                                        crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey),
+                                        crossterm::style::Print(&pb),
+                                        crossterm::style::ResetColor,
+                                        crossterm::cursor::MoveToPreviousLine(1),
                                     );
                                     let _ = out.flush();
                                     state = 0;
