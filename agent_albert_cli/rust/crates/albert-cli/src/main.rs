@@ -1043,8 +1043,12 @@ fn run_tui(
             break;
         }
 
+        // agent_override: /plan and /loop inject a richer prompt; plain input passes through.
+        let mut agent_override: Option<String> = None;
+
         // Slash commands: handle settings inline (no TUI suspend), heavy commands suspend.
         if let Some(command) = commands::SlashCommand::parse(&input) {
+
             // ── Inline: permissions and model stay fully inside the TUI ──────────
             let handled_inline = match &command {
                 commands::SlashCommand::Permissions { mode } => {
@@ -1119,35 +1123,61 @@ fn run_tui(
                     }
                     true
                 }
+                // /plan — decompose task into a numbered execution plan
+                commands::SlashCommand::Plan { task } => {
+                    let t = task.clone().unwrap_or_else(|| "the current objective".to_string());
+                    agent_override = Some(format!(
+                        "You are in /plan mode. Break this task into a clear, numbered execution \
+                         plan. For each step include: concrete action, expected outcome, and \
+                         any dependencies on prior steps. Be specific and actionable.\n\nTask: {t}"
+                    ));
+                    true
+                }
+                // /loop — autonomous agent execution
+                commands::SlashCommand::Loop { mission } => {
+                    let m = mission.clone().unwrap_or_else(|| "complete the current objective".to_string());
+                    agent_override = Some(format!(
+                        "You are in /loop autonomous mode. Execute this mission completely using \
+                         all available tools. Work step by step, use tools as needed, and report \
+                         each step you take. When the mission is 100% complete, end with exactly: \
+                         MISSION COMPLETE\n\nMission: {m}"
+                    ));
+                    true
+                }
                 _ => false,
             };
 
-            if handled_inline {
+            if handled_inline && agent_override.is_none() {
+                continue; // permissions/model handled, no agent turn needed
+            }
+            if !handled_inline {
+                // ── All other commands: suspend TUI → run → resume ───────────
+                let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<()>(1);
+                let _ = tui_event_tx.send(tui::TuiEvent::Suspend { ack: ack_tx });
+                let _ = ack_rx.recv();
+
+                let should_persist = cli.handle_repl_command(command);
+
+                let _ = tui_event_tx.send(tui::TuiEvent::Resume);
+
+                match should_persist {
+                    Ok(p) => { if p { cli.persist_session()?; } }
+                    Err(e) => eprintln!("command error: {e}"),
+                }
+
+                // Sync any state changes back into TUI
+                {
+                    let mut state = tui_state.lock().unwrap();
+                    state.model = cli.model.clone();
+                    state.permission_mode = cli.permission_mode.as_str().to_string();
+                }
                 continue;
             }
-
-            // ── All other commands: suspend TUI → run → resume ────────────────
-            let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<()>(1);
-            let _ = tui_event_tx.send(tui::TuiEvent::Suspend { ack: ack_tx });
-            let _ = ack_rx.recv();
-
-            let should_persist = cli.handle_repl_command(command);
-
-            let _ = tui_event_tx.send(tui::TuiEvent::Resume);
-
-            match should_persist {
-                Ok(p) => { if p { cli.persist_session()?; } }
-                Err(e) => eprintln!("command error: {e}"),
-            }
-
-            // Sync any state changes back into TUI
-            {
-                let mut state = tui_state.lock().unwrap();
-                state.model = cli.model.clone();
-                state.permission_mode = cli.permission_mode.as_str().to_string();
-            }
-            continue;
+            // plan/loop: agent_override is Some — fall through to agent turn execution
         }
+
+        // For /plan and /loop: display original command but send the enriched prompt to the LLM.
+        let llm_input = agent_override.unwrap_or_else(|| input.clone());
 
         // Push user message and set working
         {
@@ -1173,7 +1203,7 @@ fn run_tui(
         let turn_result = std::thread::scope(|s| {
             let runtime = &mut cli.runtime;
             let handle = s.spawn(move || {
-                let r = runtime.run_turn(input.clone(), Some(&mut prompter));
+                let r = runtime.run_turn(llm_input.clone(), Some(&mut prompter));
                 done_clone.store(true, Ordering::Relaxed);
                 r
             });

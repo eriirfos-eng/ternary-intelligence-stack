@@ -114,6 +114,8 @@ pub struct TuiState {
     pub scroll: u16,
     /// Selected index in the active popup
     pub popup_selected: usize,
+    /// True while voice recording is active (Ctrl+Space toggle)
+    pub is_recording: bool,
 }
 
 impl Default for TuiState {
@@ -132,6 +134,7 @@ impl Default for TuiState {
             working: false,
             scroll: 0,
             popup_selected: 0,
+            is_recording: false,
         }
     }
 }
@@ -217,6 +220,10 @@ pub enum TuiEvent {
     Suspend { ack: std::sync::mpsc::SyncSender<()> },
     Resume,
     Quit,
+    /// Voice transcription result — insert this text at the cursor.
+    VoiceText(String),
+    /// Voice transcription failed — show the error message.
+    VoiceError(String),
 }
 
 // ── Popup items ───────────────────────────────────────────────────────────────
@@ -770,11 +777,20 @@ fn current_activity(state: &TuiState) -> &'static str {
     "Thinking…"
 }
 
+const MIC_RED: Color = Color::Rgb(255, 60, 60);
+
 /// 1-row status strip — ALWAYS visible.
-/// Working: `* Reading… (2s · ↓ 42 tokens)`
-/// Idle:    `◆ Idle  ·  type / for commands`
+/// Recording: `@ Recording…  ctrl+space to stop`
+/// Working:   `* Reading… (2s · ↓ 42 tokens)`
+/// Idle:      `◆ Idle  ·  type / for commands`
 fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
-    let line = if state.working {
+    let line = if state.is_recording {
+        Line::from(vec![
+            Span::styled(" @ ", Style::default().fg(MIC_RED).add_modifier(Modifier::BOLD)),
+            Span::styled("Recording…", Style::default().fg(MIC_RED)),
+            Span::styled("  ctrl+space to stop & transcribe", Style::default().fg(GREY)),
+        ])
+    } else if state.working {
         let secs = state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0);
         let timer = if secs >= 60 {
             format!("{}m {}s", secs / 60, secs % 60)
@@ -896,6 +912,32 @@ fn git_branch_cached() -> Option<String> {
     branch.clone()
 }
 
+// ── Voice transcription ────────────────────────────────────────────────────────
+
+/// POST a WAV buffer to OpenAI Whisper and return the transcribed text.
+async fn transcribe_wav(wav: Vec<u8>, api_key: &str) -> Result<String, String> {
+    let client = reqwest::Client::new();
+    let part = reqwest::multipart::Part::bytes(wav)
+        .file_name("audio.wav")
+        .mime_str("audio/wav")
+        .map_err(|e| e.to_string())?;
+    let form = reqwest::multipart::Form::new()
+        .part("file", part)
+        .text("model", "whisper-1");
+    let resp = client
+        .post("https://api.openai.com/v1/audio/transcriptions")
+        .header("Authorization", format!("Bearer {api_key}"))
+        .multipart(form)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    json.get("text")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .ok_or_else(|| format!("unexpected response: {json}"))
+}
+
 // ── TuiApp ────────────────────────────────────────────────────────────────────
 
 pub struct TuiApp {
@@ -906,6 +948,8 @@ pub struct TuiApp {
     key_paused: Arc<AtomicBool>,
     /// Set by ESC during a running turn — main thread exits the event loop.
     pub cancel_flag: Arc<AtomicBool>,
+    /// Live arecord process while voice recording is active.
+    voice_process: Arc<std::sync::Mutex<Option<std::process::Child>>>,
 }
 
 impl TuiApp {
@@ -919,6 +963,7 @@ impl TuiApp {
             submit_tx,
             key_paused: Arc::new(AtomicBool::new(false)),
             cancel_flag: Arc::new(AtomicBool::new(false)),
+            voice_process: Arc::new(std::sync::Mutex::new(None)),
         };
         (app, submit_rx)
     }
@@ -977,6 +1022,8 @@ impl TuiApp {
                     Some(TuiEvent::Key(key)) => {
                         let mut do_quit = false;
                         let mut submit_text: Option<String> = None;
+                        // voice_toggle: true=start recording, false=stop recording, None=no change
+                        let mut voice_toggle: Option<bool> = None;
                         {
                             let mut state = self.state.lock().unwrap();
                             let items = popup_items(&state.input);
@@ -986,6 +1033,27 @@ impl TuiApp {
                                 (KeyCode::Char('c'), KeyModifiers::CONTROL)
                                 | (KeyCode::Char('q'), KeyModifiers::CONTROL) => {
                                     do_quit = true;
+                                }
+
+                                // Ctrl+Space — toggle voice recording
+                                (KeyCode::Char(' '), KeyModifiers::CONTROL) => {
+                                    state.is_recording = !state.is_recording;
+                                    voice_toggle = Some(state.is_recording);
+                                }
+
+                                // Ctrl+V — paste from system clipboard
+                                (KeyCode::Char('v'), KeyModifiers::CONTROL) => {
+                                    if let Ok(mut board) = arboard::Clipboard::new() {
+                                        if let Ok(text) = board.get_text() {
+                                            for ch in text.chars() {
+                                                if ch == '\n' || ch == '\r' {
+                                                    state.input_insert(' ');
+                                                } else {
+                                                    state.input_insert(ch);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
 
                                 // ESC: interrupt running turn, dismiss popup, or reset scroll
@@ -1107,6 +1175,66 @@ impl TuiApp {
                         if let Some(text) = submit_text {
                             let _ = self.submit_tx.send(text);
                         }
+                        // Handle voice recording toggle outside the state lock
+                        match voice_toggle {
+                            Some(true) => {
+                                // Start recording — try arecord (Linux ALSA)
+                                let _ = std::fs::remove_file("/tmp/albert-voice.wav");
+                                match std::process::Command::new("arecord")
+                                    .args(["-q", "-r", "16000", "-c", "1", "-f", "S16_LE",
+                                           "/tmp/albert-voice.wav"])
+                                    .spawn()
+                                {
+                                    Ok(child) => {
+                                        *self.voice_process.lock().unwrap() = Some(child);
+                                    }
+                                    Err(_) => {
+                                        // arecord not available
+                                        let _ = self.event_tx.send(TuiEvent::VoiceError(
+                                            "voice: arecord not found (install alsa-utils)".to_string(),
+                                        ));
+                                        self.state.lock().unwrap().is_recording = false;
+                                    }
+                                }
+                            }
+                            Some(false) => {
+                                // Stop recording and transcribe
+                                if let Some(mut child) = self.voice_process.lock().unwrap().take() {
+                                    let _ = child.kill();
+                                    let _ = child.wait();
+                                }
+                                let tx = self.event_tx.clone();
+                                tokio::spawn(async move {
+                                    match std::fs::read("/tmp/albert-voice.wav") {
+                                        Ok(wav) if wav.len() > 44 => {
+                                            match std::env::var("OPENAI_API_KEY") {
+                                                Ok(key) => match transcribe_wav(wav, &key).await {
+                                                    Ok(text) => {
+                                                        let _ = tx.send(TuiEvent::VoiceText(text));
+                                                    }
+                                                    Err(e) => {
+                                                        let _ = tx.send(TuiEvent::VoiceError(
+                                                            format!("transcription error: {e}"),
+                                                        ));
+                                                    }
+                                                },
+                                                Err(_) => {
+                                                    let _ = tx.send(TuiEvent::VoiceError(
+                                                        "voice: OPENAI_API_KEY not set".to_string(),
+                                                    ));
+                                                }
+                                            }
+                                        }
+                                        _ => {
+                                            let _ = tx.send(TuiEvent::VoiceError(
+                                                "voice: no audio captured".to_string(),
+                                            ));
+                                        }
+                                    }
+                                });
+                            }
+                            None => {}
+                        }
                     }
 
                     // ── agent events ──────────────────────────────────────────
@@ -1159,6 +1287,18 @@ impl TuiApp {
                         io::stdout().execute(EnterAlternateScreen).ok();
                         terminal.clear().ok();
                         self.key_paused.store(false, Ordering::Relaxed);
+                    }
+
+                    // ── voice transcription result ────────────────────────────
+                    Some(TuiEvent::VoiceText(text)) => {
+                        let mut state = self.state.lock().unwrap();
+                        for ch in text.trim().chars() {
+                            state.input_insert(ch);
+                        }
+                    }
+                    Some(TuiEvent::VoiceError(msg)) => {
+                        let mut state = self.state.lock().unwrap();
+                        state.push_exec(ExecBlock::SystemMsg(msg));
                     }
 
                     Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {}
