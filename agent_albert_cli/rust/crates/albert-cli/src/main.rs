@@ -1012,7 +1012,7 @@ fn run_tui(
             "  ██║  ██║ ███████╗██████╔╝ ███████╗ ██║  ██║    ██║   \n",
             "  ╚═╝  ╚═╝ ╚══════╝╚═════╝  ╚══════╝ ╚═╝  ╚═╝    ╚═╝   "
         );
-        state.push_exec(tui::ExecBlock::AgentText(splash.to_string()));
+        state.push_exec(tui::ExecBlock::RawText(splash.to_string()));
         state.push_exec(tui::ExecBlock::SystemMsg(format!(
             "v{}  ·  {}  ·  {}  ·  type /help for commands",
             env!("CARGO_PKG_VERSION"),

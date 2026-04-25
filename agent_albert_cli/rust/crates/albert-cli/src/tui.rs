@@ -92,6 +92,8 @@ pub enum ExecBlock {
     SystemMsg(String),
     /// Post-turn elapsed time: "Worked for Xm Ys"
     WorkedFor(u64),
+    /// Pre-formatted verbatim text — bypasses markdown, renders each line as-is.
+    RawText(String),
 }
 
 #[derive(Clone, Debug)]
@@ -466,14 +468,21 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     // Popup: up to POPUP_WINDOW items + 1 nav footer; placed BELOW input (Gemini-style)
     let popup_h = if n_items == 0 { 0u16 } else { (n_items.min(POPUP_WINDOW) + 1) as u16 };
 
-    // Status strip is ALWAYS 2 rows — shows dynamic activity when working, Idle when not.
-    // Layout top→bottom: content(flex) | status(2r) | input(1r) | [popup?] | footer(1r)
+    // Input height: min 2 rows, expands as user types, capped at 5
+    let input_h = {
+        let usable = area.width.saturating_sub(20).max(10) as usize;
+        let n = state.input.chars().count();
+        if n == 0 { 2u16 } else { ((n + usable - 1) / usable).max(2).min(5) as u16 }
+    };
+
+    // Layout top→bottom: content(flex) | status(1r) | input(dynamic) | [popup?] | tips(1r) | footer(1r)
     let mut constraints = vec![
         Constraint::Min(3),
-        Constraint::Length(2), // status strip — always present
-        Constraint::Length(1), // input
+        Constraint::Length(1),        // status strip (always visible)
+        Constraint::Length(input_h),  // expanding input
     ];
     if popup_h > 0 { constraints.push(Constraint::Length(popup_h)); }
+    constraints.push(Constraint::Length(1)); // rotating tip row
     constraints.push(Constraint::Length(1)); // footer
 
     let layout = Layout::default()
@@ -493,6 +502,8 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
         render_popup(f, layout[idx], &items, sel);
         idx += 1;
     }
+    render_tips(f, layout[idx], state);
+    idx += 1;
     render_footer(f, layout[idx], state);
 }
 
@@ -582,6 +593,16 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     ]));
                 }
             }
+
+            ExecBlock::RawText(text) => {
+                lines.push(Line::default());
+                for line in text.lines() {
+                    lines.push(Line::from(Span::styled(
+                        line.to_string(),
+                        Style::default().fg(FG),
+                    )));
+                }
+            }
         }
     }
 
@@ -658,75 +679,63 @@ fn render_popup(f: &mut ratatui::Frame, area: Rect, items: &[PopupItem], selecte
     f.render_widget(para, area);
 }
 
-/// 1-row input bar with the git branch badge pinned to the right edge.
+/// Multi-row expanding input bar with the git branch badge pinned to the right.
+/// Text wraps automatically; the real terminal cursor is placed via set_cursor_position.
 fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let branch = git_branch_cached();
-
-    // Branch badge width: " branch-name  " = name + 2 spaces padding + separator
-    let badge_text = branch
-        .as_deref()
-        .map(|b| format!(" {b} "))
-        .unwrap_or_default();
+    let badge_text = branch.as_deref().map(|b| format!(" {b} ")).unwrap_or_default();
     let badge_w = badge_text.chars().count() as u16;
 
-    // Split row: [input | branch badge]
     let h_layout = if badge_w > 0 && area.width > badge_w + 4 {
         Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Min(4),
-                Constraint::Length(badge_w),
-            ])
+            .constraints([Constraint::Min(4), Constraint::Length(badge_w)])
             .split(area)
     } else {
-        // Terminal too narrow — no badge
         Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Min(1)])
             .split(area)
     };
 
-    let input_line = if state.input.is_empty() {
-        Line::from(vec![
+    let input_area = h_layout[0];
+
+    // Render input text with wrapping (or dim placeholder when empty)
+    let para = if state.input.is_empty() {
+        Paragraph::new(Line::from(vec![
             Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
-            Span::styled(
-                "Type your message or @path/to/file",
-                Style::default().fg(DIM),
-            ),
-        ])
+            Span::styled("Type your message or @path/to/file", Style::default().fg(DIM)),
+        ]))
     } else {
-        let before: String = state.input.chars().take(state.cursor).collect();
-        let cursor_ch: String = state
-            .input
-            .chars()
-            .nth(state.cursor)
-            .map(|c| c.to_string())
-            .unwrap_or_else(|| " ".to_string());
-        let after: String = state.input.chars().skip(state.cursor + 1).collect();
-        Line::from(vec![
+        Paragraph::new(Line::from(vec![
             Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
-            Span::styled(before, Style::default().fg(FG)),
-            Span::styled(cursor_ch, Style::default().fg(BG).bg(FG)),
-            Span::styled(after, Style::default().fg(FG)),
-        ])
+            Span::styled(state.input.clone(), Style::default().fg(FG)),
+        ]))
+        .wrap(Wrap { trim: false })
     };
+    f.render_widget(para.style(Style::default().bg(USER_BOX_BG)), input_area);
 
-    f.render_widget(
-        Paragraph::new(input_line).style(Style::default().bg(USER_BOX_BG)),
-        h_layout[0],
-    );
+    // Place the real blinking terminal cursor at the logical cursor position
+    {
+        const PREFIX: u16 = 3; // " > "
+        let text_w = input_area.width.saturating_sub(PREFIX).max(1) as usize;
+        let visual_row = state.cursor / text_w;
+        let visual_col = state.cursor % text_w;
+        let cx = (input_area.x + PREFIX + visual_col as u16)
+            .min(input_area.x + input_area.width.saturating_sub(1));
+        let cy = (input_area.y + visual_row as u16)
+            .min(input_area.y + input_area.height.saturating_sub(1));
+        f.set_cursor_position((cx, cy));
+    }
 
-    // Branch pill (only if layout has 2 columns)
+    // Branch badge
     if h_layout.len() == 2 {
-        let badge_line = Line::from(Span::styled(
-            badge_text,
-            Style::default()
-                .fg(GREEN)
-                .bg(BRANCH_BG)
-                .add_modifier(Modifier::BOLD),
-        ));
         f.render_widget(
-            Paragraph::new(badge_line).style(Style::default().bg(BRANCH_BG)),
+            Paragraph::new(Line::from(Span::styled(
+                badge_text,
+                Style::default().fg(GREEN).bg(BRANCH_BG).add_modifier(Modifier::BOLD),
+            )))
+            .style(Style::default().bg(BRANCH_BG)),
             h_layout[1],
         );
     }
@@ -761,20 +770,11 @@ fn current_activity(state: &TuiState) -> &'static str {
     "Thinking…"
 }
 
-/// 2-row status strip — ALWAYS visible.
-/// Working: `* Reading… (2s · ↓ 42 tokens)`  +  rotating tip
-/// Idle:    `◆ Idle  ·  type / for commands`  +  rotating tip
+/// 1-row status strip — ALWAYS visible.
+/// Working: `* Reading… (2s · ↓ 42 tokens)`
+/// Idle:    `◆ Idle  ·  type / for commands`
 fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
-    // Choose tip index from turn elapsed (working) or session elapsed (idle)
-    let tip_secs = if state.working {
-        state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0)
-    } else {
-        state.session_start.elapsed().as_secs()
-    };
-    let tip_idx = (tip_secs / 8) as usize % TIPS.len();
-    let tip = TIPS[tip_idx];
-
-    let status_line = if state.working {
+    let line = if state.working {
         let secs = state.turn_start.map(|t| t.elapsed().as_secs()).unwrap_or(0);
         let timer = if secs >= 60 {
             format!("{}m {}s", secs / 60, secs % 60)
@@ -790,10 +790,7 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         Line::from(vec![
             Span::styled(" * ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
             Span::styled(activity, Style::default().fg(ORANGE)),
-            Span::styled(
-                format!(" ({timer}{tok_str})"),
-                Style::default().fg(GREY),
-            ),
+            Span::styled(format!(" ({timer}{tok_str})"), Style::default().fg(GREY)),
         ])
     } else {
         Line::from(vec![
@@ -802,25 +799,19 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled("  ·  type / for commands", Style::default().fg(DIM)),
         ])
     };
+    f.render_widget(Paragraph::new(line).style(Style::default().bg(STATUS_BG)), area);
+}
 
-    let tip_line = Line::from(vec![
+/// 1-row rotating tip strip — sits between the input and footer.
+fn render_tips(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
+    let secs = state.session_start.elapsed().as_secs();
+    let tip_idx = (secs / 8) as usize % TIPS.len();
+    let tip = TIPS[tip_idx];
+    let line = Line::from(vec![
         Span::styled("   ⌐ ", Style::default().fg(DIM)),
         Span::styled(format!("Tip: {tip}"), Style::default().fg(DIM)),
     ]);
-
-    let sub = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(1), Constraint::Length(1)])
-        .split(area);
-
-    f.render_widget(
-        Paragraph::new(status_line).style(Style::default().bg(STATUS_BG)),
-        sub[0],
-    );
-    f.render_widget(
-        Paragraph::new(tip_line).style(Style::default().bg(STATUS_BG)),
-        sub[1],
-    );
+    f.render_widget(Paragraph::new(line).style(Style::default().bg(BG)), area);
 }
 
 /// 1-row footer.
