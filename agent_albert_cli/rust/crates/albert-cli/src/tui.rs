@@ -1028,8 +1028,46 @@ fn git_branch_cached() -> Option<String> {
 
 // ── Voice transcription ────────────────────────────────────────────────────────
 
-/// POST a WAV buffer to OpenAI Whisper and return the transcribed text.
-async fn transcribe_wav(wav: Vec<u8>, api_key: &str) -> Result<String, String> {
+/// Transcription priority:
+///   1. local `whisper` CLI  (openai-whisper or whisper.cpp — free, offline)
+///   2. OpenAI Whisper API   (requires OPENAI_API_KEY)
+///   3. friendly error with install hint
+async fn transcribe(wav_path: &str) -> Result<String, String> {
+    // ── 1. local whisper CLI ──────────────────────────────────────────────────
+    if let Ok(out) = std::process::Command::new("whisper")
+        .args([wav_path, "--model", "tiny", "--language", "en",
+               "--output_format", "txt", "--output_dir", "/tmp", "--fp16", "False"])
+        .output()
+    {
+        if out.status.success() {
+            // whisper writes <filename>.txt next to the input or in output_dir
+            let txt_path = "/tmp/albert-voice.txt";
+            if let Ok(text) = std::fs::read_to_string(txt_path) {
+                let _ = std::fs::remove_file(txt_path);
+                let t = text.trim().to_string();
+                if !t.is_empty() { return Ok(t); }
+            }
+            // also try stdout directly
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let t = stdout.trim().to_string();
+            if !t.is_empty() { return Ok(t); }
+        }
+    }
+
+    // ── 2. OpenAI Whisper API ─────────────────────────────────────────────────
+    if let Ok(key) = std::env::var("OPENAI_API_KEY") {
+        if !key.is_empty() {
+            let wav = std::fs::read(wav_path).map_err(|e| e.to_string())?;
+            return transcribe_openai(wav, &key).await;
+        }
+    }
+
+    // ── 3. no STT available ───────────────────────────────────────────────────
+    Err("voice: no STT available — install whisper:  pip install openai-whisper".to_string())
+}
+
+/// POST a WAV buffer to the OpenAI Whisper API.
+async fn transcribe_openai(wav: Vec<u8>, api_key: &str) -> Result<String, String> {
     let client = reqwest::Client::new();
     let part = reqwest::multipart::Part::bytes(wav)
         .file_name("audio.wav")
@@ -1344,31 +1382,17 @@ impl TuiApp {
                                 }
                                 let tx = self.event_tx.clone();
                                 tokio::spawn(async move {
-                                    match std::fs::read("/tmp/albert-voice.wav") {
-                                        Ok(wav) if wav.len() > 44 => {
-                                            match std::env::var("OPENAI_API_KEY") {
-                                                Ok(key) => match transcribe_wav(wav, &key).await {
-                                                    Ok(text) => {
-                                                        let _ = tx.send(TuiEvent::VoiceText(text));
-                                                    }
-                                                    Err(e) => {
-                                                        let _ = tx.send(TuiEvent::VoiceError(
-                                                            format!("transcription error: {e}"),
-                                                        ));
-                                                    }
-                                                },
-                                                Err(_) => {
-                                                    let _ = tx.send(TuiEvent::VoiceError(
-                                                        "voice: OPENAI_API_KEY not set".to_string(),
-                                                    ));
-                                                }
-                                            }
+                                    const WAV: &str = "/tmp/albert-voice.wav";
+                                    let size = std::fs::metadata(WAV).map(|m| m.len()).unwrap_or(0);
+                                    if size > 44 {
+                                        match transcribe(WAV).await {
+                                            Ok(text) => { let _ = tx.send(TuiEvent::VoiceText(text)); }
+                                            Err(e)   => { let _ = tx.send(TuiEvent::VoiceError(e)); }
                                         }
-                                        _ => {
-                                            let _ = tx.send(TuiEvent::VoiceError(
-                                                "voice: no audio captured".to_string(),
-                                            ));
-                                        }
+                                    } else {
+                                        let _ = tx.send(TuiEvent::VoiceError(
+                                            "voice: no audio captured".to_string(),
+                                        ));
                                     }
                                 });
                             }
