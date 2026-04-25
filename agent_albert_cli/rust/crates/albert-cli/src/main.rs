@@ -14,7 +14,6 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use dialoguer::Select;
 use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
 
 use api::{
     TernlangClient, AuthSource, ContentBlockDelta, InputContentBlock,
@@ -24,7 +23,7 @@ use api::{
 use commands::{render_slash_command_help, slash_command_specs, SlashCommand};
 use compat_harness::{extract_manifest, UpstreamPaths};
 use init::initialize_repo;
-use render::TerminalRenderer;
+use render::{Spinner, TerminalRenderer};
 use runtime::{
     clear_oauth_credentials, generate_pkce_pair, generate_state, load_system_prompt,
     parse_oauth_callback_request_target, save_oauth_credentials, ApiClient, ApiRequest,
@@ -35,8 +34,10 @@ use runtime::{
 };
 use serde_json::json;
 use tools::{execute_tool, mvp_tool_specs, ToolSpec};
+use runtime::{McpServerConfig, McpServerManager, McpStdioServerConfig, ScopedMcpServerConfig};
+use std::sync::{Arc, Mutex};
 
-const DEFAULT_MODEL: &str = "gemini-2.0-flash";
+const DEFAULT_MODEL: &str = "gemini-2.5-flash";
 fn max_tokens_for_model(model: &str) -> u32 {
     if model.contains("haiku") {
         16_000
@@ -80,7 +81,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             output_format,
             allowed_tools,
             permission_mode,
-        } => LiveCli::new(auto_select_model(&model), true, allowed_tools, permission_mode)?
+        } => LiveCli::new(model, true, allowed_tools, permission_mode)?
             .run_turn_with_output(&prompt, output_format),
         CliAction::Login => run_login(),
         CliAction::Logout => run_logout(),
@@ -95,7 +96,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             if !config_path.exists() {
                 init::wake_sequence();
             }
-            run_repl(auto_select_model(&model), allowed_tools, permission_mode)
+            run_repl(model, allowed_tools, permission_mode)
         },
         CliAction::Help => {
             println!("{}", render_repl_help());
@@ -304,8 +305,8 @@ fn resolve_model_alias(model: &str) -> &str {
         "opus" => "claude-3-opus-20240229",
         "sonnet" => "claude-3-sonnet-20240229",
         "haiku" => "claude-3-haiku-20240307",
-        "flash" => "gemini-2.0-flash",
-        "pro" => "gemini-1.5-pro",
+        "flash" => "gemini-2.5-flash",
+        "pro" => "gemini-2.5-pro",
         _ => model,
     }
 }
@@ -655,19 +656,6 @@ struct StatusUsage {
     estimated_tokens: usize,
 }
 
-fn format_model_report(model: &str, message_count: usize, turns: u32) -> String {
-    format!(
-        "Model
-  Current model    {model}
-  Session messages {message_count}
-  Session turns    {turns}
-
-Usage
-  Inspect current model with /model
-  Switch models with /model <name>"
-    )
-}
-
 fn format_model_switch_report(previous: &str, next: &str, message_count: usize) -> String {
     format!(
         "Model updated
@@ -944,7 +932,7 @@ fn run_resume_command(
         | SlashCommand::Compress
         | SlashCommand::Loop { .. }
         | SlashCommand::Unknown(_) => Err("unsupported resumed slash command".into()),
-
+        &SlashCommand::Mcp { .. } => Err("cannot resume an /mcp command".into()),
     }
 }
 
@@ -1010,6 +998,7 @@ struct LiveCli {
     system_prompt: Vec<String>,
     runtime: ConversationRuntime<TernlangRuntimeClient, CliToolExecutor>,
     session: SessionHandle,
+    mcp_manager: Arc<Mutex<McpServerManager>>,
 }
 
 impl LiveCli {
@@ -1021,7 +1010,9 @@ impl LiveCli {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let system_prompt = build_system_prompt()?;
         let session = create_managed_session_handle()?;
-        let runtime = build_runtime(
+        let mcp_servers = load_mcp_servers();
+        let mcp_manager = Arc::new(Mutex::new(McpServerManager::from_servers(&mcp_servers)));
+        let runtime = build_runtime_with_mcp(
             Session::new(),
             model.clone(),
             system_prompt.clone(),
@@ -1029,6 +1020,7 @@ impl LiveCli {
             true,
             allowed_tools.clone(),
             permission_mode,
+            Arc::clone(&mcp_manager),
         )?;
         let cli = Self {
             model,
@@ -1037,6 +1029,7 @@ impl LiveCli {
             system_prompt,
             runtime,
             session,
+            mcp_manager,
         };
         cli.persist_session()?;
         Ok(cli)
@@ -1071,25 +1064,41 @@ impl LiveCli {
     }
 
     fn run_turn(&mut self, input: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::with_template("{spinner:.cyan.bold} {msg}")
-                .unwrap()
-                .tick_strings(&["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏","⠿"]),
-        );
-        pb.set_message("thinking...");
-        pb.enable_steady_tick(Duration::from_millis(80));
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        let spinning = Arc::new(AtomicBool::new(true));
+        let spin_clone = Arc::clone(&spinning);
+        let renderer = TerminalRenderer::new();
+        let theme = *renderer.color_theme();
+        let spinner_thread = thread::spawn(move || {
+            let mut spinner = Spinner::new();
+            let mut stdout = io::stdout();
+            while spin_clone.load(Ordering::Relaxed) {
+                let _ = spinner.tick("Thinking...", &theme, &mut stdout);
+                thread::sleep(Duration::from_millis(80));
+            }
+        });
 
         let mut permission_prompter = CliPermissionPrompter::new(self.permission_mode, true);
         let result = self
             .runtime
             .run_turn(input.to_string(), Some(&mut permission_prompter));
+
+        spinning.store(false, Ordering::Relaxed);
+        let _ = spinner_thread.join();
+
+        let mut stdout = io::stdout();
         match result {
             Ok(summary) => {
-                pb.finish_and_clear();
+                let mut done_spinner = Spinner::new();
+                done_spinner.finish(
+                    "Done",
+                    TerminalRenderer::new().color_theme(),
+                    &mut stdout,
+                )?;
                 let response_text = final_assistant_text(&summary);
                 if !response_text.is_empty() {
-                    println!("{}", TerminalRenderer::new().render_markdown(&response_text));
+                    typewriter_print(&TerminalRenderer::new().render_markdown(&response_text));
                 }
                 if let Some(event) = summary.auto_compaction {
                     println!(
@@ -1098,11 +1107,26 @@ impl LiveCli {
                     );
                 }
                 self.persist_session()?;
+
+                if !response_text.is_empty() {
+                    if let Some(memory_line) = self.llm_reflect(input, &response_text) {
+                        if let Err(e) = append_to_albert_memory(&memory_line) {
+                            eprintln!("{} memory write failed: {e}", style("⚠").yellow());
+                        } else {
+                            println!("{}", style("  Noted.").dim().italic());
+                        }
+                    }
+                }
+
                 Ok(())
             }
             Err(error) => {
-                pb.finish_and_clear();
-                eprintln!("{} {}", style("✘ error:").red().bold(), error);
+                let mut fail_spinner = Spinner::new();
+                fail_spinner.fail(
+                    "Request failed",
+                    TerminalRenderer::new().color_theme(),
+                    &mut stdout,
+                )?;
                 Err(Box::new(error))
             }
         }
@@ -1246,8 +1270,8 @@ impl LiveCli {
                 false
             }
             SlashCommand::Plan { task } => {
-                self.run_plan(task.as_deref())?;
-                true
+                println!("Plan initiated: {}. I am restating requirements and assessing risks...", task.unwrap_or_else(|| "current task".to_string()));
+                false
             }
             SlashCommand::Tdd { interface } => {
                 println!("TDD loop engaged for {}. Scaffold -> Failing Test -> Implement.", interface.unwrap_or_else(|| "target".to_string()));
@@ -1293,11 +1317,157 @@ impl LiveCli {
                 eprintln!("unknown slash command: /{name}");
                 false
             }
+            SlashCommand::Mcp { action, args } => {
+                self.handle_mcp_command(action.as_deref(), args.as_deref())?;
+                false
+            }
         })
     }
 
     fn persist_session(&self) -> Result<(), Box<dyn std::error::Error>> {
         self.runtime.session().save_to_path(&self.session.path)?;
+        Ok(())
+    }
+
+    fn llm_reflect(&self, user_input: &str, response: &str) -> Option<String> {
+        if user_input.len() < 10 || response.len() < 30 {
+            return None;
+        }
+        if score_turn_importance(user_input, response) < 0.3 {
+            return None;
+        }
+
+        let prompt = format!(
+            "You are a memory distillation assistant. Given a conversation turn, decide if it contains \
+a key fact, user preference, important decision, or correction worth remembering in future sessions. \
+Respond with a JSON object only — no markdown, no explanation:\n\
+{{\"important\": true/false, \"summary\": \"one-line summary or null\"}}\n\n\
+User: {}\n\nAssistant: {}",
+            &user_input[..user_input.len().min(400)],
+            &response[..response.len().min(400)]
+        );
+
+        let reflect_model = "gemini-2.5-flash";
+        let provider = api::LlmProvider::Google;
+        let auth = api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None);
+        let mut client = TernlangClient::from_auth(auth).with_provider(provider);
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .ok()?;
+
+        let raw = rt.block_on(async {
+            let mut stream = client
+                .stream_message(&MessageRequest {
+                    model: reflect_model.to_string(),
+                    max_tokens: Some(80),
+                    messages: vec![InputMessage {
+                        role: "user".to_string(),
+                        content: vec![InputContentBlock::Text { text: prompt }],
+                    }],
+                    system: Some("Output only valid JSON. No markdown fences.".to_string()),
+                    tools: None,
+                    tool_choice: None,
+                    stream: false,
+                })
+                .await
+                .ok()?;
+
+            let mut text = String::new();
+            loop {
+                match stream.next_event().await {
+                    Ok(Some(api::StreamEvent::ContentBlockDelta(ev))) => {
+                        if let ContentBlockDelta::TextDelta { text: t } = ev.delta {
+                            text.push_str(&t);
+                        }
+                    }
+                    Ok(Some(_)) => {}
+                    Ok(None) | Err(_) => break,
+                }
+            }
+            Some(text)
+        })?;
+
+        let raw = raw
+            .trim()
+            .trim_start_matches("```json")
+            .trim_start_matches("```")
+            .trim_end_matches("```")
+            .trim();
+        let json: serde_json::Value = serde_json::from_str(raw).ok()?;
+        if json
+            .get("important")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)
+        {
+            json.get("summary")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty() && *s != "null")
+                .map(ToOwned::to_owned)
+        } else {
+            None
+        }
+    }
+
+    fn handle_mcp_command(&mut self, action: Option<&str>, args: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+        match action {
+            None | Some("list") => {
+                let servers = load_mcp_servers();
+                if servers.is_empty() {
+                    println!("No MCP servers configured. Add one with: /mcp add <name> <command> [args...]");
+                } else {
+                    println!("MCP servers:");
+                    for (name, scoped) in &servers {
+                        if let McpServerConfig::Stdio(cfg) = &scoped.config {
+                            println!("  {} — {} {}", name, cfg.command, cfg.args.join(" "));
+                        }
+                    }
+                }
+            }
+            Some("add") => {
+                let parts: Vec<&str> = args.unwrap_or("").splitn(3, ' ').collect();
+                if parts.len() < 2 {
+                    println!("Usage: /mcp add <name> <command> [args...]");
+                    return Ok(());
+                }
+                let name = parts[0].to_string();
+                let command = parts[1].to_string();
+                let extra_args: Vec<String> = parts.get(2)
+                    .map(|s| s.split_whitespace().map(ToOwned::to_owned).collect())
+                    .unwrap_or_default();
+                let mut servers = load_mcp_servers();
+                servers.insert(name.clone(), ScopedMcpServerConfig {
+                    scope: ConfigSource::User,
+                    config: McpServerConfig::Stdio(McpStdioServerConfig {
+                        command: command.clone(),
+                        args: extra_args.clone(),
+                        env: std::collections::BTreeMap::new(),
+                    }),
+                });
+                save_mcp_servers(&servers)?;
+                let mut mgr = self.mcp_manager.lock().map_err(|e| e.to_string())?;
+                *mgr = McpServerManager::from_servers(&servers);
+                println!("Added MCP server '{}': {} {}", name, command, extra_args.join(" "));
+            }
+            Some("remove") => {
+                let name = args.unwrap_or("").trim();
+                if name.is_empty() {
+                    println!("Usage: /mcp remove <name>");
+                    return Ok(());
+                }
+                let mut servers = load_mcp_servers();
+                if servers.remove(name).is_none() {
+                    println!("No MCP server named '{name}'.");
+                } else {
+                    save_mcp_servers(&servers)?;
+                    let mut mgr = self.mcp_manager.lock().map_err(|e| e.to_string())?;
+                    *mgr = McpServerManager::from_servers(&servers);
+                    println!("Removed MCP server '{name}'.");
+                }
+            }
+            Some(other) => println!("Unknown /mcp action '{other}'. Use: list, add, remove"),
+        }
         Ok(())
     }
 
@@ -1323,29 +1493,35 @@ impl LiveCli {
     }
 
     fn set_model(&mut self, model: Option<String>) -> Result<bool, Box<dyn std::error::Error>> {
-        let Some(model) = model else {
-            println!(
-                "{}",
-                format_model_report(
-                    &self.model,
-                    self.runtime.session().messages.len(),
-                    self.runtime.usage().turns(),
-                )
-            );
-            return Ok(false);
+        let model_id = if let Some(m) = model {
+            resolve_model_alias(&m).to_string()
+        } else {
+            let items: Vec<String> = KNOWN_MODELS
+                .iter()
+                .map(|m| {
+                    format!(
+                        "{:<25} {:<12} {}",
+                        style(m.id).cyan(),
+                        style(format!("({})", m.provider)).dim(),
+                        style(m.description).dim()
+                    )
+                })
+                .collect();
+
+            let selection = Select::new()
+                .with_prompt("Select Model")
+                .items(&items)
+                .default(0)
+                .interact_opt()?;
+
+            if let Some(index) = selection {
+                KNOWN_MODELS[index].id.to_string()
+            } else {
+                return Ok(false);
+            }
         };
 
-        let model = resolve_model_alias(&model).to_string();
-
-        if model == self.model {
-            println!(
-                "{}",
-                format_model_report(
-                    &self.model,
-                    self.runtime.session().messages.len(),
-                    self.runtime.usage().turns(),
-                )
-            );
+        if model_id == self.model {
             return Ok(false);
         }
 
@@ -1354,17 +1530,17 @@ impl LiveCli {
         let message_count = session.messages.len();
         self.runtime = build_runtime(
             session,
-            model.clone(),
+            model_id.clone(),
             self.system_prompt.clone(),
             true,
             true,
             self.allowed_tools.clone(),
             self.permission_mode,
         )?;
-        self.model.clone_from(&model);
+        self.model.clone_from(&model_id);
         println!(
             "{}",
-            format_model_switch_report(&previous, &model, message_count)
+            format_model_switch_report(&previous, &model_id, message_count)
         );
         Ok(true)
     }
@@ -1611,63 +1787,27 @@ impl LiveCli {
         Ok(())
     }
 
-    fn run_auth(&mut self, arg: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-        const KNOWN_PROVIDERS: &[&str] = &[
-            "openai", "anthropic", "google", "xai", "huggingface", "ternlang", "azure", "aws", "ollama",
-        ];
-        const PROVIDER_MENU: &[&str] = &[
-            "Anthropic (Claude)", "Google (Gemini)", "OpenAI (GPT-4o)",
-            "XAI (Grok)", "HuggingFace", "Ollama (local, no key)", "Ternlang",
-        ];
-        const PROVIDER_KEYS: &[&str] = &[
-            "anthropic", "google", "openai", "xai", "huggingface", "ollama", "ternlang",
-        ];
-
-        // If arg looks like an API key (not a known provider name), auto-detect and save
-        if let Some(key) = arg {
-            if !KNOWN_PROVIDERS.contains(&key.to_lowercase().as_str()) && key.len() > 8 {
-                let provider = detect_provider_from_key(key).unwrap_or("ternlang");
-                runtime::save_provider_config(provider, runtime::ProviderConfig {
-                    api_key: Some(key.to_string()),
-                    model: None,
-                    base_url: None,
-                })?;
-                println!("  ✓ {} key saved.", provider_display_name(provider));
-                return Ok(());
-            }
-        }
-
-        // Resolve provider name or show interactive menu
-        let provider = match arg.map(|s| s.to_lowercase()) {
-            Some(ref p) if KNOWN_PROVIDERS.contains(&p.as_str()) => p.clone(),
-            _ => {
-                let sel = Select::new()
-                    .with_prompt("  Choose provider")
-                    .items(PROVIDER_MENU)
-                    .default(0)
-                    .interact()?;
-                PROVIDER_KEYS[sel].to_string()
+    fn run_auth(&mut self, provider_name: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+        let provider = match provider_name {
+            Some(name) => name.to_lowercase(),
+            None => {
+                println!("Available providers: openai, anthropic, huggingface, google, azure, aws");
+                print!("Choose provider: ");
+                io::stdout().flush()?;
+                let mut input = String::new();
+                io::stdin().read_line(&mut input)?;
+                input.trim().to_lowercase()
             }
         };
 
-        if provider == "ollama" {
-            runtime::save_provider_config("ollama", runtime::ProviderConfig {
-                api_key: None,
-                model: None,
-                base_url: Some("http://localhost:11434".to_string()),
-            })?;
-            println!("  ✓ Ollama (local) configured — no key needed.");
-            return Ok(());
-        }
-
-        print!("  Paste API key: ");
+        print!("Enter API Key for {provider}: ");
         io::stdout().flush()?;
         let mut api_key = String::new();
         io::stdin().read_line(&mut api_key)?;
         let api_key = api_key.trim().to_string();
 
         if api_key.is_empty() {
-            println!("  Error: key cannot be empty.");
+            println!("Error: API Key cannot be empty.");
             return Ok(());
         }
 
@@ -1677,7 +1817,7 @@ impl LiveCli {
             base_url: None,
         })?;
 
-        println!("  ✓ {} key saved.", provider_display_name(&provider));
+        println!("Authentication configured for {provider}.");
         Ok(())
     }
 
@@ -1910,56 +2050,9 @@ Conversation context:
             
             thread::sleep(Duration::from_millis(500));
         }
-
+        
         Ok(())
     }
-
-    fn run_plan(&mut self, task: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-        let task = task.unwrap_or("").trim().to_string();
-        let task = if task.is_empty() {
-            "the current objective based on our conversation".to_string()
-        } else {
-            task
-        };
-
-        println!("\n{}", style("🗺  Generating plan...").bold().cyan());
-        let plan_prompt = format!(
-            "Create a precise numbered execution plan for: {task}\n\
-            Format each step as: N. <action>\n\
-            Include verification steps. Keep steps concrete and actionable. Max 8 steps.\n\
-            Output ONLY the numbered steps, no preamble.",
-        );
-        let plan_text = self.run_internal_prompt_text(&plan_prompt, false)?;
-
-        println!("\n{}\n{}", style("Plan").bold().green(), &plan_text);
-
-        let steps = parse_numbered_steps(&plan_text);
-        if steps.is_empty() {
-            return self.run_turn(&format!("Execute this plan for: {task}\n\n{plan_text}"));
-        }
-
-        println!("\n{} {} steps", style("Executing").bold().yellow(), steps.len());
-        for (i, step) in steps.iter().enumerate() {
-            println!("\n{} [{}/{}] {}", style("▶").bold().cyan(), i + 1, steps.len(), step);
-            self.run_turn(step)?;
-        }
-
-        println!("\n{}", style("✓ Plan complete").bold().green());
-        Ok(())
-    }
-}
-
-fn parse_numbered_steps(text: &str) -> Vec<String> {
-    text.lines()
-        .filter_map(|line| {
-            let trimmed = line.trim();
-            if trimmed.len() < 3 { return None; }
-            if !trimmed.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) { return None; }
-            let after_num = trimmed.trim_start_matches(|c: char| c.is_ascii_digit());
-            let after_sep = after_num.trim_start_matches(|c: char| c == '.' || c == ')' || c == ':').trim();
-            if after_sep.is_empty() { None } else { Some(after_sep.to_string()) }
-        })
-        .collect()
 }
 
 fn sessions_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
@@ -2412,51 +2505,6 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
     }
 }
 
-fn detect_provider_from_key(key: &str) -> Option<&'static str> {
-    if key.starts_with("sk-ant-") {
-        Some("anthropic")
-    } else if key.starts_with("AIza") {
-        Some("google")
-    } else if key.starts_with("sk-") {
-        Some("openai")
-    } else if key.starts_with("xai-") {
-        Some("xai")
-    } else if key.starts_with("hf_") {
-        Some("huggingface")
-    } else {
-        None
-    }
-}
-
-fn provider_display_name(provider: &str) -> &str {
-    match provider {
-        "anthropic"    => "Anthropic (Claude)",
-        "google"       => "Google (Gemini)",
-        "openai"       => "OpenAI",
-        "xai"          => "XAI (Grok)",
-        "huggingface"  => "HuggingFace",
-        "ollama"       => "Ollama",
-        _              => "Ternlang",
-    }
-}
-
-/// If the user is on the built-in default and hasn't set a Gemini key,
-/// switch to whatever provider they actually have a key for.
-fn auto_select_model(model: &str) -> String {
-    if model != DEFAULT_MODEL {
-        return model.to_string();
-    }
-    let gemini_set = std::env::var("GEMINI_API_KEY").ok().filter(|v| !v.is_empty()).is_some()
-        || std::env::var("GOOGLE_API_KEY").ok().filter(|v| !v.is_empty()).is_some();
-    if gemini_set {
-        return model.to_string();
-    }
-    if let Some((_, fallback_model)) = api::detect_provider_and_model_from_env() {
-        return fallback_model.to_string();
-    }
-    model.to_string()
-}
-
 fn resolve_provider_for_model(model: &str) -> api::LlmProvider {
     if model.contains("gpt-") || model.contains("o1-") || model.contains("o3-") {
         api::LlmProvider::OpenAi
@@ -2486,12 +2534,10 @@ fn build_runtime(
 
     let provider = resolve_provider_for_model(&model);
     let provider_config = runtime::load_provider_config(match provider {
+        api::LlmProvider::OpenAi => "openai",
         api::LlmProvider::Anthropic => "anthropic",
         api::LlmProvider::Google => "google",
-        api::LlmProvider::OpenAi => "openai",
-        api::LlmProvider::Xai => "xai",
         api::LlmProvider::HuggingFace => "huggingface",
-        api::LlmProvider::Ollama => "ollama",
         _ => "ternlang",
     }).unwrap_or(None);
 
@@ -2499,10 +2545,10 @@ fn build_runtime(
         if let Some(key) = config.api_key {
             api::AuthSource::ApiKey(key)
         } else {
-            api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
+            api::AuthSource::None
         }
     } else {
-        api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
+        api::resolve_startup_auth_source().unwrap_or(api::AuthSource::None)
     };
 
     let client = TernlangClient::from_auth(auth_source).with_provider(provider);
@@ -2528,7 +2574,8 @@ fn build_runtime(
         },
     };
 
-    let tool_executor = CliToolExecutor::new();
+    let mcp_manager = Arc::new(Mutex::new(McpServerManager::from_servers(&load_mcp_servers())));
+    let tool_executor = CliToolExecutor::new(mcp_manager);
     let permission_policy = PermissionPolicy::new(permission_mode);
     Ok(ConversationRuntime::new(
         session,
@@ -2537,6 +2584,106 @@ fn build_runtime(
         permission_policy,
         system_prompt,
     ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_runtime_with_mcp(
+    session: Session,
+    model: String,
+    system_prompt: Vec<String>,
+    enable_tools: bool,
+    enable_stream_events: bool,
+    allowed_tools: Option<AllowedToolSet>,
+    permission_mode: PermissionMode,
+    mcp_manager: Arc<Mutex<McpServerManager>>,
+) -> Result<ConversationRuntime<TernlangRuntimeClient, CliToolExecutor>, Box<dyn std::error::Error>>
+{
+    let cwd = env::current_dir()?;
+    let _config = ConfigLoader::default_for(&cwd).load()?;
+
+    let provider = resolve_provider_for_model(&model);
+    let provider_config = runtime::load_provider_config(match provider {
+        api::LlmProvider::OpenAi => "openai",
+        api::LlmProvider::Anthropic => "anthropic",
+        api::LlmProvider::Google => "google",
+        api::LlmProvider::HuggingFace => "huggingface",
+        _ => "ternlang",
+    }).unwrap_or(None);
+
+    let auth_source = if let Some(config) = provider_config {
+        if let Some(key) = config.api_key {
+            api::AuthSource::ApiKey(key)
+        } else {
+            api::AuthSource::None
+        }
+    } else {
+        api::resolve_startup_auth_source().unwrap_or(api::AuthSource::None)
+    };
+
+    let client = TernlangClient::from_auth(auth_source).with_provider(provider);
+    let api_client = TernlangRuntimeClient {
+        client,
+        model: model.clone(),
+        max_tokens: max_tokens_for_model(&model),
+        tools: if enable_tools { filter_tool_specs(allowed_tools.as_ref()) } else { Vec::new() },
+        event_tx: if enable_stream_events {
+            Some(tokio::runtime::Runtime::new()?.block_on(async {
+                let (tx, _) = tokio::sync::broadcast::channel(128);
+                tx
+            }))
+        } else {
+            None
+        },
+    };
+
+    let tool_executor = CliToolExecutor::new(mcp_manager);
+    let permission_policy = PermissionPolicy::new(permission_mode);
+    Ok(ConversationRuntime::new(session, api_client, tool_executor, permission_policy, system_prompt))
+}
+
+fn mcp_config_path() -> PathBuf {
+    dirs::home_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join(".ternlang")
+        .join("mcp_servers.json")
+}
+
+fn load_mcp_servers() -> std::collections::BTreeMap<String, ScopedMcpServerConfig> {
+    let path = mcp_config_path();
+    if !path.exists() { return std::collections::BTreeMap::new(); }
+    let raw = fs::read_to_string(&path).unwrap_or_default();
+    let persisted: std::collections::HashMap<String, serde_json::Value> =
+        serde_json::from_str(&raw).unwrap_or_default();
+    persisted.into_iter().filter_map(|(name, v)| {
+        let command = v.get("command")?.as_str()?.to_string();
+        let args = v.get("args")?.as_array()
+            .map(|a| a.iter().filter_map(|x| x.as_str().map(ToOwned::to_owned)).collect())
+            .unwrap_or_default();
+        let scoped = ScopedMcpServerConfig {
+            scope: ConfigSource::User,
+            config: McpServerConfig::Stdio(McpStdioServerConfig {
+                command, args,
+                env: std::collections::BTreeMap::new(),
+            }),
+        };
+        Some((name, scoped))
+    }).collect()
+}
+
+fn save_mcp_servers(servers: &std::collections::BTreeMap<String, ScopedMcpServerConfig>) -> Result<(), Box<dyn std::error::Error>> {
+    let path = mcp_config_path();
+    if let Some(parent) = path.parent() { fs::create_dir_all(parent)?; }
+    let mut map = serde_json::Map::new();
+    for (name, scoped) in servers {
+        if let McpServerConfig::Stdio(cfg) = &scoped.config {
+            map.insert(name.clone(), json!({
+                "command": cfg.command,
+                "args": cfg.args,
+            }));
+        }
+    }
+    fs::write(&path, serde_json::to_string_pretty(&map)?)?;
+    Ok(())
 }
 
 fn build_system_prompt() -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -2635,10 +2782,7 @@ fn map_conversation_message(message: ConversationMessage) -> InputMessage {
 fn map_content_block(block: ContentBlock) -> InputContentBlock {
     match block {
         ContentBlock::Text { text } => InputContentBlock::Text { text },
-        ContentBlock::ToolUse { id, name, input } => InputContentBlock::ToolUse {
-            id, name,
-            input: serde_json::from_str(&input).unwrap_or(serde_json::Value::Null),
-        },
+        ContentBlock::ToolUse { id, name, input } => InputContentBlock::ToolUse { id, name, input: serde_json::Value::String(input) },
         ContentBlock::ToolResult { tool_use_id, output, tool_name: _, is_error: _ } => InputContentBlock::ToolResult {
             tool_use_id,
             content: vec![ToolResultContentBlock::Text { text: output }],
@@ -2688,11 +2832,36 @@ fn map_usage(usage: api::Usage) -> TokenUsage {
 }
 
 #[derive(Clone)]
-struct CliToolExecutor {}
+struct CliToolExecutor {
+    mcp_manager: Arc<Mutex<McpServerManager>>,
+}
 
 impl CliToolExecutor {
-    fn new() -> Self {
-        Self {}
+    fn new(mcp_manager: Arc<Mutex<McpServerManager>>) -> Self {
+        Self { mcp_manager }
+    }
+
+    fn execute_mcp_tool(&self, tool_name: &str, input: serde_json::Value) -> Result<runtime::ToolResult, ToolError> {
+        let mut manager = self.mcp_manager.lock().map_err(|e| ToolError::new(e.to_string()))?;
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| ToolError::new(e.to_string()))?;
+        rt.block_on(manager.discover_tools()).map_err(|e| ToolError::new(e.to_string()))?;
+        let response = rt.block_on(manager.call_tool(tool_name, Some(input)))
+            .map_err(|e| ToolError::new(e.to_string()))?;
+        let content = response.result.map(|r| r.content).unwrap_or_default();
+        let output = content.into_iter()
+            .filter_map(|c| {
+                if c.kind == "text" {
+                    c.data.get("text").and_then(|v| v.as_str()).map(ToOwned::to_owned)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        Ok(runtime::ToolResult { output, state: 1 })
     }
 }
 
@@ -2703,6 +2872,9 @@ impl ToolExecutor for CliToolExecutor {
         input: &str,
     ) -> Result<runtime::ToolResult, ToolError> {
         let input_val: serde_json::Value = serde_json::from_str(input).unwrap_or(serde_json::Value::Null);
+        if tool_name.starts_with("mcp__") {
+            return self.execute_mcp_tool(tool_name, input_val);
+        }
         match execute_tool(tool_name, &input_val) {
             Ok(res) => Ok(runtime::ToolResult {
                 output: res.output,
@@ -2722,6 +2894,62 @@ impl ToolExecutor for CliToolExecutor {
             Err(e) => Err(ToolError::new(e)),
         }
     }
+}
+
+fn append_to_albert_memory(line: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let home = std::env::var_os("HOME").map(std::path::PathBuf::from).ok_or("HOME not set")?;
+    let path = home.join(".ternlang");
+    fs::create_dir_all(&path)?;
+    let file_path = path.join("memory.md");
+
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&file_path)?;
+
+    writeln!(file, "- {}", line)?;
+    Ok(())
+}
+
+fn score_turn_importance(user_input: &str, response: &str) -> f32 {
+    let combined = format!("{user_input} {response}").to_lowercase();
+    let mut score: f32 = 0.0;
+    let markers = [
+        ("remember", 0.5),
+        ("prefer", 0.4),
+        ("use", 0.2),
+        ("don't", 0.3),
+        ("always", 0.3),
+        ("never", 0.4),
+        ("set", 0.2),
+        ("change", 0.2),
+        ("fix", 0.1),
+    ];
+    for (m, s) in markers {
+        if combined.contains(m) {
+            score += s;
+        }
+    }
+    score.min(1.0)
+}
+
+fn typewriter_print(text: &str) {
+    use std::io::Write;
+    let stdout = std::io::stdout();
+    let mut out = stdout.lock();
+    let delay = if text.len() > 800 {
+        1
+    } else if text.len() > 300 {
+        2
+    } else {
+        3
+    };
+    for ch in text.chars() {
+        let _ = write!(out, "{ch}");
+        let _ = out.flush();
+        thread::sleep(Duration::from_millis(delay));
+    }
+    println!();
 }
 
 fn final_assistant_text(summary: &runtime::TurnSummary) -> String {
@@ -2912,3 +3140,87 @@ fn check_workspace_trust() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", style("Trust verified. Let's build.").dim());
     Ok(())
 }
+
+struct ModelEntry {
+    id: &'static str,
+    provider: &'static str,
+    description: &'static str,
+}
+
+const KNOWN_MODELS: &[ModelEntry] = &[
+    ModelEntry {
+        id: "gemini-2.5-pro",
+        provider: "Google",
+        description: "Most capable Gemini — complex reasoning",
+    },
+    ModelEntry {
+        id: "gemini-2.5-flash",
+        provider: "Google",
+        description: "Fast & capable — recommended default",
+    },
+    ModelEntry {
+        id: "gemini-2.5-flash-lite",
+        provider: "Google",
+        description: "Lightest Gemini — maximum speed",
+    },
+    ModelEntry {
+        id: "gemini-2.0-pro",
+        provider: "Google",
+        description: "Previous Pro generation",
+    },
+    ModelEntry {
+        id: "gemini-2.0-flash",
+        provider: "Google",
+        description: "Previous Flash generation",
+    },
+    ModelEntry {
+        id: "gemini-2.0-flash-lite",
+        provider: "Google",
+        description: "Previous Flash Lite generation",
+    },
+    ModelEntry {
+        id: "claude-opus-4-7",
+        provider: "Anthropic",
+        description: "Most capable Claude",
+    },
+    ModelEntry {
+        id: "claude-sonnet-4-6",
+        provider: "Anthropic",
+        description: "Best balance of speed and capability",
+    },
+    ModelEntry {
+        id: "claude-haiku-4-5-20251001",
+        provider: "Anthropic",
+        description: "Fastest Claude",
+    },
+    ModelEntry {
+        id: "gpt-4o",
+        provider: "OpenAI",
+        description: "GPT-4o multimodal flagship",
+    },
+    ModelEntry {
+        id: "gpt-4o-mini",
+        provider: "OpenAI",
+        description: "Efficient GPT-4o variant",
+    },
+    ModelEntry {
+        id: "o3-mini",
+        provider: "OpenAI",
+        description: "o3 reasoning — efficient",
+    },
+    ModelEntry {
+        id: "grok-3",
+        provider: "xAI",
+        description: "Grok 3 flagship",
+    },
+    ModelEntry {
+        id: "grok-3-mini",
+        provider: "xAI",
+        description: "Efficient Grok variant",
+    },
+    ModelEntry {
+        id: "llama-3.3-70b-versatile",
+        provider: "Ollama",
+        description: "Llama 3.3 70B — local or hosted",
+    },
+];

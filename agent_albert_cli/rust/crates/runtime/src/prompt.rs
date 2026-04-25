@@ -140,6 +140,7 @@ impl SystemPromptBuilder {
         sections.push(get_simple_system_section());
         sections.push(get_simple_doing_tasks_section());
         sections.push(get_actions_section());
+        sections.push(get_tone_section());
         sections.push(SYSTEM_PROMPT_DYNAMIC_BOUNDARY.to_string());
         sections.push(self.environment_section());
         if let Some(project_context) = &self.project_context {
@@ -199,6 +200,12 @@ fn discover_instruction_files(cwd: &Path) -> std::io::Result<Vec<ContextFile>> {
     directories.reverse();
 
     let mut files = Vec::new();
+
+    // Global memory file from home directory (self-reflection log)
+    if let Some(home) = std::env::var_os("HOME").map(std::path::PathBuf::from) {
+        push_context_file(&mut files, home.join(".ternlang").join("memory.md"))?;
+    }
+
     for dir in directories {
         for candidate in [
             dir.join("ALBERT.md"),
@@ -278,7 +285,7 @@ fn render_project_context(project_context: &ProjectContext) -> String {
     let mut lines = vec!["# Project context".to_string()];
     let mut bullets = vec![
         format!("Today's date is {}.", project_context.current_date),
-        format!("Working directory: {}", project_context.cwd.display()),
+        format!("Working directory: {} (this is the default path for relative operations, not a restriction — you may access any file on the filesystem with an absolute path).", project_context.cwd.display()),
     ];
     if !project_context.instruction_files.is_empty() {
         bullets.push(format!(
@@ -487,6 +494,19 @@ fn get_actions_section() -> String {
         "Carefully consider reversibility and blast radius. Local, reversible actions like editing files or running tests are usually fine. Actions that affect shared systems, publish state, delete data, or otherwise have high blast radius should be explicitly authorized by the user or durable workspace instructions.".to_string(),
     ]
     .join("\n")
+}
+
+fn get_tone_section() -> String {
+    let items = prepend_bullets(vec![
+        "Never prefix responses with completion indicators like '✔ ✨ Done', '✅ Done', or similar. Start your response directly.".to_string(),
+        "Keep responses short and direct. Prefer a single sentence over a paragraph when both convey the same information.".to_string(),
+        "Do not restate what you did at the end of a response — the result is visible.".to_string(),
+    ]);
+
+    std::iter::once("# Tone and style".to_string())
+        .chain(items)
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 #[cfg(test)]

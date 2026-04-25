@@ -52,6 +52,25 @@ impl BytecodeEmitter {
         }
     }
 
+    /// Emit a single agent definition incrementally (used by the WASM fallback loop
+    /// when the full `parse_program` path is unavailable).
+    pub fn emit_agent_def(&mut self, agent: &crate::AgentDef) {
+        let type_id = self.agent_type_ids.len() as u16;
+        self.agent_type_ids.insert(agent.name.clone(), type_id);
+        let mut handler_addr: Option<u16> = None;
+        for method in &agent.methods {
+            let addr = self.code.len() as u16;
+            if handler_addr.is_none() {
+                handler_addr = Some(addr);
+            }
+            self.emit_function(method);
+            self.func_addrs.insert(format!("{}::{}", agent.name, method.name), addr);
+        }
+        if let Some(addr) = handler_addr {
+            self.agent_handlers.push((type_id, addr));
+        }
+    }
+
     pub fn emit_header_jump(&mut self) -> usize {
         let patch_pos = self.code.len() + 1;
         self.code.push(0x0b); // TJMP

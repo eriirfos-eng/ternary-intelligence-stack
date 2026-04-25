@@ -731,9 +731,13 @@ struct RepoDetection {
 
 fn generate_default_albert_md(config: &AlbertConfig) -> io::Result<()> {
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let path = cwd.join("ALBERT.md");
+    if path.exists() {
+        return Ok(());
+    }
     let content = format!(
         "# ALBERT.md\n\n- User: {}\n- Role: {}\n- Style: {}\n- Mode: sovereign\n\n## Rules\n- Pure Rust\n- Ternary logic only (+1, 0, -1)\n- Strictly LLM-agnostic\n",
         config.user_name, config.user_role, config.cognitive_style
     );
-    std::fs::write(cwd.join("ALBERT.md"), content)
+    std::fs::write(path, content)
 }

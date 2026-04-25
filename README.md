@@ -100,55 +100,81 @@ cargo build --release
 ## Agent Albert — AI Intelligence Layer
 
 [![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
+[![version](https://img.shields.io/badge/version-v0.1.2-cyan)](https://crates.io/crates/albert-cli)
 
-**Albert** is the model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He is fully sovereign — you bring your own API key and he never phones home.
+**Albert** is the sovereign, model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He runs entirely in your terminal, connects to any LLM provider, and never phones home. First went online: **2026-04-24**.
 
-**Two deployment modes:**
+---
 
-| Mode | How to use |
-|------|-----------|
-| **Standalone CLI** | `cargo install albert-cli` → set your LLM key → `albert` |
-| **Embedded in TernStudio** | Summon with `F6` inside the flow canvas to generate workflows from a prompt, debug signal paths, or explain node behaviour |
-
-**Model-agnostic — pick your LLM:**
+### Quick Install — One Copy Gets It All
 
 ```bash
-# Anthropic Claude
-export ANTHROPIC_API_KEY=sk-ant-...
+# Install Albert (brings the full agent engine with it)
+cargo install albert-cli
 
-# OpenAI / GPT-4
-export OPENAI_API_KEY=sk-...
+# Set your LLM key (pick any provider)
+export GEMINI_API_KEY=AIza...          # Google Gemini — default, highest quota
+export ANTHROPIC_API_KEY=sk-ant-...   # Anthropic Claude
+export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
+# export XAI_API_KEY=xai-...          # xAI / Grok
+# (Ollama: just run `ollama serve` — no key needed)
 
-# Google Gemini (default in Albert)
-export GEMINI_API_KEY=AIza...
-
-# Ollama (fully local, no key needed)
-# just run: ollama serve
-
-# XAI / Grok
-export XAI_API_KEY=xai-...
+# Launch
+albert
 ```
 
-**Quick start:**
+That's it. Albert auto-detects your key and spins up the REPL.
 
-```bash
-cargo install albert-cli     # installs the `albert` binary
-albert                       # starts the interactive REPL
-albert "refactor this file"  # one-shot prompt mode
+---
+
+### What Albert Can Do
+
+| Capability | Details |
+|---|---|
+| **Multi-provider routing** | Claude, GPT-4o, Gemini, Grok, Ollama, Bedrock, Azure — swap with `/model` |
+| **Autonomous agent loop** | `/loop <mission>` — runs up to 10 tool-use turns to complete a goal; Ctrl+C aborts cleanly |
+| **Chain execution** | `/plan <task>` — LLM decomposes goal into steps, executes each in sequence |
+| **Tool harness** | `read_file`, `write_file`, `edit_file`, `bash`, `glob_search`, `grep_search`, `web_fetch` |
+| **Self-reflection memory** | Automatically scores each turn for importance; commits key facts to `~/.ternlang/memory.md` and injects them on startup |
+| **Image input** | Attach images with `[image: /path/to/file.png]` syntax (Gemini multimodal) |
+| **Slash command library** | `/plan`, `/loop`, `/tdd`, `/bughunter`, `/code-review`, `/build-fix`, `/refactor`, `/commit`, `/pr`, `/compress`, and more — type `/` to browse |
+| **Interactive model picker** | `/model` with no args shows a full provider-grouped list with descriptions |
+| **Rate-limit resilience** | 429 errors auto-fall-back to a faster model and retry without crashing |
+| **Permission layer** | `read-only`, `workspace-write`, `danger-full-access` modes — deny-first AST interception |
+| **Session memory** | Sliding-window compaction keeps long sessions coherent |
+| **RTK integration** | 60–90% token savings on dev operations |
+| **MCP support** | stdio and network transport for any MCP server |
+
+---
+
+### Slash Commands
+
+```
+/model          → interactive model picker (all providers)
+/loop <goal>    → autonomous multi-turn agent mission
+/plan <task>    → decompose + execute step by step
+/bughunter      → scan codebase for bugs
+/commit         → AI-generated commit message + commit
+/compress       → summarise and compact session history
+/status         → show model, session, token usage
+/help           → browse full command list
 ```
 
-**What Albert brings to the stack:**
+---
 
-- Full agentic coding loop with session memory, tool use (file read/write/edit, bash, glob/grep search), and OAuth
-- RTK (Rust Token Killer) integration — 60–90% token savings on every dev operation
-- MCP (Model Context Protocol) client — connects to any MCP server
-- Slash command library: `/plan`, `/tdd`, `/verify`, `/code-review`, `/build-fix`, `/refactor`, `/docs`, `/loop`, `/compress`
-- Typewriter onboarding and cognitive archetype personalisation
-- Auto-generates `ALBERT.md` in your workspace to bake in project context
+### Ecosystem
 
-→ **[Full Albert documentation](ternlang-root/README.md#agent-albert--ai-intelligence-layer)**  
+| Crate | Role |
+|---|---|
+| [`albert-cli`](https://crates.io/crates/albert-cli) | The `albert` binary |
+| [`albert-runtime`](https://crates.io/crates/albert-runtime) | Session engine, MCP, auth, bash |
+| [`albert-api`](https://crates.io/crates/albert-api) | Multi-provider LLM client |
+| [`albert-commands`](https://crates.io/crates/albert-commands) | Slash command library |
+| [`albert-tools`](https://crates.io/crates/albert-tools) | Tool execution layer |
+| [`albert-compat`](https://crates.io/crates/albert-compat) | Manifest extraction harness |
+
 → **[Source: agent_albert_cli/](agent_albert_cli/)**  
-→ **[crates.io: albert-cli](https://crates.io/crates/albert-cli)**
+→ **[crates.io: albert-cli v0.1.2](https://crates.io/crates/albert-cli)**
 
 ---
 

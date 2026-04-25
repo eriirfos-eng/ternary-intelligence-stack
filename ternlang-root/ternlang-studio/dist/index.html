@@ -519,34 +519,111 @@
         </div>
 
         <!-- Reference tab -->
-        <div class="out-panel" id="panel-ref">
+        <div class="out-panel" id="panel-ref" style="overflow-y:auto;">
           <div class="ref-section">
-            <div class="ref-title">Builtins</div>
+            <div class="ref-title">Trit Builtins</div>
             <table class="ref-table">
               <tr><td>truth()</td><td>→ trit(+1)</td><td>Affirm signal</td></tr>
-              <tr><td>hold()</td><td>→ trit(0)</td><td>Neutral / pending</td></tr>
+              <tr><td>hold()</td><td>→ trit(0)</td><td>Neutral / hold</td></tr>
               <tr><td>conflict()</td><td>→ trit(-1)</td><td>Reject signal</td></tr>
-              <tr><td>consensus(a,b)</td><td>→ trit</td><td>Ternary AND merge</td></tr>
-              <tr><td>print(v)</td><td></td><td>Print to output</td></tr>
-              <tr><td>println(v)</td><td></td><td>Print + newline</td></tr>
+              <tr><td>invert(t)</td><td>→ trit</td><td>Negate trit (-1↔+1)</td></tr>
+              <tr><td>consensus(a,b)</td><td>→ trit</td><td>Ternary AND merge (max signal)</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">Math Builtins</div>
+            <table class="ref-table">
+              <tr><td>abs(x)</td><td>→ int/float</td><td>Absolute value</td></tr>
+              <tr><td>min(a, b)</td><td>→ int/float</td><td>Minimum of two values</td></tr>
+              <tr><td>max(a, b)</td><td>→ int/float</td><td>Maximum of two values</td></tr>
+              <tr><td>pow(base, exp)</td><td>→ int</td><td>Integer exponentiation</td></tr>
+              <tr><td>len(t)</td><td>→ int</td><td>Length of tensor or string</td></tr>
+              <tr><td>length(t)</td><td>→ int</td><td>Primary dimension of tensor</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">I/O Builtins</div>
+            <table class="ref-table">
+              <tr><td>print(v)</td><td></td><td>Print value (no newline)</td></tr>
+              <tr><td>println(v)</td><td></td><td>Print value + newline</td></tr>
+              <tr><td>opent(path)</td><td>→ int</td><td>Open file, returns handle</td></tr>
+              <tr><td>readt(handle)</td><td>→ string</td><td>Read file contents</td></tr>
+              <tr><td>writet(handle, s)</td><td>→ trit</td><td>Write string to file</td></tr>
             </table>
           </div>
           <div class="ref-section">
             <div class="ref-title">Types</div>
             <table class="ref-table">
               <tr><td>trit</td><td>-1 / 0 / 1</td><td>Balanced ternary value</td></tr>
-              <tr><td>int</td><td>i64</td><td>Integer</td></tr>
-              <tr><td>float</td><td>f64</td><td>Floating point</td></tr>
-              <tr><td>trittensor</td><td>N×M</td><td>Trit tensor (Tier 2+)</td></tr>
+              <tr><td>int</td><td>i64</td><td>64-bit integer</td></tr>
+              <tr><td>float</td><td>f64</td><td>64-bit floating point</td></tr>
+              <tr><td>string</td><td>UTF-8</td><td>Text value</td></tr>
+              <tr><td>bool</td><td>true/false</td><td>Boolean (coerced to trit)</td></tr>
+              <tr><td>trit[]</td><td>dynamic</td><td>Dynamic trit array / buffer</td></tr>
+              <tr><td>trittensor&lt;N&gt;</td><td>N×1</td><td>Fixed-size trit tensor</td></tr>
+              <tr><td>trittensor&lt;N,M&gt;</td><td>N×M</td><td>2D trit tensor</td></tr>
+              <tr><td>int[N]</td><td>fixed</td><td>Fixed-size integer array</td></tr>
+              <tr><td>float[N]</td><td>fixed</td><td>Fixed-size float array</td></tr>
+              <tr><td>agentref</td><td>ref</td><td>Handle to a spawned agent</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">Control Flow</div>
+            <table class="ref-table">
+              <tr><td>if ? cond { A } tend { B } reject { C }</td><td colspan="2">Ternary branch (+1/0/-1)</td></tr>
+              <tr><td>if cond { A } else { B }</td><td colspan="2">Binary branch</td></tr>
+              <tr><td>while ? cond { body }</td><td colspan="2">Ternary loop (runs on +1)</td></tr>
+              <tr><td>for x in tensor { body }</td><td colspan="2">Iterate over tensor elements</td></tr>
+              <tr><td>match x { 1 =&gt; {} 0 =&gt; {} _ =&gt; {} }</td><td colspan="2">Pattern match (int/trit/float)</td></tr>
+              <tr><td>return val;</td><td colspan="2">Return from function</td></tr>
+              <tr><td>break; / continue;</td><td colspan="2">Loop control</td></tr>
+              <tr><td>val?</td><td colspan="2">Early exit on -1 (returns conflict())</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">Agent Keywords</div>
+            <table class="ref-table">
+              <tr><td>agent Foo { fn run(...) -&gt; trit { } }</td><td colspan="2">Declare agent type</td></tr>
+              <tr><td>spawn Foo</td><td>→ agentref</td><td>Create agent instance</td></tr>
+              <tr><td>send msg to ref</td><td></td><td>Push message to mailbox</td></tr>
+              <tr><td>await ref</td><td>→ trit</td><td>Run agent, get result</td></tr>
+              <tr><td>nodeid</td><td>→ string</td><td>Current node address</td></tr>
+              <tr><td>spawn remote "addr" Foo</td><td>→ agentref</td><td>Spawn on remote node</td></tr>
             </table>
           </div>
           <div class="ref-section">
             <div class="ref-title">VM Error Codes</div>
             <table class="ref-table">
-              <tr><td>BET-001</td><td>StackUnderflow</td><td>Missing return push</td></tr>
-              <tr><td>BET-007</td><td>TypeMismatch</td><td>Wrong type for op</td></tr>
-              <tr><td>BET-010</td><td>DivByZero</td><td>Integer divide by zero</td></tr>
-              <tr><td>BET-013</td><td>OutOfBounds</td><td>Register / tensor OOB</td></tr>
+              <tr><td>BET-001</td><td>StackUnderflow</td><td>Pop on empty stack — add missing return</td></tr>
+              <tr><td>BET-007</td><td>TypeMismatch</td><td>Wrong type for op — check trit vs int vs float</td></tr>
+              <tr><td>BET-008</td><td>TensorIndexOOB</td><td>Index beyond tensor size</td></tr>
+              <tr><td>BET-010</td><td>DivByZero</td><td>Division or modulo by zero</td></tr>
+              <tr><td>BET-013</td><td>CallStackOverflow</td><td>Deep recursion or unresolved import</td></tr>
+              <tr><td>BET-014</td><td>AgentIdInvalid</td><td>send/await on invalid agent ref</td></tr>
+              <tr><td>BET-015</td><td>AgentTypeNotRegistered</td><td>spawn without agent definition</td></tr>
+              <tr><td>PARSE-001</td><td>UnexpectedToken</td><td>Syntax error — check grammar</td></tr>
+              <tr><td>PARSE-002</td><td>ExpectedToken</td><td>Missing token (often ; or })</td></tr>
+              <tr><td>MOD-004</td><td>FileNotFound</td><td>Import path not found</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">Literals</div>
+            <table class="ref-table">
+              <tr><td>1, 0, -1</td><td>int / trit</td><td>Integers; coerce to trit where needed</td></tr>
+              <tr><td>3.14</td><td>float</td><td>Decimal float</td></tr>
+              <tr><td>0xFF, 0b1010</td><td>int</td><td>Hex and binary integer literals</td></tr>
+              <tr><td>"hello"</td><td>string</td><td>String literal</td></tr>
+              <tr><td>true / false</td><td>bool→int</td><td>Boolean literals (1 / 0)</td></tr>
+              <tr><td>hold / tend</td><td>trit</td><td>Zero-state trit keyword</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
+            <div class="ref-title">Known Limitations</div>
+            <table class="ref-table">
+              <tr><td>VM-STRUCT-001</td><td colspan="2">Returning structs from functions not stable — use intermediate vars</td></tr>
+              <tr><td>COMP-TENSOR-001</td><td colspan="2">Tensor size max 65535 elements (16-bit immediate)</td></tr>
+              <tr><td>MOD-004</td><td colspan="2">Named imports require all dependencies imported explicitly</td></tr>
+              <tr><td>float[] / int[]</td><td colspan="2">Array literals/params limited — use individual vars or trit[]</td></tr>
             </table>
           </div>
         </div>

@@ -249,6 +249,12 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         argument_hint: Some("<mission>"),
         resume_supported: false,
     },
+    SlashCommandSpec {
+        name: "mcp",
+        summary: "Manage MCP servers (list / add / remove)",
+        argument_hint: Some("[list|add <name> <cmd>|remove <name>]"),
+        resume_supported: false,
+    },
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -330,6 +336,10 @@ pub enum SlashCommand {
     },
     Loop {
         mission: Option<String>,
+    },
+    Mcp {
+        action: Option<String>,
+        args: Option<String>,
     },
     Unknown(String),
 }
@@ -422,6 +432,16 @@ impl SlashCommand {
             },
             "loop" => Self::Loop {
                 mission: remainder_after_command(trimmed, command),
+            },
+            "mcp" => {
+                let rest = remainder_after_command(trimmed, command);
+                let (action, args) = rest.as_deref().map_or((None, None), |s| {
+                    let mut iter = s.splitn(2, ' ');
+                    let a = iter.next().map(ToOwned::to_owned);
+                    let b = iter.next().map(str::trim).filter(|v| !v.is_empty()).map(ToOwned::to_owned);
+                    (a, b)
+                });
+                Self::Mcp { action, args }
             },
             other => Self::Unknown(other.to_string()),
         })
@@ -571,6 +591,7 @@ pub fn handle_slash_command(
         | SlashCommand::Checkpoint { .. }
         | SlashCommand::Docs { .. }
         | SlashCommand::Loop { .. }
+        | SlashCommand::Mcp { .. }
         | SlashCommand::Unknown(_) => None,
     }
 }
