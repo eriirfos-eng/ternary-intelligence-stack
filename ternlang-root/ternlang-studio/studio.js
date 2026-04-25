@@ -6260,8 +6260,10 @@ function onMouseDown(e) {
     e.stopPropagation();
     e.preventDefault();
     const nodeEl = sourcePort.closest('.flow-node');
+    // Panels like Albert use .flow-port but are not .flow-node — fall back to nearest id'd ancestor.
+    const effectiveId = nodeEl ? nodeEl.id : (sourcePort.closest('[id]')?.id || sourcePort.id || 'panel');
     const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
-    
+
     // Phase 3: Extract Routing Port Value for Ternary Routing
     let routingValue = "all";
     if (sourcePort.classList.contains('port-affirm')) {
@@ -6272,15 +6274,17 @@ function onMouseDown(e) {
       routingValue = -1;
     }
 
-    console.log(`[Ternary] Wire Drag Start: node=${nodeEl.id}, value=${routingValue}`);
+    console.log(`[Ternary] Wire Drag Start: node=${effectiveId}, value=${routingValue}`);
 
     activeWire = {
-      fromId: nodeEl.id,
+      fromId: effectiveId,
       fromIsOutput: sourcePort.classList.contains('flow-port-out'),
       start: getPortPos(sourcePort),
       end: screenToCanvas(e.clientX - wrapRect.left, e.clientY - wrapRect.top),
       routingValue: routingValue
     };
+    // Track for external panel wire-drop detection (e.g. Albert panel input port).
+    window._activeWireFromId = effectiveId;
     isDraggingNode = false; 
     nodeDraggingId = null; // Explicitly clear any node dragging context
     updateWires(); // Force immediate draw of preview wire
@@ -6307,7 +6311,9 @@ function onMouseMove(e) {
     document.querySelectorAll('.flow-port').forEach(p => {
       // Don't magnetize to same node or same port type
       const toNode = p.closest('.flow-node');
-      if (!toNode || toNode.id === activeWire.fromId) return;
+      const toPanel = p.closest('#albert-panel');
+      const toId = toNode ? toNode.id : (toPanel ? 'albert-panel' : null);
+      if (!toId || toId === activeWire.fromId) return;
       const targetIsOutput = p.classList.contains('flow-port-out');
       if (activeWire.fromIsOutput === targetIsOutput) return;
 
@@ -6391,6 +6397,18 @@ function onMouseUp(e) {
       const targetPort = magnet || e.target.closest('.flow-port');
 
       if (targetPort) {
+        // Albert panel ports are not inside .flow-node — handle them separately.
+        const isAlbertPortIn  = targetPort.id === 'albert-port-in';
+        const isAlbertPortOut = targetPort.id === 'albert-port-out';
+        if ((isAlbertPortIn || isAlbertPortOut) && activeWire.fromId !== 'albert-panel') {
+          // Record the wired source so Albert panel can inject workflow context.
+          window._activeWireFromId = activeWire.fromId;
+          const evt = new MouseEvent('mouseup', { clientX: e.clientX, clientY: e.clientY });
+          targetPort.dispatchEvent(evt);
+          activeWire = null;
+          updateWires();
+          return;
+        }
         const toNode = targetPort.closest('.flow-node');
         if (toNode && toNode.id !== activeWire.fromId) {
           const targetIsOutput = targetPort.classList.contains('flow-port-out');
@@ -8031,10 +8049,33 @@ document.addEventListener('DOMContentLoaded', () => {
         " title="Send (Enter)">↵</button>
       </div>
 
+      <!-- API key setup row — hidden once key is saved -->
+      <div id="albert-key-row" style="
+        padding:6px 10px; border-top:1px solid #1a1a1a; display:flex; gap:6px; flex-shrink:0;
+        align-items:center;
+      ">
+        <span style="color:#555; font-size:10px; flex-shrink:0;">Gemini key</span>
+        <input id="albert-key-input" type="password" placeholder="AIzaSy…" style="
+          flex:1; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
+          color:#aaa; font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
+        "/>
+        <button id="albert-key-save" style="
+          background:#00dc7814; border:1px solid #00dc7830; border-radius:4px;
+          color:#00dc78; font-size:10px; padding:4px 8px; cursor:pointer;
+        ">Save</button>
+      </div>
+
       <!-- Status strip -->
       <div id="albert-status" style="
         padding:4px 14px; font-size:10px; color:#333; background:#0a0a0a; flex-shrink:0;
       ">⠸ idle</div>
+
+      <!-- Resize handle -->
+      <div id="albert-resize" style="
+        position:absolute; bottom:0; right:0; width:14px; height:14px; cursor:nwse-resize;
+        background:linear-gradient(135deg, transparent 50%, #333 50%);
+        border-radius:0 0 10px 0; z-index:20;
+      " title="Resize"></div>
     `;
 
     // ── Drag ──────────────────────────────────────────────────────────────
@@ -8056,11 +8097,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('mouseup', () => {
       dragStart = null;
+      resizeStart = null;
       header.style.cursor = 'grab';
+    });
+
+    // ── Resize ────────────────────────────────────────────────────────────
+    let resizeStart = null;
+    el.querySelector('#albert-resize').addEventListener('mousedown', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      resizeStart = { mx: e.clientX, my: e.clientY, w: r.width, h: r.height };
+    });
+    document.addEventListener('mousemove', e => {
+      if (!resizeStart) return;
+      const newW = Math.max(280, resizeStart.w + (e.clientX - resizeStart.mx));
+      const newH = Math.max(220, resizeStart.h + (e.clientY - resizeStart.my));
+      el.style.width  = newW + 'px';
+      el.style.height = newH + 'px';
     });
 
     // ── Close ─────────────────────────────────────────────────────────────
     el.querySelector('#albert-close').addEventListener('click', hidePanel);
+
+    // ── API key setup ─────────────────────────────────────────────────────
+    const keyRow = el.querySelector('#albert-key-row');
+    const keyInp = el.querySelector('#albert-key-input');
+    function refreshKeyRow() {
+      const existing = localStorage.getItem('albert_gemini_key');
+      if (existing) {
+        keyRow.style.display = 'none';
+      } else {
+        keyRow.style.display = 'flex';
+      }
+    }
+    refreshKeyRow();
+    el.querySelector('#albert-key-save').addEventListener('click', () => {
+      const k = keyInp.value.trim();
+      if (!k) return;
+      localStorage.setItem('albert_gemini_key', k);
+      keyInp.value = '';
+      refreshKeyRow();
+      setStatus('⠸ key saved — ready');
+    });
+    keyInp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') el.querySelector('#albert-key-save').click();
+    });
 
     // ── Send on Enter ──────────────────────────────────────────────────────
     const inp = el.querySelector('#albert-input');
@@ -8070,11 +8152,23 @@ document.addEventListener('DOMContentLoaded', () => {
     el.querySelector('#albert-send').addEventListener('click', sendMessage);
 
     // ── Port wiring ──────────────────────────────────────────────────────
-    // Albert's ports participate in the existing wire drag system by having
-    // the correct classes (.flow-port / .flow-port-in / .flow-port-out).
-    // We listen for wire completions that target albert-panel and update wiredNodeId.
+    // When a wire is dropped onto the input port, onMouseUp dispatches a synthetic
+    // mouseup on the port itself after setting window._activeWireFromId.
+    el.querySelector('#albert-port-in').addEventListener('mouseup', () => {
+      if (window._activeWireFromId && window._activeWireFromId !== 'albert-panel') {
+        wiredNodeId = window._activeWireFromId;
+        const badge = document.getElementById('albert-wired-badge');
+        const node = (typeof flowNodes !== 'undefined' ? flowNodes : []).find(n => n.id === wiredNodeId);
+        if (badge) {
+          badge.style.display = 'inline';
+          badge.textContent = `⟵ ${node?.name || wiredNodeId}`;
+        }
+        setStatus(`⠸ wired to "${node?.name || wiredNodeId}"`);
+        window._activeWireFromId = null;
+      }
+    });
     el.querySelector('#albert-port-in').addEventListener('mousedown', e => {
-      e.stopPropagation(); // handled by global wire drag
+      e.stopPropagation(); // let global wire drag handle mousedown on this port
     });
 
     document.body.appendChild(el);
@@ -8135,7 +8229,10 @@ document.addEventListener('DOMContentLoaded', () => {
               || (document.getElementById('geminiApiKey') || {}).value?.trim()
               || '';
     if (!key) {
-      return 'No Gemini API key found. Run /auth google in Albert CLI, or set localStorage.albert_gemini_key = "your-key".';
+      // Show the key-setup row so the user can enter their key directly.
+      const keyRow = document.getElementById('albert-key-row');
+      if (keyRow) { keyRow.style.display = 'flex'; document.getElementById('albert-key-input')?.focus(); }
+      return 'No Gemini API key set. Enter your key in the row above and press Save.';
     }
 
     const contents = messages.map(m => ({
@@ -8244,24 +8341,6 @@ Otherwise, respond naturally and concisely.`;
     if (visible) hidePanel(); else showPanel();
   };
 
-  // ── Wire-connection hook ──────────────────────────────────────────────────
-  // When the existing wire system drops a wire onto albert-port-in, track which
-  // node was the source so we can include it in the system prompt.
-  document.addEventListener('mouseup', (e) => {
-    const portIn = document.getElementById('albert-port-in');
-    if (!portIn || !panelEl) return;
-    const r = portIn.getBoundingClientRect();
-    const hit = e.clientX >= r.left - 10 && e.clientX <= r.right + 10
-             && e.clientY >= r.top  - 10 && e.clientY <= r.bottom + 10;
-    if (hit && window._activeWireFromId) {
-      wiredNodeId = window._activeWireFromId;
-      const badge = document.getElementById('albert-wired-badge');
-      const node = flowNodes?.find(n => n.id === wiredNodeId);
-      if (badge) {
-        badge.style.display = 'inline';
-        badge.textContent = `⟵ ${node?.name || wiredNodeId}`;
-      }
-    }
-  });
+  // Wire-drop is now handled by the port-in's own mouseup listener (above).
 
 })(); // end initAlbertPanel

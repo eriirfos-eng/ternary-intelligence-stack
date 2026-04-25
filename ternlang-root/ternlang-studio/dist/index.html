@@ -7,15 +7,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@0.400.0"></script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
   <!-- Logic extracted to studio.js -->
   
-  <script type="module" crossorigin src="/assets/index-69467930.js"></script>
-  <link rel="stylesheet" href="/assets/index-7d38b0a9.css">
+  <script type="module" crossorigin src="/assets/index-5a988c75.js"></script>
+  <link rel="stylesheet" href="/assets/index-812ed8a2.css">
 </head>
 <body>
 
@@ -33,6 +34,7 @@
       <button class="nav-tab"        id="vt-docs"      onclick="switchView('docs')"><i data-lucide="book-open"></i> Docs</button>
       <button class="nav-tab"        id="vt-debugger"  onclick="switchView('debugger')"><i data-lucide="bug"></i> Tracer</button>
       <button class="nav-tab"        id="vt-modules"   onclick="switchView('modules')"><i data-lucide="package"></i> Registry</button>
+      <button class="nav-tab"        id="vt-translator" onclick="switchView('translator')"><i data-lucide="languages"></i> Translator</button>
       <button class="nav-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings"></i> Config</button>
     </div>
   </div>
@@ -63,9 +65,6 @@
     <input type="password" id="apiKey" style="display:none;" />
   </div>
 </div>
-
-<!-- ═══ HIDING OLD VIEWBAR ════════════════════════════════════════════════════ -->
-<div id="viewbar" style="display:none"></div>
 
 <!-- ─── Modals (Global Context) ────────────────────────────────────────── -->
 <!-- Delete Agent Modal -->
@@ -592,6 +591,12 @@
             </table>
           </div>
           <div class="ref-section">
+            <div class="ref-title">Directives</div>
+            <table class="ref-table">
+              <tr><td>@sparseskip</td><td></td><td>Skip zero-signal weights (inference optimization)</td></tr>
+            </table>
+          </div>
+          <div class="ref-section">
             <div class="ref-title">VM Error Codes</div>
             <table class="ref-table">
               <tr><td>BET-001</td><td>StackUnderflow</td><td>Pop on empty stack — add missing return</td></tr>
@@ -664,131 +669,6 @@
     </div>
   </div>
   <div class="sidebar-resizer" id="flow-sidebar-resizer"></div>
-  <!-- New Agent Modal -->
-  <div id="newAgentModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeNewAgentModal()">
-    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:12px; padding:24px; width:500px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <div style="font-size:14px; font-weight:700; color:var(--text);">⊕ New Agent</div>
-        <button onclick="closeNewAgentModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;">✕</button>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <div>
-          <div class="prop-label" style="margin-bottom:4px;">Agent Name</div>
-          <input id="newAgentName" class="prop-input" style="width:100%" placeholder="e.g. SentimentGate" />
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:4px;">Import from Library</div>
-          <select id="newAgentLibPick" class="prop-input" style="width:100%" onchange="loadNewAgentTemplate()">
-            <option value="">— Start blank —</option>
-          </select>
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:4px;">Agent Code (.tern)</div>
-          <textarea id="newAgentCode" class="prop-input" style="width:100%; height:160px; resize:vertical; font-family:'JetBrains Mono',monospace; font-size:11px;" placeholder="fn main() -> trit {&#10;    return affirm;&#10;}"></textarea>
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
-          <button onclick="closeNewAgentModal()" class="btn btn-ghost">Cancel</button>
-          <button onclick="addAgentFromModal()" class="btn btn-primary">Add to Canvas</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Deploy as Product Modal -->
-  <div id="deployModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeDeployModal()">
-    <div style="background:var(--bg1); border:1px solid var(--border2); border-radius:16px; padding:28px; width:560px; max-width:95vw; box-shadow:0 24px 80px rgba(0,0,0,0.6);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <div>
-          <div style="font-size:16px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
-            <span style="font-size:20px;">🚀</span> Deploy as Product
-          </div>
-          <div style="font-size:11px; color:var(--muted2); margin-top:4px;">Publish your agent flow as a live decision API</div>
-        </div>
-        <button onclick="closeDeployModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px; padding:4px 8px;">✕</button>
-      </div>
-
-      <!-- Step indicator -->
-      <div style="display:flex; gap:0; margin-bottom:24px; border-radius:8px; overflow:hidden; border:1px solid var(--border2);">
-        <div id="deploy-step-1-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; background:rgba(1,118,211,0.2); color:var(--blue); border-right:1px solid var(--border2);">① NAME</div>
-        <div id="deploy-step-2-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2); border-right:1px solid var(--border2);">② PRICING</div>
-        <div id="deploy-step-3-tab" style="flex:1; padding:8px; text-align:center; font-size:10px; font-weight:700; color:var(--muted2);">③ DEPLOY</div>
-      </div>
-
-      <!-- Step 1: Name & Description -->
-      <div id="deploy-step-1" style="display:flex; flex-direction:column; gap:14px;">
-        <div>
-          <div class="prop-label" style="margin-bottom:6px;">Product Name</div>
-          <input id="deployName" class="prop-input" style="width:100%" placeholder="e.g. Risk Evaluator" />
-          <div style="font-size:10px; color:var(--muted2); margin-top:4px;">Becomes the API slug: /api/agent/risk-evaluator</div>
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:6px;">Description</div>
-          <textarea id="deployDesc" class="prop-input" style="width:100%; height:70px; resize:none;" placeholder="What decisions does this agent system make?"></textarea>
-        </div>
-        <div>
-          <div class="prop-label" style="margin-bottom:6px;">Input Schema (what callers send)</div>
-          <input id="deployInput" class="prop-input" style="width:100%" placeholder='e.g. { "signal": -1 | 0 | 1, "context": string }' />
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-          <button onclick="closeDeployModal()" class="btn btn-ghost">Cancel</button>
-          <button onclick="deployStep(2)" class="btn btn-primary">Next →</button>
-        </div>
-      </div>
-
-      <!-- Step 2: Pricing -->
-      <div id="deploy-step-2" style="display:none; flex-direction:column; gap:14px;">
-        <div>
-          <div class="prop-label" style="margin-bottom:10px;">Pricing Model</div>
-          <div style="display:flex; flex-direction:column; gap:8px;" id="pricingOptions">
-            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
-              <input type="radio" name="deployPricing" value="free" checked style="accent-color:var(--blue)">
-              <div>
-                <div style="font-size:13px; font-weight:600; color:var(--text);">Free</div>
-                <div style="font-size:11px; color:var(--muted2);">Open access — no billing. Good for demos.</div>
-              </div>
-            </label>
-            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
-              <input type="radio" name="deployPricing" value="per_call" style="accent-color:var(--blue)">
-              <div>
-                <div style="font-size:13px; font-weight:600; color:var(--text);">Per-call <span style="color:var(--amber)">($)</span></div>
-                <div style="font-size:11px; color:var(--muted2);">Charge consumers per API request.</div>
-              </div>
-              <input id="deployPerCallPrice" class="prop-input" style="width:100px; margin-left:auto;" placeholder="$0.01 / call" />
-            </label>
-            <label class="deploy-pricing-opt" style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border2); border-radius:8px; cursor:pointer; transition: border-color 0.2s;">
-              <input type="radio" name="deployPricing" value="private" style="accent-color:var(--blue)">
-              <div>
-                <div style="font-size:13px; font-weight:600; color:var(--text);">Private</div>
-                <div style="font-size:11px; color:var(--muted2);">Internal use only — not listed in marketplace.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-          <button onclick="deployStep(1)" class="btn btn-ghost">← Back</button>
-          <button onclick="deployStep(3)" class="btn btn-primary">Review →</button>
-        </div>
-      </div>
-
-      <!-- Step 3: Confirm & Deploy -->
-      <div id="deploy-step-3" style="display:none; flex-direction:column; gap:16px;">
-        <div id="deploy-summary" style="background:var(--bg2); border:1px solid var(--border2); border-radius:10px; padding:16px; font-size:12px; line-height:2; font-family:'JetBrains Mono',monospace;"></div>
-        <div id="deploy-progress" style="display:none; flex-direction:column; gap:10px;">
-          <div class="deploy-step-row" id="dstep-compile"><span class="dstep-icon">⏳</span> Compiling agent flow…</div>
-          <div class="deploy-step-row" id="dstep-register"><span class="dstep-icon">⏳</span> Registering endpoint…</div>
-          <div class="deploy-step-row" id="dstep-publish"><span class="dstep-icon">⏳</span> Publishing to runtime…</div>
-          <div id="deploy-result" style="display:none; padding:14px; background:rgba(16,185,129,0.08); border:1px solid var(--green); border-radius:8px; margin-top:4px;"></div>
-        </div>
-        <div id="deploy-confirm-btns" style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
-          <button onclick="deployStep(2)" class="btn btn-ghost">← Back</button>
-          <button onclick="executeProductDeploy()" class="btn btn-primary" style="background:linear-gradient(135deg,#0176d3,#06b6d4); gap:6px;">
-            <i data-lucide="rocket" style="width:14px"></i> Deploy Now
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Main View Area -->
   <div id="flow-canvas-wrap">
     <canvas id="flow-fog-canvas"></canvas>
@@ -875,6 +755,9 @@
 
     <!-- Zoom indicator -->
     <div id="zoom-indicator">
+      <button onclick="undoStep()" title="Undo (Ctrl+Z)" style="font-size:13px;">↩</button>
+      <button onclick="redoStep()" title="Redo (Ctrl+Y)" style="font-size:13px;">↪</button>
+      <div style="width:1px; background:var(--border2); height:16px; margin:0 2px;"></div>
       <button onclick="zoomStep(-1)" title="Zoom out">−</button>
       <span id="zoomLabel">100%</span>
       <button onclick="zoomStep(1)" title="Zoom in">+</button>
@@ -896,7 +779,7 @@
       <div id="ins-body" class="ins-body">
         <!-- Logs injected via JS -->
       </div>
-      <div class="inspector-resizer" id="flow-inspector-resizer"></div>
+      <!-- resize handles injected by initInspectorDraggable() -->
     </div>
 
     <!-- Multiverse Timeline (DAW-style) -->
@@ -939,7 +822,7 @@
         <input class="settings-input" id="settingsNewKey" type="password" placeholder="tern_…" style="width: 280px;" onkeydown="if(event.key==='Enter'){event.preventDefault();applySettingsKey();}" />
         <button class="settings-btn btn-primary" onclick="applySettingsKey()" style="transition:all 0.2s; box-shadow:0 0 10px rgba(1,118,211,0.3);">Apply</button>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 16px;">
         <div style="flex: 1;">
           <div style="font-size: 12px; font-weight: 600; color: #ffffff; margin-bottom: 4px;">Save Key Locally</div>
           <div style="font-size: 10px; color: var(--muted2);">Persists your key securely in localStorage across sessions.</div>
@@ -957,7 +840,7 @@
       <div id="secretsVaultList" style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px;">
         <!-- Dynamically populated -->
       </div>
-      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 16px;">
+      <div style="background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 16px;">
         <div style="font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">Add / Update Secret</div>
         <div style="display: grid; grid-template-columns: 140px 1fr auto; gap: 12px; align-items: center;">
           <select id="newSecretProvider" class="settings-select" style="width: 100%;">
@@ -1028,7 +911,7 @@
     </div>
 
     <!-- About / Footer Info -->
-    <div style="background: #0f131a; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; border-radius: 8px; width: 100%; max-width: 800px; text-align: center;">
+    <div style="background: var(--bg1); border: 1px solid var(--border); padding: 24px; border-radius: 12px; width: 100%; max-width: 800px; text-align: center;">
       <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
         TernStudio v0.3.0 &nbsp;·&nbsp; Ternary Intelligence Stack<br/>
         Runtime: BET VM (27 registers · balanced ternary)<br/>
@@ -1268,8 +1151,8 @@
 </div>
 
 <!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
-<div class="view" id="view-modules">
-</div>
+<div class="view" id="view-modules"></div>
+<div class="view" id="view-translator"></div>
 
 <div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
   <div class="modal-box">
@@ -1339,7 +1222,115 @@
 <div id="global-tooltip"></div>
 
 <!-- ═══ MONACO + APP LOGIC ══════════════════════════════════════════════════ -->
+<script>
+  // Transport Layer & Auth Handshake initialization
+  window.TERNSTUDIO_DEV_KEY = "tern_industrial_dev_013";
+  
+  function initSocket() {
+    const endpoint = document.getElementById("apiEndpoint").value;
+    const wsUrl = endpoint.replace("https://", "wss://").replace("http://", "ws://") + "/api/tracer/ws";
+    console.log("[Transport] Connecting to " + wsUrl);
+    const socket = new WebSocket(wsUrl);
+    socket.onopen = () => console.log("[Transport] Online.");
+    socket.onerror = (e) => console.error("[Transport] Connection failed", e);
+    window.studioSocket = socket;
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    initSocket();
+  });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
 
+
+<!-- Albert F6 floating panel -->
+<div id="albert-panel" style="
+  display:none; position:fixed; z-index:9999;
+  width:360px; min-height:240px;
+  background:var(--bg1); border:1px solid var(--cyan);
+  border-radius:10px; box-shadow:0 0 24px rgba(6,182,212,0.18);
+  font-family:'JetBrains Mono',monospace; overflow:hidden;
+  top:120px; left:calc(50% - 180px);
+">
+  <div id="albert-panel-drag" style="
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 12px; background:rgba(6,182,212,0.08);
+    border-bottom:1px solid var(--border2); cursor:grab; user-select:none;
+  ">
+    <div style="display:flex; align-items:center; gap:8px; color:var(--cyan); font-size:12px; font-weight:700;">
+      <span style="font-size:14px;">🧠</span> ALBERT CLI
+      <span style="font-size:9px; color:var(--muted2); font-weight:400; padding:2px 6px; border:1px solid var(--border2); border-radius:4px;">F6</span>
+    </div>
+    <button onclick="document.getElementById('albert-panel').style.display='none'" style="
+      background:none; border:none; color:var(--muted2); cursor:pointer; font-size:16px; line-height:1;
+    ">×</button>
+  </div>
+  <div style="padding:16px 14px 8px;">
+    <div id="albert-output" style="
+      min-height:120px; max-height:320px; overflow-y:auto;
+      font-size:11px; color:var(--text); line-height:1.7;
+      margin-bottom:10px;
+    ">
+      <div style="color:var(--cyan); margin-bottom:6px;">Albert CLI — canvas co-pilot mode</div>
+      <div style="color:var(--muted2); font-size:10px;">Local agent integration coming soon.</div>
+      <div style="color:var(--muted2); font-size:10px;">This panel will let you prompt Albert directly from the canvas — create nodes, wire flows, and iterate from a single prompt.</div>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <input id="albert-input" type="text" placeholder="Ask Albert anything…" style="
+        flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:6px;
+        color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px;
+        padding:6px 10px; outline:none;
+      " onkeydown="if(event.key==='Enter') albertSend()">
+      <button onclick="albertSend()" style="
+        background:var(--cyan); color:var(--bg1); border:none; border-radius:6px;
+        padding:6px 12px; font-family:'JetBrains Mono',monospace; font-size:11px;
+        font-weight:700; cursor:pointer;
+      ">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Albert panel drag
+(function() {
+  const panel = document.getElementById('albert-panel');
+  const drag  = document.getElementById('albert-panel-drag');
+  if (!drag || !panel) return;
+  let ox = 0, oy = 0, dragging = false;
+  drag.addEventListener('mousedown', e => {
+    dragging = true;
+    ox = e.clientX - panel.offsetLeft;
+    oy = e.clientY - panel.offsetTop;
+    drag.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    panel.style.left = (e.clientX - ox) + 'px';
+    panel.style.top  = (e.clientY - oy) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; drag.style.cursor = 'grab'; });
+})();
+
+function albertSend() {
+  const input = document.getElementById('albert-input');
+  const output = document.getElementById('albert-output');
+  if (!input || !output || !input.value.trim()) return;
+  const msg = input.value.trim();
+  input.value = '';
+  output.innerHTML += `<div style="color:var(--text); margin-top:6px;"><span style="color:var(--cyan);">you →</span> ${msg}</div>`;
+  output.innerHTML += `<div style="color:var(--muted2); margin-top:2px; font-size:10px;">Albert CLI integration not yet live. Stay tuned.</div>`;
+  output.scrollTop = output.scrollHeight;
+}
+
+window.toggleAlbertPanel = function() {
+  const panel = document.getElementById('albert-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') {
+    const inp = document.getElementById('albert-input');
+    if (inp) setTimeout(() => inp.focus(), 50);
+  }
+};
+</script>
 </body>
 </html>
