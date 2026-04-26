@@ -1,0 +1,49 @@
+/*
+ * FletcherChecksumTrit — Simple Fletcher-style checksum for ternary arrays.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn fletcher_checksum(data: trit[], size: int) -> int {
+    let sum1: int = 0;
+    let sum2: int = 0;
+    let i: int = 0;
+    
+    while i < size {
+        let val: int = 0;
+        match data[i] {
+            -1 => { val = 1; }
+             0 => { val = 2; }
+             1 => { val = 3; }
+        }
+        
+        sum1 = (sum1 + val) % 255;
+        sum2 = (sum2 + sum1) % 255;
+        i = i + 1;
+    }
+    
+    // Combine sum2 and sum1 into a single integer (like a 16-bit value)
+    return (sum2 * 256) + sum1;
+}
+
+fn main() -> trit {
+    let data1: trittensor<4> = [1, 0, -1, 1];
+    let data2: trittensor<4> = [1, 0, -1, 1];
+    let data3: trittensor<4> = [1, 1, 1, 1];
+    
+    let c1: int = fletcher_checksum(data1, 4);
+    let c2: int = fletcher_checksum(data2, 4);
+    let c3: int = fletcher_checksum(data3, 4);
+    
+    println("Fletcher1:"); println(c1);
+    println("Fletcher2:"); println(c2);
+    println("Fletcher3:"); println(c3);
+    
+    if c1 == c2 && c1 != c3 {
+        println("FletcherChecksumTrit Test: PASSED");
+        return 1;
+    }
+    
+    println("FletcherChecksumTrit Test: FAILED");
+    return -1;
+}
