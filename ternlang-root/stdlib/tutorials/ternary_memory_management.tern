@@ -1,0 +1,42 @@
+/*
+ * Tutorial: Ternary Memory Management
+ * Demonstrates manual initialization of arrays to bypass literal saturation
+ * issues in the current Ternlang VM.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn main() -> trit {
+    println("=== Ternary Memory Management Tutorial ===");
+    
+    // In current Ternlang, initializing an int array with a literal like [1, 2, 3]
+    // can cause the VM to interpret it as a trittensor, saturating values to [-1, 0, 1].
+    // 
+    // BAD: let bad_array: int[3] = [1, 2, 3]; // becomes [1, 1, 1] internally!
+    
+    // GOOD: Allocate without a literal, then initialize manually.
+    let good_array: int[3];
+    good_array[0] = 10;
+    good_array[1] = 20;
+    good_array[2] = 30;
+    
+    println("Array successfully initialized with values > 1:");
+    println(good_array[0]);
+    println(good_array[1]);
+    println(good_array[2]);
+    
+    // For trittensors, literals are perfectly safe:
+    let safe_trits: trittensor<3> = [1, 0, -1];
+    println("Trittensor correctly initialized:");
+    println(cast(safe_trits[0]));
+    println(cast(safe_trits[1]));
+    println(cast(safe_trits[2]));
+    
+    if good_array[1] == 20 && safe_trits[2] == -1 {
+        println("Memory Initialization Test: PASSED");
+        return 1;
+    }
+    
+    println("Memory Initialization Test: FAILED");
+    return -1;
+}

@@ -1,0 +1,55 @@
+/*
+ * Tutorial: Control Flow in Ternlang
+ * Showcases ternary conditional loops and branches.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn test_conditional(signal: trit) -> int {
+    // Ternary if-else with three explicit paths
+    if signal ? {
+        println("Branch: Truth (1)");
+        return 10;
+    } else {
+        println("Branch: Hold (0)");
+        return 0;
+    } else {
+        println("Branch: Conflict (-1)");
+        return -10;
+    }
+}
+
+fn test_loop() -> int {
+    let sum: int = 0;
+    let i: int = 0;
+    
+    // Standard while loop using binary logic mapped to ternary truth
+    while i < 3 {
+        sum = sum + i;
+        i = i + 1;
+    }
+    
+    return sum; // 0 + 1 + 2 = 3
+}
+
+fn main() -> trit {
+    println("=== Control Flow Tutorial ===");
+    
+    println("Testing Conditionals:");
+    let r1: int = test_conditional(1);
+    let r2: int = test_conditional(0);
+    let r3: int = test_conditional(-1);
+    
+    println("Testing While Loop:");
+    let sum: int = test_loop();
+    println("Loop Sum (expected 3):");
+    println(sum);
+    
+    if r1 == 10 && r2 == 0 && r3 == -10 && sum == 3 {
+        println("Control Flow Test: PASSED");
+        return 1;
+    }
+    
+    println("Control Flow Test: FAILED");
+    return -1;
+}
