@@ -480,10 +480,13 @@ async fn require_api_key(
         || path.starts_with("/playground/pkg/")
         || path == "/activate"
         || path == "/api/run"
+        || path == "/api/data"
         || path == "/api/tracer/ws"
         || path == "/api/github/activate"
         || path == "/api/stdlib/list"
         || path.starts_with("/api/stdlib/read/")
+        || path == "/kpi"
+        || path.starts_with("/kpi/")
         || path.starts_with("/assets/")
         || path == "/favicon.ico"
         || path.starts_with("/admin")
@@ -566,6 +569,29 @@ static STUDIO_HTML:     &str = include_str!("../../ternlang-studio/index.html");
 static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
 static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templates/index.html");
 static PLAYGROUND_HTML: &str = include_str!("../../playground/index.html");
+static KPI_HTML:        &str = include_str!("kpi.html");
+
+async fn kpi_page() -> Html<&'static str> {
+    Html(KPI_HTML)
+}
+
+async fn kpi_data(axum::extract::Path(filename): axum::extract::Path<String>) -> impl axum::response::IntoResponse {
+    let base = if std::path::Path::new("/data").exists() { "/data/kpi" } else { "/home/eri-irfos/Desktop/KPI" };
+    let path = std::path::Path::new(base).join(filename);
+    
+    match tokio::fs::read_to_string(&path).await {
+        Ok(content) => {
+            (
+                [
+                    (axum::http::header::CONTENT_TYPE, "application/json"),
+                    (axum::http::header::CACHE_CONTROL, "public, max-age=3600"),
+                ],
+                content
+            ).into_response()
+        }
+        Err(_) => StatusCode::NOT_FOUND.into_response()
+    }
+}
 static WASM_JS:         &str = include_str!("../../playground/pkg/ternlang_wasm.js");
 static WASM_BYTES:      &[u8] = include_bytes!("../../playground/pkg/ternlang_wasm_bg.wasm");
 
@@ -5018,6 +5044,8 @@ async fn main() {
         .route("/playground/pkg/ternlang_wasm.js",       get(wasm_js))
         .route("/playground/pkg/ternlang_wasm_bg.wasm",  get(wasm_binary))
         .route("/activate",             get(activate_page))
+        .route("/kpi",                  get(kpi_page))
+        .route("/kpi/{filename}",       get(kpi_data))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))
         .route("/api/stdlib/list", get(stdlib_list))
@@ -5026,6 +5054,7 @@ async fn main() {
         .route("/api/agents/publish",  post(publish_agent))
         .route("/api/agent/{slug}",    post(call_agent).delete(delete_agent))
         .route("/api/run",        post(run_program))
+        .route("/api/data",       get(|| kpi_data(axum::extract::Path("ternlang_kpi_log.json".to_string()))))
         .route("/api/data/query", post(data_query))
         .route("/api/data/artifact/{trace_id}", get(causal_artifact))
         .route("/api/tracer/ws", get(tracer_ws_handler))
