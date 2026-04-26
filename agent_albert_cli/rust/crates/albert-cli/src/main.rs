@@ -4051,7 +4051,7 @@ fn extract_tool_display_text(raw: &str) -> String {
             return format!("[stderr] {stderr}");
         }
         // File ops and other tools use "content", "output", "text", or "result"
-        for key in ["content", "output", "text", "result"] {
+        for key in ["content", "output", "text", "result", "message"] {
             if let Some(s) = val.get(key).and_then(|v| v.as_str()) {
                 let s = s.trim();
                 if !s.is_empty() {

@@ -1381,7 +1381,7 @@ function initCanvasInteraction() {
   function zoomMomentumTick() {
     if (Math.abs(zoomVelocity) < 0.0001) { zoomRafId = null; return; }
     zoomAt(zoomMx, zoomMy, 1 + zoomVelocity);
-    zoomVelocity *= 0.82; // friction — tune for feel
+    zoomVelocity *= 0.72; // friction — stops faster, less overshoot
     zoomRafId = requestAnimationFrame(zoomMomentumTick);
   }
 
@@ -1393,8 +1393,8 @@ function initCanvasInteraction() {
     // Normalize: deltaMode 1 = lines (~3px each), 0 = pixels
     const pixels = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     // Each pixel of scroll = tiny zoom increment; sensitivity tuned for trackpad + mouse
-    const impulse = -pixels * 0.0008;
-    zoomVelocity = (zoomVelocity + impulse) * 0.6 + impulse * 0.4;
+    const impulse = Math.max(-0.12, Math.min(0.12, -pixels * 0.0008));
+    zoomVelocity = zoomVelocity * 0.5 + impulse * 0.5;
     if (!zoomRafId) zoomRafId = requestAnimationFrame(zoomMomentumTick);
   }, { passive: false });
 
@@ -5899,7 +5899,14 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
   if (isNew && id !== 'active-wire' && wire) {
     path.style.pointerEvents = 'stroke';
     // Use mousedown (not click) so selection fires before onMouseUp clears the SVG
-    path.addEventListener("mousedown", (e) => { e.preventDefault(); selectWire(id); showWireHandles(id); });
+    path.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      selectWire(id);
+      // Only show handles on drag, not on plain click — avoids resetting the curve
+      const onFirstMove = () => showWireHandles(id);
+      path.addEventListener("mousemove", onFirstMove, { once: true });
+      window.addEventListener("mouseup", () => path.removeEventListener("mousemove", onFirstMove), { once: true });
+    });
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
     hit.setAttribute("d", d);
     hit.setAttribute("fill", "none");
@@ -5908,7 +5915,13 @@ function drawWire(start, end, id, signal, wire, confidence = 1.0) {
     hit.setAttribute("class", "wire-hit");
     hit.id = "hit-" + id;
     hit.style.pointerEvents = 'stroke';
-    hit.addEventListener("mousedown", (e) => { e.preventDefault(); selectWire(id); showWireHandles(id); });
+    hit.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      selectWire(id);
+      const onFirstMove = () => showWireHandles(id);
+      hit.addEventListener("mousemove", onFirstMove, { once: true });
+      window.addEventListener("mouseup", () => hit.removeEventListener("mousemove", onFirstMove), { once: true });
+    });
     svg.appendChild(hit);
   } else if (!isNew && wire) {
      const hit = document.getElementById("hit-" + id);
