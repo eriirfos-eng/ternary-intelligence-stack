@@ -1,0 +1,51 @@
+/*
+ * SentimentAnalyzer — A simple rule-based sentiment analyzer using ternary logic.
+ * Maps text features to Affirm (positive), Tend (neutral), or Reject (negative).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Basic word-to-trit mapping
+fn analyze_word(word: string) -> trit {
+    if word == "good" { return 1; }
+    if word == "great" { return 1; }
+    if word == "excellent" { return 1; }
+    if word == "bad" { return -1; }
+    if word == "awful" { return -1; }
+    if word == "terrible" { return -1; }
+    return 0; // neutral
+}
+
+fn main() -> trit {
+    println("Analyzing sentence: 'This is a good and great day, not bad.'");
+    
+    let total_sentiment: int = 0;
+    
+    // Simulate analyzing a stream of words
+    total_sentiment = total_sentiment + cast(analyze_word("good"));
+    total_sentiment = total_sentiment + cast(analyze_word("great"));
+    total_sentiment = total_sentiment + cast(analyze_word("bad"));
+    
+    println("Aggregated Sentiment Score:");
+    println(total_sentiment);
+    
+    let final_decision: trit = 0;
+    if total_sentiment > 0 {
+        final_decision = 1;
+        println("Conclusion: POSITIVE (Affirm)");
+    } else if total_sentiment < 0 {
+        final_decision = -1;
+        println("Conclusion: NEGATIVE (Reject)");
+    } else {
+        final_decision = 0;
+        println("Conclusion: NEUTRAL (Tend)");
+    }
+    
+    if final_decision == 1 {
+        println("SentimentAnalyzer Test: PASSED");
+        return 1;
+    }
+    
+    println("SentimentAnalyzer Test: FAILED");
+    return -1;
+}
