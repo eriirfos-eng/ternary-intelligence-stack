@@ -1,0 +1,76 @@
+/*
+ * FenwickTreeTrit — Binary Indexed Tree (BIT) for trits.
+ * Efficient range prefix sums and point updates.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Helper to find the least significant bit (binary)
+fn get_lsb(n: int) -> int {
+    if n == 0 { return 0; }
+    let m: int = n;
+    let power: int = 1;
+    while (m % 2) == 0 {
+        if m == 0 { return power; } // Safety
+        m = m / 2;
+        power = power * 2;
+    }
+    return power;
+}
+
+// Update the tree with a delta at index i
+fn ft_update(tree: int[], n: int, i: int, delta: int) -> trit {
+    let idx: int = i + 1;
+    while idx <= n {
+        tree[idx] = tree[idx] + delta;
+        idx = idx + get_lsb(idx);
+    }
+    return 1;
+}
+
+// Query the prefix sum up to index i
+fn ft_query(tree: int[], i: int) -> int {
+    let sum: int = 0;
+    let idx: int = i + 1;
+    while idx > 0 {
+        sum = sum + tree[idx];
+        idx = idx - get_lsb(idx);
+    }
+    return sum;
+}
+
+fn main() -> trit {
+    let data: trittensor<5> = [1, 0, -1, 1, 1];
+    let tree: int[6]; // Size n + 1
+    
+    let i: int = 0;
+    while i < 6 { 
+        tree[i] = 0; 
+        i = i + 1; 
+    }
+    
+    println("Building Fenwick Tree with: [1, 0, -1, 1, 1]");
+    i = 0;
+    while i < 5 {
+        ft_update(tree, 5, i, cast(data[i]));
+        i = i + 1;
+    }
+    
+    // Prefix sum of [1, 0, -1] is 0
+    let s2: int = ft_query(tree, 2);
+    println("Prefix sum up to index 2 (expected 0):");
+    println(s2);
+    
+    // Prefix sum of [1, 0, -1, 1, 1] is 2
+    let s4: int = ft_query(tree, 4);
+    println("Prefix sum up to index 4 (expected 2):");
+    println(s4);
+    
+    if s2 == 0 && s4 == 2 {
+        println("FenwickTreeTrit Test: PASSED");
+        return 1;
+    }
+    
+    println("FenwickTreeTrit Test: FAILED");
+    return -1;
+}
