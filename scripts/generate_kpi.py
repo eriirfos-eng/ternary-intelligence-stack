@@ -501,11 +501,13 @@ function initCharts(data) {{
         plugins:{{ 
             datalabels: {{
                 display: (ctx) => ctx.dataset.offset[ctx.dataIndex] > 0,
-                color: textColor,
-                backgroundColor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)',
-                borderRadius: 6,
-                padding: 8,
-                font: {{ weight: '800', size: 12 }},
+                color: '#000000',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                borderWidth: 1,
+                borderRadius: 8,
+                padding: 10,
+                font: {{ weight: '800', size: 13 }},
                 formatter: (val, ctx) => {{
                     let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
                     let pct = (val / total * 100).toFixed(1);
@@ -514,7 +516,7 @@ function initCharts(data) {{
                 textAlign: 'center',
                 anchor: 'end',
                 align: 'end',
-                offset: 10
+                offset: 15
             }},
             legend:{{ display: false }}, 
             tooltip: {{ 
