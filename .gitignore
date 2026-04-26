@@ -1,5 +1,7 @@
 # Rust build artifacts
 ternlang-root/target/
+target/
+agent_albert_cli/rust/target/
 
 # Cargo lock for libraries (keep for binaries/workspace)
 # Cargo.lock intentionally kept

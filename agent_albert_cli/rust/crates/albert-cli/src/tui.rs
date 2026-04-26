@@ -5,7 +5,8 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use crossterm::event::{
-    self, DisableBracketedPaste, EnableBracketedPaste, Event, KeyCode, KeyEvent, KeyModifiers,
+    self, DisableBracketedPaste, EnableBracketedPaste, EnableMouseCapture, DisableMouseCapture,
+    Event, KeyCode, KeyEvent, KeyModifiers, MouseEventKind,
 };
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
@@ -15,7 +16,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Paragraph, Wrap};
+use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 use ratatui::Terminal;
 
 use pulldown_cmark::{
@@ -44,6 +45,9 @@ const POPUP_SEL_BG: Color = Color::Rgb(42, 42, 42);
 const CODE_FG: Color = Color::Rgb(100, 210, 255);    // inline code / code blocks
 const CODE_BG: Color = Color::Rgb(14, 22, 30);       // code block row background
 const CODE_BAR: Color = Color::Rgb(0, 100, 160);     // code block left border bar
+const CHAT_BORDER: Color = Color::Rgb(0, 65, 75);    // chat area frame
+const INPUT_BORDER: Color = Color::Rgb(0, 175, 160); // input box turquoise frame
+const ERROR_FG: Color = Color::Rgb(230, 80, 50);     // error lines in tool output
 const POPUP_WINDOW: usize = 16;                       // max items visible at once in popup
 const CATEGORY_FG: Color = Color::Rgb(60, 60, 60);   // greyed-out category headers in popup
 
@@ -168,8 +172,6 @@ pub struct TuiState {
     pub is_recording: bool,
     /// Set while waiting for an API key — input is masked + submitted as the key.
     pub auth_flow: Option<String>,
-    /// Characters queued for the typewriter drip — drained 40 chars per Tick.
-    pub drip_buffer: String,
     /// Set when the current input arrived via a large paste (>= 3 lines).
     /// Drives the compact "pasted text · N lines" badge in render_input.
     pub paste_line_count: Option<usize>,
@@ -203,7 +205,6 @@ impl Default for TuiState {
             popup_selected: 0,
             is_recording: false,
             auth_flow: None,
-            drip_buffer: String::new(),
             paste_line_count: None,
             help_open: false,
             help_scroll: 0,
@@ -377,6 +378,10 @@ pub enum TuiEvent {
     VoiceError(String),
     /// Bracketed paste — insert without triggering submit on newlines.
     PasteText(String),
+    /// Mouse wheel scroll up — scroll content up (older messages).
+    ScrollUp,
+    /// Mouse wheel scroll down — scroll content down (newer messages).
+    ScrollDown,
 }
 
 // ── Popup items ───────────────────────────────────────────────────────────────
@@ -709,15 +714,16 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     // Popup: up to POPUP_WINDOW items + 1 nav footer; placed BELOW input (Gemini-style)
     let popup_h = if n_items == 0 { 0u16 } else { (n_items.min(POPUP_WINDOW) + 1) as u16 };
 
-    // Input height: min 2 rows, expands as user types, capped at 5.
-    // Usable text width = total width - " > " prefix (3) - badge (≈15) - margin (1).
+    // Input height: text rows + 2 border rows. Text expands 1..3 rows with content.
+    // Usable width = total - " > " prefix (3) - badge (≈15) - margin (1) - borders (2).
     let input_h = {
         let badge_approx = git_branch_cached()
             .map(|b| b.chars().count() as u16 + 2)
             .unwrap_or(0);
-        let usable = area.width.saturating_sub(3 + badge_approx + 1).max(10) as usize;
+        let usable = area.width.saturating_sub(3 + badge_approx + 3).max(10) as usize;
         let n = state.input.chars().count();
-        if n == 0 { 2u16 } else { ((n + usable - 1) / usable).max(2).min(5) as u16 }
+        let text_rows = if n == 0 { 1u16 } else { ((n + usable - 1) / usable).max(1).min(3) as u16 };
+        text_rows + 2 // top + bottom border rows
     };
 
     // Layout top→bottom: content(flex) | status(1r) | input(dynamic) | [popup?] | tips(1r) | footer(1r)
@@ -766,7 +772,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 lines.push(Line::default());
                 lines.push(Line::from(vec![
                     Span::styled(
-                        " > ",
+                        " ▸ ",
                         Style::default().fg(CYAN).add_modifier(Modifier::BOLD),
                     ),
                     Span::styled(msg.clone(), Style::default().fg(FG).bg(USER_BOX_BG)),
@@ -774,16 +780,14 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
             }
 
             ExecBlock::ToolUse { name, args, active } => {
-                let (dot_col, name_col, args_col) = if *active {
-                    (GREEN, FG, CYAN)
+                let dot_style = if *active {
+                    Style::default().fg(GREEN).add_modifier(Modifier::BOLD | Modifier::SLOW_BLINK)
                 } else {
-                    (GREY, GREY, GREY)
+                    Style::default().fg(GREY)
                 };
+                let (name_col, args_col) = if *active { (FG, CYAN) } else { (GREY, GREY) };
                 let mut spans = vec![
-                    Span::styled(
-                        "● ",
-                        Style::default().fg(dot_col).add_modifier(Modifier::BOLD),
-                    ),
+                    Span::styled("● ", dot_style),
                     Span::styled(
                         format!("Ran {name}"),
                         Style::default().fg(name_col).add_modifier(Modifier::BOLD),
@@ -800,15 +804,23 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
             ExecBlock::ToolOutput { lines: out, total } => {
                 for (i, line) in out.iter().enumerate() {
-                    let connector = if i == 0 { "⎿  " } else { "   " };
+                    let connector = if i == 0 { "  └ " } else { "    " };
+                    let lower = line.to_ascii_lowercase();
+                    let is_err = lower.contains("error")
+                        || lower.contains("not found")
+                        || lower.contains("permission denied")
+                        || lower.contains("failed:")
+                        || lower.starts_with("error")
+                        || lower.starts_with("fatal");
+                    let line_col = if is_err { ERROR_FG } else { Color::Rgb(110, 120, 120) };
                     lines.push(Line::from(vec![
                         Span::styled(connector, Style::default().fg(DIM)),
-                        Span::styled(line.clone(), Style::default().fg(GREY)),
+                        Span::styled(line.clone(), Style::default().fg(line_col)),
                     ]));
                 }
                 if *total > out.len() {
                     lines.push(Line::from(vec![
-                        Span::styled("   ", Style::default()),
+                        Span::styled("    ", Style::default()),
                         Span::styled(
                             format!("… +{} lines", total - out.len()),
                             Style::default().fg(DIM).add_modifier(Modifier::ITALIC),
@@ -819,11 +831,14 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
             ExecBlock::AgentText(text) => {
                 lines.push(Line::default());
+                lines.push(Line::from(vec![
+                    Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
+                    Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
+                ]));
                 lines.extend(markdown_to_lines(text));
             }
 
-            // WorkedFor is displayed in the permanent status bar — not in the chat log.
-            // WorkedFor is displayed in the permanent status bar — not in the chat log.
+            // WorkedFor is shown in the status bar — not duplicated in the chat log.
             ExecBlock::WorkedFor(_) => {}
 
             ExecBlock::SystemMsg(msg) => {
@@ -852,8 +867,28 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 }
 
 fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
-    let lines = build_exec_lines(state, area.width);
-    let w = area.width.max(1) as usize;
+    let scroll_indicator = if state.scroll > 0 {
+        format!(" ↑ {}  ctrl+l → bottom ", state.scroll)
+    } else {
+        String::new()
+    };
+    let title = if scroll_indicator.is_empty() {
+        " albert ".to_string()
+    } else {
+        format!(" albert {scroll_indicator}")
+    };
+
+    let block = Block::default()
+        .title(title)
+        .title_style(Style::default().fg(if state.scroll > 0 { CYAN } else { CHAT_BORDER })
+            .add_modifier(Modifier::BOLD))
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(CHAT_BORDER))
+        .style(Style::default().bg(BG));
+
+    let inner = block.inner(area);
+    let lines = build_exec_lines(state, inner.width);
+    let w = inner.width.max(1) as usize;
 
     // Compute total rendered height in rows, accounting for text wrapping.
     // Using usize to avoid u16 overflow with large logs.
@@ -865,7 +900,7 @@ fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         })
         .sum();
 
-    let visible = area.height as usize;
+    let visible = inner.height as usize;
     // max_scroll is how many rows we can scroll up from the bottom
     let max_scroll = total_wrapped.saturating_sub(visible);
     // Clamp state.scroll so we never over-scroll past the top
@@ -876,7 +911,8 @@ fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let para = Paragraph::new(Text::from(lines))
         .style(Style::default().bg(BG).fg(FG))
         .wrap(Wrap { trim: false })
-        .scroll((scroll_row, 0));
+        .scroll((scroll_row, 0))
+        .block(block);
     f.render_widget(para, area);
 }
 
@@ -952,7 +988,7 @@ fn render_popup(f: &mut ratatui::Frame, area: Rect, items: &[PopupItem], selecte
 
 /// Full-screen help overlay — floats over the whole terminal, closed with Esc.
 fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
-    use ratatui::widgets::{Block, Borders, Clear};
+    use ratatui::widgets::Clear;
 
     // Semi-transparent frame: clear the background first, then draw the box
     let overlay = Rect {
@@ -1032,7 +1068,7 @@ fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
     let scroll = scroll.min(max_scroll);
 
     let block = Block::default()
-        .title(" ◆ Albert — Command Reference ")
+        .title(" Albert — Command Reference ")
         .title_style(Style::default().fg(GREEN).add_modifier(Modifier::BOLD))
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Rgb(50, 50, 50)))
@@ -1044,26 +1080,41 @@ fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
     f.render_widget(para, overlay);
 }
 
-/// Multi-row expanding input bar with the git branch badge pinned to the right.
+/// Multi-row expanding input bar wrapped in a turquoise border.
 /// Text wraps automatically; the real terminal cursor is placed via set_cursor_position.
 fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
+    // Outer turquoise border — rendered on the full area.
+    let border_col = if state.auth_flow.is_some() {
+        ORANGE // orange border while in API-key entry mode
+    } else {
+        INPUT_BORDER
+    };
+    let input_block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(border_col))
+        .style(Style::default().bg(USER_BOX_BG));
+    f.render_widget(input_block.clone(), area);
+
+    // Inner area = area minus the 1-row border on each side.
+    let inner = input_block.inner(area);
+
     let branch = git_branch_cached();
     let badge_text = branch.as_deref().map(|b| format!(" {b} ")).unwrap_or_default();
     let badge_w = badge_text.chars().count() as u16;
 
-    let h_layout = if badge_w > 0 && area.width > badge_w + 4 {
+    let h_layout = if badge_w > 0 && inner.width > badge_w + 4 {
         Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Min(4), Constraint::Length(badge_w)])
-            .split(area)
+            .split(inner)
     } else {
         Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Min(1)])
-            .split(area)
+            .split(inner)
     };
 
-    let input_area = h_layout[0];
+    let text_area = h_layout[0];
 
     // Render input text with wrapping (or dim placeholder when empty).
     // In auth_flow mode: show provider prompt and mask the typed key.
@@ -1090,7 +1141,6 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled("Type your message or @path/to/file", Style::default().fg(DIM)),
         ]))
     } else if let Some(lines) = state.paste_line_count {
-        // Large paste: show compact badge — full content is in state.input and will be sent.
         Paragraph::new(Line::from(vec![
             Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
             Span::styled("⌨  pasted text", Style::default().fg(CYAN)),
@@ -1109,22 +1159,22 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         ]))
         .wrap(Wrap { trim: false })
     };
-    f.render_widget(para.style(Style::default().bg(USER_BOX_BG)), input_area);
+    f.render_widget(para.style(Style::default().bg(USER_BOX_BG)), text_area);
 
-    // Place the real blinking terminal cursor at the logical cursor position
+    // Place the real blinking terminal cursor inside the inner text area.
     {
         const PREFIX: u16 = 3; // " > "
-        let text_w = input_area.width.saturating_sub(PREFIX).max(1) as usize;
+        let text_w = text_area.width.saturating_sub(PREFIX).max(1) as usize;
         let visual_row = state.cursor / text_w;
         let visual_col = state.cursor % text_w;
-        let cx = (input_area.x + PREFIX + visual_col as u16)
-            .min(input_area.x + input_area.width.saturating_sub(1));
-        let cy = (input_area.y + visual_row as u16)
-            .min(input_area.y + input_area.height.saturating_sub(1));
+        let cx = (text_area.x + PREFIX + visual_col as u16)
+            .min(text_area.x + text_area.width.saturating_sub(1));
+        let cy = (text_area.y + visual_row as u16)
+            .min(text_area.y + text_area.height.saturating_sub(1));
         f.set_cursor_position((cx, cy));
     }
 
-    // Branch badge
+    // Branch badge (inside the border, right side)
     if h_layout.len() == 2 {
         f.render_widget(
             Paragraph::new(Line::from(Span::styled(
@@ -1429,6 +1479,7 @@ impl TuiApp {
         enable_raw_mode()?;
         io::stdout().execute(EnterAlternateScreen)?;
         io::stdout().execute(EnableBracketedPaste)?;
+        io::stdout().execute(EnableMouseCapture)?;
 
         let backend = CrosstermBackend::new(io::stdout());
         let mut terminal = Terminal::new(backend)?;
@@ -1449,6 +1500,13 @@ impl TuiApp {
                     Ok(Event::Key(k)) => { let _ = ktx.send(TuiEvent::Key(k)); }
                     Ok(Event::Paste(text)) => { let _ = ktx.send(TuiEvent::PasteText(text)); }
                     Ok(Event::Resize(_, _)) => { let _ = ktx.send(TuiEvent::Tick); }
+                    Ok(Event::Mouse(me)) => {
+                        match me.kind {
+                            MouseEventKind::ScrollUp => { let _ = ktx.send(TuiEvent::ScrollUp); }
+                            MouseEventKind::ScrollDown => { let _ = ktx.send(TuiEvent::ScrollDown); }
+                            _ => {}
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -1466,13 +1524,30 @@ impl TuiApp {
             .build()?;
 
         rt.block_on(async {
+            // Rate-limit rendering to ~30fps (33ms between draws).
+            // Without this, rapid streaming events cause 1000+ draws/sec which the
+            // terminal coalesces into a single visible frame — giving "all at once" appearance.
+            let mut last_draw = Instant::now();
+            const DRAW_INTERVAL: Duration = Duration::from_millis(33);
+
             loop {
-                {
-                    let state = self.state.lock().unwrap();
-                    terminal.draw(|f| render(f, &state))?;
+                // Draw if enough time has passed since the last frame.
+                if last_draw.elapsed() >= DRAW_INTERVAL {
+                    {
+                        let state = self.state.lock().unwrap();
+                        terminal.draw(|f| render(f, &state))?;
+                    }
+                    last_draw = Instant::now();
                 }
 
-                match self.event_rx.recv().await {
+                // Wait for the next event, but with a deadline so we always redraw
+                // at ~30fps even when no events arrive (keeps spinner/timer live).
+                let wait = DRAW_INTERVAL.saturating_sub(last_draw.elapsed());
+                let ev = match tokio::time::timeout(wait, self.event_rx.recv()).await {
+                    Ok(ev) => ev,
+                    Err(_) => continue, // timeout — loop back to draw
+                };
+                match ev {
                     // ── keyboard ──────────────────────────────────────────────
                     Some(TuiEvent::Key(key)) => {
                         let mut do_quit = false;
@@ -1783,12 +1858,12 @@ impl TuiApp {
                         let mut state = self.state.lock().unwrap();
                         match ev {
                             AssistantEvent::TextDelta(delta) => {
-                                // Queue into drip buffer — Tick drains it for typewriter effect.
-                                // Ensure the AgentText block exists so the drip has somewhere to land.
-                                if !matches!(state.exec_log.back(), Some(ExecBlock::AgentText(_))) {
-                                    state.exec_log.push_back(ExecBlock::AgentText(String::new()));
+                                // Append directly to the AgentText block — renders on the next
+                                // draw call, giving real-time streaming appearance.
+                                match state.exec_log.back_mut() {
+                                    Some(ExecBlock::AgentText(ref mut s)) => s.push_str(&delta),
+                                    _ => state.exec_log.push_back(ExecBlock::AgentText(delta)),
                                 }
-                                state.drip_buffer.push_str(&delta);
                             }
                             AssistantEvent::ToolUse { name, input, .. } => {
                                 let preview = tool_input_preview(&input);
@@ -1803,9 +1878,9 @@ impl TuiApp {
                                 state.tokens_out += usage.output_tokens;
                             }
                             AssistantEvent::MessageStop => {
-                                // Mark last tool done; run_turn may issue more.
-                                // Main thread clears `working` after the full turn.
-                                state.deactivate_last_tool();
+                                // Do NOT deactivate the tool dot here — the tool may still be
+                                // executing. The main thread deactivates after run_turn returns
+                                // and ToolOutput blocks have been injected.
                             }
                         }
                     }
@@ -1813,6 +1888,7 @@ impl TuiApp {
                     // ── terminal handoff for slash commands ───────────────────
                     Some(TuiEvent::Suspend { ack }) => {
                         self.key_paused.store(true, Ordering::Relaxed);
+                        io::stdout().execute(DisableMouseCapture).ok();
                         io::stdout().execute(DisableBracketedPaste).ok();
                         disable_raw_mode().ok();
                         io::stdout().execute(LeaveAlternateScreen).ok();
@@ -1827,6 +1903,7 @@ impl TuiApp {
                         }
                         enable_raw_mode().ok();
                         io::stdout().execute(EnableBracketedPaste).ok();
+                        io::stdout().execute(EnableMouseCapture).ok();
                         io::stdout().execute(EnterAlternateScreen).ok();
                         terminal.clear().ok();
                         self.key_paused.store(false, Ordering::Relaxed);
@@ -1866,27 +1943,18 @@ impl TuiApp {
                         }
                     }
 
-                    Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
-                        // Typewriter drip: flush up to N chars per tick into the current
-                        // AgentText block.  Short bursts look like smooth streaming;
-                        // large buffers drain quickly so we don't fall far behind.
+                    Some(TuiEvent::ScrollUp) => {
                         let mut state = self.state.lock().unwrap();
-                        if !state.drip_buffer.is_empty() {
-                            let buf_len = state.drip_buffer.chars().count();
-                            let n = if buf_len > 400 { 120 } else if buf_len > 80 { 60 } else { 30 };
-                            let n = n.min(buf_len);
-                            let byte_end = state.drip_buffer
-                                .char_indices()
-                                .nth(n)
-                                .map(|(i, _)| i)
-                                .unwrap_or(state.drip_buffer.len());
-                            let chunk = state.drip_buffer[..byte_end].to_string();
-                            state.drip_buffer.drain(..byte_end);
-                            match state.exec_log.back_mut() {
-                                Some(ExecBlock::AgentText(ref mut s)) => s.push_str(&chunk),
-                                _ => state.exec_log.push_back(ExecBlock::AgentText(chunk)),
-                            }
-                        }
+                        state.scroll = state.scroll.saturating_add(3);
+                    }
+                    Some(TuiEvent::ScrollDown) => {
+                        let mut state = self.state.lock().unwrap();
+                        state.scroll = state.scroll.saturating_sub(3);
+                    }
+
+                    Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
+                        // Tick fires at 100ms — redraws the screen (spinner, timer).
+                        // Text is appended directly on each TextDelta, so no work needed here.
                     }
 
                     Some(TuiEvent::Quit) | None => break,
@@ -1895,6 +1963,7 @@ impl TuiApp {
             Ok::<(), Box<dyn std::error::Error>>(())
         })?;
 
+        io::stdout().execute(DisableMouseCapture).ok();
         io::stdout().execute(DisableBracketedPaste).ok();
         disable_raw_mode().ok();
         io::stdout().execute(LeaveAlternateScreen).ok();
