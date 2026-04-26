@@ -1,0 +1,54 @@
+/*
+ * InventoryBalancerTernary — Balances inventory using ternary logic.
+ * Trits represent signals from warehouses: 
+ *   +1 (Understock), 0 (Optimal), -1 (Overstock).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn calculate_order(signal: trit, current_stock: int, base_order: int) -> int {
+    match signal {
+         1 => { return base_order * 2; } // Double order when understocked
+         0 => { return base_order; }     // Normal order
+        -1 => { return 0; }              // Halt orders when overstocked
+    }
+}
+
+fn simulate_inventory(signals: trit[], days: int, base_order: int) -> int {
+    let total_ordered: int = 0;
+    let i: int = 0;
+    
+    while i < days {
+        let order: int = calculate_order(signals[i], 0, base_order);
+        println("Day:"); println(i + 1);
+        println("Order Amount:"); println(order);
+        
+        total_ordered = total_ordered + order;
+        i = i + 1;
+    }
+    
+    return total_ordered;
+}
+
+fn main() -> trit {
+    // 5 days of warehouse signals
+    let signals: trittensor<5> = [0, 1, -1, 0, 1];
+    let base_order: int = 50;
+    
+    println("=== Inventory Balancer ===");
+    println("Signals: [Opt(0), Under(1), Over(-1), Opt(0), Under(1)]");
+    
+    let total: int = simulate_inventory(signals, 5, base_order);
+    
+    println("Total Items Ordered:");
+    println(total);
+    // Expect: 50 + 100 + 0 + 50 + 100 = 300
+    
+    if total == 300 {
+        println("InventoryBalancerTernary Test: PASSED");
+        return 1;
+    }
+    
+    println("InventoryBalancerTernary Test: FAILED");
+    return -1;
+}
