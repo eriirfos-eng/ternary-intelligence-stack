@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-TIS KPI Dashboard (v3.3 - "Calibrated Command Center")
-======================================================
-- Balanced split-card KPI layout (Left: Data / Right: Trend).
-- Full color injection for volatility metrics.
-- Hard-floor grid containment with internal scrolling.
-- High-contrast monospace typography.
+TIS KPI Dashboard - Public Generator (v1.1)
+===========================================
+- CI/CD Optimized version for GitHub Actions.
+- Static generation (no server).
 """
 
-import json, os, sys, time, io, urllib.request, urllib.error, re
+import json, os, sys, time, io, urllib.request, urllib.error, webbrowser, threading, re
 from datetime import datetime, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -21,6 +19,8 @@ OUTPUT_DIR       = os.path.join(BASE_DIR, "docs/kpi")
 LOG_FILE         = os.path.join(OUTPUT_DIR, "ternlang_kpi_log.json")
 TRAFFIC_LOG_FILE = os.path.join(OUTPUT_DIR, "ternlang_gh_traffic.json")
 HTML_FILE        = os.path.join(OUTPUT_DIR, "index.html")
+PORT             = 7329
+REFRESH_INTERVAL = 60
 OPENVSX_EXTS     = ["ternlang"]
 FOOTPRINT_WEIGHTS = {
     "views": 1.0,
@@ -36,17 +36,18 @@ latest_data = {}
 def fetch(url, headers=None):
     req = urllib.request.Request(url, headers=headers or {})
     try:
-        with urllib.request.urlopen(req, timeout=12) as r: return json.loads(r.read())
+        with urllib.request.urlopen(req, timeout=15) as r: return json.loads(r.read())
     except: return None
 
 def gh(path):
+    if not GITHUB_PAT: return None
     return fetch(f"https://api.github.com/{path}", {"Authorization": f"token {GITHUB_PAT}", "User-Agent": "ternlang-dash", "Accept": "application/vnd.github.v3+json"})
 
 def ping_api():
     for url in ["https://ternlang.com/health", "https://ternlang.com/"]:
         try:
             start = time.time()
-            urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "ternlang-dash"}), timeout=8)
+            urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "ternlang-dash"}), timeout=10)
             return round((time.time() - start) * 1000)
         except: continue
     return None
@@ -89,14 +90,14 @@ def do_fetch():
     gh_stars = repo.get("stargazers_count", 0)
     clones_data = gh(f"repos/{GITHUB_REPO}/traffic/clones") or {}
     views_data = gh(f"repos/{GITHUB_REPO}/traffic/views") or {}
-    all_traffic = merge_gh_traffic(clones_data.get("clones", []), views_data.get("views", []))
+    all_traffic = merge_gh_traffic(clones_data.get("clones", []) if clones_data else [], views_data.get("views", []) if views_data else [])
     
     total_clones = sum(v.get("clones", 0) for v in all_traffic.values())
     total_views = sum(v.get("views", 0) for v in all_traffic.values())
     
     smithery_calls = "0"
     try:
-        with urllib.request.urlopen("https://smithery.ai/badge/rfi-irfos/ternlang", timeout=8) as r:
+        with urllib.request.urlopen("https://smithery.ai/badge/rfi-irfos/ternlang", timeout=10) as r:
             svg = r.read().decode("utf-8")
             m = re.search(r'>\s*([▲▼]?\s*[\d\.]+[kMB]?)\s*</text>', svg.split("Calls")[-1])
             if m: smithery_calls = m.group(1).replace('▲','').replace('▼','').strip()
@@ -137,7 +138,6 @@ def do_fetch():
     chart_log = []
     for e in log:
         entry = dict(e)
-        # Handle legacy key transition for charts
         if "gh_clones" not in entry and "gh_clones_14d" in entry: entry["gh_clones"] = entry["gh_clones_14d"]
         if "gh_views" not in entry and "gh_views_14d" in entry: entry["gh_views"] = entry["gh_views_14d"]
         chart_log.append(entry)
@@ -204,7 +204,6 @@ def render_html():
     sentiment = "BULLISH" if macd_val > 0 else ("BEARISH" if macd_val < 0 else "STABLE")
     sent_cls = "sig-bullish" if sentiment == "BULLISH" else ("sig-bearish" if sentiment == "BEARISH" else "")
     
-    # Calculate Velocity (7-day avg footprint gain)
     recent_logs = d["chart_log"][-7:]
     if len(recent_logs) >= 2:
         v_start = _to_num(recent_logs[0].get("total_footprint", 0))
@@ -217,7 +216,6 @@ def render_html():
     curr_f = _to_num(s["total_footprint"])
     eta_days = round((target - curr_f) / daily_v) if daily_v > 0 and curr_f < target else "N/A"
     
-    # Primary Driver (from last momentum update)
     m = d["momentum"]
     drivers = { "Clones": m["clones"][-1], "Views": m["views"][-1], "Crates": m["crates"][-1], "OpenVSX": m["openvsx"][-1] }
     primary_driver = max(drivers, key=drivers.get) if any(drivers.values()) else "None"
@@ -229,7 +227,6 @@ def render_html():
       <div class="sig-item">PRIMARY DRIVER: <span>{primary_driver}</span></div>
       <div class="sig-item" style="margin-left:auto">SIGNAL STRENGTH: <span>{abs(macd_val):.2f}</span></div>
     </div>"""
-    # ----------------------
     
     def trend_box(curr, key, id_pfx):
         c, b = _to_num(curr), _to_num(p.get(key, 0))
@@ -263,38 +260,29 @@ def render_html():
 
     # -- Impact Score Mapping --
     f_map = { e["ts"][:10]: _to_num(e.get("total_footprint", 0)) for e in d["chart_log"] }
-    
     def get_impact(day, clones, views):
         curr_f = f_map.get(day, 0)
-        # Find previous day in f_map
-        day_dt = datetime.strptime(day, "%Y-%m-%d")
-        prev_day = (day_dt.replace(day=day_dt.day-1) if day_dt.day > 1 else day_dt).strftime("%Y-%m-%d") # simplified
-        # Better: just look for the day before in sorted keys
         sorted_days = sorted(f_map.keys())
         try:
             idx = sorted_days.index(day)
             prev_f = f_map[sorted_days[idx-1]] if idx > 0 else curr_f
         except: prev_f = curr_f
-        
         delta = curr_f - prev_f
         traffic = clones + views
-        
-        if delta > 50: return 1, "EXPANSION"
-        if delta <= 0 and traffic > 100: return -1, "CONTRACTION"
-        return 0, "MAINTENANCE"
+        if delta > 50: return 1
+        if delta <= 0 and traffic > 100: return -1
+        return 0
 
     rows = []
     for day, v in sorted(d["all_traffic"].items(), reverse=True):
         c, vw = v.get("clones", 0), v.get("views", 0)
-        imp_val, imp_lbl = get_impact(day, c, vw)
-        imp_cls = "impact-pos" if imp_val > 0 else ("impact-neg" if imp_val < 0 else "impact-neu")
-        badge = f'<span class="impact-badge {imp_cls}">{imp_val:+d}</span>'
+        iv = get_impact(day, c, vw)
+        icls = "impact-pos" if iv > 0 else ("impact-neg" if iv < 0 else "impact-neu")
+        badge = f'<span class="impact-badge {icls}">{iv:+d}</span>'
         rows.append(f'<tr><td>{day}</td><td class="num">{c} <span style="font-size:9px;color:var(--muted)">({v.get("clones_unique",0)})</span></td><td class="num">{vw} <span style="font-size:9px;color:var(--muted)">({v.get("views_unique",0)})</span></td><td>{badge}</td></tr>')
     traffic_rows = "\n".join(rows)
-    # -------------------------
 
     crates_rows = "\n".join(f'<tr><td>{c["name"]} <span style="font-size:9px;color:var(--muted)">v{c["version"]}</span></td><td class="num">{c["downloads"]:,}</td></tr>' for c in sorted(d["crates_list"], key=lambda x: -x["downloads"]))
-    
     lat = s["api_latency_ms"]
     lat_txt, lat_color = (f"{lat}ms", "var(--green)") if lat and lat < 500 else (f"{lat}ms" if lat else "timeout", "var(--red)")
 
@@ -305,12 +293,10 @@ def render_html():
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
-  
   :root {{ --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --border:#30363d; --text:#e6edf3; --muted:#ffffff; --green:#3fb950; --blue:#58a6ff; --purple:#a371f7; --orange:#d29922; --red:#f85149; }}
   body.light {{ background: linear-gradient(135deg, #f6f8fa 0%, #e9eff5 100%); --bg:#f6f8fa; --bg2:rgba(255,255,255,0.9); --bg3:#f0f2f4; --border:#d0d7de; --text:#1f2328; --muted:#000000; }}
   * {{ box-sizing:border-box; margin:0; padding:0; }}
   body {{ background: linear-gradient(135deg, #0d1117 0%, #0a192f 50%, #003a4d 100%); color:var(--text); font-family:'JetBrains Mono', monospace; margin:0; font-size:18px; transition: .2s; overflow-x:hidden; background-attachment: fixed; }}
-  
   header {{ background:rgba(22, 27, 34, 0.8); border-bottom:2px solid var(--border); padding:20px 40px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; backdrop-filter: blur(10px); }}
   body.light header {{ background:rgba(255, 255, 255, 0.8); border-bottom-color:rgba(0,0,0,0.05); }}
   .hdr-right {{ display:flex; gap:16px; }}
@@ -321,29 +307,22 @@ def render_html():
   .btn-green:hover {{ background:#46c95d; box-shadow: 0 0 20px rgba(63, 185, 80, 0.4); }}
   .btn-green.loading svg {{ animation: spin 1s linear infinite; }}
   @keyframes spin {{ from {{ transform: rotate(0deg); }} to {{ transform: rotate(360deg); }} }}
-  
   main {{ max-width:1650px; margin:0 auto; padding:24px; }}
-  
   .kpi-grid {{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-bottom:32px; }}
-  .kpi-card {{ background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px; border-top:6px solid var(--border); display:flex; justify-content:space-between; align-items: flex-end; min-height:160px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }}
+  .kpi-card {{ background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px; border-top:6px solid var(--border); display:flex; justify-content:space-between; align-items: flex-end; min-height:160px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); transition: all 0.3s ease; }}
   .kpi-card:hover {{ transform: translateY(-8px); box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.6); }}
-  body.light .kpi-card {{ background:rgba(255, 255, 255, 0.5); border-color:rgba(0,0,0,0.05); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08); }}
-  .kpi-card.c-purple {{ border-top-color:var(--purple); }}
+  body.light .kpi-card {{ background:rgba(255, 255, 255, 0.5); border-color:rgba(0,0,0,0.05); }}
   .card-left {{ flex: 1; }}
   .label {{ font-size:15px; text-transform:uppercase; color:var(--muted); font-weight:800; margin-bottom:16px; letter-spacing:1px; }}
   .value {{ font-size:42px; font-weight:800; line-height:1; letter-spacing:-1.5px; }}
-  
   .card-trend {{ text-align:right; display:flex; flex-direction:column; justify-content:flex-end; font-weight:800; }}
   .trend-top {{ font-size:20px; margin-bottom:6px; white-space:nowrap; }}
   .trend-bottom {{ font-size:17px; opacity:1.0; white-space:nowrap; }}
-
-  .row-top {{ display:grid; grid-template-columns: 2fr 1fr; gap:32px; margin-bottom:32px; align-items: start; }}
+  .row-top {{ display:grid; grid-template-columns: 2fr 1fr; gap:32px; margin-bottom:32px; align-items: stretch; }}
   .bottom-floor {{ display:grid; grid-template-columns: 1fr 1fr; gap:32px; height: 850px; max-width:1600px; align-items: stretch; }}
-  
   .panel {{ background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px; position:relative; display:flex; flex-direction:column; backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }}
-  body.light .panel {{ background:rgba(255, 255, 255, 0.5); border-color:rgba(0,0,0,0.05); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); }}
+  body.light .panel {{ background:rgba(255, 255, 255, 0.5); border-color:rgba(0,0,0,0.05); }}
   .panel-h {{ font-size:16px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px; display:flex; justify-content:space-between; letter-spacing:1.5px; }}
-  
   table {{ width:100%; border-collapse:collapse; font-size:17px; }}
   th {{ text-align:left; font-size:13px; color:var(--muted); padding:16px 20px; background:var(--bg3); text-transform:uppercase; font-weight:800; }}
   td {{ padding:16px 20px; border-bottom:1px solid var(--border); }}
@@ -352,26 +331,20 @@ def render_html():
   .ch-up {{ color:var(--green); }}
   .ch-dn {{ color:var(--red); }}
   .ch-na {{ color:var(--muted); }}
-
   .signal-bar {{ background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); padding:12px 40px; display:flex; gap:32px; font-size:14px; font-weight:800; letter-spacing:1px; color:var(--muted); backdrop-filter: blur(10px); }}
   body.light .signal-bar {{ background:rgba(255,255,255,0.7); border-bottom-color:rgba(0,0,0,0.05); }}
   .sig-item span {{ color:var(--text); margin-left:8px; }}
   .sig-bullish {{ color:var(--green) !important; }}
   .sig-bearish {{ color:var(--red) !important; }}
-
   .legend-container {{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; width:100%; }}
   .legend-pill {{ display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:12px; font-weight:800; color:var(--muted); transition: all 0.2s ease; }}
-  .legend-pill:hover {{ background:rgba(255,255,255,0.1); transform: translateY(-2px); }}
   .legend-pill.active {{ background:rgba(255,255,255,0.15); border-color:var(--text); color:var(--text); }}
   .legend-pill .color-dot {{ width:10px; height:10px; border-radius:50%; }}
   body.light .legend-pill {{ background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.1); }}
-  body.light .legend-pill.active {{ background:rgba(0,0,0,0.08); border-color:var(--text); }}
-
   .impact-badge {{ padding:4px 10px; border-radius:4px; font-weight:900; font-size:11px; letter-spacing:1px; }}
   .impact-pos {{ background:rgba(63,185,80,0.15); color:var(--green); border:1px solid var(--green); }}
   .impact-neu {{ background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }}
   .impact-neg {{ background:rgba(248,81,73,0.15); color:var(--red); border:1px solid var(--red); }}
-
   #loading-bar {{ position:fixed; top:0; left:0; height:3px; background:var(--blue); width:0; transition:width 0.3s; z-index:200; }}
 </style>
 </head>
@@ -403,7 +376,6 @@ def render_html():
       </div>
     </div>
   </div>
-
   <div class="row-top">
     <div class="panel">
       <div class="panel-h">Footprint Pulse <span>Historical Density</span></div>
@@ -416,7 +388,6 @@ def render_html():
       <div style="height:400px; width:340px;"><canvas id="distChart"></canvas></div>
     </div>
   </div>
-
   <div class="row-top">
     <div class="panel">
       <div class="panel-h">Momentum Shift <span>Delta Tracking</span></div>
@@ -429,7 +400,6 @@ def render_html():
       <div style="height:400px; position:relative;"><canvas id="macdChart"></canvas></div>
     </div>
   </div>
-
   <div class="bottom-floor">
     <div style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
       <div class="panel" style="padding:0; overflow:hidden;">
@@ -443,22 +413,16 @@ def render_html():
         <table id="table-crates"><thead><tr><th>Crate Name</th><th class="num">Downloads</th></tr></thead><tbody>{crates_rows}</tbody></table>
       </div>
     </div>
-
     <div class="panel" style="height: 100%; overflow-y: auto; padding: 0;">
       <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Network Traffic <span>14-Day Rescued Log</span></div>
       <table id="table-traffic"><thead><tr><th>Timestamp</th><th class="num">Clones</th><th class="num">Views</th><th>TIS Impact</th></tr></thead><tbody>{traffic_rows}</tbody></table>
     </div>
   </div>
 </main>
-
 <script>
 const P = {{ pur:'#a371f7', blu:'#58a6ff', grn:'#3fb950', org:'#d29922', red:'#f85149', teal:'#39d353' }};
 let growthChart, distChart, momentumChart, macdChart;
-
-function getThemeColor() {{
-    return getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
-}}
-
+function getThemeColor() {{ return getComputedStyle(document.documentElement).getPropertyValue('--text').trim(); }}
 function createCustomLegend(chart, containerId) {{
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -476,15 +440,23 @@ function createCustomLegend(chart, containerId) {{
         container.appendChild(pill);
     }});
 }}
-
 function initCharts(data) {{
-...
-    growthChart = new Chart(ctx, {{
+    const L = data.chart_log; const s = data.snapshot;
+    const textColor = getThemeColor(); const isLight = document.body.classList.contains('light');
+    const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+    Chart.defaults.color = textColor; Chart.defaults.font.family = "'JetBrains Mono', monospace";
+    const sm_val = (val) => {{
+        const str = String(val).replace(/[▲▼,]/g, '').trim();
+        return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
+    }};
+    if(growthChart) growthChart.destroy(); if(distChart) distChart.destroy();
+    if(momentumChart) momentumChart.destroy(); if(macdChart) macdChart.destroy();
+    growthChart = new Chart(document.getElementById('growthChart').getContext('2d'), {{
       type: 'line',
       data: {{
         labels: L.map(e=>e.ts.slice(5,10)),
         datasets: [
-          {{ label:'Footprint', data:L.map(e=>e.total_footprint), borderColor:P.pur, backgroundColor:grad, fill:true, tension:0.4, borderWidth:4, pointRadius:4, pointBackgroundColor:P.pur, z:10 }},
+          {{ label:'Footprint', data:L.map(e=>e.total_footprint), borderColor:P.pur, fill:false, tension:0.4, borderWidth:4, pointRadius:4, pointBackgroundColor:P.pur }},
           {{ label:'Crates', data:L.map(e=>e.crates_total), borderColor:P.grn, tension:0.4, pointRadius:0, borderWidth:2, borderDash:[5,5] }},
           {{ label:'OpenVSX', data:L.map(e=>e.openvsx_total), borderColor:P.blu, tension:0.4, pointRadius:0, borderWidth:2, borderDash:[5,5] }},
           {{ label:'Total Clones', data:L.map(e=>e.gh_clones), borderColor:P.teal, tension:0.4, pointRadius:0, borderWidth:2 }},
@@ -492,66 +464,22 @@ function initCharts(data) {{
           {{ label:'Smithery', data:L.map(e=>sm_val(e.smithery_calls_weekly)), borderColor:P.red, tension:0.4, pointRadius:0, borderWidth:2 }}
         ]
       }},
-      options: {{ 
-        responsive:true, maintainAspectRatio:false,
-        interaction: {{ mode: 'index', intersect: false }},
-        plugins: {{ 
-            legend: {{ display: false }},
-            tooltip: {{ 
-                backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
-                titleColor: isLight ? '#1f2328' : '#e6edf3',
-                bodyColor: isLight ? '#1f2328' : '#e6edf3',
-                titleFont: {{ size: 15, weight: '800' }}, bodyFont: {{ size: 14 }}, 
-                borderColor: 'var(--border)', borderWidth: 1, padding: 12, cornerRadius: 4 
-            }}
-        }},
-        scales:{{ 
-            x:{{ grid:{{ display:false }}, ticks:{{ font:{{ size: 12, weight: '700' }} }} }}, 
-            y:{{ grid:{{ color: gridColor }}, ticks:{{ font:{{ size: 12, weight: '700' }}, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v }} }} 
-        }} 
+      options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }},
+        plugins: {{ legend: {{ display: false }}, tooltip: {{ backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', titleColor: isLight ? '#1f2328' : '#e6edf3', bodyColor: isLight ? '#1f2328' : '#e6edf3', borderColor: 'var(--border)', borderWidth: 1 }} }},
+        scales:{{ x:{{ grid:{{ display:false }}, ticks:{{ font:{{ size: 12 }} }} }}, y:{{ grid:{{ color: gridColor }}, ticks:{{ font:{{ size: 12 }}, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v }} }} }}
       }}
     }});
     createCustomLegend(growthChart, 'lgd-growth');
-
     distChart = new Chart(document.getElementById('distChart'), {{
       type: 'doughnut',
       data: {{
         labels: ['Crates', 'OpenVSX', 'Total Clones', 'Views', 'Smithery', 'Stars'],
-        datasets: [{{ 
-            data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
-            backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
-            borderWidth: 0, 
-            hoverOffset: 20,
-            borderRadius: 10,
-            spacing: 5
-        }}]
+        datasets: [{{ data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], borderWidth: 0, hoverOffset: 20, borderRadius: 10, spacing: 5 }}]
       }},
-      options: {{ 
-        cutout:'85%', 
-        maintainAspectRatio: false, 
-        plugins:{{ 
-            legend:{{ display: false }},
-            tooltip: {{ 
-                backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
-                titleColor: isLight ? '#1f2328' : '#e6edf3',
-                bodyColor: isLight ? '#1f2328' : '#e6edf3',
-                borderWidth: 1, borderColor: 'var(--border)' 
-            }}
-        }} 
-      }}
+      options: {{ cutout:'85%', maintainAspectRatio: false, plugins:{{ legend:{{ display: false }}, tooltip: {{ backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', titleColor: isLight ? '#1f2328' : '#e6edf3', bodyColor: isLight ? '#1f2328' : '#e6edf3', borderWidth: 1, borderColor: 'var(--border)' }} }} }}
     }});
-    // For doughnut, we can manually generate legend from labels
     const dLgd = document.getElementById('lgd-dist');
-    if (dLgd) {{
-        dLgd.innerHTML = '';
-        distChart.data.labels.forEach((lbl, i) => {{
-            const pill = document.createElement('div');
-            pill.className = 'legend-pill active';
-            pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`;
-            dLgd.appendChild(pill);
-        }});
-    }}
-
+    if (dLgd) {{ dLgd.innerHTML = ''; distChart.data.labels.forEach((lbl, i) => {{ const pill = document.createElement('div'); pill.className = 'legend-pill active'; pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`; dLgd.appendChild(pill); }}); }}
     if (data.momentum) {{
         momentumChart = new Chart(document.getElementById('momentumChart'), {{
           type: 'line',
@@ -565,19 +493,12 @@ function initCharts(data) {{
               {{ label:'Smithery Δ', data:data.momentum.smithery, borderColor:P.red, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3 }}
             ]
           }},
-          options: {{
-            responsive:true, maintainAspectRatio:false,
-            interaction: {{ mode: 'index', intersect: false }},
-            plugins: {{ legend: {{ display: false }} }},
-            scales: {{ 
-                x:{{ grid:{{display:false}}, ticks:{{font:{{size:12, weight:'700'}}}} }},
-                y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12, weight:'700'}}}} }} 
-            }}
+          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ legend: {{ display: false }} }},
+            scales: {{ x:{{ grid:{{display:false}}, ticks:{{font:{{size:12}}}} }}, y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12}}}} }} }}
           }}
         }});
         createCustomLegend(momentumChart, 'lgd-momentum');
     }}
-
     if (data.macd) {{
         macdChart = new Chart(document.getElementById('macdChart'), {{
           type: 'line',
@@ -589,58 +510,31 @@ function initCharts(data) {{
               {{ label:'Histogram', data:data.macd.hist, type:'bar', backgroundColor: data.macd.hist.map(v => v >= 0 ? P.grn+'88' : P.red+'88'), borderWidth:0 }}
             ]
           }},
-          options: {{
-            responsive:true, maintainAspectRatio:false,
-            interaction: {{ mode: 'index', intersect: false }},
-            plugins: {{ legend: {{ display: false }} }},
-            scales: {{ 
-                x:{{ grid:{{display:false}}, ticks:{{font:{{size:12, weight:'700'}}}} }},
-                y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12, weight:'700'}}}} }} 
-            }}
+          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ legend: {{ display: false }} }},
+            scales: {{ x:{{ grid:{{display:false}}, ticks:{{font:{{size:12}}}} }}, y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12}}}} }} }}
           }}
         }});
         createCustomLegend(macdChart, 'lgd-macd');
     }}
-
-async function refreshDashboardData() {{
-    const btn = document.getElementById('refreshBtn');
-    const bar = document.getElementById('loading-bar');
-    btn.classList.add('loading');
-    btn.disabled = true;
-    bar.style.width = "40%";
-
-    try {{
-        const res = await fetch('/api/data');
-        const data = await res.json();
-        window.location.reload();
-    }} catch(e) {{
-        btn.classList.remove('loading');
-        btn.style.background = "var(--red)";
-    }}
 }}
-
+async function refreshDashboardData() {{
+    const btn = document.getElementById('refreshBtn'); const bar = document.getElementById('loading-bar');
+    btn.classList.add('loading'); btn.disabled = true; bar.style.width = \"40%\";
+    try {{ const res = await fetch('/api/data'); const data = await res.json(); window.location.reload(); }}
+    catch(e) {{ btn.classList.remove('loading'); btn.style.background = \"var(--red)\"; }}
+}}
 function toggleTheme() {{
-    document.body.classList.toggle('light');
-    const isLight = document.body.classList.contains('light');
+    document.body.classList.toggle('light'); const isLight = document.body.classList.contains('light');
     localStorage.setItem('tis-theme', isLight ? 'light' : 'dark');
-    
     const icon = document.getElementById('theme-icon');
-    if (isLight) {{
-        icon.innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
-    }} else {{
-        icon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>';
-    }}
+    if (isLight) icon.innerHTML = '<path d=\"M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z\"/>';
+    else icon.innerHTML = '<path d=\"M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z\"/>';
     initCharts(latest_data_js);
 }}
-
 const latest_data_js = {json.dumps(d)};
-
 (function() {{
     const saved = localStorage.getItem('tis-theme') || 'dark';
-    if (saved === 'light') {{ 
-        document.body.classList.add('light');
-        document.getElementById('theme-icon').innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
-    }}
+    if (saved === 'light') {{ document.body.classList.add('light'); document.getElementById('theme-icon').innerHTML = '<path d=\"M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z\"/>'; }}
     initCharts(latest_data_js);
 }})();
 </script>
