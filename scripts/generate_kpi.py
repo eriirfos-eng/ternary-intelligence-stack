@@ -201,6 +201,34 @@ def compute_macd(log):
     
     return {"macd": macd_line, "signal": signal_line, "hist": hist}
 
+def render_changes_rows(s, p):
+    def _to_num(v):
+        if v is None: return 0
+        s = str(v).replace('▲','').replace('▼','').replace(',','').strip()
+        if 'k' in s.lower(): return int(float(s.lower().replace('k','')) * 1000)
+        if 'm' in s.lower(): return int(float(s.lower().replace('m','')) * 1000000)
+        try: return float(s)
+        except: return 0
+        
+    def _row(curr, prev, label):
+        c, pr = _to_num(curr), _to_num(prev)
+        diff, pct = c - pr, (c-pr)/pr*100 if pr else 0
+        cls = "ch-up" if diff > 0 else ("ch-dn" if diff < 0 else "ch-na")
+        val_str = f"{curr:,}" if isinstance(curr, (int, float)) else str(curr)
+        status = "STABLE"
+        if pct > 5: status = "SURGE"
+        if pct < -5: status = "DROP"
+        if diff == 0: status = "FLAT"
+        return f'<div class="grid-row vol-grid"><div>{label} <span style="font-size:9px;opacity:0.6">[{status}]</span></div><div class="grid-cell num">{val_str}</div><div class="grid-cell num {cls}">{diff:+g}</div><div class="grid-cell num {cls}">{pct:+.1f}%</div></div>'
+
+    return "\n".join([
+        _row(s["total_footprint"], p.get("total_footprint"), "Total Footprint"),
+        _row(s["crates_total"], p.get("crates_total"), "Crates.io Downloads"),
+        _row(s["openvsx_total"], p.get("openvsx_total"), "OpenVSX Installs"),
+        _row(s["gh_clones"], p.get("gh_clones"), "Total GitHub Clones"),
+        _row(s["smithery_calls_weekly"], p.get("smithery_calls_weekly"), "Smithery Calls")
+    ])
+
 def render_html():
     d = latest_data
     s = d["snapshot"]
@@ -339,16 +367,27 @@ def render_html():
   .grid-cell {{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
   .grid-cell.num {{ text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }}
   .grid-cell.center {{ text-align: center; }}
-  
   .vol-grid {{ grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; }}
   .traffic-grid {{ grid-template-columns: 1fr 100px 100px 120px; gap: 20px; }}
   .crates-grid {{ grid-template-columns: 1.5fr 80px 100px 100px; gap: 20px; }}
-  
   .impact-badge {{ display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 11px; letter-spacing: 1px; min-width: 40px; }}
   .impact-pos {{ background:rgba(63,185,80,0.15); color:var(--green); border:1px solid var(--green); }}
   .impact-neu {{ background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }}
   .impact-neg {{ background:rgba(248,81,73,0.15); color:var(--red); border:1px solid var(--red); }}
+  .legend-container {{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; width:100%; }}
+  .legend-pill {{ display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:12px; font-weight:800; color:var(--muted); transition: all 0.2s ease; }}
+  .legend-pill.active {{ background:rgba(255,255,255,0.15); border-color:var(--text); color:var(--text); }}
+  .legend-pill .color-dot {{ width:10px; height:10px; border-radius:50%; }}
+  body.light .legend-pill {{ background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.1); }}
+  .signal-bar {{ background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); padding:12px 40px; display:flex; gap:32px; font-size:14px; font-weight:800; letter-spacing:1px; color:var(--muted); backdrop-filter: blur(10px); }}
+  body.light .signal-bar {{ background:rgba(255,255,255,0.7); border-bottom-color:rgba(0,0,0,0.05); }}
+  .sig-item span {{ color:var(--text); margin-left:8px; }}
+  .sig-bullish {{ color:var(--green) !important; }}
+  .sig-bearish {{ color:var(--red) !important; }}
   #loading-bar {{ position:fixed; top:0; left:0; height:3px; background:var(--blue); width:0; transition:width 0.3s; z-index:200; }}
+  .donut-hub {{ position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; width: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+  .hub-label {{ font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }}
+  .hub-value {{ font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -1px; line-height: 1.1; }}
 </style>
 </head>
 <body>
@@ -388,7 +427,13 @@ def render_html():
     <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
       <div class="panel-h" style="width:100%">Resource Distribution <span>Balanced Weights</span></div>
       <div id="lgd-dist" class="legend-container" style="justify-content:center"></div>
-      <div style="height:420px; width:100%; max-width:450px;"><canvas id="distChart"></canvas></div>
+      <div style="height:450px; width:100%; max-width:500px; position: relative;">
+        <canvas id="distChart"></canvas>
+        <div class="donut-hub" id="hub-dist">
+            <div class="hub-label" id="hub-lbl">Ecosystem Weight</div>
+            <div class="hub-value" id="hub-val">{s["total_footprint"]:,}</div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="row-top">
@@ -461,11 +506,17 @@ function initCharts(data) {{
     const textColor = getThemeColor(); const isLight = document.body.classList.contains('light');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
     Chart.defaults.color = textColor; Chart.defaults.font.family = "'JetBrains Mono', monospace";
-    Chart.register(ChartDataLabels);
     const sm_val = (val) => {{
         const str = String(val).replace(/[▲▼,]/g, '').trim();
         return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
     }};
+    
+    const updateHub = (label, value, pct) => {{
+        document.getElementById('hub-lbl').innerText = label;
+        document.getElementById('hub-val').innerText = pct ? `${{value.toLocaleString()}} (${{pct}}%)` : value.toLocaleString();
+    }};
+    const resetHub = () => updateHub('Ecosystem Weight', s.total_footprint);
+
     if(growthChart) growthChart.destroy(); if(distChart) distChart.destroy();
     if(momentumChart) momentumChart.destroy(); if(macdChart) macdChart.destroy();
     growthChart = new Chart(document.getElementById('growthChart').getContext('2d'), {{
@@ -482,11 +533,12 @@ function initCharts(data) {{
         ]
       }},
       options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }},
-        plugins: {{ datalabels: {{ display: false }}, legend: {{ display: false }}, tooltip: {{ backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', titleColor: isLight ? '#1f2328' : '#e6edf3', bodyColor: isLight ? '#1f2328' : '#e6edf3', borderColor: 'var(--border)', borderWidth: 1 }} }},
+        plugins: {{ legend: {{ display: false }}, tooltip: {{ backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', titleColor: isLight ? '#1f2328' : '#e6edf3', bodyColor: isLight ? '#1f2328' : '#e6edf3', borderColor: 'var(--border)', borderWidth: 1 }} }},
         scales:{{ x:{{ grid:{{ display:false }}, ticks:{{ font:{{ size: 12 }} }} }}, y:{{ grid:{{ color: gridColor }}, ticks:{{ font:{{ size: 12 }}, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v }} }} }}
       }}
     }});
     createCustomLegend(growthChart, 'lgd-growth');
+
     distChart = new Chart(document.getElementById('distChart'), {{
       type: 'doughnut',
       data: {{
@@ -495,71 +547,60 @@ function initCharts(data) {{
             data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
             backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
             borderWidth: 0, 
-            hoverOffset: 25, 
+            hoverOffset: 30, 
             borderRadius: 10, 
             spacing: 5,
             offset: [0,0,0,0,0,0]
         }}]
       }},
       options: {{ 
-        cutout:'75%', 
+        cutout:'70%', 
         maintainAspectRatio: false,
-        layout: {{ padding: 25 }},
         plugins:{{ 
-            datalabels: {{
-                display: (ctx) => ctx.dataset.offset[ctx.dataIndex] > 0,
-                color: '#000000',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderColor: 'rgba(0, 0, 0, 0.1)',
-                borderWidth: 1,
-                borderRadius: 8,
-                padding: 10,
-                font: {{ weight: '800', size: 13 }},
-                formatter: (val, ctx) => {{
-                    let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                    let pct = (val / total * 100).toFixed(1);
-                    return `${{val.toLocaleString()}}\n(${{pct}}%)`;
-                }},
-                textAlign: 'center',
-                anchor: 'end',
-                align: 'end',
-                offset: 15
-            }},
             legend:{{ display: false }}, 
-            tooltip: {{ 
-                backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
-                titleColor: isLight ? '#1f2328' : '#e6edf3', 
-                bodyColor: isLight ? '#1f2328' : '#e6edf3', 
-                borderWidth: 1, borderColor: 'var(--border)',
-                callbacks: {{
-                    label: function(item) {{
-                        let total = item.dataset.data.reduce((a, b) => a + b, 0);
-                        let val = item.raw;
-                        let pct = (val / total * 100).toFixed(1);
-                        return `${{item.label}}: ${{val.toLocaleString()}} (${{pct}}%)`;
-                    }}
-                }}
-            }} 
-        }} 
+            tooltip: {{ enabled: false }}
+        }},
+        onHover: (e, el) => {{
+            if (el.length) {{
+                const i = el[0].index;
+                const ds = distChart.data.datasets[0];
+                const total = ds.data.reduce((a, b) => a + b, 0);
+                const pct = (ds.data[i] / total * 100).toFixed(1);
+                updateHub(distChart.data.labels[i], ds.data[i], pct);
+            }} else {{
+                resetHub();
+            }}
+        }}
       }}
     }});
     const dLgd = document.getElementById('lgd-dist');
-    if (dLgd) {{ 
-        dLgd.innerHTML = ''; 
-        distChart.data.labels.forEach((lbl, i) => {{ 
-            const pill = document.createElement('div'); 
-            pill.className = 'legend-pill'; 
-            pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`; 
-            pill.onclick = () => {{
+    if (dLgd) {{
+        dLgd.innerHTML = '';
+        distChart.data.labels.forEach((lbl, i) => {{
+            const pill = document.createElement('div');
+            pill.className = 'legend-pill active';
+            pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`;
+            
+            pill.onmouseenter = () => {{
                 const ds = distChart.data.datasets[0];
-                const isH = ds.offset[i] === 25;
-                ds.offset[i] = isH ? 0 : 25;
-                pill.classList.toggle('active', !isH);
+                const total = ds.data.reduce((a, b) => a + b, 0);
+                const pct = (ds.data[i] / total * 100).toFixed(1);
+                updateHub(lbl, ds.data[i], pct);
+                ds.offset[i] = 30;
                 distChart.update();
             }};
-            dLgd.appendChild(pill); 
-        }}); 
+            pill.onmouseleave = () => {{
+                resetHub();
+                distChart.data.datasets[0].offset[i] = 0;
+                distChart.update();
+            }};
+            pill.onclick = () => {{
+                // Toggling logic can be added here if needed
+            }};
+            dLgd.appendChild(pill);
+        }});
     }}
+
     if (data.momentum) {{
         momentumChart = new Chart(document.getElementById('momentumChart'), {{
           type: 'line',
@@ -573,7 +614,7 @@ function initCharts(data) {{
               {{ label:'Smithery Δ', data:data.momentum.smithery, borderColor:P.red, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3 }}
             ]
           }},
-          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ datalabels: {{ display: false }}, legend: {{ display: false }} }},
+          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ legend: {{ display: false }} }},
             scales: {{ x:{{ grid:{{display:false}}, ticks:{{font:{{size:12}}}} }}, y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12}}}} }} }}
           }}
         }});
@@ -590,7 +631,7 @@ function initCharts(data) {{
               {{ label:'Histogram', data:data.macd.hist, type:'bar', backgroundColor: data.macd.hist.map(v => v >= 0 ? P.grn+'88' : P.red+'88'), borderWidth:0 }}
             ]
           }},
-          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ datalabels: {{ display: false }}, legend: {{ display: false }} }},
+          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ legend: {{ display: false }} }},
             scales: {{ x:{{ grid:{{display:false}}, ticks:{{font:{{size:12}}}} }}, y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12}}}} }} }}
           }}
         }});
@@ -611,46 +652,58 @@ function toggleTheme() {{
     else icon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>';
     initCharts(latest_data_js);
 }}
+
 const latest_data_js = {json.dumps(d)};
+
 (function() {{
     const saved = localStorage.getItem('tis-theme') || 'dark';
-    if (saved === 'light') {{ document.body.classList.add('light'); document.getElementById('theme-icon').innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>'; }}
+    if (saved === 'light') {{ 
+        document.body.classList.add('light');
+        document.getElementById('theme-icon').innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+    }}
     initCharts(latest_data_js);
 }})();
 </script>
 </body></html>"""
     with open(HTML_FILE, "w") as f: f.write(html)
 
-def render_changes_rows(s, p):
-    def _to_num(v):
-        if v is None: return 0
-        s = str(v).replace('▲','').replace('▼','').replace(',','').strip()
-        if 'k' in s.lower(): return int(float(s.lower().replace('k','')) * 1000)
-        if 'm' in s.lower(): return int(float(s.lower().replace('m','')) * 1000000)
-        try: return float(s)
-        except: return 0
-        
-    def _row(curr, prev, label):
-        c, pr = _to_num(curr), _to_num(prev)
-        diff, pct = c - pr, (c-pr)/pr*100 if pr else 0
-        cls = "ch-up" if diff > 0 else ("ch-dn" if diff < 0 else "ch-na")
-        val_str = f"{curr:,}" if isinstance(curr, (int, float)) else str(curr)
-        
-        # Signal Quality Logic
-        status = "STABLE"
-        if pct > 5: status = "SURGE"
-        if pct < -5: status = "DROP"
-        if diff == 0: status = "FLAT"
-        
-        return f'<div class="grid-row vol-grid"><div>{label} <span style="font-size:9px;opacity:0.6">[{status}]</span></div><div class="grid-cell num">{val_str}</div><div class="grid-cell num {cls}">{diff:+g}</div><div class="grid-cell num {cls}">{pct:+.1f}%</div></div>'
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/api/data':
+            data = do_fetch()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode())
+        else:
+            try:
+                with open(HTML_FILE, 'rb') as f:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(f.read())
+            except FileNotFoundError:
+                self.send_error(404, "File not found")
+    def log_message(self, *args): pass
 
-    return "\n".join([
-        _row(s["total_footprint"], p.get("total_footprint"), "Total Footprint"),
-        _row(s["crates_total"], p.get("crates_total"), "Crates.io Downloads"),
-        _row(s["openvsx_total"], p.get("openvsx_total"), "OpenVSX Installs"),
-        _row(s["gh_clones"], p.get("gh_clones"), "Total GitHub Clones"),
-        _row(s["smithery_calls_weekly"], p.get("smithery_calls_weekly"), "Smithery Calls")
-    ])
+def _bg_refresh_loop():
+    while True:
+        time.sleep(REFRESH_INTERVAL)
+        try: do_fetch()
+        except: pass
+
+class MyHTTPServer(HTTPServer):
+    allow_reuse_address = True
 
 if __name__ == '__main__':
     do_fetch()
+    if '--serve' in sys.argv:
+        print(f"\n  TIS ConsoleX -> http://localhost:{PORT}")
+        threading.Thread(target=_bg_refresh_loop, daemon=True).start()
+        def _open():
+            time.sleep(1.2)
+            try: webbrowser.get('firefox').open(f'http://localhost:{PORT}')
+            except: webbrowser.open(f'http://localhost:{PORT}')
+        threading.Thread(target=_open, daemon=True).start()
+        try: MyHTTPServer(('localhost', PORT), Handler).serve_forever()
+        except KeyboardInterrupt: print('\nServer stopped.')
