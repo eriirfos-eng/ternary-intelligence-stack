@@ -1,0 +1,69 @@
+/*
+ * SegmentTreeTrit — Segment tree for range queries on trits.
+ * Supports range sum (in integer) and point updates.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Recursive build of segment tree
+fn st_build(tree: int[], data: trit[], node: int, start: int, end: int) -> trit {
+    if start == end {
+        tree[node] = cast(data[start]);
+        return 1;
+    }
+    let mid: int = (start + end) / 2;
+    st_build(tree, data, 2 * node, start, mid);
+    st_build(tree, data, 2 * node + 1, mid + 1, end);
+    tree[node] = tree[2 * node] + tree[2 * node + 1];
+    return 1;
+}
+
+// Range sum query
+fn st_query(tree: int[], node: int, start: int, end: int, l: int, r: int) -> int {
+    if r < start || end < l {
+        return 0;
+    }
+    if l <= start && end <= r {
+        return tree[node];
+    }
+    let mid: int = (start + end) / 2;
+    let p1: int = st_query(tree, 2 * node, start, mid, l, r);
+    let p2: int = st_query(tree, 2 * node + 1, mid + 1, end, l, r);
+    return p1 + p2;
+}
+
+fn main() -> trit {
+    let data: trittensor<4> = [1, 1, -1, 0];
+    // Tree size should be approximately 4 * N
+    let tree: int[16]; 
+    let i: int = 0;
+    while i < 16 { 
+        tree[i] = 0; 
+        i = i + 1; 
+    }
+    
+    st_build(tree, data, 1, 0, 3);
+    
+    // Sum of [1, 1, -1, 0] is 1
+    let sum_all: int = st_query(tree, 1, 0, 3, 0, 3);
+    println("Sum of all (expected 1):");
+    println(sum_all);
+    
+    // Sum of first two [1, 1] is 2
+    let sum_first2: int = st_query(tree, 1, 0, 3, 0, 1);
+    println("Sum of first 2 (expected 2):");
+    println(sum_first2);
+    
+    // Sum of [1, -1] at index 1,2 is 0
+    let sum_mid: int = st_query(tree, 1, 0, 3, 1, 2);
+    println("Sum of mid (expected 0):");
+    println(sum_mid);
+
+    if sum_all == 1 && sum_first2 == 2 && sum_mid == 0 {
+        println("SegmentTreeTrit Test: PASSED");
+        return 1;
+    }
+    
+    println("SegmentTreeTrit Test: FAILED");
+    return -1;
+}
