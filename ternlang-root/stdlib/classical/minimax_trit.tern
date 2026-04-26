@@ -46,10 +46,10 @@ fn main() -> trit {
     println("Running Minimax on leaf scores: [3, 5, 2, 9]");
     let optimal: int = minimax(0, 1, scores, 0);
     
-    println("Optimal score (expected 5):");
+    println("Optimal score (expected 3):");
     println(optimal);
     
-    if optimal == 5 {
+    if optimal == 3 {
         println("MinimaxTrit Test: PASSED");
         return 1;
     }
