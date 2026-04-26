@@ -652,43 +652,5 @@ def render_changes_rows(s, p):
         _row(s["smithery_calls_weekly"], p.get("smithery_calls_weekly"), "Smithery Calls")
     ])
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == '/api/data':
-            data = do_fetch()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(data).encode())
-        else:
-            try:
-                with open(HTML_FILE, 'rb') as f:
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'text/html')
-                    self.end_headers()
-                    self.wfile.write(f.read())
-            except FileNotFoundError:
-                self.send_error(404, "File not found")
-    def log_message(self, *args): pass
-
-def _bg_refresh_loop():
-    while True:
-        time.sleep(REFRESH_INTERVAL)
-        try: do_fetch()
-        except: pass
-
-class MyHTTPServer(HTTPServer):
-    allow_reuse_address = True
-
 if __name__ == '__main__':
     do_fetch()
-    if '--serve' in sys.argv:
-        print(f"\n  TIS ConsoleX -> http://localhost:{PORT}")
-        threading.Thread(target=_bg_refresh_loop, daemon=True).start()
-        def _open():
-            time.sleep(1.2)
-            try: webbrowser.get('firefox').open(f'http://localhost:{PORT}')
-            except: webbrowser.open(f'http://localhost:{PORT}')
-        threading.Thread(target=_open, daemon=True).start()
-        try: MyHTTPServer(('localhost', PORT), Handler).serve_forever()
-        except KeyboardInterrupt: print('\nServer stopped.')
