@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"><title>RFI-IRFOS KPI | BULLISH 64,620.0</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
   
@@ -281,7 +282,7 @@ function initCharts(data) {
     const textColor = getThemeColor(); const isLight = document.body.classList.contains('light');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
     Chart.defaults.color = textColor; Chart.defaults.font.family = "'JetBrains Mono', monospace";
-    Chart.register(ChartDataLabels);
+    if (typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
     const sm_val = (val) => {
         const str = String(val).replace(/[▲▼,]/g, '').trim();
         return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
