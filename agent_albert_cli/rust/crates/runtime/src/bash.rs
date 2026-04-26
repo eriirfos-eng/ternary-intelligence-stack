@@ -111,7 +111,35 @@ fn validate_bash_ast(command: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Try to rewrite a command via `rtk rewrite`. Returns the rewritten command on success,
+/// or the original command if rtk is unavailable or has no rewrite for this input.
+fn rtk_rewrite(command: &str) -> String {
+    // Skip heredocs — rtk rewrite also skips them, but bail early
+    if command.contains("<<") {
+        return command.to_string();
+    }
+    match Command::new("rtk")
+        .args(["rewrite", command])
+        .output()
+    {
+        // exit 0 = auto-allow rewrite, exit 3 = "ask" in Claude Code context but
+        // Albert has its own permission system — rewrite applies in both cases.
+        Ok(out) if matches!(out.status.code(), Some(0) | Some(3)) => {
+            let rewritten = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if rewritten.is_empty() { command.to_string() } else { rewritten }
+        }
+        _ => command.to_string(),
+    }
+}
+
 pub fn execute_bash(input: BashCommandInput) -> io::Result<BashCommandOutput> {
+    // RTK rewrite: transparently swap in the token-optimised equivalent if available.
+    // Works for any LLM provider — savings are model-agnostic.
+    let input = BashCommandInput {
+        command: rtk_rewrite(&input.command),
+        ..input
+    };
+
     // Perform AST Interception
     if let Err(err) = validate_bash_ast(&input.command) {
         return Ok(BashCommandOutput {
