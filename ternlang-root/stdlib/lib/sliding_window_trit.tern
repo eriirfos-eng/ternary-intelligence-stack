@@ -1,0 +1,68 @@
+/*
+ * SlidingWindowTrit — Sliding window sum over a stream of trits.
+ * Useful for anomaly detection or moving average approximation.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn window_sum(data: trit[], size: int, window_size: int, output: int[]) -> trit {
+    if window_size > size { return -1; }
+    
+    let current_sum: int = 0;
+    let i: int = 0;
+    
+    // Initial window
+    while i < window_size {
+        match data[i] {
+             1 => { current_sum = current_sum + 1; }
+            -1 => { current_sum = current_sum - 1; }
+             0 => { }
+        }
+        i = i + 1;
+    }
+    output[0] = current_sum;
+    
+    // Slide window
+    let out_idx: int = 1;
+    while i < size {
+        // Remove trailing element
+        match data[i - window_size] {
+             1 => { current_sum = current_sum - 1; }
+            -1 => { current_sum = current_sum + 1; }
+             0 => { }
+        }
+        // Add leading element
+        match data[i] {
+             1 => { current_sum = current_sum + 1; }
+            -1 => { current_sum = current_sum - 1; }
+             0 => { }
+        }
+        output[out_idx] = current_sum;
+        out_idx = out_idx + 1;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let data: trittensor<6> = [1, 1, 0, -1, -1, 1];
+    // Output size will be size - window_size + 1 = 6 - 3 + 1 = 4
+    let out: int[4];
+    out[0]=0; out[1]=0; out[2]=0; out[3]=0;
+    
+    println("Data: [1, 1, 0, -1, -1, 1], Window: 3");
+    let res: trit = window_sum(data, 6, 3, out);
+    
+    println("Sums:");
+    println(out[0]); // 1+1+0 = 2
+    println(out[1]); // 1+0-1 = 0
+    println(out[2]); // 0-1-1 = -2
+    println(out[3]); // -1-1+1 = -1
+    
+    if out[0] == 2 && out[1] == 0 && out[2] == -2 && out[3] == -1 {
+        println("SlidingWindowTrit Test: PASSED");
+        return 1;
+    }
+    println("SlidingWindowTrit Test: FAILED");
+    return -1;
+}
