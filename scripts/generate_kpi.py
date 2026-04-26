@@ -299,6 +299,7 @@ def render_html():
 <head>
 <meta charset="UTF-8"><title>RFI-IRFOS KPI | {sentiment} {curr_f:,}</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
   :root {{ --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --border:#30363d; --text:#e6edf3; --muted:#ffffff; --green:#3fb950; --blue:#58a6ff; --purple:#a371f7; --orange:#d29922; --red:#f85149; }}
@@ -453,6 +454,7 @@ function initCharts(data) {{
     const textColor = getThemeColor(); const isLight = document.body.classList.contains('light');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
     Chart.defaults.color = textColor; Chart.defaults.font.family = "'JetBrains Mono', monospace";
+    Chart.register(ChartDataLabels);
     const sm_val = (val) => {{
         const str = String(val).replace(/[▲▼,]/g, '').trim();
         return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
@@ -473,7 +475,7 @@ function initCharts(data) {{
         ]
       }},
       options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }},
-        plugins: {{ legend: {{ display: false }}, tooltip: {{ backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', titleColor: isLight ? '#1f2328' : '#e6edf3', bodyColor: isLight ? '#1f2328' : '#e6edf3', borderColor: 'var(--border)', borderWidth: 1 }} }},
+        plugins: {{ datalabels: {{ display: false }}, legend: {{ display: false }}, tooltip: {{ backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', titleColor: isLight ? '#1f2328' : '#e6edf3', bodyColor: isLight ? '#1f2328' : '#e6edf3', borderColor: 'var(--border)', borderWidth: 1 }} }},
         scales:{{ x:{{ grid:{{ display:false }}, ticks:{{ font:{{ size: 12 }} }} }}, y:{{ grid:{{ color: gridColor }}, ticks:{{ font:{{ size: 12 }}, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v }} }} }}
       }}
     }});
@@ -496,6 +498,18 @@ function initCharts(data) {{
         cutout:'85%', 
         maintainAspectRatio: false, 
         plugins:{{ 
+            datalabels: {{
+                display: true,
+                color: textColor,
+                font: {{ weight: '800', size: 12 }},
+                formatter: (val, ctx) => {{
+                    let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    return (val / total * 100).toFixed(1) + '%';
+                }},
+                anchor: 'end',
+                align: 'end',
+                offset: 10
+            }},
             legend:{{ display: false }}, 
             tooltip: {{ 
                 backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
@@ -507,7 +521,7 @@ function initCharts(data) {{
                         let total = item.dataset.data.reduce((a, b) => a + b, 0);
                         let val = item.raw;
                         let pct = (val / total * 100).toFixed(1);
-                        return `${item.label}: ${val.toLocaleString()} (${pct}%)`;
+                        return `${{item.label}}: ${{val.toLocaleString()}} (${{pct}}%)`;
                     }}
                 }}
             }} 
@@ -544,7 +558,7 @@ function initCharts(data) {{
               {{ label:'Smithery Δ', data:data.momentum.smithery, borderColor:P.red, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3 }}
             ]
           }},
-          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ legend: {{ display: false }} }},
+          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ datalabels: {{ display: false }}, legend: {{ display: false }} }},
             scales: {{ x:{{ grid:{{display:false}}, ticks:{{font:{{size:12}}}} }}, y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12}}}} }} }}
           }}
         }});
@@ -561,7 +575,7 @@ function initCharts(data) {{
               {{ label:'Histogram', data:data.macd.hist, type:'bar', backgroundColor: data.macd.hist.map(v => v >= 0 ? P.grn+'88' : P.red+'88'), borderWidth:0 }}
             ]
           }},
-          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ legend: {{ display: false }} }},
+          options: {{ responsive:true, maintainAspectRatio:false, interaction: {{ mode: 'index', intersect: false }}, plugins: {{ datalabels: {{ display: false }}, legend: {{ display: false }} }},
             scales: {{ x:{{ grid:{{display:false}}, ticks:{{font:{{size:12}}}} }}, y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12}}}} }} }}
           }}
         }});
