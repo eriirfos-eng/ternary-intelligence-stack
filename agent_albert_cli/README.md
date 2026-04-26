@@ -111,7 +111,7 @@ albert /auth
 albert /init
 
 # 3. Start the REPL
-albert
+albert-cli
 ```
 
 On first launch Albert walks you through a setup sequence: cognitive style, provider routing, and model selection. After that, you drop straight into the REPL.
