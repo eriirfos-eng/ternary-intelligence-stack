@@ -1,0 +1,65 @@
+/*
+ * DeMorganTrit — Verification of De Morgan's laws in Ternary Logic.
+ * This demonstrates that Kleene ternary logic (used in Ternlang)
+ * satisfies De Morgan's laws.
+ * 
+ * Laws:
+ * 1. !(A && B) == !A || !B
+ * 2. !(A || B) == !A && !B
+ *
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Basic trit inversion (Logical NOT)
+fn trit_inv(a: trit) -> trit {
+    match a {
+         1 => { return -1; }
+         0 => { return  0; }
+        -1 => { return  1; }
+    }
+}
+
+fn verify_demorgan(a: trit, b: trit) -> trit {
+    // Law 1: !(a && b) == !a || !b
+    let left1: trit = trit_inv(a && b);
+    let right1: trit = trit_inv(a) || trit_inv(b);
+    
+    // Law 2: !(a || b) == !a && !b
+    let left2: trit = trit_inv(a || b);
+    let right2: trit = trit_inv(a) && trit_inv(b);
+    
+    if left1 == right1 && left2 == right2 {
+        return 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let success: trit = 1;
+    
+    // Test all 9 combinations of (a, b)
+    let values: trittensor<3> = [1, 0, -1];
+    
+    let i: int = 0;
+    while i < 3 {
+        let j: int = 0;
+        while j < 3 {
+            let res: trit = verify_demorgan(values[i], values[j]);
+            if res != 1 {
+                println("De Morgan failed for combination:");
+                println(cast(values[i]));
+                println(cast(values[j]));
+                success = -1;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    
+    match success {
+        1 => { println("De Morgan Laws (Ternary): VERIFIED"); }
+        _ => { println("De Morgan Laws (Ternary): FAILED"); }
+    }
+    
+    return success;
+}
