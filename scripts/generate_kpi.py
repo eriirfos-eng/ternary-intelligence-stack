@@ -488,7 +488,7 @@ function initCharts(data) {{
             data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
             backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
             borderWidth: 0, 
-            hoverOffset: 20, 
+            hoverOffset: 15, 
             borderRadius: 10, 
             spacing: 5,
             offset: [0,0,0,0,0,0]
@@ -496,20 +496,25 @@ function initCharts(data) {{
       }},
       options: {{ 
         cutout:'85%', 
-        maintainAspectRatio: false, 
+        maintainAspectRatio: false,
+        layout: {{ padding: 45 }},
         plugins:{{ 
             datalabels: {{
                 display: (ctx) => ctx.dataset.offset[ctx.dataIndex] > 0,
                 color: textColor,
-                font: {{ weight: '800', size: 14 }},
+                backgroundColor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)',
+                borderRadius: 6,
+                padding: 8,
+                font: {{ weight: '800', size: 12 }},
                 formatter: (val, ctx) => {{
                     let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
                     let pct = (val / total * 100).toFixed(1);
-                    return `${{val.toLocaleString()}} (${{pct}}%)`;
+                    return `${{val.toLocaleString()}}\n(${{pct}}%)`;
                 }},
+                textAlign: 'center',
                 anchor: 'end',
                 align: 'end',
-                offset: 20
+                offset: 10
             }},
             legend:{{ display: false }}, 
             tooltip: {{ 
@@ -538,8 +543,8 @@ function initCharts(data) {{
             pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`; 
             pill.onclick = () => {{
                 const ds = distChart.data.datasets[0];
-                const isH = ds.offset[i] === 20;
-                ds.offset[i] = isH ? 0 : 20;
+                const isH = ds.offset[i] === 25;
+                ds.offset[i] = isH ? 0 : 25;
                 pill.classList.toggle('active', !isH);
                 distChart.update();
             }};
