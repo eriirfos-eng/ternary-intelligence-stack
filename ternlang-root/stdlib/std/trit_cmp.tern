@@ -1,0 +1,55 @@
+/*
+ * TritCmp — Semantic wrapper functions for comparing trits.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Strictly greater
+fn trit_gt(a: trit, b: trit) -> trit {
+    if a > b { return 1; }
+    return 0;
+}
+
+// Strictly less
+fn trit_lt(a: trit, b: trit) -> trit {
+    if a < b { return 1; }
+    return 0;
+}
+
+// Greater or equal
+fn trit_gte(a: trit, b: trit) -> trit {
+    if a == b || a > b { return 1; }
+    return 0;
+}
+
+// Less or equal
+fn trit_lte(a: trit, b: trit) -> trit {
+    if a == b || a < b { return 1; }
+    return 0;
+}
+
+fn main() -> trit {
+    println("=== Trit Comparators ===");
+    
+    let a: trit = 1;
+    let b: trit = 0;
+    let c: trit = -1;
+    
+    let r1: trit = trit_gt(a, b); // 1 > 0 -> 1
+    let r2: trit = trit_lt(c, b); // -1 < 0 -> 1
+    let r3: trit = trit_gte(a, a); // 1 >= 1 -> 1
+    let r4: trit = trit_lte(b, c); // 0 <= -1 -> 0
+    
+    println("1 > 0 :"); println(cast(r1));
+    println("-1 < 0:"); println(cast(r2));
+    println("1 >= 1:"); println(cast(r3));
+    println("0 <= -1:"); println(cast(r4));
+    
+    if r1 == 1 && r2 == 1 && r3 == 1 && r4 == 0 {
+        println("TritCmp Test: PASSED");
+        return 1;
+    }
+    
+    println("TritCmp Test: FAILED");
+    return -1;
+}

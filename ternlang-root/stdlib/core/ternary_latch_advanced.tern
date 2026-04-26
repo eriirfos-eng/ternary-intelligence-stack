@@ -1,0 +1,44 @@
+/*
+ * TernaryLatchAdvanced — An advanced state-holding latch.
+ * Only updates when the clock/enable signal is Truth (+1).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Latch that holds previous state unless enabled
+fn advance_latch(current_state: trit, input: trit, enable: trit) -> trit {
+    if enable == 1 {
+        return input; // Update to new state
+    }
+    return current_state; // Hold previous state
+}
+
+fn main() -> trit {
+    println("=== Advanced Ternary Latch ===");
+    
+    let state: trit = 0; // Initial state
+    println("Initial State:"); println(cast(state));
+    
+    // Cycle 1: Disable, input 1 -> should stay 0
+    state = advance_latch(state, 1, 0);
+    println("After Cycle 1 (Enable=0, In=1):"); println(cast(state));
+    let r1: trit = state;
+    
+    // Cycle 2: Enable, input -1 -> should update to -1
+    state = advance_latch(state, -1, 1);
+    println("After Cycle 2 (Enable=1, In=-1):"); println(cast(state));
+    let r2: trit = state;
+    
+    // Cycle 3: Enable, input 1 -> should update to 1
+    state = advance_latch(state, 1, 1);
+    println("After Cycle 3 (Enable=1, In=1):"); println(cast(state));
+    let r3: trit = state;
+    
+    if r1 == 0 && r2 == -1 && r3 == 1 {
+        println("TernaryLatchAdvanced Test: PASSED");
+        return 1;
+    }
+    
+    println("TernaryLatchAdvanced Test: FAILED");
+    return -1;
+}

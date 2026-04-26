@@ -1,0 +1,50 @@
+/*
+ * MathAlgebra — Algebraic utilities including polynomial evaluation.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Evaluates a polynomial using Horner's method
+// P(x) = c[0] + c[1]*x + c[2]*x^2 ... + c[n-1]*x^(n-1)
+fn eval_poly(coeffs: int[], degree: int, x: int) -> int {
+    let result: int = 0;
+    let i: int = degree;
+    
+    // Iterate backwards from degree down to 0
+    while i >= 0 {
+        result = (result * x) + coeffs[i];
+        i = i - 1;
+    }
+    
+    return result;
+}
+
+fn main() -> trit {
+    println("=== Algebra: Horner's Method ===");
+    
+    // Polynomial: 2 + 3x + 1x^2 (degree 2)
+    let coeffs: int[3];
+    coeffs[0] = 2; // constant
+    coeffs[1] = 3; // x^1
+    coeffs[2] = 1; // x^2
+    
+    // Evaluate at x = 2
+    // P(2) = 2 + 3(2) + 1(4) = 2 + 6 + 4 = 12
+    let p_2: int = eval_poly(coeffs, 2, 2);
+    println("P(2) = 2 + 3(2) + 1(4) (expected 12):");
+    println(p_2);
+    
+    // Evaluate at x = -1
+    // P(-1) = 2 + 3(-1) + 1(1) = 2 - 3 + 1 = 0
+    let p_neg1: int = eval_poly(coeffs, 2, -1);
+    println("P(-1) = 2 + 3(-1) + 1(1) (expected 0):");
+    println(p_neg1);
+    
+    if p_2 == 12 && p_neg1 == 0 {
+        println("MathAlgebra Test: PASSED");
+        return 1;
+    }
+    
+    println("MathAlgebra Test: FAILED");
+    return -1;
+}
