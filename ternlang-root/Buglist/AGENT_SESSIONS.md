@@ -65,3 +65,32 @@ Compiler/VM observations:
 - Fixed-size array literals [0, 1, 2] are treated as trittensors and saturate values to trit range. Use manual initialization for int arrays with values > 1.
 - 'cast(trit) to int' in function parameters can sometimes maintain trit-like behavior (saturation) in arithmetic. Explicit 'if' based conversion is safer for now.
 - 'match' on 'int' literals > 1 might be unstable; 'if/else if' is more robust for general integer matching.
+
+## 2026-04-26 — stdlib session (round 2) — 20 files
+Dirs covered: stdlib/lib, stdlib/classical, stdlib/showcase, stdlib/tutorials
+Files written:
+- stdlib/lib/fletcher_checksum_trit.tern — fletcher-style checksum for trits [tier1]
+- stdlib/lib/sliding_window_trit.tern — sliding window sum over trit stream [tier1]
+- stdlib/lib/trit_encoding_utils.tern — encode pairs of trits into 9-state int [tier1]
+- stdlib/classical/kadane_algorithm_trit.tern — max subarray sum [tier1]
+- stdlib/showcase/voting_system_ternary.tern — consensus decision via trits [tier1]
+- stdlib/showcase/eco_thermostat_ternary.tern — simple feedback loop [tier1]
+- stdlib/showcase/inventory_balancer_ternary.tern — inventory control demo [tier1]
+- stdlib/showcase/traffic_flow_ternary.tern — adaptive traffic light demo [tier1]
+- stdlib/tutorials/state_machine_patterns.tern — ternary fsm demo [tier1]
+- stdlib/tutorials/ternary_memory_management.tern — initialization best practices [tier1]
+- stdlib/tutorials/control_flow_ternary.tern — ternary branches and loops [tier1]
+- stdlib/tutorials/data_validation_ternary.tern — data validation mapping [tier1]
+- stdlib/core/bitwise_ternary.tern — vectorized logic operations [tier1]
+- stdlib/core/ternary_latch_advanced.tern — state holding latch logic [tier1]
+- stdlib/std/math_algebra.tern — horner's method for polynomials [tier1]
+- stdlib/std/trit_cmp.tern — semantic comparison functions [tier1]
+- stdlib/lib/trit_histogram.tern — ascii histogram generation [tier1]
+- stdlib/lib/array_shift_trit.tern — array shift left/right utility [tier1]
+- stdlib/std/math_gcd.tern — euclidean algorithm for gcd [tier1]
+- stdlib/core/consensus_chain_trit.tern — chain reduction simulation [tier1]
+
+Compiler/VM observations:
+- Bitwise operators like `^` (XOR) might fail parsing, so checksums must rely on pure arithmetic ops `+`, `-`, `*`, `/`, `%`.
+- `consensus(1, -1)` correctly evaluates to `0` (Tend). `consensus(1, 0)` correctly evaluates to `1` (Affirm). The array iteration mutations are stable.
+- Array parameters pass by reference, enabling modifications without needing to return the whole array.

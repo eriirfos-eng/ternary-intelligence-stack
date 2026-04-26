@@ -1,0 +1,52 @@
+/*
+ * ArrayShiftTrit — Utilities to shift trit arrays left or right.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Shift array left by 'amount'. New elements are padded with '0' (Hold).
+fn shift_left(data: trit[], size: int, amount: int) -> trit {
+    if amount < 0 { return -1; }
+    if amount >= size {
+        let j: int = 0;
+        while j < size {
+            data[j] = 0;
+            j = j + 1;
+        }
+        return 1;
+    }
+    
+    let i: int = 0;
+    while i < (size - amount) {
+        data[i] = data[i + amount];
+        i = i + 1;
+    }
+    
+    while i < size {
+        data[i] = 0;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let arr: trittensor<5> = [1, -1, 1, 0, -1];
+    
+    println("Original: [1, -1, 1, 0, -1]");
+    shift_left(arr, 5, 2);
+    
+    println("Shifted Left by 2:");
+    println(cast(arr[0])); // expected 1
+    println(cast(arr[1])); // expected 0
+    println(cast(arr[2])); // expected -1
+    println(cast(arr[3])); // expected 0
+    println(cast(arr[4])); // expected 0
+    
+    if arr[0] == 1 && arr[1] == 0 && arr[2] == -1 && arr[3] == 0 && arr[4] == 0 {
+        println("ArrayShiftTrit Test: PASSED");
+        return 1;
+    }
+    
+    println("ArrayShiftTrit Test: FAILED");
+    return -1;
+}

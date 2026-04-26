@@ -1,0 +1,48 @@
+/*
+ * ConsensusChainTrit — Reduces an array of trits via a consensus cascade.
+ * Like a 1D cellular automaton that converges to a single decision.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn consensus_step(data: trit[], size: int) -> trit {
+    let i: int = 0;
+    while i < (size - 1) {
+        data[i] = consensus(data[i], data[i+1]);
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn consensus_chain(data: trit[], size: int) -> trit {
+    let current_size: int = size;
+    
+    while current_size > 1 {
+        consensus_step(data, current_size);
+        current_size = current_size - 1;
+    }
+    
+    return data[0];
+}
+
+fn main() -> trit {
+    println("=== Consensus Chain ===");
+    
+    let chain1: trittensor<4> = [1, 1, 1, 1];
+    let res1: trit = consensus_chain(chain1, 4);
+    println("Chain [1, 1, 1, 1] reduced to:");
+    println(cast(res1)); // Expected 1
+    
+    let chain2: trittensor<4> = [-1, -1, 1, -1];
+    let res2: trit = consensus_chain(chain2, 4);
+    println("Chain [-1, -1, 1, -1] reduced to:");
+    println(cast(res2)); // Expected -1
+    
+    if res1 == 1 && res2 == -1 {
+        println("ConsensusChainTrit Test: PASSED");
+        return 1;
+    }
+    
+    println("ConsensusChainTrit Test: FAILED");
+    return -1;
+}

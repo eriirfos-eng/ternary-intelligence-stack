@@ -1,0 +1,48 @@
+/*
+ * MathGCD — Euclidean algorithm for Greatest Common Divisor (GCD).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn abs_int(x: int) -> int {
+    if x < 0 { return -x; }
+    return x;
+}
+
+// Calculate the greatest common divisor of two integers
+fn gcd(a: int, b: int) -> int {
+    let temp_a: int = abs_int(a);
+    let temp_b: int = abs_int(b);
+    
+    while temp_b != 0 {
+        let remainder: int = temp_a % temp_b;
+        temp_a = temp_b;
+        temp_b = remainder;
+    }
+    
+    return temp_a;
+}
+
+fn main() -> trit {
+    println("=== Math: Greatest Common Divisor ===");
+    
+    let res1: int = gcd(48, 18);
+    println("GCD(48, 18) = (expected 6):");
+    println(res1);
+    
+    let res2: int = gcd(101, 10);
+    println("GCD(101, 10) = (expected 1):");
+    println(res2);
+    
+    let res3: int = gcd(-54, 24);
+    println("GCD(-54, 24) = (expected 6):");
+    println(res3);
+    
+    if res1 == 6 && res2 == 1 && res3 == 6 {
+        println("MathGCD Test: PASSED");
+        return 1;
+    }
+    
+    println("MathGCD Test: FAILED");
+    return -1;
+}
