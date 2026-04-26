@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><title>RFI-IRFOS KPI | BULLISH 64,620.0</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFI-IRFOS KPI | BULLISH 64,620.0</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
@@ -10,65 +12,55 @@
   :root { --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --border:#30363d; --text:#e6edf3; --muted:#ffffff; --green:#3fb950; --blue:#58a6ff; --purple:#a371f7; --orange:#d29922; --red:#f85149; }
   body.light { background: linear-gradient(135deg, #f6f8fa 0%, #e9eff5 100%); --bg:#f6f8fa; --bg2:rgba(255,255,255,0.9); --bg3:#f0f2f4; --border:#d0d7de; --text:#1f2328; --muted:#000000; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background: linear-gradient(135deg, #0d1117 0%, #0a192f 50%, #003a4d 100%); color:var(--text); font-family:'JetBrains Mono', monospace; margin:0; font-size:18px; transition: .2s; overflow-x:hidden; background-attachment: fixed; }
+  body { background: linear-gradient(135deg, #0d1117 0%, #0a192f 50%, #003a4d 100%); color:var(--text); font-family:'JetBrains Mono', monospace; margin:0; font-size:15px; transition: .2s; overflow-x:hidden; background-attachment: fixed; }
   
-  header { background:rgba(22, 27, 34, 0.8); border-bottom:2px solid var(--border); padding:20px 40px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; backdrop-filter: blur(10px); }
+  header { background:rgba(22, 27, 34, 0.8); border-bottom:2px solid var(--border); padding:12px 0; position:sticky; top:0; z-index:100; backdrop-filter: blur(10px); }
+  .header-container { max-width: 1550px; margin: 0 auto; display: flex; width: 100%; justify-content: space-between; align-items: center; padding: 0 32px; }
   body.light header { background:rgba(255, 255, 255, 0.8); border-bottom-color:rgba(0,0,0,0.05); }
-  .hdr-right { display:flex; gap:16px; }
-  .icon-btn { background:var(--bg3); border:1px solid var(--border); border-radius:12px; width:52px; height:52px; display:flex; align-items:center; justify-content:center; color:var(--text); cursor:pointer; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-  .icon-btn:hover { background:var(--border); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .icon-btn svg { width:20px; height:20px; fill:currentColor; }
-  .btn-green { background:var(--green); border:none; color:#fff; box-shadow: 0 0 15px rgba(63, 185, 80, 0.2); }
-  .btn-green:hover { background:#46c95d; box-shadow: 0 0 20px rgba(63, 185, 80, 0.4); }
-  .btn-green.loading svg { animation: spin 1s linear infinite; }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   
-  main { max-width:1650px; margin:0 auto; padding:24px; }
+  .hdr-right { display:flex; gap:10px; }
+  .icon-btn { background:var(--bg3); border:1px solid var(--border); border-radius:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--text); cursor:pointer; transition:all 0.3s ease; }
+  .icon-btn:hover { background:var(--border); transform: translateY(-2px); }
+  .icon-btn svg { width:16px; height:18px; fill:currentColor; }
+  .btn-green { background:var(--green); border:none; color:#fff; }
   
-  .kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-bottom:32px; }
-  .kpi-card { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px; border-top:6px solid var(--border); display:flex; justify-content:space-between; align-items: flex-end; min-height:160px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-  .kpi-card:hover { transform: translateY(-8px); box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.6); }
-  body.light .kpi-card { background:rgba(255, 255, 255, 0.5); border-color:rgba(0,0,0,0.05); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08); }
+  .signal-bar { background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); padding:8px 0; font-size:12px; font-weight:800; letter-spacing:1px; color:var(--muted); backdrop-filter: blur(10px); }
+  .signal-container { max-width: 1550px; margin: 0 auto; display: flex; gap: 32px; padding: 0 32px; }
+  body.light .signal-bar { background:rgba(255,255,255,0.7); border-bottom-color:rgba(0,0,0,0.05); }
+
+  main { max-width:1550px; margin:0 auto; padding:20px; }
+  
+  .kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:24px; }
+  .kpi-card { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:20px; border-top:4px solid var(--border); display:flex; justify-content:space-between; align-items: flex-end; min-height:130px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); }
   .kpi-card.c-purple { border-top-color:var(--purple); }
-  .card-left { flex: 1; }
-  .label { font-size:15px; text-transform:uppercase; color:var(--muted); font-weight:800; margin-bottom:16px; letter-spacing:1px; }
-  .value { font-size:42px; font-weight:800; line-height:1; letter-spacing:-1.5px; }
+  
+  .label { font-size:12px; text-transform:uppercase; color:var(--muted); font-weight:800; margin-bottom:10px; letter-spacing:1px; }
+  .value { font-size:32px; font-weight:800; line-height:1; letter-spacing:-1px; }
   
   .card-trend { text-align:right; display:flex; flex-direction:column; justify-content:flex-end; font-weight:800; }
-  .trend-top { font-size:20px; margin-bottom:6px; white-space:nowrap; }
-  .trend-bottom { font-size:17px; opacity:1.0; white-space:nowrap; }
+  .trend-top { font-size:14px; margin-bottom:2px; white-space:nowrap; }
+  .trend-bottom { font-size:12px; opacity:0.8; white-space:nowrap; }
 
-  .row-top { display:grid; grid-template-columns: 2fr 1fr; gap:32px; margin-bottom:32px; align-items: start; }
-  .bottom-floor { display:grid; grid-template-columns: 1fr 1fr; gap:32px; height: 850px; max-width:1600px; align-items: stretch; }
+  .row-top { display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-bottom:20px; align-items: start; }
+  .bottom-floor { display:grid; grid-template-columns: 1fr 1fr; gap:20px; height: auto; align-items: stretch; }
   
-  .panel { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px; position:relative; display:flex; flex-direction:column; backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
-  body.light .panel { background:rgba(255, 255, 255, 0.5); border-color:rgba(0,0,0,0.05); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); }
-  .panel-h { font-size:16px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px; display:flex; justify-content:space-between; letter-spacing:1.5px; }
+  .panel { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:20px; position:relative; display:flex; flex-direction:column; backdrop-filter: blur(12px); }
+  .panel-h { font-size:13px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; display:flex; justify-content:space-between; letter-spacing:1px; }
   
-  table { width:100%; border-collapse:collapse; font-size:17px; }
-  th { text-align:left; font-size:13px; color:var(--muted); padding:16px 20px; background:var(--bg3); text-transform:uppercase; font-weight:800; }
-  td { padding:16px 20px; border-bottom:1px solid var(--border); }
-  tr:hover { background:rgba(255,255,255,0.03); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { text-align:left; font-size:11px; color:var(--muted); padding:10px 12px; background:var(--bg3); text-transform:uppercase; font-weight:800; }
+  td { padding:10px 12px; border-bottom:1px solid var(--border); }
   td.num { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
   .ch-up { color:var(--green); }
   .ch-dn { color:var(--red); }
   .ch-na { color:var(--muted); }
 
-  .signal-bar { background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); padding:12px 40px; display:flex; gap:32px; font-size:14px; font-weight:800; letter-spacing:1px; color:var(--muted); backdrop-filter: blur(10px); }
-  body.light .signal-bar { background:rgba(255,255,255,0.7); border-bottom-color:rgba(0,0,0,0.05); }
-  .sig-item span { color:var(--text); margin-left:8px; }
-  .sig-bullish { color:var(--green) !important; }
-  .sig-bearish { color:var(--red) !important; }
-
-  .legend-container { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; width:100%; }
-  .legend-pill { display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:12px; font-weight:800; color:var(--muted); transition: all 0.2s ease; }
-  .legend-pill:hover { background:rgba(255,255,255,0.1); transform: translateY(-2px); }
+  .legend-container { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; width:100%; }
+  .legend-pill { display:flex; align-items:center; gap:6px; padding:4px 10px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:11px; font-weight:800; color:var(--muted); transition: all 0.2s ease; }
   .legend-pill.active { background:rgba(255,255,255,0.15); border-color:var(--text); color:var(--text); }
-  .legend-pill .color-dot { width:10px; height:10px; border-radius:50%; }
-  body.light .legend-pill { background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.1); }
-  body.light .legend-pill.active { background:rgba(0,0,0,0.08); border-color:var(--text); }
+  .legend-pill .color-dot { width:8px; height:8px; border-radius:50%; }
 
-  .impact-badge { padding:4px 10px; border-radius:4px; font-weight:900; font-size:11px; letter-spacing:1px; }
+  .impact-badge { padding:2px 8px; border-radius:4px; font-weight:900; font-size:10px; letter-spacing:1px; }
   .impact-pos { background:rgba(63,185,80,0.15); color:var(--green); border:1px solid var(--green); }
   .impact-neu { background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }
   .impact-neg { background:rgba(248,81,73,0.15); color:var(--red); border:1px solid var(--red); }
@@ -79,84 +71,57 @@
 <body>
 <div id="loading-bar"></div>
 <header>
-  <div><h1 style="margin:0;font-size:20px;letter-spacing:-0.5px;font-weight:800">RFI-IRFOS <span style="color:var(--blue)">KPI</span></h1><div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px">STATUS: NOMINAL • SYNC: 2026-04-26 20:17:18</div></div>
-  <div class="hdr-right">
-    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">
-      <svg id="theme-icon" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/></svg>
-    </button>
-    <button class="icon-btn btn-green" id="refreshBtn" onclick="refreshDashboardData()" title="Refresh Data">
-      <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-    </button>
+  <div class="header-container">
+    <div><h1 style="margin:0;font-size:18px;letter-spacing:-0.5px;font-weight:800">RFI-IRFOS <span style="color:var(--blue)">KPI</span></h1><div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">STATUS: NOMINAL • SYNC: 2026-04-26 20:17:18</div></div>
+    <div class="hdr-right">
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">
+        <svg id="theme-icon" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/></svg>
+      </button>
+      <button class="icon-btn btn-green" id="refreshBtn" onclick="refreshDashboardData()" title="Refresh Data">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </button>
+    </div>
   </div>
 </header>
 
-    <div class="signal-bar">
-      <div class="sig-item">SENTIMENT: <span class="sig-bullish">BULLISH</span></div>
-      <div class="sig-item">TARGET 100K: <span>6 DAYS</span></div>
-      <div class="sig-item">PRIMARY DRIVER: <span>Crates</span></div>
-      <div class="sig-item" style="margin-left:auto">SIGNAL STRENGTH: <span>2788.73</span></div>
-    </div>
+<div class="signal-bar">
+  <div class="signal-container">
+    <div class="sig-item">SENTIMENT: <span class="sig-bullish">BULLISH</span></div>
+    <div class="sig-item">TARGET 100K: <span>6 DAYS</span></div>
+    <div class="sig-item">PRIMARY DRIVER: <span>Crates</span></div>
+    <div class="sig-item" style="margin-left:auto">SIGNAL STRENGTH: <span>2788.73</span></div>
+  </div>
+</div>
+
 <main>
   <div class="kpi-grid">
-    
-        <div class="kpi-card c-purple">
-          <div class="card-left">
-            <div class="label">Total Footprint</div>
-            <div class="value" id="val-total">64,620</div>
-          </div>
-          <div class="card-trend" id="total-trend" style="color:var(--green)"><div class="trend-top">▲ +70.0%</div><div class="trend-bottom">(+26610)</div></div>
-        </div>
-        <div class="kpi-card ">
-          <div class="card-left">
-            <div class="label">Total Clones</div>
-            <div class="value" id="val-clones">23,173</div>
-          </div>
-          <div class="card-trend" id="clones-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div>
-        </div>
-        <div class="kpi-card ">
-          <div class="card-left">
-            <div class="label">Total Views</div>
-            <div class="value" id="val-views">3,011</div>
-          </div>
-          <div class="card-trend" id="views-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div>
-        </div>
-        <div class="kpi-card ">
-          <div class="card-left">
-            <div class="label">GitHub Stars</div>
-            <div class="value" id="val-stars">5</div>
-          </div>
-          <div class="card-trend" id="stars-trend" style="color:var(--green)"><div class="trend-top">▲ +25.0%</div><div class="trend-bottom">(+1)</div></div>
-        </div>
-        <div class="kpi-card ">
-          <div class="card-left">
-            <div class="label">Smithery Calls</div>
-            <div class="value" id="val-smithery">9.55k</div>
-          </div>
-          <div class="card-trend" id="smithery-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div>
-        </div>
-        <div class="kpi-card ">
-          <div class="card-left">
-            <div class="label">Crates Downloads</div>
-            <div class="value" id="val-crates">1,647</div>
-          </div>
-          <div class="card-trend" id="crates-trend" style="color:var(--green)"><div class="trend-top">▲ +10.2%</div><div class="trend-bottom">(+153)</div></div>
-        </div>
-        <div class="kpi-card ">
-          <div class="card-left">
-            <div class="label">Open VSX</div>
-            <div class="value" id="val-openvsx">780</div>
-          </div>
-          <div class="card-trend" id="openvsx-trend" style="color:var(--green)"><div class="trend-top">▲ +0.3%</div><div class="trend-bottom">(+2)</div></div>
-        </div>
-    <div class="kpi-card" id="card-lat">
+    <div class="kpi-card c-purple">
       <div class="card-left">
-        <div class="label">Operational Latency</div>
-        <div class="value" id="val-lat" style="color:var(--green)">160ms</div>
+        <div class="label">Total Footprint</div>
+        <div class="value" id="val-total">64,620</div>
       </div>
-      <div class="card-trend" id="del-lat" style="color:var(--muted)">
-        <div class="trend-top">✦ SIGNAL</div>
-        <div class="trend-bottom">LIVE</div>
+      <div class="card-trend" id="total-trend" style="color:var(--green)"><div class="trend-top">▲ +70.0%</div><div class="trend-bottom">(+26610)</div></div>
+    </div>
+    <div class="kpi-card ">
+      <div class="card-left">
+        <div class="label">Total Clones</div>
+        <div class="value" id="val-clones">23,173</div>
       </div>
+      <div class="card-trend" id="clones-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div>
+    </div>
+    <div class="kpi-card ">
+      <div class="card-left">
+        <div class="label">Total Views</div>
+        <div class="value" id="val-views">3,011</div>
+      </div>
+      <div class="card-trend" id="views-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div>
+    </div>
+    <div class="kpi-card ">
+      <div class="card-left">
+        <div class="label">Crates Downloads</div>
+        <div class="value" id="val-crates">1,647</div>
+      </div>
+      <div class="card-trend" id="crates-trend" style="color:var(--green)"><div class="trend-top">▲ +10.2%</div><div class="trend-bottom">(+153)</div></div>
     </div>
   </div>
 
@@ -164,89 +129,42 @@
     <div class="panel">
       <div class="panel-h">Footprint Pulse <span>Historical Density</span></div>
       <div id="lgd-growth" class="legend-container"></div>
-      <div style="height:400px"><canvas id="growthChart"></canvas></div>
+      <div style="height:320px"><canvas id="growthChart"></canvas></div>
     </div>
-    <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
-      <div class="panel-h" style="width:100%">Resource Distribution <span>Balanced Weights</span></div>
+    <div class="panel">
+      <div class="panel-h">Resource Distribution <span>Balanced Weights</span></div>
       <div id="lgd-dist" class="legend-container" style="justify-content:center"></div>
-      <div style="height:400px; width:340px;"><canvas id="distChart"></canvas></div>
+      <div style="height:320px; position:relative; display:flex; align-items:center; justify-content:center;">
+        <div style="width:100%;height:100%"><canvas id="distChart"></canvas></div>
+        <div id="doughnut-hub" style="position:absolute;text-align:center;pointer-events:none;width:150px;background:rgba(255,255,255,0.05);padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px)">
+          <div id="hub-lbl" style="font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:1px;margin-bottom:2px">Ecosystem Weight</div>
+          <div id="hub-val" style="font-size:18px;font-weight:900;color:var(--text);letter-spacing:-0.5px">64,620</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="row-top">
+  <div class="bottom-floor" style="margin-bottom:40px">
     <div class="panel">
-      <div class="panel-h">Momentum Shift <span>Delta Tracking</span></div>
-      <div id="lgd-momentum" class="legend-container"></div>
-      <div style="height:400px"><canvas id="momentumChart"></canvas></div>
-    </div>
-    <div class="panel">
-      <div class="panel-h">MACD Momentum Tracker <span>7-14-5 Trend Convergence</span></div>
+      <div class="panel-h">TIS Signal Volatility <span>MACD & Momentum</span></div>
       <div id="lgd-macd" class="legend-container"></div>
-      <div style="height:400px; position:relative;"><canvas id="macdChart"></canvas></div>
+      <div style="height:180px; margin-bottom:12px"><canvas id="macdChart"></canvas></div>
+      <div id="lgd-momentum" class="legend-container"></div>
+      <div style="height:180px"><canvas id="momentumChart"></canvas></div>
     </div>
-  </div>
-
-  <div class="bottom-floor">
-    <div style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
+    <div style="display: flex; flex-direction: column; gap: 20px;">
       <div class="panel" style="padding:0; overflow:hidden;">
-        <div class="panel-h" style="padding:15px;background:var(--bg2);z-index:10;margin:0">Recent Volatility <span>Delta Tracking</span></div>
-        <table id="table-changes"><thead><tr><th>Metric</th><th class="num">Current</th><th class="num">Change</th><th class="num">Trend %</th></tr></thead><tbody>
-          <tr><td>Total Footprint <span style="font-size:9px;opacity:0.6">[SURGE]</span></td><td class="num">64,620</td><td class="num ch-up">+26610</td><td class="num ch-up">+70.0%</td></tr>
-<tr><td>Crates.io Downloads <span style="font-size:9px;opacity:0.6">[SURGE]</span></td><td class="num">1,647</td><td class="num ch-up">+153</td><td class="num ch-up">+10.2%</td></tr>
-<tr><td>OpenVSX Installs <span style="font-size:9px;opacity:0.6">[STABLE]</span></td><td class="num">780</td><td class="num ch-up">+2</td><td class="num ch-up">+0.3%</td></tr>
-<tr><td>Total GitHub Clones <span style="font-size:9px;opacity:0.6">[FLAT]</span></td><td class="num">23,173</td><td class="num ch-na">+0</td><td class="num ch-na">+0.0%</td></tr>
-<tr><td>Smithery Calls <span style="font-size:9px;opacity:0.6">[FLAT]</span></td><td class="num">9.55k</td><td class="num ch-na">+0</td><td class="num ch-na">+0.0%</td></tr>
-        </tbody></table>
+        <div class="panel-h" style="padding:12px;background:var(--bg2);z-index:10;margin:0">Crates.io Detail <span>Downloads</span></div>
+        <div style="max-height:220px; overflow-y:auto">
+          <table id="table-crates"><thead><tr><th>Package</th><th class="num">Count</th></tr></thead><tbody><tr><td>ternlang-core</td><td class="num">220</td></tr></tbody></table>
+        </div>
       </div>
-      <div class="panel" style="flex: 1; min-height: 0; overflow-y: auto; padding: 0;">
-        <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Crates Detail <span>Granular Downloads</span></div>
-        <table id="table-crates"><thead><tr><th>Crate Name</th><th class="num">Downloads</th></tr></thead><tbody><tr><td>ternlang-core <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">220</td></tr>
-<tr><td>ternlang-ml <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">142</td></tr>
-<tr><td>ternlang-runtime <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">123</td></tr>
-<tr><td>albert-runtime <span style="font-size:9px;color:var(--muted)">v1.1.3</span></td><td class="num">122</td></tr>
-<tr><td>ternlang-moe <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">116</td></tr>
-<tr><td>ternlang-hdl <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">114</td></tr>
-<tr><td>albert-api <span style="font-size:9px;color:var(--muted)">v1.1.3</span></td><td class="num">104</td></tr>
-<tr><td>ternlang-lsp <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">96</td></tr>
-<tr><td>ternlang-cli <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">95</td></tr>
-<tr><td>ternlang-compat <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">90</td></tr>
-<tr><td>albert-commands <span style="font-size:9px;color:var(--muted)">v1.1.3</span></td><td class="num">89</td></tr>
-<tr><td>albert-tools <span style="font-size:9px;color:var(--muted)">v1.1.3</span></td><td class="num">81</td></tr>
-<tr><td>albert-compat <span style="font-size:9px;color:var(--muted)">v1.1.3</span></td><td class="num">69</td></tr>
-<tr><td>albert-cli <span style="font-size:9px;color:var(--muted)">v1.1.3</span></td><td class="num">58</td></tr>
-<tr><td>ternlang-mcp <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">47</td></tr>
-<tr><td>ternlang-codegen <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">31</td></tr>
-<tr><td>ternpkg <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">30</td></tr>
-<tr><td>ternlang-compress <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">10</td></tr>
-<tr><td>ternlang-test <span style="font-size:9px;color:var(--muted)">v1.1.1</span></td><td class="num">10</td></tr></tbody></table>
+      <div class="panel" style="padding:0; overflow:hidden; flex:1">
+        <div class="panel-h" style="padding:12px;background:var(--bg2);z-index:10;margin:0">Network Traffic <span>14-Day Log</span></div>
+        <div style="overflow-y:auto; flex:1">
+          <table id="table-traffic"><thead><tr><th>Timestamp</th><th class="num">Clones</th><th class="num">Views</th><th>Signal</th></tr></thead><tbody><tr><td>2026-04-24</td><td class="num">1140</td><td class="num">81</td><td>+1</td></tr></tbody></table>
+        </div>
       </div>
-    </div>
-
-    <div class="panel" style="height: 100%; overflow-y: auto; padding: 0;">
-      <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Network Traffic <span>14-Day Rescued Log</span></div>
-      <table id="table-traffic"><thead><tr><th>Timestamp</th><th class="num">Clones</th><th class="num">Views</th><th>TIS Impact</th></tr></thead><tbody><tr><td>2026-04-24</td><td class="num">1140 <span style="font-size:9px;color:var(--muted)">(316)</span></td><td class="num">81 <span style="font-size:9px;color:var(--muted)">(3)</span></td><td><span class="impact-badge impact-pos">+1</span></td></tr>
-<tr><td>2026-04-23</td><td class="num">2078 <span style="font-size:9px;color:var(--muted)">(444)</span></td><td class="num">130 <span style="font-size:9px;color:var(--muted)">(4)</span></td><td><span class="impact-badge impact-neu">+0</span></td></tr>
-<tr><td>2026-04-22</td><td class="num">2121 <span style="font-size:9px;color:var(--muted)">(550)</span></td><td class="num">99 <span style="font-size:9px;color:var(--muted)">(2)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-21</td><td class="num">621 <span style="font-size:9px;color:var(--muted)">(180)</span></td><td class="num">80 <span style="font-size:9px;color:var(--muted)">(3)</span></td><td><span class="impact-badge impact-pos">+1</span></td></tr>
-<tr><td>2026-04-20</td><td class="num">428 <span style="font-size:9px;color:var(--muted)">(152)</span></td><td class="num">46 <span style="font-size:9px;color:var(--muted)">(2)</span></td><td><span class="impact-badge impact-pos">+1</span></td></tr>
-<tr><td>2026-04-19</td><td class="num">428 <span style="font-size:9px;color:var(--muted)">(156)</span></td><td class="num">59 <span style="font-size:9px;color:var(--muted)">(2)</span></td><td><span class="impact-badge impact-pos">+1</span></td></tr>
-<tr><td>2026-04-18</td><td class="num">1442 <span style="font-size:9px;color:var(--muted)">(406)</span></td><td class="num">100 <span style="font-size:9px;color:var(--muted)">(8)</span></td><td><span class="impact-badge impact-pos">+1</span></td></tr>
-<tr><td>2026-04-17</td><td class="num">1006 <span style="font-size:9px;color:var(--muted)">(312)</span></td><td class="num">97 <span style="font-size:9px;color:var(--muted)">(3)</span></td><td><span class="impact-badge impact-pos">+1</span></td></tr>
-<tr><td>2026-04-16</td><td class="num">1431 <span style="font-size:9px;color:var(--muted)">(400)</span></td><td class="num">109 <span style="font-size:9px;color:var(--muted)">(1)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-15</td><td class="num">2136 <span style="font-size:9px;color:var(--muted)">(500)</span></td><td class="num">72 <span style="font-size:9px;color:var(--muted)">(7)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-14</td><td class="num">540 <span style="font-size:9px;color:var(--muted)">(175)</span></td><td class="num">188 <span style="font-size:9px;color:var(--muted)">(9)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-13</td><td class="num">518 <span style="font-size:9px;color:var(--muted)">(136)</span></td><td class="num">116 <span style="font-size:9px;color:var(--muted)">(7)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-12</td><td class="num">1851 <span style="font-size:9px;color:var(--muted)">(323)</span></td><td class="num">25 <span style="font-size:9px;color:var(--muted)">(2)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-11</td><td class="num">1113 <span style="font-size:9px;color:var(--muted)">(338)</span></td><td class="num">34 <span style="font-size:9px;color:var(--muted)">(2)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-10</td><td class="num">954 <span style="font-size:9px;color:var(--muted)">(321)</span></td><td class="num">224 <span style="font-size:9px;color:var(--muted)">(6)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-09</td><td class="num">306 <span style="font-size:9px;color:var(--muted)">(96)</span></td><td class="num">167 <span style="font-size:9px;color:var(--muted)">(2)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-08</td><td class="num">1892 <span style="font-size:9px;color:var(--muted)">(502)</span></td><td class="num">320 <span style="font-size:9px;color:var(--muted)">(4)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-07</td><td class="num">980 <span style="font-size:9px;color:var(--muted)">(178)</span></td><td class="num">290 <span style="font-size:9px;color:var(--muted)">(1)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-06</td><td class="num">23 <span style="font-size:9px;color:var(--muted)">(19)</span></td><td class="num">32 <span style="font-size:9px;color:var(--muted)">(3)</span></td><td><span class="impact-badge impact-neu">+0</span></td></tr>
-<tr><td>2026-04-05</td><td class="num">779 <span style="font-size:9px;color:var(--muted)">(199)</span></td><td class="num">298 <span style="font-size:9px;color:var(--muted)">(5)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-04</td><td class="num">607 <span style="font-size:9px;color:var(--muted)">(129)</span></td><td class="num">182 <span style="font-size:9px;color:var(--muted)">(8)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-03</td><td class="num">658 <span style="font-size:9px;color:var(--muted)">(191)</span></td><td class="num">164 <span style="font-size:9px;color:var(--muted)">(3)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr>
-<tr><td>2026-04-02</td><td class="num">121 <span style="font-size:9px;color:var(--muted)">(74)</span></td><td class="num">98 <span style="font-size:9px;color:var(--muted)">(1)</span></td><td><span class="impact-badge impact-neg">-1</span></td></tr></tbody></table>
     </div>
   </div>
 </main>
@@ -255,9 +173,7 @@
 const P = { pur:'#a371f7', blu:'#58a6ff', grn:'#3fb950', org:'#d29922', red:'#f85149', teal:'#39d353' };
 let growthChart, distChart, momentumChart, macdChart;
 
-function getThemeColor() {
-    return getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
-}
+function getThemeColor() { return getComputedStyle(document.documentElement).getPropertyValue('--text').trim(); }
 
 function createCustomLegend(chart, containerId) {
     const container = document.getElementById(containerId);
@@ -287,203 +203,86 @@ function initCharts(data) {
         const str = String(val).replace(/[▲▼,]/g, '').trim();
         return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
     };
-    
     const updateHub = (label, value, pct) => {
         document.getElementById('hub-lbl').innerText = label;
         document.getElementById('hub-val').innerText = pct ? `${value.toLocaleString()} (${pct}%)` : value.toLocaleString();
     };
     const resetHub = () => updateHub('Ecosystem Weight', s.total_footprint);
-
     const ctx = document.getElementById('growthChart').getContext('2d');
     const grad = ctx.createLinearGradient(0,0,0,400);
-    grad.addColorStop(0, 'rgba(163, 113, 247, 0.2)');
-    grad.addColorStop(1, 'rgba(163, 113, 247, 0)');
+    grad.addColorStop(0, 'rgba(163, 113, 247, 0.2)'); grad.addColorStop(1, 'rgba(163, 113, 247, 0)');
 
     if(growthChart) growthChart.destroy(); if(distChart) distChart.destroy();
     if(momentumChart) momentumChart.destroy(); if(macdChart) macdChart.destroy();
+
     growthChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: L.map(e=>e.ts.slice(5,10)),
         datasets: [
-          { label:'Footprint', data:L.map(e=>e.total_footprint), borderColor:P.pur, backgroundColor:grad, fill:true, tension:0.4, borderWidth:4, pointRadius:4, pointBackgroundColor:P.pur, z:10 },
+          { label:'Footprint', data:L.map(e=>e.total_footprint), borderColor:P.pur, backgroundColor:grad, fill:true, tension:0.4, borderWidth:3, pointRadius:3, pointBackgroundColor:P.pur },
           { label:'Crates', data:L.map(e=>e.crates_total), borderColor:P.grn, tension:0.4, pointRadius:0, borderWidth:2, borderDash:[5,5] },
-          { label:'OpenVSX', data:L.map(e=>e.openvsx_total), borderColor:P.blu, tension:0.4, pointRadius:0, borderWidth:2, borderDash:[5,5] },
-          { label:'Total Clones', data:L.map(e=>e.gh_clones), borderColor:P.teal, tension:0.4, pointRadius:0, borderWidth:2 },
-          { label:'Views', data:L.map(e=>e.gh_views), borderColor:P.org, tension:0.4, pointRadius:0, borderWidth:2 },
-          { label:'Smithery', data:L.map(e=>sm_val(e.smithery_calls_weekly)), borderColor:P.red, tension:0.4, pointRadius:0, borderWidth:2 }
+          { label:'Clones', data:L.map(e=>e.gh_clones), borderColor:P.teal, tension:0.4, pointRadius:0, borderWidth:2 }
         ]
       },
-      options: { 
-        responsive:true, maintainAspectRatio:false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: { 
-            datalabels: { display: false },
-            legend: { display: false },
-            tooltip: { 
-                backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
-                titleColor: isLight ? '#1f2328' : '#e6edf3',
-                bodyColor: isLight ? '#1f2328' : '#e6edf3',
-                titleFont: { size: 15, weight: '800' }, bodyFont: { size: 14 }, 
-                borderColor: 'var(--border)', borderWidth: 1, padding: 12, cornerRadius: 4 
-            }
-        },
-        scales:{ 
-            x:{ grid:{ display:false }, ticks:{ font:{ size: 12, weight: '700' } } }, 
-            y:{ grid:{ color: gridColor }, ticks:{ font:{ size: 12, weight: '700' }, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v } } 
-        } 
-      }
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ datalabels:{display:false}, legend:{display:false} }, scales:{ x:{grid:{display:false}}, y:{grid:{color:gridColor}} } }
     });
     createCustomLegend(growthChart, 'lgd-growth');
 
     distChart = new Chart(document.getElementById('distChart'), {
       type: 'doughnut',
       data: {
-        labels: ['Crates', 'OpenVSX', 'Total Clones', 'Views', 'Smithery', 'Stars'],
-        datasets: [{ 
-            data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
-            backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
-            borderWidth: 0, 
-            hoverOffset: 30, 
-            borderRadius: 10, 
-            spacing: 5,
-            offset: [0,0,0,0,0,0]
-        }]
+        labels: ['Crates', 'OpenVSX', 'Clones', 'Views', 'Smithery', 'Stars'],
+        datasets: [{ data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], borderWidth: 0, hoverOffset: 20, borderRadius: 8, spacing: 3, offset: [0,0,0,0,0,0] }]
       },
       options: { 
-        cutout:'70%', 
-        maintainAspectRatio: false,
-        plugins:{ 
-            legend:{ display: false }, 
-            tooltip: { enabled: false }
-        },
-        onHover: (e, el) => {
-            if (el.length) {
-                const i = el[0].index;
-                const ds = distChart.data.datasets[0];
-                const total = ds.data.reduce((a, b) => a + b, 0);
-                const pct = (ds.data[i] / total * 100).toFixed(1);
-                updateHub(distChart.data.labels[i], ds.data[i], pct);
-            } else {
-                resetHub();
-            }
-        }
+        cutout:'70%', maintainAspectRatio: false, plugins:{ legend:{display:false}, tooltip:{enabled:false} },
+        onHover: (e, el) => { if(el.length){ const i=el[0].index; const ds=distChart.data.datasets[0]; const tot=ds.data.reduce((a,b)=>a+b,0); updateHub(distChart.data.labels[i], ds.data[i], (ds.data[i]/tot*100).toFixed(1)); } else { resetHub(); } }
       }
     });
-    const dLgd = document.getElementById('lgd-dist');
-    if (dLgd) {
-        dLgd.innerHTML = '';
-        distChart.data.labels.forEach((lbl, i) => {
-            const pill = document.createElement('div');
-            pill.className = 'legend-pill active';
-            pill.innerHTML = `<div class="color-dot" style="background:${distChart.data.datasets[0].backgroundColor[i]}"></div><span>${lbl}</span>`;
-            
-            pill.onmouseenter = () => {
-                const ds = distChart.data.datasets[0];
-                const total = ds.data.reduce((a, b) => a + b, 0);
-                const pct = (ds.data[i] / total * 100).toFixed(1);
-                updateHub(lbl, ds.data[i], pct);
-                ds.offset[i] = 30;
-                distChart.update();
-            };
-            pill.onmouseleave = () => {
-                resetHub();
-                distChart.data.datasets[0].offset[i] = 0;
-                distChart.update();
-            };
-            dLgd.appendChild(pill);
-        });
-    }
 
     if (data.momentum) {
         momentumChart = new Chart(document.getElementById('momentumChart'), {
           type: 'line',
           data: {
             labels: L.map(e=>e.ts.slice(5,10)),
-            datasets: [
-              { label:'Views Δ', data:data.momentum.views, borderColor:P.org, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3 },
-              { label:'Clones Δ', data:data.momentum.clones, borderColor:P.teal, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3 },
-              { label:'Crates Δ', data:data.momentum.crates, borderColor:P.grn, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3, borderDash:[5,5] },
-              { label:'OpenVSX Δ', data:data.momentum.openvsx, borderColor:P.blu, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3, borderDash:[5,5] },
-              { label:'Smithery Δ', data:data.momentum.smithery, borderColor:P.red, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:3 }
-            ]
+            datasets: [ { label:'Views Δ', data:data.momentum.views, borderColor:P.org, tension:0.3, pointRadius:3, borderWidth:2 }, { label:'Clones Δ', data:data.momentum.clones, borderColor:P.teal, tension:0.3, pointRadius:3, borderWidth:2 } ]
           },
-          options: {
-            responsive:true, maintainAspectRatio:false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: { datalabels: { display: false }, legend: { display: false } },
-            scales: { 
-                x:{ grid:{display:false}, ticks:{font:{size:12, weight:'700'}} },
-                y:{ grid:{color:gridColor}, ticks:{font:{size:12, weight:'700'}} } 
-            }
-          }
+          options: { responsive:true, maintainAspectRatio:false, plugins:{ datalabels:{display:false}, legend:{display:false} }, scales:{ x:{grid:{display:false}}, y:{grid:{color:gridColor}} } }
         });
         createCustomLegend(momentumChart, 'lgd-momentum');
     }
-
     if (data.macd) {
         macdChart = new Chart(document.getElementById('macdChart'), {
           type: 'line',
           data: {
             labels: L.map(e=>e.ts.slice(5,10)),
-            datasets: [
-              { label:'MACD (7,14)', data:data.macd.macd, borderColor:P.blu, tension:0.4, pointRadius:4, pointHoverRadius:6, borderWidth:3 },
-              { label:'Signal (5)', data:data.macd.signal, borderColor:P.org, tension:0.4, pointRadius:4, pointHoverRadius:6, borderWidth:3, borderDash:[5,5] },
-              { label:'Histogram', data:data.macd.hist, type:'bar', backgroundColor: data.macd.hist.map(v => v >= 0 ? P.grn+'88' : P.red+'88'), borderWidth:0 }
-            ]
+            datasets: [ { label:'MACD', data:data.macd.macd, borderColor:P.blu, tension:0.4, pointRadius:3, borderWidth:2 }, { label:'Signal', data:data.macd.signal, borderColor:P.org, tension:0.4, pointRadius:3, borderWidth:2, borderDash:[5,5] }, { label:'Hist', data:data.macd.hist, type:'bar', backgroundColor: data.macd.hist.map(v => v >= 0 ? P.grn+'88' : P.red+'88'), borderWidth:0 } ]
           },
-          options: {
-            responsive:true, maintainAspectRatio:false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: { datalabels: { display: false }, legend: { display: false } },
-            scales: { 
-                x:{ grid:{display:false}, ticks:{font:{size:12, weight:'700'}} },
-                y:{ grid:{color:gridColor}, ticks:{font:{size:12, weight:'700'}} } 
-            }
-          }
+          options: { responsive:true, maintainAspectRatio:false, plugins:{ datalabels:{display:false}, legend:{display:false} }, scales:{ x:{grid:{display:false}}, y:{grid:{color:gridColor}} } }
         });
         createCustomLegend(macdChart, 'lgd-macd');
     }
 }
-async function refreshDashboardData() {
-    const btn = document.getElementById('refreshBtn');
-    const bar = document.getElementById('loading-bar');
-    btn.classList.add('loading');
-    btn.disabled = true;
-    bar.style.width = "40%";
 
-    try {
-        const res = await fetch('/api/data');
-        const data = await res.json();
-        window.location.reload();
-    } catch(e) {
-        btn.classList.remove('loading');
-        btn.style.background = "var(--red)";
-    }
+async function refreshDashboardData() {
+    const btn = document.getElementById('refreshBtn'); const bar = document.getElementById('loading-bar');
+    btn.disabled = true; bar.style.width = "40%";
+    try { const res = await fetch('/api/data'); const data = await res.json(); window.location.reload(); } catch(e) { btn.disabled = false; }
 }
 
 function toggleTheme() {
     document.body.classList.toggle('light');
     const isLight = document.body.classList.contains('light');
     localStorage.setItem('tis-theme', isLight ? 'light' : 'dark');
-    
-    const icon = document.getElementById('theme-icon');
-    if (isLight) {
-        icon.innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
-    } else {
-        icon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>';
-    }
     initCharts(latest_data_js);
 }
 
-const latest_data_js = {"snapshot": {"ts": "2026-04-26T20:17:18.829535+00:00", "total_footprint": 64620, "raw_footprint": 38166, "crates_total": 1647, "openvsx_total": 780, "gh_stars": 5, "gh_clones": 23173, "gh_views": 3011, "smithery_calls_weekly": "9.55k", "api_latency_ms": 160}, "prev": {"ts": "2026-04-25T23:59:06.178511+00:00", "total_footprint": 38010, "crates_total": 1494, "openvsx_total": 778, "gh_stars": 4, "gh_clones": 23173, "gh_views": 3011, "smithery_calls_weekly": "9.55k", "api_latency_ms": 272}, "chart_log": [{"ts": "2026-04-16T00:00:00Z", "total_footprint": 0, "crates_total": 0, "openvsx_total": 0, "gh_stars": 0, "gh_clones": 0, "gh_views": 0, "smithery_calls_weekly": "0"}, {"ts": "2026-04-17T23:56:08.003875+00:00", "crates_total": 766, "crates": [{"name": "ternlang-cli", "downloads": 73, "version": "1.0.0"}, {"name": "ternlang-codegen", "downloads": 9, "version": "0.3.2"}, {"name": "ternlang-compat", "downloads": 67, "version": "1.0.0"}, {"name": "ternlang-core", "downloads": 147, "version": "1.0.0"}, {"name": "ternlang-hdl", "downloads": 84, "version": "1.0.0"}, {"name": "ternlang-lsp", "downloads": 71, "version": "1.0.0"}, {"name": "ternlang-mcp", "downloads": 26, "version": "0.3.1"}, {"name": "ternlang-ml", "downloads": 99, "version": "1.0.0"}, {"name": "ternlang-moe", "downloads": 86, "version": "1.0.0"}, {"name": "ternlang-runtime", "downloads": 93, "version": "1.0.0"}, {"name": "ternpkg", "downloads": 11, "version": "0.1.0"}], "openvsx_total": 556, "openvsx": [{"name": "ternlang", "downloads": 556, "version": "1.0.0"}, {"name": "ternlang-vscode", "downloads": 0, "version": "?"}], "gh_stars": 4, "gh_forks": 3, "gh_watchers": 4, "gh_clones_14d": 13788, "gh_clones_unique_14d": 2702, "gh_views_14d": 2221, "gh_views_unique_14d": 40, "gh_clone_series": [{"timestamp": "2026-04-03T00:00:00Z", "count": 658, "uniques": 191}, {"timestamp": "2026-04-04T00:00:00Z", "count": 607, "uniques": 129}, {"timestamp": "2026-04-05T00:00:00Z", "count": 779, "uniques": 199}, {"timestamp": "2026-04-06T00:00:00Z", "count": 23, "uniques": 19}, {"timestamp": "2026-04-07T00:00:00Z", "count": 980, "uniques": 178}, {"timestamp": "2026-04-08T00:00:00Z", "count": 1892, "uniques": 502}, {"timestamp": "2026-04-09T00:00:00Z", "count": 306, "uniques": 96}, {"timestamp": "2026-04-10T00:00:00Z", "count": 954, "uniques": 321}, {"timestamp": "2026-04-11T00:00:00Z", "count": 1113, "uniques": 338}, {"timestamp": "2026-04-12T00:00:00Z", "count": 1851, "uniques": 323}, {"timestamp": "2026-04-13T00:00:00Z", "count": 518, "uniques": 136}, {"timestamp": "2026-04-14T00:00:00Z", "count": 540, "uniques": 175}, {"timestamp": "2026-04-15T00:00:00Z", "count": 2136, "uniques": 500}, {"timestamp": "2026-04-16T00:00:00Z", "count": 1431, "uniques": 400}], "gh_views_series": [{"timestamp": "2026-04-03T00:00:00Z", "count": 164, "uniques": 3}, {"timestamp": "2026-04-04T00:00:00Z", "count": 182, "uniques": 8}, {"timestamp": "2026-04-05T00:00:00Z", "count": 298, "uniques": 5}, {"timestamp": "2026-04-06T00:00:00Z", "count": 32, "uniques": 3}, {"timestamp": "2026-04-07T00:00:00Z", "count": 290, "uniques": 1}, {"timestamp": "2026-04-08T00:00:00Z", "count": 320, "uniques": 4}, {"timestamp": "2026-04-09T00:00:00Z", "count": 167, "uniques": 2}, {"timestamp": "2026-04-10T00:00:00Z", "count": 224, "uniques": 6}, {"timestamp": "2026-04-11T00:00:00Z", "count": 34, "uniques": 2}, {"timestamp": "2026-04-12T00:00:00Z", "count": 25, "uniques": 2}, {"timestamp": "2026-04-13T00:00:00Z", "count": 116, "uniques": 7}, {"timestamp": "2026-04-14T00:00:00Z", "count": 188, "uniques": 9}, {"timestamp": "2026-04-15T00:00:00Z", "count": 72, "uniques": 7}, {"timestamp": "2026-04-16T00:00:00Z", "count": 109, "uniques": 1}], "smithery_tools": 30, "smithery_quality": 70, "smithery_calls_weekly": 80, "api_latency_ms": 1490, "fetch_duration_s": 4.3, "total_footprint": 17415.0, "gh_clones": 13788, "gh_views": 2221}, {"ts": "2026-04-18T23:55:49.728238+00:00", "total_footprint": 17825, "crates_total": 919, "crates": [{"name": "ternlang-cli", "downloads": 85, "version": "1.0.0"}, {"name": "ternlang-codegen", "downloads": 18, "version": "1.0.0"}, {"name": "ternlang-compat", "downloads": 79, "version": "1.0.0"}, {"name": "ternlang-core", "downloads": 176, "version": "1.0.0"}, {"name": "ternlang-hdl", "downloads": 98, "version": "1.0.0"}, {"name": "ternlang-lsp", "downloads": 83, "version": "1.0.0"}, {"name": "ternlang-mcp", "downloads": 35, "version": "1.0.0"}, {"name": "ternlang-ml", "downloads": 118, "version": "1.0.0"}, {"name": "ternlang-moe", "downloads": 101, "version": "1.0.0"}, {"name": "ternlang-runtime", "downloads": 107, "version": "1.0.0"}, {"name": "ternpkg", "downloads": 19, "version": "1.0.0"}], "openvsx_total": 612, "openvsx": [{"name": "ternlang", "downloads": 612, "version": "1.0.0"}], "gh_stars": 4, "gh_forks": 3, "gh_watchers": 4, "gh_clones_14d": 14136, "gh_clones_unique_14d": 2752, "gh_views_14d": 2154, "gh_views_unique_14d": 40, "gh_clone_series": [{"timestamp": "2026-04-04T00:00:00Z", "count": 607, "uniques": 129}, {"timestamp": "2026-04-05T00:00:00Z", "count": 779, "uniques": 199}, {"timestamp": "2026-04-06T00:00:00Z", "count": 23, "uniques": 19}, {"timestamp": "2026-04-07T00:00:00Z", "count": 980, "uniques": 178}, {"timestamp": "2026-04-08T00:00:00Z", "count": 1892, "uniques": 502}, {"timestamp": "2026-04-09T00:00:00Z", "count": 306, "uniques": 96}, {"timestamp": "2026-04-10T00:00:00Z", "count": 954, "uniques": 321}, {"timestamp": "2026-04-11T00:00:00Z", "count": 1113, "uniques": 338}, {"timestamp": "2026-04-12T00:00:00Z", "count": 1851, "uniques": 323}, {"timestamp": "2026-04-13T00:00:00Z", "count": 518, "uniques": 136}, {"timestamp": "2026-04-14T00:00:00Z", "count": 540, "uniques": 175}, {"timestamp": "2026-04-15T00:00:00Z", "count": 2136, "uniques": 500}, {"timestamp": "2026-04-16T00:00:00Z", "count": 1431, "uniques": 400}, {"timestamp": "2026-04-17T00:00:00Z", "count": 1006, "uniques": 312}], "gh_views_series": [{"timestamp": "2026-04-04T00:00:00Z", "count": 182, "uniques": 8}, {"timestamp": "2026-04-05T00:00:00Z", "count": 298, "uniques": 5}, {"timestamp": "2026-04-06T00:00:00Z", "count": 32, "uniques": 3}, {"timestamp": "2026-04-07T00:00:00Z", "count": 290, "uniques": 1}, {"timestamp": "2026-04-08T00:00:00Z", "count": 320, "uniques": 4}, {"timestamp": "2026-04-09T00:00:00Z", "count": 167, "uniques": 2}, {"timestamp": "2026-04-10T00:00:00Z", "count": 224, "uniques": 6}, {"timestamp": "2026-04-11T00:00:00Z", "count": 34, "uniques": 2}, {"timestamp": "2026-04-12T00:00:00Z", "count": 25, "uniques": 2}, {"timestamp": "2026-04-13T00:00:00Z", "count": 116, "uniques": 7}, {"timestamp": "2026-04-14T00:00:00Z", "count": 188, "uniques": 9}, {"timestamp": "2026-04-15T00:00:00Z", "count": 72, "uniques": 7}, {"timestamp": "2026-04-16T00:00:00Z", "count": 109, "uniques": 1}, {"timestamp": "2026-04-17T00:00:00Z", "count": 97, "uniques": 3}], "smithery_tools": 30, "smithery_quality": 70, "smithery_calls_weekly": 80, "api_latency_ms": 626, "fetch_duration_s": 4.3, "gh_clones": 14136, "gh_views": 2154}, {"ts": "2026-04-19T20:00:04.633708+00:00", "total_footprint": 18699, "crates_total": 922, "crates": [{"name": "ternlang-cli", "downloads": 85, "version": "1.0.0"}, {"name": "ternlang-codegen", "downloads": 19, "version": "1.0.0"}, {"name": "ternlang-compat", "downloads": 79, "version": "1.0.0"}, {"name": "ternlang-core", "downloads": 176, "version": "1.0.0"}, {"name": "ternlang-hdl", "downloads": 98, "version": "1.0.0"}, {"name": "ternlang-lsp", "downloads": 83, "version": "1.0.0"}, {"name": "ternlang-mcp", "downloads": 36, "version": "1.0.0"}, {"name": "ternlang-ml", "downloads": 118, "version": "1.0.0"}, {"name": "ternlang-moe", "downloads": 101, "version": "1.0.0"}, {"name": "ternlang-runtime", "downloads": 107, "version": "1.0.0"}, {"name": "ternpkg", "downloads": 20, "version": "1.0.0"}], "openvsx_total": 730, "openvsx": [{"name": "ternlang", "downloads": 730, "version": "1.0.1"}], "gh_stars": 4, "gh_forks": 4, "gh_watchers": 4, "gh_clones_14d": 14971, "gh_clones_unique_14d": 2957, "gh_views_14d": 2072, "gh_views_unique_14d": 40, "gh_clone_series": [{"timestamp": "2026-04-05T00:00:00Z", "count": 779, "uniques": 199}, {"timestamp": "2026-04-06T00:00:00Z", "count": 23, "uniques": 19}, {"timestamp": "2026-04-07T00:00:00Z", "count": 980, "uniques": 178}, {"timestamp": "2026-04-08T00:00:00Z", "count": 1892, "uniques": 502}, {"timestamp": "2026-04-09T00:00:00Z", "count": 306, "uniques": 96}, {"timestamp": "2026-04-10T00:00:00Z", "count": 954, "uniques": 321}, {"timestamp": "2026-04-11T00:00:00Z", "count": 1113, "uniques": 338}, {"timestamp": "2026-04-12T00:00:00Z", "count": 1851, "uniques": 323}, {"timestamp": "2026-04-13T00:00:00Z", "count": 518, "uniques": 136}, {"timestamp": "2026-04-14T00:00:00Z", "count": 540, "uniques": 175}, {"timestamp": "2026-04-15T00:00:00Z", "count": 2136, "uniques": 500}, {"timestamp": "2026-04-16T00:00:00Z", "count": 1431, "uniques": 400}, {"timestamp": "2026-04-17T00:00:00Z", "count": 1006, "uniques": 312}, {"timestamp": "2026-04-18T00:00:00Z", "count": 1442, "uniques": 406}], "gh_views_series": [{"timestamp": "2026-04-05T00:00:00Z", "count": 298, "uniques": 5}, {"timestamp": "2026-04-06T00:00:00Z", "count": 32, "uniques": 3}, {"timestamp": "2026-04-07T00:00:00Z", "count": 290, "uniques": 1}, {"timestamp": "2026-04-08T00:00:00Z", "count": 320, "uniques": 4}, {"timestamp": "2026-04-09T00:00:00Z", "count": 167, "uniques": 2}, {"timestamp": "2026-04-10T00:00:00Z", "count": 224, "uniques": 6}, {"timestamp": "2026-04-11T00:00:00Z", "count": 34, "uniques": 2}, {"timestamp": "2026-04-12T00:00:00Z", "count": 25, "uniques": 2}, {"timestamp": "2026-04-13T00:00:00Z", "count": 116, "uniques": 7}, {"timestamp": "2026-04-14T00:00:00Z", "count": 188, "uniques": 9}, {"timestamp": "2026-04-15T00:00:00Z", "count": 72, "uniques": 7}, {"timestamp": "2026-04-16T00:00:00Z", "count": 109, "uniques": 1}, {"timestamp": "2026-04-17T00:00:00Z", "count": 97, "uniques": 3}, {"timestamp": "2026-04-18T00:00:00Z", "count": 100, "uniques": 8}], "smithery_tools": 30, "smithery_quality": 70, "smithery_calls_weekly": 86, "api_latency_ms": 293, "fetch_duration_s": 3.4, "gh_clones": 14971, "gh_views": 2072}, {"ts": "2026-04-20T21:18:55.321069+00:00", "total_footprint": 27688, "crates_total": 931, "openvsx_total": 750, "gh_stars": 4, "gh_clones_14d": 14620, "gh_views_14d": 1833, "smithery_calls_weekly": "9.55k", "api_latency_ms": 289, "gh_clones": 14620, "gh_views": 1833}, {"ts": "2026-04-21T23:56:01.611981+00:00", "total_footprint": 28133, "crates_total": 931, "openvsx_total": 776, "gh_stars": 4, "gh_clones_14d": 15025, "gh_views_14d": 1847, "smithery_calls_weekly": "9.55k", "api_latency_ms": 378, "gh_clones": 15025, "gh_views": 1847}, {"ts": "2026-04-22T20:00:04.494987+00:00", "total_footprint": 27573, "crates_total": 940, "openvsx_total": 776, "gh_stars": 4, "gh_clones_14d": 14666, "gh_views_14d": 1637, "smithery_calls_weekly": "9.55k", "api_latency_ms": 281, "gh_clones": 14666, "gh_views": 1637}, {"ts": "2026-04-23T23:59:18.052583+00:00", "total_footprint": 27581, "crates_total": 940, "openvsx_total": 776, "gh_stars": 4, "gh_clones_14d": 14895, "gh_views_14d": 1416, "smithery_calls_weekly": "9.55k", "api_latency_ms": 324, "gh_clones": 14895, "gh_views": 1416}, {"ts": "2026-04-24T23:59:20.084712+00:00", "total_footprint": 36391, "crates_total": 1098, "openvsx_total": 776, "gh_stars": 4, "gh_clones": 22033, "gh_views": 2930, "smithery_calls_weekly": "9.55k", "api_latency_ms": 262}, {"ts": "2026-04-25T23:59:06.178511+00:00", "total_footprint": 38010, "crates_total": 1494, "openvsx_total": 778, "gh_stars": 4, "gh_clones": 23173, "gh_views": 3011, "smithery_calls_weekly": "9.55k", "api_latency_ms": 272}, {"ts": "2026-04-26T20:17:18.829535+00:00", "total_footprint": 64620, "raw_footprint": 38166, "crates_total": 1647, "openvsx_total": 780, "gh_stars": 5, "gh_clones": 23173, "gh_views": 3011, "smithery_calls_weekly": "9.55k", "api_latency_ms": 160}], "momentum": {"views": [0, 2221.0, -67.0, -82.0, -239.0, 14.0, -210.0, -221.0, 1514.0, 81.0, 0.0], "clones": [0, 13788.0, 348.0, 835.0, -351.0, 405.0, -359.0, 229.0, 7138.0, 1140.0, 0.0], "crates": [0, 766.0, 153.0, 3.0, 9.0, 0.0, 9.0, 0.0, 158.0, 396.0, 153.0], "openvsx": [0, 556.0, 56.0, 118.0, 20.0, 26.0, 0.0, 0.0, 0.0, 2.0, 2.0], "smithery": [0, 80.0, 0.0, 6.0, 9464.0, 0, 0, 0, 0, 0, 0]}, "macd": {"macd": [0.0, 2031.75, 3332.4958333333334, 4168.864097222222, 5622.257998842593, 6431.472101601081, 6677.745531674062, 6616.165076832363, 7383.432278624183, 7824.924883834727, 10955.56424776042], "signal": [0.0, 677.25, 1562.3319444444444, 2431.1759953703704, 3494.869996527778, 4473.7373648855455, 5208.406753815051, 5677.659528154155, 6246.250444977498, 6772.4752579299075, 8166.838254540078], "hist": [0.0, 1354.5, 1770.163888888889, 1737.6881018518516, 2127.3880023148154, 1957.7347367155353, 1469.3387778590104, 938.5055486782085, 1137.181833646685, 1052.4496259048192, 2788.7259932203415]}, "crates_list": [{"name": "albert-api", "downloads": 104, "version": "1.1.3", "updated": "2026-04-26T09:54:46.319828Z"}, {"name": "albert-cli", "downloads": 58, "version": "1.1.3", "updated": "2026-04-26T09:59:07.667405Z"}, {"name": "albert-commands", "downloads": 89, "version": "1.1.3", "updated": "2026-04-26T09:56:21.290893Z"}, {"name": "albert-compat", "downloads": 69, "version": "1.1.3", "updated": "2026-04-26T09:57:15.155917Z"}, {"name": "albert-runtime", "downloads": 122, "version": "1.1.3", "updated": "2026-04-26T09:54:04.441369Z"}, {"name": "albert-tools", "downloads": 81, "version": "1.1.3", "updated": "2026-04-26T09:55:47.631026Z"}, {"name": "ternlang-cli", "downloads": 95, "version": "1.1.1", "updated": "2026-04-25T01:33:04.310827Z"}, {"name": "ternlang-codegen", "downloads": 31, "version": "1.1.1", "updated": "2026-04-25T01:20:01.540626Z"}, {"name": "ternlang-compat", "downloads": 90, "version": "1.1.1", "updated": "2026-04-25T01:23:55.963078Z"}, {"name": "ternlang-compress", "downloads": 10, "version": "1.1.1", "updated": "2026-04-25T01:29:53.453633Z"}, {"name": "ternlang-core", "downloads": 220, "version": "1.1.1", "updated": "2026-04-25T01:19:39.640970Z"}, {"name": "ternlang-hdl", "downloads": 114, "version": "1.1.1", "updated": "2026-04-25T01:22:57.532509Z"}, {"name": "ternlang-lsp", "downloads": 96, "version": "1.1.1", "updated": "2026-04-25T01:23:25.957328Z"}, {"name": "ternlang-mcp", "downloads": 47, "version": "1.1.1", "updated": "2026-04-25T01:27:43.815737Z"}, {"name": "ternlang-ml", "downloads": 142, "version": "1.1.1", "updated": "2026-04-25T01:22:52.546899Z"}, {"name": "ternlang-moe", "downloads": 116, "version": "1.1.1", "updated": "2026-04-25T01:24:32.519982Z"}, {"name": "ternlang-runtime", "downloads": 123, "version": "1.1.1", "updated": "2026-04-25T01:20:59.792036Z"}, {"name": "ternlang-test", "downloads": 10, "version": "1.1.1", "updated": "2026-04-25T01:31:39.689035Z"}, {"name": "ternpkg", "downloads": 30, "version": "1.1.1", "updated": "2026-04-25T01:33:18.461571Z"}], "all_traffic": {"2026-04-02": {"clones": 121, "clones_unique": 74, "views": 98, "views_unique": 1}, "2026-04-03": {"clones": 658, "clones_unique": 191, "views": 164, "views_unique": 3}, "2026-04-04": {"clones": 607, "clones_unique": 129, "views": 182, "views_unique": 8}, "2026-04-05": {"clones": 779, "clones_unique": 199, "views": 298, "views_unique": 5}, "2026-04-06": {"clones": 23, "clones_unique": 19, "views": 32, "views_unique": 3}, "2026-04-07": {"clones": 980, "clones_unique": 178, "views": 290, "views_unique": 1}, "2026-04-08": {"clones": 1892, "clones_unique": 502, "views": 320, "views_unique": 4}, "2026-04-09": {"clones": 306, "clones_unique": 96, "views": 167, "views_unique": 2}, "2026-04-10": {"clones": 954, "clones_unique": 321, "views": 224, "views_unique": 6}, "2026-04-11": {"clones": 1113, "clones_unique": 338, "views": 34, "views_unique": 2}, "2026-04-12": {"clones": 1851, "clones_unique": 323, "views": 25, "views_unique": 2}, "2026-04-13": {"clones": 518, "clones_unique": 136, "views": 116, "views_unique": 7}, "2026-04-14": {"clones": 540, "clones_unique": 175, "views": 188, "views_unique": 9}, "2026-04-15": {"clones": 2136, "clones_unique": 500, "views": 72, "views_unique": 7}, "2026-04-16": {"clones": 1431, "clones_unique": 400, "views": 109, "views_unique": 1}, "2026-04-17": {"clones": 1006, "clones_unique": 312, "views": 97, "views_unique": 3}, "2026-04-18": {"clones": 1442, "clones_unique": 406, "views": 100, "views_unique": 8}, "2026-04-19": {"clones": 428, "clones_unique": 156, "views": 59, "views_unique": 2}, "2026-04-20": {"clones": 428, "views": 46, "clones_unique": 152, "views_unique": 2}, "2026-04-21": {"clones": 621, "views": 80, "clones_unique": 180, "views_unique": 3}, "2026-04-22": {"clones": 2121, "views": 99, "clones_unique": 550, "views_unique": 2}, "2026-04-23": {"clones": 2078, "views": 130, "clones_unique": 444, "views_unique": 4}, "2026-04-24": {"clones": 1140, "views": 81, "clones_unique": 316, "views_unique": 3}}, "updated_at": "2026-04-26 20:17:18"};
+const latest_data_js = {"snapshot": {"ts": "2026-04-26T20:17:18.829535+00:00", "total_footprint": 64620, "raw_footprint": 38166, "crates_total": 1647, "openvsx_total": 780, "gh_stars": 5, "gh_clones": 23173, "gh_views": 3011, "smithery_calls_weekly": "9.55k", "api_latency_ms": 160}, "chart_log": [{"ts": "2026-04-16T00:00:00Z", "total_footprint": 0, "crates_total": 0, "gh_clones": 0, "gh_views": 0, "smithery_calls_weekly": "0"}]};
 
 (function() {
     const saved = localStorage.getItem('tis-theme') || 'dark';
-    if (saved === 'light') { 
-        document.body.classList.add('light');
-        document.getElementById('theme-icon').innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
-    }
+    if (saved === 'light') document.body.classList.add('light');
     initCharts(latest_data_js);
 })();
 </script>
