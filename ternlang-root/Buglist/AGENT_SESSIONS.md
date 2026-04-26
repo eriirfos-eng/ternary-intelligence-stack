@@ -36,3 +36,32 @@ Compiler fixes:
 ## 2026-04-16 (Claude Sonnet 4.6) — FULL BUG SWEEP — 14 bugs closed, 88/98 probes passing
 ...
 (All previous session logs restored)
+
+## 2026-04-26 — stdlib session — 20 files
+Dirs covered: stdlib/lib, stdlib/classical, stdlib/showcase, stdlib/tutorials
+Files written:
+- stdlib/lib/trit_field.tern — trit-based bit packing utilities [tier1]
+- stdlib/lib/circular_buffer_trit.tern — fixed-size trit history buffer [tier1]
+- stdlib/lib/de_morgan_trit.tern — verification of ternary de morgan laws [tier1]
+- stdlib/lib/hashing_trit.tern — simple trit-based hashing [tier1]
+- stdlib/lib/disjoint_set_trit.tern — union-find data structure [tier1]
+- stdlib/lib/segment_tree_trit.tern — range query data structure [tier1]
+- stdlib/lib/fenwick_tree_trit.tern — binary indexed tree for trits [tier1]
+- stdlib/lib/sparse_matrix_trit.tern — sparse COO matrix representation [tier1]
+- stdlib/lib/frequency_map_trit.tern — count trit occurrences [tier1]
+- stdlib/lib/trit_vector_dist.tern — distance metrics for trits [tier1]
+- stdlib/lib/trit_set_operations.tern — ternary set theory demo [tier1]
+- stdlib/classical/minimax_trit.tern — ternary decision tree optimization [tier1]
+- stdlib/classical/graham_scan_mock.tern — geometric orientation logic [tier1]
+- stdlib/showcase/sentiment_analyzer.tern — rule-based ternary NLP [tier1]
+- stdlib/showcase/pid_thermal_control.tern — ternary discrete control demo [tier1]
+- stdlib/showcase/market_sentiment_sim.tern — ternary financial indicator demo [tier1]
+- stdlib/tutorials/error_handling_best_practices.tern — ternary signaling guide [tier1]
+- stdlib/tutorials/custom_trit_gates.tern — gate design patterns [tier1]
+- stdlib/tutorials/tensor_transformations.tern — tensor indexing patterns [tier1]
+- stdlib/tutorials/recursion_vs_iteration.tern — comparative patterns [tier1]
+
+Compiler/VM observations:
+- Fixed-size array literals [0, 1, 2] are treated as trittensors and saturate values to trit range. Use manual initialization for int arrays with values > 1.
+- 'cast(trit) to int' in function parameters can sometimes maintain trit-like behavior (saturation) in arithmetic. Explicit 'if' based conversion is safer for now.
+- 'match' on 'int' literals > 1 might be unstable; 'if/else if' is more robust for general integer matching.
