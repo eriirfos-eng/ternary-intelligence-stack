@@ -287,10 +287,10 @@ def render_html():
         iv = get_impact(day, c, vw)
         icls = "impact-pos" if iv > 0 else ("impact-neg" if iv < 0 else "impact-neu")
         badge = f'<span class="impact-badge {icls}">{iv:+d}</span>'
-        rows.append(f'<tr><td>{day}</td><td class="num">{c} <span style="font-size:9px;color:var(--muted)">({v.get("clones_unique",0)})</span></td><td class="num">{vw} <span style="font-size:9px;color:var(--muted)">({v.get("views_unique",0)})</span></td><td>{badge}</td></tr>')
+        rows.append(f'<div class="grid-row traffic-grid"><div>{day}</div><div class="grid-cell num">{c} <span style="font-size:9px;color:var(--muted)">({v.get("clones_unique",0)})</span></div><div class="grid-cell num">{vw} <span style="font-size:9px;color:var(--muted)">({v.get("views_unique",0)})</span></div><div class="grid-cell center">{badge}</div></div>')
     traffic_rows = "\n".join(rows)
 
-    crates_rows = "\n".join(f'<tr><td>{c["name"]}</td><td class="num" style="color:var(--blue)">v{c["version"]}</td><td class="num">{c["downloads"]:,}</td><td class="num" style="color:var(--green)">+{c["recent"]:,}</td></tr>' for c in sorted(d["crates_list"], key=lambda x: -x["downloads"]))
+    crates_rows = "\n".join(f'<div class="grid-row crates-grid"><div>{c["name"]}</div><div class="grid-cell num" style="color:var(--blue)">v{c["version"]}</div><div class="grid-cell num">{c["downloads"]:,}</div><div class="grid-cell num" style="color:var(--green)">+{c["recent"]:,}</div></div>' for c in sorted(d["crates_list"], key=lambda x: -x["downloads"]))
     lat = s["api_latency_ms"]
     lat_txt, lat_color = (f"{lat}ms", "var(--green)") if lat and lat < 500 else (f"{lat}ms" if lat else "timeout", "var(--red)")
 
@@ -332,25 +332,18 @@ def render_html():
   .panel {{ background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:32px; position:relative; display:flex; flex-direction:column; backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }}
   body.light .panel {{ background:rgba(255, 255, 255, 0.5); border-color:rgba(0,0,0,0.05); }}
   .panel-h {{ font-size:16px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px; display:flex; justify-content:space-between; letter-spacing:1.5px; }}
-  table {{ width:100%; border-collapse:collapse; font-size:17px; }}
-  th {{ text-align:left; font-size:13px; color:var(--muted); padding:16px 20px; background:var(--bg3); text-transform:uppercase; font-weight:800; }}
-  td {{ padding:16px 20px; border-bottom:1px solid var(--border); }}
-  tr:hover {{ background:rgba(255,255,255,0.03); }}
-  td.num {{ text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }}
-  .ch-up {{ color:var(--green); }}
-  .ch-dn {{ color:var(--red); }}
-  .ch-na {{ color:var(--muted); }}
-  .signal-bar {{ background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); padding:12px 40px; display:flex; gap:32px; font-size:14px; font-weight:800; letter-spacing:1px; color:var(--muted); backdrop-filter: blur(10px); }}
-  body.light .signal-bar {{ background:rgba(255,255,255,0.7); border-bottom-color:rgba(0,0,0,0.05); }}
-  .sig-item span {{ color:var(--text); margin-left:8px; }}
-  .sig-bullish {{ color:var(--green) !important; }}
-  .sig-bearish {{ color:var(--red) !important; }}
-  .legend-container {{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; width:100%; }}
-  .legend-pill {{ display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:12px; font-weight:800; color:var(--muted); transition: all 0.2s ease; }}
-  .legend-pill.active {{ background:rgba(255,255,255,0.15); border-color:var(--text); color:var(--text); }}
-  .legend-pill .color-dot {{ width:10px; height:10px; border-radius:50%; }}
-  body.light .legend-pill {{ background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.1); }}
-  .impact-badge {{ padding:4px 10px; border-radius:4px; font-weight:900; font-size:11px; letter-spacing:1px; }}
+  .grid-table {{ display: flex; flex-direction: column; width: 100%; font-size:17px; }}
+  .grid-row {{ display: grid; border-bottom: 1px solid var(--border); align-items: center; padding: 16px 20px; transition: background 0.2s; }}
+  .grid-row:hover {{ background: rgba(255,255,255,0.03); }}
+  .grid-header {{ background: var(--bg3); font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 800; border-bottom: none; position: sticky; top: 0; z-index: 20; padding: 18px 20px; }}
+  .grid-cell {{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+  .grid-cell.num {{ text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }}
+  .grid-cell.center {{ text-align: center; }}
+  
+  .traffic-grid {{ grid-template-columns: 1fr 100px 100px 120px; gap: 20px; }}
+  .crates-grid {{ grid-template-columns: 1.5fr 100px 100px 100px; gap: 20px; }}
+  
+  .impact-badge {{ display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 11px; letter-spacing: 1px; min-width: 32px; }}
   .impact-pos {{ background:rgba(63,185,80,0.15); color:var(--green); border:1px solid var(--green); }}
   .impact-neu {{ background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }}
   .impact-neg {{ background:rgba(248,81,73,0.15); color:var(--red); border:1px solid var(--red); }}
@@ -419,12 +412,22 @@ def render_html():
       </div>
       <div class="panel" style="flex: 1; min-height: 0; overflow-y: auto; padding: 0;">
         <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Crates Detail <span>Granular Downloads</span></div>
-        <table id="table-crates"><thead><tr><th>Crate Name</th><th class="num">Version</th><th class="num">Total DL</th><th class="num">Recent</th></tr></thead><tbody>{crates_rows}</tbody></table>
+        <div class="grid-table">
+          <div class="grid-row grid-header crates-grid">
+            <div>Crate Name</div><div class="num">Version</div><div class="num">Total DL</div><div class="num">Recent</div>
+          </div>
+          {crates_rows}
+        </div>
       </div>
     </div>
     <div class="panel" style="height: 100%; overflow-y: auto; padding: 0;">
       <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Network Traffic <span>14-Day Rescued Log</span></div>
-      <table id="table-traffic"><thead><tr><th>Timestamp</th><th class="num">Clones</th><th class="num">Views</th><th>TIS Impact</th></tr></thead><tbody>{traffic_rows}</tbody></table>
+      <div class="grid-table">
+        <div class="grid-row grid-header traffic-grid">
+          <div>Timestamp</div><div class="num">Clones</div><div class="num">Views</div><div class="center" style="padding-right: 15px;">TIS Impact</div>
+        </div>
+        {traffic_rows}
+      </div>
     </div>
   </div>
 </main>
