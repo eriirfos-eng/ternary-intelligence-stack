@@ -8,12 +8,12 @@
 fn main() -> trit {
     // Simulated signals: +1 (Bullish), 0 (Stable), -1 (Bearish)
     // From different sources: [Technical, Fundamental, News, Social, Volume]
-    let signals: trittensor<5> = [1, 1, 0, -1, 0];
+    let signals: trittensor<5> = [1, 1, 1, -1, 0];
     
     let buy_pressure: int = 0;
     let sell_pressure: int = 0;
     
-    println("Analyzing Market Signals: [Bull, Bull, Stable, Bear, Stable]");
+    println("Analyzing Market Signals: [Bull, Bull, Bull, Bear, Stable]");
     
     for s in signals {
         match s {
