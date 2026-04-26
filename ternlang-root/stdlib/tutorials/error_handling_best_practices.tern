@@ -1,0 +1,57 @@
+/*
+ * Tutorial: Error Handling Best Practices in Ternlang
+ * 
+ * Ternary logic provides a natural way to handle three core states:
+ * 1 (Affirm)  -> Success / OK
+ * 0 (Tend)    -> Warning / Partial Success / Uncertain
+ * -1 (Reject) -> Error / Failure / Conflict
+ *
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// A function that demonstrates the three return states
+fn process_data(val: int) -> trit {
+    if val > 100 {
+        println("LOG: Value exceeds 100 — Warning state (Tend)");
+        return 0; // 0 = Tend / Neutral / Warning
+    }
+    
+    if val < 0 {
+        println("LOG: Negative value — Error state (Reject)");
+        return -1; // -1 = Reject / Conflict / Error
+    }
+    
+    println("LOG: Processing successful — Success state (Affirm)");
+    return 1; // 1 = Affirm / Truth / Success
+}
+
+// Demonstrating conflict propagation using '?'
+fn pipeline(val: int) -> trit {
+    // If process_data returns -1, pipeline immediately returns -1.
+    // If it returns 0 or 1, execution continues.
+    let status: trit = process_data(val)?;
+    
+    println("Pipeline continuing after status check...");
+    return status;
+}
+
+fn main() -> trit {
+    println("=== Ternary Error Handling Tutorial ===");
+    
+    println("1. Success Case (50):");
+    let r1: trit = pipeline(50);
+    
+    println("2. Warning Case (150):");
+    let r2: trit = pipeline(150);
+    
+    println("3. Error Case (-10):");
+    let r3: trit = pipeline(-10);
+    println("Note: Pipeline should have exited early for -10.");
+
+    if r1 == 1 && r2 == 0 && r3 == -1 {
+        println("Tutorial simulation completed successfully.");
+        return 1;
+    }
+    
+    return -1;
+}
