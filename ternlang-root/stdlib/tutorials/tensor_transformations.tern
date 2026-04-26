@@ -1,0 +1,43 @@
+/*
+ * Tutorial: Tensor Transformations
+ * Advanced techniques for manipulating and transforming trittensors.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn main() -> trit {
+    // 1D to 2D mapping
+    // A 2x2 tensor is stored flat in memory
+    let t: trittensor<2 x 2> = [1, 0, -1, 1];
+    
+    println("Initial 2x2 Tensor (Flat index access):");
+    println("Row 0: "); println(cast(t[0])); println(cast(t[1]));
+    println("Row 1: "); println(cast(t[2])); println(cast(t[3]));
+    
+    // Transpose simulation: (i, j) -> (j, i)
+    // Original:
+    // [1,  0]
+    // [-1, 1]
+    //
+    // Transposed:
+    // [1, -1]
+    // [0,  1]
+    
+    let transposed: trittensor<2 x 2> = [0, 0, 0, 0];
+    transposed[0] = t[0]; // (0,0) -> (0,0)
+    transposed[1] = t[2]; // (1,0) -> (0,1)
+    transposed[2] = t[1]; // (0,1) -> (1,0)
+    transposed[3] = t[3]; // (1,1) -> (1,1)
+    
+    println("Transposed Tensor:");
+    println("Row 0: "); println(cast(transposed[0])); println(cast(transposed[1]));
+    println("Row 1: "); println(cast(transposed[2])); println(cast(transposed[3]));
+    
+    if transposed[1] == -1 && transposed[2] == 0 {
+        println("Tensor Transformation Tutorial: SUCCESS");
+        return 1;
+    }
+    
+    println("Tensor Transformation Tutorial: FAILED");
+    return -1;
+}
