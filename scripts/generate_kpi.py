@@ -44,7 +44,7 @@ def gh(path):
     return fetch(f"https://api.github.com/{path}", {"Authorization": f"token {GITHUB_PAT}", "User-Agent": "ternlang-dash", "Accept": "application/vnd.github.v3+json"})
 
 def ping_api():
-    for url in ["https://ternlang.com/health", "https://ternlang.com/"]:
+    for url in ["https://ternlang.com/kpi", "https://ternlang.com/health", "https://ternlang.com/"]:
         try:
             start = time.time()
             urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "ternlang-dash"}), timeout=10)
@@ -83,7 +83,15 @@ def do_fetch():
     print(f"[{datetime.now().strftime('%H:%M')}] TIS Signal Sync...")
 
     cd = fetch(f"https://crates.io/api/v1/crates?per_page=100&user_id={CRATES_USER}", {"User-Agent": "ternlang-dash"}) or {}
-    crates_list = [{"name": c["name"], "downloads": c["downloads"], "version": c["max_version"], "updated": c["updated_at"]} for c in cd.get("crates", [])]
+    crates_list = []
+    for c in cd.get("crates", []):
+        crates_list.append({
+            "name": c["name"],
+            "downloads": c["downloads"],
+            "recent": c.get("recent_downloads", 0),
+            "version": c["max_version"],
+            "updated": c["updated_at"]
+        })
     crates_total = sum(c["downloads"] for c in crates_list)
     openvsx_total = sum((fetch(f"https://open-vsx.org/api/rfi-irfos/{ext}") or {}).get("downloadCount", 0) for ext in OPENVSX_EXTS)
     repo = gh(f"repos/{GITHUB_REPO}") or {}
@@ -282,7 +290,7 @@ def render_html():
         rows.append(f'<tr><td>{day}</td><td class="num">{c} <span style="font-size:9px;color:var(--muted)">({v.get("clones_unique",0)})</span></td><td class="num">{vw} <span style="font-size:9px;color:var(--muted)">({v.get("views_unique",0)})</span></td><td>{badge}</td></tr>')
     traffic_rows = "\n".join(rows)
 
-    crates_rows = "\n".join(f'<tr><td>{c["name"]} <span style="font-size:9px;color:var(--muted)">v{c["version"]}</span></td><td class="num">{c["downloads"]:,}</td></tr>' for c in sorted(d["crates_list"], key=lambda x: -x["downloads"]))
+    crates_rows = "\n".join(f'<tr><td>{c["name"]}</td><td class="num" style="color:var(--blue)">v{c["version"]}</td><td class="num">{c["downloads"]:,}</td><td class="num" style="color:var(--green)">+{c["recent"]:,}</td></tr>' for c in sorted(d["crates_list"], key=lambda x: -x["downloads"]))
     lat = s["api_latency_ms"]
     lat_txt, lat_color = (f"{lat}ms", "var(--green)") if lat and lat < 500 else (f"{lat}ms" if lat else "timeout", "var(--red)")
 
@@ -410,7 +418,7 @@ def render_html():
       </div>
       <div class="panel" style="flex: 1; min-height: 0; overflow-y: auto; padding: 0;">
         <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Crates Detail <span>Granular Downloads</span></div>
-        <table id="table-crates"><thead><tr><th>Crate Name</th><th class="num">Downloads</th></tr></thead><tbody>{crates_rows}</tbody></table>
+        <table id="table-crates"><thead><tr><th>Crate Name</th><th class="num">Version</th><th class="num">Total DL</th><th class="num">Recent</th></tr></thead><tbody>{crates_rows}</tbody></table>
       </div>
     </div>
     <div class="panel" style="height: 100%; overflow-y: auto; padding: 0;">
@@ -474,12 +482,55 @@ function initCharts(data) {{
       type: 'doughnut',
       data: {{
         labels: ['Crates', 'OpenVSX', 'Total Clones', 'Views', 'Smithery', 'Stars'],
-        datasets: [{{ data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], borderWidth: 0, hoverOffset: 20, borderRadius: 10, spacing: 5 }}]
+        datasets: [{{ 
+            data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
+            backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
+            borderWidth: 0, 
+            hoverOffset: 40, 
+            borderRadius: 10, 
+            spacing: 5,
+            offset: [0,0,0,0,0,0]
+        }}]
       }},
-      options: {{ cutout:'85%', maintainAspectRatio: false, plugins:{{ legend:{{ display: false }}, tooltip: {{ backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', titleColor: isLight ? '#1f2328' : '#e6edf3', bodyColor: isLight ? '#1f2328' : '#e6edf3', borderWidth: 1, borderColor: 'var(--border)' }} }} }}
+      options: {{ 
+        cutout:'85%', 
+        maintainAspectRatio: false, 
+        plugins:{{ 
+            legend:{{ display: false }}, 
+            tooltip: {{ 
+                backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
+                titleColor: isLight ? '#1f2328' : '#e6edf3', 
+                bodyColor: isLight ? '#1f2328' : '#e6edf3', 
+                borderWidth: 1, borderColor: 'var(--border)',
+                callbacks: {{
+                    label: function(item) {{
+                        let total = item.dataset.data.reduce((a, b) => a + b, 0);
+                        let val = item.raw;
+                        let pct = (val / total * 100).toFixed(1);
+                        return `${item.label}: ${val.toLocaleString()} (${pct}%)`;
+                    }}
+                }}
+            }} 
+        }} 
+      }}
     }});
     const dLgd = document.getElementById('lgd-dist');
-    if (dLgd) {{ dLgd.innerHTML = ''; distChart.data.labels.forEach((lbl, i) => {{ const pill = document.createElement('div'); pill.className = 'legend-pill active'; pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`; dLgd.appendChild(pill); }}); }}
+    if (dLgd) {{ 
+        dLgd.innerHTML = ''; 
+        distChart.data.labels.forEach((lbl, i) => {{ 
+            const pill = document.createElement('div'); 
+            pill.className = 'legend-pill active'; 
+            pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`; 
+            pill.onclick = () => {{
+                const ds = distChart.data.datasets[0];
+                const isH = ds.offset[i] === 40;
+                ds.offset[i] = isH ? 0 : 40;
+                pill.classList.toggle('active', !isH);
+                distChart.update();
+            }};
+            dLgd.appendChild(pill); 
+        }}); 
+    }}
     if (data.momentum) {{
         momentumChart = new Chart(document.getElementById('momentumChart'), {{
           type: 'line',
@@ -519,22 +570,22 @@ function initCharts(data) {{
 }}
 async function refreshDashboardData() {{
     const btn = document.getElementById('refreshBtn'); const bar = document.getElementById('loading-bar');
-    btn.classList.add('loading'); btn.disabled = true; bar.style.width = \"40%\";
+    btn.classList.add('loading'); btn.disabled = true; bar.style.width = "40%";
     try {{ const res = await fetch('/api/data'); const data = await res.json(); window.location.reload(); }}
-    catch(e) {{ btn.classList.remove('loading'); btn.style.background = \"var(--red)\"; }}
+    catch(e) {{ btn.classList.remove('loading'); btn.style.background = "var(--red)"; }}
 }}
 function toggleTheme() {{
     document.body.classList.toggle('light'); const isLight = document.body.classList.contains('light');
     localStorage.setItem('tis-theme', isLight ? 'light' : 'dark');
     const icon = document.getElementById('theme-icon');
-    if (isLight) icon.innerHTML = '<path d=\"M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z\"/>';
-    else icon.innerHTML = '<path d=\"M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z\"/>';
+    if (isLight) icon.innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+    else icon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/>';
     initCharts(latest_data_js);
 }}
 const latest_data_js = {json.dumps(d)};
 (function() {{
     const saved = localStorage.getItem('tis-theme') || 'dark';
-    if (saved === 'light') {{ document.body.classList.add('light'); document.getElementById('theme-icon').innerHTML = '<path d=\"M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z\"/>'; }}
+    if (saved === 'light') {{ document.body.classList.add('light'); document.getElementById('theme-icon').innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>'; }}
     initCharts(latest_data_js);
 }})();
 </script>
