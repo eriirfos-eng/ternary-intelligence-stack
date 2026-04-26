@@ -1,0 +1,59 @@
+/*
+ * MinimaxTrit — A simple Minimax algorithm demonstration for ternary decision trees.
+ * Useful for game AI and decision making.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Simple Minimax for a binary tree of depth 2
+fn minimax(depth: int, is_max: trit, scores: int[], index: int) -> int {
+    // Base case: leaf node
+    if depth == 2 {
+        return scores[index];
+    }
+    
+    // Maximizing player (1 / Affirm)
+    if is_max == 1 ? {
+        let left: int = minimax(depth + 1, -1, scores, index * 2);
+        let right: int = minimax(depth + 1, -1, scores, index * 2 + 1);
+        if left > right { 
+            return left; 
+        }
+        return right;
+    } else {
+        // Holding case (0 / Tend) - Neutral path
+        return 0;
+    } else {
+        // Minimizing player (-1 / Reject)
+        let left: int = minimax(depth + 1, 1, scores, index * 2);
+        let right: int = minimax(depth + 1, 1, scores, index * 2 + 1);
+        if left < right { 
+            return left; 
+        }
+        return right;
+    }
+}
+
+fn main() -> trit {
+    // Leaf scores for a tree of depth 2 (4 leaves)
+    // Note: manual init to avoid literal issues
+    let scores: int[4];
+    scores[0] = 3;
+    scores[1] = 5;
+    scores[2] = 2;
+    scores[3] = 9;
+    
+    println("Running Minimax on leaf scores: [3, 5, 2, 9]");
+    let optimal: int = minimax(0, 1, scores, 0);
+    
+    println("Optimal score (expected 5):");
+    println(optimal);
+    
+    if optimal == 5 {
+        println("MinimaxTrit Test: PASSED");
+        return 1;
+    }
+    
+    println("MinimaxTrit Test: FAILED");
+    return -1;
+}
