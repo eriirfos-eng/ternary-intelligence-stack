@@ -1,0 +1,79 @@
+/*
+ * Tutorial: State Machine Patterns
+ * Implementing a simple Finite State Machine (FSM) using Ternlang primitives.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// State definitions:
+// 0: IDLE
+// 1: PROCESSING
+// 2: ERROR
+
+// Process an input trit to transition to the next state
+fn next_state(current_state: int, input_signal: trit) -> int {
+    if current_state == 0 {
+        // IDLE
+        match input_signal {
+             1 => { return 1; } // start processing
+            -1 => { return 2; } // fault
+             0 => { return 0; } // remain idle
+        }
+    } else if current_state == 1 {
+        // PROCESSING
+        match input_signal {
+             1 => { return 1; } // keep processing
+            -1 => { return 2; } // error during processing
+             0 => { return 0; } // done, back to idle
+        }
+    } else if current_state == 2 {
+        // ERROR
+        match input_signal {
+             1 => { return 0; } // reset to idle
+            -1 => { return 2; } // stay in error
+             0 => { return 2; } // stay in error
+        }
+    }
+    
+    return 2; // unknown state defaults to error
+}
+
+fn main() -> trit {
+    println("=== State Machine Tutorial ===");
+    
+    let state: int = 0; // Start at IDLE
+    println("Initial State: IDLE (0)");
+    
+    // Sequence of inputs: 1 (Start), 1 (Keep), 0 (Done), -1 (Fault from Idle), 1 (Reset)
+    let inputs: trittensor<5> = [1, 1, 0, -1, 1];
+    let expected_states: int[5];
+    expected_states[0] = 1;
+    expected_states[1] = 1;
+    expected_states[2] = 0;
+    expected_states[3] = 2;
+    expected_states[4] = 0;
+    
+    let success: trit = 1;
+    let i: int = 0;
+    
+    while i < 5 {
+        state = next_state(state, inputs[i]);
+        println("Input:"); println(cast(inputs[i]));
+        println("New State:"); println(state);
+        
+        if state != expected_states[i] {
+            println("State mismatch!");
+            success = -1;
+        }
+        
+        i = i + 1;
+    }
+    
+    if success == 1 {
+        println("State Machine Test: PASSED");
+        return 1;
+    }
+    
+    println("State Machine Test: FAILED");
+    return -1;
+}

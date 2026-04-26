@@ -1,0 +1,51 @@
+/*
+ * TrafficFlowTernary — Modeling intersection logic with ternary signals.
+ * Traffic state: +1 (Heavy), 0 (Normal), -1 (Blocked/Empty)
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Decides light duration (in seconds) based on incoming traffic flow trit.
+fn adapt_light_duration(flow: trit, default_duration: int) -> int {
+    match flow {
+         1 => { 
+             println("Heavy Flow: Extending green light.");
+             return default_duration + 20; 
+         }
+         0 => { 
+             println("Normal Flow: Standard green light.");
+             return default_duration; 
+         }
+        -1 => { 
+             println("Blocked/Empty: Shortening green light.");
+             return default_duration - 15; 
+         }
+    }
+}
+
+fn main() -> trit {
+    println("=== Adaptive Traffic Flow ===");
+    
+    let north_flow: trit = 1;  // Heavy
+    let east_flow:  trit = -1; // Blocked/Empty
+    let south_flow: trit = 0;  // Normal
+    
+    let base_green: int = 30;
+    
+    let n_dur: int = adapt_light_duration(north_flow, base_green);
+    println("North Light Duration:"); println(n_dur);
+    
+    let e_dur: int = adapt_light_duration(east_flow, base_green);
+    println("East Light Duration:"); println(e_dur);
+    
+    let s_dur: int = adapt_light_duration(south_flow, base_green);
+    println("South Light Duration:"); println(s_dur);
+    
+    if n_dur == 50 && e_dur == 15 && s_dur == 30 {
+        println("TrafficFlowTernary Test: PASSED");
+        return 1;
+    }
+    
+    println("TrafficFlowTernary Test: FAILED");
+    return -1;
+}
