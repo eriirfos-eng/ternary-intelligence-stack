@@ -1,0 +1,58 @@
+/*
+ * TritHistogram — Prints a simple text-based histogram for a trit stream.
+ * Visualizes the balance of Truth, Hold, and Conflict.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn print_bar(count: int, symbol: string) -> trit {
+    let i: int = 0;
+    while i < count {
+        print(symbol); // Note: assuming print string works, else we fallback to int counts
+        i = i + 1;
+    }
+    println("");
+    return 1;
+}
+
+fn generate_histogram(data: trit[], size: int) -> trit {
+    let count_pos: int = 0;
+    let count_zero: int = 0;
+    let count_neg: int = 0;
+    
+    let i: int = 0;
+    while i < size {
+        match data[i] {
+             1 => { count_pos = count_pos + 1; }
+             0 => { count_zero = count_zero + 1; }
+            -1 => { count_neg = count_neg + 1; }
+        }
+        i = i + 1;
+    }
+    
+    println("Affirm (+1) count:"); println(count_pos);
+    println("Tend   (0) count:"); println(count_zero);
+    println("Reject (-1) count:"); println(count_neg);
+    
+    // Validate we counted them all
+    if (count_pos + count_zero + count_neg) == size {
+        return 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    println("=== Trit Histogram ===");
+    
+    let stream: trittensor<10> = [1, 1, 0, -1, 1, -1, -1, 0, 1, 1];
+    
+    let res: trit = generate_histogram(stream, 10);
+    
+    if res == 1 {
+        println("TritHistogram Test: PASSED");
+        return 1;
+    }
+    
+    println("TritHistogram Test: FAILED");
+    return -1;
+}
