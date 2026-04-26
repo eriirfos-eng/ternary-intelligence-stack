@@ -1,0 +1,11 @@
+agent StateTest {
+    state: trit;
+    fn handle(msg: trit) -> trit {
+        return 1;
+    }
+}
+
+fn main() -> trit {
+    let a: agentref = spawn StateTest;
+    return 1;
+}
