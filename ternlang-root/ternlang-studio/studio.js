@@ -409,8 +409,8 @@ function TranslatorView() {
     }
   }, [translatorUrl]);
 
-  return React.createElement('div', { 
-    style: { width: '100%', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' } 
+  return React.createElement('div', {
+    style: { width: '100%', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'transparent' }
   },
     React.createElement('iframe', {
       ref: iframeRef,
