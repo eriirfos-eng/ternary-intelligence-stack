@@ -277,7 +277,29 @@ function createCustomLegend(chart, containerId) {
 }
 
 function initCharts(data) {
-...
+    const L = data.chart_log; const s = data.snapshot;
+    const textColor = getThemeColor(); const isLight = document.body.classList.contains('light');
+    const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+    Chart.defaults.color = textColor; Chart.defaults.font.family = "'JetBrains Mono', monospace";
+    Chart.register(ChartDataLabels);
+    const sm_val = (val) => {
+        const str = String(val).replace(/[▲▼,]/g, '').trim();
+        return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
+    };
+    
+    const updateHub = (label, value, pct) => {
+        document.getElementById('hub-lbl').innerText = label;
+        document.getElementById('hub-val').innerText = pct ? `${value.toLocaleString()} (${pct}%)` : value.toLocaleString();
+    };
+    const resetHub = () => updateHub('Ecosystem Weight', s.total_footprint);
+
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,400);
+    grad.addColorStop(0, 'rgba(163, 113, 247, 0.2)');
+    grad.addColorStop(1, 'rgba(163, 113, 247, 0)');
+
+    if(growthChart) growthChart.destroy(); if(distChart) distChart.destroy();
+    if(momentumChart) momentumChart.destroy(); if(macdChart) macdChart.destroy();
     growthChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -295,6 +317,7 @@ function initCharts(data) {
         responsive:true, maintainAspectRatio:false,
         interaction: { mode: 'index', intersect: false },
         plugins: { 
+            datalabels: { display: false },
             legend: { display: false },
             tooltip: { 
                 backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
@@ -320,26 +343,32 @@ function initCharts(data) {
             data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
             backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
             borderWidth: 0, 
-            hoverOffset: 20,
-            borderRadius: 10,
-            spacing: 5
+            hoverOffset: 30, 
+            borderRadius: 10, 
+            spacing: 5,
+            offset: [0,0,0,0,0,0]
         }]
       },
       options: { 
-        cutout:'85%', 
-        maintainAspectRatio: false, 
+        cutout:'70%', 
+        maintainAspectRatio: false,
         plugins:{ 
-            legend:{ display: false },
-            tooltip: { 
-                backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
-                titleColor: isLight ? '#1f2328' : '#e6edf3',
-                bodyColor: isLight ? '#1f2328' : '#e6edf3',
-                borderWidth: 1, borderColor: 'var(--border)' 
+            legend:{ display: false }, 
+            tooltip: { enabled: false }
+        },
+        onHover: (e, el) => {
+            if (el.length) {
+                const i = el[0].index;
+                const ds = distChart.data.datasets[0];
+                const total = ds.data.reduce((a, b) => a + b, 0);
+                const pct = (ds.data[i] / total * 100).toFixed(1);
+                updateHub(distChart.data.labels[i], ds.data[i], pct);
+            } else {
+                resetHub();
             }
-        } 
+        }
       }
     });
-    // For doughnut, we can manually generate legend from labels
     const dLgd = document.getElementById('lgd-dist');
     if (dLgd) {
         dLgd.innerHTML = '';
@@ -347,6 +376,20 @@ function initCharts(data) {
             const pill = document.createElement('div');
             pill.className = 'legend-pill active';
             pill.innerHTML = `<div class="color-dot" style="background:${distChart.data.datasets[0].backgroundColor[i]}"></div><span>${lbl}</span>`;
+            
+            pill.onmouseenter = () => {
+                const ds = distChart.data.datasets[0];
+                const total = ds.data.reduce((a, b) => a + b, 0);
+                const pct = (ds.data[i] / total * 100).toFixed(1);
+                updateHub(lbl, ds.data[i], pct);
+                ds.offset[i] = 30;
+                distChart.update();
+            };
+            pill.onmouseleave = () => {
+                resetHub();
+                distChart.data.datasets[0].offset[i] = 0;
+                distChart.update();
+            };
             dLgd.appendChild(pill);
         });
     }
@@ -367,7 +410,7 @@ function initCharts(data) {
           options: {
             responsive:true, maintainAspectRatio:false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { display: false } },
+            plugins: { datalabels: { display: false }, legend: { display: false } },
             scales: { 
                 x:{ grid:{display:false}, ticks:{font:{size:12, weight:'700'}} },
                 y:{ grid:{color:gridColor}, ticks:{font:{size:12, weight:'700'}} } 
@@ -391,7 +434,7 @@ function initCharts(data) {
           options: {
             responsive:true, maintainAspectRatio:false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { display: false } },
+            plugins: { datalabels: { display: false }, legend: { display: false } },
             scales: { 
                 x:{ grid:{display:false}, ticks:{font:{size:12, weight:'700'}} },
                 y:{ grid:{color:gridColor}, ticks:{font:{size:12, weight:'700'}} } 
@@ -400,7 +443,7 @@ function initCharts(data) {
         });
         createCustomLegend(macdChart, 'lgd-macd');
     }
-
+}
 async function refreshDashboardData() {
     const btn = document.getElementById('refreshBtn');
     const bar = document.getElementById('loading-bar');
