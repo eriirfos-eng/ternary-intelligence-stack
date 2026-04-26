@@ -1,0 +1,64 @@
+/*
+ * EcoThermostatTernary — A simulated eco-friendly thermostat.
+ * Uses a ternary sensor to decide whether to heat (+1), cool (-1), or idle (0).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Simulates checking the environment sensor against a target
+fn check_sensor(current: int, target: int) -> trit {
+    if current < target {
+        return 1; // Needs heating
+    } else if current > target {
+        return -1; // Needs cooling
+    }
+    return 0; // Perfect, idle
+}
+
+fn run_thermostat(start_temp: int, target_temp: int, cycles: int) -> int {
+    let current_temp: int = start_temp;
+    let i: int = 0;
+    
+    while i < cycles {
+        let action: trit = check_sensor(current_temp, target_temp);
+        
+        match action {
+             1 => { 
+                current_temp = current_temp + 1; 
+                println("Heating..."); 
+             }
+            -1 => { 
+                current_temp = current_temp - 1; 
+                println("Cooling..."); 
+             }
+             0 => { 
+                println("Idle. Temp is optimal."); 
+             }
+        }
+        
+        i = i + 1;
+    }
+    
+    return current_temp;
+}
+
+fn main() -> trit {
+    println("=== Eco-Thermostat Simulation ===");
+    let start: int = 18;
+    let target: int = 21;
+    let cycles: int = 5;
+    
+    println("Start temp: 18, Target: 21, Cycles: 5");
+    let final_temp: int = run_thermostat(start, target, cycles);
+    
+    println("Final temperature:");
+    println(final_temp);
+    
+    if final_temp == 21 {
+        println("EcoThermostatTernary Test: PASSED");
+        return 1;
+    }
+    
+    println("EcoThermostatTernary Test: FAILED");
+    return -1;
+}
