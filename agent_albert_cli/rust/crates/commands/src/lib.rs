@@ -255,6 +255,24 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         argument_hint: Some("[list|add <name> <cmd>|remove <name>]"),
         resume_supported: false,
     },
+    SlashCommandSpec {
+        name: "remember",
+        summary: "Commit something to Albert's persistent vault memory",
+        argument_hint: Some("<text>"),
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "recall",
+        summary: "Search Albert's vault for memories matching a keyword or #tag",
+        argument_hint: Some("<query>"),
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "vault",
+        summary: "Show recent vault entries or search by tag/keyword",
+        argument_hint: Some("[query]"),
+        resume_supported: true,
+    },
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -340,6 +358,15 @@ pub enum SlashCommand {
     Mcp {
         action: Option<String>,
         args: Option<String>,
+    },
+    Remember {
+        content: Option<String>,
+    },
+    Recall {
+        query: Option<String>,
+    },
+    Vault {
+        query: Option<String>,
     },
     Unknown(String),
 }
@@ -442,6 +469,15 @@ impl SlashCommand {
                     (a, b)
                 });
                 Self::Mcp { action, args }
+            },
+            "remember" => Self::Remember {
+                content: remainder_after_command(trimmed, command),
+            },
+            "recall" => Self::Recall {
+                query: remainder_after_command(trimmed, command),
+            },
+            "vault" => Self::Vault {
+                query: remainder_after_command(trimmed, command),
             },
             other => Self::Unknown(other.to_string()),
         })
@@ -592,6 +628,9 @@ pub fn handle_slash_command(
         | SlashCommand::Docs { .. }
         | SlashCommand::Loop { .. }
         | SlashCommand::Mcp { .. }
+        | SlashCommand::Remember { .. }
+        | SlashCommand::Recall { .. }
+        | SlashCommand::Vault { .. }
         | SlashCommand::Unknown(_) => None,
     }
 }

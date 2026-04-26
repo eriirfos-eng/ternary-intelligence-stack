@@ -458,6 +458,47 @@ pub fn mvp_tool_specs() -> Vec<ToolSpec> {
             }),
             required_permission: PermissionMode::ReadOnly,
         },
+        ToolSpec {
+            name: "vault_write",
+            description: "Save a memory to Albert's persistent vault (~/.albert/vault.jsonl). \
+                Use this to lock in anything worth remembering across sessions — decisions, facts, \
+                user context, project anchors. Include #tags in the content to make recall easier. \
+                Responds with a ternary confirmation.",
+            input_schema: json!({
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "description": "The memory to store. Include #tags for easier recall later."
+                    },
+                    "state": {
+                        "type": "string",
+                        "enum": ["+1", "0", "-1"],
+                        "description": "Ternary state: +1 affirm (strong/positive), 0 tend (neutral/ongoing), -1 refrain (caution/negative)."
+                    }
+                },
+                "required": ["content"],
+                "additionalProperties": false
+            }),
+            required_permission: PermissionMode::ReadOnly,
+        },
+        ToolSpec {
+            name: "vault_read",
+            description: "Search Albert's persistent vault for memories matching a keyword or #tag. \
+                Returns all matching entries with timestamps and ternary states.",
+            input_schema: json!({
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Keyword or #tag to search for."
+                    }
+                },
+                "required": ["query"],
+                "additionalProperties": false
+            }),
+            required_permission: PermissionMode::ReadOnly,
+        },
     ]
 }
 
@@ -492,6 +533,8 @@ pub fn execute_tool(name: &str, input: &Value) -> Result<ToolResult, String> {
         "SequentialThinking" => from_value::<SequentialThinkingInput>(input).and_then(run_sequential_thinking_wrapped),
         "Memory" => from_value::<MemoryInput>(input).and_then(run_memory_wrapped),
         "RepoMap" => from_value::<RepoMapInput>(input).and_then(run_repo_map_wrapped),
+        "vault_write" => from_value::<VaultWriteInput>(input).and_then(run_vault_write_wrapped),
+        "vault_read" => from_value::<VaultReadInput>(input).and_then(run_vault_read_wrapped),
         _ => Err(format!("unsupported tool: {name}")),
     }
 }
@@ -4710,6 +4753,99 @@ fn run_memory_wrapped(input: MemoryInput) -> Result<ToolResult, String> {
 
 fn run_repo_map_wrapped(input: RepoMapInput) -> Result<ToolResult, String> {
     match run_repo_map(input) {
+        Ok(out) => Ok(ToolResult { output: out, state: 1 }),
+        Err(e) => Ok(ToolResult { output: e, state: -1 }),
+    }
+}
+
+// ── Albert Vault ──────────────────────────────────────────────────────────────
+// Persistent JSONL memory: ~/.albert/vault.jsonl
+// Format: { id, timestamp, state, tags, content }
+// Tags are auto-extracted from #hashtags in the content.
+
+#[derive(Debug, Deserialize)]
+struct VaultWriteInput {
+    content: String,
+    state: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct VaultReadInput {
+    query: String,
+}
+
+fn vault_path() -> Result<std::path::PathBuf, String> {
+    let home = std::env::var("HOME").map_err(|_| "HOME not set".to_string())?;
+    let dir = std::path::PathBuf::from(home).join(".albert");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir.join("vault.jsonl"))
+}
+
+fn vault_extract_tags(text: &str) -> Vec<String> {
+    let re = regex::Regex::new(r"#\w+").expect("valid regex");
+    let tags: Vec<String> = re.find_iter(text).map(|m| m.as_str().to_string()).collect();
+    if tags.is_empty() { vec!["#core_directive".to_string()] } else { tags }
+}
+
+fn run_vault_write(input: VaultWriteInput) -> Result<String, String> {
+    use std::io::Write as _;
+    let path = vault_path()?;
+    let id = uuid::Uuid::new_v4().to_string();
+    let timestamp = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string();
+    let state = input.state.as_deref().unwrap_or("+1").to_string();
+    let tags = vault_extract_tags(&input.content);
+    let entry = serde_json::json!({
+        "id": id,
+        "timestamp": timestamp,
+        "state": state,
+        "tags": tags,
+        "content": input.content.trim()
+    });
+    let mut file = std::fs::OpenOptions::new()
+        .create(true).append(true).open(&path)
+        .map_err(|e| format!("-1 Entropy. Failed to open vault: {e}"))?;
+    writeln!(file, "{}", serde_json::to_string(&entry).map_err(|e| e.to_string())?)
+        .map_err(|e| format!("-1 Entropy. Failed to write to vault: {e}"))?;
+    Ok(format!("+1 Resonance. Memory secured. Tags: {}", tags.join(", ")))
+}
+
+fn run_vault_read(input: VaultReadInput) -> Result<String, String> {
+    let path = vault_path()?;
+    if !path.exists() {
+        return Ok("0 Static: Vault is empty — nothing stored yet.".to_string());
+    }
+    let query = input.query.to_lowercase();
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let mut results: Vec<String> = Vec::new();
+    for line in content.lines() {
+        if line.to_lowercase().contains(&query) {
+            if let Ok(entry) = serde_json::from_str::<serde_json::Value>(line) {
+                let ts = entry["timestamp"].as_str().unwrap_or("?");
+                let state = entry["state"].as_str().unwrap_or("0");
+                let text = entry["content"].as_str().unwrap_or("");
+                let tags = entry["tags"].as_array()
+                    .map(|a| a.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>().join(" "))
+                    .unwrap_or_default();
+                results.push(format!("[{ts}] ({state}) {tags}\n  {text}"));
+            }
+        }
+    }
+    if results.is_empty() {
+        Ok(format!("0 Static: No memories found matching '{}'.", input.query))
+    } else {
+        Ok(format!("Vault — {} match(es) for '{}':\n\n{}", results.len(), input.query, results.join("\n\n")))
+    }
+}
+
+fn run_vault_write_wrapped(input: VaultWriteInput) -> Result<ToolResult, String> {
+    match run_vault_write(input) {
+        Ok(out) => Ok(ToolResult { output: out, state: 1 }),
+        Err(e) => Ok(ToolResult { output: e, state: -1 }),
+    }
+}
+
+fn run_vault_read_wrapped(input: VaultReadInput) -> Result<ToolResult, String> {
+    match run_vault_read(input) {
         Ok(out) => Ok(ToolResult { output: out, state: 1 }),
         Err(e) => Ok(ToolResult { output: e, state: -1 }),
     }
