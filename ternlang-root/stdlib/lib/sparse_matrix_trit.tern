@@ -1,0 +1,49 @@
+/*
+ * SparseMatrixTrit — A simple coordinate-list (COO) sparse matrix for trits.
+ * Efficient for matrices where most elements are 'hold' (0).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Helper to find a value in sparse COO storage
+fn sparse_get(rows: int[], cols: int[], values: trit[], count: int, r: int, c: int) -> trit {
+    let i: int = 0;
+    while i < count {
+        if rows[i] == r && cols[i] == c {
+            return values[i];
+        }
+        i = i + 1;
+    }
+    return 0; // hold/zero
+}
+
+fn main() -> trit {
+    let max_size: int = 10;
+    let rows: int[10];
+    let cols: int[10];
+    let values: trittensor<10> = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let count: int = 0;
+    
+    println("Inserting sparse values at (1,2)=1 and (3,0)=-1");
+    rows[count] = 1; cols[count] = 2; values[count] = 1; count = count + 1;
+    rows[count] = 3; cols[count] = 0; values[count] = -1; count = count + 1;
+    
+    let v1: trit = sparse_get(rows, cols, values, count, 1, 2);
+    let v2: trit = sparse_get(rows, cols, values, count, 3, 0);
+    let v3: trit = sparse_get(rows, cols, values, count, 0, 0); // Not present
+    
+    println("Query (1,2):");
+    println(cast(v1));
+    println("Query (3,0):");
+    println(cast(v2));
+    println("Query (0,0):");
+    println(cast(v3));
+    
+    if v1 == 1 && v2 == -1 && v3 == 0 {
+        println("SparseMatrixTrit Test: PASSED");
+        return 1;
+    }
+    
+    println("SparseMatrixTrit Test: FAILED");
+    return -1;
+}
