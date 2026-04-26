@@ -6,6 +6,7 @@ ternlang.com, www.ternlang.com {
     # Proxy /api/* to the Rust API server
     reverse_proxy /api/* localhost:3731
     reverse_proxy /health localhost:3731
+    reverse_proxy /studio* localhost:3731
 
     # Security headers
     header {
