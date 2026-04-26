@@ -488,7 +488,7 @@ function initCharts(data) {{
             data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
             backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
             borderWidth: 0, 
-            hoverOffset: 40, 
+            hoverOffset: 20, 
             borderRadius: 10, 
             spacing: 5,
             offset: [0,0,0,0,0,0]
@@ -504,11 +504,12 @@ function initCharts(data) {{
                 font: {{ weight: '800', size: 14 }},
                 formatter: (val, ctx) => {{
                     let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                    return (val / total * 100).toFixed(1) + '%';
+                    let pct = (val / total * 100).toFixed(1);
+                    return `${{val.toLocaleString()}} (${{pct}}%)`;
                 }},
                 anchor: 'end',
                 align: 'end',
-                offset: 15
+                offset: 20
             }},
             legend:{{ display: false }}, 
             tooltip: {{ 
@@ -537,8 +538,8 @@ function initCharts(data) {{
             pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`; 
             pill.onclick = () => {{
                 const ds = distChart.data.datasets[0];
-                const isH = ds.offset[i] === 40;
-                ds.offset[i] = isH ? 0 : 40;
+                const isH = ds.offset[i] === 20;
+                ds.offset[i] = isH ? 0 : 20;
                 pill.classList.toggle('active', !isH);
                 distChart.update();
             }};
