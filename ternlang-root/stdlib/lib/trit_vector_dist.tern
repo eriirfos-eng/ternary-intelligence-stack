@@ -4,13 +4,20 @@
  * RFI-IRFOS · PUBLIC repo · v1.0
  */
 
+// Helper to convert trit to int explicitly
+fn trit_to_int(t: trit) -> int {
+    if t == 1 { return 1; }
+    if t == -1 { return -1; }
+    return 0;
+}
+
 // Manhattan distance: sum of absolute differences
 fn manhattan_dist(a: trit[], b: trit[], size: int) -> int {
     let dist: int = 0;
     let i: int = 0;
     while i < size {
-        let val_a: int = cast(a[i]);
-        let val_b: int = cast(b[i]);
+        let val_a: int = trit_to_int(a[i]);
+        let val_b: int = trit_to_int(b[i]);
         let diff: int = val_a - val_b;
         if diff < 0 { 
             diff = -diff; 
