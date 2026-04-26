@@ -1,0 +1,43 @@
+/*
+ * TritVectorDist — Distance metrics for trit vectors.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Manhattan distance: sum of absolute differences
+fn manhattan_dist(a: trit[], b: trit[], size: int) -> int {
+    let dist: int = 0;
+    let i: int = 0;
+    while i < size {
+        let val_a: int = cast(a[i]);
+        let val_b: int = cast(b[i]);
+        let diff: int = val_a - val_b;
+        if diff < 0 { 
+            diff = -diff; 
+        }
+        dist = dist + diff;
+        i = i + 1;
+    }
+    return dist;
+}
+
+fn main() -> trit {
+    let v1: trittensor<3> = [1, 0, -1];
+    let v2: trittensor<3> = [-1, 0, 1];
+    
+    println("Vector 1: [1, 0, -1]");
+    println("Vector 2: [-1, 0, 1]");
+    
+    // Manhattan distance: |1 - (-1)| + |0 - 0| + |-1 - 1| = 2 + 0 + 2 = 4
+    let d: int = manhattan_dist(v1, v2, 3);
+    println("Manhattan Distance (expected 4):");
+    println(d);
+    
+    if d == 4 {
+        println("TritVectorDist Test: PASSED");
+        return 1;
+    }
+    
+    println("TritVectorDist Test: FAILED");
+    return -1;
+}
