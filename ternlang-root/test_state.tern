@@ -1,0 +1,23 @@
+agent StateTest {
+    count: int = 0;
+    fn handle(msg: trit) -> trit {
+        count = count + 1;
+        if count > 1 {
+            return affirm;
+        }
+        return reject;
+    }
+}
+
+fn main() -> trit {
+    let a: agentref = spawn StateTest;
+    send a 1;
+    let r1: trit = await a;
+    send a 1;
+    let r2: trit = await a;
+    
+    if r1 == -1 && r2 == 1 {
+        return 1;
+    }
+    return -1;
+}
