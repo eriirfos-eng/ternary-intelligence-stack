@@ -1,0 +1,63 @@
+/*
+ * TritSetOperations — Set operations for trit-based sets.
+ * Treats trit vectors as sets where 1 is present, -1 is absent, 
+ * and 0 is uncertain/neutral.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Union: A OR B
+fn set_union(a: trit[], b: trit[], res: trit[], size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        res[i] = a[i] || b[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+// Intersection: A AND B
+fn set_intersection(a: trit[], b: trit[], res: trit[], size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        res[i] = a[i] && b[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let s1: trittensor<3> = [1, 0, -1];
+    let s2: trittensor<3> = [0, 1, 1];
+    let res: trittensor<3> = [0, 0, 0];
+    
+    println("Set 1: [1, 0, -1]");
+    println("Set 2: [0, 1, 1]");
+    
+    println("Union:");
+    set_union(s1, s2, res, 3);
+    // Expect: [max(1,0), max(0,1), max(-1,1)] = [1, 1, 1]
+    println(cast(res[0])); println(cast(res[1])); println(cast(res[2]));
+    
+    let success: trit = 1;
+    if res[0] != 1 || res[1] != 1 || res[2] != 1 {
+        success = -1;
+    }
+    
+    println("Intersection:");
+    set_intersection(s1, s2, res, 3);
+    // Expect: [min(1,0), min(0,1), min(-1,1)] = [0, 0, -1]
+    println(cast(res[0])); println(cast(res[1])); println(cast(res[2]));
+    
+    if res[0] != 0 || res[1] != 0 || res[2] != -1 {
+        success = -1;
+    }
+    
+    if success == 1 {
+        println("TritSetOperations Test: PASSED");
+        return 1;
+    }
+    
+    println("TritSetOperations Test: FAILED");
+    return -1;
+}
