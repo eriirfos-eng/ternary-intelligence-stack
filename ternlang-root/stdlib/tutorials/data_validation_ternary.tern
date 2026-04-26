@@ -1,0 +1,44 @@
+/*
+ * Tutorial: Data Validation with Ternary Logic
+ * Represents validation states as valid (1), missing/partial (0), and corrupt (-1).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn validate_record(age: int, name_len: int) -> trit {
+    if age < 0 {
+        return -1; // Corrupt/Invalid
+    }
+    
+    if name_len == 0 {
+        return 0; // Missing name, but not strictly corrupt (tend)
+    }
+    
+    if age >= 18 {
+        return 1; // Valid adult record
+    }
+    
+    return 0; // Valid but minor (tend/requires review)
+}
+
+fn main() -> trit {
+    println("=== Data Validation Tutorial ===");
+    
+    let r1: trit = validate_record(25, 5); // Adult, has name -> 1
+    let r2: trit = validate_record(15, 4); // Minor, has name -> 0
+    let r3: trit = validate_record(-5, 6); // Negative age -> -1
+    let r4: trit = validate_record(30, 0); // Missing name -> 0
+    
+    println("Record 1 (25, 5):"); println(cast(r1));
+    println("Record 2 (15, 4):"); println(cast(r2));
+    println("Record 3 (-5, 6):"); println(cast(r3));
+    println("Record 4 (30, 0):"); println(cast(r4));
+    
+    if r1 == 1 && r2 == 0 && r3 == -1 && r4 == 0 {
+        println("Data Validation Test: PASSED");
+        return 1;
+    }
+    
+    println("Data Validation Test: FAILED");
+    return -1;
+}

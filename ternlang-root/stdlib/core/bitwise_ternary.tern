@@ -1,0 +1,59 @@
+/*
+ * BitwiseTernary — Vectorized ternary logical operations.
+ * Applies Kleene logic over arrays of trits.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Vectorized AND (min)
+fn vec_and(a: trit[], b: trit[], res: trit[], size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        res[i] = a[i] && b[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+// Vectorized OR (max)
+fn vec_or(a: trit[], b: trit[], res: trit[], size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        res[i] = a[i] || b[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let v1: trittensor<3> = [1, 0, -1];
+    let v2: trittensor<3> = [0, 1, -1];
+    let out: trittensor<3> = [0, 0, 0];
+    
+    println("=== Vectorized Bitwise Ternary ===");
+    println("v1: [1, 0, -1]");
+    println("v2: [0, 1, -1]");
+    
+    vec_and(v1, v2, out, 3);
+    println("AND (min) result:");
+    println(cast(out[0])); println(cast(out[1])); println(cast(out[2]));
+    // expect [0, 0, -1]
+    
+    let ok: trit = 1;
+    if out[0] != 0 || out[1] != 0 || out[2] != -1 { ok = -1; }
+    
+    vec_or(v1, v2, out, 3);
+    println("OR (max) result:");
+    println(cast(out[0])); println(cast(out[1])); println(cast(out[2]));
+    // expect [1, 1, -1]
+    
+    if out[0] != 1 || out[1] != 1 || out[2] != -1 { ok = -1; }
+    
+    if ok == 1 {
+        println("BitwiseTernary Test: PASSED");
+        return 1;
+    }
+    
+    println("BitwiseTernary Test: FAILED");
+    return -1;
+}
