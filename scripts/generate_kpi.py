@@ -499,16 +499,16 @@ function initCharts(data) {{
         maintainAspectRatio: false, 
         plugins:{{ 
             datalabels: {{
-                display: true,
+                display: (ctx) => ctx.dataset.offset[ctx.dataIndex] > 0,
                 color: textColor,
-                font: {{ weight: '800', size: 12 }},
+                font: {{ weight: '800', size: 14 }},
                 formatter: (val, ctx) => {{
                     let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
                     return (val / total * 100).toFixed(1) + '%';
                 }},
                 anchor: 'end',
                 align: 'end',
-                offset: 10
+                offset: 15
             }},
             legend:{{ display: false }}, 
             tooltip: {{ 
@@ -533,7 +533,7 @@ function initCharts(data) {{
         dLgd.innerHTML = ''; 
         distChart.data.labels.forEach((lbl, i) => {{ 
             const pill = document.createElement('div'); 
-            pill.className = 'legend-pill active'; 
+            pill.className = 'legend-pill'; 
             pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`; 
             pill.onclick = () => {{
                 const ds = distChart.data.datasets[0];
