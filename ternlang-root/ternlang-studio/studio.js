@@ -1619,13 +1619,36 @@ window.initCanvasInteraction = initCanvasInteraction;
 
 // ─── Built-in Agent Library ──────────────────────────────────────────────────
 const AGENT_ONTOLOGY = {
-  "Guardrails & Safety": ["SafetyGate", "OutputGuard", "gatekeeper", "range_validator", "string_validator", "validator", "float_threshold", "watchdog", "supervisor", "retry"],
-  "Deliberation & Evaluation": ["Classifier", "Ranker", "Proposer", "Challenger", "Arbiter", "deliberator"],
-  "Routing & Aggregation": ["ConsensusGate", "consensus", "aggregator", "filter", "binary_bridge", "router", "pipeline", "majority_5", "weighted_consensus", "mapper", "transformer"],
-  "Memory & Persistence": ["ContextBuffer", "EpisodicRecall", "StateInjector", "sqlite_bridge"],
+  "Guardrails & Safety": [
+    "SafetyGate", "OutputGuard", "gatekeeper", "range_validator", "string_validator",
+    "validator", "float_threshold", "watchdog", "supervisor", "retry",
+    "advanced_retry", "retry_loop", "rate_limiter", "monitor_agent",
+  ],
+  "Deliberation & Evaluation": [
+    "Classifier", "Ranker", "Proposer", "Challenger", "Arbiter", "deliberator",
+    "logical_router",
+  ],
+  "Routing & Aggregation": [
+    "ConsensusGate", "consensus", "aggregator", "filter", "binary_bridge", "router",
+    "pipeline", "majority_5", "weighted_consensus", "mapper", "transformer",
+    "aggregator_agent", "advanced_aggregator", "consensus_5", "consensus_network",
+    "router_agent", "pipeline_chain", "scheduler", "multi_supervisor",
+  ],
+  "Memory & Persistence": [
+    "ContextBuffer", "EpisodicRecall", "StateInjector", "sqlite_bridge",
+    "sql_data_bridge", "yaml_parser",
+  ],
   "Sparse Math & Compute": ["SparseMatMul", "WeightPruner", "TernaryQuantizer"],
-  "Interoperability & Protocol": ["MCPBridge", "LocalNodeSync", "VetoOrchestrator"],
-  "I/O & Execution": ["Sensor", "Actuator", "broadcast", "echo", "logger", "scaler"]
+  "Interoperability & Protocol": [
+    "MCPBridge", "LocalNodeSync", "VetoOrchestrator",
+    "duckduckgo_bridge", "web_search",
+  ],
+  "I/O & Execution": [
+    "Sensor", "Actuator", "broadcast", "echo", "logger", "scaler",
+  ],
+  "Archetypes & Composites": [
+    "new_archetypes", "new_agents",
+  ],
 };
 
 let _flowLibOpen = {
@@ -1635,7 +1658,8 @@ let _flowLibOpen = {
   "Memory & Persistence": false,
   "Sparse Math & Compute": false,
   "Interoperability & Protocol": false,
-  "I/O & Execution": false
+  "I/O & Execution": false,
+  "Archetypes & Composites": false,
 };
 
 const ARCHETYPE_ONTOLOGY = {
@@ -7573,7 +7597,7 @@ function renderVaultUI() {
   if (!listEl) return;
   const secrets = getTernflowSecrets();
   const providers = ["openai", "anthropic", "google", "custom"];
-  
+
   listEl.innerHTML = providers.map(p => {
     const key = secrets[p] || "";
     const masked = key ? (key.slice(0, 8) + "…" + key.slice(-4)) : "Not set";
@@ -7585,8 +7609,60 @@ function renderVaultUI() {
       </div>
     `;
   }).join("");
+
+  // Albert AI Panel config block
+  const albertEl = document.getElementById("albertConfigBlock");
+  if (!albertEl) return;
+  const aProvider = localStorage.getItem("albert_provider") || "gemini";
+  const aKey      = localStorage.getItem("albert_api_key") || "";
+  const aModel    = localStorage.getItem("albert_model")   || "";
+  const maskedKey = aKey ? (aKey.slice(0, 6) + "…" + aKey.slice(-4)) : "—";
+  albertEl.innerHTML = `
+    <div style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">◆ Albert AI Panel</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end;">
+      <div>
+        <div style="font-size:10px; color:var(--muted2); margin-bottom:4px;">Provider</div>
+        <select id="albertCfgProvider" class="settings-select" style="width:100%;">
+          <option value="gemini" ${aProvider==='gemini'?'selected':''}>Gemini</option>
+          <option value="openai" ${aProvider==='openai'?'selected':''}>OpenAI</option>
+          <option value="anthropic" ${aProvider==='anthropic'?'selected':''}>Anthropic</option>
+          <option value="groq" ${aProvider==='groq'?'selected':''}>Groq</option>
+          <option value="mistral" ${aProvider==='mistral'?'selected':''}>Mistral</option>
+          <option value="deepseek" ${aProvider==='deepseek'?'selected':''}>DeepSeek</option>
+          <option value="openrouter" ${aProvider==='openrouter'?'selected':''}>OpenRouter</option>
+          <option value="xai" ${aProvider==='xai'?'selected':''}>xAI / Grok</option>
+          <option value="custom" ${aProvider==='custom'?'selected':''}>Custom</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px; color:var(--muted2); margin-bottom:4px;">API Key <span style="color:var(--cyan)">${maskedKey}</span></div>
+        <input type="password" id="albertCfgKey" class="settings-input" placeholder="Enter key…" style="width:100%;" />
+      </div>
+      <div>
+        <div style="font-size:10px; color:var(--muted2); margin-bottom:4px;">Model override</div>
+        <input type="text" id="albertCfgModel" class="settings-input" placeholder="${aModel || 'default'}" value="${aModel}" style="width:100%;" />
+      </div>
+      <button class="settings-btn btn-primary" onclick="saveAlbertConfig()" style="height:32px; white-space:nowrap;">Save</button>
+    </div>
+  `;
 }
 window.renderVaultUI = renderVaultUI;
+
+function saveAlbertConfig() {
+  const provider = (document.getElementById("albertCfgProvider") || {}).value || "gemini";
+  const key      = ((document.getElementById("albertCfgKey") || {}).value || "").trim();
+  const model    = ((document.getElementById("albertCfgModel") || {}).value || "").trim();
+  localStorage.setItem("albert_provider", provider);
+  if (key)   localStorage.setItem("albert_api_key", key);
+  if (model) localStorage.setItem("albert_model", model);
+  else       localStorage.removeItem("albert_model");
+  // Also refresh the floating panel's key row if it's open
+  const albertKeyRow = document.getElementById("albert-key-row");
+  if (albertKeyRow && key) albertKeyRow.style.display = "none";
+  renderVaultUI();
+  showToast("Albert config saved", "ok");
+}
+window.saveAlbertConfig = saveAlbertConfig;
 
 // ─── Usage dashboard ──────────────────────────────────────────────────────────
 const TIER_BENEFITS = {
@@ -8284,7 +8360,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── LLM call ─────────────────────────────────────────────────────────────
   async function callLlm(messages) {
     const provider = localStorage.getItem('albert_provider') || 'gemini';
+    // key lookup priority: albert_api_key → ternflow_secrets[provider] → legacy albert_gemini_key
+    const vaultSecrets = (() => { try { return JSON.parse(localStorage.getItem('ternflow_secrets') || '{}'); } catch { return {}; } })();
+    const vaultKey = vaultSecrets[provider] || (provider === 'gemini' ? vaultSecrets['google'] : '') || '';
     const key      = localStorage.getItem('albert_api_key')
+                   || vaultKey
                    || localStorage.getItem('albert_gemini_key') // legacy fallback
                    || '';
     const savedModel = localStorage.getItem('albert_model') || '';
@@ -8292,7 +8372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!key) {
       const keyRow = document.getElementById('albert-key-row');
       if (keyRow) { keyRow.style.display = 'flex'; document.getElementById('albert-key-input')?.focus(); }
-      return `No API key set for ${provider}. Enter your key in the row above and press Save.`;
+      return `No API key set for ${provider}. Set it in Settings → Albert AI Panel, or enter it in the row above.`;
     }
 
     const sysPrompt = `You are Albert, a sovereign AI co-pilot embedded in Ternlang Studio — a visual workflow canvas.

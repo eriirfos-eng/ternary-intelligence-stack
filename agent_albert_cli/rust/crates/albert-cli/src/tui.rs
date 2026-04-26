@@ -42,6 +42,8 @@ const POPUP_BORDER: Color = Color::Rgb(55, 55, 55);
 const POPUP_MATCH: Color = Color::Rgb(0, 180, 100);
 const POPUP_SEL_BG: Color = Color::Rgb(42, 42, 42);
 const CODE_FG: Color = Color::Rgb(100, 210, 255);    // inline code / code blocks
+const CODE_BG: Color = Color::Rgb(14, 22, 30);       // code block row background
+const CODE_BAR: Color = Color::Rgb(0, 100, 160);     // code block left border bar
 const POPUP_WINDOW: usize = 16;                       // max items visible at once in popup
 const CATEGORY_FG: Color = Color::Rgb(60, 60, 60);   // greyed-out category headers in popup
 
@@ -175,6 +177,12 @@ pub struct TuiState {
     pub help_open: bool,
     /// Scroll offset inside the help popup.
     pub help_scroll: u16,
+    /// Ordered list of previously submitted messages (max 200).
+    pub input_history: Vec<String>,
+    /// Index into input_history while browsing (None = not browsing).
+    pub history_idx: Option<usize>,
+    /// Stashed live input while browsing history — restored on Down past end.
+    pub input_saved: String,
 }
 
 impl Default for TuiState {
@@ -199,6 +207,9 @@ impl Default for TuiState {
             paste_line_count: None,
             help_open: false,
             help_scroll: 0,
+            input_history: Vec::new(),
+            history_idx: None,
+            input_saved: String::new(),
         }
     }
 }
@@ -281,6 +292,73 @@ impl TuiState {
         self.paste_line_count = None;
         std::mem::take(&mut self.input)
     }
+
+    pub fn history_push(&mut self, text: &str) {
+        let text = text.trim().to_string();
+        if text.is_empty() { return; }
+        if self.input_history.last().map(|s| s == &text).unwrap_or(false) { return; }
+        self.input_history.push(text);
+        if self.input_history.len() > 200 { self.input_history.remove(0); }
+        self.history_idx = None;
+    }
+
+    pub fn history_prev(&mut self) {
+        if self.input_history.is_empty() { return; }
+        match self.history_idx {
+            None => {
+                self.input_saved = self.input.clone();
+                let idx = self.input_history.len() - 1;
+                self.history_idx = Some(idx);
+                self.input = self.input_history[idx].clone();
+                self.cursor = self.input.chars().count();
+            }
+            Some(0) => {}
+            Some(idx) => {
+                let new = idx - 1;
+                self.history_idx = Some(new);
+                self.input = self.input_history[new].clone();
+                self.cursor = self.input.chars().count();
+            }
+        }
+    }
+
+    pub fn history_next(&mut self) {
+        match self.history_idx {
+            None => {}
+            Some(idx) if idx + 1 >= self.input_history.len() => {
+                self.history_idx = None;
+                self.input = std::mem::take(&mut self.input_saved);
+                self.cursor = self.input.chars().count();
+            }
+            Some(idx) => {
+                let new = idx + 1;
+                self.history_idx = Some(new);
+                self.input = self.input_history[new].clone();
+                self.cursor = self.input.chars().count();
+            }
+        }
+    }
+}
+
+// ── Word-boundary helpers ─────────────────────────────────────────────────────
+
+fn word_left(input: &str, cursor: usize) -> usize {
+    if cursor == 0 { return 0; }
+    let chars: Vec<char> = input.chars().collect();
+    let mut pos = cursor - 1;
+    while pos > 0 && chars[pos].is_whitespace() { pos -= 1; }
+    while pos > 0 && !chars[pos - 1].is_whitespace() { pos -= 1; }
+    pos
+}
+
+fn word_right(input: &str, cursor: usize) -> usize {
+    let chars: Vec<char> = input.chars().collect();
+    let len = chars.len();
+    if cursor >= len { return len; }
+    let mut pos = cursor;
+    while pos < len && !chars[pos].is_whitespace() { pos += 1; }
+    while pos < len && chars[pos].is_whitespace() { pos += 1; }
+    pos
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────
@@ -523,6 +601,7 @@ fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
             MdEvent::Start(Tag::CodeBlock(_)) => in_code_block = true,
             MdEvent::End(TagEnd::CodeBlock) => {
                 md_flush(&mut spans, &mut lines);
+                lines.push(Line::default());
                 in_code_block = false;
             }
             MdEvent::Start(Tag::List(_)) => list_depth += 1,
@@ -545,10 +624,10 @@ fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
                 }
                 if in_code_block {
                     for line in t.lines() {
-                        lines.push(Line::from(Span::styled(
-                            format!("  {line}"),
-                            Style::default().fg(CODE_FG),
-                        )));
+                        lines.push(Line::from(vec![
+                            Span::styled("▌", Style::default().fg(CODE_BAR).bg(CODE_BG)),
+                            Span::styled(format!(" {line}"), Style::default().fg(CODE_FG).bg(CODE_BG)),
+                        ]));
                     }
                 } else {
                     let mut style = Style::default().fg(FG);
@@ -972,8 +1051,13 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled("  (press Enter to send, Esc to clear)", Style::default().fg(DIM)),
         ]))
     } else {
+        let (prompt_txt, prompt_col) = if state.history_idx.is_some() {
+            (" ↑ ", ORANGE)
+        } else {
+            (" > ", CYAN)
+        };
         Paragraph::new(Line::from(vec![
-            Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(prompt_txt, Style::default().fg(prompt_col).add_modifier(Modifier::BOLD)),
             Span::styled(state.input.clone(), Style::default().fg(FG)),
         ]))
         .wrap(Wrap { trim: false })
@@ -1123,25 +1207,32 @@ fn render_footer(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or(&state.cwd);
-        let tok = if state.tokens_in > 0 {
-            format!(
-                "  ·  {}↑ {}↓",
-                fmt_tokens(state.tokens_in),
-                fmt_tokens(state.tokens_out)
-            )
-        } else {
-            String::new()
-        };
         let perm = if state.permission_mode.is_empty() {
             String::new()
         } else {
             format!("  ·  {}", state.permission_mode)
         };
-        let text = format!(
-            " {}  ·  {}{}{}",
-            state.model, dir, perm, tok,
-        );
-        Line::from(Span::styled(text, Style::default().fg(GREY)))
+        let base = format!(" {}  ·  {}{}", state.model, dir, perm);
+        if state.tokens_in > 0 {
+            // Color the token count: green → yellow → orange → red as context fills (200K max)
+            let tok_color = match state.tokens_in {
+                0..=49_999    => Color::Rgb(80, 80, 80),
+                50_000..=99_999  => Color::Rgb(200, 180, 50),
+                100_000..=149_999 => ORANGE,
+                _                => Color::Rgb(220, 60, 60),
+            };
+            let tok_str = format!(
+                "  ·  {}↑ {}↓",
+                fmt_tokens(state.tokens_in),
+                fmt_tokens(state.tokens_out),
+            );
+            Line::from(vec![
+                Span::styled(base, Style::default().fg(GREY)),
+                Span::styled(tok_str, Style::default().fg(tok_color)),
+            ])
+        } else {
+            Line::from(Span::styled(base, Style::default().fg(GREY)))
+        }
     };
     f.render_widget(
         Paragraph::new(line).style(Style::default().bg(STATUS_BG)),
@@ -1310,6 +1401,7 @@ impl TuiApp {
                 match event::read() {
                     Ok(Event::Key(k)) => { let _ = ktx.send(TuiEvent::Key(k)); }
                     Ok(Event::Paste(text)) => { let _ = ktx.send(TuiEvent::PasteText(text)); }
+                    Ok(Event::Resize(_, _)) => { let _ = ktx.send(TuiEvent::Tick); }
                     _ => {}
                 }
             }
@@ -1427,14 +1519,15 @@ impl TuiApp {
                                     }
                                 }
 
-                                // Scroll when no popup
-                                (KeyCode::Up, _) | (KeyCode::PageUp, _) => {
-                                    let step = if key.code == KeyCode::PageUp { 10 } else { 3 };
-                                    state.scroll = state.scroll.saturating_add(step);
+                                // Up/Down without popup — history navigation (bash-style)
+                                (KeyCode::Up, KeyModifiers::NONE) => { state.history_prev(); }
+                                (KeyCode::Down, KeyModifiers::NONE) => { state.history_next(); }
+                                // PageUp/PageDown — scroll content (also catches Up/Down with modifiers)
+                                (KeyCode::PageUp, _) | (KeyCode::Up, _) => {
+                                    state.scroll = state.scroll.saturating_add(10);
                                 }
-                                (KeyCode::Down, _) | (KeyCode::PageDown, _) => {
-                                    let step = if key.code == KeyCode::PageDown { 10 } else { 3 };
-                                    state.scroll = state.scroll.saturating_sub(step);
+                                (KeyCode::PageDown, _) | (KeyCode::Down, _) => {
+                                    state.scroll = state.scroll.saturating_sub(10);
                                 }
 
                                 // Tab / Right-at-EOL: autocomplete selected popup item
@@ -1477,6 +1570,7 @@ impl TuiApp {
                                 (KeyCode::Char(c), m)
                                     if m == KeyModifiers::NONE || m == KeyModifiers::SHIFT =>
                                 {
+                                    state.history_idx = None; // exit history browse on new input
                                     state.input_insert(c);
                                     // Reset to first selectable item (skip any header at 0)
                                     let new_items = popup_items(&state.input);
@@ -1492,10 +1586,60 @@ impl TuiApp {
                                         .unwrap_or(0);
                                 }
                                 (KeyCode::Delete, _) => state.input_delete(),
+
+                                // ── Readline shortcuts ────────────────────────
+                                // Ctrl+A: jump to start of line
+                                (KeyCode::Char('a'), KeyModifiers::CONTROL) => {
+                                    state.cursor = 0;
+                                }
+                                // Ctrl+E: jump to end of line
+                                (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+                                    state.cursor = state.input.chars().count();
+                                }
+                                // Ctrl+K: kill to end of line
+                                (KeyCode::Char('k'), KeyModifiers::CONTROL) => {
+                                    let pos = state.input.char_indices()
+                                        .nth(state.cursor)
+                                        .map(|(i, _)| i)
+                                        .unwrap_or(state.input.len());
+                                    state.input.truncate(pos);
+                                }
+                                // Ctrl+U: kill to start of line
+                                (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                                    let pos = state.input.char_indices()
+                                        .nth(state.cursor)
+                                        .map(|(i, _)| i)
+                                        .unwrap_or(state.input.len());
+                                    state.input.drain(..pos);
+                                    state.cursor = 0;
+                                }
+                                // Ctrl+W: kill previous word
+                                (KeyCode::Char('w'), KeyModifiers::CONTROL) => {
+                                    let new_cur = word_left(&state.input, state.cursor);
+                                    let start = state.input.char_indices()
+                                        .nth(new_cur).map(|(i, _)| i).unwrap_or(0);
+                                    let end = state.input.char_indices()
+                                        .nth(state.cursor).map(|(i, _)| i)
+                                        .unwrap_or(state.input.len());
+                                    state.input.drain(start..end);
+                                    state.cursor = new_cur;
+                                }
+                                // Ctrl+L: scroll to bottom (show latest)
+                                (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
+                                    state.scroll = 0;
+                                }
+                                // Ctrl+Left: word left
+                                (KeyCode::Left, KeyModifiers::CONTROL) => {
+                                    state.cursor = word_left(&state.input, state.cursor);
+                                }
+                                // Ctrl+Right: word right
+                                (KeyCode::Right, KeyModifiers::CONTROL) => {
+                                    state.cursor = word_right(&state.input, state.cursor);
+                                }
+
+                                // ── Cursor movement ───────────────────────────
                                 (KeyCode::Left, _) => {
-                                    if state.cursor > 0 {
-                                        state.cursor -= 1;
-                                    }
+                                    if state.cursor > 0 { state.cursor -= 1; }
                                 }
                                 (KeyCode::Right, _) => {
                                     if state.cursor < state.input.chars().count() {
@@ -1513,11 +1657,11 @@ impl TuiApp {
                             break;
                         }
                         if let Some(text) = submit_text {
-                            // /help and /version are handled entirely inside the TUI.
                             let trimmed = text.trim();
                             if trimmed == "/help" || trimmed == "/?" {
                                 self.state.lock().unwrap().help_open = true;
                             } else {
+                                self.state.lock().unwrap().history_push(&text);
                                 let _ = self.submit_tx.send(text);
                             }
                         }
