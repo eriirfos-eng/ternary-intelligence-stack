@@ -409,32 +409,50 @@ const CMD_GROUPS: &[(&str, &[&str])] = &[
     ("INFO",      &["help", "version"]),
 ];
 
+/// Commands that open a sub-menu when Enter is pressed (rather than submitting directly).
+/// Enter → fills input with "/cmd " → popup re-renders the sub-options.
+fn is_drilldown(complete: &str) -> bool {
+    matches!(complete, "/model" | "/permissions" | "/auth")
+}
+
+// All supported auth providers (id, description)
+const AUTH_PROVIDERS: &[(&str, &str)] = &[
+    ("anthropic",  "Claude opus-4-7 · sonnet-4-6 · haiku-4-5"),
+    ("openai",     "GPT-4o · GPT-4o-mini · o3 · o3-mini"),
+    ("google",     "Gemini 2.5 Pro · Flash · Flash-Lite"),
+    ("xai",        "Grok 3 · Grok 3-mini"),
+    ("groq",       "Llama 3.3 70B · 8B — ultra-fast LPU"),
+    ("mistral",    "Mistral Large · Small · Codestral"),
+    ("deepseek",   "DeepSeek V3 · R1 chain-of-thought"),
+    ("openrouter", "100+ models via unified API"),
+    ("perplexity", "Sonar Pro · Sonar — search-grounded"),
+    ("cohere",     "Command R+ · Command R — RAG"),
+    ("cerebras",   "Llama 3.3 70B on WSE accelerator"),
+    ("together",   "Open source models at scale"),
+    ("fireworks",  "Fast inference — Llama, Mistral, …"),
+    ("novita",     "Cost-efficient open model hosting"),
+    ("ollama",     "Local models — no API key required"),
+];
+
 /// Returns popup items for the current input:
-///   /           → full categorised command list
-///   /partial    → flat filtered list (no categories)
-///   /permissions[…] → permission mode picker
-///   /model[…]   → model picker
+///   /              → full categorised command list  (Enter drills into sub-commands)
+///   /partial       → flat filtered list
+///   /permissions   → permission mode picker  (Enter applies mode)
+///   /model         → model picker            (Enter switches model)
+///   /auth          → provider picker         (Enter starts auth flow)
 fn popup_items(input: &str) -> Vec<PopupItem> {
     if !input.starts_with('/') {
         return vec![];
     }
 
     // ── Permission mode picker ─────────────────────────────────────────────
-    let perm_prefix = "/permissions";
-    if input == perm_prefix
-        || input.starts_with("/permissions ")
-        || (input.len() > 1 && perm_prefix.starts_with(input))
-    {
-        let partial = if input.starts_with("/permissions ") {
-            input["/permissions ".len()..].trim()
-        } else {
-            ""
-        };
+    if input.starts_with("/permissions") {
+        let partial = input.strip_prefix("/permissions").unwrap_or("").trim();
         return PERM_MODES
             .iter()
             .filter(|(mode, _)| partial.is_empty() || mode.starts_with(partial))
             .map(|(mode, desc)| PopupItem::cmd(
-                &format!("permissions {mode}"),
+                &format!("permissions  {mode}"),
                 &format!("/permissions {mode}"),
                 desc,
             ))
@@ -442,24 +460,37 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
     }
 
     // ── Model picker ──────────────────────────────────────────────────────
-    let model_prefix = "/model";
-    if input == model_prefix
-        || input.starts_with("/model ")
-        || (input.len() > 1 && model_prefix.starts_with(input))
-    {
-        let partial = if input.starts_with("/model ") {
-            input["/model ".len()..].trim()
-        } else {
-            ""
-        };
-        return MODEL_ENTRIES
-            .iter()
-            .filter(|(id, _, _)| partial.is_empty() || id.contains(partial))
-            .take(16)
-            .map(|(id, provider, desc)| PopupItem::cmd(
-                &format!("model  {id}"),
+    if input.starts_with("/model") {
+        let partial = input.strip_prefix("/model").unwrap_or("").trim();
+        let mut items: Vec<PopupItem> = Vec::new();
+        let mut cur_provider = "";
+        for (id, provider, desc) in MODEL_ENTRIES {
+            if !partial.is_empty() && !id.contains(partial) && !provider.to_lowercase().contains(partial) {
+                continue;
+            }
+            if *provider != cur_provider {
+                items.push(PopupItem::header(provider));
+                cur_provider = provider;
+            }
+            items.push(PopupItem::cmd(
+                id,
                 &format!("/model {id}"),
-                &format!("{provider}  ·  {desc}"),
+                desc,
+            ));
+        }
+        return items;
+    }
+
+    // ── Auth provider picker ───────────────────────────────────────────────
+    if input.starts_with("/auth") {
+        let partial = input.strip_prefix("/auth").unwrap_or("").trim();
+        return AUTH_PROVIDERS
+            .iter()
+            .filter(|(p, _)| partial.is_empty() || p.starts_with(partial))
+            .map(|(provider, desc)| PopupItem::cmd(
+                &format!("auth  {provider}"),
+                &format!("/auth {provider}"),
+                desc,
             ))
             .collect();
     }
@@ -475,9 +506,11 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
                 .iter()
                 .filter_map(|&n| specs.iter().find(|s| s.name == n))
                 .map(|s| {
-                    let hint = match s.name {
-                        "model" | "permissions" => String::new(),
-                        _ => s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default(),
+                    // Drill-down commands show "›" hint; others show their argument hint.
+                    let hint = if is_drilldown(&format!("/{}", s.name)) {
+                        "  ›".to_string()
+                    } else {
+                        s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default()
                     };
                     PopupItem::cmd(
                         &format!("{}{hint}", s.name),
@@ -499,9 +532,10 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
         .iter()
         .filter(|s| s.name.starts_with(prefix))
         .map(|s| {
-            let hint = match s.name {
-                "model" | "permissions" => String::new(),
-                _ => s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default(),
+            let hint = if is_drilldown(&format!("/{}", s.name)) {
+                "  ›".to_string()
+            } else {
+                s.argument_hint.map(|h| format!(" {h}")).unwrap_or_default()
             };
             PopupItem::cmd(
                 &format!("{}{hint}", s.name),
@@ -862,12 +896,17 @@ fn render_popup(f: &mut ratatui::Frame, area: Rect, items: &[PopupItem], selecte
         .filter(|i| !i.is_header)
         .count();
 
+    // Is the currently selected item a drill-down parent?
+    let sel_item = items.get(selected.min(total.saturating_sub(1)));
+    let sel_is_drilldown = sel_item
+        .map(|it| !it.is_header && is_drilldown(&it.complete))
+        .unwrap_or(false);
+
     let mut lines: Vec<Line<'static>> = Vec::new();
 
     for (abs_i, item) in items[win_start..win_end].iter().enumerate() {
         let i = win_start + abs_i;
         if item.is_header {
-            // Category separator — dim label with rule
             let label = format!("  {} ", item.display);
             lines.push(Line::from(Span::styled(label, Style::default().fg(CATEGORY_FG).bg(POPUP_BG))));
         } else {
@@ -875,22 +914,30 @@ fn render_popup(f: &mut ratatui::Frame, area: Rect, items: &[PopupItem], selecte
             let bg = if is_sel { POPUP_SEL_BG } else { POPUP_BG };
             let name_col = if is_sel { GREEN } else { POPUP_MATCH };
             let desc_col = if is_sel { FG } else { GREY };
+            // Drill-down items get a "›" right-hand indicator
+            let drilldown_hint = if is_sel && is_drilldown(&item.complete) {
+                Span::styled("  ›", Style::default().fg(CYAN).bg(bg).add_modifier(Modifier::BOLD))
+            } else {
+                Span::styled("", Style::default().bg(bg))
+            };
             lines.push(Line::from(vec![
                 Span::styled("  ", Style::default().bg(bg)),
                 Span::styled(
                     format!("/{}", item.display),
                     Style::default().fg(name_col).bg(bg).add_modifier(Modifier::BOLD),
                 ),
+                drilldown_hint,
                 Span::styled("  ", Style::default().bg(bg)),
                 Span::styled(item.desc.clone(), Style::default().fg(desc_col).bg(bg)),
             ]));
         }
     }
 
-    // Nav footer
+    // Nav footer — contextual based on selected item type
+    let action_hint = if sel_is_drilldown { "enter → open  ·  " } else { "enter → select  ·  " };
     let nav = if selectable_total > 0 {
         format!(
-            "  ({}/{})  ↑↓ navigate  ·  tab/enter select  ·  esc dismiss",
+            "  ({}/{})  ↑↓ navigate  ·  {action_hint}tab → complete  ·  esc dismiss",
             selectable_idx + 1,
             selectable_total,
         )
@@ -1530,34 +1577,52 @@ impl TuiApp {
                                     state.scroll = state.scroll.saturating_sub(10);
                                 }
 
-                                // Tab / Right-at-EOL: autocomplete selected popup item
-                                (KeyCode::Tab, _)
-                                    if has_popup =>
-                                {
+                                // Tab: complete into the input (never submits).
+                                // For drill-down parents: opens sub-menu.
+                                // For leaf commands: fills full command + space ready to run.
+                                (KeyCode::Tab, _) if has_popup => {
                                     let sel = state.popup_selected.min(items.len().saturating_sub(1));
                                     if !items[sel].is_header {
                                         let complete = items[sel].complete.clone();
-                                        let with_space = if complete.starts_with("/permissions ") {
+                                        // Always append space — this opens the sub-menu for parents
+                                        // and puts a space after leaf commands for argument entry.
+                                        let already_has_space = complete.ends_with(' ');
+                                        state.input = if already_has_space {
                                             complete
                                         } else {
                                             format!("{complete} ")
                                         };
-                                        state.input = with_space;
                                         state.cursor = state.input.chars().count();
-                                        state.popup_selected = 0;
+                                        let new_items = popup_items(&state.input);
+                                        state.popup_selected = new_items.iter()
+                                            .position(|i| !i.is_header)
+                                            .unwrap_or(0);
                                     }
                                 }
 
-                                // Enter with popup: always submit the selected command.
-                                // Tab (above) is the "complete without submitting" key.
+                                // Enter with popup:
+                                //   drill-down items  (model / permissions / auth) → navigate into sub-menu
+                                //   leaf items        → execute immediately
                                 (KeyCode::Enter, KeyModifiers::NONE) if has_popup => {
                                     let sel = state.popup_selected.min(items.len().saturating_sub(1));
                                     if !items[sel].is_header {
-                                        state.input = items[sel].complete.clone();
-                                        state.cursor = state.input.chars().count();
-                                        state.popup_selected = 0;
-                                        let text = state.input_take();
-                                        submit_text = Some(text);
+                                        let complete = items[sel].complete.clone();
+                                        if is_drilldown(&complete) {
+                                            // Open sub-menu: append space so popup_items sees the prefix
+                                            state.input = format!("{complete} ");
+                                            state.cursor = state.input.chars().count();
+                                            let new_items = popup_items(&state.input);
+                                            state.popup_selected = new_items.iter()
+                                                .position(|i| !i.is_header)
+                                                .unwrap_or(0);
+                                        } else {
+                                            // Leaf: execute
+                                            state.input = complete;
+                                            state.cursor = state.input.chars().count();
+                                            state.popup_selected = 0;
+                                            let text = state.input_take();
+                                            submit_text = Some(text);
+                                        }
                                     }
                                 }
                                 (KeyCode::Enter, KeyModifiers::NONE) => {
