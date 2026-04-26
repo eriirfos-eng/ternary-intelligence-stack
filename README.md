@@ -120,7 +120,7 @@ export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
 # (Ollama: just run `ollama serve` — no key needed)
 
 # Launch
-albert
+albert-cli
 ```
 
 That's it. Albert auto-detects your key and spins up the REPL.
