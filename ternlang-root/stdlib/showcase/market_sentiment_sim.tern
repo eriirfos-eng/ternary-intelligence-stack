@@ -1,0 +1,49 @@
+/*
+ * MarketSentimentSim — Simulation of market sentiment based on multiple signals.
+ * Demonstrates how multiple ternary indicators can be aggregated for a decision.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn main() -> trit {
+    // Simulated signals: +1 (Bullish), 0 (Stable), -1 (Bearish)
+    // From different sources: [Technical, Fundamental, News, Social, Volume]
+    let signals: trittensor<5> = [1, 1, 0, -1, 0];
+    
+    let buy_pressure: int = 0;
+    let sell_pressure: int = 0;
+    
+    println("Analyzing Market Signals: [Bull, Bull, Stable, Bear, Stable]");
+    
+    for s in signals {
+        match s {
+             1 => { buy_pressure = buy_pressure + 1; }
+            -1 => { sell_pressure = sell_pressure + 1; }
+             0 => { } // Neutral
+        }
+    }
+    
+    println("Buy Signal Count:");  println(buy_pressure);
+    println("Sell Signal Count:"); println(sell_pressure);
+    
+    let final_sentiment: trit = 0;
+    // We require a margin of at least 1 for a clear signal
+    if buy_pressure > (sell_pressure + 1) {
+        final_sentiment = 1;
+        println("Aggregated Sentiment: BULLISH (+1)");
+    } else if sell_pressure > (buy_pressure + 1) {
+        final_sentiment = -1;
+        println("Aggregated Sentiment: BEARISH (-1)");
+    } else {
+        final_sentiment = 0;
+        println("Aggregated Sentiment: NEUTRAL / STABLE (0)");
+    }
+    
+    if final_sentiment == 1 {
+        println("MarketSentimentSim Test: PASSED");
+        return 1;
+    }
+    
+    println("MarketSentimentSim Test: FAILED");
+    return -1;
+}
