@@ -5700,8 +5700,11 @@ function updateWires() {
     const fromNode = document.getElementById(w.fromId);
     const toNode   = document.getElementById(w.toId);
     // Skip wires where either endpoint has been deleted.
-    // Albert panel wires are OK if the panel exists in the DOM.
     if (!fromNode || !toNode) return;
+    // Skip albert-panel wires when the panel is hidden — getBoundingClientRect returns zeros.
+    const albertPanel = document.getElementById('albert-panel');
+    if ((w.fromId === 'albert-panel' || w.toId === 'albert-panel') &&
+        albertPanel && albertPanel.style.display === 'none') return;
 
     // Phase 3: Select specific ternary output port based on condition
     let portSelector = '.flow-port-out';
@@ -6299,8 +6302,9 @@ function onMouseDown(e) {
     e.stopPropagation();
     e.preventDefault();
     const nodeEl = sourcePort.closest('.flow-node');
-    // Panels like Albert use .flow-port but are not .flow-node — fall back to nearest id'd ancestor.
-    const effectiveId = nodeEl ? nodeEl.id : (sourcePort.closest('[id]')?.id || sourcePort.id || 'panel');
+    // Panels like Albert use .flow-port but are not .flow-node — use the panel's own id.
+    const albertAncestor = sourcePort.closest('#albert-panel');
+    const effectiveId = nodeEl ? nodeEl.id : (albertAncestor ? 'albert-panel' : (sourcePort.closest('[id]')?.id || sourcePort.id || 'panel'));
     const wrapRect = document.getElementById("flow-canvas-wrap").getBoundingClientRect();
 
     // Phase 3: Extract Routing Port Value for Ternary Routing

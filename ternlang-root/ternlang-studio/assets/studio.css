@@ -606,11 +606,8 @@
       transition: all 0.2s;
     }
     .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.05) !important; opacity: 0.8; }
-    .nav-tab.active { color: var(--cyan); position: relative; opacity: 1; background: #131b2e !important; border-top: 2px solid var(--cyan) !important; }
-    .nav-tab.active::after {
-      content: ""; position: absolute; bottom: -8px; left: 10px; right: 10px;
-      height: 2px; background: var(--cyan); border-radius: 2px;
-    }
+    .nav-tab.active { color: var(--cyan); position: relative; opacity: 1; background: transparent !important; border-top: 2px solid var(--cyan) !important; }
+    .nav-tab.active::after { content: none; }
     .nav-tab i { width: 14px !important; height: 14px !important; }
 
     .tb-center {
