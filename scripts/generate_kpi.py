@@ -10,12 +10,12 @@ TIS KPI Dashboard (v3.3 - "Calibrated Command Center")
 
 import json, os, sys, time, io, urllib.request, urllib.error, re
 from datetime import datetime, timezone
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # -- Config -------------------------------------------------------------------
 GITHUB_PAT       = os.environ.get("KPI_GITHUB_TOKEN")
 GITHUB_REPO      = "eriirfos-eng/ternary-intelligence-stack"
 CRATES_USER      = 403632
-# Paths relative to the repo root
 BASE_DIR         = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR       = os.path.join(BASE_DIR, "docs/kpi")
 LOG_FILE         = os.path.join(OUTPUT_DIR, "ternlang_kpi_log.json")
@@ -261,7 +261,38 @@ def render_html():
           {trend_box(val, key, id_pfx)}
         </div>"""
 
-    traffic_rows = "\n".join(f'<tr><td>{day}</td><td class="num">{v.get("clones",0)} <span style="font-size:9px;color:var(--muted)">({v.get("clones_unique",0)})</span></td><td class="num">{v.get("views",0)} <span style="font-size:9px;color:var(--muted)">({v.get("views_unique",0)})</span></td></tr>' for day,v in sorted(d["all_traffic"].items(), reverse=True))
+    # -- Impact Score Mapping --
+    f_map = { e["ts"][:10]: _to_num(e.get("total_footprint", 0)) for e in d["chart_log"] }
+    
+    def get_impact(day, clones, views):
+        curr_f = f_map.get(day, 0)
+        # Find previous day in f_map
+        day_dt = datetime.strptime(day, "%Y-%m-%d")
+        prev_day = (day_dt.replace(day=day_dt.day-1) if day_dt.day > 1 else day_dt).strftime("%Y-%m-%d") # simplified
+        # Better: just look for the day before in sorted keys
+        sorted_days = sorted(f_map.keys())
+        try:
+            idx = sorted_days.index(day)
+            prev_f = f_map[sorted_days[idx-1]] if idx > 0 else curr_f
+        except: prev_f = curr_f
+        
+        delta = curr_f - prev_f
+        traffic = clones + views
+        
+        if delta > 50: return 1, "EXPANSION"
+        if delta <= 0 and traffic > 100: return -1, "CONTRACTION"
+        return 0, "MAINTENANCE"
+
+    rows = []
+    for day, v in sorted(d["all_traffic"].items(), reverse=True):
+        c, vw = v.get("clones", 0), v.get("views", 0)
+        imp_val, imp_lbl = get_impact(day, c, vw)
+        imp_cls = "impact-pos" if imp_val > 0 else ("impact-neg" if imp_val < 0 else "impact-neu")
+        badge = f'<span class="impact-badge {imp_cls}">{imp_val:+d}</span>'
+        rows.append(f'<tr><td>{day}</td><td class="num">{c} <span style="font-size:9px;color:var(--muted)">({v.get("clones_unique",0)})</span></td><td class="num">{vw} <span style="font-size:9px;color:var(--muted)">({v.get("views_unique",0)})</span></td><td>{badge}</td></tr>')
+    traffic_rows = "\n".join(rows)
+    # -------------------------
+
     crates_rows = "\n".join(f'<tr><td>{c["name"]} <span style="font-size:9px;color:var(--muted)">v{c["version"]}</span></td><td class="num">{c["downloads"]:,}</td></tr>' for c in sorted(d["crates_list"], key=lambda x: -x["downloads"]))
     
     lat = s["api_latency_ms"]
@@ -328,6 +359,19 @@ def render_html():
   .sig-bullish {{ color:var(--green) !important; }}
   .sig-bearish {{ color:var(--red) !important; }}
 
+  .legend-container {{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; width:100%; }}
+  .legend-pill {{ display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:12px; font-weight:800; color:var(--muted); transition: all 0.2s ease; }}
+  .legend-pill:hover {{ background:rgba(255,255,255,0.1); transform: translateY(-2px); }}
+  .legend-pill.active {{ background:rgba(255,255,255,0.15); border-color:var(--text); color:var(--text); }}
+  .legend-pill .color-dot {{ width:10px; height:10px; border-radius:50%; }}
+  body.light .legend-pill {{ background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.1); }}
+  body.light .legend-pill.active {{ background:rgba(0,0,0,0.08); border-color:var(--text); }}
+
+  .impact-badge {{ padding:4px 10px; border-radius:4px; font-weight:900; font-size:11px; letter-spacing:1px; }}
+  .impact-pos {{ background:rgba(63,185,80,0.15); color:var(--green); border:1px solid var(--green); }}
+  .impact-neu {{ background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }}
+  .impact-neg {{ background:rgba(248,81,73,0.15); color:var(--red); border:1px solid var(--red); }}
+
   #loading-bar {{ position:fixed; top:0; left:0; height:3px; background:var(--blue); width:0; transition:width 0.3s; z-index:200; }}
 </style>
 </head>
@@ -363,10 +407,12 @@ def render_html():
   <div class="row-top">
     <div class="panel">
       <div class="panel-h">Footprint Pulse <span>Historical Density</span></div>
+      <div id="lgd-growth" class="legend-container"></div>
       <div style="height:400px"><canvas id="growthChart"></canvas></div>
     </div>
     <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
       <div class="panel-h" style="width:100%">Resource Distribution <span>Balanced Weights</span></div>
+      <div id="lgd-dist" class="legend-container" style="justify-content:center"></div>
       <div style="height:400px; width:340px;"><canvas id="distChart"></canvas></div>
     </div>
   </div>
@@ -374,10 +420,12 @@ def render_html():
   <div class="row-top">
     <div class="panel">
       <div class="panel-h">Momentum Shift <span>Delta Tracking</span></div>
+      <div id="lgd-momentum" class="legend-container"></div>
       <div style="height:400px"><canvas id="momentumChart"></canvas></div>
     </div>
     <div class="panel">
       <div class="panel-h">MACD Momentum Tracker <span>7-14-5 Trend Convergence</span></div>
+      <div id="lgd-macd" class="legend-container"></div>
       <div style="height:400px; position:relative;"><canvas id="macdChart"></canvas></div>
     </div>
   </div>
@@ -398,7 +446,7 @@ def render_html():
 
     <div class="panel" style="height: 100%; overflow-y: auto; padding: 0;">
       <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Network Traffic <span>14-Day Rescued Log</span></div>
-      <table id="table-traffic"><thead><tr><th>Timestamp</th><th class="num">Clones</th><th class="num">Views</th></tr></thead><tbody>{traffic_rows}</tbody></table>
+      <table id="table-traffic"><thead><tr><th>Timestamp</th><th class="num">Clones</th><th class="num">Views</th><th>TIS Impact</th></tr></thead><tbody>{traffic_rows}</tbody></table>
     </div>
   </div>
 </main>
@@ -411,33 +459,26 @@ function getThemeColor() {{
     return getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
 }}
 
+function createCustomLegend(chart, containerId) {{
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    chart.data.datasets.forEach((dataset, index) => {{
+        const pill = document.createElement('div');
+        pill.className = 'legend-pill' + (chart.isDatasetVisible(index) ? ' active' : '');
+        pill.innerHTML = `<div class="color-dot" style="background:${{dataset.borderColor || dataset.backgroundColor}}"></div><span>${{dataset.label}}</span>`;
+        pill.onclick = () => {{
+            const visible = chart.isDatasetVisible(index);
+            chart.setDatasetVisibility(index, !visible);
+            chart.update();
+            pill.classList.toggle('active');
+        }};
+        container.appendChild(pill);
+    }});
+}}
+
 function initCharts(data) {{
-    const L = data.chart_log;
-    const s = data.snapshot;
-    const textColor = getThemeColor();
-    const isLight = document.body.classList.contains('light');
-    const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
-    
-    Chart.defaults.color = textColor;
-    Chart.defaults.font.family = "'JetBrains Mono', monospace";
-    Chart.defaults.borderColor = gridColor;
-
-    const sm_val = (val) => {{
-        const str = String(val).replace(/[▲▼,]/g, '').trim();
-        return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
-    }};
-
-    if(growthChart) growthChart.destroy();
-    if(distChart) distChart.destroy();
-    if(momentumChart) momentumChart.destroy();
-    if(macdChart) macdChart.destroy();
-
-    const canvas = document.getElementById('growthChart');
-    const ctx = canvas.getContext('2d');
-    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grad.addColorStop(0, isLight ? 'rgba(163,113,247,0.15)' : 'rgba(163,113,247,0.2)');
-    grad.addColorStop(1, 'rgba(163,113,247,0)');
-
+...
     growthChart = new Chart(ctx, {{
       type: 'line',
       data: {{
@@ -455,7 +496,7 @@ function initCharts(data) {{
         responsive:true, maintainAspectRatio:false,
         interaction: {{ mode: 'index', intersect: false }},
         plugins: {{ 
-            legend: {{ position: 'top', align: 'end', labels: {{ color: isLight ? '#000000' : '#ffffff', boxWidth: 25, usePointStyle: true, pointStyle: 'rectRounded', padding: 25, font: {{ weight: '800', size: 14 }} }} }},
+            legend: {{ display: false }},
             tooltip: {{ 
                 backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
                 titleColor: isLight ? '#1f2328' : '#e6edf3',
@@ -470,6 +511,7 @@ function initCharts(data) {{
         }} 
       }}
     }});
+    createCustomLegend(growthChart, 'lgd-growth');
 
     distChart = new Chart(document.getElementById('distChart'), {{
       type: 'doughnut',
@@ -488,7 +530,7 @@ function initCharts(data) {{
         cutout:'85%', 
         maintainAspectRatio: false, 
         plugins:{{ 
-            legend:{{ position:'bottom', labels:{{ color: isLight ? '#000000' : '#ffffff', boxWidth: 15, usePointStyle: true, pointStyle: 'rectRounded', font:{{size:13, weight:'800'}}, padding:25 }} }},
+            legend:{{ display: false }},
             tooltip: {{ 
                 backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(22, 27, 34, 0.9)', 
                 titleColor: isLight ? '#1f2328' : '#e6edf3',
@@ -498,6 +540,17 @@ function initCharts(data) {{
         }} 
       }}
     }});
+    // For doughnut, we can manually generate legend from labels
+    const dLgd = document.getElementById('lgd-dist');
+    if (dLgd) {{
+        dLgd.innerHTML = '';
+        distChart.data.labels.forEach((lbl, i) => {{
+            const pill = document.createElement('div');
+            pill.className = 'legend-pill active';
+            pill.innerHTML = `<div class="color-dot" style="background:${{distChart.data.datasets[0].backgroundColor[i]}}"></div><span>${{lbl}}</span>`;
+            dLgd.appendChild(pill);
+        }});
+    }}
 
     if (data.momentum) {{
         momentumChart = new Chart(document.getElementById('momentumChart'), {{
@@ -515,13 +568,14 @@ function initCharts(data) {{
           options: {{
             responsive:true, maintainAspectRatio:false,
             interaction: {{ mode: 'index', intersect: false }},
-            plugins: {{ legend: {{ position:'top', align:'end', labels:{{ color: isLight ? '#000000' : '#ffffff', boxWidth:25, usePointStyle:true, pointStyle:'rectRounded', padding:20, font:{{size:14, weight:'800'}} }} }} }},
+            plugins: {{ legend: {{ display: false }} }},
             scales: {{ 
                 x:{{ grid:{{display:false}}, ticks:{{font:{{size:12, weight:'700'}}}} }},
                 y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12, weight:'700'}}}} }} 
             }}
           }}
         }});
+        createCustomLegend(momentumChart, 'lgd-momentum');
     }}
 
     if (data.macd) {{
@@ -538,15 +592,15 @@ function initCharts(data) {{
           options: {{
             responsive:true, maintainAspectRatio:false,
             interaction: {{ mode: 'index', intersect: false }},
-            plugins: {{ legend: {{ position:'top', align:'end', labels:{{ color: isLight ? '#000000' : '#ffffff', boxWidth:25, usePointStyle:true, pointStyle:'rectRounded', padding:20, font:{{size:14, weight:'800'}} }} }} }},
+            plugins: {{ legend: {{ display: false }} }},
             scales: {{ 
                 x:{{ grid:{{display:false}}, ticks:{{font:{{size:12, weight:'700'}}}} }},
                 y:{{ grid:{{color:gridColor}}, ticks:{{font:{{size:12, weight:'700'}}}} }} 
             }}
           }}
         }});
+        createCustomLegend(macdChart, 'lgd-macd');
     }}
-}}
 
 async function refreshDashboardData() {{
     const btn = document.getElementById('refreshBtn');
