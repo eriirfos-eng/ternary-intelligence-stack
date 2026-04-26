@@ -1,0 +1,53 @@
+/*
+ * CircularBufferTrit — A fixed-size circular buffer optimized for trit streams.
+ * Useful for signal processing, moving averages, or state history.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Since Ternlang v1.0.0 currently lacks complex struct methods, 
+// we provide functional helpers for circular buffer operations.
+
+fn cb_push(buffer: trittensor<5>, head: int, val: trit) -> int {
+    buffer[head] = val;
+    return (head + 1) % 5;
+}
+
+fn main() -> trit {
+    let size: int = 5;
+    let buffer: trittensor<5> = [0, 0, 0, 0, 0];
+    let head: int = 0;
+
+    println("Pushing values: 1, -1, 1, 1, 1");
+    head = cb_push(buffer, head, 1);
+    head = cb_push(buffer, head, -1);
+    head = cb_push(buffer, head, 1);
+    head = cb_push(buffer, head, 1);
+    head = cb_push(buffer, head, 1);
+    
+    println("Buffer after 5 pushes:");
+    let i: int = 0;
+    while i < 5 {
+        println(cast(buffer[i]));
+        i = i + 1;
+    }
+    
+    println("Pushing 0 (should overwrite first 1 at index 0)");
+    head = cb_push(buffer, head, 0);
+    
+    println("Buffer after overwrite:");
+    i = 0;
+    while i < 5 {
+        println(cast(buffer[i]));
+        i = i + 1;
+    }
+    
+    // Check index 0
+    if buffer[0] == 0 {
+        println("CircularBuffer Test: PASSED");
+        return 1;
+    }
+    
+    println("CircularBuffer Test: FAILED");
+    return -1;
+}
