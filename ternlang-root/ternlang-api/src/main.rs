@@ -490,6 +490,7 @@ async fn require_api_key(
         || path.starts_with("/assets/")
         || path == "/favicon.ico"
         || path.ends_with(".map")
+        || path.contains("installHook.js")
         || path.starts_with("/admin")
     {
         return next.run(request).await;
