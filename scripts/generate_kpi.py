@@ -335,15 +335,16 @@ def render_html():
   .grid-table {{ display: flex; flex-direction: column; width: 100%; font-size:17px; }}
   .grid-row {{ display: grid; border-bottom: 1px solid var(--border); align-items: center; padding: 16px 20px; transition: background 0.2s; }}
   .grid-row:hover {{ background: rgba(255,255,255,0.03); }}
-  .grid-header {{ background: var(--bg3); font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 800; border-bottom: none; position: sticky; top: 0; z-index: 20; padding: 18px 20px; }}
+  .grid-header {{ background: var(--bg3); font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 800; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 20; padding: 14px 20px; letter-spacing: 1px; }}
   .grid-cell {{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
   .grid-cell.num {{ text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }}
   .grid-cell.center {{ text-align: center; }}
   
+  .vol-grid {{ grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; }}
   .traffic-grid {{ grid-template-columns: 1fr 100px 100px 120px; gap: 20px; }}
-  .crates-grid {{ grid-template-columns: 1.5fr 100px 100px 100px; gap: 20px; }}
+  .crates-grid {{ grid-template-columns: 1.5fr 80px 100px 100px; gap: 20px; }}
   
-  .impact-badge {{ display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 11px; letter-spacing: 1px; min-width: 32px; }}
+  .impact-badge {{ display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 11px; letter-spacing: 1px; min-width: 40px; }}
   .impact-pos {{ background:rgba(63,185,80,0.15); color:var(--green); border:1px solid var(--green); }}
   .impact-neu {{ background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }}
   .impact-neg {{ background:rgba(248,81,73,0.15); color:var(--red); border:1px solid var(--red); }}
@@ -387,7 +388,7 @@ def render_html():
     <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
       <div class="panel-h" style="width:100%">Resource Distribution <span>Balanced Weights</span></div>
       <div id="lgd-dist" class="legend-container" style="justify-content:center"></div>
-      <div style="height:400px; width:340px;"><canvas id="distChart"></canvas></div>
+      <div style="height:420px; width:100%; max-width:450px;"><canvas id="distChart"></canvas></div>
     </div>
   </div>
   <div class="row-top">
@@ -406,9 +407,12 @@ def render_html():
     <div style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
       <div class="panel" style="padding:0; overflow:hidden;">
         <div class="panel-h" style="padding:15px;background:var(--bg2);z-index:10;margin:0">Recent Volatility <span>Delta Tracking</span></div>
-        <table id="table-changes"><thead><tr><th>Metric</th><th class="num">Current</th><th class="num">Change</th><th class="num">Trend %</th></tr></thead><tbody>
+        <div class="grid-table">
+          <div class="grid-row grid-header vol-grid">
+            <div>Metric</div><div class="num">Current</div><div class="num">Change</div><div class="num">Trend %</div>
+          </div>
           {render_changes_rows(s, p)}
-        </tbody></table>
+        </div>
       </div>
       <div class="panel" style="flex: 1; min-height: 0; overflow-y: auto; padding: 0;">
         <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Crates Detail <span>Granular Downloads</span></div>
@@ -424,7 +428,7 @@ def render_html():
       <div class="panel-h" style="padding:15px; position:sticky; top:0; background:var(--bg2); z-index:10; margin:0">Network Traffic <span>14-Day Rescued Log</span></div>
       <div class="grid-table">
         <div class="grid-row grid-header traffic-grid">
-          <div>Timestamp</div><div class="num">Clones</div><div class="num">Views</div><div class="center" style="padding-right: 15px;">TIS Impact</div>
+          <div>Timestamp</div><div class="num">Clones</div><div class="num">Views</div><div class="grid-cell center">TIS Impact</div>
         </div>
         {traffic_rows}
       </div>
@@ -491,16 +495,16 @@ function initCharts(data) {{
             data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], 
             backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], 
             borderWidth: 0, 
-            hoverOffset: 15, 
+            hoverOffset: 25, 
             borderRadius: 10, 
             spacing: 5,
             offset: [0,0,0,0,0,0]
         }}]
       }},
       options: {{ 
-        cutout:'85%', 
+        cutout:'75%', 
         maintainAspectRatio: false,
-        layout: {{ padding: 45 }},
+        layout: {{ padding: 25 }},
         plugins:{{ 
             datalabels: {{
                 display: (ctx) => ctx.dataset.offset[ctx.dataIndex] > 0,
@@ -638,7 +642,7 @@ def render_changes_rows(s, p):
         if pct < -5: status = "DROP"
         if diff == 0: status = "FLAT"
         
-        return f'<tr><td>{label} <span style="font-size:9px;opacity:0.6">[{status}]</span></td><td class="num">{val_str}</td><td class="num {cls}">{diff:+g}</td><td class="num {cls}">{pct:+.1f}%</td></tr>'
+        return f'<div class="grid-row vol-grid"><div>{label} <span style="font-size:9px;opacity:0.6">[{status}]</span></div><div class="grid-cell num">{val_str}</div><div class="grid-cell num {cls}">{diff:+g}</div><div class="grid-cell num {cls}">{pct:+.1f}%</div></div>'
 
     return "\n".join([
         _row(s["total_footprint"], p.get("total_footprint"), "Total Footprint"),
@@ -648,5 +652,43 @@ def render_changes_rows(s, p):
         _row(s["smithery_calls_weekly"], p.get("smithery_calls_weekly"), "Smithery Calls")
     ])
 
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/api/data':
+            data = do_fetch()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode())
+        else:
+            try:
+                with open(HTML_FILE, 'rb') as f:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(f.read())
+            except FileNotFoundError:
+                self.send_error(404, "File not found")
+    def log_message(self, *args): pass
+
+def _bg_refresh_loop():
+    while True:
+        time.sleep(REFRESH_INTERVAL)
+        try: do_fetch()
+        except: pass
+
+class MyHTTPServer(HTTPServer):
+    allow_reuse_address = True
+
 if __name__ == '__main__':
     do_fetch()
+    if '--serve' in sys.argv:
+        print(f"\n  TIS ConsoleX -> http://localhost:{PORT}")
+        threading.Thread(target=_bg_refresh_loop, daemon=True).start()
+        def _open():
+            time.sleep(1.2)
+            try: webbrowser.get('firefox').open(f'http://localhost:{PORT}')
+            except: webbrowser.open(f'http://localhost:{PORT}')
+        threading.Thread(target=_open, daemon=True).start()
+        try: MyHTTPServer(('localhost', PORT), Handler).serve_forever()
+        except KeyboardInterrupt: print('\nServer stopped.')
