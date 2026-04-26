@@ -500,21 +500,34 @@ fn from_value<T: for<'de> Deserialize<'de>>(input: &Value) -> Result<T, String> 
     serde_json::from_value(input.clone()).map_err(|error| error.to_string())
 }
 
+fn expand_tilde(path: &str) -> String {
+    if path.starts_with("~/") || path == "~" {
+        if let Ok(home) = std::env::var("HOME") {
+            return if path == "~" {
+                home
+            } else {
+                format!("{}{}", home, &path[1..])
+            };
+        }
+    }
+    path.to_string()
+}
+
 #[allow(clippy::needless_pass_by_value)]
 fn run_read_file(input: ReadFileInput) -> Result<String, String> {
-    to_pretty_json(read_file(&input.path, input.offset, input.limit).map_err(io_to_string)?)
+    to_pretty_json(read_file(&expand_tilde(&input.path), input.offset, input.limit).map_err(io_to_string)?)
 }
 
 #[allow(clippy::needless_pass_by_value)]
 fn run_write_file(input: WriteFileInput) -> Result<String, String> {
-    to_pretty_json(write_file(&input.path, &input.content).map_err(io_to_string)?)
+    to_pretty_json(write_file(&expand_tilde(&input.path), &input.content).map_err(io_to_string)?)
 }
 
 #[allow(clippy::needless_pass_by_value)]
 fn run_edit_file(input: EditFileInput) -> Result<String, String> {
     to_pretty_json(
         edit_file(
-            &input.path,
+            &expand_tilde(&input.path),
             &input.old_string,
             &input.new_string,
             input.replace_all.unwrap_or(false),
@@ -525,7 +538,8 @@ fn run_edit_file(input: EditFileInput) -> Result<String, String> {
 
 #[allow(clippy::needless_pass_by_value)]
 fn run_glob_search(input: GlobSearchInputValue) -> Result<String, String> {
-    to_pretty_json(glob_search(&input.pattern, input.path.as_deref()).map_err(io_to_string)?)
+    let expanded = input.path.as_deref().map(expand_tilde);
+    to_pretty_json(glob_search(&input.pattern, expanded.as_deref()).map_err(io_to_string)?)
 }
 
 #[allow(clippy::needless_pass_by_value)]

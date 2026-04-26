@@ -28,17 +28,17 @@ use runtime::AssistantEvent;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 
-const BG: Color = Color::Rgb(11, 11, 11);
+const BG: Color = Color::Rgb(13, 17, 33);
 const FG: Color = Color::Rgb(220, 220, 220);
 const DIM: Color = Color::Rgb(80, 80, 80);
 const GREY: Color = Color::Rgb(145, 145, 145);
 const GREEN: Color = Color::Rgb(0, 220, 120);
 const CYAN: Color = Color::Rgb(0, 200, 255);
 const ORANGE: Color = Color::Rgb(255, 140, 50);   // working `*` indicator
-const USER_BOX_BG: Color = Color::Rgb(28, 28, 28);
-const STATUS_BG: Color = Color::Rgb(18, 18, 18);
+const USER_BOX_BG: Color = Color::Rgb(20, 26, 48);
+const STATUS_BG: Color = Color::Rgb(16, 21, 40);
 const BRANCH_BG: Color = Color::Rgb(35, 55, 35);  // git branch pill background
-const POPUP_BG: Color = Color::Rgb(26, 26, 26);
+const POPUP_BG: Color = Color::Rgb(20, 26, 48);
 const POPUP_BORDER: Color = Color::Rgb(55, 55, 55);
 const POPUP_MATCH: Color = Color::Rgb(0, 180, 100);
 const POPUP_SEL_BG: Color = Color::Rgb(42, 42, 42);
@@ -1528,7 +1528,7 @@ impl TuiApp {
             // Without this, rapid streaming events cause 1000+ draws/sec which the
             // terminal coalesces into a single visible frame — giving "all at once" appearance.
             let mut last_draw = Instant::now();
-            const DRAW_INTERVAL: Duration = Duration::from_millis(33);
+            const DRAW_INTERVAL: Duration = Duration::from_millis(16);
 
             loop {
                 // Draw if enough time has passed since the last frame.
