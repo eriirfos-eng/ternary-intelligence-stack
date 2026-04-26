@@ -1,0 +1,38 @@
+/*
+ * GrahamScanMock — Convex Hull logic demonstration.
+ * Focuses on the orientation test (cross product) used in Graham Scan.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Orientation test: 
+// Returns > 0 for Counter-clockwise, 
+//         < 0 for Clockwise, 
+//           0 for Collinear.
+fn cross_product(ox: int, oy: int, ax: int, ay: int, bx: int, by: int) -> int {
+    // (A-O) x (B-O)
+    return (ax - ox) * (by - oy) - (ay - oy) * (bx - ox);
+}
+
+fn main() -> trit {
+    // Points: O(0,0), A(2,0), B(2,2)
+    println("Testing Orientation (Cross Product):");
+    println("O(0,0), A(2,0), B(2,2)");
+    
+    let cp1: int = cross_product(0, 0, 2, 0, 2, 2);
+    println("Cross product (expected 4):");
+    println(cp1);
+    
+    // Reverse order: O(0,0), A(2,2), B(2,0)
+    let cp2: int = cross_product(0, 0, 2, 2, 2, 0);
+    println("Cross product reversed (expected -4):");
+    println(cp2);
+    
+    if cp1 == 4 && cp2 == -4 {
+        println("GrahamScanMock Test: PASSED");
+        return 1;
+    }
+    
+    println("GrahamScanMock Test: FAILED");
+    return -1;
+}
