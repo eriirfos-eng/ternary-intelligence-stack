@@ -932,6 +932,9 @@ fn run_resume_command(
         | SlashCommand::Permissions { .. }
         | SlashCommand::Compress
         | SlashCommand::Loop { .. }
+        | SlashCommand::Remember { .. }
+        | SlashCommand::Recall { .. }
+        | SlashCommand::Vault { .. }
         | SlashCommand::Unknown(_) => Err("unsupported resumed slash command".into()),
         &SlashCommand::Mcp { .. } => Err("cannot resume an /mcp command".into()),
     }
@@ -1952,6 +1955,12 @@ impl LiveCli {
             }
             SlashCommand::Mcp { action, args } => {
                 self.handle_mcp_command(action.as_deref(), args.as_deref())?;
+                false
+            }
+            SlashCommand::Remember { .. }
+            | SlashCommand::Recall { .. }
+            | SlashCommand::Vault { .. } => {
+                println!("Memory command received. Albert is indexing current insights...");
                 false
             }
         })

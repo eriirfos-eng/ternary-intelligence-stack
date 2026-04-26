@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "albert-api"
-version = "1.1.2"
+version = "1.1.3"
 dependencies = [
  "albert-runtime",
  "reqwest",
@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "albert-cli"
-version = "1.1.2"
+version = "1.1.3"
 dependencies = [
  "albert-api",
  "albert-commands",
@@ -59,7 +59,7 @@ dependencies = [
 
 [[package]]
 name = "albert-commands"
-version = "1.1.2"
+version = "1.1.3"
 dependencies = [
  "albert-runtime",
  "console 0.15.11",
@@ -67,7 +67,7 @@ dependencies = [
 
 [[package]]
 name = "albert-compat"
-version = "1.1.2"
+version = "1.1.3"
 dependencies = [
  "albert-commands",
  "albert-runtime",
@@ -76,7 +76,7 @@ dependencies = [
 
 [[package]]
 name = "albert-runtime"
-version = "1.1.2"
+version = "1.1.3"
 dependencies = [
  "glob",
  "regex",
@@ -89,15 +89,18 @@ dependencies = [
 
 [[package]]
 name = "albert-tools"
-version = "1.1.2"
+version = "1.1.3"
 dependencies = [
  "albert-api",
  "albert-runtime",
+ "chrono",
  "dirs",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
  "tokio",
+ "uuid",
  "walkdir",
 ]
 
@@ -2418,6 +2421,17 @@ name = "utf8parse"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
+
+[[package]]
+name = "uuid"
+version = "1.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ddd74a9687298c6858e9b88ec8935ec45d22e8fd5e6394fa1bd4e99a87789c76"
+dependencies = [
+ "getrandom 0.4.2",
+ "js-sys",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "version_check"
