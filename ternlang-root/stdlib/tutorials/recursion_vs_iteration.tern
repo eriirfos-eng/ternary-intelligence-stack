@@ -1,0 +1,48 @@
+/*
+ * Tutorial: Recursion vs. Iteration
+ * A comparative study of recursive and iterative patterns in Ternlang.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Recursive implementation of Factorial
+fn factorial_recursive(n: int) -> int {
+    if n <= 1 { 
+        return 1; 
+    }
+    return n * factorial_recursive(n - 1);
+}
+
+// Iterative implementation of Factorial
+fn factorial_iterative(n: int) -> int {
+    let res: int = 1;
+    let i: int = 1;
+    while i <= n {
+        res = res * i;
+        i = i + 1;
+    }
+    return res;
+}
+
+fn main() -> trit {
+    println("=== Recursion vs. Iteration Tutorial ===");
+    
+    let n: int = 5;
+    println("Calculating Factorial(5)...");
+    
+    let r_rec: int = factorial_recursive(n);
+    println("Recursive result:");
+    println(r_rec);
+    
+    let r_iter: int = factorial_iterative(n);
+    println("Iterative result:");
+    println(r_iter);
+    
+    if r_rec == 120 && r_iter == 120 {
+        println("Both methods produced 120. SUCCESS.");
+        return 1;
+    }
+    
+    println("Mismatched results or incorrect calculation.");
+    return -1;
+}
