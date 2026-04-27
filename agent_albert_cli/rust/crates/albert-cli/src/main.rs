@@ -301,6 +301,57 @@ fn parse_args(args: &[String]) -> Result<CliAction, String> {
     }
 }
 
+fn fetch_available_models() -> Vec<ModelEntry> {
+    let mut discovered = Vec::new();
+    let providers = [
+        api::LlmProvider::Google,
+        api::LlmProvider::Anthropic,
+        api::LlmProvider::OpenAi,
+        api::LlmProvider::Ternlang,
+        api::LlmProvider::Xai,
+        api::LlmProvider::Groq,
+        api::LlmProvider::Mistral,
+        api::LlmProvider::DeepSeek,
+        api::LlmProvider::Ollama,
+    ];
+
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    for provider in providers {
+        let auth = runtime::load_provider_config(provider_config_name(provider))
+            .unwrap_or(None)
+            .and_then(|c| c.api_key.map(api::AuthSource::ApiKey))
+            .or_else(|| api::resolve_auth_for_provider(provider).ok());
+
+        if let Some(auth_source) = auth {
+            let client = TernlangClient::from_auth(auth_source).with_provider(provider);
+            print!("fetching models for {:?}... ", provider);
+            match rt.block_on(client.list_remote_models()) {
+                Ok(models) => {
+                    println!("{}", style(format!("found {}", models.len())).green());
+                    for m in models {
+                        // Skip if already discovered
+                        if !discovered.iter().any(|d: &ModelEntry| d.id == m) {
+                            discovered.push(ModelEntry {
+                                id: Box::leak(m.into_boxed_str()),
+                                provider: Box::leak(format!("{:?}", provider).into_boxed_str()),
+                                description: "discovered via API",
+                            });
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("{}", style(format!("failed ({})", e)).red().dim());
+                }
+            }
+        }
+    }
+    discovered
+}
+
 fn resolve_model_alias(model: &str) -> &str {
     match model {
         "opus" => "claude-3-opus-20240229",
@@ -950,6 +1001,8 @@ fn run_repl(
     let mut editor = input::LineEditor::new("> ", slash_command_completion_candidates());
     println!("{}", cli.startup_banner());
 
+    let mut prompter = CliPermissionPrompter::new(cli.permission_mode, true, None);
+
     loop {
         match editor.read_line()? {
             input::ReadOutcome::Submit(input) => {
@@ -968,7 +1021,7 @@ fn run_repl(
                     continue;
                 }
                 editor.push_history(input);
-                cli.run_turn(&trimmed)?;
+                cli.runtime.run_turn(trimmed, Some(&mut prompter))?;
             }
             input::ReadOutcome::Cancel => {}
             input::ReadOutcome::Exit => {
@@ -1376,7 +1429,15 @@ fn run_tui(
         // Clone so the async block can clear working state immediately on ESC.
         let tui_state_cancel = Arc::clone(&tui_state);
 
-        let mut prompter = CliPermissionPrompter::new(cli.permission_mode, false);
+        let mut prompter = CliPermissionPrompter::new(
+            cli.permission_mode,
+            true,
+            Some(tui_event_tx.clone()),
+        );
+        {
+            let st = tui_state.lock().unwrap();
+            prompter.is_prompting = Some(Arc::clone(&st.is_prompting));
+        }
 
         let turn_result = std::thread::scope(|s| {
             let runtime = &mut cli.runtime;
@@ -1667,6 +1728,7 @@ impl LiveCli {
             permission_mode: self.permission_mode,
             interactive: true,
             is_prompting: Some(is_prompting.clone()),
+            tui_event_tx: None,
         };
 
         let mut rx = self.event_tx.subscribe();
@@ -1912,7 +1974,7 @@ impl LiveCli {
             self.allowed_tools.clone(),
             self.permission_mode,
         )?;
-        let mut permission_prompter = CliPermissionPrompter::new(self.permission_mode, false);
+        let mut permission_prompter = CliPermissionPrompter::new(self.permission_mode, false, None);
         let summary = runtime.run_turn(input.to_string(), Some(&mut permission_prompter))?;
         self.runtime = runtime;
         self.persist_session()?;
@@ -2239,28 +2301,57 @@ User: {}\n\nAssistant: {}",
         let model_id = if let Some(m) = model {
             resolve_model_alias(&m).to_string()
         } else {
-            let items: Vec<String> = KNOWN_MODELS
-                .iter()
-                .map(|m| {
-                    format!(
-                        "{:<25} {:<12} {}",
-                        style(m.id).cyan(),
-                        style(format!("({})", m.provider)).dim(),
-                        style(m.description).dim()
-                    )
-                })
-                .collect();
+            let mut all_models: Vec<ModelEntry> = KNOWN_MODELS.to_vec();
+            
+            loop {
+                let mut items: Vec<String> = all_models
+                    .iter()
+                    .map(|m| {
+                        format!(
+                            "{:<25} {:<12} {}",
+                            style(m.id).cyan(),
+                            style(format!("({})", m.provider)).dim(),
+                            style(m.description).dim()
+                        )
+                    })
+                    .collect();
 
-            let selection = Select::new()
-                .with_prompt("Select Model")
-                .items(&items)
-                .default(0)
-                .interact_opt()?;
+                items.push(format!("{} {}", style("↺").yellow(), "Fetch more models from API..."));
+                items.push(format!("{} {}", style("✎").yellow(), "Manual entry..."));
 
-            if let Some(index) = selection {
-                KNOWN_MODELS[index].id.to_string()
-            } else {
-                return Ok(false);
+                let selection = Select::new()
+                    .with_prompt("Select Model")
+                    .items(&items)
+                    .default(0)
+                    .interact_opt()?;
+
+                match selection {
+                    Some(index) if index < all_models.len() => {
+                        break all_models[index].id.to_string();
+                    }
+                    Some(index) if index == all_models.len() => {
+                        // Fetch remote
+                        let discovered = fetch_available_models();
+                        if discovered.is_empty() {
+                            println!("{}", style("No additional models found (check your API keys).").red());
+                        } else {
+                            for d in discovered {
+                                if !all_models.iter().any(|m| m.id == d.id) {
+                                    all_models.push(d);
+                                }
+                            }
+                        }
+                        // Continue loop to show updated list
+                    }
+                    Some(index) if index == all_models.len() + 1 => {
+                        // Manual entry
+                        let manual: String = Input::new()
+                            .with_prompt("Enter model ID")
+                            .interact_text()?;
+                        break manual;
+                    }
+                    _ => return Ok(false),
+                }
             }
         };
 
@@ -2598,7 +2689,7 @@ User: {}\n\nAssistant: {}",
             self.allowed_tools.clone(),
             self.permission_mode,
         )?;
-        let mut permission_prompter = CliPermissionPrompter::new(self.permission_mode, false);
+        let mut permission_prompter = CliPermissionPrompter::new(self.permission_mode, false, None);
         let summary = runtime.run_turn(prompt.to_string(), Some(&mut permission_prompter))?;
         Ok(final_assistant_text(&summary).trim().to_string())
     }
@@ -3188,14 +3279,20 @@ struct CliPermissionPrompter {
     permission_mode: PermissionMode,
     interactive: bool,
     is_prompting: Option<Arc<std::sync::atomic::AtomicBool>>,
+    tui_event_tx: Option<tokio::sync::mpsc::UnboundedSender<tui::TuiEvent>>,
 }
 
 impl CliPermissionPrompter {
-    fn new(permission_mode: PermissionMode, interactive: bool) -> Self {
+    fn new(
+        permission_mode: PermissionMode,
+        interactive: bool,
+        tui_event_tx: Option<tokio::sync::mpsc::UnboundedSender<tui::TuiEvent>>,
+    ) -> Self {
         Self {
             permission_mode,
             interactive,
             is_prompting: None,
+            tui_event_tx,
         }
     }
 }
@@ -3240,45 +3337,63 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
             return default;
         }
 
-        let tool_input_string = request.input.to_string();
-        if tool_input_string.len() > 256 {
-            println!(
-                "Request to use tool `{}` with large input. Preview:\n{}...",
-                request.tool_name,
-                &tool_input_string[..256]
-            );
-        } else {
-            println!("Request to use tool `{}` with input:\n{}", request.tool_name, request.input);
-        }
-
-        loop {
-            let choice = dialoguer::Select::new()
-                .with_prompt("Allow this tool use?")
-                .items(&["Allow once", "Deny"])
-                .default(0)
-                .interact_opt()
-                .unwrap_or_default();
-
-            match choice {
-                Some(0) => return runtime::PermissionPromptDecision::Allow,
-                Some(1) => {
-                    return runtime::PermissionPromptDecision::Deny {
-                        reason: "user denied".to_string(),
-                    }
-                }
-                Some(_) => {
-                    return runtime::PermissionPromptDecision::Deny {
-                        reason: "invalid choice".to_string(),
-                    }
-                }
-                None => {
-                    // User cancelled with Esc, treat as denial
-                    return runtime::PermissionPromptDecision::Deny {
-                        reason: "user cancelled".to_string(),
-                    };
-                }
+        // ── Interactive TUI Prompt ──────────────────────────────────────────
+        // Suspend TUI so we can interact with the user via standard CLI prompts
+        let mut suspended = false;
+        if let Some(tx) = &self.tui_event_tx {
+            let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<()>(1);
+            if tx.send(tui::TuiEvent::Suspend { ack: ack_tx }).is_ok() {
+                let _ = ack_rx.recv();
+                suspended = true;
             }
         }
+
+        let tool_input_string = request.input.to_string();
+        println!("\n{}", style("────────────────────────────────────────────────────────────").yellow());
+        println!("{}", style(" ⚠ Permission Request").yellow().bold());
+        println!(" Agent wants to use tool: {}", style(&request.tool_name).cyan().bold());
+        
+        if tool_input_string.len() > 512 {
+            println!("\n Input (truncated):\n{}\n...", style(&tool_input_string[..512]).dim());
+        } else {
+            println!("\n Input:\n{}", style(&tool_input_string).dim());
+        }
+        println!("{}", style("────────────────────────────────────────────────────────────").yellow());
+
+        let options = vec![
+            "Yes, accept these changes",
+            "Yes, but with edits (add context)",
+            "No, interrupt and stop agent",
+        ];
+
+        let selection = Select::new()
+            .with_prompt("Action")
+            .items(&options)
+            .default(0)
+            .interact_opt()
+            .unwrap_or(Some(2)); // default to No if error
+
+        let decision = match selection {
+            Some(0) => runtime::PermissionPromptDecision::Allow,
+            Some(1) => {
+                let edits: String = Input::new()
+                    .with_prompt("Enter additional context or modified input")
+                    .interact_text()
+                    .unwrap_or_default();
+                runtime::PermissionPromptDecision::AllowWithEdits { new_input: edits }
+            }
+            _ => runtime::PermissionPromptDecision::Deny {
+                reason: "user interrupted".to_string(),
+            },
+        };
+
+        if suspended {
+            if let Some(tx) = &self.tui_event_tx {
+                let _ = tx.send(tui::TuiEvent::Resume);
+            }
+        }
+
+        decision
     }
 }
 
@@ -4051,6 +4166,7 @@ fn check_workspace_trust() -> Result<bool, Box<dyn std::error::Error>> {
         }
     }
 }
+#[derive(Debug, Clone, Copy)]
 struct ModelEntry {
     id: &'static str,
     provider: &'static str,

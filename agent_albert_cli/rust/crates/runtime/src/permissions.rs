@@ -34,6 +34,7 @@ pub struct PermissionRequest {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PermissionPromptDecision {
     Allow,
+    AllowWithEdits { new_input: String },
     Deny { reason: String },
 }
 
@@ -44,6 +45,7 @@ pub trait PermissionPrompter {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PermissionOutcome {
     Allow,
+    AllowWithEdits { new_input: String },
     Deny { reason: String },
 }
 
@@ -118,6 +120,9 @@ impl PermissionPolicy {
             return match prompter.as_mut() {
                 Some(prompter) => match prompter.decide(&request) {
                     PermissionPromptDecision::Allow => PermissionOutcome::Allow,
+                    PermissionPromptDecision::AllowWithEdits { new_input } => {
+                        PermissionOutcome::AllowWithEdits { new_input }
+                    }
                     PermissionPromptDecision::Deny { reason } => PermissionOutcome::Deny { reason },
                 },
                 None => PermissionOutcome::Deny {
