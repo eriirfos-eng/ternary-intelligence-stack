@@ -761,15 +761,15 @@
     "api_latency_ms": 404
   },
   {
-    "ts": "2026-04-27T07:45:25.559073+00:00",
-    "total_footprint": 64812,
-    "raw_footprint": 38336,
+    "ts": "2026-04-27T08:47:27.840101+00:00",
+    "total_footprint": 64837,
+    "raw_footprint": 38386,
     "crates_total": 1675,
     "openvsx_total": 782,
     "gh_stars": 5,
     "gh_clones": 23173,
     "gh_views": 3011,
-    "smithery_calls_weekly": "9.69k",
-    "api_latency_ms": 456
+    "smithery_calls_weekly": "9.74k",
+    "api_latency_ms": 284
   }
 ]
