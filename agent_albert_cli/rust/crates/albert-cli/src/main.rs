@@ -3,7 +3,7 @@ mod input;
 mod render;
 mod tui;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::env;
 use std::fs;
 use std::io::{self, Read, Write};
@@ -1462,7 +1462,15 @@ fn run_tui(
                             state.working = false;
                             state.deactivate_all_tools();
                             state.turn_start = None;
-                            state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
+                            
+                            let already_interrupted = if let Some(tui::ExecBlock::SystemMsg(m)) = state.exec_log.back() {
+                                m == "interrupted"
+                            } else {
+                                false
+                            };
+                            if !already_interrupted {
+                                state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
+                            }
                         }
                         // Drain any remaining queued events (skip on cancel)
                         if is_done {
@@ -1495,23 +1503,33 @@ fn run_tui(
             })
         });
 
-        // Always clear working state + deactivate any pending tool dot.
-        // If already cleared by the cancel path above, these are no-ops.
+        // ── turn finished ───────────────────────────────────────────────────
         let was_cancelled = cancel_flag.load(Ordering::Relaxed);
         let turn_secs = {
             let mut state = tui_state.lock().unwrap();
             let secs = state.turn_start.take().map(|t| t.elapsed().as_secs()).unwrap_or(0);
             state.working = false;
             state.deactivate_all_tools();
-            // "interrupted" was already pushed in the cancel path above; skip here.
-            if was_cancelled && false {
-                state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
+            
+            // If the turn ended via ESC, the async block already pushed "interrupted".
+            // If it ended naturally but was marked as cancelled by the runtime, 
+            // ensure it's recorded.
+            if was_cancelled {
+                // Check if the last msg is already "interrupted" to avoid duplicates
+                let already_interrupted = if let Some(tui::ExecBlock::SystemMsg(m)) = state.exec_log.back() {
+                    m == "interrupted"
+                } else {
+                    false
+                };
+                if !already_interrupted {
+                    state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
+                }
             }
             secs
         };
         cancel_flag.store(false, Ordering::Relaxed);
 
-        // Inject ToolOutput blocks: walk exec_log, insert human-readable output after each ToolUse.
+        // Inject ToolOutput blocks: safely walk log without risk of clearing it on early return.
         if let Ok(Ok(ref summary)) = turn_result {
             let tool_results_data: Vec<(String, bool)> = summary
                 .tool_results
@@ -1528,41 +1546,31 @@ fn run_tui(
 
             if !tool_results_data.is_empty() {
                 let mut state = tui_state.lock().unwrap();
-                let log: Vec<_> = std::mem::take(&mut state.exec_log).into_iter().collect();
+                // Create a NEW log with outputs injected, then swap it in.
+                let mut new_log = VecDeque::with_capacity(state.exec_log.len() + tool_results_data.len());
                 let mut out_iter = tool_results_data.into_iter();
-                for mut block in log {
+                
+                for mut block in std::mem::take(&mut state.exec_log) {
                     if let tui::ExecBlock::ToolUse { ref mut active, .. } = block {
                         *active = false;
-                        state.exec_log.push_back(block);
+                        new_log.push_back(block);
                         if let Some((raw, is_err)) = out_iter.next() {
                             state.tool_calls += 1;
-                            if is_err {
-                                state.tool_failure += 1;
-                            } else {
-                                state.tool_success += 1;
-                            }
+                            if is_err { state.tool_failure += 1; } else { state.tool_success += 1; }
 
-                            // Extract human-readable text — bash outputs are JSON
                             let display = extract_tool_display_text(&raw);
-                            let all: Vec<String> = display
-                                .lines()
-                                .map(|l| l.trim_end().to_string())
-                                .filter(|l| !l.is_empty())
-                                .collect();
+                            let all: Vec<String> = display.lines().map(|l| l.trim_end().to_string()).filter(|l| !l.is_empty()).collect();
                             let total = all.len();
                             if total > 0 {
-                                // Show at most 5 lines; the "… +N lines" hint covers the rest
                                 let shown: Vec<String> = all.into_iter().take(5).collect();
-                                state.exec_log.push_back(tui::ExecBlock::ToolOutput {
-                                    lines: shown,
-                                    total,
-                                });
+                                new_log.push_back(tui::ExecBlock::ToolOutput { lines: shown, total });
                             }
                         }
                     } else {
-                        state.exec_log.push_back(block);
+                        new_log.push_back(block);
                     }
                 }
+                state.exec_log = new_log;
             }
         }
 
