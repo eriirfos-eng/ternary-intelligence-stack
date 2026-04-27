@@ -1559,6 +1559,8 @@ fn run_tui(
                                 });
                             }
                         }
+                    } else {
+                        state.exec_log.push_back(block);
                     }
                 }
             }
