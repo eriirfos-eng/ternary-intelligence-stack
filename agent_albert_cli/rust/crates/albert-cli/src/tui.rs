@@ -828,8 +828,10 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
 
 fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
     let mut lines: Vec<Line<'static>> = Vec::new();
+    let mut it = state.exec_log.iter().peekable();
+    let mut last_was_tool = false;
 
-    for block in &state.exec_log {
+    while let Some(block) = it.next() {
         match block {
             ExecBlock::UserMessage(msg) => {
                 lines.push(Line::default());
@@ -840,6 +842,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     ),
                     Span::styled(msg.clone(), Style::default().fg(FG).bg(USER_BOX_BG)),
                 ]));
+                last_was_tool = false;
             }
 
             ExecBlock::ToolUse { name, args, active } => {
@@ -849,10 +852,30 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     Style::default().fg(GREY)
                 };
                 let (name_col, args_col) = if *active { (FG, CYAN) } else { (GREY, GREY) };
+                
+                let verb = if name.contains("write") {
+                    "Wrote"
+                } else if name.contains("read") {
+                    "Read"
+                } else if name.contains("grep") || name.contains("search") {
+                    "Searched"
+                } else if name.contains("glob") || name.contains("scan") {
+                    "Scanned"
+                } else if name.contains("bash") || name.contains("execute") {
+                    "Ran"
+                } else if name.contains("plan") {
+                    "Planned"
+                } else if name.contains("fetch") {
+                    "Fetched"
+                } else {
+                    "Used"
+                };
+
+                let prefix = if last_was_tool { " ╰ ● " } else { " ● " };
                 let mut spans = vec![
-                    Span::styled("● ", dot_style),
+                    Span::styled(prefix, dot_style),
                     Span::styled(
-                        format!("Ran {name}"),
+                        format!("{verb} {name}"),
                         Style::default().fg(name_col).add_modifier(Modifier::BOLD),
                     ),
                 ];
@@ -863,6 +886,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     ));
                 }
                 lines.push(Line::from(spans));
+                last_was_tool = true;
             }
 
             ExecBlock::ToolOutput { lines: out, total } => {
@@ -890,6 +914,8 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                         ),
                     ]));
                 }
+                // Keep last_was_tool true after output so the NEXT tool in sequence is indented
+                last_was_tool = true;
             }
 
             ExecBlock::AgentText(text) => {
@@ -898,7 +924,9 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
                     Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
                 ]));
+                
                 lines.extend(markdown_to_lines(text));
+                last_was_tool = false;
             }
 
             // WorkedFor is shown in the status bar — not duplicated in the chat log.
