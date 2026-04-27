@@ -1460,7 +1460,7 @@ fn run_tui(
                             // continues running in the background until handle.join() below.
                             let mut state = tui_state_cancel.lock().unwrap();
                             state.working = false;
-                            state.deactivate_last_tool();
+                            state.deactivate_all_tools();
                             state.turn_start = None;
                             state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));
                         }
@@ -1502,7 +1502,7 @@ fn run_tui(
             let mut state = tui_state.lock().unwrap();
             let secs = state.turn_start.take().map(|t| t.elapsed().as_secs()).unwrap_or(0);
             state.working = false;
-            state.deactivate_last_tool();
+            state.deactivate_all_tools();
             // "interrupted" was already pushed in the cancel path above; skip here.
             if was_cancelled && false {
                 state.push_exec(tui::ExecBlock::SystemMsg("interrupted".to_string()));

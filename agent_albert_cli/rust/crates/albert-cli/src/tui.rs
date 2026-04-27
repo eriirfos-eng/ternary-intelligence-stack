@@ -259,7 +259,7 @@ impl TuiState {
 
     pub fn push_exec(&mut self, block: ExecBlock) {
         if matches!(&block, ExecBlock::ToolUse { .. }) {
-            self.deactivate_last_tool();
+            self.deactivate_all_tools();
         }
 
         // Bug fix: Remove ASCII splash and startup system message when the first user message arrives
@@ -304,14 +304,12 @@ impl TuiState {
         }
     }
 
-    /// Mark the most-recent active ToolUse as completed (grey dot).
-    pub fn deactivate_last_tool(&mut self) {
-        for block in self.exec_log.iter_mut().rev() {
+
+    /// Mark all active ToolUse as completed (grey dot).
+    pub fn deactivate_all_tools(&mut self) {
+        for block in self.exec_log.iter_mut() {
             if let ExecBlock::ToolUse { active, .. } = block {
-                if *active {
-                    *active = false;
-                    break;
-                }
+                *active = false;
             }
         }
     }
@@ -923,7 +921,9 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
             }
 
             ExecBlock::AgentText(text) => {
-                lines.push(Line::default());
+                if !last_was_tool {
+                    lines.push(Line::default());
+                }
                 lines.push(Line::from(vec![
                     Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
                     Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
@@ -1004,11 +1004,10 @@ fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     // max_scroll is how many rows we can scroll up from the bottom
     let max_scroll = total_wrapped_count.saturating_sub(visible);
     
-    // Clamp state.scroll so we never over-scroll past the top
-    let effective_scroll = (state.scroll as usize).min(max_scroll);
-    
-    // scroll_row is the top row to pass to Paragraph (0 = top of content)
-    let scroll_row = max_scroll.saturating_sub(effective_scroll).min(u16::MAX as usize) as u16;
+    // state.scroll is rows scrolled up from the bottom.
+    // paragraph.scroll(y, x) is rows scrolled down from the TOP.
+    // So scroll_y = max_scroll - state.scroll
+    let scroll_row = max_scroll.saturating_sub(state.scroll as usize).min(u16::MAX as usize) as u16;
 
     let para = Paragraph::new(Text::from(lines))
         .style(Style::default().bg(BG).fg(FG))
