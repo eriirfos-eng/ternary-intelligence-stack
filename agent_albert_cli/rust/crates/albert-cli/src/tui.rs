@@ -210,6 +210,8 @@ pub struct TuiState {
     pub quit_confirm: bool,
     /// Whether the user has explicitly trusted this directory for this session.
     pub trusted: bool,
+    /// Whether the agent is currently blocked waiting for a permission prompt response.
+    pub is_prompting: Arc<AtomicBool>,
 }
 
 impl Default for TuiState {
@@ -245,6 +247,7 @@ impl Default for TuiState {
             session_id: String::new(),
             quit_confirm: false,
             trusted: false,
+            is_prompting: Arc::new(AtomicBool::new(false)),
         }
     }
 }
@@ -442,10 +445,6 @@ pub enum TuiEvent {
     VoiceError(String),
     /// Bracketed paste — insert without triggering submit on newlines.
     PasteText(String),
-    /// Mouse wheel scroll up — scroll content up (older messages).
-    ScrollUp,
-    /// Mouse wheel scroll down — scroll content down (newer messages).
-    ScrollDown,
 }
 
 // ── Popup items ───────────────────────────────────────────────────────────────
@@ -1092,6 +1091,12 @@ fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
     lines.push(hint_line("           together · openrouter · perplexity · cohere · cerebras · qwen"));
     lines.push(hint_line("           nvidia · fireworks · deepinfra · novita · sambanova · ollama"));
     lines.push(blank());
+
+    lines.push(h("  TIPS & INTERACTION"));
+    lines.push(hint_line("Selection: Click & Drag to select and copy text."));
+    lines.push(hint_line("Scrolling: Mouse wheel or Shift+Up/Down arrows to scroll chat history."));
+    lines.push(hint_line("Override:  Hold SHIFT to force native terminal selection/scrolling."));
+    lines.push(blank());
     lines.push(h("  SESSION"));
     lines.push(c("/compact",              "summarise old context to free tokens"));
     lines.push(c("/compress",             "aggressive compression — strip tool outputs"));
@@ -1417,6 +1422,12 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled("Recording…", Style::default().fg(MIC_RED)),
             Span::styled("  ctrl+space to stop & transcribe", Style::default().fg(GREY)),
         ])
+    } else if state.is_prompting.load(Ordering::Relaxed) {
+        Line::from(vec![
+            Span::styled(" 𒀭 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+            Span::styled("Waiting for you…", Style::default().fg(ORANGE)),
+            Span::styled("  check main terminal for approval prompt", Style::default().fg(GREY)),
+        ])
     } else if state.working {
         let elapsed_ms = state.turn_start.map(|t| t.elapsed().as_millis()).unwrap_or(0);
         let secs = elapsed_ms / 1000;
@@ -1673,7 +1684,6 @@ impl TuiApp {
         enable_raw_mode()?;
         io::stdout().execute(EnterAlternateScreen)?;
         io::stdout().execute(EnableBracketedPaste)?;
-        io::stdout().execute(EnableMouseCapture)?;
 
         let backend = CrosstermBackend::new(io::stdout());
         let mut terminal = Terminal::new(backend)?;
@@ -1694,13 +1704,6 @@ impl TuiApp {
                     Ok(Event::Key(k)) => { let _ = ktx.send(TuiEvent::Key(k)); }
                     Ok(Event::Paste(text)) => { let _ = ktx.send(TuiEvent::PasteText(text)); }
                     Ok(Event::Resize(_, _)) => { let _ = ktx.send(TuiEvent::Tick); }
-                    Ok(Event::Mouse(me)) => {
-                        match me.kind {
-                            MouseEventKind::ScrollUp => { let _ = ktx.send(TuiEvent::ScrollUp); }
-                            MouseEventKind::ScrollDown => { let _ = ktx.send(TuiEvent::ScrollDown); }
-                            _ => {}
-                        }
-                    }
                     _ => {}
                 }
             }
@@ -2126,7 +2129,6 @@ impl TuiApp {
                         }
                         enable_raw_mode().ok();
                         io::stdout().execute(EnableBracketedPaste).ok();
-                        io::stdout().execute(EnableMouseCapture).ok();
                         io::stdout().execute(EnterAlternateScreen).ok();
                         terminal.clear().ok();
                         self.key_paused.store(false, Ordering::Relaxed);
@@ -2164,15 +2166,6 @@ impl TuiApp {
                                 }
                             }
                         }
-                    }
-
-                    Some(TuiEvent::ScrollUp) => {
-                        let mut state = self.state.lock().unwrap();
-                        state.scroll = state.scroll.saturating_add(5);
-                    }
-                    Some(TuiEvent::ScrollDown) => {
-                        let mut state = self.state.lock().unwrap();
-                        state.scroll = state.scroll.saturating_sub(5);
                     }
 
                     Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {

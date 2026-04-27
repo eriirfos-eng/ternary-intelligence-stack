@@ -262,9 +262,14 @@ where
                     };
 
                     let result_message = match permission_outcome {
-                        PermissionOutcome::Allow => {
+                        PermissionOutcome::Allow | PermissionOutcome::AllowWithEdits { .. } => {
+                            let (effective_input, is_human_edit) = match permission_outcome {
+                                PermissionOutcome::AllowWithEdits { new_input } => (new_input, true),
+                                _ => (input, false),
+                            };
+
                             let pre_hook_result =
-                                self.hook_runner.run_pre_tool_use(&tool_name, &input);
+                                self.hook_runner.run_pre_tool_use(&tool_name, &effective_input);
                             if pre_hook_result.is_denied() {
                                 let deny_message =
                                     format!("PreToolUse hook denied tool `{tool_name}`");
@@ -276,7 +281,7 @@ where
                                 )
                             } else {
                                 let (output, mut is_error, validation_state) =
-                                    match self.tool_executor.execute(&tool_name, &input) {
+                                    match self.tool_executor.execute(&tool_name, &effective_input) {
                                         Ok(res) => (res.output, res.state == -1, res.state),
                                         Err(error) => {
                                             let err_msg = error.to_string();
@@ -298,7 +303,7 @@ where
                                 if validation_state == 0 {
                                     // Neurosymbolic Gap Recovery: Try to resolve state 0 autonomously via local graph
                                     let mut recovered = false;
-                                    let query_terms: Vec<&str> = input.split(|c: char| !c.is_alphanumeric())
+                                    let query_terms: Vec<&str> = effective_input.split(|c: char| !c.is_alphanumeric())
                                         .filter(|s| s.len() > 3)
                                         .collect();
                                     
@@ -345,7 +350,7 @@ where
 
                                 let post_hook_result = self.hook_runner.run_post_tool_use(
                                     &tool_name,
-                                    &input,
+                                    &effective_input,
                                     &final_output,
                                     is_error,
                                 );
