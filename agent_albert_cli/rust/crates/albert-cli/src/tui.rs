@@ -445,6 +445,10 @@ pub enum TuiEvent {
     VoiceError(String),
     /// Bracketed paste — insert without triggering submit on newlines.
     PasteText(String),
+    /// Mouse wheel scroll up — scroll content up (older messages).
+    ScrollUp,
+    /// Mouse wheel scroll down — scroll content down (newer messages).
+    ScrollDown,
 }
 
 // ── Popup items ───────────────────────────────────────────────────────────────
@@ -1712,6 +1716,7 @@ impl TuiApp {
         enable_raw_mode()?;
         io::stdout().execute(EnterAlternateScreen)?;
         io::stdout().execute(EnableBracketedPaste)?;
+        io::stdout().execute(EnableMouseCapture)?;
 
         let backend = CrosstermBackend::new(io::stdout());
         let mut terminal = Terminal::new(backend)?;
@@ -1732,6 +1737,13 @@ impl TuiApp {
                     Ok(Event::Key(k)) => { let _ = ktx.send(TuiEvent::Key(k)); }
                     Ok(Event::Paste(text)) => { let _ = ktx.send(TuiEvent::PasteText(text)); }
                     Ok(Event::Resize(_, _)) => { let _ = ktx.send(TuiEvent::Tick); }
+                    Ok(Event::Mouse(me)) => {
+                        match me.kind {
+                            MouseEventKind::ScrollUp => { let _ = ktx.send(TuiEvent::ScrollUp); }
+                            MouseEventKind::ScrollDown => { let _ = ktx.send(TuiEvent::ScrollDown); }
+                            _ => {}
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -2157,6 +2169,7 @@ impl TuiApp {
                         }
                         enable_raw_mode().ok();
                         io::stdout().execute(EnableBracketedPaste).ok();
+                        io::stdout().execute(EnableMouseCapture).ok();
                         io::stdout().execute(EnterAlternateScreen).ok();
                         terminal.clear().ok();
                         self.key_paused.store(false, Ordering::Relaxed);
@@ -2194,6 +2207,15 @@ impl TuiApp {
                                 }
                             }
                         }
+                    }
+
+                    Some(TuiEvent::ScrollUp) => {
+                        let mut state = self.state.lock().unwrap();
+                        state.scroll = state.scroll.saturating_add(5);
+                    }
+                    Some(TuiEvent::ScrollDown) => {
+                        let mut state = self.state.lock().unwrap();
+                        state.scroll = state.scroll.saturating_sub(5);
                     }
 
                     Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
