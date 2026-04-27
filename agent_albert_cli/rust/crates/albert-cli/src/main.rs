@@ -1530,10 +1530,10 @@ fn run_tui(
                 let mut state = tui_state.lock().unwrap();
                 let log: Vec<_> = std::mem::take(&mut state.exec_log).into_iter().collect();
                 let mut out_iter = tool_results_data.into_iter();
-                for block in log {
-                    let is_tool = matches!(&block, tui::ExecBlock::ToolUse { .. });
-                    state.exec_log.push_back(block);
-                    if is_tool {
+                for mut block in log {
+                    if let tui::ExecBlock::ToolUse { ref mut active, .. } = block {
+                        *active = false;
+                        state.exec_log.push_back(block);
                         if let Some((raw, is_err)) = out_iter.next() {
                             state.tool_calls += 1;
                             if is_err {
