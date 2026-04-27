@@ -14,7 +14,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crossterm::execute;
-use dialoguer::Select;
+use dialoguer::{Select, Input, Confirm};
 use console::style;
 
 use api::{
@@ -945,7 +945,7 @@ fn run_repl(
     allowed_tools: Option<AllowedToolSet>,
     permission_mode: PermissionMode,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    check_workspace_trust()?;
+    let _trusted = check_workspace_trust()?;
     let mut cli = LiveCli::new(model, true, allowed_tools, permission_mode)?;
     let mut editor = input::LineEditor::new("> ", slash_command_completion_candidates());
     println!("{}", cli.startup_banner());
@@ -991,7 +991,7 @@ fn run_tui(
     // Disable sandbox when running unrestricted so the agent can reach all paths.
     runtime::set_sandbox_bypass(permission_mode == PermissionMode::DangerFullAccess);
 
-    check_workspace_trust()?;
+    let trusted = check_workspace_trust()?;
 
     let cwd = env::current_dir()
         .map(|p| p.display().to_string())
@@ -1002,6 +1002,12 @@ fn run_tui(
     let session_id = cli.session.id.clone();
     let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd, permission_mode.as_str().to_string(), session_id);
     let tui_state = Arc::clone(&tui_app.state);
+
+    // Sync initial trust status to TUI
+    {
+        let mut state = tui_state.lock().unwrap();
+        state.trusted = trusted;
+    }
     let tui_event_tx = tui_app.event_tx.clone();
     let cancel_flag = Arc::clone(&tui_app.cancel_flag);
 
@@ -1191,7 +1197,73 @@ fn run_tui(
                     }
                     true
                 }
+                commands::SlashCommand::Tdd { interface } => {
+                    let target = interface.clone().unwrap_or_else(|| "the requested feature".to_string());
+                    agent_override = Some(format!(
+                        "You are in /tdd mode. Implement '{target}' using strict Test-Driven Development.\n\
+                         1. Write a failing test first.\n\
+                         2. Implement the minimum code to make it pass.\n\
+                         3. Refactor while keeping tests green.\n\
+                         4. End with 'TDD CYCLE COMPLETE'."
+                    ));
+                    true
+                }
+                commands::SlashCommand::Verify => {
+                    agent_override = Some(
+                        "You are in /verify mode. Run a full verification of the workspace:\n\
+                         build, lint, test, and type-check. Identify any regressions or failures \
+                         and fix them autonomously. End with 'VERIFICATION COMPLETE'."
+                        .to_string(),
+                    );
+                    true
+                }
+                commands::SlashCommand::CodeReview { files } => {
+                    let target = files.clone().unwrap_or_else(|| "recent changes".to_string());
+                    agent_override = Some(format!(
+                        "You are in /codereview mode. Deeply review {target}.\n\
+                         Assess code quality, security vulnerabilities, edge cases, and maintainability. \
+                         Provide a structured review report and proactively fix critical issues."
+                    ));
+                    true
+                }
+                commands::SlashCommand::BuildFix => {
+                    agent_override = Some(
+                        "You are in /buildfix mode. Analyze the latest build or compilation errors, \
+                         formulate a fix strategy, and apply the necessary changes to resolve them. \
+                         Verify the build succeeds before concluding."
+                        .to_string(),
+                    );
+                    true
+                }
+                commands::SlashCommand::Aside { question } => {
+                    let q = question.clone().unwrap_or_else(|| "Analyze the current context.".to_string());
+                    agent_override = Some(format!(
+                        "You are in /aside mode. Answer this side question or explore this tangent \
+                         WITHOUT modifying the primary task's files unless explicitly requested to do so.\n\
+                         Question/Tangent: {q}"
+                    ));
+                    true
+                }
+                commands::SlashCommand::Learn => {
+                    agent_override = Some(
+                        "You are in /learn mode. Extract reusable architectural patterns, persistent \
+                         bug resolutions, or project conventions from our recent interactions and \
+                         summarize them to be committed to your memory/knowledge base."
+                        .to_string(),
+                    );
+                    true
+                }
+                commands::SlashCommand::Refactor { scope } => {
+                    let target = scope.clone().unwrap_or_else(|| "the current module".to_string());
+                    agent_override = Some(format!(
+                        "You are in /refactor mode. Refactor {target} to improve readability, \
+                         maintainability, and performance.\n\
+                         CRITICAL: You must preserve all existing external behavior and pass all tests."
+                    ));
+                    true
+                }
                 // /help is intercepted in the TUI before reaching main loop — this arm is unreachable in TUI mode.
+
                 commands::SlashCommand::Help => {
                     // Fallback for non-TUI REPL mode
                     println!("{}", render_repl_help());
@@ -1240,6 +1312,42 @@ fn run_tui(
                 continue;
             }
             // plan/loop: agent_override is Some — fall through to agent turn execution
+        }
+
+        // ── @cd command ──────────────────────────────────────────────────────
+        if input.trim_start().starts_with("@cd ") {
+            let target = input.trim_start()[4..].trim();
+            let path = std::path::PathBuf::from(target);
+            let msg = if path.is_dir() {
+                match std::env::set_current_dir(&path) {
+                    Ok(_) => {
+                        let new_cwd = std::env::current_dir().unwrap_or(path).to_string_lossy().to_string();
+                        {
+                            let mut st = tui_state.lock().unwrap();
+                            st.cwd = new_cwd.clone();
+                        }
+                        format!("directory changed to: {new_cwd}")
+                    }
+                    Err(e) => format!("cd failed: {e}"),
+                }
+            } else {
+                format!("cd failed: not a directory ({target})")
+            };
+            {
+                let mut st = tui_state.lock().unwrap();
+                st.push_exec(tui::ExecBlock::SystemMsg(msg));
+            }
+            continue;
+        }
+
+        // ── @trust command ───────────────────────────────────────────────────
+        if input.trim() == "@trust" {
+            {
+                let mut st = tui_state.lock().unwrap();
+                st.trusted = true;
+                st.push_exec(tui::ExecBlock::SystemMsg("folder trusted — tools will run without approval if permitted".to_string()));
+            }
+            continue;
         }
 
         // For /plan and /loop: display original command but send the enriched prompt to the LLM.
@@ -1919,36 +2027,15 @@ impl LiveCli {
                 self.run_auth(provider.as_deref())?;
                 false
             }
-            SlashCommand::Plan { task } => {
-                println!("Plan initiated: {}. I am restating requirements and assessing risks...", task.unwrap_or_else(|| "current task".to_string()));
-                false
-            }
-            SlashCommand::Tdd { interface } => {
-                println!("TDD loop engaged for {}. Scaffold -> Failing Test -> Implement.", interface.unwrap_or_else(|| "target".to_string()));
-                false
-            }
-            SlashCommand::Verify => {
-                println!("Running full verification: build, lint, test, and type-check...");
-                false
-            }
-            SlashCommand::CodeReview { files } => {
-                println!("Reviewing {}. Assessing quality, security, and maintainability.", files.unwrap_or_else(|| "changed files".to_string()));
-                false
-            }
-            SlashCommand::BuildFix => {
-                println!("Detecting build errors. Dispatching resolver agents...");
-                false
-            }
-            SlashCommand::Aside { question } => {
-                println!("Pivot: {}. Answering side question without losing context.", question.unwrap_or_else(|| "...".to_string()));
-                false
-            }
-            SlashCommand::Learn => {
-                println!("Extracting reusable patterns and learned instincts...");
-                false
-            }
-            SlashCommand::Refactor { scope } => {
-                println!("Refactoring {}. Removing dead code and consolidating duplicates.", scope.unwrap_or_else(|| "workspace".to_string()));
+            SlashCommand::Plan { .. }
+            | SlashCommand::Tdd { .. }
+            | SlashCommand::Verify
+            | SlashCommand::CodeReview { .. }
+            | SlashCommand::BuildFix
+            | SlashCommand::Aside { .. }
+            | SlashCommand::Learn
+            | SlashCommand::Refactor { .. } => {
+                // Handled as agent overrides in the main event loop
                 false
             }
             SlashCommand::Checkpoint { label } => {
@@ -3920,33 +4007,50 @@ fn render_last_tool_debug_report(_session: &Session) -> Result<String, Box<dyn s
     Ok("".to_string())
 }
 
-fn check_workspace_trust() -> Result<(), Box<dyn std::error::Error>> {
-    let cwd = env::current_dir()?;
-    
-    println!("\n{}", style("────────────────────────────────────────────────────────────").dim());
-    println!("Accessing workspace:");
-    println!("\n  {}\n", style(cwd.display()).cyan());
-    
-    println!("Quick safety check: Is this a project you created or one you trust?");
-    println!("(Like your own code, a well-known open source project, or work from your team).");
-    println!("If not, take a moment to review what's in this folder first.\n");
-    
-    let options = vec!["Yes, I trust this folder", "No, exit"];
-    let selection = Select::new()
-        .with_prompt("Security guide")
-        .items(&options)
-        .default(0)
-        .interact()?;
-        
-    if selection == 1 {
-        println!("\nExiting for safety.");
-        std::process::exit(0);
-    }
-    
-    println!("{}", style("Trust verified. Let's build.").dim());
-    Ok(())
-}
+fn check_workspace_trust() -> Result<bool, Box<dyn std::error::Error>> {
+    let mut cwd = env::current_dir()?;
 
+    loop {
+        println!("\n{}", style("────────────────────────────────────────────────────────────").dim());
+        println!("Accessing workspace:");
+        println!("\n  {}\n", style(cwd.display()).cyan());
+
+        println!("Quick safety check: Is this a project you created or one you trust?");
+        println!("(Like your own code, a well-known open source project, or work from your team).");
+        println!("If not, take a moment to review what's in this folder first.\n");
+
+        let options = vec!["Yes, I trust this folder", "Change directory", "No, exit"];
+        let selection = Select::new()
+            .with_prompt("Security guide")
+            .items(&options)
+            .default(0)
+            .interact()?;
+
+        match selection {
+            0 => {
+                println!("{}", style("Trust verified. Let's build.").dim());
+                return Ok(true);
+            }
+            1 => {
+                let target: String = Input::new()
+                    .with_prompt("Enter path to new directory")
+                    .interact_text()?;
+                let path = PathBuf::from(target);
+                if path.is_dir() {
+                    env::set_current_dir(&path)?;
+                    cwd = env::current_dir()?;
+                    println!("\nDirectory changed successfully.");
+                } else {
+                    println!("\n{} is not a valid directory.", style(path.display()).red());
+                }
+            }
+            _ => {
+                println!("\nExiting for safety.");
+                std::process::exit(0);
+            }
+        }
+    }
+}
 struct ModelEntry {
     id: &'static str,
     provider: &'static str,

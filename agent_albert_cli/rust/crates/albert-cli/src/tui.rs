@@ -51,9 +51,6 @@ const ERROR_FG: Color = Color::Rgb(230, 80, 50);     // error lines in tool outp
 const POPUP_WINDOW: usize = 16;                       // max items visible at once in popup
 const CATEGORY_FG: Color = Color::Rgb(60, 60, 60);   // greyed-out category headers in popup
 
-// Braille spinner frames — cycle at 100 ms per frame via Tick
-const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-
 // Tip lines shown below the working indicator — cycle by elapsed seconds
 const TIPS: &[&str] = &[
     "Use /compress to free context space mid-session",
@@ -211,6 +208,8 @@ pub struct TuiState {
 
     /// Set when Ctrl+C is pressed once.
     pub quit_confirm: bool,
+    /// Whether the user has explicitly trusted this directory for this session.
+    pub trusted: bool,
 }
 
 impl Default for TuiState {
@@ -245,6 +244,7 @@ impl Default for TuiState {
             tool_time_ms: 0,
             session_id: String::new(),
             quit_confirm: false,
+            trusted: false,
         }
     }
 }
@@ -785,8 +785,8 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
             .map(|b| b.chars().count() as u16 + 2)
             .unwrap_or(0);
         let usable = area.width.saturating_sub(3 + badge_approx + 3).max(10) as usize;
-        let n = state.input.chars().count();
-        let text_rows = if n == 0 { 1u16 } else { ((n + usable - 1) / usable).max(1).min(3) as u16 };
+        let n = if state.paste_line_count.is_some() { 1 } else { state.input.chars().count() };
+        let text_rows = if n == 0 { 1u16 } else if state.paste_line_count.is_some() { 1u16 } else { ((n + usable - 1) / usable).max(1).min(10) as u16 };
         text_rows + 2 // top + bottom border rows
     };
 
@@ -936,16 +936,20 @@ fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     } else {
         String::new()
     };
-    let title = if scroll_indicator.is_empty() {
-        " albert ".to_string()
+
+    let title_line = if scroll_indicator.is_empty() {
+        Line::from(vec![
+            Span::styled(" albert ", Style::default().fg(CHAT_BORDER).add_modifier(Modifier::BOLD))
+        ])
     } else {
-        format!(" albert {scroll_indicator}")
+        Line::from(vec![
+            Span::styled(" albert ", Style::default().fg(CHAT_BORDER).add_modifier(Modifier::BOLD)),
+            Span::styled(scroll_indicator, Style::default().fg(GREY)),
+        ])
     };
 
     let block = Block::default()
-        .title(title)
-        .title_style(Style::default().fg(if state.scroll > 0 { CYAN } else { CHAT_BORDER })
-            .add_modifier(Modifier::BOLD))
+        .title(title_line)
         .borders(Borders::ALL)
         .border_style(Style::default().fg(CHAT_BORDER))
         .style(Style::default().bg(BG));
@@ -1120,8 +1124,10 @@ fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
     lines.push(h("  KEYBOARD"));
     lines.push(hint_line("Enter       send message"));
     lines.push(hint_line("Tab         autocomplete command from popup"));
-    lines.push(hint_line("↑ ↓         navigate popup / scroll history"));
-    lines.push(hint_line("PageUp/Dn   scroll conversation"));
+    lines.push(hint_line("↑ ↓         navigate input history"));
+    lines.push(hint_line("PageUp/Dn   scroll conversation (or Shift + ↑/↓)"));
+    lines.push(hint_line("MouseWheel  scroll conversation"));
+    lines.push(hint_line("Shift+Click select text / right-click (native)"));
     lines.push(hint_line("Esc         interrupt · dismiss popup · close this overlay"));
     lines.push(hint_line("Ctrl+Space  toggle voice recording (whisper STT)"));
     lines.push(hint_line("Ctrl+V      paste from clipboard"));
@@ -1185,7 +1191,18 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 
     // Render input text with wrapping (or dim placeholder when empty).
     // In auth_flow mode: show provider prompt and mask the typed key.
-    let para = if let Some(ref provider) = state.auth_flow {
+    let para = if let Some(n) = state.paste_line_count {
+        Paragraph::new(Line::from(vec![
+            Span::styled(" ≻ ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                format!("[Pasted Text: {} lines]", n),
+                Style::default()
+                    .fg(Color::Rgb(198, 120, 221))
+                    .bg(Color::Rgb(40, 44, 52)),
+            ),
+            Span::styled("  Esc to clear", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
+        ]))
+    } else if let Some(ref provider) = state.auth_flow {
         if state.input.is_empty() {
             Paragraph::new(Line::from(vec![
                 Span::styled(" 🔑 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
@@ -1207,13 +1224,6 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
             Span::styled("Type your message or @path/to/file", Style::default().fg(DIM)),
         ]))
-    } else if let Some(lines) = state.paste_line_count {
-        Paragraph::new(Line::from(vec![
-            Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
-            Span::styled("⌨  pasted text", Style::default().fg(CYAN)),
-            Span::styled(format!("  ·  {lines} lines"), Style::default().fg(DIM)),
-            Span::styled("  (press Enter to send, Esc to clear)", Style::default().fg(DIM)),
-        ]))
     } else {
         let (prompt_txt, prompt_col) = if state.history_idx.is_some() {
             (" ↑ ", ORANGE)
@@ -1230,14 +1240,20 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 
     // Place the real blinking terminal cursor inside the inner text area.
     {
-        const PREFIX: u16 = 3; // " > "
-        let text_w = text_area.width.saturating_sub(PREFIX).max(1) as usize;
-        let visual_row = state.cursor / text_w;
-        let visual_col = state.cursor % text_w;
-        let cx = (text_area.x + PREFIX + visual_col as u16)
-            .min(text_area.x + text_area.width.saturating_sub(1));
-        let cy = (text_area.y + visual_row as u16)
-            .min(text_area.y + text_area.height.saturating_sub(1));
+        const PREFIX: u16 = 3; // " > " or " ≻ "
+        let (cx, cy) = if state.paste_line_count.is_some() {
+            // Position cursor at the very end of the badge line
+            (text_area.x + PREFIX + 1, text_area.y) // Just put it after the "≻"
+        } else {
+            let text_w = text_area.width.saturating_sub(PREFIX).max(1) as usize;
+            let visual_row = state.cursor / text_w;
+            let visual_col = state.cursor % text_w;
+            let cx = (text_area.x + PREFIX + visual_col as u16)
+                .min(text_area.x + text_area.width.saturating_sub(1));
+            let cy = (text_area.y + visual_row as u16)
+                .min(text_area.y + text_area.height.saturating_sub(1));
+            (cx, cy)
+        };
         f.set_cursor_position((cx, cy));
     }
 
@@ -1257,7 +1273,7 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
     let area = f.area();
     let w = 76;
-    let h = 18;
+    let h = 20; // Increased from 18 to fit tokens
     let x = (area.width.saturating_sub(w)) / 2;
     let y = (area.height.saturating_sub(h)) / 2;
     let popup_area = Rect::new(x, y, w.min(area.width), h.min(area.height));
@@ -1267,7 +1283,7 @@ pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
         Span::styled(" 𒀭 Agent powering down. Goodbye!", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
     ]));
     lines.push(Line::default());
-    
+
     let label_style = Style::default().fg(GREY);
     let value_style = Style::default().fg(CYAN).add_modifier(Modifier::BOLD);
 
@@ -1276,7 +1292,7 @@ pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
         Span::styled("  Session ID:                 ", label_style),
         Span::styled(&state.session_id, value_style),
     ]));
-    
+
     let success_rate = if state.tool_calls > 0 {
         (state.tool_success as f32 / state.tool_calls as f32) * 100.0
     } else {
@@ -1293,8 +1309,14 @@ pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
     ]));
     lines.push(Line::default());
 
+    lines.push(Line::from(Span::styled("  Resources", Style::default().add_modifier(Modifier::BOLD))));
+    lines.push(Line::from(vec![
+        Span::styled("  Total Tokens:               ", label_style),
+        Span::styled(format!("{} in  ·  {} out", fmt_tokens(state.tokens_in), fmt_tokens(state.tokens_out)), value_style),
+    ]));
+    lines.push(Line::default());
+
     lines.push(Line::from(Span::styled("  Performance", Style::default().add_modifier(Modifier::BOLD))));
-    
     let wall_secs = state.session_start.elapsed().as_secs();
     let wall_time = if wall_secs >= 60 { format!("{}m {}s", wall_secs / 60, wall_secs % 60) } else { format!("{wall_secs}s") };
     
@@ -1383,7 +1405,13 @@ const MIC_RED: Color = Color::Rgb(255, 60, 60);
 /// Working:   `* Reading… (2s · ↓ 42 tokens)`
 /// Idle:      `◆ Idle  ·  type / for commands`
 fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
-    let line = if state.is_recording {
+    let line = if !state.trusted {
+        Line::from(vec![
+            Span::styled(" ⚠ ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+            Span::styled("Untrusted Folder", Style::default().fg(ORANGE)),
+            Span::styled("  tools will require manual approval", Style::default().fg(DIM)),
+        ])
+    } else if state.is_recording {
         Line::from(vec![
             Span::styled(" 𒀭 ", Style::default().fg(MIC_RED).add_modifier(Modifier::BOLD)),
             Span::styled("Recording…", Style::default().fg(MIC_RED)),
@@ -1465,7 +1493,7 @@ fn render_footer(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled("esc to interrupt", Style::default().fg(CYAN)),
             Span::styled(
                 "  ·  ctrl+c to quit",
-                Style::default().fg(DIM),
+                Style::default().fg(Color::Rgb(60, 60, 60)),
             ),
         ])
     } else {
@@ -1479,29 +1507,26 @@ fn render_footer(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             format!("  ·  {}", state.permission_mode)
         };
         let base = format!(" {}  ·  {}{}", state.model, dir, perm);
+        // Very subtle colors for the sidenote footer
+        let base_style = Style::default().fg(Color::Rgb(50, 50, 50));
+        let tok_style = Style::default().fg(Color::Rgb(40, 40, 40));
+
         if state.tokens_in > 0 {
-            // Color the token count: green → yellow → orange → red as context fills (200K max)
-            let tok_color = match state.tokens_in {
-                0..=49_999    => Color::Rgb(80, 80, 80),
-                50_000..=99_999  => Color::Rgb(200, 180, 50),
-                100_000..=149_999 => ORANGE,
-                _                => Color::Rgb(220, 60, 60),
-            };
             let tok_str = format!(
                 "  ·  {}↑ {}↓",
                 fmt_tokens(state.tokens_in),
                 fmt_tokens(state.tokens_out),
             );
             Line::from(vec![
-                Span::styled(base, Style::default().fg(GREY)),
-                Span::styled(tok_str, Style::default().fg(tok_color)),
+                Span::styled(base, base_style),
+                Span::styled(tok_str, tok_style),
             ])
         } else {
-            Line::from(Span::styled(base, Style::default().fg(GREY)))
+            Line::from(Span::styled(base, base_style))
         }
     };
     f.render_widget(
-        Paragraph::new(line).style(Style::default().bg(STATUS_BG)),
+        Paragraph::new(line).style(Style::default().bg(BG)),
         area,
     );
 }
@@ -1697,7 +1722,7 @@ impl TuiApp {
             // Without this, rapid streaming events cause 1000+ draws/sec which the
             // terminal coalesces into a single visible frame — giving "all at once" appearance.
             let mut last_draw = Instant::now();
-            const DRAW_INTERVAL: Duration = Duration::from_millis(16);
+            const DRAW_INTERVAL: Duration = Duration::from_millis(33);
 
             loop {
                 // Draw if enough time has passed since the last frame.
@@ -1815,17 +1840,19 @@ impl TuiApp {
                                     }
                                 }
 
-                                // Up/Down — history navigation (bash-style) 
-                                // BUG FIX: If we have scrolled up (state.scroll > 0), Up/Down should scroll the chat further
-                                // instead of navigating history. This helps if the terminal emulates mousewheel as arrow keys.
-                                (KeyCode::Up, KeyModifiers::NONE) if state.scroll == 0 => { state.history_prev(); }
-                                (KeyCode::Down, KeyModifiers::NONE) if state.scroll == 0 => { state.history_next(); }
-                                
-                                // PageUp/PageDown — scroll content (also catches Up/Down with modifiers or when scrolled up)
-                                (KeyCode::PageUp, _) | (KeyCode::Up, _) => {
+                                // Up/Down — history navigation (bash-style)
+                                (KeyCode::Up, KeyModifiers::NONE) => {
+                                    state.history_prev();
+                                }
+                                (KeyCode::Down, KeyModifiers::NONE) => {
+                                    state.history_next();
+                                }
+
+                                // PageUp/PageDown or Shift+Up/Down — scroll content
+                                (KeyCode::PageUp, _) | (KeyCode::Up, KeyModifiers::SHIFT) => {
                                     state.scroll = state.scroll.saturating_add(10);
                                 }
-                                (KeyCode::PageDown, _) | (KeyCode::Down, _) => {
+                                (KeyCode::PageDown, _) | (KeyCode::Down, KeyModifiers::SHIFT) => {
                                     state.scroll = state.scroll.saturating_sub(10);
                                 }
 
@@ -2121,10 +2148,10 @@ impl TuiApp {
                     Some(TuiEvent::PasteText(text)) => {
                         let mut state = self.state.lock().unwrap();
                         let line_count = text.lines().count();
-                        if line_count >= 3 {
+                        if line_count >= 3 || text.chars().count() > 200 {
                             // Large paste: store raw, show compact badge in render_input.
                             state.input = text;
-                            state.cursor = state.input.chars().count();
+                            state.cursor = 0; // Keep cursor at 0 so it stays on the badge
                             state.paste_line_count = Some(line_count);
                         } else {
                             // Small paste: insert inline, convert newlines to spaces.
