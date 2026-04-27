@@ -2,6 +2,12 @@
 
 ## Stable Release: 2026-04-27 (TUI & Autonomous Core)
 
+### 🌐 Ternlang Studio
+- **Fetch Encoding Fix**: Resolved `TypeError` in `Window.fetch` caused by non-ASCII characters (specifically em-dashes `—`) leaking into the `X-Ternlang-Key` header.
+    - Implemented `sanitizeHeader` utility to strip all non-ASCII characters and whitespace from headers.
+    - Applied sanitization to all API key entry points and `fetch` calls (`loadPremiumTree`, `syncFleetRegistry`, `deleteAgent`, `fetchUsage`, `buildFileTree`, `openFile`, `deployAgent`, `tryApiUsage`, `tryApiRun`).
+    - Fixed `TranslatorView` auth bridge to also use sanitized keys.
+
 ### 🎨 TUI & UX Refinements
 - **Dingir Sigil (𒀭)**: Restored as the primary brand sigil and pulsing "Energy Core" status indicator.
 - **Subtle HUD**: Refined the absolute bottom footer (Model, CWD, Permissions) into a dimmed "sidenote" to prioritize the Tips row.
