@@ -63,6 +63,20 @@ const TIPS: &[&str] = &[
     "Type /help to see all available slash commands",
     "Press esc to interrupt a running turn at any time",
     "Use /session list to see and switch between saved sessions",
+    "Use /init to scaffold an ALBERT.md for project context",
+    "Use /memory to view the agent's persistent long-term memory",
+    "Use /commit to have AI draft a perfect git commit message",
+    "Use /diff to review current changes before committing",
+    "Use /tdd to enter a test-driven development loop",
+    "Use /bughunter to scan the codebase for potential issues",
+    "Use /refactor to improve the structure of the current file",
+    "Ctrl+L scrolls the conversation back to the bottom",
+    "Ctrl+Space toggles voice recording (STT) for hands-free input",
+    "Shift+Enter adds a newline to your message",
+    "Tab completes slash commands and opens sub-menus",
+    "Use /aside to take temporary notes during a deep session",
+    "Use /export to save the current conversation to a file",
+    "Use /checkpoint to save a snapshot of the current workspace",
 ];
 
 // Permission modes (in display/cycle order)
@@ -185,6 +199,18 @@ pub struct TuiState {
     pub history_idx: Option<usize>,
     /// Stashed live input while browsing history — restored on Down past end.
     pub input_saved: String,
+
+    // ── Session Metrics ──────────────────────────────────────────────────────
+    pub tool_calls: usize,
+    pub tool_success: usize,
+    pub tool_failure: usize,
+    pub agent_active_ms: u64,
+    pub api_time_ms: u64,
+    pub tool_time_ms: u64,
+    pub session_id: String,
+
+    /// Set when Ctrl+C is pressed once.
+    pub quit_confirm: bool,
 }
 
 impl Default for TuiState {
@@ -211,19 +237,55 @@ impl Default for TuiState {
             input_history: Vec::new(),
             history_idx: None,
             input_saved: String::new(),
+            tool_calls: 0,
+            tool_success: 0,
+            tool_failure: 0,
+            agent_active_ms: 0,
+            api_time_ms: 0,
+            tool_time_ms: 0,
+            session_id: String::new(),
+            quit_confirm: false,
         }
     }
 }
 
 impl TuiState {
-    pub fn new(model: String, cwd: String, permission_mode: String) -> Self {
-        Self { model, cwd, permission_mode, ..Default::default() }
+    pub fn new(model: String, cwd: String, permission_mode: String, session_id: String) -> Self {
+        Self { model, cwd, permission_mode, session_id, ..Default::default() }
     }
 
     pub fn push_exec(&mut self, block: ExecBlock) {
         if matches!(&block, ExecBlock::ToolUse { .. }) {
             self.deactivate_last_tool();
         }
+
+        // Bug fix: Remove ASCII splash and startup system message when the first user message arrives
+        if matches!(&block, ExecBlock::UserMessage(_)) {
+            let has_splash = self.exec_log.iter().any(|b| {
+                if let ExecBlock::RawText(s) = b {
+                    s.contains("██████╗")
+                } else {
+                    false
+                }
+            });
+            if has_splash {
+                self.exec_log.retain(|b| {
+                    match b {
+                        ExecBlock::RawText(s) if s.contains("██████╗") => false,
+                        ExecBlock::SystemMsg(s) if s.contains("v") && s.contains("type /help") => false,
+                        _ => true,
+                    }
+                });
+            }
+        }
+
+        // Filter out meta-tools from "Ran [tool]" display
+        if let ExecBlock::ToolUse { ref name, .. } = block {
+            if name == "SendUserMessage" || name == "Brief" {
+                return;
+            }
+        }
+
         // Suppress consecutive identical SystemMsg entries (e.g. repeated voice errors).
         if let ExecBlock::SystemMsg(ref msg) = block {
             if let Some(ExecBlock::SystemMsg(ref last)) = self.exec_log.back() {
@@ -372,6 +434,8 @@ pub enum TuiEvent {
     Suspend { ack: std::sync::mpsc::SyncSender<()> },
     Resume,
     Quit,
+    /// Exit and show the session report card.
+    QuitWithReport,
     /// Voice transcription result — insert this text at the cursor.
     VoiceText(String),
     /// Voice transcription failed — show the error message.
@@ -772,7 +836,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 lines.push(Line::default());
                 lines.push(Line::from(vec![
                     Span::styled(
-                        " ▸ ",
+                        " ≻ ",
                         Style::default().fg(CYAN).add_modifier(Modifier::BOLD),
                     ),
                     Span::styled(msg.clone(), Style::default().fg(FG).bg(USER_BOX_BG)),
@@ -901,10 +965,13 @@ fn render_content(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         .sum();
 
     let visible = inner.height as usize;
+    let total_wrapped_count = total_wrapped;
     // max_scroll is how many rows we can scroll up from the bottom
-    let max_scroll = total_wrapped.saturating_sub(visible);
+    let max_scroll = total_wrapped_count.saturating_sub(visible);
+    
     // Clamp state.scroll so we never over-scroll past the top
     let effective_scroll = (state.scroll as usize).min(max_scroll);
+    
     // scroll_row is the top row to pass to Paragraph (0 = top of content)
     let scroll_row = max_scroll.saturating_sub(effective_scroll).min(u16::MAX as usize) as u16;
 
@@ -1187,6 +1254,95 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     }
 }
 
+pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
+    let area = f.area();
+    let w = 76;
+    let h = 18;
+    let x = (area.width.saturating_sub(w)) / 2;
+    let y = (area.height.saturating_sub(h)) / 2;
+    let popup_area = Rect::new(x, y, w.min(area.width), h.min(area.height));
+
+    let mut lines = Vec::new();
+    lines.push(Line::from(vec![
+        Span::styled(" 𒀭 Agent powering down. Goodbye!", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
+    ]));
+    lines.push(Line::default());
+    
+    let label_style = Style::default().fg(GREY);
+    let value_style = Style::default().fg(CYAN).add_modifier(Modifier::BOLD);
+
+    lines.push(Line::from(Span::styled("  Interaction Summary", Style::default().add_modifier(Modifier::BOLD))));
+    lines.push(Line::from(vec![
+        Span::styled("  Session ID:                 ", label_style),
+        Span::styled(&state.session_id, value_style),
+    ]));
+    
+    let success_rate = if state.tool_calls > 0 {
+        (state.tool_success as f32 / state.tool_calls as f32) * 100.0
+    } else {
+        0.0
+    };
+
+    lines.push(Line::from(vec![
+        Span::styled("  Tool Calls:                 ", label_style),
+        Span::styled(format!("{} ( ✓ {}  ✗ {} )", state.tool_calls, state.tool_success, state.tool_failure), value_style),
+    ]));
+    lines.push(Line::from(vec![
+        Span::styled("  Success Rate:               ", label_style),
+        Span::styled(format!("{:.1}%", success_rate), value_style),
+    ]));
+    lines.push(Line::default());
+
+    lines.push(Line::from(Span::styled("  Performance", Style::default().add_modifier(Modifier::BOLD))));
+    
+    let wall_secs = state.session_start.elapsed().as_secs();
+    let wall_time = if wall_secs >= 60 { format!("{}m {}s", wall_secs / 60, wall_secs % 60) } else { format!("{wall_secs}s") };
+    
+    let active_secs = state.agent_active_ms / 1000;
+    let active_time = if active_secs >= 60 { format!("{}m {}s", active_secs / 60, active_secs % 60) } else { format!("{active_secs}s") };
+    
+    lines.push(Line::from(vec![
+        Span::styled("  Wall Time:                  ", label_style),
+        Span::styled(wall_time, value_style),
+    ]));
+    lines.push(Line::from(vec![
+        Span::styled("  Agent Active:               ", label_style),
+        Span::styled(active_time, value_style),
+    ]));
+
+    let api_pct = if state.agent_active_ms > 0 { (state.api_time_ms as f32 / state.agent_active_ms as f32) * 100.0 } else { 0.0 };
+    let tool_pct = if state.agent_active_ms > 0 { (state.tool_time_ms as f32 / state.agent_active_ms as f32) * 100.0 } else { 0.0 };
+
+    lines.push(Line::from(vec![
+        Span::styled("    » API Time:               ", label_style),
+        Span::styled(format!("{}s ({:.1}%)", state.api_time_ms / 1000, api_pct), value_style),
+    ]));
+    lines.push(Line::from(vec![
+        Span::styled("    » Tool Time:              ", label_style),
+        Span::styled(format!("{}s ({:.1}%)", state.tool_time_ms / 1000, tool_pct), value_style),
+    ]));
+    
+    lines.push(Line::default());
+    lines.push(Line::from(vec![
+        Span::styled("  To resume this session: ", label_style),
+        Span::styled(format!("albert --resume {}", state.session_id), Style::default().fg(GREEN)),
+    ]));
+    lines.push(Line::default());
+    lines.push(Line::from(vec![
+        Span::styled("  ( Press any key to exit )", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
+    ]));
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(CHAT_BORDER))
+        .style(Style::default().bg(BG));
+
+    let para = Paragraph::new(lines)
+        .block(block);
+
+    f.render_widget(para, popup_area);
+}
+
 /// Derive a human-readable activity label from the currently running tool (if any).
 fn current_activity(state: &TuiState) -> &'static str {
     for block in state.exec_log.iter().rev() {
@@ -1208,12 +1364,16 @@ fn current_activity(state: &TuiState) -> &'static str {
                 } else if n.contains("plan") {
                     "Planning…"
                 } else {
-                    "Crunching…"
+                    "On it…"
                 };
             }
         }
     }
-    "Thinking…"
+    match (state.session_start.elapsed().as_secs() / 3) % 3 {
+        0 => "Thinking…",
+        1 => "Pondering…",
+        _ => "Pondering…", // can add more here
+    }
 }
 
 const MIC_RED: Color = Color::Rgb(255, 60, 60);
@@ -1225,7 +1385,7 @@ const MIC_RED: Color = Color::Rgb(255, 60, 60);
 fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     let line = if state.is_recording {
         Line::from(vec![
-            Span::styled(" @ ", Style::default().fg(MIC_RED).add_modifier(Modifier::BOLD)),
+            Span::styled(" 𒀭 ", Style::default().fg(MIC_RED).add_modifier(Modifier::BOLD)),
             Span::styled("Recording…", Style::default().fg(MIC_RED)),
             Span::styled("  ctrl+space to stop & transcribe", Style::default().fg(GREY)),
         ])
@@ -1243,12 +1403,20 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             String::new()
         };
         let activity = current_activity(state);
-        // Animate spinner at ~100 ms per frame
-        let frame = (elapsed_ms / 100) as usize % SPINNER.len();
-        let spin = SPINNER[frame];
+
+        // Pulse the Dingir symbol when active
+        let elapsed = state.session_start.elapsed().as_secs_f32();
+        let period = 2.0; 
+        let t = (elapsed % period) / period;
+        let intensity = ((t * std::f32::consts::PI).sin()).powf(2.0);
+        let r = (80.0 + (0.0 - 80.0) * intensity) as u8;
+        let g = (80.0 + (200.0 - 80.0) * intensity) as u8;
+        let b = (80.0 + (255.0 - 80.0) * intensity) as u8;
+        let pulse_color = Color::Rgb(r, g, b);
+
         Line::from(vec![
-            Span::styled(format!(" {spin} "), Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
-            Span::styled(activity, Style::default().fg(ORANGE)),
+            Span::styled(" 𒀭 ", Style::default().fg(pulse_color).add_modifier(Modifier::BOLD)),
+            Span::styled(activity, Style::default().fg(pulse_color)),
             Span::styled(format!(" ({timer}{tok_str})"), Style::default().fg(GREY)),
         ])
     } else {
@@ -1262,9 +1430,10 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
                 format!("{secs}s")
             };
             format!("  ·  Worked for {dur}  ")
-        }).unwrap_or_else(|| "  ".to_string());
+        }).unwrap_or_else(|| "  ·  ".to_string());
+
         Line::from(vec![
-            Span::styled(" ◆ ", Style::default().fg(DIM).add_modifier(Modifier::BOLD)),
+            Span::styled(" 𒀭 ", Style::default().fg(DIM).add_modifier(Modifier::BOLD)),
             Span::styled("Idle", Style::default().fg(DIM)),
             Span::styled(worked_part, Style::default().fg(DIM)),
             Span::styled("type / for commands", Style::default().fg(DIM)),
@@ -1454,11 +1623,11 @@ pub struct TuiApp {
 }
 
 impl TuiApp {
-    pub fn new(model: String, cwd: String, permission_mode: String) -> (Self, std::sync::mpsc::Receiver<String>) {
+    pub fn new(model: String, cwd: String, permission_mode: String, session_id: String) -> (Self, std::sync::mpsc::Receiver<String>) {
         let (event_tx, event_rx) = tokio::sync::mpsc::unbounded_channel();
         let (submit_tx, submit_rx) = std::sync::mpsc::channel();
         let app = Self {
-            state: Arc::new(Mutex::new(TuiState::new(model, cwd, permission_mode))),
+            state: Arc::new(Mutex::new(TuiState::new(model, cwd, permission_mode, session_id))),
             event_tx,
             event_rx,
             submit_tx,
@@ -1550,7 +1719,7 @@ impl TuiApp {
                 match ev {
                     // ── keyboard ──────────────────────────────────────────────
                     Some(TuiEvent::Key(key)) => {
-                        let mut do_quit = false;
+                        let mut quit_event: Option<TuiEvent> = None;
                         let mut submit_text: Option<String> = None;
                         // voice_toggle: true=start recording, false=stop recording, None=no change
                         let mut voice_toggle: Option<bool> = None;
@@ -1562,7 +1731,12 @@ impl TuiApp {
                             match (key.code, key.modifiers) {
                                 (KeyCode::Char('c'), KeyModifiers::CONTROL)
                                 | (KeyCode::Char('q'), KeyModifiers::CONTROL) => {
-                                    do_quit = true;
+                                    if state.quit_confirm {
+                                        quit_event = Some(TuiEvent::QuitWithReport);
+                                    } else {
+                                        state.quit_confirm = true;
+                                        state.push_exec(ExecBlock::SystemMsg("Press Ctrl+C again to exit session".to_string()));
+                                    }
                                 }
 
                                 // Ctrl+Space — toggle voice recording
@@ -1641,10 +1815,13 @@ impl TuiApp {
                                     }
                                 }
 
-                                // Up/Down without popup — history navigation (bash-style)
-                                (KeyCode::Up, KeyModifiers::NONE) => { state.history_prev(); }
-                                (KeyCode::Down, KeyModifiers::NONE) => { state.history_next(); }
-                                // PageUp/PageDown — scroll content (also catches Up/Down with modifiers)
+                                // Up/Down — history navigation (bash-style) 
+                                // BUG FIX: If we have scrolled up (state.scroll > 0), Up/Down should scroll the chat further
+                                // instead of navigating history. This helps if the terminal emulates mousewheel as arrow keys.
+                                (KeyCode::Up, KeyModifiers::NONE) if state.scroll == 0 => { state.history_prev(); }
+                                (KeyCode::Down, KeyModifiers::NONE) if state.scroll == 0 => { state.history_next(); }
+                                
+                                // PageUp/PageDown — scroll content (also catches Up/Down with modifiers or when scrolled up)
                                 (KeyCode::PageUp, _) | (KeyCode::Up, _) => {
                                     state.scroll = state.scroll.saturating_add(10);
                                 }
@@ -1710,6 +1887,7 @@ impl TuiApp {
                                 (KeyCode::Char(c), m)
                                     if m == KeyModifiers::NONE || m == KeyModifiers::SHIFT =>
                                 {
+                                    state.quit_confirm = false;
                                     state.history_idx = None; // exit history browse on new input
                                     state.input_insert(c);
                                     // Reset to first selectable item (skip any header at 0)
@@ -1719,25 +1897,32 @@ impl TuiApp {
                                         .unwrap_or(0);
                                 }
                                 (KeyCode::Backspace, _) => {
+                                    state.quit_confirm = false;
                                     state.input_backspace();
                                     let new_items = popup_items(&state.input);
                                     state.popup_selected = new_items.iter()
                                         .position(|i| !i.is_header)
                                         .unwrap_or(0);
                                 }
-                                (KeyCode::Delete, _) => state.input_delete(),
+                                (KeyCode::Delete, _) => {
+                                    state.quit_confirm = false;
+                                    state.input_delete();
+                                }
 
                                 // ── Readline shortcuts ────────────────────────
                                 // Ctrl+A: jump to start of line
                                 (KeyCode::Char('a'), KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     state.cursor = 0;
                                 }
                                 // Ctrl+E: jump to end of line
                                 (KeyCode::Char('e'), KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     state.cursor = state.input.chars().count();
                                 }
                                 // Ctrl+K: kill to end of line
                                 (KeyCode::Char('k'), KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     let pos = state.input.char_indices()
                                         .nth(state.cursor)
                                         .map(|(i, _)| i)
@@ -1746,6 +1931,7 @@ impl TuiApp {
                                 }
                                 // Ctrl+U: kill to start of line
                                 (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     let pos = state.input.char_indices()
                                         .nth(state.cursor)
                                         .map(|(i, _)| i)
@@ -1755,6 +1941,7 @@ impl TuiApp {
                                 }
                                 // Ctrl+W: kill previous word
                                 (KeyCode::Char('w'), KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     let new_cur = word_left(&state.input, state.cursor);
                                     let start = state.input.char_indices()
                                         .nth(new_cur).map(|(i, _)| i).unwrap_or(0);
@@ -1766,35 +1953,44 @@ impl TuiApp {
                                 }
                                 // Ctrl+L: scroll to bottom (show latest)
                                 (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     state.scroll = 0;
                                 }
                                 // Ctrl+Left: word left
                                 (KeyCode::Left, KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     state.cursor = word_left(&state.input, state.cursor);
                                 }
                                 // Ctrl+Right: word right
                                 (KeyCode::Right, KeyModifiers::CONTROL) => {
+                                    state.quit_confirm = false;
                                     state.cursor = word_right(&state.input, state.cursor);
                                 }
 
                                 // ── Cursor movement ───────────────────────────
                                 (KeyCode::Left, _) => {
+                                    state.quit_confirm = false;
                                     if state.cursor > 0 { state.cursor -= 1; }
                                 }
                                 (KeyCode::Right, _) => {
+                                    state.quit_confirm = false;
                                     if state.cursor < state.input.chars().count() {
                                         state.cursor += 1;
                                     }
                                 }
-                                (KeyCode::Home, _) => state.cursor = 0,
+                                (KeyCode::Home, _) => {
+                                    state.quit_confirm = false;
+                                    state.cursor = 0;
+                                }
                                 (KeyCode::End, _) => {
+                                    state.quit_confirm = false;
                                     state.cursor = state.input.chars().count();
                                 }
                                 _ => {}
                             }
                         }
-                        if do_quit {
-                            break;
+                        if let Some(ev) = quit_event {
+                            let _ = self.event_tx.send(ev);
                         }
                         if let Some(text) = submit_text {
                             let trimmed = text.trim();
@@ -1897,7 +2093,7 @@ impl TuiApp {
                         loop {
                             match self.event_rx.recv().await {
                                 Some(TuiEvent::Resume) => break,
-                                Some(TuiEvent::Quit) | None => return Ok(()),
+                                Some(TuiEvent::Quit) | Some(TuiEvent::QuitWithReport) | None => return Ok(()),
                                 _ => {}
                             }
                         }
@@ -1945,19 +2141,38 @@ impl TuiApp {
 
                     Some(TuiEvent::ScrollUp) => {
                         let mut state = self.state.lock().unwrap();
-                        state.scroll = state.scroll.saturating_add(3);
+                        state.scroll = state.scroll.saturating_add(5);
                     }
                     Some(TuiEvent::ScrollDown) => {
                         let mut state = self.state.lock().unwrap();
-                        state.scroll = state.scroll.saturating_sub(3);
+                        state.scroll = state.scroll.saturating_sub(5);
                     }
 
                     Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
                         // Tick fires at 100ms — redraws the screen (spinner, timer).
                         // Text is appended directly on each TextDelta, so no work needed here.
                     }
+                    Some(TuiEvent::Quit) => {
+                        break;
+                    }
 
-                    Some(TuiEvent::Quit) | None => break,
+                    Some(TuiEvent::QuitWithReport) => {
+                        // Show report card and wait for any keypress before exiting
+                        {
+                            let state = self.state.lock().unwrap();
+                            terminal.draw(|f| render_report_card(f, &state))?;
+                        }
+                        // Drain any pending keys then wait for a fresh one
+                        while self.event_rx.try_recv().is_ok() {}
+                        loop {
+                            match self.event_rx.recv().await {
+                                Some(TuiEvent::Key(_)) | Some(TuiEvent::Quit) | None => break,
+                                _ => {}
+                            }
+                        }
+                        break;
+                    }
+                    None => break,
                 }
             }
             Ok::<(), Box<dyn std::error::Error>>(())

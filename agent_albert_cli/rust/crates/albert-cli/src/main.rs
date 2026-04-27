@@ -999,7 +999,8 @@ fn run_tui(
 
     let mut cli = LiveCli::new(model.clone(), true, allowed_tools, permission_mode)?;
 
-    let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd, permission_mode.as_str().to_string());
+    let session_id = cli.session.id.clone();
+    let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd, permission_mode.as_str().to_string(), session_id);
     let tui_state = Arc::clone(&tui_app.state);
     let tui_event_tx = tui_app.event_tx.clone();
     let cancel_flag = Arc::clone(&tui_app.cancel_flag);
@@ -1343,28 +1344,35 @@ fn run_tui(
 
         // Inject ToolOutput blocks: walk exec_log, insert human-readable output after each ToolUse.
         if let Ok(Ok(ref summary)) = turn_result {
-            let outputs: Vec<String> = summary
+            let tool_results_data: Vec<(String, bool)> = summary
                 .tool_results
                 .iter()
                 .flat_map(|msg| &msg.blocks)
                 .filter_map(|block| {
-                    if let ContentBlock::ToolResult { output, .. } = block {
-                        Some(output.clone())
+                    if let ContentBlock::ToolResult { output, is_error, .. } = block {
+                        Some((output.clone(), *is_error))
                     } else {
                         None
                     }
                 })
                 .collect();
 
-            if !outputs.is_empty() {
+            if !tool_results_data.is_empty() {
                 let mut state = tui_state.lock().unwrap();
                 let log: Vec<_> = std::mem::take(&mut state.exec_log).into_iter().collect();
-                let mut out_iter = outputs.into_iter();
+                let mut out_iter = tool_results_data.into_iter();
                 for block in log {
                     let is_tool = matches!(&block, tui::ExecBlock::ToolUse { .. });
                     state.exec_log.push_back(block);
                     if is_tool {
-                        if let Some(raw) = out_iter.next() {
+                        if let Some((raw, is_err)) = out_iter.next() {
+                            state.tool_calls += 1;
+                            if is_err {
+                                state.tool_failure += 1;
+                            } else {
+                                state.tool_success += 1;
+                            }
+
                             // Extract human-readable text — bash outputs are JSON
                             let display = extract_tool_display_text(&raw);
                             let all: Vec<String> = display
@@ -1435,6 +1443,12 @@ fn run_tui(
         if !was_cancelled && turn_secs > 0 {
             let mut state = tui_state.lock().unwrap();
             state.push_exec(tui::ExecBlock::WorkedFor(turn_secs));
+            
+            // Track total active time and estimate breakdown (API 70% / Tool 30% as heuristic)
+            let ms = turn_secs * 1000;
+            state.agent_active_ms += ms;
+            state.api_time_ms += (ms as f32 * 0.7) as u64;
+            state.tool_time_ms += (ms as f32 * 0.3) as u64;
         }
 
         // Save session after each turn
