@@ -400,7 +400,7 @@ function TranslatorView() {
     const handleLoad = () => {
       if (iframeRef.current) {
         console.log('[TranslatorView] Iframe loaded, transmitting API key...');
-        const key = localStorage.getItem('ternstudio-key') || '';
+        const key = sanitizeHeader(localStorage.getItem('ternstudio-key'));
         iframeRef.current.contentWindow.postMessage({
           type: 'TIS_AUTH_BRIDGE',
           key: key
@@ -1898,7 +1898,7 @@ async function renderFlowLibrary() {
 
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-    const key = document.getElementById("apiKey").value.trim();
+    const key = sanitizeHeader(document.getElementById("apiKey").value);
     const r = await fetch(endpoint + "/api/stdlib/list", { headers: key ? { "X-Ternlang-Key": key } : {}, signal: AbortSignal.timeout(3000) });
     const d = await r.json();
     let paths = (d.status === "ok" && d.files) ? d.files.filter(p => p.includes("agents/")) : [];
@@ -6226,7 +6226,7 @@ async function executeProductDeploy() {
   await new Promise(r => setTimeout(r, 800));
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-    const key = document.getElementById("apiKey").value.trim();
+    const key = sanitizeHeader(document.getElementById("apiKey").value);
     const payload = { name, slug, desc, input_schema: input, pricing, nodes: flowNodes.length, wires: flowWires.length, code: flowCode };
     const r = await fetch(endpoint + "/api/agents/publish", {
       method: "POST",
@@ -6734,7 +6734,7 @@ async function buildFileTree(force = false) {
 
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-    const key = document.getElementById("apiKey").value.trim();
+    const key = sanitizeHeader(document.getElementById("apiKey").value);
 
     const r = await fetch(endpoint + "/api/stdlib/list", {
       headers: key ? { "X-Ternlang-Key": key } : {}
@@ -6844,7 +6844,7 @@ async function openFile(path, useGithub = false, usePremium = false) {
     try {
       const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
       const r = await fetch(`${endpoint}/api/premium/file?path=${encodeURIComponent(path)}`, {
-        headers: { 'X-Ternlang-Key': localStorage.getItem('ternstudio-key') || '' }
+        headers: { 'X-Ternlang-Key': sanitizeHeader(localStorage.getItem('ternstudio-key')) }
       });
       if (!r.ok) throw new Error(`Auth failed or file not found (${r.status})`);
       const d = await r.json();
@@ -6878,7 +6878,7 @@ async function openFile(path, useGithub = false, usePremium = false) {
   // Fallback to standard API
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-    const key = document.getElementById("apiKey").value.trim();
+    const key = sanitizeHeader(document.getElementById("apiKey").value);
     const r = await fetch(endpoint + "/api/stdlib/read/" + path, {
       headers: key ? { "X-Ternlang-Key": key } : {}
     });
@@ -7397,7 +7397,7 @@ window.tryHealth = tryHealth;
 
 async function tryApiUsage() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-  const key = document.getElementById("apiKey").value.trim();
+  const key = sanitizeHeader(document.getElementById("apiKey").value);
   try {
     const r = await fetch(endpoint + "/api/usage", {
       headers: key ? { "X-Ternlang-Key": key } : {},
@@ -7412,7 +7412,7 @@ window.tryApiUsage = tryApiUsage;
 
 async function tryApiRun() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-  const key = document.getElementById("apiKey").value.trim();
+  const key = sanitizeHeader(document.getElementById("apiKey").value);
   const code = monacoEditor ? monacoEditor.getValue() : "";
   const body = { code };
   if (key) body.key = key;
@@ -7736,7 +7736,7 @@ window.updateTopbarTier = updateTopbarTier;
 
 async function fetchUsage() {
   const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
-  const key = document.getElementById("apiKey").value.trim();
+  const key = sanitizeHeader(document.getElementById("apiKey").value);
   if (!key) { renderUsageAnon(); return; }
   try {
     const r = await fetch(endpoint + "/api/usage", {
