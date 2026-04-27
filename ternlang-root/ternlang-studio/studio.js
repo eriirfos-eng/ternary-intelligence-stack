@@ -171,6 +171,12 @@ let sessionRuns = 0, sessionOk = 0, sessionErr = 0;
 
 // ─── View switching ───────────────────────────────────────────────────────────
 // ─── API Key management ──────────────────────────────────────────────────────
+function sanitizeHeader(val) {
+  if (!val) return "";
+  // Strip non-ASCII characters (like em-dash \u2014) that crash fetch()
+  return val.replace(/[^\x00-\x7F]/g, "").trim();
+}
+
 function toggleKeyInput() {
   const area = document.getElementById("keyToggleArea");
   const acts = document.getElementById("topbarActions");
@@ -186,7 +192,7 @@ function toggleKeyInput() {
 window.toggleKeyInput = toggleKeyInput;
 
 function updateApiKey(val) {
-  val = val.trim();
+  val = sanitizeHeader(val);
   document.getElementById("apiKey").value = val;
   localStorage.setItem("ternstudio-key", val);
   fetchUsage();
@@ -222,7 +228,7 @@ async function loadPremiumTree() {
   try {
     const endpoint = document.getElementById("apiEndpoint").value.replace(/\/$/, "");
     const r = await fetch(`${endpoint}/api/premium/list`, {
-      headers: { 'X-Ternlang-Key': localStorage.getItem('ternstudio-key') || '' }
+      headers: { 'X-Ternlang-Key': sanitizeHeader(localStorage.getItem('ternstudio-key')) }
     });
 
     if (!r.ok) {
@@ -474,7 +480,7 @@ async function deleteAgent() {
       // Verifying destruction with backend
       const r = await fetch(`${endpoint}/api/agent/${agentToDeleteId}`, {
         method: 'DELETE',
-        headers: { 'X-Ternlang-Key': key }
+        headers: { 'X-Ternlang-Key': sanitizeHeader(key) }
       });
       const d = await r.json();
       if (d.status !== "ok") {
@@ -508,7 +514,7 @@ window.deleteAgent = deleteAgent;
 async function syncFleetRegistry() {
   try {
     const r = await fetch("https://ternlang-api.fly.dev/api/agents", {
-      headers: { 'X-Ternlang-Key': localStorage.getItem('ternstudio-key') || '' }
+      headers: { 'X-Ternlang-Key': sanitizeHeader(localStorage.getItem('ternstudio-key')) }
     });
     const d = await r.json();
 
