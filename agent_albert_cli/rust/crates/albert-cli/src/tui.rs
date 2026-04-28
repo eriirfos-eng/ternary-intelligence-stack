@@ -1095,6 +1095,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 else { "Used" };
 
                 let hook = if is_last { "└─" } else { "├─" };
+                // Audit: Ensure exactly one spine (│) at Col 0. No nested pipes.
                 let mut spans = vec![
                     spine.clone(),
                     Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
@@ -1134,6 +1135,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                         TaskStatus::Done => (" [✔] ", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
                         TaskStatus::Failed => (" [✘] ", Style::default().fg(ERROR_FG).add_modifier(Modifier::BOLD)),
                     };
+                    // Audit: Single spine at Col 0.
                     lines.push(Line::from(vec![
                         spine.clone(),
                         Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
@@ -1144,7 +1146,6 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
             }
 
             ExecBlock::ToolOutput { lines: out, total } => {
-                let sub_spine = Span::styled("│ │ ", Style::default().fg(Color::Rgb(25, 45, 45))); 
                 for (i, line) in out.iter().enumerate() {
                     let connector = if i == 0 { "└─" } else { "  " };
                     let lower = line.to_ascii_lowercase();
@@ -1152,7 +1153,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     let line_col = if is_err { ERROR_FG } else { Color::Rgb(110, 120, 120) };
                     
                     lines.push(Line::from(vec![
-                        sub_spine.clone(),
+                        spine.clone(), // Keep main spine
                         Span::styled(connector, Style::default().fg(Color::Rgb(25, 45, 45))),
                         Span::styled(" ", Style::default()),
                         Span::styled(line.clone(), Style::default().fg(line_col)),
@@ -1160,7 +1161,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 }
                 if *total > out.len() {
                     lines.push(Line::from(vec![
-                        sub_spine.clone(),
+                        spine.clone(),
                         Span::styled("   ", Style::default()),
                         Span::styled(format!("… +{} lines", total - out.len()), Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
                     ]));
@@ -1283,27 +1284,27 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                                 row_spans.push(Span::styled(content_text.clone(), Style::default().fg(col).add_modifier(Modifier::BOLD)));
                                 current_row_visual_w = console::measure_text_width(&content_text);
                             } else if i >= padded_logo.len() && i < footer_line { // Metadata
-                                let text = content_text.trim_start();
-                                let leading_spaces = content_text.chars().count() - text.chars().count();
-                                row_spans.push(Span::raw(" ".repeat(leading_spaces)));
-                                current_row_visual_w = leading_spaces;
+                                let text = content_text.trim(); // Trim all to align flush
+                                current_row_visual_w = 0;
 
                                 if text.starts_with("Welcome Back,") {
                                     row_spans.push(Span::styled("Welcome Back, ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)));
                                     let user_part = text.chars().skip(13).collect::<String>();
-                                    current_row_visual_w += 14 + console::measure_text_width(&user_part);
-                                    row_spans.push(Span::styled(user_part, Style::default().fg(CYAN).add_modifier(Modifier::BOLD)));
+                                    let user_with_bang = format!("{}!", user_part.trim());
+                                    current_row_visual_w += 14 + console::measure_text_width(&user_with_bang);
+                                    row_spans.push(Span::styled(user_with_bang, Style::default().fg(CYAN).add_modifier(Modifier::BOLD)));
                                 } else if text.starts_with("Model") || text.starts_with("Mode") || text.starts_with("Session") {
                                     let parts: Vec<&str> = text.splitn(2, ' ').collect();
-                                    row_spans.push(Span::styled(format!("{:<8}", parts[0]), Style::default().fg(DIM)));
+                                    row_spans.push(Span::styled(format!("{:<8}", parts[0]), Style::default().fg(GREY)));
                                     current_row_visual_w += 8;
                                     if parts.len() > 1 {
-                                        current_row_visual_w += console::measure_text_width(parts[1]);
-                                        row_spans.push(Span::styled(parts[1].to_string(), Style::default().add_modifier(Modifier::BOLD)));
+                                        let val = parts[1].trim();
+                                        current_row_visual_w += console::measure_text_width(val);
+                                        row_spans.push(Span::styled(val.to_string(), Style::default().fg(GREY).add_modifier(Modifier::BOLD)));
                                     }
                                 } else {
                                     current_row_visual_w += console::measure_text_width(text);
-                                    row_spans.push(Span::styled(text.to_string(), Style::default().fg(FG)));
+                                    row_spans.push(Span::styled(text.to_string(), Style::default().fg(GREY)));
                                 }
                             } else {
                                 current_row_visual_w = console::measure_text_width(&content_text);
