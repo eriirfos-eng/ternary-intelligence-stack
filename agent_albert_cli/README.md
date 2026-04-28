@@ -82,6 +82,27 @@ Integrated token-optimization proxy that intercepts outgoing context and applies
 
 ---
 
+## Cognitive Persistence & Identity
+
+Albert doesn't just "forget" once a session ends. He builds a mental model of your project through two primary systems:
+
+### 🧠 The Knowledge Graph (`knowledge_graph.json`)
+This is Albert's **Knowledge Base**. When you say "lock this into memory," Albert uses a specialized tool to store structured facts, relationships, and observations.
+- **Persistence**: Stored in `~/.ternlang/memory/knowledge_graph.json`.
+- **Neurosymbolic Gap Recovery**: If a tool enters an ambiguous state (**State 0**), Albert autonomously queries this graph. If he finds a matching entity or observation, he uses it to resolve the ambiguity and proceed to **State +1** without bothering you.
+- **Content**: Tracks project team members, architectural decisions, and hardware context.
+
+### 🎭 Identity & Working Agreement (`ALBERT.md`)
+This is Albert's **Core Directive**. It is the instruction set that defines his "brain" configuration for the current workspace.
+- **Customizable Behavior**: By editing `ALBERT.md` in your project root, you can "re-program" Albert's personality, tone, and priorities.
+- **Directives**: You can set specific rules like "always use async/await" or "respond with dry wit."
+- **Scope**: Loaded dynamically on startup; changes take effect in the next session.
+
+### 🔄 Reflection Log (`memory.md`)
+A global, high-level summary of significant insights. Albert periodically runs a "reflection pass" (`llm_reflect`) to distill your conversations into single-line memories saved in `~/.ternlang/memory.md`.
+
+---
+
 ## Installation
 
 **Prerequisites:** Rust toolchain (`cargo`) — [install here](https://rustup.rs/)
