@@ -84,7 +84,7 @@ Integrated token-optimization proxy that intercepts outgoing context and applies
 
 ## Cognitive Persistence & Identity
 
-Albert doesn't just "forget" once a session ends. He builds a mental model of your project through two primary systems:
+Albert builds a mental model of your project through two primary systems:
 
 ###  The Knowledge Graph (`knowledge_graph.json`)
 This is Albert's **Knowledge Base**. When you say "lock this into memory," Albert uses a specialized tool to store structured facts, relationships, and observations.
