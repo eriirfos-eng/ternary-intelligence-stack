@@ -1,4 +1,4 @@
-# Ternary Intelligence Stack (TIS)
+# Ternary Intelligence Stack (TIS) 
 
 [![version](https://img.shields.io/badge/version-v1.1.1-black)](#architecture)
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
