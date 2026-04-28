@@ -17,6 +17,26 @@ Albert is a terminal-native, model-agnostic AI agent built in pure Rust. It runs
 ---
 <img width="960" height="816" alt="image" src="https://github.com/user-attachments/assets/ea793697-949d-4c6f-98f3-3bcfa74aca03" />
 
+### Quick Install — One Copy Gets It All
+
+```bash
+# Install Albert (brings the full agent engine with it)
+cargo install albert-cli
+
+# Set your LLM key (pick any provider)
+export GEMINI_API_KEY=AIza...          # Google Gemini — default, highest quota
+export ANTHROPIC_API_KEY=sk-ant-...   # Anthropic Claude
+export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
+# export XAI_API_KEY=xai-...          # xAI / Grok
+# (Ollama: just run `ollama serve` — no key needed)
+
+# Launch
+albert-cli
+```
+
+That's it. Albert auto-detects your key and spins up the REPL.
+
+
 ## How it thinks
 
 Albert operates in exactly three states:
@@ -105,20 +125,23 @@ A global, high-level summary of significant insights. Albert periodically runs a
 
 ## Installation
 
+
+
 **Prerequisites:** Rust toolchain (`cargo`) — [install here](https://rustup.rs/)
 
 ```bash
-# Clone the monorepo
-git clone https://github.com/eriirfos-eng/ternary-intelligence-stack.git
-cd ternary-intelligence-stack/agent_albert_cli/rust
+# Install Albert (brings the full agent engine with it)
+cargo install albert-cli
 
-# Build and install
-cargo install --path crates/albert-cli --force
-```
+# Set your LLM key (pick any provider)
+export GEMINI_API_KEY=AIza...          # Google Gemini — default, highest quota
+export ANTHROPIC_API_KEY=sk-ant-...   # Anthropic Claude
+export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
+# export XAI_API_KEY=xai-...          # xAI / Grok
+# (Ollama: just run `ollama serve` — no key needed)
 
-Verify:
-```bash
-albert --version
+# Launch
+albert-cli
 ```
 
 ---
