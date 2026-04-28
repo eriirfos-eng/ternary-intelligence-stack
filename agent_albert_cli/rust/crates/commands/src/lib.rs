@@ -112,6 +112,12 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         resume_supported: true,
     },
     SlashCommandSpec {
+        name: "treemap",
+        summary: "View the repository structure tree in an overlay",
+        argument_hint: None,
+        resume_supported: true,
+    },
+    SlashCommandSpec {
         name: "diff",
         summary: "Show git diff for current workspace changes",
         argument_hint: None,
@@ -273,6 +279,36 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         argument_hint: Some("[query]"),
         resume_supported: true,
     },
+    SlashCommandSpec {
+        name: "upgrade",
+        summary: "Check for and install CLI updates",
+        argument_hint: None,
+        resume_supported: false,
+    },
+    SlashCommandSpec {
+        name: "terminal-setup",
+        summary: "Configure TUI theme and keybindings",
+        argument_hint: None,
+        resume_supported: false,
+    },
+    SlashCommandSpec {
+        name: "setup-github",
+        summary: "Configure GitHub authentication for /pr and /issue",
+        argument_hint: None,
+        resume_supported: false,
+    },
+    SlashCommandSpec {
+        name: "recap",
+        summary: "Summarize work done in the current session",
+        argument_hint: None,
+        resume_supported: false,
+    },
+    SlashCommandSpec {
+        name: "session-recap",
+        summary: "Recap the previous session and bring it into context",
+        argument_hint: None,
+        resume_supported: false,
+    },
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -316,6 +352,7 @@ pub enum SlashCommand {
     },
     Memory,
     Init,
+    Treemap,
     Diff,
     Version,
     Export {
@@ -368,6 +405,12 @@ pub enum SlashCommand {
     Vault {
         query: Option<String>,
     },
+    Upgrade,
+    TerminalSetup,
+    SetupGithub,
+    Settings,
+    Recap,
+    SessionRecap,
     Unknown(String),
 }
 
@@ -382,10 +425,16 @@ impl SlashCommand {
         let mut parts = trimmed.trim_start_matches('/').split_whitespace();
         let command = parts.next().unwrap_or_default();
         Some(match command {
-            "help" => Self::Help,
+            "help" | "?" => Self::Help,
             "status" => Self::Status,
             "compact" => Self::Compact,
             "compress" => Self::Compress,
+            "upgrade" => Self::Upgrade,
+            "terminal-setup" => Self::TerminalSetup,
+            "setup-github" => Self::SetupGithub,
+            "settings" => Self::Settings,
+            "recap" => Self::Recap,
+            "session-recap" => Self::SessionRecap,
             "bughunter" => Self::Bughunter {
                 scope: remainder_after_command(trimmed, command),
             },
@@ -421,6 +470,7 @@ impl SlashCommand {
             },
             "memory" => Self::Memory,
             "init" => Self::Init,
+            "treemap" => Self::Treemap,
             "diff" => Self::Diff,
             "version" => Self::Version,
             "export" => Self::Export {
@@ -517,10 +567,10 @@ pub fn render_slash_command_help() -> String {
     output.push_str(&format!("  {}\n", style("[resume] works with --resume SESSION.json").dim()));
 
     let categories = vec![
-        ("SESSION & CONTEXT", vec!["status", "clear", "resume", "session", "export", "compact", "compress", "cost", "memory", "aside", "checkpoint", "learn"]),
-        ("DEVELOPMENT & REASONING", vec!["ultraplan", "plan", "loop", "tdd", "verify", "code-review", "build-fix", "refactor", "docs", "bughunter", "init", "teleport", "diff", "commit", "pr", "issue", "debug-tool-call"]),
-        ("CONFIGURATION & AUTH", vec!["model", "permissions", "auth", "config"]),
-        ("UTILITY", vec!["help", "version"]),
+        ("SESSION & CONTEXT", vec!["status", "clear", "resume", "session", "export", "compact", "compress", "cost", "memory", "aside", "checkpoint", "learn", "recap", "session-recap"]),
+        ("DEVELOPMENT & REASONING", vec!["ultraplan", "plan", "loop", "tdd", "verify", "code-review", "build-fix", "refactor", "docs", "bughunter", "init", "treemap", "teleport", "diff", "commit", "pr", "issue", "debug-tool-call"]),
+        ("CONFIGURATION & AUTH", vec!["model", "permissions", "auth", "config", "setup-github", "terminal-setup", "settings"]),
+        ("UTILITY", vec!["help", "version", "upgrade"]),
     ];
 
     for (cat_name, cat_cmds) in categories {
@@ -612,6 +662,7 @@ pub fn handle_slash_command(
         | SlashCommand::Config { .. }
         | SlashCommand::Memory
         | SlashCommand::Init
+        | SlashCommand::Treemap
         | SlashCommand::Diff
         | SlashCommand::Version
         | SlashCommand::Export { .. }
@@ -631,6 +682,12 @@ pub fn handle_slash_command(
         | SlashCommand::Remember { .. }
         | SlashCommand::Recall { .. }
         | SlashCommand::Vault { .. }
+        | SlashCommand::Upgrade
+        | SlashCommand::TerminalSetup
+        | SlashCommand::SetupGithub
+        | SlashCommand::Settings
+        | SlashCommand::Recap
+        | SlashCommand::SessionRecap
         | SlashCommand::Unknown(_) => None,
     }
 }
