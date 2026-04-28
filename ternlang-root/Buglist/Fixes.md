@@ -4,6 +4,24 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 ---
 
+## 2026-04-28 — albert-cli TUI flow & studio auth (v1.2.1 release)
+
+**Diagnosis:** Multiple UI and integration regressions:
+1. **Message Flow Confusion:** Assistant text anchoring was not reset on non-text blocks (ToolUse/Plan) or MessageStop. Turn 2+ text appended to Turn 1 "thinking", appearing out of order.
+2. **Vertical Clutter:** Inactive tool outputs wasted space with separate lines and bullet points.
+3. **Studio Auth Failure:** `TypeError` in `Window.fetch` caused by non-ASCII characters (em-dashes) leaking into `X-Ternlang-Key` headers.
+4. **Slash Command redrawing:** Terminal-based commands (like `/status`) were immediately overwritten by TUI redraw.
+
+**Fix:**
+- `tui.rs`: Updated `push_exec` and `MessageStop` handler to reset text anchoring (`current_assistant_block_index = None`).
+- `tui.rs`: Modified `render_log` to inline `[Output Collapsed]` tag and remove separate output lines.
+- `tui.rs`: Implemented a pause (`Press Enter to return`) for slash commands that exit the alternate screen.
+- `studio`: Implemented `sanitizeHeader` utility to strip non-ASCII chars from API keys before `fetch`.
+- `Cargo.toml`: Bumped workspace version to `1.2.1` and published to crates.io.
+**Status:** FIXED. Committed & Released.
+
+---
+
 ## 2026-04-17 — wildcard _ match arm (PARSER-MATCH-001 resolved)
 
 **Trigger:** `match x { _ => { ... } }` → ParseError: ExpectedToken
