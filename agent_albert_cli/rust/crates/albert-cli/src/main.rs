@@ -1045,6 +1045,10 @@ fn run_tui(
             Err(_) => break, // TUI thread exited
         };
 
+        // Signal abort for any active turn immediately when new input is received.
+        // This ensures AgentText is sealed and tools are frozen before the new response roots.
+        cancel_flag.store(true, Ordering::Relaxed);
+
         // Handle /exit and /quit without calling the agent
         if matches!(input.trim(), "/exit" | "/quit") {
             cli.persist_session()?;
