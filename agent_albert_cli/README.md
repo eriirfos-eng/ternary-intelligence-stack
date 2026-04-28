@@ -15,7 +15,7 @@ Albert is a terminal-native, model-agnostic AI agent built in pure Rust. It runs
 </div>
 
 ---
-<img width="901" height="790" alt="image" src="https://github.com/user-attachments/assets/a272afe5-864d-4baf-8ac1-f6e9a921acd5" />
+<img width="887" height="805" alt="image" src="https://github.com/user-attachments/assets/0ba0486d-cab1-4ea5-9001-671a39d307e9" />
 
 ## How it thinks
 
