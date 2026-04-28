@@ -8008,17 +8008,16 @@ require(["vs/editor/editor.main"], function () {
   // Initialization: load saved state
   initKeyPersistence();
   const savedKey = localStorage.getItem("ternstudio-key") || "";
-  if (savedKey) {
-    document.getElementById("apiKey").value = savedKey;
-    document.getElementById("topbarKeyInput").value = savedKey;
-    fetchUsage();
-    syncFleetRegistry();
-    loadPremiumTree();
-  } else if (window.TERNSTUDIO_DEV_KEY) {
-    // Auto-load dev key from local config (.ternstudio-local.js, gitignored)
-    document.getElementById("apiKey").value = window.TERNSTUDIO_DEV_KEY;
-    document.getElementById("topbarKeyInput").value = window.TERNSTUDIO_DEV_KEY;
-    localStorage.setItem("ternstudio-key", window.TERNSTUDIO_DEV_KEY);
+  
+  // Use TERNSTUDIO_DEV_KEY if provided, otherwise fallback to savedKey
+  const activeKey = window.TERNSTUDIO_DEV_KEY || savedKey;
+
+  if (activeKey) {
+    document.getElementById("apiKey").value = activeKey;
+    document.getElementById("topbarKeyInput").value = activeKey;
+    if (window.TERNSTUDIO_DEV_KEY) {
+      localStorage.setItem("ternstudio-key", window.TERNSTUDIO_DEV_KEY);
+    }
     fetchUsage();
     syncFleetRegistry();
     loadPremiumTree();
