@@ -187,7 +187,7 @@ pub enum ExecBlock {
     /// Real-time task tree [ ] [●] [✔]
     Plan { tasks: Vec<Task>, frozen: bool },
     /// L-shaped output under a ToolUse
-    ToolOutput { lines: Vec<String>, total: usize },
+    ToolOutput { lines: Vec<String>, total: usize, active: bool },
     /// Streaming agent text
     AgentText(String, bool), // (text, is_interrupted)
     /// System / info note
@@ -332,6 +332,9 @@ impl TuiState {
         // Track the index of AssistantResponse blocks for turn anchoring
         if matches!(self.exec_log.back(), Some(ExecBlock::AgentText(..))) {
             self.current_assistant_block_index = Some(self.exec_log.len() - 1);
+        } else {
+            // Any other block (ToolUse, Plan, etc.) breaks the continuity of the text block.
+            self.current_assistant_block_index = None;
         }
 
         // Keep the log bounded so rendering stays fast — older blocks are trimmed.
@@ -368,13 +371,16 @@ impl TuiState {
     /// Mark all active ToolUse as completed (grey dot).
     pub fn deactivate_all_tools(&mut self) {
         for block in self.exec_log.iter_mut() {
-            if let ExecBlock::ToolUse { active, .. } = block {
-                *active = false;
+            match block {
+                ExecBlock::ToolUse { active, .. } => *active = false,
+                ExecBlock::ToolOutput { active, .. } => *active = false,
+                _ => {}
             }
         }
     }
 
     pub fn input_insert(&mut self, ch: char) {
+        self.paste_line_count = None;
         let pos = self
             .input
             .char_indices()
@@ -386,6 +392,7 @@ impl TuiState {
     }
 
     pub fn input_backspace(&mut self) {
+        self.paste_line_count = None;
         if self.cursor > 0 {
             let pos = self
                 .input
@@ -399,6 +406,7 @@ impl TuiState {
     }
 
     pub fn input_delete(&mut self) {
+        self.paste_line_count = None;
         let len = self.input.chars().count();
         if self.cursor < len {
             let pos = self
@@ -983,16 +991,23 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     // Popup: up to POPUP_WINDOW items + 1 nav footer; placed BELOW input (Gemini-style)
     let popup_h = if n_items == 0 { 0u16 } else { (n_items.min(POPUP_WINDOW) + 1) as u16 };
 
-    // Input height: text rows + 2 border rows. Text expands 1..3 rows with content.
-    // Usable width = total - " > " prefix (3) - badge (≈15) - margin (1) - borders (2).
     let input_h = {
         let badge_approx = git_branch_cached()
             .map(|b| b.chars().count() as u16 + 2)
             .unwrap_or(0);
-        let usable = area.width.saturating_sub(3 + badge_approx + 3).max(10) as usize;
+        // usable width for text content (minus borders and badge)
+        let w = area.width.saturating_sub(2 + badge_approx).max(10) as usize;
+        let p_len = 3; // " ≻ " or " ↑ "
         let n = if state.paste_line_count.is_some() { 1 } else { state.input.chars().count() };
-        let text_rows = if n == 0 { 1u16 } else if state.paste_line_count.is_some() { 1u16 } else { ((n + usable - 1) / usable).max(1).min(10) as u16 };
-        text_rows + 2 // top + bottom border rows
+        let text_rows = if n == 0 || state.paste_line_count.is_some() {
+            1
+        } else if n <= w - p_len {
+            1
+        } else {
+            let rem = n - (w - p_len);
+            1 + (rem + w - 1) / w
+        };
+        (text_rows as u16 + 2).min(12) // caps total input box height
     };
 
     // Layout top→bottom: content(flex) | status(1r) | input(dynamic) | [popup?] | tips(1r) | footer(1r)
@@ -1094,21 +1109,56 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 else if name.contains("fetch") { "Fetched" }
                 else { "Used" };
 
-                let hook = if is_last { "└─" } else { "├─" };
-                // Audit: Ensure exactly one spine (│) at Col 0. No nested pipes.
-                let mut spans = vec![
-                    spine.clone(),
-                    Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
-                    Span::styled(" ● ", dot_style),
-                    Span::styled(
-                        format!("{verb} {name}"),
-                        Style::default().fg(name_col).add_modifier(Modifier::BOLD),
-                    ),
-                ];
-                if !args.is_empty() {
-                    spans.push(Span::styled(format!("  {args}"), Style::default().fg(args_col)));
+                // Peek ahead to see if there's a collapsed ToolOutput following this ToolUse.
+                let has_collapsed_output = matches!(it.peek(), Some(ExecBlock::ToolOutput { active: false, .. }));
+                let hook = if is_last && !has_collapsed_output { "└─" } else { "├─" };
+                
+                let full_line = format!("{verb} {name}{}{}", 
+                    if args.is_empty() { "" } else { &format!("  {args}") },
+                    if has_collapsed_output { " [Output Collapsed]" } else { "" }
+                );
+                let chars: Vec<char> = full_line.chars().collect();
+                
+                // Indent: spine (2) + hook (2) + dot (3) = 7 chars
+                let indent_len = 7;
+                let usable_w = _width.saturating_sub(indent_len as u16 + 1).max(10) as usize;
+
+                if chars.len() <= usable_w {
+                    let mut spans = vec![
+                        spine.clone(),
+                        Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
+                        Span::styled(" ● ", dot_style),
+                        Span::styled(format!("{verb} {name}"), Style::default().fg(name_col).add_modifier(Modifier::BOLD)),
+                    ];
+                    if !args.is_empty() {
+                        spans.push(Span::styled(format!("  {args}"), Style::default().fg(args_col)));
+                    }
+                    if has_collapsed_output {
+                        spans.push(Span::styled(" [Output Collapsed]", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)));
+                    }
+                    lines.push(Line::from(spans));
+                } else {
+                    // Multi-line wrap with spine protection
+                    let first_chunk: String = chars[..usable_w].iter().collect();
+                    lines.push(Line::from(vec![
+                        spine.clone(),
+                        Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
+                        Span::styled(" ● ", dot_style),
+                        Span::styled(first_chunk, Style::default().fg(name_col).add_modifier(Modifier::BOLD)),
+                    ]));
+
+                    let mut start = usable_w;
+                    while start < chars.len() {
+                        let end = (start + usable_w).min(chars.len());
+                        let chunk: String = chars[start..end].iter().collect();
+                        lines.push(Line::from(vec![
+                            spine.clone(),
+                            Span::styled("     ", Style::default()), // 5 spaces to align under the text
+                            Span::styled(chunk, Style::default().fg(args_col)),
+                        ]));
+                        start = end;
+                    }
                 }
-                lines.push(Line::from(spans));
             }
 
             ExecBlock::Plan { tasks, frozen } => {
@@ -1145,29 +1195,37 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 }
             }
 
-            ExecBlock::ToolOutput { lines: out, total } => {
-                for (i, line) in out.iter().enumerate() {
-                    let connector = if i == 0 { "└─" } else { "  " };
-                    let lower = line.to_ascii_lowercase();
-                    let is_err = lower.contains("error") || lower.contains("not found") || lower.contains("failed:");
-                    let line_col = if is_err { ERROR_FG } else { Color::Rgb(110, 120, 120) };
-                    
-                    lines.push(Line::from(vec![
-                        spine.clone(), // Keep main spine
-                        Span::styled(connector, Style::default().fg(Color::Rgb(25, 45, 45))),
-                        Span::styled(" ", Style::default()),
-                        Span::styled(line.clone(), Style::default().fg(line_col)),
-                    ]));
-                }
-                if *total > out.len() {
-                    lines.push(Line::from(vec![
-                        spine.clone(),
-                        Span::styled("   ", Style::default()),
-                        Span::styled(format!("… +{} lines", total - out.len()), Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
-                    ]));
-                }
-                if is_last {
-                    lines.push(Line::from(vec![seal.clone()]));
+            ExecBlock::ToolOutput { lines: out, total, active } => {
+                if *active {
+                    for (i, line) in out.iter().enumerate() {
+                        let connector = if i == 0 { "└─" } else { "  " };
+                        let lower = line.to_ascii_lowercase();
+                        let is_err = lower.contains("error") || lower.contains("not found") || lower.contains("failed:");
+                        let line_col = if is_err { ERROR_FG } else { Color::Rgb(110, 120, 120) };
+                        
+                        lines.push(Line::from(vec![
+                            spine.clone(), // Keep main spine
+                            Span::styled(connector, Style::default().fg(Color::Rgb(25, 45, 45))),
+                            Span::styled(" ", Style::default()),
+                            Span::styled(line.clone(), Style::default().fg(line_col)),
+                        ]));
+                    }
+                    if *total > out.len() {
+                        lines.push(Line::from(vec![
+                            spine.clone(),
+                            Span::styled("   ", Style::default()),
+                            Span::styled(format!("… +{} lines", total - out.len()), Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
+                        ]));
+                    }
+                    if is_last {
+                        lines.push(Line::from(vec![seal.clone()]));
+                    }
+                } else {
+                    // Historical Tool Collapse (Accordion Mode)
+                    // Skip rendering here as it's now inlined into the parent ToolUse line.
+                    if is_last {
+                        lines.push(Line::from(vec![seal.clone()]));
+                    }
                 }
             }
 
@@ -1181,8 +1239,8 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     in_assistant_turn = true;
                 }
                 
-                let text = text.trim_start();
-                let md_lines = markdown_to_lines(text, None, _width);
+                let text = text.trim();
+                let md_lines = markdown_to_lines(text, Some(spine.clone()), _width);
                 lines.extend(md_lines);
 
                 if is_last || *interrupted {
@@ -1663,28 +1721,53 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         } else {
             (" ≻ ", CYAN)
         };
-        Paragraph::new(Line::from(vec![
-            Span::styled(prompt_txt, Style::default().fg(prompt_col).add_modifier(Modifier::BOLD)),
-            Span::styled(state.input.clone(), Style::default().fg(FG)),
-        ]))
-        .wrap(Wrap { trim: false })
+
+        let w = text_area.width as usize;
+        let p_len = 3;
+        let chars: Vec<char> = state.input.chars().collect();
+        let mut lines = Vec::new();
+
+        if chars.len() <= w.saturating_sub(p_len) {
+            lines.push(Line::from(vec![
+                Span::styled(prompt_txt, Style::default().fg(prompt_col).add_modifier(Modifier::BOLD)),
+                Span::styled(state.input.clone(), Style::default().fg(FG)),
+            ]));
+        } else {
+            // First line with prompt
+            lines.push(Line::from(vec![
+                Span::styled(prompt_txt, Style::default().fg(prompt_col).add_modifier(Modifier::BOLD)),
+                Span::styled(chars[0..w.saturating_sub(p_len)].iter().collect::<String>(), Style::default().fg(FG)),
+            ]));
+            // Subsequent lines strictly wrapped
+            let mut start = w.saturating_sub(p_len);
+            while start < chars.len() {
+                let end = (start + w).min(chars.len());
+                lines.push(Line::from(vec![
+                    Span::styled(chars[start..end].iter().collect::<String>(), Style::default().fg(FG)),
+                ]));
+                start = end;
+            }
+        }
+        Paragraph::new(lines)
     };
     f.render_widget(para.style(Style::default().bg(USER_BOX_BG)), text_area);
 
     // Place the real blinking terminal cursor inside the inner text area.
     {
-        const PREFIX: u16 = 3; // " > " or " ≻ "
+        const PREFIX: u16 = 3; 
         let (cx, cy) = if state.paste_line_count.is_some() {
-            // Position cursor at the very end of the badge line
-            (text_area.x + PREFIX + 1, text_area.y) // Just put it after the "≻"
+            (text_area.x + PREFIX + 1, text_area.y)
         } else {
-            let text_w = text_area.width.saturating_sub(PREFIX).max(1) as usize;
-            let visual_row = state.cursor / text_w;
-            let visual_col = state.cursor % text_w;
-            let cx = (text_area.x + PREFIX + visual_col as u16)
-                .min(text_area.x + text_area.width.saturating_sub(1));
-            let cy = (text_area.y + visual_row as u16)
-                .min(text_area.y + text_area.height.saturating_sub(1));
+            let w = text_area.width as usize;
+            let p = PREFIX as usize;
+            let (visual_row, visual_col) = if state.cursor < w.saturating_sub(p) {
+                (0, state.cursor + p)
+            } else {
+                let rem = state.cursor - (w.saturating_sub(p));
+                (1 + rem / w, rem % w)
+            };
+            let cx = (text_area.x + visual_col as u16).min(text_area.x + text_area.width.saturating_sub(1));
+            let cy = (text_area.y + visual_row as u16).min(text_area.y + text_area.height.saturating_sub(1));
             (cx, cy)
         };
         f.set_cursor_position((cx, cy));
@@ -2247,17 +2330,23 @@ impl TuiApp {
                                 (KeyCode::Char('v'), KeyModifiers::CONTROL) => {
                                     if let Ok(mut board) = arboard::Clipboard::new() {
                                         if let Ok(text) = board.get_text() {
-                                            for ch in text.chars() {
-                                                if ch == '\n' || ch == '\r' {
-                                                    state.input_insert(' ');
-                                                } else {
-                                                    state.input_insert(ch);
+                                            let line_count = text.lines().count();
+                                            if line_count > 1 || text.chars().count() > 2000 {
+                                                state.input = text;
+                                                state.cursor = 0;
+                                                state.paste_line_count = Some(line_count);
+                                            } else {
+                                                for ch in text.chars() {
+                                                    if ch == '\n' || ch == '\r' {
+                                                        state.input_insert(' ');
+                                                    } else {
+                                                        state.input_insert(ch);
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-
                                 // ESC: close help overlay → dismiss popup → clear paste → reset scroll
                                 (KeyCode::Esc, _) => {
                                     if state.working {
@@ -2614,6 +2703,9 @@ impl TuiApp {
                                 state.tokens_out += usage.output_tokens;
                             }
                             AssistantEvent::MessageStop => {
+                                // Clear anchoring so any subsequent text (in a new turn) starts a new block.
+                                state.current_assistant_block_index = None;
+
                                 // Phase 3: Freezer - stop pulsing for current Plan
                                 if let Some(ExecBlock::Plan { tasks, frozen }) = state.exec_log.back_mut() {
                                     *frozen = true;
@@ -2670,13 +2762,14 @@ impl TuiApp {
                     Some(TuiEvent::PasteText(text)) => {
                         let mut state = self.state.lock().unwrap();
                         let line_count = text.lines().count();
-                        if line_count >= 3 || text.chars().count() > 200 {
-                            // Large paste: store raw, show compact badge in render_input.
+                        if line_count > 1 || text.chars().count() > 2000 {
+                            // Multi-line paste: store raw, show compact badge in render_input.
                             state.input = text;
                             state.cursor = 0; // Keep cursor at 0 so it stays on the badge
                             state.paste_line_count = Some(line_count);
                         } else {
-                            // Small paste: insert inline, convert newlines to spaces.
+                            // Reasonable paste: insert inline, convert newlines to spaces for now
+                            // since the input box is still optimized for single-line display.
                             state.paste_line_count = None;
                             for ch in text.chars() {
                                 if ch == '\n' || ch == '\r' {
@@ -2701,14 +2794,16 @@ impl TuiApp {
                         // Tick fires at 100ms — redraws the screen (spinner, timer).
                         let mut state = self.state.lock().unwrap();
                         
-                        // Typewriter effect: drain characters from the buffer into the active AgentText block.
+                        // Adaptive Typewriter: Smoother flow by scaling drain rate with buffer size.
                         if !state.typewriter_buffer.is_empty() {
-                            // Take up to 10 characters per tick (100 chars/sec at 100ms ticks) for a smooth flow.
-                            let n = 10.min(state.typewriter_buffer.chars().count());
+                            let buf_len = state.typewriter_buffer.chars().count();
+                            // Drain faster if buffer is full (up to 40 chars/tick), minimum 5 for visibility.
+                            let n = if buf_len > 50 { 25 } else if buf_len > 20 { 15 } else { 5 };
+                            let n = n.min(buf_len);
+
                             let chars: String = state.typewriter_buffer.chars().take(n).collect();
                             state.typewriter_buffer = state.typewriter_buffer.chars().skip(n).collect();
                             
-                            // Deduplicate Headers: Find the most recent AgentText block associated with this turn.
                             let mut appended = false;
                             if let Some(idx) = state.current_assistant_block_index {
                                 if let Some(ExecBlock::AgentText(ref mut s, _)) = state.exec_log.get_mut(idx) {
