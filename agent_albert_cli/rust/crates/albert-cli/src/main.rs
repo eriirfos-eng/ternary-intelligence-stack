@@ -1026,6 +1026,7 @@ fn run_tui(
         state.trusted = trusted;
         state.push_exec(tui::ExecBlock::SystemMsg(cli.startup_banner()));
     }
+
     let tui_event_tx = tui_app.event_tx.clone();
     let cancel_flag = Arc::clone(&tui_app.cancel_flag);
 
@@ -1482,19 +1483,10 @@ fn run_tui(
                         break;
                     }
 
-                    tokio::select! {
-                        ev = rx.recv() => {
-                            match ev {
-                                Ok(ev) => {
-                                    let _ = tx.send(tui::TuiEvent::AgentEvent(ev));
-                                }
-                                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
-                                Err(_) => break,
-                            }
-                        }
-                        _ = tokio::time::sleep(Duration::from_millis(30)) => {
-                            // poll again on next tick — checks done/cancel at top of loop
-                        }
+                    if let Ok(ev) = rx.try_recv() {
+                        let _ = tx.send(tui::TuiEvent::AgentEvent(ev));
+                    } else {
+                        tokio::time::sleep(Duration::from_millis(10)).await;
                     }
                 }
             });
@@ -1589,7 +1581,7 @@ fn run_tui(
             Ok(Ok(ref summary)) => {
                 // Auto-compact when the session grows large to prevent TUI freeze and API rejection
                 let tokens = summary.usage.input_tokens;
-                if tokens > 60_000 {
+                if tokens > 150_000 {
                     let compact_result = cli.runtime.compact(runtime::CompactionConfig::default());
                     let removed = compact_result.removed_message_count;
                     if removed > 0 {
@@ -1941,6 +1933,9 @@ impl LiveCli {
                                 Ok(AssistantEvent::Usage(usage)) => {
                                     tokens_in = tokens_in.max(usage.input_tokens);
                                     tokens_out += usage.output_tokens;
+                                }
+                                Ok(AssistantEvent::TaskStarted { .. }) | Ok(AssistantEvent::TaskCompleted { .. }) => {
+                                    // Task events are purely for TUI visualization
                                 }
                                 Ok(AssistantEvent::MessageStop) => {
                                     if state == 1 { let _ = writeln!(out); }

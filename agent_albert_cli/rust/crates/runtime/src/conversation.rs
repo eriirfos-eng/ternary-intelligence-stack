@@ -30,6 +30,14 @@ pub enum AssistantEvent {
         name: String,
         input: String,
     },
+    TaskStarted {
+        id: String,
+        label: String,
+    },
+    TaskCompleted {
+        id: String,
+        success: bool,
+    },
     Usage(TokenUsage),
     MessageStop,
 }
@@ -498,7 +506,12 @@ fn build_assistant_message(
                 flush_text_block(&mut text, &mut blocks);
                 blocks.push(ContentBlock::ToolUse { id, name, input });
             }
-            AssistantEvent::Usage(value) => usage = Some(value),
+            AssistantEvent::TaskStarted { .. } | AssistantEvent::TaskCompleted { .. } => {
+                // Task events are handled by the TUI in real-time and don't affect 
+                // the static ConversationMessage structure.
+            }
+            AssistantEvent::Usage(u) => usage = Some(u),
+
             AssistantEvent::MessageStop => {
                 finished = true;
             }
@@ -511,9 +524,6 @@ fn build_assistant_message(
         return Err(RuntimeError::new(
             "assistant stream ended without a message stop event",
         ));
-    }
-    if blocks.is_empty() {
-        return Err(RuntimeError::new("assistant stream produced no content"));
     }
 
     Ok((

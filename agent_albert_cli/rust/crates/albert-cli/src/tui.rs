@@ -50,6 +50,27 @@ const ERROR_FG: Color = Color::Rgb(230, 80, 50);     // error lines in tool outp
 const POPUP_WINDOW: usize = 16;                       // max items visible at once in popup
 const CATEGORY_FG: Color = Color::Rgb(60, 60, 60);   // greyed-out category headers in popup
 
+/// Returns a Style that "breathes" (interpolates brightness) over time.
+/// Used to unify the pulse effect across the status bar, tool calls, and tasks.
+fn get_pulse_style(elapsed: f32, is_active: bool) -> Style {
+    if !is_active {
+        return Style::default().fg(GREY);
+    }
+
+    let period = 2.0 / 1.5; // Sync frequency
+    let t = (elapsed % period) / period;
+    let intensity = ((t * std::f32::consts::PI).sin()).powf(2.0);
+
+    // LERP from Grey (80,80,80) to Turquoise (0,200,255)
+    let r = (80.0 + (0.0 - 80.0) * intensity) as u8;
+    let g = (80.0 + (200.0 - 80.0) * intensity) as u8;
+    let b = (80.0 + (255.0 - 80.0) * intensity) as u8;
+
+    Style::default()
+        .fg(Color::Rgb(r, g, b))
+        .add_modifier(Modifier::BOLD)
+}
+
 // Tip lines shown below the working indicator — cycle by elapsed seconds
 const TIPS: &[&str] = &[
     "Use /compress to free context space mid-session",
@@ -142,16 +163,33 @@ const MODEL_ENTRIES: &[(&str, &str, &str)] = &[
 
 // ── Data model ────────────────────────────────────────────────────────────────
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TaskStatus {
+    Pending,
+    Running,
+    Done,
+    Failed,
+}
+
+#[derive(Clone, Debug)]
+pub struct Task {
+    pub id: String,
+    pub label: String,
+    pub status: TaskStatus,
+}
+
 #[derive(Clone, Debug)]
 pub enum ExecBlock {
     /// User message:  > text  on slightly dark background
     UserMessage(String),
     /// Tool call — green dot while active, grey when done
     ToolUse { name: String, args: String, active: bool },
+    /// Real-time task tree [ ] [●] [✔]
+    Plan { tasks: Vec<Task>, frozen: bool },
     /// L-shaped output under a ToolUse
     ToolOutput { lines: Vec<String>, total: usize },
     /// Streaming agent text
-    AgentText(String),
+    AgentText(String, bool), // (text, is_interrupted)
     /// System / info note
     SystemMsg(String),
     /// Post-turn elapsed time: "Worked for Xm Ys"
@@ -191,6 +229,8 @@ pub struct TuiState {
     pub help_scroll: u16,
     /// Buffer for the typewriter effect (flowing text deltas).
     pub typewriter_buffer: String,
+    /// Track the index of the last active assistant text block for correct turn anchoring.
+    pub current_assistant_block_index: Option<usize>,
     /// Ordered list of previously submitted messages (max 200).
     pub input_history: Vec<String>,
     /// Index into input_history while browsing (None = not browsing).
@@ -237,6 +277,7 @@ impl Default for TuiState {
             help_open: false,
             help_scroll: 0,
             typewriter_buffer: String::new(),
+            current_assistant_block_index: None,
             input_history: Vec::new(),
             history_idx: None,
             input_saved: String::new(),
@@ -260,6 +301,12 @@ impl TuiState {
     }
 
     pub fn push_exec(&mut self, block: ExecBlock) {
+        if matches!(&block, ExecBlock::UserMessage(_)) {
+            self.seal_last_assistant_block();
+            self.current_assistant_block_index = None;
+            self.typewriter_buffer.clear(); // Discard stray tokens on new user message
+        }
+
         if matches!(&block, ExecBlock::ToolUse { .. }) {
             self.deactivate_all_tools();
         }
@@ -279,10 +326,41 @@ impl TuiState {
                 }
             }
         }
+
         self.exec_log.push_back(block);
+        
+        // Track the index of AssistantResponse blocks for turn anchoring
+        if matches!(self.exec_log.back(), Some(ExecBlock::AgentText(..))) {
+            self.current_assistant_block_index = Some(self.exec_log.len() - 1);
+        }
+
         // Keep the log bounded so rendering stays fast — older blocks are trimmed.
         while self.exec_log.len() > 120 {
             self.exec_log.pop_front();
+            if let Some(ref mut idx) = self.current_assistant_block_index {
+                if *idx == 0 {
+                    self.current_assistant_block_index = None;
+                } else {
+                    *idx -= 1;
+                }
+            }
+        }
+    }
+
+    /// Seal the current assistant turn: freeze plans and mark text as interrupted if needed.
+    pub fn seal_last_assistant_block(&mut self) {
+        // Freeze any active plans
+        for block in self.exec_log.iter_mut() {
+            if let ExecBlock::Plan { frozen, .. } = block {
+                *frozen = true;
+            }
+        }
+        
+        // If the turn ended via interruption (before MessageStop), mark the last text block.
+        if let Some(idx) = self.current_assistant_block_index {
+            if let Some(ExecBlock::AgentText(_, interrupted)) = self.exec_log.get_mut(idx) {
+                *interrupted = true;
+            }
         }
     }
 
@@ -764,14 +842,8 @@ fn generate_repo_map(root: &std::path::Path, max_depth: usize) -> String {
 
 // ── Markdown rendering ────────────────────────────────────────────────────────
 
-fn md_flush(spans: &mut Vec<Span<'static>>, lines: &mut Vec<Line<'static>>) {
-    if !spans.is_empty() {
-        lines.push(Line::from(std::mem::take(spans)));
-    }
-}
-
-/// Convert a markdown string to styled ratatui Lines.
-fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
+/// Convert a markdown string to styled ratatui Lines, wrapping manually to fit within width.
+fn markdown_to_lines(text: &str, prefix: Option<Span<'static>>, width: u16) -> Vec<Line<'static>> {
     let mut lines: Vec<Line<'static>> = Vec::new();
     let mut spans: Vec<Span<'static>> = Vec::new();
     let mut bold = false;
@@ -782,8 +854,48 @@ fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
     let mut list_depth: usize = 0;
     let mut item_needs_bullet = false;
 
+    let prefix_w = prefix.as_ref().map(|p| p.content.chars().count()).unwrap_or(0) as u16;
+    let available_w = width.saturating_sub(prefix_w + 1).max(10);
+
     let opts = MdOptions::ENABLE_STRIKETHROUGH;
     let parser = MdParser::new_ext(text, opts);
+
+    let mut flush_to_lines = |spans: &mut Vec<Span<'static>>, lines: &mut Vec<Line<'static>>| {
+        if spans.is_empty() { return; }
+        
+        // Manual wrapping: convert spans to a single string, wrap it, then recreate spans.
+        let mut full_text = String::new();
+        for s in spans.iter() { full_text.push_str(&s.content); }
+        
+        // Very simple wrap: split by available_w
+        let mut current_pos = 0;
+        let chars: Vec<char> = full_text.chars().collect();
+        while current_pos < chars.len() {
+            let end = (current_pos + available_w as usize).min(chars.len());
+            // Try to find a space to wrap at
+            let mut wrap_at = end;
+            if end < chars.len() {
+                for i in (current_pos..end).rev() {
+                    if chars[i].is_whitespace() {
+                        wrap_at = i + 1;
+                        break;
+                    }
+                }
+            }
+            
+            let chunk: String = chars[current_pos..wrap_at].iter().collect();
+            let mut row = Vec::new();
+            if let Some(p) = &prefix { row.push(p.clone()); }
+            row.push(Span::styled(chunk, Style::default().fg(FG))); // Simplification: lose internal formatting on wrap for now
+            lines.push(Line::from(row));
+            
+            current_pos = wrap_at;
+            while current_pos < chars.len() && chars[current_pos].is_whitespace() && chars[current_pos] != '\n' {
+                current_pos += 1;
+            }
+        }
+        spans.clear();
+    };
 
     for event in parser {
         match event {
@@ -796,7 +908,7 @@ fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
                 };
             }
             MdEvent::End(TagEnd::Heading(_)) => {
-                md_flush(&mut spans, &mut lines);
+                flush_to_lines(&mut spans, &mut lines);
                 in_heading = false;
             }
             MdEvent::Start(Tag::Strong) => bold = true,
@@ -805,40 +917,37 @@ fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
             MdEvent::End(TagEnd::Emphasis) => italic = false,
             MdEvent::Start(Tag::CodeBlock(_)) => in_code_block = true,
             MdEvent::End(TagEnd::CodeBlock) => {
-                md_flush(&mut spans, &mut lines);
-                lines.push(Line::default());
+                flush_to_lines(&mut spans, &mut lines);
+                lines.push(if let Some(p) = &prefix { Line::from(vec![p.clone()]) } else { Line::default() });
                 in_code_block = false;
             }
             MdEvent::Start(Tag::List(_)) => list_depth += 1,
             MdEvent::End(TagEnd::List(_)) => list_depth = list_depth.saturating_sub(1),
             MdEvent::Start(Tag::Item) => item_needs_bullet = true,
-            MdEvent::End(TagEnd::Item) => md_flush(&mut spans, &mut lines),
+            MdEvent::End(TagEnd::Item) => flush_to_lines(&mut spans, &mut lines),
             MdEvent::Start(Tag::Paragraph) => {}
             MdEvent::End(TagEnd::Paragraph) => {
-                md_flush(&mut spans, &mut lines);
-                lines.push(Line::default());
+                flush_to_lines(&mut spans, &mut lines);
+                lines.push(if let Some(p) = &prefix { Line::from(vec![p.clone()]) } else { Line::default() });
             }
             MdEvent::Text(t) => {
                 if item_needs_bullet {
                     item_needs_bullet = false;
-                    let indent = "  ".repeat(list_depth.saturating_sub(1));
-                    spans.push(Span::styled(
-                        format!("{indent}• "),
-                        Style::default().fg(DIM),
-                    ));
+                    let indent = "  ".repeat(list_depth); // 2 spaces per depth
+                    spans.push(Span::styled(format!("{indent}• "), Style::default().fg(DIM)));
                 }
                 if in_code_block {
                     for line in t.lines() {
-                        lines.push(Line::from(vec![
-                            Span::styled("▌", Style::default().fg(CODE_BAR).bg(CODE_BG)),
-                            Span::styled(format!(" {line}"), Style::default().fg(CODE_FG).bg(CODE_BG)),
-                        ]));
+                        let mut row = Vec::new();
+                        if let Some(p) = &prefix { row.push(p.clone()); }
+                        row.push(Span::styled("▌", Style::default().fg(CODE_BAR).bg(CODE_BG)));
+                        row.push(Span::styled(format!(" {line}"), Style::default().fg(CODE_FG).bg(CODE_BG)));
+                        lines.push(Line::from(row));
                     }
                 } else {
                     let mut style = Style::default().fg(FG);
-                    if in_heading {
-                        style = style.fg(heading_color).add_modifier(Modifier::BOLD);
-                    } else {
+                    if in_heading { style = style.fg(heading_color).add_modifier(Modifier::BOLD); }
+                    else {
                         if bold { style = style.add_modifier(Modifier::BOLD); }
                         if italic { style = style.add_modifier(Modifier::ITALIC); }
                     }
@@ -846,27 +955,21 @@ fn markdown_to_lines(text: &str) -> Vec<Line<'static>> {
                 }
             }
             MdEvent::Code(c) => {
-                spans.push(Span::styled(
-                    format!("`{c}`"),
-                    Style::default().fg(CODE_FG),
-                ));
+                spans.push(Span::styled(format!("`{c}`"), Style::default().fg(CODE_FG)));
             }
-            MdEvent::SoftBreak => {
-                spans.push(Span::styled(" ".to_string(), Style::default().fg(FG)));
-            }
-            MdEvent::HardBreak => md_flush(&mut spans, &mut lines),
+            MdEvent::SoftBreak => { spans.push(Span::styled(" ".to_string(), Style::default().fg(FG))); }
+            MdEvent::HardBreak => flush_to_lines(&mut spans, &mut lines),
             MdEvent::Rule => {
-                md_flush(&mut spans, &mut lines);
-                lines.push(Line::from(Span::styled(
-                    "─".repeat(60),
-                    Style::default().fg(DIM),
-                )));
+                flush_to_lines(&mut spans, &mut lines);
+                let mut row = Vec::new();
+                if let Some(p) = &prefix { row.push(p.clone()); }
+                row.push(Span::styled("─".repeat(available_w as usize), Style::default().fg(DIM)));
+                lines.push(Line::from(row));
             }
             _ => {}
         }
     }
-
-    md_flush(&mut spans, &mut lines);
+    flush_to_lines(&mut spans, &mut lines);
     lines
 }
 
@@ -929,131 +1032,180 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     }
 }
 
+fn is_last_in_turn(it: &std::iter::Peekable<std::collections::vec_deque::Iter<'_, ExecBlock>>) -> bool {
+    let mut peek_it = it.clone();
+    while let Some(next) = peek_it.next() {
+        match next {
+            ExecBlock::UserMessage(_) => return true,
+            ExecBlock::ToolUse { .. } | ExecBlock::Plan { .. } | ExecBlock::ToolOutput { .. } | ExecBlock::AgentText(..) => return false,
+            ExecBlock::WorkedFor(_) | ExecBlock::SystemMsg(_) => continue,
+        }
+    }
+    true
+}
+
 fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
     let mut lines: Vec<Line<'static>> = Vec::new();
     let mut it = state.exec_log.iter().peekable();
-    let mut last_was_tool = false;
+    let mut in_assistant_turn = false;
+
+    // Define consistent spacing for the "Laminar Flow" architecture.
+    // Spine at Col 0, Hook at Col 2, Dot at Col 4.
+    let spine_str = "│ "; 
+    let spine = Span::styled(spine_str, Style::default().fg(Color::Rgb(25, 45, 45)));
+    let seal = Span::styled("└─", Style::default().fg(Color::Rgb(25, 45, 45)));
 
     while let Some(block) = it.next() {
+        let is_last = is_last_in_turn(&it);
+
         match block {
             ExecBlock::UserMessage(msg) => {
                 lines.push(Line::default());
                 lines.push(Line::from(vec![
                     Span::styled(
-                        " ≻ ",
+                        "≻ ",
                         Style::default().fg(CYAN).add_modifier(Modifier::BOLD),
                     ),
                     Span::styled(msg.clone(), Style::default().fg(FG).bg(USER_BOX_BG)),
                 ]));
-                last_was_tool = false;
+                in_assistant_turn = false;
             }
 
             ExecBlock::ToolUse { name, args, active } => {
-                let dot_style = if *active {
-                    Style::default().fg(GREEN).add_modifier(Modifier::BOLD | Modifier::SLOW_BLINK)
-                } else {
-                    Style::default().fg(GREY)
-                };
+                if !in_assistant_turn {
+                    lines.push(Line::default());
+                    lines.push(Line::from(vec![
+                        Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
+                        Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
+                    ]));
+                    in_assistant_turn = true;
+                }
+
+                let elapsed = state.session_start.elapsed().as_secs_f32();
+                let dot_style = get_pulse_style(elapsed, *active);
                 let (name_col, args_col) = if *active { (FG, CYAN) } else { (GREY, GREY) };
                 
-                let verb = if name.contains("write") {
-                    "Wrote"
-                } else if name.contains("read") {
-                    "Read"
-                } else if name.contains("grep") || name.contains("search") {
-                    "Searched"
-                } else if name.contains("glob") || name.contains("scan") {
-                    "Scanned"
-                } else if name.contains("bash") || name.contains("execute") {
-                    "Ran"
-                } else if name.contains("plan") {
-                    "Planned"
-                } else if name.contains("fetch") {
-                    "Fetched"
-                } else {
-                    "Used"
-                };
+                let verb = if name.contains("write") { "Wrote" }
+                else if name.contains("read") { "Read" }
+                else if name.contains("grep") || name.contains("search") { "Searched" }
+                else if name.contains("glob") || name.contains("scan") { "Scanned" }
+                else if name.contains("bash") || name.contains("execute") { "Ran" }
+                else if name.contains("plan") { "Planned" }
+                else if name.contains("fetch") { "Fetched" }
+                else { "Used" };
 
-                let prefix = if last_was_tool { " ╰ ● " } else { " ● " };
+                let hook = if is_last { "└─" } else { "├─" };
                 let mut spans = vec![
-                    Span::styled(prefix, dot_style),
+                    spine.clone(),
+                    Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
+                    Span::styled(" ● ", dot_style),
                     Span::styled(
                         format!("{verb} {name}"),
                         Style::default().fg(name_col).add_modifier(Modifier::BOLD),
                     ),
                 ];
                 if !args.is_empty() {
-                    spans.push(Span::styled(
-                        format!("  {args}"),
-                        Style::default().fg(args_col),
-                    ));
+                    spans.push(Span::styled(format!("  {args}"), Style::default().fg(args_col)));
                 }
                 lines.push(Line::from(spans));
-                last_was_tool = true;
+            }
+
+            ExecBlock::Plan { tasks, frozen } => {
+                if !in_assistant_turn {
+                    lines.push(Line::default());
+                    lines.push(Line::from(vec![
+                        Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
+                        Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
+                    ]));
+                    in_assistant_turn = true;
+                }
+
+                let elapsed = state.session_start.elapsed().as_secs_f32();
+                for (i, task) in tasks.iter().enumerate() {
+                    let is_final_task = is_last && i == tasks.len() - 1;
+                    let hook = if is_final_task { "└─" } else { "├─" };
+                    
+                    let (icon, style) = match task.status {
+                        TaskStatus::Pending => (" [ ] ", Style::default().fg(GREY)),
+                        TaskStatus::Running => {
+                            if *frozen { (" [●] ", Style::default().fg(GREEN)) }
+                            else { (" [●] ", get_pulse_style(elapsed, true)) }
+                        }
+                        TaskStatus::Done => (" [✔] ", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
+                        TaskStatus::Failed => (" [✘] ", Style::default().fg(ERROR_FG).add_modifier(Modifier::BOLD)),
+                    };
+                    lines.push(Line::from(vec![
+                        spine.clone(),
+                        Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
+                        Span::styled(icon, style),
+                        Span::styled(task.label.clone(), Style::default().fg(FG)),
+                    ]));
+                }
             }
 
             ExecBlock::ToolOutput { lines: out, total } => {
+                let sub_spine = Span::styled("│ │ ", Style::default().fg(Color::Rgb(25, 45, 45))); 
                 for (i, line) in out.iter().enumerate() {
-                    let connector = if i == 0 { "  └ " } else { "    " };
+                    let connector = if i == 0 { "└─" } else { "  " };
                     let lower = line.to_ascii_lowercase();
-                    let is_err = lower.contains("error")
-                        || lower.contains("not found")
-                        || lower.contains("permission denied")
-                        || lower.contains("failed:")
-                        || lower.starts_with("error")
-                        || lower.starts_with("fatal");
+                    let is_err = lower.contains("error") || lower.contains("not found") || lower.contains("failed:");
                     let line_col = if is_err { ERROR_FG } else { Color::Rgb(110, 120, 120) };
+                    
                     lines.push(Line::from(vec![
-                        Span::styled(connector, Style::default().fg(DIM)),
+                        sub_spine.clone(),
+                        Span::styled(connector, Style::default().fg(Color::Rgb(25, 45, 45))),
+                        Span::styled(" ", Style::default()),
                         Span::styled(line.clone(), Style::default().fg(line_col)),
                     ]));
                 }
                 if *total > out.len() {
                     lines.push(Line::from(vec![
-                        Span::styled("    ", Style::default()),
-                        Span::styled(
-                            format!("… +{} lines", total - out.len()),
-                            Style::default().fg(DIM).add_modifier(Modifier::ITALIC),
-                        ),
+                        sub_spine.clone(),
+                        Span::styled("   ", Style::default()),
+                        Span::styled(format!("… +{} lines", total - out.len()), Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
                     ]));
                 }
-                // Keep last_was_tool true after output so the NEXT tool in sequence is indented
-                last_was_tool = true;
-            }
-
-            ExecBlock::AgentText(text) => {
-                if !last_was_tool {
-                    lines.push(Line::default());
+                if is_last {
+                    lines.push(Line::from(vec![seal.clone()]));
                 }
-                lines.push(Line::from(vec![
-                    Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
-                    Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
-                ]));
-                
-                lines.extend(markdown_to_lines(text));
-                last_was_tool = false;
             }
 
-            // WorkedFor is shown in the status bar — not duplicated in the chat log.
+            ExecBlock::AgentText(text, interrupted) => {
+                if !in_assistant_turn {
+                    lines.push(Line::default());
+                    lines.push(Line::from(vec![
+                        Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
+                        Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
+                    ]));
+                    in_assistant_turn = true;
+                }
+                
+                let text = text.trim_start();
+                let md_lines = markdown_to_lines(text, None, _width);
+                lines.extend(md_lines);
+
+                if is_last || *interrupted {
+                    lines.push(Line::from(vec![seal.clone()]));
+                }
+            }
+
             ExecBlock::WorkedFor(_) => {}
 
             ExecBlock::SystemMsg(msg) => {
-                let mut it = msg.lines().peekable();
-                let first_line = it.peek().cloned().unwrap_or_default();
+                let mut it_msg = msg.lines().peekable();
+                let first_line = it_msg.peek().cloned().unwrap_or_default();
                 let is_banner = first_line == "[BANNER]";
                 let is_treemap = first_line == "[TREEMAP]";
-                
-                // If it's the startup banner, only show it if no user messages have been sent yet.
+
                 if is_banner {
                     let has_user_msgs = state.exec_log.iter().any(|b| matches!(b, ExecBlock::UserMessage(_)));
-                    if has_user_msgs {
-                        continue;
-                    }
+                    if has_user_msgs { continue; }
                 }
 
                 lines.push(Line::default());
+                in_assistant_turn = false;
                 if is_banner || is_treemap {
-                    it.next(); // skip marker
+                    it_msg.next(); // skip marker
                     let logo_colors = [
                         Color::Rgb(0, 255, 255), // Turquoise gradient
                         Color::Rgb(0, 220, 255),
@@ -1063,12 +1215,12 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                         Color::Rgb(0, 100, 255),
                     ];
                     
-                    let banner_lines: Vec<String> = it.map(|s| s.to_string()).collect();
+                    let banner_lines: Vec<String> = it_msg.map(|s| s.to_string()).collect();
                     let footer_line = banner_lines.iter().position(|l| l.contains("Did you know?")).unwrap_or(banner_lines.len());
 
                     // 1. Raw String Padding: Rectangularize the logo part
                     let mut padded_logo = Vec::new();
-                    let mut max_logo_chars = 0;
+                    let mut max_logo_chars: usize = 0;
                     if is_banner {
                         let logo_count = 6.min(banner_lines.len()).min(footer_line);
                         for i in 0..logo_count {
@@ -1101,16 +1253,16 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                     // 3. Find the Maximum: Add buffer (MAX_WIDTH)
                     let target_w = max_visual_w + 2; // 2 space buffer
 
-                    // Top border (Dynamic Width)
+                    // Top border (Dynamic Width) - Indented by 1 space for parity with 'albert' header
                     lines.push(Line::from(vec![
-                        Span::styled(format!(" ┌{}┐", "─".repeat(target_w + 2)), Style::default().fg(CHAT_BORDER))
+                        Span::styled(format!("  ┌{}┐", "─".repeat(target_w + 2)), Style::default().fg(CHAT_BORDER))
                     ]));
                     
                     for (i, line) in banner_lines.iter().enumerate() {
                         if i >= footer_line { break; }
                         
                         let mut row_spans = Vec::new();
-                        row_spans.push(Span::styled(" │ ", Style::default().fg(CHAT_BORDER)));
+                        row_spans.push(Span::styled("  │ ", Style::default().fg(CHAT_BORDER)));
 
                         let mut current_row_visual_w;
 
@@ -1163,21 +1315,21 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                         let padding_needed = target_w.saturating_sub(current_row_visual_w);
                         row_spans.push(Span::raw(" ".repeat(padding_needed)));
 
-                    // 5. Close the Box: Reset and append right border
+                        // 5. Close the Box: Reset and append right border
                         row_spans.push(Span::styled(" │", Style::default().fg(CHAT_BORDER)));
                         lines.push(Line::from(row_spans));
                     }
 
                     // 6. Seal the Main Box First: Draw the bottom border exactly after metadata
                     lines.push(Line::from(vec![
-                        Span::styled(format!(" └{}┘", "─".repeat(target_w + 2)), Style::default().fg(CHAT_BORDER))
+                        Span::styled(format!("  └{}┘", "─".repeat(target_w + 2)), Style::default().fg(CHAT_BORDER))
                     ]));
 
                     // 7. External Render: Print the hook line after the box is physically closed
-                    // Column Alignment: The ' ' followed by '└' aligns it with the ' └' of the box above.
+                    // Column Alignment: The '  ' followed by '└' aligns it with the '  └' of the box above.
                     if footer_line < banner_lines.len() {
                         lines.push(Line::from(vec![
-                            Span::styled(format!(" {}", banner_lines[footer_line].trim()), Style::default().fg(GREY).add_modifier(Modifier::ITALIC))
+                            Span::styled(format!("  {}", banner_lines[footer_line].trim()), Style::default().fg(GREY).add_modifier(Modifier::ITALIC))
                         ]));
                     }
                 } else {
@@ -1760,17 +1912,11 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 
         // Pulse the Dingir symbol when active
         let elapsed = state.session_start.elapsed().as_secs_f32();
-        let period = 2.0 / 1.5; // Sync with current_activity tick rate
-        let t = (elapsed % period) / period;
-        let intensity = ((t * std::f32::consts::PI).sin()).powf(2.0);
-        let r = (80.0 + (0.0 - 80.0) * intensity) as u8;
-        let g = (80.0 + (200.0 - 80.0) * intensity) as u8;
-        let b = (80.0 + (255.0 - 80.0) * intensity) as u8;
-        let pulse_color = Color::Rgb(r, g, b);
+        let pulse_style = get_pulse_style(elapsed, true);
 
         Line::from(vec![
-            Span::styled(" 𒀭 ", Style::default().fg(pulse_color).add_modifier(Modifier::BOLD)),
-            Span::styled(activity, Style::default().fg(pulse_color)),
+            Span::styled(" 𒀭 ", pulse_style),
+            Span::styled(activity, pulse_style),
             Span::styled(format!(" ({timer}{tok_str})"), Style::default().fg(GREY)),
         ])
     } else {
@@ -2419,9 +2565,14 @@ impl TuiApp {
                         let mut state = self.state.lock().unwrap();
                         match ev {
                             AssistantEvent::TextDelta(delta) => {
-                                // Flow incoming text into the typewriter buffer.
-                                // It will be drained character-by-character on Tick events.
-                                state.typewriter_buffer.push_str(&delta);
+                                // Filter Empty Deltas: Ignore whitespace-only or empty events.
+                                if delta.trim().is_empty() && !delta.contains('\n') {
+                                    // continue to next event
+                                } else {
+                                    // Flow incoming text into the typewriter buffer.
+                                    // It will be drained character-by-character on Tick events.
+                                    state.typewriter_buffer.push_str(&delta);
+                                }
                             }
                             AssistantEvent::ToolUse { name, input, .. } => {
                                 let preview = tool_input_preview(&input);
@@ -2431,14 +2582,46 @@ impl TuiApp {
                                     active: true,
                                 });
                             }
+                            AssistantEvent::TaskStarted { id, label } => {
+                                // Update existing plan or create a new one
+                                let mut found = false;
+                                if let Some(ExecBlock::Plan { tasks, frozen: false }) = state.exec_log.back_mut() {
+                                    if let Some(task) = tasks.iter_mut().find(|t| t.id == id) {
+                                        task.status = TaskStatus::Running;
+                                        found = true;
+                                    } else {
+                                        tasks.push(Task { id: id.clone(), label: label.clone(), status: TaskStatus::Running });
+                                        found = true;
+                                    }
+                                }
+                                if !found {
+                                    state.push_exec(ExecBlock::Plan {
+                                        tasks: vec![Task { id, label, status: TaskStatus::Running }],
+                                        frozen: false,
+                                    });
+                                }
+                            }
+                            AssistantEvent::TaskCompleted { id, success } => {
+                                if let Some(ExecBlock::Plan { tasks, frozen: false }) = state.exec_log.back_mut() {
+                                    if let Some(task) = tasks.iter_mut().find(|t| t.id == id) {
+                                        task.status = if success { TaskStatus::Done } else { TaskStatus::Failed };
+                                    }
+                                }
+                            }
                             AssistantEvent::Usage(usage) => {
                                 state.tokens_in = state.tokens_in.max(usage.input_tokens);
                                 state.tokens_out += usage.output_tokens;
                             }
                             AssistantEvent::MessageStop => {
-                                // Do NOT deactivate the tool dot here — the tool may still be
-                                // executing. The main thread deactivates after run_turn returns
-                                // and ToolOutput blocks have been injected.
+                                // Phase 3: Freezer - stop pulsing for current Plan
+                                if let Some(ExecBlock::Plan { tasks, frozen }) = state.exec_log.back_mut() {
+                                    *frozen = true;
+                                    for task in tasks.iter_mut() {
+                                        if task.status == TaskStatus::Running {
+                                            task.status = TaskStatus::Done;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -2455,7 +2638,10 @@ impl TuiApp {
                         loop {
                             match self.event_rx.recv().await {
                                 Some(TuiEvent::Resume) => break,
-                                Some(TuiEvent::Quit) | Some(TuiEvent::QuitWithReport) | None => return Ok(()),
+                                Some(TuiEvent::Quit) | Some(TuiEvent::QuitWithReport) | None => {
+                                     self.key_paused.store(false, Ordering::Relaxed);
+                                     return Ok::<(), Box<dyn std::error::Error>>(());
+                                }
                                 _ => {}
                             }
                         }
@@ -2521,9 +2707,17 @@ impl TuiApp {
                             let chars: String = state.typewriter_buffer.chars().take(n).collect();
                             state.typewriter_buffer = state.typewriter_buffer.chars().skip(n).collect();
                             
-                            match state.exec_log.back_mut() {
-                                Some(ExecBlock::AgentText(ref mut s)) => s.push_str(&chars),
-                                _ => state.exec_log.push_back(ExecBlock::AgentText(chars)),
+                            // Deduplicate Headers: Find the most recent AgentText block associated with this turn.
+                            let mut appended = false;
+                            if let Some(idx) = state.current_assistant_block_index {
+                                if let Some(ExecBlock::AgentText(ref mut s, _)) = state.exec_log.get_mut(idx) {
+                                    s.push_str(&chars);
+                                    appended = true;
+                                }
+                            }
+
+                            if !appended {
+                                state.push_exec(ExecBlock::AgentText(chars, false));
                             }
                         }
                     }
