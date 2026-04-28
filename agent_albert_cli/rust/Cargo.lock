@@ -55,6 +55,7 @@ dependencies = [
  "syntect",
  "tokio",
  "toml",
+ "walkdir",
 ]
 
 [[package]]

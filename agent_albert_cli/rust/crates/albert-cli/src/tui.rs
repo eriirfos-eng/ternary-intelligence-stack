@@ -35,15 +35,14 @@ const GREY: Color = Color::Rgb(145, 145, 145);
 const GREEN: Color = Color::Rgb(0, 220, 120);
 const CYAN: Color = Color::Rgb(0, 200, 255);
 const ORANGE: Color = Color::Rgb(255, 140, 50);   // working `*` indicator
-const USER_BOX_BG: Color = Color::Rgb(20, 26, 48);
-const STATUS_BG: Color = Color::Rgb(16, 21, 40);
-const BRANCH_BG: Color = Color::Rgb(35, 55, 35);  // git branch pill background
+const USER_BOX_BG: Color = Color::Reset;
+const STATUS_BG: Color = Color::Reset;
+const BRANCH_BG: Color = Color::Reset;  // git branch pill background
 const POPUP_BG: Color = Color::Rgb(20, 26, 48);
-const POPUP_BORDER: Color = Color::Rgb(55, 55, 55);
 const POPUP_MATCH: Color = Color::Rgb(0, 180, 100);
 const POPUP_SEL_BG: Color = Color::Rgb(42, 42, 42);
 const CODE_FG: Color = Color::Rgb(100, 210, 255);    // inline code / code blocks
-const CODE_BG: Color = Color::Rgb(14, 22, 30);       // code block row background
+const CODE_BG: Color = Color::Reset;       // code block row background
 const CODE_BAR: Color = Color::Rgb(0, 100, 160);     // code block left border bar
 const CHAT_BORDER: Color = Color::Rgb(0, 65, 75);    // chat area frame
 const INPUT_BORDER: Color = Color::Rgb(0, 175, 160); // input box turquoise frame
@@ -157,8 +156,8 @@ pub enum ExecBlock {
     SystemMsg(String),
     /// Post-turn elapsed time: "Worked for Xm Ys"
     WorkedFor(u64),
-    /// Pre-formatted verbatim text — bypasses markdown, renders each line as-is.
-    RawText(String),
+    // /// Pre-formatted verbatim text — bypasses markdown, renders each line as-is.
+    // RawText(String),
 }
 
 #[derive(Clone, Debug)]
@@ -190,6 +189,8 @@ pub struct TuiState {
     pub help_open: bool,
     /// Scroll offset inside the help popup.
     pub help_scroll: u16,
+    /// Buffer for the typewriter effect (flowing text deltas).
+    pub typewriter_buffer: String,
     /// Ordered list of previously submitted messages (max 200).
     pub input_history: Vec<String>,
     /// Index into input_history while browsing (None = not browsing).
@@ -235,6 +236,7 @@ impl Default for TuiState {
             paste_line_count: None,
             help_open: false,
             help_scroll: 0,
+            typewriter_buffer: String::new(),
             input_history: Vec::new(),
             history_idx: None,
             input_saved: String::new(),
@@ -260,26 +262,6 @@ impl TuiState {
     pub fn push_exec(&mut self, block: ExecBlock) {
         if matches!(&block, ExecBlock::ToolUse { .. }) {
             self.deactivate_all_tools();
-        }
-
-        // Bug fix: Remove ASCII splash and startup system message when the first user message arrives
-        if matches!(&block, ExecBlock::UserMessage(_)) {
-            let has_splash = self.exec_log.iter().any(|b| {
-                if let ExecBlock::RawText(s) = b {
-                    s.contains("██████╗")
-                } else {
-                    false
-                }
-            });
-            if has_splash {
-                self.exec_log.retain(|b| {
-                    match b {
-                        ExecBlock::RawText(s) if s.contains("██████╗") => false,
-                        ExecBlock::SystemMsg(s) if s.contains("v") && s.contains("type /help") => false,
-                        _ => true,
-                    }
-                });
-            }
         }
 
         // Filter out meta-tools from "Ran [tool]" display
@@ -504,13 +486,52 @@ const AUTH_PROVIDERS: &[(&str, &str)] = &[
     ("ollama",     "Local models — no API key required"),
 ];
 
+// @ Mentions / Agents
+const AGENT_GROUPS: &[(&str, &[(&str, &str)])] = &[
+    ("AGENTS", &[
+        ("plan",    "Break down complex tasks into steps"),
+        ("loop",    "Autonomous execution autopilot"),
+        ("tdd",     "Strict Test-Driven Development"),
+        ("verify",  "Full workspace health check"),
+        ("debug",   "Deep root-cause analysis"),
+        ("fix",     "Autonomous bug resolution"),
+        ("review",  "Deep security & logic review"),
+    ]),
+    ("RULES", &[
+        ("strict",  "Enforce maximum safety and types"),
+        ("fast",    "Prioritize speed and brevity"),
+        ("debug",   "Verbose logging and tool traces"),
+    ]),
+];
+
 /// Returns popup items for the current input:
-///   /              → full categorised command list  (Enter drills into sub-commands)
+///   /              → full categorised command list
+///   @              → agent/rule picker
 ///   /partial       → flat filtered list
-///   /permissions   → permission mode picker  (Enter applies mode)
-///   /model         → model picker            (Enter switches model)
-///   /auth          → provider picker         (Enter starts auth flow)
+///   /permissions   → permission mode picker
+///   /model         → model picker
+///   /auth          → provider picker
 fn popup_items(input: &str) -> Vec<PopupItem> {
+    if input.starts_with('@') {
+        let partial = &input[1..];
+        let mut items = Vec::new();
+        for (label, agents) in AGENT_GROUPS {
+            let matches: Vec<PopupItem> = agents.iter()
+                .filter(|(name, _)| partial.is_empty() || name.starts_with(partial))
+                .map(|(name, desc)| PopupItem::cmd(
+                    &format!("@{name}"),
+                    &format!("/{name}"), // map to slash command for execution
+                    desc,
+                ))
+                .collect();
+            if !matches.is_empty() {
+                items.push(PopupItem::header(label));
+                items.extend(matches);
+            }
+        }
+        return items;
+    }
+
     if !input.starts_with('/') {
         return vec![];
     }
@@ -659,6 +680,86 @@ fn truncate(s: &str, max_chars: usize) -> String {
     }
     let end = s.char_indices().nth(max_chars).map(|(i, _)| i).unwrap_or(s.len());
     format!("{}…", &s[..end])
+}
+
+fn generate_repo_map(root: &std::path::Path, max_depth: usize) -> String {
+    use walkdir::WalkDir;
+    let mut map = String::new();
+    let root_str = root.file_name().and_then(|n| n.to_str()).unwrap_or(".");
+    map.push_str(&format!("{}/\n", root_str));
+
+    fn is_noise(name: &str) -> bool {
+        let n = name.to_lowercase();
+        // Common build/cache artifacts
+        let noise_dirs = ["target", "node_modules", "dist", "build", "out", "debug", "release", ".git", ".cache", ".next", ".cargo", "vendor"];
+        if noise_dirs.iter().any(|&d| n == d) { return true; }
+        
+        // Long alphanumeric hash names (e.g. 3a5b6c...)
+        if name.len() > 20 && name.chars().all(|c| c.is_alphanumeric()) { return true; }
+        
+        false
+    }
+
+    let mut it = WalkDir::new(root)
+        .min_depth(1)
+        .max_depth(max_depth)
+        .sort_by(|a, b| {
+            let a_is_dir = a.file_type().is_dir();
+            let b_is_dir = b.file_type().is_dir();
+            if a_is_dir != b_is_dir {
+                // Directories first
+                b_is_dir.cmp(&a_is_dir)
+            } else {
+                a.file_name().cmp(b.file_name())
+            }
+        })
+        .into_iter()
+        .filter_entry(|e| !is_noise(e.file_name().to_str().unwrap_or("")))
+        .peekable();
+
+    let mut count_at_depth = std::collections::HashMap::new();
+
+    while let Some(Ok(entry)) = it.next() {
+        let depth = entry.depth();
+        let name = entry.file_name().to_string_lossy();
+        let is_dir = entry.file_type().is_dir();
+
+        // Count items at this depth for truncation logic
+        let count = count_at_depth.entry(depth).or_insert(0);
+        *count += 1;
+
+        if !is_dir && *count > 5 {
+            // Check if there are more items at this depth to show "and X more"
+            let mut more = 0;
+            while let Some(Ok(peek)) = it.peek() {
+                if peek.depth() == depth {
+                    more += 1;
+                    it.next();
+                } else {
+                    break;
+                }
+            }
+            
+            let mut indent = String::new();
+            for _ in 1..depth { indent.push_str("│   "); }
+            if more > 0 {
+                map.push_str(&format!("└── ... and {} more items\n", more));
+            }
+            continue;
+        }
+
+        let mut indent = String::new();
+        for _ in 1..depth {
+            indent.push_str("│   ");
+        }
+
+        // We can't easily know if it's the absolute last item without more complex lookahead,
+        // but ├── is a safe default for a compressed view.
+        let connector = "├── ";
+        map.push_str(&format!("{}{}{}\n", indent, connector, name));
+    }
+
+    map
 }
 
 // ── Markdown rendering ────────────────────────────────────────────────────────
@@ -937,24 +1038,167 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
             ExecBlock::WorkedFor(_) => {}
 
             ExecBlock::SystemMsg(msg) => {
+                let mut it = msg.lines().peekable();
+                let first_line = it.peek().cloned().unwrap_or_default();
+                let is_banner = first_line == "[BANNER]";
+                let is_treemap = first_line == "[TREEMAP]";
+                
+                // If it's the startup banner, only show it if no user messages have been sent yet.
+                if is_banner {
+                    let has_user_msgs = state.exec_log.iter().any(|b| matches!(b, ExecBlock::UserMessage(_)));
+                    if has_user_msgs {
+                        continue;
+                    }
+                }
+
                 lines.push(Line::default());
-                for line in msg.lines() {
+                if is_banner || is_treemap {
+                    it.next(); // skip marker
+                    let logo_colors = [
+                        Color::Rgb(0, 255, 255), // Turquoise gradient
+                        Color::Rgb(0, 220, 255),
+                        Color::Rgb(0, 190, 255),
+                        Color::Rgb(0, 160, 255),
+                        Color::Rgb(0, 130, 255),
+                        Color::Rgb(0, 100, 255),
+                    ];
+                    
+                    let banner_lines: Vec<String> = it.map(|s| s.to_string()).collect();
+                    let footer_line = banner_lines.iter().position(|l| l.contains("Did you know?")).unwrap_or(banner_lines.len());
+
+                    // 1. Raw String Padding: Rectangularize the logo part
+                    let mut padded_logo = Vec::new();
+                    let mut max_logo_chars = 0;
+                    if is_banner {
+                        let logo_count = 6.min(banner_lines.len()).min(footer_line);
+                        for i in 0..logo_count {
+                            let row = banner_lines[i].chars().take(54).collect::<String>().trim_end().to_string();
+                            let c = row.chars().count();
+                            if c > max_logo_chars { max_logo_chars = c; }
+                            padded_logo.push(row);
+                        }
+                        for row in &mut padded_logo {
+                            let needed = max_logo_chars.saturating_sub(row.chars().count());
+                            row.push_str(&" ".repeat(needed));
+                        }
+                    }
+
+                    // 2. Visual Width Calculation: Find maximum visual width of all content
+                    let mut max_visual_w = 51; // Minimum default width
+                    for (i, line) in banner_lines.iter().enumerate() {
+                        if i >= footer_line { break; }
+                        let text = if is_banner && i < padded_logo.len() {
+                             padded_logo[i].clone()
+                        } else if is_banner {
+                             line.chars().take(54).collect::<String>().trim_end().to_string()
+                        } else {
+                             line.trim_end().to_string()
+                        };
+                        let w = console::measure_text_width(&text);
+                        if w > max_visual_w { max_visual_w = w; }
+                    }
+
+                    // 3. Find the Maximum: Add buffer (MAX_WIDTH)
+                    let target_w = max_visual_w + 2; // 2 space buffer
+
+                    // Top border (Dynamic Width)
                     lines.push(Line::from(vec![
-                        Span::styled("* ", Style::default().fg(DIM)),
-                        Span::styled(line.to_string(), Style::default().fg(GREY)),
+                        Span::styled(format!(" ┌{}┐", "─".repeat(target_w + 2)), Style::default().fg(CHAT_BORDER))
                     ]));
+                    
+                    for (i, line) in banner_lines.iter().enumerate() {
+                        if i >= footer_line { break; }
+                        
+                        let mut row_spans = Vec::new();
+                        row_spans.push(Span::styled(" │ ", Style::default().fg(CHAT_BORDER)));
+
+                        let mut current_row_visual_w;
+
+                        if is_treemap {
+                            let text = line.trim_end();
+                            current_row_visual_w = console::measure_text_width(text);
+                            row_spans.push(Span::styled(text.to_string(), Style::default().fg(GREEN)));
+                        } else {
+                            // Banner logic (Logo/Meta)
+                            let content_text = if i < padded_logo.len() {
+                                padded_logo[i].clone()
+                            } else {
+                                line.chars().take(54).collect::<String>().trim_end().to_string()
+                            };
+                            
+                            if i < padded_logo.len() { // Logo
+                                let col = logo_colors.get(i).cloned().unwrap_or(GREY);
+                                row_spans.push(Span::styled(content_text.clone(), Style::default().fg(col).add_modifier(Modifier::BOLD)));
+                                current_row_visual_w = console::measure_text_width(&content_text);
+                            } else if i >= padded_logo.len() && i < footer_line { // Metadata
+                                let text = content_text.trim_start();
+                                let leading_spaces = content_text.chars().count() - text.chars().count();
+                                row_spans.push(Span::raw(" ".repeat(leading_spaces)));
+                                current_row_visual_w = leading_spaces;
+
+                                if text.starts_with("Welcome Back,") {
+                                    row_spans.push(Span::styled("Welcome Back, ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)));
+                                    let user_part = text.chars().skip(13).collect::<String>();
+                                    current_row_visual_w += 14 + console::measure_text_width(&user_part);
+                                    row_spans.push(Span::styled(user_part, Style::default().fg(CYAN).add_modifier(Modifier::BOLD)));
+                                } else if text.starts_with("Model") || text.starts_with("Mode") || text.starts_with("Session") {
+                                    let parts: Vec<&str> = text.splitn(2, ' ').collect();
+                                    row_spans.push(Span::styled(format!("{:<8}", parts[0]), Style::default().fg(DIM)));
+                                    current_row_visual_w += 8;
+                                    if parts.len() > 1 {
+                                        current_row_visual_w += console::measure_text_width(parts[1]);
+                                        row_spans.push(Span::styled(parts[1].to_string(), Style::default().add_modifier(Modifier::BOLD)));
+                                    }
+                                } else {
+                                    current_row_visual_w += console::measure_text_width(text);
+                                    row_spans.push(Span::styled(text.to_string(), Style::default().fg(FG)));
+                                }
+                            } else {
+                                current_row_visual_w = console::measure_text_width(&content_text);
+                                row_spans.push(Span::raw(content_text));
+                            }
+                        }
+
+                        // 4. Uniform Padding: Calculate and append exactly enough spaces
+                        let padding_needed = target_w.saturating_sub(current_row_visual_w);
+                        row_spans.push(Span::raw(" ".repeat(padding_needed)));
+
+                    // 5. Close the Box: Reset and append right border
+                        row_spans.push(Span::styled(" │", Style::default().fg(CHAT_BORDER)));
+                        lines.push(Line::from(row_spans));
+                    }
+
+                    // 6. Seal the Main Box First: Draw the bottom border exactly after metadata
+                    lines.push(Line::from(vec![
+                        Span::styled(format!(" └{}┘", "─".repeat(target_w + 2)), Style::default().fg(CHAT_BORDER))
+                    ]));
+
+                    // 7. External Render: Print the hook line after the box is physically closed
+                    // Column Alignment: The ' ' followed by '└' aligns it with the ' └' of the box above.
+                    if footer_line < banner_lines.len() {
+                        lines.push(Line::from(vec![
+                            Span::styled(format!(" {}", banner_lines[footer_line].trim()), Style::default().fg(GREY).add_modifier(Modifier::ITALIC))
+                        ]));
+                    }
+                } else {
+                    for line in msg.lines() {
+                        let mut spans = Vec::new();
+                        spans.push(Span::styled("* ", Style::default().fg(DIM)));
+                        spans.push(Span::styled(line.to_string(), Style::default().fg(GREY)));
+                        lines.push(Line::from(spans));
+                    }
                 }
             }
 
-            ExecBlock::RawText(text) => {
-                lines.push(Line::default());
-                for line in text.lines() {
-                    lines.push(Line::from(Span::styled(
-                        line.to_string(),
-                        Style::default().fg(FG),
-                    )));
-                }
-            }
+            // ExecBlock::RawText(text) => {
+            //     lines.push(Line::default());
+            //     for line in text.lines() {
+            //         lines.push(Line::from(Span::styled(
+            //             line.to_string(),
+            //             Style::default().fg(FG),
+            //         )));
+            //     }
+            // }
         }
     }
 
@@ -1257,14 +1501,14 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         }
     } else if state.input.is_empty() {
         Paragraph::new(Line::from(vec![
-            Span::styled(" > ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+            Span::styled(" ≻ ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
             Span::styled("Type your message or @path/to/file", Style::default().fg(DIM)),
         ]))
     } else {
         let (prompt_txt, prompt_col) = if state.history_idx.is_some() {
             (" ↑ ", ORANGE)
         } else {
-            (" > ", CYAN)
+            (" ≻ ", CYAN)
         };
         Paragraph::new(Line::from(vec![
             Span::styled(prompt_txt, Style::default().fg(prompt_col).add_modifier(Modifier::BOLD)),
@@ -1402,36 +1646,76 @@ pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
 }
 
 /// Derive a human-readable activity label from the currently running tool (if any).
-fn current_activity(state: &TuiState) -> &'static str {
+fn current_activity(state: &TuiState) -> String {
+    let elapsed = state.session_start.elapsed().as_secs_f32();
+    let tick = (elapsed * 10.0) as usize; // 10Hz base tick
+    let phrase_idx = (tick / 30) % 10;   // Rotate phrase every 3 seconds (30 ticks)
+
+    let thinking_phrases = [
+        "Computing causal vectors...",
+        "Navigating ternary matrices...",
+        "Weighing ontological states...",
+        "Resolving logic branches...",
+        "Distilling intent...",
+        "Evaluating outcome probabilities...",
+        "Synthesizing cognitive shards...",
+        "Mapping architecture dependencies...",
+        "Optimizing heuristic paths...",
+        "Synchronizing neural weights...",
+    ];
+
+    let reading_phrases = [
+        "Ingesting context...",
+        "Parsing structural data...",
+        "Scanning workspace geometry...",
+        "Resolving symbol references...",
+        "Analyzing byte streams...",
+        "Absorbing local state...",
+        "Decoding manifest layers...",
+        "Tracing source origins...",
+        "Indexing project memory...",
+        "Querying filesystem truth...",
+    ];
+
+    let writing_phrases = [
+        "Compiling output...",
+        "Forging response...",
+        "Committing logic to buffer...",
+        "Assembling content blocks...",
+        "Refining prose...",
+        "Emitting signal...",
+        "Hardening implementation...",
+        "Polishing syntax...",
+        "Projecting thought into text...",
+        "Finalizing assistant state...",
+    ];
+
     for block in state.exec_log.iter().rev() {
         if let ExecBlock::ToolUse { name, active, .. } = block {
             if *active {
                 let n = name.as_str();
-                return if n.contains("read") {
-                    "Reading…"
+                if n.contains("read") {
+                    return reading_phrases[phrase_idx].to_string();
                 } else if n.contains("write") || n.contains("edit") {
-                    "Writing…"
+                    return writing_phrases[phrase_idx].to_string();
                 } else if n.contains("bash") || n.contains("execute") {
-                    "Running…"
+                    return format!("Running {}...", n);
                 } else if n.contains("grep") || n.contains("search") {
-                    "Searching…"
+                    return format!("Searching {}...", n);
                 } else if n.contains("glob") || n.contains("scan") {
-                    "Scanning…"
+                    return format!("Scanning {}...", n);
                 } else if n.contains("web") || n.contains("fetch") {
-                    "Fetching…"
+                    return "Fetching...".to_string();
                 } else if n.contains("plan") {
-                    "Planning…"
+                    return "Planning...".to_string();
                 } else {
-                    "On it…"
+                    return "On it...".to_string();
                 };
             }
         }
     }
-    match (state.session_start.elapsed().as_secs() / 3) % 3 {
-        0 => "Thinking…",
-        1 => "Pondering…",
-        _ => "Pondering…", // can add more here
-    }
+    
+    thinking_phrases[phrase_idx].to_string()
 }
 
 const MIC_RED: Color = Color::Rgb(255, 60, 60);
@@ -1476,7 +1760,7 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 
         // Pulse the Dingir symbol when active
         let elapsed = state.session_start.elapsed().as_secs_f32();
-        let period = 2.0; 
+        let period = 2.0 / 1.5; // Sync with current_activity tick rate
         let t = (elapsed % period) / period;
         let intensity = ((t * std::f32::consts::PI).sin()).powf(2.0);
         let r = (80.0 + (0.0 - 80.0) * intensity) as u8;
@@ -1942,14 +2226,26 @@ impl TuiApp {
                                             state.cursor = state.input.chars().count();
                                             state.popup_selected = 0;
                                             let text = state.input_take();
-                                            submit_text = Some(text);
+                                            if text.trim() == "/treemap" {
+                                                let cwd = std::path::PathBuf::from(&state.cwd);
+                                                let map = generate_repo_map(&cwd, 2);
+                                                state.push_exec(ExecBlock::SystemMsg(format!("[TREEMAP]\n{}", map)));
+                                            } else {
+                                                submit_text = Some(text);
+                                            }
                                         }
                                     }
                                 }
                                 (KeyCode::Enter, KeyModifiers::NONE) => {
                                     let text = state.input_take();
                                     if !text.trim().is_empty() {
-                                        submit_text = Some(text);
+                                        if text.trim() == "/treemap" {
+                                            let cwd = std::path::PathBuf::from(&state.cwd);
+                                            let map = generate_repo_map(&cwd, 2);
+                                            state.push_exec(ExecBlock::SystemMsg(format!("[TREEMAP]\n{}", map)));
+                                        } else {
+                                            submit_text = Some(text);
+                                        }
                                     }
                                 }
 
@@ -2123,12 +2419,9 @@ impl TuiApp {
                         let mut state = self.state.lock().unwrap();
                         match ev {
                             AssistantEvent::TextDelta(delta) => {
-                                // Append directly to the AgentText block — renders on the next
-                                // draw call, giving real-time streaming appearance.
-                                match state.exec_log.back_mut() {
-                                    Some(ExecBlock::AgentText(ref mut s)) => s.push_str(&delta),
-                                    _ => state.exec_log.push_back(ExecBlock::AgentText(delta)),
-                                }
+                                // Flow incoming text into the typewriter buffer.
+                                // It will be drained character-by-character on Tick events.
+                                state.typewriter_buffer.push_str(&delta);
                             }
                             AssistantEvent::ToolUse { name, input, .. } => {
                                 let preview = tool_input_preview(&input);
@@ -2219,7 +2512,20 @@ impl TuiApp {
 
                     Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
                         // Tick fires at 100ms — redraws the screen (spinner, timer).
-                        // Text is appended directly on each TextDelta, so no work needed here.
+                        let mut state = self.state.lock().unwrap();
+                        
+                        // Typewriter effect: drain characters from the buffer into the active AgentText block.
+                        if !state.typewriter_buffer.is_empty() {
+                            // Take up to 10 characters per tick (100 chars/sec at 100ms ticks) for a smooth flow.
+                            let n = 10.min(state.typewriter_buffer.chars().count());
+                            let chars: String = state.typewriter_buffer.chars().take(n).collect();
+                            state.typewriter_buffer = state.typewriter_buffer.chars().skip(n).collect();
+                            
+                            match state.exec_log.back_mut() {
+                                Some(ExecBlock::AgentText(ref mut s)) => s.push_str(&chars),
+                                _ => state.exec_log.push_back(ExecBlock::AgentText(chars)),
+                            }
+                        }
                     }
                     Some(TuiEvent::Quit) => {
                         break;

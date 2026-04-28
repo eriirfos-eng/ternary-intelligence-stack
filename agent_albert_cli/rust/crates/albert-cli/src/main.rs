@@ -14,7 +14,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crossterm::execute;
-use dialoguer::{Select, Input, Confirm};
+use dialoguer::{Select, Input};
 use console::style;
 
 use api::{
@@ -22,7 +22,7 @@ use api::{
     InputMessage, MessageRequest, OutputContentBlock,
     StreamEvent as ApiStreamEvent, ToolChoice, ToolDefinition, ToolResultContentBlock,
 };
-use commands::{render_slash_command_help, slash_command_specs, SlashCommand};
+use commands::{render_slash_command_help, SlashCommand};
 use compat_harness::{extract_manifest, UpstreamPaths};
 use init::initialize_repo;
 use runtime::{
@@ -986,52 +986,16 @@ fn run_resume_command(
         | SlashCommand::Remember { .. }
         | SlashCommand::Recall { .. }
         | SlashCommand::Vault { .. }
-        | SlashCommand::Unknown(_) => Err("unsupported resumed slash command".into()),
+        | SlashCommand::Unknown(_)
+        | SlashCommand::Upgrade
+        | SlashCommand::TerminalSetup
+        | SlashCommand::SetupGithub
+        | SlashCommand::Settings
+        | SlashCommand::Recap
+        | SlashCommand::Treemap
+        | SlashCommand::SessionRecap => Err("unsupported resumed slash command".into()),
         &SlashCommand::Mcp { .. } => Err("cannot resume an /mcp command".into()),
     }
-}
-
-fn run_repl(
-    model: String,
-    allowed_tools: Option<AllowedToolSet>,
-    permission_mode: PermissionMode,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let _trusted = check_workspace_trust()?;
-    let mut cli = LiveCli::new(model, true, allowed_tools, permission_mode)?;
-    let mut editor = input::LineEditor::new("> ", slash_command_completion_candidates());
-    println!("{}", cli.startup_banner());
-
-    let mut prompter = CliPermissionPrompter::new(cli.permission_mode, true, None);
-
-    loop {
-        match editor.read_line()? {
-            input::ReadOutcome::Submit(input) => {
-                let trimmed = input.trim().to_string();
-                if trimmed.is_empty() {
-                    continue;
-                }
-                if matches!(trimmed.as_str(), "/exit" | "/quit") {
-                    cli.persist_session()?;
-                    break;
-                }
-                if let Some(command) = SlashCommand::parse(&trimmed) {
-                    if cli.handle_repl_command(command)? {
-                        cli.persist_session()?;
-                    }
-                    continue;
-                }
-                editor.push_history(input);
-                cli.runtime.run_turn(trimmed, Some(&mut prompter))?;
-            }
-            input::ReadOutcome::Cancel => {}
-            input::ReadOutcome::Exit => {
-                cli.persist_session()?;
-                break;
-            }
-        }
-    }
-
-    Ok(())
 }
 
 fn run_tui(
@@ -1056,33 +1020,14 @@ fn run_tui(
     let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd, permission_mode.as_str().to_string(), session_id);
     let tui_state = Arc::clone(&tui_app.state);
 
-    // Sync initial trust status to TUI
+    // Sync initial state and show banner
     {
         let mut state = tui_state.lock().unwrap();
         state.trusted = trusted;
+        state.push_exec(tui::ExecBlock::SystemMsg(cli.startup_banner()));
     }
     let tui_event_tx = tui_app.event_tx.clone();
     let cancel_flag = Arc::clone(&tui_app.cancel_flag);
-
-    // Show ASCII splash + model/permission line on startup
-    {
-        let mut state = tui_state.lock().unwrap();
-        let splash = concat!(
-            "  ██████╗  ██╗      ██████╗  ███████╗ ██████╗  ████████╗\n",
-            "  ██╔══██╗ ██║     ██╔══██╗ ██╔════╝ ██╔══██╗ ╚══██╔══╝\n",
-            "  ███████║ ██║     ██████╔╝ █████╗   ██████╔╝    ██║   \n",
-            "  ██╔══██║ ██║     ██╔══██╗ ██╔══╝   ██╔══██╗    ██║   \n",
-            "  ██║  ██║ ███████╗██████╔╝ ███████╗ ██║  ██║    ██║   \n",
-            "  ╚═╝  ╚═╝ ╚══════╝╚═════╝  ╚══════╝ ╚═╝  ╚═╝    ╚═╝   "
-        );
-        state.push_exec(tui::ExecBlock::RawText(splash.to_string()));
-        state.push_exec(tui::ExecBlock::SystemMsg(format!(
-            "v{}  ·  {}  ·  {}  ·  type /help for commands",
-            env!("CARGO_PKG_VERSION"),
-            cli.model,
-            cli.permission_mode.as_str(),
-        )));
-    }
 
     // Spawn TUI thread — it owns its own tokio runtime + terminal
     let tui_thread = std::thread::spawn(move || tui_app.run());
@@ -1268,6 +1213,55 @@ fn run_tui(
                          and fix them autonomously. End with 'VERIFICATION COMPLETE'."
                         .to_string(),
                     );
+                    true
+                }
+                commands::SlashCommand::Recap => {
+                    agent_override = Some(
+                        "Please provide a concise summary of the work we have done in this active session so far. \
+                         List key changes, files modified, and decisions made in a 'Session Recap' format."
+                        .to_string(),
+                    );
+                    true
+                }
+                commands::SlashCommand::SessionRecap => {
+                    match find_previous_session(&cli.session.id) {
+                        Ok(Some(prev)) => {
+                            match runtime::Session::load_from_path(&prev.path) {
+                                Ok(prev_session) => {
+                                    // Extract some context from previous session to feed the agent
+                                    let mut summary_data = String::new();
+                                    for msg in prev_session.messages.iter().rev().take(10).rev() {
+                                        for block in &msg.blocks {
+                                            if let runtime::ContentBlock::Text { text } = block {
+                                                summary_data.push_str(text);
+                                                summary_data.push('\n');
+                                            }
+                                        }
+                                    }
+                                    let truncated = truncate_for_prompt(&summary_data, 2000);
+                                    agent_override = Some(format!(
+                                        "I am pulling in context from the previous session (ID: {}). \
+                                         Here is the trailing context from that session:\n\n{}\n\n\
+                                         Please provide a concise recap of what was accomplished in that session \
+                                         so I am up to speed, then ask how we should continue.",
+                                        prev.id, truncated
+                                    ));
+                                }
+                                Err(e) => {
+                                    let mut st = tui_state.lock().unwrap();
+                                    st.push_exec(tui::ExecBlock::SystemMsg(format!("session-recap: failed to load previous session — {e}")));
+                                }
+                            }
+                        }
+                        Ok(None) => {
+                            let mut st = tui_state.lock().unwrap();
+                            st.push_exec(tui::ExecBlock::SystemMsg("session-recap: no previous sessions found".to_string()));
+                        }
+                        Err(e) => {
+                            let mut st = tui_state.lock().unwrap();
+                            st.push_exec(tui::ExecBlock::SystemMsg(format!("session-recap: error finding session — {e}")));
+                        }
+                    }
                     true
                 }
                 commands::SlashCommand::CodeReview { files } => {
@@ -1660,6 +1654,7 @@ struct ManagedSessionSummary {
 }
 
 struct LiveCli {
+    user_name: String,
     model: String,
     allowed_tools: Option<AllowedToolSet>,
     permission_mode: PermissionMode,
@@ -1679,6 +1674,27 @@ impl LiveCli {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let system_prompt = build_system_prompt()?;
         let session = create_managed_session_handle()?;
+
+        // Attempt to load user_name from ~/.config/albert/config.toml
+        let mut user_name = "Developer".to_string();
+        if let Some(config_home) = dirs::config_dir() {
+            let config_path = config_home.join("albert/config.toml");
+            if let Ok(content) = fs::read_to_string(config_path) {
+                for line in content.lines() {
+                    if let Some(rest) = line.trim().strip_prefix("user_name =") {
+                        user_name = rest.trim().trim_matches('"').trim_matches('\'').to_string();
+                        break;
+                    }
+                }
+            }
+        }
+        if user_name == "Developer" {
+            // Fallback to system user
+            user_name = env::var("USER")
+                .or_else(|_| env::var("USERNAME"))
+                .unwrap_or_else(|_| "Developer".to_string());
+        }
+
         let mcp_servers = load_mcp_servers();
         let mcp_manager = Arc::new(Mutex::new(McpServerManager::from_servers(&mcp_servers)));
         let (event_tx, _) = tokio::sync::broadcast::channel::<AssistantEvent>(256);
@@ -1693,6 +1709,7 @@ impl LiveCli {
             event_tx.clone(),
         )?;
         let cli = Self {
+            user_name,
             model,
             allowed_tools,
             permission_mode,
@@ -1707,31 +1724,66 @@ impl LiveCli {
     }
 
     fn startup_banner(&self) -> String {
-        let cwd = env::current_dir().map_or_else(
-            |_| "<unknown>".to_string(),
-            |path| path.display().to_string(),
-        );
-        format!(
-            "
-  █████╗  ██╗     ██████╗ ███████╗██████╗ ████████╗
-  ██╔══██╗ ██║     ██╔══██╗██╔════╝██╔══██╗╚══██╔══╝
-  ███████║ ██║     ██████╔╝█████╗  ██████╔╝   ██║   
-  ██╔══██║ ██║     ██╔══██╗██╔══╝  ██╔══██╗   ██║   
-  ██║  ██║ ███████╗██████╔╝███████╗██║  ██║   ██║   
-  ╚═╝  ╚═╝ ╚══════╝╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   
-     ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+        let logo = [
+            "█████╗  ██╗     ██████╗ ███████╗██████╗ ████████╗",
+            "██╔══██╗ ██║     ██╔══██╗██╔════╝██╔══██╗╚══██╔══╝",
+            "███████║ ██║     ██████╔╝█████╗  ██████╔╝   ██║   ",
+            "██╔══██║ ██║     ██╔══██╗██╔══╝  ██╔══██╗   ██║   ",
+            "██║  ██║ ███████╗██████╔╝███████╗██║  ██║   ██║   ",
+            "╚═╝  ╚═╝ ╚══════╝╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ",
+        ];
 
-  Model            {}
-  Permissions      {}
-  Directory        {}
-  Session          {}
+        let dyk_tips = [
+            "You can view the repository structure anytime with /treemap",
+            "Use /compact to prune old history and save tokens",
+            "Hold SHIFT to use your terminal's native selection",
+            "Albert can handle voice input with Ctrl+Space",
+            "Slash commands like /commit can automate your workflow",
+            "Use /memory to see what Albert remembers about your project",
+            "The /plan command helps decompose complex tasks",
+            "You can export your conversation to Markdown with /export",
+            "Albert supports multiple LLM providers via /model",
+            "Test-driven development is supported via the /tdd loop",
+            "Use /bughunter to proactively scan for issues",
+            "The /refactor command helps improve code structure",
+            "Ctrl+L scrolls the TUI conversation back to the bottom",
+            "Use /session list to manage and resume previous chats",
+            "Albert can scaffold project documentation with /init",
+            "The /diff command shows your current uncommitted changes",
+            "You can interrupt Albert at any time by pressing Esc",
+            "Type @path/to/file to quickly add files to context",
+            "Albert's UI is built with Rust and Ratatui for speed",
+            "Use /permissions to switch between security levels",
+        ];
+        
+        let tip_idx = self.session.id.chars().map(|c| c as usize).sum::<usize>() % dyk_tips.len();
+        let selected_tip = dyk_tips[tip_idx];
 
-  Type /help for commands · Shift+Enter for newline",
-            self.model,
-            self.permission_mode.as_str(),
-            cwd,
-            self.session.id,
-        )
+        let meta_lines = [
+            "".to_string(), // Spacer
+            format!("Welcome Back, {}", self.user_name),
+            format!("Model   {}", self.model),
+            format!("Mode    {}", self.permission_mode.as_str()),
+            format!("Session {}", &self.session.id),
+        ];
+
+        let total_height = logo.len() + meta_lines.len();
+
+        let mut output = String::new();
+        output.push_str("[BANNER]\n");
+
+        for i in 0..total_height {
+            let line = if i < logo.len() {
+                logo[i].to_string()
+            } else {
+                meta_lines[i - logo.len()].clone()
+            };
+
+            output.push_str(&format!("{:<54}\n", line));
+        }
+
+        output.push_str(&format!("└─💡 Did you know? Use /help for commands, or {}", selected_tip));
+        output
     }
 
     fn run_turn(&mut self, input: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -2059,6 +2111,23 @@ impl LiveCli {
                 self.run_debug_tool_call()?;
                 false
             }
+            SlashCommand::Upgrade => {
+                println!("Checking for updates...");
+                println!("No updates available at this time.");
+                false
+            }
+            SlashCommand::TerminalSetup => {
+                println!("Terminal setup: Theme and keybinding configuration coming soon.");
+                false
+            }
+            SlashCommand::SetupGithub => {
+                println!("GitHub Auth: Configuration for /pr and /issue integration coming soon.");
+                false
+            }
+            SlashCommand::Settings => {
+                println!("Settings: Interactive configuration menu coming soon.");
+                false
+            }
             SlashCommand::Compact => {
                 self.compact()?;
                 false
@@ -2087,6 +2156,11 @@ impl LiveCli {
                 run_init()?;
                 false
             }
+            SlashCommand::Treemap => {
+                let cwd = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+                println!("{}", generate_repo_map(&cwd, 3));
+                false
+            }
             SlashCommand::Diff => {
                 Self::print_diff()?;
                 false
@@ -2113,7 +2187,9 @@ impl LiveCli {
             | SlashCommand::BuildFix
             | SlashCommand::Aside { .. }
             | SlashCommand::Learn
-            | SlashCommand::Refactor { .. } => {
+            | SlashCommand::Refactor { .. }
+            | SlashCommand::Recap
+            | SlashCommand::SessionRecap => {
                 // Handled as agent overrides in the main event loop
                 false
             }
@@ -4026,15 +4102,6 @@ fn collect_tool_results(summary: &runtime::TurnSummary) -> serde_json::Value {
     )
 }
 
-fn slash_command_completion_candidates() -> Vec<String> {
-    let mut candidates: Vec<String> = slash_command_specs()
-        .iter()
-        .map(|spec| format!("/{}", spec.name))
-        .collect();
-    candidates.sort();
-    candidates
-}
-
 fn truncate_for_prompt(value: &str, max_chars: usize) -> String {
     if value.len() <= max_chars {
         return value.to_string();
@@ -4328,3 +4395,59 @@ fn extract_tool_display_text(raw: &str) -> String {
         trimmed.to_string()
     }
 }
+
+fn generate_repo_map(root: &Path, max_depth: usize) -> String {
+    use walkdir::WalkDir;
+    let mut map = String::new();
+    let root_str = root.file_name().and_then(|n| n.to_str()).unwrap_or(".");
+    map.push_str(&format!("{}/\n", root_str));
+
+    let mut entries: Vec<_> = WalkDir::new(root)
+        .min_depth(1)
+        .max_depth(max_depth)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy();
+            !name.starts_with('.') && name != "target" && name != "node_modules"
+        })
+        .collect();
+
+    entries.sort_by(|a, b| a.path().cmp(b.path()));
+
+    for (i, entry) in entries.iter().enumerate() {
+        let depth = entry.depth();
+        let name = entry.file_name().to_string_lossy();
+        
+        // Simple ASCII tree logic
+        let mut indent = String::new();
+        if depth > 1 {
+            indent.push_str("│   ");
+        }
+        
+        let is_last = i == entries.len() - 1 || (i < entries.len() - 1 && entries[i+1].depth() < depth);
+        let connector = if is_last { "└── " } else { "├── " };
+        
+        map.push_str(&format!("{}{}{}\n", indent, connector, name));
+    }
+
+    map.lines().take(15).collect::<Vec<_>>().join("\n")
+}
+
+fn find_previous_session(current_id: &str) -> Result<Option<SessionHandle>, Box<dyn std::error::Error>> {
+    let mut sessions = list_managed_sessions()?;
+    // Sort by modified time descending
+    sessions.sort_by(|a, b| b.modified_epoch_secs.cmp(&a.modified_epoch_secs));
+    
+    // Find the first one that is NOT the current one
+    for s in sessions {
+        if s.id != current_id {
+            return Ok(Some(SessionHandle {
+                id: s.id.clone(),
+                path: sessions_dir()?.join(format!("{}.json", s.id)),
+            }));
+        }
+    }
+    Ok(None)
+}
+

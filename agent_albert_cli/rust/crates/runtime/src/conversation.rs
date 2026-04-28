@@ -263,7 +263,7 @@ where
 
                     let result_message = match permission_outcome {
                         PermissionOutcome::Allow | PermissionOutcome::AllowWithEdits { .. } => {
-                            let (effective_input, is_human_edit) = match permission_outcome {
+                            let (effective_input, _is_human_edit) = match permission_outcome {
                                 PermissionOutcome::AllowWithEdits { new_input } => (new_input, true),
                                 _ => (input, false),
                             };
