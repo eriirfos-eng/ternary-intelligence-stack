@@ -1349,6 +1349,13 @@ fn run_tui(
 
                 let should_persist = cli.handle_repl_command(command);
 
+                // Pause so the user can read the output before the TUI redraws over it
+                use std::io::Write;
+                println!("\n[Press Enter to return to Albert...]");
+                let _ = std::io::stdout().flush();
+                let mut discard = String::new();
+                let _ = std::io::stdin().read_line(&mut discard);
+
                 let _ = tui_event_tx.send(tui::TuiEvent::Resume);
 
                 match should_persist {
