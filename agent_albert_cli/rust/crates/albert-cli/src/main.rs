@@ -1560,7 +1560,7 @@ fn run_tui(
                             let total = all.len();
                             if total > 0 {
                                 let shown: Vec<String> = all.into_iter().take(5).collect();
-                                new_log.push_back(tui::ExecBlock::ToolOutput { lines: shown, total });
+                                new_log.push_back(tui::ExecBlock::ToolOutput { lines: shown, total, active: true });
                             }
                         }
                     } else {
