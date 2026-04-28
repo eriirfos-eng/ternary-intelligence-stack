@@ -9,6 +9,7 @@
     - Fixed `TranslatorView` auth bridge to also use sanitized keys.
 
 ### 🎨 TUI & UX Refinements
+- **Slash Command Pause**: Fixed a bug where terminal-based slash commands (like `/status`, `/cost`, `/clear`, `/version`) would print to stdout and immediately be overwritten by the TUI redraw, appearing as if "nothing happened". The TUI now pauses and waits for `Enter` so you can read the output before returning to the chat window.
 - **Dingir Sigil (𒀭)**: Restored as the primary brand sigil and pulsing "Energy Core" status indicator.
 - **Subtle HUD**: Refined the absolute bottom footer (Model, CWD, Permissions) into a dimmed "sidenote" to prioritize the Tips row.
 - **Compact Paste**: Implemented a "Pasted Text" badge for inputs >= 3 lines or > 200 characters, preventing buffer bloat while preserving the payload.
