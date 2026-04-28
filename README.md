@@ -44,7 +44,6 @@ Ternlang provides a machine-readable path to human escalation instead of a force
 )** —  terminal-native, model-agnostic AI agent built in pure Rust
 
 → **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
----
 
 ---
 
