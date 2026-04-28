@@ -17,20 +17,16 @@ Ternlang is a systems programming language, compiler, and high-performance infer
 
 Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
+The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm), the zero state therefore is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
+Ternlang provides a machine-readable path to human escalation instead of a forced binary guess.
 ---
-
 ## Technical Pillars
 
 - **Deterministic Uncertainty**: Ternlang's `trit` (affirm/tend/reject) provides a first-class routing mechanism for **Uncertainty-Aware AI**, eliminating "hallucinated confidence."
 - **Sparsity-Aware Inference Engine**: Native `@sparseskip` optimization achieves up to 122x throughput gains by bypassing zero-signal (`tend`) weights at the hardware primitive level.
 - **Explainable AI (XAI) by Design**: Every decision is auditable and traceable, fulfilling **EU AI Act Articles 13, 14, and 15** mandates for algorithmic transparency and human oversight.
 - **Post-Binary Systems Architecture**: A full-stack ecosystem including a custom **Instruction Set Architecture (ISA)**, triadic networking, and memory-efficient ternary encoding.
-
-The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm).
-The zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
-
-Ternlang provides a machine-readable path to human escalation instead of a forced binary guess. This is the foundation for **Post-Binary Intelligence**.
 
 ---
 ## Full Documentation
@@ -47,18 +43,8 @@ Ternlang provides a machine-readable path to human escalation instead of a force
 → **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli
 )** —  terminal-native, model-agnostic AI agent built in pure Rust
 
-
+→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 ---
-
-## Team
-
-The Ternary Intelligence Stack is built by a core team of three co-founders from **RFI-IRFOS**, Graz:
-
-*   **Simeon Kepp**: Head of Research & Systems Architect.
-*   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
-*   **Zabih Karimi**: Principal Network & ML Engineer.
-
-**[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
 ---
 
@@ -235,6 +221,15 @@ After purchasing: visit **[ternlang.com/activate](https://ternlang.com/activate)
 
 Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
 
+---
+
+## Team
+
+The Ternary Intelligence Stack is built by a core team of three co-founders from **RFI-IRFOS**, Graz:
+
+*   **Simeon Kepp**: Head of Research & Systems Architect.
+*   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
+*   **Zabih Karimi**: Principal Network & ML Engineer.
 ---
 
 <div align="center">
