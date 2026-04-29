@@ -19,7 +19,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version     = "1.2.1"
+version     = "1.2.3"
 edition     = "2024"
 license     = "LGPL-3.0-or-later"
 repository  = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
@@ -34,17 +34,17 @@ keywords    = ["ternary", "trit", "balanced-ternary", "vm", "compiler"]
 categories  = ["compilers", "science"]
 
 [workspace.dependencies]
-ternlang-core    = { path = "compiler/legacy_shim/ternlang-core",    version = "1.2.1" }
-ternlang-codegen = { path = "compiler/legacy_shim/ternlang-codegen", version = "1.2.1" }
-ternlang-runtime = { path = "compiler/legacy_shim/ternlang-runtime", version = "1.2.1" }
-ternlang-cli     = { path = "compiler/legacy_shim/ternlang-cli",     version = "1.2.1" }
-ternlang-ml      = { path = "ternlang-ml",      version = "1.2.1" }
-ternlang-compress = { path = "ternlang-compress", version = "1.2.1" }
-ternlang-api     = { path = "ternlang-api",     version = "1.2.1" }
-ternlang-test    = { path = "ternlang-test",    version = "1.2.1" }
-ternlang-mcp     = { path = "ternlang-mcp",     version = "1.2.1" }
-ternlang-hdl     = { path = "ternlang-hdl",     version = "1.2.1" }
-ternlang-lsp     = { path = "ternlang-lsp",     version = "1.2.1" }
-ternpkg          = { path = "ternpkg",          version = "1.2.1" }
-ternlang-compat  = { path = "ternlang-compat",  version = "1.2.1" }
-ternlang-moe     = { path = "ternlang-moe",     version = "1.2.1" }
+ternlang-core    = { path = "compiler/legacy_shim/ternlang-core",    version = "1.2.3" }
+ternlang-codegen = { path = "compiler/legacy_shim/ternlang-codegen", version = "1.2.3" }
+ternlang-runtime = { path = "compiler/legacy_shim/ternlang-runtime", version = "1.2.3" }
+ternlang-cli     = { path = "compiler/legacy_shim/ternlang-cli",     version = "1.2.3" }
+ternlang-ml      = { path = "ternlang-ml",      version = "1.2.3" }
+ternlang-compress = { path = "ternlang-compress", version = "1.2.3" }
+ternlang-api     = { path = "ternlang-api",     version = "1.2.3" }
+ternlang-test    = { path = "ternlang-test",    version = "1.2.3" }
+ternlang-mcp     = { path = "ternlang-mcp",     version = "1.2.3" }
+ternlang-hdl     = { path = "ternlang-hdl",     version = "1.2.3" }
+ternlang-lsp     = { path = "ternlang-lsp",     version = "1.2.3" }
+ternpkg          = { path = "ternpkg",          version = "1.2.3" }
+ternlang-compat  = { path = "ternlang-compat",  version = "1.2.3" }
+ternlang-moe     = { path = "ternlang-moe",     version = "1.2.3" }
