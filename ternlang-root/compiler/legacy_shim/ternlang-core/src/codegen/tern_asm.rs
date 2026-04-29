@@ -564,6 +564,16 @@ impl TernAsmEmitter {
                 r
             }
 
+            Expr::Slice { object, start, end, stride } => {
+                let obj = self.emit_expr(object, ra);
+                let st = self.emit_expr(start, ra);
+                let en = self.emit_expr(end, ra);
+                let sd = self.emit_expr(stride, ra);
+                let r = ra.scratch();
+                self.emit(&format!("tview {}, {}, {}, {}, {} ; create view", reg(r), reg(obj), reg(st), reg(en), reg(sd)));
+                r
+            }
+
             Expr::Propagate { expr } => {
                 let src = self.emit_expr(expr, ra);
                 let lbl = self.fresh_label("prop_ok");

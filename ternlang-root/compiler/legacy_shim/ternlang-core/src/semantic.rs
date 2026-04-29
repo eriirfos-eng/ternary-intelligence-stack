@@ -501,6 +501,15 @@ impl SemanticAnalyzer {
                 self.infer_expr_type(col)?;
                 Ok(Type::Trit)
             }
+
+            Expr::Slice { object, start, end, stride } => {
+                self.infer_expr_type(object)?;
+                self.infer_expr_type(start)?;
+                self.infer_expr_type(end)?;
+                self.infer_expr_type(stride)?;
+                // Returns a 1D view (TensorView is treated as TensorRef in types)
+                Ok(Type::TritTensor { dims: vec![0] })
+            }
         }
     }
 

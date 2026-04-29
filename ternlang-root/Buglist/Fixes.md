@@ -4,6 +4,19 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 ---
 
+## 2026-04-29 — [EXATERN-SIMD + ZERO-COPY] (v1.3.0 pre-release)
+
+**Diagnosis:** To achieve "Nation-State Scale" performance, the BET-VM required a transition from "Byte-per-Trit" emulation to hardware-aligned vectorized execution. Memory bandwidth was identified as a primary bottleneck for large foundation models.
+
+**Fix:**
+- **SIMD Core**: Implemented 5-trit-per-byte packing (99.06% efficiency). Added `packed_add`, `packed_neg`, and `packed_consensus` backed by pre-computed $243 \times 243$ lookup tables. Introduced opcodes `0x50` (TPACK), `0x51` (TUNPACK), `0x52` (TV_ADD), `0x53` (TV_NEG), and `0x54` (TV_CON).
+- **Zero-Copy Architecture**: Implemented `Value::TensorView` and `0x55` (TVIEW) opcode, enabling nested slicing with absolute offset/stride calculation without copying data.
+- **Register Binding**: Implemented `0x42` (TBIND) to link VM registers to memory views. Updated `Tload` and `Tset` to support high-speed in-place updates through bound registers.
+- **Compiler/Parser**: Added `packed trit[N]` type and `tensor[start..end; stride]` slicing syntax. Updated `betbc.rs` to emit SIMD builtins and `TVIEW` logic.
+**Status:** IMPLEMENTED and VERIFIED. (Pending v1.3.0 crate publication).
+
+---
+
 ## 2026-04-29 — [COMP-TENSOR-001 + VM-STRUCT-001] (v1.2.1 release)
 
 **Diagnosis:** Two major architectural bottlenecks identified:

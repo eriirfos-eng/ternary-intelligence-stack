@@ -31,6 +31,9 @@ pub enum Token {
     #[token("sparseskip", priority = 3)]
     SparseSkip,
 
+    #[token("packed", priority = 3)]
+    Packed,
+
 
     // Standard Keywords
     #[token("if", priority = 3)]
@@ -194,6 +197,9 @@ pub enum Token {
 
     #[token("->")]
     Arrow,
+
+    #[token("..")]
+    Range,
 
     #[token(".")]
     Dot,

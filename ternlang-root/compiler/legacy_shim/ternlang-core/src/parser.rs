@@ -264,16 +264,32 @@ impl<'a> Parser<'a> {
                 }
                 Token::LBracket => {
                     self.next_token()?; // consume `[`
-                    let row = self.parse_expr()?;
-                    if let Ok(Token::Comma) = self.peek_token() {
+                    let row_or_start = self.parse_expr()?;
+                    if let Ok(Token::Range) = self.peek_token() {
+                        self.next_token()?; // consume `..`
+                        let end = self.parse_expr()?;
+                        let stride = if let Ok(Token::Semicolon) = self.peek_token() {
+                            self.next_token()?;
+                            self.parse_expr()?
+                        } else {
+                            Expr::IntLiteral(1)
+                        };
+                        self.expect(Token::RBracket)?;
+                        expr = Expr::Slice {
+                            object: Box::new(expr),
+                            start: Box::new(row_or_start),
+                            end: Box::new(end),
+                            stride: Box::new(stride),
+                        };
+                    } else if let Ok(Token::Comma) = self.peek_token() {
                         self.next_token()?; // consume `,`
                         let col = self.parse_expr()?;
                         self.expect(Token::RBracket)?;
-                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(col) };
+                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row_or_start), col: Box::new(col) };
                     } else {
                         self.expect(Token::RBracket)?;
                         // Single-index access: sentinel col=-1 signals flat indexing in VM
-                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row), col: Box::new(Expr::IntLiteral(-1)) };
+                        expr = Expr::Index { object: Box::new(expr), row: Box::new(row_or_start), col: Box::new(Expr::IntLiteral(-1)) };
                     }
                 }
                 Token::UncertainBranch => {
@@ -772,6 +788,21 @@ impl<'a> Parser<'a> {
     fn parse_type(&mut self) -> Result<Type, ParseError> {
         let token = self.next_token()?;
         match token {
+            Token::SparseSkip => Ok(Type::Trit), // skip as marker
+            Token::Packed     => {
+                self.expect(Token::TritType)?;
+                if let Ok(Token::LBracket) = self.peek_token() {
+                    self.next_token()?;
+                    let dim = if let Ok(Token::Int(n)) = self.peek_token() {
+                        self.next_token()?;
+                        n as usize
+                    } else { 0 };
+                    self.expect(Token::RBracket)?;
+                    Ok(Type::PackedTritTensor { dims: vec![dim] })
+                } else {
+                    Ok(Type::PackedTritTensor { dims: vec![0] })
+                }
+            }
             Token::TritType   => {
                 if let Ok(Token::LBracket) = self.peek_token() {
                     self.next_token()?;
