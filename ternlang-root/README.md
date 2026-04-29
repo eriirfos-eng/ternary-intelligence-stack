@@ -24,13 +24,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 We are a core team of three co-founders overseeing a international Team of 10 Members from our base in Graz, Austria, working at the intersection of computer science, machine learning, and international relations. We believe that Europe's path to technological sovereignty lies in leapfrogging the binary limitations of current AI hyperscalers.
 
-**Ternlang adds the third state.** By representing uncertainty as a first-class citizen, we enable AI systems that reason with causal transparency and ontological integrity.
-
-**[Meet the Team in LEADERSHIP.md](../LEADERSHIP.md)**
-
-Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either make a confident inference or return null.
-
-Ternlang adds the third state.
+Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either make a confident inference or return null. **Ternlang adds the third state.** By representing uncertainty as a first-class citizen, we enable AI systems that reason with causal transparency and ontological integrity.
 
 | Trit | Name | What it means |
 |------|------|---------------|
@@ -38,12 +32,11 @@ Ternlang adds the third state.
 | ` 0` | **tend** | Insufficient data. Gather more before acting. |
 | `+1` | **affirm** | Clear positive signal. Proceed. |
 
-## The `tend` state is not indecision. It is a **first-class routing instruction** — a computational directive to remain in deliberation until evidence crosses a threshold. This makes ternlang the natural foundation for AI agents that must reason honestly under uncertainty.
----
 → **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
 
 → **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress developer dash
 
+→ **[Meet the Team in LEADERSHIP.md](../LEADERSHIP.md)**
 
 ## What's in This Repository
 
