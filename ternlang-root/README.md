@@ -36,7 +36,7 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 
 → **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress developer dash
 
-→ **[Meet the Team in LEADERSHIP.md](../LEADERSHIP.md)**
+→ **[Team](../LEADERSHIP.md)** - Meet the Team
 
 ## What's in This Repository
 
