@@ -2749,7 +2749,7 @@ User: {}\n\nAssistant: {}",
         io::stdout().flush()?;
         let mut api_key = String::new();
         io::stdin().read_line(&mut api_key)?;
-        let api_key = api_key.trim().to_string();
+        let api_key = api_key.trim().trim_matches(|c| c == '\n' || c == '\r').to_string();
 
         if api_key.is_empty() {
             println!("Error: API Key cannot be empty.");

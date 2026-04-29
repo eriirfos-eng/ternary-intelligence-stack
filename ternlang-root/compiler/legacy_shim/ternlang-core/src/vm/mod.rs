@@ -94,6 +94,7 @@ pub enum Value {
     String(String),
     TensorRef(usize),
     AgentRef(usize, Option<String>),
+    Struct(std::collections::HashMap<String, Value>),
 }
 
 impl Default for Value {
@@ -349,8 +350,8 @@ impl BetVm {
                     self.stack.push(Value::Trit(result));
                 }
                 0x0f => { // Talloc (trit tensor)
-                    let rows = self.read_u16()? as usize;
-                    let cols = self.read_u16()? as usize;
+                    let rows = self.read_u32()? as usize;
+                    let cols = self.read_u32()? as usize;
                     let size = rows * cols;
                     let idx = self.tensors.len();
                     self.tensors.push(TensorInstance {
@@ -361,8 +362,8 @@ impl BetVm {
                     self.stack.push(Value::TensorRef(idx));
                 }
                 0x3c => { // Talloc_Int (int tensor)
-                    let rows = self.read_u16()? as usize;
-                    let cols = self.read_u16()? as usize;
+                    let rows = self.read_u32()? as usize;
+                    let cols = self.read_u32()? as usize;
                     let size = rows * cols;
                     let idx = self.tensors.len();
                     self.tensors.push(TensorInstance {
@@ -373,8 +374,8 @@ impl BetVm {
                     self.stack.push(Value::TensorRef(idx));
                 }
                 0x3d => { // Talloc_Float (float tensor)
-                    let rows = self.read_u16()? as usize;
-                    let cols = self.read_u16()? as usize;
+                    let rows = self.read_u32()? as usize;
+                    let cols = self.read_u32()? as usize;
                     let size = rows * cols;
                     let idx = self.tensors.len();
                     self.tensors.push(TensorInstance {
@@ -631,6 +632,7 @@ impl BetVm {
                         Value::String(s) => s.clone(),
                         Value::TensorRef(idx) => format!("TensorRef({})", idx),
                         Value::AgentRef(idx, addr) => format!("AgentRef({}, {:?})", idx, addr),
+                        Value::Struct(fields) => format!("Struct({:?})", fields),
                     };
                     println!("{}", line);
                     self.print_log.push(line);
@@ -992,6 +994,32 @@ impl BetVm {
                         return Err(VmError::TypeMismatch { expected: "TensorRef, TensorRef".into(), found: "Unknown".into() });
                     }
                 }
+                0x40 => { // Tstruct
+                    let num_fields = self.read_u8()? as usize;
+                    let mut fields = std::collections::HashMap::new();
+                    for _ in 0..num_fields {
+                        let name_len = self.read_u8()? as usize;
+                        let mut name_bytes = vec![0u8; name_len];
+                        for i in 0..name_len { name_bytes[i] = self.read_u8()?; }
+                        let name = String::from_utf8(name_bytes).unwrap();
+                        let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                        fields.insert(name, val);
+                    }
+                    self.stack.push(Value::Struct(fields));
+                }
+                0x41 => { // Tfield
+                    let name_len = self.read_u8()? as usize;
+                    let mut name_bytes = vec![0u8; name_len];
+                    for i in 0..name_len { name_bytes[i] = self.read_u8()?; }
+                    let name = String::from_utf8(name_bytes).unwrap();
+                    let obj = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let Value::Struct(fields) = obj {
+                        let val = fields.get(&name).cloned().unwrap_or_default();
+                        self.stack.push(val);
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "Struct".into(), found: format!("{:?}", obj) });
+                    }
+                }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
             }
@@ -1010,6 +1038,16 @@ impl BetVm {
         if self.pc + 1 >= self.code.len() { return Err(VmError::PcOutOfBounds(self.pc)); }
         let val = u16::from_le_bytes([self.code[self.pc], self.code[self.pc + 1]]);
         self.pc += 2;
+        Ok(val)
+    }
+
+    fn read_u32(&mut self) -> Result<u32, VmError> {
+        if self.pc + 3 >= self.code.len() { return Err(VmError::PcOutOfBounds(self.pc)); }
+        let val = u32::from_le_bytes([
+            self.code[self.pc], self.code[self.pc + 1],
+            self.code[self.pc + 2], self.code[self.pc + 3]
+        ]);
+        self.pc += 4;
         Ok(val)
     }
 }

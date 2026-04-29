@@ -630,6 +630,7 @@ fn format_value(val: &Value) -> String {
         Value::TensorRef(r) => format!("tensor@{}", r),
         Value::AgentRef(a, _) => format!("agent:{}", a),
         Value::String(s)    => format!("{:?}", s),
+        Value::Struct(f)    => format!("struct{{{:?}}}", f),
     }
 }
 
@@ -759,6 +760,7 @@ fn run_repl() {
                             Value::TensorRef(r) => println!("  → tensor_ref({})", r),
                             Value::AgentRef(a, _)  => println!("  → agent_ref({})", a),
                             Value::String(s) => println!("  → {:?}", s),
+                            Value::Struct(f) => println!("  → struct{{{:?}}}", f),
                         }
                     }
                     Err(e) => eprintln!("  vm error: {}", e),
