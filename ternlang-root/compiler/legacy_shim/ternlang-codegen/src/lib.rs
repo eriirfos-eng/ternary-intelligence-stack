@@ -339,6 +339,10 @@ impl CTranspiler {
                     .collect();
                 format!("({}){{ {} }}", name, f.join(", "))
             }
+            Expr::Slice { object, .. } => {
+                let obj = self.emit_expr(object);
+                format!("/* slice on {obj} — zero-copy views not implemented in C backend */ {obj}")
+            }
         }
     }
 
@@ -356,6 +360,7 @@ impl CTranspiler {
             Type::FloatTensor { .. } => "double*",
             Type::Named(_)          => "trit",  // struct handled separately
             Type::AgentRef          => "int",   // opaque ID in C backend
+            Type::PackedTritTensor { .. } => "uint8_t*", // opaque packed buffer
         }
     }
 
