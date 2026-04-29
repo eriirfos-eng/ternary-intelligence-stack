@@ -23,18 +23,12 @@ Albert is a terminal-native, model-agnostic AI agent built in pure Rust. It runs
 # Install Albert (brings the full agent engine with it)
 cargo install albert-cli
 
-# Set your LLM key (pick any provider)
-export GEMINI_API_KEY=AIza...          # Google Gemini — default, highest quota
-export ANTHROPIC_API_KEY=sk-ant-...   # Anthropic Claude
-export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
-# export XAI_API_KEY=xai-...          # xAI / Grok
-# (Ollama: just run `ollama serve` — no key needed)
 
 # Launch
 albert-cli
 ```
 
-That's it. Albert auto-detects your key and spins up the REPL.
+That's it. Albert spins up the REPL and the onboarding will start.
 
 
 ## How it thinks
