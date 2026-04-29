@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "albert-api"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "albert-runtime",
  "reqwest",
@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "albert-cli"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "albert-api",
  "albert-commands",
@@ -60,7 +60,7 @@ dependencies = [
 
 [[package]]
 name = "albert-commands"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "albert-runtime",
  "console 0.15.11",
@@ -68,7 +68,7 @@ dependencies = [
 
 [[package]]
 name = "albert-compat"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "albert-commands",
  "albert-runtime",
@@ -77,7 +77,7 @@ dependencies = [
 
 [[package]]
 name = "albert-runtime"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "glob",
  "regex",
@@ -90,7 +90,7 @@ dependencies = [
 
 [[package]]
 name = "albert-tools"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "albert-api",
  "albert-runtime",
@@ -100,6 +100,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "ternlang-ruvector",
  "tokio",
  "uuid",
  "walkdir",
@@ -141,6 +142,16 @@ dependencies = [
  "percent-encoding",
  "windows-sys 0.60.2",
  "x11rb",
+]
+
+[[package]]
+name = "ariadne"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8454c8a44ce2cb9cc7e7fae67fc6128465b343b92c6631e94beca3c8d1524ea5"
+dependencies = [
+ "unicode-width 0.2.0",
+ "yansi",
 ]
 
 [[package]]
@@ -327,6 +338,31 @@ checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
 dependencies = [
  "cfg-if",
 ]
+
+[[package]]
+name = "crossbeam-deque"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51"
+dependencies = [
+ "crossbeam-epoch",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "crossterm"
@@ -1121,6 +1157,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
+name = "logos"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb2c55a318a87600ea870ff8c2012148b44bf18b74fad48d0f835c38c7d07c5f"
+dependencies = [
+ "logos-derive",
+]
+
+[[package]]
+name = "logos-codegen"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58b3ffaa284e1350d017a57d04ada118c4583cf260c8fb01e0fe28a2e9cf8970"
+dependencies = [
+ "fnv",
+ "proc-macro2",
+ "quote",
+ "regex-automata",
+ "regex-syntax",
+ "syn",
+]
+
+[[package]]
+name = "logos-derive"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52d3a9855747c17eaf4383823f135220716ab49bea5fbea7dd42cc9a92f8aa31"
+dependencies = [
+ "logos-codegen",
+]
+
+[[package]]
 name = "lru"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1614,6 +1682,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "rayon"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d"
+dependencies = [
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2094,6 +2182,39 @@ dependencies = [
  "once_cell",
  "rustix 1.1.4",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "ternlang-core"
+version = "1.2.4"
+dependencies = [
+ "ariadne",
+ "logos",
+ "serde",
+]
+
+[[package]]
+name = "ternlang-ml"
+version = "1.2.4"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "rayon",
+ "serde",
+ "serde_json",
+ "ternlang-core",
+]
+
+[[package]]
+name = "ternlang-ruvector"
+version = "1.2.4"
+dependencies = [
+ "anyhow",
+ "rayon",
+ "serde",
+ "serde_json",
+ "ternlang-core",
+ "ternlang-ml",
 ]
 
 [[package]]
@@ -3050,6 +3171,12 @@ checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
 ]
+
+[[package]]
+name = "yansi"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
 
 [[package]]
 name = "yoke"

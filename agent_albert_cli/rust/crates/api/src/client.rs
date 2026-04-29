@@ -359,6 +359,33 @@ impl TernlangClient {
         }
     }
 
+    pub async fn create_embeddings(&self, model: &str, input: &[String]) -> Result<Vec<Vec<f32>>, ApiError> {
+        if self.provider.is_openai_compat() || self.provider == LlmProvider::Ternlang {
+            let url = format!("{}/v1/embeddings", self.base_url.trim_end_matches('/'));
+            let req = EmbeddingRequest {
+                model: model.to_string(),
+                input: input.to_vec(),
+            };
+            
+            let res = self.auth.apply(self.provider, self.http.post(&url))
+                .json(&req)
+                .send()
+                .await
+                .map_err(ApiError::from)?;
+            
+            if !res.status().is_success() {
+                let status = res.status();
+                let body = res.text().await.unwrap_or_default();
+                return Err(ApiError::ProviderError { status, body });
+            }
+            
+            let data: EmbeddingResponse = res.json().await.map_err(ApiError::from)?;
+            Ok(data.data.into_iter().map(|d| d.embedding).collect())
+        } else {
+            Err(ApiError::Config(format!("Embeddings not yet supported for provider {:?}", self.provider)))
+        }
+    }
+
     pub async fn exchange_oauth_code(
         &self,
         _config: OAuthConfig,

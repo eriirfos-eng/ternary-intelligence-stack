@@ -27,6 +27,11 @@ pub enum ApiError {
         attempt: u32,
         base_delay: Duration,
     },
+    Config(String),
+    ProviderError {
+        status: reqwest::StatusCode,
+        body: String,
+    },
 }
 
 impl ApiError {
@@ -36,6 +41,7 @@ impl ApiError {
             Self::Http(error) => error.is_connect() || error.is_timeout() || error.is_request(),
             Self::Api { retryable, .. } => *retryable,
             Self::RetriesExhausted { last_error, .. } => last_error.is_retryable(),
+            Self::ProviderError { status, .. } => status.is_server_error(),
             Self::MissingApiKey
             | Self::ExpiredOAuthToken
             | Self::Auth(_)
@@ -43,6 +49,7 @@ impl ApiError {
             | Self::Io(_)
             | Self::Json(_)
             | Self::InvalidSseFrame(_)
+            | Self::Config(_)
             | Self::BackoffOverflow { .. } => false,
         }
     }
@@ -51,6 +58,8 @@ impl ApiError {
 impl Display for ApiError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Config(message) => write!(f, "configuration error: {message}"),
+            Self::ProviderError { status, body } => write!(f, "provider returned {status}: {body}"),
             Self::MissingApiKey => {
                 write!(
                     f,

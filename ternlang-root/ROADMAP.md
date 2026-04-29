@@ -1,6 +1,6 @@
 # Ternlang Roadmap: Bridging the Ternary Software Deficit
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
-**Current Version:** v1.3.0 (dev) / v1.2.1 (published)
+**Current Version:** v1.3.0 (dev) / v1.2.4 (published)
 **Last Updated:** 2026-04-29
 **Repo:** https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-
 **Local:** ~/Desktop/Ternary Intelligence Stack (TIS)/
@@ -444,6 +444,20 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 
 ---
 
+## 🔄 Phase 20: Frontier Europe — The Sovereign Intelligence Layer
+**Goal: Forge a sovereign, offline-first intelligence layer built on high-capacity open-source MoE architecture.**
+
+- [ ] **Hardware Foundation**: Secure and deploy the **BIZON G3000** cluster (4x RTX 5090 Blackwell GPUs). Leverage 128 GB of GDDR7 VRAM and 1.79 TB/s bandwidth to manipulate high-expert-count MoE structures without friction.
+- [ ] **The Ternary Shift**: Execute the "Ternarization Forge" on a 26B parameter open-source MoE model. Collapse the memory footprint from ~52 GB to **10–15 GB** by mapping weights into the {-1, 0, 1} state-space.
+- [ ] **Expert Re-Architecture**: Consolidate the model's 128 granular experts into **13 Meta-Domain Subrouters** (Legal, Science, Ethics, Causal Reasoning, etc.). Concentrates cognitive load and ensures specialized circuit activation per task.
+- [ ] **Agentic Command**: Deploy **Albert CLI** as the sovereign pilot. Albert manages the local loop — research, strategy, and execution — ensuring every command is validated via ternary logic before system interaction.
+- [ ] **Deployment**: Enable "Frontier-level" reasoning on standard local hardware via the collapsed ternary footprint.
+- [ ] **The Next Frontier EU Fund**: Utilize this verified architecture to train, build, and assemble a proprietary, sovereign MoE Frontier Model specifically for the EU.
+- [ ] **Hyperscale Infrastructure**: Transition from the BIZON G3000 hardware anchor to datacenter-scale deployment. Replicate the forged model across server racks and scale server farms continent-wide.
+- [ ] **Full Vertical Sovereignty**: Provide the European Union with a complete, end-to-end Ternary Logic Vertical Stack—from the BET-VM runtime and ExaTern SIMD primitives up to the Albert CLI agentic layer and the sovereign Frontier MoE.
+
+---
+
 ═══════════════════════════════════════════════════
 # LICENSING & IP
 ═══════════════════════════════════════════════════
@@ -505,6 +519,8 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | Q4 2026 | VS Code extension v0.5.0 — BET debugger (Phase 16) | 🟠 High | High |
 | >>Q4 2026>> **DONE** | TernStudio v1.0 (Phase 16) | 🟠 High | Very High |
 | Q4 2026 | arXiv paper submission (Phase 15C) | 🟡 Medium | Medium |
+| Q2 2026 | ~~RuVector Enterprise Bridge (Phase 19)~~ | 🔴 Critical (commercial) | Medium |
+| Q3 2026 | Frontier Europe (Phase 20) | 🔴 Critical (sovereignty) | High |
 
 ---
 
@@ -561,4 +577,10 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | 2026-04-17 | **[Smithery uptime + MCP v1.0.0 + KPI dashboard + STDLIB_AGENT targeted scan]** Smithery 0% uptime fixed (protocol errors → MCP isError:true). Deployed to Fly.io (release 412ff381). KPI dashboard built: ternlang_kpi_fetch.py (1054 lines), Day-0 baseline locked, permanent traffic log, 5-min live chart, light/dark, XLSX export, Firefox launch. ternlang-mcp bumped to v1.0.0: README.md created, package.json hardened, smithery.yaml systemPrompt added. Republished to Smithery (release a02625c1, 30 tools confirmed). STDLIB_AGENT.md: global weakness scan replaced with targeted 10-dir check protocol (wc -l per dir, single-file existence check before writing, hard ban on ls -R / find). |
 | 2026-04-25 | **[Albert TUI + Voice + Multi-provider]** Major Albert CLI overhaul. Full ratatui TUI rewrite with tool dots and ⎿ output connectors. Voice input (Whisper STT with API fallback), clipboard paste, and /plan+/loop inline commands. Multi-provider expansion for Albert CLI + Studio. Markdown rendering and interactive popup menus. |
 | 2026-04-29 | **[v1.2.3 RELEASE: ExaTern + Albert Sync]** Resolved COMP-TENSOR-001 (32-bit dimensions) and VM-STRUCT-001 (Struct return ABI). Implemented ExaTern SIMD foundation (5-trit-per-byte packing) and Zero-Copy views (TVIEW/TBIND). Aligned all 13 core crates and 6 Albert crates to v1.2.3. Fixed albert-cli binary name in README. Published all packages to crates.io. |
+| 2026-04-29 | **[v1.2.4 RELEASE: RuVector Enterprise Bridge]** Formalized the RuVector Enterprise Bridge for Sparse GEMV acceleration. Synchronized v1.2.4 version across all 20+ crates. Optimized performance for Vector DB integrations (Qdrant/Milvus). Verified ecosystem integrity and published to crates.io. |
 | 2026-04-26 | **[KPI Spine + Stdlib Expansion]** Automated KPI dashboard hosted via GitHub Pages with interactive charts. Containerized KPI spine and background service integration. Massive expansion of `stdlib` (over 40 new modules) including `ternary_set_theory`, `market_sentiment_sim`, `pid_thermal_control`, and advanced algorithms (Fenwick, Segment trees). Bumped Albert crates to v1.1.3. |
+| 2026-04-29 | **[RuVector Enterprise Bridge]** Formalized experimental Sparse GEMV integrations into a commercial plugin (`ternlang-ruvector`). Optimized for existing Vector databases to accelerate RAG pipelines. Added serialization support and search kernels. |
+d Zero-Copy views (TVIEW/TBIND). Aligned all 13 core crates and 6 Albert crates to v1.2.3. Fixed albert-cli binary name in README. Published all packages to crates.io. |
+| 2026-04-29 | **[v1.2.4 RELEASE: RuVector Enterprise Bridge]** Formalized the RuVector Enterprise Bridge for Sparse GEMV acceleration. Synchronized v1.2.4 version across all 20+ crates. Optimized performance for Vector DB integrations (Qdrant/Milvus). Verified ecosystem integrity and published to crates.io. |
+| 2026-04-26 | **[KPI Spine + Stdlib Expansion]** Automated KPI dashboard hosted via GitHub Pages with interactive charts. Containerized KPI spine and background service integration. Massive expansion of `stdlib` (over 40 new modules) including `ternary_set_theory`, `market_sentiment_sim`, `pid_thermal_control`, and advanced algorithms (Fenwick, Segment trees). Bumped Albert crates to v1.1.3. |
+| 2026-04-29 | **[RuVector Enterprise Bridge]** Formalized experimental Sparse GEMV integrations into a commercial plugin (`ternlang-ruvector`). Optimized for existing Vector databases to accelerate RAG pipelines. Added serialization support and search kernels. |

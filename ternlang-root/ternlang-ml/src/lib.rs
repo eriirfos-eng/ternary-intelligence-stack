@@ -16,6 +16,7 @@
 ///   - MLP               — 2-layer ternary multi-layer perceptron
 
 use ternlang_core::trit::Trit;
+use serde::{Serialize, Deserialize};
 
 // ─── Annexation: Spectra-1.1 Compatibility ────────────────────────────────────
 
@@ -64,6 +65,7 @@ pub fn bitnet_threshold(weights: &[f32]) -> f32 {
 // ─── Tensor layout ───────────────────────────────────────────────────────────
 
 /// A flat row-major ternary matrix (rows × cols).
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TritMatrix {
     pub rows: usize,
     pub cols: usize,
