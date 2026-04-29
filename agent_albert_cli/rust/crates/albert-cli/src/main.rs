@@ -2111,8 +2111,49 @@ impl LiveCli {
                 false
             }
             SlashCommand::Upgrade => {
-                println!("Checking for updates...");
-                println!("No updates available at this time.");
+                println!("Checking for updates on crates.io...");
+                
+                // Use a one-off client for the version check
+                let async_rt = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .expect("failed to build runtime");
+                
+                let client = api::TernlangClient::from_auth(api::AuthSource::None);
+                let latest = async_rt.block_on(client.check_for_updates());
+
+                match latest {
+                    Ok(Some(version)) if version != VERSION => {
+                        println!("A new version is available: v{} (current: v{})", version, VERSION);
+                        println!("Starting upgrade via `cargo install albert-cli`...");
+                        
+                        let status = Command::new("cargo")
+                            .args(["install", "albert-cli"])
+                            .status();
+                        
+                        match status {
+                            Ok(s) if s.success() => {
+                                println!("\nUpgrade successful! Please restart albert-cli to use the new version.");
+                            }
+                            Ok(s) => {
+                                eprintln!("\nUpgrade failed with exit code: {}", s);
+                                println!("You may need to run `cargo install albert-cli` manually.");
+                            }
+                            Err(e) => {
+                                eprintln!("\nFailed to execute cargo: {}", e);
+                            }
+                        }
+                    }
+                    Ok(Some(_)) => {
+                        println!("You are already on the latest version (v{}).", VERSION);
+                    }
+                    Ok(None) => {
+                        println!("Could not determine the latest version from crates.io.");
+                    }
+                    Err(e) => {
+                        eprintln!("Error checking for updates: {}", e);
+                    }
+                }
                 false
             }
             SlashCommand::TerminalSetup => {

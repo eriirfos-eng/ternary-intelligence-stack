@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Unit test for inference_queue
-fn inference_queue_test() -> trit {
-    return affirm;
-}

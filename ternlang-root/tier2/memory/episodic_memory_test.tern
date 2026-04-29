@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Unit test for episodic_memory
-fn episodic_memory_test() -> trit {
-    return affirm;
-}
