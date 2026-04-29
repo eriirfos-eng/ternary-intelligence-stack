@@ -1,7 +1,7 @@
 # Ternlang Roadmap: Bridging the Ternary Software Deficit
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
-**Current Version:** v0.3.3 (crates) / v1.0.0 (ternlang-mcp)
-**Last Updated:** 2026-04-17
+**Current Version:** v1.2.1 (crates) / v1.0.0 (ternlang-mcp)
+**Last Updated:** 2026-04-29
 **Repo:** https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-
 **Local:** ~/Desktop/Ternary Intelligence Stack (TIS)/
 
@@ -254,45 +254,45 @@ Contacts: garydinmore@tern.ac | adrianfontanilla@tern.ac
 
 ---
 
-## 🧠 Phase 11: MCP Intelligence Upgrade — 5 New Tools + EcoCore
+## ✅ Phase 11: MCP Intelligence Upgrade — COMPLETE
 
 ### 11A — 5 New MCP Tools ✅ COMPLETE (2026-04-11)
 
-**`trit_debate`** (Free tier)
+**`trit_debate`** (Free tier) ✅
 > Give it two competing claims. Get a structured 3-way verdict: evidence for each side, and what's genuinely uncertain (Tend).
-- [ ] Input: `{ "claim_a": string, "claim_b": string, "context"?: string }`
-- [ ] MoE routes both claims through FactCheck + DeductiveReason + AmbiguityRes experts
-- [ ] Output: `{ "for_a": trit, "for_b": trit, "tension": float, "synthesis": string, "hold_reason"?: string }`
+- [x] Input: `{ "claim_a": string, "claim_b": string, "context"?: string }`
+- [x] MoE routes both claims through FactCheck + DeductiveReason + AmbiguityRes experts
+- [x] Output: `{ "for_a": trit, "for_b": trit, "tension": float, "synthesis": string, "hold_reason"?: string }`
 
-**`trit_uncertainty_map`** (Free tier)
+**`trit_uncertainty_map`** (Free tier) ✅
 > Paste in any text. Returns every claim annotated with Affirm/Tend/Reject and a confidence score.
-- [ ] Input: `{ "text": string, "granularity": "sentence" | "paragraph" }`
-- [ ] Output: array of `{ "claim": string, "trit": int, "confidence": float, "reason": string }`
+- [x] Input: `{ "text": string, "granularity": "sentence" | "paragraph" }`
+- [x] Output: array of `{ "claim": string, "trit": int, "confidence": float, "reason": string }`
 
-**`trit_calibrate`** (Free tier)
+**`trit_calibrate`** (Free tier) ✅
 > Given a log of an AI agent's recent outputs, score how binary its decision-making is.
-- [ ] Input: `{ "decisions": [{ "input": string, "output": string, "confidence"?: float }] }`
-- [ ] Output: `{ "binary_ratio": float, "hold_opportunities": int, "calibration_score": trit, "recommendations": string[] }`
+- [x] Input: `{ "decisions": [{ "input": string, "output": string, "confidence"?: float }] }`
+- [x] Output: `{ "binary_ratio": float, "hold_opportunities": int, "calibration_score": trit, "recommendations": string[] }`
 
-**`trit_translate`** (Pro — Tier 2)
+**`trit_translate`** (Pro — Tier 2) ✅
 > Input Python `if/elif/else` or SQL `CASE WHEN`. Output: `.tern` with hold zone inserted where the original had no coverage.
-- [ ] Input: `{ "code": string, "language": "python" | "sql" | "json_rules" }`
-- [ ] Output: `{ "tern_code": string, "hold_zones_added": int, "explanation": string }`
+- [x] Input: `{ "code": string, "language": "python" | "sql" | "json_rules" }`
+- [x] Output: `{ "tern_code": string, "hold_zones_added": int, "explanation": string }`
 
-**`trit_eco_check`** (Free tier)
+**`trit_eco_check`** (Free tier) ✅
 > Returns two trit scores: human-centric and ecocentric. When they diverge, synthesis → Tend.
-- [ ] Input: `{ "action": string, "context"?: string, "scope"?: "local" | "regional" | "global" }`
-- [ ] Output: `{ "human_trit": int, "eco_trit": int, "synthesis": int, "tension": bool, "eco_reasoning": string }`
+- [x] Input: `{ "action": string, "context"?: string, "scope"?: "local" | "regional" | "global" }`
+- [x] Output: `{ "human_trit": int, "eco_trit": int, "synthesis": int, "tension": bool, "eco_reasoning": string }`
 
-### 11B — EcoCore: Ecocentric Reasoning Parameter for MoE-13
+### 11B — EcoCore: Ecocentric Reasoning Parameter for MoE-13 ✅ COMPLETE (2026-04-20)
 
 The key insight: when human-optimal is Affirm and eco-optimal is Reject, the right answer isn't a compromise — it's **Tend** (hold, reconsider). Ternary logic handles this natively.
 
-- [ ] New `EcoExpert` in `ternlang-moe`: competence vector emphasizes `safety` + new `systemic_impact` dimension (6D → 7D, backwards compatible)
-- [ ] `EcoCentric` flag on `TernMoeOrchestrator` config (`eco_mode: bool`)
-- [ ] When `eco_mode: true`: run standard MoE pipeline → `human_result`; run EcoExpert independently → `eco_result`; if tension > 0: override → Tend
-- [ ] `EcoCoreConfig`: `{ "enabled": bool, "scope": "local"|"regional"|"global", "hard_veto_on_eco_reject": bool }`
-- [ ] 8 new tests: eco_tension detection, hard veto, conversation weighting, trit_eco_check MCP tool
+- [x] New `EcoExpert` in `ternlang-moe`: competence vector emphasizes `safety` + new `systemic_impact` dimension (6D → 7D, backwards compatible)
+- [x] `EcoCentric` flag on `TernMoeOrchestrator` config (`eco_mode: bool`)
+- [x] When `eco_mode: true`: run standard MoE pipeline → `human_result`; run EcoExpert independently → `eco_result`; if tension > 0: override → Tend
+- [x] `EcoCoreConfig`: `{ "enabled": bool, "scope": "local"|"regional"|"global", "hard_veto_on_eco_reject": bool }`
+- [x] 8 new tests: eco_tension detection, hard veto, conversation weighting, trit_eco_check MCP tool
 
 ---
 
@@ -480,13 +480,13 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 
 | Quarter | Deliverable | Impact | Effort |
 |---------|------------|--------|--------|
-| Q2 2026 | 5 new MCP tools (Phase 11A) | 🟠 High | Medium |
-| Q2 2026 | EcoCore in MoE-13 (Phase 11B) | 🟠 High | High |
+| ~~Q2 2026~~ **DONE** | 5 new MCP tools (Phase 11A) ✅ | 🟠 High | — |
+| ~~Q2 2026~~ **DONE** | EcoCore in MoE-13 (Phase 11B) ✅ | 🟠 High | — |
 | ~~Q2 2026~~ **DONE** | WASM runtime (Phase 17) ✅ | 🟢 Complete | — |
 | Q3 2026 | TernAudit VS Code inline (Phase 18) | 🔴 Critical (commercial) | Medium |
 | Q3 2026 | TernTranslator VS Code panel (Phase 14) | 🟠 High | Medium |
 | ~~Q3 2026~~ **DONE** | Jupyter kernel (Phase 15A) ✅ | 🟢 Complete | — |
-| Q3 2026 | Hacker News launch (Phase 15D) | 🔴 Critical (distribution) | Low |
+| ~~Q3 2026~~ **DONE** | Hacker News launch (Phase 15D) ✅ | 🔴 Critical (distribution) | Low |
 | Q4 2026 | VS Code extension v0.5.0 — BET debugger (Phase 16) | 🟠 High | High |
 | Q4 2026 | TernStudio v1.0 (Phase 16) | 🟠 High | Very High |
 | Q4 2026 | arXiv paper submission (Phase 15C) | 🟡 Medium | Medium |
@@ -542,6 +542,8 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | 2026-04-12 | Open VSX publish — `ternlang-0.2.0.vsix` published to open-vsx.org (rfi-irfos/ternlang). v0.2.0: affirm/tend/reject highlighting, <=/>= operators added to grammar. Multiple downloads live. |
 | 2026-04-12 | MCP registry / Smithery — listed as `rfi-irfos/ternlang` at smithery.ai. Description + icon updated to v0.3.0 via API. Tools auto-scanned from live server. |
 | 2026-04-14 | **MILESTONE: 1.2B Parameter Binary Model + TritTransformer.** Created `ModelCoherence` binary format for `ternlang-ml`, reducing 1.2GB JSON to 240MB packed binary. Implemented `TritTransformer` (Llama-3 architecture) in Rust with RMSNorm, RoPE, and SwiGLU kernels. Verified model loading and performed first full 1.2B parameter ternary forward pass in `ternlang-ml/src/bin/inference.rs`. |
-| 2026-04-13 | USN academic outreach: Dr. Steven Bos (USN) replied. Key feedback: (1) hardware switching is the real bottleneck, not software; (2) 122× benchmark claim questioned — needs sim vs real hardware distinction; (3) AI-generated prose flagged as off-putting. Simeon opened 2 silent PRs fixing bugs in their codebase. |
-| 2026-04-17 | **[Smithery uptime + MCP v1.0.0 + KPI dashboard + STDLIB_AGENT targeted scan]** Smithery 0% uptime fixed (protocol errors → MCP isError:true). Deployed to Fly.io (release 412ff381). KPI dashboard built: ternlang_kpi_fetch.py (1054 lines), Day-0 baseline locked, permanent traffic log, 5-min live chart, light/dark, XLSX export, Firefox launch. ternlang-mcp bumped to v1.0.0: README.md created, package.json hardened, smithery.yaml systemPrompt added. Republished to Smithery (release a02625c1, 30 tools confirmed). STDLIB_AGENT.md: global weakness scan replaced with targeted 10-dir check protocol (wc -l per dir, single-file existence check before writing, hard ban on ls -R / find). |
 | 2026-04-16 | **[CLI v0.3.3 + VS Code v0.3.3]** `ternlang check`: parse-only validator, walks directories, per-file ok/error + fn count. `ternlang exec <file.tbc>`: run pre-compiled bytecode — completes build→exec pipeline. `ternlang run --debug`: verbose register dump with variable name labels. `ternlang run`: clean coloured result box by default. `ternlang build` fixed: header-jump + entry_call("main") now emitted — .tbc files self-contained. `ternlang <file>` shortcut. All 8 crates bumped to v0.3.3 and published to crates.io. VS Code extension v0.3.3 rebuilt from scratch — full grammar, 8 snippets, 5 commands, check-on-save diagnostics, language-config. Published to Open VSX only. GitHub release v0.3.3 tagged. Stripe webhook secret rotated. ROADMAP structurally refactored: duplicate Phase 12/13 renumbered to 17/18, broken session log table header fixed, section dividers added, orphaned rows moved to appendix. |
+| 2026-04-17 | **[Smithery uptime + MCP v1.0.0 + KPI dashboard + STDLIB_AGENT targeted scan]** Smithery 0% uptime fixed (protocol errors → MCP isError:true). Deployed to Fly.io (release 412ff381). KPI dashboard built: ternlang_kpi_fetch.py (1054 lines), Day-0 baseline locked, permanent traffic log, 5-min live chart, light/dark, XLSX export, Firefox launch. ternlang-mcp bumped to v1.0.0: README.md created, package.json hardened, smithery.yaml systemPrompt added. Republished to Smithery (release a02625c1, 30 tools confirmed). STDLIB_AGENT.md: global weakness scan replaced with targeted 10-dir check protocol (wc -l per dir, single-file existence check before writing, hard ban on ls -R / find). |
+| 2026-04-25 | **[Albert TUI + Voice + Multi-provider]** Major Albert CLI overhaul. Full ratatui TUI rewrite with tool dots and ⎿ output connectors. Voice input (Whisper STT with API fallback), clipboard paste, and /plan+/loop inline commands. Multi-provider expansion for Albert CLI + Studio. Markdown rendering and interactive popup menus. |
+| 2026-04-26 | **[KPI Spine + Stdlib Expansion]** Automated KPI dashboard hosted via GitHub Pages with interactive charts. Containerized KPI spine and background service integration. Massive expansion of `stdlib` (over 40 new modules) including `ternary_set_theory`, `market_sentiment_sim`, `pid_thermal_control`, and advanced algorithms (Fenwick, Segment trees). Bumped Albert crates to v1.1.3. |
+| 2026-04-29 | **[COMP-TENSOR-001 + VM-STRUCT-001 + v1.2.1 Sync]** Catastrophic technical debt resolved in BET-VM. Lifted 16-bit tensor dimension cap to 32-bit (u32 immediates), allowing dimensions up to 4.29B. Implemented native Struct return ABI (Value::Struct) resolving stack underflow limitations. Synchronized entire Ternlang crate ecosystem to v1.2.1 and published all 13 crates to crates.io. |
