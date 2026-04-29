@@ -94,3 +94,11 @@ Compiler/VM observations:
 - Bitwise operators like `^` (XOR) might fail parsing, so checksums must rely on pure arithmetic ops `+`, `-`, `*`, `/`, `%`.
 - `consensus(1, -1)` correctly evaluates to `0` (Tend). `consensus(1, 0)` correctly evaluates to `1` (Affirm). The array iteration mutations are stable.
 - Array parameters pass by reference, enabling modifications without needing to return the whole array.
+
+## 2026-04-29 — [COMP-TENSOR-001 + VM-STRUCT-001 + v1.2.1 Sync]
+Major architectural upgrade session.
+- **Resolved [COMP-TENSOR-001]**: Lifted 16-bit tensor dimension cap. Upgraded Talloc opcodes (0x0f, 0x3c, 0x3d) to use 32-bit (u32) immediates, supporting up to 4.29B elements.
+- **Resolved [VM-STRUCT-001]**: Implemented native Struct return ABI. Introduced `Value::Struct(HashMap<String, Value>)` variant. Added opcodes `0x40` (`Tstruct`) and `0x41` (`Tfield`) for composite object manipulation.
+- **Fix [CLI-MATCH-FIX]**: Fixed non-exhaustive match errors in `ternlang-cli` caused by the new `Value::Struct` variant.
+- **Ecosystem Sync**: Synchronized all workspace crates to version `1.2.1` and published to `crates.io`.
+- **ROADMAP Update**: Marked Phase 11 (MCP Intelligence Upgrade) as complete.
