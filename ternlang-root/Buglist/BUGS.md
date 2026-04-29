@@ -73,29 +73,21 @@ This file tracks known bugs in the Ternlang compiler and VM.
 
 ---
 
+## [VM-STRUCT-001] Nested Struct Access Stack Underflow — FIXED (2026-04-29)
+- **Description:** Returning structs or accessing nested fields caused stack underflow.
+- **Fix:** Implemented native `Value::Struct` heap-allocated variant and `Tstruct`/`Tfield` opcodes.
+- **Status:** FIXED in v1.2.1
+
+## [COMP-TENSOR-001] Tensor Size Truncation (16-bit) — FIXED (2026-04-29)
+- **Description:** Tensor dimensions were capped at 65,535 (u16).
+- **Fix:** Upgraded Talloc immediates to 32-bit (u32), supporting up to 4.29B elements.
+- **Status:** FIXED in v1.2.1
+
+## [CLI-MATCH-001] Non-Exhaustive Match in CLI — FIXED (2026-04-29)
+- **Description:** `ternlang-cli` failed to compile after adding `Value::Struct` due to non-exhaustive matches in `format_value` and REPL.
+- **Fix:** Added `Value::Struct` handlers to `main.rs`.
+- **Status:** FIXED in v1.2.1
+
+---
+
 ## Remaining Unresolved Bugs
-
-## [BET-013] Named Import Stack Overflow
-- **Description:** Importing a function with unfulfilled dependencies causes a call stack overflow during execution instead of a compile-time link error.
-- **Regression Test:** `stdlib/bughunt/probe_24_named_import_failure.tern`
-
-## [PARSER-MATCH-001] Limited Match Arm Syntax
-- **Description:** The `match` statement does not support multiple values (`1, 2 =>`) or expressions in arms.
-- **Status:** Wildcard `_` is FIXED, but multi-val/expr still pending.
-
-## [VM-STRUCT-001] Nested Struct Access Stack Underflow — ARCH-LIMIT
-- **Description:** Returning structs or accessing nested fields causes stack underflow.
-- **Status:** ARCH-LIMIT (requires struct-value ABI refactor)
-
-## [COMP-TENSOR-001] Tensor Size Truncation (16-bit) — ARCH-LIMIT
-- **Status:** ARCH-LIMIT (requires 32-bit immediate encoding)
-
-## [COMP-OP-001] Sparseskip Annotation is No-Op
-- **Description:** `@sparseskip` directive is parsed but doesn't emit optimized bytecode.
-- **Status:** PENDING
-
-## [VM-AGENT-001] Non-Blocking Await
-- **Status:** PENDING
-
-## [VM-AGENT-002] Synchronous Agent Execution
-- **Status:** PENDING

@@ -4,21 +4,25 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 ---
 
-## 2026-04-28 — albert-cli TUI flow & studio auth (v1.2.1 release)
+## 2026-04-29 — [COMP-TENSOR-001 + VM-STRUCT-001] (v1.2.1 release)
 
-**Diagnosis:** Multiple UI and integration regressions:
-1. **Message Flow Confusion:** Assistant text anchoring was not reset on non-text blocks (ToolUse/Plan) or MessageStop. Turn 2+ text appended to Turn 1 "thinking", appearing out of order.
-2. **Vertical Clutter:** Inactive tool outputs wasted space with separate lines and bullet points.
-3. **Studio Auth Failure:** `TypeError` in `Window.fetch` caused by non-ASCII characters (em-dashes) leaking into `X-Ternlang-Key` headers.
-4. **Slash Command redrawing:** Terminal-based commands (like `/status`) were immediately overwritten by TUI redraw.
+**Diagnosis:** Two major architectural bottlenecks identified:
+1. **COMP-TENSOR-001:** Tensor dimensions were limited by 16-bit immediate encoding in `Talloc` opcodes, capping layers at 65,535 elements — insufficient for modern foundation models.
+2. **VM-STRUCT-001:** Structs could not be returned reliably from functions because they were flattened into caller-context registers which were restored on `Tret`, causing stack underflow.
+3. **CLI-MATCH:** The introduction of `Value::Struct` caused compilation failures in the CLI driver due to non-exhaustive match statements.
 
 **Fix:**
-- `tui.rs`: Updated `push_exec` and `MessageStop` handler to reset text anchoring (`current_assistant_block_index = None`).
-- `tui.rs`: Modified `render_log` to inline `[Output Collapsed]` tag and remove separate output lines.
-- `tui.rs`: Implemented a pause (`Press Enter to return`) for slash commands that exit the alternate screen.
-- `studio`: Implemented `sanitizeHeader` utility to strip non-ASCII chars from API keys before `fetch`.
-- `Cargo.toml`: Bumped workspace version to `1.2.1` and published to crates.io.
+- `vm/mod.rs`: Upgraded `Talloc` (0x0f), `Talloc_Int` (0x3c), and `Talloc_Float` (0x3d) to consume 8 bytes of immediates (2x `u32` for rows/cols) instead of 4 bytes. Added `read_u32` helper.
+- `vm/mod.rs`: Added `Value::Struct(HashMap<String, Value>)` to enable heap-allocated composite objects.
+- `vm/mod.rs`: Implemented `Tstruct` (0x40) to pop N values into a named struct and `Tfield` (0x41) to extract field values.
+- `betbc.rs`: Updated `emit_stmt` for tensor allocation to write `u32` le-bytes. Updated `Expr::StructLiteral` and `Expr::FieldAccess` to emit new composite opcodes.
+- `ternlang-cli/src/main.rs`: Handled `Value::Struct` in `format_value` and REPL result printer.
+- `Cargo.toml`: Bumped workspace version to `1.2.1` and published all 13 crates to crates.io.
 **Status:** FIXED. Committed & Released.
+
+---
+
+## 2026-04-28 — albert-cli TUI flow & studio auth (v1.1.3 release)
 
 ---
 
