@@ -1,7 +1,3 @@
-# GEMINI.md - Albert CLI Development Log
-
-## Stable Release: 2026-04-27 (TUI & Autonomous Core)
-
 ### 🌐 Ternlang Studio
 - **Fetch Encoding Fix**: Resolved `TypeError` in `Window.fetch` caused by non-ASCII characters (specifically em-dashes `—`) leaking into the `X-Ternlang-Key` header.
     - Implemented `sanitizeHeader` utility to strip all non-ASCII characters and whitespace from headers.
