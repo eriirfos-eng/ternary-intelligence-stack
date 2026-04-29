@@ -460,23 +460,6 @@ curl -X POST https://ternlang.com/api/trit_decide \
 | `POST /api/translate` | TernTranslator — Python/SQL/JSON rules → .tern with tend arms (Tier 2+) |
 
 ---
-
-## Enterprise Offering (Tier 4)
-
-The Tier-3 plan provides on-premise deployment, custom FPGA integration via `ternlang-hdl`, enterprise SLA, and direct access to the full BSL-1.1 codebase for air-gapped or regulated environments.
-
-- **On-premise deployment** — run the full TIS stack locally, no Fly.io dependency
-- **FPGA integration** — `ternlang-hdl` generates Verilog-2001 for BET processor synthesis on Xilinx/Intel targets
-- **ternlang-mkl (cuTern)** — native sparsity bypass kernel library for production inference
-- **Enterprise SLA** — dedicated support, audit logs, custom licensing
-
-For inquiries: `enterprise@ternlang.com`
-
-| `GET  /api/stream/deliberate` | EMA deliberation streamed per round via SSE |
-| `GET  /api/usage` | Monthly usage stats for the authenticated key |
-
-**API key:** [ternlang.com/pricing](https://ternlang.com/pricing) · Tier 2 (€24/month): 10,000 calls/month, calendar-month reset
-
 ### MCP Server — v1.1.0 (30 tools — all free)
 
 The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, Cursor, Gemini CLI, and any HTTP MCP client.
@@ -604,7 +587,7 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-gfx`](ternlang-gfx/) | BSL-1.1 | **T-GPU**: Triadic Graphics Pipeline (Depth-as-a-Trit) |
 | [`ternlang-contract`](ternlang-contract/) | BSL-1.1 | **T-Contract**: Triadic Smart Contracts (Arbitration State) |
 
-**88+ probe tests passing · v0.3.3**
+**88+ probe tests passing · v1.2.1**
 
 ---
 
@@ -686,9 +669,6 @@ The open-core stdlib includes: `core/`, `ternary/`, `std/`, `showcase/`, `bughun
 
 The premium repo includes all paid-tier directories: `agents/`, `ml/`, `nn/`, `nlp/`, `finance/`, `bio/`, `crypto/`, `security/`, `math/`, `logic/`, `vision/`, `stats/`, `physics/`, `qnn/`, and 40+ more.
 
-**After purchasing a license:** Visit **[ternlang.com/activate](https://ternlang.com/activate)**, enter your API key and GitHub username, and you will receive a collaborator invite to the private repo automatically.
-
-→ [See full tier table in stdlib/PREMIUM.md](stdlib/PREMIUM.md)
 
 ---
 
@@ -707,11 +687,11 @@ On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimite
 ┌─────────────────────────────────────────────────────────────────┐
 │  TIER 1 — Open Core (LGPL-3.0)                     Free         │
 │  ternlang-core · ternlang-cli · ternlang-lsp · ternlang-compat  │
-│  ternpkg · spec/                                                 │
+│  ternpkg · spec/                                                │
 │  Free to use, modify, and distribute under LGPL.                │
 ├─────────────────────────────────────────────────────────────────┤
 │  TIER 2 — Pro Standard (BSL-1.1)                  €99/mo        │
-│  ★ 30 MCP tools (all free) + REST API (10,000 calls/month)     │
+│  ★ 30 MCP tools (all free) + REST API (10,000 calls/month)      │
 │  ✓ Server-side persistent 3-layer memory                        │
 │  ✓ SSE streaming · MoE-13 consolidation · production SLA        │
 ├─────────────────────────────────────────────────────────────────┤
@@ -721,13 +701,14 @@ On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimite
 ├─────────────────────────────────────────────────────────────────┤
 │  TIER 4 — Enterprise (Proprietary)      from €2,500/mo          │
 │  On-premise BET-VM clusters · Custom FPGA · Enterprise SLA      │
-│  Unlimited throughput · Dedicated support · Air-gap ready        │
+│  Unlimited throughput · Dedicated support · Air-gap ready       │
 │  Contact: licensing@ternlang.com                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-> **ML Training Restriction:** The contents of this repository may not be used to train, fine-tune, or distill machine learning models without explicit written permission from RFI-IRFOS. See [LICENSE-ML-TRAINING](LICENSE-ML-TRAINING).
+**After purchasing a license:** Visit **[ternlang.com/activate](https://ternlang.com/activate)**, enter your API key and GitHub username, and you will receive a collaborator invite to the private repo automatically.
 
+→ [See full tier table in stdlib/PREMIUM.md](stdlib/PREMIUM.md)
 ---
 
 ## Ecosystem Position
@@ -755,15 +736,6 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 - [spec/grammar.ebnf](spec/grammar.ebnf) — language grammar
 - [spec/ternlang-language-reference-v0.1.md](spec/ternlang-language-reference-v0.1.md) — language reference
 
-```bibtex
-@misc{kepp2026ternlang,
-  author  = {Kepp, Simeon},
-  title   = {Ternlang: Balanced Ternary Intelligence Stack},
-  year    = {2026},
-  url     = {https://ternlang.com},
-  doi     = {10.17605/OSF.IO/TZ7DC}
-}
-```
 ---
 
 ## EU AI Act Compliance
@@ -792,5 +764,3 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 | **Commercial licensing** | [licensing@ternlang.com](mailto:licensing@ternlang.com) |
 | **Academic collaboration** | Open — cite the whitepaper |
 | **API access** | [ternlang.com/#licensing](https://ternlang.com/#licensing) |
-
-*"The place where fragmented ternary efforts compile into one."*
