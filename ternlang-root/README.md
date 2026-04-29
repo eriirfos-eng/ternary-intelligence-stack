@@ -38,7 +38,7 @@ Ternlang adds the third state.
 | ` 0` | **tend** | Insufficient data. Gather more before acting. |
 | `+1` | **affirm** | Clear positive signal. Proceed. |
 
-The `tend` state is not indecision. It is a **first-class routing instruction** — a computational directive to remain in deliberation until evidence crosses a threshold. This makes ternlang the natural foundation for AI agents that must reason honestly under uncertainty.
+## The `tend` state is not indecision. It is a **first-class routing instruction** — a computational directive to remain in deliberation until evidence crosses a threshold. This makes ternlang the natural foundation for AI agents that must reason honestly under uncertainty.
 ---
 → **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
 
