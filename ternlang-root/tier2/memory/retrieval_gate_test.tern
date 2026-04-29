@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Unit test for retrieval_gate
-fn retrieval_gate_test() -> trit {
-    return affirm;
-}

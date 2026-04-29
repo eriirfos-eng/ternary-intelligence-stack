@@ -1688,10 +1688,10 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled(
                 format!("[Pasted Text: {} lines]", n),
                 Style::default()
-                    .fg(Color::Rgb(198, 120, 221))
-                    .bg(Color::Rgb(40, 44, 52)),
+                    .fg(CYAN)
+                    .bg(USER_BOX_BG),
             ),
-            Span::styled("  Esc to clear", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
+            Span::styled("  Continuing...", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
         ]))
     } else if let Some(ref provider) = state.auth_flow {
         if state.input.is_empty() {

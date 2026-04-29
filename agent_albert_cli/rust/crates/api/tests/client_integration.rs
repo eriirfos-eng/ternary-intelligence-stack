@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use api::{
+use albert_api::{
     TernlangClient, ApiError, ContentBlockDelta, ContentBlockDeltaEvent, ContentBlockStartEvent,
     InputContentBlock, InputMessage, MessageDeltaEvent, MessageRequest, OutputContentBlock,
     StreamEvent, ToolChoice, ToolDefinition,
@@ -34,8 +34,8 @@ async fn send_message_posts_json_and_parses_response() {
     )
     .await;
 
-    let client = TernlangClient::new("test-key")
-        .with_auth_token(Some("proxy-token".to_string()))
+    let client = TernlangClient::from_auth(albert_api::AuthSource::ApiKey("test-key".to_string()))
+        .with_auth_source(albert_api::AuthSource::ApiKey("proxy-token".to_string()))
         .with_base_url(server.base_url());
     let response = client
         .send_message(&sample_request(false))
@@ -104,8 +104,8 @@ async fn stream_message_parses_sse_events_with_tool_use() {
     )
     .await;
 
-    let client = TernlangClient::new("test-key")
-        .with_auth_token(Some("proxy-token".to_string()))
+    let client = TernlangClient::from_auth(albert_api::AuthSource::ApiKey("test-key".to_string()))
+        .with_auth_source(albert_api::AuthSource::ApiKey("proxy-token".to_string()))
         .with_base_url(server.base_url());
     let mut stream = client
         .stream_message(&sample_request(false))
@@ -182,9 +182,9 @@ async fn retries_retryable_failures_before_succeeding() {
     )
     .await;
 
-    let client = TernlangClient::new("test-key")
+    let client = TernlangClient::from_auth(albert_api::AuthSource::ApiKey("test-key".to_string()))
         .with_base_url(server.base_url())
-        .with_retry_policy(2, Duration::from_millis(1), Duration::from_millis(2));
+        ;
 
     let response = client
         .send_message(&sample_request(false))
@@ -215,9 +215,9 @@ async fn surfaces_retry_exhaustion_for_persistent_retryable_errors() {
     )
     .await;
 
-    let client = TernlangClient::new("test-key")
+    let client = TernlangClient::from_auth(albert_api::AuthSource::ApiKey("test-key".to_string()))
         .with_base_url(server.base_url())
-        .with_retry_policy(1, Duration::from_millis(1), Duration::from_millis(2));
+        ;
 
     let error = client
         .send_message(&sample_request(false))
@@ -251,7 +251,7 @@ async fn live_stream_smoke_test() {
         .stream_message(&MessageRequest {
             model: std::env::var("TERNLANG_MODEL")
                 .unwrap_or_else(|_| "agent-ternlang-3-7-sonnet-latest".to_string()),
-            max_tokens: 32,
+            max_tokens: Some(32),
             messages: vec![InputMessage::user_text(
                 "Reply with exactly: hello from rust",
             )],
@@ -411,7 +411,7 @@ fn http_response_with_headers(
 fn sample_request(stream: bool) -> MessageRequest {
     MessageRequest {
         model: "agent-ternlang-3-7-sonnet-latest".to_string(),
-        max_tokens: 64,
+        max_tokens: Some(64),
         messages: vec![InputMessage {
             role: "user".to_string(),
             content: vec![
@@ -420,7 +420,7 @@ fn sample_request(stream: bool) -> MessageRequest {
                 },
                 InputContentBlock::ToolResult {
                     tool_use_id: "toolu_prev".to_string(),
-                    content: vec![api::ToolResultContentBlock::Json {
+                    content: vec![albert_api::ToolResultContentBlock::Json {
                         value: json!({"forecast": "sunny"}),
                     }],
                     is_error: false,

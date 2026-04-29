@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Unit test for decay_controller
-fn decay_controller_test() -> trit {
-    return affirm;
-}

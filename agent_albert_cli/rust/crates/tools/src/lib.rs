@@ -3175,7 +3175,7 @@ mod tests {
         )
         .expect("WebFetch should succeed");
 
-        let output: serde_json::Value = serde_json::from_str(&result).expect("valid json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("valid json");
         assert_eq!(output["code"], 200);
         let summary = output["result"].as_str().expect("result string");
         assert!(summary.contains("Fetched"));
@@ -3190,7 +3190,7 @@ mod tests {
             }),
         )
         .expect("WebFetch title query should succeed");
-        let titled_output: serde_json::Value = serde_json::from_str(&titled).expect("valid json");
+        let titled_output: serde_json::Value = serde_json::from_str(&titled.output).expect("valid json");
         let titled_summary = titled_output["result"].as_str().expect("result string");
         assert!(titled_summary.contains("Title: Ignored"));
     }
@@ -3211,7 +3211,7 @@ mod tests {
         )
         .expect("WebFetch should succeed for text content");
 
-        let output: serde_json::Value = serde_json::from_str(&result).expect("valid json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("valid json");
         assert_eq!(output["url"], format!("http://{}/plain", server.addr()));
         assert!(output["result"]
             .as_str()
@@ -3260,7 +3260,7 @@ mod tests {
         .expect("WebSearch should succeed");
         std::env::remove_var("CLAWD_WEB_SEARCH_BASE_URL");
 
-        let output: serde_json::Value = serde_json::from_str(&result).expect("valid json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("valid json");
         assert_eq!(output["query"], "rust web search");
         let results = output["results"].as_array().expect("results array");
         let search_result = results
@@ -3306,7 +3306,7 @@ mod tests {
         .expect("WebSearch fallback parsing should succeed");
         std::env::remove_var("CLAWD_WEB_SEARCH_BASE_URL");
 
-        let output: serde_json::Value = serde_json::from_str(&result).expect("valid json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("valid json");
         let results = output["results"].as_array().expect("results array");
         let search_result = results
             .iter()
@@ -3342,7 +3342,7 @@ mod tests {
             }),
         )
         .expect("TodoWrite should succeed");
-        let first_output: serde_json::Value = serde_json::from_str(&first).expect("valid json");
+        let first_output: serde_json::Value = serde_json::from_str(&first.output).expect("valid json");
         assert_eq!(first_output["oldTodos"].as_array().expect("array").len(), 0);
 
         let second = execute_tool(
@@ -3359,7 +3359,7 @@ mod tests {
         std::env::remove_var("CLAWD_TODO_STORE");
         let _ = std::fs::remove_file(path);
 
-        let second_output: serde_json::Value = serde_json::from_str(&second).expect("valid json");
+        let second_output: serde_json::Value = serde_json::from_str(&second.output).expect("valid json");
         assert_eq!(
             second_output["oldTodos"].as_array().expect("array").len(),
             2
@@ -3420,7 +3420,7 @@ mod tests {
         std::env::remove_var("CLAWD_TODO_STORE");
         let _ = fs::remove_file(path);
 
-        let output: serde_json::Value = serde_json::from_str(&nudge).expect("valid json");
+        let output: serde_json::Value = serde_json::from_str(&nudge.output).expect("valid json");
         assert_eq!(output["verificationNudgeNeeded"], true);
     }
 
@@ -3435,7 +3435,7 @@ mod tests {
         )
         .expect("Skill should succeed");
 
-        let output: serde_json::Value = serde_json::from_str(&result).expect("valid json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("valid json");
         assert_eq!(output["skill"], "help");
         assert!(output["path"]
             .as_str()
@@ -3454,7 +3454,7 @@ mod tests {
         )
         .expect("Skill should accept $skill invocation form");
         let dollar_output: serde_json::Value =
-            serde_json::from_str(&dollar_result).expect("valid json");
+            serde_json::from_str(&dollar_result.output).expect("valid json");
         assert_eq!(dollar_output["skill"], "$help");
         assert!(dollar_output["path"]
             .as_str()
@@ -3469,20 +3469,20 @@ mod tests {
             &json!({"query": "web current", "max_results": 3}),
         )
         .expect("ToolSearch should succeed");
-        let keyword_output: serde_json::Value = serde_json::from_str(&keyword).expect("valid json");
+        let keyword_output: serde_json::Value = serde_json::from_str(&keyword.output).expect("valid json");
         let matches = keyword_output["matches"].as_array().expect("matches");
         assert!(matches.iter().any(|value| value == "WebSearch"));
 
         let selected = execute_tool("ToolSearch", &json!({"query": "select:Agent,Skill"}))
             .expect("ToolSearch should succeed");
         let selected_output: serde_json::Value =
-            serde_json::from_str(&selected).expect("valid json");
+            serde_json::from_str(&selected.output).expect("valid json");
         assert_eq!(selected_output["matches"][0], "Agent");
         assert_eq!(selected_output["matches"][1], "Skill");
 
         let aliased = execute_tool("ToolSearch", &json!({"query": "AgentTool"}))
             .expect("ToolSearch should support tool aliases");
-        let aliased_output: serde_json::Value = serde_json::from_str(&aliased).expect("valid json");
+        let aliased_output: serde_json::Value = serde_json::from_str(&aliased.output).expect("valid json");
         assert_eq!(aliased_output["matches"][0], "Agent");
         assert_eq!(aliased_output["normalized_query"], "agent");
 
@@ -3490,7 +3490,7 @@ mod tests {
             execute_tool("ToolSearch", &json!({"query": "select:AgentTool,Skill"}))
                 .expect("ToolSearch alias select should succeed");
         let selected_with_alias_output: serde_json::Value =
-            serde_json::from_str(&selected_with_alias).expect("valid json");
+            serde_json::from_str(&selected_with_alias.output).expect("valid json");
         assert_eq!(selected_with_alias_output["matches"][0], "Agent");
         assert_eq!(selected_with_alias_output["matches"][1], "Skill");
     }
@@ -3555,7 +3555,7 @@ mod tests {
         )
         .expect("Agent should normalize built-in aliases");
         let normalized_output: serde_json::Value =
-            serde_json::from_str(&normalized).expect("valid json");
+            serde_json::from_str(&normalized.output).expect("valid json");
         assert_eq!(normalized_output["subagentType"], "Explore");
 
         let named = execute_tool(
@@ -3567,7 +3567,7 @@ mod tests {
             }),
         )
         .expect("Agent should normalize explicit names");
-        let named_output: serde_json::Value = serde_json::from_str(&named).expect("valid json");
+        let named_output: serde_json::Value = serde_json::from_str(&named.output).expect("valid json");
         assert_eq!(named_output["name"], "ship-audit");
         let _ = std::fs::remove_dir_all(dir);
     }
@@ -3810,7 +3810,7 @@ mod tests {
             }),
         )
         .expect("NotebookEdit replace should succeed");
-        let replaced_output: serde_json::Value = serde_json::from_str(&replaced).expect("json");
+        let replaced_output: serde_json::Value = serde_json::from_str(&replaced.output).expect("json");
         assert_eq!(replaced_output["cell_id"], "cell-a");
         assert_eq!(replaced_output["cell_type"], "code");
 
@@ -3825,7 +3825,7 @@ mod tests {
             }),
         )
         .expect("NotebookEdit insert should succeed");
-        let inserted_output: serde_json::Value = serde_json::from_str(&inserted).expect("json");
+        let inserted_output: serde_json::Value = serde_json::from_str(&inserted.output).expect("json");
         assert_eq!(inserted_output["cell_type"], "markdown");
         let appended = execute_tool(
             "NotebookEdit",
@@ -3836,7 +3836,7 @@ mod tests {
             }),
         )
         .expect("NotebookEdit append should succeed");
-        let appended_output: serde_json::Value = serde_json::from_str(&appended).expect("json");
+        let appended_output: serde_json::Value = serde_json::from_str(&appended.output).expect("json");
         assert_eq!(appended_output["cell_type"], "code");
 
         let deleted = execute_tool(
@@ -3848,7 +3848,7 @@ mod tests {
             }),
         )
         .expect("NotebookEdit delete should succeed without new_source");
-        let deleted_output: serde_json::Value = serde_json::from_str(&deleted).expect("json");
+        let deleted_output: serde_json::Value = serde_json::from_str(&deleted.output).expect("json");
         assert!(deleted_output["cell_type"].is_null());
         assert_eq!(deleted_output["new_source"], "");
 
@@ -3912,13 +3912,13 @@ mod tests {
     fn bash_tool_reports_success_exit_failure_timeout_and_background() {
         let success = execute_tool("bash", &json!({ "command": "printf 'hello'" }))
             .expect("bash should succeed");
-        let success_output: serde_json::Value = serde_json::from_str(&success).expect("json");
+        let success_output: serde_json::Value = serde_json::from_str(&success.output).expect("json");
         assert_eq!(success_output["stdout"], "hello");
         assert_eq!(success_output["interrupted"], false);
 
         let failure = execute_tool("bash", &json!({ "command": "printf 'oops' >&2; exit 7" }))
             .expect("bash failure should still return structured output");
-        let failure_output: serde_json::Value = serde_json::from_str(&failure).expect("json");
+        let failure_output: serde_json::Value = serde_json::from_str(&failure.output).expect("json");
         assert_eq!(failure_output["returnCodeInterpretation"], "exit_code:7");
         assert!(failure_output["stderr"]
             .as_str()
@@ -3927,7 +3927,7 @@ mod tests {
 
         let timeout = execute_tool("bash", &json!({ "command": "sleep 1", "timeout": 10 }))
             .expect("bash timeout should return output");
-        let timeout_output: serde_json::Value = serde_json::from_str(&timeout).expect("json");
+        let timeout_output: serde_json::Value = serde_json::from_str(&timeout.output).expect("json");
         assert_eq!(timeout_output["interrupted"], true);
         assert_eq!(timeout_output["returnCodeInterpretation"], "timeout");
         assert!(timeout_output["stderr"]
@@ -3940,7 +3940,7 @@ mod tests {
             &json!({ "command": "sleep 1", "run_in_background": true }),
         )
         .expect("bash background should succeed");
-        let background_output: serde_json::Value = serde_json::from_str(&background).expect("json");
+        let background_output: serde_json::Value = serde_json::from_str(&background.output).expect("json");
         assert!(background_output["backgroundTaskId"].as_str().is_some());
         assert_eq!(background_output["noOutputExpected"], true);
     }
@@ -3961,7 +3961,7 @@ mod tests {
         )
         .expect("write create should succeed");
         let write_create_output: serde_json::Value =
-            serde_json::from_str(&write_create).expect("json");
+            serde_json::from_str(&write_create.output).expect("json");
         assert_eq!(write_create_output["type"], "create");
         assert!(root.join("nested/demo.txt").exists());
 
@@ -3971,13 +3971,13 @@ mod tests {
         )
         .expect("write update should succeed");
         let write_update_output: serde_json::Value =
-            serde_json::from_str(&write_update).expect("json");
+            serde_json::from_str(&write_update.output).expect("json");
         assert_eq!(write_update_output["type"], "update");
         assert_eq!(write_update_output["originalFile"], "alpha\nbeta\nalpha\n");
 
         let read_full = execute_tool("read_file", &json!({ "path": "nested/demo.txt" }))
             .expect("read full should succeed");
-        let read_full_output: serde_json::Value = serde_json::from_str(&read_full).expect("json");
+        let read_full_output: serde_json::Value = serde_json::from_str(&read_full.output).expect("json");
         assert_eq!(read_full_output["file"]["content"], "alpha\nbeta\ngamma");
         assert_eq!(read_full_output["file"]["startLine"], 1);
 
@@ -3986,7 +3986,7 @@ mod tests {
             &json!({ "path": "nested/demo.txt", "offset": 1, "limit": 1 }),
         )
         .expect("read slice should succeed");
-        let read_slice_output: serde_json::Value = serde_json::from_str(&read_slice).expect("json");
+        let read_slice_output: serde_json::Value = serde_json::from_str(&read_slice.output).expect("json");
         assert_eq!(read_slice_output["file"]["content"], "beta");
         assert_eq!(read_slice_output["file"]["startLine"], 2);
 
@@ -3996,7 +3996,7 @@ mod tests {
         )
         .expect("read past EOF should succeed");
         let read_past_end_output: serde_json::Value =
-            serde_json::from_str(&read_past_end).expect("json");
+            serde_json::from_str(&read_past_end.output).expect("json");
         assert_eq!(read_past_end_output["file"]["content"], "");
         assert_eq!(read_past_end_output["file"]["startLine"], 4);
 
@@ -4009,7 +4009,7 @@ mod tests {
             &json!({ "path": "nested/demo.txt", "old_string": "alpha", "new_string": "omega" }),
         )
         .expect("single edit should succeed");
-        let edit_once_output: serde_json::Value = serde_json::from_str(&edit_once).expect("json");
+        let edit_once_output: serde_json::Value = serde_json::from_str(&edit_once.output).expect("json");
         assert_eq!(edit_once_output["replaceAll"], false);
         assert_eq!(
             fs::read_to_string(root.join("nested/demo.txt")).expect("read file"),
@@ -4031,7 +4031,7 @@ mod tests {
             }),
         )
         .expect("replace all should succeed");
-        let edit_all_output: serde_json::Value = serde_json::from_str(&edit_all).expect("json");
+        let edit_all_output: serde_json::Value = serde_json::from_str(&edit_all.output).expect("json");
         assert_eq!(edit_all_output["replaceAll"], true);
         assert_eq!(
             fs::read_to_string(root.join("nested/demo.txt")).expect("read file"),
@@ -4075,7 +4075,7 @@ mod tests {
 
         let globbed = execute_tool("glob_search", &json!({ "pattern": "nested/*.rs" }))
             .expect("glob should succeed");
-        let globbed_output: serde_json::Value = serde_json::from_str(&globbed).expect("json");
+        let globbed_output: serde_json::Value = serde_json::from_str(&globbed.output).expect("json");
         assert_eq!(globbed_output["numFiles"], 1);
         assert!(globbed_output["filenames"][0]
             .as_str()
@@ -4100,7 +4100,7 @@ mod tests {
         )
         .expect("grep content should succeed");
         let grep_content_output: serde_json::Value =
-            serde_json::from_str(&grep_content).expect("json");
+            serde_json::from_str(&grep_content.output).expect("json");
         assert_eq!(grep_content_output["numFiles"], 0);
         assert!(grep_content_output["appliedLimit"].is_null());
         assert_eq!(grep_content_output["appliedOffset"], 1);
@@ -4114,7 +4114,7 @@ mod tests {
             &json!({ "pattern": "alpha", "path": "nested", "output_mode": "count" }),
         )
         .expect("grep count should succeed");
-        let grep_count_output: serde_json::Value = serde_json::from_str(&grep_count).expect("json");
+        let grep_count_output: serde_json::Value = serde_json::from_str(&grep_count.output).expect("json");
         assert_eq!(grep_count_output["numMatches"], 3);
 
         let grep_error = execute_tool(
@@ -4134,7 +4134,7 @@ mod tests {
         let result =
             execute_tool("Sleep", &json!({"duration_ms": 20})).expect("Sleep should succeed");
         let elapsed = started.elapsed();
-        let output: serde_json::Value = serde_json::from_str(&result).expect("json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("json");
         assert_eq!(output["duration_ms"], 20);
         assert!(output["message"]
             .as_str()
@@ -4164,7 +4164,7 @@ mod tests {
         )
         .expect("SendUserMessage should succeed");
 
-        let output: serde_json::Value = serde_json::from_str(&result).expect("json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("json");
         assert_eq!(output["message"], "hello user");
         assert!(output["sentAt"].as_str().is_some());
         assert_eq!(output["attachments"][0]["isImage"], true);
@@ -4201,7 +4201,7 @@ mod tests {
         std::env::set_current_dir(&cwd).expect("set cwd");
 
         let get = execute_tool("Config", &json!({"setting": "verbose"})).expect("get config");
-        let get_output: serde_json::Value = serde_json::from_str(&get).expect("json");
+        let get_output: serde_json::Value = serde_json::from_str(&get.output).expect("json");
         assert_eq!(get_output["value"], false);
 
         let set = execute_tool(
@@ -4209,7 +4209,7 @@ mod tests {
             &json!({"setting": "permissions.defaultMode", "value": "plan"}),
         )
         .expect("set config");
-        let set_output: serde_json::Value = serde_json::from_str(&set).expect("json");
+        let set_output: serde_json::Value = serde_json::from_str(&set.output).expect("json");
         assert_eq!(set_output["operation"], "set");
         assert_eq!(set_output["newValue"], "plan");
 
@@ -4222,7 +4222,7 @@ mod tests {
 
         let unknown =
             execute_tool("Config", &json!({"setting": "nope"})).expect("unknown setting result");
-        let unknown_output: serde_json::Value = serde_json::from_str(&unknown).expect("json");
+        let unknown_output: serde_json::Value = serde_json::from_str(&unknown.output).expect("json");
         assert_eq!(unknown_output["success"], false);
 
         std::env::set_current_dir(&original_dir).expect("restore cwd");
@@ -4241,7 +4241,7 @@ mod tests {
     fn structured_output_echoes_input_payload() {
         let result = execute_tool("StructuredOutput", &json!({"ok": true, "items": [1, 2, 3]}))
             .expect("StructuredOutput should succeed");
-        let output: serde_json::Value = serde_json::from_str(&result).expect("json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("json");
         assert_eq!(output["data"], "Structured output provided successfully");
         assert_eq!(output["structured_output"]["ok"], true);
         assert_eq!(output["structured_output"]["items"][1], 2);
@@ -4254,7 +4254,7 @@ mod tests {
             &json!({"language": "python", "code": "print(1 + 1)", "timeout_ms": 500}),
         )
         .expect("REPL should succeed");
-        let output: serde_json::Value = serde_json::from_str(&result).expect("json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("json");
         assert_eq!(output["language"], "python");
         assert_eq!(output["exitCode"], 0);
         assert!(output["stdout"].as_str().expect("stdout").contains('2'));
@@ -4306,11 +4306,11 @@ printf 'pwsh:%s' "$1"
         std::env::set_var("PATH", original_path);
         let _ = std::fs::remove_dir_all(dir);
 
-        let output: serde_json::Value = serde_json::from_str(&result).expect("json");
+        let output: serde_json::Value = serde_json::from_str(&result.output).expect("json");
         assert_eq!(output["stdout"], "pwsh:Write-Output hello");
         assert!(output["stderr"].as_str().expect("stderr").is_empty());
 
-        let background_output: serde_json::Value = serde_json::from_str(&background).expect("json");
+        let background_output: serde_json::Value = serde_json::from_str(&background.output).expect("json");
         assert!(background_output["backgroundTaskId"].as_str().is_some());
         assert_eq!(background_output["backgroundedByUser"], true);
         assert_eq!(background_output["assistantAutoBackgrounded"], false);

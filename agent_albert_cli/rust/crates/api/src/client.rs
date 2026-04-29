@@ -398,6 +398,29 @@ impl TernlangClient {
             scopes: vec![],
         })
     }
+
+    /// Check crates.io for the latest version of albert-cli.
+    pub async fn check_for_updates(&self) -> Result<Option<String>, ApiError> {
+        let url = "https://crates.io/api/v1/crates/albert-cli";
+        // Crates.io requires a User-Agent header
+        let res = self.http.get(url)
+            .header("User-Agent", "albert-cli (https://github.com/eriirfos-eng/ternary-intelligence-stack)")
+            .send()
+            .await
+            .map_err(ApiError::from)?;
+        
+        if !res.status().is_success() {
+            return Ok(None);
+        }
+
+        let json: serde_json::Value = res.json().await.map_err(ApiError::from)?;
+        let max_version = json.get("crate")
+            .and_then(|c| c.get("max_version"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        Ok(max_version)
+    }
 }
 
 #[derive(Debug)]

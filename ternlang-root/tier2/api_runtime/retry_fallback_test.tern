@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Unit test for retry_fallback
-fn retry_fallback_test() -> trit {
-    return affirm;
-}
