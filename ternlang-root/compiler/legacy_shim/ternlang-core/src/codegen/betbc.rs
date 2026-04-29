@@ -201,6 +201,17 @@ impl BytecodeEmitter {
                             handled = true;
                         }
                     }
+                    Type::PackedTritTensor { dims } => {
+                        let is_zero_init = matches!(value, Expr::TritLiteral(0) | Expr::IntLiteral(0));
+                        if !dims.is_empty() && !dims.contains(&0) && is_zero_init {
+                            let rows = dims[0];
+                            let cols = if dims.len() > 1 { dims[1] } else { 1 };
+                            self.code.push(0x56); // TALLOC_PACKED
+                            self.code.extend_from_slice(&(rows as u32).to_le_bytes());
+                            self.code.extend_from_slice(&(cols as u32).to_le_bytes());
+                            handled = true;
+                        }
+                    }
                     Type::IntTensor { dims } => {
                         let is_zero_init = matches!(value, Expr::TritLiteral(0) | Expr::IntLiteral(0));
                         if !dims.is_empty() && !dims.contains(&0) && is_zero_init {
@@ -867,6 +878,34 @@ impl BytecodeEmitter {
                         for a in args { self.emit_expr(a); self.code.push(0x0c); } // eval + discard
                         self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); // stub result
                     }
+                    "pack" => {
+                        for a in args { self.emit_expr(a); }
+                        if args.len() == 5 { self.code.push(0x50); }
+                    }
+                    "unpack" => {
+                        if args.len() == 1 { self.emit_expr(&args[0]); self.code.push(0x51); }
+                    }
+                    "v_add" => {
+                        if args.len() == 2 { for a in args { self.emit_expr(a); } self.code.push(0x52); }
+                    }
+                    "v_neg" => {
+                        if args.len() == 1 { self.emit_expr(&args[0]); self.code.push(0x53); }
+                    }
+                    "v_con" => {
+                        if args.len() == 2 { for a in args { self.emit_expr(a); } self.code.push(0x54); }
+                    }
+                    "bind" => {
+                        if args.len() == 2 {
+                            if let Expr::Ident(name) = &args[0] {
+                                if let Some(&reg) = self.symbols.get(name) {
+                                    self.emit_expr(&args[1]);
+                                    self.code.push(0x42); // TBIND
+                                    self.code.push(reg);
+                                }
+                            }
+                        }
+                        self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
+                    }
                     "mul" => {
                         for a in args { self.emit_expr(a); }
                         if args.len() == 2 { self.code.push(0x03); }
@@ -941,12 +980,22 @@ impl BytecodeEmitter {
                 self.emit_expr(target);
                 self.code.push(0x32); // TAWAIT
             }
+            Expr::Slice { object, start, end, stride } => {
+                self.emit_expr(object);
+                self.emit_expr(start);
+                // Compute length = end - start
+                self.emit_expr(end);
+                self.emit_expr(start);
+                self.code.push(0x04); self.code.push(0x02); // TSUB (end - start)
+                self.emit_expr(stride);
+                self.code.push(0x55); // TVIEW
+            }
             Expr::TritTensorLiteral(vs) => {
                 let rows = vs.len();
                 let cols = 1;
                 self.code.push(0x0f);
-                self.code.extend_from_slice(&(rows as u16).to_le_bytes());
-                self.code.extend_from_slice(&(cols as u16).to_le_bytes());
+                self.code.extend_from_slice(&(rows as u32).to_le_bytes());
+                self.code.extend_from_slice(&(cols as u32).to_le_bytes());
                 let tr = self.next_reg; self.next_reg += 1;
                 self.code.push(0x08); self.code.push(tr.try_into().unwrap());
                 for (idx, &v) in vs.iter().enumerate() {

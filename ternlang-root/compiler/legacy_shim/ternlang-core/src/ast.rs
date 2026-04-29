@@ -39,6 +39,13 @@ pub enum Expr {
     Await {
         target: Box<Expr>,
     },
+    /// tensor[10..20] slice
+    Slice {
+        object: Box<Expr>,
+        start: Box<Expr>,
+        end: Box<Expr>,
+        stride: Box<Expr>,
+    },
     /// tensor[row, col] indexing (Phase 4.1)
     Index {
         object: Box<Expr>,
@@ -172,6 +179,7 @@ pub enum Pattern {
 pub enum Type {
     Trit,
     TritTensor { dims: Vec<usize> },
+    PackedTritTensor { dims: Vec<usize> },
     Int,
     IntTensor { dims: Vec<usize> },
     Bool,

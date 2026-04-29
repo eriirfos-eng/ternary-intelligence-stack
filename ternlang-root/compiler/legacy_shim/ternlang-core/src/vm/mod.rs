@@ -93,6 +93,12 @@ pub enum Value {
     Float(f64),
     String(String),
     TensorRef(usize),
+    TensorView {
+        tensor_id: usize,
+        offset: usize,
+        length: usize,
+        stride: usize,
+    },
     AgentRef(usize, Option<String>),
     Struct(std::collections::HashMap<String, Value>),
 }
@@ -105,6 +111,7 @@ impl Default for Value {
 
 enum TensorData {
     Trit(Vec<Trit>),
+    PackedTrit(Vec<u8>, usize),
     Float(Vec<f64>),
     Int(Vec<i64>),
 }
@@ -113,6 +120,7 @@ impl TensorData {
     fn len(&self) -> usize {
         match self {
             TensorData::Trit(v) => v.len(),
+            TensorData::PackedTrit(_, len) => *len,
             TensorData::Float(v) => v.len(),
             TensorData::Int(v) => v.len(),
         }
@@ -147,6 +155,7 @@ pub struct BetVm {
     pub sparse_dropped: bool,
     remote: Option<Arc<dyn RemoteTransport>>,
     open_files: Vec<Option<std::fs::File>>,
+    bindings: std::collections::HashMap<usize, Value>,
     _instructions_count: u64,
     pub print_log: Vec<String>,
 }
@@ -168,6 +177,7 @@ impl BetVm {
             sparse_dropped: false,
             remote: None,
             open_files: Vec::new(),
+            bindings: std::collections::HashMap::new(),
             _instructions_count: 0,
             print_log: Vec::new(),
         }
@@ -302,13 +312,17 @@ impl BetVm {
                 0x08 => { // Tstore
                     let reg = self.read_u8()? as usize;
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    self.bindings.remove(&reg);
                     if reg >= self.registers.len() { self.registers.resize(reg + 1, Value::default()); }
                     self.registers[reg] = val;
                 }
                 0x09 => { // Tload
                     let reg = self.read_u8()? as usize;
-                    if reg >= self.registers.len() { self.registers.resize(reg + 1, Value::default()); }
-                    self.stack.push(self.registers[reg].clone());
+                    let val = self.bindings.get(&reg).cloned().unwrap_or_else(|| {
+                        if reg >= self.registers.len() { self.registers.resize(reg + 1, Value::default()); }
+                        self.registers[reg].clone()
+                    });
+                    self.stack.push(val);
                 }
                 0x0a => { // Tdup
                     let val = self.stack.last().ok_or(VmError::StackUnderflow)?;
@@ -631,6 +645,7 @@ impl BetVm {
                         Value::Float(f) => format!("{}", f),
                         Value::String(s) => s.clone(),
                         Value::TensorRef(idx) => format!("TensorRef({})", idx),
+                        Value::TensorView { tensor_id, offset, length, .. } => format!("TensorView({}[{}..{}])", tensor_id, offset, offset + length),
                         Value::AgentRef(idx, addr) => format!("AgentRef({}, {:?})", idx, addr),
                         Value::Struct(fields) => format!("Struct({:?})", fields),
                     };
@@ -650,26 +665,25 @@ impl BetVm {
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
                     let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
-                    match rf {
-                        Value::TensorRef(idx) => {
-                            if idx >= self.tensors.len() {
-                                return Err(VmError::TensorNotAllocated(idx));
-                            }
-                            let tensor = &self.tensors[idx];
-                            let data_len = tensor.data.len();
-                            let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
-                            if pos >= data_len {
-                                return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len });
-                            }
-                            let pushed = match &tensor.data {
-                                TensorData::Trit(v) => Value::Trit(v[pos]),
-                                TensorData::Float(v) => Value::Float(v[pos]),
-                                TensorData::Int(v) => Value::Int(v[pos]),
-                            };
-                            self.stack.push(pushed);
-                        }
-                        _ => return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) }),
+                    
+                    let (idx, pos) = self.get_pos(&rf, r, c)?;
+                    let tensor = &self.tensors[idx];
+                    let data_len = tensor.data.len();
+                    if pos >= data_len {
+                        return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len });
                     }
+                    let pushed = match &tensor.data {
+                        TensorData::Trit(v) => Value::Trit(v[pos]),
+                        TensorData::PackedTrit(v, _) => {
+                            let byte_idx = pos / 5;
+                            let trit_idx = pos % 5;
+                            let trits = crate::trit::unpack_5_trits(v[byte_idx]);
+                            Value::Trit(trits[trit_idx])
+                        }
+                        TensorData::Float(v) => Value::Float(v[pos]),
+                        TensorData::Int(v) => Value::Int(v[pos]),
+                    };
+                    self.stack.push(pushed);
                 }
                 0x23 => { // Tset
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
@@ -678,44 +692,52 @@ impl BetVm {
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
                     let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
-                    if let Value::TensorRef(idx) = rf.clone() {
-                        if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
-                        let tensor = &mut self.tensors[idx];
-                        let data_len = tensor.data.len();
-                        let pos = if tensor.cols > 1 && c >= 0 { r as usize * tensor.cols + c as usize } else { r as usize };
-                        if pos >= data_len { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len }); }
-                        match (&mut tensor.data, val.clone()) {
-                            (TensorData::Trit(v), Value::Trit(t)) => v[pos] = t,
-                            (TensorData::Trit(v), Value::Int(i)) => v[pos] = if i > 0 { Trit::Affirm } else if i < 0 { Trit::Reject } else { Trit::Tend },
-                            (TensorData::Float(v), Value::Float(f)) => v[pos] = f,
-                            (TensorData::Float(v), Value::Int(i)) => v[pos] = i as f64,
-                            (TensorData::Int(v), Value::Int(i)) => v[pos] = i,
-                            (TensorData::Int(v), Value::Float(f)) => v[pos] = f as i64,
-                            (TensorData::Int(v), Value::Trit(t)) => v[pos] = t as i64,
-                            _ => return Err(VmError::TypeMismatch { expected: "compatible value for tensor type".into(), found: format!("{:?}", val) }),
+                    
+                    let (idx, pos) = self.get_pos(&rf, r, c)?;
+                    let tensor = &mut self.tensors[idx];
+                    let data_len = tensor.data.len();
+                    if pos >= data_len { return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len }); }
+                    match (&mut tensor.data, val.clone()) {
+                        (TensorData::Trit(v), Value::Trit(t)) => v[pos] = t,
+                        (TensorData::Trit(v), Value::Int(i)) => v[pos] = if i > 0 { Trit::Affirm } else if i < 0 { Trit::Reject } else { Trit::Tend },
+                        (TensorData::PackedTrit(v, _), val_v) => {
+                            let byte_idx = pos / 5;
+                            let trit_idx = pos % 5;
+                            let mut trits = crate::trit::unpack_5_trits(v[byte_idx]);
+                            trits[trit_idx] = match val_v {
+                                Value::Trit(t) => t,
+                                Value::Int(i) => if i > 0 { Trit::Affirm } else if i < 0 { Trit::Reject } else { Trit::Tend },
+                                _ => return Err(VmError::TypeMismatch { expected: "Trit or Int".into(), found: format!("{:?}", val_v) }),
+                            };
+                            v[byte_idx] = crate::trit::pack_5_trits(trits);
                         }
-                    } else {
-                        return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", rf) });
+                        (TensorData::Float(v), Value::Float(f)) => v[pos] = f,
+                        (TensorData::Float(v), Value::Int(i)) => v[pos] = i as f64,
+                        (TensorData::Int(v), Value::Int(i)) => v[pos] = i,
+                        (TensorData::Int(v), Value::Float(f)) => v[pos] = f as i64,
+                        (TensorData::Int(v), Value::Trit(t)) => v[pos] = t as i64,
+                        _ => return Err(VmError::TypeMismatch { expected: "compatible value for tensor type".into(), found: format!("{:?}", val) }),
                     }
                 }
-                0x24 => { // Tshape — TensorRef → (rows, cols); String → (len, 1)
+                0x24 => { // Tshape — TensorRef/View → (rows, cols); String → (len, 1)
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     match rf {
                         Value::TensorRef(idx) => {
-                            if idx >= self.tensors.len() {
-                                return Err(VmError::TensorNotAllocated(idx));
-                            }
+                            if idx >= self.tensors.len() { return Err(VmError::TensorNotAllocated(idx)); }
                             let tensor = &self.tensors[idx];
                             self.stack.push(Value::Int(tensor.rows as i64));
                             self.stack.push(Value::Int(tensor.cols as i64));
                         }
+                        Value::TensorView { length, .. } => {
+                            self.stack.push(Value::Int(length as i64));
+                            self.stack.push(Value::Int(1));
+                        }
                         Value::String(s) => {
-                            // len(string) — returns character count as rows, cols=1
                             let n = s.chars().count() as i64;
                             self.stack.push(Value::Int(n));
                             self.stack.push(Value::Int(1));
                         }
-                        _ => return Err(VmError::TypeMismatch { expected: "TensorRef or String".into(), found: format!("{:?}", rf) }),
+                        _ => return Err(VmError::TypeMismatch { expected: "TensorRef, TensorView, or String".into(), found: format!("{:?}", rf) }),
                     }
                 }
                 0x30 => { // Tspawn — (type_id) → AgentRef
@@ -1020,6 +1042,162 @@ impl BetVm {
                         return Err(VmError::TypeMismatch { expected: "Struct".into(), found: format!("{:?}", obj) });
                     }
                 }
+                0x42 => { // TBIND reg, view_reg
+                    let reg = self.read_u8()? as usize;
+                    let view_val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let Value::TensorView { .. } = view_val {
+                        self.bindings.insert(reg, view_val);
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "TensorView".into(), found: format!("{:?}", view_val) });
+                    }
+                }
+                0x55 => { // TVIEW tensor_ref/view, offset, length, stride → TensorView
+                    let stride = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let length = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let offset = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    
+                    if let (Value::Int(o), Value::Int(l), Value::Int(s)) = (&offset, &length, &stride) {
+                        match rf {
+                            Value::TensorRef(id) => {
+                                self.stack.push(Value::TensorView {
+                                    tensor_id: id,
+                                    offset: *o as usize,
+                                    length: *l as usize,
+                                    stride: *s as usize,
+                                });
+                            }
+                            Value::TensorView { tensor_id, offset: v_off, stride: v_stride, .. } => {
+                                // Slicing a view: absolute offset = view_offset + (slice_offset * view_stride)
+                                // New stride = view_stride * slice_stride
+                                self.stack.push(Value::TensorView {
+                                    tensor_id,
+                                    offset: v_off + (*o as usize * v_stride),
+                                    length: *l as usize,
+                                    stride: v_stride * (*s as usize),
+                                });
+                            }
+                            _ => return Err(VmError::TypeMismatch { expected: "TensorRef or TensorView".into(), found: format!("{:?}", rf) }),
+                        }
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "Int, Int, Int".into(), found: format!("{:?}, {:?}, {:?}", offset, length, stride) });
+                    }
+                }
+                0x50 => { // TPACK: pops 5 trits, pushes 1 packed byte (as Int)
+                    let mut trits = [Trit::Tend; 5];
+                    for i in (0..5).rev() {
+                        let t = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                        trits[i] = match t {
+                            Value::Trit(tv) => tv,
+                            _ => return Err(VmError::TypeMismatch { expected: "Trit".into(), found: format!("{:?}", t) }),
+                        };
+                    }
+                    let packed = crate::trit::pack_5_trits(trits);
+                    self.stack.push(Value::Int(packed as i64));
+                }
+                0x51 => { // TUNPACK: pops 1 packed byte, pushes 5 trits
+                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let Value::Int(packed) = val {
+                        let trits = crate::trit::unpack_5_trits(packed as u8);
+                        for t in trits {
+                            self.stack.push(Value::Trit(t));
+                        }
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "Int (packed byte)".into(), found: format!("{:?}", val) });
+                    }
+                }
+                0x56 => { // TALLOC_PACKED (packed trit tensor)
+                    let rows = self.read_u32()? as usize;
+                    let cols = self.read_u32()? as usize;
+                    let size = rows * cols;
+                    let num_bytes = (size + 4) / 5;
+                    let idx = self.tensors.len();
+                    self.tensors.push(TensorInstance {
+                        data: TensorData::PackedTrit(vec![0x00; num_bytes], size), // 0x00 is Reject Reject Reject Reject Reject
+                        rows,
+                        cols,
+                    });
+                    self.stack.push(Value::TensorRef(idx));
+                }
+                0x52 => { // TV_ADD: Vectorized addition of two packed tensors
+                    let b_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let (Value::TensorRef(a_idx), Value::TensorRef(b_idx)) = (a_ref, b_ref) {
+                        let res_idx = self.tensors.len();
+                        let (rows, cols, data) = {
+                            let a = self.tensors.get(a_idx).ok_or(VmError::TensorNotAllocated(a_idx))?;
+                            let b = self.tensors.get(b_idx).ok_or(VmError::TensorNotAllocated(b_idx))?;
+                            if a.rows != b.rows || a.cols != b.cols {
+                                return Err(VmError::RuntimeError("Tensor dimension mismatch in TV_ADD".into()));
+                            }
+                            match (&a.data, &b.data) {
+                                (TensorData::PackedTrit(av, alen), TensorData::PackedTrit(bv, _)) => {
+                                    let mut res_v = vec![0u8; av.len()];
+                                    for i in 0..av.len() {
+                                        res_v[i] = crate::trit::packed_add(av[i], bv[i]);
+                                    }
+                                    (a.rows, a.cols, TensorData::PackedTrit(res_v, *alen))
+                                }
+                                _ => return Err(VmError::TypeMismatch { expected: "PackedTrit tensors".into(), found: "Other".into() }),
+                            }
+                        };
+                        self.tensors.push(TensorInstance { data, rows, cols });
+                        self.stack.push(Value::TensorRef(res_idx));
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "TensorRef, TensorRef".into(), found: "Unknown".into() });
+                    }
+                }
+                0x53 => { // TV_NEG: Vectorized negation of a packed tensor
+                    let a_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let Value::TensorRef(idx) = a_ref {
+                        let res_idx = self.tensors.len();
+                        let (rows, cols, data) = {
+                            let a = self.tensors.get(idx).ok_or(VmError::TensorNotAllocated(idx))?;
+                            match &a.data {
+                                TensorData::PackedTrit(v, len) => {
+                                    let mut res_v = vec![0u8; v.len()];
+                                    for i in 0..v.len() {
+                                        res_v[i] = crate::trit::packed_neg(v[i]);
+                                    }
+                                    (a.rows, a.cols, TensorData::PackedTrit(res_v, *len))
+                                }
+                                _ => return Err(VmError::TypeMismatch { expected: "PackedTrit tensor".into(), found: "Other".into() }),
+                            }
+                        };
+                        self.tensors.push(TensorInstance { data, rows, cols });
+                        self.stack.push(Value::TensorRef(res_idx));
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "TensorRef".into(), found: format!("{:?}", a_ref) });
+                    }
+                }
+                0x54 => { // TV_CON: Vectorized consensus of two packed tensors
+                    let b_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let a_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    if let (Value::TensorRef(a_idx), Value::TensorRef(b_idx)) = (a_ref, b_ref) {
+                        let res_idx = self.tensors.len();
+                        let (rows, cols, data) = {
+                            let a = self.tensors.get(a_idx).ok_or(VmError::TensorNotAllocated(a_idx))?;
+                            let b = self.tensors.get(b_idx).ok_or(VmError::TensorNotAllocated(b_idx))?;
+                            if a.rows != b.rows || a.cols != b.cols {
+                                return Err(VmError::RuntimeError("Tensor dimension mismatch in TV_CON".into()));
+                            }
+                            match (&a.data, &b.data) {
+                                (TensorData::PackedTrit(av, alen), TensorData::PackedTrit(bv, _)) => {
+                                    let mut res_v = vec![0u8; av.len()];
+                                    for i in 0..av.len() {
+                                        res_v[i] = crate::trit::packed_consensus(av[i], bv[i]);
+                                    }
+                                    (a.rows, a.cols, TensorData::PackedTrit(res_v, *alen))
+                                }
+                                _ => return Err(VmError::TypeMismatch { expected: "PackedTrit tensors".into(), found: "Other".into() }),
+                            }
+                        };
+                        self.tensors.push(TensorInstance { data, rows, cols });
+                        self.stack.push(Value::TensorRef(res_idx));
+                    } else {
+                        return Err(VmError::TypeMismatch { expected: "TensorRef, TensorRef".into(), found: "Unknown".into() });
+                    }
+                }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),
             }
@@ -1049,5 +1227,24 @@ impl BetVm {
         ]);
         self.pc += 4;
         Ok(val)
+    }
+
+    fn get_pos(&self, rf: &Value, row: i64, col: i64) -> Result<(usize, usize), VmError> {
+        match rf {
+            Value::TensorRef(idx) => {
+                let tensor = self.tensors.get(*idx).ok_or(VmError::TensorNotAllocated(*idx))?;
+                let pos = if tensor.cols > 1 && col >= 0 {
+                    row as usize * tensor.cols + col as usize
+                } else {
+                    row as usize
+                };
+                Ok((*idx, pos))
+            }
+            Value::TensorView { tensor_id, offset, stride, .. } => {
+                let pos = *offset + (row as usize * *stride);
+                Ok((*tensor_id, pos))
+            }
+            _ => Err(VmError::TypeMismatch { expected: "TensorRef or TensorView".into(), found: format!("{:?}", rf) }),
+        }
     }
 }

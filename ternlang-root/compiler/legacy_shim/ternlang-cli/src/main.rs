@@ -628,6 +628,8 @@ fn format_value(val: &Value) -> String {
         Value::Int(v)       => format!("{}  int", v),
         Value::Float(f)     => format!("{:.6}  float", f),
         Value::TensorRef(r) => format!("tensor@{}", r),
+        Value::TensorView { tensor_id, offset, length, .. } =>
+            format!("view@{}[{}..{}]", tensor_id, offset, offset + length),
         Value::AgentRef(a, _) => format!("agent:{}", a),
         Value::String(s)    => format!("{:?}", s),
         Value::Struct(f)    => format!("struct{{{:?}}}", f),
@@ -761,6 +763,8 @@ fn run_repl() {
                             Value::AgentRef(a, _)  => println!("  → agent_ref({})", a),
                             Value::String(s) => println!("  → {:?}", s),
                             Value::Struct(f) => println!("  → struct{{{:?}}}", f),
+                            Value::TensorView { tensor_id, offset, length, .. } =>
+                                println!("  → view@{}[{}..{}]", tensor_id, offset, offset + length),
                         }
                     }
                     Err(e) => eprintln!("  vm error: {}", e),
