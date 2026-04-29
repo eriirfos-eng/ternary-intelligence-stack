@@ -93,8 +93,8 @@ cargo build --release
 [![version](https://img.shields.io/badge/version-v0.1.2-cyan)](https://crates.io/crates/albert-cli)
 
 ---
-**Albert** is the sovereign, model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He runs entirely in your terminal, connects to any LLM provider, and never phones home.
----
+*Albert* is the sovereign, model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He runs entirely in your terminal, connects to any LLM provider, and never phones home.
+
 
 ### Quick Install — One Copy Gets It All
 
