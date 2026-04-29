@@ -1,0 +1,11 @@
+// stdlib/bughunt/probe_81_pow_test.tern
+// Tier: 1
+
+fn main() -> trit {
+    let res: int = pow(2, 3);
+    println("2^3: ");
+    println(res);
+    return truth();
+}
+
+main();

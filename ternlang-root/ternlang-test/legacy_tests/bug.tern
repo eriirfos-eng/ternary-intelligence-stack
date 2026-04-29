@@ -1,0 +1,6 @@
+fn main() -> trit {
+    if 1.0 < 2.0 {
+        return affirm;
+    }
+    return hold;
+}

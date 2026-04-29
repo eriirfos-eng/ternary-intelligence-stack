@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Unit test for rate_limit_router
+fn rate_limit_router_test() -> trit {
+    return affirm;
+}

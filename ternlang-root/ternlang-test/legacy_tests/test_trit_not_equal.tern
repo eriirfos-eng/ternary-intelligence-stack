@@ -1,0 +1,7 @@
+fn main() -> trit {
+    let a: trit = 1;
+    let b: trit = 1;
+    let res: trit = a == b;
+    return res;
+}
+

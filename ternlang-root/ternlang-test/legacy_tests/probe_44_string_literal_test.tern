@@ -1,0 +1,19 @@
+// stdlib/bughunt/probe_44_string_literal_test.tern
+// Demonstrates: Basic handling of string literals.
+// Tier: 1
+
+fn main() -> trit {
+    // Test if string literals can be assigned and returned.
+    let greeting: string = "Hello, Ternlang!";
+    let another_greeting: string = "This is a test.";
+
+    // Simple check: if the string is stored and retrieved correctly,
+    // we can return truth. If it causes a parse error or runtime issue,
+    // it will likely result in a reject or panic.
+    
+    // We can't directly compare strings yet, so we'll just return truth()
+    // if the program compiles and runs without crashing.
+    // If there's a bug in string handling, we expect a failure.
+    
+    return truth();
+}

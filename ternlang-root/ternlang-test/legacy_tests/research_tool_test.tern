@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Unit test for research_tool
+fn research_tool_test() -> trit {
+    return affirm;
+}

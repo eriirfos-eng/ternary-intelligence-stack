@@ -1,0 +1,9 @@
+agent Worker {
+    fn handle(input: trit) -> trit {
+        return 1;
+    }
+}
+
+fn main() -> trit {
+    return 1;
+}

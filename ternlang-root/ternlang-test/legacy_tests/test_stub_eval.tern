@@ -1,0 +1,23 @@
+// stdlib/testing/test_stub_eval.tern
+// Demonstrates: Using a stubbed response based on input mapping
+// Tier: 1 - Open Core
+
+fn stub_response(input_id: int) -> trit {
+    match input_id {
+        1 => { return truth();    }
+        2 => { return conflict(); }
+        0 => { return hold();     }
+    }
+    return hold(); // Default for unmapped inputs
+}
+
+fn main() -> trit {
+    let input: int = 2;
+    let result: trit = stub_response(input);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

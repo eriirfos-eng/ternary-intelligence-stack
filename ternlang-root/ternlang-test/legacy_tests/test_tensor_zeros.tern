@@ -1,0 +1,8 @@
+fn main() -> trit {
+    let mut t: trittensor<5> = zeros(5);
+    t[0] = affirm;
+    if t[0] == affirm {
+        return affirm;
+    }
+    return reject;
+}

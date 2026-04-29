@@ -1,0 +1,80 @@
+// stdlib/bughunt/probe_33_stress_test.tern
+// Demonstrates: A complex interaction of language features to find bugs.
+// Tier: 1
+
+// 1. Struct Definition
+struct Point {
+    x: int,
+    y: int,
+    label: string
+}
+
+// 2. Function returning a struct
+fn create_point(x: int, y: int) -> Point {
+    let p: Point = Point {
+        x: x,
+        y: y,
+        label: "default"
+    };
+    return p;
+}
+
+// 3. Recursive function (factorial)
+fn factorial(n: int) -> int {
+    if n == 0 {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+fn main() -> trit {
+    // 4. Test recursion and integer ops
+    let fact_5: int = factorial(5); // Should be 120
+    if fact_5 != 120 {
+        return tend; // <<< MODIFIED: Return tend on factorial failure
+    }
+
+    // 5. Test struct creation and field access
+    let my_point: Point = create_point(fact_5, -10);
+    if my_point.x != 120 {
+        // This is a new check, let's have it return something unique
+        return cast(2); 
+    }
+
+    // 6. Test type casting
+    let x_float: float = cast(my_point.x); // int to float
+    let y_int: int = cast(3.14);          // float to int (should truncate to 3)
+
+    let test_cast: int = cast(8.9);
+    if test_cast != 8 {
+        return reject; // <<< THIS is the prime suspect. Keep it as reject.
+    }
+
+    if x_float != 120.0 {
+        return cast(3); // Fail on int-to-float cast
+    }
+    if y_int != 3 {
+        return cast(4); // Fail on float-to-int cast
+    }
+
+    // 7. Test control flow (match and loop)
+    let mut final_val: trit = tend;
+    let items: trittensor<3> = [1, 0, -1];
+
+    for item in items {
+        match item {
+            1 => { final_val = truth(); }
+            0 => { final_val = tend; }
+            -1 => { final_val = conflict(); break; } // exit loop early
+        }
+    }
+
+    // If the loop ran correctly, `break` should have been hit.
+    if final_val != conflict() {
+        return cast(5);
+    }
+
+    // If all tests pass, we return truth
+    return truth();
+}

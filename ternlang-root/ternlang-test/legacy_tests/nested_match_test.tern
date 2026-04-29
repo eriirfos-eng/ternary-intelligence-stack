@@ -1,0 +1,45 @@
+// stdlib/testing/nested_match_test.tern
+// Demonstrates: Deeply nested match statements for stack stability check
+// Tier: 1 — Open Core
+
+fn nested_match(a: trit, b: trit, c: trit) -> trit {
+    match a {
+        -1 => {
+            match b {
+                -1 => { return conflict(); }
+                 0 => { return hold(); }
+                 1 => { return truth(); }
+            }
+        }
+         0 => {
+            match c {
+                -1 => { return hold(); }
+                 0 => { return hold(); }
+                 1 => { return hold(); }
+            }
+        }
+         1 => {
+            match b {
+                -1 => {
+                    match c {
+                        -1 => { return reject; }
+                         0 => { return tend; }
+                         1 => { return affirm; }
+                    }
+                }
+                 0 => { return hold(); }
+                 1 => { return truth(); }
+            }
+        }
+    }
+}
+
+fn main() -> trit {
+    let r1: trit = nested_match(affirm, reject, affirm);
+    print(" (1, -1, 1) -> "); print(r1);
+    
+    if r1 == affirm {
+        return truth();
+    }
+    return conflict();
+}

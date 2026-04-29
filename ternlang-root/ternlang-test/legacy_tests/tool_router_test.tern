@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Unit test for tool_router
+fn tool_router_test() -> trit {
+    return affirm;
+}

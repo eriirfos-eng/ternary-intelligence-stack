@@ -1,0 +1,9 @@
+fn greet(signal: trit) -> trit {
+    match signal {
+        -1 => { return conflict(); }
+         0 => { return hold();    }
+         1 => { return truth();   }
+    }
+}
+let result: trit = greet(1);
+return result;

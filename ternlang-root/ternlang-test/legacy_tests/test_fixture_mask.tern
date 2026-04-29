@@ -1,0 +1,27 @@
+// stdlib/testing/test_fixture_mask.tern
+// Demonstrates: Orchestrating test fixture setup, execution, and teardown
+// Tier: 1 - Open Core
+
+fn run_fixture_test(setup_ok: trit, test_ok: trit, teardown_ok: trit) -> trit {
+    // If setup fails, don't run test or care about teardown
+    if setup_ok < 1 {
+        return conflict();
+    }
+    
+    // Balanced ternary AND for overall status
+    return setup_ok && test_ok && teardown_ok;
+}
+
+fn main() -> trit {
+    let s: trit = truth();
+    let t: trit = truth();
+    let td: trit = truth();
+    
+    let result: trit = run_fixture_test(s, t, td);
+    
+    match result {
+        -1 => { return conflict(); }
+         0 => { return hold();     }
+         1 => { return truth();    }
+    }
+}

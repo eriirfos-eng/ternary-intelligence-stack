@@ -1,0 +1,49 @@
+// stdlib/agents/supervisor.tern
+// Demonstrates: Supervisor agent pattern (Child monitoring and restart)
+// Tier: 1
+
+agent Worker {
+    fn handle(input: trit) -> trit {
+        // Simulates a worker that might fail (reject) on specific input
+        if input == reject {
+            return reject;
+        }
+        return affirm;
+    }
+    state: trit;
+}
+
+agent Supervisor {
+    fn handle(input: trit) -> trit {
+        let w: agentref = spawn Worker;
+        
+        send w input;
+        let res: trit = await w;
+        
+        if res == reject {
+            // Monitoring logic: detect failure and "restart" (spawn new instance)
+            // In a real system, this would log the failure and attempt recovery.
+            let w2: agentref = spawn Worker;
+            // Retry with a neutral input to recover
+            send w2 tend;
+            return await w2;
+        }
+        
+        return res;
+    }
+}
+
+fn main() -> trit {
+    let s: agentref = spawn Supervisor;
+    
+    // Test case: input that causes worker failure
+    send s reject;
+    let res: trit = await s;
+    
+    // Supervisor should have recovered and returned 'affirm' or 'tend'
+    match res {
+        affirm => { return affirm; }
+        tend   => { return affirm; } // Recovery success
+        reject => { return reject; } // Recovery failed
+    }
+}

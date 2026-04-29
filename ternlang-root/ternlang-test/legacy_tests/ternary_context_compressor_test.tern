@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Unit test for ternary_context_compressor
+fn ternary_context_compressor_test() -> trit {
+    return affirm;
+}

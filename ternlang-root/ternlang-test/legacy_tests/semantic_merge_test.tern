@@ -1,0 +1,5 @@
+// --- RFI-IRFOS TIER 2 PROPRIETARY ---
+// Unit test for semantic_merge
+fn semantic_merge_test() -> trit {
+    return affirm;
+}
