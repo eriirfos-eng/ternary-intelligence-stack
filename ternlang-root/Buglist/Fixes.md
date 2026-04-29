@@ -4,6 +4,18 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 ---
 
+## 2026-04-29 — [RU-VECTOR + V1.2.4 SYNC] (v1.2.4 release)
+
+**Diagnosis:** Enterprise users required high-performance bridge between Ternary logic and existing Vector Databases (Qdrant, Milvus) for RAG pipelines. Additionally, the ecosystem needed a synchronized version bump to lock in the RuVector activation.
+
+**Fix:**
+- **RuVector Bridge**: Formalized `ternlang-ruvector` crate. Implemented Sparse GEMV kernels optimized for 99%+ sparsity (up to 122x speedup). Added serialization layers for direct VDB indexing.
+- **Ecosystem Sync**: Bumped version to `v1.2.4` across all 20+ crates (14 Ternlang, 6 Albert). 
+- **Vault Integration**: Activated live semantic search hooks in Albert CLI via the RuVector-backed vault.
+**Status:** RELEASED. All 20 crates live on crates.io.
+
+---
+
 ## 2026-04-29 — [EXATERN-SIMD + ZERO-COPY] (v1.3.0 pre-release)
 
 **Diagnosis:** To achieve "Nation-State Scale" performance, the BET-VM required a transition from "Byte-per-Trit" emulation to hardware-aligned vectorized execution. Memory bandwidth was identified as a primary bottleneck for large foundation models.

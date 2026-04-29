@@ -11,9 +11,9 @@ keywords = ["ai", "cli", "ternary", "compat", "agent"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-commands = { package = "albert-commands", path = "../commands", version = "1.2.3" }
-tools = { package = "albert-tools", path = "../tools", version = "1.2.3" }
-runtime = { package = "albert-runtime", path = "../runtime", version = "1.2.3" }
+commands = { package = "albert-commands", path = "../commands", version = "1.2.4" }
+tools = { package = "albert-tools", path = "../tools", version = "1.2.4" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "1.2.4" }
 
 [lints]
 workspace = true
