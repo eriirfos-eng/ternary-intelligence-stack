@@ -196,8 +196,8 @@ impl BytecodeEmitter {
                             let rows = dims[0];
                             let cols = if dims.len() > 1 { dims[1] } else { 1 };
                             self.code.push(0x0f); // TALLOC (trit)
-                            self.code.extend_from_slice(&(rows as u16).to_le_bytes());
-                            self.code.extend_from_slice(&(cols as u16).to_le_bytes());
+                            self.code.extend_from_slice(&(rows as u32).to_le_bytes());
+                            self.code.extend_from_slice(&(cols as u32).to_le_bytes());
                             handled = true;
                         }
                     }
@@ -207,8 +207,8 @@ impl BytecodeEmitter {
                             let rows = dims[0];
                             let cols = if dims.len() > 1 { dims[1] } else { 1 };
                             self.code.push(0x3c); // TALLOC_Int
-                            self.code.extend_from_slice(&(rows as u16).to_le_bytes());
-                            self.code.extend_from_slice(&(cols as u16).to_le_bytes());
+                            self.code.extend_from_slice(&(rows as u32).to_le_bytes());
+                            self.code.extend_from_slice(&(cols as u32).to_le_bytes());
                             handled = true;
                         }
                     }
@@ -218,8 +218,8 @@ impl BytecodeEmitter {
                             let rows = dims[0];
                             let cols = if dims.len() > 1 { dims[1] } else { 1 };
                             self.code.push(0x3d); // TALLOC_Float
-                            self.code.extend_from_slice(&(rows as u16).to_le_bytes());
-                            self.code.extend_from_slice(&(cols as u16).to_le_bytes());
+                            self.code.extend_from_slice(&(rows as u32).to_le_bytes());
+                            self.code.extend_from_slice(&(cols as u32).to_le_bytes());
                             handled = true;
                         }
                     }
@@ -958,10 +958,17 @@ impl BytecodeEmitter {
                 }
                 self.code.push(0x09); self.code.push(tr.try_into().unwrap());
             }
-            Expr::StructLiteral { .. } => {
-                // Struct literals are largely handled by Stmt::Let by flattening.
-                // We push a dummy hold so Return(struct_lit) or Let works consistently.
-                self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
+            Expr::StructLiteral { fields, .. } => {
+                for (_, f_val) in fields {
+                    self.emit_expr(f_val);
+                }
+                self.code.push(0x40); // TSTRUCT
+                self.code.push(fields.len() as u8);
+                // We pop in reverse order of pushing
+                for (f_name, _) in fields.iter().rev() {
+                    self.code.push(f_name.len() as u8);
+                    self.code.extend_from_slice(f_name.as_bytes());
+                }
             }
             Expr::Propagate { expr } => {
                 self.emit_expr(expr);
