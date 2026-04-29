@@ -488,7 +488,7 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | ~~Q3 2026~~ **DONE** | Jupyter kernel (Phase 15A) ✅ | 🟢 Complete | — |
 | ~~Q3 2026~~ **DONE** | Hacker News launch (Phase 15D) ✅ | 🔴 Critical (distribution) | Low |
 | Q4 2026 | VS Code extension v0.5.0 — BET debugger (Phase 16) | 🟠 High | High |
-| Q4 2026 | TernStudio v1.0 (Phase 16) | 🟠 High | Very High |
+| >>Q4 2026>> **DONE** | TernStudio v1.0 (Phase 16) | 🟠 High | Very High |
 | Q4 2026 | arXiv paper submission (Phase 15C) | 🟡 Medium | Medium |
 
 ---
