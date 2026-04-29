@@ -92,8 +92,7 @@ cargo build --release
 [![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
 [![version](https://img.shields.io/badge/version-v0.1.2-cyan)](https://crates.io/crates/albert-cli)
 
-**Albert** is the sovereign, model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He runs entirely in your terminal, connects to any LLM provider, and never phones home. First went online: **2026-04-24**.
-
+**Albert** is the sovereign, model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He runs entirely in your terminal, connects to any LLM provider, and never phones home.
 ---
 
 ### Quick Install — One Copy Gets It All
@@ -102,18 +101,11 @@ cargo build --release
 # Install Albert (brings the full agent engine with it)
 cargo install albert-cli
 
-# Set your LLM key (pick any provider)
-export GEMINI_API_KEY=AIza...          # Google Gemini — default, highest quota
-export ANTHROPIC_API_KEY=sk-ant-...   # Anthropic Claude
-export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
-# export XAI_API_KEY=xai-...          # xAI / Grok
-# (Ollama: just run `ollama serve` — no key needed)
-
 # Launch
 albert-cli
 ```
 
-That's it. Albert auto-detects your key and spins up the REPL.
+That's it. Albert spins up the REPL.
 
 ---
 
