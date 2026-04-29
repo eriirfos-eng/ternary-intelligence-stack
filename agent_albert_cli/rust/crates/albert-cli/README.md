@@ -1,6 +1,6 @@
 # albert-cli
 
-The `albert` binary — part of the [Ternary Intelligence Stack](https://github.com/eriirfos-eng/ternary-intelligence-stack).
+The `albert-cli` binary — part of the [Ternary Intelligence Stack](https://github.com/eriirfos-eng/ternary-intelligence-stack).
 
 [![Crates.io](https://img.shields.io/crates/v/albert-cli)](https://crates.io/crates/albert-cli)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/LICENSE)
@@ -14,7 +14,7 @@ cargo install albert-cli
 Then run:
 
 ```bash
-albert
+albert-cli
 ```
 
 ## What Albert does
@@ -39,4 +39,4 @@ Albert is a sovereign AI development CLI that runs in your terminal. It connects
 | [`albert-commands`](https://crates.io/crates/albert-commands) | Slash command library |
 | [`albert-tools`](https://crates.io/crates/albert-tools) | Tool execution layer |
 | [`albert-compat`](https://crates.io/crates/albert-compat) | Manifest extraction harness |
-| `albert-cli` | **This crate** — binary (`albert`) |
+| `albert-cli` | **This crate** — binary (`albert-cli`) |
