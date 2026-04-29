@@ -144,10 +144,10 @@ albert-cli
 
 ```bash
 # 1. Add your provider credentials
-albert /auth
+albert-cli /auth
 
 # 2. Map the current repository
-albert /init
+albert-cli /init
 
 # 3. Start the REPL
 albert-cli
