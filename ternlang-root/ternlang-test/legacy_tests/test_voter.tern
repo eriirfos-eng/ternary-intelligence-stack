@@ -1,0 +1,14 @@
+agent Voter {
+    opinion: trit
+    fn handle(val: trit) -> trit {
+        opinion = val;
+        return opinion;
+    }
+}
+
+fn main() -> trit {
+    let v: agentref = spawn Voter;
+    send v 1;
+    let res: trit = await v;
+    return res;
+}

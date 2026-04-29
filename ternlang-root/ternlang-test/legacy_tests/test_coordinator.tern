@@ -1,0 +1,15 @@
+agent Coordinator {
+    rounds: int
+    fn run() -> trit {
+        let i: int = 0;
+        while i < 10 ? {
+            i = i + 1;
+        } else { } else { }
+        return affirm;
+    }
+}
+
+fn main() -> trit {
+    let c: agentref = spawn Coordinator;
+    return 1;
+}

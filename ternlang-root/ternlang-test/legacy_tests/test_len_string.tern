@@ -1,0 +1,11 @@
+// test_len_string.tern
+fn main() -> trit {
+    let s: string = "hello world";
+    let l: int = len(s);
+    println("Length of 'hello world':");
+    println(l);
+    if l == 11 {
+        return truth();
+    }
+    return reject;
+}

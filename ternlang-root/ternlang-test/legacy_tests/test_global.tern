@@ -1,0 +1,5 @@
+let global_state: trit = 1;
+
+fn main() -> trit {
+    return global_state;
+}

@@ -1,0 +1,33 @@
+// stdlib/testing/tensor_equality_test.tern
+// Demonstrates: A function to check equality between two trit tensors.
+// Tier: 1 - Open Core
+
+fn are_tensors_equal(a: trittensor<5>, b: trittensor<5>, size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        if a[i] != b[i] { return -1; }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let t1: trittensor<5> = [1, 0, -1, 0, 1];
+    let t2: trittensor<5> = [1, 0, -1, 0, 1];
+    let t3: trittensor<5> = [1, 0, 0, 0, 1];
+    
+    println("Tensor Equality Test:");
+    
+    println("Checking t1 == t2 (identical):");
+    let r1: trit = are_tensors_equal(t1, t2, 5);
+    if r1 == 1 { println("Equal (Correct)."); } else { return conflict(); }
+    
+    println("Checking t1 == t3 (different):");
+    let r2: trit = are_tensors_equal(t1, t3, 5);
+    if r2 == -1 {
+        println("Not equal (Correct). Success.");
+        return truth();
+    }
+    
+    return conflict();
+}

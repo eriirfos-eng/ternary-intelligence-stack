@@ -1,0 +1,30 @@
+// stdlib/testing/float_comparison_test.tern
+// Demonstrates: Floating point comparison with epsilon.
+// Tier: 1 - Open Core
+
+fn float_near(a: float, b: float, epsilon: float) -> trit {
+    let diff: float = a - b;
+    if diff < 0.0 { diff = 0.0 - diff; }
+    
+    if diff <= epsilon { return 1; }
+    return -1;
+}
+
+fn main() -> trit {
+    let a: float = 1.0;
+    let b: float = 1.0000001;
+    let eps: float = 0.0001;
+    
+    println("Float Near Test (1.0 vs 1.0000001, eps 0.0001):");
+    let r1: trit = float_near(a, b, eps);
+    if r1 == 1 { println("Near (Correct)."); } else { return conflict(); }
+    
+    println("Float Near Test (1.0 vs 1.1, eps 0.0001):");
+    let r2: trit = float_near(a, 1.1, eps);
+    if r2 == -1 {
+        println("Not near (Correct). Success.");
+        return truth();
+    }
+    
+    return conflict();
+}

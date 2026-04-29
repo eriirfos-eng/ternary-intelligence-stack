@@ -1,0 +1,29 @@
+// stdlib/bughunt/probe_93_agent_test.tern
+// Demonstrates: Agent spawning and messaging
+// Tier: 1
+
+agent Echo {
+    fn handle(msg: trit) -> trit {
+        return msg;
+    }
+}
+
+fn main() -> trit {
+    println("Spawning Echo agent...");
+    let a: agentref = spawn Echo;
+    println("Sending affirm to agent...");
+    send a affirm;
+    println("Awaiting reply...");
+    let res: trit = await a;
+    
+    println("Result: ");
+    println(res);
+    
+    if res == affirm {
+        println("Success!");
+        return truth();
+    } else {
+        println("Failure!");
+        return conflict();
+    }
+}

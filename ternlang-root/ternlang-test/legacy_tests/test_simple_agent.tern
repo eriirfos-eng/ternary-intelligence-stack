@@ -1,0 +1,12 @@
+agent MyAgent {
+    fn handle(input: trit) -> trit {
+        return affirm;
+    }
+}
+
+fn main() -> trit {
+    let a: agentref = spawn MyAgent;
+    send a 1;
+    let res: trit = await a;
+    return res;
+}
