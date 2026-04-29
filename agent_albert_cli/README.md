@@ -41,7 +41,7 @@ Albert operates in exactly three states:
 | ` 0` | Tend | Context missing — Albert pauses and asks before continuing |
 | `-1` | Reject | Failure detected — Albert self-corrects and retries |
 
-This isn't just a design philosophy. It's enforced at the engine level. Albert will not hallucinate an answer, silently skip a step, or execute an ambiguous command.
+This is enforced at the engine level. Albert will not hallucinate an answer, silently skip a step, or execute an ambiguous command.
 
 ---
 
