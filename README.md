@@ -1,6 +1,6 @@
 # Ternary Intelligence Stack (TIS) 
 
-[![version](https://img.shields.io/badge/version-v1.1.1-black)](#architecture)
+[![version](https://img.shields.io/badge/version-v1.2.3-black)](#architecture)
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
@@ -90,7 +90,7 @@ cargo build --release
 ## Agent Albert — AI Intelligence Layer
 
 [![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
-[![version](https://img.shields.io/badge/version-v0.1.2-cyan)](https://crates.io/crates/albert-cli)
+[![version](https://img.shields.io/badge/version-v1.2.3-cyan)](https://crates.io/crates/albert-cli)
 
 ---
 *Albert* is the sovereign, model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He runs entirely in your terminal, connects to any LLM provider, and never phones home.

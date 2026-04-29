@@ -699,3 +699,26 @@ Symptom: Parse program error: ExpectedToken("Semicolon", "LParen").
 Diagnosis: The parser occasionally struggles with lookahead for parentheses in specific return or conditional contexts.
 Fix: Workaround applied — assign complex expressions to a temporary variable before evaluation, and use the 'hold' keyword instead of the function-style 'hold()'.
 Status: Resolved via idiom update in patterns.md and AGENT_SESSIONS.md.
+
+---
+
+## 2026-04-29 — [DONE] COMP-TENSOR-001 + VM-STRUCT-001 Resolved
+**Problem:** 16-bit tensor dimension cap (65,535) and lack of native Struct return ABI causing stack underflow/corruption.
+**Fix:** 
+- Upgraded BET-VM to 32-bit dimension addressing (u32 immediates).
+- Implemented `Value::Struct` return ABI for direct register-to-register struct passing.
+- Synchronized all 13 crates to v1.2.1 (ExaTern Phase 1).
+
+## 2026-04-29 — [DONE] ExaTern SIMD + Zero-Copy view foundation
+**Problem:** Binary overhead in large tensor ops and redundant memory copying for slices.
+**Fix:**
+- Implemented 5-trit-per-byte packing with O(1) vectorized arithmetic lookup tables.
+- Added `TVIEW` and `TBIND` opcodes for zero-copy slicing and in-place register binding.
+- Updated `ternlang-codegen` to handle packed trit tensors.
+
+## 2026-04-29 — [DONE] Albert-cli README + Binary Consistency (v1.2.3)
+**Problem:** `albert-cli` README instructed users to run `albert` instead of `albert-cli`. 
+**Fix:**
+- Corrected all README instances to `albert-cli`.
+- Aligned all Albert crates (`albert-runtime`, `albert-api`, `albert-commands`, `albert-tools`, `albert-compat`, `albert-cli`) to version **v1.2.3** to match the core Ternlang stack.
+- Successfully published all Albert crates to crates.io at v1.2.3.
