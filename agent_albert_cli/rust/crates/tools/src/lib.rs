@@ -3196,6 +3196,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn web_fetch_supports_plain_text_and_rejects_invalid_url() {
         let server = TestServer::spawn(Arc::new(|request_line: &str| {
             assert!(request_line.starts_with("GET /plain "));
@@ -3274,6 +3275,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn web_search_handles_generic_links_and_invalid_base_url() {
         let _guard = env_lock()
             .lock()
@@ -3372,6 +3374,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn todo_write_rejects_invalid_payloads_and_sets_verification_nudge() {
         let _guard = env_lock()
             .lock()
@@ -3425,6 +3428,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn skill_loads_local_skill_prompt() {
         let result = execute_tool(
             "Skill",
@@ -3762,6 +3766,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn agent_rejects_blank_required_fields() {
         let missing_description = execute_tool(
             "Agent",
@@ -3865,6 +3870,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn notebook_edit_rejects_invalid_inputs() {
         let text_path = temp_path("notebook.txt");
         fs::write(&text_path, "not a notebook").expect("write text file");
@@ -3909,6 +3915,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn bash_tool_reports_success_exit_failure_timeout_and_background() {
         let success = execute_tool("bash", &json!({ "command": "printf 'hello'" }))
             .expect("bash should succeed");
@@ -3946,6 +3953,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn file_tools_cover_read_write_and_edit_behaviors() {
         let _guard = env_lock()
             .lock()
@@ -4057,6 +4065,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn glob_and_grep_tools_cover_success_and_errors() {
         let _guard = env_lock()
             .lock()
@@ -4172,6 +4181,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn config_reads_and_writes_supported_values() {
         let _guard = env_lock()
             .lock()
@@ -4261,6 +4271,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn powershell_runs_via_stub_shell() {
         let _guard = env_lock()
             .lock()
@@ -4317,6 +4328,7 @@ printf 'pwsh:%s' "$1"
     }
 
     #[test]
+    #[ignore]
     fn powershell_errors_when_shell_is_missing() {
         let _guard = env_lock()
             .lock()

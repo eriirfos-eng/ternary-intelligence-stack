@@ -1,6 +1,6 @@
 [package]
 name = "ternlang-esp32"
-version = "1.0.0"
+version = "1.2.7"
 edition = "2021"
 license = "LicenseRef-BSL-1.1"
 description = "Triadic Silicon Gate for Espressif Hardware. Standardized Efficiency Gate for IoT."

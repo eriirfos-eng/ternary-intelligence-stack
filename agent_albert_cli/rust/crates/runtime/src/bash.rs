@@ -2,12 +2,10 @@ use std::env;
 use std::io;
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use tokio::process::Command as TokioCommand;
 use tokio::runtime::Builder;
-use tokio::time::timeout;
 use regex::Regex;
 
 use crate::sandbox::{
@@ -200,23 +198,72 @@ async fn execute_bash_async(
     sandbox_status: SandboxStatus,
     cwd: std::path::PathBuf,
 ) -> io::Result<BashCommandOutput> {
-    let mut command = prepare_tokio_command(&input.command, &cwd, &sandbox_status, true);
+    use std::process::Stdio;
+    use tokio::io::AsyncReadExt;
 
-    let output_result = if let Some(timeout_ms) = input.timeout {
-        match timeout(Duration::from_millis(timeout_ms), command.output()).await {
-            Ok(result) => (result?, false),
-            Err(_) => {
+    let mut cmd = prepare_tokio_command(&input.command, &cwd, &sandbox_status, true);
+    cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+
+    let mut child = cmd.spawn()?;
+    let mut stdout = child.stdout.take().expect("Failed to open stdout");
+    let mut stderr = child.stderr.take().expect("Failed to open stderr");
+
+    let mut stdout_vec = Vec::new();
+    let mut stderr_vec = Vec::new();
+    
+    // Persistent buffers to ensure no data is lost during tokio::select! races
+    let mut stdout_buf = [0u8; 4096];
+    let mut stderr_buf = [0u8; 4096];
+
+    loop {
+        tokio::select! {
+            res = stdout.read(&mut stdout_buf) => {
+                match res {
+                    Ok(0) => {}, // EOF handled by child.wait()
+                    Ok(n) => {
+                        let chunk = String::from_utf8_lossy(&stdout_buf[..n]).to_string();
+                        stdout_vec.push(chunk);
+                    }
+                    Err(_) => break,
+                }
+            }
+            res = stderr.read(&mut stderr_buf) => {
+                match res {
+                    Ok(0) => {}, // EOF
+                    Ok(n) => {
+                        let chunk = String::from_utf8_lossy(&stderr_buf[..n]).to_string();
+                        stderr_vec.push(chunk);
+                    }
+                    Err(_) => break,
+                }
+            }
+            status = child.wait() => {
+                let status = status?;
+                
+                // Final drain to capture any remaining output after process exit
+                let mut final_stdout = Vec::new();
+                let mut final_stderr = Vec::new();
+                stdout.read_to_end(&mut final_stdout).await.ok();
+                stderr.read_to_end(&mut final_stderr).await.ok();
+                
+                if !final_stdout.is_empty() {
+                    stdout_vec.push(String::from_utf8_lossy(&final_stdout).to_string());
+                }
+                if !final_stderr.is_empty() {
+                    stderr_vec.push(String::from_utf8_lossy(&final_stderr).to_string());
+                }
+
                 return Ok(BashCommandOutput {
-                    stdout: String::new(),
-                    stderr: format!("Command exceeded timeout of {timeout_ms} ms"),
+                    stdout: stdout_vec.concat(),
+                    stderr: stderr_vec.concat(),
                     raw_output_path: None,
-                    interrupted: true,
+                    interrupted: false,
                     is_image: None,
                     background_task_id: None,
                     backgrounded_by_user: None,
                     assistant_auto_backgrounded: None,
-                    return_code_interpretation: Some(String::from("timeout")),
-                    no_output_expected: Some(true),
+                    return_code_interpretation: status.code().map(|c| format!("exit_code:{c}")),
+                    no_output_expected: Some(false),
                     structured_content: None,
                     persisted_output_path: None,
                     persisted_output_size: None,
@@ -225,33 +272,21 @@ async fn execute_bash_async(
                 });
             }
         }
-    } else {
-        (command.output().await?, false)
-    };
-
-    let (output, interrupted) = output_result;
-    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
-    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
-    let no_output_expected = Some(stdout.trim().is_empty() && stderr.trim().is_empty());
-    let return_code_interpretation = output.status.code().and_then(|code| {
-        if code == 0 {
-            None
-        } else {
-            Some(format!("exit_code:{code}"))
-        }
-    });
-
+    }
+    
+    // Fallback if loop ends prematurely
+    let status = child.wait().await?;
     Ok(BashCommandOutput {
-        stdout,
-        stderr,
+        stdout: stdout_vec.concat(),
+        stderr: stderr_vec.concat(),
         raw_output_path: None,
-        interrupted,
+        interrupted: false,
         is_image: None,
         background_task_id: None,
         backgrounded_by_user: None,
         assistant_auto_backgrounded: None,
-        return_code_interpretation,
-        no_output_expected,
+        return_code_interpretation: status.code().map(|c| format!("exit_code:{c}")),
+        no_output_expected: Some(false),
         structured_content: None,
         persisted_output_path: None,
         persisted_output_size: None,

@@ -198,6 +198,14 @@ pub enum ExecBlock {
     // RawText(String),
 }
 
+#[derive(Debug)]
+pub struct ToolApprovalState {
+    pub _id: String,
+    pub name: String,
+    pub input: serde_json::Value,
+    pub resp_tx: std::sync::mpsc::SyncSender<runtime::PermissionPromptDecision>,
+}
+
 #[derive(Clone, Debug)]
 pub struct TuiState {
     pub exec_log: VecDeque<ExecBlock>,
@@ -237,6 +245,12 @@ pub struct TuiState {
     pub history_idx: Option<usize>,
     /// Stashed live input while browsing history — restored on Down past end.
     pub input_saved: String,
+
+    // ── HITL ─────────────────────────────────────────────────────────────────
+    /// HITL: Set when waiting for the user to approve a plan.
+    pub _awaiting_plan_approval: bool,
+    /// HITL: Set when waiting for tool approval.
+    pub awaiting_tool_approval: Option<Arc<Mutex<Option<ToolApprovalState>>>>,
 
     // ── Session Metrics ──────────────────────────────────────────────────────
     pub tool_calls: usize,
@@ -281,6 +295,8 @@ impl Default for TuiState {
             input_history: Vec::new(),
             history_idx: None,
             input_saved: String::new(),
+            _awaiting_plan_approval: false,
+            awaiting_tool_approval: None,
             tool_calls: 0,
             tool_success: 0,
             tool_failure: 0,
@@ -515,6 +531,20 @@ pub enum TuiEvent {
     ScrollUp,
     /// Mouse wheel scroll down — scroll content down (newer messages).
     ScrollDown,
+
+    // ── Tool Approval (HITL) ───────────────────────────────────────────────
+    /// Agent needs permission to execute a tool (Sync bridge).
+    ToolApprovalRequestSync {
+        id: String,
+        name: String,
+        input: serde_json::Value,
+        tx: std::sync::mpsc::SyncSender<runtime::PermissionPromptDecision>,
+    },
+    /// User responded to a tool approval request.
+    ToolApprovalResponse {
+        approved: bool,
+        feedback: Option<String>,
+    },
 }
 
 // ── Popup items ───────────────────────────────────────────────────────────────
@@ -868,7 +898,7 @@ fn markdown_to_lines(text: &str, prefix: Option<Span<'static>>, width: u16) -> V
     let opts = MdOptions::ENABLE_STRIKETHROUGH;
     let parser = MdParser::new_ext(text, opts);
 
-    let mut flush_to_lines = |spans: &mut Vec<Span<'static>>, lines: &mut Vec<Line<'static>>| {
+    let flush_to_lines = |spans: &mut Vec<Span<'static>>, lines: &mut Vec<Line<'static>>| {
         if spans.is_empty() { return; }
         
         // Manual wrapping: convert spans to a single string, wrap it, then recreate spans.
@@ -978,6 +1008,20 @@ fn markdown_to_lines(text: &str, prefix: Option<Span<'static>>, width: u16) -> V
         }
     }
     flush_to_lines(&mut spans, &mut lines);
+
+    // Post-processing: Remove trailing empty/spine-only lines to avoid "ghost padding"
+    while let Some(last) = lines.last() {
+        let is_empty = last.spans.is_empty();
+        let is_spine_only = prefix.as_ref().map(|p| {
+            last.spans.len() == 1 && last.spans[0].content == p.content
+        }).unwrap_or(false);
+
+        if is_empty || is_spine_only {
+            lines.pop();
+        } else {
+            break;
+        }
+    }
     lines
 }
 
@@ -1041,6 +1085,12 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     idx += 1;
     render_footer(f, layout[idx], state);
 
+    if let Some(approval_arc) = &state.awaiting_tool_approval {
+        if let Some(approval) = &*approval_arc.lock().unwrap() {
+            let area = centered_rect(60, 40, f.area());
+            render_tool_approval_modal(f, area, &approval.name, &approval.input);
+        }
+    }
     // Help overlay floats on top of everything — rendered last so it covers all other widgets.
     if state.help_open {
         render_help_overlay(f, area, state.help_scroll);
@@ -1075,7 +1125,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
         match block {
             ExecBlock::UserMessage(msg) => {
-                lines.push(Line::default());
+                // Remove redundant Line::default() - vertical flow handled by constraints
                 lines.push(Line::from(vec![
                     Span::styled(
                         "≻ ",
@@ -1088,7 +1138,6 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
             ExecBlock::ToolUse { name, args, active } => {
                 if !in_assistant_turn {
-                    lines.push(Line::default());
                     lines.push(Line::from(vec![
                         Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
                         Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
@@ -1231,7 +1280,6 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
             ExecBlock::AgentText(text, interrupted) => {
                 if !in_assistant_turn {
-                    lines.push(Line::default());
                     lines.push(Line::from(vec![
                         Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
                         Span::styled(" ─────────────────────", Style::default().fg(Color::Rgb(25, 45, 45))),
@@ -2310,6 +2358,32 @@ impl TuiApp {
                             let has_popup = !items.is_empty();
 
                             match (key.code, key.modifiers) {
+                                // ── HITL (Tool Approval) ──────────────────────
+                                (KeyCode::Char('1'), _) if state.awaiting_tool_approval.is_some() => {
+                                    let _ = self.event_tx.send(TuiEvent::ToolApprovalResponse {
+                                        approved: true,
+                                        feedback: None,
+                                    });
+                                }
+                                (KeyCode::Char('2'), _) if state.awaiting_tool_approval.is_some() => {
+                                    let _ = self.event_tx.send(TuiEvent::ToolApprovalResponse {
+                                        approved: true,
+                                        feedback: Some("Approved in TUI".to_string()),
+                                    });
+                                }
+                                (KeyCode::Char('3'), _) if state.awaiting_tool_approval.is_some() => {
+                                    let _ = self.event_tx.send(TuiEvent::ToolApprovalResponse {
+                                        approved: false,
+                                        feedback: None,
+                                    });
+                                }
+                                (KeyCode::Esc, _) if state.awaiting_tool_approval.is_some() => {
+                                    let _ = self.event_tx.send(TuiEvent::ToolApprovalResponse {
+                                        approved: false,
+                                        feedback: None,
+                                    });
+                                }
+
                                 (KeyCode::Char('c'), KeyModifiers::CONTROL)
                                 | (KeyCode::Char('q'), KeyModifiers::CONTROL) => {
                                     if state.quit_confirm {
@@ -2716,6 +2790,34 @@ impl TuiApp {
                                     }
                                 }
                             }
+                            AssistantEvent::ToolTelemetry { .. } => {}
+                        }
+                    }
+
+                    // ── HITL ──────────────────────────────────────────────────
+                    Some(TuiEvent::ToolApprovalRequestSync { id, name, input, tx }) => {
+                        let mut state = self.state.lock().unwrap();
+                        state.awaiting_tool_approval = Some(Arc::new(Mutex::new(Some(ToolApprovalState {
+                            _id: id,
+                            name,
+                            input,
+                            resp_tx: tx,
+                        }))));
+                    }
+                    Some(TuiEvent::ToolApprovalResponse { approved, feedback }) => {
+                        let mut state = self.state.lock().unwrap();
+                        if let Some(approval_arc) = state.awaiting_tool_approval.take() {
+                            if let Some(approval) = approval_arc.lock().unwrap().take() {
+                                let decision = if approved {
+                                    match feedback {
+                                        Some(new_input) => runtime::PermissionPromptDecision::AllowWithEdits { new_input },
+                                        None => runtime::PermissionPromptDecision::Allow,
+                                    }
+                                } else {
+                                    runtime::PermissionPromptDecision::Deny { reason: "user rejected in TUI".to_string() }
+                                };
+                                let _ = approval.resp_tx.send(decision);
+                            }
                         }
                     }
 
@@ -2849,4 +2951,57 @@ impl TuiApp {
         io::stdout().execute(LeaveAlternateScreen).ok();
         Ok(())
     }
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
+}
+
+fn render_tool_approval_modal(f: &mut ratatui::Frame, area: Rect, name: &str, input: &serde_json::Value) {
+    use ratatui::widgets::Clear;
+    f.render_widget(Clear, area);
+
+    let block = Block::default()
+        .title(format!(" ⚠ Permission Request: {} ", name))
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(ORANGE).add_modifier(Modifier::BOLD))
+        .style(Style::default().bg(POPUP_BG));
+
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(1),
+            Constraint::Length(1),
+        ])
+        .split(inner);
+
+    let input_str = serde_json::to_string_pretty(input).unwrap_or_else(|_| "{}".to_string());
+    let p = Paragraph::new(format!("Agent wants to use tool with input:\n\n{}", input_str))
+        .wrap(Wrap { trim: false })
+        .style(Style::default().fg(FG));
+    f.render_widget(p, chunks[0]);
+
+    let options = " 1: Accept   2: Accept w/ Edits   3: Reject / Esc ";
+    let opt_p = Paragraph::new(options)
+        .style(Style::default().fg(CYAN).add_modifier(Modifier::BOLD));
+    f.render_widget(opt_p, chunks[1]);
 }
