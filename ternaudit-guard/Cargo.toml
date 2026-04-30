@@ -1,0 +1,16 @@
+[package]
+name = "ternaudit-guard"
+version = "1.2.6"
+edition = "2024"
+authors = ["Simeon Kepp <rfi.irfos@gmail.com>"]
+description = "Production-grade Sovereign Compliance SDK for EU AI Act Articles 13, 14, & 15. Native audit transparency for ternary-logic decision agents."
+keywords = ["sovereign-ai", "eu-ai-act", "compliance", "transparency", "ternary-logic"]
+repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+license = "LGPL-3.0-or-later"
+
+[dependencies]
+ternlang-mcp = { path = "../ternlang-root/ternlang-mcp", version = "1.2.6" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# Placeholder for PDF generation capability
+# printpdf = "0.7"
