@@ -31,10 +31,10 @@ Ternlang provides a machine-readable path to human escalation instead of a force
 ---
 ## Full Documentation
   
-→ **[ternlang-root/README.md](ternlang-root/README.md)** (Full explanation, technical details, and compiler specs)
+→ **[ternlang-root/README.md](ternlang-root/docs/README.md)** (Full explanation, technical details, and compiler specs)
 
 
-→ **[ROADMAP.md](ternlang-root/ROADMAP.md)** (Phases 1–18, session log, priority matrix)
+→ **[ROADMAP.md](ternlang-root/docs/ROADMAP.md)** (Phases 1–18, session log, priority matrix)
 
 
 → **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress SDK
