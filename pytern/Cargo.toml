@@ -1,6 +1,6 @@
 [package]
 name = "pytern"
-version = "1.2.6"
+version = "1.2.9"
 edition = "2024"
 authors = ["Simeon Kepp <rfi.irfos@gmail.com>"]
 description = "High-performance Python-to-Ternary-Bytecode transpiler for MoE model training."
