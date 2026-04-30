@@ -30,8 +30,6 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 → **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — terminal-native, model-agnostic AI agent built in pure Rust
 
-→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
-
 ---
 
 ## 1. What is Ternlang? (The Infrastructure Layer)
@@ -151,6 +149,8 @@ The Ternary Intelligence Stack is built by a core team of three co-founders from
 *   **Zabih Karimi**: Principal Network & ML Engineer.
 *   **Lisa Scharler**: Head of Social Technology & Ecocentric Systems.
 *   **Louis Ehrig**: Louis Paul Ehrig Corporate Secretary and Press & Media Relations.
+
+→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
 ---
 
