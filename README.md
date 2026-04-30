@@ -1,9 +1,7 @@
-# Albert: Your Private, Local-First AI
-
-**Albert is a sovereign, model-agnostic AI coding assistant that runs entirely on your local machine.** It leverages the Ternary Intelligence Stack to provide a secure, private, and powerful AI development environment.
+# Ternary Intelligence Stack (TIS)
 
 [![version](https://img.shields.io/badge/version-v1.2.7-black)](#architecture)
-[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
+[![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
@@ -14,123 +12,11 @@
 [![stdlib](https://img.shields.io/badge/stdlib-293_open%20%2B%2028k%2B_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
+**Ternlang is the high-performance ternary runtime supporting Albert, our sovereign MoE-13 Ternary LLM.**
+
+The Ternary Intelligence Stack (TIS) provides a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty by moving beyond the binary limitations of current systems.
+
 Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
-
----
-
-## Agent Albert — Your Private AI Assistant
-
-[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
-[![version](https://img.shields.io/badge/version-v1.2.7-cyan)](https://crates.io/crates/albert-cli)
-
-**Albert** is the sovereign, model-agnostic AI coding CLI and embedded intelligence layer of the Ternary Intelligence Stack. He runs entirely in your terminal, connects to any LLM provider, and never “phones home.” First went online: **2026-04-24**.
-
-### Local-First AI Sovereignty
-
-Albert is designed to be a private and secure AI assistant. It runs locally on your machine, and you can use it with local models via Ollama for a completely offline and free experience.
-
-You can also connect Albert to any commercial LLM provider like OpenAI, Anthropic, or Google. These are treated as "fallback bridges" or "model-agnostic capabilities" rather than dependencies.
-
-### Quick Install — One Copy Gets It All
-
-```bash
-# Install Albert (brings the full agent engine with it)
-cargo install albert-cli
-
-# Set your LLM key (pick any provider)
-export GEMINI_API_KEY=AIza...          # Google Gemini — default, highest quota
-export ANTHROPIC_API_KEY=sk-ant-...   # Anthropic Claude
-export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
-# export XAI_API_KEY=xai-...          # xAI / Grok
-# (Ollama: just run `ollama serve` — no key needed)
-
-# Launch
-albert-cli
-```
-
-That's it. Albert auto-detects your key and spins up the REPL.
-
-### What Albert Can Do
-
-| Capability | Details |
-|---|---|
-| **Multi-provider routing** | Claude, GPT-4o, Gemini, Grok, Ollama, Bedrock, Azure — swap with `/model` |
-| **Autonomous agent loop** | `/loop <mission>` — runs up to 10 tool-use turns to complete a goal; Ctrl+C aborts cleanly |
-| **Chain execution** | `/plan <task>` — LLM decomposes goal into steps, executes each in sequence |
-| **Tool harness** | `read_file`, `write_file`, `edit_file`, `bash`, `glob_search`, `grep_search`, `web_fetch` |
-| **Self-reflection memory** | Automatically scores each turn for importance; commits key facts to `~/.ternlang/memory.md` and injects them on startup |
-| **Image input** | Attach images with `[image: /path/to/file.png]` syntax (Gemini multimodal) |
-| **Slash command library** | `/plan`, `/loop`, `/tdd`, `/bughunter`, `/code-review`, `/build-fix`, `/refactor`, `/commit`, `/pr`, `/compress`, and more — type `/` to browse |
-| **Interactive model picker** | `/model` with no args shows a full provider-grouped list with descriptions |
-| **Rate-limit resilience** | 429 errors auto-fall-back to a faster model and retry without crashing |
-| **Permission layer** | `read-only`, `workspace-write`, `danger-full-access` modes — deny-first AST interception |
-| **Session memory** | Sliding-window compaction keeps long sessions coherent |
-| **RTK integration** | 60–90% token savings on dev operations |
-| **MCP support** | stdio and network transport for any MCP server |
-
-### Slash Commands
-
-```
-/model          → interactive model picker (all providers)
-/loop <goal>    → autonomous multi-turn agent mission
-/plan <task>    → decompose + execute step by step
-/bughunter      → scan codebase for bugs
-/commit         → AI-generated commit message + commit
-/compress       → summarise and compact session history
-/status         → show model, session, token usage
-/help           → browse full command list
-```
-
----
-
-## The Ternary Intelligence Stack
-
-The Ternary Intelligence Stack is the foundation upon which Albert is built. It is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
-
-The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm), the zero state therefore is a first-class routing instruction: *"insufficient confidence — do not act yet."*
-
-Ternlang provides a machine-readable path to human escalation instead of a forced binary guess.
-
-### Technical Pillars
-
-- **Deterministic Uncertainty**: Ternlang's `trit` (affirm/tend/reject) provides a first-class routing mechanism for **Uncertainty-Aware AI**, eliminating "hallucinated confidence."
-- **Explainable AI (XAI) by Design**: Every decision is auditable and traceable, fulfilling **EU AI Act Articles 13, 14, and 15** mandates for algorithmic transparency and human oversight.
-- **Post-Binary Systems Architecture**: A full-stack ecosystem including a custom **Instruction Set Architecture (ISA)**, triadic networking, and memory-efficient ternary encoding.
-
-### Performance Benchmarks
-
-| Feature | Performance Gain | Industry Comparison |
-|---------|------------------|---------------------|
-| **Data Density** | 1.25x improvement | 5-trit block packing (8-bit) |
-| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
-| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
-
-### Quick start
-
-```bash
-cargo install ternlang-cli
-```
-
-That's it. The `ternlang` binary is now in your PATH:
-
-```bash
-ternlang                        # → interactive REPL, start typing trit expressions
-ternlang my_program.tern        # → run a .tern file directly
-ternlang run my_program.tern    # → same (explicit form)
-ternlang build my_program.tern  # → compile to .bet bytecode
-ternlang fmt my_program.tern    # → format source file
-ternlang repl                   # → interactive REPL (explicit)
-ternlang test                   # → run test suite
-```
-
-Or build from source:
-
-```bash
-git clone https://github.com/eriirfos-eng/ternary-intelligence-stack
-cd ternary-intelligence-stack/ternlang-root
-cargo build --release
-./target/release/ternlang examples/03_rocket_launch.tern
-```
 
 ---
 
@@ -138,33 +24,85 @@ cargo build --release
   
 → **[ternlang-root/README.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md)** (Full explanation, technical details, and compiler specs)
 
-
-→ **[ROADMAP.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** (Phases 1–18, session log, priority matrix)
-
+→ **[ROADMAP.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** (Phases 1–20, MoE-13 structure, priority matrix)
 
 → **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress SDK
 
-
-→ **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli
-)** —  terminal-native, model-agnostic AI agent built in pure Rust
+→ **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — terminal-native, model-agnostic AI agent built in pure Rust
 
 → **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
 ---
 
-### Ecosystem
+## 1. What is Ternlang? (The Infrastructure Layer)
 
-| Crate | Role |
+Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
+
+The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
+
+- **Explainable AI (XAI) by Design**: Auditable decision paths fulfilling **EU AI Act Articles 13, 14, and 15**.
+- **Post-Binary Architecture**: Custom Instruction Set Architecture (ISA), triadic networking, and memory-efficient ternary encoding.
+
+## 2. What is MoE-13 / Albert? (The Intelligence Layer)
+
+**Albert** is our sovereign MoE-13 (Mixture-of-Experts) ternary model. Unlike binary LLMs that "hallucinate confidence," Albert uses 13 domain-specific experts to deliberate on every decision.
+
+- **13 Deliberation Axes**: Safety, Ethics, Logic, FactCheck, and more, each voting with ternary signals.
+- **Safety Hard Gate**: A mandatory Axis-6 veto that can terminate any execution path before action is taken.
+- **Local-First Sovereignty**: Designed to run entirely on local infrastructure via Ollama or custom ternary hardware.
+
+---
+
+## 3. Agent Albert — The Sovereign AI Assistant
+
+[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
+[![version](https://img.shields.io/badge/version-v1.2.7-cyan)](https://crates.io/crates/albert-cli)
+
+**Albert** is also the terminal-native interface for the TIS. He runs entirely in your terminal, connects to local models (Ollama) or commercial bridges, and never “phones home.”
+
+### Quick Install
+
+```bash
+# Install Albert (brings the full agent engine with it)
+cargo install albert-cli
+
+# Launch
+albert-cli
+```
+
+### Key Capabilities
+
+| Capability | Details |
 |---|---|
-| [`albert-cli`](https://crates.io/crates/albert-cli) | The `albert` binary |
-| [`albert-runtime`](https://crates.io/crates/albert-runtime) | Session engine, MCP, auth, bash |
-| [`albert-api`](https://crates.io/crates/albert-api) | Multi-provider LLM client |
-| [`albert-commands`](https://crates.io/crates/albert-commands) | Slash command library |
-| [`albert-tools`](https://crates.io/crates/albert-tools) | Tool execution layer |
-| [`albert-compat`](https://crates.io/crates/albert-compat) | Manifest extraction harness |
+| **Autonomous agent loop** | `/loop <mission>` — runs up to 10 tool-use turns to complete a goal |
+| **Local-First** | Native Ollama support for completely offline and free operation |
+| **Model-agnostic** | Connect to Gemini, Claude, GPT-4o, or Grok as "capability bridges" |
+| **Self-reflection memory** | Commits key facts to local storage to maintain long-term context |
 
-→ **[Source: agent_albert_cli/](agent_albert_cli/)**  
-→ **[crates.io: albert-cli v0.1.2](https://crates.io/crates/albert-cli)**
+---
+
+## Performance Benchmarks
+
+| Feature | Performance Gain | Industry Comparison |
+|---------|------------------|---------------------|
+| **Data Density** | 1.25x improvement | 5-trit block packing (8-bit) |
+| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
+| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
+
+---
+
+## Quick start (Compiler)
+
+```bash
+cargo install ternlang-cli
+```
+
+The `ternlang` binary provides the compiler, REPL, and test runner:
+
+```bash
+ternlang my_program.tern        # → run a .tern file directly
+ternlang build my_program.tern  # → compile to .bet bytecode
+```
 
 ---
 
@@ -173,11 +111,8 @@ cargo build --release
 | Directory | Contents |
 |-----------|----------|
 | [`ternlang-root/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root) | All Rust crates — compiler, VM, API, MCP server, ML stack |
+| [`agent_albert_cli/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli) | Agent Albert — terminal-native CLI + TernStudio intelligence layer |
 | [`ternlang-root/stdlib/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib) | 293 open-core `.tern` modules (Tier 1 — free) |
-| [`ternlang-root/examples/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/examples) | Runnable `.tern` examples (medical, finance, aerospace, etc.) |
-| [`ternlang-root/spec/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/spec) | BET-ISA spec, language reference, grammar, protocol specs |
-| [`ternlang-root/ternlang-web/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-web) | ternlang.com frontend (GitHub Pages) |
-| [`agent_albert_cli/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli) | Agent Albert — model-agnostic AI coding CLI + TernStudio intelligence layer |
 | `eriirfos-eng/ternlang-premium` *(private)* | 28,495+ proprietary `.tern` modules — Tier 2 / 3 / 4 |
 
 ---
@@ -196,39 +131,21 @@ curl -X POST https://ternlang.com/mcp \
 
 ---
 
-## StdLib Access
-
-The standard library is split across two repos to protect paid-tier IP:
-
-- **Tier 1 (free):** 293 open-core modules in [`ternlang-root/stdlib/`](ternlang-root/stdlib/) — clone this repo and use immediately
-- **Tier 2/3/4 (paid):** 28,495+ proprietary modules in the private `eriirfos-eng/ternlang-premium` repo
-
-After purchasing: visit **[ternlang.com/activate](https://ternlang.com/activate)** — enter your API key + GitHub username and you'll receive a collaborator invite to the private repo automatically.
-
-→ [Full tier breakdown](ternlang-root/stdlib/PREMIUM.md)
-
----
-
 ## Licensing
 
 | Tier | Price | Details |
 |------|-------|---------|
-| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 293 stdlib modules + **30 MCP tools (all free)** |
-| Pro Standard (BSL-1.1) | €99/month | REST API (10,000 calls/month), server-side 3-layer memory, SSE streaming + Tier 2 stdlib |
-| Industrial (BSL-1.1) | €349/month | 50,000 API calls, QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
-| Enterprise (Proprietary) | From €2,500/month | unlimited API calls | On-premise, FPGA, custom SLA + full Tier 4 stdlib | lifetime support|
-
-Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
+| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 293 stdlib modules + 30 MCP tools |
+| Pro Standard (BSL-1.1) | €99/month | REST API, server-side memory, Tier 2 stdlib |
+| Industrial (BSL-1.1) | €349/month | QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
+| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 stdlib |
 
 ---
 
 ## Team
 
-The Ternary Intelligence Stack is built by a core team of three co-founders from **RFI-IRFOS**, Graz:
+Built by **RFI-IRFOS**, Graz: **Simeon Kepp**, **Nikoletta Csonka**, and **Zabih Karimi**.
 
-*   **Simeon Kepp**: Head of Research & Systems Architect.
-*   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
-*   **Zabih Karimi**: Principal Network & ML Engineer.
 ---
 
 <div align="center">
