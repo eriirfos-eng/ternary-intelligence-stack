@@ -62,6 +62,23 @@ Nikoletta leads international strategy, regulatory positioning, and strategic pa
 - **Email:** csonikoletta@ternlang.com
 
 ---
+### Lisa Scharler  
+#### Head of Social Technology & Ecocentric Systems  
+*Societal Integration Lead*
+
+> Reframing intelligence systems through ecocentric logic — where technology serves life, not the other way around.
+
+Lisa leads the integration of social technology within the Ternary Intelligence Stack, focusing on aligning computational systems with ecological thinking, societal impact, and long-term human-centered adaptability.
+
+| Leadership Role | Strategic Focus |
+|---|---|
+| Societal Integration · Social Technology Lead | Ecocentric Systems · Social Resilience · Ethical System Design |
+
+**Connect**
+- **LinkedIn:** [Lisa Scharler](https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/?locale=en)
+- **Email:** l.scharler@ternlang.com
+- 
+---
 
 ### Louis Paul Ehrig  
 #### Co-Founder & Head of Public Affairs  
