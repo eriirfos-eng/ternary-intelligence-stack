@@ -153,9 +153,8 @@ The Ternary Intelligence Stack is built by a core team of four co-founders from 
 *   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
 *   **Zabih Karimi**: Principal Network & ML Engineer.
 *   **Louis Paul Ehrig**: Head of Press & Public Affairs
-
-→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 ---
+→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
 <div align="center">
   <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
