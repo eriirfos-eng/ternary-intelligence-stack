@@ -785,15 +785,27 @@
     "api_latency_ms": 275
   },
   {
-    "ts": "2026-04-29T12:26:50.637433+00:00",
-    "total_footprint": 68943,
-    "raw_footprint": 40242,
-    "crates_total": 2504,
+    "ts": "2026-04-29T23:17:21.234083+00:00",
+    "total_footprint": 71039,
+    "raw_footprint": 40768,
+    "crates_total": 3028,
     "openvsx_total": 844,
-    "gh_stars": 10,
+    "gh_stars": 12,
     "gh_clones": 23173,
     "gh_views": 3011,
     "smithery_calls_weekly": "10.70k",
-    "api_latency_ms": 277
+    "api_latency_ms": 324
+  },
+  {
+    "ts": "2026-04-30T05:04:51.868486+00:00",
+    "total_footprint": 71235,
+    "raw_footprint": 40817,
+    "crates_total": 3077,
+    "openvsx_total": 844,
+    "gh_stars": 12,
+    "gh_clones": 23173,
+    "gh_views": 3011,
+    "smithery_calls_weekly": "10.70k",
+    "api_latency_ms": 266
   }
 ]

@@ -7,13 +7,6 @@
 
 ---
 
-## Development Protocol (READ THIS FIRST)
-- **Always work locally AND push to GitHub** after every meaningful session
-- Push command (credentials stored): `git push origin main` from inside `Ternary Intelligence Stack (TIS)/`
-- Pull before starting a new session: `git pull origin main`
-- Update this ROADMAP at the end of every session with current status
-- The AI engineering agent (Gemini CLI) maintains context via the TIS-specific brief in `GEMINI.md` — ensure all foundational mandates are followed each session.
-
 ###  Whitepaper Update Protocol
 The academic whitepaper (`whitepaper/ternlang-whitepaper.tex` + `whitepaper/ternlang-whitepaper.docx`) is a **living document**. Update it whenever a phase produces measurable results:
 - New opcodes or VM features → update Section 4 (ISA) and Section 10 (implementation status)
