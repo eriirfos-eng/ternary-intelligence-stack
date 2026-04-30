@@ -1,5 +1,8 @@
 [workspace]
 members = [
+    "ternlang-root/ternlang-ruvector",
+    "pytern",
+    "ternaudit-guard",
     "ternlang-root/compiler/legacy_shim/ternlang-core",
     "ternlang-root/compiler/legacy_shim/ternlang-codegen",
     "ternlang-root/compiler/legacy_shim/ternlang-cli",
