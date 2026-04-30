@@ -16,7 +16,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version     = "1.0.0"
+version     = "1.2.6"
 edition     = "2024"
 license     = "LGPL-3.0-or-later"
 repository  = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
@@ -28,11 +28,9 @@ authors     = [
     "RFI-IRFOS <licensing@ternlang.com>"
 ]
 keywords    = [
-    "ternary-logic", "machine-learning", "inference-engine", "compiler", 
-    "ai-safety", "explainable-ai", "sparsity", "rust-lang", "low-latency", 
-    "post-binary", "quantization", "hpc", "deterministic"
+    "ternary-logic", "machine-learning", "ai-safety", "hpc", "deterministic"
 ]
-categories  = ["compilers", "science", "embedded-programming", "development-tools::ffi"]
+categories  = ["compilers", "science", "development-tools"]
 
 [workspace.dependencies]
 ternlang-core    = { path = "ternlang-root/compiler/legacy_shim/ternlang-core",    version = "1.0.0" }

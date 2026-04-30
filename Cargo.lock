@@ -1253,6 +1253,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pytern"
+version = "1.2.6"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1791,8 +1799,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternaudit-guard"
+version = "1.2.6"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ternlang-mcp",
+]
+
+[[package]]
 name = "ternlang-api"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "axum",
  "chrono",
@@ -1816,7 +1833,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-astro"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
  "ternlang-moe",
@@ -1824,24 +1841,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ternlang-audit"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "colored",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "ternlang-auth"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-bci"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-bio",
  "ternlang-core",
@@ -1849,18 +1854,18 @@ dependencies = [
 
 [[package]]
 name = "ternlang-bio"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-bridge"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-cad"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-candle"
@@ -1868,7 +1873,7 @@ version = "1.0.0"
 
 [[package]]
 name = "ternlang-cli"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "clap",
  "colored",
@@ -1882,28 +1887,28 @@ dependencies = [
 
 [[package]]
 name = "ternlang-codegen"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-compat"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-consensus"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-contract"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-consensus",
  "ternlang-core",
@@ -1911,7 +1916,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-core"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ariadne",
  "logos",
@@ -1921,21 +1926,21 @@ dependencies = [
 
 [[package]]
 name = "ternlang-crypto"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-driver"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-edu"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "serde",
 ]
@@ -1946,7 +1951,7 @@ version = "1.0.0"
 
 [[package]]
 name = "ternlang-fs"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-gate"
@@ -1954,26 +1959,26 @@ version = "1.0.0"
 
 [[package]]
 name = "ternlang-gfx"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-grid"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-harmony"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "ternlang-hdl"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-hft"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
  "ternlang-hdl",
@@ -1981,7 +1986,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-lsp"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "serde",
  "serde_json",
@@ -1990,7 +1995,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-mcp"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "serde",
  "serde_json",
@@ -2001,11 +2006,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-mkl"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-ml"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2017,7 +2022,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-moe"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "serde",
  "serde_json",
@@ -2027,11 +2032,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-net"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-posix"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "libc",
  "ternlang-core",
@@ -2039,14 +2044,14 @@ dependencies = [
 
 [[package]]
 name = "ternlang-qutrit"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-ros2"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
  "ternlang-posix",
@@ -2054,7 +2059,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-runtime"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "reqwest",
  "serde",
@@ -2064,7 +2069,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-sec"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
  "ternlang-crypto",
@@ -2072,26 +2077,26 @@ dependencies = [
 
 [[package]]
 name = "ternlang-sql"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-swarm"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-test"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-time"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-translator"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "anyhow",
  "clap",
@@ -2101,7 +2106,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-tson"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "serde",
  "serde_json",
@@ -2110,11 +2115,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ttp"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-ui"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "ternlang-wasmtime"
@@ -2122,7 +2127,7 @@ version = "1.0.0"
 
 [[package]]
 name = "ternpkg"
-version = "1.0.0"
+version = "1.2.6"
 dependencies = [
  "serde",
  "serde_json",
@@ -2130,7 +2135,7 @@ dependencies = [
 
 [[package]]
 name = "ternpkg-registry"
-version = "1.0.0"
+version = "1.2.6"
 
 [[package]]
 name = "thiserror"
