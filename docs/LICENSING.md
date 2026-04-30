@@ -34,7 +34,7 @@ Ternlang uses a **four-tier monetization model** to bridge open-source accessibi
 **Includes:**
 - 10,000 API requests/month.
 - Access to `ternlang-ml` and `ternlang-mcp`.
-- 122x Sparse Bypass acceleration.
+- Sparse acceleration.
 
 ---
 
@@ -69,7 +69,7 @@ Ternlang uses a **four-tier monetization model** to bridge open-source accessibi
 
 **Tier 2 (Pro):**
 - 10,000 calls/month (€24.99/month).
-- 122x Sparse Multiplier unlocked.
+- Performance optimizations unlocked.
 
 **Tier 3 (Industrial):**
 - 20,000 calls/month (€49.99/month).
