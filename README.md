@@ -152,7 +152,7 @@ The Ternary Intelligence Stack is built by a core team of four co-founders from 
 *   **Simeon Kepp**: Head of Research & Systems Architect.
 *   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
 *   **Zabih Karimi**: Principal Network & ML Engineer.
-*   **Lisa Scharler**:Head of Social Technology & Ecocentric Systems
+*   **Lisa Scharler**: Head of Social Technology & Ecocentric Systems
 *   **Louis Paul Ehrig**: Head of Press & Public Affairs
 ---
 → **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
