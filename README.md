@@ -125,17 +125,6 @@ albert-cli
 
 ---
 
-## Repository layout
-
-| Directory | Contents |
-|-----------|----------|
-| [`ternlang-root/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root) | Compiler, VM, API, MCP server |
-| [`ternaudit-guard/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternaudit-guard) | Compliance SDK |
-| [`pytern/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/pytern) | Transpiler |
-| [`agent_albert_cli/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli) | Albert Agent |
-
----
-
 ## Live API
 
 ```bash
