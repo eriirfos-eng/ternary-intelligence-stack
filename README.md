@@ -44,8 +44,11 @@ Ternlang provides a machine-readable path to human escalation instead of a force
 ## Full Documentation
   
 → **[ternlang-root/README.md](ternlang-root/README.md)** (Full explanation, technical details, and compiler specs)
+
 → **[ROADMAP.md](ternlang-root/docs/ROADMAP.md)** (Phases 1–18, session log, priority matrix)
+
 → **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress SDK
+
 → **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — terminal-native, model-agnostic AI agent built in pure Rust
 
 ---
