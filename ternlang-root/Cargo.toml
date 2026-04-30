@@ -15,6 +15,7 @@ members = [
     "ternpkg",
     "ternlang-compat",
     "ternlang-moe",
+    "ternlang-ruvector",
 ]
 resolver = "2"
 
