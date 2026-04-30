@@ -144,7 +144,13 @@ curl -X POST https://ternlang.com/mcp \
 
 ## Team
 
-Built by **RFI-IRFOS**, Graz: **Simeon Kepp**, **Nikoletta Csonka**, and **Zabih Karimi**.
+The Ternary Intelligence Stack is built by a core team of three co-founders from **RFI-IRFOS**, Graz:
+
+*   **Simeon Kepp**: Head of Research & Systems Architect.
+*   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
+*   **Zabih Karimi**: Principal Network & ML Engineer.
+*   **Lisa Scharler**: Head of Social Technology & Ecocentric Systems.
+*   **Louis Ehrig**: Louis Paul Ehrig Corporate Secretary and Press & Media Relations.
 
 ---
 

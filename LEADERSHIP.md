@@ -77,7 +77,7 @@ Lisa leads the integration of social technology within the Ternary Intelligence 
 **Connect**
 - **LinkedIn:** [Lisa Scharler](https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/?locale=en)
 - **Email:** l.scharler@ternlang.com
-- 
+
 ---
 
 ### Louis Paul Ehrig  
