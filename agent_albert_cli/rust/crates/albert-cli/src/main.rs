@@ -1945,6 +1945,7 @@ impl LiveCli {
                                     if state == 1 { let _ = writeln!(out); }
                                     state = 2;
                                 }
+                                Ok(AssistantEvent::ToolTelemetry { .. }) => {}
                                 Err(_) => break,
                             }
                         }
@@ -3471,7 +3472,31 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
         }
 
         // ── Interactive TUI Prompt ──────────────────────────────────────────
-        // Suspend TUI so we can interact with the user via standard CLI prompts
+        if let Some(tx) = &self.tui_event_tx {
+            let (resp_tx, resp_rx) = std::sync::mpsc::sync_channel(1);
+            let input_val = serde_json::from_str(&request.input).unwrap_or(serde_json::json!({ "raw": request.input }));
+            
+            // We need a way to send the response back from TUI to here.
+            // I'll use a wrapper enum or just a custom TuiEvent variant.
+            // Since TuiEvent is in tui.rs, I'll update it there.
+            
+            let event = tui::TuiEvent::ToolApprovalRequestSync {
+                id: uuid::Uuid::new_v4().to_string(),
+                name: request.tool_name.clone(),
+                input: input_val,
+                tx: resp_tx,
+            };
+
+            if tx.send(event).is_ok() {
+                // Wait for the response from the TUI synchronously
+                return resp_rx.recv().unwrap_or(runtime::PermissionPromptDecision::Deny {
+                    reason: "TUI communication failed".to_string(),
+                });
+            }
+        }
+
+        // ── Fallback Terminal Prompt ────────────────────────────────────────
+        // Suspend TUI if it exists but bridge failed (unlikely) or if we are in CLI mode
         let mut suspended = false;
         if let Some(tx) = &self.tui_event_tx {
             let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<()>(1);

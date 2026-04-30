@@ -15,18 +15,18 @@ name = "albert-cli"
 path = "src/main.rs"
 
 [dependencies]
-api = { package = "albert-api", path = "../api", version = "1.2.6" }
-commands = { package = "albert-commands", path = "../commands", version = "1.2.6" }
-compat-harness = { package = "albert-compat", path = "../compat-harness", version = "1.2.6" }
+api = { package = "albert-api", path = "../api", version = "1.2.7" }
+commands = { package = "albert-commands", path = "../commands", version = "1.2.7" }
+compat-harness = { package = "albert-compat", path = "../compat-harness", version = "1.2.7" }
 crossterm = "0.28"
 ratatui = "0.29"
 pulldown-cmark = "0.13"
 rustyline = "15"
-runtime = { package = "albert-runtime", path = "../runtime", version = "1.2.6" }
+runtime = { package = "albert-runtime", path = "../runtime", version = "1.2.7" }
 serde_json = "1"
 syntect = "5"
 tokio = { version = "1", features = ["rt-multi-thread", "time"] }
-tools = { package = "albert-tools", path = "../tools", version = "1.2.6" }
+tools = { package = "albert-tools", path = "../tools", version = "1.2.7" }
 dialoguer = "0.12.0"
 console = "0.15"
 indicatif = "0.17"
@@ -39,6 +39,7 @@ chrono = "0.4"
 arboard = { version = "3", default-features = false }
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 walkdir = "2"
+uuid = { version = "1.23.1", features = ["v4"] }
 
 
 [lints]

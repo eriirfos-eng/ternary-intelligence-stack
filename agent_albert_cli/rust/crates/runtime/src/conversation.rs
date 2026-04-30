@@ -40,6 +40,7 @@ pub enum AssistantEvent {
     },
     Usage(TokenUsage),
     MessageStop,
+    ToolTelemetry { text: String },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -515,7 +516,8 @@ fn build_assistant_message(
             AssistantEvent::MessageStop => {
                 finished = true;
             }
-        }
+            AssistantEvent::ToolTelemetry { .. } => {}
+            }
     }
 
     flush_text_block(&mut text, &mut blocks);

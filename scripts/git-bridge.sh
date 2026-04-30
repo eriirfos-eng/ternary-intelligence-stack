@@ -25,6 +25,16 @@ sync_now() {
     elif [ $LOCAL = $BASE ]; then
         echo "[$(date +%T)] WARN | Local outdated. Fast-forwarding..."
         git pull --rebase origin main
+        
+        echo "[$(date +%T)] INFO | Changes detected. Re-installing Albert and Ternlang crates..."
+        
+        # 1. Re-install Albert CLI
+        (cd "/home/eri-irfos/projects/ternary-intelligence-stack/agent_albert_cli/rust" && cargo install --path crates/albert-cli --force)
+        
+        # 2. Re-install Ternlang components
+        (cd "/home/eri-irfos/projects/ternary-intelligence-stack" && ./scripts/install.sh)
+        
+        echo "[$(date +%T)] SUCCESS | System updated to latest version."
     elif [ $REMOTE = $BASE ]; then
         echo "[$(date +%T)] INFO | Local has ahead-of-state commits. Pushing..."
         git push origin main
