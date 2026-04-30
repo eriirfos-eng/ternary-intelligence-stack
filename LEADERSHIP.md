@@ -105,7 +105,7 @@ Louis oversees press relations, public communication, institutional releases, an
 We are **Styrian Rebels** in frontier deep technology.
 
 We believe Europe’s path to technological sovereignty lies not in competing within the limits of binary hyperscaling, but in advancing toward the next frontier:
-
+---
 # Post-Binary Intelligence
 
 Ternlang is the first step in this journey — a full-stack ecosystem built on the honest logic of the `trit`.
