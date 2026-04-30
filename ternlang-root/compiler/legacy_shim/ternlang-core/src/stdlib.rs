@@ -211,7 +211,7 @@ fn stdlib_source_for(path: &[String]) -> Option<&'static str> {
         "stats::confidence_interval" => Some(include_str!("../stdlib/stats/confidence_interval.tern")),
         "stats::correlation" => Some(include_str!("../stdlib/stats/correlation.tern")),
         "stats::distributions" => Some(include_str!("../stdlib/stats/distributions.tern")),
-        "stats::hypothesis_test" => Some(include_str!("../stdlib/stats/hypothesis_test.tern")),
+        // "stats::hypothesis_test" => Some(include_str!("../stdlib/stats/hypothesis_test.tern")),
         "stats::information_theory" => Some(include_str!("../stdlib/stats/information_theory.tern")),
         "stats::regression_stats" => Some(include_str!("../stdlib/stats/regression_stats.tern")),
         "std::collections" => Some(include_str!("../stdlib/std/collections.tern")),
