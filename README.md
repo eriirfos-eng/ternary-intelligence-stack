@@ -147,13 +147,15 @@ Commercial licensing: [licensing@ternlang.com](mailto:licensing@ternlang.com)
 
 ## Team
 
-The Ternary Intelligence Stack is built by a core team of three co-founders from **RFI-IRFOS**, Graz:
+The Ternary Intelligence Stack is built by a core team of four co-founders from **RFI-IRFOS**, Graz:
 
 *   **Simeon Kepp**: Head of Research & Systems Architect.
 *   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
 *   **Zabih Karimi**: Principal Network & ML Engineer.
----
+*   **Louis Paul Ehrig**: Head of Press & Public Affairs
+
 → **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
+---
 
 <div align="center">
   <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
