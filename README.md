@@ -102,13 +102,6 @@ cargo build --release
 # Install Albert (brings the full agent engine with it)
 cargo install albert-cli
 
-# Set your LLM key (pick any provider)
-export GEMINI_API_KEY=AIza...          # Google Gemini — default, highest quota
-export ANTHROPIC_API_KEY=sk-ant-...   # Anthropic Claude
-export OPENAI_API_KEY=sk-...          # OpenAI / GPT-4o
-# export XAI_API_KEY=xai-...          # xAI / Grok
-# (Ollama: just run `ollama serve` — no key needed)
-
 # Launch
 albert-cli
 ```
