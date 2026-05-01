@@ -1,0 +1,60 @@
+/*
+ * Advanced 3D Trit Tensor
+ * Simulation of a 3D tensor with dimension tracking and bounds checking.
+ * Optimized for spatial reasoning agents.
+ */
+
+fn tensor_3d_idx(x: int, y: int, z: int, dim_y: int, dim_z: int) -> int {
+    return x * (dim_y * dim_z) + y * dim_z + z;
+}
+
+fn tensor_3d_get(data: trit[], x: int, y: int, z: int, dim_x: int, dim_y: int, dim_z: int) -> trit {
+    if x >= 0 && x < dim_x && y >= 0 && y < dim_y && z >= 0 && z < dim_z {
+        return data[tensor_3d_idx(x, y, z, dim_y, dim_z)];
+    }
+    return 0; // Out of bounds default to hold
+}
+
+fn tensor_3d_set(data: trit[], x: int, y: int, z: int, dim_x: int, dim_y: int, dim_z: int, val: trit) -> trit {
+    if x >= 0 && x < dim_x && y >= 0 && y < dim_y && z >= 0 && z < dim_z {
+        data[tensor_3d_idx(x, y, z, dim_y, dim_z)] = val;
+        return 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    // 3x3x3 tensor = 27 elements
+    let data: trit[27];
+    let i: int = 0;
+    while i < 27 { data[i] = 0; i = i + 1; }
+    
+    let dim: int = 3;
+    
+    println("Advanced 3D Trit Tensor Demo");
+    
+    println("Setting [1, 1, 1] to Affirm (1)");
+    tensor_3d_set(data, 1, 1, 1, dim, dim, dim, 1);
+    
+    println("Setting [2, 0, 2] to Reject (-1)");
+    tensor_3d_set(data, 2, 0, 2, dim, dim, dim, -1);
+    
+    println("Reading [1, 1, 1]:");
+    let v1: trit = tensor_3d_get(data, 1, 1, 1, dim, dim, dim);
+    println(v1);
+    
+    println("Reading [2, 0, 2]:");
+    let v2: trit = tensor_3d_get(data, 2, 0, 2, dim, dim, dim);
+    println(v2);
+    
+    println("Reading [3, 3, 3] (Out of bounds, expected 0):");
+    let v3: trit = tensor_3d_get(data, 3, 3, 3, dim, dim, dim);
+    println(v3);
+    
+    if v1 == 1 && v2 == -1 && v3 == 0 {
+        println("3D Tensor addressing and bounds checking verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
