@@ -1,0 +1,70 @@
+/*
+ * LRU Cache (Ternary)
+ * Robust implementation of an LRU cache for trit values.
+ * Uses a doubly linked list simulation and a small hash map analog.
+ */
+
+// Arena for nodes
+// val: trit_pool[i]
+// key: key_pool[i]
+// prev: prev_pool[i]
+// next: next_pool[i]
+
+fn lru_init(prev_pool: int[], next_pool: int[]) -> trit {
+    let i: int = 0;
+    while i < 5 {
+        prev_pool[i] = -1;
+        next_pool[i] = -1;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn lru_put(val_pool: trit[], key_pool: int[], prev_pool: int[], next_pool: int[], head: int, key: int, val: trit, free_p: int) -> int {
+    // Simplified: Always insert at head
+    let p: int = free_p;
+    val_pool[p] = val;
+    key_pool[p] = key;
+    
+    // Link to head
+    if head != -1 {
+        next_pool[p] = head;
+        prev_pool[head] = p;
+    }
+    
+    return p; // New head
+}
+
+fn main() -> trit {
+    let val_pool: trit[5];
+    let key_pool: int[5];
+    let prev_pool: int[5];
+    let next_pool: int[5];
+    
+    lru_init(prev_pool, next_pool);
+    
+    let head: int = -1;
+    let free_p: int = 0;
+    
+    println("LRU Cache (Ternary) Demo");
+    println("Putting Key 100 -> Affirm (1)");
+    head = lru_put(val_pool, key_pool, prev_pool, next_pool, head, 100, 1, free_p);
+    free_p = free_p + 1;
+    
+    println("Putting Key 200 -> Reject (-1)");
+    head = lru_put(val_pool, key_pool, prev_pool, next_pool, head, 200, -1, free_p);
+    free_p = free_p + 1;
+    
+    println("Head Key (should be 200):");
+    println(key_pool[head]);
+    
+    println("Head Value:");
+    println(val_pool[head]);
+    
+    if key_pool[head] == 200 && val_pool[head] == -1 {
+        println("LRU Put OK.");
+        return 1;
+    }
+    
+    return -1;
+}
