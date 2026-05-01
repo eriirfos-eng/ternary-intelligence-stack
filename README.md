@@ -64,48 +64,60 @@ ternlang build my_program.tern  # → compile to .bet bytecode
 
 ## 2. Albert-MoE-13 — The Intelligence Layer
 
-We are actively designing, training, and deploying our own **ternary-native Mixture-of-Experts model**.
-
-**Albert** is our in-progress **MoE-13 (Mixture-of-Experts) ternary LLM**.  
-Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to deliberate on every decision.
+> **Albert is a ternary Mixture-of-Experts model that turns AI from a guessing system into a transparent decision process.**
 
 ---
 
-### Core Architecture
+### Core Idea
 
-- **Base Model**  
-  Open-source MoE in the **20B–30B parameter class**
+Each expert evaluates the input from a specific perspective and returns a ternary vote:
 
-- **Transformation**  
-  Full **ternarization into `{ -1, 0, +1 }` weight space**
+```
+-1 → reject  
+ 0 → hold (uncertain / insufficient evidence)  
++1 → affirm  
+```
 
-- **Objective**  
-  - Reduce memory footprint  
-  - Enable **sparsity-aware execution**  
-  - Improve deterministic interpretability  
-
-- **Architecture**  
-  Consolidation into **13 domain-specific expert routers (MoE-13)**
-
-- **13 Deliberation Axes**  
-  Each expert represents a distinct reasoning dimension (e.g. Safety, Ethics, Logic, FactCheck, etc.),  
-  voting using **ternary signals**: `{ -1, 0, +1 }`.
-
-- **Safety Hard Gate (Axis-6)**  
-  A mandatory veto layer capable of **terminating any execution path** before action is taken.
-
-- **Local-First Sovereignty**  
-  Designed to run fully offline on **local infrastructure** via Ollama or custom ternary hardware.
+Votes are **confidence-weighted (EMA)** and aggregated into a final system decision.
 
 ---
 
-Albert is designed to:
+### The 13 Deliberation Axes
 
-- Operate fully **offline** on sovereign infrastructure  
-- Enforce **deterministic uncertainty** via the `HOLD (0)` state  
-- Integrate natively with **Ternlang** and the **BET-VM runtime**  
-- Provide a **verifiable decision layer**, not just probabilistic outputs  
-- Enable **traceable, inspectable reasoning paths**
+| Axis         | Role |
+|--------------|------|
+| Safety       | Immediate harm detection |
+| MetaSafety   | Safety audit / veto |
+| Logic        | Formal consistency |
+| Ethics       | Normative constraints |
+| FactCheck    | Claim verification |
+| Causal       | Cause–effect integrity |
+| Context      | Situational awareness |
+| History      | Prior decision memory |
+| Ambiguity    | Uncertainty detection |
+| Math         | Quantitative validation |
+| ToolUse      | External action risk |
+| Persona      | Human alignment |
+| Efficiency   | Resource cost |
+
+---
+
+### Architecture
+
+- **Base Model**: Open-source MoE (~20B–30B parameters)  
+- **Weights**: Fully ternarized `{ -1, 0, +1 }`  
+- **Structure**: 13 expert routers (MoE-13)  
+- **Execution**: Sparsity-aware inference  
+
+---
+
+### Key Properties
+
+- **Deterministic uncertainty** via `HOLD (0)`  
+- **Traceable reasoning** through expert votes  
+- **Built-in safety gating** (pre-output veto)  
+- **Offline-first, sovereign deployment**  
+- Native integration with **Ternlang** and **BET-VM**
 
 ---
 
