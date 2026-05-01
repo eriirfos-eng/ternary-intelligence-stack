@@ -36,36 +36,33 @@ Keys are stored in `~/.config/albert/secrets.json` — never sent anywhere excep
 
 ## Slash commands
 
-| Command | What it does |
-|---------|-------------|
-| `/plan` | Decompose a task into a structured plan before coding |
-| `/tdd` | Red-Green-Refactor loop — failing test first |
-| `/verify` | Run tests, report failures only |
-| `/code-review` | Full correctness + safety + idiom review |
-| `/build-fix` | Compile → fix errors → repeat until clean |
-| `/refactor` | Targeted cleanup, no behaviour change |
-| `/docs` | Generate documentation for current scope |
-| `/loop` | Recursive mission loop, up to 10 iterations |
-| `/compress` | Aggressive context compaction |
+**Development & Reasoning** — `/plan`, `/tdd`, `/loop`, `/code-review`, `/build-fix`, `/bughunter`, `/refactor`, `/commit`
+
+**Memory & Knowledge** — `/remember`, `/recall`, `/vault` (persistent cross-session memory), `/soul`, `/patterns`, `/security`, `/best-practices` (embedded production reference docs)
+
+**Autonomous & Extensions** — `/cron` (schedule tasks), `/skill` (manage custom automations), `/teach-skill` (teach new behaviors)
+
+**Session Utilities** — `/compress` (context compaction), `/help`, `/status`, `/export`
 
 ## Workspace layout
 
 ```
 crates/
+  albert-cli           — TUI and REPL binary
   albert-runtime       — session, MCP, OAuth, bash, file ops, compaction
   albert-api           — multi-provider LLM client, SSE streaming, retry
-  albert-commands      — slash command library
+  albert-commands      — slash command library + spec registry
   albert-tools         — tool dispatch (read/write/edit/bash/glob/grep/MCP)
   albert-compat        — upstream manifest extraction and path resolution
-  rusty-ternlang-cli/  — binary crate (package: albert-cli, binary: albert)
+  reference/           — embedded production documentation (SOUL, patterns, security, etc.)
   rtk-integration/     — vendored RTK token filter (external, not published)
 ```
 
-## Build
+## Build & Install
 
 ```bash
-cargo build --workspace
-cargo install --path crates/rusty-ternlang-cli
+cargo build --workspace --release
+cargo install --path crates/albert-cli
 ```
 
 ## Configuration

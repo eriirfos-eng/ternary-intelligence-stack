@@ -303,6 +303,48 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         argument_hint: None,
         resume_supported: false,
     },
+    SlashCommandSpec {
+        name: "soul",
+        summary: "Display Albert's core principles (SOUL.md)",
+        argument_hint: None,
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "patterns",
+        summary: "Display orchestration design patterns",
+        argument_hint: None,
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "security",
+        summary: "Display security guidelines and threat model",
+        argument_hint: None,
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "best-practices",
+        summary: "Show combined wisdom from all reference docs",
+        argument_hint: None,
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "cron",
+        summary: "Schedule autonomous recurring tasks",
+        argument_hint: Some("[list|add <name> <schedule>|remove <name>]"),
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "skill",
+        summary: "Manage custom skills and automations",
+        argument_hint: Some("[list|invoke <name> [args]|delete <name>]"),
+        resume_supported: true,
+    },
+    SlashCommandSpec {
+        name: "teach-skill",
+        summary: "Teach Albert a custom skill from a script",
+        argument_hint: Some("<name> <script-path>"),
+        resume_supported: false,
+    },
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -404,6 +446,22 @@ pub enum SlashCommand {
     Settings,
     Recap,
     SessionRecap,
+    Soul,
+    Patterns,
+    Security,
+    BestPractices,
+    Cron {
+        action: Option<String>,
+        args: Option<String>,
+    },
+    Skill {
+        action: Option<String>,
+        args: Option<String>,
+    },
+    TeachSkill {
+        name: Option<String>,
+        path: Option<String>,
+    },
     Unknown(String),
 }
 
@@ -521,6 +579,40 @@ impl SlashCommand {
             "vault" => Self::Vault {
                 query: remainder_after_command(trimmed, command),
             },
+            "soul" => Self::Soul,
+            "patterns" => Self::Patterns,
+            "security" => Self::Security,
+            "best-practices" => Self::BestPractices,
+            "cron" => {
+                let rest = remainder_after_command(trimmed, command);
+                let (action, args) = rest.as_deref().map_or((None, None), |s| {
+                    let mut iter = s.splitn(2, ' ');
+                    let a = iter.next().map(ToOwned::to_owned);
+                    let b = iter.next().map(str::trim).filter(|v| !v.is_empty()).map(ToOwned::to_owned);
+                    (a, b)
+                });
+                Self::Cron { action, args }
+            },
+            "skill" => {
+                let rest = remainder_after_command(trimmed, command);
+                let (action, args) = rest.as_deref().map_or((None, None), |s| {
+                    let mut iter = s.splitn(2, ' ');
+                    let a = iter.next().map(ToOwned::to_owned);
+                    let b = iter.next().map(str::trim).filter(|v| !v.is_empty()).map(ToOwned::to_owned);
+                    (a, b)
+                });
+                Self::Skill { action, args }
+            },
+            "teach-skill" => {
+                let rest = remainder_after_command(trimmed, command);
+                let (name, path) = rest.as_deref().map_or((None, None), |s| {
+                    let mut iter = s.splitn(2, ' ');
+                    let n = iter.next().map(ToOwned::to_owned);
+                    let p = iter.next().map(str::trim).filter(|v| !v.is_empty()).map(ToOwned::to_owned);
+                    (n, p)
+                });
+                Self::TeachSkill { name, path }
+            },
             other => Self::Unknown(other.to_string()),
         })
     }
@@ -559,9 +651,12 @@ pub fn render_slash_command_help() -> String {
     output.push_str(&format!("  {}\n", style("[resume] works with --resume SESSION.json").dim()));
 
     let categories = vec![
-        ("SESSION & CONTEXT", vec!["status", "clear", "resume", "session", "export", "compact", "compress", "cost", "memory", "aside", "checkpoint", "learn", "recap", "session-recap"]),
+        ("SESSION & CONTEXT", vec!["status", "clear", "resume", "session", "export", "compress", "cost", "memory", "aside", "checkpoint", "learn", "recap", "session-recap"]),
         ("DEVELOPMENT & REASONING", vec!["ultraplan", "plan", "loop", "tdd", "verify", "code-review", "build-fix", "refactor", "docs", "bughunter", "init", "treemap", "teleport", "diff", "commit", "pr", "issue", "debug-tool-call"]),
         ("CONFIGURATION & AUTH", vec!["model", "permissions", "auth", "config", "setup-github", "terminal-setup", "settings"]),
+        ("REFERENCE & PRINCIPLES", vec!["soul", "patterns", "security", "best-practices"]),
+        ("MEMORY & VAULT", vec!["remember", "recall", "vault"]),
+        ("AUTONOMOUS & EXTENSIONS", vec!["cron", "skill", "teach-skill"]),
         ("UTILITY", vec!["help", "version", "upgrade"]),
     ];
 
@@ -665,6 +760,13 @@ pub fn handle_slash_command(
         | SlashCommand::Settings
         | SlashCommand::Recap
         | SlashCommand::SessionRecap
+        | SlashCommand::Soul
+        | SlashCommand::Patterns
+        | SlashCommand::Security
+        | SlashCommand::BestPractices
+        | SlashCommand::Cron { .. }
+        | SlashCommand::Skill { .. }
+        | SlashCommand::TeachSkill { .. }
         | SlashCommand::Unknown(_) => None,
     }
 }

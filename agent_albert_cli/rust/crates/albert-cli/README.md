@@ -25,6 +25,9 @@ Albert is a sovereign AI development CLI that runs in your terminal. It connects
 |---------|---------|
 | Multi-provider | Claude, GPT-4o, Gemini, Grok, Ollama, Bedrock, Azure |
 | Slash commands | `/plan`, `/tdd`, `/loop`, `/code-review`, `/build-fix`, `/bughunter`, `/refactor`, `/commit` |
+| Autonomous features | `/cron` (scheduled tasks), `/skill` (custom automations), `/teach-skill` (skill definitions) |
+| Memory & vault | `/remember`, `/recall`, `/vault` — persistent cross-session memory |
+| Reference docs | `/soul`, `/patterns`, `/security`, `/best-practices` — embedded production knowledge |
 | Tool execution | `read_file`, `write_file`, `edit_file`, `bash`, `glob`, `grep`, `web_fetch` |
 | MCP support | stdio and network transport for any MCP server |
 | Permission layer | Deny-first AST interception blocks dangerous shell patterns before OS |

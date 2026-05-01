@@ -18,6 +18,7 @@ path = "src/main.rs"
 api = { package = "albert-api", path = "../api", version = "1.2.7" }
 commands = { package = "albert-commands", path = "../commands", version = "1.2.7" }
 compat-harness = { package = "albert-compat", path = "../compat-harness", version = "1.2.7" }
+reference = { path = "../reference" }
 crossterm = "0.28"
 ratatui = "0.29"
 pulldown-cmark = "0.13"
