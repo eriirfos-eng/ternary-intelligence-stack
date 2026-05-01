@@ -1876,12 +1876,12 @@ window.clearCanvas = clearCanvas;
 let _canvasInteractionInited = false;
 function renderFlow() {
   simulationAborted = false;
-  if (!_canvasInteractionInited) { 
-    initCanvasInteraction(); 
+  if (!_canvasInteractionInited) {
+    initCanvasInteraction();
     initInspectorDraggable();
     initSidebarResizer();
-    applyTransform(); 
-    _canvasInteractionInited = true; 
+    applyTransform();
+    _canvasInteractionInited = true;
   }
   renderFlowLibrary();
   // Restore canvas from localStorage (don't wipe on every view switch)
@@ -1891,6 +1891,9 @@ function renderFlow() {
       const hint = document.getElementById("canvas-hint");
       if (hint) hint.style.display = "flex";
     }
+  } else {
+    // Re-render wires when switching back to flow view (wires are in memory but not visually rendered)
+    updateWires();
   }
 }
 window.renderFlow = renderFlow;
