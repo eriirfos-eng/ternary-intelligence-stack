@@ -1,18 +1,16 @@
 [package]
-name = "moe-platform"
+name = "moe-plugin-sdk"
 version = "1.0.0"
 edition = "2021"
-description = "Stable API for MoE-13 ternary inference and model ingestion."
+description = "Stable SDK for building third-party MoE-13 inference plugins."
 license = "MIT"
 repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
-documentation = "https://docs.rs/moe-platform"
-
-[lib]
-path = "src/lib.rs"
+documentation = "https://docs.rs/moe-plugin-sdk"
 
 [dependencies]
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-semver = "1.0"
+semver = { version = "1.0", features = ["serde"] }
+# Access internal core types without re-exporting internal logic
 moe-core = { path = "../moe-core", version = "1.0.0" }
