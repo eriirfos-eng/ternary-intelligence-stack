@@ -1,0 +1,50 @@
+/*
+ * Advanced Trit Vector Min/Max
+ * Finding minimum and maximum trit values with location tracking.
+ */
+
+fn vector_min_idx(data: trit[]) -> int {
+    let m: trit = 1;
+    let idx: int = 0;
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        if data[i] < m { m = data[i]; idx = i; }
+        i = i + 1;
+    }
+    return idx;
+}
+
+fn vector_max_idx(data: trit[]) -> int {
+    let m: trit = -1;
+    let idx: int = 0;
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        if data[i] > m { m = data[i]; idx = i; }
+        i = i + 1;
+    }
+    return idx;
+}
+
+fn main() -> trit {
+    let v: trit[5];
+    v[0] = 0; v[1] = 1; v[2] = 0; v[3] = -1; v[4] = 0;
+    
+    println("Advanced Trit Vector Min/Max Demo");
+    
+    println("Index of Min (expected 3):");
+    let min_i: int = vector_min_idx(v);
+    println(min_i);
+    
+    println("Index of Max (expected 1):");
+    let max_i: int = vector_max_idx(v);
+    println(max_i);
+    
+    if min_i == 3 && max_i == 1 {
+        println("Min/Max location verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
