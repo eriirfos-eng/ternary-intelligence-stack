@@ -1,0 +1,61 @@
+/*
+ * Trit LRU Cache
+ * LRU cache implementation for trit values.
+ * Uses a flat array with shifts for eviction and access update.
+ */
+
+fn lru_trit_access(keys: int[], vals: trit[], size: int, key: int) -> int {
+    let found_pos: int = -1;
+    let i: int = 0;
+    while i < size {
+        if keys[i] == key {
+            found_pos = i;
+        }
+        i = i + 1;
+    }
+    
+    if found_pos == -1 { return -1; }
+    
+    let target_val: trit = vals[found_pos];
+    
+    // Shift others
+    let j: int = found_pos;
+    while j > 0 {
+        keys[j] = keys[j-1];
+        vals[j] = vals[j-1];
+        j = j - 1;
+    }
+    
+    keys[0] = key;
+    vals[0] = target_val;
+    return 0;
+}
+
+fn main() -> trit {
+    let keys: int[5];
+    let vals: trit[5];
+    
+    // Initial data
+    keys[0] = 1; vals[0] = 1;
+    keys[1] = 2; vals[1] = 0;
+    keys[2] = 3; vals[2] = -1;
+    keys[3] = 4; vals[3] = 1;
+    keys[4] = 5; vals[4] = 0;
+    
+    println("Trit LRU Cache Demo");
+    println("Accessing Key 3");
+    lru_trit_access(keys, vals, 5, 3);
+    
+    println("Head Key (should be 3):");
+    println(keys[0]);
+    
+    println("Head Value (should be -1):");
+    println(vals[0]);
+    
+    if keys[0] == 3 && vals[0] == -1 {
+        println("LRU Access OK.");
+        return 1;
+    }
+    
+    return -1;
+}
