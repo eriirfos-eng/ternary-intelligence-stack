@@ -14,3 +14,4 @@ pub mod policy;
 pub mod diagnostic_aedl;
 pub mod diagnostic_hybrid;
 pub mod diagnostic_causal;
+pub mod model_adapter;

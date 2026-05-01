@@ -170,6 +170,18 @@ impl CliDriver {
         crate::core::diagnostic_causal::run_mi_test();
     }
 
+    pub fn run_model_import(&self, hf_id: &str) {
+        println!("Importing model: {}", hf_id);
+    }
+
+    pub fn run_model_validate(&self) {
+        println!("Validating model integrity...");
+    }
+
+    pub fn run_model_benchmark(&self) {
+        println!("Running benchmark...");
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -222,6 +234,13 @@ impl CliDriver {
             "moe-routing-entropy-analysis" => self.run_moe_routing_entropy_analysis(),
             "moe-clustering-visualization" => self.run_moe_clustering_visualization(),
             "moe-causal-test" => self.run_moe_causal_test(),
+            "model-import" => {
+                if args.len() > 1 {
+                    self.run_model_import(&args[1]);
+                }
+            },
+            "model-validate" => self.run_model_validate(),
+            "model-benchmark" => self.run_model_benchmark(),
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);
