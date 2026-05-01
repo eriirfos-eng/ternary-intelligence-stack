@@ -140,6 +140,16 @@ impl CliDriver {
         crate::core::diagnostic_behavioral::run_moe_clustering_visualization();
     }
 
+    /// Runs the AEDL report.
+    pub fn run_moe_aedl_report(&self, router: &crate::core::routing::MoERouter13) {
+        crate::core::diagnostic_aedl::run_moe_aedl_report(router);
+    }
+
+    /// Runs the routing drift analysis.
+    pub fn run_moe_routing_drift_analysis(&self, router: &crate::core::routing::MoERouter13) {
+        crate::core::diagnostic_aedl::run_moe_routing_drift_analysis(router);
+    }
+
     /// Runs the causal behavioral attribution test.
     pub fn run_moe_causal_test(&self) {
         crate::core::diagnostic_causal::run_mi_test();

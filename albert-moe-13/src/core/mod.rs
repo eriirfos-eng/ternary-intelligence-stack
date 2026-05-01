@@ -9,4 +9,6 @@ pub mod diagnostic_bifurcation;
 pub mod diagnostic_moe;
 pub mod diagnostic_behavioral;
 pub mod rdl;
+pub mod aedl;
+pub mod diagnostic_aedl;
 pub mod diagnostic_causal;

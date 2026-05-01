@@ -3,6 +3,7 @@
 //! Control and routing layer for Mixture-of-Experts architecture on top of the ternary inference substrate.
 
 use crate::core::mock_layer::{TernaryLayer, ternary_matmul_kernel};
+use crate::core::aedl::AEDL;
 use rand::{prelude::*, Rng};
 
 #[derive(Clone, Copy, Debug)]
@@ -39,29 +40,30 @@ impl ExpertBank13 {
 
 /// Input-dependent routing layer.
 pub struct MoERouter13 {
-    pub gate_weights: Vec<f32>, // Learnable gate parameters
+    pub gate_weights: Vec<f32>,
+    pub aedl: AEDL,
 }
 
 impl MoERouter13 {
     pub fn new(input_dim: usize) -> Self {
         Self {
-            gate_weights: vec![0.1; input_dim * 13], // Simplified initialization
+            gate_weights: vec![0.1; input_dim * 13],
+            aedl: AEDL::new(13),
         }
     }
 
-    /// Selects top-k experts based on input conditioning.
+    /// Selects top-k experts based on input conditioning and adaptive bias.
     pub fn route(&self, input: &[f32], top_k: usize) -> Vec<(usize, f32)> {
-        // Simple softmax-over-logits routing
         let mut scores = vec![0.0; 13];
         for i in 0..13 {
             let mut score = 0.0;
             for j in 0..input.len() {
                 score += input[j] * self.gate_weights[i * input.len() + j];
             }
-            scores[i] = score;
+            // Add adaptive bias from AEDL
+            scores[i] = score + self.aedl.get_bias(i);
         }
 
-        // Return top-k expert indices and normalized scores
         let mut indexed_scores: Vec<(usize, f32)> = scores.into_iter().enumerate().collect();
         indexed_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         indexed_scores.into_iter().take(top_k).collect()
