@@ -145,6 +145,21 @@ impl CliDriver {
         crate::core::diagnostic_aedl::run_moe_aedl_report(router);
     }
 
+    /// Runs the hybrid mode test.
+    pub fn run_moe_mode_test(&self, router: &crate::core::routing::MoERouter13) {
+        crate::core::diagnostic_hybrid::run_moe_mode_test(router);
+    }
+
+    /// Runs the stability scan.
+    pub fn run_moe_stability_scan(&self, router: &mut crate::core::routing::MoERouter13) {
+        crate::core::diagnostic_hybrid::run_moe_stability_scan(router);
+    }
+
+    /// Runs the regime sweep.
+    pub fn run_moe_regime_sweep(&self, router: &mut crate::core::routing::MoERouter13) {
+        crate::core::diagnostic_hybrid::run_moe_regime_sweep(router);
+    }
+
     /// Runs the routing drift analysis.
     pub fn run_moe_routing_drift_analysis(&self, router: &crate::core::routing::MoERouter13) {
         crate::core::diagnostic_aedl::run_moe_routing_drift_analysis(router);
