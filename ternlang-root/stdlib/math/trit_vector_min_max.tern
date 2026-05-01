@@ -1,0 +1,48 @@
+/*
+ * Trit Vector Min/Max
+ * Finding minimum and maximum trit values in a tensor.
+ */
+
+fn vector_min_trit(data: trit[]) -> trit {
+    let m: trit = 1;
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        if data[i] < m { m = data[i]; }
+        i = i + 1;
+    }
+    return m;
+}
+
+fn vector_max_trit(data: trit[]) -> trit {
+    let m: trit = -1;
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        if data[i] > m { m = data[i]; }
+        i = i + 1;
+    }
+    return m;
+}
+
+fn main() -> trit {
+    let v: trit[5];
+    v[0] = 0; v[1] = 1; v[2] = 0; v[3] = -1; v[4] = 0;
+    
+    println("Trit Vector Min/Max Demo");
+    
+    println("Min value (expected -1):");
+    let min_v: trit = vector_min_trit(v);
+    println(min_v);
+    
+    println("Max value (expected 1):");
+    let max_v: trit = vector_max_trit(v);
+    println(max_v);
+    
+    if min_v == -1 && max_v == 1 {
+        println("Min/Max verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
