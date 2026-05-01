@@ -191,7 +191,6 @@ Together, they form a **closed-loop system**:
 > perception → deliberation → validation → execution
 
 ---
----
 
 ## MoE-13: Explainable Mixture-of-Experts
 
