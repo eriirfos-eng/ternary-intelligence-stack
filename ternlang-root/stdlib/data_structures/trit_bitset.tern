@@ -1,0 +1,57 @@
+/*
+ * Trit-Bitset
+ * Compact storage of binary flags using ternary signals.
+ * Each trit can store 0, 1, or -1 (allowing for 'unset', 'true', 'false').
+ */
+
+fn tb_set(data: trit[], pos: int, val: trit) -> trit {
+    if pos >= 0 && pos < 10 { // Using fixed size limit for safety
+        data[pos] = val;
+        return 1;
+    }
+    return -1;
+}
+
+fn tb_get(data: trit[], pos: int) -> trit {
+    if pos >= 0 && pos < 10 {
+        return data[pos];
+    }
+    return 0; // Default to hold if out of bounds
+}
+
+fn main() -> trit {
+    let flags: trit[10];
+    
+    // Initialize
+    let k: int = 0;
+    while k < 10 {
+        flags[k] = 0; // unset/hold
+        k = k + 1;
+    }
+    
+    println("Trit-Bitset Demo");
+    println("Setting pos 3 to Affirm (1)");
+    tb_set(flags, 3, 1);
+    
+    println("Setting pos 5 to Reject (-1)");
+    tb_set(flags, 5, -1);
+    
+    println("Reading pos 3:");
+    let f3: trit = tb_get(flags, 3);
+    println(f3);
+    
+    println("Reading pos 5:");
+    let f5: trit = tb_get(flags, 5);
+    println(f5);
+    
+    println("Reading pos 0 (unset):");
+    let f0: trit = tb_get(flags, 0);
+    println(f0);
+    
+    if f3 == 1 && f5 == -1 && f0 == 0 {
+        println("Trit-Bitset verified.");
+        return 1;
+    }
+    
+    return -1;
+}
