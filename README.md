@@ -32,14 +32,37 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ---
 
-## 1. Ternlang (The Infrastructure Layer)
+## Ternlang (The Infrastructure Layer)
 
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
 
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
+## Performance Benchmarks
 
-## 2. Albert-MoE-13 — The Intelligence Layer
+| Feature | Performance Gain | Industry Comparison |
+|---------|------------------|---------------------|
+| **Data Density** | 1.25x improvement | 5-trit block packing (8-bit) |
+| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
+| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
+
+---
+
+## Quick start (Compiler)
+
+```bash
+cargo install ternlang-cli
+```
+
+The `ternlang` binary provides the compiler, REPL, and test runner:
+
+```bash
+ternlang my_program.tern        # → run a .tern file directly
+ternlang build my_program.tern  # → compile to .bet bytecode
+```
+---
+
+## Albert-MoE-13 — The Intelligence Layer
 
 We are actively designing, training, and deploying our own **ternary-native Mixture-of-Experts model**.
 
@@ -92,18 +115,6 @@ Albert is designed to:
 
 ---
 
-### Relationship to Agent Albert
-
-Albert-MoE-13 serves as the **core intelligence layer** powering Agent Albert.
-
-- **Agent Albert** → orchestration, interaction, execution  
-- **Albert-MoE-13** → deliberation, validation, decision-making  
-
-Together, they form a **closed-loop system**:
-> perception → deliberation → validation → execution
-
----
-
 ## 3. Agent Albert — The Sovereign AI Assistant
 
 [![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
@@ -130,30 +141,6 @@ albert-cli
 | **Model-agnostic** | Connect to Gemini, Claude, GPT-4o, or Grok as "capability bridges" |
 | **Self-reflection memory** | Commits key facts to local storage to maintain long-term context |
 
----
-
-## Performance Benchmarks
-
-| Feature | Performance Gain | Industry Comparison |
-|---------|------------------|---------------------|
-| **Data Density** | 1.25x improvement | 5-trit block packing (8-bit) |
-| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
-| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
-
----
-
-## Quick start (Compiler)
-
-```bash
-cargo install ternlang-cli
-```
-
-The `ternlang` binary provides the compiler, REPL, and test runner:
-
-```bash
-ternlang my_program.tern        # → run a .tern file directly
-ternlang build my_program.tern  # → compile to .bet bytecode
-```
 
 ---
 
@@ -165,20 +152,6 @@ ternlang build my_program.tern  # → compile to .bet bytecode
 | [`agent_albert_cli/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli) | Agent Albert — terminal-native CLI + TernStudio intelligence layer |
 | [`ternlang-root/stdlib/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib) | 293 open-core `.tern` modules (Tier 1 — free) |
 | `eriirfos-eng/ternlang-premium` *(private)* | 28,495+ proprietary `.tern` modules — Tier 2 / 3 / 4 |
-
----
-
-## Live API
-
-```bash
-# Health check
-curl https://ternlang.com/health
-
-# MoE-13 ternary decision via MCP (no key required)
-curl -X POST https://ternlang.com/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"moe_orchestrate","arguments":{"query":"Should I proceed?"}}}'
-```
 
 ---
 
