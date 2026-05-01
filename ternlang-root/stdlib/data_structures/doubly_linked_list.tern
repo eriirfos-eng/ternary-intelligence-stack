@@ -1,0 +1,66 @@
+/*
+ * Doubly Linked List (Ternary)
+ * Implementation using a flat arena-backed array.
+ * Each node has a value (trit) and pointers to previous and next nodes.
+ */
+
+// Arena-backed implementation
+// val: trit_pool[i]
+// prev: prev_pool[i]
+// next: next_pool[i]
+
+fn dll_insert_after(val_pool: trit[], prev_pool: int[], next_pool: int[], curr: int, val: trit, free_p: int) -> int {
+    let p: int = free_p;
+    val_pool[p] = val;
+    
+    let next_node: int = next_pool[curr];
+    
+    // Link new node
+    next_pool[p] = next_node;
+    prev_pool[p] = curr;
+    
+    // Update neighbors
+    next_pool[curr] = p;
+    if next_node != -1 {
+        prev_pool[next_node] = p;
+    }
+    
+    return p + 1;
+}
+
+fn main() -> trit {
+    let val_pool: trit[10];
+    let prev_pool: int[10];
+    let next_pool: int[10];
+    
+    // Initialize
+    let i: int = 0;
+    while i < 10 {
+        val_pool[i] = 0;
+        prev_pool[i] = -1;
+        next_pool[i] = -1;
+        i = i + 1;
+    }
+    
+    let head: int = 0;
+    val_pool[head] = 1; // Affirm
+    let free_p: int = 1;
+    
+    println("Doubly Linked List Demo");
+    println("Inserting -1 after head (1)");
+    free_p = dll_insert_after(val_pool, prev_pool, next_pool, head, -1, free_p);
+    
+    let node1: int = next_pool[head];
+    println("Node 1 value:");
+    println(val_pool[node1]);
+    
+    println("Node 1 previous (should be 0/head):");
+    println(prev_pool[node1]);
+    
+    if val_pool[node1] == -1 && prev_pool[node1] == head {
+        println("DLL insertion and back-link verified.");
+        return 1;
+    }
+    
+    return -1;
+}
