@@ -15,6 +15,11 @@ impl CliDriver {
         crate::training::ternarization::TernarizationPipeline::run_mock_ternarization();
     }
 
+    /// Runs the transformer layer comparison test.
+    pub fn run_layer_test(&self) {
+        crate::core::mock_layer::run_layer_comparison();
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -35,6 +40,7 @@ impl CliDriver {
 
         match args[0].as_str() {
             "ternary-test" => self.run_mock_test(),
+            "layer-test" => self.run_layer_test(),
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);

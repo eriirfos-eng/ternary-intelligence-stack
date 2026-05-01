@@ -1497,6 +1497,14 @@ fn run_tui(
         // For /plan and /loop: display original command but send the enriched prompt to the LLM.
         let llm_input = agent_override.unwrap_or_else(|| input.clone());
 
+        // Drain pending images before launching the thread.
+        let pending_images: Vec<(String, String)> = {
+            let mut state = tui_state.lock().unwrap();
+            state.pending_images.drain(..)
+                .map(|att| (att.mime, att.base64))
+                .collect()
+        };
+
         // Push user message and set working
         {
             let mut state = tui_state.lock().unwrap();
@@ -1533,7 +1541,11 @@ fn run_tui(
         let turn_result = std::thread::scope(|s| {
             let runtime = &mut cli.runtime;
             let handle = s.spawn(move || {
-                let r = runtime.run_turn(llm_input.clone(), Some(&mut prompter));
+                let r = if pending_images.is_empty() {
+                    runtime.run_turn(llm_input.clone(), Some(&mut prompter))
+                } else {
+                    runtime.run_turn_with_images(llm_input.clone(), pending_images, Some(&mut prompter))
+                };
                 done_clone.store(true, Ordering::Relaxed);
                 r
             });
