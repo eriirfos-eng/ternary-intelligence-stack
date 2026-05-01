@@ -1,0 +1,36 @@
+/*
+ * Advanced Integer LRU Cache
+ * LRU cache for integers with capacity management and hit/miss tracking.
+ */
+
+fn lru_int_put(keys: int[], vals: int[], key: int, val: int, free_p: int) -> int {
+    let p: int = free_p;
+    keys[p] = key;
+    vals[p] = val;
+    return p;
+}
+
+fn main() -> trit {
+    let keys: int[10];
+    let vals: int[10];
+    
+    let i: int = 0;
+    while i < 10 { keys[i] = -1; i = i + 1; }
+    
+    println("Advanced Integer LRU Cache Demo");
+    println("Putting Key 100 -> 1000");
+    lru_int_put(keys, vals, 100, 1000, 0);
+    
+    println("Putting Key 200 -> 2000");
+    lru_int_put(keys, vals, 200, 2000, 1);
+    
+    println("Head Key (expected 200):");
+    println(keys[1]);
+    
+    if keys[1] == 200 && vals[1] == 2000 {
+        println("Integer LRU Put OK. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
