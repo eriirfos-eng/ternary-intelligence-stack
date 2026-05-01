@@ -449,6 +449,91 @@ pub fn run_real_layer_test() {
     println!("Compression Ratio: {:.1}x", 1.0 / (1.0 - (sparsity / 100.0)));
     println!();
 }
+
+pub struct LayerStack {
+    pub layers: Vec<LinearLayer>,
+}
+
+pub struct TernaryStack {
+    pub layers: Vec<(TernaryLayer, ExpertType)>,
+}
+
+pub fn run_stack_test() {
+    let dim = 32;
+    let loader = ModelLoader::new("mock");
+    
+    let mut layers = Vec::new();
+    // 1. Transformer-like
+    layers.push(LinearLayer {
+        weights: loader.simulate_transformer_shard(dim * dim),
+        bias: vec![0.0; dim],
+        input_dim: dim,
+        output_dim: dim,
+    });
+    // 2. High Variance
+    layers.push(LinearLayer {
+        weights: LayerType::HighVariance.generate_weights(dim * dim),
+        bias: vec![0.0; dim],
+        input_dim: dim,
+        output_dim: dim,
+    });
+    // 3. Sparse
+    layers.push(LinearLayer {
+        weights: LayerType::SparseRandom.generate_weights(dim * dim),
+        bias: vec![0.0; dim],
+        input_dim: dim,
+        output_dim: dim,
+    });
+    // 4. Dense
+    layers.push(LinearLayer {
+        weights: LayerType::DenseUniform.generate_weights(dim * dim),
+        bias: vec![0.0; dim],
+        input_dim: dim,
+        output_dim: dim,
+    });
+
+    let float_stack = LayerStack { layers };
+    let mut ternary_layers = Vec::new();
+    for layer in &float_stack.layers {
+        ternary_layers.push(expert_ternarize(layer));
+    }
+    let ternary_stack = TernaryStack { layers: ternary_layers };
+
+    let input = vec![1.0; dim];
+    
+    println!("\n[ALBERT::STACK]");
+    
+    let mut f_current = input.clone();
+    let mut t_current = input.clone();
+    
+    for i in 0..float_stack.layers.len() {
+        f_current = float_stack.layers[i].forward(&f_current);
+        t_current = ternary_stack.layers[i].0.forward_ternary(&t_current);
+        
+        let mse = compute_mse(&f_current, &t_current);
+        let variance = compute_variance(&f_current);
+        let nmse = mse / variance;
+        
+        println!("Layer {} → NMSE: {:.4}", i + 1, nmse);
+    }
+    
+    let final_mse = compute_mse(&f_current, &t_current);
+    let final_variance = compute_variance(&f_current);
+    let final_nmse = final_mse / final_variance;
+    
+    println!("\nFinal NMSE: {:.4}", final_nmse);
+    
+    let status = if final_nmse < 0.2 {
+        "STABLE"
+    } else if final_nmse <= 1.0 {
+        "DEGRADED"
+    } else {
+        "UNSTABLE"
+    };
+    
+    println!("Status: {}", status);
+    println!();
+}
 use crate::core::routing::{DataRouter, ExpertType};
 
 pub fn expert_ternarize(layer: &LinearLayer) -> (TernaryLayer, ExpertType) {

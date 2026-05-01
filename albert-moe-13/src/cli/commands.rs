@@ -45,6 +45,11 @@ impl CliDriver {
         crate::core::mock_layer::run_real_layer_test();
     }
 
+    /// Runs the sequential layer stack test.
+    pub fn run_stack_test(&self) {
+        crate::core::mock_layer::run_stack_test();
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -71,6 +76,7 @@ impl CliDriver {
             "multi-layer-test" => self.run_multi_layer_test(),
             "routing-test" => self.run_routing_test(),
             "real-test" => self.run_real_test(),
+            "stack-test" => self.run_stack_test(),
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);
