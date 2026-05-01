@@ -1011,19 +1011,20 @@ fn run_tui(
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    // Disable sandbox when running unrestricted so the agent can reach all paths.
-    runtime::set_sandbox_bypass(permission_mode == PermissionMode::DangerFullAccess);
+    // Check workspace trust and optionally select permission mode interactively
+    let (trusted, final_permission_mode) = check_workspace_trust(permission_mode)?;
 
-    let trusted = check_workspace_trust()?;
+    // Disable sandbox when running unrestricted so the agent can reach all paths.
+    runtime::set_sandbox_bypass(final_permission_mode == PermissionMode::DangerFullAccess);
 
     let cwd = env::current_dir()
         .map(|p| p.display().to_string())
         .unwrap_or_else(|_| "<unknown>".to_string());
 
-    let mut cli = LiveCli::new(model.clone(), true, allowed_tools, permission_mode)?;
+    let mut cli = LiveCli::new(model.clone(), true, allowed_tools, final_permission_mode)?;
 
     let session_id = cli.session.id.clone();
-    let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd, permission_mode.as_str().to_string(), session_id);
+    let (tui_app, submit_rx) = tui::TuiApp::new(model, cwd, final_permission_mode.as_str().to_string(), session_id);
     let tui_state = Arc::clone(&tui_app.state);
 
     // Sync initial state and show banner
@@ -4375,7 +4376,7 @@ fn render_last_tool_debug_report(_session: &Session) -> Result<String, Box<dyn s
     Ok("".to_string())
 }
 
-fn check_workspace_trust() -> Result<bool, Box<dyn std::error::Error>> {
+fn check_workspace_trust(cli_permission_mode: PermissionMode) -> Result<(bool, PermissionMode), Box<dyn std::error::Error>> {
     let mut cwd = env::current_dir()?;
 
     loop {
@@ -4396,8 +4397,33 @@ fn check_workspace_trust() -> Result<bool, Box<dyn std::error::Error>> {
 
         match selection {
             0 => {
-                println!("{}", style("Trust verified. Let's build.").dim());
-                return Ok(true);
+                println!("{}", style("Trust verified.").dim());
+
+                // If an explicit --permission-mode flag was provided (not the default),
+                // skip the permission selection prompt and use the CLI-provided mode
+                let final_mode = if cli_permission_mode != PermissionMode::DangerFullAccess {
+                    cli_permission_mode
+                } else {
+                    // Show permission mode selection (default is workspace-write, which is safer)
+                    println!("\nPermission mode for this session:");
+                    let mode_options = vec![
+                        "read-only          (no writes · no shell)",
+                        "workspace-write    (files only · no shell)",
+                        "danger-full-access (unrestricted · full shell)",
+                    ];
+                    let mode_selection = Select::new()
+                        .items(&mode_options)
+                        .default(1) // workspace-write is safer default
+                        .interact()?;
+
+                    match mode_selection {
+                        0 => PermissionMode::ReadOnly,
+                        1 => PermissionMode::WorkspaceWrite,
+                        _ => PermissionMode::DangerFullAccess,
+                    }
+                };
+
+                return Ok((true, final_mode));
             }
             1 => {
                 let target: String = Input::new()
