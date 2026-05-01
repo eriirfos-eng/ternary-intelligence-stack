@@ -1,0 +1,61 @@
+/*
+ * Integer LRU Cache
+ * LRU cache implementation for integer values.
+ * Uses a flat array with shifts for eviction and access update.
+ */
+
+fn lru_int_access(keys: int[], vals: int[], size: int, key: int) -> int {
+    let found_pos: int = -1;
+    let i: int = 0;
+    while i < size {
+        if keys[i] == key {
+            found_pos = i;
+        }
+        i = i + 1;
+    }
+    
+    if found_pos == -1 { return -1; }
+    
+    let target_val: int = vals[found_pos];
+    
+    // Shift others
+    let j: int = found_pos;
+    while j > 0 {
+        keys[j] = keys[j-1];
+        vals[j] = vals[j-1];
+        j = j - 1;
+    }
+    
+    keys[0] = key;
+    vals[0] = target_val;
+    return 0;
+}
+
+fn main() -> trit {
+    let keys: int[5];
+    let vals: int[5];
+    
+    // Initial data
+    keys[0] = 1; vals[0] = 10;
+    keys[1] = 2; vals[1] = 20;
+    keys[2] = 3; vals[2] = 30;
+    keys[3] = 4; vals[3] = 40;
+    keys[4] = 5; vals[4] = 50;
+    
+    println("Integer LRU Cache Demo");
+    println("Accessing Key 3");
+    lru_int_access(keys, vals, 5, 3);
+    
+    println("Head Key (should be 3):");
+    println(keys[0]);
+    
+    println("Head Value (should be 30):");
+    println(vals[0]);
+    
+    if keys[0] == 3 && vals[0] == 30 {
+        println("LRU Access OK.");
+        return 1;
+    }
+    
+    return -1;
+}
