@@ -396,11 +396,62 @@ pub fn run_multi_layer_test() {
     unique_thresholds.dedup();
 
     println!();
-    if unique_thresholds.len() <= 1 {
-        println!("[ALBERT::INSIGHT] Compression is globally stable");
-    } else {
-        println!("[ALBERT::INSIGHT] Layer-specific compression behavior detected");
-        println!("Unique thresholds identified: {:?}", unique_thresholds);
+    println!();
+}
+
+use crate::core::routing::{DataRouter, ExpertType};
+
+pub fn expert_ternarize(layer: &LinearLayer) -> (TernaryLayer, ExpertType) {
+    let stats = DataRouter::analyze_layer(&layer.weights);
+    let expert = DataRouter::route_layer(&stats);
+    let threshold = DataRouter::get_threshold(expert);
+    
+    let ternary_layer = convert_to_ternary(layer, threshold);
+    (ternary_layer, expert)
+}
+
+pub fn run_routing_test() {
+    let input_dim = 16;
+    let output_dim = 16;
+    let size = input_dim * output_dim;
+    let bias = vec![0.0; output_dim];
+    
+    let layers = vec![
+        (LayerType::HighVariance, "High Variance Layer"),
+        (LayerType::SparseRandom, "Sparse Layer"),
+        (LayerType::DenseUniform, "Standard Layer"),
+    ];
+
+    for (l_type, desc) in layers {
+        let weights = l_type.generate_weights(size);
+        let float_layer = LinearLayer {
+            weights,
+            bias: bias.clone(),
+            input_dim,
+            output_dim,
+        };
+
+        let stats = DataRouter::analyze_layer(&float_layer.weights);
+        let (ternary_layer, expert) = expert_ternarize(&float_layer);
+        
+        let zero_count = ternary_layer.weights.iter().filter(|&&w| w == 0).count();
+        let sparsity = (zero_count as f32 / ternary_layer.weights.len() as f32) * 100.0;
+
+        // Dummy input for NMSE check
+        let input = vec![1.0; input_dim];
+        let f_out = float_layer.forward(&input);
+        let t_out = ternary_layer.forward_ternary(&input);
+        let mse = compute_mse(&f_out, &t_out);
+        let variance = compute_variance(&f_out);
+        let nmse = mse / variance;
+
+        println!("\n[ALBERT::ROUTING]");
+        println!("Description: {}", desc);
+        println!("Layer Stats: Variance={:.4}, Mean={:.4}, SparsityEst={:.2}", 
+            stats.variance, stats.mean, stats.sparsity_estimate);
+        println!("Assigned Expert: {:?}", expert);
+        println!("Selected Threshold: {:.2}", DataRouter::get_threshold(expert));
+        println!("Result: Sparsity={:.1}%, NMSE={:.6}", sparsity, nmse);
     }
     println!();
 }

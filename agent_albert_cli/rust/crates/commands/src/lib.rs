@@ -52,14 +52,8 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         resume_supported: true,
     },
     SlashCommandSpec {
-        name: "compact",
-        summary: "Compact local session history",
-        argument_hint: None,
-        resume_supported: true,
-    },
-    SlashCommandSpec {
         name: "compress",
-        summary: "Aggressively compress session history into a summary",
+        summary: "Compress session history to ~40-50k tokens, preserving recent context",
         argument_hint: None,
         resume_supported: true,
     },
@@ -315,7 +309,6 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
 pub enum SlashCommand {
     Help,
     Status,
-    Compact,
     Compress,
     Bughunter {
         scope: Option<String>,
@@ -427,7 +420,6 @@ impl SlashCommand {
         Some(match command {
             "help" | "?" => Self::Help,
             "status" => Self::Status,
-            "compact" => Self::Compact,
             "compress" => Self::Compress,
             "upgrade" => Self::Upgrade,
             "terminal-setup" => Self::TerminalSetup,
@@ -604,35 +596,20 @@ pub struct SlashCommandResult {
 pub fn handle_slash_command(
     input: &str,
     session: &Session,
-    compaction: CompactionConfig,
+    _compaction: CompactionConfig,
 ) -> Option<SlashCommandResult> {
     match SlashCommand::parse(input)? {
-        SlashCommand::Compact => {
-            let result = compact_session(session, compaction);
-            let message = if result.removed_message_count == 0 {
-                "Compaction skipped: session is below the compaction threshold.".to_string()
-            } else {
-                format!(
-                    "Compacted {} messages into a resumable system summary.",
-                    result.removed_message_count
-                )
-            };
-            Some(SlashCommandResult {
-                message,
-                session: result.compacted_session,
-            })
-        }
         SlashCommand::Compress => {
-            // Aggressive manual compression: only keep last 2 messages
+            // Compress session history to ~40-50k tokens, preserving recent context
             let result = compact_session(session, CompactionConfig {
-                preserve_recent_messages: 2,
-                max_estimated_tokens: 1, // Force it
+                preserve_recent_messages: 4,
+                max_estimated_tokens: 1,
             });
             let message = if result.removed_message_count == 0 {
                 "Compression skipped: session is empty or too short.".to_string()
             } else {
                 format!(
-                    "Aggressively compressed {} messages. Albert's memory is now lean and sharp.",
+                    "Compressed {} messages into summary. Session ready to continue indefinitely.",
                     result.removed_message_count
                 )
             };
