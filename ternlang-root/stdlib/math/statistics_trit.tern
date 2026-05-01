@@ -1,0 +1,118 @@
+/*
+ * Trit-Native Statistics
+ * Provides statistical functions optimized for balanced ternary signals.
+ */
+
+// Mean of a trit tensor.
+// Returns float for precision.
+fn mean_trit(data: trit[]) -> float {
+    let sum: float = 0.0;
+    let count: int = len(data);
+    
+    if count == 0 {
+        return 0.0;
+    }
+    
+    let i: int = 0;
+    while i < count {
+        sum = sum + cast(data[i]);
+        i = i + 1;
+    }
+    
+    return sum / cast(count);
+}
+
+// Majority voting (consensus) of a trit tensor.
+// Returns the most frequent trit value.
+fn majority_trit(data: trit[]) -> trit {
+    let count_pos: int = 0;
+    let count_neg: int = 0;
+    let count_zero: int = 0;
+    let n: int = len(data);
+    
+    let i: int = 0;
+    while i < n {
+        match data[i] {
+             1 => { count_pos = count_pos + 1; }
+             0 => { count_zero = count_zero + 1; }
+            -1 => { count_neg = count_neg + 1; }
+        }
+        i = i + 1;
+    }
+    
+    if count_pos > count_neg && count_pos > count_zero {
+        return 1;
+    }
+    if count_neg > count_pos && count_neg > count_zero {
+        return -1;
+    }
+    
+    return 0; // Tend to 0 if tied or 0 is majority
+}
+
+// Entropy calculation for ternary signal (shannon entropy base 3).
+fn entropy_ternary(data: trit[]) -> float {
+    let n: int = len(data);
+    if n == 0 { return 0.0; }
+    
+    let p1: float = 0.0;
+    let p0: float = 0.0;
+    let pn1: float = 0.0;
+    
+    let i: int = 0;
+    while i < n {
+        match data[i] {
+             1 => { p1 = p1 + 1.0; }
+             0 => { p0 = p0 + 1.0; }
+            -1 => { pn1 = pn1 + 1.0; }
+        }
+        i = i + 1;
+    }
+    
+    let total: float = cast(n);
+    p1 = p1 / total;
+    p0 = p0 / total;
+    pn1 = pn1 / total;
+    
+    let ent: float = 0.0;
+    if p1 > 0.0 { ent = ent - p1 * log3(p1); }
+    if p0 > 0.0 { ent = ent - p0 * log3(p0); }
+    if pn1 > 0.0 { ent = ent - pn1 * log3(pn1); }
+    
+    return ent;
+}
+
+// log3 helper (log2(x) / log2(3))
+fn log3(x: float) -> float {
+    return ln(x) / ln(3.0);
+}
+
+// Natural logarithm approximation using Taylor series (simplified for stdlib demo)
+fn ln(x: float) -> float {
+    if x <= 0.0 { return -100.0; } // Error value
+    
+    // Very simple approximation: ln(x) ~ (x-1) - (x-1)^2/2
+    // For x near 1
+    let y: float = (x - 1.0);
+    return y - (y * y / 2.0);
+}
+
+fn main() -> trit {
+    let signal: trit[5];
+    signal[0] = 1;
+    signal[1] = 1;
+    signal[2] = 0;
+    signal[3] = -1;
+    signal[4] = 1;
+    
+    let m: float = mean_trit(signal);
+    let maj: trit = majority_trit(signal);
+    // let ent: float = entropy_ternary(signal);
+    
+    // Check results (1+1+0-1+1)/5 = 2/5 = 0.4
+    if m == 0.4 && maj == 1 {
+        return 1;
+    }
+    
+    return 0;
+}
