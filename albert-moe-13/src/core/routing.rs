@@ -1,64 +1,69 @@
-// SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
-//! # Statistical Expert Routing
-//! 
-//! Routes neural layers to specialized compression strategies based on 
-//! their statistical properties.
+//! # MoE-13 Expert System
+//!
+//! Control and routing layer for Mixture-of-Experts architecture on top of the ternary inference substrate.
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ExpertType {
-    HighSparsity, // Aggressive compression (threshold ~0.5)
-    Balanced,     // Mid compression (threshold ~0.3)
-    Precision,    // Low error priority (threshold ~0.15)
+use crate::core::mock_layer::{TernaryLayer, ternary_matmul_kernel};
+use rand::{prelude::*, Rng};
+
+#[derive(Clone, Copy, Debug)]
+pub enum ExpertType { FastSparse, Balanced, HighPrecision, MemoryHeavy }
+
+/// Indexed bank of 13 independent experts.
+pub struct ExpertBank13 {
+    pub experts: Vec<TernaryLayer>,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct LayerStats {
-    pub variance: f32,
-    pub mean: f32,
-    pub sparsity_estimate: f32,
-}
-
-pub struct DataRouter;
-
-impl DataRouter {
-    /// Analyzes the statistical distribution of weights.
-    pub fn analyze_layer(weights: &[f32]) -> LayerStats {
-        if weights.is_empty() {
-            return LayerStats { variance: 0.0, mean: 0.0, sparsity_estimate: 0.0 };
+impl ExpertBank13 {
+    pub fn new(input_dim: usize, output_dim: usize) -> Self {
+        let mut rng = thread_rng();
+        let mut experts = Vec::with_capacity(13);
+        for _ in 0..13 {
+            experts.push(TernaryLayer {
+                weights: (0..input_dim * output_dim).map(|_| rng.gen_range(-1..2) as i8).collect(),
+                alpha: 1.0,
+                bias: vec![0.0; output_dim],
+                input_dim,
+                output_dim,
+            });
         }
-
-        let mean = weights.iter().sum::<f32>() / weights.len() as f32;
-        let variance = weights.iter().map(|&w| (w - mean).powi(2)).sum::<f32>() / weights.len() as f32;
-        
-        // Estimate potential sparsity by counting near-zero weights (heuristic)
-        let near_zero_count = weights.iter().filter(|&&w| w.abs() < 0.1).count();
-        let sparsity_estimate = near_zero_count as f32 / weights.len() as f32;
-
-        LayerStats { variance, mean, sparsity_estimate }
+        Self { experts }
     }
 
-    /// Routes a layer to an expert based on its statistics.
-    pub fn route_layer(stats: &LayerStats) -> ExpertType {
-        // Heuristic 1: High variance requires precision to maintain signal fidelity.
-        if stats.variance > 0.5 {
-            ExpertType::Precision
-        } 
-        // Heuristic 2: Many near-zero weights suggest high compressibility.
-        else if stats.sparsity_estimate > 0.4 {
-            ExpertType::HighSparsity
-        }
-        // Fallback: Balanced strategy.
-        else {
-            ExpertType::Balanced
+    pub fn execute_expert(&self, expert_idx: usize, input: &[f32]) -> Vec<f32> {
+        let expert = &self.experts[expert_idx];
+        let mut output = vec![0.0; expert.output_dim];
+        ternary_matmul_kernel(&expert.weights, input, &mut output, expert.alpha, expert.input_dim, expert.output_dim);
+        output
+    }
+}
+
+/// Input-dependent routing layer.
+pub struct MoERouter13 {
+    pub gate_weights: Vec<f32>, // Learnable gate parameters
+}
+
+impl MoERouter13 {
+    pub fn new(input_dim: usize) -> Self {
+        Self {
+            gate_weights: vec![0.1; input_dim * 13], // Simplified initialization
         }
     }
 
-    /// Maps expert type to its recommended threshold.
-    pub fn get_threshold(expert: ExpertType) -> f32 {
-        match expert {
-            ExpertType::HighSparsity => 0.5,
-            ExpertType::Balanced => 0.3,
-            ExpertType::Precision => 0.15,
+    /// Selects top-k experts based on input conditioning.
+    pub fn route(&self, input: &[f32], top_k: usize) -> Vec<(usize, f32)> {
+        // Simple softmax-over-logits routing
+        let mut scores = vec![0.0; 13];
+        for i in 0..13 {
+            let mut score = 0.0;
+            for j in 0..input.len() {
+                score += input[j] * self.gate_weights[i * input.len() + j];
+            }
+            scores[i] = score;
         }
+
+        // Return top-k expert indices and normalized scores
+        let mut indexed_scores: Vec<(usize, f32)> = scores.into_iter().enumerate().collect();
+        indexed_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        indexed_scores.into_iter().take(top_k).collect()
     }
 }
