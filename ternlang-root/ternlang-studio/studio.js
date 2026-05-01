@@ -126,7 +126,8 @@ match result {
   const loc = window.location;
   if (loc.hostname !== 'localhost' && loc.hostname !== '127.0.0.1' && loc.protocol !== 'file:') {
     const origin = loc.protocol + '//' + loc.hostname + (loc.port ? ':' + loc.port : '');
-    document.getElementById('apiEndpoint').value = origin;
+    const el = document.getElementById('apiEndpoint');
+    if (el) el.value = origin;
   }
 })();
 
@@ -4969,6 +4970,8 @@ function initInspectorDraggable() {
     const rect = anchorToPixels();
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
     e.preventDefault();
@@ -4996,13 +4999,15 @@ function initInspectorDraggable() {
       activeEdge = { dx, dy };
       startRect  = anchorToPixels();
       startMouse = { x: e.clientX, y: e.clientY };
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup",   onMouseUp);
     });
   });
 
   function onMouseMove(e) {
-    if (isDragging) {
+    if (isDragging && dragParentRect) {
       ins.style.left = (e.clientX - offsetX - dragParentRect.left) + "px";
       ins.style.top  = (e.clientY - offsetY - dragParentRect.top)  + "px";
     } else if (isResizing && activeEdge && startRect && startMouse) {
