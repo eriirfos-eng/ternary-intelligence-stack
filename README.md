@@ -24,6 +24,8 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 → **[ROADMAP.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** (Phases 1–20, MoE-13 structure, priority matrix)
 
+→ **[session_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** (Details to the Fixes we adressed during production)
+
 → **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress SDK
 
 → **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — terminal-native, model-agnostic AI agent built in pure Rust
