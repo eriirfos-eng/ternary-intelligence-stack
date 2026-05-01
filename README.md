@@ -73,20 +73,6 @@ Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to de
 
 ### Core Architecture
 
-- **13 Deliberation Axes**  
-  Each expert represents a distinct reasoning dimension (e.g. Safety, Ethics, Logic, FactCheck, etc.),  
-  voting using **ternary signals**: `{ -1, 0, +1 }`.
-
-- **Safety Hard Gate (Axis-6)**  
-  A mandatory veto layer capable of **terminating any execution path** before action is taken.
-
-- **Local-First Sovereignty**  
-  Designed to run fully offline on **local infrastructure** via Ollama or custom ternary hardware.
-
----
-
-### Technical Stack
-
 - **Base Model**  
   Open-source MoE in the **20B–30B parameter class**
 
@@ -101,9 +87,17 @@ Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to de
 - **Architecture**  
   Consolidation into **13 domain-specific expert routers (MoE-13)**
 
----
+- **13 Deliberation Axes**  
+  Each expert represents a distinct reasoning dimension (e.g. Safety, Ethics, Logic, FactCheck, etc.),  
+  voting using **ternary signals**: `{ -1, 0, +1 }`.
 
-### Why This Matters
+- **Safety Hard Gate (Axis-6)**  
+  A mandatory veto layer capable of **terminating any execution path** before action is taken.
+
+- **Local-First Sovereignty**  
+  Designed to run fully offline on **local infrastructure** via Ollama or custom ternary hardware.
+
+---
 
 Albert is designed to:
 
