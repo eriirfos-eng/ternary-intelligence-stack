@@ -1,6 +1,6 @@
 # Ternary Intelligence Stack (TIS)
 
-[![version](https://img.shields.io/badge/version-v1.2.7-black)](#architecture)
+[![version](https://img.shields.io/badge/version-v1.2.9-blue)](#architecture)
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
@@ -142,7 +142,7 @@ curl -X POST https://ternlang.com/mcp \
 
 ## Team
 
-The Ternary Intelligence Stack is built by a core team of three co-founders from **RFI-IRFOS**, Graz:
+The Ternary Intelligence Stack is built by a core team of five co-founders from **RFI-IRFOS**, Graz:
 
 *   **Simeon Kepp**: Head of Research & Systems Architect.
 *   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
