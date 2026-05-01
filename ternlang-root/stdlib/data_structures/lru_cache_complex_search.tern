@@ -1,0 +1,37 @@
+/*
+ * Complex LRU Cache with Search
+ * LRU cache for complex trit pairs with value-based search capability.
+ */
+
+fn lru_complex_search(reals: trit[], imags: trit[], size: int, re: trit, im: trit) -> int {
+    let i: int = 0;
+    while i < size {
+        if reals[i] == re && imags[i] == im {
+            return i;
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let reals: trit[5];
+    let imags: trit[5];
+    
+    reals[0] = 1; imags[0] = 1;
+    reals[1] = -1; imags[1] = 0;
+    reals[2] = 0; imags[2] = -1;
+    
+    println("Complex LRU Cache Search Demo");
+    
+    println("Searching for (-1, 0) (expected index 1):");
+    let idx: int = lru_complex_search(reals, imags, 3, -1, 0);
+    println(idx);
+    
+    if idx == 1 {
+        println("Complex search verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
