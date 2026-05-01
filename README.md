@@ -168,7 +168,7 @@ The Ternary Intelligence Stack is built by a core team of five co-founders from 
 *   **Lisa Scharler**: Head of Social Technology & Ecocentric Systems.
 *   **Louis Ehrig**: Corporate Secretary and Press & Media Relations.
 
-→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
+→ **[Read our BIO and Mission in LEADERSHIP.md](docs/LEADERSHIP.md)**
 
 ---
 
