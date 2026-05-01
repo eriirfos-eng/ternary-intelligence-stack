@@ -1,0 +1,62 @@
+/*
+ * Integer Statistics
+ * Statistical functions for integer arrays.
+ * Mean, Min, Max, and Range.
+ */
+
+fn mean_int(data: int[]) -> float {
+    let sum: int = 0;
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        sum = sum + data[i];
+        i = i + 1;
+    }
+    return cast(sum) / cast(n);
+}
+
+fn min_int(data: int[]) -> int {
+    let m: int = data[0];
+    let i: int = 1;
+    while i < 5 {
+        if data[i] < m { m = data[i]; }
+        i = i + 1;
+    }
+    return m;
+}
+
+fn max_int(data: int[]) -> int {
+    let m: int = data[0];
+    let i: int = 1;
+    while i < 5 {
+        if data[i] > m { m = data[i]; }
+        i = i + 1;
+    }
+    return m;
+}
+
+fn main() -> trit {
+    let data: int[5];
+    data[0] = 10; data[1] = 20; data[2] = 5; data[3] = 40; data[4] = 15;
+    
+    println("Integer Statistics Demo");
+    
+    println("Mean (expected 18.0):");
+    let m: float = mean_int(data);
+    println(m);
+    
+    println("Min (expected 5):");
+    let min_v: int = min_int(data);
+    println(min_v);
+    
+    println("Max (expected 40):");
+    let max_v: int = max_int(data);
+    println(max_v);
+    
+    if m == 18.0 && min_v == 5 && max_v == 40 {
+        println("Integer statistics verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
