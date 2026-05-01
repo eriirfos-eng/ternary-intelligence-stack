@@ -5720,10 +5720,6 @@ function updateWires() {
     const toNode   = document.getElementById(w.toId);
     // Skip wires where either endpoint has been deleted.
     if (!fromNode || !toNode) return;
-    // Skip albert-panel wires when the panel is hidden — getBoundingClientRect returns zeros.
-    const albertPanel = document.getElementById('albert-panel');
-    if ((w.fromId === 'albert-panel' || w.toId === 'albert-panel') &&
-        albertPanel && albertPanel.style.display === 'none') return;
 
     // Phase 3: Select specific ternary output port based on condition
     let portSelector = '.flow-port-out';
@@ -8045,17 +8041,13 @@ require(["vs/editor/editor.main"], function () {
   // Load from hash after Monaco is ready
   loadFromHash();
 
-  // Migration: Manually inject missing agents
+  // Cleanup: Remove deprecated local node entries
   const reg = JSON.parse(localStorage.getItem("ternflow_registry") || "[]");
-  const missing = [
-    { id: "agent", slug: "agent", name: "Agent", desc: "Custom ternary pipeline", pricing: "per_call", nodes: 2, deployed: "2026-04-19T00:00:00Z" },
-    { id: "mesh-node-a", slug: "mesh-node-a", name: "Mesh_Node_A", desc: "Custom ternary pipeline", pricing: "private", nodes: 8, deployed: "2026-04-19T00:00:00Z" }
-  ];
-  let changed = false;
-  missing.forEach(m => {
-    if (!reg.find(r => r.id === m.id)) { reg.push(m); changed = true; }
-  });
-  if (changed) localStorage.setItem("ternflow_registry", JSON.stringify(reg));
+  const deprecated = ["agent", "mesh-node-a"];
+  const filtered = reg.filter(r => !deprecated.includes(r.id));
+  if (filtered.length < reg.length) {
+    localStorage.setItem("ternflow_registry", JSON.stringify(filtered));
+  }
 
   const lastView = localStorage.getItem("ternstudio-last-view") || "dashboard";
   hydrateSimSpeed();
