@@ -178,12 +178,30 @@ pub struct Task {
     pub status: TaskStatus,
 }
 
+/// A single line in an xray diff view.
+#[derive(Clone, Debug)]
+pub enum XRayLine {
+    Added   { n: usize, text: String },
+    Removed { n: usize, text: String },
+    Context { n: usize, text: String },
+    Elided  { count: usize },
+}
+
+/// Diff summary shown below an Edit/Write tool call.
+#[derive(Clone, Debug)]
+pub struct XRayDiff {
+    pub file:    String,
+    pub added:   usize,
+    pub removed: usize,
+    pub lines:   Vec<XRayLine>,
+}
+
 #[derive(Clone, Debug)]
 pub enum ExecBlock {
     /// User message:  > text  on slightly dark background
     UserMessage(String),
     /// Tool call — green dot while active, grey when done
-    ToolUse { name: String, args: String, active: bool },
+    ToolUse { name: String, args: String, active: bool, xray: Option<XRayDiff> },
     /// Real-time task tree [ ] [●] [✔]
     Plan { tasks: Vec<Task>, frozen: bool },
     /// L-shaped output under a ToolUse
@@ -1165,7 +1183,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 in_assistant_turn = false;
             }
 
-            ExecBlock::ToolUse { name, args, active } => {
+            ExecBlock::ToolUse { name, args, active, xray } => {
                 if !in_assistant_turn {
                     lines.push(Line::from(vec![
                         Span::styled("albert", Style::default().fg(Color::Rgb(0, 170, 120)).add_modifier(Modifier::BOLD)),
@@ -1177,7 +1195,7 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 let elapsed = state.session_start.elapsed().as_secs_f32();
                 let dot_style = get_pulse_style(elapsed, *active);
                 let (name_col, args_col) = if *active { (FG, CYAN) } else { (GREY, GREY) };
-                
+
                 let verb = if name.contains("write") { "Wrote" }
                 else if name.contains("read") { "Read" }
                 else if name.contains("grep") || name.contains("search") { "Searched" }
@@ -1185,56 +1203,99 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
                 else if name.contains("bash") || name.contains("execute") { "Ran" }
                 else if name.contains("plan") { "Planned" }
                 else if name.contains("fetch") { "Fetched" }
+                else if name.contains("edit") || name.contains("patch") { "Edited" }
                 else { "Used" };
 
                 // Peek ahead to see if there's a collapsed ToolOutput following this ToolUse.
-                let has_collapsed_output = matches!(it.peek(), Some(ExecBlock::ToolOutput { active: false, .. }));
-                let hook = if is_last && !has_collapsed_output { "└─" } else { "├─" };
-                
-                let full_line = format!("{verb} {name}{}{}", 
-                    if args.is_empty() { "" } else { &format!("  {args}") },
-                    if has_collapsed_output { " [Output Collapsed]" } else { "" }
-                );
-                let chars: Vec<char> = full_line.chars().collect();
-                
-                // Indent: spine (2) + hook (2) + dot (3) = 7 chars
-                let indent_len = 7;
-                let usable_w = _width.saturating_sub(indent_len as u16 + 1).max(10) as usize;
+                let has_xray = xray.is_some();
+                let has_collapsed_output = !has_xray && matches!(it.peek(), Some(ExecBlock::ToolOutput { active: false, .. }));
+                let hook = if is_last && !has_collapsed_output && !has_xray { "└─" } else { "├─" };
 
-                if chars.len() <= usable_w {
-                    let mut spans = vec![
-                        spine.clone(),
-                        Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
-                        Span::styled(" ● ", dot_style),
-                        Span::styled(format!("{verb} {name}"), Style::default().fg(name_col).add_modifier(Modifier::BOLD)),
-                    ];
+                // Header line
+                let dot_icon = if !*active && has_xray { " ✓ " } else { " ● " };
+                let dot_style_h = if !*active && has_xray {
+                    Style::default().fg(Color::Rgb(0, 200, 100)).add_modifier(Modifier::BOLD)
+                } else { dot_style };
+
+                let mut header_spans = vec![
+                    spine.clone(),
+                    Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
+                    Span::styled(dot_icon, dot_style_h),
+                    Span::styled(format!("{verb} {name}"), Style::default().fg(name_col).add_modifier(Modifier::BOLD)),
+                ];
+
+                if has_xray {
+                    if let Some(xr) = xray {
+                        let summary = if !*active {
+                            format!("  {} → Accepted (+{}, -{})",
+                                xr.file, xr.added, xr.removed)
+                        } else {
+                            format!("  {}", xr.file)
+                        };
+                        header_spans.push(Span::styled(summary, Style::default().fg(Color::Rgb(0, 180, 120))));
+                    }
+                } else {
                     if !args.is_empty() {
-                        spans.push(Span::styled(format!("  {args}"), Style::default().fg(args_col)));
+                        header_spans.push(Span::styled(format!("  {args}"), Style::default().fg(args_col)));
                     }
                     if has_collapsed_output {
-                        spans.push(Span::styled(" [Output Collapsed]", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)));
+                        header_spans.push(Span::styled(" [collapsed]", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)));
                     }
-                    lines.push(Line::from(spans));
-                } else {
-                    // Multi-line wrap with spine protection
-                    let first_chunk: String = chars[..usable_w].iter().collect();
-                    lines.push(Line::from(vec![
-                        spine.clone(),
-                        Span::styled(hook, Style::default().fg(Color::Rgb(25, 45, 45))),
-                        Span::styled(" ● ", dot_style),
-                        Span::styled(first_chunk, Style::default().fg(name_col).add_modifier(Modifier::BOLD)),
-                    ]));
+                }
+                lines.push(Line::from(header_spans));
 
-                    let mut start = usable_w;
-                    while start < chars.len() {
-                        let end = (start + usable_w).min(chars.len());
-                        let chunk: String = chars[start..end].iter().collect();
-                        lines.push(Line::from(vec![
-                            spine.clone(),
-                            Span::styled("     ", Style::default()), // 5 spaces to align under the text
-                            Span::styled(chunk, Style::default().fg(args_col)),
-                        ]));
-                        start = end;
+                // XRay diff lines (only when not collapsed / has xray)
+                if let Some(xr) = xray {
+                    const XRAY_BG_ADD: Color = Color::Rgb(0, 35, 15);
+                    const XRAY_BG_REM: Color = Color::Rgb(40, 8, 8);
+                    const XRAY_FG_ADD: Color = Color::Rgb(80, 230, 120);
+                    const XRAY_FG_REM: Color = Color::Rgb(230, 80, 80);
+                    const XRAY_FG_CTX: Color = Color::Rgb(70, 85, 85);
+                    const XRAY_FG_NUM: Color = Color::Rgb(55, 75, 75);
+
+                    let usable_w = _width.saturating_sub(10).max(20) as usize;
+
+                    for xline in &xr.lines {
+                        match xline {
+                            XRayLine::Elided { count } => {
+                                lines.push(Line::from(vec![
+                                    spine.clone(),
+                                    Span::styled(
+                                        format!("  ···  {} lines unchanged", count),
+                                        Style::default().fg(DIM).add_modifier(Modifier::ITALIC),
+                                    ),
+                                ]));
+                            }
+                            XRayLine::Context { n, text } => {
+                                let display = format!("{:>4}   {}", n, &text.chars().take(usable_w).collect::<String>());
+                                lines.push(Line::from(vec![
+                                    spine.clone(),
+                                    Span::styled(display, Style::default().fg(XRAY_FG_CTX)),
+                                ]));
+                            }
+                            XRayLine::Removed { n, text } => {
+                                let num_s = Span::styled(format!("{:>4} ", n), Style::default().fg(XRAY_FG_NUM).bg(XRAY_BG_REM));
+                                let prefix = Span::styled("- ", Style::default().fg(XRAY_FG_REM).bg(XRAY_BG_REM).add_modifier(Modifier::BOLD));
+                                let content = Span::styled(
+                                    text.chars().take(usable_w).collect::<String>(),
+                                    Style::default().fg(XRAY_FG_REM).bg(XRAY_BG_REM),
+                                );
+                                lines.push(Line::from(vec![spine.clone(), num_s, prefix, content]));
+                            }
+                            XRayLine::Added { n, text } => {
+                                let num_s = Span::styled(format!("{:>4} ", n), Style::default().fg(XRAY_FG_NUM).bg(XRAY_BG_ADD));
+                                let prefix = Span::styled("+ ", Style::default().fg(XRAY_FG_ADD).bg(XRAY_BG_ADD).add_modifier(Modifier::BOLD));
+                                let content = Span::styled(
+                                    text.chars().take(usable_w).collect::<String>(),
+                                    Style::default().fg(XRAY_FG_ADD).bg(XRAY_BG_ADD),
+                                );
+                                lines.push(Line::from(vec![spine.clone(), num_s, prefix, content]));
+                            }
+                        }
+                    }
+                    // Seal after diff
+                    if is_last {
+                        lines.push(Line::from(vec![seal.clone()]));
                     }
                 }
             }
@@ -2824,10 +2885,19 @@ impl TuiApp {
                             }
                             AssistantEvent::ToolUse { name, input, .. } => {
                                 let preview = tool_input_preview(&input);
+                                let is_edit_tool = name.to_lowercase().contains("edit")
+                                    || name == "str_replace_based_edit_tool"
+                                    || name == "str_replace_editor";
+                                let xray = if is_edit_tool {
+                                    build_xray_from_edit_full(&input)
+                                } else {
+                                    None
+                                };
                                 state.push_exec(ExecBlock::ToolUse {
                                     name,
                                     args: preview,
                                     active: true,
+                                    xray,
                                 });
                             }
                             AssistantEvent::TaskStarted { id, label } => {
@@ -3101,4 +3171,131 @@ fn render_tool_approval_modal(f: &mut ratatui::Frame, area: Rect, name: &str, in
     let opt_p = Paragraph::new(options)
         .style(Style::default().fg(CYAN).add_modifier(Modifier::BOLD));
     f.render_widget(opt_p, chunks[1]);
+}
+
+// ── XRay diff helpers ─────────────────────────────────────────────────────────
+
+
+/// Find the 1-based line number where `needle` starts in `haystack`.
+fn find_xray_base_line(haystack: &str, needle: &str) -> Option<usize> {
+    let pos = haystack.find(needle)?;
+    let line = haystack[..pos].lines().count() + 1;
+    Some(line)
+}
+
+/// Diff operation produced by LCS.
+#[derive(Debug)]
+enum DiffOp {
+    Context(usize, usize), // (old_idx, new_idx)
+    Removed(usize),        // old_idx
+    Added(usize),          // new_idx
+}
+
+/// Simple LCS-based diff. Returns (ops, added_count, removed_count).
+fn lcs_diff<'a>(old: &'a [&str], new: &'a [&str]) -> (Vec<DiffOp>, usize, usize) {
+    let m = old.len();
+    let n = new.len();
+
+    // Build LCS DP table
+    let mut dp = vec![vec![0u16; n + 1]; m + 1];
+    for i in (0..m).rev() {
+        for j in (0..n).rev() {
+            dp[i][j] = if old[i] == new[j] {
+                dp[i + 1][j + 1].saturating_add(1)
+            } else {
+                dp[i + 1][j].max(dp[i][j + 1])
+            };
+        }
+    }
+
+    // Traceback
+    let mut ops = Vec::new();
+    let (mut i, mut j) = (0, 0);
+    let mut added = 0usize;
+    let mut removed = 0usize;
+    while i < m || j < n {
+        if i < m && j < n && old[i] == new[j] {
+            ops.push(DiffOp::Context(i, j));
+            i += 1; j += 1;
+        } else if j < n && (i >= m || dp[i][j + 1] >= dp[i + 1][j]) {
+            ops.push(DiffOp::Added(j));
+            added += 1;
+            j += 1;
+        } else {
+            ops.push(DiffOp::Removed(i));
+            removed += 1;
+            i += 1;
+        }
+    }
+    (ops, added, removed)
+}
+
+
+/// Build xray diff with actual text content filled in.
+pub fn build_xray_from_edit_full(input_json: &str) -> Option<XRayDiff> {
+    let val: serde_json::Value = serde_json::from_str(input_json).ok()?;
+    let old_str = val.get("old_string").and_then(|v| v.as_str())?;
+    let new_str = val.get("new_string").and_then(|v| v.as_str())?;
+    let file_path = val.get("file_path").and_then(|v| v.as_str()).unwrap_or("");
+
+    let old_lines: Vec<&str> = old_str.lines().collect();
+    let new_lines: Vec<&str> = new_str.lines().collect();
+
+    if old_lines.len() > 300 || new_lines.len() > 300 {
+        return None;
+    }
+
+    let base_line: usize = if !file_path.is_empty() {
+        std::fs::read_to_string(file_path)
+            .ok()
+            .and_then(|content| find_xray_base_line(&content, old_str))
+            .unwrap_or(1)
+    } else { 1 };
+
+    let short_name = std::path::Path::new(file_path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or(file_path)
+        .to_string();
+
+    let (ops, added, removed) = lcs_diff(&old_lines, &new_lines);
+
+    const CTX: usize = 3;
+    let n = ops.len();
+    let mut interesting = vec![false; n];
+    for (i, op) in ops.iter().enumerate() {
+        if matches!(op, DiffOp::Added(_) | DiffOp::Removed(_)) {
+            let lo = i.saturating_sub(CTX);
+            let hi = (i + CTX + 1).min(n);
+            for k in lo..hi { interesting[k] = true; }
+        }
+    }
+
+    let mut xray_lines = Vec::new();
+    let mut skip_count = 0usize;
+
+    for (i, op) in ops.iter().enumerate() {
+        if !interesting[i] { skip_count += 1; continue; }
+        if skip_count > 0 {
+            xray_lines.push(XRayLine::Elided { count: skip_count });
+            skip_count = 0;
+        }
+        match op {
+            DiffOp::Context(oi, _) => xray_lines.push(XRayLine::Context {
+                n: base_line + oi,
+                text: old_lines[*oi].to_string(),
+            }),
+            DiffOp::Removed(oi) => xray_lines.push(XRayLine::Removed {
+                n: base_line + oi,
+                text: old_lines[*oi].to_string(),
+            }),
+            DiffOp::Added(ni) => xray_lines.push(XRayLine::Added {
+                n: base_line + ni,
+                text: new_lines[*ni].to_string(),
+            }),
+        }
+    }
+    if skip_count > 0 { xray_lines.push(XRayLine::Elided { count: skip_count }); }
+
+    Some(XRayDiff { file: short_name, added, removed, lines: xray_lines })
 }
