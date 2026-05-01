@@ -64,7 +64,10 @@ ternlang build my_program.tern  # → compile to .bet bytecode
 
 ## 2. Albert-MoE-13 — The Intelligence Layer
 
-> **Albert is a ternary Mixture-of-Experts model that turns AI from a guessing system into a transparent decision process.**
+We are actively developing **Albert-MoE-13**, our flagship ternary-native Mixture-of-Experts architecture. Rather than pre-training from scratch, Albert is built through the **Native Ternary Adaptation** of established open-source LLM foundations (Mistral, Llama, etc.). This allows us to leapfrog the multi-billion dollar pre-training cost while providing superior triadic reasoning.
+
+**Albert** is our in-progress **MoE-13 (Mixture-of-Experts) ternary LLM**.  
+Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to deliberate on every decision.
 
 ---
 
@@ -78,27 +81,23 @@ Each expert evaluates the input from a specific perspective and returns a ternar
 +1 → affirm  
 ```
 
-Votes are **confidence-weighted (EMA)** and aggregated into a final system decision.
+- **Simulation-to-Silicon Bridge**  
+  Currently running as a high-performance software simulation on standard x86/CUDA hardware, designed for seamless migration to future **Ternary Silicon** (including Huawei's latest AI hardware).
 
 ---
 
 ### The 13 Deliberation Axes
 
-| Axis         | Role |
-|--------------|------|
-| Safety       | Immediate harm detection |
-| MetaSafety   | Safety audit / veto |
-| Logic        | Formal consistency |
-| Ethics       | Normative constraints |
-| FactCheck    | Claim verification |
-| Causal       | Cause–effect integrity |
-| Context      | Situational awareness |
-| History      | Prior decision memory |
-| Ambiguity    | Uncertainty detection |
-| Math         | Quantitative validation |
-| ToolUse      | External action risk |
-| Persona      | Human alignment |
-| Efficiency   | Resource cost |
+- **The Ternarization Forge**  
+  We leverage high-capacity open-source foundations (20B–30B parameter class) and execute a full-model transformation. By mapping continuous weights into the discrete {-1, 0, +1} weight space, we collapse the memory footprint from ~52 GB to **10–15 GB**.
+
+- **Objective**  
+  - Enable **frontier-level reasoning** on standard local hardware.
+  - Enable **sparsity-aware execution** (@sparseskip).
+  - Improve deterministic interpretability via discrete weight states.
+
+- **Architecture**  
+  Consolidation into **13 domain-specific expert routers (MoE-13)**.
 
 ---
 

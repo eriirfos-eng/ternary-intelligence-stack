@@ -22,7 +22,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ## Our Mission: Post-Binary Sovereignty
 
-We are a core team of three co-founders overseeing a international Team of 10 Members from our base in Graz, Austria, working at the intersection of computer science, machine learning, and international relations. We believe that Europe's path to technological sovereignty lies in leapfrogging the binary limitations of current AI hyperscalers.
+We are a core team of five co-founders and leads from **RFI-IRFOS** in Graz, Austria, working at the intersection of computer science, machine learning, and international relations. We believe that Europe's path to technological sovereignty lies in leapfrogging the binary limitations of current AI hyperscalers.
 
 Every AI system today is forced to answer yes or no — even when the evidence is contradictory, incomplete, or genuinely uncertain. Binary logic has no formal representation for *"I don't know yet."* Systems either make a confident inference or return null. **Ternlang adds the third state.** By representing uncertainty as a first-class citizen, we enable AI systems that reason with causal transparency and ontological integrity.
 
@@ -128,7 +128,7 @@ cargo build --release
 ```
 ---
 
-## 2. Albert-MoE-13 — The Intelligence Layer
+We are actively developing **Albert-MoE-13**, our flagship ternary-native Mixture-of-Experts architecture. Rather than pre-training from scratch, Albert is built through the **Native Ternary Adaptation** of established open-source LLM foundations (Mistral, Llama, etc.). This allows us to leapfrog the multi-billion dollar pre-training cost while providing superior triadic reasoning.
 
 > **Albert is a ternary Mixture-of-Experts model that turns AI from a guessing system into a transparent decision process.**
 
@@ -147,9 +147,56 @@ Each expert evaluates the input from a specific perspective and returns a ternar
 +1 → affirm  
 ```
 
-Votes are **confidence-weighted (EMA)** and aggregated into a final system decision.
+- **Simulation-to-Silicon Bridge**  
+  Currently running as a high-performance software simulation on standard x86/CUDA hardware, designed for seamless migration to future **Ternary Silicon** (including Huawei's latest AI hardware).
 
 ---
+
+### Technical Stack
+
+- **The Ternarization Forge**  
+  We leverage high-capacity open-source foundations (20B–30B parameter class) and execute a full-model transformation. By mapping continuous weights into the discrete {-1, 0, +1} weight space, we collapse the memory footprint from ~52 GB to **10–15 GB**.
+
+- **Objective**  
+  - Enable **frontier-level reasoning** on standard local hardware.
+  - Enable **sparsity-aware execution** (@sparseskip).
+  - Improve deterministic interpretability via discrete weight states.
+
+- **Architecture**  
+  Consolidation into **13 domain-specific expert routers (MoE-13)**.
+
+---
+
+### Why This Matters
+
+Albert is designed to:
+
+- Operate fully **offline** on sovereign infrastructure  
+- Enforce **deterministic uncertainty** via the `HOLD (0)` state  
+- Integrate natively with **Ternlang** and the **BET-VM runtime**  
+- Provide a **verifiable decision layer**, not just probabilistic outputs  
+- Enable **traceable, inspectable reasoning paths**
+
+---
+
+### Relationship to Agent Albert
+
+Albert-MoE-13 serves as the **core intelligence layer** powering Agent Albert.
+
+- **Agent Albert** → orchestration, interaction, execution  
+- **Albert-MoE-13** → deliberation, validation, decision-making  
+
+Together, they form a **closed-loop system**:
+> perception → deliberation → validation → execution
+
+---
+
+## MoE-13: Explainable Mixture-of-Experts
+
+
+MoE-13 an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
+
+Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
 
 ### The 13 Deliberation Axes
 
