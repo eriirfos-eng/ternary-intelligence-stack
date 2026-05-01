@@ -1,0 +1,72 @@
+/*
+ * Circular Queue (Ternary)
+ * Robust implementation of a circular queue for trits.
+ * Optimized for streaming signal data where order is critical.
+ */
+
+// Fixed size arena-backed implementation
+fn cq_enqueue(buffer: trit[], head: int, tail: int, count: int, val: trit) -> int {
+    if count >= 10 {
+        return -1; // Overflow
+    }
+    
+    buffer[tail] = val;
+    return (tail + 1) % 10;
+}
+
+// Since we can't return multiple values yet, we use pointer-like indices
+fn cq_dequeue(buffer: trit[], head: int, count: int) -> int {
+    if count <= 0 {
+        return -1; // Underflow
+    }
+    return (head + 1) % 10;
+}
+
+fn main() -> trit {
+    let buffer: trit[10];
+    let head: int = 0;
+    let tail: int = 0;
+    let count: int = 0;
+    
+    // Initialize
+    let k: int = 0;
+    while k < 10 {
+        buffer[k] = 0;
+        k = k + 1;
+    }
+    
+    println("Circular Queue Demo");
+    
+    println("Enqueuing: 1, -1, 1");
+    tail = cq_enqueue(buffer, head, tail, count, 1);
+    count = count + 1;
+    tail = cq_enqueue(buffer, head, tail, count, -1);
+    count = count + 1;
+    tail = cq_enqueue(buffer, head, tail, count, 1);
+    count = count + 1;
+    
+    println("Count:"); println(count);
+    
+    println("Dequeuing first element:");
+    let val: trit = buffer[head];
+    head = cq_dequeue(buffer, head, count);
+    count = count - 1;
+    println(val);
+    
+    if val == 1 && count == 2 {
+        println("First dequeue OK.");
+    } else { return -1; }
+    
+    println("Dequeuing second element:");
+    let val2: trit = buffer[head];
+    head = cq_dequeue(buffer, head, count);
+    count = count - 1;
+    println(val2);
+    
+    if val2 == -1 && count == 1 {
+        println("Second dequeue OK. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
