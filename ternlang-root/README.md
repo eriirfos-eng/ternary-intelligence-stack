@@ -190,7 +190,164 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 > **Published on Open VSX** — multiple downloads live. Works in VS Code, VSCodium, Cursor, and any Open VSX-compatible editor.
 
 ---
+## Albert-MoE-13 — The Intelligence Layer
 
+We are actively designing, training, and deploying our own **ternary-native Mixture-of-Experts model**.
+
+**Albert** is our in-progress **MoE-13 (Mixture-of-Experts) ternary LLM**.  
+Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to deliberate on every decision.
+
+---
+
+### Core Architecture
+
+- **13 Deliberation Axes**  
+  Each expert represents a distinct reasoning dimension (e.g. Safety, Ethics, Logic, FactCheck, etc.),  
+  voting using **ternary signals**: `{ -1, 0, +1 }`.
+
+- **Safety Hard Gate (Axis-6)**  
+  A mandatory veto layer capable of **terminating any execution path** before action is taken.
+
+- **Local-First Sovereignty**  
+  Designed to run fully offline on **local infrastructure** via Ollama or custom ternary hardware.
+
+---
+
+### Technical Stack
+
+- **Base Model**  
+  Open-source MoE in the **20B–30B parameter class**
+
+- **Transformation**  
+  Full **ternarization into `{ -1, 0, +1 }` weight space**
+
+- **Objective**  
+  - Reduce memory footprint  
+  - Enable **sparsity-aware execution**  
+  - Improve deterministic interpretability  
+
+- **Architecture**  
+  Consolidation into **13 domain-specific expert routers (MoE-13)**
+
+---
+
+### Why This Matters
+
+Albert is designed to:
+
+- Operate fully **offline** on sovereign infrastructure  
+- Enforce **deterministic uncertainty** via the `HOLD (0)` state  
+- Integrate natively with **Ternlang** and the **BET-VM runtime**  
+- Provide a **verifiable decision layer**, not just probabilistic outputs  
+- Enable **traceable, inspectable reasoning paths**
+
+---
+
+### Relationship to Agent Albert
+
+Albert-MoE-13 serves as the **core intelligence layer** powering Agent Albert.
+
+- **Agent Albert** → orchestration, interaction, execution  
+- **Albert-MoE-13** → deliberation, validation, decision-making  
+
+Together, they form a **closed-loop system**:
+> perception → deliberation → validation → execution
+
+---
+---
+
+## MoE-13: Explainable Mixture-of-Experts
+
+
+MoE-13 an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
+
+Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
+
+### The 13 Deliberation Axes
+
+| Axis | Role |
+|---|---|
+| Safety | Immediate risk / harm detection |
+| MetaSafety | Safety-on-safety audit and veto authority |
+| Logic | Formal consistency |
+| Ethics | Normative and moral constraints |
+| FactCheck | Claim verification |
+| Causal | Cause-effect integrity |
+| Context | Situational awareness |
+| History | Prior decision memory |
+| Ambiguity | Uncertainty detection |
+| Math | Quantitative verification |
+| ToolUse | External action risk |
+| Persona | Human alignment layer |
+| Efficiency | Resource and environmental cost |
+
+Each expert returns a ternary vote:
+
+- `-1` → reject
+- ` 0` → hold / insufficient evidence
+- `+1` → affirm
+
+Votes are weighted by EMA convergence confidence and combined into a network-wide verdict.
+
+### Safety-first ecological veto
+
+MoE-13 is explicitly **ecocentric**.
+
+No majority can override a hard safety veto.
+
+If either `Safety` or `MetaSafety` returns `-1` with confidence > 0.90, the entire decision chain terminates immediately before any tool execution or external action.
+
+This mirrors ecological systems where boundary constraints dominate local optimization.
+
+### Network telemetry
+
+Every axis emits:
+
+- live vote state
+- confidence score
+- convergence momentum
+- trace logs
+- veto rationale
+
+This creates a fully auditable reasoning path for EU AI Act Article 13 / 14 compliance.
+
+`ternlang-moe` implements the MoE-13 architecture ([DOI: 10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a **Deterministic Mixture-of-Experts** system that routes queries through 13 domain-specific agents to achieve **Emergent Reasoning** with a mandatory safety hard gate.
+
+```rust
+use ternlang_moe::TernMoeOrchestrator;
+
+let mut orch = TernMoeOrchestrator::with_standard_experts();
+
+// [syntax, world_knowledge, reasoning, tool_use, persona, safety]
+let evidence = [0.6, 0.7, 0.8, 0.5, 0.4, 0.9];
+let result = orch.orchestrate("Should I proceed with this action?", &evidence);
+
+println!("trit={} conf={:.0}% held={}", result.trit, result.confidence * 100.0, result.held);
+// → trit=1 conf=84% held=false
+println!("{}", result.prompt_hint);
+// → "Affirm with confidence 84%. Emergent field amplifying."
+```
+
+**How it works:**
+
+1. **Dual-key routing** — scores every expert pair by `relevance_a × relevance_b × synergy`. Complementary experts outperform redundant ones.
+2. **Emergent triad synthesis** — weighted field `Ek = synergy × (vi + vj) / 2`. Two orthogonal experts produce a composite signal whose confidence exceeds either input independently.
+3. **Safety hard gate** — Axis-6 veto fires before any vote. Every veto is permanently logged to `AxisMemory` for audit.
+4. **Hold with tiebreaker** — a split vote or low confidence yields `trit=0`. The orchestrator invokes a tiebreaker (max 4 active experts) before committing, modelling the human *"let me think about this"* behaviour.
+5. **Three-tier memory** — Node (TTL: seconds), Cluster (routing frequency, mode-collapse risk), Axis (persistent priors + veto audit log).
+
+**13 standard experts:** Syntax · WorldKnowledge · DeductiveReason · InductiveReason · ToolUse · Persona · Safety · FactCheck · CausalReason · AmbiguityRes · MathReason · ContextMem · MetaSafety
+
+**AgentHarness** provides a pluggable interface for all 13 experts:
+
+```rust
+use ternlang_moe::agents::AgentHarness;
+
+let harness = AgentHarness::with_standard_agents();
+let verdicts = harness.run("Is this safe to execute?", &evidence);
+```
+
+---
 ## Agent Albert — AI Intelligence Layer
 
 [![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
@@ -320,100 +477,6 @@ The 2.3× figure is the baseline measured result from the first `@sparseskip` be
 cd benchmarks && make bench-all
 ```
 
----
-
-## MoE-13: Explainable Mixture-of-Experts
-
-
-MoE-13 an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
-
-Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
-
-### The 13 Deliberation Axes
-
-| Axis | Role |
-|---|---|
-| Safety | Immediate risk / harm detection |
-| MetaSafety | Safety-on-safety audit and veto authority |
-| Logic | Formal consistency |
-| Ethics | Normative and moral constraints |
-| FactCheck | Claim verification |
-| Causal | Cause-effect integrity |
-| Context | Situational awareness |
-| History | Prior decision memory |
-| Ambiguity | Uncertainty detection |
-| Math | Quantitative verification |
-| ToolUse | External action risk |
-| Persona | Human alignment layer |
-| Efficiency | Resource and environmental cost |
-
-Each expert returns a ternary vote:
-
-- `-1` → reject
-- ` 0` → hold / insufficient evidence
-- `+1` → affirm
-
-Votes are weighted by EMA convergence confidence and combined into a network-wide verdict.
-
-### Safety-first ecological veto
-
-MoE-13 is explicitly **ecocentric**.
-
-No majority can override a hard safety veto.
-
-If either `Safety` or `MetaSafety` returns `-1` with confidence > 0.90, the entire decision chain terminates immediately before any tool execution or external action.
-
-This mirrors ecological systems where boundary constraints dominate local optimization.
-
-### Network telemetry
-
-Every axis emits:
-
-- live vote state
-- confidence score
-- convergence momentum
-- trace logs
-- veto rationale
-
-This creates a fully auditable reasoning path for EU AI Act Article 13 / 14 compliance.
-
-`ternlang-moe` implements the MoE-13 architecture ([DOI: 10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC)) — a **Deterministic Mixture-of-Experts** system that routes queries through 13 domain-specific agents to achieve **Emergent Reasoning** with a mandatory safety hard gate.
-
-```rust
-use ternlang_moe::TernMoeOrchestrator;
-
-let mut orch = TernMoeOrchestrator::with_standard_experts();
-
-// [syntax, world_knowledge, reasoning, tool_use, persona, safety]
-let evidence = [0.6, 0.7, 0.8, 0.5, 0.4, 0.9];
-let result = orch.orchestrate("Should I proceed with this action?", &evidence);
-
-println!("trit={} conf={:.0}% held={}", result.trit, result.confidence * 100.0, result.held);
-// → trit=1 conf=84% held=false
-println!("{}", result.prompt_hint);
-// → "Affirm with confidence 84%. Emergent field amplifying."
-```
-
-**How it works:**
-
-1. **Dual-key routing** — scores every expert pair by `relevance_a × relevance_b × synergy`. Complementary experts outperform redundant ones.
-2. **Emergent triad synthesis** — weighted field `Ek = synergy × (vi + vj) / 2`. Two orthogonal experts produce a composite signal whose confidence exceeds either input independently.
-3. **Safety hard gate** — Axis-6 veto fires before any vote. Every veto is permanently logged to `AxisMemory` for audit.
-4. **Hold with tiebreaker** — a split vote or low confidence yields `trit=0`. The orchestrator invokes a tiebreaker (max 4 active experts) before committing, modelling the human *"let me think about this"* behaviour.
-5. **Three-tier memory** — Node (TTL: seconds), Cluster (routing frequency, mode-collapse risk), Axis (persistent priors + veto audit log).
-
-**13 standard experts:** Syntax · WorldKnowledge · DeductiveReason · InductiveReason · ToolUse · Persona · Safety · FactCheck · CausalReason · AmbiguityRes · MathReason · ContextMem · MetaSafety
-
-**AgentHarness** provides a pluggable interface for all 13 experts:
-
-```rust
-use ternlang_moe::agents::AgentHarness;
-
-let harness = AgentHarness::with_standard_agents();
-let verdicts = harness.run("Is this safe to execute?", &evidence);
-```
-
----
 
 ## Live API
 
