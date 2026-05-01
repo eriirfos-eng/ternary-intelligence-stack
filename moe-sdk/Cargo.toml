@@ -1,0 +1,10 @@
+[package]
+name = "moe-sdk"
+version = "1.0.0"
+edition = "2021"
+description = "Unified entrypoint for MoE-13 ecosystem."
+license = "MIT"
+
+[dependencies]
+moe-platform = { path = "../moe-platform", version = "1.0.0" }
+moe-plugin-sdk = { path = "../moe-plugin-sdk", version = "1.0.0" }
