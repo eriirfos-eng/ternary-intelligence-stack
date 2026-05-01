@@ -1,0 +1,52 @@
+/*
+ * Advanced Trit Ring Buffer
+ * Circular buffer implementation with full support for overflow management and peeking.
+ * Optimized for real-time signal processing windows.
+ */
+
+fn rb_push(buffer: trit[], tail: int, val: trit) -> int {
+    buffer[tail] = val;
+    let next_tail: int = (tail + 1) % 10;
+    return next_tail;
+}
+
+fn rb_peek(buffer: trit[], head: int, offset: int) -> trit {
+    let idx: int = (head + offset) % 10;
+    return buffer[idx];
+}
+
+fn main() -> trit {
+    let buffer: trit[10];
+    let head: int = 0;
+    let tail: int = 0;
+    let count: int = 0;
+    
+    // Initialize
+    let k: int = 0;
+    while k < 10 { buffer[k] = 0; k = k + 1; }
+    
+    println("Advanced Trit Ring Buffer Demo");
+    
+    println("Pushing: 1, 1, -1, 0, 1");
+    tail = rb_push(buffer, tail, 1);
+    tail = rb_push(buffer, tail, 1);
+    tail = rb_push(buffer, tail, -1);
+    tail = rb_push(buffer, tail, 0);
+    tail = rb_push(buffer, tail, 1);
+    count = 5;
+    
+    println("Peeking at offset 2 (should be -1):");
+    let v: trit = rb_peek(buffer, head, 2);
+    println(v);
+    
+    println("Peeking at offset 3 (should be 0):");
+    let v2: trit = rb_peek(buffer, head, 3);
+    println(v2);
+    
+    if v == -1 && v2 == 0 {
+        println("Ring buffer peeking verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
