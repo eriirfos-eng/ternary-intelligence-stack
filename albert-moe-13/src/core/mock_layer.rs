@@ -399,6 +399,56 @@ pub fn run_multi_layer_test() {
     println!();
 }
 
+use crate::core::loader::ModelLoader;
+
+pub fn run_real_layer_test() {
+    let dim_in = 64;
+    let dim_out = 64;
+    let size = dim_in * dim_out;
+    
+    let loader = ModelLoader::new("mock/path");
+    let weights = loader.simulate_transformer_shard(size);
+    let bias = vec![0.0; dim_out];
+    
+    let float_layer = LinearLayer {
+        weights,
+        bias,
+        input_dim: dim_in,
+        output_dim: dim_out,
+    };
+
+    let stats = DataRouter::analyze_layer(&float_layer.weights);
+    let (ternary_layer, expert) = expert_ternarize(&float_layer);
+    
+    let zero_count = ternary_layer.weights.iter().filter(|&&w| w == 0).count();
+    let sparsity = (zero_count as f32 / ternary_layer.weights.len() as f32) * 100.0;
+
+    // Simulate realistic input (Normal distribution)
+    let mut input = Vec::with_capacity(dim_in);
+    for i in 0..dim_in {
+        input.push((i as f32 * 0.789).sin() * 0.1);
+    }
+
+    let f_out = float_layer.forward(&input);
+    let t_out = ternary_layer.forward_ternary(&input);
+    let mse = compute_mse(&f_out, &t_out);
+    let variance = compute_variance(&f_out);
+    let nmse = mse / variance;
+
+    println!("\n[ALBERT::REAL_LAYER]");
+    println!("Layer Size: {}x{}", dim_in, dim_out);
+    println!("Detected Distribution: {:?}", 
+        if stats.variance > 0.005 { "Trained/Wide" } else { "Initial/Tight" });
+    println!("Assigned Expert: {:?}", expert);
+    println!("Selected Threshold: {:.2}", DataRouter::get_threshold(expert));
+
+    println!("\nOriginal vs Ternary:");
+    println!("MSE: {:.6}", mse);
+    println!("NMSE: {:.6}", nmse);
+    println!("Sparsity: {:.1}%", sparsity);
+    println!("Compression Ratio: {:.1}x", 1.0 / (1.0 - (sparsity / 100.0)));
+    println!();
+}
 use crate::core::routing::{DataRouter, ExpertType};
 
 pub fn expert_ternarize(layer: &LinearLayer) -> (TernaryLayer, ExpertType) {

@@ -40,6 +40,11 @@ impl CliDriver {
         crate::core::mock_layer::run_routing_test();
     }
 
+    /// Runs the validation test on real model shards.
+    pub fn run_real_test(&self) {
+        crate::core::mock_layer::run_real_layer_test();
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -65,6 +70,7 @@ impl CliDriver {
             "adaptive-test" => self.run_adaptive_test(),
             "multi-layer-test" => self.run_multi_layer_test(),
             "routing-test" => self.run_routing_test(),
+            "real-test" => self.run_real_test(),
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);
