@@ -25,7 +25,7 @@ impl TernarizationPipeline {
         let threshold = 0.5;
         let mapper = TernaryMapper::new(threshold);
         
-        let (ternary, alpha) = mapper.ternarize(&weights);
+        let (ternary, alpha) = mapper.ternarize(&weights, threshold);
         let non_zero = ternary.iter().filter(|&&w| w != 0).count();
         let sparsity = (weights.len() - non_zero) as f32 / weights.len() as f32;
 

@@ -545,7 +545,7 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
         let mut tool_calls = vec![];
 
         let mut content_blocks: Vec<serde_json::Value> = vec![];
-        let mut tool_calls = vec![];
+        let mut tool_calls: Vec<serde_json::Value> = vec![];
 
         for block in &msg.content {
             match block {

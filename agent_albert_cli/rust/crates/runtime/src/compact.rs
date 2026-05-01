@@ -130,7 +130,7 @@ fn summarize_messages(messages: &[ConversationMessage]) -> String {
         .filter_map(|block| match block {
             ContentBlock::ToolUse { name, .. } => Some(name.as_str()),
             ContentBlock::ToolResult { tool_name, .. } => Some(tool_name.as_str()),
-            ContentBlock::Text { .. } => None,
+            ContentBlock::Text { .. } | ContentBlock::Image { .. } => None,
         })
         .collect::<Vec<_>>();
     tool_names.sort_unstable();
@@ -200,6 +200,7 @@ fn summarize_messages(messages: &[ConversationMessage]) -> String {
 fn summarize_block(block: &ContentBlock) -> String {
     let raw = match block {
         ContentBlock::Text { text } => text.clone(),
+        ContentBlock::Image { media_type, .. } => format!("[image: {media_type}]"),
         ContentBlock::ToolUse { name, input, .. } => format!("tool_use {name}({input})"),
         ContentBlock::ToolResult {
             tool_name,
@@ -257,10 +258,11 @@ fn collect_key_files(messages: &[ConversationMessage]) -> Vec<String> {
     let mut files = messages
         .iter()
         .flat_map(|message| message.blocks.iter())
-        .map(|block| match block {
-            ContentBlock::Text { text } => text.as_str(),
-            ContentBlock::ToolUse { input, .. } => input.as_str(),
-            ContentBlock::ToolResult { output, .. } => output.as_str(),
+        .filter_map(|block| match block {
+            ContentBlock::Text { text } => Some(text.as_str()),
+            ContentBlock::ToolUse { input, .. } => Some(input.as_str()),
+            ContentBlock::ToolResult { output, .. } => Some(output.as_str()),
+            ContentBlock::Image { .. } => None,
         })
         .flat_map(extract_file_candidates)
         .collect::<Vec<_>>();
@@ -283,7 +285,8 @@ fn first_text_block(message: &ConversationMessage) -> Option<&str> {
         ContentBlock::Text { text } if !text.trim().is_empty() => Some(text.as_str()),
         ContentBlock::ToolUse { .. }
         | ContentBlock::ToolResult { .. }
-        | ContentBlock::Text { .. } => None,
+        | ContentBlock::Text { .. }
+        | ContentBlock::Image { .. } => None,
     })
 }
 
@@ -330,9 +333,8 @@ fn estimate_message_tokens(message: &ConversationMessage) -> usize {
         .map(|block| match block {
             ContentBlock::Text { text } => text.len() / 4 + 1,
             ContentBlock::ToolUse { name, input, .. } => (name.len() + input.len()) / 4 + 1,
-            ContentBlock::ToolResult {
-                tool_name, output, ..
-            } => (tool_name.len() + output.len()) / 4 + 1,
+            ContentBlock::ToolResult { tool_name, output, .. } => (tool_name.len() + output.len()) / 4 + 1,
+            ContentBlock::Image { data, .. } => data.len() / 4 + 1,
         })
         .sum()
 }

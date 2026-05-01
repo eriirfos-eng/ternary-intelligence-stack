@@ -33,15 +33,15 @@ impl TernaryMapper {
     /// Returns:
     /// - ternary vector (i8: -1, 0, 1)
     /// - alpha scaling factor (mean of absolute values of non-zero weights)
-    pub fn ternarize(&self, weights: &[f32]) -> (Vec<i8>, f32) {
+    pub fn ternarize(&self, weights: &[f32], threshold: f32) -> (Vec<i8>, f32) {
         let mut ternary_vec = Vec::with_capacity(weights.len());
         let mut sum_abs = 0.0;
         let mut non_zero_count = 0;
 
         for &w in weights {
-            let t = if w > self.threshold {
+            let t = if w > threshold {
                 1
-            } else if w < -self.threshold {
+            } else if w < -threshold {
                 -1
             } else {
                 0
@@ -65,7 +65,7 @@ impl TernaryMapper {
 
     /// Maps a buffer of float weights into a TernaryLayer.
     pub fn map_weights(&self, float_weights: &[f32]) -> Result<TernaryLayer> {
-        let (weights, scale) = self.ternarize(float_weights);
+        let (weights, scale) = self.ternarize(float_weights, self.threshold);
         let zero_count = weights.iter().filter(|&&w| w == 0).count();
         let sparsity = zero_count as f32 / weights.len() as f32;
 
@@ -86,7 +86,7 @@ mod tests {
         let mapper = TernaryMapper::new(0.5);
         let weights = [0.9, -0.8, 0.1, 0.0, -0.05, 0.7];
         
-        let (ternary, alpha) = mapper.ternarize(&weights);
+        let (ternary, alpha) = mapper.ternarize(&weights, 0.5);
         
         // Expected mapping: [1, -1, 0, 0, 0, 1]
         assert_eq!(ternary, vec![1, -1, 0, 0, 0, 1]);
