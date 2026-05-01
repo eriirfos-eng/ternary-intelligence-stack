@@ -1,3 +1,21 @@
+# v1.3.1 - Albert CLI Stabilization & MOE Platform Launch
+
+## Critical Bugfixes (2025-05-01)
+
+**albert-cli v1.3.1**:
+- **Fixed Tokio Runtime Panic**: Resolved "no reactor running" crash on startup by moving `tokio::time::timeout()` inside async block context (main.rs:114)
+- **Fixed API Key Truncation**: Moved Google API key from URL query parameters to secure request headers, preventing truncation by proxies and intermediaries (api/src/client.rs:329)
+- Both fixes ensure seamless initialization and authentication across all model providers
+
+**MOE Platform Ecosystem Stabilized**:
+- **moe-core v1.0.0**: Internal core engine for MoE-13 ternary inference and routing (now on crates.io)
+- **moe-platform v1.0.0**: Stable API for MoE-13 ternary inference and model ingestion (now on crates.io)
+- **moe-plugin-sdk v1.0.0**: Stable SDK for building third-party MoE-13 inference plugins (now on crates.io)
+
+All changes tested, compiled, and published to crates.io registry.
+
+---
+
 # v1.2.5 - Our "First Step on the Moon"
 
 This is it. The moment where we move from experimentation to true, sovereign-grade performance. 

@@ -36,91 +36,36 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ---
 
-## 1. Ternlang (The Infrastructure Layer)
+## 1. What is Ternlang? (The Infrastructure Layer)
 
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
 
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
-## Performance Benchmarks
 
-| Feature | Performance Gain | Industry Comparison |
-|---------|------------------|---------------------|
-| **Data Density** | 86.1x improvement | 5-trit block packing (8-bit) |
-| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
-| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
+## 2. What is Albert-MoE-13? (The Intelligence Layer)
 
----
+We are actively designing, training, and deploying our own ternary-native Mixture-of-Experts model.
 
-## Quick start (Compiler)
+**Albert** is our work in progress MoE-13 (Mixture-of-Experts) ternary LLM. Unlike binary LLMs Albert uses 13 domain-specific experts to deliberate on every decision.
 
-```bash
-cargo install ternlang-cli
-```
+- **13 Deliberation Axes**: Safety, Ethics, Logic, FactCheck, and more, each voting with ternary signals.
+- **Safety Hard Gate**: A mandatory Axis-6 veto that can terminate any execution path before action is taken.
+- **Local-First Sovereignty**: Designed to run entirely on local infrastructure via Ollama or custom ternary hardware.
 
-The `ternlang` binary provides the compiler, REPL, and test runner:
+Base: Open-source MoE (20B–30B parameter class)
+Transformation: Ternarization into {−1, 0, +1} weight space
+Objective: Reduce memory footprint while enabling sparsity-aware execution
+Architecture: Consolidation into 13 domain-specific expert routers (MoE-13)
+Why This Matters
 
-```bash
-ternlang my_program.tern        # → run a .tern file directly
-ternlang build my_program.tern  # → compile to .bet bytecode
-```
----
+This model is designed to:
 
-## 2. Albert-MoE-13 — The Intelligence Layer
-
-We are actively developing **Albert-MoE-13**, our flagship ternary-native Mixture-of-Experts architecture. Rather than pre-training from scratch, Albert is built through the **Native Ternary Adaptation** of established open-source LLM foundations (Mistral, Llama, etc.). This allows us to leapfrog the multi-billion dollar pre-training cost while providing superior triadic reasoning.
-
-**Albert** is our in-progress **MoE-13 (Mixture-of-Experts) ternary LLM**.  
-Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to deliberate on every decision.
-
----
-
-### Core Idea
-
-Each expert evaluates the input from a specific perspective and returns a ternary vote:
-
-```
--1 → reject  
- 0 → hold (uncertain / insufficient evidence)  
-+1 → affirm  
-```
-
-- **Simulation-to-Silicon Bridge**  
-  Currently running as a high-performance software simulation on standard x86/CUDA hardware, designed for seamless migration to future **Ternary Silicon** (including Huawei's latest AI hardware).
-
----
-
-### The 13 Deliberation Axes
-
-- **The Ternarization Forge**  
-  We leverage high-capacity open-source foundations (20B–30B parameter class) and execute a full-model transformation. By mapping continuous weights into the discrete {-1, 0, +1} weight space, we collapse the memory footprint from ~52 GB to **10–15 GB**.
-
-- **Objective**  
-  - Enable **frontier-level reasoning** on standard local hardware.
-  - Enable **sparsity-aware execution** (@sparseskip).
-  - Improve deterministic interpretability via discrete weight states.
-
-- **Architecture**  
-  Consolidation into **13 domain-specific expert routers (MoE-13)**.
-
----
-
-### Architecture
-
-- **Base Model**: Open-source MoE (~20B–30B parameters)  
-- **Weights**: Fully ternarized `{ -1, 0, +1 }`  
-- **Structure**: 13 expert routers (MoE-13)  
-- **Execution**: Sparsity-aware inference  
-
----
-
-### Key Properties
-
-- **Deterministic uncertainty** via `HOLD (0)`  
-- **Traceable reasoning** through expert votes  
-- **Built-in safety gating** (pre-output veto)  
-- **Offline-first, sovereign deployment**  
-- Native integration with **Ternlang** and **BET-VM**
+-operate fully offline on local or sovereign infrastructure
+-enforce deterministic uncertainty (HOLD state) at the model level
+-integrate directly with Ternlang and the BET-VM runtime
+-provide a verifiable decision layer, not just probabilistic outputs
+-Relationship to Agent Albert
 
 ---
 
@@ -150,10 +95,34 @@ albert-cli
 | **Model-agnostic** | Connect to Gemini, Claude, GPT-4o, or Grok as "capability bridges" |
 | **Self-reflection memory** | Commits key facts to local storage to maintain long-term context |
 
+---
+
+## Performance Benchmarks
+
+| Feature | Performance Gain | Industry Comparison |
+|---------|------------------|---------------------|
+| **Data Density** | 1.25x improvement | 5-trit block packing (8-bit) |
+| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
+| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
 
 ---
 
-## 4. Repository layout
+## Quick start (Compiler)
+
+```bash
+cargo install ternlang-cli
+```
+
+The `ternlang` binary provides the compiler, REPL, and test runner:
+
+```bash
+ternlang my_program.tern        # → run a .tern file directly
+ternlang build my_program.tern  # → compile to .bet bytecode
+```
+
+---
+
+## Repository layout
 
 | Directory | Contents |
 |-----------|----------|
@@ -164,7 +133,21 @@ albert-cli
 
 ---
 
-## 5. Licensing
+## Live API
+
+```bash
+# Health check
+curl https://ternlang.com/health
+
+# MoE-13 ternary decision via MCP (no key required)
+curl -X POST https://ternlang.com/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"moe_orchestrate","arguments":{"query":"Should I proceed?"}}}'
+```
+
+---
+
+## Licensing
 
 | Tier | Price | Details |
 |------|-------|---------|
@@ -175,7 +158,7 @@ albert-cli
 
 ---
 
-## 6. Team
+## Team
 
 The Ternary Intelligence Stack is built by a core team of five co-founders from **RFI-IRFOS**, Graz:
 

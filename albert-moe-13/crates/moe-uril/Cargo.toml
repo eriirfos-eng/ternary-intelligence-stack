@@ -1,0 +1,16 @@
+[package]
+name = "moe-uril"
+version = "1.0.0"
+edition = "2021"
+description = "Unified Runtime Integration Layer for MoE-13 ecosystem."
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+moe-core = { path = "../moe-core", version = "1.0.0" }
+moe-platform = { path = "../moe-platform", version = "1.0.0" }
+moe-runtime = { path = "../moe-runtime", version = "1.0.0" }
+moe-plugin-sdk = { path = "../moe-plugin-sdk", version = "1.0.0" }
+moe-ddel = { path = "../moe-ddel", version = "1.0.0" }

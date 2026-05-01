@@ -1,9 +1,31 @@
-[package]
-name = "albert-moe"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = [
+    "crates/moe-core",
+    "crates/moe-ddel",
+    "crates/moe-platform",
+    "crates/moe-plugin-sdk",
+    "crates/moe-runtime",
+    "crates/moe-sdk",
+    "crates/moe-uril",
+    "crates/moe-validation-suite",
+]
+resolver = "2"
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
 authors = ["RFI-IRFOS <licensing@ternlang.com>"]
-description = "Core Intelligence Layer for Albert-MoE-13: Native Ternary Adaptation and Compression"
+license = "MIT"
+repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+
+[package]
+name = "albert-moe-13"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "MoE-13: Engineered Partitioned Inference System (EPIS) — Deterministic multi-expert architecture for ternary compute substrates"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
