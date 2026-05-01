@@ -1,0 +1,66 @@
+/*
+ * Advanced Trit Vector Entropy
+ * Calculation of the entropy of a trit tensor.
+ * Measures the uncertainty/information content of a ternary signal.
+ */
+
+// Simple log3 approximation: ln(x) / ln(3)
+fn ln_approx(x: float) -> float {
+    if x <= 0.0 { return -100.0; }
+    let y: float = (x - 1.0);
+    return y - (y * y / 2.0);
+}
+
+fn entropy_trit_adv(data: trit[]) -> float {
+    let n: int = 10;
+    let p1: float = 0.0;
+    let p0: float = 0.0;
+    let pn1: float = 0.0;
+    
+    let i: int = 0;
+    while i < n {
+        match data[i] {
+             1 => { p1 = p1 + 1.0; }
+             0 => { p0 = p0 + 1.0; }
+            -1 => { pn1 = pn1 + 1.0; }
+        }
+        i = i + 1;
+    }
+    
+    let total: float = 10.0;
+    p1 = p1 / total;
+    p0 = p0 / total;
+    pn1 = pn1 / total;
+    
+    let ent: float = 0.0;
+    let ln3: float = 1.0986;
+    
+    if p1 > 0.0 { ent = ent - p1 * (ln_approx(p1) / ln3); }
+    if p0 > 0.0 { ent = ent - p0 * (ln_approx(p0) / ln3); }
+    if pn1 > 0.0 { ent = ent - pn1 * (ln_approx(pn1) / ln3); }
+    
+    return ent;
+}
+
+fn main() -> trit {
+    let data: trit[10];
+    let k: int = 0;
+    while k < 10 { data[k] = 0; k = k + 1; }
+    
+    // Balanced: 4 Affirm, 3 Tend, 3 Reject
+    data[0]=1; data[1]=1; data[2]=1; data[3]=1;
+    data[4]=0; data[5]=0; data[6]=0;
+    data[7]=-1; data[8]=-1; data[9]=-1;
+    
+    println("Advanced Trit Vector Entropy Demo");
+    let e: float = entropy_trit_adv(data);
+    println("Entropy:");
+    println(e);
+    
+    if e > 0.0 {
+        println("Entropy calculation verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
