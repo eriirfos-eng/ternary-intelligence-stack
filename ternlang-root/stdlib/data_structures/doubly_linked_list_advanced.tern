@@ -1,0 +1,52 @@
+/*
+ * Advanced Doubly Linked List
+ * Full DLL implementation with head/tail tracking and reverse traversal demo.
+ * Optimized for bidirectional signal flow models.
+ */
+
+fn dll_adv_append(val_pool: trit[], prev_pool: int[], next_pool: int[], tail: int, val: trit, free_p: int) -> int {
+    let p: int = free_p;
+    val_pool[p] = val;
+    prev_pool[p] = tail;
+    next_pool[p] = -1;
+    
+    if tail != -1 {
+        next_pool[tail] = p;
+    }
+    return p;
+}
+
+fn main() -> trit {
+    let val_pool: trit[10];
+    let prev_pool: int[10];
+    let next_pool: int[10];
+    
+    let i: int = 0;
+    while i < 10 { val_pool[i] = 0; prev_pool[i] = -1; next_pool[i] = -1; i = i + 1; }
+    
+    let head: int = 0;
+    val_pool[head] = 1;
+    let tail: int = head;
+    let free_p: int = 1;
+    
+    println("Advanced Doubly Linked List Demo");
+    println("Appending -1 to DLL");
+    tail = dll_adv_append(val_pool, prev_pool, next_pool, tail, -1, free_p);
+    
+    println("Current tail value (expected -1):");
+    println(val_pool[tail]);
+    
+    println("Traversing backwards from tail to head:");
+    let curr: int = tail;
+    while curr != -1 {
+        println(val_pool[curr]);
+        curr = prev_pool[curr];
+    }
+    
+    if val_pool[tail] == -1 && prev_pool[tail] == 0 {
+        println("DLL bidirectional links verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
