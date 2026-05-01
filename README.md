@@ -24,7 +24,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 → **[ROADMAP.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** (Phases 1–20, MoE-13 structure, priority matrix)
 
-→ **[session_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** (Details to the Fixes we adressed during production)
+→ **[session_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** (Details on fixes we addressed during production)
 
 → **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress SDK
 
@@ -179,7 +179,7 @@ The Ternary Intelligence Stack is built by a core team of five co-founders from 
 *   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
 *   **Zabih Karimi**: Principal Network & ML Engineer.
 *   **Lisa Scharler**: Head of Social Technology & Ecocentric Systems.
-*   **Louis Ehrig**: Louis Paul Ehrig Corporate Secretary and Press & Media Relations.
+*   **Louis Ehrig**: Corporate Secretary and Press & Media Relations.
 
 → **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
