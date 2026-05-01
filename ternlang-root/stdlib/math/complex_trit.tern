@@ -1,0 +1,67 @@
+/*
+ * Complex Trit Arithmetic
+ * Represents complex values using ternary signals.
+ * Each complex number z = a + bi is represented by a pair of trits (real, imag).
+ */
+
+// Since we can't return structs, we use pairs of variables or arrays.
+
+// Complex Addition: (a + bi) + (c + di) = (a+c) + (b+d)i
+// Using consensus for ternary 'addition' analog
+fn complex_add(re1: trit, im1: trit, re2: trit, im2: trit, res: trit[]) -> trit {
+    res[0] = consensus(re1, re2);
+    res[1] = consensus(im1, im2);
+    return 1;
+}
+
+// Complex Multiplication: (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
+fn complex_mul(re1: trit, im1: trit, re2: trit, im2: trit, res: trit[]) -> trit {
+    // real = ac - bd
+    let ac: trit = re1 * re2;
+    let bd: trit = im1 * im2;
+    res[0] = consensus(ac, -bd);
+    
+    // imag = ad + bc
+    let ad: trit = re1 * im2;
+    let bc: trit = im1 * re2;
+    res[1] = consensus(ad, bc);
+    
+    return 1;
+}
+
+// Conjugate: z* = a - bi
+fn complex_conj(re: trit, im: trit, res: trit[]) -> trit {
+    res[0] = re;
+    res[1] = -im;
+    return 1;
+}
+
+fn main() -> trit {
+    let res: trit[2];
+    res[0] = 0; res[1] = 0;
+    
+    println("Complex Trit Arithmetic Demo");
+    
+    // (1 + 0i) + (0 + 1i) = (1 + 1i)
+    println("Addition: (1 + 0i) + (0 + 1i)");
+    complex_add(1, 0, 0, 1, res);
+    println("Real:"); println(res[0]);
+    println("Imag:"); println(res[1]);
+    
+    if res[0] == 1 && res[1] == 1 {
+        println("Addition OK.");
+    } else { return -1; }
+    
+    // (0 + 1i) * (0 + 1i) = (0*0 - 1*1) + (0*1 + 1*0)i = -1 + 0i
+    println("Multiplication: i * i");
+    complex_mul(0, 1, 0, 1, res);
+    println("Real:"); println(res[0]);
+    println("Imag:"); println(res[1]);
+    
+    if res[0] == -1 && res[1] == 0 {
+        println("Multiplication (i^2 = -1) OK.");
+        return 1;
+    }
+    
+    return -1;
+}
