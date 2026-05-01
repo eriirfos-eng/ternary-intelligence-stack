@@ -1,0 +1,49 @@
+/*
+ * Advanced Integer Circular Queue
+ * Robust circular queue for integers with full overflow/underflow management.
+ */
+
+fn cq_int_enqueue(buffer: int[], tail: int, count: int, val: int) -> int {
+    if count >= 10 { return -1; }
+    buffer[tail] = val;
+    return (tail + 1) % 10;
+}
+
+fn cq_int_dequeue(head: int, count: int) -> int {
+    if count <= 0 { return -1; }
+    return (head + 1) % 10;
+}
+
+fn main() -> trit {
+    let buffer: int[10];
+    let head: int = 0;
+    let tail: int = 0;
+    let count: int = 0;
+    
+    // Initialize
+    let k: int = 0;
+    while k < 10 { buffer[k] = 0; k = k + 1; }
+    
+    println("Advanced Integer Circular Queue Demo");
+    
+    println("Enqueuing: 10, 20, 30");
+    tail = cq_int_enqueue(buffer, tail, count, 10); count = count + 1;
+    tail = cq_int_enqueue(buffer, tail, count, 20); count = count + 1;
+    tail = cq_int_enqueue(buffer, tail, count, 30); count = count + 1;
+    
+    println("Count (expected 3):");
+    println(count);
+    
+    println("Dequeuing:");
+    let val: int = buffer[head];
+    head = cq_int_dequeue(head, count);
+    count = count - 1;
+    println(val);
+    
+    if val == 10 && count == 2 {
+        println("Circular Queue OK. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
