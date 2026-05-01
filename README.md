@@ -12,7 +12,7 @@
 [![stdlib](https://img.shields.io/badge/stdlib-293_open%20%2B%2028k%2B_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
-**Ternlang is the high-performance ternary runtime supporting Albert, our sovereign MoE-13 Ternary LLM.**
+**Ternlang is the high-performance ternary runtime supporting Albert, our work in progress MoE-13 Ternary LLM.**
 
 The Ternary Intelligence Stack (TIS) provides a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty by moving beyond the binary limitations of current systems.
 
@@ -38,8 +38,6 @@ Ternlang is a systems programming language, compiler, and high-performance infer
 
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
-- **Explainable AI (XAI) by Design**: Auditable decision paths fulfilling **EU AI Act Articles 13, 14, and 15**.
-- **Post-Binary Architecture**: Custom Instruction Set Architecture (ISA), triadic networking, and memory-efficient ternary encoding.
 
 ## 2. What is MoE-13 / Albert? (The Intelligence Layer)
 
