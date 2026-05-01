@@ -1,0 +1,52 @@
+/*
+ * Advanced 2D Trit Tensor
+ * Simulation of a 2D tensor with bounds checking and row/column access helpers.
+ */
+
+fn tensor_2d_idx(row: int, col: int, dim_col: int) -> int {
+    return row * dim_col + col;
+}
+
+fn tensor_2d_get(data: trit[], row: int, col: int, dim_row: int, dim_col: int) -> trit {
+    if row >= 0 && row < dim_row && col >= 0 && col < dim_col {
+        return data[tensor_2d_idx(row, col, dim_col)];
+    }
+    return 0;
+}
+
+fn tensor_2d_set(data: trit[], row: int, col: int, dim_row: int, dim_col: int, val: trit) -> trit {
+    if row >= 0 && row < dim_row && col >= 0 && col < dim_col {
+        data[tensor_2d_idx(row, col, dim_col)] = val;
+        return 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    // 3x3 tensor
+    let data: trit[9];
+    let i: int = 0;
+    while i < 9 { data[i] = 0; i = i + 1; }
+    
+    let dim: int = 3;
+    
+    println("Advanced 2D Trit Tensor Demo");
+    
+    println("Setting [1, 1] to Affirm (1)");
+    tensor_2d_set(data, 1, 1, dim, dim, 1);
+    
+    println("Reading [1, 1]:");
+    let v: trit = tensor_2d_get(data, 1, 1, dim, dim);
+    println(v);
+    
+    println("Reading [0, 2]:");
+    let v2: trit = tensor_2d_get(data, 0, 2, dim, dim);
+    println(v2);
+    
+    if v == 1 && v2 == 0 {
+        println("2D Tensor addressing verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
