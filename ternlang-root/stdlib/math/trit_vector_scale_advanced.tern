@@ -1,0 +1,39 @@
+/*
+ * Advanced Trit Vector Scaling
+ * Scalar multiplication of a trit tensor by a trit scalar.
+ * res[i] = a[i] * s
+ */
+
+fn vector_scale_trit(data: trit[], s: trit, res: trit[]) -> trit {
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        res[i] = data[i] * s;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let v: trit[5];
+    let res: trit[5];
+    
+    // v = [1, 0, -1, 1, 0]
+    v[0] = 1; v[1] = 0; v[2] = -1; v[3] = 1; v[4] = 0;
+    
+    println("Advanced Trit Vector Scaling Demo");
+    
+    println("Scaling by Reject (-1):");
+    vector_scale_trit(v, -1, res);
+    
+    println("Resulting Vector:");
+    let k: int = 0;
+    while k < 5 { println(res[k]); k = k + 1; }
+    
+    if res[0] == -1 && res[2] == 1 && res[3] == -1 {
+        println("Vector scaling verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
