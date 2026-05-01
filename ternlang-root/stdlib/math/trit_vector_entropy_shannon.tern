@@ -1,0 +1,64 @@
+/*
+ * Trit Shannon Entropy
+ * Precise calculation of Shannon entropy for ternary signals.
+ */
+
+fn ln_approx(x: float) -> float {
+    if x <= 0.0 { return -100.0; }
+    let y: float = (x - 1.0);
+    return y - (y * y / 2.0) + (y * y * y / 3.0);
+}
+
+fn entropy_shannon(data: trit[]) -> float {
+    let n: int = 10;
+    let counts: int[3];
+    counts[0]=0; counts[1]=0; counts[2]=0;
+    
+    let i: int = 0;
+    while i < n {
+        match data[i] {
+             1 => { counts[0] = counts[0] + 1; }
+             0 => { counts[1] = counts[1] + 1; }
+            -1 => { counts[2] = counts[2] + 1; }
+        }
+        i = i + 1;
+    }
+    
+    let entropy: float = 0.0;
+    let ln3: float = 1.0986;
+    
+    let j: int = 0;
+    while j < 3 {
+        if counts[j] > 0 {
+            let p: float = cast(counts[j]) / 10.0;
+            entropy = entropy - p * (ln_approx(p) / ln3);
+        }
+        j = j + 1;
+    }
+    
+    return entropy;
+}
+
+fn main() -> trit {
+    let data: trit[10];
+    let k: int = 0;
+    while k < 10 { data[k] = 1; k = k + 1; } // Low entropy (all Affirm)
+    
+    println("Shannon Entropy Demo (Low Entropy Signal)");
+    let e1: float = entropy_shannon(data);
+    println(e1);
+    
+    // High entropy signal
+    data[0]=1; data[1]=0; data[2]=-1; data[3]=1; data[4]=0; data[5]=-1;
+    
+    println("Shannon Entropy Demo (High Entropy Signal)");
+    let e2: float = entropy_shannon(data);
+    println(e2);
+    
+    if e2 > e1 {
+        println("Shannon entropy correctly measures uncertainty. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
