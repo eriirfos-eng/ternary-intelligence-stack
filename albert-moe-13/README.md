@@ -1,27 +1,39 @@
-# Albert-MoE-13 Core Intelligence Layer
+# MoE-13: Engineered Partitioned Inference System (EPIS)
 
-> **Sovereign, offline-first Mixture-of-Experts architecture built on Native Ternary Adaptation.**
+## System Overview
+MoE-13 is a deterministic, high-performance expert partitioning architecture designed for execution on compressed ternary compute substrates. It provides a reliable, auditable framework for multi-expert execution without the unpredictability associated with emergent neural systems.
 
-This module is the heart of the **Albert-MoE-13** system. It is responsible for the deep-tech transformation of high-capacity open-source MoE models into ternary-native execution environments.
+### Classification
+**Engineered Partitioned Inference System (EPIS).** 
+This is not an emergent Mixture-of-Experts system. Specialization is explicitly induced by the architecture, not self-organized.
 
-## Technical Positioning
+## Architecture
+```
+[Input]
+   │
+[Representation Divergence Layer (RDL)] ◄── Controlled manifold separation (Deterministic)
+   │
+[MoE Router]                           ◄── Deterministic expert selection
+   │
+[ExpertBank13]                         ◄── Partitioned execution paths
+   │
+[Ternary Kernel Substrate]             ◄── Execution backend (Contractive)
+   │
+[Output]
+```
 
-Albert-MoE-13 is **not a wrapper** and it does **not train from scratch**. Instead, it implements a **Native Ternary Adaptation** pipeline that collapses the memory and computational footprint of 20B–30B parameter models through structural ternarization.
+## Core Design Philosophy
+*   **Deterministic Execution:** Expert partitioning is strictly defined by the RDL and routing logic. 
+*   **Auditability:** Every expert path is traceable; behavior is invariant under identical inputs.
+*   **Ternary Efficiency:** Uses compressed ternary weights for hardware-level compute efficiency.
+*   **Safety-First:** Ideal for compliance-constrained environments where predictable AI behavior is required.
 
-### Core Functions:
-*   **Weight Ternarization**: Mapping continuous 16/32-bit float weights into the discrete `{-1, 0, +1}` state space.
-*   **Sparsity Compression**: Leveraging the inherent zero-state sparsity of adapted models to enable `@sparseskip` execution.
-*   **Expert Consolidation**: Re-architecting 128+ granular experts into **13 Meta-Domain Subrouters** (Safety, Ethics, Causal Reasoning, etc.).
-*   **Memory Collapse**: Reducing the active memory footprint from ~52 GB to **10–15 GB** for local-first deployment.
+---
 
-## Directory Structure
+## Evolution Roadmap: Achieving Emergent Specialization
+To transform this EPIS into a truly emergent MoE, the following architectural shifts are required:
 
-*   `core/`: High-performance inference kernels, ternary mapping, and routing logic.
-*   `experts/`: Implementation of the 13 meta-domain reasoning experts.
-*   `training/`: Fine-tuning, adaptation, and quantization-aware retraining pipelines.
-*   `pipelines/`: Data ingestion and evaluation surfaces.
-*   `config/`: Model architecture and expert routing configurations.
-
-## Vision: From Simulation to Silicon
-
-Albert-MoE-13 currently operates as a high-performance software simulation on standard x86/CUDA hardware using the **BET-VM** and **ExaTern SIMD** primitives. This architecture is designed as a direct bridge for future **Ternary Silicon**, providing a sovereign, auditable intelligence layer that complies with **EU AI Act Articles 13 & 14**.
+1.  **Differentiable Routing via Policy Gradients:** Replace the current input-to-score router with a reinforcement learning loop (e.g., REINFORCE) where routing decisions are optimized based on expert accuracy, forcing the system to *learn* which expert is best for which task.
+2.  **Backprop-Through-Router:** Enable end-to-end gradient flow from the expert outputs back to the router and RDL, allowing the system to co-adapt expert internal parameters and routing decisions.
+3.  **Soft-Ternary Optimization:** Transition from fixed ternary weights to learned ternary distributions (e.g., using Straight-Through Estimator) to allow experts to adapt their internal manifolds to the tasks they are routed to.
+4.  **Task-Reward Function:** Implement a global loss function that penalizes expert over-subscription and rewards functional specialization, driving the emergence of task-expert alignment.
