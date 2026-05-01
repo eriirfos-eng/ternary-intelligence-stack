@@ -4,6 +4,7 @@
 
 use crate::core::mock_layer::{TernaryLayer, ternary_matmul_kernel};
 use crate::core::aedl::AEDL;
+use crate::core::policy::{HybridRouterPolicy, MoEMode};
 use rand::{prelude::*, Rng};
 
 #[derive(Clone, Copy, Debug)]
@@ -42,6 +43,7 @@ impl ExpertBank13 {
 pub struct MoERouter13 {
     pub gate_weights: Vec<f32>,
     pub aedl: AEDL,
+    pub policy: HybridRouterPolicy,
 }
 
 impl MoERouter13 {
@@ -49,6 +51,7 @@ impl MoERouter13 {
         Self {
             gate_weights: vec![0.1; input_dim * 13],
             aedl: AEDL::new(13),
+            policy: HybridRouterPolicy::default(),
         }
     }
 
@@ -60,8 +63,13 @@ impl MoERouter13 {
             for j in 0..input.len() {
                 score += input[j] * self.gate_weights[i * input.len() + j];
             }
-            // Add adaptive bias from AEDL
-            scores[i] = score + self.aedl.get_bias(i);
+            
+            // Apply Hybrid Routing: base_score + (λ * AEDL_bias)
+            if self.policy.mode == MoEMode::HYBRID {
+                scores[i] = score + (self.policy.lambda * self.aedl.get_bias(i));
+            } else {
+                scores[i] = score;
+            }
         }
 
         let mut indexed_scores: Vec<(usize, f32)> = scores.into_iter().enumerate().collect();
