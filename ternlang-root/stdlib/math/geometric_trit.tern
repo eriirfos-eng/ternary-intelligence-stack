@@ -1,0 +1,68 @@
+/*
+ * Geometric Trit Utils
+ * 2D Geometry helpers using ternary signals for quadrant and orientation detection.
+ */
+
+// Orientation of three points (p1, p2, p3)
+// Returns:
+//  0 (hold)   -> collinear
+//  1 (affirm) -> clockwise
+// -1 (reject) -> counter-clockwise
+fn orientation_trit(x1: int, y1: int, x2: int, y2: int, x3: int, y3: int) -> trit {
+    let val: int = (y2 - y1) * (x3 - x2) - (x2 - x1) * (y3 - y2);
+    
+    if val == 0 { return 0; }
+    if val > 0 { return 1; }
+    return -1;
+}
+
+// Check if a point (px, py) is in a rectangle defined by (x1, y1) and (x2, y2)
+fn is_in_rect(px: int, py: int, x1: int, y1: int, x2: int, y2: int) -> trit {
+    let check_x: trit = 0;
+    let check_y: trit = 0;
+    
+    // Check X boundaries
+    if px >= x1 && px <= x2 {
+        check_x = 1;
+    } else {
+        if px >= x2 && px <= x1 {
+            check_x = 1;
+        } else {
+            check_x = -1;
+        }
+    }
+    
+    // Check Y boundaries
+    if py >= y1 && py <= y2 {
+        check_y = 1;
+    } else {
+        if py >= y2 && py <= y1 {
+            check_y = 1;
+        } else {
+            check_y = -1;
+        }
+    }
+    
+    return check_x && check_y;
+}
+
+fn main() -> trit {
+    println("Geometric Trit Utils Demo");
+    
+    // Points (0,0), (1,1), (1,0)
+    println("Checking orientation of (0,0), (1,1), (1,0):");
+    let orient: trit = orientation_trit(0, 0, 1, 1, 1, 0);
+    println(orient); // Should be 1 (clockwise)
+    
+    // Rectangle (0,0) to (10,10), Point (5,5)
+    println("Checking if (5,5) is in rect (0,0)-(10,10):");
+    let in_rect: trit = is_in_rect(5, 5, 0, 0, 10, 10);
+    println(in_rect); // Should be 1
+    
+    if orient == 1 && in_rect == 1 {
+        println("Geometry helpers verified.");
+        return 1;
+    }
+    
+    return -1;
+}
