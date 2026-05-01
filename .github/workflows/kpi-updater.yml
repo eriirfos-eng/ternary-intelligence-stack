@@ -31,3 +31,15 @@ jobs:
         with:
           commit_message: "docs(kpi): auto-update dashboard data [skip ci]"
           file_pattern: "docs/kpi/*"
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Push KPI data to Fly.io volume
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl ssh console --app ternlang-api -C "mkdir -p /data/kpi"
+          flyctl ssh sftp put --app ternlang-api docs/kpi/index.html /data/kpi/index.html
+          flyctl ssh sftp put --app ternlang-api docs/kpi/ternlang_kpi_log.json /data/kpi/ternlang_kpi_log.json
+          flyctl ssh sftp put --app ternlang-api docs/kpi/ternlang_gh_traffic.json /data/kpi/ternlang_gh_traffic.json

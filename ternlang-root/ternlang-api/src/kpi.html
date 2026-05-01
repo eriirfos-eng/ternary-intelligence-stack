@@ -1,283 +1,272 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RFI-IRFOS KPI | BULLISH 64,620.0</title>
+<html lang="en"><head><meta charset="UTF-8"><title>RFI-IRFOS KPI | BULLISH 87,866</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
-  
   :root { --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --border:#30363d; --text:#e6edf3; --muted:#ffffff; --green:#3fb950; --blue:#58a6ff; --purple:#a371f7; --orange:#d29922; --red:#f85149; }
-  body.light { background: linear-gradient(135deg, #f6f8fa 0%, #e9eff5 100%); --bg:#f6f8fa; --bg2:rgba(255,255,255,0.9); --bg3:#f0f2f4; --border:#d0d7de; --text:#1f2328; --muted:#000000; }
+  body.light { background: linear-gradient(135deg, #e8edf2 0%, #d4dde8 100%); --bg:#edf0f4; --bg2:rgba(255,255,255,0.95); --bg3:#e2e8ef; --border:#c8d0da; --text:#1a1f26; --muted:#1a1f26; }
+  body.light .panel { background:rgba(255,255,255,0.85); border-color:rgba(0,0,0,0.08); }
+  body.light .kpi-card { background:rgba(255,255,255,0.85); border-color:rgba(0,0,0,0.08); }
+  body.light .signal-bar { background:rgba(255,255,255,0.85); }
+  body.light .tab-bar { background:rgba(255,255,255,0.95); }
+  body.light .grid-header { background:#dde3ea; }
+  body.light .grid-row { border-bottom-color:rgba(0,0,0,0.06); }
+  body.light .legend-pill { background:rgba(0,0,0,0.05); border-color:rgba(0,0,0,0.12); color:var(--text); }
+  body.light .legend-pill.active { background:rgba(0,0,0,0.12); border-color:var(--text); }
+  body.light .dropdown-pill select { background:rgba(0,0,0,0.06); border-color:rgba(0,0,0,0.15); color:var(--text); }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background: linear-gradient(135deg, #0d1117 0%, #0a192f 50%, #003a4d 100%); color:var(--text); font-family:'JetBrains Mono', monospace; margin:0; font-size:14px; transition: .2s; overflow-x:hidden; background-attachment: fixed; line-height: 1.4; }
-  
-  header { background:rgba(22, 27, 34, 0.8); border-bottom:2px solid var(--border); padding:12px 0; position:sticky; top:0; z-index:100; backdrop-filter: blur(10px); }
-  .header-container { max-width: 1550px; margin: 0 auto; display: flex; width: 100%; justify-content: space-between; align-items: center; padding: 0 24px; }
+  body { background: linear-gradient(135deg, #0d1117 0%, #0a192f 50%, #003a4d 100%); color:var(--text); font-family:'JetBrains Mono', monospace; font-size:14px; overflow-x:hidden; background-attachment: fixed; }
+  header { background:rgba(22, 27, 34, 0.8); border-bottom:2px solid var(--border); padding:10px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; backdrop-filter: blur(10px); }
   body.light header { background:rgba(255, 255, 255, 0.8); border-bottom-color:rgba(0,0,0,0.05); }
-  
-  .hdr-right { display:flex; gap:10px; }
-  .icon-btn { background:var(--bg3); border:1px solid var(--border); border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; color:var(--text); cursor:pointer; transition:all 0.3s ease; }
-  .icon-btn:hover { background:var(--border); transform: translateY(-1px); }
-  .icon-btn svg { width:16px; height:16px; fill:currentColor; }
-  .btn-green { background:var(--green); border:none; color:#fff; }
-  
-  .signal-bar { background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); padding:6px 0; font-size:11px; font-weight:800; letter-spacing:1px; color:var(--muted); backdrop-filter: blur(10px); }
-  .signal-container { max-width: 1550px; margin: 0 auto; display: flex; gap: 32px; padding: 0 24px; }
-  body.light .signal-bar { background:rgba(255,255,255,0.7); border-bottom-color:rgba(0,0,0,0.05); }
-
-  main { max-width:1550px; margin:0 auto; padding:16px 24px; }
-  
-  .kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:20px; }
-  .kpi-card { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; border-top:4px solid var(--border); display:flex; justify-content:space-between; align-items: flex-end; min-height:110px; backdrop-filter: blur(12px); box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3); }
-  .kpi-card.c-purple { border-top-color:var(--purple); }
-  
-  .label { font-size:11px; text-transform:uppercase; color:var(--muted); font-weight:800; margin-bottom:8px; letter-spacing:1px; }
-  .value { font-size:28px; font-weight:800; line-height:1; letter-spacing:-1px; }
-  
-  .card-trend { text-align:right; display:flex; flex-direction:column; justify-content:flex-end; font-weight:800; }
-  .trend-top { font-size:13px; margin-bottom:2px; white-space:nowrap; }
-  .trend-bottom { font-size:11px; opacity:0.8; white-space:nowrap; }
-
-  .row-top { display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin-bottom:16px; align-items: start; }
-  .bottom-floor { display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items: stretch; }
-  
-  .panel { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; position:relative; display:flex; flex-direction:column; backdrop-filter: blur(12px); overflow: hidden; }
-  .panel-h { font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px; display:flex; justify-content:space-between; letter-spacing:1px; }
-  
-  .chart-container { width: 100%; aspect-ratio: 2 / 1; min-height: 200px; }
-  .dist-container { width: 100%; aspect-ratio: 1 / 1; max-height: 300px; }
-  .vol-container { width: 100%; aspect-ratio: 3 / 1; min-height: 150px; }
-
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th { text-align:left; font-size:10px; color:var(--muted); padding:8px 10px; background:var(--bg3); text-transform:uppercase; font-weight:800; }
-  td { padding:8px 10px; border-bottom:1px solid var(--border); }
-  td.num { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
-  .ch-up { color:var(--green); }
-  .ch-dn { color:var(--red); }
-  .ch-na { color:var(--muted); }
-
-  .legend-container { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; width:100%; }
-  .legend-pill { display:flex; align-items:center; gap:6px; padding:3px 8px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:10px; font-weight:800; color:var(--muted); transition: all 0.2s ease; }
-  .legend-pill.active { background:rgba(255,255,255,0.15); border-color:var(--text); color:var(--text); }
-  .legend-pill .color-dot { width:8px; height:8px; border-radius:50%; }
-
-  .impact-badge { padding:2px 6px; border-radius:4px; font-weight:900; font-size:9px; letter-spacing:1px; }
+  .hdr-right { display:flex; gap:16px; }
+  .icon-btn { background:var(--bg3); border:1px solid var(--border); border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; color:var(--text); cursor:pointer; transition:all 0.3s; }
+  .icon-btn svg { width:20px; height:20px; fill:currentColor; }
+  .btn-green { background:var(--green); border:none; }
+  main { max-width:1560px; margin:0 auto; padding:16px 28px; }
+  .tab-bar { background:rgba(13,17,23,0.95); border-bottom:1px solid var(--border); display:flex; gap:0; padding:0 28px; backdrop-filter:blur(10px); position:sticky; top:53px; z-index:90; }
+  .tab-btn { padding:9px 18px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.6px; color:var(--muted); opacity:0.4; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; user-select:none; }
+  .tab-btn:hover { opacity:0.75; }
+  .tab-btn.active { opacity:1; color:var(--blue); border-bottom-color:var(--blue); }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; margin-bottom:14px; }
+  .kpi-card { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:14px; border-top:5px solid var(--border); display:flex; justify-content:space-between; align-items: flex-end; min-height:95px; backdrop-filter: blur(12px); }
+  .kpi-card:hover { transform: translateY(-6px); box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.6); }
+  .label { font-size:10px; text-transform:uppercase; color:var(--muted); font-weight:800; margin-bottom:5px; opacity:0.7; }
+  .value { font-size:21px; font-weight:800; line-height:1; letter-spacing:-1px; }
+  .card-trend { text-align:right; font-weight:800; }
+  .trend-top { font-size:12px; } .trend-bottom { font-size:10px; opacity:0.8; }
+  .row-top2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .row-mid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .row-bottom { display:grid; grid-template-columns:1fr 1fr 0.6fr; gap:14px; margin-bottom:14px; }
+  .panel { background:rgba(22, 27, 34, 0.4); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:14px; display:flex; flex-direction:column; backdrop-filter: blur(12px); }
+  .panel-h { font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:7px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .grid-table { display: flex; flex-direction: column; width: 100%; font-size:11px; }
+  .grid-row { display: grid; border-bottom: 1px solid var(--border); padding: 6px 10px; }
+  .grid-header { background: var(--bg3); font-size: 11px; text-transform: uppercase; font-weight: 800; position: sticky; top: 0; z-index: 20; }
+  .num { text-align: right; font-weight: 700; } .center { text-align: center; }
+  .vol-grid { grid-template-columns: 1.5fr 1fr 1fr 1fr; } .traffic-grid { grid-template-columns: 1.5fr 0.8fr 0.8fr 0.6fr; } .crates-grid { grid-template-columns: 1.5fr 0.8fr 1fr 1fr; }
+  .impact-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 10px; min-width: 30px; }
   .impact-pos { background:rgba(63,185,80,0.15); color:var(--green); border:1px solid var(--green); }
   .impact-neu { background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border); }
   .impact-neg { background:rgba(248,81,73,0.15); color:var(--red); border:1px solid var(--red); }
-
+  .legend-container { display:flex; flex-wrap:nowrap; gap:8px; margin-bottom:8px; align-items:center; min-height:26px; width:100%; }
+  .legend-pill { display:flex; align-items:center; gap:5px; padding:3px 8px; border-radius:50px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:11px; font-weight:800; color:var(--muted); white-space:nowrap; }
+  .legend-pill.active { background:rgba(255,255,255,0.15); border-color:var(--text); color:var(--text); }
+  .legend-pill .color-dot { width:10px; height:10px; border-radius:50%; }
+  .signal-bar { background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); padding:5px 24px; display:flex; gap:20px; font-size:11px; font-weight:800; color:var(--muted); backdrop-filter: blur(10px); }
+  .sig-item span { color:var(--text); margin-left:6px; }
   #loading-bar { position:fixed; top:0; left:0; height:3px; background:var(--blue); width:0; transition:width 0.3s; z-index:200; }
-</style>
-</head>
-<body>
-<div id="loading-bar"></div>
+  .dropdown-pill { position:relative; margin-left:auto; }
+  .dropdown-pill select { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:50px; color:var(--text); font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:800; padding:3px 22px 3px 9px; cursor:pointer; appearance:none; -webkit-appearance:none; }
+  .dropdown-pill select:focus { outline:none; border-color:var(--blue); }
+  .dropdown-pill::after { content:'▼'; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:10px; pointer-events:none; opacity:0.6; }
+  .donut-hub { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; width: 120px; }
+  .hub-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
+  .hub-value { font-size: 18px; font-weight: 800; color: var(--text); }
+  .ch-up { color: var(--green); } .ch-dn { color: var(--red); } .ch-na { color: var(--muted); }
+  .bottom-floor { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; }
+  .data-main { display:grid; grid-template-columns:1.4fr 1fr 1.3fr 1.1fr; gap:16px; }
+  #tab-data .grid-table { font-size:12px; }
+  #tab-data .grid-row { padding:8px 12px; }
+  #tab-data .grid-header { font-size:10px; }
+  .vol-banner { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:16px; }
+  .vol-stat { background:rgba(22,27,34,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px 16px; backdrop-filter:blur(12px); }
+  body.light .vol-stat { background:rgba(255,255,255,0.85); border-color:rgba(0,0,0,0.08); }
+  .vol-stat-label { font-size:9px; font-weight:800; text-transform:uppercase; opacity:0.55; margin-bottom:4px; }
+  .vol-stat-val { font-size:20px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; }
+  .vol-stat-delta { font-size:11px; font-weight:700; }
+</style></head>
+<body><div id="loading-bar"></div>
 <header>
-  <div class="header-container">
-    <div><h1 style="margin:0;font-size:16px;letter-spacing:-0.5px;font-weight:800">RFI-IRFOS <span style="color:var(--blue)">KPI</span></h1><div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:1px">STATUS: NOMINAL • SYNC: 2026-04-26 20:17:18</div></div>
-    <div class="hdr-right">
-      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">
-        <svg id="theme-icon" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41z"/></svg>
-      </button>
-      <button class="icon-btn btn-green" id="refreshBtn" onclick="refreshDashboardData()" title="Refresh Data">
-        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      </button>
-    </div>
+  <div><h1 style="margin:0;font-size:20px;">RFI-IRFOS <span style="color:var(--blue)">KPI</span></h1><div style="font-size:11px;opacity:0.6;">NOMINAL STATUS</div></div>
+  <div class="hdr-right">
+    <button class="icon-btn" onclick="exportCSV()"><svg viewBox="0 0 24 24"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg></button>
+    <button class="icon-btn" onclick="toggleTheme()"><svg id="theme-icon" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/></svg></button>
+    <button class="icon-btn btn-green" id="refreshBtn" onclick="refreshData()"><svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
   </div>
 </header>
-
-<div class="signal-bar">
-  <div class="signal-container">
-    <div class="sig-item">SENTIMENT: <span class="sig-bullish">BULLISH</span></div>
-    <div class="sig-item">TARGET 100K: <span>6 DAYS</span></div>
-    <div class="sig-item">PRIMARY DRIVER: <span>Crates</span></div>
-    <div class="sig-item" style="margin-left:auto">SIGNAL STRENGTH: <span>2788.73</span></div>
-  </div>
-</div>
-
+<div class="signal-bar"><div class="sig-item">SENTIMENT: <span class="sig-bullish">BULLISH</span></div><div class="sig-item">TARGET 100K: <span>1 DAYS</span></div><div class="sig-item">SYNC: <span>2026-05-01 08:38:18</span></div><div class="sig-item" style="margin-left:auto">SIGNAL STRENGTH: <span>3486.54</span></div></div>
+<div class="tab-bar"><div class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</div><div class="tab-btn" data-tab="data" onclick="switchTab('data')">Data &amp; Tables</div></div>
 <main>
-  <div class="kpi-grid">
-    <div class="kpi-card c-purple">
-      <div class="card-left"><div class="label">Total Footprint</div><div class="value" id="val-total">64,620</div></div>
-      <div class="card-trend" id="total-trend" style="color:var(--green)"><div class="trend-top">▲ +70.0%</div><div class="trend-bottom">(+26610)</div></div>
-    </div>
-    <div class="kpi-card ">
-      <div class="card-left"><div class="label">Total Clones</div><div class="value" id="val-clones">23,173</div></div>
-      <div class="card-trend" id="clones-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div>
-    </div>
-    <div class="kpi-card ">
-      <div class="card-left"><div class="label">Total Views</div><div class="value" id="val-views">3,011</div></div>
-      <div class="card-trend" id="views-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div>
-    </div>
-    <div class="kpi-card ">
-      <div class="card-left"><div class="label">Crates Downloads</div><div class="value" id="val-crates">1,647</div></div>
-      <div class="card-trend" id="crates-trend" style="color:var(--green)"><div class="trend-top">▲ +10.2%</div><div class="trend-bottom">(+153)</div></div>
-    </div>
+  <div id="tab-overview" class="tab-pane active">
+  <div class="kpi-grid"><div class="kpi-card c-purple"><div class="card-left"><div class="label">Total Footprint</div><div class="value">87,866</div></div><div class="card-trend" style="color:var(--green)"><div class="trend-top">▲ +1.9%</div><div class="trend-bottom">(+1668)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">Total Clones</div><div class="value">29,751</div></div><div class="card-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">Total Views</div><div class="value">3,240</div></div><div class="card-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">14D Visitors</div><div class="value">146</div></div><div class="card-trend" style="color:var(--green)"><div class="trend-top">▲ +0.0%</div><div class="trend-bottom">(+146)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">GH Stars</div><div class="value">14</div></div><div class="card-trend" style="color:var(--green)"><div class="trend-top">▲ +16.7%</div><div class="trend-bottom">(+2)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">GH Watchers</div><div class="value">3</div></div><div class="card-trend" style="color:var(--green)"><div class="trend-top">▲ +0.0%</div><div class="trend-bottom">(+3)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">Smithery Calls</div><div class="value">10.70k</div></div><div class="card-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">Crates DL</div><div class="value">3,886</div></div><div class="card-trend" style="color:var(--green)"><div class="trend-top">▲ +12.0%</div><div class="trend-bottom">(+417)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">Open VSX</div><div class="value">846</div></div><div class="card-trend" style="color:var(--muted)"><div class="trend-top">• +0.0%</div><div class="trend-bottom">(+0)</div></div></div><div class="kpi-card "><div class="card-left"><div class="label">Latency</div><div class="value">254</div></div><div class="card-trend" style="color:var(--red)"><div class="trend-top">▼ -20.6%</div><div class="trend-bottom">(-66)</div></div></div></div>
+  <div class="row-top2">
+    <div class="panel"><div class="panel-h">Footprint Pulse<div class="dropdown-pill"><select onchange="setFilter('growth',this.value)"><option value="0" selected>ALL</option><option value="30">1M</option><option value="14">2W</option><option value="7">1W</option></select></div></div><div class="legend-container"><div id="lgd-growth" style="display:flex;gap:8px"></div></div><div style="height:300px"><canvas id="growthChart"></canvas></div></div>
+    <div class="panel"><div class="panel-h">Traffic Reach<div class="dropdown-pill"><select onchange="setFilter('reach',this.value)"><option value="0" selected>ALL</option><option value="30">1M</option><option value="14">2W</option><option value="7">1W</option></select></div></div><div class="legend-container"><div id="lgd-reach" style="display:flex;gap:8px"></div></div><div style="height:300px"><canvas id="reachChart"></canvas></div></div>
   </div>
-
-  <div class="row-top">
-    <div class="panel">
-      <div class="panel-h">Footprint Pulse <span>Historical Density</span></div>
-      <div id="lgd-growth" class="legend-container"></div>
-      <div class="chart-container"><canvas id="growthChart"></canvas></div>
-    </div>
-    <div class="panel">
-      <div class="panel-h">Metric Weighting <span>Distribution Hub</span></div>
-      <div id="lgd-dist" class="legend-container" style="justify-content:center"></div>
-      <div class="dist-container" style="position:relative; display:flex; align-items:center; justify-content:center;">
-        <div style="width:100%;height:100%"><canvas id="distChart"></canvas></div>
-        <div id="doughnut-hub" style="position:absolute;text-align:center;pointer-events:none;width:140px;background:rgba(255,255,255,0.05);padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px)">
-          <div id="hub-lbl" style="font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:1px;margin-bottom:2px">Ecosystem</div>
-          <div id="hub-val" style="font-size:16px;font-weight:900;color:var(--text);letter-spacing:-0.5px">64,620</div>
-        </div>
-      </div>
-    </div>
+  <div class="row-mid2">
+    <div class="panel"><div class="panel-h">Momentum Shift<div class="dropdown-pill"><select onchange="setFilter('momentum',this.value)"><option value="0" selected>ALL</option><option value="30">1M</option><option value="14">2W</option><option value="7">1W</option></select></div></div><div class="legend-container"><div id="lgd-momentum" style="display:flex;gap:8px"></div></div><div style="height:280px"><canvas id="momentumChart"></canvas></div></div>
+    <div class="panel"><div class="panel-h">MACD Momentum<div class="dropdown-pill"><select onchange="setFilter('macd',this.value)"><option value="0" selected>ALL</option><option value="30">1M</option><option value="14">2W</option><option value="7">1W</option></select></div></div><div class="legend-container"><div id="lgd-macd" style="display:flex;gap:8px"></div></div><div style="height:280px"><canvas id="macdChart"></canvas></div></div>
   </div>
-
-  <div class="bottom-floor" style="margin-bottom:20px">
-    <div class="panel">
-      <div class="panel-h">TIS Signal Volatility <span>MACD & Momentum</span></div>
-      <div id="lgd-macd" class="legend-container"></div>
-      <div class="vol-container" style="margin-bottom:12px"><canvas id="macdChart"></canvas></div>
-      <div id="lgd-momentum" class="legend-container"></div>
-      <div class="vol-container"><canvas id="momentumChart"></canvas></div>
+  <div class="row-bottom">
+    <div class="panel"><div class="panel-h">Daily Views<div class="dropdown-pill"><select onchange="setFilter('views',this.value)"><option value="0">ALL</option><option value="30">1M</option><option value="14" selected>2W</option><option value="7">1W</option></select></div></div><div class="legend-container"><div id="lgd-views" style="display:flex;gap:8px"></div></div><div style="height:200px"><canvas id="viewsChart"></canvas></div></div>
+    <div class="panel"><div class="panel-h">Unique Visitors<div class="dropdown-pill"><select onchange="setFilter('visitors',this.value)"><option value="0">ALL</option><option value="30">1M</option><option value="14" selected>2W</option><option value="7">1W</option></select></div></div><div class="legend-container"><div id="lgd-visitors" style="display:flex;gap:8px"></div></div><div style="height:200px"><canvas id="visitorsChart"></canvas></div></div>
+    <div class="panel"><div class="panel-h">Distribution</div><div id="lgd-dist" class="legend-container" style="justify-content:center"></div><div style="height:180px;position:relative;"><canvas id="distChart"></canvas><div class="donut-hub"><div class="hub-label">Total Weight</div><div class="hub-value">87,866</div></div></div></div>
+  </div>
+  </div>
+  <div id="tab-data" class="tab-pane">
+  <div class="vol-banner"><div class="vol-stat"><div class="vol-stat-label">Total Footprint</div><div class="vol-stat-val">87,866</div><div class="vol-stat-delta ch-up">▲ +1.9% (+1668)</div></div><div class="vol-stat"><div class="vol-stat-label">Crates DL</div><div class="vol-stat-val">3,886</div><div class="vol-stat-delta ch-up">▲ +12.0% (+417)</div></div><div class="vol-stat"><div class="vol-stat-label">OpenVSX</div><div class="vol-stat-val">846</div><div class="vol-stat-delta ch-na">• +0.0% (+0)</div></div><div class="vol-stat"><div class="vol-stat-label">GH Clones</div><div class="vol-stat-val">29,751</div><div class="vol-stat-delta ch-na">• +0.0% (+0)</div></div><div class="vol-stat"><div class="vol-stat-label">Smithery</div><div class="vol-stat-val">10.70k</div><div class="vol-stat-delta ch-na">• +0.0% (+0)</div></div></div>
+  <div class="data-main">
+    <div class="panel" style="padding:0; overflow-y:auto;"><div class="panel-h" style="padding:14px 16px;position:sticky;top:0;background:var(--bg2);z-index:10;margin:0;">Crates Detail</div><div class="grid-table"><div class="grid-row crates-grid grid-header"><div>Package</div><div class="num">Version</div><div class="num">Downloads</div><div class="num">New</div></div><div class="grid-row crates-grid"><div>ternlang-core</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">454</div><div class="num" style="color:var(--green)">+454</div></div>
+<div class="grid-row crates-grid"><div>albert-runtime</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">328</div><div class="num" style="color:var(--green)">+328</div></div>
+<div class="grid-row crates-grid"><div>ternlang-ml</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">307</div><div class="num" style="color:var(--green)">+307</div></div>
+<div class="grid-row crates-grid"><div>albert-api</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">274</div><div class="num" style="color:var(--green)">+274</div></div>
+<div class="grid-row crates-grid"><div>albert-commands</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">238</div><div class="num" style="color:var(--green)">+238</div></div>
+<div class="grid-row crates-grid"><div>albert-tools</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">229</div><div class="num" style="color:var(--green)">+229</div></div>
+<div class="grid-row crates-grid"><div>ternlang-runtime</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">212</div><div class="num" style="color:var(--green)">+212</div></div>
+<div class="grid-row crates-grid"><div>ternlang-moe</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">211</div><div class="num" style="color:var(--green)">+211</div></div>
+<div class="grid-row crates-grid"><div>ternlang-hdl</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">203</div><div class="num" style="color:var(--green)">+203</div></div>
+<div class="grid-row crates-grid"><div>albert-compat</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">198</div><div class="num" style="color:var(--green)">+198</div></div>
+<div class="grid-row crates-grid"><div>ternlang-lsp</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">173</div><div class="num" style="color:var(--green)">+173</div></div>
+<div class="grid-row crates-grid"><div>ternlang-cli</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">168</div><div class="num" style="color:var(--green)">+168</div></div>
+<div class="grid-row crates-grid"><div>albert-cli</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">167</div><div class="num" style="color:var(--green)">+167</div></div>
+<div class="grid-row crates-grid"><div>ternlang-compat</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">158</div><div class="num" style="color:var(--green)">+158</div></div>
+<div class="grid-row crates-grid"><div>ternlang-mcp</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">127</div><div class="num" style="color:var(--green)">+127</div></div>
+<div class="grid-row crates-grid"><div>ternpkg</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">99</div><div class="num" style="color:var(--green)">+99</div></div>
+<div class="grid-row crates-grid"><div>ternlang-codegen</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">97</div><div class="num" style="color:var(--green)">+97</div></div>
+<div class="grid-row crates-grid"><div>ternlang-test</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">80</div><div class="num" style="color:var(--green)">+80</div></div>
+<div class="grid-row crates-grid"><div>ternlang-compress</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">77</div><div class="num" style="color:var(--green)">+77</div></div>
+<div class="grid-row crates-grid"><div>ternlang-ruvector</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">65</div><div class="num" style="color:var(--green)">+65</div></div>
+<div class="grid-row crates-grid"><div>pytern</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">11</div><div class="num" style="color:var(--green)">+11</div></div>
+<div class="grid-row crates-grid"><div>ternaudit-guard</div><div class="num" style="color:var(--blue)">v1.2.9</div><div class="num">10</div><div class="num" style="color:var(--green)">+10</div></div></div></div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="panel" style="padding:0; overflow-y:auto;"><div class="panel-h" style="padding:14px 16px;position:sticky;top:0;background:var(--bg2);z-index:10;margin:0;">Referring Sites</div><div class="grid-table"><div class="grid-row traffic-grid grid-header"><div>Referrer</div><div class="num">Views</div><div class="num">Uniques</div><div class="center">Impact</div></div><div class="grid-row traffic-grid"><div>github.com</div><div class="num">46</div><div class="num">11</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>ternlang-api.fly.dev</div><div class="num">32</div><div class="num">1</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>news.ycombinator.com</div><div class="num">31</div><div class="num">28</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>linkedin.com</div><div class="num">27</div><div class="num">22</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>com.linkedin.android</div><div class="num">18</div><div class="num">9</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>lnkd.in</div><div class="num">11</div><div class="num">10</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>Google</div><div class="num">7</div><div class="num">4</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>crates.io</div><div class="num">4</div><div class="num">1</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>kagi.com</div><div class="num">2</div><div class="num">2</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>hackernewz.com</div><div class="num">1</div><div class="num">1</div><div class="center">-</div></div></div></div>
     </div>
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div class="panel" style="padding:0; overflow:hidden;">
-        <div class="panel-h" style="padding:10px 16px;background:var(--bg2);z-index:10;margin:0">Crates.io Detail</div>
-        <div style="max-height:180px; overflow-y:auto">
-          <table id="table-crates"><thead><tr><th>Package</th><th class="num">Count</th></tr></thead><tbody><tr><td>ternlang-core</td><td class="num">220</td></tr></tbody></table>
-        </div>
-      </div>
-      <div class="panel" style="padding:0; overflow:hidden; flex:1">
-        <div class="panel-h" style="padding:10px 16px;background:var(--bg2);z-index:10;margin:0">Traffic Log</div>
-        <div style="overflow-y:auto; flex:1">
-          <table id="table-traffic"><thead><tr><th>Date</th><th class="num">Clones</th><th class="num">Views</th><th>Signal</th></tr></thead><tbody><tr><td>2026-04-24</td><td class="num">1140</td><td class="num">81</td><td>+1</td></tr></tbody></table>
-        </div>
-      </div>
-    </div>
+    <div class="panel" style="padding:0; overflow-y:auto;"><div class="panel-h" style="padding:14px 16px;position:sticky;top:0;background:var(--bg2);z-index:10;margin:0;">Popular Content</div><div class="grid-table"><div class="grid-row traffic-grid grid-header"><div>Path</div><div class="num">Views</div><div class="num">Uniques</div><div class="center">Impact</div></div><div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack</div><div class="num">296</div><div class="num">72</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli</div><div class="num">105</div><div class="num">61</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/actions</div><div class="num">72</div><div class="num">2</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md</div><div class="num">36</div><div class="num">4</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/pulse</div><div class="num">36</div><div class="num">2</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/graphs/traffic</div><div class="num">31</div><div class="num">1</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/tree/main</div><div class="num">28</div><div class="num">3</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-studio</div><div class="num">26</div><div class="num">1</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/edit/main/ternlang-root/README.md</div><div class="num">17</div><div class="num">1</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>/eriirfos-eng/ternary-intelligence-stack/blob/main/agent_albert_cli/README.md</div><div class="num">13</div><div class="num">1</div><div class="center">-</div></div></div></div>
+    <div class="panel" style="padding:0; overflow-y:auto;"><div class="panel-h" style="padding:14px 16px;position:sticky;top:0;background:var(--bg2);z-index:10;margin:0;">Recent Traffic</div><div class="grid-table"><div class="grid-row traffic-grid grid-header"><div>Date</div><div class="num">Clones</div><div class="num">Views</div><div class="center">Impact</div></div><div class="grid-row traffic-grid"><div>2026-04-29</div><div class="num">1335</div><div class="num">100</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-28</div><div class="num">586</div><div class="num">49</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-27</div><div class="num">515</div><div class="num">20</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-26</div><div class="num">1698</div><div class="num">19</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-25</div><div class="num">2444</div><div class="num">41</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-24</div><div class="num">1140</div><div class="num">81</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-23</div><div class="num">2078</div><div class="num">130</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-22</div><div class="num">2121</div><div class="num">99</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-21</div><div class="num">621</div><div class="num">80</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-20</div><div class="num">428</div><div class="num">46</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-19</div><div class="num">428</div><div class="num">59</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-18</div><div class="num">1442</div><div class="num">100</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-17</div><div class="num">1006</div><div class="num">97</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-16</div><div class="num">1431</div><div class="num">109</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-15</div><div class="num">2136</div><div class="num">72</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-14</div><div class="num">540</div><div class="num">188</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-13</div><div class="num">518</div><div class="num">116</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-12</div><div class="num">1851</div><div class="num">25</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-11</div><div class="num">1113</div><div class="num">34</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-10</div><div class="num">954</div><div class="num">224</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-09</div><div class="num">306</div><div class="num">167</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-08</div><div class="num">1892</div><div class="num">320</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-07</div><div class="num">980</div><div class="num">290</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-06</div><div class="num">23</div><div class="num">32</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-05</div><div class="num">779</div><div class="num">298</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-04</div><div class="num">607</div><div class="num">182</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-03</div><div class="num">658</div><div class="num">164</div><div class="center">-</div></div>
+<div class="grid-row traffic-grid"><div>2026-04-02</div><div class="num">121</div><div class="num">98</div><div class="center">-</div></div></div></div>
+  </div>
   </div>
 </main>
-
 <script>
 const P = { pur:'#a371f7', blu:'#58a6ff', grn:'#3fb950', org:'#d29922', red:'#f85149', teal:'#39d353' };
-let growthChart, distChart, momentumChart, macdChart;
-
-function getThemeColor() { return getComputedStyle(document.documentElement).getPropertyValue('--text').trim(); }
-
-function createCustomLegend(chart, containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
-    chart.data.datasets.forEach((dataset, index) => {
-        const pill = document.createElement('div');
-        pill.className = 'legend-pill' + (chart.isDatasetVisible(index) ? ' active' : '');
-        pill.innerHTML = `<div class="color-dot" style="background:${dataset.borderColor || dataset.backgroundColor}"></div><span>${dataset.label}</span>`;
-        pill.onclick = () => {
-            const visible = chart.isDatasetVisible(index);
-            chart.setDatasetVisibility(index, !visible);
-            chart.update();
-            pill.classList.toggle('active');
-        };
-        container.appendChild(pill);
+let charts = {}, filters = { growth:0, reach:0, momentum:0, macd:0, views:14, visitors:14 };
+const _to_num = (v) => { if (v===null||v===undefined) return 0; if (typeof v==='number') return v; const s=String(v).replace(/[▲▼,]/g,'').trim(); if(s.toLowerCase().endsWith('k')) return parseFloat(s)*1000; if(s.toLowerCase().endsWith('m')) return parseFloat(s)*1000000; return parseFloat(s)||0; };
+function createLegend(chart, id) {
+    const c = document.getElementById(id); if (!c) return; c.innerHTML = '';
+    chart.data.datasets.forEach((ds, i) => {
+        if (ds.label === 'Vol') return;
+        const p = document.createElement('div'); p.className = 'legend-pill active';
+        p.innerHTML = `<div class="color-dot" style="background:${ds.borderColor||ds.backgroundColor}"></div><span>${ds.label}</span>`;
+        p.onclick = () => { chart.setDatasetVisibility(i, !chart.isDatasetVisible(i)); chart.update(); p.classList.toggle('active'); };
+        c.appendChild(p);
     });
 }
-
+function setFilter(ck, d) { filters[ck] = parseInt(d); updateChart(ck); }
+function updateChart(k) {
+    const data = latest_data_js; let L = data.chart_log; if (filters[k] > 0) L = L.slice(-filters[k]);
+    const labels = L.map(e=>e.ts.slice(5,10));
+    if (k === 'growth') { charts.growth.data.labels = labels; charts.growth.data.datasets[0].data = L.map(e=>e.total_footprint); charts.growth.data.datasets[1].data = L.map(e=>e.crates_total); charts.growth.data.datasets[2].data = L.map(e=>e.openvsx_total); charts.growth.data.datasets[3].data = L.map(e=>e.gh_clones); charts.growth.data.datasets[4].data = L.map(e=>e.gh_views); charts.growth.update(); }
+    if (k === 'reach') {
+        charts.reach.data.labels = labels;
+        charts.reach.data.datasets[0].data = L.map((e,i) => i===0?0:_to_num(e.gh_views)-_to_num(L[i-1].gh_views));
+        charts.reach.data.datasets[1].data = L.map(e => data.all_traffic[e.ts.slice(0,10)]?.views_unique || 0);
+        charts.reach.update();
+    }
+    if (k === 'momentum') { const s = (arr) => filters.momentum > 0 ? arr.slice(-filters.momentum) : arr; charts.momentum.data.labels = labels; charts.momentum.data.datasets[0].data = s(data.momentum.views); charts.momentum.data.datasets[1].data = s(data.momentum.clones); charts.momentum.data.datasets[2].data = s(data.momentum.crates); charts.momentum.data.datasets[3].data = s(data.momentum.openvsx); charts.momentum.update(); }
+    if (k === 'macd') {
+        const sl = (arr) => filters.macd > 0 ? arr.slice(-filters.macd) : arr;
+        const hist = sl(data.macd.hist);
+        charts.macd.data.labels = labels;
+        charts.macd.data.datasets[0].data = sl(data.macd.macd);
+        charts.macd.data.datasets[1].data = sl(data.macd.signal);
+        charts.macd.data.datasets[2].data = hist;
+        charts.macd.data.datasets[2].backgroundColor = hist.map(v => v >= 0 ? 'rgba(63,185,80,0.8)' : 'rgba(248,81,73,0.8)');
+        charts.macd.data.datasets[2].borderColor = hist.map(v => v >= 0 ? '#3fb950' : '#f85149');
+        charts.macd.data.datasets[2].borderWidth = 1;
+        charts.macd.data.datasets[3].data = L.map((e,i) => i===0 ? 0 : e.total_footprint - L[i-1].total_footprint);
+        charts.macd.update();
+    }
+    if (k === 'views') { charts.views.data.labels = labels; charts.views.data.datasets[0].data = L.map((e,i) => i===0?0:_to_num(e.gh_views)-_to_num(L[i-1].gh_views)); charts.views.update(); }
+    if (k === 'visitors') { charts.visitors.data.labels = labels; charts.visitors.data.datasets[0].data = L.map(e => data.all_traffic[e.ts.slice(0,10)]?.views_unique || 0); charts.visitors.update(); }
+}
+function exportCSV() {
+    const L = latest_data_js.chart_log; let csv = "Timestamp,Footprint,Crates,OpenVSX,Clones,Views\n";
+    L.forEach(e => csv += `${e.ts},${e.total_footprint},${e.crates_total},${e.openvsx_total},${e.gh_clones},${e.gh_views}\n`);
+    const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'ternlang_kpi.csv'; a.click();
+}
 function initCharts(data) {
-    const L = data.chart_log; const s = data.snapshot;
-    const textColor = getThemeColor(); const isLight = document.body.classList.contains('light');
-    const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
-    Chart.defaults.color = textColor; Chart.defaults.font.family = "'JetBrains Mono', monospace";
-    if (typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
-    const sm_val = (val) => {
-        const str = String(val).replace(/[▲▼,]/g, '').trim();
-        return str.toLowerCase().endsWith('k') ? parseFloat(str)*1000 : (parseFloat(str)||0);
-    };
-    const updateHub = (label, value, pct) => {
-        document.getElementById('hub-lbl').innerText = label;
-        document.getElementById('hub-val').innerText = pct ? `${value.toLocaleString()} (${pct}%)` : value.toLocaleString();
-    };
-    const resetHub = () => updateHub('Ecosystem', s.total_footprint);
-    const ctx = document.getElementById('growthChart').getContext('2d');
-    const grad = ctx.createLinearGradient(0,0,0,400);
-    grad.addColorStop(0, 'rgba(163, 113, 247, 0.15)'); grad.addColorStop(1, 'rgba(163, 113, 247, 0)');
-
-    if(growthChart) growthChart.destroy(); if(distChart) distChart.destroy();
-    if(momentumChart) momentumChart.destroy(); if(macdChart) macdChart.destroy();
-
-    const chartConfig = { responsive:true, maintainAspectRatio:false, plugins:{ datalabels:{display:false}, legend:{display:false} }, scales:{ x:{grid:{display:false}, ticks:{font:{size:10}}}, y:{grid:{color:gridColor}, ticks:{font:{size:10}}} } };
-
-    growthChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: L.map(e=>e.ts.slice(5,10)),
-        datasets: [
-          { label:'Footprint', data:L.map(e=>e.total_footprint), borderColor:P.pur, backgroundColor:grad, fill:true, tension:0.4, borderWidth:2.5, pointRadius:2, pointBackgroundColor:P.pur },
-          { label:'Crates', data:L.map(e=>e.crates_total), borderColor:P.grn, tension:0.4, pointRadius:0, borderWidth:1.5, borderDash:[4,4] },
-          { label:'Clones', data:L.map(e=>e.gh_clones), borderColor:P.teal, tension:0.4, pointRadius:0, borderWidth:1.5 }
-        ]
-      },
-      options: chartConfig
-    });
-    createCustomLegend(growthChart, 'lgd-growth');
-
-    distChart = new Chart(document.getElementById('distChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Crates', 'OpenVSX', 'Clones', 'Views', 'Smithery', 'Stars'],
-        datasets: [{ data: [s.crates_total, s.openvsx_total, s.gh_clones, s.gh_views, sm_val(s.smithery_calls_weekly), s.gh_stars], backgroundColor: [P.grn, P.blu, P.pur, P.org, P.red, P.teal], borderWidth: 0, hoverOffset: 15, borderRadius: 6, spacing: 2 }]
-      },
-      options: { 
-        cutout:'70%', maintainAspectRatio: false, plugins:{ legend:{display:false}, tooltip:{enabled:false} },
-        onHover: (e, el) => { if(el.length){ const i=el[0].index; const ds=distChart.data.datasets[0]; const tot=ds.data.reduce((a,b)=>a+b,0); updateHub(distChart.data.labels[i], ds.data[i], (ds.data[i]/tot*100).toFixed(1)); } else { resetHub(); } }
-      }
-    });
-
-    if (data.momentum) {
-        momentumChart = new Chart(document.getElementById('momentumChart'), {
-          type: 'line',
-          data: {
-            labels: L.map(e=>e.ts.slice(5,10)),
-            datasets: [ { label:'Views Δ', data:data.momentum.views, borderColor:P.org, tension:0.3, pointRadius:2, borderWidth:1.5 }, { label:'Clones Δ', data:data.momentum.clones, borderColor:P.teal, tension:0.3, pointRadius:2, borderWidth:1.5 } ]
-          },
-          options: chartConfig
-        });
-        createCustomLegend(momentumChart, 'lgd-momentum');
-    }
-    if (data.macd) {
-        macdChart = new Chart(document.getElementById('macdChart'), {
-          type: 'line',
-          data: {
-            labels: L.map(e=>e.ts.slice(5,10)),
-            datasets: [ { label:'MACD', data:data.macd.macd, borderColor:P.blu, tension:0.4, pointRadius:2, borderWidth:1.5 }, { label:'Signal', data:data.macd.signal, borderColor:P.org, tension:0.4, pointRadius:2, borderWidth:1.5, borderDash:[4,4] }, { label:'Hist', data:data.macd.hist, type:'bar', backgroundColor: data.macd.hist.map(v => v >= 0 ? P.grn+'66' : P.red+'66'), borderWidth:0 } ]
-          },
-          options: chartConfig
-        });
-        createCustomLegend(macdChart, 'lgd-macd');
-    }
+    const isL = document.body.classList.contains('light'); const gC = isL ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+    Chart.defaults.color = isL ? '#1f2328' : '#e6edf3'; Chart.defaults.font.family = "'JetBrains Mono', monospace";
+    const anim = { animation:{ duration:600, easing:'easeInOutQuart' } };
+    const common = { responsive:true, maintainAspectRatio:false, animation:anim.animation, plugins:{legend:{display:false}}, elements:{point:{radius:3, hoverRadius:6}}, scales:{x:{grid:{display:false}, ticks:{maxTicksLimit:8}}, y:{grid:{color:gC}, ticks:{maxTicksLimit:6}} } };
+    charts.growth = new Chart(document.getElementById('growthChart'), { type:'line', data: { labels:[], datasets: [{label:'Total', borderColor:P.pur, borderWidth:3, tension:0.4, fill:false, data:[]}, {label:'Crates', borderColor:P.grn, borderDash:[5,5], borderWidth:2, tension:0.4, fill:false, data:[]}, {label:'OpenVSX', borderColor:P.blu, borderDash:[5,5], borderWidth:2, tension:0.4, fill:false, data:[]}, {label:'Clones', borderColor:P.teal, borderWidth:2, tension:0.4, fill:false, data:[]}, {label:'Views', borderColor:P.org, borderWidth:2, tension:0.4, fill:false, data:[]}] }, options: common });
+    charts.reach = new Chart(document.getElementById('reachChart'), { type:'line', data: { labels:[], datasets: [{label:'Daily Views', borderColor:P.org, borderWidth:2.5, tension:0.4, fill:false, data:[]}, {label:'Uniques', borderColor:P.blu, borderDash:[5,5], borderWidth:2.5, tension:0.4, fill:false, data:[]}] }, options: common });
+    charts.momentum = new Chart(document.getElementById('momentumChart'), { type:'line', data: { labels:[], datasets: [{label:'Views Δ', borderColor:P.org, borderWidth:2.5, tension:0.35, fill:false, data:[]}, {label:'Clones Δ', borderColor:P.teal, borderWidth:2.5, tension:0.35, fill:false, data:[]}, {label:'Crates Δ', borderColor:P.grn, borderDash:[5,5], borderWidth:2, tension:0.35, fill:false, data:[]}, {label:'OpenVSX Δ', borderColor:P.blu, borderDash:[5,5], borderWidth:2, tension:0.35, fill:false, data:[]}] }, options: common });
+    charts.macd = new Chart(document.getElementById('macdChart'), { type:'bar', data: { labels:[], datasets: [{label:'MACD', type:'line', borderColor:P.blu, borderWidth:2, tension:0.4, fill:false, pointRadius:2, data:[]}, {label:'Signal', type:'line', borderColor:P.org, borderDash:[5,5], borderWidth:1.5, tension:0.4, fill:false, pointRadius:2, data:[]}, {label:'Hist', type:'bar', backgroundColor:[], borderColor:[], borderWidth:1, data:[]}, {label:'Vol', type:'bar', data:[], backgroundColor:P.pur+'22', yAxisID:'y1'}] }, options: { ...common, scales:{ ...common.scales, y1:{ position:'right', grid:{display:false}, display:false } } } });
+    charts.views = new Chart(document.getElementById('viewsChart'), { type:'line', data: { labels:[], datasets: [{label:'Daily Views', borderColor:P.org, borderWidth:3, tension:0.4, data:[]}] }, options: common });
+    charts.visitors = new Chart(document.getElementById('visitorsChart'), { type:'line', data: { labels:[], datasets: [{label:'Uniques', borderColor:P.blu, borderWidth:3, tension:0.4, data:[]}] }, options: common });
+    charts.dist = new Chart(document.getElementById('distChart'), { type:'doughnut', data: { labels:['Crates', 'OpenVSX', 'Clones', 'Views'], datasets:[{ data:[data.snapshot.crates_total, data.snapshot.openvsx_total, data.snapshot.gh_clones, data.snapshot.gh_views], backgroundColor:[P.grn, P.blu, P.pur, P.org], borderWidth:0, cutout:'70%' }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } });
+    createLegend(charts.growth, 'lgd-growth'); createLegend(charts.reach, 'lgd-reach'); createLegend(charts.momentum, 'lgd-momentum'); createLegend(charts.macd, 'lgd-macd'); createLegend(charts.views, 'lgd-views'); createLegend(charts.visitors, 'lgd-visitors');
+    ['growth', 'reach', 'momentum', 'macd', 'views', 'visitors'].forEach(updateChart);
 }
-
-async function refreshDashboardData() {
-    const btn = document.getElementById('refreshBtn'); const bar = document.getElementById('loading-bar');
-    btn.disabled = true; bar.style.width = "40%";
-    try { const res = await fetch('/api/data'); const data = await res.json(); window.location.reload(); } catch(e) { btn.disabled = false; }
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector('[data-tab="' + name + '"]').classList.add('active');
 }
-
+async function refreshData() { const b = document.getElementById('refreshBtn'); b.classList.add('loading'); await fetch('/api/data'); window.location.reload(); }
 function toggleTheme() {
-    document.body.classList.toggle('light');
-    const isLight = document.body.classList.contains('light');
-    localStorage.setItem('tis-theme', isLight ? 'light' : 'dark');
-    initCharts(latest_data_js);
+  document.body.classList.toggle('light');
+  localStorage.setItem('tis-theme', document.body.classList.contains('light') ? 'light' : 'dark');
+  const isL = document.body.classList.contains('light');
+  const gC = isL ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+  Chart.defaults.color = isL ? '#1f2328' : '#e6edf3';
+  Object.values(charts).forEach(c => {
+    if (c.options.scales) {
+      if (c.options.scales.x) c.options.scales.x.ticks = {...c.options.scales.x.ticks, color: Chart.defaults.color};
+      if (c.options.scales.y) { c.options.scales.y.grid.color = gC; c.options.scales.y.ticks = {...c.options.scales.y.ticks, color: Chart.defaults.color}; }
+      if (c.options.scales.y1) c.options.scales.y1.ticks = {...c.options.scales.y1.ticks, color: Chart.defaults.color};
+    }
+    c.update('none');
+  });
 }
-
-const latest_data_js = {"snapshot": {"ts": "2026-04-26T20:17:18.829535+00:00", "total_footprint": 64620, "raw_footprint": 38166, "crates_total": 1647, "openvsx_total": 780, "gh_stars": 5, "gh_clones": 23173, "gh_views": 3011, "smithery_calls_weekly": "9.55k", "api_latency_ms": 160}, "chart_log": [{"ts": "2026-04-16T00:00:00Z", "total_footprint": 0, "crates_total": 0, "gh_clones": 0, "gh_views": 0, "smithery_calls_weekly": "0"}]};
-
-(function() {
-    const saved = localStorage.getItem('tis-theme') || 'dark';
-    if (saved === 'light') document.body.classList.add('light');
-    initCharts(latest_data_js);
-})();
-</script>
-</body></html>
+const latest_data_js = {"snapshot": {"ts": "2026-05-01T08:38:18.376966+00:00", "total_footprint": 87866, "crates_total": 3886, "openvsx_total": 846, "gh_stars": 14, "gh_watchers": 3, "gh_clones": 29751, "gh_views": 3240, "gh_unique_visitors_14d": 146, "smithery_calls_weekly": "10.70k", "api_latency_ms": 254}, "prev": {"ts": "2026-04-30T23:59:23.729651+00:00", "total_footprint": 86198, "raw_footprint": 48018, "crates_total": 3469, "openvsx_total": 846, "gh_stars": 12, "gh_clones": 29751, "gh_views": 3240, "smithery_calls_weekly": "10.70k", "api_latency_ms": 320}, "chart_log": [{"ts": "2026-04-02T00:00:00Z", "total_footprint": 6224, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 121, "gh_views": 98, "smithery_calls_weekly": 80}, {"ts": "2026-04-03T00:00:00Z", "total_footprint": 7704, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 779, "gh_views": 262, "smithery_calls_weekly": 80}, {"ts": "2026-04-04T00:00:00Z", "total_footprint": 9100, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 1386, "gh_views": 444, "smithery_calls_weekly": 80}, {"ts": "2026-04-05T00:00:00Z", "total_footprint": 10956, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 2165, "gh_views": 742, "smithery_calls_weekly": 80}, {"ts": "2026-04-06T00:00:00Z", "total_footprint": 11034, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 2188, "gh_views": 774, "smithery_calls_weekly": 80}, {"ts": "2026-04-07T00:00:00Z", "total_footprint": 13284, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 3168, "gh_views": 1064, "smithery_calls_weekly": 80}, {"ts": "2026-04-08T00:00:00Z", "total_footprint": 17388, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 5060, "gh_views": 1384, "smithery_calls_weekly": 80}, {"ts": "2026-04-09T00:00:00Z", "total_footprint": 18167, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 5366, "gh_views": 1551, "smithery_calls_weekly": 80}, {"ts": "2026-04-10T00:00:00Z", "total_footprint": 20299, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 6320, "gh_views": 1775, "smithery_calls_weekly": 80}, {"ts": "2026-04-11T00:00:00Z", "total_footprint": 22559, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 7433, "gh_views": 1809, "smithery_calls_weekly": 80}, {"ts": "2026-04-12T00:00:00Z", "total_footprint": 26286, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 9284, "gh_views": 1834, "smithery_calls_weekly": 80}, {"ts": "2026-04-13T00:00:00Z", "total_footprint": 27438, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 9802, "gh_views": 1950, "smithery_calls_weekly": 80}, {"ts": "2026-04-14T00:00:00Z", "total_footprint": 28706, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 10342, "gh_views": 2138, "smithery_calls_weekly": 80}, {"ts": "2026-04-15T00:00:00Z", "total_footprint": 33050, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 12478, "gh_views": 2210, "smithery_calls_weekly": 80}, {"ts": "2026-04-16T00:00:00Z", "total_footprint": 36021, "crates_total": 766, "openvsx_total": 556, "gh_stars": 4, "gh_clones": 13909, "gh_views": 2319, "smithery_calls_weekly": 80}, {"ts": "2026-04-17T23:56:08.003875+00:00", "crates_total": 766, "crates": [{"name": "ternlang-cli", "downloads": 73, "version": "1.0.0"}, {"name": "ternlang-codegen", "downloads": 9, "version": "0.3.2"}, {"name": "ternlang-compat", "downloads": 67, "version": "1.0.0"}, {"name": "ternlang-core", "downloads": 147, "version": "1.0.0"}, {"name": "ternlang-hdl", "downloads": 84, "version": "1.0.0"}, {"name": "ternlang-lsp", "downloads": 71, "version": "1.0.0"}, {"name": "ternlang-mcp", "downloads": 26, "version": "0.3.1"}, {"name": "ternlang-ml", "downloads": 99, "version": "1.0.0"}, {"name": "ternlang-moe", "downloads": 86, "version": "1.0.0"}, {"name": "ternlang-runtime", "downloads": 93, "version": "1.0.0"}, {"name": "ternpkg", "downloads": 11, "version": "0.1.0"}], "openvsx_total": 556, "openvsx": [{"name": "ternlang", "downloads": 556, "version": "1.0.0"}, {"name": "ternlang-vscode", "downloads": 0, "version": "?"}], "gh_stars": 4, "gh_forks": 3, "gh_watchers": 4, "gh_clones_14d": 13788, "gh_clones_unique_14d": 2702, "gh_views_14d": 2221, "gh_views_unique_14d": 40, "gh_clone_series": [{"timestamp": "2026-04-03T00:00:00Z", "count": 658, "uniques": 191}, {"timestamp": "2026-04-04T00:00:00Z", "count": 607, "uniques": 129}, {"timestamp": "2026-04-05T00:00:00Z", "count": 779, "uniques": 199}, {"timestamp": "2026-04-06T00:00:00Z", "count": 23, "uniques": 19}, {"timestamp": "2026-04-07T00:00:00Z", "count": 980, "uniques": 178}, {"timestamp": "2026-04-08T00:00:00Z", "count": 1892, "uniques": 502}, {"timestamp": "2026-04-09T00:00:00Z", "count": 306, "uniques": 96}, {"timestamp": "2026-04-10T00:00:00Z", "count": 954, "uniques": 321}, {"timestamp": "2026-04-11T00:00:00Z", "count": 1113, "uniques": 338}, {"timestamp": "2026-04-12T00:00:00Z", "count": 1851, "uniques": 323}, {"timestamp": "2026-04-13T00:00:00Z", "count": 518, "uniques": 136}, {"timestamp": "2026-04-14T00:00:00Z", "count": 540, "uniques": 175}, {"timestamp": "2026-04-15T00:00:00Z", "count": 2136, "uniques": 500}, {"timestamp": "2026-04-16T00:00:00Z", "count": 1431, "uniques": 400}], "gh_views_series": [{"timestamp": "2026-04-03T00:00:00Z", "count": 164, "uniques": 3}, {"timestamp": "2026-04-04T00:00:00Z", "count": 182, "uniques": 8}, {"timestamp": "2026-04-05T00:00:00Z", "count": 298, "uniques": 5}, {"timestamp": "2026-04-06T00:00:00Z", "count": 32, "uniques": 3}, {"timestamp": "2026-04-07T00:00:00Z", "count": 290, "uniques": 1}, {"timestamp": "2026-04-08T00:00:00Z", "count": 320, "uniques": 4}, {"timestamp": "2026-04-09T00:00:00Z", "count": 167, "uniques": 2}, {"timestamp": "2026-04-10T00:00:00Z", "count": 224, "uniques": 6}, {"timestamp": "2026-04-11T00:00:00Z", "count": 34, "uniques": 2}, {"timestamp": "2026-04-12T00:00:00Z", "count": 25, "uniques": 2}, {"timestamp": "2026-04-13T00:00:00Z", "count": 116, "uniques": 7}, {"timestamp": "2026-04-14T00:00:00Z", "count": 188, "uniques": 9}, {"timestamp": "2026-04-15T00:00:00Z", "count": 72, "uniques": 7}, {"timestamp": "2026-04-16T00:00:00Z", "count": 109, "uniques": 1}], "smithery_tools": 30, "smithery_quality": 70, "smithery_calls_weekly": 80, "api_latency_ms": 1490, "fetch_duration_s": 4.3, "total_footprint": 17415.0, "gh_clones": 14915, "gh_views": 2416}, {"ts": "2026-04-18T23:55:49.728238+00:00", "total_footprint": 17825, "crates_total": 919, "crates": [{"name": "ternlang-cli", "downloads": 85, "version": "1.0.0"}, {"name": "ternlang-codegen", "downloads": 18, "version": "1.0.0"}, {"name": "ternlang-compat", "downloads": 79, "version": "1.0.0"}, {"name": "ternlang-core", "downloads": 176, "version": "1.0.0"}, {"name": "ternlang-hdl", "downloads": 98, "version": "1.0.0"}, {"name": "ternlang-lsp", "downloads": 83, "version": "1.0.0"}, {"name": "ternlang-mcp", "downloads": 35, "version": "1.0.0"}, {"name": "ternlang-ml", "downloads": 118, "version": "1.0.0"}, {"name": "ternlang-moe", "downloads": 101, "version": "1.0.0"}, {"name": "ternlang-runtime", "downloads": 107, "version": "1.0.0"}, {"name": "ternpkg", "downloads": 19, "version": "1.0.0"}], "openvsx_total": 612, "openvsx": [{"name": "ternlang", "downloads": 612, "version": "1.0.0"}], "gh_stars": 4, "gh_forks": 3, "gh_watchers": 4, "gh_clones_14d": 14136, "gh_clones_unique_14d": 2752, "gh_views_14d": 2154, "gh_views_unique_14d": 40, "gh_clone_series": [{"timestamp": "2026-04-04T00:00:00Z", "count": 607, "uniques": 129}, {"timestamp": "2026-04-05T00:00:00Z", "count": 779, "uniques": 199}, {"timestamp": "2026-04-06T00:00:00Z", "count": 23, "uniques": 19}, {"timestamp": "2026-04-07T00:00:00Z", "count": 980, "uniques": 178}, {"timestamp": "2026-04-08T00:00:00Z", "count": 1892, "uniques": 502}, {"timestamp": "2026-04-09T00:00:00Z", "count": 306, "uniques": 96}, {"timestamp": "2026-04-10T00:00:00Z", "count": 954, "uniques": 321}, {"timestamp": "2026-04-11T00:00:00Z", "count": 1113, "uniques": 338}, {"timestamp": "2026-04-12T00:00:00Z", "count": 1851, "uniques": 323}, {"timestamp": "2026-04-13T00:00:00Z", "count": 518, "uniques": 136}, {"timestamp": "2026-04-14T00:00:00Z", "count": 540, "uniques": 175}, {"timestamp": "2026-04-15T00:00:00Z", "count": 2136, "uniques": 500}, {"timestamp": "2026-04-16T00:00:00Z", "count": 1431, "uniques": 400}, {"timestamp": "2026-04-17T00:00:00Z", "count": 1006, "uniques": 312}], "gh_views_series": [{"timestamp": "2026-04-04T00:00:00Z", "count": 182, "uniques": 8}, {"timestamp": "2026-04-05T00:00:00Z", "count": 298, "uniques": 5}, {"timestamp": "2026-04-06T00:00:00Z", "count": 32, "uniques": 3}, {"timestamp": "2026-04-07T00:00:00Z", "count": 290, "uniques": 1}, {"timestamp": "2026-04-08T00:00:00Z", "count": 320, "uniques": 4}, {"timestamp": "2026-04-09T00:00:00Z", "count": 167, "uniques": 2}, {"timestamp": "2026-04-10T00:00:00Z", "count": 224, "uniques": 6}, {"timestamp": "2026-04-11T00:00:00Z", "count": 34, "uniques": 2}, {"timestamp": "2026-04-12T00:00:00Z", "count": 25, "uniques": 2}, {"timestamp": "2026-04-13T00:00:00Z", "count": 116, "uniques": 7}, {"timestamp": "2026-04-14T00:00:00Z", "count": 188, "uniques": 9}, {"timestamp": "2026-04-15T00:00:00Z", "count": 72, "uniques": 7}, {"timestamp": "2026-04-16T00:00:00Z", "count": 109, "uniques": 1}, {"timestamp": "2026-04-17T00:00:00Z", "count": 97, "uniques": 3}], "smithery_tools": 30, "smithery_quality": 70, "smithery_calls_weekly": 80, "api_latency_ms": 626, "fetch_duration_s": 4.3, "gh_clones": 16357, "gh_views": 2516}, {"ts": "2026-04-19T20:00:04.633708+00:00", "total_footprint": 18699, "crates_total": 922, "crates": [{"name": "ternlang-cli", "downloads": 85, "version": "1.0.0"}, {"name": "ternlang-codegen", "downloads": 19, "version": "1.0.0"}, {"name": "ternlang-compat", "downloads": 79, "version": "1.0.0"}, {"name": "ternlang-core", "downloads": 176, "version": "1.0.0"}, {"name": "ternlang-hdl", "downloads": 98, "version": "1.0.0"}, {"name": "ternlang-lsp", "downloads": 83, "version": "1.0.0"}, {"name": "ternlang-mcp", "downloads": 36, "version": "1.0.0"}, {"name": "ternlang-ml", "downloads": 118, "version": "1.0.0"}, {"name": "ternlang-moe", "downloads": 101, "version": "1.0.0"}, {"name": "ternlang-runtime", "downloads": 107, "version": "1.0.0"}, {"name": "ternpkg", "downloads": 20, "version": "1.0.0"}], "openvsx_total": 730, "openvsx": [{"name": "ternlang", "downloads": 730, "version": "1.0.1"}], "gh_stars": 4, "gh_forks": 4, "gh_watchers": 4, "gh_clones_14d": 14971, "gh_clones_unique_14d": 2957, "gh_views_14d": 2072, "gh_views_unique_14d": 40, "gh_clone_series": [{"timestamp": "2026-04-05T00:00:00Z", "count": 779, "uniques": 199}, {"timestamp": "2026-04-06T00:00:00Z", "count": 23, "uniques": 19}, {"timestamp": "2026-04-07T00:00:00Z", "count": 980, "uniques": 178}, {"timestamp": "2026-04-08T00:00:00Z", "count": 1892, "uniques": 502}, {"timestamp": "2026-04-09T00:00:00Z", "count": 306, "uniques": 96}, {"timestamp": "2026-04-10T00:00:00Z", "count": 954, "uniques": 321}, {"timestamp": "2026-04-11T00:00:00Z", "count": 1113, "uniques": 338}, {"timestamp": "2026-04-12T00:00:00Z", "count": 1851, "uniques": 323}, {"timestamp": "2026-04-13T00:00:00Z", "count": 518, "uniques": 136}, {"timestamp": "2026-04-14T00:00:00Z", "count": 540, "uniques": 175}, {"timestamp": "2026-04-15T00:00:00Z", "count": 2136, "uniques": 500}, {"timestamp": "2026-04-16T00:00:00Z", "count": 1431, "uniques": 400}, {"timestamp": "2026-04-17T00:00:00Z", "count": 1006, "uniques": 312}, {"timestamp": "2026-04-18T00:00:00Z", "count": 1442, "uniques": 406}], "gh_views_series": [{"timestamp": "2026-04-05T00:00:00Z", "count": 298, "uniques": 5}, {"timestamp": "2026-04-06T00:00:00Z", "count": 32, "uniques": 3}, {"timestamp": "2026-04-07T00:00:00Z", "count": 290, "uniques": 1}, {"timestamp": "2026-04-08T00:00:00Z", "count": 320, "uniques": 4}, {"timestamp": "2026-04-09T00:00:00Z", "count": 167, "uniques": 2}, {"timestamp": "2026-04-10T00:00:00Z", "count": 224, "uniques": 6}, {"timestamp": "2026-04-11T00:00:00Z", "count": 34, "uniques": 2}, {"timestamp": "2026-04-12T00:00:00Z", "count": 25, "uniques": 2}, {"timestamp": "2026-04-13T00:00:00Z", "count": 116, "uniques": 7}, {"timestamp": "2026-04-14T00:00:00Z", "count": 188, "uniques": 9}, {"timestamp": "2026-04-15T00:00:00Z", "count": 72, "uniques": 7}, {"timestamp": "2026-04-16T00:00:00Z", "count": 109, "uniques": 1}, {"timestamp": "2026-04-17T00:00:00Z", "count": 97, "uniques": 3}, {"timestamp": "2026-04-18T00:00:00Z", "count": 100, "uniques": 8}], "smithery_tools": 30, "smithery_quality": 70, "smithery_calls_weekly": 86, "api_latency_ms": 293, "fetch_duration_s": 3.4, "gh_clones": 16785, "gh_views": 2575}, {"ts": "2026-04-20T21:18:55.321069+00:00", "total_footprint": 27688, "crates_total": 931, "openvsx_total": 750, "gh_stars": 4, "gh_clones_14d": 14620, "gh_views_14d": 1833, "smithery_calls_weekly": "9.55k", "api_latency_ms": 289, "gh_clones": 17213, "gh_views": 2621}, {"ts": "2026-04-21T23:56:01.611981+00:00", "total_footprint": 28133, "crates_total": 931, "openvsx_total": 776, "gh_stars": 4, "gh_clones_14d": 15025, "gh_views_14d": 1847, "smithery_calls_weekly": "9.55k", "api_latency_ms": 378, "gh_clones": 17834, "gh_views": 2701}, {"ts": "2026-04-22T20:00:04.494987+00:00", "total_footprint": 27573, "crates_total": 940, "openvsx_total": 776, "gh_stars": 4, "gh_clones_14d": 14666, "gh_views_14d": 1637, "smithery_calls_weekly": "9.55k", "api_latency_ms": 281, "gh_clones": 19955, "gh_views": 2800}, {"ts": "2026-04-23T23:59:18.052583+00:00", "total_footprint": 27581, "crates_total": 940, "openvsx_total": 776, "gh_stars": 4, "gh_clones_14d": 14895, "gh_views_14d": 1416, "smithery_calls_weekly": "9.55k", "api_latency_ms": 324, "gh_clones": 22033, "gh_views": 2930}, {"ts": "2026-04-24T23:59:20.084712+00:00", "total_footprint": 36391, "crates_total": 1098, "openvsx_total": 776, "gh_stars": 4, "gh_clones": 23173, "gh_views": 3011, "smithery_calls_weekly": "9.55k", "api_latency_ms": 262}, {"ts": "2026-04-25T23:59:06.178511+00:00", "total_footprint": 38010, "crates_total": 1494, "openvsx_total": 778, "gh_stars": 4, "gh_clones": 25617, "gh_views": 3052, "smithery_calls_weekly": "9.55k", "api_latency_ms": 272}, {"ts": "2026-04-26T23:59:03.351142+00:00", "total_footprint": 64620, "raw_footprint": 38166, "crates_total": 1647, "openvsx_total": 780, "gh_stars": 5, "gh_clones": 27315, "gh_views": 3071, "smithery_calls_weekly": "9.55k", "api_latency_ms": 269}, {"ts": "2026-04-27T23:59:03.808425+00:00", "total_footprint": 73521, "raw_footprint": 43125, "crates_total": 1675, "openvsx_total": 798, "gh_stars": 6, "gh_clones": 27830, "gh_views": 3091, "smithery_calls_weekly": "10.26k", "api_latency_ms": 297}, {"ts": "2026-04-28T23:59:58.577490+00:00", "total_footprint": 75893, "raw_footprint": 44366, "crates_total": 1893, "openvsx_total": 844, "gh_stars": 8, "gh_clones": 28416, "gh_views": 3140, "smithery_calls_weekly": "10.70k", "api_latency_ms": 361}, {"ts": "2026-04-29T23:59:16.878870+00:00", "total_footprint": 80433, "raw_footprint": 45505, "crates_total": 3028, "openvsx_total": 844, "gh_stars": 12, "gh_clones": 29751, "gh_views": 3240, "smithery_calls_weekly": "10.70k", "api_latency_ms": 255}], "momentum": {"views": [0, 164.0, 182.0, 298.0, 32.0, 290.0, 320.0, 167.0, 224.0, 34.0, 25.0, 116.0, 188.0, 72.0, 109.0, 97.0, 100.0, 59.0, 46.0, 80.0, 99.0, 130.0, 81.0, 41.0, 19.0, 20.0, 49.0, 100.0], "clones": [0, 658.0, 607.0, 779.0, 23.0, 980.0, 1892.0, 306.0, 954.0, 1113.0, 1851.0, 518.0, 540.0, 2136.0, 1431.0, 1006.0, 1442.0, 428.0, 428.0, 621.0, 2121.0, 2078.0, 1140.0, 2444.0, 1698.0, 515.0, 586.0, 1335.0], "crates": [0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 153.0, 3.0, 9.0, 0.0, 9.0, 0.0, 158.0, 396.0, 153.0, 28.0, 218.0, 1135.0], "openvsx": [0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 56.0, 118.0, 20.0, 26.0, 0.0, 0.0, 0.0, 2.0, 2.0, 18.0, 46.0, 0.0], "smithery": [0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.0, 9464.0, 0, 0, 0, 0, 0, 0, 710, 440, 0]}, "macd": {"macd": [0.0, 172.66666666666697, 442.01111111111095, 818.8846296296297, 1045.6562623456794, 1420.7026148662553, 2095.925990175754, 2555.840317787737, 3018.3232868092673, 3481.993107112954, 4102.128720073251, 4502.879244495001, 4761.204443885974, 5277.209008693906, 5783.321675529267, 3748.8175197879427, 2349.2625678964832, 1463.209763570485, 1887.2184486395709, 2151.8334789798246, 2186.7721327349936, 2137.523186584691, 3062.0939320341677, 3749.8784521751913, 7176.442441861014, 10202.944287094768, 12106.80567692688, 13470.422057753523], "signal": [0.0, 57.55555555555566, 185.7074074074074, 396.7664814814815, 613.0630751028807, 882.2762550240055, 1286.826166741255, 1709.830883756749, 2145.9950181075883, 2591.32771444271, 3094.9280496528904, 3564.245114600261, 3963.2315576954984, 4401.224041361635, 4861.923252750846, 4490.888008429878, 3777.0128615854132, 3005.745162247104, 2632.9029243779264, 2472.546442578559, 2377.2883392973704, 2297.366621726477, 2552.275725162374, 2951.4766341666464, 4359.798570064769, 6307.513809074768, 8240.611098358806, 9983.881418157045], "hist": [0.0, 115.11111111111131, 256.30370370370355, 422.1181481481482, 432.59318724279865, 538.4263598422498, 809.0998234344991, 846.0094340309881, 872.328268701679, 890.6653926702438, 1007.2006704203609, 938.6341298947405, 797.9728861904755, 875.9849673322715, 921.3984227784213, -742.0704886419353, -1427.75029368893, -1542.535398676619, -745.6844757383556, -320.7129635987344, -190.51620656237674, -159.84343514178636, 509.8182068717938, 798.401818008545, 2816.6438717962455, 3895.43047802, 3866.1945785680746, 3486.5406395964783]}, "crates_list": [{"name": "albert-api", "downloads": 274, "recent": 274, "version": "1.2.9", "updated": "2026-04-30T18:14:15.215877Z"}, {"name": "albert-cli", "downloads": 167, "recent": 167, "version": "1.2.9", "updated": "2026-04-30T18:42:13.469079Z"}, {"name": "albert-commands", "downloads": 238, "recent": 238, "version": "1.2.9", "updated": "2026-04-30T18:14:19.720723Z"}, {"name": "albert-compat", "downloads": 198, "recent": 198, "version": "1.2.9", "updated": "2026-04-30T18:42:05.267604Z"}, {"name": "albert-runtime", "downloads": 328, "recent": 328, "version": "1.2.9", "updated": "2026-04-30T18:14:06.322418Z"}, {"name": "albert-tools", "downloads": 229, "recent": 229, "version": "1.2.9", "updated": "2026-04-30T18:41:59.223354Z"}, {"name": "pytern", "downloads": 11, "recent": 11, "version": "1.2.9", "updated": "2026-04-30T18:45:48.517838Z"}, {"name": "ternaudit-guard", "downloads": 10, "recent": 10, "version": "1.2.9", "updated": "2026-04-30T18:45:54.187764Z"}, {"name": "ternlang-cli", "downloads": 168, "recent": 168, "version": "1.2.9", "updated": "2026-04-30T18:40:21.605997Z"}, {"name": "ternlang-codegen", "downloads": 97, "recent": 97, "version": "1.2.9", "updated": "2026-04-30T18:39:25.582728Z"}, {"name": "ternlang-compat", "downloads": 158, "recent": 158, "version": "1.2.9", "updated": "2026-04-30T18:40:11.667454Z"}, {"name": "ternlang-compress", "downloads": 77, "recent": 77, "version": "1.2.9", "updated": "2026-04-30T18:39:36.487825Z"}, {"name": "ternlang-core", "downloads": 454, "recent": 454, "version": "1.2.9", "updated": "2026-04-30T18:39:14.552481Z"}, {"name": "ternlang-hdl", "downloads": 203, "recent": 203, "version": "1.2.9", "updated": "2026-04-30T18:40:01.492332Z"}, {"name": "ternlang-lsp", "downloads": 173, "recent": 173, "version": "1.2.9", "updated": "2026-04-30T18:40:15.434562Z"}, {"name": "ternlang-mcp", "downloads": 127, "recent": 127, "version": "1.2.9", "updated": "2026-04-30T18:40:37.642375Z"}, {"name": "ternlang-ml", "downloads": 307, "recent": 307, "version": "1.2.9", "updated": "2026-04-30T18:39:20.302024Z"}, {"name": "ternlang-moe", "downloads": 211, "recent": 211, "version": "1.2.9", "updated": "2026-04-30T18:39:45.499807Z"}, {"name": "ternlang-runtime", "downloads": 212, "recent": 212, "version": "1.2.9", "updated": "2026-04-30T18:39:31.002727Z"}, {"name": "ternlang-ruvector", "downloads": 65, "recent": 65, "version": "1.2.9", "updated": "2026-04-30T18:39:52.434230Z"}, {"name": "ternlang-test", "downloads": 80, "recent": 80, "version": "1.2.9", "updated": "2026-04-30T18:39:57.769228Z"}, {"name": "ternpkg", "downloads": 99, "recent": 99, "version": "1.2.9", "updated": "2026-04-30T18:40:06.508825Z"}], "all_traffic": {"2026-04-02": {"clones": 121, "clones_unique": 74, "views": 98, "views_unique": 1}, "2026-04-03": {"clones": 658, "clones_unique": 191, "views": 164, "views_unique": 3}, "2026-04-04": {"clones": 607, "clones_unique": 129, "views": 182, "views_unique": 8}, "2026-04-05": {"clones": 779, "clones_unique": 199, "views": 298, "views_unique": 5}, "2026-04-06": {"clones": 23, "clones_unique": 19, "views": 32, "views_unique": 3}, "2026-04-07": {"clones": 980, "clones_unique": 178, "views": 290, "views_unique": 1}, "2026-04-08": {"clones": 1892, "clones_unique": 502, "views": 320, "views_unique": 4}, "2026-04-09": {"clones": 306, "clones_unique": 96, "views": 167, "views_unique": 2}, "2026-04-10": {"clones": 954, "clones_unique": 321, "views": 224, "views_unique": 6}, "2026-04-11": {"clones": 1113, "clones_unique": 338, "views": 34, "views_unique": 2}, "2026-04-12": {"clones": 1851, "clones_unique": 323, "views": 25, "views_unique": 2}, "2026-04-13": {"clones": 518, "clones_unique": 136, "views": 116, "views_unique": 7}, "2026-04-14": {"clones": 540, "clones_unique": 175, "views": 188, "views_unique": 9}, "2026-04-15": {"clones": 2136, "clones_unique": 500, "views": 72, "views_unique": 7}, "2026-04-16": {"clones": 1431, "clones_unique": 400, "views": 109, "views_unique": 1}, "2026-04-17": {"clones": 1006, "clones_unique": 312, "views": 97, "views_unique": 3}, "2026-04-18": {"clones": 1442, "clones_unique": 406, "views": 100, "views_unique": 8}, "2026-04-19": {"clones": 428, "clones_unique": 156, "views": 59, "views_unique": 2}, "2026-04-20": {"clones": 428, "views": 46, "clones_unique": 152, "views_unique": 2}, "2026-04-21": {"clones": 621, "views": 80, "clones_unique": 180, "views_unique": 3}, "2026-04-22": {"clones": 2121, "views": 99, "clones_unique": 550, "views_unique": 2}, "2026-04-23": {"clones": 2078, "views": 130, "clones_unique": 444, "views_unique": 4}, "2026-04-24": {"clones": 1140, "views": 81, "clones_unique": 316, "views_unique": 3}, "2026-04-25": {"clones": 2444, "clones_unique": 324, "views": 41, "views_unique": 8}, "2026-04-26": {"clones": 1698, "clones_unique": 425, "views": 19, "views_unique": 5}, "2026-04-27": {"clones": 515, "clones_unique": 172, "views": 20, "views_unique": 13}, "2026-04-28": {"clones": 586, "clones_unique": 200, "views": 49, "views_unique": 26}, "2026-04-29": {"clones": 1335, "clones_unique": 320, "views": 100, "views_unique": 80}}, "top_referrers": [{"referrer": "github.com", "count": 46, "uniques": 11}, {"referrer": "ternlang-api.fly.dev", "count": 32, "uniques": 1}, {"referrer": "news.ycombinator.com", "count": 31, "uniques": 28}, {"referrer": "linkedin.com", "count": 27, "uniques": 22}, {"referrer": "com.linkedin.android", "count": 18, "uniques": 9}, {"referrer": "lnkd.in", "count": 11, "uniques": 10}, {"referrer": "Google", "count": 7, "uniques": 4}, {"referrer": "crates.io", "count": 4, "uniques": 1}, {"referrer": "kagi.com", "count": 2, "uniques": 2}, {"referrer": "hackernewz.com", "count": 1, "uniques": 1}], "top_paths": [{"path": "/eriirfos-eng/ternary-intelligence-stack", "title": "Overview", "count": 296, "uniques": 72}, {"path": "/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli", "title": "/tree/main/agent_albert_cli", "count": 105, "uniques": 61}, {"path": "/eriirfos-eng/ternary-intelligence-stack/actions", "title": "/actions", "count": 72, "uniques": 2}, {"path": "/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md", "title": "/blob/main/ternlang-root/README.md", "count": 36, "uniques": 4}, {"path": "/eriirfos-eng/ternary-intelligence-stack/pulse", "title": "/pulse", "count": 36, "uniques": 2}, {"path": "/eriirfos-eng/ternary-intelligence-stack/graphs/traffic", "title": "/graphs/traffic", "count": 31, "uniques": 1}, {"path": "/eriirfos-eng/ternary-intelligence-stack/tree/main", "title": "/tree/main", "count": 28, "uniques": 3}, {"path": "/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-studio", "title": "/tree/main/ternlang-root/ternlang-studio", "count": 26, "uniques": 1}, {"path": "/eriirfos-eng/ternary-intelligence-stack/edit/main/ternlang-root/README.md", "title": "/edit/main/ternlang-root/README.md", "count": 17, "uniques": 1}, {"path": "/eriirfos-eng/ternary-intelligence-stack/blob/main/agent_albert_cli/README.md", "title": "/blob/main/agent_albert_cli/README.md", "count": 13, "uniques": 1}], "updated_at": "2026-05-01 08:38:18"};
+(function() { if (localStorage.getItem('tis-theme')==='light') document.body.classList.add('light'); initCharts(latest_data_js); })();
+</script></body></html>

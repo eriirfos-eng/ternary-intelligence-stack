@@ -573,8 +573,16 @@ static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templ
 static PLAYGROUND_HTML: &str = include_str!("../../playground/index.html");
 static KPI_HTML:        &str = include_str!("kpi.html");
 
-async fn kpi_page() -> Html<&'static str> {
-    Html(KPI_HTML)
+async fn kpi_page() -> impl axum::response::IntoResponse {
+    let dynamic = if std::path::Path::new("/data/kpi/index.html").exists() {
+        tokio::fs::read_to_string("/data/kpi/index.html").await.ok()
+    } else {
+        None
+    };
+    match dynamic {
+        Some(html) => Html(html).into_response(),
+        None => Html(KPI_HTML).into_response(),
+    }
 }
 
 async fn kpi_data(axum::extract::Path(filename): axum::extract::Path<String>) -> impl axum::response::IntoResponse {
@@ -4470,7 +4478,7 @@ pub struct TaasInferRequest {
 #[derive(Debug, Serialize)]
 pub struct TaasInferResponse {
     pub status: i8,            // 1=Affirm, 0=Deliberate, -1=Veto
-    pub optimization: String,  // e.g., "122x Sparse Bypass Active"
+    pub optimization: String,  // e.g., "@sparseskip Logic Active"
     pub audit_log: String,     // Summary of MoE-13 deliberation
     pub result: Option<Vec<i8>>, // Resultant TritMatrix data
     pub skipped: Option<usize>, // Number of zero-weight multiplications skipped
