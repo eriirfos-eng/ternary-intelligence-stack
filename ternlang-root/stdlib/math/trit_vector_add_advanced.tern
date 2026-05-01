@@ -1,0 +1,40 @@
+/*
+ * Advanced Trit Vector Addition
+ * Element-wise addition of two trit tensors using consensus as the ternary addition analog.
+ */
+
+fn vector_add_consensus(a: trit[], b: trit[], res: trit[]) -> trit {
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        res[i] = consensus(a[i], b[i]);
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let v1: trit[5];
+    let v2: trit[5];
+    let res: trit[5];
+    
+    // v1 = [1, 0, -1, 1, 0]
+    v1[0] = 1; v1[1] = 0; v1[2] = -1; v1[3] = 1; v1[4] = 0;
+    
+    // v2 = [0, 1, -1, -1, 1]
+    v2[0] = 0; v2[1] = 1; v2[2] = -1; v2[3] = -1; v2[4] = 1;
+    
+    println("Advanced Trit Vector Addition (Consensus) Demo");
+    vector_add_consensus(v1, v2, res);
+    
+    println("Resulting Vector:");
+    let k: int = 0;
+    while k < 5 { println(res[k]); k = k + 1; }
+    
+    if res[0] == 1 && res[1] == 1 && res[2] == -1 && res[3] == 0 && res[4] == 1 {
+        println("Consensus addition verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
