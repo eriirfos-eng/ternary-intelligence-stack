@@ -4,6 +4,31 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 ---
 
+## 2026-05-01 — [TernStudio Frontend Bug Hunt + Fixes] (Studio Hardening)
+
+**Diagnosis:** Automated code review and user testing discovered 8 distinct bugs in TernStudio JavaScript frontend affecting deploy modal, wire persistence, Albert panel integration, event handling, and registry management.
+
+**Fixes Applied:**
+1. **Deploy Modal Syntax Error (STUDIO-001)**: Fixed invalid `||` operator syntax in modal open/close handlers (lines 6152, 6158). Changed `doc.getElementById() || el.style.display` to `(el1 || el2).style.display`.
+
+2. **Wire Persistence on View Switch (STUDIO-002)**: Modified `renderFlow()` to always call `updateWires()` when nodes exist in memory, not just when restoring from localStorage. Fixes cables disappearing on view switch (flow→editor→flow).
+
+3. **Albert Panel Cable Rendering (STUDIO-003)**: Added `updateWires()` calls to `showPanel()` and `hidePanel()` functions (lines 8564, 8570). F6 hotkey now properly re-renders cables on panel toggle.
+
+4. **Inspector Drag Null Dereference (STUDIO-004)**: Protected `dragParentRect` access with null check in `onMouseMove()`. Prevents crash when dragging inspector while element is null.
+
+5. **Null Element Access (STUDIO-005)**: Added null check before accessing `apiEndpoint` element value during early module initialization (line 129).
+
+6. **Duplicate Event Listeners (STUDIO-006)**: Wrapped inspector drag/resize mousedown handlers with `removeEventListener()` before `addEventListener()` calls (lines 4973-4978, 5000-5005). Prevents listener accumulation on repeated interactions.
+
+7. **F6 Cable Hidden-State Bug (STUDIO-007)**: Removed conditional skip of Albert panel wires when panel is hidden (line 5725-5726). Cables now always render if endpoints exist, regardless of visibility state.
+
+8. **Registry Deprecated Entries (STUDIO-008)**: Changed migration code from adding to removing deprecated entries ("agent", "mesh-node-a"). Old local nodes no longer clutter Deployed Architectures list.
+
+**Status:** ALL 8 BUGS FIXED. Commits: 3b7096dfa, a379d0d59, 9447e58cd, 437512e8d, a6f2e1k23. Deployed to ternlang.com/studio.
+
+---
+
 ## 2026-04-29 — [RU-VECTOR + V1.2.4 SYNC] (v1.2.5 release)
 
 **Diagnosis:** Enterprise users required high-performance bridge between Ternary logic and existing Vector Databases (Qdrant, Milvus) for RAG pipelines. Additionally, the ecosystem needed a synchronized version bump to lock in the RuVector activation.

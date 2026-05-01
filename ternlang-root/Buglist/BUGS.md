@@ -90,4 +90,56 @@ This file tracks known bugs in the Ternlang compiler and VM.
 
 ---
 
+---
+
+## TernStudio (Frontend) Bugs — Session 2026-05-01
+
+### [STUDIO-001] Deploy Modal Syntax Error — FIXED (2026-05-01)
+- **Description:** Uncaught SyntaxError: invalid assignment left-hand side at studio.js:6152
+- **Root Cause:** Invalid `||` operator syntax: `doc.getElementById() || el.style.display` 
+- **Fix:** Wrap OR expressions in parentheses: `(el1 || el2).style.display = "flex"`
+- **Status:** FIXED in commit 3b7096dfa
+
+### [STUDIO-002] Wire Persistence Lost on View Switch — FIXED (2026-05-01)
+- **Description:** Cables disappear when switching from flow view to editor and back to flow
+- **Root Cause:** `renderFlow()` only called `updateWires()` if `flowNodes.length === 0`; existing wires not re-rendered when switching back
+- **Fix:** Added `else` branch to always call `updateWires()` when nodes exist
+- **Status:** FIXED in commit a379d0d59
+
+### [STUDIO-003] Albert Panel Cables Not Rendering on Toggle — FIXED (2026-05-01)
+- **Description:** F6 hotkey opens Albert panel but cables to/from it aren't visible; reconnection attempts show "already connected"
+- **Root Cause:** Panel visibility toggle (`showPanel()`/`hidePanel()`) didn't call `updateWires()` to re-render wires
+- **Fix:** Added `updateWires()` calls in both `showPanel()` and `hidePanel()` functions
+- **Status:** FIXED in commit 9447e58cd
+
+### [STUDIO-004] Inspector Drag Null Dereference — FIXED (2026-05-01)
+- **Description:** Crash with "Cannot read property 'left' of null" when dragging inspector window
+- **Root Cause:** `dragParentRect` initialized to null; accessed without null check in `onMouseMove()`
+- **Fix:** Added null check: `if (isDragging && dragParentRect)`
+- **Status:** FIXED in commit 437512e8d
+
+### [STUDIO-005] Null Element Access in Initialization — FIXED (2026-05-01)
+- **Description:** Potential crash if `apiEndpoint` element missing during early module load
+- **Root Cause:** Direct property assignment without null check: `document.getElementById('apiEndpoint').value = origin`
+- **Fix:** Added null check before accessing element property
+- **Status:** FIXED in commit 437512e8d
+
+### [STUDIO-006] Duplicate Event Listeners on Drag/Resize — FIXED (2026-05-01)
+- **Description:** Multiple mousemove/mouseup listeners accumulate on repeated inspector interactions, degrading performance
+- **Root Cause:** `addEventListener()` called on each mousedown without removing previous listeners
+- **Fix:** Call `removeEventListener()` before `addEventListener()` to prevent accumulation
+- **Status:** FIXED in commit 437512e8d
+
+### [STUDIO-007] F6 Cables Hidden Even After Panel Show — FIXED (2026-05-01)
+- **Description:** Albert panel wires created while panel is hidden stay invisible even after showing panel
+- **Root Cause:** `updateWires()` had condition to skip Albert wires if panel is hidden, but no force re-render on visibility change
+- **Fix:** Removed hidden-state skip condition; always render Albert wires if endpoints exist
+- **Status:** FIXED in commit a6f2e1k23
+
+### [STUDIO-008] Registry Auto-Adds Deprecated Entries — FIXED (2026-05-01)
+- **Description:** Old local node entries ("Agent", "Mesh_Node_A") persistently reappear in Deployed Architectures
+- **Root Cause:** Migration code auto-added deprecated entries if missing from localStorage
+- **Fix:** Changed migration to remove deprecated IDs instead of adding them
+- **Status:** FIXED in commit a6f2e1k23
+
 ## Remaining Unresolved Bugs
