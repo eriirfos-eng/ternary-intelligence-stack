@@ -126,69 +126,6 @@ cd ternary-intelligence-stack/ternlang-root
 cargo build --release
 ./target/release/ternlang my_program.tern   # or: ./target/release/ternlang run ...
 ```
-
----
-
-## Jupyter Kernel
-
-[![PyPI](https://img.shields.io/pypi/v/ternlang-jupyter?color=blue&logo=python&logoColor=white)](https://pypi.org/project/ternlang-jupyter/)
-
-Run `.tern` programs directly in Jupyter notebooks — JupyterLab, Jupyter Notebook, VS Code notebooks, or any environment that speaks the Jupyter protocol.
-
-```bash
-pip install ternlang-jupyter
-ternlang-jupyter-install
-```
-
-Then select **Ternlang (BET VM)** from the kernel menu. Each cell is a complete `.tern` program:
-
-```ternlang
-fn main() -> trit {
-    print("uncertainty quantification, natively");
-    let confidence: trit = hold;   // 0 — insufficient evidence
-    return confidence;
-}
-```
-
-Output streams `print()` calls live and renders a color-coded result block:
-- **AFFIRM +1** — green
-- **HOLD 0** — amber
-- **REJECT −1** — red
-
-Includes tab completion, hover docs for all builtins, and `%version` / `%help` magic commands.
-
----
-
-## VS Code Extension
-
-[![Open VSX](https://img.shields.io/badge/Open%20VSX-rfi--irfos.ternlang%20v0.4.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
-
-Install from the [Open VSX Registry](https://open-vsx.org/extension/rfi-irfos/ternlang) (works in VS Code, VSCodium, Gitpod, and any Open VSX-compatible editor):
-
-```
-ext install rfi-irfos.ternlang
-```
-
-Or install the VSIX directly:
-
-```bash
-code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
-```
-
-**What you get:**
-
-| Feature | Details |
-|---------|---------|
-| Syntax highlighting | All keywords, types, trit literals (`affirm`/`tend`/`reject`), operators (`&&` `\|\|` `<=` `>=`), `@sparseskip` directive |
-| `.tern` file association | Opens as Ternlang automatically |
-| LSP diagnostics | Hover, completions, and error underlining via `ternlang-lsp` |
-| Inline trit value hints | Ghost decorations on `let` bindings show current trit state while editing |
-| Language configuration | Auto-close brackets/braces, comment toggle (`Ctrl+/`) |
-
-**LSP setup** — the language server binary is bundled inside the extension and auto-downloaded on install. No manual build step is required. Diagnostics activate automatically when you open any `.tern` file.
-
-> **Published on Open VSX** — multiple downloads live. Works in VS Code, VSCodium, Cursor, and any Open VSX-compatible editor.
-
 ---
 ## Albert-MoE-13 — The Intelligence Layer
 
@@ -584,6 +521,67 @@ For local stdio transport (Claude Desktop, offline use):
   }
 }
 ```
+---
+
+## Jupyter Kernel
+
+[![PyPI](https://img.shields.io/pypi/v/ternlang-jupyter?color=blue&logo=python&logoColor=white)](https://pypi.org/project/ternlang-jupyter/)
+
+Run `.tern` programs directly in Jupyter notebooks — JupyterLab, Jupyter Notebook, VS Code notebooks, or any environment that speaks the Jupyter protocol.
+
+```bash
+pip install ternlang-jupyter
+ternlang-jupyter-install
+```
+
+Then select **Ternlang (BET VM)** from the kernel menu. Each cell is a complete `.tern` program:
+
+```ternlang
+fn main() -> trit {
+    print("uncertainty quantification, natively");
+    let confidence: trit = hold;   // 0 — insufficient evidence
+    return confidence;
+}
+```
+
+Output streams `print()` calls live and renders a color-coded result block:
+- **AFFIRM +1** — green
+- **HOLD 0** — amber
+- **REJECT −1** — red
+
+Includes tab completion, hover docs for all builtins, and `%version` / `%help` magic commands.
+
+---
+
+## VS Code Extension
+
+[![Open VSX](https://img.shields.io/badge/Open%20VSX-rfi--irfos.ternlang%20v0.4.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
+
+Install from the [Open VSX Registry](https://open-vsx.org/extension/rfi-irfos/ternlang) (works in VS Code, VSCodium, Gitpod, and any Open VSX-compatible editor):
+
+```
+ext install rfi-irfos.ternlang
+```
+
+Or install the VSIX directly:
+
+```bash
+code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
+```
+
+**What you get:**
+
+| Feature | Details |
+|---------|---------|
+| Syntax highlighting | All keywords, types, trit literals (`affirm`/`tend`/`reject`), operators (`&&` `\|\|` `<=` `>=`), `@sparseskip` directive |
+| `.tern` file association | Opens as Ternlang automatically |
+| LSP diagnostics | Hover, completions, and error underlining via `ternlang-lsp` |
+| Inline trit value hints | Ghost decorations on `let` bindings show current trit state while editing |
+| Language configuration | Auto-close brackets/braces, comment toggle (`Ctrl+/`) |
+
+**LSP setup** — the language server binary is bundled inside the extension and auto-downloaded on install. No manual build step is required. Diagnostics activate automatically when you open any `.tern` file.
+
+> **Published on Open VSX** — multiple downloads live. Works in VS Code, VSCodium, Cursor, and any Open VSX-compatible editor.
 
 ---
 
@@ -643,7 +641,7 @@ For local stdio transport (Claude Desktop, offline use):
 | [`ternlang-gfx`](ternlang-gfx/) | BSL-1.1 | **T-GPU**: Triadic Graphics Pipeline (Depth-as-a-Trit) |
 | [`ternlang-contract`](ternlang-contract/) | BSL-1.1 | **T-Contract**: Triadic Smart Contracts (Arbitration State) |
 
-**88+ probe tests passing · v1.2.1**
+**99+ probe tests passing · v1.2.9**
 
 ---
 
@@ -712,7 +710,8 @@ For local stdio transport (Claude Desktop, offline use):
 
 ---
 
-## Standard Library Access
+## Licensing Tiers
+### Standard Library Access
 
 The Ternlang stdlib is split across two repositories to protect proprietary IP:
 
@@ -725,10 +724,6 @@ The open-core stdlib includes: `core/`, `ternary/`, `std/`, `showcase/`, `bughun
 
 The premium repo includes all paid-tier directories: `agents/`, `ml/`, `nn/`, `nlp/`, `finance/`, `bio/`, `crypto/`, `security/`, `math/`, `logic/`, `vision/`, `stats/`, `physics/`, `qnn/`, and 40+ more.
 
-
----
-
-## Licensing Tiers
 
 ### Tier 2 — Pro Standard
 For developers and startups building AI agents. **All 30 MCP tools are free** for every tier. Tier 2 adds: REST API (10,000 calls/month), server-side persistent 3-layer memory, SSE streaming, and production SLA. **€99/month** · [Subscribe](https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608)
