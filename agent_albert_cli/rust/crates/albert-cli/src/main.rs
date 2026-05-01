@@ -97,6 +97,29 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             if !config_path.exists() {
                 init::wake_sequence();
             }
+
+            // Check for updates at startup with a 3-second timeout
+            if let Ok(async_rt) = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+            {
+                let check_future = async {
+                    let client = api::TernlangClient::from_auth(api::AuthSource::None);
+                    client.check_for_updates().await
+                };
+
+                if let Ok(update_result) = async_rt.block_on(tokio::time::timeout(
+                    Duration::from_secs(3),
+                    check_future,
+                )) {
+                    if let Ok(Some(version)) = update_result {
+                        if version != VERSION {
+                            println!("Update available: albert-cli v{version} (current: v{VERSION}). Run /upgrade after launch to update.");
+                        }
+                    }
+                }
+            }
+
             run_tui(model, allowed_tools, permission_mode)
         },
         CliAction::Help => {
@@ -862,23 +885,6 @@ fn run_resume_command(
             session: session.clone(),
             message: Some(render_repl_help()),
         }),
-        SlashCommand::Compact => {
-            let result = runtime::compact_session(
-                session,
-                CompactionConfig {
-                    max_estimated_tokens: 0,
-                    ..CompactionConfig::default()
-                },
-            );
-            let removed = result.removed_message_count;
-            let kept = result.compacted_session.messages.len();
-            let skipped = removed == 0;
-            result.compacted_session.save_to_path(session_path)?;
-            Ok(ResumeCommandOutcome {
-                session: result.compacted_session,
-                message: Some(format_compact_report(removed, kept, skipped)),
-            })
-        }
         SlashCommand::Clear { confirm } => {
             if !confirm {
                 return Ok(ResumeCommandOutcome {
@@ -1355,13 +1361,7 @@ fn run_tui(
                     println!("{}", render_repl_help());
                     true
                 }
-                // /compact and /compress — run inline and push result as a system note
-                commands::SlashCommand::Compact => {
-                    let msg = cli.compact_inline()?;
-                    let mut st = tui_state.lock().unwrap();
-                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
-                    true
-                }
+                // /compress — compress session history to ~40-50k tokens
                 commands::SlashCommand::Compress => {
                     let msg = cli.compress_inline()?;
                     let mut st = tui_state.lock().unwrap();
@@ -1680,14 +1680,14 @@ fn run_tui(
                 state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
             }
             Ok(Ok(ref summary)) => {
-                // Auto-compact when the session grows large to prevent TUI freeze and API rejection
+                // Auto-compress when the session grows large to prevent TUI freeze and API rejection
                 let tokens = summary.usage.input_tokens;
                 if tokens > 150_000 {
-                    let compact_result = cli.runtime.compact(runtime::CompactionConfig::default());
-                    let removed = compact_result.removed_message_count;
+                    let compress_result = cli.runtime.compact(runtime::CompactionConfig::default());
+                    let removed = compress_result.removed_message_count;
                     if removed > 0 {
                         match build_runtime_with_mcp(
-                            compact_result.compacted_session,
+                            compress_result.compacted_session,
                             cli.model.clone(),
                             cli.system_prompt.clone(),
                             true,
@@ -1702,10 +1702,10 @@ fn run_tui(
                                 st.tokens_in = 0;
                                 st.tokens_out = 0;
                                 st.push_exec(tui::ExecBlock::SystemMsg(format!(
-                                    "auto-compacted: removed {removed} messages to free context space"
+                                    "auto-compressed: removed {removed} messages to free context space"
                                 )));
                             }
-                            Err(e) => eprintln!("auto-compact rebuild: {e}"),
+                            Err(e) => eprintln!("auto-compress rebuild: {e}"),
                         }
                     }
                 }
@@ -2264,10 +2264,6 @@ impl LiveCli {
             }
             SlashCommand::Settings => {
                 println!("Settings: Interactive configuration menu coming soon.");
-                false
-            }
-            SlashCommand::Compact => {
-                self.compact()?;
                 false
             }
             SlashCommand::Compress => {
@@ -2836,31 +2832,6 @@ User: {}\n\nAssistant: {}",
         }
     }
 
-    fn compact(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let msg = self.compact_inline()?;
-        println!("{msg}");
-        Ok(())
-    }
-
-    fn compact_inline(&mut self) -> Result<String, Box<dyn std::error::Error>> {
-        let result = self.runtime.compact(CompactionConfig::default());
-        let removed = result.removed_message_count;
-        let kept = result.compacted_session.messages.len();
-        let skipped = removed == 0;
-        self.runtime = build_runtime_with_mcp(
-            result.compacted_session,
-            self.model.clone(),
-            self.system_prompt.clone(),
-            true,
-            self.allowed_tools.clone(),
-            self.permission_mode,
-            Arc::clone(&self.mcp_manager),
-            self.event_tx.clone(),
-        )?;
-        self.persist_session()?;
-        Ok(format_compact_report(removed, kept, skipped))
-    }
-
     fn compress(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let msg = self.compress_inline()?;
         println!("{msg}");
@@ -2869,7 +2840,7 @@ User: {}\n\nAssistant: {}",
 
     fn compress_inline(&mut self) -> Result<String, Box<dyn std::error::Error>> {
         let result = self.runtime.compact(CompactionConfig {
-            preserve_recent_messages: 2,
+            preserve_recent_messages: 4,
             max_estimated_tokens: 1,
         });
         let removed = result.removed_message_count;
