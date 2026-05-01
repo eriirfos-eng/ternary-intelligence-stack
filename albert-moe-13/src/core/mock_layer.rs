@@ -62,7 +62,7 @@ impl TernaryLayer {
 
 pub fn convert_to_ternary(layer: &LinearLayer, threshold: f32) -> TernaryLayer {
     let mapper = TernaryMapper::new(threshold);
-    let (t_weights, alpha) = mapper.ternarize(&layer.weights);
+    let (t_weights, alpha) = mapper.ternarize(&layer.weights, threshold);
 
     TernaryLayer {
         weights: t_weights,
@@ -120,5 +120,56 @@ pub fn run_layer_comparison() {
     println!("Mean Squared Error (MSE): {:.6}", mse);
     println!("Sparsity (Compression): {:.1}%", compression);
     println!("Alpha (Scale): {:.4}", ternary_layer.alpha);
+    println!();
+}
+
+pub fn run_threshold_sweep() {
+    let input_dim = 16;
+    let output_dim = 16;
+    
+    // Generate deterministic mock weights for sweep
+    let mut weights = Vec::with_capacity(input_dim * output_dim);
+    for i in 0..(input_dim * output_dim) {
+        let val = (i as f32 * 0.1).sin() * (i as f32 * 0.2).cos();
+        weights.push(val);
+    }
+    
+    let bias = vec![0.0; output_dim];
+    let mut input = Vec::with_capacity(input_dim);
+    for i in 0..input_dim {
+        input.push((i as f32 * 0.5).cos());
+    }
+
+    let float_layer = LinearLayer {
+        weights,
+        bias,
+        input_dim,
+        output_dim,
+    };
+
+    let thresholds = vec![0.05, 0.1, 0.2, 0.3, 0.5];
+    let float_out = float_layer.forward(&input);
+
+    println!("\n[ALBERT::SWEEP]");
+    println!("{:<10} | {:<10} | {:<10}", "Threshold", "Sparsity", "MSE");
+    println!("--------------------------------");
+
+    let mut csv_data = String::from("threshold,sparsity,mse\n");
+
+    for &t in &thresholds {
+        let ternary_layer = convert_to_ternary(&float_layer, t);
+        let ternary_out = ternary_layer.forward_ternary(&input);
+        let mse = compute_mse(&float_out, &ternary_out);
+        let zero_count = ternary_layer.weights.iter().filter(|&&w| w == 0).count();
+        let sparsity = (zero_count as f32 / ternary_layer.weights.len() as f32) * 100.0;
+
+        println!("{:<10.2} | {:<10.1}% | {:<10.6}", t, sparsity, mse);
+        csv_data.push_str(&format!("{:.2},{:.2},{:.6}\n", t, sparsity, mse));
+    }
+
+    // Save results to docs (optional/best-effort)
+    let _ = std::fs::create_dir_all("docs");
+    let _ = std::fs::write("docs/ternary_sweep.csv", csv_data);
+    println!("\nResults saved to docs/ternary_sweep.csv");
     println!();
 }
