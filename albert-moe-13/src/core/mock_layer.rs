@@ -96,11 +96,31 @@ pub fn baseline_error(layer: &LinearLayer, input: &[f32]) -> f32 {
     compute_mse(&out1, &out2)
 }
 
-struct SweepResult {
-    threshold: f32,
-    sparsity: f32,
-    mse: f32,
-    nmse: f32,
+#[derive(Clone, Copy, Debug)]
+pub struct SweepResult {
+    pub threshold: f32,
+    pub sparsity: f32,
+    pub mse: f32,
+    pub nmse: f32,
+}
+
+pub fn find_optimal_threshold(results: &[SweepResult], lambda: f32) -> SweepResult {
+    results.iter()
+        .map(|res| {
+            // Score = Sparsity (0.0 to 100.0) - Lambda * NMSE (scaled to comparable range)
+            let score = res.sparsity - (lambda * res.nmse * 100.0);
+            (res, score)
+        })
+        .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+        .map(|(res, _score)| *res)
+        .expect("Sweep results cannot be empty")
+}
+
+pub fn adaptive_ternarize(layer: &LinearLayer, inputs: &[Vec<f32>]) -> (TernaryLayer, SweepResult) {
+    let results = perform_sweep(layer.input_dim, layer.output_dim, layer, inputs);
+    let optimal = find_optimal_threshold(&results, 0.5);
+    let ternary_layer = convert_to_ternary(layer, optimal.threshold);
+    (ternary_layer, optimal)
 }
 
 fn perform_sweep(input_dim: usize, output_dim: usize, layer: &LinearLayer, inputs: &[Vec<f32>]) -> Vec<SweepResult> {
@@ -253,5 +273,46 @@ pub fn run_threshold_sweep() {
     let _ = std::fs::create_dir_all("docs");
     let _ = std::fs::write("docs/ternary_sweep.csv", csv_data);
     println!("\nResults verified and saved to docs/ternary_sweep.csv");
+    println!();
+}
+
+pub fn run_adaptive_test() {
+    let input_dim = 16;
+    let output_dim = 16;
+    
+    // Deterministic weight generation
+    let mut weights = Vec::with_capacity(input_dim * output_dim);
+    for i in 0..(input_dim * output_dim) {
+        let val = (i as f32 * 0.1).sin() * (i as f32 * 0.2).cos();
+        weights.push(val);
+    }
+    let bias = vec![0.0; output_dim];
+    
+    let mut inputs = Vec::new();
+    for s in 0..5 {
+        let mut input = Vec::with_capacity(input_dim);
+        for i in 0..input_dim {
+            input.push(((i + s) as f32 * 0.5).cos());
+        }
+        inputs.push(input);
+    }
+
+    let float_layer = LinearLayer {
+        weights,
+        bias,
+        input_dim,
+        output_dim,
+    };
+
+    let (_ternary_layer, optimal) = adaptive_ternarize(&float_layer, &inputs);
+    let lambda = 0.5;
+    let score = optimal.sparsity - (lambda * optimal.nmse * 100.0);
+
+    println!("\n[ALBERT::ADAPTIVE]");
+    println!("Target Layer: {}x{}", input_dim, output_dim);
+    println!("Selected Threshold: {:.2}", optimal.threshold);
+    println!("Sparsity: {:.1}%", optimal.sparsity);
+    println!("NMSE: {:.6}", optimal.nmse);
+    println!("Optimization Score: {:.2}", score);
     println!();
 }
