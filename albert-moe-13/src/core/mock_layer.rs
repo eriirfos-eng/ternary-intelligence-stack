@@ -276,6 +276,33 @@ pub fn run_threshold_sweep() {
     println!();
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum LayerType {
+    DenseUniform,
+    SparseRandom,
+    HighVariance,
+    LowVariance,
+}
+
+impl LayerType {
+    pub fn generate_weights(&self, size: usize) -> Vec<f32> {
+        let mut weights = Vec::with_capacity(size);
+        for i in 0..size {
+            let base = (i as f32 * 0.1).sin();
+            let val = match self {
+                LayerType::DenseUniform => base * 0.5,
+                LayerType::SparseRandom => {
+                    if i % 3 == 0 { base } else { 0.01 * base }
+                },
+                LayerType::HighVariance => base * 2.0 * (i as f32 * 0.5).cos(),
+                LayerType::LowVariance => base * 0.1,
+            };
+            weights.push(val);
+        }
+        weights
+    }
+}
+
 pub fn run_adaptive_test() {
     let input_dim = 16;
     let output_dim = 16;
@@ -314,5 +341,66 @@ pub fn run_adaptive_test() {
     println!("Sparsity: {:.1}%", optimal.sparsity);
     println!("NMSE: {:.6}", optimal.nmse);
     println!("Optimization Score: {:.2}", score);
+    println!();
+}
+
+pub fn run_multi_layer_test() {
+    let input_dim = 16;
+    let output_dim = 16;
+    let size = input_dim * output_dim;
+    let bias = vec![0.0; output_dim];
+    
+    let mut inputs = Vec::new();
+    for s in 0..5 {
+        let mut input = Vec::with_capacity(input_dim);
+        for i in 0..input_dim {
+            input.push(((i + s) as f32 * 0.5).cos());
+        }
+        inputs.push(input);
+    }
+
+    let types = vec![
+        LayerType::DenseUniform,
+        LayerType::SparseRandom,
+        LayerType::HighVariance,
+        LayerType::LowVariance,
+    ];
+
+    println!("\n[ALBERT::MULTI_LAYER]");
+    println!("{:<15} | {:<10} | {:<10} | {:<10} | {:<10}", "Layer Type", "Threshold", "Sparsity", "NMSE", "Score");
+    println!("----------------------------------------------------------------------------");
+
+    let mut thresholds = Vec::new();
+
+    for l_type in types {
+        let weights = l_type.generate_weights(size);
+        let float_layer = LinearLayer {
+            weights,
+            bias: bias.clone(),
+            input_dim,
+            output_dim,
+        };
+
+        let (_ternary_layer, optimal) = adaptive_ternarize(&float_layer, &inputs);
+        let lambda = 0.5;
+        let score = optimal.sparsity - (lambda * optimal.nmse * 100.0);
+        thresholds.push(optimal.threshold);
+
+        println!("{:<15?} | {:<10.2} | {:<10.1}% | {:<10.6} | {:<10.2}", 
+            l_type, optimal.threshold, optimal.sparsity, optimal.nmse, score);
+    }
+
+    // Consistency Check
+    let mut unique_thresholds = thresholds.clone();
+    unique_thresholds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    unique_thresholds.dedup();
+
+    println!();
+    if unique_thresholds.len() <= 1 {
+        println!("[ALBERT::INSIGHT] Compression is globally stable");
+    } else {
+        println!("[ALBERT::INSIGHT] Layer-specific compression behavior detected");
+        println!("Unique thresholds identified: {:?}", unique_thresholds);
+    }
     println!();
 }

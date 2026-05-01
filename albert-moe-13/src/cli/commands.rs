@@ -30,6 +30,11 @@ impl CliDriver {
         crate::core::mock_layer::run_adaptive_test();
     }
 
+    /// Runs the multi-layer distribution evaluation.
+    pub fn run_multi_layer_test(&self) {
+        crate::core::mock_layer::run_multi_layer_test();
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -53,6 +58,7 @@ impl CliDriver {
             "layer-test" => self.run_layer_test(),
             "sweep-test" => self.run_sweep_test(),
             "adaptive-test" => self.run_adaptive_test(),
+            "multi-layer-test" => self.run_multi_layer_test(),
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);
