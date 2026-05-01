@@ -1,0 +1,68 @@
+/*
+ * Complex LRU Cache
+ * LRU cache implementation for complex trit values (real, imag pairs).
+ * Uses a flat array with shifts for eviction and access update.
+ */
+
+fn lru_complex_access(keys: int[], reals: trit[], imags: trit[], size: int, key: int) -> int {
+    let found_pos: int = -1;
+    let i: int = 0;
+    while i < size {
+        if keys[i] == key {
+            found_pos = i;
+        }
+        i = i + 1;
+    }
+    
+    if found_pos == -1 { return -1; }
+    
+    let target_re: trit = reals[found_pos];
+    let target_im: trit = imags[found_pos];
+    
+    // Shift others
+    let j: int = found_pos;
+    while j > 0 {
+        keys[j] = keys[j-1];
+        reals[j] = reals[j-1];
+        imags[j] = imags[j-1];
+        j = j - 1;
+    }
+    
+    keys[0] = key;
+    reals[0] = target_re;
+    imags[0] = target_im;
+    return 0;
+}
+
+fn main() -> trit {
+    let keys: int[5];
+    let reals: trit[5];
+    let imags: trit[5];
+    
+    // Initial data
+    keys[0] = 1; reals[0] = 1; imags[0] = 0;
+    keys[1] = 2; reals[1] = 0; imags[1] = 1;
+    keys[2] = 3; reals[2] = -1; imags[2] = -1;
+    keys[3] = 4; reals[3] = 1; imags[3] = 1;
+    keys[4] = 5; reals[4] = 0; imags[4] = 0;
+    
+    println("Complex LRU Cache Demo");
+    println("Accessing Key 3");
+    lru_complex_access(keys, reals, imags, 5, 3);
+    
+    println("Head Key (should be 3):");
+    println(keys[0]);
+    
+    println("Head Real (should be -1):");
+    println(reals[0]);
+    
+    println("Head Imag (should be -1):");
+    println(imags[0]);
+    
+    if keys[0] == 3 && reals[0] == -1 && imags[0] == -1 {
+        println("LRU Access OK.");
+        return 1;
+    }
+    
+    return -1;
+}
