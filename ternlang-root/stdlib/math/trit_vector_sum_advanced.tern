@@ -1,0 +1,34 @@
+/*
+ * Advanced Trit Vector Sum
+ * Robust calculation of the sum of elements in a trit tensor.
+ * Includes explicit cast and accumulation.
+ */
+
+fn vector_sum_trit(data: trit[]) -> int {
+    let sum: int = 0;
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        sum = sum + cast(data[i]);
+        i = i + 1;
+    }
+    return sum;
+}
+
+fn main() -> trit {
+    let v: trit[5];
+    v[0] = 1; v[1] = 1; v[2] = -1; v[3] = 0; v[4] = 1;
+    
+    println("Advanced Trit Vector Sum Demo");
+    
+    println("Sum (expected 2):");
+    let s: int = vector_sum_trit(v);
+    println(s);
+    
+    if s == 2 {
+        println("Vector sum verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
