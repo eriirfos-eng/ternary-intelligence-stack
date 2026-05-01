@@ -1,0 +1,16 @@
+[package]
+name = "moe-core"
+version = "1.0.0"
+edition = "2021"
+description = "Internal core engine for MoE-13 ternary inference and routing."
+license = "MIT"
+repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+documentation = "https://docs.rs/moe-core"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+ndarray = "0.15"
+rand = "0.8"
+log = "0.4"

@@ -326,10 +326,10 @@ impl TernlangClient {
     pub async fn list_remote_models(&self) -> Result<Vec<String>, ApiError> {
         match self.provider {
             LlmProvider::Google => {
-                let url = format!("{}/v1beta/models?key={}", self.base_url.trim_end_matches('/'), self.auth.api_key().unwrap_or(""));
-                let res = self.http.get(&url).send().await.map_err(ApiError::from)?;
+                let url = format!("{}/v1beta/models", self.base_url.trim_end_matches('/'));
+                let res = self.auth.apply(self.provider, self.http.get(&url)).send().await.map_err(ApiError::from)?;
                 let json: serde_json::Value = res.json().await.map_err(ApiError::from)?;
-                
+
                 let mut models = vec![];
                 if let Some(list) = json.get("models").and_then(|m| m.as_array()) {
                     for m in list {

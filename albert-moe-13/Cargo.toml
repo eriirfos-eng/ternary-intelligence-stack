@@ -1,6 +1,6 @@
 [package]
 name = "albert-moe"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 authors = ["RFI-IRFOS <licensing@ternlang.com>"]
 description = "Core Intelligence Layer for Albert-MoE-13: Native Ternary Adaptation and Compression"
