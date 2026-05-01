@@ -342,17 +342,18 @@ impl AgentRegistry {
         self.save().await;
     }
 
-    pub async fn delete(&self, slug: &str, owner_key: &str, is_admin: bool) -> bool {
+    pub async fn delete(&self, slug: &str, owner_key: &str, is_admin: bool) -> Result<(), &'static str> {
         let mut guard = self.data.write().await;
         if let Some(a) = guard.agents.get(slug) {
             if is_admin || a.owner_key == owner_key {
                 guard.agents.remove(slug);
                 drop(guard);
                 self.save().await;
-                return true;
+                return Ok(());
             }
+            return Err("forbidden");
         }
-        false
+        Err("not_found")
     }
 }
 
@@ -3892,10 +3893,10 @@ async fn delete_agent(
     }
 
     let is_admin = raw_key == state.admin_key;
-    if state.agent_registry.delete(&slug, raw_key, is_admin).await {
-        Json(json!({ "status": "ok", "deleted": slug })).into_response()
-    } else {
-        api_error(StatusCode::NOT_FOUND, "Agent not found or ownership mismatch")
+    match state.agent_registry.delete(&slug, raw_key, is_admin).await {
+        Ok(()) => Json(json!({ "status": "ok", "deleted": slug })).into_response(),
+        Err("forbidden") => api_error(StatusCode::FORBIDDEN, "Ownership mismatch — this agent belongs to a different key"),
+        _ => api_error(StatusCode::NOT_FOUND, "Agent not found"),
     }
 }
 

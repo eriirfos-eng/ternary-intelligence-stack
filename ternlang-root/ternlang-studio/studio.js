@@ -484,8 +484,13 @@ async function deleteAgent() {
       });
       const d = await r.json();
       if (d.status !== "ok") {
-        showToast("Server rejection: " + (d.error || "Unknown error"), "err");
-        return;
+        if (r.status === 403) {
+          // Real ownership block — another key owns this agent
+          showToast("Ownership mismatch — agent belongs to a different key", "err");
+          return;
+        }
+        // 404 = agent was never persisted server-side (local-only deploy)
+        // Fall through and clean up localStorage anyway
       }
     }
 
