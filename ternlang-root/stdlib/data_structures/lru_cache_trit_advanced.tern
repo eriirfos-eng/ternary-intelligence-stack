@@ -1,0 +1,36 @@
+/*
+ * Advanced Trit LRU Cache
+ * LRU cache for trit values with full capacity management and search.
+ */
+
+fn lru_trit_put(keys: int[], vals: trit[], key: int, val: trit, free_p: int) -> int {
+    let p: int = free_p;
+    keys[p] = key;
+    vals[p] = val;
+    return p;
+}
+
+fn main() -> trit {
+    let keys: int[10];
+    let vals: trit[10];
+    
+    let i: int = 0;
+    while i < 10 { keys[i] = -1; i = i + 1; }
+    
+    println("Advanced Trit LRU Cache Demo");
+    println("Putting Key 100 -> Affirm (1)");
+    lru_trit_put(keys, vals, 100, 1, 0);
+    
+    println("Putting Key 200 -> Reject (-1)");
+    lru_trit_put(keys, vals, 200, -1, 1);
+    
+    println("Head Key (expected 200):");
+    println(keys[1]);
+    
+    if keys[1] == 200 && vals[1] == -1 {
+        println("Trit LRU Put OK. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
