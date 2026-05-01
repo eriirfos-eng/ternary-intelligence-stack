@@ -37,13 +37,29 @@ Ternlang is a systems programming language, compiler, and high-performance infer
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
 
-## 2. What is MoE-13 / Albert? (The Intelligence Layer)
+## 2. What is Albert-MoE-13? (The Intelligence Layer)
 
-**Albert** is our sovereign MoE-13 (Mixture-of-Experts) ternary model. Unlike binary LLMs that "hallucinate confidence," Albert uses 13 domain-specific experts to deliberate on every decision.
+We are actively designing, training, and deploying our own ternary-native Mixture-of-Experts model.
+
+**Albert** is our work in progress MoE-13 (Mixture-of-Experts) ternary LLM. Unlike binary LLMs Albert uses 13 domain-specific experts to deliberate on every decision.
 
 - **13 Deliberation Axes**: Safety, Ethics, Logic, FactCheck, and more, each voting with ternary signals.
 - **Safety Hard Gate**: A mandatory Axis-6 veto that can terminate any execution path before action is taken.
 - **Local-First Sovereignty**: Designed to run entirely on local infrastructure via Ollama or custom ternary hardware.
+
+Base: Open-source MoE (20B–30B parameter class)
+Transformation: Ternarization into {−1, 0, +1} weight space
+Objective: Reduce memory footprint while enabling sparsity-aware execution
+Architecture: Consolidation into 13 domain-specific expert routers (MoE-13)
+Why This Matters
+
+This model is designed to:
+
+-operate fully offline on local or sovereign infrastructure
+-enforce deterministic uncertainty (HOLD state) at the model level
+-integrate directly with Ternlang and the BET-VM runtime
+-provide a verifiable decision layer, not just probabilistic outputs
+-Relationship to Agent Albert
 
 ---
 
