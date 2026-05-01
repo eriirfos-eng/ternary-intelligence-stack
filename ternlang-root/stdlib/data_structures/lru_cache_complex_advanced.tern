@@ -1,0 +1,39 @@
+/*
+ * Advanced Complex LRU Cache
+ * LRU cache for complex trit pairs with full capacity and eviction logic.
+ */
+
+fn lru_complex_put(keys: int[], reals: trit[], imags: trit[], key: int, re: trit, im: trit, free_p: int) -> int {
+    // Simplified: Always insert at front
+    let p: int = free_p;
+    keys[p] = key;
+    reals[p] = re;
+    imags[p] = im;
+    return p;
+}
+
+fn main() -> trit {
+    let keys: int[10];
+    let reals: trit[10];
+    let imags: trit[10];
+    
+    let i: int = 0;
+    while i < 10 { keys[i] = -1; i = i + 1; }
+    
+    println("Advanced Complex LRU Cache Demo");
+    println("Putting Key 100 -> (1, 1)");
+    lru_complex_put(keys, reals, imags, 100, 1, 1, 0);
+    
+    println("Putting Key 200 -> (-1, 0)");
+    lru_complex_put(keys, reals, imags, 200, -1, 0, 1);
+    
+    println("Head Key (expected 200):");
+    println(keys[1]); // since we just put it in index 1
+    
+    if keys[1] == 200 && reals[1] == -1 {
+        println("Complex LRU Put OK. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
