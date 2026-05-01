@@ -30,36 +30,75 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ---
 
-## 1. What is Ternlang? (The Infrastructure Layer)
+## 1. Ternlang (The Infrastructure Layer)
 
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
 
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
 
-## 2. What is Albert-MoE-13? (The Intelligence Layer)
+## 2. Albert-MoE-13 — The Intelligence Layer
 
-We are actively designing, training, and deploying our own ternary-native Mixture-of-Experts model.
+We are actively designing, training, and deploying our own **ternary-native Mixture-of-Experts model**.
 
-**Albert** is our work in progress MoE-13 (Mixture-of-Experts) ternary LLM. Unlike binary LLMs Albert uses 13 domain-specific experts to deliberate on every decision.
+**Albert** is our in-progress **MoE-13 (Mixture-of-Experts) ternary LLM**.  
+Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to deliberate on every decision.
 
-- **13 Deliberation Axes**: Safety, Ethics, Logic, FactCheck, and more, each voting with ternary signals.
-- **Safety Hard Gate**: A mandatory Axis-6 veto that can terminate any execution path before action is taken.
-- **Local-First Sovereignty**: Designed to run entirely on local infrastructure via Ollama or custom ternary hardware.
+---
 
-Base: Open-source MoE (20B–30B parameter class)
-Transformation: Ternarization into {−1, 0, +1} weight space
-Objective: Reduce memory footprint while enabling sparsity-aware execution
-Architecture: Consolidation into 13 domain-specific expert routers (MoE-13)
-Why This Matters
+### Core Architecture
 
-This model is designed to:
+- **13 Deliberation Axes**  
+  Each expert represents a distinct reasoning dimension (e.g. Safety, Ethics, Logic, FactCheck, etc.),  
+  voting using **ternary signals**: `{ -1, 0, +1 }`.
 
--operate fully offline on local or sovereign infrastructure
--enforce deterministic uncertainty (HOLD state) at the model level
--integrate directly with Ternlang and the BET-VM runtime
--provide a verifiable decision layer, not just probabilistic outputs
--Relationship to Agent Albert
+- **Safety Hard Gate (Axis-6)**  
+  A mandatory veto layer capable of **terminating any execution path** before action is taken.
+
+- **Local-First Sovereignty**  
+  Designed to run fully offline on **local infrastructure** via Ollama or custom ternary hardware.
+
+---
+
+### Technical Stack
+
+- **Base Model**  
+  Open-source MoE in the **20B–30B parameter class**
+
+- **Transformation**  
+  Full **ternarization into `{ -1, 0, +1 }` weight space**
+
+- **Objective**  
+  - Reduce memory footprint  
+  - Enable **sparsity-aware execution**  
+  - Improve deterministic interpretability  
+
+- **Architecture**  
+  Consolidation into **13 domain-specific expert routers (MoE-13)**
+
+---
+
+### Why This Matters
+
+Albert is designed to:
+
+- Operate fully **offline** on sovereign infrastructure  
+- Enforce **deterministic uncertainty** via the `HOLD (0)` state  
+- Integrate natively with **Ternlang** and the **BET-VM runtime**  
+- Provide a **verifiable decision layer**, not just probabilistic outputs  
+- Enable **traceable, inspectable reasoning paths**
+
+---
+
+### Relationship to Agent Albert
+
+Albert-MoE-13 serves as the **core intelligence layer** powering Agent Albert.
+
+- **Agent Albert** → orchestration, interaction, execution  
+- **Albert-MoE-13** → deliberation, validation, decision-making  
+
+Together, they form a **closed-loop system**:
+> perception → deliberation → validation → execution
 
 ---
 
