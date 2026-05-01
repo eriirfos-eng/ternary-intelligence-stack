@@ -1,0 +1,16 @@
+routing_strategy: "synergistic-dual-key"
+top_k: 2
+experts:
+  - id: 0
+    name: "syntax"
+    competence: [1.0, 0.2, 0.3, 0.1, 0.0, 0.5]
+  - id: 1
+    name: "logic"
+    competence: [0.2, 0.4, 1.0, 0.3, 0.0, 0.6]
+  - id: 2
+    name: "ethics"
+    competence: [0.0, 0.5, 0.5, 0.0, 1.0, 0.9]
+  # ... (up to 13 experts)
+synergy_threshold: 0.45
+safety_veto_axis: 6
+hold_threshold: 0.4

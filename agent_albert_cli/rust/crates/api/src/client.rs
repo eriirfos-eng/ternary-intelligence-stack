@@ -511,6 +511,10 @@ fn translate_to_anthropic(request: &MessageRequest) -> serde_json::Value {
                         "type": "tool_result", "tool_use_id": tool_use_id, "content": text, "is_error": is_error
                     })
                 }
+                InputContentBlock::Image { media_type, data } => json!({
+                    "type": "image",
+                    "source": { "type": "base64", "media_type": media_type, "data": data }
+                }),
             }
         }).collect();
         json!({ "role": msg.role, "content": content })
@@ -540,9 +544,14 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
         let mut content_text = String::new();
         let mut tool_calls = vec![];
 
+        let mut content_blocks: Vec<serde_json::Value> = vec![];
+        let mut tool_calls = vec![];
+
         for block in &msg.content {
             match block {
-                InputContentBlock::Text { text } => content_text.push_str(text),
+                InputContentBlock::Text { text } => {
+                    content_blocks.push(json!({ "type": "text", "text": text }));
+                }
                 InputContentBlock::ToolUse { id, name, input } => {
                     tool_calls.push(json!({
                         "id": id, "type": "function", "function": { "name": name, "arguments": input.to_string() }
@@ -554,12 +563,26 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
                     }).collect::<Vec<String>>().join("\n");
                     messages.push(json!({ "role": "tool", "tool_call_id": tool_use_id, "content": text }));
                 }
+                InputContentBlock::Image { media_type, data } => {
+                    content_blocks.push(json!({
+                        "type": "image_url",
+                        "image_url": { "url": format!("data:{media_type};base64,{data}") }
+                    }));
+                }
             }
         }
 
-        if !content_text.is_empty() || !tool_calls.is_empty() {
+        if !content_blocks.is_empty() || !tool_calls.is_empty() {
             let mut m = json!({ "role": msg.role });
-            if !content_text.is_empty() { m["content"] = json!(content_text); }
+            if content_blocks.len() == 1 {
+                if let Some(t) = content_blocks[0].get("text").and_then(|v| v.as_str()) {
+                    m["content"] = json!(t);
+                } else {
+                    m["content"] = json!(content_blocks);
+                }
+            } else if !content_blocks.is_empty() {
+                m["content"] = json!(content_blocks);
+            }
             if !tool_calls.is_empty() { m["tool_calls"] = json!(tool_calls); }
             messages.push(m);
         }
@@ -617,6 +640,9 @@ fn translate_to_gemini(request: &MessageRequest) -> serde_json::Value {
                     }).collect::<Vec<String>>().join("\n");
                     json!({ "functionResponse": { "name": tool_use_id, "response": { "result": text } } })
                 }
+                InputContentBlock::Image { media_type, data } => json!({
+                    "inline_data": { "mime_type": media_type, "data": data }
+                }),
             }
         }).collect();
         json!({ "role": role, "parts": parts })

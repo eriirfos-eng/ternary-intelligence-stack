@@ -1,0 +1,12 @@
+quantization:
+  method: "straight-through-estimator"
+  threshold_mode: "bitnet-auto" # τ = 0.5 * mean(|w|)
+  packing: "5-trit-8-bit"
+  simd_optimized: true
+compression:
+  sparsity_mask: "adaptive-magnitude"
+  skip_kernel: "sparseskip-v2"
+  rle_enabled: true
+hardware_target:
+  current: "x86-64-avx512"
+  future: "ternary-npu-v1"

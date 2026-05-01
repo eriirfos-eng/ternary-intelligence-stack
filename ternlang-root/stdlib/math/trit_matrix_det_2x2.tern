@@ -1,0 +1,42 @@
+/*
+ * Trit Matrix Determinant (2x2)
+ * Calculation of the determinant of a 2x2 trit matrix.
+ * Det([a b; c d]) = ad - bc
+ */
+
+fn mat_det_2x2(m: trit[]) -> int {
+    let ad: int = cast(m[0]) * cast(m[3]);
+    let bc: int = cast(m[1]) * cast(m[2]);
+    let res: int = ad - bc;
+    return res;
+}
+
+fn main() -> trit {
+    // [1 1; 0 1] -> det = 1*1 - 1*0 = 1
+    let m1: trit[4];
+    m1[0] = 1; m1[1] = 1; m1[2] = 0; m1[3] = 1;
+    
+    println("Matrix 1: [1 1; 0 1]");
+    let det1: int = mat_det_2x2(m1);
+    println("Determinant (expected 1):");
+    println(det1);
+    
+    // [1 -1; 1 1] -> det = 1*1 - (-1)*1 = 1 + 1 = 2
+    let m2: trit[4];
+    m2[0] = 1; m2[1] = -1; m2[2] = 1; m2[3] = 1;
+    
+    println("Matrix 2: [1 -1; 1 1]");
+    let det2: int = mat_det_2x2(m2);
+    println("Determinant (expected 2):");
+    println(det2);
+    
+    if det1 == 1 {
+        if det2 == 2 {
+            println("Determinant calculation verified. Success.");
+            return 1;
+        }
+    }
+    
+    println("Verification FAILED.");
+    return -1;
+}

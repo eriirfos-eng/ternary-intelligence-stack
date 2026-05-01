@@ -1,0 +1,7 @@
+fn main() -> trit {
+    let x: int = cast(1);
+    let y: int = cast(-1);
+    println(x);
+    println(y);
+    return 1;
+}

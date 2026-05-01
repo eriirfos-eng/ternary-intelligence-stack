@@ -30,6 +30,11 @@ pub enum ContentBlock {
         output: String,
         is_error: bool,
     },
+    /// Attached image — persisted as a placeholder text in session files.
+    Image {
+        media_type: String,
+        data: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -286,6 +291,14 @@ impl ContentBlock {
                 );
                 object.insert("output".to_string(), JsonValue::String(output.clone()));
                 object.insert("is_error".to_string(), JsonValue::Bool(*is_error));
+            }
+            // Store only the mime type — base64 data is not persisted.
+            Self::Image { media_type, .. } => {
+                object.insert("type".to_string(), JsonValue::String("text".to_string()));
+                object.insert(
+                    "text".to_string(),
+                    JsonValue::String(format!("[image: {media_type}]")),
+                );
             }
         }
         JsonValue::Object(object)

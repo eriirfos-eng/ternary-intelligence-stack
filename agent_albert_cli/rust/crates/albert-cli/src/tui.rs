@@ -198,6 +198,14 @@ pub enum ExecBlock {
     // RawText(String),
 }
 
+#[derive(Clone, Debug)]
+pub struct ImageAttachment {
+    pub path: std::path::PathBuf,
+    pub base64: String,
+    pub mime: String,
+    pub thumb: String,
+}
+
 #[derive(Debug)]
 pub struct ToolApprovalState {
     pub _id: String,
@@ -226,6 +234,10 @@ pub struct TuiState {
     pub popup_selected: usize,
     /// True while voice recording is active (Ctrl+Space toggle)
     pub is_recording: bool,
+    /// True while awaiting transcription result (between stop-record and VoiceText/Error)
+    pub voice_transcribing: bool,
+    /// Animated spine frame counter (0..3), incremented on Tick when working=true
+    pub spine_frame: u8,
     /// Set while waiting for an API key — input is masked + submitted as the key.
     pub auth_flow: Option<String>,
     /// Set when the current input arrived via a large paste (>= 3 lines).
@@ -261,6 +273,11 @@ pub struct TuiState {
     pub tool_time_ms: u64,
     pub session_id: String,
 
+    /// Images queued for the next send (attached via Ctrl+I).
+    pub pending_images: Vec<ImageAttachment>,
+    /// True while the image-path overlay is open (Ctrl+I pressed, awaiting path entry).
+    pub image_path_overlay: bool,
+
     /// Set when Ctrl+C is pressed once.
     pub quit_confirm: bool,
     /// Whether the user has explicitly trusted this directory for this session.
@@ -286,6 +303,8 @@ impl Default for TuiState {
             scroll: 0,
             popup_selected: 0,
             is_recording: false,
+            voice_transcribing: false,
+            spine_frame: 0,
             auth_flow: None,
             paste_line_count: None,
             help_open: false,
@@ -304,6 +323,8 @@ impl Default for TuiState {
             api_time_ms: 0,
             tool_time_ms: 0,
             session_id: String::new(),
+            pending_images: Vec::new(),
+            image_path_overlay: false,
             quit_confirm: false,
             trusted: false,
             is_prompting: Arc::new(AtomicBool::new(false)),
@@ -525,6 +546,8 @@ pub enum TuiEvent {
     VoiceText(String),
     /// Voice transcription failed — show the error message.
     VoiceError(String),
+    /// Transcription is in progress — show "Transcribing…" status.
+    VoiceTranscribing,
     /// Bracketed paste — insert without triggering submit on newlines.
     PasteText(String),
     /// Mouse wheel scroll up — scroll content up (older messages).
@@ -1116,8 +1139,14 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
     // Define consistent spacing for the "Laminar Flow" architecture.
     // Spine at Col 0, Hook at Col 2, Dot at Col 4.
-    let spine_str = "│ "; 
-    let spine = Span::styled(spine_str, Style::default().fg(Color::Rgb(25, 45, 45)));
+    // Animate the spine glyph at 2Hz when working (every 5 ticks @ 100ms = 500ms per step).
+    const SPINE_GLYPHS: [&str; 4] = ["│ ", "╎ ", "┆ ", "┊ "];
+    let spine_glyph = if state.working {
+        SPINE_GLYPHS[((state.spine_frame / 5) % 4) as usize]
+    } else {
+        "│ "
+    };
+    let spine = Span::styled(spine_glyph, Style::default().fg(Color::Rgb(25, 45, 45)));
     let seal = Span::styled("└─", Style::default().fg(Color::Rgb(25, 45, 45)));
 
     while let Some(block) = it.next() {
@@ -1698,6 +1727,8 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     // Outer turquoise border — rendered on the full area.
     let border_col = if state.auth_flow.is_some() {
         ORANGE // orange border while in API-key entry mode
+    } else if state.image_path_overlay {
+        Color::Rgb(0, 180, 180) // teal border while entering image path
     } else {
         INPUT_BORDER
     };
@@ -1758,10 +1789,29 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
                 Span::styled(masked, Style::default().fg(ORANGE)),
             ]))
         }
+    } else if state.image_path_overlay {
+        if state.input.is_empty() {
+            Paragraph::new(Line::from(vec![
+                Span::styled(" 📎 ", Style::default().fg(Color::Rgb(0, 200, 180)).add_modifier(Modifier::BOLD)),
+                Span::styled("Enter image path:", Style::default().fg(Color::Rgb(0, 200, 180))),
+                Span::styled("  (Esc to cancel)", Style::default().fg(DIM)),
+            ]))
+        } else {
+            Paragraph::new(Line::from(vec![
+                Span::styled(" 📎 ", Style::default().fg(Color::Rgb(0, 200, 180)).add_modifier(Modifier::BOLD)),
+                Span::styled(state.input.clone(), Style::default().fg(FG)),
+            ]))
+        }
     } else if state.input.is_empty() {
+        let img_badge = if state.pending_images.is_empty() {
+            String::new()
+        } else {
+            format!("  [📎 {}]", state.pending_images.len())
+        };
         Paragraph::new(Line::from(vec![
             Span::styled(" ≻ ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
             Span::styled("Type your message or @path/to/file", Style::default().fg(DIM)),
+            Span::styled(img_badge, Style::default().fg(Color::Rgb(0, 200, 180))),
         ]))
     } else {
         let (prompt_txt, prompt_col) = if state.history_idx.is_some() {
@@ -1776,10 +1826,17 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         let mut lines = Vec::new();
 
         if chars.len() <= w.saturating_sub(p_len) {
-            lines.push(Line::from(vec![
+            let mut spans = vec![
                 Span::styled(prompt_txt, Style::default().fg(prompt_col).add_modifier(Modifier::BOLD)),
                 Span::styled(state.input.clone(), Style::default().fg(FG)),
-            ]));
+            ];
+            if !state.pending_images.is_empty() {
+                spans.push(Span::styled(
+                    format!("  [📎 {}]", state.pending_images.len()),
+                    Style::default().fg(Color::Rgb(0, 200, 180)),
+                ));
+            }
+            lines.push(Line::from(spans));
         } else {
             // First line with prompt
             lines.push(Line::from(vec![
@@ -2002,8 +2059,6 @@ fn current_activity(state: &TuiState) -> String {
     thinking_phrases[phrase_idx].to_string()
 }
 
-const MIC_RED: Color = Color::Rgb(255, 60, 60);
-
 /// 1-row status strip — ALWAYS visible.
 /// Recording: `@ Recording…  ctrl+space to stop`
 /// Working:   `* Reading… (2s · ↓ 42 tokens)`
@@ -2015,10 +2070,19 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             Span::styled("Untrusted Folder", Style::default().fg(ORANGE)),
             Span::styled("  tools will require manual approval", Style::default().fg(DIM)),
         ])
-    } else if state.is_recording {
+    } else if state.voice_transcribing {
         Line::from(vec![
-            Span::styled(" 𒀭 ", Style::default().fg(MIC_RED).add_modifier(Modifier::BOLD)),
-            Span::styled("Recording…", Style::default().fg(MIC_RED)),
+            Span::styled(" 𒀭 ", Style::default().fg(Color::Rgb(0, 200, 140)).add_modifier(Modifier::BOLD)),
+            Span::styled("Transcribing…", Style::default().fg(Color::Rgb(0, 200, 140))),
+            Span::styled("  converting speech to text", Style::default().fg(GREY)),
+        ])
+    } else if state.is_recording {
+        let elapsed = state.session_start.elapsed().as_secs_f64();
+        let blink = (elapsed * 2.5).sin() > 0.0;
+        let mic_color = if blink { Color::Rgb(255, 60, 60) } else { Color::Rgb(200, 30, 30) };
+        Line::from(vec![
+            Span::styled(" 𒀭 ", Style::default().fg(mic_color).add_modifier(Modifier::BOLD)),
+            Span::styled("Recording…", Style::default().fg(mic_color)),
             Span::styled("  ctrl+space to stop & transcribe", Style::default().fg(GREY)),
         ])
     } else if state.is_prompting.load(Ordering::Relaxed) {
@@ -2400,6 +2464,14 @@ impl TuiApp {
                                     voice_toggle = Some(state.is_recording);
                                 }
 
+                                // Ctrl+I — open image-attach overlay
+                                (KeyCode::Char('i'), KeyModifiers::CONTROL) => {
+                                    state.image_path_overlay = true;
+                                    state.input.clear();
+                                    state.cursor = 0;
+                                    state.paste_line_count = None;
+                                }
+
                                 // Ctrl+V — paste from system clipboard
                                 (KeyCode::Char('v'), KeyModifiers::CONTROL) => {
                                     if let Ok(mut board) = arboard::Clipboard::new() {
@@ -2425,6 +2497,10 @@ impl TuiApp {
                                 (KeyCode::Esc, _) => {
                                     if state.working {
                                         cancel_flag.store(true, Ordering::Relaxed);
+                                    } else if state.image_path_overlay {
+                                        state.image_path_overlay = false;
+                                        state.input.clear();
+                                        state.cursor = 0;
                                     } else if state.help_open {
                                         state.help_open = false;
                                         state.help_scroll = 0;
@@ -2705,17 +2781,25 @@ impl TuiApp {
                                     let _ = child.wait();
                                 }
                                 let tx = self.event_tx.clone();
+                                let _ = tx.send(TuiEvent::VoiceTranscribing);
                                 tokio::spawn(async move {
                                     const WAV: &str = "/tmp/albert-voice.wav";
                                     let size = std::fs::metadata(WAV).map(|m| m.len()).unwrap_or(0);
                                     if size > 44 {
-                                        match transcribe(WAV).await {
-                                            Ok(text) => { let _ = tx.send(TuiEvent::VoiceText(text)); }
-                                            Err(e)   => { let _ = tx.send(TuiEvent::VoiceError(e)); }
+                                        let result = tokio::time::timeout(
+                                            std::time::Duration::from_secs(30),
+                                            transcribe(WAV),
+                                        ).await;
+                                        match result {
+                                            Ok(Ok(text)) => { let _ = tx.send(TuiEvent::VoiceText(text)); }
+                                            Ok(Err(e))   => { let _ = tx.send(TuiEvent::VoiceError(e)); }
+                                            Err(_)       => { let _ = tx.send(TuiEvent::VoiceError(
+                                                "voice: transcription timed out after 30s".to_string(),
+                                            )); }
                                         }
                                     } else {
                                         let _ = tx.send(TuiEvent::VoiceError(
-                                            "voice: no audio captured".to_string(),
+                                            "voice: no audio captured (is your mic working?)".to_string(),
                                         ));
                                     }
                                 });
@@ -2849,14 +2933,22 @@ impl TuiApp {
                     }
 
                     // ── voice transcription result ────────────────────────────
+                    Some(TuiEvent::VoiceTranscribing) => {
+                        let mut state = self.state.lock().unwrap();
+                        state.voice_transcribing = true;
+                    }
                     Some(TuiEvent::VoiceText(text)) => {
                         let mut state = self.state.lock().unwrap();
+                        state.is_recording = false;
+                        state.voice_transcribing = false;
                         for ch in text.trim().chars() {
                             state.input_insert(ch);
                         }
                     }
                     Some(TuiEvent::VoiceError(msg)) => {
                         let mut state = self.state.lock().unwrap();
+                        state.is_recording = false;
+                        state.voice_transcribing = false;
                         state.push_exec(ExecBlock::SystemMsg(msg));
                     }
 
@@ -2895,7 +2987,12 @@ impl TuiApp {
                     Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
                         // Tick fires at 100ms — redraws the screen (spinner, timer).
                         let mut state = self.state.lock().unwrap();
-                        
+
+                        // Advance spine animation frame when working (cycles │ ╎ ┆ ┊ at ~2Hz)
+                        if state.working {
+                            state.spine_frame = state.spine_frame.wrapping_add(1);
+                        }
+
                         // Adaptive Typewriter: Smoother flow by scaling drain rate with buffer size.
                         if !state.typewriter_buffer.is_empty() {
                             let buf_len = state.typewriter_buffer.chars().count();

@@ -201,14 +201,38 @@ where
     }
 
     pub fn run_turn(
+        &mut self,
+        user_input: impl Into<String>,
+        prompter: Option<&mut dyn PermissionPrompter>,
+    ) -> Result<TurnSummary, RuntimeError> {
+        self.session.messages.push(ConversationMessage::user_text(user_input.into()));
+        self.run_conversation_loop(prompter)
+    }
+
+    pub fn run_turn_with_images(
+        &mut self,
+        user_input: impl Into<String>,
+        images: Vec<(String, String)>,
+        prompter: Option<&mut dyn PermissionPrompter>,
+    ) -> Result<TurnSummary, RuntimeError> {
+        use crate::session::MessageRole;
+        let mut blocks: Vec<ContentBlock> = images
+            .into_iter()
+            .map(|(media_type, data)| ContentBlock::Image { media_type, data })
+            .collect();
+        blocks.push(ContentBlock::Text { text: user_input.into() });
+        self.session.messages.push(ConversationMessage {
+            role: MessageRole::User,
+            blocks,
+            usage: None,
+        });
+        self.run_conversation_loop(prompter)
+    }
+
+    fn run_conversation_loop(
     &mut self,
-    user_input: impl Into<String>,
     mut prompter: Option<&mut dyn PermissionPrompter>,
 ) -> Result<TurnSummary, RuntimeError> {
-    self.session
-        .messages
-        .push(ConversationMessage::user_text(user_input.into()));
-
     let mut assistant_messages = Vec::new();
     let mut tool_results = Vec::new();
     let mut iterations = 0;
