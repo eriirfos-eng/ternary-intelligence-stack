@@ -1,12 +1,13 @@
 # TIS Session Log
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
 
-Chronological record of every working session. One row per session or sub-session. For roadmap and phase status see [ROADMAP.md](ROADMAP.md).
+Reverse chronological record of every working session (newest first). One row per session or sub-session. For roadmap and phase status see [ROADMAP.md](ROADMAP.md).
 
 ---
 
 | Date | Session Update |
 |------|----------------|
+| 2026-05-01 | **[albert-cli v1.3.1 stabilization + MOE ecosystem launch]** Fixed two critical bugs: (1) Tokio runtime panic on startup (moved timeout into async context, main.rs:114); (2) API key truncation due to query-param encoding (moved to secure headers, client.rs:329). Published fixes + version bump to crates.io. MOE platform ecosystem confirmed live: moe-core v1.0.0, moe-platform v1.0.0, moe-plugin-sdk v1.0.0 all on registry. Bugfixes documented in Buglist/Fixes.md (ALBERT-CLI-001/002) and release_notes.md (v1.3.1 section). All credentials (crates.io PAT + GitHub PAT) saved to memory. Ready for fly.io production integration. Commits: fea98eeb6, af6c34ad6. |
 | 2026-04-02 | Initial repo setup. Phase 1+2 confirmed complete. Git initialized, pushed to GitHub. Credential store configured. 4 failing tests identified (DimSeparator bug). Phase 3 plan defined. |
 | 2026-04-02 | Fixed DimSeparator/Ident collision in lexer. Fixed betbc test import. 11/11 tests passing. Next: TCALL/TRET function dispatch + tensor VM opcodes. |
 | 2026-04-02 | TCALL/TRET implemented. Tensor opcodes DONE: TMATMUL, TSPARSE_MATMUL, TIDX, TSET, TSHAPE, TSPARSITY. 14/14 tests passing. |
