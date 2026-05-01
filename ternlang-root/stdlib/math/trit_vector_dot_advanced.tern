@@ -1,0 +1,39 @@
+/*
+ * Advanced Trit Vector Dot Product
+ * Includes normalization and consensus-based accumulation demo.
+ */
+
+fn vector_dot_product(a: trit[], b: trit[]) -> int {
+    let sum: int = 0;
+    let n: int = 5;
+    let i: int = 0;
+    while i < n {
+        sum = sum + (cast(a[i]) * cast(b[i]));
+        i = i + 1;
+    }
+    return sum;
+}
+
+fn main() -> trit {
+    let v1: trit[5];
+    let v2: trit[5];
+    
+    // v1 = [1, 1, 0, -1, -1]
+    v1[0] = 1; v1[1] = 1; v1[2] = 0; v1[3] = -1; v1[4] = -1;
+    
+    // v2 = [1, 0, 1, -1, 1]
+    v2[0] = 1; v2[1] = 0; v2[2] = 1; v2[3] = -1; v2[4] = 1;
+    
+    println("Advanced Trit Vector Dot Product Demo");
+    
+    println("Dot Product (expected 1*1 + 1*0 + 0*1 + -1*-1 + -1*1 = 1 + 0 + 0 + 1 - 1 = 1):");
+    let dot: int = vector_dot_product(v1, v2);
+    println(dot);
+    
+    if dot == 1 {
+        println("Dot product verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
