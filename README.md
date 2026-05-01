@@ -32,7 +32,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ---
 
-## Ternlang (The Infrastructure Layer)
+## 1. Ternlang (The Infrastructure Layer)
 
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
 
@@ -62,7 +62,7 @@ ternlang build my_program.tern  # → compile to .bet bytecode
 ```
 ---
 
-## Albert-MoE-13 — The Intelligence Layer
+## 2. Albert-MoE-13 — The Intelligence Layer
 
 We are actively designing, training, and deploying our own **ternary-native Mixture-of-Experts model**.
 
@@ -144,7 +144,7 @@ albert-cli
 
 ---
 
-## Repository layout
+## 4. Repository layout
 
 | Directory | Contents |
 |-----------|----------|
@@ -155,7 +155,7 @@ albert-cli
 
 ---
 
-## Licensing
+## 5. Licensing
 
 | Tier | Price | Details |
 |------|-------|---------|
@@ -166,7 +166,7 @@ albert-cli
 
 ---
 
-## Team
+## 6. Team
 
 The Ternary Intelligence Stack is built by a core team of five co-founders from **RFI-IRFOS**, Graz:
 
