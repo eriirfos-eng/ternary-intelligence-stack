@@ -23,12 +23,14 @@ COPY ternpkg/Cargo.toml            ternpkg/Cargo.toml
 COPY ternlang-compat/Cargo.toml    ternlang-compat/Cargo.toml
 COPY ternlang-compress/Cargo.toml  ternlang-compress/Cargo.toml
 COPY ternlang-wasm/Cargo.toml      ternlang-wasm/Cargo.toml
+COPY ternlang-ruvector/Cargo.toml  ternlang-ruvector/Cargo.toml
 
 # Stub out all src dirs so cargo can resolve deps without full source
 RUN for crate in compiler/legacy_shim/ternlang-core compiler/legacy_shim/ternlang-codegen \
       compiler/legacy_shim/ternlang-runtime compiler/legacy_shim/ternlang-cli \
       ternlang-ml ternlang-api ternlang-mcp ternlang-moe ternlang-test \
-      ternlang-hdl ternlang-lsp ternpkg ternlang-compat ternlang-compress ternlang-wasm; do \
+      ternlang-hdl ternlang-lsp ternpkg ternlang-compat ternlang-compress ternlang-wasm \
+      ternlang-ruvector; do \
       mkdir -p $crate/src && echo "fn main() {}" > $crate/src/main.rs && \
       echo "" > $crate/src/lib.rs; \
     done
@@ -55,6 +57,7 @@ COPY ternpkg/src            ternpkg/src
 COPY ternlang-compat/src    ternlang-compat/src
 COPY ternlang-compress/src  ternlang-compress/src
 COPY ternlang-wasm/src      ternlang-wasm/src
+COPY ternlang-ruvector/src  ternlang-ruvector/src
 
 # Compile backend API with embedded assets
 RUN cargo build --release -p ternlang-api
