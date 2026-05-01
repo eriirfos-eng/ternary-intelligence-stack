@@ -1,0 +1,50 @@
+/*
+ * 3D Trit Tensor (Arena-backed)
+ * Simulation of a 3D tensor [X, Y, Z] using flat indexing.
+ */
+
+fn tensor_3d_get(data: trit[], x: int, y: int, z: int, dim_y: int, dim_z: int) -> trit {
+    let idx: int = x * (dim_y * dim_z) + y * dim_z + z;
+    return data[idx];
+}
+
+fn tensor_3d_set(data: trit[], x: int, y: int, z: int, dim_y: int, dim_z: int, val: trit) -> trit {
+    let idx: int = x * (dim_y * dim_z) + y * dim_z + z;
+    data[idx] = val;
+    return 1;
+}
+
+fn main() -> trit {
+    // 2x2x2 tensor
+    let data: trit[8];
+    let dim_x: int = 2;
+    let dim_y: int = 2;
+    let dim_z: int = 2;
+    
+    // Initialize
+    let i: int = 0;
+    while i < 8 { data[i] = 0; i = i + 1; }
+    
+    println("3D Trit Tensor [2x2x2] Demo");
+    
+    println("Setting [1, 0, 1] to Affirm (1)");
+    tensor_3d_set(data, 1, 0, 1, dim_y, dim_z, 1);
+    
+    println("Setting [0, 1, 1] to Reject (-1)");
+    tensor_3d_set(data, 0, 1, 1, dim_y, dim_z, -1);
+    
+    println("Reading [1, 0, 1]:");
+    let v1: trit = tensor_3d_get(data, 1, 0, 1, dim_y, dim_z);
+    println(v1);
+    
+    println("Reading [0, 1, 1]:");
+    let v2: trit = tensor_3d_get(data, 0, 1, 1, dim_y, dim_z);
+    println(v2);
+    
+    if v1 == 1 && v2 == -1 {
+        println("3D Tensor addressing verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
