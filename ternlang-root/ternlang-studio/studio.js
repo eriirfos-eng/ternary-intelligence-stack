@@ -6149,13 +6149,13 @@ function openDeployModal() {
   document.getElementById("deploy-confirm-btns").style.display = "flex";
   document.getElementById("deploy-result").style.display = "none";
   deployStep(1);
-  document.getElementById("deploy-modal") || document.getElementById("deployModal").style.display = "flex";
+  (document.getElementById("deploy-modal") || document.getElementById("deployModal")).style.display = "flex";
   lucide.createIcons();
 }
 window.openDeployModal = openDeployModal;
 
 function closeDeployModal() {
-  document.getElementById("deploy-modal") || document.getElementById("deployModal").style.display = "none";
+  (document.getElementById("deploy-modal") || document.getElementById("deployModal")).style.display = "none";
 }
 window.closeDeployModal = closeDeployModal;
 
