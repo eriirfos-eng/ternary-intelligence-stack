@@ -8556,11 +8556,13 @@ Otherwise, respond naturally and concisely.`;
     panelEl.style.display = 'flex';
     visible = true;
     setTimeout(() => document.getElementById('albert-input')?.focus(), 50);
+    updateWires();
   }
 
   function hidePanel() {
     if (panelEl) panelEl.style.display = 'none';
     visible = false;
+    updateWires();
   }
 
   window.toggleAlbertPanel = function() {
