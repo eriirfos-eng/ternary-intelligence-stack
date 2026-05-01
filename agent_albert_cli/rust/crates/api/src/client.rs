@@ -541,9 +541,6 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
     if let Some(system) = &request.system { messages.push(json!({ "role": "system", "content": system })); }
 
     for msg in &request.messages {
-        let mut content_text = String::new();
-        let mut tool_calls = vec![];
-
         let mut content_blocks: Vec<serde_json::Value> = vec![];
         let mut tool_calls: Vec<serde_json::Value> = vec![];
 

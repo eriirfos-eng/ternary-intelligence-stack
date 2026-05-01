@@ -2030,6 +2030,10 @@ fn convert_messages(messages: &[ConversationMessage]) -> Vec<InputMessage> {
                         }],
                         is_error: *is_error,
                     },
+                    ContentBlock::Image { media_type, data } => InputContentBlock::Image {
+                        media_type: media_type.clone(),
+                        data: data.clone(),
+                    },
                 })
                 .collect::<Vec<_>>();
             (!content.is_empty()).then(|| InputMessage {
