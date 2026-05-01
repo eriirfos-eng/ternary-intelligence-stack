@@ -25,6 +25,11 @@ impl CliDriver {
         crate::core::mock_layer::run_threshold_sweep();
     }
 
+    /// Runs the adaptive threshold selection test.
+    pub fn run_adaptive_test(&self) {
+        crate::core::mock_layer::run_adaptive_test();
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -47,6 +52,7 @@ impl CliDriver {
             "ternary-test" => self.run_mock_test(),
             "layer-test" => self.run_layer_test(),
             "sweep-test" => self.run_sweep_test(),
+            "adaptive-test" => self.run_adaptive_test(),
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);
