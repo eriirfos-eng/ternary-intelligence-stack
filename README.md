@@ -42,7 +42,7 @@ The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (aff
 
 | Feature | Performance Gain | Industry Comparison |
 |---------|------------------|---------------------|
-| **Data Density** | 1.25x improvement | 5-trit block packing (8-bit) |
+| **Data Density** | 86.1x improvement | 5-trit block packing (8-bit) |
 | **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
 | **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
 
