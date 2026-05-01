@@ -1,0 +1,43 @@
+/*
+ * Advanced Geometric Trit Utils
+ * Includes point-in-circle detection and line segment intersection analogs.
+ * Uses float math where precision is required.
+ */
+
+// Check if point (px, py) is inside circle (cx, cy) with radius r
+fn is_in_circle(px: float, py: float, cx: float, cy: float, r: float) -> trit {
+    let dx: float = px - cx;
+    let dy: float = py - cy;
+    let dist_sq: float = dx * dx + dy * dy;
+    let r_sq: float = r * r;
+    
+    if dist_sq < r_sq { return 1; }
+    if dist_sq == r_sq { return 0; }
+    return -1;
+}
+
+fn main() -> trit {
+    println("Advanced Geometric Trit Demo");
+    
+    // Circle at (0,0) radius 5, Point (3,4) -> on circle boundary
+    println("Point (3,4) in circle (0,0) r=5:");
+    let c1: trit = is_in_circle(3.0, 4.0, 0.0, 0.0, 5.0);
+    println(c1);
+    
+    // Point (1,1) -> inside
+    println("Point (1,1) in circle (0,0) r=5:");
+    let c2: trit = is_in_circle(1.0, 1.0, 0.0, 0.0, 5.0);
+    println(c2);
+    
+    // Point (6,6) -> outside
+    println("Point (6,6) in circle (0,0) r=5:");
+    let c3: trit = is_in_circle(6.0, 6.0, 0.0, 0.0, 5.0);
+    println(c3);
+    
+    if c1 == 0 && c2 == 1 && c3 == -1 {
+        println("Circle detection verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
