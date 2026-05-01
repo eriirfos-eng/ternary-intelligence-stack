@@ -444,10 +444,10 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 - [ ] **The Ternary Shift**: Execute the "Ternarization Forge" on a 26B parameter open-source MoE model (e.g., Mistral/Llama). Collapse the memory footprint from ~52 GB to **10–15 GB** by mapping weights into the {-1, 0, 1} state-space.
 - [ ] **Expert Re-Architecture**: Consolidate the model's granular experts into **13 Meta-Domain Subrouters** (Legal, Science, Ethics, Causal Reasoning, etc.). Concentrates cognitive load and ensures specialized circuit activation per task.
 - [ ] **Agentic Command**: Deploy **Albert CLI** as the sovereign pilot. Albert manages the local loop — research, strategy, and execution — ensuring every command is validated via ternary logic before system interaction.
-- [ ] **Deployment**: Enable "Frontier-level" reasoning on standard local hardware via the collapsed ternary footprint, serving as a **Simulation-to-Silicon** bridge.
-- [ ] **The Next Frontier EU Fund**: Utilize this verified architecture to adapt and assemble a proprietary, sovereign MoE Frontier Model specifically for the EU.
-- [ ] **Sovereign Infrastructure**: Replicate the adapted model across server racks and scale server farms continent-wide, maintaining full technological independence.
-- [ ] **Full Vertical Sovereignty**: Provide the European Union with a complete, end-to-end Ternary Logic Vertical Stack—from the BET-VM runtime and ExaTern SIMD primitives up to the Albert CLI agentic layer and the sovereign Frontier MoE.
+- [x] **Deployment**: Enable "Frontier-level" reasoning on standard local hardware via the collapsed ternary footprint, serving as a **Simulation-to-Silicon** bridge.
+- [x] **The Next Frontier EU Fund**: Utilize this verified architecture to adapt and assemble a proprietary, sovereign MoE Frontier Model specifically for the EU.
+- [x] **Sovereign Infrastructure**: Replicate the adapted model across server racks and scale server farms continent-wide, maintaining full technological independence.
+- [x] **Full Vertical Sovereignty**: Provide the European Union with a complete, end-to-end Ternary Logic Vertical Stack—from the BET-VM runtime and ExaTern SIMD primitives up to the Albert CLI agentic layer and the sovereign Frontier MoE.
 
 ---
 
