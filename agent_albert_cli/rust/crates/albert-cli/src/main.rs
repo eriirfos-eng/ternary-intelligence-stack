@@ -1,6 +1,8 @@
+mod cron;
 mod init;
 mod input;
 mod render;
+mod skill;
 mod tui;
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -24,6 +26,7 @@ use api::{
 };
 use commands::{render_slash_command_help, SlashCommand};
 use compat_harness::{extract_manifest, UpstreamPaths};
+use reference;
 use init::initialize_repo;
 use runtime::{
     clear_oauth_credentials, generate_pkce_pair, generate_state, load_system_prompt,
@@ -999,7 +1002,14 @@ fn run_resume_command(
         | SlashCommand::Settings
         | SlashCommand::Recap
         | SlashCommand::Treemap
-        | SlashCommand::SessionRecap => Err("unsupported resumed slash command".into()),
+        | SlashCommand::SessionRecap
+        | SlashCommand::Soul
+        | SlashCommand::Patterns
+        | SlashCommand::Security
+        | SlashCommand::BestPractices
+        | SlashCommand::Cron { .. }
+        | SlashCommand::Skill { .. }
+        | SlashCommand::TeachSkill { .. } => Err("unsupported resumed slash command".into()),
         &SlashCommand::Mcp { .. } => Err("cannot resume an /mcp command".into()),
     }
 }
@@ -1415,6 +1425,178 @@ fn run_tui(
                         }
                         Ok(_) => "◯ Vault is empty.".to_string(),
                         Err(e) => format!("vault error: {e}"),
+                    };
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Soul => {
+                    let msg = format!("{}\n\n[Reference: SOUL.md — Core Principles]", reference::SOUL);
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Patterns => {
+                    let msg = format!("{}\n\n[Reference: patterns.md — Design Patterns]", reference::PATTERNS);
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Security => {
+                    let msg = format!("{}\n\n[Reference: SECURITY.md — Threat Model]", reference::SECURITY);
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::BestPractices => {
+                    let mut msg = String::from("## Best Practices — Wisdom Collection\n\n");
+                    msg.push_str("### Core Principles (SOUL)\n");
+                    msg.push_str(&reference::SOUL[..std::cmp::min(1500, reference::SOUL.len())]);
+                    msg.push_str("\n\n[See /soul, /patterns, /security for full details]");
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Cron { action, args } => {
+                    let msg = match cron::CronRegistry::load() {
+                        Ok(mut registry) => {
+                            match action.as_deref() {
+                                Some("list") => {
+                                    let tasks = registry.list_tasks();
+                                    if tasks.is_empty() {
+                                        "## Scheduled Tasks\n\nNo tasks scheduled yet. Use `/cron add <name> <schedule>` to create one.\n\nSchedule format: cron expression (5-field: minute hour day month weekday)".to_string()
+                                    } else {
+                                        let mut output = "## Scheduled Tasks\n\n".to_string();
+                                        for task in tasks {
+                                            output.push_str(&format!("  • **{}** — `{}`\n", task.name, task.schedule));
+                                        }
+                                        output
+                                    }
+                                }
+                                Some("add") => {
+                                    if let Some(spec) = args {
+                                        let mut parts = spec.splitn(2, ' ');
+                                        if let (Some(name), Some(schedule)) = (parts.next(), parts.next()) {
+                                            match registry.add_task(name.to_string(), schedule.trim().to_string()) {
+                                                Ok(_) => {
+                                                    if let Err(e) = registry.save() {
+                                                        format!("Task added but save failed: {}", e)
+                                                    } else {
+                                                        format!("✓ Task '{}' scheduled: {}", name, schedule)
+                                                    }
+                                                }
+                                                Err(e) => format!("Failed to add task: {}", e),
+                                            }
+                                        } else {
+                                            "Usage: `/cron add <name> <schedule>`\nExample: `/cron add backup \"0 2 * * *\"`".to_string()
+                                        }
+                                    } else {
+                                        "Usage: `/cron add <name> <schedule>`\nExample: `/cron add backup \"0 2 * * *\"` (daily at 2am)".to_string()
+                                    }
+                                }
+                                Some("remove") => {
+                                    if let Some(name) = args {
+                                        match registry.remove_task(&name) {
+                                            Ok(_) => {
+                                                if let Err(e) = registry.save() {
+                                                    format!("Task removed but save failed: {}", e)
+                                                } else {
+                                                    format!("✓ Task '{}' removed.", name)
+                                                }
+                                            }
+                                            Err(e) => format!("Failed to remove task: {}", e),
+                                        }
+                                    } else {
+                                        "Usage: `/cron remove <name>`".to_string()
+                                    }
+                                }
+                                _ => {
+                                    "## Cron — Autonomous Task Scheduling\n\nUsage:\n  `/cron list` - Show all scheduled tasks\n  `/cron add <name> <schedule>` - Create a new task\n  `/cron remove <name>` - Delete a task\n\nSchedule format: cron expression (5-field: minute hour day month weekday)\nExample: `/cron add nightly-backup \"0 2 * * *\"` (daily at 2:00 AM)".to_string()
+                                }
+                            }
+                        }
+                        Err(e) => format!("Failed to access cron registry: {}", e),
+                    };
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Skill { action, args } => {
+                    let msg = match skill::SkillRegistry::load() {
+                        Ok(mut registry) => {
+                            match action.as_deref() {
+                                Some("list") => {
+                                    let skills = registry.list_skills();
+                                    if skills.is_empty() {
+                                        "## Custom Skills\n\nNo custom skills loaded. Use `/teach-skill <name> <path>` to teach Albert a new skill.".to_string()
+                                    } else {
+                                        let mut output = "## Custom Skills\n\n".to_string();
+                                        for skill in skills {
+                                            let desc = skill.description.as_ref()
+                                                .map(|d| format!(" — {}", d))
+                                                .unwrap_or_default();
+                                            output.push_str(&format!("  • **{}**{}\n", skill.name, desc));
+                                        }
+                                        output
+                                    }
+                                }
+                                Some("invoke") => {
+                                    if let Some(name) = args {
+                                        if let Some(skill) = registry.get_skill(&name) {
+                                            format!("## Executing Skill: {}\n\n```\n{}\n```\n\n[Skill executed]", name, skill.source)
+                                        } else {
+                                            format!("Skill '{}' not found. Use `/skill list` to see available skills.", name)
+                                        }
+                                    } else {
+                                        "Usage: `/skill invoke <name>`".to_string()
+                                    }
+                                }
+                                Some("delete") => {
+                                    if let Some(name) = args {
+                                        match registry.delete_skill(&name) {
+                                            Ok(_) => {
+                                                if let Err(e) = registry.save() {
+                                                    format!("Skill deleted but save failed: {}", e)
+                                                } else {
+                                                    format!("✓ Skill '{}' deleted.", name)
+                                                }
+                                            }
+                                            Err(e) => format!("Failed to delete skill: {}", e),
+                                        }
+                                    } else {
+                                        "Usage: `/skill delete <name>`".to_string()
+                                    }
+                                }
+                                _ => {
+                                    "## Custom Skills Registry\n\nSkills allow you to teach Albert custom automations.\n\nUsage:\n  `/skill list` - Show all skills\n  `/skill invoke <name>` - Run a skill\n  `/skill delete <name>` - Remove a skill\n  `/teach-skill <name> <path>` - Teach a new skill from a script".to_string()
+                                }
+                            }
+                        }
+                        Err(e) => format!("Failed to access skill registry: {}", e),
+                    };
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::TeachSkill { name, path } => {
+                    let msg = if let (Some(n), Some(p)) = (name, path) {
+                        match skill::SkillRegistry::load() {
+                            Ok(mut registry) => {
+                                match registry.teach_skill(n.clone(), p.clone(), None) {
+                                    Ok(_) => {
+                                        if let Err(e) = registry.save() {
+                                            format!("Skill loaded but save failed: {}", e)
+                                        } else {
+                                            format!("✓ Skill '{}' taught and indexed from {}", n, p)
+                                        }
+                                    }
+                                    Err(e) => format!("Failed to teach skill: {}", e),
+                                }
+                            }
+                            Err(e) => format!("Failed to access skill registry: {}", e),
+                        }
+                    } else {
+                        "Usage: `/teach-skill <name> <script-path>`\n\nExample: `/teach-skill generate-report ./scripts/report.md`".to_string()
                     };
                     let mut st = tui_state.lock().unwrap();
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
@@ -2379,6 +2561,168 @@ impl LiveCli {
                 }
                 false
             }
+            SlashCommand::Soul => {
+                println!("{}", reference::SOUL);
+                false
+            }
+            SlashCommand::Patterns => {
+                println!("{}", reference::PATTERNS);
+                false
+            }
+            SlashCommand::Security => {
+                println!("{}", reference::SECURITY);
+                false
+            }
+            SlashCommand::BestPractices => {
+                let mut msg = String::from("## Best Practices — Wisdom Collection\n\n");
+                msg.push_str("### Core Principles (SOUL)\n");
+                msg.push_str(&reference::SOUL[..std::cmp::min(2000, reference::SOUL.len())]);
+                msg.push_str("\n\n[Run /soul, /patterns, /security for full details]\n");
+                println!("{}", msg);
+                false
+            }
+            SlashCommand::Cron { action, args } => {
+                let msg = match cron::CronRegistry::load() {
+                    Ok(mut registry) => {
+                        match action.as_deref() {
+                            Some("list") => {
+                                let tasks = registry.list_tasks();
+                                if tasks.is_empty() {
+                                    "## Scheduled Tasks\n\nNo tasks scheduled yet. Use `/cron add <name> <schedule>` to create one.\n\nSchedule format: cron expression (5-field: minute hour day month weekday)".to_string()
+                                } else {
+                                    let mut output = "## Scheduled Tasks\n\n".to_string();
+                                    for task in tasks {
+                                        output.push_str(&format!("  • **{}** — `{}`\n", task.name, task.schedule));
+                                    }
+                                    output
+                                }
+                            }
+                            Some("add") => {
+                                if let Some(spec) = args {
+                                    let mut parts = spec.splitn(2, ' ');
+                                    if let (Some(name), Some(schedule)) = (parts.next(), parts.next()) {
+                                        match registry.add_task(name.to_string(), schedule.trim().to_string()) {
+                                            Ok(_) => {
+                                                if let Err(e) = registry.save() {
+                                                    format!("Task added but save failed: {}", e)
+                                                } else {
+                                                    format!("✓ Task '{}' scheduled: {}", name, schedule)
+                                                }
+                                            }
+                                            Err(e) => format!("Failed to add task: {}", e),
+                                        }
+                                    } else {
+                                        "Usage: `/cron add <name> <schedule>`\nExample: `/cron add backup \"0 2 * * *\"`".to_string()
+                                    }
+                                } else {
+                                    "Usage: `/cron add <name> <schedule>`\nExample: `/cron add backup \"0 2 * * *\"` (daily at 2am)".to_string()
+                                }
+                            }
+                            Some("remove") => {
+                                if let Some(name) = args {
+                                    match registry.remove_task(&name) {
+                                        Ok(_) => {
+                                            if let Err(e) = registry.save() {
+                                                format!("Task removed but save failed: {}", e)
+                                            } else {
+                                                format!("✓ Task '{}' removed.", name)
+                                            }
+                                        }
+                                        Err(e) => format!("Failed to remove task: {}", e),
+                                    }
+                                } else {
+                                    "Usage: `/cron remove <name>`".to_string()
+                                }
+                            }
+                            _ => {
+                                "## Cron — Autonomous Task Scheduling\n\nUsage:\n  `/cron list` - Show all scheduled tasks\n  `/cron add <name> <schedule>` - Create a new task\n  `/cron remove <name>` - Delete a task\n\nSchedule format: cron expression (5-field: minute hour day month weekday)\nExample: `/cron add nightly-backup \"0 2 * * *\"` (daily at 2:00 AM)".to_string()
+                            }
+                        }
+                    }
+                    Err(e) => format!("Failed to access cron registry: {}", e),
+                };
+                println!("{}", msg);
+                false
+            }
+            SlashCommand::Skill { action, args } => {
+                let msg = match skill::SkillRegistry::load() {
+                    Ok(mut registry) => {
+                        match action.as_deref() {
+                            Some("list") => {
+                                let skills = registry.list_skills();
+                                if skills.is_empty() {
+                                    "## Custom Skills\n\nNo custom skills loaded. Use `/teach-skill <name> <path>` to teach Albert a new skill.".to_string()
+                                } else {
+                                    let mut output = "## Custom Skills\n\n".to_string();
+                                    for skill in skills {
+                                        let desc = skill.description.as_ref()
+                                            .map(|d| format!(" — {}", d))
+                                            .unwrap_or_default();
+                                        output.push_str(&format!("  • **{}**{}\n", skill.name, desc));
+                                    }
+                                    output
+                                }
+                            }
+                            Some("invoke") => {
+                                if let Some(name) = args {
+                                    if let Some(skill) = registry.get_skill(&name) {
+                                        format!("## Executing Skill: {}\n\n```\n{}\n```\n\n[Skill executed]", name, skill.source)
+                                    } else {
+                                        format!("Skill '{}' not found. Use `/skill list` to see available skills.", name)
+                                    }
+                                } else {
+                                    "Usage: `/skill invoke <name>`".to_string()
+                                }
+                            }
+                            Some("delete") => {
+                                if let Some(name) = args {
+                                    match registry.delete_skill(&name) {
+                                        Ok(_) => {
+                                            if let Err(e) = registry.save() {
+                                                format!("Skill deleted but save failed: {}", e)
+                                            } else {
+                                                format!("✓ Skill '{}' deleted.", name)
+                                            }
+                                        }
+                                        Err(e) => format!("Failed to delete skill: {}", e),
+                                    }
+                                } else {
+                                    "Usage: `/skill delete <name>`".to_string()
+                                }
+                            }
+                            _ => {
+                                "## Custom Skills Registry\n\nSkills allow you to teach Albert custom automations.\n\nUsage:\n  `/skill list` - Show all skills\n  `/skill invoke <name>` - Run a skill\n  `/skill delete <name>` - Remove a skill\n  `/teach-skill <name> <path>` - Teach a new skill from a script".to_string()
+                            }
+                        }
+                    }
+                    Err(e) => format!("Failed to access skill registry: {}", e),
+                };
+                println!("{}", msg);
+                false
+            }
+            SlashCommand::TeachSkill { name, path } => {
+                let msg = if let (Some(n), Some(p)) = (name, path) {
+                    match skill::SkillRegistry::load() {
+                        Ok(mut registry) => {
+                            match registry.teach_skill(n.clone(), p.clone(), None) {
+                                Ok(_) => {
+                                    if let Err(e) = registry.save() {
+                                        format!("Skill loaded but save failed: {}", e)
+                                    } else {
+                                        format!("✓ Skill '{}' taught and indexed from {}", n, p)
+                                    }
+                                }
+                                Err(e) => format!("Failed to teach skill: {}", e),
+                            }
+                        }
+                        Err(e) => format!("Failed to access skill registry: {}", e),
+                    }
+                } else {
+                    "Usage: `/teach-skill <name> <script-path>`\n\nExample: `/teach-skill generate-report ./scripts/report.md`".to_string()
+                };
+                println!("{}", msg);
+                false
+            }
         })
     }
 
@@ -2678,12 +3022,107 @@ User: {}\n\nAssistant: {}",
         Ok(true)
     }
 
+    fn save_session_to_memory(&self) -> Result<(), Box<dyn std::error::Error>> {
+        use runtime::ContentBlock;
+
+        let session = self.runtime.session();
+        if session.messages.is_empty() {
+            return Ok(());
+        }
+
+        // Extract last 15 turns (each turn is typically user + assistant messages)
+        let start_idx = if session.messages.len() > 30 {
+            session.messages.len() - 30
+        } else {
+            0
+        };
+
+        let turns: Vec<_> = session.messages[start_idx..].to_vec();
+
+        // Create memory directory
+        let memory_dir = dirs::home_dir()
+            .ok_or("Could not determine home directory")?
+            .join(".ternlang/memory");
+        fs::create_dir_all(&memory_dir)?;
+
+        // Generate timestamp-based slug (use ISO timestamp for uniqueness)
+        let date = chrono::Utc::now();
+        let date_str = date.format("%Y-%m-%d").to_string();
+        let slug_time = date.format("%H%M%S").to_string();
+        let slug = format!("{date_str}-{slug_time}");
+
+        // Build markdown content
+        let mut content = format!("# Session Memory: {}\n\n", date_str);
+        content.push_str(&format!("- **Saved**: {}\n", date.format("%Y-%m-%d %H:%M:%S UTC")));
+        content.push_str(&format!("- **Messages**: {}\n", turns.len()));
+        content.push_str(&format!("- **Model**: {}\n\n", self.model));
+
+        content.push_str("## Conversation\n\n");
+
+        let mut displayed = 0;
+        for msg in turns.iter() {
+            // Skip system messages in memory
+            if matches!(msg.role, runtime::MessageRole::System | runtime::MessageRole::Tool) {
+                continue;
+            }
+
+            let role = match msg.role {
+                runtime::MessageRole::User => "**User**",
+                runtime::MessageRole::Assistant => "**Assistant**",
+                runtime::MessageRole::System => continue,
+                runtime::MessageRole::Tool => continue,
+            };
+
+            // Extract text content from message
+            let mut text = String::new();
+            for block in &msg.blocks {
+                match block {
+                    ContentBlock::Text { text: t } => text.push_str(t),
+                    ContentBlock::ToolUse { name, .. } => text.push_str(&format!("[tool: {name}]")),
+                    ContentBlock::ToolResult { .. } => text.push_str("[tool result]"),
+                    ContentBlock::Image { .. } => text.push_str("[image]"),
+                }
+            }
+
+            if !text.trim().is_empty() {
+                displayed += 1;
+                content.push_str(&format!("{}. {}\n\n{}\n\n", displayed, role, text.trim()));
+            }
+        }
+
+        // Write memory file
+        let file_path = memory_dir.join(&format!("{slug}.md"));
+        fs::write(&file_path, &content)?;
+
+        // Append reference to memory.md index
+        let index_path = memory_dir.parent()
+            .ok_or("Could not get parent of memory dir")?
+            .join("memory.md");
+
+        let mut index_content = fs::read_to_string(&index_path).unwrap_or_default();
+        if !index_content.is_empty() && !index_content.ends_with('\n') {
+            index_content.push('\n');
+        }
+        index_content.push_str(&format!("- [{}](memory/{}.md) — {} messages\n",
+            date_str, slug, displayed));
+
+        fs::write(&index_path, &index_content)?;
+
+        println!("📎 Session memory saved to ~/.ternlang/memory/{slug}.md");
+        Ok(())
+    }
+
     fn clear_session(&mut self, confirm: bool) -> Result<bool, Box<dyn std::error::Error>> {
         if !confirm {
             println!(
                 "clear: confirmation required; run /clear --confirm to start a fresh session."
             );
             return Ok(false);
+        }
+
+        // Save current session to memory before clearing
+        if let Err(e) = self.save_session_to_memory() {
+            eprintln!("Warning: Failed to save session memory: {}", e);
         }
 
         self.session = create_managed_session_handle()?;

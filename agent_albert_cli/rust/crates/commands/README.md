@@ -11,6 +11,7 @@ Parser and registry for all Albert slash commands. Each command is a typed enum 
 
 | Command | Description |
 |---------|-------------|
+| **Development** | |
 | `/auth` | Configure provider credentials |
 | `/init` | Build cognitive map of the current repo |
 | `/plan` | Multi-step execution plan with risk analysis |
@@ -21,6 +22,19 @@ Parser and registry for all Albert slash commands. Each command is a typed enum 
 | `/bughunter` | Hunt and triage bugs across the codebase |
 | `/refactor` | Remove dead code, consolidate duplicates |
 | `/commit` | AI-generated commit message from staged diff |
+| **Memory & Knowledge** | |
+| `/remember` | Save text to persistent vault memory |
+| `/recall` | Search vault for matching memories |
+| `/vault` | Show vault entries or search by tag |
+| `/soul` | Display Albert's core principles |
+| `/patterns` | View orchestration design patterns |
+| `/security` | Show security guidelines & threat model |
+| `/best-practices` | Combined wisdom from all reference docs |
+| **Autonomous & Extensions** | |
+| `/cron` | Schedule recurring autonomous tasks |
+| `/skill` | Manage custom skills and automations |
+| `/teach-skill` | Teach Albert a custom skill from a script |
+| **Session & Utility** | |
 | `/compress` | Sliding-window context compaction |
 | `/help` | Full command reference |
 

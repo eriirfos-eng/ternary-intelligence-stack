@@ -71,6 +71,54 @@ fn get_pulse_style(elapsed: f32, is_active: bool) -> Style {
         .add_modifier(Modifier::BOLD)
 }
 
+/// Shimmer effect: creates a moving light gradient across text
+/// Returns styled spans with position-based brightness
+fn get_shimmer_spans(text: &str, elapsed: f32) -> Vec<Span<'static>> {
+    if text.is_empty() {
+        return vec![Span::raw("")];
+    }
+
+    let text_len = text.len() as f32;
+    let period = 3.0; // 3 second cycle for left-to-right sweep
+    let phase = (elapsed % period) / period; // 0..1
+    let shimmer_pos = phase * (text_len + 4.0); // Travel beyond text for smooth exit
+
+    let mut spans = Vec::new();
+    let chars: Vec<char> = text.chars().collect();
+
+    for (idx, &ch) in chars.iter().enumerate() {
+        let idx_f = idx as f32;
+        let dist_from_shimmer = (idx_f - shimmer_pos).abs();
+        let shimmer_width = 6.0; // Width of the shimmer effect
+
+        // Calculate brightness: brightest at center (dist=0), fades to normal at edges
+        let brightness = if dist_from_shimmer < shimmer_width {
+            let factor = 1.0 - (dist_from_shimmer / shimmer_width);
+            factor * factor // Quadratic falloff for smoother look
+        } else {
+            0.0
+        };
+
+        // Base color (turquoise): (0, 200, 255)
+        // Shimmer adds brightness (white highlight effect)
+        let base_r = 0u8;
+        let base_g = 200u8;
+        let base_b = 255u8;
+
+        let r = (base_r as f32 + (255.0 - base_r as f32) * brightness * 0.6) as u8;
+        let g = (base_g as f32 + (255.0 - base_g as f32) * brightness * 0.4) as u8;
+        let b = (base_b as f32 + (255.0 - base_b as f32) * brightness * 0.3) as u8;
+
+        let style = Style::default()
+            .fg(Color::Rgb(r, g, b))
+            .add_modifier(if brightness > 0.5 { Modifier::BOLD } else { Modifier::empty() });
+
+        spans.push(Span::styled(ch.to_string(), style));
+    }
+
+    spans
+}
+
 // Tip lines shown below the working indicator — cycle by elapsed seconds
 const TIPS: &[&str] = &[
     "Use /compress to free context space mid-session",
@@ -1141,18 +1189,6 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     }
 }
 
-fn is_last_in_turn(it: &std::iter::Peekable<std::collections::vec_deque::Iter<'_, ExecBlock>>) -> bool {
-    let mut peek_it = it.clone();
-    while let Some(next) = peek_it.next() {
-        match next {
-            ExecBlock::UserMessage(_) => return true,
-            ExecBlock::ToolUse { .. } | ExecBlock::Plan { .. } | ExecBlock::ToolOutput { .. } | ExecBlock::AgentText(..) => return false,
-            ExecBlock::WorkedFor(_) | ExecBlock::SystemMsg(_) => continue,
-        }
-    }
-    true
-}
-
 fn is_last_in_turn_by_index(log: &std::collections::VecDeque<ExecBlock>, start_idx: usize) -> bool {
     for (idx, block) in log.iter().enumerate().skip(start_idx + 1) {
         match block {
@@ -2215,15 +2251,16 @@ fn render_status(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
         };
         let activity = current_activity(state);
 
-        // Pulse the Dingir symbol when active
+        // Pulse the Dingir symbol when active, shimmer the activity text
         let elapsed = state.session_start.elapsed().as_secs_f32();
         let pulse_style = get_pulse_style(elapsed, true);
+        let shimmer_spans = get_shimmer_spans(&activity, elapsed);
 
-        Line::from(vec![
-            Span::styled(" 𒀭 ", pulse_style),
-            Span::styled(activity, pulse_style),
-            Span::styled(format!(" ({timer}{tok_str})"), Style::default().fg(GREY)),
-        ])
+        let mut spans = vec![Span::styled(" 𒀭 ", pulse_style)];
+        spans.extend(shimmer_spans);
+        spans.push(Span::styled(format!(" ({timer}{tok_str})"), Style::default().fg(GREY)));
+
+        Line::from(spans)
     } else {
         let last_worked = state.exec_log.iter().rev().find_map(|b| {
             if let ExecBlock::WorkedFor(s) = b { Some(*s) } else { None }

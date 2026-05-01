@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "albert-api"
-version = "1.2.7"
+version = "1.3.0"
 dependencies = [
  "albert-runtime",
  "reqwest",
@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "albert-cli"
-version = "1.2.7"
+version = "1.3.0"
 dependencies = [
  "albert-api",
  "albert-commands",
@@ -48,6 +48,7 @@ dependencies = [
  "indicatif",
  "pulldown-cmark",
  "ratatui",
+ "reference",
  "reqwest",
  "rustyline",
  "serde",
@@ -61,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "albert-commands"
-version = "1.2.7"
+version = "1.3.0"
 dependencies = [
  "albert-runtime",
  "console 0.15.11",
@@ -69,7 +70,7 @@ dependencies = [
 
 [[package]]
 name = "albert-compat"
-version = "1.2.7"
+version = "1.3.0"
 dependencies = [
  "albert-commands",
  "albert-runtime",
@@ -78,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "albert-runtime"
-version = "1.2.7"
+version = "1.3.0"
 dependencies = [
  "glob",
  "regex",
@@ -91,7 +92,7 @@ dependencies = [
 
 [[package]]
 name = "albert-tools"
-version = "1.2.7"
+version = "1.3.0"
 dependencies = [
  "albert-api",
  "albert-runtime",
@@ -1721,6 +1722,10 @@ dependencies = [
  "libredox",
  "thiserror 1.0.69",
 ]
+
+[[package]]
+name = "reference"
+version = "1.3.0"
 
 [[package]]
 name = "regex"

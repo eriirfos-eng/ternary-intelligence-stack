@@ -55,6 +55,36 @@ impl CliDriver {
         crate::core::mock_layer::run_stable_stack_test();
     }
 
+    /// Runs the task-level pressure evaluation.
+    pub fn run_task_test(&self) {
+        crate::core::mock_layer::run_task_test();
+    }
+
+    /// Runs the ternary inference engine.
+    pub fn run_bench_inference(&self) {
+        crate::core::mock_layer::run_bench_inference();
+    }
+
+    /// Runs the scaling sweep experiments.
+    pub fn run_scaling_sweep(&self) {
+        crate::core::mock_layer::run_scaling_sweep();
+    }
+
+    /// Runs the performance report summary.
+    pub fn run_perf_report(&self) {
+        crate::core::mock_layer::run_perf_report();
+    }
+
+    /// Runs the concurrency stress test.
+    pub fn run_concurrency_test(&self) {
+        crate::core::mock_layer::run_concurrency_test();
+    }
+
+    /// Runs the routing stress test.
+    pub fn run_routing_stress_test(&self, num_experts: usize) {
+        crate::core::mock_layer::run_routing_stress_test(num_experts);
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -83,6 +113,18 @@ impl CliDriver {
             "real-test" => self.run_real_test(),
             "stack-test" => self.run_stack_test(),
             "stable-stack-test" => self.run_stable_stack_test(),
+            "task-test" => self.run_task_test(),
+            "bench-inference" => self.run_bench_inference(),
+            "scaling-sweep" => self.run_scaling_sweep(),
+            "perf-report" => self.run_perf_report(),
+            "concurrency-test" => self.run_concurrency_test(),
+            "routing-stress-test" => {
+                if args.len() > 1 {
+                    self.run_routing_stress_test(args[1].parse().unwrap_or(2));
+                } else {
+                    self.run_routing_stress_test(2);
+                }
+            }
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);
