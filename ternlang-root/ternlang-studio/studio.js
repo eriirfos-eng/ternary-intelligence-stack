@@ -6140,20 +6140,19 @@ function openDeployModal() {
   if (flowNodes.length === 0) { showToast("Add agents to the canvas first", "error"); return; }
   // Pre-fill name from first node
   const firstName = flowNodes[0]?.name || "";
-  document.getElementById("deployName").value = firstName;
-  document.getElementById("deployDesc").value = "";
-  document.getElementById("deployInput").value = "";
+  document.getElementById("deploy-name").value = firstName;
+  document.getElementById("deploy-desc").value = "";
   document.getElementById("deploy-progress").style.display = "none";
   document.getElementById("deploy-confirm-btns").style.display = "flex";
   document.getElementById("deploy-result").style.display = "none";
   deployStep(1);
-  document.getElementById("deployModal").style.display = "flex";
+  document.getElementById("deploy-modal") || document.getElementById("deployModal").style.display = "flex";
   lucide.createIcons();
 }
 window.openDeployModal = openDeployModal;
 
 function closeDeployModal() {
-  document.getElementById("deployModal").style.display = "none";
+  document.getElementById("deploy-modal") || document.getElementById("deployModal").style.display = "none";
 }
 window.closeDeployModal = closeDeployModal;
 
@@ -6170,10 +6169,10 @@ function deployStep(n) {
 window.deployStep = deployStep;
 
 function buildDeploySummary() {
-  const name    = document.getElementById("deployName").value.trim() || "my-agent";
-  const desc    = document.getElementById("deployDesc").value.trim() || "—";
-  const input   = document.getElementById("deployInput").value.trim() || "{ signal: trit }";
-  const pricing = document.querySelector('input[name="deployPricing"]:checked')?.value || "free";
+  const name    = document.getElementById("deploy-name").value.trim() || "my-agent";
+  const desc    = document.getElementById("deploy-desc").value.trim() || "—";
+  const input   = "{ signal: trit }";
+  const pricing = document.querySelector('input[name="deploy-pricing"]:checked')?.value || "free";
   const slug    = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
   const nodeCount = flowNodes.length;
   const wireCount = flowWires.length;
@@ -6194,9 +6193,9 @@ async function executeProductDeploy() {
   // GC sweep: clear old visual results before building deployment
   clearResultArtifacts();
 
-  const name    = document.getElementById("deployName").value.trim();
-  const desc    = document.getElementById("deployDesc").value.trim();
-  const input   = document.getElementById("deployInput").value.trim();
+  const name    = document.getElementById("deploy-name").value.trim();
+  const desc    = document.getElementById("deploy-desc").value.trim();
+  const input   = "{ signal: trit }";
   const pricing = document.querySelector('input[name="deployPricing"]:checked')?.value || "free";
   const slug    = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
