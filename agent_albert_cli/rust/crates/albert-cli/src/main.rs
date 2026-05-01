@@ -106,15 +106,13 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 .enable_all()
                 .build()
             {
-                let check_future = async {
+                if let Ok(update_result) = async_rt.block_on(async {
                     let client = api::TernlangClient::from_auth(api::AuthSource::None);
-                    client.check_for_updates().await
-                };
-
-                if let Ok(update_result) = async_rt.block_on(tokio::time::timeout(
-                    Duration::from_secs(3),
-                    check_future,
-                )) {
+                    tokio::time::timeout(
+                        Duration::from_secs(3),
+                        client.check_for_updates(),
+                    ).await
+                }) {
                     if let Ok(Some(version)) = update_result {
                         if version != VERSION {
                             println!("Update available: albert-cli v{version} (current: v{VERSION}). Run /upgrade after launch to update.");

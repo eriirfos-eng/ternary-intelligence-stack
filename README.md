@@ -1,190 +1,43 @@
-# Ternary Intelligence Stack (TIS)
+# MoE-13 Inference Runtime
 
-[![version](https://img.shields.io/badge/version-v1.2.9-blue)](#architecture)
-[![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
-[![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
-[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20-003399?logo=european-union)](https://ternlang.com/compliance)
-[![MCP](https://img.shields.io/badge/MCP-30_tools_free-orange)](#live-api)
-[![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
-[![examples](https://img.shields.io/badge/examples-2,090%2B_.tern_programs-blueviolet)](#example-library)
-[![stdlib](https://img.shields.io/badge/stdlib-293_open%20%2B%2028k%2B_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
-[![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
+MoE-13 is a deterministic, offline-first inference runtime supporting multiple model providers through a unified execution system.
 
-The Ternary Intelligence Stack (TIS) provides a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty by moving beyond the binary limitations of current systems.
+## Capabilities
+* **Run models from**:
+  * Ollama (offline-first priority)
+  * HuggingFace (local ingestion)
+  * Custom provider plugins
+* **Deterministic inference execution**
+* **Plugin-based model extension system**
+* **Offline execution guarantee**
+* **Cross-provider unified API**
 
-Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
+## Quick Start
+```rust
+use moe_sdk::*;
 
----
+// Initialize the platform
+let runtime = MoEPlatform::load(config)?;
 
-### Full Documentation
-  
-→ **[ternlang-root/README.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md)** (Full explanation, technical details, and compiler specs)
+// Run inference
+let output = runtime.run("input_query")?;
+```
 
-→ **[ROADMAP.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** (Phases 1–20, MoE-13 structure, priority matrix)
-
-→ **[session_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** (Details to the Fixes we adressed during production)
-
-→ **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress SDK
-
-→ **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — terminal-native, model-agnostic AI agent built in pure Rust
-
----
-
-## 1. Ternlang (The Infrastructure Layer)
-
-Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
-
-The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
-
-## Performance Benchmarks
-
-| Feature | Performance Gain | Industry Comparison |
-|---------|------------------|---------------------|
-| **Data Density** | 86.1x improvement | 5-trit block packing (8-bit) |
-| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
-| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
-
----
-
-## Quick start (Compiler)
-
+## CLI Usage
 ```bash
-cargo install ternlang-cli
+moe run --provider ollama --model llama3
+moe run --provider hf --model gemma
 ```
 
-The `ternlang` binary provides the compiler, REPL, and test runner:
+## Architecture
+MoE-13 consists of:
+* **Public SDK (`moe-sdk`)**: Simple, stable entrypoint for developers.
+* **Execution Platform (`moe-platform` + `plugin-sdk`)**: High-performance runtime and extensibility layer.
+* **Internal Runtime**: Optimized ternary execution substrate (hidden).
 
-```bash
-ternlang my_program.tern        # → run a .tern file directly
-ternlang build my_program.tern  # → compile to .bet bytecode
-```
----
-
-## 2. Albert-MoE-13 — The Intelligence Layer
-
-We are actively developing **Albert-MoE-13**, our flagship ternary-native Mixture-of-Experts architecture. Rather than pre-training from scratch, Albert is built through the **Native Ternary Adaptation** of established open-source LLM foundations (Mistral, Llama, etc.). This allows us to leapfrog the multi-billion dollar pre-training cost while providing superior triadic reasoning.
-
-**Albert** is our in-progress **MoE-13 (Mixture-of-Experts) ternary LLM**.  
-Unlike traditional binary LLMs, Albert uses **13 domain-specific experts** to deliberate on every decision.
-
----
-
-### Core Idea
-
-Each expert evaluates the input from a specific perspective and returns a ternary vote:
-
-```
--1 → reject  
- 0 → hold (uncertain / insufficient evidence)  
-+1 → affirm  
-```
-
-- **Simulation-to-Silicon Bridge**  
-  Currently running as a high-performance software simulation on standard x86/CUDA hardware, designed for seamless migration to future **Ternary Silicon** (including Huawei's latest AI hardware).
-
----
-
-### The 13 Deliberation Axes
-
-- **The Ternarization Forge**  
-  We leverage high-capacity open-source foundations (20B–30B parameter class) and execute a full-model transformation. By mapping continuous weights into the discrete {-1, 0, +1} weight space, we collapse the memory footprint from ~52 GB to **10–15 GB**.
-
-- **Objective**  
-  - Enable **frontier-level reasoning** on standard local hardware.
-  - Enable **sparsity-aware execution** (@sparseskip).
-  - Improve deterministic interpretability via discrete weight states.
-
-- **Architecture**  
-  Consolidation into **13 domain-specific expert routers (MoE-13)**.
-
----
-
-### Architecture
-
-- **Base Model**: Open-source MoE (~20B–30B parameters)  
-- **Weights**: Fully ternarized `{ -1, 0, +1 }`  
-- **Structure**: 13 expert routers (MoE-13)  
-- **Execution**: Sparsity-aware inference  
-
----
-
-### Key Properties
-
-- **Deterministic uncertainty** via `HOLD (0)`  
-- **Traceable reasoning** through expert votes  
-- **Built-in safety gating** (pre-output veto)  
-- **Offline-first, sovereign deployment**  
-- Native integration with **Ternlang** and **BET-VM**
-
----
-
-## 3. Agent Albert — The Sovereign AI Assistant
-
-[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
-[![version](https://img.shields.io/badge/version-v1.2.9-cyan)](https://crates.io/crates/albert-cli)
-
-**Albert** is also the terminal-native interface for the TIS. He runs entirely in your terminal, connects to local models (Ollama) or commercial bridges, and never “phones home.”
-
-### Quick Install
-
-```bash
-# Install Albert (brings the full agent engine with it)
-cargo install albert-cli
-
-# Launch
-albert-cli
-```
-
-### Key Capabilities
-
-| Capability | Details |
-|---|---|
-| **Autonomous agent loop** | `/loop <mission>` — runs up to 10 tool-use turns to complete a goal |
-| **Local-First** | Native Ollama support for completely offline and free operation |
-| **Model-agnostic** | Connect to Gemini, Claude, GPT-4o, or Grok as "capability bridges" |
-| **Self-reflection memory** | Commits key facts to local storage to maintain long-term context |
-
-
----
-
-## 4. Repository layout
-
-| Directory | Contents |
-|-----------|----------|
-| [`ternlang-root/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root) | All Rust crates — compiler, VM, API, MCP server, ML stack |
-| [`agent_albert_cli/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli) | Agent Albert — terminal-native CLI + TernStudio intelligence layer |
-| [`ternlang-root/stdlib/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib) | 293 open-core `.tern` modules (Tier 1 — free) |
-| `eriirfos-eng/ternlang-premium` *(private)* | 28,495+ proprietary `.tern` modules — Tier 2 / 3 / 4 |
-
----
-
-## 5. Licensing
-
-| Tier | Price | Details |
-|------|-------|---------|
-| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 293 stdlib modules + 30 MCP tools |
-| Pro Standard (BSL-1.1) | €99/month | REST API, server-side memory, Tier 2 stdlib |
-| Industrial (BSL-1.1) | €349/month | QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
-| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 stdlib |
-
----
-
-## 6. Team
-
-The Ternary Intelligence Stack is built by a core team of five co-founders from **RFI-IRFOS**, Graz:
-
-*   **Simeon Kepp**: Head of Research & Systems Architect.
-*   **Nikoletta Csonka**: Head of Strategic Outreach & EU Relations.
-*   **Zabih Karimi**: Principal Network & ML Engineer.
-*   **Lisa Scharler**: Head of Social Technology & Ecocentric Systems.
-*   **Louis Ehrig**: Louis Paul Ehrig Corporate Secretary and Press & Media Relations.
-
-→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
-
----
-
-<div align="center">
-  <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
-</div>
+## Stability Guarantees
+* Deterministic execution
+* Offline-first by design
+* Reproducible outputs
+* Sandboxed plugins
+* No runtime mutation of core engine

@@ -3,7 +3,11 @@ use regex::Regex;
 use colored::*;
 use std::fs;
 use std::path::PathBuf;
-use serde_json;
+use serde_json::{self, json};
+
+#[path = "../../ternlang-root/ternlang-moe/src/agents/safety.rs"]
+mod safety;
+use safety::{patterns, gate_injector};
 
 /// TernTranslator — Migrate binary logic to balanced ternary (.tern)
 #[derive(Parser, Debug)]
@@ -147,16 +151,12 @@ fn main() -> anyhow::Result<()> {
         },
     ];
 
-mod safety;
-use safety::{patterns, gate_injector};
-
-// ... inside main ...
     let all_rules = [logic_rules, flow_rules, type_rules, optimization_rules].concat();
 
     for rule in all_rules {
         if rule.pattern.is_match(&translated) {
             translated = rule.pattern.replace_all(&translated, rule.replacement).to_string();
-            insights.push(rule.note);
+            insights.push(rule.note.to_string());
         }
     }
 
@@ -168,18 +168,18 @@ use safety::{patterns, gate_injector};
                 gate_injector::inject_safety_gate(&caps[0], &pattern)
             }).to_string();
             
-            manifest_data.push(serde_json::json!({
+            manifest_data.push(json!({
                 "pattern_id": pattern.id,
                 "risk_level": format!("{:?}", pattern.risk_level),
                 "original": &caps[0],
                 "explanation": pattern.explanation
             }));
-            insights.push(format!("Gated risky operation: {}", pattern.id));
+            insights.push("Gated risky operation: ".to_string() + &pattern.id);
         }
     }
     
     if !manifest_data.is_empty() {
-        let manifest_json = serde_json::json!({
+        let manifest_json = json!({
             "file": format!("{:?}", args.input),
             "transformations": manifest_data
         });
