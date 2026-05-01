@@ -1,0 +1,44 @@
+/*
+ * Advanced Trit Stack
+ * Trit stack implementation with peek and search capabilities.
+ */
+
+fn stack_peek(buffer: trit[], ptr: int) -> trit {
+    if ptr <= 0 { return 0; }
+    return buffer[ptr - 1];
+}
+
+fn stack_contains(buffer: trit[], ptr: int, val: trit) -> trit {
+    let i: int = 0;
+    while i < ptr {
+        if buffer[i] == val { return 1; }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let buffer: trit[10];
+    let ptr: int = 0;
+    
+    // Push
+    buffer[ptr] = 1; ptr = ptr + 1;
+    buffer[ptr] = -1; ptr = ptr + 1;
+    
+    println("Advanced Trit Stack Demo");
+    
+    println("Peeking (should be -1):");
+    let p: trit = stack_peek(buffer, ptr);
+    println(p);
+    
+    println("Contains Affirm (1)?");
+    let c: trit = stack_contains(buffer, ptr, 1);
+    println(c);
+    
+    if p == -1 && c == 1 {
+        println("Stack operations verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
