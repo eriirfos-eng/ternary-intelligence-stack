@@ -534,6 +534,108 @@ pub fn run_stack_test() {
     println!("Status: {}", status);
     println!();
 }
+
+pub struct StabilizedTernaryLayer {
+    pub ternary_layer: TernaryLayer,
+    pub alpha_residual: f32,
+}
+
+pub struct StabilizedTernaryStack {
+    pub layers: Vec<StabilizedTernaryLayer>,
+}
+
+impl StabilizedTernaryLayer {
+    /// Forward pass with residual preservation and lightweight normalization.
+    pub fn forward_stabilized(&self, input: &[f32]) -> Vec<f32> {
+        let ternary_out = self.ternary_layer.forward_ternary(input);
+        
+        let mut output = vec![0.0; ternary_out.len()];
+        for i in 0..ternary_out.len() {
+            // Combine ternary output with scaled identity residual
+            let residual = if i < input.len() { input[i] * 1.0 } else { 0.0 };
+            output[i] = ternary_out[i] + residual;
+        }
+
+        // Lightweight Stabilization: Variance-based control
+        let variance = compute_variance(&output);
+        let scale = 1.0 / (1.0 + variance);
+        
+        output.iter().map(|&x| x * scale).collect()
+    }
+}
+
+pub fn run_stable_stack_test() {
+    let dim = 32;
+    let loader = ModelLoader::new("mock");
+    
+    let mut float_layers = Vec::new();
+    for _ in 0..4 {
+        float_layers.push(LinearLayer {
+            weights: loader.simulate_transformer_shard(dim * dim),
+            bias: vec![0.0; dim],
+            input_dim: dim,
+            output_dim: dim,
+        });
+    }
+
+    let float_stack = LayerStack { layers: float_layers };
+    
+    let mut stable_layers = Vec::new();
+    for layer in &float_stack.layers {
+        let (ternary, _expert) = expert_ternarize(layer);
+        stable_layers.push(StabilizedTernaryLayer {
+            ternary_layer: ternary,
+            alpha_residual: 0.25, // Fixed stable residual factor
+        });
+    }
+    let stable_stack = StabilizedTernaryStack { layers: stable_layers };
+
+    let input = vec![1.0; dim];
+    
+    println!("\n[ALBERT::STABLE_STACK]");
+    
+    let mut f_current = input.clone();
+    let mut s_current = input.clone();
+    
+    for i in 0..float_stack.layers.len() {
+        // Float forward with residual
+        let f_main = float_stack.layers[i].forward(&f_current);
+        let mut f_next = vec![0.0; f_main.len()];
+        for j in 0..f_main.len() {
+            let res = if j < f_current.len() { f_current[j] * 1.0 } else { 0.0 };
+            f_next[j] = f_main[j] + res;
+        }
+        // Apply same normalization to float for parity
+        let f_var = compute_variance(&f_next);
+        let f_scale = 1.0 / (1.0 + f_var);
+        f_current = f_next.iter().map(|&x| x * f_scale).collect();
+
+        s_current = stable_stack.layers[i].forward_stabilized(&s_current);
+        
+        let mse = compute_mse(&f_current, &s_current);
+        let variance = compute_variance(&f_current);
+        let nmse = mse / variance;
+        
+        println!("Layer {} → NMSE: {:.4}", i + 1, nmse);
+    }
+    
+    let final_mse = compute_mse(&f_current, &s_current);
+    let final_variance = compute_variance(&f_current);
+    let final_nmse = final_mse / final_variance;
+    
+    println!("\nFinal NMSE: {:.4}", final_nmse);
+    
+    let status = if final_nmse < 0.2 {
+        "STABLE"
+    } else if final_nmse <= 1.0 {
+        "DEGRADED"
+    } else {
+        "UNSTABLE"
+    };
+    
+    println!("Status: {}", status);
+    println!();
+}
 use crate::core::routing::{DataRouter, ExpertType};
 
 pub fn expert_ternarize(layer: &LinearLayer) -> (TernaryLayer, ExpertType) {

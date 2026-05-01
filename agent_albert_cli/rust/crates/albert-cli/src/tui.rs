@@ -302,6 +302,8 @@ pub struct TuiState {
     pub trusted: bool,
     /// Whether the agent is currently blocked waiting for a permission prompt response.
     pub is_prompting: Arc<AtomicBool>,
+    /// Track which exec_log blocks are collapsed (by index). Toggle with Ctrl+O.
+    pub collapsed_blocks: std::collections::HashSet<usize>,
 }
 
 impl Default for TuiState {
@@ -346,6 +348,7 @@ impl Default for TuiState {
             quit_confirm: false,
             trusted: false,
             is_prompting: Arc::new(AtomicBool::new(false)),
+            collapsed_blocks: std::collections::HashSet::new(),
         }
     }
 }
@@ -1150,9 +1153,19 @@ fn is_last_in_turn(it: &std::iter::Peekable<std::collections::vec_deque::Iter<'_
     true
 }
 
+fn is_last_in_turn_by_index(log: &std::collections::VecDeque<ExecBlock>, start_idx: usize) -> bool {
+    for (idx, block) in log.iter().enumerate().skip(start_idx + 1) {
+        match block {
+            ExecBlock::UserMessage(_) => return true,
+            ExecBlock::ToolUse { .. } | ExecBlock::Plan { .. } | ExecBlock::ToolOutput { .. } | ExecBlock::AgentText(..) => return false,
+            ExecBlock::WorkedFor(_) | ExecBlock::SystemMsg(_) => continue,
+        }
+    }
+    true
+}
+
 fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
     let mut lines: Vec<Line<'static>> = Vec::new();
-    let mut it = state.exec_log.iter().peekable();
     let mut in_assistant_turn = false;
 
     // Define consistent spacing for the "Laminar Flow" architecture.
@@ -1167,8 +1180,9 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
     let spine = Span::styled(spine_glyph, Style::default().fg(Color::Rgb(25, 45, 45)));
     let seal = Span::styled("└─", Style::default().fg(Color::Rgb(25, 45, 45)));
 
-    while let Some(block) = it.next() {
-        let is_last = is_last_in_turn(&it);
+    for (block_idx, block) in state.exec_log.iter().enumerate() {
+        let is_last = is_last_in_turn_by_index(&state.exec_log, block_idx);
+        let is_collapsed = state.collapsed_blocks.contains(&block_idx);
 
         match block {
             ExecBlock::UserMessage(msg) => {
@@ -1208,7 +1222,10 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
 
                 // Peek ahead to see if there's a collapsed ToolOutput following this ToolUse.
                 let has_xray = xray.is_some();
-                let has_collapsed_output = !has_xray && matches!(it.peek(), Some(ExecBlock::ToolOutput { active: false, .. }));
+                let next_is_tool_output = state.exec_log.get(block_idx + 1)
+                    .map(|b| matches!(b, ExecBlock::ToolOutput { active: false, .. }))
+                    .unwrap_or(false);
+                let has_collapsed_output = !has_xray && next_is_tool_output;
                 let hook = if is_last && !has_collapsed_output && !has_xray { "└─" } else { "├─" };
 
                 // Header line
@@ -1335,13 +1352,44 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
             }
 
             ExecBlock::ToolOutput { lines: out, total, active } => {
-                if *active {
+                if is_collapsed && !out.is_empty() {
+                    // Collapsed view: show hidden line count + brief summary
+                    lines.push(Line::from(vec![
+                        spine.clone(),
+                        Span::styled("└─", Style::default().fg(Color::Rgb(25, 45, 45))),
+                        Span::styled(" ", Style::default()),
+                        Span::styled(format!("... first {} lines hidden (Ctrl+O to show) ...", out.len()),
+                            Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
+                    ]));
+
+                    // Try to extract a result summary (first line that looks like "Result:" or similar)
+                    if let Some(result_line) = out.iter().find(|l| l.contains("Result:") || l.contains("result:")) {
+                        lines.push(Line::from(vec![
+                            spine.clone(),
+                            Span::styled("   ", Style::default()),
+                            Span::styled(result_line.clone(), Style::default().fg(Color::Rgb(110, 120, 120))),
+                        ]));
+                    }
+
+                    if *total > out.len() {
+                        lines.push(Line::from(vec![
+                            spine.clone(),
+                            Span::styled("   ", Style::default()),
+                            Span::styled(format!("… +{} more lines", total - out.len()),
+                                Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
+                        ]));
+                    }
+
+                    if is_last {
+                        lines.push(Line::from(vec![seal.clone()]));
+                    }
+                } else if *active {
                     for (i, line) in out.iter().enumerate() {
                         let connector = if i == 0 { "└─" } else { "  " };
                         let lower = line.to_ascii_lowercase();
                         let is_err = lower.contains("error") || lower.contains("not found") || lower.contains("failed:");
                         let line_col = if is_err { ERROR_FG } else { Color::Rgb(110, 120, 120) };
-                        
+
                         lines.push(Line::from(vec![
                             spine.clone(), // Keep main spine
                             Span::styled(connector, Style::default().fg(Color::Rgb(25, 45, 45))),
@@ -2531,6 +2579,17 @@ impl TuiApp {
                                     state.input.clear();
                                     state.cursor = 0;
                                     state.paste_line_count = None;
+                                }
+
+                                // Ctrl+O — toggle collapse on the last collapsible block
+                                (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
+                                    if let Some(last_idx) = state.exec_log.len().checked_sub(1) {
+                                        if state.collapsed_blocks.contains(&last_idx) {
+                                            state.collapsed_blocks.remove(&last_idx);
+                                        } else {
+                                            state.collapsed_blocks.insert(last_idx);
+                                        }
+                                    }
                                 }
 
                                 // Ctrl+V — paste from system clipboard
