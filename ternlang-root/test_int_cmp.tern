@@ -1,0 +1,10 @@
+fn main() -> trit {
+    let x: int = 2;
+    println(x);
+    if x == 2 {
+        println("x is 2");
+    } else {
+        println("x is NOT 2");
+    }
+    return 1;
+}

@@ -1,0 +1,16 @@
+[package]
+name = "albert-moe"
+version = "0.1.0"
+edition = "2024"
+authors = ["RFI-IRFOS <licensing@ternlang.com>"]
+description = "Core Intelligence Layer for Albert-MoE-13: Native Ternary Adaptation and Compression"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+log = "0.4"
+# Internal dependencies
+ternlang-ml = { path = "../ternlang-root/ternlang-ml" }
+ternlang-moe = { path = "../ternlang-root/ternlang-moe" }

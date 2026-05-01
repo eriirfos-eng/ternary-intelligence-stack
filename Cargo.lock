@@ -24,6 +24,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "albert-moe"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "serde",
+ "serde_yaml",
+ "ternlang-ml",
+ "ternlang-moe",
+ "tokio",
+]
+
+[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1252,6 +1265,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pytern"
+version = "1.2.9"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1647,6 +1668,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_yaml"
+version = "0.9.34+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
+dependencies = [
+ "indexmap",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
+]
+
+[[package]]
 name = "sha1"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1790,8 +1824,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternaudit-guard"
+version = "1.2.9"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ternlang-mcp",
+]
+
+[[package]]
 name = "ternlang-api"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "axum",
  "chrono",
@@ -1815,7 +1858,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-astro"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
  "ternlang-moe",
@@ -1823,24 +1866,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ternlang-audit"
-version = "1.2.7"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "colored",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "ternlang-auth"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-bci"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-bio",
  "ternlang-core",
@@ -1848,18 +1879,18 @@ dependencies = [
 
 [[package]]
 name = "ternlang-bio"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-bridge"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-cad"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-candle"
@@ -1867,7 +1898,7 @@ version = "1.2.7"
 
 [[package]]
 name = "ternlang-cli"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "clap",
  "colored",
@@ -1881,28 +1912,28 @@ dependencies = [
 
 [[package]]
 name = "ternlang-codegen"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-compat"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-consensus"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-contract"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-consensus",
  "ternlang-core",
@@ -1910,7 +1941,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-core"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ariadne",
  "logos",
@@ -1920,21 +1951,21 @@ dependencies = [
 
 [[package]]
 name = "ternlang-crypto"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-driver"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-edu"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "serde",
 ]
@@ -1945,7 +1976,7 @@ version = "1.2.7"
 
 [[package]]
 name = "ternlang-fs"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-gate"
@@ -1953,26 +1984,26 @@ version = "1.2.7"
 
 [[package]]
 name = "ternlang-gfx"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-grid"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-harmony"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "ternlang-hdl"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-hft"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
  "ternlang-hdl",
@@ -1980,7 +2011,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-lsp"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "serde",
  "serde_json",
@@ -1989,7 +2020,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-mcp"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "serde",
  "serde_json",
@@ -2000,11 +2031,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-mkl"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-ml"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2016,7 +2047,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-moe"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "serde",
  "serde_json",
@@ -2026,11 +2057,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-net"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-posix"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "libc",
  "ternlang-core",
@@ -2038,14 +2069,14 @@ dependencies = [
 
 [[package]]
 name = "ternlang-qutrit"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-ros2"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
  "ternlang-posix",
@@ -2053,7 +2084,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-runtime"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "reqwest",
  "serde",
@@ -2062,8 +2093,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternlang-ruvector"
+version = "1.2.9"
+dependencies = [
+ "anyhow",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "ternlang-core",
+ "ternlang-ml",
+]
+
+[[package]]
 name = "ternlang-sec"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
  "ternlang-crypto",
@@ -2071,26 +2115,26 @@ dependencies = [
 
 [[package]]
 name = "ternlang-sql"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-swarm"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-test"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-time"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-translator"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "anyhow",
  "clap",
@@ -2100,7 +2144,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-tson"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "serde",
  "serde_json",
@@ -2109,11 +2153,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ttp"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-ui"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "ternlang-wasmtime"
@@ -2121,7 +2165,7 @@ version = "1.2.7"
 
 [[package]]
 name = "ternpkg"
-version = "1.2.7"
+version = "1.2.9"
 dependencies = [
  "serde",
  "serde_json",
@@ -2129,7 +2173,7 @@ dependencies = [
 
 [[package]]
 name = "ternpkg-registry"
-version = "1.2.7"
+version = "1.2.9"
 
 [[package]]
 name = "thiserror"
@@ -2372,6 +2416,12 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
+name = "unsafe-libyaml"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "untrusted"

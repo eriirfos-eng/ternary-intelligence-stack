@@ -15,12 +15,12 @@ members = [
     "ternlang-root/integrations/ternlang-esp32",
     "ternlang-root/integrations/ternlang-wasmtime",
     "ternlang-root/ternlang-hft", "ternlang-root/ternlang-ros2",
-    "ternlang-root/ternlang-test", "ternlang-root/ternlang-mcp", "ternlang-root/ternlang-hdl", "ternlang-root/ternlang-lsp", "ternlang-root/ternpkg", "ternlang-root/ternlang-compat", "ternlang-root/ternlang-moe", "ternlang-translator", "ternlang-root/ternlang-sql", "ternlang-root/ternlang-bridge", "ternlang-root/ternpkg-registry", "ternlang-root/ternlang-net", "ternlang-root/ternlang-crypto", "ternlang-root/ternlang-fs", "ternlang-root/ternlang-qutrit", "ternlang-root/ternlang-consensus", "ternlang-root/ternlang-ui", "ternlang-root/ternlang-bci", "ternlang-root/ternlang-astro", "ternlang-root/ternlang-swarm", "ternlang-root/ternlang-tson", "ternlang-root/ternlang-ttp", "ternlang-root/ternlang-posix", "ternlang-root/ternlang-time", "ternlang-root/ternlang-auth", "ternlang-root/ternlang-gfx", "ternlang-root/ternlang-contract", "ternlang-root/ternlang-bio", "ternlang-root/ternlang-sec", "ternlang-root/ternlang-grid", "ternlang-root/ternlang-cad", "ternlang-root/ternlang-edu", "ternlang-root/ternlang-harmony", "ternlang-root/ternlang-driver",
+    "ternlang-root/ternlang-test", "ternlang-root/ternlang-mcp", "ternlang-root/ternlang-hdl", "ternlang-root/ternlang-lsp", "ternlang-root/ternpkg", "ternlang-root/ternlang-compat", "ternlang-root/ternlang-moe", "ternlang-translator", "ternlang-root/ternlang-sql", "ternlang-root/ternlang-bridge", "ternlang-root/ternpkg-registry", "ternlang-root/ternlang-net", "ternlang-root/ternlang-crypto", "ternlang-root/ternlang-fs", "ternlang-root/ternlang-qutrit", "ternlang-root/ternlang-consensus", "ternlang-root/ternlang-ui", "ternlang-root/ternlang-bci", "ternlang-root/ternlang-astro", "ternlang-root/ternlang-swarm", "ternlang-root/ternlang-tson", "ternlang-root/ternlang-ttp", "ternlang-root/ternlang-posix", "ternlang-root/ternlang-time", "ternlang-root/ternlang-auth", "ternlang-root/ternlang-gfx", "ternlang-root/ternlang-contract", "ternlang-root/ternlang-bio", "ternlang-root/ternlang-sec", "ternlang-root/ternlang-grid", "ternlang-root/ternlang-cad", "ternlang-root/ternlang-edu", "ternlang-root/ternlang-harmony", "ternlang-root/ternlang-driver", "albert-moe-13",
 ]
 resolver = "2"
 
 [workspace.package]
-version     = "1.2.7"
+version     = "1.2.9"
 edition     = "2024"
 license     = "LGPL-3.0-or-later"
 repository  = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
@@ -39,18 +39,18 @@ keywords    = [
 categories  = ["compilers", "science", "embedded-programming", "development-tools::ffi"]
 
 [workspace.dependencies]
-ternlang-core    = { path = "ternlang-root/compiler/legacy_shim/ternlang-core",    version = "1.2.7" }
-ternlang-codegen = { path = "ternlang-root/compiler/legacy_shim/ternlang-codegen", version = "1.2.7" }
-ternlang-runtime = { path = "ternlang-root/compiler/legacy_shim/ternlang-runtime", version = "1.2.7" }
-ternlang-cli     = { path = "ternlang-root/compiler/legacy_shim/ternlang-cli",     version = "1.2.7" }
-ternlang-ml      = { path = "ternlang-root/ternlang-ml",      version = "1.2.7" }
-ternlang-moe     = { path = "ternlang-root/ternlang-moe",     version = "1.2.7" }
-ternlang-hdl     = { path = "ternlang-root/ternlang-hdl",     version = "1.2.7" }
-ternlang-lsp     = { path = "ternlang-root/ternlang-lsp",     version = "1.2.7" }
-ternlang-mcp     = { path = "ternlang-root/ternlang-mcp",     version = "1.2.7" }
-ternpkg          = { path = "ternlang-root/ternpkg",          version = "1.2.7" }
-ternlang-compat  = { path = "ternlang-root/ternlang-compat",  version = "1.2.7" }
-ternlang-test    = { path = "ternlang-root/ternlang-test",    version = "1.2.7" }
-ternlang-api     = { path = "ternlang-root/ternlang-api",     version = "1.2.7" }
-ternlang-compress = { path = "ternlang-root/ternlang-compress", version = "1.2.7" }
+ternlang-core    = { path = "ternlang-root/compiler/legacy_shim/ternlang-core",    version = "1.2.9" }
+ternlang-codegen = { path = "ternlang-root/compiler/legacy_shim/ternlang-codegen", version = "1.2.9" }
+ternlang-runtime = { path = "ternlang-root/compiler/legacy_shim/ternlang-runtime", version = "1.2.9" }
+ternlang-cli     = { path = "ternlang-root/compiler/legacy_shim/ternlang-cli",     version = "1.2.9" }
+ternlang-ml      = { path = "ternlang-root/ternlang-ml",      version = "1.2.9" }
+ternlang-moe     = { path = "ternlang-root/ternlang-moe",     version = "1.2.9" }
+ternlang-hdl     = { path = "ternlang-root/ternlang-hdl",     version = "1.2.9" }
+ternlang-lsp     = { path = "ternlang-root/ternlang-lsp",     version = "1.2.9" }
+ternlang-mcp     = { path = "ternlang-root/ternlang-mcp",     version = "1.2.9" }
+ternpkg          = { path = "ternlang-root/ternpkg",          version = "1.2.9" }
+ternlang-compat  = { path = "ternlang-root/ternlang-compat",  version = "1.2.9" }
+ternlang-test    = { path = "ternlang-root/ternlang-test",    version = "1.2.9" }
+ternlang-api     = { path = "ternlang-root/ternlang-api",     version = "1.2.9" }
+ternlang-compress = { path = "ternlang-root/ternlang-compress", version = "1.2.9" }
 

@@ -1,0 +1,10 @@
+model_name: "Albert-MoE-13"
+base_model: "mistralai/Mixtral-8x7B-v0.1" # Example base for adaptation
+expert_count: 13
+architecture: "ternary-moe-v1"
+dimension: 4096
+num_layers: 32
+vocab_size: 32000
+ternary_state: "{-1, 0, +1}"
+sparsity_target: 0.65
+memory_footprint: "12.5GB"

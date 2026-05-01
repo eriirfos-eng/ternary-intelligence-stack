@@ -1080,6 +1080,40 @@ fn run_tui(
             }
         }
 
+        // ── Image-path overlay: treat submission as file path to attach ──────────
+        {
+            let overlay_active = tui_state.lock().unwrap().image_path_overlay;
+            if overlay_active {
+                let path_str = input.trim().to_string();
+                let msg = if path_str.is_empty() {
+                    "📎 path cannot be empty — Esc to cancel".to_string()
+                } else {
+                    let path = std::path::PathBuf::from(&path_str);
+                    match fs::read(&path) {
+                        Ok(bytes) => {
+                            use base64::Engine as _;
+                            let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+                            let mime = mime_from_ext(&path).to_string();
+                            let thumb = path.file_name()
+                                .and_then(|n| n.to_str())
+                                .unwrap_or(&path_str)
+                                .chars().take(40).collect::<String>();
+                            let att = tui::ImageAttachment { path, base64: b64, mime, thumb: thumb.clone() };
+                            let mut st = tui_state.lock().unwrap();
+                            st.pending_images.push(att);
+                            st.image_path_overlay = false;
+                            format!("📎 attached: {thumb}")
+                        }
+                        Err(e) => format!("📎 error reading file: {e}"),
+                    }
+                };
+                let mut st = tui_state.lock().unwrap();
+                st.image_path_overlay = false;
+                st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                continue;
+            }
+        }
+
         // agent_override: /plan and /loop inject a richer prompt; plain input passes through.
         let mut agent_override: Option<String> = None;
 
@@ -1330,6 +1364,57 @@ fn run_tui(
                 }
                 commands::SlashCommand::Compress => {
                     let msg = cli.compress_inline()?;
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Remember { content } => {
+                    let msg = match content.as_deref().filter(|s| !s.trim().is_empty()) {
+                        Some(text) => {
+                            let input = json!({"content": text.trim(), "state": "+1"});
+                            match execute_tool("vault_write", &input) {
+                                Ok(_) => "+1 Resonance. Memory secured.".to_string(),
+                                Err(e) => format!("vault error: {e}"),
+                            }
+                        }
+                        None => "/remember <text>  — what should I remember?".to_string(),
+                    };
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Recall { query } => {
+                    let q = query.as_deref().unwrap_or("").trim();
+                    let input = if q.is_empty() {
+                        json!({"query": "*"})
+                    } else {
+                        json!({"query": q})
+                    };
+                    let msg = match execute_tool("vault_read", &input) {
+                        Ok(res) if !res.output.trim().is_empty() => {
+                            format!("◯ Vault recall — query: {}\n\n{}", if q.is_empty() { "*" } else { q }, res.output)
+                        }
+                        Ok(_) => "◯ Nothing found in vault.".to_string(),
+                        Err(e) => format!("vault error: {e}"),
+                    };
+                    let mut st = tui_state.lock().unwrap();
+                    st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    true
+                }
+                commands::SlashCommand::Vault { query } => {
+                    let q = query.as_deref().unwrap_or("").trim();
+                    let input = if q.is_empty() {
+                        json!({"query": "*", "limit": 10})
+                    } else {
+                        json!({"query": q, "limit": 10})
+                    };
+                    let msg = match execute_tool("vault_read", &input) {
+                        Ok(res) if !res.output.trim().is_empty() => {
+                            format!("◯ Vault — last entries\n\n{}", res.output)
+                        }
+                        Ok(_) => "◯ Vault is empty.".to_string(),
+                        Err(e) => format!("vault error: {e}"),
+                    };
                     let mut st = tui_state.lock().unwrap();
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
@@ -2254,10 +2339,35 @@ impl LiveCli {
                 self.handle_mcp_command(action.as_deref(), args.as_deref())?;
                 false
             }
-            SlashCommand::Remember { .. }
-            | SlashCommand::Recall { .. }
-            | SlashCommand::Vault { .. } => {
-                println!("Memory command received. Albert is indexing current insights...");
+            SlashCommand::Remember { content } => {
+                match content.as_deref().filter(|s| !s.trim().is_empty()) {
+                    Some(text) => {
+                        let input = json!({"content": text.trim(), "state": "+1"});
+                        match execute_tool("vault_write", &input) {
+                            Ok(_) => println!("+1 Resonance. Memory secured."),
+                            Err(e) => eprintln!("vault error: {e}"),
+                        }
+                    }
+                    None => println!("/remember <text>  — what should I remember?"),
+                }
+                false
+            }
+            SlashCommand::Recall { query } => {
+                let q = query.as_deref().unwrap_or("").trim();
+                let input = if q.is_empty() { json!({"query": "*"}) } else { json!({"query": q}) };
+                match execute_tool("vault_read", &input) {
+                    Ok(res) => println!("{}", res.output),
+                    Err(e) => eprintln!("vault error: {e}"),
+                }
+                false
+            }
+            SlashCommand::Vault { query } => {
+                let q = query.as_deref().unwrap_or("").trim();
+                let input = if q.is_empty() { json!({"query": "*", "limit": 10}) } else { json!({"query": q, "limit": 10}) };
+                match execute_tool("vault_read", &input) {
+                    Ok(res) => println!("{}", res.output),
+                    Err(e) => eprintln!("vault error: {e}"),
+                }
                 false
             }
         })
@@ -3912,6 +4022,17 @@ fn map_content_block(block: ContentBlock) -> InputContentBlock {
             content: vec![ToolResultContentBlock::Text { text: output }],
             is_error: false,
         },
+        ContentBlock::Image { media_type, data } => InputContentBlock::Image { media_type, data },
+    }
+}
+
+fn mime_from_ext(path: &std::path::Path) -> &'static str {
+    match path.extension().and_then(|e| e.to_str()).map(|s| s.to_lowercase()).as_deref() {
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("gif") => "image/gif",
+        Some("webp") => "image/webp",
+        _ => "image/jpeg",
     }
 }
 
