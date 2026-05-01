@@ -85,6 +85,66 @@ impl CliDriver {
         crate::core::mock_layer::run_routing_stress_test(num_experts);
     }
 
+    /// Runs the specialization validation experiment.
+    pub fn run_specialization_validation(&self) {
+        crate::core::mock_layer::run_specialization_validation();
+    }
+
+    /// Runs the divergence diagnostic experiment.
+    pub fn run_divergence_diagnostic(&self) {
+        crate::core::mock_layer::run_divergence_diagnostic();
+    }
+
+    /// Runs the temporal stability diagnostic experiment.
+    pub fn run_temporal_diagnostic(&self) {
+        crate::core::diagnostic_temporal::run_temporal_stability_diagnostic();
+    }
+
+    /// Runs the bifurcation analysis experiment.
+    pub fn run_bifurcation_analysis(&self) {
+        crate::core::diagnostic_bifurcation::run_bifurcation_analysis();
+    }
+
+    /// Runs the MOE route test.
+    pub fn run_moe_route_test(&self) {
+        crate::core::diagnostic_moe::run_moe_route_test();
+    }
+
+    /// Runs the MOE divergence test.
+    pub fn run_moe_divergence_test(&self) {
+        crate::core::diagnostic_moe::run_moe_expert_divergence_test();
+    }
+
+    /// Runs the MOE load report.
+    pub fn run_moe_load_report(&self) {
+        crate::core::diagnostic_moe::run_moe_load_report();
+    }
+
+    /// Runs the behavioral test.
+    pub fn run_moe_behavior_test(&self) {
+        crate::core::diagnostic_behavioral::run_moe_behavior_test();
+    }
+
+    /// Runs the task consistency report.
+    pub fn run_moe_task_consistency_report(&self) {
+        crate::core::diagnostic_behavioral::run_moe_task_consistency_report();
+    }
+
+    /// Runs the routing entropy analysis.
+    pub fn run_moe_routing_entropy_analysis(&self) {
+        crate::core::diagnostic_behavioral::run_moe_routing_entropy_analysis();
+    }
+
+    /// Runs the clustering visualization.
+    pub fn run_moe_clustering_visualization(&self) {
+        crate::core::diagnostic_behavioral::run_moe_clustering_visualization();
+    }
+
+    /// Runs the causal behavioral attribution test.
+    pub fn run_moe_causal_test(&self) {
+        crate::core::diagnostic_causal::run_mi_test();
+    }
+
     /// Dispatches the 'forge' command to initiate model ternarization.
     pub fn run_forge(&self, config_path: &str) {
         log::info!("Running 'forge' with config: {}", config_path);
@@ -125,6 +185,18 @@ impl CliDriver {
                     self.run_routing_stress_test(2);
                 }
             }
+            "specialization-validation" => self.run_specialization_validation(),
+            "divergence-diagnostic" => self.run_divergence_diagnostic(),
+            "temporal-diagnostic" => self.run_temporal_diagnostic(),
+            "bifurcation-analysis" => self.run_bifurcation_analysis(),
+            "moe-route-test" => self.run_moe_route_test(),
+            "moe-divergence-test" => self.run_moe_divergence_test(),
+            "moe-load-report" => self.run_moe_load_report(),
+            "moe-behavior-test" => self.run_moe_behavior_test(),
+            "moe-task-consistency-report" => self.run_moe_task_consistency_report(),
+            "moe-routing-entropy-analysis" => self.run_moe_routing_entropy_analysis(),
+            "moe-clustering-visualization" => self.run_moe_clustering_visualization(),
+            "moe-causal-test" => self.run_moe_causal_test(),
             "forge" => {
                 if args.len() > 1 {
                     self.run_forge(&args[1]);
