@@ -1,0 +1,66 @@
+/*
+ * Advanced Trit Set
+ * Set implementation for trits with bit-mask like operations.
+ * Allows tracking presence of Affirm, Tend, and Reject in a unified way.
+ */
+
+// A trit set is essentially a 3-flag bitmask
+// Using a trittensor to represent the set states
+fn ts_add(s: trit[], val: trit) -> trit {
+    match val {
+         1 => { s[0] = 1; }
+         0 => { s[1] = 1; }
+        -1 => { s[2] = 1; }
+    }
+    return 1;
+}
+
+fn ts_remove(s: trit[], val: trit) -> trit {
+    match val {
+         1 => { s[0] = 0; }
+         0 => { s[1] = 0; }
+        -1 => { s[2] = 0; }
+    }
+    return 1;
+}
+
+fn ts_contains(s: trit[], val: trit) -> trit {
+    match val {
+         1 => { return s[0]; }
+         0 => { return s[1]; }
+        -1 => { return s[2]; }
+    }
+}
+
+fn main() -> trit {
+    let s: trit[3];
+    s[0] = 0; s[1] = 0; s[2] = 0;
+    
+    println("Advanced Trit Set Demo");
+    
+    println("Adding Affirm (1) and Reject (-1)");
+    ts_add(s, 1);
+    ts_add(s, -1);
+    
+    println("Contains Affirm?");
+    let c1: trit = ts_contains(s, 1);
+    println(c1);
+    
+    println("Contains Tend (0)?");
+    let c2: trit = ts_contains(s, 0);
+    println(c2);
+    
+    println("Removing Affirm (1)");
+    ts_remove(s, 1);
+    
+    println("Contains Affirm?");
+    let c3: trit = ts_contains(s, 1);
+    println(c3);
+    
+    if c1 == 1 && c2 == 0 && c3 == 0 {
+        println("Trit set operations verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
