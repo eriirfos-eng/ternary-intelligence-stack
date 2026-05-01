@@ -1,0 +1,64 @@
+/*
+ * Advanced Integer Stack
+ * Robust implementation of a LIFO stack for integers.
+ * Includes explicit bounds checking and status returns.
+ */
+
+fn stack_push(buffer: int[], ptr: int, val: int) -> int {
+    if ptr >= 10 {
+        return -1; // Overflow
+    }
+    buffer[ptr] = val;
+    return ptr + 1;
+}
+
+fn stack_pop(ptr: int) -> int {
+    if ptr <= 0 {
+        return -1; // Underflow
+    }
+    return ptr - 1;
+}
+
+fn main() -> trit {
+    let buffer: int[10];
+    let ptr: int = 0;
+    
+    // Initialize
+    let k: int = 0;
+    while k < 10 { buffer[k] = 0; k = k + 1; }
+    
+    println("Advanced Integer Stack Demo");
+    
+    println("Pushing: 100, 200, 300");
+    ptr = stack_push(buffer, ptr, 100);
+    ptr = stack_push(buffer, ptr, 200);
+    ptr = stack_push(buffer, ptr, 300);
+    
+    println("Ptr after pushes (expected 3):");
+    println(ptr);
+    
+    if ptr == 3 {
+        println("Push OK.");
+    } else { return -1; }
+    
+    println("Popping top element:");
+    ptr = stack_pop(ptr);
+    let top: int = buffer[ptr];
+    println(top);
+    
+    if top == 300 && ptr == 2 {
+        println("Pop OK.");
+    } else { return -1; }
+    
+    println("Popping next element:");
+    ptr = stack_pop(ptr);
+    let top2: int = buffer[ptr];
+    println(top2);
+    
+    if top2 == 200 && ptr == 1 {
+        println("Stack sequence verified. Success.");
+        return 1;
+    }
+    
+    return -1;
+}
