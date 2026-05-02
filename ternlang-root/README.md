@@ -257,7 +257,7 @@ This creates a fully auditable reasoning path for EU AI Act Article 13 / 14 comp
 
 Albert is the sovereign, model-agnostic AI coding CLI built as the **orchestration layer** of the Ternary Intelligence Stack. He runs as a standalone terminal agent or embedded directly inside TernStudio — wired into the flow canvas to generate, debug, and explain ternary workflows.
 
-> **Architecture note:** Albert-CLI is a model-agnostic interface that dispatches to external LLM providers (Gemini, Claude, OpenAI, Ollama, etc.). The **ternary-native reasoning layer** is Albert-MoE-13 — the 13-expert deliberation engine described above, which runs in Rust on the BET-VM. The CLI and the MoE engine are decoupled by design: you can run the MoE-13 engine standalone without any external LLM.
+> **Architecture note:** Albert-CLI is a fully native autonomous agent (Rust + Python runtime) with its own conversation loop, tool executor, session memory, MCP server manager, skills, and permission system. LLM providers (Gemini, Claude, OpenAI, Ollama, etc.) serve as the **natural language generation layer** — the "voice" Albert uses to communicate — not as the reasoning engine. The agent orchestration, tool decisions, and deliberation logic are all native. The **ternary deliberation layer** is Albert-MoE-13: the 13-expert engine running on BET-VM, which operates independently of any external LLM.
 
 ### Two modes
 
