@@ -120,68 +120,23 @@ cargo build --release
 ```
 ---
 
-## 4. Albert-MoE-13
+## 4. Albert-MoE-13: Ternary-Native Scaling Research
 
-We are actively developing **Albert-MoE-13**, our flagship ternary-native Mixture-of-Experts architecture. Rather than pre-training from scratch, Albert is built through the **Native Ternary Adaptation** of established open-source LLM foundations (Mistral, Llama, etc.). This allows us to leapfrog the multi-billion dollar pre-training cost while providing superior triadic reasoning.
+**Albert** is our experimental framework for ternary Mixture-of-Experts (MoE). Unlike binary transformer architectures, Albert explores how scaling parameter counts ($N$) in a ternary manifold ($\{-1, 0, +1\}$) leads to stable loss convergence without the need for high-precision float training.
 
-> **Albert is a ternary Mixture-of-Experts model that turns AI from a guessing system into a transparent decision process.**
+> **Research Focus:** Ternary-native representation scaling laws & stable manifold training.
 
-Albert is an in-progress **MoE-13 (Mixture-of-Experts) LLM** built on a ternary foundation.  
-Instead of producing outputs directly, it **deliberates across 13 specialized experts** before reaching a decision.
+### Core Research Dimensions
+- **Scaling Laws:** Predicting loss convergence as parameters scale to 1T+.
+- **Manifold Stability:** Quantifying signal integrity through ternary thresholds.
+- **Native Training:** Training from scratch on ternary manifolds via Straight-Through Estimators (STE).
+- **Sparse Geometry:** Exploiting weight sparsity for sub-linear memory scaling.
 
----
-
-### Core Idea
-
-Each expert evaluates the input from a specific perspective and returns a ternary vote:
-
-```
--1 → reject  
- 0 → hold (uncertain / insufficient evidence)  
-+1 → affirm  
-```
-
-- **Simulation-to-Silicon Bridge**  
-  Currently running as a high-performance software simulation on standard x86/CUDA hardware, designed for seamless migration to future **Ternary Silicon** (including Huawei's latest AI hardware).
-
----
-
-### Technical Stack
-
-- **The Ternarization Forge**  
-  We leverage high-capacity open-source foundations (20B–30B parameter class) and execute a full-model transformation. By mapping continuous weights into the discrete {-1, 0, +1} weight space, we collapse the memory footprint from ~52 GB to **10–15 GB**.
-
-- **Objective**  
-  - Enable **frontier-level reasoning** on standard local hardware.
-  - Enable **sparsity-aware execution** (@sparseskip).
-  - Improve deterministic interpretability via discrete weight states.
-
-- **Architecture**  
-  Consolidation into **13 domain-specific expert routers (MoE-13)**.
-
----
-
-### Why This Matters
-
-Albert is designed to:
-
-- Operate fully **offline** on sovereign infrastructure  
-- Enforce **deterministic uncertainty** via the `HOLD (0)` state  
-- Integrate natively with **Ternlang** and the **BET-VM runtime**  
-- Provide a **verifiable decision layer**, not just probabilistic outputs  
-- Enable **traceable, inspectable reasoning paths**
-
----
-
-### Relationship to Agent Albert
-
-Albert-MoE-13 serves as the **core intelligence layer** powering Agent Albert.
-
-- **Agent Albert** → orchestration, interaction, execution  
-- **Albert-MoE-13** → deliberation, validation, decision-making  
-
-Together, they form a **closed-loop system**:
-> perception → deliberation → validation → execution
+### Architectural Advantages
+- **Deterministic Uncertainty:** `HOLD (0)` state provides a formal mechanism to defer decision-making.
+- **Sovereign Efficiency:** Offline-first execution on commodity or future ternary-native hardware.
+- **Explainable Reasoning:** Triadic votes offer an auditable path for Article 13/14/15 AI Act compliance.
+- **Native Integration:** Direct pipeline flow between Ternlang, BET-VM, and the MoE deliberation engine.
 
 ---
 
