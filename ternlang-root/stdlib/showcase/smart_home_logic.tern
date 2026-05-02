@@ -1,0 +1,38 @@
+// stdlib/showcase/smart_home_logic.tern
+// Multi-sensor fusion for smart home climate control using ternary signals.
+// Tier: 1 - Open Core
+
+fn climate_control(temp: float, humidity: float, user_pref: trit) -> trit {
+    // Basic logic
+    if temp > 25.0 { return 1; } // Hot -> AC
+    if temp < 18.0 { return -1; } // Cold -> Heat
+    
+    // Humidity influence
+    if humidity > 70.0 && temp > 22.0 { return 1; } // Muggy -> AC
+    
+    // User preference override if in neutral zone
+    return user_pref;
+}
+
+fn main() -> trit {
+    println("TIS Smart Home Climate Control");
+    
+    println("Test 1: Hot day (28C)");
+    let r1: trit = climate_control(28.0, 40.0, 0);
+    print("Action: "); match r1 { 1 => { println("AC ON"); } 0 => { println("IDLE"); } -1 => { println("HEAT ON"); } }
+    
+    println("Test 2: Neutral temp (21C), User prefers Heat");
+    let r2: trit = climate_control(21.0, 45.0, -1);
+    print("Action: "); match r2 { 1 => { println("AC ON"); } 0 => { println("IDLE"); } -1 => { println("HEAT ON"); } }
+    
+    println("Test 3: Cold day (15C)");
+    let r3: trit = climate_control(15.0, 50.0, 1);
+    print("Action: "); match r3 { 1 => { println("AC ON"); } 0 => { println("IDLE"); } -1 => { println("HEAT ON"); } }
+    
+    if r1 == 1 && r2 == -1 && r3 == -1 {
+        println("Climate control logic validated.");
+        return 1;
+    }
+    
+    return -1;
+}
