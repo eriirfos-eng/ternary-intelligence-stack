@@ -95,8 +95,7 @@ cargo install albert-cli
 # Launch the agent
 albert-cli
 ```
-
-```
+---
 
 ### Key Capabilities
 
@@ -106,21 +105,6 @@ albert-cli
 | **Local-First** | Native Ollama support for completely offline and free operation |
 | **Model-agnostic** | Connect to Gemini, Claude, GPT-4o, or Grok as "capability bridges" |
 | **Self-reflection memory** | Commits key facts to local storage to maintain long-term context |
-
----
-
-## Quick start (Compiler)
-
-```bash
-cargo install ternlang-cli
-```
-
-The `ternlang` binary provides the compiler, REPL, and test runner:
-
-```bash
-ternlang my_program.tern        # → run a .tern file directly
-ternlang build my_program.tern  # → compile to .bet bytecode
-```
 
 ---
 
