@@ -1,0 +1,45 @@
+// stdlib/logic/trit_majority_n.tern
+// Generalized majority operator for N ternary inputs.
+// Tier: 1 - Open Core
+
+fn majority_n(inputs: trit[], n: int) -> trit {
+    let pos_count: int = 0;
+    let neg_count: int = 0;
+    
+    let i: int = 0;
+    while i < n {
+        match inputs[i] {
+            1 => { pos_count = pos_count + 1; }
+           -1 => { neg_count = neg_count + 1; }
+            0 => { /* skip */ }
+        }
+        i = i + 1;
+    }
+    
+    if pos_count > neg_count { return 1; }
+    if neg_count > pos_count { return -1; }
+    return 0;
+}
+
+fn main() -> trit {
+    let inputs1: trit[] = [1, 1, -1, 0, 0];
+    let res1: trit = majority_n(inputs1, 5);
+    println("Majority of [1, 1, -1, 0, 0] (expected 1):");
+    println(res1);
+    if res1 != 1 { return -1; }
+    
+    let inputs2: trit[] = [1, -1, -1, 0];
+    let res2: trit = majority_n(inputs2, 4);
+    println("Majority of [1, -1, -1, 0] (expected -1):");
+    println(res2);
+    if res2 != -1 { return -1; }
+    
+    let inputs3: trit[] = [1, -1, 0];
+    let res3: trit = majority_n(inputs3, 3);
+    println("Majority of [1, -1, 0] (expected 0):");
+    println(res3);
+    if res3 != 0 { return -1; }
+
+    println("Majority N validation complete.");
+    return 1;
+}
