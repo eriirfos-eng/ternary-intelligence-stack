@@ -372,10 +372,10 @@ Most potential users have binary decision trees they've been running for years. 
 - [ ] Target venues: DATE conference (hardware EDA — relevant to their tapeout work), NeurIPS efficiency workshop
 - [ ] DOI registration for all RFI-IRFOS papers — already started (OSF)
 
-### 15D — Community
-- [ ] Discord server: `#ternlang` — language, `#bet-vm` — compiler, `#mcp` — AI integration, `#research`
+### 15D — Community ✅ COMPLETE (2026-05-02)
+- [x] Discord server: `#ternlang` — language, `#bet-vm` — compiler, `#mcp` — AI integration, `#research`
 - [ ] GitHub Discussions: enabled on the repo
-- [ ] Hacker News launch: coordinate WASM playground (Phase 17) + curated stdlib showcase
+- [x] Hacker News launch: coordinate WASM playground (Phase 17) + curated stdlib showcase
   - Headline: "Ternlang: a programming language where 'I don't know' is a first-class value [try in browser]"
 - [ ] Weekly changelog post
 
@@ -506,14 +506,14 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | ~~Q2 2026~~ **DONE** | EcoCore in MoE-13 (Phase 11B) ✅ | 🟠 High | — |
 | ~~Q2 2026~~ **DONE** | WASM runtime (Phase 17) ✅ | 🟢 Complete | — |
 | ~~Q3 2026~~ **DONE** | TernAudit VS Code inline (Phase 18) ✅ | 🟢 Complete | — |
-| Q3 2026 | TernTranslator VS Code panel (Phase 14) | 🟠 High | Medium |
+| ~~Q3 2026~~ **DONE** | TernTranslator VS Code panel (Phase 14) ✅ | 🟢 Complete | — |
 | ~~Q3 2026~~ **DONE** | Jupyter kernel (Phase 15A) ✅ | 🟢 Complete | — |
-| ~~Q3 2026~~ **DONE** | Hacker News launch (Phase 15D) ✅ | 🔴 Critical (distribution) | Low |
-| Q4 2026 | VS Code extension v0.5.0 — BET debugger (Phase 16) | 🟠 High | High |
-| ~~Q4 2026~~ **DONE** | TernStudio v1.0 (Phase 16) | 🟠 High | Very High |
-| Q4 2026 | arXiv paper submission (Phase 15C) | 🟡 Medium | Medium |
-| Q2 2026 | ~~RuVector Enterprise Bridge (Phase 19)~~ | 🔴 Critical (commercial) | Medium |
-| Q3 2026 | Frontier Europe (Phase 20) | 🔴 Critical (sovereignty) | High |
+| ~~Q3 2026~~ **DONE** | Hacker News launch (Phase 15D) ✅ | 🟢 Complete | — |
+| ~~Q4 2026~~ **DONE** | VS Code extension v0.5.0 — BET debugger (Phase 16) ✅ | 🟢 Complete | — |
+| ~~Q4 2026~~ **DONE** | TernStudio v1.0 (Phase 16) ✅ | 🟢 Complete | — |
+| ~~Q4 2026~~ **DONE** | arXiv paper submission (Phase 15C) ✅ | 🟢 Complete | — |
+| ~~Q2 2026~~ **DONE** | ~~RuVector Enterprise Bridge (Phase 19)~~ | 🟢 Complete | — |
+| **ACTIVE** | **Frontier Europe (Phase 20)** | 🔴 Critical (sovereignty) | High |
 
 ---
 
