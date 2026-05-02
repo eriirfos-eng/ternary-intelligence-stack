@@ -1,0 +1,35 @@
+// Agent Goal Planner: Determines actions to reach a target goal state.
+// Simplified BFS-style planning in a 1D state space.
+
+fn plan(current: int, goal: int) -> trit {
+    if current < goal {
+        return 1; // Move forward
+    }
+    if current > goal {
+        return -1; // Move backward
+    }
+    return 0; // Goal reached
+}
+
+fn main() -> trit {
+    let current_pos: int = 5;
+    let goal_pos: int = 10;
+    
+    let action: trit = plan(current_pos, goal_pos);
+    
+    let success: trit = 0;
+    if action == 1 {
+        // Move pos
+        let val_move: int = action;
+        current_pos = current_pos + val_move;
+        if current_pos == 6 {
+            success = 1;
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
