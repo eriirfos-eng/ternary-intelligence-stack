@@ -1,0 +1,63 @@
+// Sparse MoE Layer: Integrates routing, dispatching, and combining.
+// Demonstrates a complete (though simplified) MoE forward pass.
+
+fn router_top1(scores: float[3]) -> int {
+    let max_score: float = scores[0];
+    let max_idx: int = 0;
+    let i: int = 1;
+    while i < 3 {
+        if scores[i] > max_score {
+            max_score = scores[i];
+            max_idx = i;
+        }
+        i = i + 1;
+    }
+    return max_idx;
+}
+
+fn forward_moe(input: float[3], gating_scores: float[3], output: float[3]) -> trit {
+    // 1. Route
+    let expert_idx: int = router_top1(gating_scores);
+    
+    // 2. Dispatch & Expert Computation (Simulated)
+    // For simplicity, each expert does a different scaling.
+    let scale: float = 0.0;
+    if expert_idx == 0 { scale = 1.0; }
+    if expert_idx == 1 { scale = 2.0; }
+    if expert_idx == 2 { scale = 3.0; }
+    
+    let i: int = 0;
+    while i < 3 {
+        output[i] = input[i] * scale;
+        i = i + 1;
+    }
+    
+    return 1;
+}
+
+fn main() -> trit {
+    let input: float[3];
+    input[0] = 1.0; input[1] = 1.0; input[2] = 1.0;
+    
+    let scores: float[3];
+    scores[0] = 0.1;
+    scores[1] = 0.8; // Selected expert 1
+    scores[2] = 0.1;
+    
+    let output: float[3];
+    let ok: trit = forward_moe(input, scores, output);
+    
+    // Expected expert 1 scale = 2.0 -> [2.0, 2.0, 2.0]
+    let success: trit = 0;
+    if output[0] == 2.0 {
+        success = 1;
+    } else {
+        success = -1;
+    }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
