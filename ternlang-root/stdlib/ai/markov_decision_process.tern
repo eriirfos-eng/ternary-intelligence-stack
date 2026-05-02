@@ -1,0 +1,82 @@
+/*
+ * Markov Decision Process (MDP) Mock.
+ * A 3-state system where actions influence transitions and rewards.
+ * States: -1, 0, 1.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Return expected reward for an action in a state
+fn expected_reward(state: trit, action: trit) -> float {
+    // Arbitrary simple reward function
+    if state == 1 {
+        if action == 1 { return 10.0; }
+        if action == 0 { return 5.0; }
+        return 0.0;
+    }
+    
+    if state == 0 {
+        if action == 1 { return 5.0; }
+        if action == 0 { return 2.0; }
+        return -2.0;
+    }
+    
+    // state == -1
+    if action == 1 { return 0.0; }
+    if action == 0 { return -5.0; }
+    return -10.0;
+}
+
+// Next state transition
+fn transition(state: trit, action: trit) -> trit {
+    if state == 1 {
+        if action == 1 { return 1; }
+        if action == 0 { return 0; }
+        return -1;
+    }
+    
+    if state == 0 {
+        if action == 1 { return 1; }
+        if action == 0 { return 0; }
+        return -1;
+    }
+    
+    if action == 1 { return 0; }
+    return -1;
+}
+
+fn evaluate_policy(steps: int) -> float {
+    let current_state: trit = 0; // Start at 0
+    let total_reward: float = 0.0;
+    
+    let i: int = 0;
+    while i < steps {
+        // Policy: Always try to go up (action = 1)
+        let action: trit = 1;
+        
+        total_reward = total_reward + expected_reward(current_state, action);
+        current_state = transition(current_state, action);
+        
+        i = i + 1;
+    }
+    
+    return total_reward;
+}
+
+fn main() -> trit {
+    // Step 0: state=0, action=1 -> reward=5.0, next=1
+    // Step 1: state=1, action=1 -> reward=10.0, next=1
+    // Step 2: state=1, action=1 -> reward=10.0, next=1
+    // Total = 25.0
+    
+    let reward: float = evaluate_policy(3);
+    println("Total Expected Reward (expected 25.0):");
+    println(reward);
+    
+    if reward == 25.0 {
+        println("MDP Mock Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
