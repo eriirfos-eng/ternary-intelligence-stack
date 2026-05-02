@@ -1,0 +1,46 @@
+/*
+ * JSON Formatter for Ternary — Convert trit arrays to JSON-like strings.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn format_trits_to_json(data: trit[5]) -> string {
+    let result: string = "[";
+    
+    let i: int = 0;
+    while i < 5 {
+        let val: trit = data[i];
+        let s: string = "";
+        
+        match val {
+            -1 => { s = "-1"; }
+             0 => { s = "0"; }
+             1 => { s = "1"; }
+        }
+        
+        result = result + s;
+        if i < 4 {
+            result = result + ", ";
+        }
+        i = i + 1;
+    }
+    
+    result = result + "]";
+    return result;
+}
+
+fn main() -> trit {
+    let my_trits: trit[5] = [1, 0, -1, 0, 1];
+    
+    let json_str: string = format_trits_to_json(my_trits);
+    println("Formatted JSON:");
+    println(json_str);
+    
+    if json_str == "[1, 0, -1, 0, 1]" {
+        println("JSON Formatter Test: PASSED");
+        return 1;
+    }
+    
+    println("JSON Formatter Test: FAILED");
+    return -1;
+}
