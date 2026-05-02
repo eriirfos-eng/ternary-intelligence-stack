@@ -26,8 +26,8 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 - **[MoE-13: Deterministic Multi-Expert Inference](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Production-grade Mixture-of-Experts system for regulated AI workloads. 
 - **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — Terminal-native, model-agnostic AI agent built in pure Rust
 - **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Work-in-progress developer dashboard and SDK
-- **[session_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and refinements addressed during deployment
-- **[ROADMAP.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** — Phases 1–20, MoE-13 architecture, and priority matrix
+- **[Session Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and refinements addressed during deployment
+- **[Roadmap](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** — Phases 1–20, MoE-13 architecture, and priority matrix
 
 ---
 
@@ -56,18 +56,15 @@ Why This Matters
 
 This model is designed to:
 
--operate fully offline on local or sovereign infrastructure
--enforce deterministic uncertainty (HOLD state) at the model level
--integrate directly with Ternlang and the BET-VM runtime
--provide a verifiable decision layer, not just probabilistic outputs
--Relationship to Agent Albert
+- operate fully offline on local or sovereign infrastructure
+- enforce deterministic uncertainty (HOLD state) at the model level
+- integrate directly with Ternlang and the BET-VM runtime
+- provide a verifiable decision layer, not just probabilistic outputs
+- Relationship to Agent Albert
 
 ---
 
 ## 3. Agent Albert — The Sovereign AI Assistant
-
-[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
-[![version](https://img.shields.io/badge/version-v1.2.9-cyan)](https://crates.io/crates/albert-cli)
 
 **Albert** is also the terminal-native interface for the TIS. He runs entirely in your terminal, connects to local models (Ollama) or commercial bridges, and never “phones home.”
 
