@@ -35,12 +35,6 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 | ` 0` | **tend** | Insufficient data. Gather more before acting. |
 | `+1` | **affirm** | Clear positive signal. Proceed. |
 
-→ **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
-
-→ **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress developer dash
-
-→ **[Team](../LEADERSHIP.md)** - Meet the Team
-
 ---
 ## 2. What's in This Repository
 
