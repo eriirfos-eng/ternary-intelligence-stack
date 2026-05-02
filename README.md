@@ -80,13 +80,17 @@ albert-cli
 
 ---
 
-## Performance Benchmarks
+## Empirical Scaling Metrics
 
-| Feature | Performance Gain | Industry Comparison |
-|---------|------------------|---------------------|
-| **Data Density** | 1.25x improvement | 5-trit block packing (8-bit) |
-| **Logic Consistency** | 100% Deterministic | Eliminates binary timeout/null-guessing |
-| **Safety Latency** | < 1ms hard-veto | Axis-6 Veto Hard Gate |
+We measure architectural success through ternary convergence and scaling efficiency.
+
+| Metric | Scientific Focus | Empirical Baseline |
+|--------|------------------|--------------------|
+| **Loss Convergence ($N$)** | Power-law scaling | Stable scaling up to 1T params |
+| **Manifold Sparsity** | Sparse geometric efficiency | ~32% stable sparsity |
+| **Ternary Manifold ($\alpha$)** | Signal amplitude stability | $\alpha \approx 0.55$ invariant |
+
+*See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full experimental data.*
 
 ---
 
@@ -107,12 +111,11 @@ ternlang build my_program.tern  # → compile to .bet bytecode
 
 ## Repository layout
 
-| Directory | Contents |
-|-----------|----------|
-| [`ternlang-root/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root) | All Rust crates — compiler, VM, API, MCP server, ML stack |
-| [`agent_albert_cli/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli) | Agent Albert — terminal-native CLI + TernStudio intelligence layer |
-| [`ternlang-root/stdlib/`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib) | 293 open-core `.tern` modules (Tier 1 — free) |
-| `eriirfos-eng/ternlang-premium` *(private)* | 28,495+ proprietary `.tern` modules — Tier 2 / 3 / 4 |
+| Path | Research Focus |
+|-----------|----------------|
+| [`ternlang-root/`](ternlang-root/) | Research Engine: Compiler, VM, Ternary ML kernels |
+| [`albert-moe-13/`](albert-moe-13/) | Scaling Experiments: MoE-13 training & convergence framework |
+| [`ternlang-ml/`](ternlang-root/ternlang-ml/) | Training Infrastructure: QAT/STE and manifold adaptation logic |
 
 ---
 
