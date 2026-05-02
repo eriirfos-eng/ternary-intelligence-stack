@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "ternlang": {
-      "url": "https://server.smithery.ai/rfi-irfos/ternlang/mcp",
-      "type": "http"
-    }
-  }
-}
