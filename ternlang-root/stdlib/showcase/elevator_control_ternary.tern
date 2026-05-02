@@ -1,0 +1,60 @@
+/*
+ * Elevator Control Logic (Mock).
+ * Uses ternary state to track elevator movement: 1 (Up), 0 (Idle), -1 (Down).
+ * Computes next state based on current floor and requests.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn next_elevator_state(current_floor: int, requests: int[10], req_count: int) -> trit {
+    if req_count == 0 { return 0; } // Idle if no requests
+    
+    // Simplified logic: just look at the first request
+    let target: int = requests[0];
+    
+    if target > current_floor { return 1; }  // Go Up
+    if target < current_floor { return -1; } // Go Down
+    return 0; // At target, open doors
+}
+
+fn main() -> trit {
+    let requests: int[10];
+    let i: int = 0;
+    while i < 10 { requests[i] = 0; i = i + 1; }
+    
+    // Request queue: Floor 5, then Floor 2
+    requests[0] = 5;
+    requests[1] = 2;
+    let req_count: int = 2;
+    
+    let current_floor: int = 3;
+    
+    // Evaluate for first request
+    let s1: trit = next_elevator_state(current_floor, requests, req_count);
+    println("State towards Floor 5 from 3 (Expected 1):");
+    println(cast(s1));
+    
+    // Simulate arrival at 5, update queue
+    current_floor = 5;
+    requests[0] = requests[1]; // Shift queue
+    req_count = 1;
+    
+    let s2: trit = next_elevator_state(current_floor, requests, req_count);
+    println("State towards Floor 2 from 5 (Expected -1):");
+    println(cast(s2));
+    
+    // Simulate arrival at 2, update queue
+    current_floor = 2;
+    req_count = 0; // Empty
+    
+    let s3: trit = next_elevator_state(current_floor, requests, req_count);
+    println("State with no requests (Expected 0):");
+    println(cast(s3));
+    
+    if s1 == 1 && s2 == -1 && s3 == 0 {
+        println("Elevator Control Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
