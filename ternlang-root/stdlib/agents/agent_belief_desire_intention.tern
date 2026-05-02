@@ -1,0 +1,43 @@
+// BDI Agent Architecture: Belief-Desire-Intention model mock.
+// Beliefs: Agent's internal representation of the environment.
+// Desires: Objectives the agent wants to achieve.
+// Intentions: Actions the agent is committed to.
+
+fn update_beliefs(beliefs: int[3], sensor_data: int[3]) -> trit {
+    let i: int = 0;
+    while i < 3 {
+        beliefs[i] = sensor_data[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn select_intention(beliefs: int[3], desires: int[3]) -> trit {
+    // If belief doesn't match desire, intention is to change it (1)
+    if beliefs[0] != desires[0] {
+        return 1;
+    }
+    return 0; // Content
+}
+
+fn main() -> trit {
+    let beliefs: int[3];
+    let desires: int[3];
+    let sensors: int[3];
+    
+    beliefs[0] = 0; desires[0] = 1; sensors[0] = 0;
+    
+    let ok1: trit = update_beliefs(beliefs, sensors);
+    let intention: trit = select_intention(beliefs, desires);
+    
+    let success: trit = 0;
+    if intention == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
