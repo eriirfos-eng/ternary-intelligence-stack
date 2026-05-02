@@ -1,0 +1,40 @@
+// Gate Entropy Regularization: Approximates gating diversity.
+// Uses a simplified Gini-style metric to penalize concentrated gating.
+
+fn calculate_diversity(scores: float[3]) -> float {
+    let diversity: float = 0.0;
+    let i: int = 0;
+    while i < 3 {
+        // Gini impurity: sum(p * (1 - p))
+        // High diversity means scores are spread out (e.g., [0.33, 0.33, 0.33])
+        let p: float = scores[i];
+        diversity = diversity + (p * (1.0 - p));
+        i = i + 1;
+    }
+    return diversity;
+}
+
+fn main() -> trit {
+    let scores_diverse: float[3];
+    scores_diverse[0] = 0.33; scores_diverse[1] = 0.33; scores_diverse[2] = 0.34;
+    
+    let scores_concentrated: float[3];
+    scores_concentrated[0] = 0.9; scores_concentrated[1] = 0.05; scores_concentrated[2] = 0.05;
+    
+    let div_a: float = calculate_diversity(scores_diverse);
+    let div_b: float = calculate_diversity(scores_concentrated);
+    
+    // Diverse: 0.33*0.67 * 3 approx 0.22 * 3 = 0.66
+    // Conc: 0.9*0.1 + 0.05*0.95*2 = 0.09 + 0.095 = 0.185
+    
+    let success: trit = 0;
+    if div_a > div_b {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
