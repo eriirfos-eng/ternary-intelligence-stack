@@ -9,7 +9,7 @@
 [![MCP](https://img.shields.io/badge/MCP-30_tools_free-orange)](#live-api)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples-2,090%2B_.tern_programs-blueviolet)](#example-library)
-[![stdlib](https://img.shields.io/badge/stdlib-293_open%20%2B%2028k%2B_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
+[![stdlib](https://img.shields.io/badge/stdlib-1000%2B_open%20%2B%2028k%2B_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
 The Ternary Intelligence Stack (TIS) provides a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty by moving beyond the binary limitations of current systems.
@@ -34,6 +34,21 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
 
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
+
+### Quick Start
+```bash
+# Ensure Rust is installed
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install the Ternlang CLI
+cargo install ternlang-cli
+
+# Start developing
+ternlang                       # launch interactive REPL immediately
+ternlang my_program.tern       # run a .tern file directly
+ternlang run my_program.tern   # explicit form
+```
+
 
 
 ## 2. What is Albert-MoE-13? (The Intelligence Layer)
