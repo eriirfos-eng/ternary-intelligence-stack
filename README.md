@@ -1,22 +1,27 @@
 # Ternary Intelligence Stack (TIS)
+[![version](https://img.shields.io/badge/version-v1.2.9-2b2b2b)](#architecture)
+[![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-3a3a3a)](LICENSE)
+[![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-4a4a4a)](https://doi.org/10.17605/OSF.IO/TZ7DC)
+[![crates.io](https://img.shields.io/crates/v/ternlang-core.svg?color=5a5a5a)](https://crates.io/crates/ternlang-core)
 
-[![version](https://img.shields.io/badge/version-v1.2.9-111111)](#architecture)
-[![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-2c2c2c)](LICENSE)
-[![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-444444)](https://doi.org/10.17605/OSF.IO/TZ7DC)
-[![crates.io](https://img.shields.io/crates/v/ternlang-core.svg?color=555555)](https://crates.io/crates/ternlang-core)
-[![tests](https://img.shields.io/badge/tests-88%2B%20passing-1f7a1f)](#architecture)
-[![API](https://img.shields.io/badge/API-live-2ca02c)](https://ternlang-api.fly.dev/health)
-[![speedup](https://img.shields.io/badge/@sparseskip-2.3x_measured_%7C_up_to_122x_max-3cb043)](#sparse-ternary-inference)
-[![stdlib](https://img.shields.io/badge/stdlib-1k+_open_%26_28k+_premium-1f4e79)](stdlib/PREMIUM.md)
-[![examples](https://img.shields.io/badge/examples-2k+_.tern_programs-2b6cb0)](#example-library)
+[![tests](https://img.shields.io/badge/tests-88%2B%20passing-2e7d32)](#architecture)
+[![API](https://img.shields.io/badge/API-live-388e3c)](https://ternlang-api.fly.dev/health)
+
+[![speedup](https://img.shields.io/badge/@sparseskip-2.3x_measured_%7C_up_to_122x_max-43a047)](#sparse-ternary-inference)
+
+[![stdlib](https://img.shields.io/badge/stdlib-1k+_open_%26_28k+_premium-1e5f8a)](stdlib/PREMIUM.md)
+[![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-2a6f97)](#example-library)
 [![MCP](https://img.shields.io/badge/MCP-30_tools-3a7bd5)](#mcp-server--v030-19-tools)
-[![smithery badge](https://img.shields.io/badge/smithery-registry-4c8eda)](https://smithery.ai/servers/rfi-irfos/ternlang)
-[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant-003399?logo=european-union)](https://ternlang.com/compliance)
+[![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
+
+[![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
+
 [![moe-core](https://img.shields.io/crates/v/moe-core.svg?label=moe-core&color=6b6b6b)](https://crates.io/crates/moe-core)
 [![moe-platform](https://img.shields.io/crates/v/moe-platform.svg?label=moe-platform&color=7a7a7a)](https://crates.io/crates/moe-platform)
 [![moe-runtime](https://img.shields.io/crates/v/moe-runtime.svg?label=moe-runtime&color=8a8a8a)](https://crates.io/crates/moe-runtime)
 [![moe-plugin-sdk](https://img.shields.io/crates/v/moe-plugin-sdk.svg?label=moe-plugin-sdk&color=9a9a9a)](https://crates.io/crates/moe-plugin-sdk)
 [![moe-ddel](https://img.shields.io/crates/v/moe-ddel.svg?label=moe-ddel&color=aaaaaa)](https://crates.io/crates/moe-ddel)
+
 
 
 The Ternary Intelligence Stack (TIS) provides a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty by moving beyond the binary limitations of current systems.
