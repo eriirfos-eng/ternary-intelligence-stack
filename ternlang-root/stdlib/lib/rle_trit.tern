@@ -1,0 +1,66 @@
+// stdlib/lib/rle_trit.tern
+// Run-Length Encoding (RLE) for trit sequences.
+// Compresses repeated trits into pairs of (trit, count).
+
+fn rle_compress(input: trit[], out_vals: trit[], out_counts: int[]) -> int {
+    let n: int = len(input);
+    if n == 0 { return 0; }
+    
+    let current_trit: trit = input[0];
+    let current_count: int = 1;
+    let out_idx: int = 0;
+    
+    let i: int = 1;
+    while i < n {
+        if input[i] == current_trit {
+            current_count = current_count + 1;
+        } else {
+            // Write to output
+            out_vals[out_idx] = current_trit;
+            out_counts[out_idx] = current_count;
+            out_idx = out_idx + 1;
+            
+            // Reset for next run
+            current_trit = input[i];
+            current_count = 1;
+        }
+        i = i + 1;
+    }
+    
+    // Write last run
+    out_vals[out_idx] = current_trit;
+    out_counts[out_idx] = current_count;
+    out_idx = out_idx + 1;
+    
+    return out_idx;
+}
+
+fn main() -> trit {
+    let input: trit[8];
+    input[0] = 1; input[1] = 1; input[2] = 1; // 3 Affirm
+    input[3] = 0; input[4] = 0;               // 2 Hold
+    input[5] = -1;                            // 1 Reject
+    input[6] = 1; input[7] = 1;               // 2 Affirm
+
+    let out_vals: trit[8];
+    let out_counts: int[8];
+    
+    let num_runs: int = rle_compress(input, out_vals, out_counts);
+    
+    print("Number of runs: ");
+    print(num_runs); // Expected 4
+
+    let j: int = 0;
+    while j < num_runs {
+        print("Run "); print(j); print(": ");
+        print(out_vals[j]); print(" x "); print(out_counts[j]);
+        j = j + 1;
+    }
+
+    if num_runs == 4 && out_counts[0] == 3 && out_vals[2] == -1 {
+        println("✓ RLE compression test passed.");
+        return 1;
+    }
+    
+    return -1;
+}
