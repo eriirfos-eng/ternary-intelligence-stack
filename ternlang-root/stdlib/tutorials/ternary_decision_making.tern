@@ -1,0 +1,43 @@
+// stdlib/tutorials/ternary_decision_making.tern
+// Tutorial: Making decisions with Balanced Ternary logic.
+// Tier: 1 - Open Core
+
+/*
+ * In Ternary Intelligence Stack, logic is not binary (true/false).
+ * It is balanced ternary:
+ * +1 : Affirm (Yes, Positive, high confidence)
+ *  0 : Tend   (Maybe, Neutral, uncertainty, hold)
+ * -1 : Reject (No, Negative, low confidence)
+ */
+
+fn evaluate_sensor(val: float, threshold: float) -> trit {
+    if val > threshold + 0.1 { return 1; } // Clearly above
+    if val < threshold - 0.1 { return -1; } // Clearly below
+    return 0; // In the noise / uncertainty zone
+}
+
+fn main() -> trit {
+    let threshold: float = 0.5;
+    
+    let test_vals: float[3];
+    test_vals[0] = 0.8;
+    test_vals[1] = 0.5;
+    test_vals[2] = 0.2;
+    
+    println("Ternary Decision Making Tutorial");
+    println("Threshold: 0.5");
+    
+    let i: int = 0;
+    while i < 3 {
+        let res: trit = evaluate_sensor(test_vals[i], threshold);
+        print("Value: "); print(test_vals[i]); print(" -> Result: ");
+        match res {
+            1 => { println("Affirm (+1)"); }
+            0 => { println("Tend (0)"); }
+           -1 => { println("Reject (-1)"); }
+        }
+        i = i + 1;
+    }
+    
+    return 1;
+}
