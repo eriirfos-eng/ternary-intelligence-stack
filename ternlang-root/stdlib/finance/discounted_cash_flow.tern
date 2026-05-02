@@ -1,0 +1,12 @@
+fn main() -> trit {
+    let r: float = 0.1;
+    let cf1: float = 100.0; let cf2: float = 110.0; let cf3: float = 121.0;
+    let d1: float = 1.0 + r;
+    let d2: float = d1 * d1;
+    let d3: float = d2 * d1;
+    let dcf: float = (cf1 / d1) + (cf2 / d2) + (cf3 / d3);
+    println("DCF Valuation:");
+    println(dcf);
+    if dcf > 0.0 { return 1; }
+    return -1;
+}

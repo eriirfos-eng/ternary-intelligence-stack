@@ -1,0 +1,48 @@
+fn sqrt_approx(x: float) -> float {
+    if x <= 0.0 { return 0.0; }
+    let mut z: float = x;
+    if x > 1.0 {
+        z = x / 2.0;
+    }
+    let mut i: int = 0;
+    while i < 10 {
+        z = (z + x / z) / 2.0;
+        i = i + 1;
+    }
+    return z;
+}
+
+fn main() -> trit {
+    let r1: float = 0.05;
+    let r2: float = 0.02;
+    let r3: float = -0.01;
+    let r4: float = 0.04;
+    let r5: float = 0.03;
+    let rf: float = 0.01; 
+    
+    let sum: float = r1 + r2 + r3 + r4 + r5;
+    let mean: float = sum / 5.0;
+    
+    let d1: float = r1 - mean;
+    let d2: float = r2 - mean;
+    let d3: float = r3 - mean;
+    let d4: float = r4 - mean;
+    let d5: float = r5 - mean;
+    
+    let var_sum: float = (d1 * d1) + (d2 * d2) + (d3 * d3) + (d4 * d4) + (d5 * d5);
+    let variance: float = var_sum / 5.0;
+    
+    let std_dev: float = sqrt_approx(variance);
+    
+    let sharpe: float = (mean - rf) / std_dev;
+    
+    println("Mean Return:");
+    println(mean);
+    println("Sharpe Ratio:");
+    println(sharpe);
+    
+    if sharpe > 0.0 {
+        return 1;
+    }
+    return -1;
+}

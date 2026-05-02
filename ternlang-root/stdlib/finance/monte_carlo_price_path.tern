@@ -1,0 +1,12 @@
+fn main() -> trit {
+    let mut price: float = 100.0;
+    let mut i: int = 0;
+    while i < 10 {
+        price = price + 0.5; // Simplified drift for MC path simulation
+        i = i + 1;
+    }
+    println("Final MC Price:");
+    println(price);
+    if price > 100.0 { return 1; }
+    return -1;
+}

@@ -1,0 +1,10 @@
+fn main() -> trit {
+    let buy_price: float = 100.5;
+    let sell_price: float = 100.0;
+    if buy_price >= sell_price {
+        println("Order Matched");
+        return 1;
+    }
+    println("No Match");
+    return 0;
+}
