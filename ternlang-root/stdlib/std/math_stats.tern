@@ -1,26 +1,55 @@
-// stdlib/std/math_stats.tern
-// Demonstrates: Basic statistical utilities for trit sequences.
-// Tier: 1 - Open Core
+/*
+ * Standard Statistics Module — Basic summary stats for float arrays.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
 
-fn mean(data: int[5]) -> float {
-    let sum: int = 0;
+fn calculate_mean(data: float[10]) -> float {
+    let sum: float = 0.0;
     let i: int = 0;
-    while i < 5 {
+    while i < 10 {
         sum = sum + data[i];
         i = i + 1;
     }
-    return cast(sum) / 5.0;
+    return sum / 10.0;
+}
+
+fn calculate_variance(data: float[10], mean: float) -> float {
+    let sum: float = 0.0;
+    let i: int = 0;
+    while i < 10 {
+        let diff: float = data[i] - mean;
+        sum = sum + (diff * diff);
+        i = i + 1;
+    }
+    return sum / 10.0;
 }
 
 fn main() -> trit {
-    let data: int[5] = [1, 0, -1, 1, 0];
-    let avg: float = mean(data);
-    
-    // Mean of [1, 0, -1, 1, 0] is 0.2
-    if avg > 0.1 && avg < 0.3 {
-        println("Mean calculation OK.");
-        return truth();
+    let data: float[10];
+    let i: int = 0;
+    while i < 10 {
+        // Force float context
+        let val: float = 0.0;
+        let j: int = 0;
+        while j < i { val = val + 1.0; j = j + 1; }
+        data[i] = val; // 0, 1, 2, ..., 9
+        i = i + 1;
     }
     
-    return conflict();
+    // Mean = (0+1+2+3+4+5+6+7+8+9) / 10 = 45 / 10 = 4.5
+    let mean: float = calculate_mean(data);
+    println("Mean (expected 4.5):");
+    println(mean);
+    
+    let var: float = calculate_variance(data, mean);
+    println("Variance:");
+    println(var);
+    
+    if mean == 4.5 {
+        println("Stats Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
 }
