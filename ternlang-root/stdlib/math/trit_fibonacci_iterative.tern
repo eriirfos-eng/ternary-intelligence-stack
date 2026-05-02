@@ -1,0 +1,48 @@
+// stdlib/math/trit_fibonacci_iterative.tern
+// Iterative Fibonacci calculation with overflow protection.
+// Tier: 1 - Open Core
+
+fn fib(n: int, result: int[]) -> trit {
+    if n < 1 { return -1; }
+    
+    result[0] = 0;
+    if n == 1 { return 1; }
+    result[1] = 1;
+    if n == 2 { return 1; }
+    
+    let i: int = 2;
+    while i < n {
+        result[i] = result[i - 1] + result[i - 2];
+        // Overflow check (Simplified for demo)
+        if result[i] < 0 {
+            println("Warning: Integer overflow detected.");
+            return 0;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let n: int = 10;
+    let res: int[10];
+    
+    println("Calculating first 10 Fibonacci numbers...");
+    let status: trit = fib(n, res);
+    
+    if status == 1 {
+        let j: int = 0;
+        while j < n {
+            print(res[j]); print(" ");
+            j = j + 1;
+        }
+        println("");
+        
+        if res[9] == 34 {
+            println("Fibonacci validation successful.");
+            return 1;
+        }
+    }
+    
+    return -1;
+}
