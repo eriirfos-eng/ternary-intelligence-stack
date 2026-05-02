@@ -1,0 +1,35 @@
+// stdlib/classical/naive_bayes_trit.tern
+// Naive Bayes classifier for ternary features.
+// Tier: 1 - Open Core
+
+fn main() -> trit {
+    // Classes: 1 (Pos), -1 (Neg)
+    // Feature 0: Trit signal
+    
+    // Probabilities (Mock training results)
+    // P(Class=1) = 0.5, P(Class=-1) = 0.5
+    // P(Feature=1 | Class=1) = 0.8
+    // P(Feature=0 | Class=1) = 0.1
+    // P(Feature=-1| Class=1) = 0.1
+    
+    // P(Feature=1 | Class=-1) = 0.1
+    // P(Feature=0 | Class=-1) = 0.1
+    // P(Feature=-1| Class=-1) = 0.8
+    
+    let input: trit = 1;
+    println("Input feature: Affirm (1)");
+    
+    let prob_pos: float = 0.5 * 0.8;
+    let prob_neg: float = 0.5 * 0.1;
+    
+    print("Probability Class Pos: "); println(prob_pos);
+    print("Probability Class Neg: "); println(prob_neg);
+    
+    if prob_pos > prob_neg {
+        println("Classification: Positive (Affirm)");
+        return 1;
+    } else {
+        println("Classification: Negative (Reject)");
+        return -1;
+    }
+}
