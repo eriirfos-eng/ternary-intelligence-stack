@@ -1,0 +1,43 @@
+// stdlib/showcase/credit_score_ternary.tern
+// Credit scoring assessment using ternary logic.
+// Tier: 1 - Open Core
+
+fn assess_credit(income: float, debt: float, history: trit) -> trit {
+    let dti: float = debt / income; // Debt-to-Income ratio
+    
+    // Hard rejection
+    if dti > 0.6 { return -1; }
+    if history == -1 { return -1; }
+    
+    // Probable approval
+    if dti < 0.3 && history == 1 { return 1; }
+    
+    // Everything else is uncertain / manual review
+    return 0;
+}
+
+fn main() -> trit {
+    println("TIS Credit Assessment System");
+    
+    println("Case 1: High Income, Low Debt, Good History");
+    let r1: trit = assess_credit(5000.0, 500.0, 1);
+    print("Decision: "); 
+    match r1 { 1 => { println("APPROVE"); } 0 => { println("REVIEW"); } -1 => { println("DENY"); } }
+    
+    println("Case 2: Moderate Income, High Debt");
+    let r2: trit = assess_credit(3000.0, 2000.0, 0);
+    print("Decision: ");
+    match r2 { 1 => { println("APPROVE"); } 0 => { println("REVIEW"); } -1 => { println("DENY"); } }
+    
+    println("Case 3: Bad History");
+    let r3: trit = assess_credit(10000.0, 100.0, -1);
+    print("Decision: ");
+    match r3 { 1 => { println("APPROVE"); } 0 => { println("REVIEW"); } -1 => { println("DENY"); } }
+    
+    if r1 == 1 && r2 == -1 && r3 == -1 {
+        println("All assessments correct.");
+        return 1;
+    }
+    
+    return -1;
+}
