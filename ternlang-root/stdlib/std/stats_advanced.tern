@@ -1,0 +1,116 @@
+// stdlib/std/stats_advanced.tern
+// Advanced statistical utilities for trit signals.
+// Provides variance, standard deviation, and Pearson correlation.
+
+fn to_int(s: trit) -> int {
+    match s {
+        1 => { return 1; }
+        -1 => { return -1; }
+        _ => { return 0; }
+    }
+}
+
+fn sqrt_approx(x: float) -> float {
+    if x <= 0.0 { return 0.0; }
+    let mut z: float = x;
+    if x > 1.0 {
+        z = x / 2.0;
+    }
+    let mut i: int = 0;
+    while i < 10 {
+        z = (z + x / z) / 2.0;
+        i = i + 1;
+    }
+    return z;
+}
+
+fn mean_trit(data: trit[]) -> float {
+    let n: int = len(data);
+    if n == 0 { return 0.0; }
+    
+    let sum: int = 0;
+    let i: int = 0;
+    while i < n {
+        sum = sum + to_int(data[i]);
+        i = i + 1;
+    }
+    // Force float division context
+    return (cast(sum) * 1.0) / cast(n);
+}
+
+fn variance_trit(data: trit[]) -> float {
+    let n: int = len(data);
+    if n == 0 { return 0.0; }
+    
+    let m: float = mean_trit(data);
+    let var_sum: float = 0.0;
+    let i: int = 0;
+    while i < n {
+        let diff: float = cast(to_int(data[i])) - m;
+        var_sum = var_sum + (diff * diff);
+        i = i + 1;
+    }
+    return var_sum / cast(n);
+}
+
+fn stdev_trit(data: trit[]) -> float {
+    return sqrt_approx(variance_trit(data));
+}
+
+fn correlation_trit(a: trit[], b: trit[]) -> float {
+    let n: int = len(a);
+    if n != len(b) || n == 0 { return 0.0; }
+    
+    let ma: float = mean_trit(a);
+    let mb: float = mean_trit(b);
+    
+    let num: float = 0.0;
+    let den_a: float = 0.0;
+    let den_b: float = 0.0;
+    
+    let i: int = 0;
+    while i < n {
+        let diff_a: float = cast(to_int(a[i])) - ma;
+        let diff_b: float = cast(to_int(b[i])) - mb;
+        
+        num = num + (diff_a * diff_b);
+        den_a = den_a + (diff_a * diff_a);
+        den_b = den_b + (diff_b * diff_b);
+        
+        i = i + 1;
+    }
+    
+    let den: float = sqrt_approx(den_a * den_b);
+    if den == 0.0 { return 0.0; }
+    
+    return num / den;
+}
+
+fn main() -> trit {
+    let sig1: trit[5];
+    sig1[0] = 1; sig1[1] = 1; sig1[2] = 0; sig1[3] = -1; sig1[4] = -1;
+    
+    let sig2: trit[5];
+    sig2[0] = 1; sig2[1] = 0; sig2[2] = 1; sig2[3] = -1; sig2[4] = 0;
+
+    let var: float = variance_trit(sig1);
+    let corr: float = correlation_trit(sig1, sig2);
+    
+    print("Signal 1: [1, 1, 0, -1, -1]");
+    print("Variance: ");
+    print(var);
+    
+    print("Signal 2: [1, 0, 1, -1, 0]");
+    print("Correlation: ");
+    print(corr);
+
+    if var > 0.79 && var < 0.81 {
+        if corr > 0.59 && corr < 0.61 {
+            print("✓ Advanced statistics test passed.");
+            return 1;
+        }
+    }
+    
+    print("✗ Advanced statistics test failed.");
+    return -1;
+}
