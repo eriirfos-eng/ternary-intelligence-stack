@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for expert_router in onprem
+// expert_router — onprem deployment variant
 agent expert_router_Enterprise {
     fn execute() -> trit { return affirm; }
 }

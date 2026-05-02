@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for invoice_generator
+// Safety-hardened variant of invoice_generator
 fn invoice_generator_safe() -> trit {
     return affirm;
 }

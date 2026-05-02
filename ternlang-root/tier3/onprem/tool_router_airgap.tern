@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for tool_router in onprem
+// tool_router — onprem deployment variant
 agent tool_router_Enterprise {
     fn execute() -> trit { return affirm; }
 }

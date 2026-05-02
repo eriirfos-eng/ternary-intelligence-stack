@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for memory_consolidation in cluster
+// memory_consolidation — cluster deployment variant
 agent memory_consolidation_Enterprise {
     fn execute() -> trit { return affirm; }
 }

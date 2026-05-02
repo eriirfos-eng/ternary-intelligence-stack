@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for inference_queue
+// Safety-hardened variant of inference_queue
 
 fn run_safe_queue(system_load: float) -> trit {
     if system_load < 0.9 { return affirm; }

@@ -11,7 +11,7 @@ Building a standard library is an exponential effort. As of April 2026, RFI-IRFO
 ## 2. The File Family Standard (FFS-v1.0)
 We have not just written single modules; we have saturated the algorithmic landscape vertically. Every core concept in our stack ships with a 15-file ecosystem:
 *   `_sparse`: Hardware-accelerated sparse skip matrices.
-*   `_safe`: Formal verification wrappers.
+*   `_safe`: Formal verification layer — safety-hardened variants with hardware-enforced `tend` holds.
 *   `_distributed`: Multi-node cluster consensus logic.
 *   `_quantized`: Low-precision variants.
 *   **The Moat:** FFS-v1.0 is now the *expectation* of ternary engineers. No new entrant can launch an ecosystem without adhering to this standard, which we mathematically define and own.

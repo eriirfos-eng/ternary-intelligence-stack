@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for expert_dispatch
+// Safety-hardened variant of expert_dispatch
 
 fn is_dispatch_secure(auth_token: int) -> trit {
     if auth_token > 0 { return affirm; }

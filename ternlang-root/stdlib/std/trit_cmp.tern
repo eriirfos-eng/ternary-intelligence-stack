@@ -1,5 +1,5 @@
 /*
- * TritCmp — Semantic wrapper functions for comparing trits.
+ * TritCmp — Semantic comparison layer for trit values.
  * 
  * RFI-IRFOS · PUBLIC repo · v1.0
  */

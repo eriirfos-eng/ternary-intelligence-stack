@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for retry_fallback in onprem
+// retry_fallback — onprem deployment variant
 agent retry_fallback_Enterprise {
     fn execute() -> trit { return affirm; }
 }

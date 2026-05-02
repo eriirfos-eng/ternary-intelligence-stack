@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for invoice_generator in cluster
+// invoice_generator — cluster deployment variant
 agent invoice_generator_Enterprise {
     fn execute() -> trit { return affirm; }
 }

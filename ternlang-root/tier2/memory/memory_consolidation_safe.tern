@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for memory_consolidation
+// Safety-hardened variant of memory_consolidation
 
 fn validate_consolidation(status: trit) -> trit {
     if status == affirm { return affirm; }

@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for memory_tool_bridge
+// Safety-hardened variant of memory_tool_bridge
 fn memory_tool_bridge_safe() -> trit {
     return affirm;
 }

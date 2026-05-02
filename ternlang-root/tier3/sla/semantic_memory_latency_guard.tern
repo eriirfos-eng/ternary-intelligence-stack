@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for semantic_memory in sla
+// semantic_memory — sla deployment variant
 agent semantic_memory_Enterprise {
     fn execute() -> trit { return affirm; }
 }

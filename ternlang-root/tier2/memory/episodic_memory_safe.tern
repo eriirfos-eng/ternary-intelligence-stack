@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for episodic_memory
+// Safety-hardened variant of episodic_memory
 
 fn check_episode_bounds(index: int, total: int) -> trit {
     if index < total { return affirm; }

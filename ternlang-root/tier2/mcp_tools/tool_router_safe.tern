@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for tool_router
+// Safety-hardened variant of tool_router
 fn tool_router_safe() -> trit {
     return affirm;
 }

@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for retry_fallback
+// Safety-hardened variant of retry_fallback
 
 fn safe_retry_limit(backoff_ms: int) -> trit {
     if backoff_ms < 5000 { return affirm; }

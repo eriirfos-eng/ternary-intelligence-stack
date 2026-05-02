@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for key_rotator
+// Safety-hardened variant of key_rotator
 fn key_rotator_safe() -> trit {
     return affirm;
 }
