@@ -1,0 +1,77 @@
+// stdlib/math/trit_matrix_det_3x3.tern
+// Determinant of a 3x3 trit matrix.
+// Tier: 1 - Open Core
+
+fn trit_to_int(t: trit) -> int {
+    if t == 1 { return 1; }
+    if t == -1 { return -1; }
+    return 0;
+}
+
+fn det_3x3(m: trittensor<9>) -> int {
+    // Sarrus' Rule for 3x3 matrix:
+    // [ a b c ]
+    // [ d e f ]
+    // [ g h i ]
+    // det = aei + bfg + cdh - ceg - bdi - afh
+    
+    let a: int = trit_to_int(m[0]);
+    let b: int = trit_to_int(m[1]);
+    let c: int = trit_to_int(m[2]);
+    let d: int = trit_to_int(m[3]);
+    let e: int = trit_to_int(m[4]);
+    let f: int = trit_to_int(m[5]);
+    let g: int = trit_to_int(m[6]);
+    let h: int = trit_to_int(m[7]);
+    let i: int = trit_to_int(m[8]);
+    
+    let pos: int = (a * e * i) + (b * f * g) + (c * d * h);
+    let neg: int = (c * e * g) + (b * d * i) + (a * f * h);
+    
+    return pos - neg;
+}
+
+fn main() -> trit {
+    // Identity matrix
+    let identity: trittensor<9> = [
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+    ];
+    
+    println("Calculating determinant of 3x3 Identity matrix:");
+    let d1: int = det_3x3(identity);
+    println(d1);
+    if d1 != 1 { return conflict(); }
+    
+    // Matrix with det 0
+    let zero_det: trittensor<9> = [
+        1, 1, 1,
+        1, 1, 1,
+        1, 1, 1
+    ];
+    println("Calculating determinant of 3x3 All-Ones matrix:");
+    let d2: int = det_3x3(zero_det);
+    println(d2);
+    if d2 != 0 { return conflict(); }
+    
+    // A more complex trit matrix
+    let m3: trittensor<9> = [
+        1,  0, -1,
+        0,  1,  1,
+       -1,  1,  0
+    ];
+    // det = (1*1*0) + (0*1*-1) + (-1*0*1) - (-1*1*-1) - (0*0*0) - (1*1*1)
+    // det = 0 + 0 + 0 - 1 - 0 - 1 = -2
+    
+    println("Calculating determinant of complex trit matrix:");
+    let d3: int = det_3x3(m3);
+    println(d3);
+    
+    match d3 {
+        -2 => { println("Correct."); }
+        _  => { println("Incorrect determinant."); return conflict(); }
+    }
+    
+    return truth();
+}
