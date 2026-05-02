@@ -1,0 +1,46 @@
+// MoE Residual Block: Implements x + SparseMoE(x).
+// Standard building block for Transformer-based MoE models.
+
+fn sparse_moe(input: float[3], output: float[3]) -> trit {
+    // Simplified expert: scale by 2.0
+    let i: int = 0;
+    while i < 3 {
+        output[i] = input[i] * 2.0;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn residual_moe(x: float[3], out: float[3]) -> trit {
+    let moe_out: float[3];
+    let ok: trit = sparse_moe(x, moe_out);
+    
+    let i: int = 0;
+    while i < 3 {
+        out[i] = x[i] + moe_out[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let x: float[3];
+    x[0] = 1.0; x[1] = 2.0; x[2] = 3.0;
+    
+    let out: float[3];
+    let ok: trit = residual_moe(x, out);
+    
+    // Expected: [3.0, 6.0, 9.0]
+    let success: trit = 0;
+    if out[0] == 3.0 {
+        if out[2] == 9.0 {
+            success = 1;
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
