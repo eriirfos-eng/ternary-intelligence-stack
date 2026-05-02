@@ -1,0 +1,57 @@
+/*
+ * Base27 Ternary Encoding — Encode 3 trits into a single character (A-Z, 0).
+ * 3 trits = 27 possible states.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Encode 3 trits to a value 0-26
+fn trits_to_val(t1: trit, t2: trit, t3: trit) -> int {
+    let v1: int = 0;
+    let v2: int = 0;
+    let v3: int = 0;
+    
+    match t1 {
+        -1 => { v1 = 0; }
+         0 => { v1 = 1; }
+         1 => { v1 = 2; }
+    }
+    match t2 {
+        -1 => { v2 = 0; }
+         0 => { v2 = 1; }
+         1 => { v2 = 2; }
+    }
+    match t3 {
+        -1 => { v3 = 0; }
+         0 => { v3 = 1; }
+         1 => { v3 = 2; }
+    }
+    
+    return v1 * 9 + v2 * 3 + v3;
+}
+
+// Map 0-26 to a char (represented as int for now, or just logic)
+fn val_to_char_index(val: int) -> int {
+    return val; // Returns index 0-26
+}
+
+fn main() -> trit {
+    let t1: trit = 1;
+    let t2: trit = 0;
+    let t3: trit = -1;
+    
+    // (1, 0, -1) -> (2, 1, 0) in 0-2 range
+    // 2*9 + 1*3 + 0 = 18 + 3 = 21
+    
+    let encoded: int = trits_to_val(t1, t2, t3);
+    println("Encoded (1, 0, -1) value (0-26):");
+    println(encoded);
+    
+    if encoded == 21 {
+        println("Base27 Encoding Test: PASSED");
+        return 1;
+    }
+    
+    println("Base27 Encoding Test: FAILED");
+    return -1;
+}
