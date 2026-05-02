@@ -1,0 +1,48 @@
+/*
+ * Smart Grid Balancer (Mock).
+ * Uses ternary signals to model energy generation/consumption states.
+ * 1: Surplus, 0: Balanced, -1: Deficit
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn balance_grid(nodes: trit[5]) -> trit {
+    let surplus_count: int = 0;
+    let deficit_count: int = 0;
+    
+    let i: int = 0;
+    while i < 5 {
+        if nodes[i] == 1 { surplus_count = surplus_count + 1; }
+        if nodes[i] == -1 { deficit_count = deficit_count + 1; }
+        i = i + 1;
+    }
+    
+    println("Surplus Nodes:");
+    println(surplus_count);
+    println("Deficit Nodes:");
+    println(deficit_count);
+    
+    // Global state
+    if surplus_count > deficit_count {
+        return 1; // Overall surplus
+    }
+    if deficit_count > surplus_count {
+        return -1; // Overall deficit
+    }
+    return 0; // Balanced
+}
+
+fn main() -> trit {
+    let nodes: trit[5] = [1, -1, 0, -1, -1];
+    
+    let status: trit = balance_grid(nodes);
+    println("Grid Status (Expected -1):");
+    println(cast(status));
+    
+    if status == -1 {
+        println("Smart Grid Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
