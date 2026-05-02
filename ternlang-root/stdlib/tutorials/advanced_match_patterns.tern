@@ -1,0 +1,34 @@
+// stdlib/tutorials/advanced_match_patterns.tern
+// Tutorial: Advanced patterns with the match keyword.
+// Tier: 1 - Open Core
+
+fn classify_signal(t: trit) -> trit {
+    match t {
+        1 => { println("Signal is Affirm."); return 1; }
+        -1 => { println("Signal is Reject."); return -1; }
+        _ => { 
+            println("Signal is Tend (matched via wildcard _).");
+            return 0;
+        }
+    }
+}
+
+fn main() -> trit {
+    println("Ternlang Match Pattern Tutorial (Trit-native)");
+    
+    println("Testing 1:");
+    let r1: trit = classify_signal(1);
+    
+    println("Testing -1:");
+    let r2: trit = classify_signal(-1);
+    
+    println("Testing 0 (Wildcard match):");
+    let r3: trit = classify_signal(0);
+    
+    if r1 == 1 && r2 == -1 && r3 == 0 {
+        println("Match patterns validated.");
+        return 1;
+    }
+    
+    return -1;
+}
