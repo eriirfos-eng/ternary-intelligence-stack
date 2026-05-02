@@ -1,0 +1,61 @@
+// MoE Top-K Router: Selects the top K experts (K=2 in this example).
+// Useful for load balancing and expert diversity.
+
+fn find_top2(scores: float[4], out_indices: int[2]) -> trit {
+    let first_idx: int = -1;
+    let first_val: float = -100.0;
+    let second_idx: int = -1;
+    let second_val: float = -100.0;
+    
+    let i: int = 0;
+    while i < 4 {
+        if scores[i] > first_val {
+            second_val = first_val;
+            second_idx = first_idx;
+            first_val = scores[i];
+            first_idx = i;
+        } else {
+            if scores[i] > second_val {
+                second_val = scores[i];
+                second_idx = i;
+            }
+        }
+        i = i + 1;
+    }
+    
+    out_indices[0] = first_idx;
+    out_indices[1] = second_idx;
+    return 1;
+}
+
+fn main() -> trit {
+    let scores: float[4];
+    scores[0] = 0.1;
+    scores[1] = 0.5;
+    scores[2] = 0.8;
+    scores[3] = 0.2;
+    
+    let top_indices: int[2];
+    top_indices[0] = -1;
+    top_indices[1] = -1;
+    
+    let ok: trit = find_top2(scores, top_indices);
+    
+    // Expected: top_indices[0] == 2 (value 0.8), top_indices[1] == 1 (value 0.5)
+    let success: trit = 0;
+    if top_indices[0] == 2 {
+        if top_indices[1] == 1 {
+            success = 1;
+        } else {
+            success = -1;
+        }
+    } else {
+        success = -1;
+    }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
