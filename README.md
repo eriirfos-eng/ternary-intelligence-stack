@@ -56,11 +56,11 @@ Why This Matters
 
 This model is designed to:
 
--operate fully offline on local or sovereign infrastructure
--enforce deterministic uncertainty (HOLD state) at the model level
--integrate directly with Ternlang and the BET-VM runtime
--provide a verifiable decision layer, not just probabilistic outputs
--Relationship to Agent Albert
+- operate fully offline on local or sovereign infrastructure
+- enforce deterministic uncertainty (HOLD state) at the model level
+- integrate directly with Ternlang and the BET-VM runtime
+- provide a verifiable decision layer, not just probabilistic outputs
+- Relationship to Agent Albert
 
 ---
 
