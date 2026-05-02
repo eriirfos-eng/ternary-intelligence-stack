@@ -1,0 +1,30 @@
+// Agent Anomaly Detector: Monitors peer behaviors for unexpected patterns.
+// Used for security and safety in multi-agent systems.
+
+fn detect_anomaly(last_state: trit, current_state: trit) -> trit {
+    // Anomaly if agent goes from Idle (0) directly to Error (-1) without being Busy (1)
+    if last_state == 0 {
+        if current_state == -1 {
+            return 1; // Anomaly detected
+        }
+    }
+    return -1; // Normal
+}
+
+fn main() -> trit {
+    let s0: trit = 0;
+    let s1: trit = -1;
+    
+    let is_anomaly: trit = detect_anomaly(s0, s1);
+    
+    let success: trit = 0;
+    if is_anomaly == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
