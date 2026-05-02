@@ -1,0 +1,38 @@
+// Agent Negotiation Protocol: Implements a simple propose-respond handshake.
+// Used for resource allocation and task negotiation.
+
+fn negotiate(proposal: float, threshold: float) -> trit {
+    // If proposal is above threshold, accept (1). 
+    // If it's very low, reject (-1). 
+    // Otherwise, ask for revision (0).
+    if proposal > threshold {
+        return 1;
+    }
+    if proposal < (threshold * 0.5) {
+        return -1;
+    }
+    return 0;
+}
+
+fn main() -> trit {
+    let threshold: float = 0.7;
+    
+    let ok1: trit = negotiate(0.8, threshold); // Accept
+    let ok2: trit = negotiate(0.2, threshold); // Reject
+    let ok3: trit = negotiate(0.5, threshold); // Revise
+    
+    let success: trit = 0;
+    if ok1 == 1 {
+        if ok2 == -1 {
+            if ok3 == 0 {
+                success = 1;
+            } else { success = -1; }
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
