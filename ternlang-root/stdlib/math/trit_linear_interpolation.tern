@@ -1,0 +1,39 @@
+// stdlib/math/trit_linear_interpolation.tern
+// Linear interpolation (Lerp) between ternary signals.
+// Tier: 1 - Open Core
+
+fn lerp_trit(a: trit, b: trit, t: float) -> float {
+    let fa: float = cast(a);
+    let fb: float = cast(b);
+    return fa + t * (fb - fa);
+}
+
+fn main() -> trit {
+    let a: trit = -1; // Reject
+    let b: trit = 1;  // Affirm
+    
+    println("Interpolating between -1 and 1 with factor 0.5...");
+    let res: float = lerp_trit(a, b, 0.5);
+    println("Result (expected 0.0):");
+    println(res);
+    
+    if res > -0.01 && res < 0.01 {
+        println("Lerp at 0.5 OK.");
+    } else {
+        return -1;
+    }
+    
+    println("Interpolating with factor 0.75...");
+    let res2: float = lerp_trit(a, b, 0.75);
+    println("Result (expected 0.5):");
+    println(res2);
+    
+    if res2 > 0.49 && res2 < 0.51 {
+        println("Lerp at 0.75 OK.");
+    } else {
+        return -1;
+    }
+    
+    println("Ternary lerp validation successful.");
+    return 1;
+}
