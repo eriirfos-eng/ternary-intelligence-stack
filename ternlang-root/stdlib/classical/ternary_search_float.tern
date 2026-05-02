@@ -1,0 +1,41 @@
+// stdlib/classical/ternary_search_float.tern
+// Ternary search for finding the maximum of a unimodal function.
+// Tier: 1 - Open Core
+
+fn target_func(x: float) -> float {
+    // A simple downward-opening parabola: -(x-2)^2 + 10
+    // Maximum at x = 2.0
+    return -(x - 2.0) * (x - 2.0) + 10.0;
+}
+
+fn ternary_search(l: float, r: float, epsilon: float) -> float {
+    let left: float = l;
+    let right: float = r;
+    
+    while (right - left) > epsilon {
+        let m1: float = left + (right - left) / 3.0;
+        let m2: float = right - (right - left) / 3.0;
+        
+        if target_func(m1) < target_func(m2) {
+            left = m1;
+        } else {
+            right = m2;
+        }
+    }
+    return (left + right) / 2.0;
+}
+
+fn main() -> trit {
+    println("Performing ternary search for maximum of -(x-2)^2 + 10 in [0, 10]...");
+    let max_x: float = ternary_search(0.0, 10.0, 0.0001);
+    
+    print("Found maximum at x = "); println(max_x);
+    
+    // Check if max_x is close to 2.0
+    if max_x > 1.99 && max_x < 2.01 {
+        println("Ternary search successful.");
+        return 1;
+    }
+    
+    return -1;
+}
