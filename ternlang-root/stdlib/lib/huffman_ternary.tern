@@ -1,0 +1,103 @@
+// stdlib/lib/huffman_ternary.tern
+// 3-ary Huffman Coding implementation.
+// Tier: 1 - Open Core
+
+// Simplified Huffman implementation using an arena for the tree.
+// We use 3-way branching (Ternary Tree).
+
+fn find_min(freqs: int[20], n: int, exclude: int[20], exclude_count: int) -> int {
+    let min_val: int = 1000000;
+    let min_idx: int = -1;
+    let i: int = 0;
+    while i < n {
+        // Check if i is in exclude list
+        let is_excluded: trit = -1;
+        let j: int = 0;
+        while j < exclude_count {
+            if exclude[j] == i { is_excluded = 1; }
+            j = j + 1;
+        }
+        
+        if is_excluded == -1 {
+            if freqs[i] < min_val && freqs[i] != -1 {
+                min_val = freqs[i];
+                min_idx = i;
+            }
+        }
+        i = i + 1;
+    }
+    return min_idx;
+}
+
+fn main() -> trit {
+    // Frequencies for 5 symbols (A, B, C, D, E)
+    let freqs: int[20];
+    let i: int = 0;
+    while i < 20 { freqs[i] = -1; i = i + 1; }
+    
+    freqs[0] = 5;  // A
+    freqs[1] = 7;  // B
+    freqs[2] = 10; // C
+    freqs[3] = 15; // D
+    freqs[4] = 20; // E
+    
+    let n: int = 5;
+    // For 3-ary Huffman, (n-1) % 2 must be 0. (5-1) % 2 == 0. OK.
+    
+    let left: int[20];
+    let mid: int[20];
+    let right: int[20];
+    let k: int = 0;
+    while k < 20 { left[k] = -1; mid[k] = -1; right[k] = -1; k = k + 1; }
+    
+    let next_node: int = n;
+    let active_nodes: int = n;
+    
+    println("Building 3-ary Huffman Tree...");
+    
+    while active_nodes > 1 {
+        let exclude: int[20];
+        let m1: int = find_min(freqs, next_node, exclude, 0);
+        exclude[0] = m1;
+        let m2: int = find_min(freqs, next_node, exclude, 1);
+        exclude[1] = m2;
+        let m3: int = find_min(freqs, next_node, exclude, 2);
+        
+        // Combine m1, m2, m3 into a new node
+        let new_freq: int = freqs[m1] + freqs[m2] + freqs[m3];
+        freqs[next_node] = new_freq;
+        left[next_node] = m1;
+        mid[next_node] = m2;
+        right[next_node] = m3;
+        
+        // Mark combined nodes as inactive (freq = -1)
+        freqs[m1] = -1;
+        freqs[m2] = -1;
+        freqs[m3] = -1;
+        
+        println("Combined nodes into new parent with freq:");
+        println(new_freq);
+        
+        next_node = next_node + 1;
+        active_nodes = active_nodes - 2; // We took 3, added 1
+    }
+    
+    println("Huffman Tree built. Root node index:");
+    println(next_node - 1);
+    
+    // Simple verification: total frequency should be 5+7+10+15+20 = 57
+    let root_idx: int = next_node - 1;
+    // Wait, I marked children as -1, so I can't check their freq directly.
+    // But I can check the root's freq if I hadn't marked it yet.
+    // Ah, I marked it -1 in the LAST iteration if active_nodes became 1.
+    // No, the loop terminates when active_nodes == 1. So the root is NOT marked -1.
+    
+    println("Root frequency (expected 57):");
+    println(freqs[root_idx]);
+    
+    if freqs[root_idx] == 57 {
+        return 1;
+    }
+    
+    return -1;
+}
