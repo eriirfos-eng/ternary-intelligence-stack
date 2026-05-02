@@ -1,0 +1,39 @@
+// Expert Capacity Manager: Limits the number of tokens assigned to each expert.
+// Implements the "capacity factor" logic for MoE scaling.
+
+fn check_capacity(expert_idx: int, counts: int[3], capacity: int) -> trit {
+    if counts[expert_idx] < capacity {
+        counts[expert_idx] = counts[expert_idx] + 1;
+        return 1; // Success, assigned to expert
+    }
+    return -1; // Capacity exceeded, token dropped or routed to fallback
+}
+
+fn main() -> trit {
+    let capacity: int = 5;
+    let counts: int[3];
+    counts[0] = 4;
+    counts[1] = 5; // At capacity
+    counts[2] = 0;
+    
+    // Assign to expert 0: should succeed
+    let ok0: trit = check_capacity(0, counts, capacity);
+    
+    // Assign to expert 1: should fail
+    let ok1: trit = check_capacity(1, counts, capacity);
+    
+    let success: trit = 0;
+    if ok0 == 1 {
+        if ok1 == -1 {
+            if counts[0] == 5 {
+                success = 1;
+            } else { success = -1; }
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
