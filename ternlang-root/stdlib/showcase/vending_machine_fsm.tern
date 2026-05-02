@@ -1,0 +1,48 @@
+// stdlib/showcase/vending_machine_fsm.tern
+// Finite State Machine (FSM) for a vending machine using ternary signals.
+// States: 0 = Idle, 1 = Selecting, -1 = Error/Maintenance
+// Tier: 1 - Open Core
+
+fn transition(state: trit, input: trit) -> trit {
+    match state {
+        0 => { // Idle
+            if input == 1 { return 1; } // Coin inserted -> Selecting
+            return 0; // Stay Idle
+        }
+        1 => { // Selecting
+            if input == -1 { return 0; } // Cancel -> Idle
+            if input == 1 { return 0; } // Item dispensed -> Idle
+            return 1; // Stay Selecting
+        }
+       -1 => { // Error
+            if input == 0 { return 0; } // Reset -> Idle
+            return -1; // Stay in Error
+        }
+    }
+}
+
+fn main() -> trit {
+    let state: trit = 0; // Idle
+    println("Vending Machine FSM started.");
+    print("Initial State: "); println(state);
+    
+    println("Input: Coin (1)");
+    state = transition(state, 1);
+    print("New State: "); println(state);
+    if state != 1 { return -1; }
+    
+    println("Input: Dispense (1)");
+    state = transition(state, 1);
+    print("New State: "); println(state);
+    if state != 0 { return -1; }
+    
+    println("Input: System Error (Manually set state to -1)");
+    state = -1;
+    println("Input: Reset (0)");
+    state = transition(state, 0);
+    print("New State: "); println(state);
+    if state != 0 { return -1; }
+
+    println("Vending Machine FSM validation complete.");
+    return 1;
+}
