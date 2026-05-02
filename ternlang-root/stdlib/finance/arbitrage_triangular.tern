@@ -1,0 +1,10 @@
+fn main() -> trit {
+    let ab: float = 1.1; let bc: float = 0.8; let ca: float = 1.2;
+    let product: float = ab * bc * ca;
+    if product > 1.0 {
+        println("Arbitrage Opportunity:");
+        println(product);
+        return 1;
+    }
+    return -1;
+}

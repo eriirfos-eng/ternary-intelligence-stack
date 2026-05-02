@@ -1,0 +1,18 @@
+fn sqrt_approx(x: float) -> float {
+    if x <= 0.0 { return 0.0; }
+    let mut z: float = x;
+    if x > 1.0 { z = x / 2.0; }
+    let mut i: int = 0;
+    while i < 10 { z = (z + x / z) / 2.0; i = i + 1; }
+    return z;
+}
+fn main() -> trit {
+    let p: float = 100.0;
+    let vol: float = 10000.0;
+    let k: float = 0.0001;
+    let impact: float = p * (1.0 + k * sqrt_approx(vol));
+    println("Market Impact Price:");
+    println(impact);
+    if impact > p { return 1; }
+    return -1;
+}

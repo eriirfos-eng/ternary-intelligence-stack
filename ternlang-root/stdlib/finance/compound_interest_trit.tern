@@ -1,0 +1,22 @@
+fn main() -> trit {
+    let p: float = 1000.0;
+    let r: float = 0.05;
+    let n: int = 10;
+    
+    let mut balance: float = p;
+    let mut i: int = 0;
+    while i < n {
+        balance = balance * (1.0 + r);
+        i = i + 1;
+    }
+    
+    println("Initial Principal:");
+    println(p);
+    println("Balance after 10 years:");
+    println(balance);
+    
+    if balance > p {
+        return 1;
+    }
+    return -1;
+}

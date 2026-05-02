@@ -1,0 +1,21 @@
+fn main() -> trit {
+    let w1: float = 0.6;
+    let w2: float = 0.4;
+    let sigma1: float = 0.15;
+    let sigma2: float = 0.20;
+    let rho12: float = 0.3; 
+    
+    let part1: float = w1 * w1 * sigma1 * sigma1;
+    let part2: float = w2 * w2 * sigma2 * sigma2;
+    let part3: float = 2.0 * w1 * w2 * rho12 * sigma1 * sigma2;
+    
+    let var_p: float = part1 + part2 + part3;
+    
+    println("Portfolio Variance:");
+    println(var_p);
+    
+    if var_p > 0.0 {
+        return 1;
+    }
+    return -1;
+}
