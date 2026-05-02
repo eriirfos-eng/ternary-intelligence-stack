@@ -1,0 +1,43 @@
+// stdlib/tutorials/error_signaling_patterns.tern
+// Tutorial: Signaling errors and status with ternary values.
+// Tier: 1 - Open Core
+
+/*
+ * Convention for error signaling in TIS:
+ * +1 : Success (Action completed fully)
+ *  0 : Warning (Partial success, recoverable issue, or "hold")
+ * -1 : Failure (Critical error, action aborted)
+ */
+
+fn process_data(val: int) -> trit {
+    if val < 0 {
+        println("Error: Negative value not allowed.");
+        return -1;
+    }
+    if val > 100 {
+        println("Warning: Value exceeds recommended range. Processing anyway...");
+        return 0;
+    }
+    println("Success: Value processed.");
+    return 1;
+}
+
+fn main() -> trit {
+    println("Ternary Error Signaling Tutorial");
+    
+    println("Processing 50:");
+    let s1: trit = process_data(50);
+    
+    println("Processing 150:");
+    let s2: trit = process_data(150);
+    
+    println("Processing -10:");
+    let s3: trit = process_data(-10);
+    
+    if s1 == 1 && s2 == 0 && s3 == -1 {
+        println("Error signaling patterns validated.");
+        return 1;
+    }
+    
+    return -1;
+}
