@@ -1,12 +1,11 @@
 # Ternlang — Balanced Ternary Intelligence Stack
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![version](https://img.shields.io/badge/version-v1.2.9-black)](#architecture)
+[![version](https://img.shields.io/badge/version-v1.2.9-blue)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
-[![speedup](https://img.shields.io/badge/@sparseskip-2.3x_measured_%7C_up_to_122x_max-success)](#sparse-ternary-inference)
 [![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#example-library)
