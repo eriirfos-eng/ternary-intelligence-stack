@@ -1,3 +1,81 @@
+## 2026-05-02 — stdlib session — 9 files (Batch 5)
+Dirs covered: stdlib/logic, stdlib/math, stdlib/showcase, stdlib/std, stdlib/lib, stdlib/physics, stdlib/classical
+Files written:
+- stdlib/logic/ternary_comparator.tern — lexicographical comparison of 3-trit words returning relation [tier1]
+- stdlib/math/trit_dot_product.tern — integer dot product of trit tensors [tier1]
+- stdlib/showcase/smart_grid_balance.tern — grid state aggregation evaluating net surplus/deficit [tier1]
+- stdlib/logic/ternary_mux_9to1.tern — multiplexer using 2 ternary select lines mapping to 9 inputs [tier1]
+- stdlib/std/math_trigonometry_mock.tern — Taylor series approximations for sin/cos using float subset [tier1]
+- stdlib/lib/trit_ring_buffer.tern — fixed-size circular array tracking via integer heads [tier1]
+- stdlib/physics/thermodynamic_cooling.tern — Newton's law of cooling with ternary environmental factors [tier1]
+- stdlib/classical/greedy_coin_change_trit.tern — algorithmic conversion of integers into balanced ternary polynomials [tier1]
+- stdlib/showcase/elevator_control_ternary.tern — directional request routing based on ternary physical state [tier1]
+
+Compiler/VM observations:
+- Fixed-size integer indexing via variable registers correctly resolves without boundary faults across math iterations.
+- Base modulus arithmetic (`%`) correctly handles negative ranges locally but custom mappings are required for strictly "balanced" ternary outputs.
+- Completed full 50-file milestone for this execution phase.
+
+## 2026-05-02 — stdlib session — 10 files (Batch 4)
+Dirs covered: stdlib/ai, stdlib/physics, stdlib/showcase
+Files written:
+- stdlib/ai/particle_swarm_trit.tern — PSO minimizing a 1D objective via ternary velocity impulses [tier1]
+- stdlib/physics/kinematics_2d_trit.tern — 2D position/velocity tracking with ternary thrust controls [tier1]
+- stdlib/physics/collision_aabb.tern — axis-aligned bounding box collision mapped to ternary states [tier1]
+- stdlib/showcase/robot_navigation_trit.tern — reactive obstacle avoidance using discrete trit sensors [tier1]
+- stdlib/ai/markov_decision_process.tern — state transition and reward valuation across ternary actions [tier1]
+- stdlib/physics/spring_damper_trit.tern — 1D damped harmonic oscillator with ternary stiffness modulation [tier1]
+- stdlib/showcase/autonomous_drone_logic.tern — mock altitude hold adapting to ternary pitch/roll [tier1]
+- stdlib/ai/k_means_clustering_2d.tern — ternary assignment of 2D points into 3 mock centroids [tier1]
+- stdlib/physics/gravity_n_body.tern — 1D N-body gravity attraction simulating spatial collapse [tier1]
+- stdlib/ai/reinforcement_learning_mock.tern — multi-armed bandit Q-value tracker for ternary action space [tier1]
+
+Compiler/VM observations:
+- Mathematical simulations running long inner loops (e.g. PSO with 50 iterations * 3 particles) execute reliably without triggering stack issues or memory limits, proving the base register allocation is sound for deep iteration.
+- Passing `float` constants via arrays to simulate structs (`float[3]` for position/velocity/mass) remains a safe pattern while full `Struct` instantiation continues to stabilize in the parser.
+- Multi-branching logic heavily nested within `while` loops resolves correctly without branch target corruption.
+
+## 2026-05-02 — stdlib session — 10 files (Batch 3)
+Dirs covered: stdlib/crypto, stdlib/finance, stdlib/data_structures, stdlib/agents, stdlib/classical, stdlib/lib, stdlib/std, stdlib/tutorials, stdlib/core
+Files written:
+- stdlib/crypto/lfsr_ternary.tern — pseudo-random trit generator via GF(3) feedback [tier1]
+- stdlib/finance/black_scholes_ternary.tern — options pricing with ternary volatility adjustments [tier1]
+- stdlib/data_structures/ternary_search_tree.tern — 3-way branching tree for string search [tier1]
+- stdlib/agents/aggregator.tern — consensus mean and certainty aggregation for agents [tier1]
+- stdlib/classical/logistic_regression.tern — ternary-based binary classification mock [tier1]
+- stdlib/lib/trit_one_hot.tern — convert trits to 3-element one-hot float vectors [tier1]
+- stdlib/lib/trit_set_operations.tern — ternary set union and intersection logic [tier1]
+- stdlib/lib/trit_histogram.tern — frequency distribution visualizer for trits [tier1]
+- stdlib/std/math_stats.tern — mean and variance utilities for float tensors [tier1]
+- stdlib/tutorials/advanced_match_patterns.tern — showcasing nested ternary logic branches [tier1]
+- stdlib/core/consensus_chain_trit.tern — linear reduction of votes via consensus builtin [tier1]
+
+Compiler/VM observations:
+- Floating point comparisons in the VM are reliable for exact values (e.g., `0.5 == 0.5`), but caution is needed for derived values due to potential precision drift.
+- `consensus` builtin remains highly robust for linear and tree-based state reductions.
+- GF(3) arithmetic (balanced ternary) can be efficiently implemented using standard integer ops with balanced modulo adjustments.
+- String return values from functions are stable, though manipulation within the function (like concatenation) should be tested for performance on large strings.
+
+## 2026-05-02 — stdlib session — 10 files (Batch 2)
+Dirs covered: stdlib/lib, stdlib/classical, stdlib/std, stdlib/tutorials, stdlib/showcase, stdlib/core
+Files written:
+- stdlib/lib/base27_ternary.tern — encode 3 trits to a 27-char alphabet [tier1]
+- stdlib/lib/json_formatter_ternary.tern — format trit arrays to JSON strings [tier1]
+- stdlib/classical/max_flow_edmonds_karp.tern — Edmonds-Karp max flow implementation [tier1]
+- stdlib/lib/trit_packing_utils.tern — manual packing of 5 trits into 1 byte (0-242) [tier1]
+- stdlib/std/complex_ternary.tern — basic complex number arithmetic using floats [tier1]
+- stdlib/tutorials/neural_net_basics_trit.tern — single-layer ternary perceptron tutorial [tier1]
+- stdlib/showcase/fluid_diffusion_1d.tern — 1D heat/concentration diffusion simulation [tier1]
+- stdlib/core/ternary_parity.tern — balanced ternary checksum modulo 3 [tier1]
+- stdlib/core/ternary_multiplier.tern — single-trit multiplication logic [tier1]
+- stdlib/classical/min_cut_max_flow_dual.tern — min-cut discovery in residual graphs [tier1]
+
+Compiler/VM observations:
+- Fixed-size array literals (e.g., `let a: int[4] = [0, 0, 0, 0];`) trigger saturation behavior in the VM, effectively treating them as `trittensor` even if declared as `int[]`. Workaround: use manual initialization (`let a: int[4]; a[0]=0; ...`) for arrays that must hold values outside the trit range (-1, 0, 1).
+- String indexing (`s[i]`) is currently unsupported and triggers a `Runtime type mismatch` (BET-007).
+- String concatenation (`+`) and `len(string)` are stable.
+- Local array sizes should be slightly larger than the maximum expected index to avoid potential off-by-one or boundary issues in some VM versions.
+
 ## 2026-05-02 — stdlib session — 50 files (Round 2)
 Dirs covered: stdlib/signal, stdlib/crypto, stdlib/physics, stdlib/finance, stdlib/ai
 Files written:

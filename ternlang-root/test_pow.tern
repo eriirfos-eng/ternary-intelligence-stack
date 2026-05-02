@@ -1,0 +1,7 @@
+fn main() -> trit {
+    let x: float = pow(2.0, 2);
+    println(x);
+    let y: float = pow(2.0, -1);
+    println(y);
+    return 1;
+}

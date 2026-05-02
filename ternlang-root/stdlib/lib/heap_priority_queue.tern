@@ -1,0 +1,86 @@
+// stdlib/lib/heap_priority_queue.tern
+// Binary heap-based priority queue for trits.
+// Tier: 1 - Open Core
+
+fn heapify_up(heap: trit[], count: int) -> trit {
+    let curr: int = count - 1;
+    while curr > 0 {
+        let parent: int = (curr - 1) / 2;
+        if heap[curr] > heap[parent] {
+            let tmp: trit = heap[curr];
+            heap[curr] = heap[parent];
+            heap[parent] = tmp;
+            curr = parent;
+        } else {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+fn heapify_down(heap: trit[], count: int) -> trit {
+    let curr: int = 0;
+    while curr * 2 + 1 < count {
+        let child: int = curr * 2 + 1;
+        if child + 1 < count {
+            if heap[child + 1] > heap[child] {
+                child = child + 1;
+            }
+        }
+        
+        if heap[child] > heap[curr] {
+            let tmp: trit = heap[curr];
+            heap[curr] = heap[child];
+            heap[child] = tmp;
+            curr = child;
+        } else {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+fn push(heap: trit[], count: int, val: trit) -> int {
+    heap[count] = val;
+    let next: int = count + 1;
+    let dummy: trit = heapify_up(heap, next);
+    return next;
+}
+
+fn pop(heap: trit[], count: int) -> int {
+    if count == 0 { return 0; }
+    heap[0] = heap[count - 1];
+    let next: int = count - 1;
+    let dummy: trit = heapify_down(heap, next);
+    return next;
+}
+
+fn main() -> trit {
+    let heap: trittensor<31> = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ];
+    let count: int = 0;
+    
+    println("Pushing 0");
+    count = push(heap, count, 0);
+    println("Pushing -1");
+    count = push(heap, count, -1);
+    println("Pushing 1");
+    count = push(heap, count, 1);
+    
+    println("Current count:");
+    println(count);
+    
+    println("Popping:");
+    while count > 0 {
+        let top: trit = heap[0];
+        if top == 1 { println("Affirm"); }
+        if top == 0 { println("Tend"); }
+        if top == -1 { println("Reject"); }
+        count = pop(heap, count);
+    }
+    
+    return 1;
+}

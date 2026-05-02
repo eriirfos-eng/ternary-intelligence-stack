@@ -1,0 +1,24 @@
+fn f(a: float, b: int[3], c: int[3]) -> float {
+    let d: float = a;
+    let i: int = 0;
+    let p: int = 0;
+    while i < 3 {
+        p = b[i] * c[i];
+        let pf: float = p * 1.0;
+        d = d + pf;
+        i = i + 1;
+    }
+    return d;
+}
+
+fn main() -> trit {
+    let b: int[3];
+    let c: int[3];
+    b[0]=1; b[1]=1; b[2]=1;
+    c[0]=1; c[1]=1; c[2]=1;
+    let r: float = f(1.0, b, c);
+    if r == 4.0 {
+        return 1;
+    }
+    return -1;
+}

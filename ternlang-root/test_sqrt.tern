@@ -1,0 +1,6 @@
+fn main() -> trit {
+    let x: float = 4.0;
+    let y: float = sqrt(x);
+    println(y);
+    return 1;
+}

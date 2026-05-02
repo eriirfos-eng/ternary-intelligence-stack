@@ -1,0 +1,12 @@
+fn test_inc(x: int) -> int {
+    return x + 1;
+}
+
+fn main() -> trit {
+    let c: int = 0;
+    c = test_inc(c);
+    println(c);
+    c = test_inc(c);
+    println(c);
+    return 1;
+}

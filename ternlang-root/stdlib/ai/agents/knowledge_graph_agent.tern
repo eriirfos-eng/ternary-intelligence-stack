@@ -1,0 +1,29 @@
+// Knowledge Graph Agent: Queries a mock ternary relationship graph.
+// Relationships: -1 (False), 0 (Unknown), 1 (True).
+
+fn query_kg(kg: trit[9], subject: int, object: int) -> trit {
+    // KG is a 3x3 adjacency matrix
+    return kg[subject * 3 + object];
+}
+
+fn main() -> trit {
+    let kg: trit[9];
+    let i: int = 0;
+    while i < 9 { kg[i] = 0; i = i + 1; }
+    
+    // Knowledge: (0, 1) is True
+    kg[0 * 3 + 1] = 1;
+    
+    let result: trit = query_kg(kg, 0, 1);
+    
+    let success: trit = 0;
+    if result == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}

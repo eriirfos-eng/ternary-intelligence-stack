@@ -3,6 +3,6 @@ name = "ternlang-wasmtime"
 version = "1.2.7"
 edition = "2021"
 license = "LicenseRef-BSL-1.1"
-description = "Ontological Handshake for Wasmtime Runtime. Sovereign triadic WASM authorization."
+description = "Wasmtime integration for Ternlang. Sovereign triadic WASM runtime."
 
 [dependencies]
