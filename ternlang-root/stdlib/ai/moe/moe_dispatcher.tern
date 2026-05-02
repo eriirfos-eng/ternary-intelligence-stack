@@ -1,0 +1,38 @@
+// MoE Dispatcher: Routes an input vector to the selected expert.
+// Simulates the dispatching phase of a sparse MoE layer.
+
+fn dispatch(input: float[3], expert_idx: int, expert_input: float[3]) -> trit {
+    // In a real system, this would move data to the specific expert's buffer.
+    // Here we just copy the input to the target 'expert_input' array.
+    let i: int = 0;
+    while i < 3 {
+        expert_input[i] = input[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let input: float[3];
+    input[0] = 0.5; input[1] = -0.2; input[2] = 0.1;
+    
+    let expert_idx: int = 2; // Router selected expert 2
+    let expert_buffer: float[3];
+    
+    let ok: trit = dispatch(input, expert_idx, expert_buffer);
+    
+    let success: trit = 0;
+    if expert_buffer[0] == 0.5 {
+        if expert_buffer[1] == -0.2 {
+            if expert_buffer[2] == 0.1 {
+                success = 1;
+            } else { success = -1; }
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
