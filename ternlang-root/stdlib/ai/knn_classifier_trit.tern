@@ -1,0 +1,22 @@
+fn main() -> trit {
+    let target: trit[3];
+    target[0] = 1; target[1] = 1; target[2] = 1;
+    
+    let p1: trit[3];
+    p1[0] = 1; p1[1] = 0; p1[2] = 1;
+    
+    let mut dist: int = 0;
+    let mut i: int = 0;
+    while i < 3 {
+        let mut diff: int = 0;
+        if target[i] != p1[i] { diff = 1; }
+        dist = dist + diff;
+        i = i + 1;
+    }
+    
+    println("Manhattan Distance to Nearest Neighbor:");
+    println(dist);
+    
+    if dist == 1 { return 1; }
+    return -1;
+}

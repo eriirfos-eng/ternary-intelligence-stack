@@ -1,0 +1,15 @@
+fn main() -> trit {
+    let mut q: float = 0.0;
+    let reward: float = 1.0;
+    let gamma: float = 0.9;
+    let alpha: float = 0.1;
+    let next_max_q: float = 0.5;
+    
+    q = q + alpha * (reward + gamma * next_max_q - q);
+    
+    println("Updated Q-value:");
+    println(q);
+    
+    if q > 0.0 { return 1; }
+    return -1;
+}
