@@ -1,0 +1,44 @@
+// stdlib/showcase/priority_scheduler_trit.tern
+// Task scheduler using ternary priority signals.
+// Priorities: 1 = Urgent, 0 = Normal, -1 = Background
+// Tier: 1 - Open Core
+
+fn schedule_tasks(tasks: trit[], n: int) -> trit {
+    println("Processing Urgent Tasks (1):");
+    let i: int = 0;
+    while i < n {
+        if tasks[i] == 1 {
+            print("Task "); print(i); println(": EXECUTING (High Priority)");
+        }
+        i = i + 1;
+    }
+    
+    println("Processing Normal Tasks (0):");
+    let j: int = 0;
+    while j < n {
+        if tasks[j] == 0 {
+            print("Task "); print(j); println(": EXECUTING (Med Priority)");
+        }
+        j = j + 1;
+    }
+    
+    println("Background Tasks (-1) held for later.");
+    return 1;
+}
+
+fn main() -> trit {
+    let tasks: trit[6];
+    tasks[0] = 0; tasks[1] = 1; tasks[2] = -1; tasks[3] = 1; tasks[4] = 0; tasks[5] = -1;
+    
+    println("TIS Priority Task Scheduler");
+    println("Task List Priorities: [0, 1, -1, 1, 0, -1]");
+    
+    let res: trit = schedule_tasks(tasks, 6);
+    
+    if res == 1 {
+        println("Scheduler validation complete.");
+        return 1;
+    }
+    
+    return -1;
+}
