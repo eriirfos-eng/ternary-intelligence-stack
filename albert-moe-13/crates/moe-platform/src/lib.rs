@@ -1,9 +1,12 @@
+pub mod file_loader;
+
 use anyhow::Result;
 use moe_core::core::inference::InferenceEngine;
+use file_loader::{load_expert_bank, EXPERT_INPUT_DIM, EXPERT_OUTPUT_DIM};
 
 /// A loaded, ready-to-run model instance.
 pub struct LoadedModel {
-    engine: InferenceEngine,
+    pub(crate) engine: InferenceEngine,
     pub model_id: String,
     pub input_dim: usize,
     pub output_dim: usize,
@@ -17,7 +20,7 @@ pub struct InferenceResult {
     pub confidence: f32,
     /// Raw output activation vector from the expert bank
     pub output_vec: Vec<f32>,
-    /// Human-readable summary of expert routing
+    /// Human-readable routing summary
     pub routing_summary: String,
 }
 
@@ -28,20 +31,57 @@ impl Platform {
         Self
     }
 
-    /// Instantiate an InferenceEngine for the given model identifier.
-    /// Dimensions default to 64; future versions will parse model_id for config.
+    /// Instantiate a synthetic InferenceEngine with default dimensions.
+    /// Use this when no pre-trained weights are available.
     pub fn load_model(&self, model_id: &str) -> Result<LoadedModel> {
-        let input_dim = 64;
-        let output_dim = 64;
         Ok(LoadedModel {
             engine: InferenceEngine::new(
                 format!("epis-v1.0/{}", model_id),
-                input_dim,
-                output_dim,
+                EXPERT_INPUT_DIM,
+                EXPERT_OUTPUT_DIM,
             ),
             model_id: model_id.to_string(),
-            input_dim,
-            output_dim,
+            input_dim: EXPERT_INPUT_DIM,
+            output_dim: EXPERT_OUTPUT_DIM,
+        })
+    }
+
+    /// Load a real ternarized model from a `.tern.bin` file.
+    ///
+    /// The file must be a `ModelCoherence` binary produced by `scripts/transmute_llama.py`.
+    /// Layers are mapped round-robin to the 13 EPIS experts.
+    ///
+    /// ```no_run
+    /// use moe_platform::Platform;
+    /// let platform = Platform::new();
+    /// let model = platform.load_model_from_file("/path/to/llama32-1b.tern.bin").unwrap();
+    /// let result = platform.run_inference(&model, "Should we proceed?").unwrap();
+    /// println!("Verdict: {}", result.trit_verdict);
+    /// ```
+    pub fn load_model_from_file(&self, path: &str) -> Result<LoadedModel> {
+        let (expert_bank, info) = load_expert_bank(path)?;
+
+        log::info!(
+            "Loaded '{}' — {} layers → 13 experts | sparsity {:.1}% | ᾱ={:.4}",
+            info.source_model,
+            info.num_layers,
+            info.sparsity * 100.0,
+            info.mean_alpha,
+        );
+
+        let mut engine = InferenceEngine::new(
+            format!("epis-v1.0/{}", info.source_model),
+            EXPERT_INPUT_DIM,
+            EXPERT_OUTPUT_DIM,
+        );
+        // Swap in real weights from file — overwrites the randomly-initialised bank
+        engine.expert_bank = expert_bank;
+
+        Ok(LoadedModel {
+            engine,
+            model_id: info.source_model,
+            input_dim: EXPERT_INPUT_DIM,
+            output_dim: EXPERT_OUTPUT_DIM,
         })
     }
 
@@ -60,7 +100,6 @@ impl Default for Platform {
 }
 
 /// Encode a text prompt into a normalised float activation vector.
-/// Each byte maps to a dimension via modular indexing; result is L2-normalised.
 fn encode_prompt(prompt: &str, dim: usize) -> Vec<f32> {
     let mut vec = vec![0.0f32; dim];
     for (i, b) in prompt.bytes().enumerate() {
@@ -74,8 +113,6 @@ fn encode_prompt(prompt: &str, dim: usize) -> Vec<f32> {
 /// Map raw output activations to a ternary verdict + metadata.
 fn decode_result(output: Vec<f32>, model: &LoadedModel) -> InferenceResult {
     let mean = output.iter().sum::<f32>() / output.len() as f32;
-
-    // Ternary thresholding: ±0.05 dead-band becomes HOLD
     let trit_verdict: i8 = if mean > 0.05 { 1 } else if mean < -0.05 { -1 } else { 0 };
     let confidence = mean.abs().min(1.0);
 
@@ -86,7 +123,7 @@ fn decode_result(output: Vec<f32>, model: &LoadedModel) -> InferenceResult {
     };
 
     let routing_summary = format!(
-        "model={} | kernel={} | dims={}→{} | verdict={}| confidence={:.3}",
+        "model={} | kernel={} | dims={}→{} | verdict={} | confidence={:.3}",
         model.model_id,
         model.engine.kernel_version,
         model.input_dim,
@@ -120,9 +157,9 @@ mod tests {
         let a = platform.run_inference(&model, prompt).unwrap();
         let b = platform.run_inference(&model, prompt).unwrap();
         assert_eq!(a.trit_verdict, b.trit_verdict,
-            "EPIS mode must produce identical verdicts for identical input");
+            "EPIS must produce identical verdicts for identical input");
         assert_eq!(a.output_vec, b.output_vec,
-            "EPIS mode must produce identical output vectors for identical input");
+            "EPIS must produce identical activations for identical input");
     }
 
     #[test]
@@ -131,7 +168,28 @@ mod tests {
         let model = platform.load_model("test-epis").unwrap();
         let a = platform.run_inference(&model, "proceed").unwrap();
         let b = platform.run_inference(&model, "abort").unwrap();
-        // Different inputs should produce different activations (routing sanity check)
-        assert_ne!(a.output_vec, b.output_vec, "Different prompts must produce different activations");
+        assert_ne!(a.output_vec, b.output_vec,
+            "Different prompts must produce different activations");
+    }
+
+    /// Smoke test for file loading — skipped if no .tern.bin is present.
+    #[test]
+    fn test_load_from_file_if_available() {
+        let candidates = [
+            "/home/eri-irfos/llama32-1b.tern.bin",
+            "/home/eri-irfos/Desktop/llama32-1b.tern.bin",
+        ];
+        let path = candidates.iter().find(|p| std::path::Path::new(p).exists());
+
+        if let Some(p) = path {
+            let platform = Platform::new();
+            let model = platform.load_model_from_file(p).unwrap();
+            let result = platform.run_inference(&model, "What is ternary logic?").unwrap();
+            assert!([-1i8, 0, 1].contains(&result.trit_verdict));
+            println!("✓ Real model loaded: {}", result.routing_summary);
+        } else {
+            println!("⚠  No .tern.bin found — skipping file-load smoke test");
+            println!("   Run: python3 scripts/transmute_llama.py to generate one");
+        }
     }
 }
