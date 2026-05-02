@@ -1,0 +1,34 @@
+// MoE Attention Fusion: Combines expert outputs with an attention weight vector.
+// Simulates the integration of MoE with Attention mechanisms.
+
+fn fuse_attention(expert_out: float[3], attn_weights: float[3], fused_out: float[3]) -> trit {
+    let i: int = 0;
+    while i < 3 {
+        fused_out[i] = expert_out[i] * attn_weights[i];
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let out: float[3];
+    out[0] = 1.0; out[1] = 2.0; out[2] = 3.0;
+    
+    let attn: float[3];
+    attn[0] = 0.1; attn[1] = 0.8; attn[2] = 0.1;
+    
+    let final_res: float[3];
+    let ok: trit = fuse_attention(out, attn, final_res);
+    
+    // Expected: [0.1, 1.6, 0.3]
+    let success: trit = 0;
+    if final_res[1] == 1.6 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
