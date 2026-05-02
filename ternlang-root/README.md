@@ -307,7 +307,7 @@ Albert dispatches to whichever provider you configure. No default billing, no ve
 **Recommended for sovereign/offline deployment — zero external API calls:**
 
 ```bash
-ollama pull llama3.2          # or any model from ollama.com/library
+ollama pull qwen 3.5          # or any model from ollama.com/library
 ollama serve                  # start local inference server
 albert                        # Albert auto-detects Ollama — no key needed
 ```
