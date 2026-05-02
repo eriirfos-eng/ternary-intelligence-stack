@@ -517,9 +517,5 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 
 ---
 
-═══════════════════════════════════════════════════
-# APPENDIX A — SESSION LOG
-═══════════════════════════════════════════════════
-
 Full session history has been moved to **[docs/session_log.md](session_log.md)**.
 Add a row there at the end of every session.
