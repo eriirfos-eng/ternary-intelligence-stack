@@ -1,0 +1,25 @@
+fn le(b: float, iv: int[3], wv: int[3]) -> float {
+    let t: float = b;
+    let i: int = 0;
+    while i < 3 {
+        let r: int = iv[i];
+        r = r * wv[i];
+        t = t + cast(float)r;
+        i = i + 1;
+    }
+    return t;
+}
+
+fn main() -> trit {
+    let input: int[3];
+    let weights: int[3];
+    input[0] = 1; input[1] = -1; input[2] = 0;
+    weights[0] = 1; weights[1] = 1; weights[2] = -1;
+    
+    let result: float = le(0.5, input, weights);
+    
+    if result == 0.5 {
+        return 1;
+    }
+    return -1;
+}

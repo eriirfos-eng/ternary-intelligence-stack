@@ -1,0 +1,13 @@
+fn increment(x: &mut int) {
+    x = x + 1;
+}
+
+fn main() -> trit {
+    let mut a: int = 10;
+    increment(&mut a);
+    println(a);
+    if a == 11 {
+        return 1;
+    }
+    return -1;
+}
