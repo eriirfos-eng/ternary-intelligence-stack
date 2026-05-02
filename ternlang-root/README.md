@@ -684,8 +684,8 @@ The Ternlang stdlib is split across two repositories to protect proprietary IP:
 
 | | Repo | Files | Access |
 |--|------|-------|--------|
-| **Tier 1 — Open Core** | [`ternary-intelligence-stack/stdlib/`](stdlib/) | 293 `.tern` modules | Free — clone this repo |
-| **Tier 2/3/4 — Premium** | [`eriirfos-eng/ternlang-premium`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-premium) *(private)* | 28,495+ `.tern` modules | Paid license required |
+| **Tier 1 — Open Core** | [`ternary-intelligence-stack/stdlib/`](stdlib/) | +1000 `.tern` modules | Free — clone this repo |
+| **Tier 2/3/4 — Premium** | [`eriirfos-eng/ternlang-premium`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-premium) *(private)* | 28,000+ `.tern` modules | Paid license required |
 
 The open-core stdlib includes: `core/`, `ternary/`, `std/`, `showcase/`, `bughunt/`, `testing/`, `bench/`, `benchmarks/`, `classical/`, `errors/`, `tutorials/`, `lib/`
 
@@ -693,37 +693,16 @@ The premium repo includes all paid-tier directories: `agents/`, `ml/`, `nn/`, `n
 
 
 ### Tier 2 — Pro Standard
-For developers and startups building AI agents. **All 30 MCP tools are free** for every tier. Tier 2 adds: REST API (10,000 calls/month), server-side persistent 3-layer memory, SSE streaming, and production SLA. **€99/month** · [Subscribe](https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608)
+For developers and startups building AI agents. **All 30 MCP tools are free** for every tier. Tier 2 adds: REST API (20,000 calls/month), server-side persistent 3-layer memory, SSE streaming, and production SLA. **€99/month** · [Subscribe](https://buy.stripe.com/5kQ28t7SM4rB0DH6jm7N608)
 
 ### Tier 3 — Industrial
 Production-grade deployment for teams requiring EU AI Act-compliant safety gating, audit trails, and high-volume inference. Includes 50,000 API calls/month, QNN & SEC modules, T-HAL silicon bindings, and TernAudit log access. **€349/month** · [Subscribe](https://buy.stripe.com/eVq7sNfle0bl86937a7N609)
 
 ### Tier 4 — Enterprise
+Unlimited API calls/month
 On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimited throughput, dedicated SLA, and direct BSL-1.1 source access for air-gapped or regulated environments. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) — **from €2,500/month.**
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  TIER 1 — Open Core (LGPL-3.0)                     Free         │
-│  ternlang-core · ternlang-cli · ternlang-lsp · ternlang-compat  │
-│  ternpkg · spec/                                                │
-│  Free to use, modify, and distribute under LGPL.                │
-├─────────────────────────────────────────────────────────────────┤
-│  TIER 2 — Pro Standard (BSL-1.1)                  €99/mo        │
-│  ★ 30 MCP tools (all free) + REST API (10,000 calls/month)      │
-│  ✓ Server-side persistent 3-layer memory                        │
-│  ✓ SSE streaming · MoE-13 consolidation · production SLA        │
-├─────────────────────────────────────────────────────────────────┤
-│  TIER 3 — Industrial (BSL-1.1)                  €349/mo         │
-│  ✓ 50,000 API calls/month · QNN & SEC modules                   │
-│  ✓ T-HAL silicon bindings · TernAudit · Full premium stdlib     │
-├─────────────────────────────────────────────────────────────────┤
-│  TIER 4 — Enterprise (Proprietary)      from €2,500/mo          │
-│  On-premise BET-VM clusters · Custom FPGA · Enterprise SLA      │
-│  Unlimited throughput · Dedicated support · Air-gap ready       │
-│  Contact: licensing@ternlang.com                                │
-└─────────────────────────────────────────────────────────────────┘
-```
-
 **After purchasing a license:** Visit **[ternlang.com/activate](https://ternlang.com/activate)**, enter your API key and GitHub username, and you will receive a collaborator invite to the private repo automatically.
 
 → [See full tier table in stdlib/PREMIUM.md](stdlib/PREMIUM.md)
