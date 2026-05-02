@@ -1,9 +1,0 @@
-fn test_sig(a: float, b: int[3]) -> float {
-    return a;
-}
-
-fn main() -> trit {
-    let b: int[3];
-    let r: float = test_sig(1.0, b);
-    return 1;
-}
