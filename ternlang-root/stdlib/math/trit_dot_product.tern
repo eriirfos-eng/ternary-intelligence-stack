@@ -1,0 +1,52 @@
+/*
+ * Ternary Dot Product — Calculates the dot product of two trit vectors.
+ * The result is an integer.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn dot_product(v1: trit[5], v2: trit[5]) -> int {
+    let sum: int = 0;
+    let i: int = 0;
+    
+    while i < 5 {
+        let val1: int = 0;
+        let val2: int = 0;
+        
+        match v1[i] {
+            1 => { val1 = 1; }
+            -1 => { val1 = -1; }
+            0 => { val1 = 0; }
+        }
+        
+        match v2[i] {
+            1 => { val2 = 1; }
+            -1 => { val2 = -1; }
+            0 => { val2 = 0; }
+        }
+        
+        sum = sum + (val1 * val2);
+        i = i + 1;
+    }
+    
+    return sum;
+}
+
+fn main() -> trit {
+    let v1: trit[5] = [1, -1, 0, 1, 1];
+    let v2: trit[5] = [1, 1, -1, 0, 1];
+    
+    // (1 * 1) + (-1 * 1) + (0 * -1) + (1 * 0) + (1 * 1)
+    // 1 - 1 + 0 + 0 + 1 = 1
+    
+    let res: int = dot_product(v1, v2);
+    println("Dot Product Result (Expected 1):");
+    println(res);
+    
+    if res == 1 {
+        println("Trit Dot Product Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
