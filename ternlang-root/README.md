@@ -32,6 +32,12 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 | ` 0` | **tend** | Insufficient data. Gather more before acting. |
 | `+1` | **affirm** | Clear positive signal. Proceed. |
 
+→ **[ROADMAP.md](ROADMAP.md)** — Phases 1–18, session log, priority matrix
+
+→ **[Ternlang Studio IDE Preview](https://ternlang-api.fly.dev/studio)** — Our work-in-progress developer dash
+
+→ **[Team](../LEADERSHIP.md)** - Meet the Team
+
 ## What's in This Repository
 
 | Layer | What it does |
@@ -301,7 +307,7 @@ Albert dispatches to whichever provider you configure. No default billing, no ve
 **Recommended for sovereign/offline deployment — zero external API calls:**
 
 ```bash
-ollama pull qwen 3.5          # or any model from ollama.com/library
+ollama pull llama3.2          # or any model from ollama.com/library
 ollama serve                  # start local inference server
 albert                        # Albert auto-detects Ollama — no key needed
 ```
@@ -399,9 +405,16 @@ The 2.3× figure is the baseline measured result from the first `@sparseskip` be
 **5-trit block packing** encodes 5 trits into 8 bits (vs 10 bits for naive 2-bit emulation) — a 1.25× storage density improvement.
 
 ```bash
-cd benchmarks && make bench-all
+# MoE-13 routing + sparse matmul benchmarks (no GPU, no API key)
+cargo run --release --bin bench_moe -p moe-core
+
+# QAT/STE training + perplexity validation
+cargo run --release --bin perplexity_eval -p ternlang-ml
 ```
 
+Full measured results with hardware specs: **[BENCHMARKS.md](BENCHMARKS.md)**
+
+---
 
 ## Live API
 
