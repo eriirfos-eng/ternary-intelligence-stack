@@ -1,0 +1,35 @@
+// stdlib/crypto/trit_permutation_network.tern
+// A simple Benes-like network or fixed permutation layer for 9 trits.
+
+fn permute_9(input: trit[]) -> trit[] {
+    let mut output: trit[9];
+    // Fixed permutation: P = (0 3 6 1 4 7 2 5 8)
+    output[0] = input[0];
+    output[1] = input[3];
+    output[2] = input[6];
+    output[3] = input[1];
+    output[4] = input[4];
+    output[5] = input[7];
+    output[6] = input[2];
+    output[7] = input[5];
+    output[8] = input[8];
+    return output;
+}
+
+fn main() -> trit {
+    let mut input: trit[9];
+    input[0] = 1; input[1] = 0; input[2] = -1;
+    input[3] = 1; input[4] = 0; input[5] = -1;
+    input[6] = 1; input[7] = 0; input[8] = -1;
+
+    let output: trit[] = permute_9(input);
+    
+    println("Permuted Trit at index 1 (originally index 3):");
+    println(output[1]);
+    
+    if output[1] == input[3] {
+        println("Verification successful.");
+        return 1;
+    }
+    return -1;
+}

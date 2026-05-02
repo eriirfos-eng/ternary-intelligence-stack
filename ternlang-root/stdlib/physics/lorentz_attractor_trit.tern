@@ -1,0 +1,23 @@
+fn main() -> trit {
+    let mut x: float = 0.1;
+    let mut y: float = 0.0;
+    let mut z: float = 0.0;
+    let sigma: float = 10.0;
+    let rho: float = 28.0;
+    let beta: float = 2.666;
+    let dt: float = 0.01;
+    
+    let dx: float = sigma * (y - x);
+    let dy: float = x * (rho - z) - y;
+    let dz: float = x * y - beta * z;
+    
+    x = x + dx * dt;
+    y = y + dy * dt;
+    z = z + dz * dt;
+    
+    println("Lorentz x:"); println(x);
+    println("Lorentz y:"); println(y);
+    println("Lorentz z:"); println(z);
+    
+    return 1;
+}

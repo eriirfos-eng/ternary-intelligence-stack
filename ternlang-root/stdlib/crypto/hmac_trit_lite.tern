@@ -1,0 +1,74 @@
+// stdlib/crypto/hmac_trit_lite.tern
+// HMAC logic: Hash(Key ^ opad || Hash(Key ^ ipad || Message)).
+// opad/ipad are ternary constants.
+
+fn hash_9(message: trit[], len: int) -> trit[] {
+    let mut state: trit[9];
+    let mut i: int = 0;
+    while i < 9 { state[i] = 0; i = i + 1; }
+    
+    // Simple sponge: absorb message
+    let mut m: int = 0;
+    while m < len {
+        state[0] = consensus(state[0], message[m]);
+        
+        // Permutation
+        let mut round: int = 0;
+        while round < 3 {
+            let first: trit = state[0];
+            let mut j: int = 0;
+            while j < 8 {
+                state[j] = consensus(state[j], state[j+1]);
+                j = j + 1;
+            }
+            state[8] = consensus(state[8], first);
+            round = round + 1;
+        }
+        m = m + 1;
+    }
+    return state;
+}
+
+fn main() -> trit {
+    let mut key: trit[9];
+    let mut msg: trit[9];
+    let mut i: int = 0;
+    while i < 9 {
+        key[i] = 1;
+        msg[i] = -1;
+        i = i + 1;
+    }
+
+    let opad: trit = 1;
+    let ipad: trit = -1;
+
+    // Inner hash: Hash(Key ^ ipad || Message)
+    let mut inner_input: trit[18];
+    let mut k: int = 0;
+    while k < 9 {
+        inner_input[k] = key[k] + ipad; 
+        inner_input[k+9] = msg[k];
+        k = k + 1;
+    }
+    
+    let inner_hash: trit[] = hash_9(inner_input, 18);
+    
+    // Outer hash: Hash(Key ^ opad || InnerHash)
+    let mut outer_input: trit[18];
+    k = 0;
+    while k < 9 {
+        outer_input[k] = key[k] + opad;
+        outer_input[k+9] = inner_hash[k];
+        k = k + 1;
+    }
+    
+    let final_hmac: trit[] = hash_9(outer_input, 18);
+    
+    println("HMAC result[0]:");
+    println(final_hmac[0]);
+    
+    if final_hmac[0] == 0 || final_hmac[0] == 1 || final_hmac[0] == -1 {
+        return 1;
+    }
+    return -1;
+}

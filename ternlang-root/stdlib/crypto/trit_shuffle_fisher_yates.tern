@@ -1,0 +1,22 @@
+fn main() -> trit {
+    let arr: trit[9];
+    arr[0] = 1; arr[1] = 0; arr[2] = -1;
+    arr[3] = 1; arr[4] = 0; arr[5] = -1;
+    arr[6] = 1; arr[7] = 0; arr[8] = -1;
+    
+    let mut seed: int = 42;
+    let mut i: int = 8;
+    while i > 0 {
+        seed = (seed * 1103515245 + 12345);
+        if seed < 0 { seed = -seed; }
+        seed = seed % 32768;
+        
+        let j: int = seed % (i + 1);
+        let temp: trit = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+        i = i - 1;
+    }
+    println("Fisher-Yates Shuffle Complete.");
+    return 1;
+}

@@ -1,0 +1,16 @@
+fn main() -> trit {
+    let t: float[5];
+    let mut i: int = 0;
+    while i < 5 { t[i] = 0.0; i = i + 1; }
+    t[2] = 1.0; // Hot center
+    
+    let alpha: float = 0.1;
+    // T[2] = T[2] + alpha * (T[3] - 2*T[2] + T[1])
+    let t2_new: float = t[2] + alpha * (t[3] - 2.0 * t[2] + t[1]);
+    
+    println("Thermal Diffusion T[2] Next:");
+    println(t2_new);
+    
+    if t2_new < 1.0 { return 1; }
+    return -1;
+}

@@ -1,0 +1,16 @@
+fn main() -> trit {
+    let p1: float = 0.0;
+    let p2: float = 10.0;
+    let m1: float = 1.0;
+    let m2: float = 1.0;
+    let g: float = 1.0;
+    
+    let r: float = p2 - p1;
+    let f: float = (g * m1 * m2) / (r * r);
+    
+    println("Gravitational Force:");
+    println(f);
+    
+    if f > 0.0 { return 1; }
+    return -1;
+}

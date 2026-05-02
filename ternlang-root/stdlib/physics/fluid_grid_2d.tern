@@ -1,0 +1,14 @@
+fn main() -> trit {
+    let p: float[9];
+    let mut i: int = 0;
+    while i < 9 { p[i] = 0.0; i = i + 1; }
+    p[4] = 1.0; // Center pressure
+    
+    // Simple laplacian step for center point
+    // p_new[4] = 0.25 * (p[3] + p[5] + p[1] + p[7])
+    let p_new: float = 0.25 * (p[3] + p[5] + p[1] + p[7]);
+    
+    println("Fluid Pressure Center Next Step:");
+    println(p_new);
+    return 1;
+}

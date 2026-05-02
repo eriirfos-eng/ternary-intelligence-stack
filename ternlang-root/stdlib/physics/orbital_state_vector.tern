@@ -1,0 +1,19 @@
+fn main() -> trit {
+    let mut x: float = 1.0;
+    let mut v: float = 0.0;
+    let dt: float = 0.1;
+    let mu: float = 1.0; // G * M
+    
+    let r2: float = x * x;
+    let a: float = -mu / r2;
+    
+    v = v + a * dt;
+    x = x + v * dt;
+    
+    println("Orbital Position x:");
+    println(x);
+    println("Orbital Velocity v:");
+    println(v);
+    
+    return 1;
+}
