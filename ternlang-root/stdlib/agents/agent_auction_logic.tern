@@ -1,0 +1,36 @@
+// Agent Auction Logic: Implements a basic second-price auction mechanism.
+// Agents submit bids, and the highest bidder wins.
+
+fn run_auction(bids: float[3]) -> int {
+    let max_bid: float = -1.0;
+    let winner: int = -1;
+    let i: int = 0;
+    while i < 3 {
+        if bids[i] > max_bid {
+            max_bid = bids[i];
+            winner = i;
+        }
+        i = i + 1;
+    }
+    return winner;
+}
+
+fn main() -> trit {
+    let bids: float[3];
+    bids[0] = 100.0;
+    bids[1] = 250.0;
+    bids[2] = 175.0;
+    
+    let winner: int = run_auction(bids);
+    
+    let success: trit = 0;
+    if winner == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
