@@ -50,11 +50,79 @@ Matrix: 512×512, measurement window: 500 ms per cell.
 
 ---
 
-## §3 — Full Routing Pipeline
+## §3 — Expert Domain Scoring Throughput (All 13 Experts)
 
 Run: `cargo run --release --bin bench_moe -p moe-core`  
-Throughput: **363,106 routing decisions / second**  
-Latency: **2.75 µs / routing decision**
+Input dim: 64, measurement window: 300 ms per expert.
+
+| Expert | Domain | Throughput | Latency |
+|--------|--------|-----------|---------|
+| 0 | EthicsExpert | 497,922 q/s | 2,008 ns |
+| 1 | LegalExpert | 504,685 q/s | 1,981 ns |
+| 2 | ScienceExpert | 505,761 q/s | 1,977 ns |
+| 3 | CausalExpert | 490,220 q/s | 2,040 ns |
+| 4 | TemporalExpert | 508,630 q/s | 1,966 ns |
+| 5 | SpatialExpert | 506,805 q/s | 1,973 ns |
+| 6 | MathematicalExpert | 502,206 q/s | 1,991 ns |
+| 7 | TechnicalExpert | 486,502 q/s | 2,056 ns |
+| 8 | LinguisticExpert | 505,138 q/s | 1,980 ns |
+| 9 | LogicExpert | 489,512 q/s | 2,043 ns |
+| 10 | CulturalExpert | 506,599 q/s | 1,974 ns |
+| 11 | MedicalExpert | 496,021 q/s | 2,016 ns |
+| 12 | EcologicalExpert | 489,722 q/s | 2,042 ns |
+| **Total bank** | **all 13** | **6,489,723 q/s** | **~2 µs avg** |
+
+---
+
+## §4 — Full Routing Pipeline
+
+Run: `cargo run --release --bin bench_moe -p moe-core`  
+Input dim: 64, 13 experts, top-3 selection.
+
+| Metric | Value |
+|--------|-------|
+| Throughput | **363,106 routing decisions / second** |
+| Latency | **2.75 µs / routing decision** |
+
+---
+
+## §5 — End-to-End MoE Inference
+
+Run: `cargo run --release --bin bench_moe -p moe-core`  
+Input dim: 64, route top-3 experts, execute each.
+
+| Metric | Value |
+|--------|-------|
+| Throughput | **25,514 full inferences / second** |
+| Latency | **39.19 µs / inference** |
+
+---
+
+## §6 — Concurrent Routing Throughput
+
+Run: `cargo run --release --bin bench_moe -p moe-core`  
+Input dim: 64, top-3 selection, 1-second measurement window per thread count.
+
+| Threads | Total (kq/s) | Per-thread (kq/s) | Scaling efficiency |
+|---------|-------------|-------------------|--------------------|
+| 1 | 358.3 | 358.3 | 99.5% |
+| 2 | 708.5 | 354.2 | 98.4% |
+| 4 | 1,112.9 | 278.2 | 77.3% |
+| 8 | 1,183.9 | 148.0 | 41.1% |
+
+---
+
+## §7 — QAT/STE Training Convergence
+
+Run: `cargo run --release --bin perplexity_eval -p ternlang-ml`  
+Architecture: 32→64→8, 300 epochs, 32 held-out test samples.
+
+| Metric | Pre-QAT (baseline) | Post-QAT (STE fine-tuned) | Delta |
+|--------|-------------------|--------------------------|-------|
+| Pseudo-perplexity | 3,899.2 | 2,227.9 | **−42.9%** |
+| Mean cross-entropy | 8.2685 | 7.7088 | −0.559 |
+| Top-1 accuracy | 12.5% | 18.8% | **+6.2 pp** |
+| Output entropy | 0.094 nats | 0.493 nats | +0.399 |
 
 ---
 
@@ -65,7 +133,7 @@ Latency: **2.75 µs / routing decision**
 cd ternlang-root
 cargo run --release --bin scaling_convergence_bench -p ternlang-ml
 
-# Performance Benchmarks (§2–§5)
+# Performance Benchmarks (§2–§7)
 cd albert-moe-13
 cargo run --release --bin bench_moe -p moe-core
 ```
