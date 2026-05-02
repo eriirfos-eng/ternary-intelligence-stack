@@ -1,0 +1,26 @@
+// Task Allocation: Distributes tasks to available agents.
+
+fn allocate_task(states: trit[3]) -> int {
+    let i: int = 0;
+    while i < 3 {
+        if states[i] == 0 { 
+            return i; 
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let states: trit[3];
+    states[0] = 1; 
+    states[1] = 0; 
+    states[2] = 1; 
+    
+    let agent_id: int = allocate_task(states);
+    
+    if agent_id == 1 {
+        return 1;
+    }
+    return -1;
+}
