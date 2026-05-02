@@ -1,0 +1,44 @@
+// MoE Combiner: Aggregates expert outputs using gating weights.
+// Final phase of a sparse MoE layer.
+
+fn combine(expert_outputs: float[6], gating_weights: float[2], out_final: float[3]) -> trit {
+    // expert_outputs contains 2 experts' 3D outputs flattened: [e1_0, e1_1, e1_2, e2_0, e2_1, e2_2]
+    // gating_weights contains weights for each expert.
+    
+    let i: int = 0;
+    while i < 3 {
+        let e1_val: float = expert_outputs[i];
+        let e2_val: float = expert_outputs[i + 3];
+        
+        out_final[i] = (e1_val * gating_weights[0]) + (e2_val * gating_weights[1]);
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let outputs: float[6];
+    outputs[0] = 1.0; outputs[1] = 1.0; outputs[2] = 1.0; // Expert 1 output
+    outputs[3] = 2.0; outputs[4] = 2.0; outputs[5] = 2.0; // Expert 2 output
+    
+    let weights: float[2];
+    weights[0] = 0.5;
+    weights[1] = 0.5;
+    
+    let final: float[3];
+    let ok: trit = combine(outputs, weights, final);
+    
+    // Expected: [1.5, 1.5, 1.5]
+    let success: trit = 0;
+    if final[0] == 1.5 {
+        success = 1;
+    } else {
+        success = -1;
+    }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
