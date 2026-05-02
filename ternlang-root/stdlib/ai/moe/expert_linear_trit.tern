@@ -1,0 +1,41 @@
+// Expert Linear Layer: Performs a linear transformation (W*x + b).
+// Specialized for ternary weights and inputs.
+
+fn linear_expert(bias: float, input_v: int[3], weight_v: int[3]) -> float {
+    let sum: float = bias;
+    let i: int = 0;
+    while i < 3 {
+        let v: int = input_v[i];
+        let w: int = weight_v[i];
+        let p: int = v * w;
+        let p_f: float = p * 1.0;
+        sum = sum + p_f;
+        i = i + 1;
+    }
+    return sum;
+}
+
+fn main() -> trit {
+    let input: int[3];
+    let weights: int[3];
+    input[0] = 1; input[1] = -1; input[2] = 0;
+    weights[0] = 1; weights[1] = 1; weights[2] = -1;
+    
+    let bias: float = 0.5;
+    
+    // Expected: (1*1 + -1*1 + 0*-1) + 0.5 = (1 - 1 + 0) + 0.5 = 0.5
+    let result: float = linear_expert(bias, input, weights);
+    
+    let success: trit = 0;
+    if result == 0.5 {
+        success = 1;
+    } else {
+        success = -1;
+    }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
