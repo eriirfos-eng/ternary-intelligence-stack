@@ -1,0 +1,79 @@
+// stdlib/math/trit_softmax.tern
+// Softmax activation function for trit tensors.
+// Tier: 1 - Open Core
+
+fn exp_float(x: float) -> float {
+    // Simple Taylor series approximation for e^x
+    // e^x = 1 + x + x^2/2! + x^3/3! + ...
+    if x == 0.0 { return 1.0; }
+    
+    let neg: trit = -1;
+    let val: float = x;
+    if x < 0.0 {
+        neg = 1;
+        val = -x;
+    }
+    
+    let res: float = 1.0 + val + (val * val) / 2.0 + (val * val * val) / 6.0 + (val * val * val * val) / 24.0;
+    
+    if neg == 1 {
+        return 1.0 / res;
+    }
+    return res;
+}
+
+fn softmax(input: float[], output: float[], n: int) -> trit {
+    let max_val: float = -1000000.0;
+    let i: int = 0;
+    while i < n {
+        if input[i] > max_val { max_val = input[i]; }
+        i = i + 1;
+    }
+    
+    let sum: float = 0.0;
+    let j: int = 0;
+    while j < n {
+        let val: float = exp_float(input[j] - max_val);
+        output[j] = val;
+        sum = sum + val;
+        j = j + 1;
+    }
+    
+    let k: int = 0;
+    while k < n {
+        output[k] = output[k] / sum;
+        k = k + 1;
+    }
+    
+    return 1;
+}
+
+fn main() -> trit {
+    let n: int = 3;
+    let input: float[3];
+    input[0] = 1.0;
+    input[1] = 0.0;
+    input[2] = -1.0;
+    let output: float[3];
+    output[0] = 0.0;
+    output[1] = 0.0;
+    output[2] = 0.0;
+    
+    println("Calculating Softmax for [1.0, 0.0, -1.0]:");
+    softmax(input, output, n);
+    
+    println("Output[0]:"); println(output[0]);
+    println("Output[1]:"); println(output[1]);
+    println("Output[2]:"); println(output[2]);
+    
+    let total: float = output[0] + output[1] + output[2];
+    println("Sum of outputs (should be 1.0):");
+    println(total);
+    
+    if total > 0.99 && total < 1.01 {
+        println("Softmax validation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
