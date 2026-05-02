@@ -1,0 +1,52 @@
+// stdlib/logic/trit_consensus_n.tern
+// Generalized consensus operator for N ternary inputs.
+// Tier: 1 - Open Core
+
+fn consensus_n(inputs: trit[], n: int) -> trit {
+    if n == 0 { return 0; }
+    
+    let result: trit = inputs[0];
+    let i: int = 1;
+    while i < n {
+        let next: trit = inputs[i];
+        // Consensus logic:
+        // 1 & 1 -> 1, -1 & -1 -> -1
+        // 1 & -1 -> 0, 1 & 0 -> 1, -1 & 0 -> -1
+        // (Simplified: if they differ and neither is 0, result is 0)
+        
+        if result != next {
+            if result != 0 && next != 0 {
+                result = 0;
+            } else {
+                if result == 0 {
+                    result = next;
+                }
+            }
+        }
+        i = i + 1;
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let inputs1: trit[] = [1, 1, 0, 1];
+    let res1: trit = consensus_n(inputs1, 4);
+    println("Consensus of [1, 1, 0, 1] (expected 1):");
+    println(res1);
+    if res1 != 1 { return -1; }
+    
+    let inputs2: trit[] = [1, -1, 0];
+    let res2: trit = consensus_n(inputs2, 3);
+    println("Consensus of [1, -1, 0] (expected 0):");
+    println(res2);
+    if res2 != 0 { return -1; }
+    
+    let inputs3: trit[] = [-1, -1, 0, -1];
+    let res3: trit = consensus_n(inputs3, 4);
+    println("Consensus of [-1, -1, 0, -1] (expected -1):");
+    println(res3);
+    if res3 != -1 { return -1; }
+
+    println("Consensus N validation complete.");
+    return 1;
+}
