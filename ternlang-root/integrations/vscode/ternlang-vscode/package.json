@@ -2,7 +2,7 @@
   "name": "ternlang",
   "displayName": "Ternlang",
   "description": "Syntax highlighting, diagnostics, and run commands for the Ternlang balanced ternary language (.tern files). Powered by the BET VM and the ternlang CLI.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "RFI-IRFOS",
   "engines": {
     "vscode": "^1.75.0"
@@ -73,6 +73,10 @@
       {
         "command": "ternlang.repl",
         "title": "Ternlang: Open REPL"
+      },
+      {
+        "command": "ternlang.auditSelection",
+        "title": "Ternlang Pro: Audit Selection"
       }
     ],
     "menus": {
@@ -98,6 +102,11 @@
           "command": "ternlang.check",
           "when": "resourceExtname == .tern",
           "group": "ternlang"
+        },
+        {
+          "command": "ternlang.auditSelection",
+          "when": "editorHasSelection",
+          "group": "ternlang"
         }
       ]
     },
@@ -113,6 +122,11 @@
           "type": "boolean",
           "default": true,
           "description": "Run 'ternlang check' on every save and surface parse errors as diagnostics."
+        },
+        "ternlang.ternauditPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the ternlang-audit binary. Leave empty to use built-in JS analysis."
         }
       }
     }
