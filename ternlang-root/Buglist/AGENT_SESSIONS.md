@@ -141,3 +141,20 @@ Comprehensive architectural upgrade and ecosystem synchronization.
 - **ExaTern Performance [SIMD Core]**: Implemented high-efficiency 5-trit-per-byte packing and vectorized opcodes (`TV_ADD`, `TV_NEG`, `TV_CON`) using $243 \times 243$ lookup tables.
 - **ExaTern Performance [Zero-Copy]**: Implemented `Value::TensorView` (TVIEW) for slicing and `TBIND` for high-speed in-place register updates.
 - **Language Support**: Added `packed trit[N]` types and `tensor[start..end]` slicing syntax to the parser and compiler.
+## 2026-05-02 — stdlib session — 10 files
+Dirs covered: stdlib/classical, stdlib/lib, stdlib/std, stdlib/showcase, stdlib/tutorials
+Files written:
+- stdlib/classical/knapsack_ternary.tern — 0/1 knapsack with ternary preference [tier1]
+- stdlib/lib/levenshtein_trit.tern — edit distance for trit sequences [tier1]
+- stdlib/lib/convolution_trit.tern — 1D convolution for signals [tier1]
+- stdlib/std/stats_advanced.tern — variance and Pearson correlation [tier1]
+- stdlib/showcase/decision_tree_simple.tern — rule-based adaptive decision system [tier1]
+- stdlib/lib/heap_ternary.tern — efficient 3-way branching max-heap [tier1]
+- stdlib/tutorials/recurrent_state_trit.tern — stateful logic and feedback loops [tier1]
+- stdlib/lib/int_to_ternary.tern — decimal to balanced ternary conversion [tier1]
+- stdlib/lib/rle_trit.tern — run-length encoding for trit compression [tier1]
+- stdlib/tutorials/decision_loop_pattern.tern — handling uncertainty in loops [tier1]
+
+Compiler/VM observations:
+- Built-in `sqrt` causes `Call stack overflow (BET-013)` in current build. Workaround: use `sqrt_approx` (Newton-Raphson).
+- `cast(int) / cast(int)` can sometimes result in integer division even when assigned to float. Workaround: force float context with `* 1.0`.
