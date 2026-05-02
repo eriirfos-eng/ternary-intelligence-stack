@@ -1,0 +1,69 @@
+// stdlib/tutorials/recurrent_state_trit.tern
+// Tutorial: Maintaining recurrent state in Ternary Decision Systems.
+// Explains how to use the 'hold' state and feedback loops for temporal logic.
+
+fn update_memory(input: trit, memory: trit) -> trit {
+    // A simple latch-like logic:
+    // If input is strong (1 or -1), it overrides memory.
+    // If input is uncertain (0), we hold the previous memory.
+    
+    match input {
+        1 => { return 1; }
+        -1 => { return -1; }
+        0 => { return memory; }
+    }
+}
+
+fn smooth_decision(input: trit, history: trit) -> trit {
+    // Dampen signals: Only change decision if input matches history
+    // or if we have sustained pressure.
+    
+    let combined: trit = consensus(input, history);
+    
+    // If consensus is 'hold', we keep the history but nudge it
+    if combined == 0 {
+        return history;
+    }
+    
+    return combined;
+}
+
+fn main() -> trit {
+    println("Ternary Recurrent State Tutorial");
+    println("=================================");
+
+    let memory: trit = 0; // Initial state: uncertain
+    
+    println("Initial Memory: 0");
+    
+    // Step 1: Strong positive signal
+    memory = update_memory(1, memory);
+    print("After Input 1: "); print(memory); println(" (Affirm)");
+
+    // Step 2: Uncertain signal
+    memory = update_memory(0, memory);
+    print("After Input 0: "); print(memory); println(" (Hold Memory)");
+    
+    // Step 3: Strong negative signal
+    memory = update_memory(-1, memory);
+    print("After Input -1: "); print(memory); println(" (Reject)");
+
+    println("");
+    println("Signal Smoothing Demo:");
+    let history: trit = 1; // Start with positive bias
+    print("Start History: "); println(history);
+
+    // Conflict input
+    let input: trit = -1;
+    let decision: trit = smooth_decision(input, history);
+    print("Input -1 + History 1 -> Smoothed Decision: ");
+    print(decision); 
+    println(" (Consensus(1, -1) is 0, so we keep 1)");
+
+    if memory == -1 && decision == 1 {
+        println("✓ Recurrent state logic verified.");
+        return 1;
+    }
+    
+    return -1;
+}
