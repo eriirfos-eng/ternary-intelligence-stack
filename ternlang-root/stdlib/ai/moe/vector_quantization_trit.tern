@@ -1,0 +1,48 @@
+// Vector Quantization: Finds the nearest centroid for an input vector.
+// Foundation for VQ-VAE and codebook-based MoE routing.
+
+fn get_dist(v1: float[3], v2: float[3]) -> float {
+    let d: float = 0.0;
+    let i: int = 0;
+    while i < 3 {
+        let diff: float = v1[i] - v2[i];
+        d = d + (diff * diff);
+        i = i + 1;
+    }
+    return d;
+}
+
+fn vq_route(input_v: float[3], codebook: float[6]) -> int {
+    // 2 codebook vectors (3D each)
+    let c1: float[3]; 
+    c1[0]=codebook[0]; c1[1]=codebook[1]; c1[2]=codebook[2];
+    
+    let c2: float[3]; 
+    c2[0]=codebook[3]; c2[1]=codebook[4]; c2[2]=codebook[5];
+    
+    let d1: float = get_dist(input_v, c1);
+    let d2: float = get_dist(input_v, c2);
+    
+    if d1 < d2 { return 0; }
+    return 1;
+}
+
+fn main() -> trit {
+    let input: float[3]; input[0]=0.1; input[1]=0.1; input[2]=0.1;
+    let cb: float[6];
+    cb[0]=0.0; cb[1]=0.0; cb[2]=0.0; // Near input
+    cb[3]=1.0; cb[4]=1.0; cb[5]=1.0; // Far input
+    
+    let idx: int = vq_route(input, cb);
+    
+    let success: trit = 0;
+    if idx == 0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
