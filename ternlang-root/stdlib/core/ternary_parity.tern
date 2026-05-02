@@ -1,0 +1,54 @@
+/*
+ * Ternary Parity — Calculate parity (checksum) for a sequence of trits.
+ * Using modulo 3 arithmetic.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn calculate_parity(data: trit[10]) -> trit {
+    let sum: int = 0;
+    let i: int = 0;
+    while i < 10 {
+        match data[i] {
+            1 => { sum = sum + 1; }
+            -1 => { sum = sum - 1; }
+            0 => { sum = sum + 0; }
+        }
+        i = i + 1;
+    }
+    
+    // Modulo 3 in ternary range
+    let m: int = sum % 3;
+    
+    // Balanced modulo: map {2, -1, -4...} -> -1, {1, -2, 4...} -> 1, {0, 3, -3...} -> 0
+    if m == 1 || m == -2 { return 1; }
+    if m == 2 || m == -1 { return -1; }
+    return 0;
+}
+
+fn main() -> trit {
+    let data: trit[10] = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0];
+    
+    // Sum = 2 -> Parity should be -1
+    let p: trit = calculate_parity(data);
+    println("Parity of [1, 1]:");
+    println(cast(p));
+    
+    if p == -1 {
+        println("Ternary Parity Test 1: PASSED");
+    } else {
+        return -1;
+    }
+    
+    data[2] = 1; // Sum = 3 -> Parity should be 0
+    p = calculate_parity(data);
+    println("Parity of [1, 1, 1]:");
+    println(cast(p));
+    
+    if p == 0 {
+        println("Ternary Parity Test 2: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
