@@ -1,0 +1,44 @@
+// stdlib/logic/ternary_full_adder.tern
+// Ternary full-adder implementation (Sum and Carry with Carry-In).
+// Tier: 1 - Open Core
+
+fn full_adder(a: trit, b: trit, cin: trit, out: trittensor<2>) -> trit {
+    let sum: int = cast(a) + cast(b) + cast(cin);
+    
+    // Balanced Ternary Full-Adder logic
+    if sum >= 2 {
+        out[0] = cast(sum - 3); // Sum
+        out[1] = 1;             // Carry
+    } else if sum <= -2 {
+        out[0] = cast(sum + 3);
+        out[1] = -1;
+    } else {
+        out[0] = cast(sum);
+        out[1] = 0;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let out: trittensor<2>;
+    
+    println("Ternary Full-Adder Validation:");
+    
+    // 1 + 1 + 1 = 3 -> 1 carry, 0 sum (in balanced ternary 3 = 1 0)
+    full_adder(1, 1, 1, out);
+    print("1 + 1 + 1 -> Sum: "); print(out[0]); print(", Carry: "); println(out[1]);
+    if out[0] != 0 || out[1] != 1 { return -1; }
+    
+    // 1 + 1 + 0 = 2 -> 1 carry, -1 sum
+    full_adder(1, 1, 0, out);
+    print("1 + 1 + 0 -> Sum: "); print(out[0]); print(", Carry: "); println(out[1]);
+    if out[0] != -1 || out[1] != 1 { return -1; }
+    
+    // -1 + -1 + -1 = -3 -> -1 carry, 0 sum
+    full_adder(-1, -1, -1, out);
+    print("-1 + -1 + -1 -> Sum: "); print(out[0]); print(", Carry: "); println(out[1]);
+    if out[0] != 0 || out[1] != -1 { return -1; }
+
+    println("Full-adder validated.");
+    return 1;
+}
