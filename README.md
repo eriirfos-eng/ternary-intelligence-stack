@@ -84,19 +84,13 @@ We measure architectural success through ternary convergence and scaling efficie
 
 **Albert** is also the terminal-native interface for the TIS. He runs entirely in your terminal, connects to local models (Ollama) or commercial bridges, and never “phones home.”
 
-### Prerequisites
-Ensure you have Rust installed:
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
 ### Quick Install
 
 ```bash
-# Install Albert (brings the full agent engine with it)
+# Install Agent Albert
 cargo install albert-cli
 
-# Launch
+# Launch the agent
 albert-cli
 ```
 
