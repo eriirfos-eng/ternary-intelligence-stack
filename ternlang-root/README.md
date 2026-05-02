@@ -20,7 +20,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ---
 
-## Our Mission: Post-Binary Sovereignty
+## 1. Our Mission: Post-Binary Sovereignty
 
 We are a core team of five co-founders and leads from **RFI-IRFOS** in Graz, Austria, working at the intersection of computer science, machine learning, and international relations. We believe that Europe's path to technological sovereignty lies in leapfrogging the binary limitations of current AI hyperscalers.
 
@@ -38,7 +38,7 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 
 → **[Team](../LEADERSHIP.md)** - Meet the Team
 
-## What's in This Repository
+## 2. What's in This Repository
 
 | Layer | What it does |
 |-------|-------------|
@@ -52,7 +52,7 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 
 ---
 
-## Language & VM
+## 3. Language & VM
 
 Ternlang programs use `trit` as the only scalar type. Every `match` must cover all three arms — the compiler rejects non-exhaustive matches.
 
@@ -129,6 +129,8 @@ cargo build --release
 ```
 ---
 
+## 4. Albert-MoE-13
+
 We are actively developing **Albert-MoE-13**, our flagship ternary-native Mixture-of-Experts architecture. Rather than pre-training from scratch, Albert is built through the **Native Ternary Adaptation** of established open-source LLM foundations (Mistral, Llama, etc.). This allows us to leapfrog the multi-billion dollar pre-training cost while providing superior triadic reasoning.
 
 > **Albert is a ternary Mixture-of-Experts model that turns AI from a guessing system into a transparent decision process.**
@@ -192,7 +194,7 @@ Together, they form a **closed-loop system**:
 
 ---
 
-## MoE-13: Explainable Mixture-of-Experts
+## 5. MoE-13: Explainable Mixture-of-Experts
 
 > **Source:** [`albert-moe-13/`](albert-moe-13/) — fully implemented, all crates published to crates.io.
 
@@ -268,7 +270,7 @@ Safety-critical domains (Ethics, Legal, Medical, Ecological) use asymmetric thre
 Every inference emits: live vote state · confidence score · convergence momentum · trace logs · veto rationale — creating a fully auditable reasoning path for EU AI Act Article 13/14/15 compliance.
 
 ---
-## Agent Albert — AI Intelligence Layer
+## 6. Agent Albert — AI Intelligence Layer
 
 [![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](../agent_albert_cli/rust/LICENSE)
@@ -389,7 +391,7 @@ Albert will be deployed as a sidecar service alongside the TernStudio API on Fly
 
 ---
 
-## Sparse Ternary Inference
+## 7. Sparse Ternary Inference
 
 The core performance claim of TIS rests on a single hardware primitive: `@sparseskip` — an opcode that skips computation on zero-state (`tend`) weights entirely.
 
@@ -417,7 +419,7 @@ Full measured results with hardware specs: **[BENCHMARKS.md](BENCHMARKS.md)**
 
 ---
 
-## Live API
+## 8. Live API
 
 The full TIS API runs at **`https://ternlang.com`** — deployed on Fly.io, Frankfurt region.
 
@@ -525,7 +527,7 @@ For local stdio transport (Claude Desktop, offline use):
 ```
 ---
 
-## Jupyter Kernel
+## 9. Jupyter Kernel
 
 [![PyPI](https://img.shields.io/pypi/v/ternlang-jupyter?color=blue&logo=python&logoColor=white)](https://pypi.org/project/ternlang-jupyter/)
 
@@ -555,7 +557,7 @@ Includes tab completion, hover docs for all builtins, and `%version` / `%help` m
 
 ---
 
-## VS Code Extension
+## 10. VS Code Extension
 
 [![Open VSX](https://img.shields.io/badge/Open%20VSX-rfi--irfos.ternlang%20v0.4.0-blue?logo=visualstudiocode)](https://open-vsx.org/extension/rfi-irfos/ternlang)
 
@@ -587,9 +589,9 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ---
 
-## Example Library
+## 11. Example Library
 
-**29,000+ `.tern` programs** (2,090 public examples + 1,000+ open-core stdlib modules + 28,000+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) — we commit and build weekly across all tiers, continuously expanding the TIS ecosystem.
+**30,000+ `.tern` programs** (2,090 public examples + 1,000+ open-core stdlib modules + 28,000+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) — we commit and build weekly across all tiers, continuously expanding the TIS ecosystem.
 
 | Category | Examples |
 |----------|---------|
@@ -608,7 +610,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ---
 
-## Architecture
+## 12. Architecture
 
 | Crate | Tier | Description |
 |-------|------|-------------|
@@ -647,34 +649,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ---
 
-## RFI-IRFOS Protocol Specifications
-
-> These are open technical proposals authored by RFI-IRFOS. They are not yet ratified by IEEE, ISO, or any external standards body. They define intended behaviour for the Ternlang ecosystem and are published to establish prior art and invite community review.
-
-### Core Architecture & Logic
-- [**BET-ISA v1.0**](spec/standards/BET-ISA-v1.0.md): The definitive 9-Trit RISC Instruction Set Architecture.
-- [**T-UNCERTAINTY**](spec/standards/ISO-CERTIFIED-UNCERTAINTY.md): Specification for deliberative hold abstention in safety-critical decision systems.
-- [**TSON v1.0**](spec/standards/TSON-v1.0.md): Optimized data serialization for triadic systems.
-- [**T-POSIX v1.0**](spec/standards/T-POSIX-v1.0.md): Operating system interface redefining process state logic.
-
-### AI, Memory & Intelligence
-- [**T-TOKEN v1.0**](spec/standards/T-TOKEN-v1.0.md): Trit-Pair Encoding (TPE) — Compressing semantic entropy by 33%.
-- [**T-KV-CACHE v1.0**](spec/standards/T-KV-CACHE-v1.0.md): The Memory Moat — Eliminating 60% of zero-signal KV allocations.
-- [**T-WEIGHT v1.0**](spec/standards/T-WEIGHT-v1.0.md): Triadic Weight Exchange — Mandatory safety headers for LLM weights.
-- [**T-EXPLAIN v1.0**](spec/standards/T-EXPLAIN-v1.0.md): Triadic Traceability — Standardizing MoE-13 deliberation logs.
-- [**T-HALO v1.0**](spec/standards/T-HALO-v1.0.md): Triadic Alignment & Governance — Hardware-locked safety holds.
-- [**TUANN v1.0**](stdlib/ml/tuann.tern): Triadic Uncertainty-Aware Neural Networks — Native deliberative hold for hallucination rejection.
-
-### Hardware, Physical & Frontier
-- [**T-HAL v1.0**](spec/standards/T-HAL-v1.0.md): Universal Hardware Abstraction — The bridge for Huawei/NVIDIA/FPGA.
-- [**T-SENSE v1.0**](spec/standards/T-SENSE-v1.0.md): Ternary Sensor Fusion — Triadic Delta fields for IoT efficiency.
-- [**T-THERMAL v1.0**](spec/standards/T-THERMAL-v1.0.md): Power-Aware Compute — Dynamic clock scaling via sparsity.
-- [**T-BIO v1.0**](spec/standards/T-BIO-v1.0.md): Triadic Neural Encoding — 1:1 parity for Brain-Computer Interfaces.
-- [**T-QUT v1.0**](spec/standards/T-QUT-v1.0.md): Qutrit Bridge Standard — Positioning TIS as the OS for Quantum.
-
----
-
-## RFI-IRFOS Protocol Specifications
+## 13. RFI-IRFOS Protocol Specifications
 
 > These are open technical proposals authored by RFI-IRFOS. They are not yet ratified by IEEE, ISO, or any external standards body. They define intended behaviour for the Ternlang ecosystem and are published to establish prior art and invite community review.
 
@@ -712,7 +687,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ---
 
-## Licensing Tiers
+## 14. Licensing Tiers
 ### Standard Library Access
 
 The Ternlang stdlib is split across two repositories to protect proprietary IP:
@@ -720,7 +695,7 @@ The Ternlang stdlib is split across two repositories to protect proprietary IP:
 | | Repo | Files | Access |
 |--|------|-------|--------|
 | **Tier 1 — Open Core** | [`ternary-intelligence-stack/stdlib/`](stdlib/) | 293 `.tern` modules | Free — clone this repo |
-| **Tier 2/3/4 — Premium** | [`eriirfos-eng/ternlang-premium`](https://github.com/eriirfos-eng/ternlang-premium) *(private)* | 28,495+ `.tern` modules | Paid license required |
+| **Tier 2/3/4 — Premium** | [`eriirfos-eng/ternlang-premium`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-premium) *(private)* | 28,495+ `.tern` modules | Paid license required |
 
 The open-core stdlib includes: `core/`, `ternary/`, `std/`, `showcase/`, `bughunt/`, `testing/`, `bench/`, `benchmarks/`, `classical/`, `errors/`, `tutorials/`, `lib/`
 
@@ -764,7 +739,7 @@ On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimite
 → [See full tier table in stdlib/PREMIUM.md](stdlib/PREMIUM.md)
 ---
 
-## Ecosystem Position
+## 15. Ecosystem Position
 
 Ternlang is designed to be the convergence point for the fragmented ternary computing field.
 
@@ -782,7 +757,7 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 
 ---
 
-## Whitepaper & Specs
+## 16. Whitepaper & Specs
 
 - [ternlang-whitepaper.tex](whitepaper/ternlang-whitepaper.tex) — IEEE two-column, arXiv-ready (cs.PL / cs.AR / cs.NE)
 - [BET-ISA-SPEC.md](BET-ISA-SPEC.md) — formal ISA specification with encoding tables and stack-effect notation
@@ -791,7 +766,7 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 
 ---
 
-## EU AI Act Compliance
+## 17. EU AI Act Compliance
 
 > Ternlang is designed from first principles to support EU AI Act compliance for downstream AI systems. The following applies to TIS v0.3.0 and later.
 
@@ -809,7 +784,7 @@ Ternlang is designed to be the convergence point for the fragmented ternary comp
 
 ---
 
-## Contact & Licensing
+## 18. Contact & Licensing
 
 | | |
 |---|---|
