@@ -51,80 +51,72 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 
 ---
 
-## 3. Language & VM
+## 3. Language & VM: The Balanced Ternary Foundation
 
-Ternlang programs use `trit` as the only scalar type. Every `match` must cover all three arms — the compiler rejects non-exhaustive matches.
+The **Balanced Ternary Execution VM (BET-VM)** provides the native substrate for TIS. By treating `trit` (the ternary digit) as a first-class citizen, the VM enables reasoning systems that fundamentally support the `HOLD` (uncertain) state, which binary systems can only approximate via fragile null-checking or external safety wrappers.
+
+### First-Class Ternary Reasoning
+In Ternlang, every execution path is a trivalent decision. The compiler enforces exhaustive matching of all three states — `affirm`, `tend`, and `reject` — at compile time, eliminating a massive class of runtime uncertainty failures.
 
 ```ternlang
-// A ternary medical triage gate
+// A deliberative medical triage gate
 fn patient_conscious(signal: trit) -> trit {
+    // Compile-time safety: Match must be exhaustive for all 3 trits
     match signal {
-        reject => { return reject; }   // hard gate — unconscious patient blocks all other evaluation
-        tend   => { return tend;   }
-        affirm => { return affirm; }
+        reject => { return reject; }   // Immediate safety shutdown
+        tend   => { return tend;   }   // Defer to human oversight
+        affirm => { return affirm; }   // Standard inference flow
     }
 }
 
+// Consensus logic: aggregated uncertainty quantification
 fn vital_signs(heart: trit, pressure: trit) -> trit {
     return consensus(heart, pressure);
 }
 
+// Logic flow
 let conscious: trit = patient_conscious(affirm);
-
 match conscious {
-    reject => { return reject; }   // immediate escalation, no further checks
+    reject => { return reject; }   // Early termination
     tend   => { return tend;   }
     affirm => {
+        // Evaluate secondary evidence
         let vitals: trit = vital_signs(affirm, tend);
-        match vitals {
-            reject => { return reject; }
-            tend   => { return tend;   }
-            affirm => { return affirm; }
-        }
+        return vitals;
     }
 }
 ```
 
+### Standard Library & Ecosystem
 **Standard Library:** 1k+ open-core modules in this repo · 28k+ proprietary modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md) — we are constantly adding new `.tern` definitions and building the stack weekly.
  — including `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, `bio::*`, `crypto::*`, `finance::*`, and research-grade `qnn::*`.
 
-**Compiler Features:** First-class `affirm/tend/reject` keywords · Binary `if/while` fallbacks · Tensor indexing `obj[r,c]` · Built-in `use` resolver with zero runtime I/O.
+### Compiler Capabilities
+- **Trit-native primitives**: `affirm`, `tend`, `reject` keywords.
+- **Ternary type system**: Compile-time check of all match branches.
+- **Ternary-native tensors**: Indexing `obj[r,c]` natively on 9-trit RISC ISA.
+- **Resolver**: Built-in dependency resolver with zero runtime I/O overhead.
 
-**Quick start — install the CLI:**
-
+### Quick Start
+Install the CLI toolchain:
 ```bash
 cargo install ternlang-cli
 ```
 
-That installs the `ternlang` binary. Then:
-
+Common operations:
 ```bash
-ternlang                        # launch interactive REPL immediately
-ternlang my_program.tern        # run a .tern file directly — no subcommand needed
-ternlang run my_program.tern    # same as above (explicit form)
+ternlang                        # Launch the interactive REPL
+ternlang my_program.tern        # Run a .tern file directly
+ternlang run my_program.tern    # Explicit run command
+ternlang build my_program.tern  # Compile to .bet bytecode
+ternlang test [path]            # Execute test suite
 ```
 
-**All commands:**
-
-```bash
-ternlang                                          # → interactive REPL
-ternlang <file.tern>                              # → run file directly
-ternlang run <file.tern>                          # → run file
-ternlang build <file.tern> [--output file.bet]   # → compile to bytecode
-ternlang repl                                     # → interactive REPL
-ternlang fmt <file.tern> [--write]               # → format source
-ternlang test [path]                              # → run test suite
-ternlang audit decisions.json [--html]           # → EU AI Act audit report
-ternlang translate my_logic.py [--language python] [--output result.tern]
-```
-
-**Or build from source:**
-
+For large-scale compilation, you can also build directly from source:
 ```bash
 git clone https://github.com/eriirfos-eng/ternary-intelligence-stack
 cd ternary-intelligence-stack/ternlang-root
 cargo build --release
-./target/release/ternlang my_program.tern   # or: ./target/release/ternlang run ...
 ```
 ---
 
