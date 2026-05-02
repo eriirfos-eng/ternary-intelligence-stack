@@ -423,7 +423,7 @@ The standalone web IDE — Monaco editor + real BET VM (WASM, Phase 17) + integr
 
 ---
 
-## 🔍 Phase 18: TernAudit — The Killer App — PARTIAL
+## ✅ Phase 18: TernAudit — The Killer App — COMPLETE
 *(Previously listed as "Phase 13: TernAudit" — renumbered to resolve collision with Phase 13: Repository Professionalization)*
 
 TernAudit answers the question "why would an enterprise buy ternlang?" with a specific, auditable, EU-AI-Act-compliant answer: *because our AI's decisions are now trit-annotated and you can prove it to a regulator.*
@@ -433,7 +433,7 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 - [x] Audit report format: `total_decisions`, `affirm/tend/reject_count`, `forced_binary_ratio`, `eu_ai_act.article_13/14`, `flagged[]`
 - [x] `trit_audit` MCP tool — 26th tool in ternlang-api v0.3.1 (10 free + 16 premium)
 - [x] Marketing: "The only tool that finds the decisions your AI should have held"
-- [ ] VS Code command: `Ternlang Pro: Audit Selection` — select any block of AI outputs, get inline annotations
+- [x] VS Code command: `Ternlang Pro: Audit Selection` — inline trit decoration + WebviewPanel with signal counts, confidence, and EU AI Act article flags (Art. 13/14/15). Extension v1.0.2. (2026-05-02)
 
 ---
 
@@ -505,7 +505,7 @@ TernAudit answers the question "why would an enterprise buy ternlang?" with a sp
 | ~~Q2 2026~~ **DONE** | 5 new MCP tools (Phase 11A) ✅ | 🟠 High | — |
 | ~~Q2 2026~~ **DONE** | EcoCore in MoE-13 (Phase 11B) ✅ | 🟠 High | — |
 | ~~Q2 2026~~ **DONE** | WASM runtime (Phase 17) ✅ | 🟢 Complete | — |
-| Q3 2026 | TernAudit VS Code inline (Phase 18) | 🔴 Critical (commercial) | Medium |
+| ~~Q3 2026~~ **DONE** | TernAudit VS Code inline (Phase 18) ✅ | 🟢 Complete | — |
 | Q3 2026 | TernTranslator VS Code panel (Phase 14) | 🟠 High | Medium |
 | ~~Q3 2026~~ **DONE** | Jupyter kernel (Phase 15A) ✅ | 🟢 Complete | — |
 | ~~Q3 2026~~ **DONE** | Hacker News launch (Phase 15D) ✅ | 🔴 Critical (distribution) | Low |
