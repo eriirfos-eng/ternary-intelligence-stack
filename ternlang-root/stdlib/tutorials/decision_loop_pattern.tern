@@ -1,0 +1,64 @@
+// stdlib/tutorials/decision_loop_pattern.tern
+// Tutorial: The Ternary Decision Loop pattern.
+// Demonstrates how to handle 'uncertainty' as a loop condition until consensus is reached.
+
+fn get_mock_signal(time: int) -> trit {
+    // Simulates a signal that becomes clear over time
+    if time < 3 { return 0; }
+    if time < 5 { return 1; }
+    return 1;
+}
+
+fn get_noisy_signal(time: int) -> trit {
+    // Simulates a fluctuating signal
+    if time % 2 == 0 { return 0; }
+    if time < 4 { return -1; }
+    return 1;
+}
+
+fn main() -> trit {
+    println("Tutorial: Ternary Decision Loops");
+    println("================================");
+
+    println("Example 1: Waiting for signal clarity...");
+    let mut decision: trit = 0;
+    let mut t: int = 0;
+    
+    while decision == 0 && t < 10 {
+        decision = get_mock_signal(t);
+        print("Time "); print(t); print(": Signal is "); print(decision);
+        if decision == 0 { println(" (Waiting...)"); } else { println(" (Decision reached!)"); }
+        t = t + 1;
+    }
+
+    println("");
+    println("Example 2: Signal smoothing loop (Consensus-based)");
+    let mut smoothed: trit = 0;
+    let mut k: int = 0;
+    let mut confirmed: int = 0;
+
+    while confirmed < 3 && k < 15 {
+        let raw: trit = get_noisy_signal(k);
+        smoothed = consensus(smoothed, raw);
+        
+        print("Step "); print(k); print(": Raw "); print(raw); 
+        print(" -> Smoothed "); print(smoothed);
+        
+        if smoothed != 0 {
+            confirmed = confirmed + 1;
+            println(" (Confirming...)");
+        } else {
+            confirmed = 0;
+            println(" (Resetting confirmation)");
+        }
+        k = k + 1;
+    }
+
+    if t == 4 && smoothed == -1 {
+        println("");
+        println("✓ Decision loop patterns verified.");
+        return 1;
+    }
+    
+    return -1;
+}
