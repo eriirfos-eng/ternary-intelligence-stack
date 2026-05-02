@@ -1,0 +1,60 @@
+// stdlib/classical/k_means_trit.tern
+// K-Means clustering for ternary signals.
+// Tier: 1 - Open Core
+
+fn get_dist(t: trit, centroid: float) -> float {
+    let tf: float = cast(t);
+    return abs(tf - centroid);
+}
+
+fn main() -> trit {
+    let data: trittensor<10> = [1, 1, 0, 0, -1, -1, 1, 0, -1, 1];
+    let k: int = 3;
+    let centroids: float[3];
+    centroids[0] = -1.0;
+    centroids[1] = 0.0;
+    centroids[2] = 1.0;
+    
+    let assignments: int[10];
+    let i: int = 0;
+    while i < 10 {
+        let min_dist: float = 1000.0;
+        let best_k: int = 0;
+        let j: int = 0;
+        while j < 3 {
+            let d: float = get_dist(data[i], centroids[j]);
+            if d < min_dist {
+                min_dist = d;
+                best_k = j;
+            }
+            j = j + 1;
+        }
+        assignments[i] = best_k;
+        i = i + 1;
+    }
+    
+    println("K-Means clustering complete for 10 trit samples.");
+    println("Assignments (Sample: Index -> Cluster):");
+    let k0: int = 0;
+    let k1: int = 0;
+    let k2: int = 0;
+    
+    let m: int = 0;
+    while m < 10 {
+        if assignments[m] == 0 { k0 = k0 + 1; }
+        if assignments[m] == 1 { k1 = k1 + 1; }
+        if assignments[m] == 2 { k2 = k2 + 1; }
+        m = m + 1;
+    }
+    
+    print("Cluster 0 count: "); println(k0);
+    print("Cluster 1 count: "); println(k1);
+    print("Cluster 2 count: "); println(k2);
+    
+    if k0 == 3 && k1 == 3 && k2 == 4 {
+        println("Clustering matches expected distribution.");
+        return 1;
+    }
+    
+    return -1;
+}
