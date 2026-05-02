@@ -1,0 +1,46 @@
+// stdlib/lib/trit_unit_converter.tern
+// Unit conversion utility with ternary status signaling.
+// Tier: 1 - Open Core
+
+fn c_to_f(c: float) -> float {
+    return (c * 9.0 / 5.0) + 32.0;
+}
+
+fn f_to_c(f: float) -> float {
+    return (f - 32.0) * 5.0 / 9.0;
+}
+
+fn validate_temp(c: float) -> trit {
+    if c < -273.15 { return -1; } // Physical impossibility
+    if c > 100.0 { return 0; } // Extreme heat warning
+    return 1; // Normal range
+}
+
+fn main() -> trit {
+    println("Ternary Unit Converter");
+    
+    let c1: float = 25.0;
+    let f1: float = c_to_f(c1);
+    print("25C in F: "); println(f1);
+    
+    if f1 > 76.9 && f1 < 77.1 {
+        println("Conversion OK.");
+    } else {
+        return -1;
+    }
+    
+    println("Validating 150C:");
+    let status: trit = validate_temp(150.0);
+    match status {
+        1 => { println("Temp OK."); }
+        0 => { println("Warning: Overheating."); }
+       -1 => { println("Error: Impossible temp."); }
+    }
+    
+    if status == 0 {
+        println("Validation logic OK.");
+        return 1;
+    }
+    
+    return -1;
+}
