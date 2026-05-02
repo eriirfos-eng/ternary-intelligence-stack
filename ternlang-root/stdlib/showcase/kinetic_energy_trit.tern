@@ -1,0 +1,26 @@
+// stdlib/showcase/kinetic_energy_trit.tern
+// Basic physics: Kinetic energy calculation.
+// Tier: 1 - Open Core
+
+fn calculate_ke(mass: float, velocity: float) -> float {
+    return 0.5 * mass * velocity * velocity;
+}
+
+fn main() -> trit {
+    let mass: float = 10.0;
+    let velocity: float = 5.0;
+    
+    println("Physics Tool: Kinetic Energy");
+    print("Mass: "); println(mass);
+    print("Velocity: "); println(velocity);
+    
+    let ke: float = calculate_ke(mass, velocity);
+    print("Kinetic Energy (expected 125.0): "); println(ke);
+    
+    if ke > 124.9 && ke < 125.1 {
+        println("Calculation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
