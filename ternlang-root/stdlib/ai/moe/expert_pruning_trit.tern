@@ -1,0 +1,40 @@
+// Expert Pruning: Disables experts with low utilization to save resources.
+// Implements a simple dynamic expert selection/pruning mechanism.
+
+fn prune_experts(utilization: float[3], active: trit[3], threshold: float) -> int {
+    let pruned_count: int = 0;
+    let i: int = 0;
+    while i < 3 {
+        if utilization[i] < threshold {
+            active[i] = -1; // Deactivate
+            pruned_count = pruned_count + 1;
+        } else {
+            active[i] = 1; // Keep active
+        }
+        i = i + 1;
+    }
+    return pruned_count;
+}
+
+fn main() -> trit {
+    let utilization: float[3];
+    utilization[0] = 0.5;
+    utilization[1] = 0.05; // Below threshold
+    utilization[2] = 0.8;
+    
+    let active_status: trit[3];
+    let count: int = prune_experts(utilization, active_status, 0.1);
+    
+    let success: trit = 0;
+    if count == 1 {
+        if active_status[1] == -1 {
+            success = 1;
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
