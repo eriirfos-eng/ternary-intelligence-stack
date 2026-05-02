@@ -1,0 +1,36 @@
+// stdlib/math/trit_cross_product.tern
+// 3D cross product for vectors of trits/ints.
+// Tier: 1 - Open Core
+
+fn cross_product(a: int[3], b: int[3], result: int[3]) -> trit {
+    // res = [a2b3 - a3b2, a3b1 - a1b3, a1b2 - a2b1]
+    result[0] = a[1] * b[2] - a[2] * b[1];
+    result[1] = a[2] * b[0] - a[0] * b[2];
+    result[2] = a[0] * b[1] - a[1] * b[0];
+    return 1;
+}
+
+fn main() -> trit {
+    let a: int[3];
+    a[0] = 1; a[1] = 0; a[2] = 0; // i unit vector
+    
+    let b: int[3];
+    b[0] = 0; b[1] = 1; b[2] = 0; // j unit vector
+    
+    let res: int[3];
+    println("Calculating cross product of i and j unit vectors...");
+    cross_product(a, b, res);
+    
+    print("Result vector: ["); 
+    print(res[0]); print(", "); 
+    print(res[1]); print(", "); 
+    print(res[2]); println("]");
+    
+    // Expected result: [0, 0, 1] (k unit vector)
+    if res[0] == 0 && res[1] == 0 && res[2] == 1 {
+        println("Cross product OK.");
+        return 1;
+    }
+    
+    return -1;
+}
