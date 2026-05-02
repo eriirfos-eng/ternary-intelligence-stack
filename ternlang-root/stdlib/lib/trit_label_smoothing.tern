@@ -1,0 +1,40 @@
+// stdlib/lib/trit_label_smoothing.tern
+// Label smoothing for ternary classification.
+// Tier: 1 - Open Core
+
+fn smooth_labels(target: trit, epsilon: float, output: float[3]) -> trit {
+    let e_part: float = epsilon / 2.0;
+    let t_part: float = 1.0 - epsilon;
+    
+    output[0] = e_part;
+    output[1] = e_part;
+    output[2] = e_part;
+    
+    match target {
+        1 => { output[0] = t_part; }
+        0 => { output[1] = t_part; }
+       -1 => { output[2] = t_part; }
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let labels: float[3];
+    let epsilon: float = 0.1;
+    
+    println("Smoothing label Affirm (1) with epsilon 0.1:");
+    smooth_labels(1, epsilon, labels);
+    
+    print("Label[0] (expected 0.9): "); println(labels[0]);
+    print("Label[1] (expected 0.05): "); println(labels[1]);
+    print("Label[2] (expected 0.05): "); println(labels[2]);
+    
+    if labels[0] > 0.89 && labels[0] < 0.91 {
+        if labels[1] > 0.04 && labels[1] < 0.06 {
+            println("Label smoothing OK.");
+            return 1;
+        }
+    }
+    
+    return -1;
+}
