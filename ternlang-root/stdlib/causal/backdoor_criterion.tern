@@ -1,0 +1,111 @@
+// stdlib/causal/backdoor_criterion.tern
+// Verification of the Backdoor Criterion for causal identification.
+// Tier: 1 - Open Core
+
+// A set Z satisfies the backdoor criterion relative to (X, Y) if:
+// 1. No node in Z is a descendant of X.
+// 2. Z blocks every path between X and Y that contains an arrow into X.
+
+fn is_descendant(adj: trittensor<25>, n: int, start: int, target: int) -> trit {
+    if start == target { return 1; }
+    let i: int = 0;
+    while i < n {
+        if adj[start * n + i] == 1 {
+            if is_descendant(adj, n, i, target) == 1 { return 1; }
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn satisfies_backdoor(adj: trittensor<25>, n: int, x: int, y: int, z_set: trittensor<5>) -> trit {
+    // 1. Check if any Z is a descendant of X
+    let i: int = 0;
+    while i < n {
+        if z_set[i] == 1 {
+            if is_descendant(adj, n, x, i) == 1 {
+                println("Violation: Node in Z is a descendant of X.");
+                return -1;
+            }
+        }
+        i = i + 1;
+    }
+    
+    // 2. Check backdoor paths (simplified: check parents of X)
+    let p: int = 0;
+    while p < n {
+        if adj[p * n + x] == 1 {
+            // Node p is a parent of X. It starts a backdoor path.
+            // If p is not in Z, and p can reach Y without going through X, it's an unblocked backdoor path.
+            // (Note: This is a simplified check for demo purposes)
+            if z_set[p] == -1 {
+                // If p is not in Z, check if p can reach Y
+                if is_descendant(adj, n, p, y) == 1 {
+                    println("Violation: Unblocked backdoor path via parent of X.");
+                    return -1;
+                }
+            }
+        }
+        p = p + 1;
+    }
+    
+    return 1;
+}
+
+fn main() -> trit {
+    let n: int = 5;
+    // Model: Z -> X, X -> Y, Z -> Y (Confounder Z)
+    // Nodes: X=0, Y=1, Z=2, W=3, M=4
+    let adj: trittensor<25> = [
+        0, 1, 0, 0, 0, // X -> Y
+        0, 0, 0, 0, 0, // Y
+        1, 1, 0, 0, 0, // Z -> X, Z -> Y
+        0, 0, 0, 0, 0, // W
+        0, 0, 0, 0, 0  // M
+    ];
+    
+    println("Model: Z -> X, X -> Y, Z -> Y (Z is a confounder)");
+    
+    let x: int = 0;
+    let y: int = 1;
+    
+    println("Testing Z_set = {} (empty):");
+    let empty_z: trittensor<5> = [-1, -1, -1, -1, -1];
+    let res1: trit = satisfies_backdoor(adj, n, x, y, empty_z);
+    print("Result (expected -1): "); println(res1);
+    
+    println("Testing Z_set = {Z}:");
+    let z_only: trittensor<5> = [-1, -1, 1, -1, -1];
+    let res2: trit = satisfies_backdoor(adj, n, x, y, z_only);
+    print("Result (expected 1): "); println(res2);
+    
+    match res2 {
+        1 => { println("Correct: Z blocks the backdoor path."); }
+        _ => { return -1; }
+    }
+    
+    // Model 2: X -> M -> Y, X -> Y
+    println("Model 2: X -> M -> Y (M is a mediator)");
+    let adj2: trittensor<25> = [
+        0, 1, 0, 0, 1, // X -> Y, X -> M
+        0, 0, 0, 0, 0, // Y
+        0, 0, 0, 0, 0, // Z
+        0, 0, 0, 0, 0, // W
+        0, 1, 0, 0, 0  // M -> Y
+    ];
+    
+    let m: int = 4;
+    println("Testing Z_set = {M}:");
+    let m_only: trittensor<5> = [-1, -1, -1, -1, 1];
+    let res3: trit = satisfies_backdoor(adj2, n, x, y, m_only);
+    print("Result (expected -1 because M is descendant of X): "); println(res3);
+    
+    if res3 == -1 {
+        println("Correct: Mediator cannot be in the adjustment set.");
+    } else {
+        return -1;
+    }
+
+    println("Backdoor Criterion validation complete.");
+    return 1;
+}
