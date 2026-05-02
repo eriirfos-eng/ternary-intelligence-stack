@@ -1,0 +1,44 @@
+// Expert Parallel Simulator: Tracks the time cost of expert execution.
+// In real systems, experts run in parallel; this simulates the latency.
+
+fn execute_experts(expert_ids: int[2], costs: float[2]) -> float {
+    // Simulated costs for different experts
+    let i: int = 0;
+    let max_time: float = 0.0;
+    while i < 2 {
+        let id: int = expert_ids[i];
+        let cost: float = 0.0;
+        if id == 0 { cost = 10.0; }
+        if id == 1 { cost = 15.0; }
+        if id == 2 { cost = 12.0; }
+        
+        costs[i] = cost;
+        if cost > max_time {
+            max_time = cost;
+        }
+        i = i + 1;
+    }
+    // Return the max time (latency for parallel execution)
+    return max_time;
+}
+
+fn main() -> trit {
+    let selected: int[2];
+    selected[0] = 0;
+    selected[1] = 1;
+    
+    let individual_costs: float[2];
+    let latency: float = execute_experts(selected, individual_costs);
+    
+    // Expected max(10, 15) = 15.0
+    let success: trit = 0;
+    if latency == 15.0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
