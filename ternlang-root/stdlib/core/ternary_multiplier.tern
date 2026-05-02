@@ -1,0 +1,60 @@
+/*
+ * Ternary Multiplier — Logic for multiplying two single trits.
+ * Returns two trits: (high, low) representing the result.
+ * 
+ * Range: 1 * 1 = 1 (0, 1)
+ *        1 * -1 = -1 (0, -1)
+ *        -1 * -1 = 1 (0, 1)
+ *        (Actually, for 1-trit multiplication, high is always 0)
+ * 
+ * For 2-trit multiplication:
+ * max: 11 (4) * 11 (4) = 16 (1 -1 1 in balanced ternary)
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Multiply two trits, return (high, low) in a trit[2]
+fn multiply_trits(a: trit, b: trit, res: trit[2]) -> trit {
+    let prod: int = 0;
+    
+    // Manual multiplication logic
+    if a == 0 || b == 0 {
+        res[0] = 0;
+        res[1] = 0;
+        return 1;
+    }
+    
+    if a == 1 {
+        if b == 1 { res[1] = 1; }
+        else { res[1] = -1; }
+    } else { // a == -1
+        if b == 1 { res[1] = -1; }
+        else { res[1] = 1; }
+    }
+    res[0] = 0;
+    
+    return 1;
+}
+
+fn main() -> trit {
+    let res: trit[2];
+    
+    println("1 * 1:");
+    let d: trit = multiply_trits(1, 1, res);
+    println(cast(res[1]));
+    
+    println("-1 * 1:");
+    d = multiply_trits(-1, 1, res);
+    println(cast(res[1]));
+    
+    println("-1 * -1:");
+    d = multiply_trits(-1, -1, res);
+    println(cast(res[1]));
+    
+    if res[1] == 1 {
+        println("Ternary Multiplier Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
