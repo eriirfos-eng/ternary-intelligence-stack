@@ -253,11 +253,11 @@
             The world isn't <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-t_teal to-t_blue">binary.</span>
           </h1>
           <p class="text-xl md:text-3xl text-t_muted font-light mb-12 max-w-2xl mx-auto leading-relaxed">
-            A programming language, compiler, and virtual machine built on three states: <em class="text-t_text not-italic font-bold underline decoration-t_teal underline-offset-8">−1 reject, 0 hold, +1 affirm</em>. When evidence is insufficient, the program says so — instead of guessing.
+            Most AI systems are forced to choose between "yes" and "no" — even when they're guessing. We build software that knows when it doesn't know, using three states: <em class="text-t_text not-italic font-bold underline decoration-t_teal underline-offset-8">Yes, No, or "I need more information."</em>
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <button onclick="navTo(1)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)]">MEET AGENT ALBERT</button>
-            <button onclick="navTo(5)" class="px-10 py-4 border border-t_border text-t_text font-black hover:border-t_teal transition-all rounded">EXPLORE API</button>
+            <button onclick="navTo(1)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)]">MEET ALBERT</button>
+            <button onclick="navTo(5)" class="px-10 py-4 border border-t_border text-t_text font-black hover:border-t_teal transition-all rounded">API REFERENCE</button>
           </div>
         </div>
       </header>
@@ -268,9 +268,9 @@
           <div class="text-center mb-12">
             <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Why Three States</p>
             <h2 class="text-3xl md:text-5xl font-light text-t_text mb-6">You already think <strong class="font-black text-t_teal">in three states.</strong></h2>
-            <p class="text-lg text-t_text max-w-2xl mx-auto mb-6">Every AI system that forced a yes/no answer when evidence wasn't there has made a wrong call. That is a design flaw, not a model flaw.</p>
+            <p class="text-lg text-t_text max-w-2xl mx-auto mb-6">Traditional AI is forced to pick a side, even when the data is inconclusive. That’s not how smart decision-making works in the real world.</p>
             <div class="bg-t_bg3 border border-t_border p-6 rounded-2xl max-w-3xl mx-auto shadow-lg text-left">
-              <p class="text-t_text opacity-90 text-sm md:text-base leading-relaxed"><strong class="text-t_text font-black">The root cause of AI hallucination:</strong> Binary systems must produce an output — even when they don't have enough information. Ternlang adds a third return value: <code class="text-t_teal font-bold">trit = 0</code>, meaning "not enough evidence to commit." The system stops and says so, instead of making up an answer. This is a compile-time enforcement, not a prompt instruction.</p>
+              <p class="text-t_text opacity-90 text-sm md:text-base leading-relaxed"><strong class="text-t_text font-black">Why standard AI hallucinates:</strong> Conventional systems have no way to say "I don't know" — they are forced to produce an answer, so they make one up. We built a third option into the core logic of our system: <code class="text-t_teal font-bold">trit = 0</code>. This is the computer's way of saying "not enough evidence." It stops the process safely rather than guessing.</p>
             </div>
           </div>
           <div class="grid md:grid-cols-3 gap-8">
