@@ -1,3 +1,24 @@
+## 2026-05-02 — stdlib session — 10 files
+Dirs covered: stdlib/causal, stdlib/lib, stdlib/math
+Files written:
+- stdlib/causal/causal_graph.tern — basic DAG with cycle detection [tier1]
+- stdlib/causal/do_calculus.tern — Pearl's do-operator intervention [tier1]
+- stdlib/causal/backdoor_criterion.tern — backdoor adjustment verification [tier1]
+- stdlib/causal/frontdoor_criterion.tern — frontdoor adjustment verification [tier1]
+- stdlib/causal/intervention_sim.tern — signal propagation in causal chains [tier1]
+- stdlib/lib/huffman_ternary.tern — 3-ary Huffman coding tree [tier1]
+- stdlib/math/trit_matrix_det_3x3.tern — 3x3 determinant with saturation fix [tier1]
+- stdlib/math/trit_softmax.tern — softmax with custom Taylor exp approximation [tier1]
+- stdlib/lib/trit_one_hot.tern — one-hot encoding/decoding for trits [tier1]
+- stdlib/lib/trit_label_smoothing.tern — label smoothing for ternary classes [tier1]
+
+Compiler/VM observations:
+- Fixed a corrupted cargo registry by removing empty 'hex' crate dir and re-fetching.
+- Confirmed 'ternlang' is the binary name produced by 'ternlang-cli' crate.
+- Observed 'cast(trit) to int' can maintain saturation behavior in arithmetic; manual 'trit_to_int' with if-branches is safer for multi-class calculations.
+- 'pow' built-in with negative integer exponents returns 1.0 (reverted to custom Taylor series for exp_float).
+- Float literals are not currently supported in tensor literal initialization (e.g., [1.0, 0.0] fails).
+
 ## 2026-04-22 — stdlib session — 8 files
 Dirs covered: stdlib/classical
 Files written:
