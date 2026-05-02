@@ -1,0 +1,36 @@
+// Swarm Aggregation: Agents move towards their collective center of mass.
+// Core logic for emergent swarm behavior.
+
+fn get_center_x(positions: float[6]) -> float {
+    // 3 agents in 2D: [x1, y1, x2, y2, x3, y3]
+    let sum_x: float = 0.0;
+    
+    let i: int = 0;
+    while i < 3 {
+        sum_x = sum_x + positions[i * 2];
+        i = i + 1;
+    }
+    
+    return sum_x / 3.0;
+}
+
+fn main() -> trit {
+    let pos: float[6];
+    pos[0] = 0.0; pos[1] = 0.0;
+    pos[2] = 10.0; pos[3] = 10.0;
+    pos[4] = 20.0; pos[5] = 20.0;
+    
+    let cx: float = get_center_x(pos);
+    
+    // Expected mean X = (0 + 10 + 20) / 3 = 10.0
+    let success: trit = 0;
+    if cx == 10.0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
