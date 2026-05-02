@@ -1,0 +1,35 @@
+// stdlib/tutorials/tensor_manipulation_pro.tern
+// Tutorial: Advanced tensor indexing and slicing.
+// Tier: 1 - Open Core
+
+fn main() -> trit {
+    println("Ternlang Tensor Slicing Tutorial (v1.2.1+)");
+    
+    let data: int[10];
+    let i: int = 0;
+    while i < 10 { data[i] = i; i = i + 1; }
+    
+    println("Full data: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
+    
+    // Slice: data[2..5] should contain [2, 3, 4]
+    // Note: Slicing syntax returns a TensorView.
+    
+    /*
+     * Compiler update v1.2.1:
+     * - tensor[start..end] slicing syntax.
+     */
+    
+    let sub: int[] = data[2..5];
+    println("Slice data[2..5] first element (expected 2):");
+    println(sub[0]);
+    
+    println("Slice data[2..5] length (expected 3):");
+    println(len(sub));
+    
+    if sub[0] == 2 && len(sub) == 3 {
+        println("Slicing validation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
