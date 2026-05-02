@@ -44,8 +44,9 @@ impl InferenceEngine {
             self.entropy_injector.inject_entropy(input);
         }
 
+        let domain_bias = self.expert_bank.domain_scores(input);
         let task_embedding = vec![0.1f32; 16.min(input.len())];
-        let selected_experts = self.router.route(input, 2);
+        let selected_experts = self.router.route(input, 2, &domain_bias);
 
         let mut final_output = vec![0.0f32; self.output_dim];
         for (idx, weight) in &selected_experts {
@@ -62,7 +63,8 @@ impl InferenceEngine {
     /// Return which experts would be activated for this input without executing.
     /// Used for audit trails and routing diagnostics.
     pub fn route_only(&self, input: &[f32]) -> Vec<(usize, f32)> {
-        self.router.route(input, 2)
+        let domain_bias = self.expert_bank.domain_scores(input);
+        self.router.route(input, 2, &domain_bias)
     }
 
     pub fn mode(&self) -> MoEMode {

@@ -42,7 +42,8 @@ impl GraphExecutor {
 
                 let task_embedding = vec![0.1f32; 16.min(activation.len())];
                 let rdl = RepresentationDivergenceLayer::new(activation.len());
-                let selected = router.route(&activation, 2);
+                let domain_bias = bank.domain_scores(&activation);
+                let selected = router.route(&activation, 2, &domain_bias);
 
                 let output_dim = bank.experts.first().map(|e| e.output_dim).unwrap_or(16);
                 let mut combined = vec![0.0f32; output_dim];

@@ -22,7 +22,8 @@ pub fn run_moe_behavior_test() {
 
     for task in tasks {
         let input = get_task_input(task);
-        let routes = engine.router.route(&input, 1);
+        let domain_bias = engine.expert_bank.domain_scores(&input);
+        let routes = engine.router.route(&input, 1, &domain_bias);
         
         for (expert_id, prob) in routes {
             let out1 = engine.expert_bank.execute_expert(expert_id, &input);

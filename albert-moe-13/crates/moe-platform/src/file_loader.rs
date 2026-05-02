@@ -104,7 +104,7 @@ pub fn load_expert_bank(path: &str) -> Result<(ExpertBank13, ModelFileInfo)> {
         mean_alpha,
     };
 
-    Ok((ExpertBank13 { experts }, info))
+    Ok((ExpertBank13::from_layers(experts), info))
 }
 
 /// Ternary majority vote: same sign → keep, conflict → 0 (hold/uncertain).
