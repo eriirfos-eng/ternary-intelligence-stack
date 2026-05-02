@@ -40,6 +40,7 @@ RUN cargo fetch
 
 # Now copy the real source (Rust & API core + required assets for include_str!)
 COPY stdlib/                stdlib/
+COPY docs/                  docs/
 COPY ternlang-web/          ternlang-web/
 COPY ternlang-studio/       ternlang-studio/
 COPY ternlang-translator/   ternlang-translator/
