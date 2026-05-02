@@ -1,0 +1,56 @@
+// stdlib/math/trit_prime_factorization.tern
+// Trial division for prime factorization.
+// Tier: 1 - Open Core
+
+fn factorize(n: int, factors: int[]) -> int {
+    let num: int = n;
+    let count: int = 0;
+    
+    // Check 2
+    while (num % 2) == 0 {
+        factors[count] = 2;
+        count = count + 1;
+        num = num / 2;
+    }
+    
+    // Check odds
+    let d: int = 3;
+    while d * d <= num {
+        while (num % d) == 0 {
+            factors[count] = d;
+            count = count + 1;
+            num = num / d;
+        }
+        d = d + 2;
+    }
+    
+    if num > 1 {
+        factors[count] = num;
+        count = count + 1;
+    }
+    
+    return count;
+}
+
+fn main() -> trit {
+    let n: int = 84;
+    let factors: int[10];
+    
+    println("Factorizing 84:");
+    let count: int = factorize(n, factors);
+    
+    let i: int = 0;
+    while i < count {
+        print(factors[i]); print(" ");
+        i = i + 1;
+    }
+    println("");
+    
+    // 84 = 2 * 2 * 3 * 7
+    if count == 4 && factors[0] == 2 && factors[2] == 3 && factors[3] == 7 {
+        println("Factorization successful.");
+        return 1;
+    }
+    
+    return -1;
+}
