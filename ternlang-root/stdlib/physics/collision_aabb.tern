@@ -1,0 +1,55 @@
+/*
+ * Axis-Aligned Bounding Box (AABB) Collision Detection.
+ * Returns ternary state: 1 (Colliding), -1 (Clear), 0 (Touching Edge).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// box represented as [min_x, min_y, max_x, max_y]
+fn check_aabb_collision(box1: float[4], box2: float[4]) -> trit {
+    // Check for separation
+    if box1[2] < box2[0] || box1[0] > box2[2] || box1[3] < box2[1] || box1[1] > box2[3] {
+        return -1; // Clear
+    }
+    
+    // Check for exact edge touching
+    if box1[2] == box2[0] || box1[0] == box2[2] || box1[3] == box2[1] || box1[1] == box2[3] {
+        return 0; // Touching Edge
+    }
+    
+    // Otherwise, intersecting
+    return 1; // Colliding
+}
+
+fn main() -> trit {
+    let box1: float[4];
+    box1[0] = 0.0; box1[1] = 0.0; box1[2] = 10.0; box1[3] = 10.0;
+    
+    let box2: float[4]; // Intersecting
+    box2[0] = 5.0; box2[1] = 5.0; box2[2] = 15.0; box2[3] = 15.0;
+    
+    let box3: float[4]; // Clear
+    box3[0] = 20.0; box3[1] = 20.0; box3[2] = 30.0; box3[3] = 30.0;
+    
+    let box4: float[4]; // Touching
+    box4[0] = 10.0; box4[1] = 0.0; box4[2] = 20.0; box4[3] = 10.0;
+    
+    println("Box1 and Box2 (Expected 1):");
+    let res1: trit = check_aabb_collision(box1, box2);
+    println(cast(res1));
+    
+    println("Box1 and Box3 (Expected -1):");
+    let res2: trit = check_aabb_collision(box1, box3);
+    println(cast(res2));
+    
+    println("Box1 and Box4 (Expected 0):");
+    let res3: trit = check_aabb_collision(box1, box4);
+    println(cast(res3));
+    
+    if res1 == 1 && res2 == -1 && res3 == 0 {
+        println("AABB Collision Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
