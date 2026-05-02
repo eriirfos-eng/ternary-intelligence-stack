@@ -118,20 +118,6 @@ albert-cli
 
 ---
 
-## Live API
-
-```bash
-# Health check
-curl https://ternlang.com/health
-
-# MoE-13 ternary decision via MCP (no key required)
-curl -X POST https://ternlang.com/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"moe_orchestrate","arguments":{"query":"Should I proceed?"}}}'
-```
-
----
-
 ## Licensing
 
 | Tier | Price | Details |
