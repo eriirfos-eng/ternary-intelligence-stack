@@ -1,0 +1,21 @@
+fn main() -> trit {
+    let mut data: trit[9];
+    let mut i: int = 0;
+    while i < 9 { data[i] = 1; i = i + 1; }
+    
+    let mut s1: int = 0;
+    let mut s2: int = 0;
+    i = 0;
+    while i < 9 {
+        let mut val: int = 0;
+        if data[i] == 1 { val = 1; } if data[i] == -1 { val = -1; }
+        s1 = s1 + val;
+        s2 = s2 + s1;
+        i = i + 1;
+    }
+    println("Checksum S1:"); println(s1);
+    println("Checksum S2:"); println(s2);
+    
+    if s1 == 9 { return 1; }
+    return -1;
+}

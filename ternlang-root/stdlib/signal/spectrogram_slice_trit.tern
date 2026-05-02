@@ -1,0 +1,44 @@
+fn main() -> trit {
+    let mut signal: trit[9];
+    let mut i: int = 0;
+    while i < 9 {
+        if i % 2 == 0 { signal[i] = 1; } else { signal[i] = -1; }
+        i = i + 1;
+    }
+
+    let mut low: int = 0;
+    let mut mid: int = 0;
+    let mut high: int = 0;
+
+    let mut j: int = 0;
+    while j < 3 {
+        let mut val: int = 0;
+        if signal[j] == 1 { val = 1; } if signal[j] == -1 { val = -1; }
+        low = low + val * val;
+        j = j + 1;
+    }
+    j = 3;
+    while j < 6 {
+        let mut val: int = 0;
+        if signal[j] == 1 { val = 1; } if signal[j] == -1 { val = -1; }
+        mid = mid + val * val;
+        j = j + 1;
+    }
+    j = 6;
+    while j < 9 {
+        let mut val: int = 0;
+        if signal[j] == 1 { val = 1; } if signal[j] == -1 { val = -1; }
+        high = high + val * val;
+        j = j + 1;
+    }
+
+    println("Spectrogram Slice Energy:");
+    println("Low:"); println(low);
+    println("Mid:"); println(mid);
+    println("High:"); println(high);
+
+    if low == 3 && mid == 3 && high == 3 {
+        return 1;
+    }
+    return -1;
+}

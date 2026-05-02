@@ -1,0 +1,26 @@
+fn main() -> trit {
+    let mut l: trit[3];
+    let mut r: trit[3];
+    let mut key: trit[3];
+    key[0] = 1; key[1] = 0; key[2] = -1;
+    
+    l[0] = 1; l[1] = 1; l[2] = 1;
+    r[0] = 0; r[1] = 0; r[2] = 0;
+
+    let mut round: int = 0;
+    while round < 2 {
+        let mut new_r: trit[3];
+        let mut i: int = 0;
+        while i < 3 {
+            let f: trit = r[i] * key[i];
+            new_r[i] = consensus(l[i], f);
+            l[i] = r[i];
+            r[i] = new_r[i];
+            i = i + 1;
+        }
+        round = round + 1;
+    }
+    println("Feistel Output R:");
+    println(r[0]); println(r[1]); println(r[2]);
+    return 1;
+}

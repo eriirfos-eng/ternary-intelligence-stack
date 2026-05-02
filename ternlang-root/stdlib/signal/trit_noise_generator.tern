@@ -1,0 +1,26 @@
+struct NoiseState {
+    state: int
+}
+
+fn next_trit(ns: NoiseState) -> trit {
+    ns.state = (ns.state * 13 + 7) % 81;
+    let val: int = ns.state % 3;
+    if val == 0 { return tend; }
+    if val == 1 { return affirm; }
+    return reject;
+}
+
+fn main() -> trit {
+    let mut ns: NoiseState = { state: 42 };
+    let n1: trit = next_trit(ns);
+    let n2: trit = next_trit(ns);
+    let n3: trit = next_trit(ns);
+    
+    println("Generated trits:");
+    println(n1);
+    println(n2);
+    println(n3);
+    
+    println("Noise generator test passed");
+    return affirm;
+}

@@ -1,0 +1,24 @@
+fn main() -> trit {
+    let mut state: trit[9];
+    let mut i: int = 0;
+    while i < 9 { state[i] = 0; i = i + 1; }
+    state[0] = 1;
+
+    let mut round: int = 0;
+    while round < 3 {
+        let first: trit = state[0];
+        let mut j: int = 0;
+        while j < 8 {
+            state[j] = consensus(state[j], state[j+1]);
+            j = j + 1;
+        }
+        state[8] = consensus(state[8], first);
+        round = round + 1;
+    }
+
+    println("Sponge Hash Output State[0]:");
+    println(state[0]);
+
+    if state[0] != 0 { return 1; }
+    return -1;
+}

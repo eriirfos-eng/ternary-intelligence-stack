@@ -1,0 +1,20 @@
+fn am_modulate(carrier: trit, signal: trit, m: float) -> float {
+    let mut c: float = 0.0;
+    if carrier == 1 { c = 1.0; }
+    if carrier == -1 { c = -1.0; }
+    
+    let mut s: float = 0.0;
+    if signal == 1 { s = 1.0; }
+    if signal == -1 { s = -1.0; }
+    
+    return c * (1.0 + m * s);
+}
+
+fn main() -> trit {
+    let result: float = am_modulate(1, -1, 0.5);
+    if result == 0.5 {
+        return 1;
+    } else {
+        return -1;
+    }
+}
