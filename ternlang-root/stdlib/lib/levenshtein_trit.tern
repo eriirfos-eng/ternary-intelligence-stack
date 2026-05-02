@@ -1,0 +1,96 @@
+// stdlib/lib/levenshtein_trit.tern
+// Computes the Levenshtein distance (edit distance) between two trit sequences.
+// Useful for comparing decision signals or signal-based pattern matching.
+
+fn levenshtein_trit(a: trit[], b: trit[]) -> int {
+    let m: int = len(a);
+    let n: int = len(b);
+    
+    // DP table (space optimized to 1D)
+    // Supports sequences up to length 31
+    let dp: int[32];
+    
+    if m > 31 || n > 31 {
+        return -1; // Overflow protection
+    }
+
+    let j: int = 0;
+    while j <= n {
+        dp[j] = j;
+        j = j + 1;
+    }
+    
+    let i: int = 1;
+    while i <= m {
+        let prev_diag: int = dp[0];
+        dp[0] = i;
+        let j2: int = 1;
+        while j2 <= n {
+            let temp: int = dp[j2];
+            
+            // Ternary signal comparison
+            let match_pref: trit = 0;
+            if a[i - 1] == b[j2 - 1] {
+                match_pref = 1; // Affirm: signals are identical
+            } else {
+                match_pref = -1; // Reject: signals differ
+            }
+
+            match match_pref {
+                1 => {
+                    dp[j2] = prev_diag;
+                }
+                _ => {
+                    // Signals differ, find min(insert, delete, replace) + 1
+                    let insert: int = dp[j2 - 1];
+                    let delete: int = dp[j2];
+                    let replace: int = prev_diag;
+                    
+                    let min_dist: int = insert;
+                    if delete < min_dist { min_dist = delete; }
+                    if replace < min_dist { min_dist = replace; }
+                    
+                    dp[j2] = min_dist + 1;
+                }
+            }
+            
+            prev_diag = temp;
+            j2 = j2 + 1;
+        }
+        i = i + 1;
+    }
+    
+    return dp[n];
+}
+
+fn main() -> trit {
+    let sig1: trit[4];
+    sig1[0] = 1; sig1[1] = 0; sig1[2] = -1; sig1[3] = 1;
+
+    let sig2: trit[4];
+    sig2[0] = 1; sig2[1] = -1; sig2[2] = -1; sig2[3] = 0;
+    
+    // sig1: [1, 0, -1, 1]
+    // sig2: [1, -1, -1, 0]
+    // Edit 1: replace 0 at index 1 with -1
+    // Edit 2: replace 1 at index 3 with 0
+    // Expected distance: 2
+
+    let dist: int = levenshtein_trit(sig1, sig2);
+    
+    print("Signal 1: [1, 0, -1, 1]");
+    print("Signal 2: [1, -1, -1, 0]");
+    print("Levenshtein Distance: ");
+    print(dist);
+
+    match dist {
+        2 => {
+            print("✓ Levenshtein test passed.");
+            return 1;
+        }
+        _ => {
+            print("✗ Levenshtein test failed.");
+            return -1;
+        }
+    }
+}
