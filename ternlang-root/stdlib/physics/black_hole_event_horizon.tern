@@ -1,0 +1,19 @@
+fn main() -> trit {
+    let g: float = 1.0;
+    let m: float = 10.0;
+    let c: float = 1.0;
+    
+    let rs: float = (2.0 * g * m) / (c * c);
+    let r: float = 5.0;
+    
+    println("Schwarzschild Radius:");
+    println(rs);
+    println("Particle Distance:");
+    println(r);
+    
+    if r < rs { 
+        println("Inside Event Horizon!");
+        return 1; 
+    }
+    return -1;
+}

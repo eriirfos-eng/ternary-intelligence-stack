@@ -1,0 +1,18 @@
+fn main() -> trit {
+    let mut x: float = 0.9;
+    let mut v: float = 0.2;
+    let dt: float = 1.0;
+    
+    x = x + v * dt;
+    if x > 1.0 {
+        v = -v;
+        x = 1.0 - (x - 1.0);
+    }
+    
+    println("Gas Particle Position:");
+    println(x);
+    println("Gas Particle Velocity:");
+    println(v);
+    
+    return 1;
+}

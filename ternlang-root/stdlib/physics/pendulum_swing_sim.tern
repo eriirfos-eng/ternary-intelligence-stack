@@ -1,0 +1,16 @@
+fn main() -> trit {
+    let mut theta: float = 0.1;
+    let mut omega: float = 0.0;
+    let g: float = 9.8;
+    let l: float = 1.0;
+    let dt: float = 0.01;
+    
+    // Small angle: sin(theta) approx theta
+    let alpha: float = -(g / l) * theta;
+    omega = omega + alpha * dt;
+    theta = theta + omega * dt;
+    
+    println("Pendulum Theta:");
+    println(theta);
+    return 1;
+}

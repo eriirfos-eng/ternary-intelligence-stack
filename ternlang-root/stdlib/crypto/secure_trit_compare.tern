@@ -1,0 +1,43 @@
+// stdlib/crypto/secure_trit_compare.tern
+// Constant-time comparison for two ternary arrays to prevent timing attacks.
+// Result is 1 if equal, -1 if not, but loop runs for full length.
+
+fn secure_compare(a: trit[], b: trit[], len: int) -> trit {
+    let mut diff_count: int = 0;
+    let mut i: int = 0;
+    while i < len {
+        if a[i] != b[i] {
+            diff_count = diff_count + 1;
+        }
+        i = i + 1;
+    }
+    
+    if diff_count == 0 {
+        return 1;
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let mut a: trit[3];
+    let mut b: trit[3];
+    let mut c: trit[3];
+    
+    a[0] = 1; a[1] = 0; a[2] = -1;
+    b[0] = 1; b[1] = 0; b[2] = -1;
+    c[0] = 1; c[1] = 0; c[2] = 1;
+    
+    let res1: trit = secure_compare(a, b, 3);
+    println("Compare A and B (equal):");
+    println(res1);
+    
+    let res2: trit = secure_compare(a, c, 3);
+    println("Compare A and C (not equal):");
+    println(res2);
+    
+    if res1 == 1 && res2 == -1 {
+        println("Secure compare verification successful.");
+        return 1;
+    }
+    return -1;
+}

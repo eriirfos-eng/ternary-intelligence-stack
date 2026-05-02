@@ -1,0 +1,56 @@
+// stdlib/crypto/diffie_hellman_ternary.tern
+// Conceptual DH key exchange: (g^a)^b mod n.
+// Use modular exponentiation with trits/ints.
+
+fn pow_mod(base: int, exp: int, mod_val: int) -> int {
+    let mut res: int = 1;
+    let mut b: int = base % mod_val;
+    let mut e: int = exp;
+    
+    while e > 0 {
+        // Simple binary exponentiation for conceptual demo
+        if e % 2 == 1 {
+            res = (res * b) % mod_val;
+        }
+        b = (b * b) % mod_val;
+        e = e / 2;
+    }
+    return res;
+}
+
+fn main() -> trit {
+    // Public parameters
+    let g: int = 3;
+    let n: int = 17; // A prime
+    
+    // Alice's private key
+    let a: int = 4;
+    // Alice's public key: A = g^a mod n
+    let alice_pub: int = pow_mod(g, a, n);
+    
+    // Bob's private key
+    let b: int = 3;
+    // Bob's public key: B = g^b mod n
+    let bob_pub: int = pow_mod(g, b, n);
+    
+    // Shared secret for Alice: S_alice = B^a mod n
+    let s_alice: int = pow_mod(bob_pub, a, n);
+    
+    // Shared secret for Bob: S_bob = A^b mod n
+    let s_bob: int = pow_mod(alice_pub, b, n);
+    
+    println("Alice Pub:");
+    println(alice_pub);
+    println("Bob Pub:");
+    println(bob_pub);
+    println("Shared Secret Alice:");
+    println(s_alice);
+    println("Shared Secret Bob:");
+    println(s_bob);
+    
+    if s_alice == s_bob {
+        println("DH Exchange Successful.");
+        return 1;
+    }
+    return -1;
+}
