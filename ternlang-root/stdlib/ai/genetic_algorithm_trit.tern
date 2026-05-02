@@ -1,0 +1,22 @@
+fn main() -> trit {
+    let p1: trit[9];
+    let p2: trit[9];
+    let child: trit[9];
+    
+    let mut i: int = 0;
+    while i < 9 {
+        p1[i] = 1;
+        p2[i] = -1;
+        if i < 4 { child[i] = p1[i]; } else { child[i] = p2[i]; }
+        i = i + 1;
+    }
+    
+    // Mutation
+    child[8] = 0;
+    
+    println("Child Chromosome[0]:"); println(child[0]);
+    println("Child Chromosome[8]:"); println(child[8]);
+    
+    if child[0] == 1 && child[8] == 0 { return 1; }
+    return -1;
+}

@@ -1,0 +1,17 @@
+fn main() -> trit {
+    let mut current_cost: float = 10.0;
+    let next_cost: float = 8.0;
+    let mut t: float = 100.0;
+    
+    if next_cost < current_cost {
+        current_cost = next_cost;
+        println("Accepted Better State");
+    } else {
+        // Probabilistic acceptance logic simplified
+        println("Stayed in Current State");
+    }
+    
+    t = t * 0.95; // Cooling
+    println("Temperature:"); println(t);
+    return 1;
+}

@@ -1,0 +1,15 @@
+fn main() -> trit {
+    let gamma: float = 0.5;
+    let mut dist_sq: float = 2.0;
+    
+    // K = exp(-gamma * dist_sq)
+    // Using Taylor approximation for exp(-x) approx 1 - x + x^2/2
+    let x: float = gamma * dist_sq;
+    let k: float = 1.0 - x + (x * x) / 2.0;
+    
+    println("RBF Kernel Value Approximation:");
+    println(k);
+    
+    if k > 0.0 { return 1; }
+    return -1;
+}

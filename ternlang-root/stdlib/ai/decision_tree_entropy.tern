@@ -1,0 +1,14 @@
+fn main() -> trit {
+    // Entropy for p = [1/3, 1/3, 1/3]
+    // H = -(3 * (1/3 * log2(1/3))) = log2(3) approx 1.585
+    let p: float = 0.333;
+    let log2_3: float = 1.585;
+    
+    let h: float = -3.0 * (p * -log2_3); // Approximation
+    
+    println("Approximated Shannon Entropy (Base 2):");
+    println(h);
+    
+    if h > 1.5 { return 1; }
+    return -1;
+}

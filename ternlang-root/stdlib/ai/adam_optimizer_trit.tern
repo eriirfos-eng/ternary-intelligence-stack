@@ -1,0 +1,20 @@
+fn main() -> trit {
+    let mut w: float = 0.5;
+    let g: float = 0.1;
+    let mut m: float = 0.0;
+    let mut v: float = 0.0;
+    let beta1: float = 0.9;
+    let beta2: float = 0.999;
+    let lr: float = 0.001;
+    let eps: float = 0.0000001;
+    
+    m = beta1 * m + (1.0 - beta1) * g;
+    v = beta2 * v + (1.0 - beta2) * (g * g);
+    
+    // Simplification: ignoring bias correction for lite version
+    w = w - lr * m / (v + eps);
+    
+    println("Adam Updated Weight:");
+    println(w);
+    return 1;
+}
