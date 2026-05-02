@@ -1,0 +1,83 @@
+// stdlib/causal/do_calculus.tern
+// Implementation of Pearl's do-operator for causal interventions.
+// Tier: 1 - Open Core
+
+// We represent a causal model as a graph and a set of structural equations (simplified).
+// The do(X=x) operator removes all incoming edges to X and fixes its value.
+
+fn simulate_intervention(adj: trittensor<25>, n: int, values: trittensor<5>, target_node: int, target_val: trit) -> trittensor<5> {
+    let result: trittensor<5> = [0, 0, 0, 0, 0];
+    
+    // Copy initial values or set them to uncertainty (0)
+    let i: int = 0;
+    while i < n { result[i] = values[i]; i = i + 1; }
+    
+    // Apply do(target_node = target_val)
+    result[target_node] = target_val;
+    
+    // In a real structural causal model, we would re-evaluate descendant nodes.
+    // Here we simulate a simple linear propagation for demonstration.
+    // For each node, if it's a descendant of target_node, its value is affected.
+    
+    let j: int = 0;
+    while j < n {
+        if j != target_node {
+            // If target_node -> j exists, propagate the signal
+            if adj[target_node * n + j] == 1 {
+                // Simple propagation: result[j] = consensus(result[j], target_val)
+                // In TIS, we use ternary consensus logic.
+                let current: trit = result[j];
+                match target_val {
+                    1 => { result[j] = 1; }
+                   -1 => { result[j] = -1; }
+                    0 => { /* no change, maintain uncertainty */ }
+                }
+            }
+        }
+        j = j + 1;
+    }
+    
+    return result;
+}
+
+fn main() -> trit {
+    let n: int = 5;
+    let adj: trittensor<25> = [
+        0, 1, 0, 0, 0, // 0 -> 1
+        0, 0, 1, 0, 0, // 1 -> 2
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, // 3 -> 4
+        0, 0, 0, 0, 0
+    ];
+    
+    let values: trittensor<5> = [0, 0, 0, 0, 0];
+    
+    println("Original Model: 0 -> 1 -> 2, 3 -> 4");
+    println("Applying do(1 = 1)...");
+    
+    let inter_vals: trittensor<5> = simulate_intervention(adj, n, values, 1, 1);
+    
+    println("Results after intervention:");
+    print("Node 1 value (expected 1): "); println(inter_vals[1]);
+    print("Node 2 value (expected 1, propagated): "); println(inter_vals[2]);
+    print("Node 0 value (expected 0, unaffected by downstream): "); println(inter_vals[0]);
+    
+    if inter_vals[1] == 1 && inter_vals[2] == 1 && inter_vals[0] == 0 {
+        println("Intervention propagation successful.");
+    } else {
+        return -1;
+    }
+    
+    println("Applying do(1 = -1)...");
+    let inter_vals2: trittensor<5> = simulate_intervention(adj, n, values, 1, -1);
+    print("Node 2 value (expected -1): "); println(inter_vals2[2]);
+    
+    if inter_vals2[2] == -1 {
+        println("Negative signal propagation successful.");
+    } else {
+        return -1;
+    }
+
+    println("Do-calculus simulation complete.");
+    return 1;
+}
