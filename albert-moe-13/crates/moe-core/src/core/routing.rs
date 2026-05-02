@@ -6,7 +6,21 @@ use crate::core::mock_layer::{TernaryLayer, ternary_matmul_kernel};
 use crate::core::aedl::AEDL;
 use crate::core::policy::{HybridRouterPolicy, MoEMode};
 use crate::experts::ExpertLogic;
-use crate::experts::domains::{ethics::EthicsExpert, logic::LogicExpert, science::ScienceExpert};
+use crate::experts::domains::{
+    causal::CausalExpert,
+    cultural::CulturalExpert,
+    ecological::EcologicalExpert,
+    ethics::EthicsExpert,
+    legal::LegalExpert,
+    linguistic::LinguisticExpert,
+    mathematical::MathematicalExpert,
+    medical::MedicalExpert,
+    science::ScienceExpert,
+    spatial::SpatialExpert,
+    technical::TechnicalExpert,
+    temporal::TemporalExpert,
+    logic::LogicExpert,
+};
 use rand::{prelude::*, Rng};
 
 #[derive(Clone, Copy, Debug)]
@@ -56,15 +70,22 @@ impl ExpertBank13 {
     }
 
     fn default_domain_logic() -> Vec<Box<dyn ExpertLogic + Send + Sync>> {
-        (0..13)
-            .map(|i| -> Box<dyn ExpertLogic + Send + Sync> {
-                match i % 3 {
-                    0 => Box::new(EthicsExpert),
-                    1 => Box::new(LogicExpert),
-                    _ => Box::new(ScienceExpert),
-                }
-            })
-            .collect()
+        // 13 meta-domain subrouters — one per expert slot, covering all Phase 20 domains
+        vec![
+            Box::new(EthicsExpert),       // 0  — normative constraints, safety
+            Box::new(LegalExpert),        // 1  — statutory interpretation, compliance
+            Box::new(ScienceExpert),      // 2  — factual verification, empirical reasoning
+            Box::new(CausalExpert),       // 3  — cause-effect chains, counterfactuals
+            Box::new(TemporalExpert),     // 4  — sequence logic, timelines, scheduling
+            Box::new(SpatialExpert),      // 5  — geometry, geography, spatial inference
+            Box::new(LinguisticExpert),   // 6  — grammar, translation, register
+            Box::new(MathematicalExpert), // 7  — formal proof, symbolic computation
+            Box::new(MedicalExpert),      // 8  — clinical evidence, patient safety
+            Box::new(CulturalExpert),     // 9  — tone, cultural context, bias risk
+            Box::new(TechnicalExpert),    // 10 — systems, APIs, code execution
+            Box::new(EcologicalExpert),   // 11 — environmental impact, sustainability
+            Box::new(LogicExpert),        // 12 — formal consistency, contradiction detection
+        ]
     }
 }
 

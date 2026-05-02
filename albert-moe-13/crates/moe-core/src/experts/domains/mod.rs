@@ -1,6 +1,16 @@
+pub mod causal;
+pub mod cultural;
+pub mod ecological;
 pub mod ethics;
+pub mod legal;
+pub mod linguistic;
 pub mod logic;
+pub mod mathematical;
+pub mod medical;
 pub mod science;
+pub mod spatial;
+pub mod technical;
+pub mod temporal;
 
 /// Project a query vector through 6 competence axes and return a weighted scalar.
 ///
