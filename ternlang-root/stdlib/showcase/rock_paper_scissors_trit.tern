@@ -1,0 +1,42 @@
+// stdlib/showcase/rock_paper_scissors_trit.tern
+// Rock Paper Scissors implementation using ternary signals.
+// 1 = Rock, 0 = Paper, -1 = Scissors
+// Tier: 1 - Open Core
+
+fn play_rps(p1: trit, p2: trit) -> trit {
+    if p1 == p2 { return 0; } // Draw
+    
+    match p1 {
+        1 => { // Rock
+            if p2 == -1 { return 1; } // Rock beats Scissors
+            return -1; // Paper beats Rock
+        }
+        0 => { // Paper
+            if p2 == 1 { return 1; } // Paper beats Rock
+            return -1; // Scissors beats Paper
+        }
+       -1 => { // Scissors
+            if p2 == 0 { return 1; } // Scissors beats Paper
+            return -1; // Rock beats Scissors
+        }
+    }
+}
+
+fn main() -> trit {
+    println("Rock Paper Scissors Showdown!");
+    println("Player 1: Rock (1), Player 2: Scissors (-1)");
+    
+    let res: trit = play_rps(1, -1);
+    match res {
+        1 => { println("Player 1 Wins!"); }
+        0 => { println("Draw."); }
+       -1 => { println("Player 2 Wins!"); }
+    }
+    
+    if res == 1 {
+        println("Validation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
