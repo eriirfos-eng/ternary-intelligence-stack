@@ -1,0 +1,66 @@
+/*
+ * Autonomous Drone Altitude Logic (Mock).
+ * Uses ternary inputs (pitch, roll, altitude error) to output motor commands.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Simple motor command generator based on ternary state
+// Returns: 1 (Increase thrust), 0 (Maintain), -1 (Decrease thrust)
+fn compute_motor_thrust(alt_error: trit, pitch: trit, roll: trit) -> trit {
+    // If altitude is too low (error = 1), increase thrust
+    if alt_error == 1 {
+        // If we are also pitching/rolling, we need more thrust to compensate
+        if pitch != 0 || roll != 0 {
+            return 1; // Definite increase
+        }
+        return 1;
+    }
+    
+    // If altitude is too high (error = -1), decrease thrust
+    if alt_error == -1 {
+        if pitch == 0 && roll == 0 {
+            return -1; // Safe to decrease
+        }
+        return 0; // Maintain if maneuvering to avoid crash
+    }
+    
+    // Altitude is good (error = 0)
+    // If maneuvering, increase slightly to not lose altitude
+    if pitch != 0 || roll != 0 {
+        return 1;
+    }
+    
+    return 0; // Hover
+}
+
+fn main() -> trit {
+    println("Drone Altitude Logic Tests:");
+    
+    // Scenario 1: Too low, level flight
+    let m1: trit = compute_motor_thrust(1, 0, 0);
+    println("Too low, level (Expected 1):");
+    println(cast(m1));
+    
+    // Scenario 2: Too high, maneuvering (pitching)
+    let m2: trit = compute_motor_thrust(-1, 1, 0);
+    println("Too high, pitching (Expected 0):");
+    println(cast(m2));
+    
+    // Scenario 3: At target altitude, maneuvering
+    let m3: trit = compute_motor_thrust(0, 0, -1);
+    println("Target alt, rolling (Expected 1):");
+    println(cast(m3));
+    
+    // Scenario 4: Hovering perfectly
+    let m4: trit = compute_motor_thrust(0, 0, 0);
+    println("Hovering perfectly (Expected 0):");
+    println(cast(m4));
+    
+    if m1 == 1 && m2 == 0 && m3 == 1 && m4 == 0 {
+        println("Drone Logic Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
