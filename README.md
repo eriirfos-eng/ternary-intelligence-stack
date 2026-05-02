@@ -14,12 +14,7 @@
 [![moe-core](https://img.shields.io/crates/v/moe-core.svg?label=moe-core)](https://crates.io/crates/moe-core)
 [![moe-platform](https://img.shields.io/crates/v/moe-platform.svg?label=moe-platform)](https://crates.io/crates/moe-platform)
 [![moe-runtime](https://img.shields.io/crates/v/moe-runtime.svg?label=moe-runtime)](https://crates.io/crates/moe-runtime)
-[![moe-plugin-sdk](https://img.shields.io/crates/v/moe-plugin-sdk.svg?label=moe-plugin-sdk)](https://crates.io/crates/moe-plugin-sdk)
-[![moe-ddel](https://img.shields.io/crates/v/moe-ddel.svg?label=moe-ddel)](https://crates.io/crates/moe-ddel)
 
-
-
-The Ternary Intelligence Stack (TIS) provides a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty by moving beyond the binary limitations of current systems.
 
 Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
 
@@ -38,7 +33,9 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ## 1. What is Ternlang? (The Infrastructure Layer)
 
-Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic.
+Ternlang is a systems programming language, compiler, and high-performance inference runtime built on balanced ternary logic. 
+The Stack provides a fundamental architectural shift for **Explainable AI (XAI)** and European technological sovereignty by moving beyond the binary limitations of current systems.
+
 
 The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (affirm). This allows for **Deterministic Uncertainty**, where the zero state is a first-class routing instruction: *"insufficient confidence — do not act yet."*
 
