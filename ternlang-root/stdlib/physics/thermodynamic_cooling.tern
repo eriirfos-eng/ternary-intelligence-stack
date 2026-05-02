@@ -1,0 +1,59 @@
+/*
+ * Newton's Law of Cooling (Mock).
+ * Simulates temperature drop with ternary environmental factors.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn step_cooling(temp: float, env_temp: float, env_state: trit, dt: float) -> float {
+    let base_k: float = 0.1; // Base cooling constant
+    let k: float = 0.0;
+    
+    // Ternary environment state adjusts cooling rate
+    match env_state {
+        1 => { k = base_k * 2.0; } // High wind (fast cooling)
+        0 => { k = base_k; }       // Still air
+        -1 => { k = base_k * 0.5; } // Insulated (slow cooling)
+    }
+    
+    // dT/dt = -k * (T - T_env)
+    let rate: float = (0.0 - k) * (temp - env_temp);
+    
+    return temp + (rate * dt);
+}
+
+fn main() -> trit {
+    let t: float = 100.0; // Initial coffee temp
+    let env_t: float = 20.0; // Room temp
+    let dt: float = 1.0;
+    
+    println("Initial Temp: 100.0");
+    
+    // Step 1: Still air (0)
+    // rate = -0.1 * (100 - 20) = -8.0
+    // new T = 100 - 8.0 = 92.0
+    let t1: float = step_cooling(t, env_t, 0, dt);
+    println("Temp after 1 step (Still air):");
+    println(t1);
+    
+    // Reset and step 1 with High wind (1)
+    // rate = -0.2 * (100 - 20) = -16.0
+    // new T = 100 - 16.0 = 84.0
+    let t2: float = step_cooling(t, env_t, 1, dt);
+    println("Temp after 1 step (High wind):");
+    println(t2);
+    
+    // Reset and step 1 with Insulated (-1)
+    // rate = -0.05 * 80 = -4.0
+    // new T = 100 - 4.0 = 96.0
+    let t3: float = step_cooling(t, env_t, -1, dt);
+    println("Temp after 1 step (Insulated):");
+    println(t3);
+    
+    if t1 == 92.0 && t2 == 84.0 && t3 == 96.0 {
+        println("Thermodynamic Cooling Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
