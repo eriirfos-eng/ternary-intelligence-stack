@@ -1,0 +1,66 @@
+/*
+ * Ternary 4-to-1 Multiplexer.
+ * Uses 2 select lines to choose between 4 input trits.
+ * Wait, 2 trit select lines can actually choose among 9 inputs (3^2 = 9).
+ * Let's implement a 9-to-1 multiplexer instead!
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn mux_9to1(inputs: trit[9], sel1: trit, sel0: trit) -> trit {
+    // Map sel1, sel0 (-1, 0, 1) to an index 0-8
+    let s1_val: int = 0;
+    let s0_val: int = 0;
+    
+    match sel1 {
+        -1 => { s1_val = 0; }
+         0 => { s1_val = 1; }
+         1 => { s1_val = 2; }
+    }
+    
+    match sel0 {
+        -1 => { s0_val = 0; }
+         0 => { s0_val = 1; }
+         1 => { s0_val = 2; }
+    }
+    
+    let index: int = (s1_val * 3) + s0_val;
+    return inputs[index];
+}
+
+fn main() -> trit {
+    // Inputs: indices 0 to 8
+    let inputs: trit[9] = [
+        -1, // index 0 (sel = -1, -1)
+         0, // index 1 (sel = -1, 0)
+         1, // index 2 (sel = -1, 1)
+        -1, // index 3 (sel = 0, -1)
+         1, // index 4 (sel = 0, 0)
+         0, // index 5 (sel = 0, 1)
+         1, // index 6 (sel = 1, -1)
+        -1, // index 7 (sel = 1, 0)
+         0  // index 8 (sel = 1, 1)
+    ];
+    
+    // Test sel = 0, 0 (index 4) -> Expected 1
+    let r1: trit = mux_9to1(inputs, 0, 0);
+    println("MUX (0, 0) Expected 1:");
+    println(cast(r1));
+    
+    // Test sel = -1, 1 (index 2) -> Expected 1
+    let r2: trit = mux_9to1(inputs, -1, 1);
+    println("MUX (-1, 1) Expected 1:");
+    println(cast(r2));
+    
+    // Test sel = 1, 0 (index 7) -> Expected -1
+    let r3: trit = mux_9to1(inputs, 1, 0);
+    println("MUX (1, 0) Expected -1:");
+    println(cast(r3));
+    
+    if r1 == 1 && r2 == 1 && r3 == -1 {
+        println("Ternary 9-to-1 MUX Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
