@@ -1,0 +1,61 @@
+/*
+ * Robot Navigation Logic (Mock) — Ternary sensor-based obstacle avoidance.
+ * Sensors return: 1 (Clear), 0 (Warning/Unknown), -1 (Blocked).
+ * Action returns: 1 (Forward), 0 (Turn Right), -1 (Turn Left).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn determine_action(sensor_left: trit, sensor_center: trit, sensor_right: trit) -> trit {
+    // Basic reactive navigation
+    
+    // If center is blocked, we must turn.
+    if sensor_center == -1 {
+        // Choose direction based on side sensors
+        if sensor_left == 1 { return -1; } // Turn left
+        if sensor_right == 1 { return 0; } // Turn right
+        return 0; // Default turn right if both blocked
+    }
+    
+    // If center is clear, but sides have issues
+    if sensor_center == 1 {
+        if sensor_left == -1 { return 0; } // Veer right
+        if sensor_right == -1 { return -1; } // Veer left
+        return 1; // Move forward
+    }
+    
+    // If center is warning
+    if sensor_center == 0 {
+        if sensor_left == 1 && sensor_right != 1 { return -1; }
+        if sensor_right == 1 && sensor_left != 1 { return 0; }
+        return 1; // Proceed cautiously
+    }
+    
+    return 1;
+}
+
+fn main() -> trit {
+    println("Robot Navigation Test:");
+    
+    // Scenario 1: All clear
+    let act1: trit = determine_action(1, 1, 1);
+    println("Action 1 (Expected 1):");
+    println(cast(act1));
+    
+    // Scenario 2: Center blocked, left clear
+    let act2: trit = determine_action(1, -1, -1);
+    println("Action 2 (Expected -1):");
+    println(cast(act2));
+    
+    // Scenario 3: Center warning, right clear
+    let act3: trit = determine_action(-1, 0, 1);
+    println("Action 3 (Expected 0):");
+    println(cast(act3));
+    
+    if act1 == 1 && act2 == -1 && act3 == 0 {
+        println("Robot Navigation Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
