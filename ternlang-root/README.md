@@ -42,13 +42,12 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 
 | Layer | What it does |
 |-------|-------------|
-| [Language & VM](#language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
-| [Sparse Inference](#sparse-ternary-inference) | @sparseskip: **2.3× measured** on x86 baseline; mathematical upper bound 122× at 99%+ sparsity |
-| [MoE-13 Orchestrator](#moe-13-ternary-orchestrator) | Mixture-of-Experts reasoning engine with safety hard gate |
-| [Protocol Specifications](#rfi-irfos-protocol-specifications) | BET-ISA, TSON, TTP, and T-POSIX — RFI-IRFOS open proposals |
-| [Enterprise Middleware](#architecture) | **cuTern** (MKL), Ternary SQL, Triadic Networking, and Crypto |
-| [Frontier Tech](#architecture) | Qutrit Quantum bridging, BCI neural decoding, and Interplanetary DTN |
-| [Example Library](#example-library) | 300+ `.tern` programs across every domain |
+| [Language & VM](#3-language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
+| [Sparse Inference](#7-sparse-ternary-inference) | @sparseskip: Mathematical upper bound 122× at 99%+ sparsity |
+| [MoE-13 Orchestrator](#4-albert-moe-13) | Mixture-of-Experts reasoning engine with safety hard gate |
+| [Protocol Specifications](#13-rfi-irfos-protocol-specifications) | BET-ISA, TSON, TTP, and T-POSIX — RFI-IRFOS open proposals |
+| [Frontier Tech](#13-rfi-irfos-protocol-specifications) | Qutrit Quantum bridging, BCI neural decoding, and Interplanetary DTN |
+| [Example Library](#11-example-library) | 30,000+ `.tern` programs across every domain |
 
 ---
 
