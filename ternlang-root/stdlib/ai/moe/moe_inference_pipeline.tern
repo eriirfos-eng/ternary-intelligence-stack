@@ -1,0 +1,42 @@
+// MoE Inference Pipeline: Orchestrates the full forward pass of an MoE system.
+// Connects routing, dispatching, execution, and aggregation phases.
+
+fn router(x: float[3]) -> int {
+    if x[0] > 0.0 { return 1; }
+    return 2;
+}
+
+fn expert1(x: float[3], out: float[3]) -> trit {
+    let i: int = 0;
+    while i < 3 { out[i] = x[i] * 1.0; i = i + 1; }
+    return 1;
+}
+
+fn expert2(x: float[3], out: float[3]) -> trit {
+    let i: int = 0;
+    while i < 3 { out[i] = x[i] * -1.0; i = i + 1; }
+    return 1;
+}
+
+fn main() -> trit {
+    let input_v: float[3]; input_v[0]=1.0; input_v[1]=1.0; input_v[2]=1.0;
+    let expert_id: int = router(input_v);
+    
+    let result_v: float[3];
+    if expert_id == 1 {
+        let ok1: trit = expert1(input_v, result_v);
+    } else {
+        let ok2: trit = expert2(input_v, result_v);
+    }
+    
+    let success: trit = 0;
+    if result_v[0] == 1.0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
