@@ -1,0 +1,70 @@
+/*
+ * K-Means Clustering (Mock for 2D).
+ * Clusters points into up to 3 clusters (Ternary Assignments: -1, 0, 1).
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Returns squared distance
+fn dist_sq(x1: float, y1: float, x2: float, y2: float) -> float {
+    let dx: float = x1 - x2;
+    let dy: float = y1 - y2;
+    return (dx * dx) + (dy * dy);
+}
+
+fn assign_clusters(px: float[4], py: float[4], cx: float[3], cy: float[3], assignments: trit[4]) -> trit {
+    let i: int = 0;
+    while i < 4 {
+        // Cluster -1 (Index 0)
+        let d_neg: float = dist_sq(px[i], py[i], cx[0], cy[0]);
+        // Cluster 0 (Index 1)
+        let d_zero: float = dist_sq(px[i], py[i], cx[1], cy[1]);
+        // Cluster 1 (Index 2)
+        let d_pos: float = dist_sq(px[i], py[i], cx[2], cy[2]);
+        
+        let min_d: float = d_neg;
+        let best_c: trit = -1;
+        
+        if d_zero < min_d {
+            min_d = d_zero;
+            best_c = 0;
+        }
+        
+        if d_pos < min_d {
+            min_d = d_pos;
+            best_c = 1;
+        }
+        
+        assignments[i] = best_c;
+        i = i + 1;
+    }
+    
+    return 1;
+}
+
+fn main() -> trit {
+    // 4 points
+    let px: float[4]; px[0] = 0.0; px[1] = 0.5; px[2] = 10.0; px[3] = 10.5;
+    let py: float[4]; py[0] = 0.0; py[1] = 0.5; py[2] = 10.0; py[3] = 10.5;
+    
+    // 3 centroids
+    let cx: float[3]; cx[0] = 0.0; cx[1] = 5.0; cx[2] = 10.0; // Index 0 (-1), Index 1 (0), Index 2 (1)
+    let cy: float[3]; cy[0] = 0.0; cy[1] = 5.0; cy[2] = 10.0;
+    
+    let assignments: trit[4];
+    
+    let dummy: trit = assign_clusters(px, py, cx, cy, assignments);
+    
+    println("Assignments:");
+    println(cast(assignments[0])); // Expected -1
+    println(cast(assignments[1])); // Expected -1
+    println(cast(assignments[2])); // Expected 1
+    println(cast(assignments[3])); // Expected 1
+    
+    if assignments[0] == -1 && assignments[1] == -1 && assignments[2] == 1 && assignments[3] == 1 {
+        println("K-Means Clustering Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
