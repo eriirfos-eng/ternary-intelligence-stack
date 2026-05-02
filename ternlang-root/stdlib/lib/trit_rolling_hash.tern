@@ -1,0 +1,73 @@
+// stdlib/lib/trit_rolling_hash.tern
+// Rolling hash for trit sequences (Rabin-Karp style).
+// Tier: 1 - Open Core
+
+fn main() -> trit {
+    let text: trit[] = [1, 0, -1, 1, 1, 0, -1, 0];
+    let pattern: trit[] = [1, 0, -1];
+    let n: int = 8;
+    let m: int = 3;
+    
+    // Base 3 hash: sum(s[i] * 3^(m-1-i))
+    // Map -1 -> 2, 0 -> 0, 1 -> 1 for positive hash values
+    
+    let pat_hash: int = 0;
+    let curr_hash: int = 0;
+    let p_base: int = 1;
+    
+    let i: int = 0;
+    while i < m {
+        let p_val: int = 0;
+        match pattern[m - 1 - i] {
+            1 => { p_val = 1; }
+            0 => { p_val = 0; }
+           -1 => { p_val = 2; }
+        }
+        pat_hash = pat_hash + p_val * p_base;
+        
+        let t_val: int = 0;
+        match text[m - 1 - i] {
+            1 => { t_val = 1; }
+            0 => { t_val = 0; }
+           -1 => { t_val = 2; }
+        }
+        curr_hash = curr_hash + t_val * p_base;
+        
+        if i < m - 1 { p_base = p_base * 3; }
+        i = i + 1;
+    }
+    
+    println("Pattern hash:"); println(pat_hash);
+    
+    let found: trit = -1;
+    let j: int = 0;
+    while j <= (n - m) {
+        if curr_hash == pat_hash {
+            println("Pattern match found at index:");
+            println(j);
+            found = 1;
+        }
+        
+        if j < (n - m) {
+            // Update rolling hash
+            let old_val: int = 0;
+            match text[j] {
+                1 => { old_val = 1; }
+                0 => { old_val = 0; }
+               -1 => { old_val = 2; }
+            }
+            
+            let new_val: int = 0;
+            match text[j + m] {
+                1 => { new_val = 1; }
+                0 => { new_val = 0; }
+               -1 => { new_val = 2; }
+            }
+            
+            curr_hash = (curr_hash - old_val * p_base) * 3 + new_val;
+        }
+        j = j + 1;
+    }
+    
+    return found;
+}
