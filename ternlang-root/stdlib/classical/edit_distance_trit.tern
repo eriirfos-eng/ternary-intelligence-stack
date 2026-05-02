@@ -1,0 +1,65 @@
+// stdlib/classical/edit_distance_trit.tern
+// Levenshtein distance between two trit sequences.
+// Tier: 1 - Open Core
+
+fn min_3(a: int, b: int, c: int) -> int {
+    let m: int = a;
+    if b < m { m = b; }
+    if c < m { m = c; }
+    return m;
+}
+
+fn edit_distance(s1: trit[], len1: int, s2: trit[], len2: int) -> int {
+    // DP table (flattened)
+    let dp: int[36]; // Max 5x5 + 1 row/col = 6x6 = 36
+    
+    let i: int = 0;
+    while i <= len1 {
+        dp[i * (len2 + 1)] = i;
+        i = i + 1;
+    }
+    
+    let j: int = 0;
+    while j <= len2 {
+        dp[j] = j;
+        j = j + 1;
+    }
+    
+    let r: int = 1;
+    while r <= len1 {
+        let c: int = 1;
+        while c <= len2 {
+            let cost: int = 0;
+            if s1[r - 1] != s2[c - 1] {
+                cost = 1;
+            }
+            
+            let insertion: int = dp[(r - 1) * (len2 + 1) + c] + 1;
+            let deletion: int = dp[r * (len2 + 1) + (c - 1)] + 1;
+            let substitution: int = dp[(r - 1) * (len2 + 1) + (c - 1)] + cost;
+            
+            dp[r * (len2 + 1) + c] = min_3(insertion, deletion, substitution);
+            c = c + 1;
+        }
+        r = r + 1;
+    }
+    
+    return dp[len1 * (len2 + 1) + len2];
+}
+
+fn main() -> trit {
+    let s1: trit[] = [1, 0, -1];
+    let s2: trit[] = [1, -1, -1];
+    
+    println("Calculating edit distance between [1, 0, -1] and [1, -1, -1]...");
+    let dist: int = edit_distance(s1, 3, s2, 3);
+    
+    print("Distance (expected 1): "); println(dist);
+    
+    if dist == 1 {
+        println("Edit distance calculation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
