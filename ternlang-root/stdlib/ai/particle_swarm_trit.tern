@@ -1,0 +1,77 @@
+/*
+ * Particle Swarm Optimization (PSO) with Ternary Velocity.
+ * Optimizes a simple 1D function using swarm intelligence.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Target function to minimize: f(x) = (x - 5.0)^2
+fn objective_function(x: float) -> float {
+    let diff: float = x - 5.0;
+    return diff * diff;
+}
+
+fn main() -> trit {
+    // 3 particles, 1D positions
+    let pos: float[3]; pos[0] = 0.0; pos[1] = 10.0; pos[2] = 2.0;
+    let vel: float[3]; vel[0] = 0.0; vel[1] = 0.0; vel[2] = 0.0;
+    let pbest: float[3]; pbest[0] = 0.0; pbest[1] = 10.0; pbest[2] = 2.0;
+    
+    let gbest: float = 0.0; // Global best position
+    let gbest_val: float = 1000.0; // Infinity
+    
+    let w: float = 0.5; // Inertia
+    let c1: float = 1.0; // Cognitive
+    let c2: float = 1.0; // Social
+    
+    let iter: int = 0;
+    while iter < 50 {
+        let i: int = 0;
+        while i < 3 {
+            let val: float = objective_function(pos[i]);
+            
+            // Update personal best
+            let pbest_val: float = objective_function(pbest[i]);
+            if val < pbest_val {
+                pbest[i] = pos[i];
+            }
+            
+            // Update global best
+            if val < gbest_val {
+                gbest_val = val;
+                gbest = pos[i];
+            }
+            i = i + 1;
+        }
+        
+        // Update velocity and position
+        i = 0;
+        while i < 3 {
+            // Simplified ternary-inspired velocity update (discrete pushes)
+            let cog_push: float = 0.0;
+            if pbest[i] > pos[i] { cog_push = 1.0; }
+            if pbest[i] < pos[i] { cog_push = -1.0; }
+            
+            let soc_push: float = 0.0;
+            if gbest > pos[i] { soc_push = 1.0; }
+            if gbest < pos[i] { soc_push = -1.0; }
+            
+            vel[i] = (w * vel[i]) + (c1 * cog_push) + (c2 * soc_push);
+            pos[i] = pos[i] + vel[i];
+            i = i + 1;
+        }
+        iter = iter + 1;
+    }
+    
+    println("Global Best Position (expected near 5.0):");
+    println(gbest);
+    println("Global Best Value:");
+    println(gbest_val);
+    
+    if gbest > 2.0 && gbest < 8.0 {
+        println("Particle Swarm Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
