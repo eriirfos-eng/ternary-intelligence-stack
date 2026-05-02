@@ -42,6 +42,7 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 
 → **[Team](../LEADERSHIP.md)** - Meet the Team
 
+---
 ## 2. What's in This Repository
 
 | Layer | What it does |
