@@ -1,0 +1,43 @@
+// stdlib/math/trit_convolution_1d.tern
+// 1D discrete convolution for ternary signals.
+// Tier: 1 - Open Core
+
+fn convolution_1d(signal: trit[], s_len: int, kernel: float[], k_len: int, output: float[]) -> trit {
+    let i: int = 0;
+    while i <= (s_len - k_len) {
+        let sum: float = 0.0;
+        let j: int = 0;
+        while j < k_len {
+            sum = sum + cast(signal[i + j]) * kernel[j];
+            j = j + 1;
+        }
+        output[i] = sum;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let signal: trit[] = [1, 1, -1, -1, 0, 0, 1, 1];
+    let kernel: float[3];
+    kernel[0] = 0.5; kernel[1] = 1.0; kernel[2] = 0.5; // Smoothing kernel
+    
+    let output: float[6];
+    println("Performing 1D convolution (smoothing)...");
+    convolution_1d(signal, 8, kernel, 3, output);
+    
+    println("Output signal:");
+    let k: int = 0;
+    while k < 6 {
+        println(output[k]);
+        k = k + 1;
+    }
+    
+    // Check first element: 1*0.5 + 1*1.0 + -1*0.5 = 0.5 + 1.0 - 0.5 = 1.0
+    if output[0] > 0.99 && output[0] < 1.01 {
+        println("Convolution validation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
