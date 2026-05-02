@@ -1,0 +1,50 @@
+/*
+ * Trit Ring Buffer (Fixed Size 5).
+ * Simulates a continuous circular stream of trit data.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn write_ring(buf: trit[5], head: int, val: trit) -> int {
+    buf[head] = val;
+    let next: int = head + 1;
+    if next >= 5 { next = 0; }
+    return next;
+}
+
+fn read_ring(buf: trit[5], tail: int) -> trit {
+    return buf[tail];
+}
+
+fn main() -> trit {
+    let buf: trit[5] = [0, 0, 0, 0, 0];
+    let head: int = 0;
+    
+    head = write_ring(buf, head, 1);
+    head = write_ring(buf, head, -1);
+    head = write_ring(buf, head, 0);
+    head = write_ring(buf, head, 1);
+    head = write_ring(buf, head, 1);
+    
+    // Buffer should be [1, -1, 0, 1, 1], head = 0
+    println("Buffer after 5 writes:");
+    println(cast(buf[0])); // 1
+    println(cast(buf[4])); // 1
+    
+    // Overwrite the first 2
+    head = write_ring(buf, head, -1);
+    head = write_ring(buf, head, -1);
+    
+    // Buffer should be [-1, -1, 0, 1, 1], head = 2
+    println("Buffer after 7 writes:");
+    println(cast(buf[0])); // -1
+    println(cast(buf[1])); // -1
+    println(cast(buf[2])); // 0
+    
+    if buf[0] == -1 && buf[1] == -1 && buf[2] == 0 && buf[3] == 1 && head == 2 {
+        println("Trit Ring Buffer Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
