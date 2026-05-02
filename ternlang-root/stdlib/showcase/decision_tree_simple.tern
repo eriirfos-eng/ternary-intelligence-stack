@@ -1,0 +1,82 @@
+// stdlib/showcase/decision_tree_simple.tern
+// A rule-based Ternary Decision Tree for financial signals.
+// Demonstrates how ternary logic handles uncertainty (0/hold) better than binary.
+
+fn analyze_market(sentiment: trit, volume: trit, trend: trit, risk: trit) -> trit {
+    print("Evaluating: [Sentiment: "); print(sentiment);
+    print(", Volume: "); print(volume);
+    print(", Trend: "); print(trend);
+    print(", Risk Appetite: "); print(risk);
+    print("] -> ");
+
+    // Strategy varies by risk appetite
+    if risk == -1 {
+        // Conservative: Only affirm if all signals are positive
+        if sentiment == 1 && volume == 1 && trend == 1 {
+            return 1;
+        }
+        return -1;
+    }
+    
+    if risk == 1 {
+        // Aggressive: Affirm if any signal is positive
+        if sentiment == 1 || volume == 1 || trend == 1 {
+            return 1;
+        }
+        return 0; // Otherwise wait
+    }
+    
+    // Balanced Strategy (Risk = 0)
+    match sentiment {
+        1 => {
+            // Positive sentiment: check trend
+            if trend == 1 { return 1; }
+            return 0; // Wait for trend confirmation
+        }
+        -1 => {
+            // Negative sentiment: check trend
+            if trend == -1 { return -1; }
+            return 0; // Wait for trend confirmation
+        }
+        0 => {
+            // Uncertain sentiment: follow volume
+            return volume;
+        }
+    }
+}
+
+fn main() -> trit {
+    println("Ternary Market Decision System");
+    println("==============================");
+
+    // Case 1: Conservative Investor, Mixed Signals
+    let dec1: trit = analyze_market(1, 0, 1, -1);
+    match dec1 {
+        1 => { println("Decision: BUY"); }
+        0 => { println("Decision: HOLD"); }
+       -1 => { println("Decision: REJECT"); }
+    }
+
+    // Case 2: Aggressive Investor, Mixed Signals
+    let dec2: trit = analyze_market(1, 0, -1, 1);
+    match dec2 {
+        1 => { println("Decision: BUY"); }
+        0 => { println("Decision: HOLD"); }
+       -1 => { println("Decision: REJECT"); }
+    }
+
+    // Case 3: Balanced Investor, Uncertain Sentiment
+    let dec3: trit = analyze_market(0, -1, 1, 0);
+    match dec3 {
+        1 => { println("Decision: BUY"); }
+        0 => { println("Decision: HOLD"); }
+       -1 => { println("Decision: REJECT"); }
+    }
+
+    if dec1 == -1 && dec2 == 1 && dec3 == -1 {
+        println("✓ Decision tree showcase logic verified.");
+        return 1;
+    }
+    
+    return -1;
+}
