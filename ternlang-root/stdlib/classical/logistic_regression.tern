@@ -1,40 +1,37 @@
-// Module:  stdlib/classical/logistic_regression.tern
-// Purpose: Ternary Logistic Regression (sklearn.linear_model.LogisticRegression equivalent)
-// Author:  RFI-IRFOS
-// Ref:     https://ternlang.com
+/*
+ * Ternary Logistic Regression (Mock/Simple) — Simple binary-like classification using ternary.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
 
-// Instead of mapping to probabilities in [0, 1], ternary logistic regression
-// maps inputs directly to affirm (+1), tend (0), or reject (-1).
-
-fn sigmoid_trit(x: trit) -> trit {
-    // In ternary, the activation preserves the active center state (tend).
-    match x {
-        affirm => { return affirm; }
-        tend   => { return tend;   }
-        reject => { return reject; }
-    }
+fn sigmoid(x: float) -> float {
+    // Crude approximation of 1 / (1 + exp(-x))
+    if x > 2.0 { return 1.0; }
+    if x < -2.0 { return 0.0; }
+    return 0.5 + 0.25 * x;
 }
 
-fn decision_boundary(score: trit, margin: trit) -> trit {
-    // If the margin is tend, we lack the confidence to split the space.
-    if margin == tend {
-        return tend;
-    }
-    match score {
-        affirm => { return affirm; }
-        tend   => { return tend;   }
-        reject => { return reject; }
-    }
+fn predict_logistic(inputs: float[2], weights: float[2], bias: float) -> float {
+    let z: float = bias + inputs[0] * weights[0] + inputs[1] * weights[1];
+    return sigmoid(z);
 }
 
-fn binary_to_trit_label(label: int) -> trit {
-    // Legacy datasets often use 0 for false and 1 for true.
-    // We convert them to proper ternary semantics.
-    if label > 0 {
-        return affirm;
+fn main() -> trit {
+    let inputs: float[2]; inputs[0] = 1.0; inputs[1] = -1.0;
+    let weights: float[2]; weights[0] = 0.5; weights[1] = 0.5;
+    let bias: float = 0.0;
+    
+    // z = 0 + 1.0 * 0.5 + (-1.0) * 0.5 = 0
+    // sigmoid(0) = 0.5
+    
+    let p: float = predict_logistic(inputs, weights, bias);
+    println("Prediction (expected 0.5):");
+    println(p);
+    
+    if p == 0.5 {
+        println("Logistic Regression Test: PASSED");
+        return 1;
     }
-    if label < 0 {
-        return reject;
-    }
-    return tend; // 0 maps to tend (uncertain), NOT reject!
+    
+    return -1;
 }
