@@ -1,5 +1,4 @@
 use crate::core::model_adapter::umil::cmir::UnifiedWeightTensor;
-use ndarray::ArrayD;
 
 pub struct TernaryConverterV2;
 

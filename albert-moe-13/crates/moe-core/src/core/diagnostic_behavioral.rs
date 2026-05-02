@@ -1,5 +1,5 @@
 use crate::core::inference::InferenceEngine;
-use crate::core::mock_layer::{compute_similarity, compute_variance};
+use crate::core::mock_layer::compute_similarity;
 
 #[derive(Debug, Clone, Copy)]
 pub enum TaskType { Arithmetic, Logical, Causal, Pattern }

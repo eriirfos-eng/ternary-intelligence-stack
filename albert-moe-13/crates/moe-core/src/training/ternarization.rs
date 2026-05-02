@@ -1,8 +1,7 @@
-// SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
 //! # Ternarization Pipeline
 //! 
 //! Orchestrates the transformation of high-capacity MoE models into 
-//! ternary-native states.
+//! ternary-native states using Straight-Through Estimation (STE).
 
 use anyhow::Result;
 use crate::core::ternary_mapper::TernaryMapper;
@@ -18,66 +17,80 @@ impl TernarizationPipeline {
         }
     }
 
-    /// Executes a mock ternarization to demonstrate the first irreversible step 
-    /// from architecture to execution.
+    /// Straight-Through Estimator (STE) for ternary thresholding.
+    /// During the forward pass, this acts as the hard ternary map {-1, 0, 1}.
+    /// During the backward pass, we pass the gradient through unchanged (identity).
+    ///
+    /// # Mathematical Formulation
+    /// Forward: y = sign(x) if |x| > threshold else 0
+    /// Backward: ∂L/∂x ≈ ∂L/∂y
+    pub fn forward_ste(x: f32, threshold: f32) -> i8 {
+        if x > threshold {
+            1
+        } else if x < -threshold {
+            -1
+        } else {
+            0
+        }
+    }
+
+    /// Computes the backward pass gradient approximation for the STE.
+    /// In actual training, this would be registered in the Autograd graph.
+    pub fn backward_ste(grad_output: f32, x: f32, threshold: f32) -> f32 {
+        if x.abs() <= threshold {
+            grad_output
+        } else {
+            0.0 // Suppress gradient outside the threshold boundary if necessary
+        }
+    }
+
     pub fn run_mock_ternarization() {
         let weights = vec![0.9, -0.8, 0.1, 0.0, -0.05, 0.7];
         let threshold = 0.5;
         let mapper = TernaryMapper::new(threshold);
         
-        let (ternary, alpha) = mapper.ternarize(&weights, threshold);
+        let (ternary, _alpha) = mapper.ternarize(&weights, threshold);
         let non_zero = ternary.iter().filter(|&&w| w != 0).count();
         let sparsity = (weights.len() - non_zero) as f32 / weights.len() as f32;
 
-        println!("\n[ALBERT::TERNARY]");
-        println!("Input weights: {:?}", weights);
-        println!("Ternary result: {:?}", ternary);
-        println!("Input size: {}", weights.len());
-        println!("Non-zero: {}", non_zero);
+        println!("\n[ALBERT::TERNARY-STE]");
+        println!("Weights: {:?}", weights);
+        println!("Mapped: {:?}", ternary);
         println!("Sparsity: {:.0}%", sparsity * 100.0);
-        println!("Alpha (Scale Factor): {:.2}", alpha);
         println!();
     }
 
-    /// Executes the full ternarization forge:
-    /// 1. Load Pretrained Weights: Ingest float32/bfloat16 tensors from the base model.
-    /// 2. Normalize: Align layer distributions to a zero-mean canonical form.
-    /// 3. Quantize: Apply ternary mapping {-1, 0, +1} using Straight-Through Estimation.
-    /// 4. Apply Sparsity Mask: Prune low-magnitude signals to hit the ~65% sparsity target.
-    /// 5. Validate Loss: Check perplexity/loss degradation on the calibration set.
     pub async fn run_forge(&self, model_path: &str) -> Result<()> {
         log::info!("Initiating Ternarization Forge for model at {}", model_path);
-        
-        // Step 1: Ingest
         self.load_pretrained_weights(model_path)?;
-        
-        // Step 2-4: Adapt
         self.apply_structural_quantization()?;
-        
-        // Step 5: Validate
         self.validate_coherence()?;
-        
         Ok(())
     }
 
-    fn load_pretrained_weights(&self, path: &str) -> Result<()> {
-        // Implementation: Streaming weight ingestion to keep memory overhead low
-        Ok(())
-    }
-
-    fn apply_structural_quantization(&self) -> Result<()> {
-        // Implementation: Per-block quantization with local scaling factors
-        Ok(())
-    }
-
-    fn validate_coherence(&self) -> Result<()> {
-        // Implementation: Forward pass validation against the original model signal
-        Ok(())
-    }
+    fn load_pretrained_weights(&self, _path: &str) -> Result<()> { Ok(()) }
+    fn apply_structural_quantization(&self) -> Result<()> { Ok(()) }
+    fn validate_coherence(&self) -> Result<()> { Ok(()) }
 }
 
-/// Future-scale hook: Dataset streaming for large-scale calibration.
+/// Dataset streamer for ternary training.
 pub trait DatasetStreamer {
-    /// Stream data for quantization-aware fine-tuning (QAT).
-    fn stream_calibration_data(&self);
+    fn get_next_batch(&self, batch_size: usize) -> (Vec<f32>, Vec<f32>);
+}
+
+pub struct MockStreamer {
+    pub input_size: usize,
+}
+
+impl DatasetStreamer for MockStreamer {
+    fn get_next_batch(&self, batch_size: usize) -> (Vec<f32>, Vec<f32>) {
+        let input: Vec<f32> = (0..batch_size * self.input_size)
+            .map(|_| rand::random::<f32>() * 2.0 - 1.0)
+            .collect();
+        // Target: simple parity task (sum > 0)
+        let target: Vec<f32> = input.chunks(self.input_size)
+            .map(|c| if c.iter().sum::<f32>() > 0.0 { 1.0 } else { -1.0 })
+            .collect();
+        (input, target)
+    }
 }

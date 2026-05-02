@@ -12,7 +12,7 @@ impl SparsityOptimizer {
     /// 
     /// The goal is to maximize the 'tend' (0) state count to optimize 
     /// for @sparseskip execution, while maintaining model coherence.
-    pub fn optimize_sparsity(&self, weights: &mut [i8]) {
+    pub fn optimize_sparsity(&self, _weights: &mut [i8]) {
         // Implementation: Magnitude-based adaptive pruning
     }
 }

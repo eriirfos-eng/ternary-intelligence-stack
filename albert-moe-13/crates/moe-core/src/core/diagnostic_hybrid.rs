@@ -3,7 +3,6 @@
 //! Observability for switching between EPIS and HYBRID routing modes.
 
 use crate::core::routing::MoERouter13;
-use crate::core::policy::MoEMode;
 
 pub fn run_moe_mode_test(router: &MoERouter13) {
     println!("\n[ALBERT::MOE_MODE_TEST]");

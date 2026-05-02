@@ -1,4 +1,4 @@
-use crate::core::mock_layer::{ternary_inference_engine, InferenceConfig, compute_similarity, compute_variance};
+use crate::core::mock_layer::{ternary_inference_engine, InferenceConfig, compute_similarity};
 use crate::core::entropy_injector::EntropyInjector;
 
 pub fn run_bifurcation_analysis() {
@@ -12,8 +12,8 @@ pub fn run_bifurcation_analysis() {
     println!("\n[ALBERT::BIFURCATION_ANALYSIS]");
     println!("Pressure | Stable Clusters | Persistence | Similarity");
 
-    for (ns, beta) in pressure_levels {
-        let injector = EntropyInjector::new(ns, 0.05, 0.02);
+    for (ns, _beta) in pressure_levels {
+        let _injector = EntropyInjector::new(ns, 0.05, 0.02);
         let mut outputs = Vec::new();
         let mut prev_output = ternary_inference_engine(&input, &base_config);
         
@@ -21,7 +21,7 @@ pub fn run_bifurcation_analysis() {
         let mut persistence = 0;
         
         for _t in 0..n {
-            let mut output = ternary_inference_engine(&input, &base_config);
+            let output = ternary_inference_engine(&input, &base_config);
             // Apply intensified perturbation logic here as per objectives
             // (e.g., using the injector instance locally if needed)
             
