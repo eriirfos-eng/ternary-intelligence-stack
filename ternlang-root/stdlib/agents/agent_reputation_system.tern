@@ -1,0 +1,39 @@
+// Agent Reputation System: Tracks and updates peer reliability scores.
+// Helps agents decide which peers to trust for tasks.
+
+fn update_reputation(rep: float, success_flag: trit) -> float {
+    let alpha: float = 0.1; // Learning rate
+    let current_rep: float = rep;
+    if success_flag == 1 {
+        current_rep = current_rep + (alpha * (1.0 - current_rep));
+    }
+    if success_flag == -1 {
+        current_rep = current_rep - (alpha * current_rep);
+    }
+    return current_rep;
+}
+
+fn main() -> trit {
+    let reputation: float = 0.5;
+    
+    reputation = update_reputation(reputation, 1); // Success
+    reputation = update_reputation(reputation, 1); // Success
+    reputation = update_reputation(reputation, -1); // Failure
+    
+    // 0.5 + 0.1*0.5 = 0.55
+    // 0.55 + 0.1*0.45 = 0.55 + 0.045 = 0.595
+    // 0.595 - 0.1*0.595 = 0.595 - 0.0595 = 0.5355
+    
+    let success: trit = 0;
+    if reputation > 0.53 {
+        if reputation < 0.54 {
+            success = 1;
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
