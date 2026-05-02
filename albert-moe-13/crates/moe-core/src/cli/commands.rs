@@ -189,7 +189,7 @@ impl CliDriver {
     }
 
     /// Dispatches the 'infer' command for local-first execution.
-    pub fn run_inference(&self, query: &str) {
+    pub fn run_inference(&self, _query: &str) {
         // Implementation: Forward pass via InferenceEngine
     }
 

@@ -1,22 +1,91 @@
-// SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
-//! # Fine-tuning & Adaptation Pipeline
+//! # Training Harness
 //! 
-//! Logic for Quantization-Aware Fine-tuning (QAT) to recover 
-//! signal after ternarization.
+//! Defines the training step interface for ternary-native neural networks.
+use crate::training::ternarization::{TernarizationPipeline, DatasetStreamer};
+use crate::core::router::DifferentiableRouter;
+use std::fs::OpenOptions;
+use std::io::Write;
 
-use anyhow::Result;
+pub struct TernaryTrainingStep {
+    pub learning_rate: f32,
+    pub threshold: f32,
+    pub router: DifferentiableRouter,
+}
 
-pub struct AdaptationPipeline;
+impl TernaryTrainingStep {
+    pub fn new(lr: f32, threshold: f32, input_dim: usize, num_experts: usize) -> Self {
+        Self { 
+            learning_rate: lr, 
+            threshold,
+            router: DifferentiableRouter::new(input_dim, num_experts, threshold),
+        }
+    }
 
-impl AdaptationPipeline {
-    /// Executes a fine-tuning pass on the ternarized weights.
-    /// 
-    /// We use a Straight-Through Estimator (STE) to propagate gradients 
-    /// through the discrete ternary states, allowing the model to adapt its 
-    /// non-zero weights to the newly imposed structural constraints.
-    pub async fn finetune(&self) -> Result<()> {
-        log::info!("Starting Quantization-Aware Fine-tuning (QAT)");
-        // Implementation: STE backward pass with low-rank adaptation
-        Ok(())
+    pub fn train_epoch(&self, weights: &mut [f32], streamer: &impl DatasetStreamer, batch_size: usize) {
+        let (input, target) = streamer.get_next_batch(batch_size);
+        let routing_probs = self.router.route(&input);
+
+        let mut log_file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("training.log")
+            .unwrap();
+        writeln!(log_file, "Routing Probs: {:?}", routing_probs).unwrap();
+
+        for (i, w) in weights.iter_mut().enumerate() {
+            if i < target.len() {
+                let pred = TernarizationPipeline::forward_ste(*w, self.threshold) as f32;
+                let grad = 2.0 * (pred - target[i]);
+                *w -= self.learning_rate * grad;
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::training::ternarization::{MockStreamer, TernarizationPipeline};
+    use std::fs::OpenOptions;
+    use std::io::Write;
+
+    #[test]
+    fn test_scaled_training_and_logging() {
+        let n = 1000;
+        let mut weights = vec![0.1; n];
+        let streamer = MockStreamer { input_size: n };
+        let trainer = TernaryTrainingStep::new(0.01, 0.5, n, 13);
+        
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("training.log")
+            .unwrap();
+        
+        writeln!(file, "--- New Run: N={} ---", n).unwrap();
+        
+        for epoch in 0..20 {
+            trainer.train_epoch(&mut weights, &streamer, 1);
+            let current_loss: f32 = weights.iter().map(|w| w.powi(2)).sum();
+            writeln!(file, "Epoch {}: loss={}", epoch, current_loss).unwrap();
+        }
+        
+        let final_loss: f32 = weights.iter().map(|w| w.powi(2)).sum();
+        assert!(final_loss < 5.0); // Convergence check
+    }
+
+    #[test]
+    fn test_training_convergence_over_epochs() {
+        let mut weights = vec![0.1; 10]; // Small initial weights
+        let streamer = MockStreamer { input_size: 10 };
+        let trainer = TernaryTrainingStep::new(0.01, 0.5, 10, 13);
+        
+        // Run 5 epochs
+        for _ in 0..5 {
+            trainer.train_epoch(&mut weights, &streamer, 1);
+        }
+        
+        let final_loss: f32 = weights.iter().map(|w| w.powi(2)).sum();
+        assert!(final_loss < 0.1); 
     }
 }

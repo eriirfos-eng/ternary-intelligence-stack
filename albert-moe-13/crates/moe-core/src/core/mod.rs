@@ -2,6 +2,7 @@ pub mod ternary_mapper;
 pub mod loader;
 pub mod inference;
 pub mod routing;
+pub mod router;
 pub mod mock_layer;
 pub mod entropy_injector;
 pub mod diagnostic_temporal;

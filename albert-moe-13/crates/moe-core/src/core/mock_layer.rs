@@ -168,7 +168,6 @@ pub fn ternary_matmul_kernel(weights: &[i8], input: &[f32], output: &mut [f32], 
 #[derive(Clone, Copy)]
 pub struct InferenceConfig { pub batch_size: usize, pub depth: usize, pub width: usize, pub ternary_threshold: f32, pub residual_strength: f32 }
 
-use crate::core::inference::InferenceEngine;
 use crate::core::entropy_injector::EntropyInjector;
 
 pub fn ternary_inference_engine(input: &[f32], config: &InferenceConfig) -> Vec<f32> {

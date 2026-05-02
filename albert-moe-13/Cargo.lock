@@ -164,7 +164,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "moe-core"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "log",
@@ -176,7 +176,7 @@ dependencies = [
 
 [[package]]
 name = "moe-ddel"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -187,7 +187,7 @@ dependencies = [
 
 [[package]]
 name = "moe-platform"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "log",
@@ -200,7 +200,7 @@ dependencies = [
 
 [[package]]
 name = "moe-plugin-sdk"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -211,7 +211,7 @@ dependencies = [
 
 [[package]]
 name = "moe-runtime"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -223,7 +223,7 @@ dependencies = [
 
 [[package]]
 name = "moe-sdk"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "moe-platform",
  "moe-plugin-sdk",
@@ -231,7 +231,7 @@ dependencies = [
 
 [[package]]
 name = "moe-uril"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -245,7 +245,7 @@ dependencies = [
 
 [[package]]
 name = "moe-validation-suite"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "moe-sdk",
@@ -471,6 +471,7 @@ version = "1.2.9"
 dependencies = [
  "anyhow",
  "bincode",
+ "rand",
  "rayon",
  "serde",
  "serde_json",

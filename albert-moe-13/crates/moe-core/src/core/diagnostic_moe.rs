@@ -26,7 +26,7 @@ pub fn run_moe_expert_divergence_test() {
 }
 
 pub fn run_moe_load_report() {
-    let engine = InferenceEngine::new("v1.0".to_string(), 16, 16);
+    let _engine = InferenceEngine::new("v1.0".to_string(), 16, 16);
     // Simulate multiple passes to report distribution
     println!("\n[ALBERT::MOE_LOAD_REPORT]");
     println!("Load distribution metrics initialized.");
