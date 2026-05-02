@@ -1,0 +1,53 @@
+// stdlib/showcase/tictactoe_logic_trit.tern
+// Tic-Tac-Toe board state evaluation using ternary signals.
+// 1 = X, -1 = O, 0 = Empty
+// Tier: 1 - Open Core
+
+fn check_line(b: trittensor<9>, i1: int, i2: int, i3: int) -> trit {
+    if b[i1] == b[i2] && b[i2] == b[i3] && b[i1] != 0 {
+        return b[i1];
+    }
+    return 0;
+}
+
+fn evaluate_board(b: trittensor<9>) -> trit {
+    // Rows
+    let r1: trit = check_line(b, 0, 1, 2); if r1 != 0 { return r1; }
+    let r2: trit = check_line(b, 3, 4, 5); if r2 != 0 { return r2; }
+    let r3: trit = check_line(b, 6, 7, 8); if r3 != 0 { return r3; }
+    
+    // Cols
+    let c1: trit = check_line(b, 0, 3, 6); if c1 != 0 { return c1; }
+    let c2: trit = check_line(b, 1, 4, 7); if c2 != 0 { return c2; }
+    let c3: trit = check_line(b, 2, 5, 8); if c3 != 0 { return c3; }
+    
+    // Diagonals
+    let d1: trit = check_line(b, 0, 4, 8); if d1 != 0 { return d1; }
+    let d2: trit = check_line(b, 2, 4, 6); if d2 != 0 { return d2; }
+    
+    return 0; // No winner
+}
+
+fn main() -> trit {
+    let board: trittensor<9> = [
+        1,  0, -1,
+        0,  1,  0,
+       -1, -1,  1
+    ];
+    
+    println("Evaluating Tic-Tac-Toe board (X won on diagonal):");
+    let winner: trit = evaluate_board(board);
+    
+    match winner {
+        1 => { println("X wins!"); }
+       -1 => { println("O wins!"); }
+        0 => { println("No winner yet."); }
+    }
+    
+    if winner == 1 {
+        println("Board evaluation OK.");
+        return 1;
+    }
+    
+    return -1;
+}
