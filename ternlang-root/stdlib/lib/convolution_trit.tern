@@ -1,0 +1,84 @@
+// stdlib/lib/convolution_trit.tern
+// 1D Convolution for trit-based signals.
+// Useful for signal smoothing, feature detection, or decision signal processing.
+
+fn convolution_trit(signal: trit[], kernel: trit[], output: int[]) -> int {
+    let sig_len: int = len(signal);
+    let ker_len: int = len(kernel);
+    let out_len: int = sig_len + ker_len - 1;
+    
+    // Boundary check for output tensor
+    if len(output) < out_len {
+        return -1; // Output buffer too small
+    }
+
+    // Initialize output
+    let k: int = 0;
+    while k < out_len {
+        output[k] = 0;
+        k = k + 1;
+    }
+
+    // Perform convolution
+    let i: int = 0;
+    while i < sig_len {
+        let j: int = 0;
+        while j < ker_len {
+            let idx: int = i + j;
+            let product: int = to_int(signal[i]) * to_int(kernel[j]);
+            output[idx] = output[idx] + product;
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    
+    return out_len;
+}
+
+// Helper to convert trit to int for arithmetic
+fn to_int(s: trit) -> int {
+    match s {
+        1 => { return 1; }
+        -1 => { return -1; }
+        _ => { return 0; }
+    }
+}
+
+fn main() -> trit {
+    let signal: trit[5];
+    signal[0] = 1; signal[1] = 1; signal[2] = 0; signal[3] = -1; signal[4] = -1;
+    
+    let kernel: trit[3];
+    kernel[0] = 1; kernel[1] = 0; kernel[2] = -1;
+    
+    let output: int[7];
+    let result_len: int = convolution_trit(signal, kernel, output);
+    
+    print("Signal: [1, 1, 0, -1, -1]");
+    print("Kernel: [1, 0, -1]");
+    print("Convolution Result: ");
+    
+    let m: int = 0;
+    while m < result_len {
+        print(output[m]);
+        m = m + 1;
+    }
+
+    // Expected:
+    // idx 0: sig[0]*ker[0] = 1*1 = 1
+    // idx 1: sig[0]*ker[1] + sig[1]*ker[0] = 1*0 + 1*1 = 1
+    // idx 2: sig[0]*ker[2] + sig[1]*ker[1] + sig[2]*ker[0] = 1*-1 + 1*0 + 0*1 = -1
+    // idx 3: sig[1]*ker[2] + sig[2]*ker[1] + sig[3]*ker[0] = 1*-1 + 0*0 + -1*1 = -2
+    // idx 4: sig[2]*ker[2] + sig[3]*ker[1] + sig[4]*ker[0] = 0*-1 + -1*0 + -1*1 = -1
+    // idx 5: sig[3]*ker[2] + sig[4]*ker[1] = -1*-1 + -1*0 = 1
+    // idx 6: sig[4]*ker[2] = -1*-1 = 1
+    // Result: [1, 1, -1, -2, -1, 1, 1]
+
+    if output[0] == 1 && output[3] == -2 && output[6] == 1 {
+        print("✓ Convolution test passed.");
+        return 1;
+    } else {
+        print("✗ Convolution test failed.");
+        return -1;
+    }
+}
