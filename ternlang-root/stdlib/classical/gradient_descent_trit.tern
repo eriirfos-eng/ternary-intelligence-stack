@@ -1,0 +1,38 @@
+// stdlib/classical/gradient_descent_trit.tern
+// Numeric gradient step for ternary signals.
+// Tier: 1 - Open Core
+
+fn loss_func(p: float) -> float {
+    // Goal is to reach p = 1.0 (Affirm)
+    return (p - 1.0) * (p - 1.0);
+}
+
+fn get_gradient(p: float, h: float) -> float {
+    return (loss_func(p + h) - loss_func(p - h)) / (2.0 * h);
+}
+
+fn main() -> trit {
+    let p: float = 0.0; // Start at uncertainty (Tend)
+    let lr: float = 0.1;
+    let h: float = 0.01;
+    
+    println("Initial parameter p (Tend): 0.0");
+    println("Initial loss:"); println(loss_func(p));
+    
+    let i: int = 0;
+    while i < 10 {
+        let grad: float = get_gradient(p, h);
+        p = p - lr * grad;
+        i = i + 1;
+    }
+    
+    println("Parameter p after 10 steps:"); println(p);
+    println("Final loss:"); println(loss_func(p));
+    
+    if loss_func(p) < 0.1 {
+        println("Gradient descent converged towards Affirm (1.0).");
+        return 1;
+    }
+    
+    return -1;
+}
