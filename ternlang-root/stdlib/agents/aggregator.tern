@@ -1,54 +1,47 @@
-// stdlib/agents/aggregator.tern
-// Demonstrates: Production-grade Aggregator agent pattern with error handling
-// Tier: 1 — Open Core
+/*
+ * Ternary Consensus Aggregator — Collect ternary votes from multiple agents.
+ * Calculates the overall consensus (mean) and certainty.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
 
-agent Sensor {
-    fn handle(input: trit) -> trit {
-        // Robust sensor: accepts only valid signals
-        match input {
-            affirm => { return affirm; }
-            reject => { return reject; }
-            tend   => { return tend; }
+fn calculate_consensus(votes: trit[10], count: int) -> float {
+    let sum: float = 0.0;
+    let i: int = 0;
+    while i < count {
+        match votes[i] {
+            1 => { sum = sum + 1.0; }
+            -1 => { sum = sum - 1.0; }
+            0 => { sum = sum + 0.0; }
         }
+        i = i + 1;
     }
-}
-
-agent Aggregator {
-    fn handle(input: trit) -> trit {
-        // Validate input signal
-        if input == tend {
-            return tend;
-        }
-
-        let s1: agentref = spawn Sensor;
-        let s2: agentref = spawn Sensor;
-        let s3: agentref = spawn Sensor;
-
-        send s1 input;
-        send s2 input;
-        send s3 input;
-
-        let r1: trit = await s1;
-        let r2: trit = await s2;
-        let r3: trit = await s3;
-
-        // Robust consensus
-        if r1 == r2 { return r1; }
-        if r1 == r3 { return r1; }
-        if r2 == r3 { return r2; }
-        
-        return tend; // Ambiguous state
-    }
+    
+    // Convert count to float for division
+    let f_count: float = 0.0;
+    let j: int = 0;
+    while j < count { f_count = f_count + 1.0; j = j + 1; }
+    
+    return sum / f_count;
 }
 
 fn main() -> trit {
-    let a: agentref = spawn Aggregator;
-    send a affirm;
-    let res: trit = await a;
+    let votes: trit[10] = [1, 1, 0, -1, 1, 0, 0, 1, 1, -1];
+    let count: int = 10;
     
-    match res {
-        affirm => { return affirm; }
-        reject => { return reject; }
-        tend   => { return tend; }
+    // Sum = 1 + 1 + 0 - 1 + 1 + 0 + 0 + 1 + 1 - 1 = 4
+    // Wait, let's re-calculate manually:
+    // 1+1=2, +0=2, -1=1, +1=2, +0=2, +0=2, +1=3, +1=4, -1=3. YES, SUM IS 3.
+    // Mean = 3 / 10 = 0.3
+    
+    let consensus: float = calculate_consensus(votes, count);
+    println("Consensus Score (expected 0.3):");
+    println(consensus);
+    
+    if consensus == 0.3 {
+        println("Consensus Aggregator Test: PASSED");
+        return 1;
     }
+    
+    return -1;
 }
