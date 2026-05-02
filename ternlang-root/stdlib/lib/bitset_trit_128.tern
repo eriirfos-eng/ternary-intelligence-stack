@@ -1,0 +1,46 @@
+// stdlib/lib/bitset_trit_128.tern
+// 128-trit bitset (tritset) using multiple tensors for demonstration.
+// Tier: 1 - Open Core
+
+fn set_trit(low: trittensor<64>, high: trittensor<64>, index: int, val: trit) -> trit {
+    if index < 64 {
+        low[index] = val;
+    } else {
+        high[index - 64] = val;
+    }
+    return 1;
+}
+
+fn get_trit(low: trittensor<64>, high: trittensor<64>, index: int) -> trit {
+    if index < 64 {
+        return low[index];
+    } else {
+        return high[index - 64];
+    }
+}
+
+fn main() -> trit {
+    let low: trittensor<64>;
+    let high: trittensor<64>;
+    
+    // Initialize
+    let i: int = 0;
+    while i < 64 { low[i] = 0; high[i] = 0; i = i + 1; }
+    
+    println("Setting trits at index 10 and 100...");
+    set_trit(low, high, 10, 1);
+    set_trit(low, high, 100, -1);
+    
+    let v1: trit = get_trit(low, high, 10);
+    let v2: trit = get_trit(low, high, 100);
+    
+    print("Value at 10: "); println(v1);
+    print("Value at 100: "); println(v2);
+    
+    if v1 == 1 && v2 == -1 {
+        println("Tritset128 validation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
