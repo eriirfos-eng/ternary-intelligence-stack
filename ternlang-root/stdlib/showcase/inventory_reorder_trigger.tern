@@ -1,0 +1,37 @@
+// stdlib/showcase/inventory_reorder_trigger.tern
+// Inventory management logic using ternary signals.
+// Tier: 1 - Open Core
+
+fn check_reorder(stock: int, min_stock: int, lead_time_demand: int) -> trit {
+    if stock <= min_stock { return 1; } // Critical: Reorder
+    if stock <= (min_stock + lead_time_demand) { return 0; } // Caution: Monitor
+    return -1; // Safe: Stock OK
+}
+
+fn main() -> trit {
+    println("TIS Inventory Reorder System");
+    
+    let min_stock: int = 10;
+    let avg_daily_sales: int = 2;
+    let lead_time_days: int = 5;
+    let lead_time_demand: int = avg_daily_sales * lead_time_days; // 10
+    
+    println("Current Stock: 25");
+    let r1: trit = check_reorder(25, min_stock, lead_time_demand);
+    print("Action: "); match r1 { 1 => { println("REORDER"); } 0 => { println("MONITOR"); } -1 => { println("OK"); } }
+    
+    println("Current Stock: 15");
+    let r2: trit = check_reorder(15, min_stock, lead_time_demand);
+    print("Action: "); match r2 { 1 => { println("REORDER"); } 0 => { println("MONITOR"); } -1 => { println("OK"); } }
+    
+    println("Current Stock: 5");
+    let r3: trit = check_reorder(5, min_stock, lead_time_demand);
+    print("Action: "); match r3 { 1 => { println("REORDER"); } 0 => { println("MONITOR"); } -1 => { println("OK"); } }
+    
+    if r1 == -1 && r2 == 0 && r3 == 1 {
+        println("Inventory logic validated.");
+        return 1;
+    }
+    
+    return -1;
+}
