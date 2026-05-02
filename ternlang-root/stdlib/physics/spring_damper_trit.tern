@@ -1,0 +1,69 @@
+/*
+ * Spring-Damper System with Ternary Stiffness Control.
+ * Simulates a 1D damped harmonic oscillator (Hooke's Law).
+ * Stiffness is adjusted dynamically based on a ternary signal.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// state: [position, velocity]
+fn step_spring_damper(state: float[2], stiffness_signal: trit, dt: float) -> trit {
+    let base_k: float = 10.0; // Base spring constant
+    let k: float = 0.0;
+    let c: float = 2.0;       // Damping coefficient
+    let mass: float = 1.0;
+    
+    // Ternary stiffness adjustment
+    match stiffness_signal {
+        1 => { k = base_k * 1.5; } // Stiff
+        0 => { k = base_k; }       // Normal
+        -1 => { k = base_k * 0.5; } // Soft
+    }
+    
+    // F = -k*x - c*v
+    let force: float = (0.0 - k * state[0]) - (c * state[1]);
+    let acc: float = force / mass;
+    
+    // Update velocity and position (Euler integration)
+    state[1] = state[1] + acc * dt;
+    state[0] = state[0] + state[1] * dt;
+    
+    return 1;
+}
+
+fn main() -> trit {
+    let state: float[2];
+    state[0] = 5.0; // Initial displacement
+    state[1] = 0.0; // Initial velocity
+    
+    let dt: float = 0.1;
+    
+    println("Initial Position:");
+    println(state[0]);
+    
+    // Step 1: Normal stiffness (0)
+    let dummy: trit = step_spring_damper(state, 0, dt);
+    
+    // force = -10*5 - 2*0 = -50
+    // acc = -50 / 1 = -50
+    // vel = 0 + (-50)*0.1 = -5.0
+    // pos = 5 + (-5.0)*0.1 = 4.5
+    println("Position after 1 step (Normal):");
+    println(state[0]);
+    
+    // Reset and test stiff
+    state[0] = 5.0; state[1] = 0.0;
+    dummy = step_spring_damper(state, 1, dt);
+    // force = -15*5 = -75
+    // vel = -7.5
+    // pos = 5 - 0.75 = 4.25
+    println("Position after 1 step (Stiff):");
+    println(state[0]);
+    
+    if state[0] == 4.25 {
+        println("Spring-Damper Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
