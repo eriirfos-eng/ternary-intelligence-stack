@@ -1,0 +1,74 @@
+/*
+ * Fluid Diffusion 1D Showcase — Simple diffusion simulation on a 1D grid.
+ * Demonstrates iterative state updates and neighbor interaction.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn diffuse(grid: float[10], next_grid: float[10]) -> trit {
+    let i: int = 0;
+    while i < 10 {
+        let sum: float = grid[i];
+        let neighbors: float = 1.0;
+        
+        if i > 0 {
+            sum = sum + grid[i - 1];
+            neighbors = neighbors + 1.0;
+        }
+        if i < 9 {
+            sum = sum + grid[i + 1];
+            neighbors = neighbors + 1.0;
+        }
+        
+        next_grid[i] = sum / neighbors;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn print_grid(grid: float[10]) -> trit {
+    let i: int = 0;
+    while i < 10 {
+        print(grid[i]);
+        print(" ");
+        i = i + 1;
+    }
+    println("");
+    return 1;
+}
+
+fn main() -> trit {
+    let grid: float[10];
+    let next_grid: float[10];
+    
+    // Initialize: concentration of 10.0 at the center
+    let i: int = 0;
+    while i < 10 {
+        grid[i] = 0.0;
+        next_grid[i] = 0.0;
+        i = i + 1;
+    }
+    grid[5] = 10.0;
+    
+    println("Step 0:");
+    let d: trit = print_grid(grid);
+    
+    println("Step 1:");
+    d = diffuse(grid, next_grid);
+    d = print_grid(next_grid);
+    
+    println("Step 2:");
+    // Copy next_grid to grid
+    i = 0;
+    while i < 10 { grid[i] = next_grid[i]; i = i + 1; }
+    d = diffuse(grid, next_grid);
+    d = print_grid(next_grid);
+    
+    if next_grid[5] < 10.0 && next_grid[4] > 0.0 {
+        println("Fluid Diffusion Test: PASSED");
+        return 1;
+    }
+    
+    println("Fluid Diffusion Test: FAILED");
+    return -1;
+}
