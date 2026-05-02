@@ -1,0 +1,65 @@
+// stdlib/lib/lru_cache_trit.tern
+// Least Recently Used (LRU) cache for ternary signals.
+// Tier: 1 - Open Core
+
+fn update_lru(usage: int[5], index: int) -> trit {
+    let i: int = 0;
+    while i < 5 {
+        if i == index {
+            usage[i] = 0; // Reset usage for this index (most recent)
+        } else {
+            usage[i] = usage[i] + 1; // Increment usage age
+        }
+        i = i + 1;
+    }
+    return 0;
+}
+
+fn find_lru_index(usage: int[5]) -> int {
+    let max_age: int = -1;
+    let lru_idx: int = 0;
+    let i: int = 0;
+    while i < 5 {
+        if usage[i] > max_age {
+            max_age = usage[i];
+            lru_idx = i;
+        }
+        i = i + 1;
+    }
+    return lru_idx;
+}
+
+fn main() -> trit {
+    let keys: trittensor<5> = [0, 0, 0, 0, 0];
+    let values: float[5];
+    let usage: int[5];
+    usage[0] = 10;
+    usage[1] = 10;
+    usage[2] = 10;
+    usage[3] = 10;
+    usage[4] = 10;
+    
+    println("LRU Cache initialized (size 5).");
+    
+    // Simulate caching values for keys
+    // Key 1 -> 0.1, Key -1 -> -0.1
+    keys[0] = 1; values[0] = 0.1; update_lru(usage, 0);
+    keys[1] = -1; values[1] = -0.1; update_lru(usage, 1);
+    
+    println("Cache state after 2 insertions:");
+    let lru1: int = find_lru_index(usage);
+    print("LRU Index: "); println(lru1);
+    
+    // Access index 0 (Key 1) again
+    update_lru(usage, 0);
+    println("Accessed Key 1. New LRU Index should be 2, 3, or 4:");
+    let lru2: int = find_lru_index(usage);
+    println(lru2);
+    
+    if lru2 >= 2 {
+        println("LRU update successful.");
+        return 1;
+    }
+    
+    return -1;
+}
