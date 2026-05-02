@@ -1,0 +1,44 @@
+// MoE Load Balancer: Penalizes overused experts to ensure uniform utilization.
+// Implements a simple auxiliary loss/penalty mechanism.
+
+fn apply_load_penalty(scores: float[3], counts: int[3], penalty_factor: float) -> trit {
+    let i: int = 0;
+    while i < 3 {
+        // Penalty is proportional to how many times the expert was used.
+        let val: int = counts[i];
+        let penalty: float = (val * 1.0) * penalty_factor;
+        scores[i] = scores[i] - penalty;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let scores: float[3];
+    scores[0] = 0.8; scores[1] = 0.8; scores[2] = 0.8;
+    
+    let usage_counts: int[3];
+    usage_counts[0] = 10; // Overused
+    usage_counts[1] = 2;
+    usage_counts[2] = 1;
+    
+    let penalty: float = 0.05;
+    let ok: trit = apply_load_penalty(scores, usage_counts, penalty);
+    
+    // Expected scores[0]: 0.8 - (10 * 0.05) = 0.8 - 0.5 = 0.3
+    // Expected scores[1]: 0.8 - (2 * 0.05) = 0.8 - 0.1 = 0.7
+    // Expected scores[2]: 0.8 - (1 * 0.05) = 0.8 - 0.05 = 0.75
+    
+    let success: trit = 0;
+    if scores[0] == 0.3 {
+        if scores[2] == 0.75 {
+            success = 1;
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
