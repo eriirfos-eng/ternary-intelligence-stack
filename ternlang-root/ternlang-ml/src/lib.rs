@@ -33,6 +33,8 @@ pub mod spectra_compat {
 }
 
 pub mod coherence;
+pub mod qat;
+pub mod perplexity;
 
 // ─── Quantization ────────────────────────────────────────────────────────────
 
@@ -391,6 +393,43 @@ impl TernaryMLP {
 
     pub fn layer1_sparsity(&self) -> f64 { self.w1.sparsity() }
     pub fn layer2_sparsity(&self) -> f64 { self.w2.sparsity() }
+
+    /// F32 forward pass: returns raw f32 logits (no final ternary clipping).
+    ///
+    /// Uses quantized {-1,0,+1} weights but accumulates in f32, which makes
+    /// the output suitable for softmax / cross-entropy in perplexity evaluation.
+    ///
+    /// `input` — flat f32 slice of length `in_features`
+    pub fn forward_logits(&self, input: &[f32]) -> Vec<f32> {
+        assert_eq!(input.len(), self.in_features);
+        let (inf, hs, outf) = (self.in_features, self.hidden_size, self.out_features);
+
+        // Weights as f32 {-1, 0, +1}
+        let w1_f: Vec<f32> = self.w1.to_i8_vec().iter().map(|&v| v as f32).collect();
+        let w2_f: Vec<f32> = self.w2.to_i8_vec().iter().map(|&v| v as f32).collect();
+
+        // Layer 1: hidden [hs]
+        let mut hidden = vec![0.0f32; hs];
+        for j in 0..hs {
+            for i in 0..inf {
+                hidden[j] += input[i] * w1_f[i * hs + j];
+            }
+        }
+
+        // Sign activation
+        let hidden_act: Vec<f32> = hidden.iter().map(|&h| {
+            if h > 0.0 { 1.0 } else if h < 0.0 { -1.0 } else { 0.0 }
+        }).collect();
+
+        // Layer 2: output [outf]
+        let mut output = vec![0.0f32; outf];
+        for j in 0..outf {
+            for i in 0..hs {
+                output[j] += hidden_act[i] * w2_f[i * outf + j];
+            }
+        }
+        output
+    }
 }
 
 // ─── Extended timed benchmark ────────────────────────────────────────────────
