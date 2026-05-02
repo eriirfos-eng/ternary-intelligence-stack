@@ -322,36 +322,34 @@
         <div class="max-w-4xl mx-auto px-6">
           <div class="text-center mb-12">
             <h2 class="text-4xl font-black mb-4 uppercase text-t_text">Get Started</h2>
-            <p class="text-t_muted">Everything installs from crates.io. Run your first .tern program — or have a full AI agent conversation — in under two minutes.</p>
+            <p class="text-t_muted">Getting started is simple. Whether you want an AI agent on your command line or to start writing your own triadic code, you'll be up and running in minutes.</p>
           </div>
           <div class="bg-t_bg rounded-3xl border border-t_border p-8 md:p-10 font-mono text-sm shadow-2xl relative overflow-hidden group">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-t_teal via-t_blue to-t_red opacity-50"></div>
-            <div class="space-y-6 text-t_text font-medium">
+            <div class="space-y-8 text-t_text font-medium">
               <div>
-                <span class="text-t_muted block mb-1"># Agent Albert — multi-provider AI agent (Gemini, Claude, GPT-4o, Ollama…)</span>
-                <span class="text-t_blue">cargo</span> install albert-cli<br>
-                <span class="text-t_teal">albert-cli</span>                      <span class="text-t_muted"># → wake sequence + interactive chat</span>
+                <h4 class="text-t_teal text-xs font-black uppercase mb-3 tracking-widest">1. Install the AI Agent</h4>
+                <p class="text-t_muted text-xs mb-3">Talk to Gemini, Claude, GPT, or Ollama right from your terminal.</p>
+                <div class="bg-t_bg3 p-4 rounded-lg font-mono">
+                  <span class="text-t_blue">cargo</span> install albert-cli<br>
+                  <span class="text-t_teal">albert-cli</span>
+                </div>
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># Ternlang VM + REPL</span>
-                <span class="text-t_blue">cargo</span> install ternlang-cli<br>
-                <span class="text-t_teal">ternlang</span>                        <span class="text-t_muted"># → interactive REPL</span><br>
-                <span class="text-t_teal">ternlang</span> my_program.tern         <span class="text-t_muted"># → run a .tern file directly</span>
+                <h4 class="text-t_blue text-xs font-black uppercase mb-3 tracking-widest">2. Run your first Ternlang program</h4>
+                <p class="text-t_muted text-xs mb-3">Ternlang is a programming language built on triadic logic (Yes, No, Hold).</p>
+                <div class="bg-t_bg3 p-4 rounded-lg font-mono">
+                  <span class="text-t_blue">cargo</span> install ternlang-cli<br>
+                  <span class="text-t_teal">ternlang</span> your_first_file.tern
+                </div>
               </div>
               <div>
-                <span class="text-t_muted block mb-1"># Or build everything from source</span>
-                <span class="text-t_teal">git</span> clone https://github.com/eriirfos-eng/ternary-intelligence-stack<br>
-                <span class="text-t_teal">cd</span> ternary-intelligence-stack/ternlang-root<br>
-                <span class="text-t_blue">cargo</span> build --release<br>
-                <span class="text-t_blue">cargo</span> test --workspace
-              </div>
-              <div>
-                <span class="text-t_muted block mb-1"># Boot the MCP Server (30 tools, stdio — works with Claude Desktop, Cursor, VS Code)</span>
-                <span class="text-t_red">./target/release/ternlang-mcp</span>
-              </div>
-              <div>
-                <span class="text-t_muted block mb-1"># Audit a decision log (EU AI Act Art.13/14 compliant output)</span>
-                <span class="text-t_blue">cargo</span> run --bin ternlang -- audit decisions.json --html
+                <h4 class="text-t_red text-xs font-black uppercase mb-3 tracking-widest">3. Need more power?</h4>
+                <p class="text-t_muted text-xs mb-3">Clone the full stack to access the MoE-13 frontier model and the BET Virtual Machine.</p>
+                <div class="bg-t_bg3 p-4 rounded-lg font-mono text-[10px]">
+                  <span class="text-t_teal">git</span> clone https://github.com/eriirfos-eng/ternary-intelligence-stack<br>
+                  <span class="text-t_blue">cargo</span> build --release
+                </div>
               </div>
             </div>
           </div>
