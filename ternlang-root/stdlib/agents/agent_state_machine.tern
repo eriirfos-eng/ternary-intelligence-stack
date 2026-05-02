@@ -1,0 +1,40 @@
+// Agent State Machine: Core FSM for controlling agent behavior.
+// States: -1 (Error), 0 (Idle), 1 (Busy)
+
+fn transition(current_state: trit, event: trit) -> trit {
+    match current_state {
+        0 => { // Idle
+            if event == 1 { return 1; } // Start task -> Busy
+            if event == -1 { return -1; } // Error event -> Error
+            return 0; // Remain Idle
+        }
+        1 => { // Busy
+            if event == 0 { return 0; } // Task done -> Idle
+            if event == -1 { return -1; } // Error event -> Error
+            return 1; // Remain Busy
+        }
+        -1 => { // Error
+            if event == 0 { return 0; } // Reset -> Idle
+            return -1; // Remain in Error
+        }
+    }
+}
+
+fn main() -> trit {
+    let state: trit = 0; // Idle
+    
+    state = transition(state, 1); // Go Busy
+    state = transition(state, 1); // Stay Busy
+    state = transition(state, 0); // Back to Idle
+    
+    let success: trit = 0;
+    if state == 0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
