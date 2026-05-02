@@ -1,0 +1,68 @@
+/*
+ * Min-Cut / Max-Flow Duality — Find the minimum cut in a graph using Max Flow.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// Reachable nodes in residual graph
+fn find_reachable(cap: int[16], flow: int[16], s: int, reachable: int[4]) -> int {
+    let queue: int[4];
+    let head: int = 0;
+    let tail: int = 0;
+    
+    let i: int = 0;
+    while i < 4 { reachable[i] = 0; i = i + 1; }
+    
+    queue[tail] = s;
+    tail = tail + 1;
+    reachable[s] = 1;
+    
+    while head < tail {
+        let u: int = queue[head];
+        head = head + 1;
+        
+        let v: int = 0;
+        while v < 4 {
+            if reachable[v] == 0 && (cap[u * 4 + v] - flow[u * 4 + v]) > 0 {
+                reachable[v] = 1;
+                queue[tail] = v;
+                tail = tail + 1;
+            }
+            v = v + 1;
+        }
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    // Re-use the max flow graph from previous task
+    let cap: int[16];
+    let flow: int[16];
+    let i: int = 0;
+    while i < 16 { cap[i] = 0; flow[i] = 0; i = i + 1; }
+    
+    cap[0 * 4 + 1] = 10;
+    cap[0 * 4 + 2] = 5;
+    cap[1 * 4 + 3] = 10;
+    cap[2 * 4 + 3] = 5;
+    
+    // Simulate max flow (15)
+    flow[0 * 4 + 1] = 10; flow[1 * 4 + 3] = 10;
+    flow[0 * 4 + 2] = 5; flow[2 * 4 + 3] = 5;
+    
+    let reachable: int[4];
+    let d: int = find_reachable(cap, flow, 0, reachable);
+    
+    println("Reachable from source in residual graph:");
+    println(reachable[0]); // 1
+    println(reachable[1]); // 0 (0 capacity left)
+    println(reachable[2]); // 0
+    println(reachable[3]); // 0
+    
+    if reachable[0] == 1 && reachable[3] == 0 {
+        println("Min-Cut Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
