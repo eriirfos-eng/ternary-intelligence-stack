@@ -1,0 +1,31 @@
+fn quantize(val: float) -> trit {
+    if val < -0.33 {
+        return -1;
+    }
+    if val > 0.33 {
+        return 1;
+    }
+    return 0;
+}
+
+fn main() -> trit {
+    let t1: trit = quantize(-0.5);
+    let t2: trit = quantize(0.0);
+    let t3: trit = quantize(0.5);
+    
+    if t1 != -1 { 
+        println("Fail: t1 expected -1");
+        return -1; 
+    }
+    if t2 != 0 { 
+        println("Fail: t2 expected 0");
+        return -1; 
+    }
+    if t3 != 1 { 
+        println("Fail: t3 expected 1");
+        return -1; 
+    }
+    
+    println("Quantizer test passed");
+    return 1;
+}

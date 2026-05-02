@@ -1,0 +1,17 @@
+fn main() -> trit {
+    let msg: trit = 1;
+    let key: trit = -1;
+    // OTP encryption: Cipher = (msg + key) mod 3. 
+    // In balanced ternary addition: 1 + -1 = 0.
+    let cipher: trit = consensus(msg, key);
+    
+    // OTP decryption: msg = (cipher - key) mod 3.
+    // In balanced ternary: 0 - (-1) = 1.
+    let dec: trit = consensus(cipher, -key);
+    
+    println("OTP Msg:"); println(msg);
+    println("OTP Dec:"); println(dec);
+    
+    if dec == msg { return 1; }
+    return -1;
+}
