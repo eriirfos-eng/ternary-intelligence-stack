@@ -1,0 +1,30 @@
+// Agent Resource Trading: Simulates a simple barter economy between agents.
+// Agents exchange resources based on surplus and deficit.
+
+fn trade(surplus: int, deficit: int) -> int {
+    // If agent has surplus (> 5) and peer has deficit (> 5), trade amount
+    if surplus > 5 {
+        if deficit > 5 {
+            return 5; // Trade amount
+        }
+    }
+    return 0; // No trade
+}
+
+fn main() -> trit {
+    let agent_a_energy: int = 15; // Surplus
+    let agent_b_energy: int = 2; // Deficit (10 - 2 = 8 deficit)
+    
+    let amount: int = trade(agent_a_energy, 10 - agent_b_energy);
+    
+    let success: trit = 0;
+    if amount == 5 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
