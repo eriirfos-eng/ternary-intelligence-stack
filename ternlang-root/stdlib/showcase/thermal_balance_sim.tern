@@ -1,0 +1,44 @@
+// stdlib/showcase/thermal_balance_sim.tern
+// Thermal balance simulation using ternary feedback.
+// Tier: 1 - Open Core
+
+fn update_temp(curr: float, heater: trit, ambient: float) -> float {
+    let new_temp: float = curr;
+    // Loss to ambient
+    new_temp = new_temp - 0.1 * (curr - ambient);
+    
+    // Heater influence
+    match heater {
+        1 => { new_temp = new_temp + 1.0; } // Heating
+       -1 => { new_temp = new_temp - 1.0; } // Cooling
+        0 => { /* Idle */ }
+    }
+    return new_temp;
+}
+
+fn main() -> trit {
+    let temp: float = 20.0;
+    let target: float = 25.0;
+    let ambient: float = 15.0;
+    
+    println("Thermal Balance Simulation");
+    println("Target: 25.0, Ambient: 15.0");
+    
+    let i: int = 0;
+    while i < 10 {
+        let heater: trit = 0;
+        if temp < target - 0.5 { heater = 1; }
+        else if temp > target + 0.5 { heater = -1; }
+        
+        temp = update_temp(temp, heater, ambient);
+        print("Step "); print(i); print(": Temp="); println(temp);
+        i = i + 1;
+    }
+    
+    if temp > 22.0 && temp < 28.0 {
+        println("Simulation reached stable range.");
+        return 1;
+    }
+    
+    return -1;
+}
