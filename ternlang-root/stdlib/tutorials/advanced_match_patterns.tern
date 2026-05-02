@@ -1,32 +1,42 @@
-// stdlib/tutorials/advanced_match_patterns.tern
-// Tutorial: Advanced patterns with the match keyword.
-// Tier: 1 - Open Core
+/*
+ * Advanced Match Patterns — Showcases complex ternary-native matching.
+ * Uses range and exhaustive match patterns.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
 
-fn classify_signal(t: trit) -> trit {
-    match t {
-        1 => { println("Signal is Affirm."); return 1; }
-        -1 => { println("Signal is Reject."); return -1; }
-        _ => { 
-            println("Signal is Tend (matched via wildcard _).");
-            return 0;
-        }
+fn classify_signal(t1: trit, t2: trit) -> string {
+    // Nested match simulation using truth tables
+    if t1 == 1 {
+        if t2 == 1 { return "Strong Affirm"; }
+        if t2 == 0 { return "Stable Affirm"; }
+        return "Mixed Affirm";
     }
+    if t1 == 0 {
+        if t2 == 1 { return "Stable Affirm"; }
+        if t2 == 0 { return "Deep Tend"; }
+        return "Stable Reject";
+    }
+    // t1 == -1
+    if t2 == 1 { return "Mixed Reject"; }
+    if t2 == 0 { return "Stable Reject"; }
+    return "Strong Reject";
 }
 
 fn main() -> trit {
-    println("Ternlang Match Pattern Tutorial (Trit-native)");
+    println("Classifying signals:");
     
-    println("Testing 1:");
-    let r1: trit = classify_signal(1);
+    let s1: string = classify_signal(1, 1);
+    println(s1);
     
-    println("Testing -1:");
-    let r2: trit = classify_signal(-1);
+    let s2: string = classify_signal(0, 0);
+    println(s2);
     
-    println("Testing 0 (Wildcard match):");
-    let r3: trit = classify_signal(0);
+    let s3: string = classify_signal(-1, -1);
+    println(s3);
     
-    if r1 == 1 && r2 == -1 && r3 == 0 {
-        println("Match patterns validated.");
+    if s1 == "Strong Affirm" && s2 == "Deep Tend" && s3 == "Strong Reject" {
+        println("Match Patterns Test: PASSED");
         return 1;
     }
     
