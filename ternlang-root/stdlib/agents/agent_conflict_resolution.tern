@@ -1,0 +1,30 @@
+// Agent Conflict Resolution: Resolves resource contention between peers.
+// Uses a priority-based logic to decide which agent gains access.
+
+fn resolve(priority_a: int, priority_b: int) -> trit {
+    if priority_a > priority_b {
+        return 1; // Agent A wins
+    }
+    if priority_b > priority_a {
+        return -1; // Agent B wins
+    }
+    return 0; // Draw/Consensus required
+}
+
+fn main() -> trit {
+    let p1: int = 10;
+    let p2: int = 5;
+    
+    let winner: trit = resolve(p1, p2);
+    
+    let success: trit = 0;
+    if winner == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
