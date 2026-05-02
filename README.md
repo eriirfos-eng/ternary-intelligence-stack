@@ -20,10 +20,8 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 
 ### Full Documentation
 
-
 - **[ternlang-root/README.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md)** — Full explanation, technical details, and compiler specifications
-
-- **[MoE-13: Deterministic Multi-Expert Inference](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Production-grade Mixture-of-Experts system for regulated AI workloads. 
+- **[MoE-13: Scalable Ternary Scaling Research](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Research into the physics of natively trained ternary scaling laws.
 - **[Agent Albert](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — Terminal-native, model-agnostic AI agent built in pure Rust
 - **[Ternlang Studio Preview](https://ternlang-api.fly.dev/studio)** — Work-in-progress developer dashboard and SDK
 - **[Session Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and refinements addressed during deployment
@@ -53,11 +51,29 @@ Base Architecture: Scalable Ternary MoE (Multi-Domain Experts)
 Objective: Demonstrate empirical scaling laws and representation efficiency of native ternary manifolds.
 Why This Matters: Move AI scaling beyond the energy-intensive binary-float paradigm.
 
+### Empirical Scaling Metrics
+
+We measure architectural success through ternary convergence and scaling efficiency.
+
+| Metric | Scientific Focus | Empirical Baseline |
+|--------|------------------|--------------------|
+| **Loss Convergence ($N$)** | Power-law scaling | Stable scaling up to 1T params |
+| **Manifold Sparsity** | Sparse geometric efficiency | ~32% stable sparsity |
+| **Ternary Manifold ($\alpha$)** | Signal amplitude stability | $\alpha \approx 0.55$ invariant |
+
+*See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full experimental data.*
+
 ---
 
 ## 3. Agent Albert — The Sovereign AI Assistant
 
 **Albert** is also the terminal-native interface for the TIS. He runs entirely in your terminal, connects to local models (Ollama) or commercial bridges, and never “phones home.”
+
+### Prerequisites
+Ensure you have Rust installed:
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
 ### Quick Install
 
@@ -77,20 +93,6 @@ albert-cli
 | **Local-First** | Native Ollama support for completely offline and free operation |
 | **Model-agnostic** | Connect to Gemini, Claude, GPT-4o, or Grok as "capability bridges" |
 | **Self-reflection memory** | Commits key facts to local storage to maintain long-term context |
-
----
-
-## Empirical Scaling Metrics
-
-We measure architectural success through ternary convergence and scaling efficiency.
-
-| Metric | Scientific Focus | Empirical Baseline |
-|--------|------------------|--------------------|
-| **Loss Convergence ($N$)** | Power-law scaling | Stable scaling up to 1T params |
-| **Manifold Sparsity** | Sparse geometric efficiency | ~32% stable sparsity |
-| **Ternary Manifold ($\alpha$)** | Signal amplitude stability | $\alpha \approx 0.55$ invariant |
-
-*See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full experimental data.*
 
 ---
 
