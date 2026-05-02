@@ -1,0 +1,40 @@
+// Agent Message Bus: Facilitates communication between agents via a shared buffer.
+// Simulated asynchronous message passing.
+
+fn post_message(bus: trit[10], index: int, msg: trit) -> trit {
+    if index < 10 {
+        bus[index] = msg;
+        return 1;
+    }
+    return -1;
+}
+
+fn poll_message(bus: trit[10], index: int) -> trit {
+    if index < 10 {
+        return bus[index];
+    }
+    return -1;
+}
+
+fn main() -> trit {
+    let bus: trit[10];
+    let i: int = 0;
+    while i < 10 {
+        bus[i] = 0;
+        i = i + 1;
+    }
+    
+    let ok: trit = post_message(bus, 3, 1);
+    let msg: trit = poll_message(bus, 3);
+    
+    let success: trit = 0;
+    if msg == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
