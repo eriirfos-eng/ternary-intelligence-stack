@@ -1,0 +1,58 @@
+// Noisy Top-K Gating: Adds noise to gating scores to encourage expert diversity.
+// This helps prevent expert collapse during training/inference.
+
+fn get_noise(seed: int) -> float {
+    // Simple deterministic noise based on seed
+    let val: int = seed % 7;
+    let noise: float = (val * 1.0) / 10.0;
+    return noise;
+}
+
+fn noisy_top1(scores: float[3], seed: int) -> int {
+    let noisy_scores: float[3];
+    let i: int = 0;
+    while i < 3 {
+        noisy_scores[i] = scores[i] + get_noise(seed + i);
+        i = i + 1;
+    }
+    
+    let max_score: float = noisy_scores[0];
+    let max_idx: int = 0;
+    i = 1;
+    while i < 3 {
+        if noisy_scores[i] > max_score {
+            max_score = noisy_scores[i];
+            max_idx = i;
+        }
+        i = i + 1;
+    }
+    return max_idx;
+}
+
+fn main() -> trit {
+    let scores: float[3];
+    scores[0] = 0.5;
+    scores[1] = 0.5;
+    scores[2] = 0.5;
+    
+    // Seed 1: 
+    // i=0: (1 % 7)/10 = 0.1 -> 0.6
+    // i=1: (2 % 7)/10 = 0.2 -> 0.7
+    // i=2: (3 % 7)/10 = 0.3 -> 0.8
+    // Result: index 2
+    
+    let top_a: int = noisy_top1(scores, 1);
+    
+    let success: trit = 0;
+    if top_a == 2 {
+        success = 1;
+    } else {
+        success = -1;
+    }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
