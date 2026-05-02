@@ -1,0 +1,39 @@
+// Multi-Agent Consensus: Agents reach a unified decision via the consensus builtin.
+// Demonstrates how to aggregate opinions from N agents.
+
+fn get_consensus(votes: trit[5]) -> trit {
+    let result: trit = votes[0];
+    let i: int = 1;
+    while i < 5 {
+        result = consensus(result, votes[i]);
+        i = i + 1;
+    }
+    return result;
+}
+
+fn main() -> trit {
+    let votes: trit[5];
+    votes[0] = 1;
+    votes[1] = 1;
+    votes[2] = -1;
+    votes[3] = 0;
+    votes[4] = 1;
+    
+    // Consensus sequence:
+    // 1 con 1 = 1
+    // 1 con -1 = 0
+    // 0 con 0 = 0
+    // 0 con 1 = 1
+    let final_decision: trit = get_consensus(votes);
+    
+    let success: trit = 0;
+    if final_decision == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
