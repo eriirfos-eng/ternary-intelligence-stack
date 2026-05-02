@@ -1,0 +1,44 @@
+// Expert ReLU Activation: Performs ReLU activation on a vector.
+// Specialized for MoE expert outputs.
+
+fn expert_relu(data: float[3]) -> trit {
+    let i: int = 0;
+    while i < 3 {
+        if data[i] < 0.0 {
+            data[i] = 0.0;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let data: float[3];
+    data[0] = -0.5;
+    data[1] = 0.8;
+    data[2] = -1.2;
+    
+    let ok: trit = expert_relu(data);
+    
+    // Expected: [0.0, 0.8, 0.0]
+    let success: trit = 0;
+    if data[0] == 0.0 {
+        if data[1] == 0.8 {
+            if data[2] == 0.0 {
+                success = 1;
+            } else {
+                success = -1;
+            }
+        } else {
+            success = -1;
+        }
+    } else {
+        success = -1;
+    }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
