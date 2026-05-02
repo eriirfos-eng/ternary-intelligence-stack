@@ -1,51 +1,33 @@
-// stdlib/lib/trit_one_hot.tern
-// One-hot encoding and decoding for trits.
-// Tier: 1 - Open Core
+/*
+ * Ternary One-Hot Encoding — Convert a trit to a 3-element one-hot float vector.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
 
-fn one_hot_encode(input: trit, output: trittensor<3>) -> trit {
-    output[0] = 0;
-    output[1] = 0;
-    output[2] = 0;
+fn one_hot_trit(t: trit, res: float[3]) -> trit {
+    res[0] = 0.0; res[1] = 0.0; res[2] = 0.0;
     
-    match input {
-        1 => { output[0] = 1; }
-        0 => { output[1] = 1; }
-       -1 => { output[2] = 1; }
+    match t {
+        -1 => { res[0] = 1.0; }
+         0 => { res[1] = 1.0; }
+         1 => { res[2] = 1.0; }
     }
     return 1;
-}
-
-fn one_hot_decode(input: trittensor<3>) -> trit {
-    if input[0] == 1 { return 1; }
-    if input[1] == 1 { return 0; }
-    if input[2] == 1 { return -1; }
-    return 0; // Default to uncertainty
 }
 
 fn main() -> trit {
-    let oh: trittensor<3> = [0, 0, 0];
+    let res: float[3];
     
-    println("Encoding Affirm (1):");
-    one_hot_encode(1, oh);
-    print("Result: ["); print(oh[0]); print(", "); print(oh[1]); print(", "); print(oh[2]); println("]");
+    println("One-hot for Reject (-1):");
+    let d: trit = one_hot_trit(-1, res);
+    println(res[0]); // 1.0
+    println(res[1]); // 0.0
+    println(res[2]); // 0.0
     
-    if oh[0] == 1 && oh[1] == 0 && oh[2] == 0 {
-        println("Encoding OK.");
-    } else {
-        return -1;
+    if res[0] == 1.0 && res[1] == 0.0 && res[2] == 0.0 {
+        println("Trit One-Hot Test: PASSED");
+        return 1;
     }
     
-    println("Decoding [0, 0, 1]:");
-    let dec: trittensor<3> = [0, 0, 1];
-    let res: trit = one_hot_decode(dec);
-    print("Result: "); println(res);
-    
-    if res == -1 {
-        println("Decoding OK.");
-    } else {
-        return -1;
-    }
-    
-    println("One-hot validation complete.");
-    return 1;
+    return -1;
 }
