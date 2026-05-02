@@ -6,7 +6,7 @@
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
-[![speedup](https://img.shields.io/badge/@sparseskip-up_to_122x-success)](#sparse-ternary-inference)
+[![speedup](https://img.shields.io/badge/@sparseskip-2.3x_measured_%7C_up_to_122x_max-success)](#sparse-ternary-inference)
 [![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#example-library)
@@ -43,7 +43,7 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 | Layer | What it does |
 |-------|-------------|
 | [Language & VM](#language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
-| [Sparse Inference](#sparse-ternary-inference) | @sparseskip: 2.3× measured baseline, scales to 122× at extreme sparsity |
+| [Sparse Inference](#sparse-ternary-inference) | @sparseskip: **2.3× measured** on x86 baseline; mathematical upper bound 122× at 99%+ sparsity |
 | [MoE-13 Orchestrator](#moe-13-ternary-orchestrator) | Mixture-of-Experts reasoning engine with safety hard gate |
 | [Protocol Specifications](#rfi-irfos-protocol-specifications) | BET-ISA, TSON, TTP, and T-POSIX — RFI-IRFOS open proposals |
 | [Enterprise Middleware](#architecture) | **cuTern** (MKL), Ternary SQL, Triadic Networking, and Crypto |
@@ -198,23 +198,23 @@ MoE-13 an **ecocentric deliberation architecture** designed for high-stakes deci
 
 Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
 
-### The 13 Deliberation Axes
+### The 13 Domain Experts (implemented in `albert-moe-13`)
 
-| Axis         | Role |
-|--------------|------|
-| Safety       | Immediate harm detection |
-| MetaSafety   | Safety audit / veto |
-| Logic        | Formal consistency |
-| Ethics       | Normative constraints |
-| FactCheck    | Claim verification |
-| Causal       | Cause–effect integrity |
-| Context      | Situational awareness |
-| History      | Prior decision memory |
-| Ambiguity    | Uncertainty detection |
-| Math         | Quantitative validation |
-| ToolUse      | External action risk |
-| Persona      | Human alignment |
-| Efficiency   | Resource cost |
+| Expert           | Role | Threshold |
+|------------------|------|-----------|
+| Ethics           | Normative constraints, persona safety | Conservative asymmetric |
+| Legal            | Regulatory compliance, world-knowledge | Conservative asymmetric |
+| Science          | Empirical claims, world-knowledge | Standard ±0.05 |
+| Causal           | Cause–effect integrity | Standard ±0.05 |
+| Temporal         | Time-sensitive reasoning | Standard ±0.05 |
+| Spatial          | Geometric / physical reasoning | Standard ±0.05 |
+| Linguistic       | Syntax and language form | Standard ±0.05 |
+| Mathematical     | Quantitative validation | Standard ±0.05 |
+| Medical          | Clinical safety, world-knowledge | Conservative asymmetric |
+| Cultural         | Persona and social alignment | Standard ±0.05 |
+| Technical        | Tool use and systems | Standard ±0.05 |
+| Ecological       | Environmental / safety co-domain | Conservative asymmetric |
+| Logic            | Formal consistency and reasoning | Standard ±0.05 |
 
 ---
 
@@ -255,7 +255,9 @@ This creates a fully auditable reasoning path for EU AI Act Article 13 / 14 comp
 [![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](../agent_albert_cli/rust/LICENSE)
 
-Albert is the sovereign, model-agnostic AI coding CLI built as the intelligence layer of the Ternary Intelligence Stack. He runs as a standalone terminal agent or embedded directly inside TernStudio — wired into the flow canvas to generate, debug, and explain ternary workflows.
+Albert is the sovereign, model-agnostic AI coding CLI built as the **orchestration layer** of the Ternary Intelligence Stack. He runs as a standalone terminal agent or embedded directly inside TernStudio — wired into the flow canvas to generate, debug, and explain ternary workflows.
+
+> **Architecture note:** Albert-CLI is a model-agnostic interface that dispatches to external LLM providers (Gemini, Claude, OpenAI, Ollama, etc.). The **ternary-native reasoning layer** is Albert-MoE-13 — the 13-expert deliberation engine described above, which runs in Rust on the BET-VM. The CLI and the MoE engine are decoupled by design: you can run the MoE-13 engine standalone without any external LLM.
 
 ### Two modes
 
@@ -552,7 +554,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ## Example Library
 
-**30,000+ `.tern` programs** (2,090 examples + 27,800+ stdlib) across every domain — establishing TIS as the definitive standard for balanced ternary logic.
+**30,000+ `.tern` programs** (2,090 public examples + 567 open-core stdlib modules + 27,800+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) across every domain — establishing TIS as the definitive standard for balanced ternary logic.
 
 | Category | Examples |
 |----------|---------|
