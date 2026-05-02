@@ -1,0 +1,48 @@
+// Agent Memory Stream: Stores a sliding window of past agent states.
+// Enables temporal reasoning and stateful behavior.
+
+fn push_memory(stream: int[5], new_state: int) -> trit {
+    // Shift left
+    let i: int = 0;
+    while i < 4 {
+        stream[i] = stream[i + 1];
+        i = i + 1;
+    }
+    stream[4] = new_state;
+    return 1;
+}
+
+fn get_mean_memory(stream: int[5]) -> float {
+    let sum_val: int = 0;
+    let i: int = 0;
+    while i < 5 {
+        sum_val = sum_val + stream[i];
+        i = i + 1;
+    }
+    return (sum_val * 1.0) / 5.0;
+}
+
+fn main() -> trit {
+    let memory: int[5];
+    let i: int = 0;
+    while i < 5 { memory[i] = 0; i = i + 1; }
+    
+    let ok: trit = 0;
+    ok = push_memory(memory, 10);
+    ok = push_memory(memory, 20);
+    
+    // Memory: [0, 0, 0, 10, 20]
+    let m_val: float = get_mean_memory(memory);
+    
+    // Mean = 30 / 5 = 6.0
+    let success: trit = 0;
+    if m_val == 6.0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
