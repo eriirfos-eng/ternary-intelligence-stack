@@ -479,6 +479,7 @@ async fn require_api_key(
         || path == "/translator"
         || path == "/playground"
         || path.starts_with("/playground/pkg/")
+        || path == "/fortune"
         || path == "/activate"
         || path == "/api/run"
         || path == "/api/data"
@@ -573,6 +574,7 @@ static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
 static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templates/index.html");
 static PLAYGROUND_HTML: &str = include_str!("../../playground/index.html");
 static KPI_HTML:        &str = include_str!("kpi.html");
+static FORTUNE_HTML:    &str = include_str!("../../docs/fortune_cookie.html");
 
 async fn kpi_page() -> impl axum::response::IntoResponse {
     let dynamic = if std::path::Path::new("/data/kpi/index.html").exists() {
@@ -608,6 +610,10 @@ static WASM_BYTES:      &[u8] = include_bytes!("../../playground/pkg/ternlang_wa
 
 async fn studio_page() -> Html<&'static str> {
     Html(STUDIO_HTML)
+}
+
+async fn fortune_page() -> Html<&'static str> {
+    Html(FORTUNE_HTML)
 }
 
 async fn translator_page() -> Html<&'static str> {
@@ -5057,6 +5063,7 @@ async fn main() {
         .route("/activate",             get(activate_page))
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))
+        .route("/fortune",              get(fortune_page))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))
         .route("/api/stdlib/list", get(stdlib_list))
