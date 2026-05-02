@@ -10,7 +10,7 @@
 [![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#example-library)
-[![stdlib](https://img.shields.io/badge/stdlib-293_open%20%2B%2028k%2B_premium-blue)](stdlib/PREMIUM.md)
+[![stdlib](https://img.shields.io/badge/stdlib-1k+_open_%26_28k+_premium-blue)](stdlib/PREMIUM.md)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 
 
@@ -86,7 +86,8 @@ match conscious {
 }
 ```
 
-**Standard Library:** 293 open-core modules in this repo · 28,495+ proprietary modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md) — including `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, `bio::*`, `crypto::*`, `finance::*`, and research-grade `qnn::*`.
+**Standard Library:** 1k+ open-core modules in this repo · 28k+ proprietary modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md)
+ — including `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, `bio::*`, `crypto::*`, `finance::*`, and research-grade `qnn::*`.
 
 **Compiler Features:** First-class `affirm/tend/reject` keywords · Binary `if/while` fallbacks · Tensor indexing `obj[r,c]` · Built-in `use` resolver with zero runtime I/O.
 
@@ -588,7 +589,8 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ## Example Library
 
-**30,000+ `.tern` programs** (2,090 public examples + 567 open-core stdlib modules + 27,800+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) across every domain — establishing TIS as the definitive standard for balanced ternary logic.
+**29,000+ `.tern` programs** (2,090 public examples + 1,000+ open-core stdlib modules + 28,000+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo)
+ across every domain — establishing TIS as the definitive standard for balanced ternary logic.
 
 | Category | Examples |
 |----------|---------|
