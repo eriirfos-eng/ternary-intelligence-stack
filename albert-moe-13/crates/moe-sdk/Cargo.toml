@@ -1,10 +1,11 @@
 [package]
 name = "moe-sdk"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "Unified entrypoint for MoE-13 ecosystem."
 license = "MIT"
+repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
 
 [dependencies]
-moe-platform = { path = "../moe-platform", version = "1.0.0" }
-moe-plugin-sdk = { path = "../moe-plugin-sdk", version = "1.0.0" }
+moe-platform = { path = "../moe-platform", version = "1.1.0" }
+moe-plugin-sdk = { path = "../moe-plugin-sdk", version = "1.1.0" }

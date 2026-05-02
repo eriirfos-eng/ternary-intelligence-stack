@@ -1,6 +1,6 @@
 [package]
 name = "moe-plugin-sdk"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "Stable SDK for building third-party MoE-13 inference plugins."
 license = "MIT"
@@ -13,4 +13,4 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 semver = { version = "1.0", features = ["serde"] }
 # Access internal core types without re-exporting internal logic
-moe-core = { path = "../moe-core", version = "1.0.0" }
+moe-core = { path = "../moe-core", version = "1.1.0" }
