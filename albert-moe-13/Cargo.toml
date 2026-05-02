@@ -17,23 +17,3 @@ edition = "2021"
 authors = ["RFI-IRFOS <licensing@ternlang.com>"]
 license = "MIT"
 repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
-
-[package]
-name = "albert-moe-13"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-description = "MoE-13: Engineered Partitioned Inference System (EPIS) — Deterministic multi-expert architecture for ternary compute substrates"
-
-[dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
-tokio = { version = "1.0", features = ["full"] }
-anyhow = "1.0"
-log = "0.4"
-rand = "0.8.6"
-# Internal dependencies
-ternlang-ml = { path = "../ternlang-root/ternlang-ml" }
-ternlang-moe = { path = "../ternlang-root/ternlang-moe" }
