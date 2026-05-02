@@ -1,0 +1,78 @@
+/*
+ * Ternary Reinforcement Learning Mock.
+ * A very simple multi-armed bandit simulation with 3 arms (actions: -1, 0, 1).
+ * Q-values are tracked for each action.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// We don't have random(), so we'll simulate a fixed sequence of rewards
+fn get_reward(action: trit, step: int) -> float {
+    // Action 1 is generally good but variable
+    // Action 0 is neutral
+    // Action -1 is generally bad
+    if action == 1 {
+        if step % 2 == 0 { return 2.0; }
+        return 1.0;
+    }
+    if action == 0 {
+        return 0.5;
+    }
+    // action == -1
+    return -1.0;
+}
+
+fn select_action(q_neg: float, q_zero: float, q_pos: float) -> trit {
+    // Greedy selection
+    if q_pos >= q_zero && q_pos >= q_neg { return 1; }
+    if q_zero >= q_pos && q_zero >= q_neg { return 0; }
+    return -1;
+}
+
+fn main() -> trit {
+    let q_neg: float = 0.0;
+    let q_zero: float = 0.0;
+    let q_pos: float = 0.0;
+    
+    // Counts to compute average
+    let n_neg: float = 0.0;
+    let n_zero: float = 0.0;
+    let n_pos: float = 0.0;
+    
+    let i: int = 0;
+    while i < 10 {
+        let action: trit = select_action(q_neg, q_zero, q_pos);
+        let reward: float = get_reward(action, i);
+        
+        // Update Q-value incrementally: Q = Q + (R - Q) / N
+        match action {
+            1 => {
+                n_pos = n_pos + 1.0;
+                q_pos = q_pos + (reward - q_pos) / n_pos;
+            }
+            0 => {
+                n_zero = n_zero + 1.0;
+                q_zero = q_zero + (reward - q_zero) / n_zero;
+            }
+            -1 => {
+                n_neg = n_neg + 1.0;
+                q_neg = q_neg + (reward - q_neg) / n_neg;
+            }
+        }
+        i = i + 1;
+    }
+    
+    println("Q-value Action 1:");
+    println(q_pos);
+    println("Q-value Action 0:");
+    println(q_zero);
+    println("Q-value Action -1:");
+    println(q_neg);
+    
+    if q_pos > q_zero && q_pos > q_neg {
+        println("RL Bandit Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
