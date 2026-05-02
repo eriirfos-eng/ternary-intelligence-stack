@@ -1,0 +1,74 @@
+/*
+ * 2D Kinematics with Ternary Control Signals.
+ * Simulates object motion in 2D space based on discrete thrust commands.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+// state: [pos_x, pos_y, vel_x, vel_y]
+fn step_kinematics(state: float[4], thrust_x: trit, thrust_y: trit, dt: float) -> trit {
+    let ax: float = 0.0;
+    let ay: float = 0.0;
+    let thrust_mag: float = 10.0;
+    
+    // Apply ternary thrust to acceleration
+    match thrust_x {
+        1 => { ax = thrust_mag; }
+        -1 => { ax = 0.0 - thrust_mag; }
+        0 => { ax = 0.0; }
+    }
+    
+    match thrust_y {
+        1 => { ay = thrust_mag; }
+        -1 => { ay = 0.0 - thrust_mag; }
+        0 => { ay = 0.0; }
+    }
+    
+    // Update velocity: v = v + a*dt
+    state[2] = state[2] + ax * dt;
+    state[3] = state[3] + ay * dt;
+    
+    // Update position: p = p + v*dt
+    state[0] = state[0] + state[2] * dt;
+    state[1] = state[1] + state[3] * dt;
+    
+    return 1;
+}
+
+fn main() -> trit {
+    // [px, py, vx, vy]
+    let state: float[4];
+    state[0] = 0.0; state[1] = 0.0; state[2] = 0.0; state[3] = 0.0;
+    
+    let dt: float = 0.1;
+    
+    println("Initial State: (0,0) v=(0,0)");
+    
+    // Step 1: Thrust Right (1), Thrust Up (1)
+    let dummy: trit = step_kinematics(state, 1, 1, dt);
+    
+    // ax = 10.0, ay = 10.0
+    // vx = 1.0, vy = 1.0
+    // px = 0.1, py = 0.1
+    println("State after Step 1:");
+    println(state[0]);
+    println(state[1]);
+    
+    // Step 2: Coast (0, 0)
+    dummy = step_kinematics(state, 0, 0, dt);
+    
+    // ax = 0, ay = 0
+    // vx = 1.0, vy = 1.0
+    // px = 0.1 + 0.1 = 0.2
+    // py = 0.1 + 0.1 = 0.2
+    println("State after Step 2:");
+    println(state[0]);
+    println(state[1]);
+    
+    if state[0] == 0.2 && state[1] == 0.2 {
+        println("Kinematics 2D Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
