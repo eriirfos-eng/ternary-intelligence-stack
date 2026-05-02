@@ -13,7 +13,7 @@ setup(
     
     This package intercepts standard PyTorch `nn.Linear` and dense tensor operations, transparently routing them 
     through the RFI-IRFOS Ternary-as-a-Service (TaaS) mesh. It applies BitNet b1.58 quantization via the T-TriLM 
-    standard and utilizes the native `@sparseskip` hardware architecture on the BET-VM to achieve up to a 122x 
+    standard and utilizes the native `@sparseskip` hardware architecture on the BET-VM to achieve up to a up to 122.3x (theoretical upper bound) 
     inference speedup on edge devices and TaaS nodes.
     
     By installing this package, developers bind their inference graphs to the MoE-13 safety gates via the BSL-1.1 license.

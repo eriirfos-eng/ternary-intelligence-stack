@@ -56,7 +56,7 @@ All 19 tools are available on the community tier — no API key required.
 | Tool | Description |
 |------|-------------|
 | `quantize_weights` | Float weights → balanced ternary via BitNet thresholding |
-| `sparse_benchmark` | Ternary matmul efficiency benchmark (up to 122x at 99%+ sparsity) |
+| `sparse_benchmark` | Ternary matmul efficiency benchmark (up to up to 122.3x (theoretical upper bound) at 99%+ sparsity) |
 | `tsql_join` | T-SQL Triadic Join — partial matches routed to Deliberative Hold |
 
 ---
