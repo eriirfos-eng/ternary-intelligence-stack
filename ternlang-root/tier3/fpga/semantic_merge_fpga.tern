@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for semantic_merge in fpga
+// semantic_merge — fpga deployment variant
 agent semantic_merge_Enterprise {
     fn execute() -> trit { return affirm; }
 }

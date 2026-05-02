@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for semantic_memory
+// Safety-hardened variant of semantic_memory
 
 fn verify_semantic_node(node_id: int) -> trit {
     if node_id > 0 { return affirm; }

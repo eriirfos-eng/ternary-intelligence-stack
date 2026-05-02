@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for moe13_core
+// Safety-hardened variant of moe13_core
 
 fn is_moe13_safe(veto_count: int) -> trit {
     if veto_count == 0 { return affirm; }

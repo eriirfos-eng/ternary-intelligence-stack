@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for decay_controller
+// Safety-hardened variant of decay_controller
 fn decay_controller_safe() -> trit {
     return affirm;
 }

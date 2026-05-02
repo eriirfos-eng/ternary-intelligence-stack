@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// Wrapper for ternary_context_compressor in cluster
+// ternary_context_compressor — cluster deployment variant
 agent ternary_context_compressor_Enterprise {
     fn execute() -> trit { return affirm; }
 }

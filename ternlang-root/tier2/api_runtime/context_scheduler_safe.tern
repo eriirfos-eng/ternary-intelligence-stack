@@ -1,5 +1,5 @@
 // --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety wrapper for context_scheduler
+// Safety-hardened variant of context_scheduler
 
 fn is_schedule_safe(task_count: int) -> trit {
     if task_count < 100 { return affirm; }
