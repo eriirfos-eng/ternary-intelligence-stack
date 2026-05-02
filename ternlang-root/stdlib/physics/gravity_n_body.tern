@@ -1,0 +1,68 @@
+/*
+ * N-Body Gravity Mock (1D).
+ * Simulates gravitational attraction between 3 bodies in 1D.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn apply_gravity_1d(pos: float[3], vel: float[3], mass: float[3], dt: float) -> trit {
+    let g: float = 1.0; // Mock gravitational constant
+    
+    // Calculate accelerations
+    let acc: float[3]; acc[0] = 0.0; acc[1] = 0.0; acc[2] = 0.0;
+    
+    let i: int = 0;
+    while i < 3 {
+        let j: int = 0;
+        while j < 3 {
+            if i != j {
+                let dist: float = pos[j] - pos[i];
+                let dist_sq: float = dist * dist;
+                // Add soft factor to avoid div by zero
+                dist_sq = dist_sq + 0.1;
+                
+                let force: float = (g * mass[i] * mass[j]) / dist_sq;
+                // Direction of force
+                if dist < 0.0 { force = 0.0 - force; }
+                
+                acc[i] = acc[i] + (force / mass[i]);
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    
+    // Update velocity and position
+    i = 0;
+    while i < 3 {
+        vel[i] = vel[i] + acc[i] * dt;
+        pos[i] = pos[i] + vel[i] * dt;
+        i = i + 1;
+    }
+    
+    return 1;
+}
+
+fn main() -> trit {
+    // 3 bodies
+    let pos: float[3]; pos[0] = 0.0; pos[1] = 5.0; pos[2] = 10.0;
+    let vel: float[3]; vel[0] = 0.0; vel[1] = 0.0; vel[2] = 0.0;
+    let mass: float[3]; mass[0] = 10.0; mass[1] = 1.0; mass[2] = 20.0;
+    
+    let dt: float = 0.1;
+    
+    let dummy: trit = apply_gravity_1d(pos, vel, mass, dt);
+    
+    println("Positions after 1 step:");
+    println(pos[0]);
+    println(pos[1]);
+    println(pos[2]);
+    
+    // mass[2] is bigger, so pos[1] should move towards pos[2] (pos[1] > 5.0)
+    if pos[1] > 5.0 {
+        println("N-Body Gravity Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
