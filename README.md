@@ -40,27 +40,18 @@ The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (aff
 
 ## 2. What is Albert-MoE-13? (The Intelligence Layer)
 
-We are actively designing, training, and deploying our own ternary-native Mixture-of-Experts model.
+We are researching the fundamental scaling laws of natively trained ternary neural networks.
 
-**Albert** is our work in progress MoE-13 (Mixture-of-Experts) ternary LLM. Unlike binary LLMs Albert uses 13 domain-specific experts to deliberate on every decision.
+**Albert** is our experimental framework for ternary Mixture-of-Experts (MoE). Unlike binary transformer architectures, Albert explores how scaling parameter counts ($N$) in a ternary manifold ($\{-1, 0, +1\}$) leads to stable loss convergence without the need for high-precision float training.
 
-- **13 Deliberation Axes**: Safety, Ethics, Logic, FactCheck, and more, each voting with ternary signals.
-- **Safety Hard Gate**: A mandatory Axis-6 veto that can terminate any execution path before action is taken.
-- **Local-First Sovereignty**: Designed to run entirely on local infrastructure via Ollama or custom ternary hardware.
+- **Scaling Dimension**: Investigating how ternary-native representations scale predictably to 1T+ parameters.
+- **Manifold Stability**: Empirically measuring loss convergence and gradient flow through discrete ternary thresholds (STE).
+- **Native Ternary Training**: Training from scratch on the ternary manifold to optimize representation efficiency.
+- **Sparse Geometric Scaling**: Leveraging the sparse geometry of ternary weights for sub-linear memory requirements.
 
-Base: Open-source MoE (20B–30B parameter class)
-Transformation: Ternarization into {−1, 0, +1} weight space
-Objective: Reduce memory footprint while enabling sparsity-aware execution
-Architecture: Consolidation into 13 domain-specific expert routers (MoE-13)
-Why This Matters
-
-This model is designed to:
-
-- operate fully offline on local or sovereign infrastructure
-- enforce deterministic uncertainty (HOLD state) at the model level
-- integrate directly with Ternlang and the BET-VM runtime
-- provide a verifiable decision layer, not just probabilistic outputs
-- Relationship to Agent Albert
+Base Architecture: Scalable Ternary MoE (Multi-Domain Experts)
+Objective: Demonstrate empirical scaling laws and representation efficiency of native ternary manifolds.
+Why This Matters: Move AI scaling beyond the energy-intensive binary-float paradigm.
 
 ---
 
