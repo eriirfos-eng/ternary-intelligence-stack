@@ -86,7 +86,7 @@ match conscious {
 }
 ```
 
-**Standard Library:** 1k+ open-core modules in this repo · 28k+ proprietary modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md)
+**Standard Library:** 1k+ open-core modules in this repo · 28k+ proprietary modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md) — we are constantly adding new `.tern` definitions and building the stack weekly.
  — including `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, `bio::*`, `crypto::*`, `finance::*`, and research-grade `qnn::*`.
 
 **Compiler Features:** First-class `affirm/tend/reject` keywords · Binary `if/while` fallbacks · Tensor indexing `obj[r,c]` · Built-in `use` resolver with zero runtime I/O.
@@ -589,8 +589,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ## Example Library
 
-**29,000+ `.tern` programs** (2,090 public examples + 1,000+ open-core stdlib modules + 28,000+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo)
- across every domain — establishing TIS as the definitive standard for balanced ternary logic.
+**29,000+ `.tern` programs** (2,090 public examples + 1,000+ open-core stdlib modules + 28,000+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) — we commit and build weekly across all tiers, continuously expanding the TIS ecosystem.
 
 | Category | Examples |
 |----------|---------|
