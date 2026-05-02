@@ -1,16 +1,13 @@
-## 2026-05-02 — stdlib session — 10 files
-Dirs covered: stdlib/causal, stdlib/lib, stdlib/math
+## 2026-05-02 — stdlib session — 50 files
+Dirs covered: stdlib/causal, stdlib/lib, stdlib/math, stdlib/classical, stdlib/logic, stdlib/showcase, stdlib/tutorials
 Files written:
-- stdlib/causal/causal_graph.tern — basic DAG with cycle detection [tier1]
-- stdlib/causal/do_calculus.tern — Pearl's do-operator intervention [tier1]
-- stdlib/causal/backdoor_criterion.tern — backdoor adjustment verification [tier1]
-- stdlib/causal/frontdoor_criterion.tern — frontdoor adjustment verification [tier1]
-- stdlib/causal/intervention_sim.tern — signal propagation in causal chains [tier1]
-- stdlib/lib/huffman_ternary.tern — 3-ary Huffman coding tree [tier1]
-- stdlib/math/trit_matrix_det_3x3.tern — 3x3 determinant with saturation fix [tier1]
-- stdlib/math/trit_softmax.tern — softmax with custom Taylor exp approximation [tier1]
-- stdlib/lib/trit_one_hot.tern — one-hot encoding/decoding for trits [tier1]
-- stdlib/lib/trit_label_smoothing.tern — label smoothing for ternary classes [tier1]
+- stdlib/causal/causal_graph.tern, do_calculus.tern, backdoor_criterion.tern, frontdoor_criterion.tern, intervention_sim.tern
+- stdlib/lib/huffman_ternary.tern, trit_one_hot.tern, trit_label_smoothing.tern, heap_priority_queue.tern, lru_cache_trit.tern, bitset_trit_128.tern, circular_buffer_float.tern, trit_rolling_hash.tern, trit_unit_converter.tern
+- stdlib/math/trit_matrix_det_3x3.tern, trit_softmax.tern, trit_cross_product.tern, trit_linear_interpolation.tern, trit_convolution_1d.tern, trit_pooling_max.tern, trit_pooling_avg.tern, trit_vector_normalization.tern, trit_fibonacci_iterative.tern, trit_prime_factorization.tern
+- stdlib/classical/ternary_search_float.tern, gradient_descent_trit.tern, k_means_trit.tern, naive_bayes_trit.tern, edit_distance_trit.tern
+- stdlib/logic/trit_consensus_n.tern, trit_majority_n.tern, trit_conditional_entropy.tern, ternary_equivalence_checker.tern, ternary_half_adder.tern, ternary_full_adder.tern
+- stdlib/showcase/rock_paper_scissors_trit.tern, tictactoe_logic_trit.tern, vending_machine_fsm.tern, credit_score_ternary.tern, inventory_reorder_trigger.tern, smart_home_logic.tern, thermal_balance_sim.tern, kinetic_energy_trit.tern, logic_gate_simulator.tern, consensus_voting_sim.tern, priority_scheduler_trit.tern
+- stdlib/tutorials/ternary_decision_making.tern, advanced_match_patterns.tern, tensor_manipulation_pro.tern, error_signaling_patterns.tern
 
 Compiler/VM observations:
 - Fixed a corrupted cargo registry by removing empty 'hex' crate dir and re-fetching.
@@ -18,6 +15,9 @@ Compiler/VM observations:
 - Observed 'cast(trit) to int' can maintain saturation behavior in arithmetic; manual 'trit_to_int' with if-branches is safer for multi-class calculations.
 - 'pow' built-in with negative integer exponents returns 1.0 (reverted to custom Taylor series for exp_float).
 - Float literals are not currently supported in tensor literal initialization (e.g., [1.0, 0.0] fails).
+- 'sqrt' built-in currently triggers a stack overflow (BET-013); implemented custom Newton's method sqrt_float as a workaround.
+- Array parameters (trit[]) are passed by reference, but returning values from functions that also take array parameters might be unstable in some VM versions (observed count resets in heap_priority_queue.tern).
+- 'match' on int literals > 1 is unstable; use 'if/else if' for general integer matching.
 
 ## 2026-04-22 — stdlib session — 8 files
 Dirs covered: stdlib/classical
