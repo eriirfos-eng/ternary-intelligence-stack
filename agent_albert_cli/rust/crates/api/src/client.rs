@@ -36,6 +36,10 @@ pub enum LlmProvider {
     Zhipu,
     MiniMax,
     Qwen,
+    Moonshot,
+    Qianfan,
+    // ── Inference marketplaces ────────────────────────────────────────────────
+    Chutes,
     // ── Enterprise cloud ─────────────────────────────────────────────────────
     Azure,
     Aws,
@@ -78,6 +82,9 @@ impl LlmProvider {
             Self::Zhipu        => "https://open.bigmodel.cn/api/paas/v4",
             Self::MiniMax      => "https://api.minimax.chat/v1",
             Self::Qwen         => "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            Self::Moonshot     => "https://api.moonshot.cn",
+            Self::Qianfan      => "https://aistudio.baidu.com/llm/lmapi/v3",
+            Self::Chutes       => "https://llm.chutes.ai",
             Self::Azure        => "https://api.azure.com",
             Self::Aws          => "https://bedrock-runtime.us-east-1.amazonaws.com",
             Self::HuggingFace  => "https://api-inference.huggingface.co",
@@ -122,6 +129,9 @@ impl LlmProvider {
             Self::Zhipu        => "ZHIPU_API_KEY",
             Self::MiniMax      => "MINIMAX_API_KEY",
             Self::Qwen         => "DASHSCOPE_API_KEY",
+            Self::Moonshot     => "MOONSHOT_API_KEY",
+            Self::Qianfan      => "QIANFAN_API_KEY",
+            Self::Chutes       => "CHUTES_API_KEY",
             Self::Azure        => "AZURE_OPENAI_API_KEY",
             Self::Aws          => "AWS_ACCESS_KEY_ID",
             Self::HuggingFace  => "HUGGINGFACE_API_KEY",
@@ -326,37 +336,64 @@ impl TernlangClient {
     pub async fn list_remote_models(&self) -> Result<Vec<String>, ApiError> {
         match self.provider {
             LlmProvider::Google => {
-                let url = format!("{}/v1beta/models", self.base_url.trim_end_matches('/'));
-                let res = self.auth.apply(self.provider, self.http.get(&url)).send().await.map_err(ApiError::from)?;
+                let base = self.base_url.trim_end_matches('/');
+                let url = if let Some(key) = self.auth.api_key() {
+                    format!("{}/v1beta/models?key={}", base, key)
+                } else {
+                    format!("{}/v1beta/models", base)
+                };
+                let res = self.http.get(&url).send().await.map_err(ApiError::from)?;
                 let json: serde_json::Value = res.json().await.map_err(ApiError::from)?;
-
                 let mut models = vec![];
                 if let Some(list) = json.get("models").and_then(|m| m.as_array()) {
                     for m in list {
                         if let Some(name) = m.get("name").and_then(|n| n.as_str()) {
-                            models.push(name.replace("models/", ""));
+                            let id = name.replace("models/", "");
+                            if !models.contains(&id) { models.push(id); }
                         }
                     }
                 }
+                if models.is_empty() {
+                    return Ok(curated_models(self.provider));
+                }
                 Ok(models)
             }
-            LlmProvider::OpenAi | LlmProvider::Ollama | LlmProvider::Xai => {
+            LlmProvider::Anthropic => Ok(curated_models(self.provider)),
+            _ if self.provider.is_openai_compat() => {
                 let url = format!("{}/v1/models", self.base_url.trim_end_matches('/'));
                 let res = self.auth.apply(self.provider, self.http.get(&url)).send().await.map_err(ApiError::from)?;
+                if !res.status().is_success() {
+                    return Ok(curated_models(self.provider));
+                }
                 let json: serde_json::Value = res.json().await.map_err(ApiError::from)?;
-                
                 let mut models = vec![];
                 if let Some(list) = json.get("data").and_then(|m| m.as_array()) {
                     for m in list {
                         if let Some(id) = m.get("id").and_then(|i| i.as_str()) {
-                            models.push(id.to_string());
+                            if !models.contains(&id.to_string()) { models.push(id.to_string()); }
                         }
                     }
                 }
+                if models.is_empty() {
+                    return Ok(curated_models(self.provider));
+                }
                 Ok(models)
             }
-            _ => Ok(vec![])
+            _ => Ok(curated_models(self.provider)),
         }
+    }
+
+    /// Returns display-annotated model strings for the TUI picker.
+    /// Format: "model-id (annotation)" for known models, bare id otherwise.
+    pub async fn list_models_for_display(&self) -> Vec<String> {
+        let raw = self.list_remote_models().await.unwrap_or_default();
+        raw.into_iter().map(|id| {
+            if let Some(ann) = model_annotation(&id) {
+                format!("{id} ({ann})")
+            } else {
+                id
+            }
+        }).collect()
     }
 
     pub async fn create_embeddings(&self, model: &str, input: &[String]) -> Result<Vec<Vec<f32>>, ApiError> {
@@ -754,6 +791,163 @@ fn translate_from_gemini(response: serde_json::Value, model: &str) -> MessageRes
         id: "gemini-response".to_string(), kind: "message".to_string(), role: "assistant".to_string(),
         content, model: model.to_string(), stop_reason: Some("end_turn".to_string()),
         stop_sequence: None, usage, request_id: None,
+    }
+}
+
+/// Curated fallback model list for providers that don't expose a /v1/models endpoint.
+pub fn curated_models(provider: LlmProvider) -> Vec<String> {
+    let list: &[&str] = match provider {
+        LlmProvider::Anthropic => &[
+            "claude-opus-4-7",
+            "claude-sonnet-4-6",
+            "claude-haiku-4-5-20251001",
+            "claude-3-7-sonnet-latest",
+            "claude-3-5-sonnet-latest",
+            "claude-3-5-haiku-latest",
+            "claude-3-opus-latest",
+        ],
+        LlmProvider::Google => &[
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+        ],
+        LlmProvider::OpenAi => &[
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "o3",
+            "o3-mini",
+            "o1",
+            "o1-mini",
+            "o4-mini",
+        ],
+        LlmProvider::Xai => &["grok-3", "grok-3-mini", "grok-2"],
+        LlmProvider::DeepSeek => &["deepseek-chat", "deepseek-reasoner"],
+        LlmProvider::Mistral => &[
+            "mistral-large-latest",
+            "mistral-small-latest",
+            "codestral-latest",
+            "pixtral-large-latest",
+        ],
+        LlmProvider::OpenRouter => &[
+            "openai/gpt-4o",
+            "anthropic/claude-3.5-sonnet",
+            "google/gemini-2.5-flash",
+            "meta-llama/llama-3.3-70b-instruct",
+            "deepseek/deepseek-r1",
+            "qwen/qwen-2.5-72b-instruct",
+        ],
+        LlmProvider::Groq => &[
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "llama-3.1-70b-versatile",
+            "gemma2-9b-it",
+            "mixtral-8x7b-32768",
+        ],
+        LlmProvider::Cohere => &["command-r-plus", "command-r", "command-r-08-2024"],
+        LlmProvider::Perplexity => &["sonar-pro", "sonar", "sonar-reasoning"],
+        LlmProvider::Together => &[
+            "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+            "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
+            "Qwen/Qwen2.5-72B-Instruct-Turbo",
+        ],
+        LlmProvider::Fireworks => &[
+            "accounts/fireworks/models/llama-v3p1-70b-instruct",
+            "accounts/fireworks/models/deepseek-r1",
+            "accounts/fireworks/models/qwen2p5-72b-instruct",
+        ],
+        LlmProvider::Cerebras => &["llama3.3-70b", "llama3.1-8b"],
+        LlmProvider::SambaNova => &[
+            "Meta-Llama-3.3-70B-Instruct",
+            "DeepSeek-R1-Distill-Llama-70B",
+        ],
+        LlmProvider::NvidiaNim => &[
+            "nvidia/llama-3.1-nemotron-70b-instruct",
+            "meta/llama-3.1-70b-instruct",
+        ],
+        LlmProvider::Zhipu => &[
+            "zai/glm-5",
+            "zai/glm-4.7",
+            "zai/glm-4.7-flash",
+            "zai/glm-4.5",
+            "zai/glm-4.5-flash",
+            "glm-4-plus",
+            "glm-4-air",
+        ],
+        LlmProvider::MiniMax => &["MiniMax-Text-01", "abab6.5s-chat", "abab6.5g-chat"],
+        LlmProvider::Qwen => &[
+            "qwen-max",
+            "qwen-plus",
+            "qwen-turbo",
+            "qwen2.5-72b-instruct",
+            "qwq-32b",
+            "qwen2.5-coder-32b-instruct",
+        ],
+        LlmProvider::Moonshot => &["moonshot-v1-128k", "moonshot-v1-32k", "moonshot-v1-8k", "kimi-k2"],
+        LlmProvider::Qianfan => &["ernie-4.5-turbo-128k", "ernie-4.0-turbo-8k", "ernie-3.5-8k"],
+        LlmProvider::Chutes => &[
+            "deepseek-ai/DeepSeek-R1",
+            "deepseek-ai/DeepSeek-V3",
+            "Qwen/Qwen2.5-72B-Instruct",
+        ],
+        LlmProvider::HuggingFace => &[
+            "meta-llama/Meta-Llama-3-8B-Instruct",
+            "mistralai/Mistral-7B-Instruct-v0.3",
+        ],
+        LlmProvider::GitHub => &["gpt-4o", "gpt-4o-mini", "o3-mini"],
+        _ => &[],
+    };
+    list.iter().map(|s| (*s).to_string()).collect()
+}
+
+/// Human-readable annotation for known model IDs.
+pub fn model_annotation(id: &str) -> Option<&'static str> {
+    match id {
+        // Anthropic
+        "claude-opus-4-7" | "claude-opus-4-5" => Some("Opus 4 · ctx 200k · top capability"),
+        "claude-sonnet-4-6" | "claude-3-7-sonnet-latest" | "claude-3-5-sonnet-latest" => Some("Sonnet · ctx 200k · balanced"),
+        "claude-haiku-4-5-20251001" | "claude-3-5-haiku-latest" => Some("Haiku · ctx 200k · fast & cheap"),
+        "claude-3-opus-latest" => Some("Opus 3 · ctx 200k · legacy"),
+        // Google
+        "gemini-2.5-pro" => Some("ctx 1M · best reasoning · multimodal"),
+        "gemini-2.5-flash" => Some("ctx 1M · fast · recommended"),
+        "gemini-2.0-flash" => Some("ctx 1M · ultra-fast"),
+        "gemini-1.5-pro" => Some("ctx 2M · legacy pro"),
+        // OpenAI
+        "gpt-4o" => Some("ctx 128k · multimodal · flagship"),
+        "gpt-4o-mini" => Some("ctx 128k · cheap · fast"),
+        "o3" => Some("ctx 200k · reasoning · top"),
+        "o3-mini" | "o4-mini" => Some("ctx 200k · reasoning · fast"),
+        "o1" => Some("ctx 200k · reasoning · legacy"),
+        // xAI
+        "grok-3" => Some("ctx 131k · flagship"),
+        "grok-3-mini" => Some("ctx 131k · fast"),
+        // DeepSeek
+        "deepseek-chat" => Some("ctx 64k · DeepSeek-V3 · cost-efficient"),
+        "deepseek-reasoner" => Some("ctx 64k · R1 · chain-of-thought"),
+        // Mistral
+        "mistral-large-latest" => Some("ctx 128k · flagship"),
+        "codestral-latest" => Some("ctx 256k · code specialist"),
+        // Zhipu / Z.AI
+        "zai/glm-5" => Some("ctx 200k · reasoning · alias: GLM"),
+        "zai/glm-4.7" => Some("ctx 128k · balanced"),
+        "zai/glm-4.7-flash" => Some("ctx 128k · fast"),
+        "zai/glm-4.5" => Some("ctx 128k · cost-efficient"),
+        "zai/glm-4.5-flash" => Some("ctx 32k · ultra-fast"),
+        // Qwen
+        "qwen-max" => Some("ctx 32k · flagship"),
+        "qwq-32b" => Some("ctx 32k · reasoning"),
+        "qwen2.5-coder-32b-instruct" => Some("ctx 128k · code specialist"),
+        // Moonshot / Kimi
+        "kimi-k2" => Some("ctx 128k · Kimi K2.5"),
+        "moonshot-v1-128k" => Some("ctx 128k · long context"),
+        // Groq
+        "llama-3.3-70b-versatile" => Some("ctx 128k · ultra-fast on Groq"),
+        // Misc
+        _ => None,
     }
 }
 

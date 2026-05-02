@@ -16,6 +16,9 @@ pub struct AlbertConfig {
     pub user_role: String,
     pub cognitive_style: String,
     pub theme: String,
+    /// Canonical provider key — matches runtime::save_provider_config() key.
+    /// e.g. "ollama", "anthropic", "google". Never a display string.
+    pub provider: String,
     pub provider_architecture: String,
     pub target_model: String,
     pub api_key: Option<String>,
@@ -173,116 +176,165 @@ pub fn wake_sequence() {
         }
     }
     
-    // 4. Routing
+    // 4. Provider + model selection
     println!("\n{}", style("────────────────────────────────────────────────────────────").dim());
-    typewriter("\n[4] Cognitive Routing", 20);
+    typewriter("\n[4] Model / Auth Provider", 20);
     println!();
     thread::sleep(Duration::from_millis(300));
-    
-    let routes = vec![
-        "[SOVEREIGN] ternlang core (local/no telemetry)",
-        "[LOCAL]     ollama (your hardware)",
-        "[CLOUD]     external models (api key)",
+
+    // Each entry: (config_key, LlmProvider, display_label)
+    let provider_entries: &[(&str, LlmProvider, &str)] = &[
+        ("anthropic",    LlmProvider::Anthropic,   "Anthropic           (Claude 3.5 / 4 Opus/Sonnet/Haiku)"),
+        ("openai",       LlmProvider::OpenAi,       "OpenAI              (GPT-4o, o3, o4-mini)"),
+        ("google",       LlmProvider::Google,       "Google              (Gemini 2.5 Flash/Pro)"),
+        ("xai",          LlmProvider::Xai,          "xAI                 (Grok 3, Grok 3 Mini)"),
+        ("deepseek",     LlmProvider::DeepSeek,     "DeepSeek            (DeepSeek-V3, R1)"),
+        ("mistral",      LlmProvider::Mistral,      "Mistral AI          (Large, Codestral)"),
+        ("openrouter",   LlmProvider::OpenRouter,   "OpenRouter          (100+ models, routing)"),
+        ("groq",         LlmProvider::Groq,         "Groq                (Llama, Gemma — ultra-fast)"),
+        ("cohere",       LlmProvider::Cohere,       "Cohere              (Command R+)"),
+        ("perplexity",   LlmProvider::Perplexity,   "Perplexity          (Sonar — online search)"),
+        ("together",     LlmProvider::Together,     "Together AI         (FOSS model inference)"),
+        ("fireworks",    LlmProvider::Fireworks,    "Fireworks AI        (inference cloud)"),
+        ("cerebras",     LlmProvider::Cerebras,     "Cerebras            (ultra-fast WSE chips)"),
+        ("sambanova",    LlmProvider::SambaNova,    "SambaNova           (high-throughput)"),
+        ("novita",       LlmProvider::Novita,       "Novita AI           (GPU cloud)"),
+        ("deepinfra",    LlmProvider::DeepInfra,    "DeepInfra           (inference API)"),
+        ("nvidia",       LlmProvider::NvidiaNim,    "NVIDIA NIM          (enterprise inference)"),
+        ("zhipu",        LlmProvider::Zhipu,        "Z.AI / Zhipu        (GLM-4.5, GLM-5 — Global/CN)"),
+        ("minimax",      LlmProvider::MiniMax,      "MiniMax             (MiniMax-Text-01)"),
+        ("qwen",         LlmProvider::Qwen,         "Qwen / Dashscope    (Qwen2.5, QwQ)"),
+        ("moonshot",     LlmProvider::Moonshot,     "Moonshot AI         (Kimi K2.5)"),
+        ("qianfan",      LlmProvider::Qianfan,      "Qianfan / Baidu     (Ernie 4.5)"),
+        ("chutes",       LlmProvider::Chutes,       "Chutes              (inference marketplace)"),
+        ("huggingface",  LlmProvider::HuggingFace,  "HuggingFace         (open models)"),
+        ("github",       LlmProvider::GitHub,       "GitHub Copilot      (gpt-4o, o3)"),
+        ("azure",        LlmProvider::Azure,        "Azure OpenAI        (enterprise, bring your endpoint)"),
+        ("ollama",       LlmProvider::Ollama,       "Ollama              (local / cloud custom URL)"),
+        ("lmstudio",     LlmProvider::LmStudio,     "LM Studio           (local GUI — localhost:1234)"),
+        ("openai-compat",LlmProvider::OpenAiCompat, "Custom OpenAI-compat (any base URL)"),
     ];
-    let route_selection = Select::new()
-        .with_prompt("where should i think?")
-        .items(&routes)
-        .default(2)
+
+    let provider_labels: Vec<&str> = provider_entries.iter().map(|(_, _, label)| *label).collect();
+    let provider_idx = Select::new()
+        .with_prompt("choose provider")
+        .items(&provider_labels)
+        .default(0)
         .interact()
         .unwrap();
 
-    let mut api_key = None;
-    let mut target_model = String::from("ternlang-moe-13");
-    let mut base_url = None;
+    let (selected_config_key, selected_provider, _) = provider_entries[provider_idx];
 
-    if route_selection == 2 {
-        let providers = vec!["google", "openai", "anthropic", "huggingface", "xai", "ollama"];
-        let provider_idx = Select::new()
-            .with_prompt("cloud provider")
-            .items(&providers)
-            .default(0)
+    let mut api_key: Option<String> = None;
+    let mut base_url: Option<String> = None;
+    let mut target_model = String::from("ternlang-moe-13");
+
+    // Local providers skip key entry; custom-URL providers ask for base URL
+    let is_local = matches!(selected_provider, LlmProvider::Ollama | LlmProvider::LmStudio);
+    let is_custom_url = matches!(selected_provider, LlmProvider::OpenAiCompat | LlmProvider::Azure);
+
+    if is_local {
+        let default_url = selected_provider.default_base_url().to_string();
+        let entered_url: String = Input::with_theme(&theme)
+            .with_prompt("base URL (Enter for default)")
+            .default(default_url.clone())
+            .interact_text()
+            .unwrap();
+        base_url = Some(entered_url.clone());
+
+        // Optional key for cloud Ollama / authenticated LM Studio
+        let maybe_key: String = Input::with_theme(&theme)
+            .with_prompt("API key (Enter to skip for local)")
+            .allow_empty(true)
+            .interact_text()
+            .unwrap();
+        if !maybe_key.trim().is_empty() {
+            api_key = Some(maybe_key);
+        }
+    } else if is_custom_url {
+        let default_url = selected_provider.default_base_url().to_string();
+        let entered_url: String = Input::with_theme(&theme)
+            .with_prompt("base URL")
+            .default(default_url)
+            .interact_text()
+            .unwrap();
+        base_url = Some(entered_url);
+        let key: String = Password::with_theme(&theme)
+            .with_prompt(format!("{} API key", selected_config_key))
+            .allow_empty_password(true)
             .interact()
             .unwrap();
-        let selected_provider = providers[provider_idx];
-
+        if !key.trim().is_empty() { api_key = Some(key); }
+    } else {
         let key: String = Password::with_theme(&theme)
-            .with_prompt(format!("{} key", selected_provider))
+            .with_prompt(format!("{} API key", selected_config_key))
             .interact()
             .unwrap();
         api_key = Some(key.clone());
+    }
 
-        let provider = match selected_provider {
-            "google" => LlmProvider::Google,
-            "openai" => LlmProvider::OpenAi,
-            "anthropic" => LlmProvider::Anthropic,
-            "huggingface" => LlmProvider::HuggingFace,
-            "xai" => LlmProvider::Xai,
-            "ollama" => LlmProvider::Ollama,
-            _ => LlmProvider::OpenAi,
-        };
+    // Model discovery
+    print!("fetching models from {}... ", selected_config_key);
+    let _ = io::stdout().flush();
 
-        let discovered_models = if selected_provider == "anthropic" {
-            // Anthropic doesn't have a public list API, provide main ones
-            vec![
-                "claude-3-7-sonnet-latest".to_string(),
-                "claude-3-5-sonnet-latest".to_string(),
-                "claude-3-5-haiku-latest".to_string(),
-                "claude-3-opus-latest".to_string(),
-            ]
+    let auth_for_discovery = if let Some(ref k) = api_key {
+        AuthSource::ApiKey(k.clone())
+    } else {
+        AuthSource::None
+    };
+
+    let mut client_for_discovery = TernlangClient::from_auth(auth_for_discovery).with_provider(selected_provider);
+    if let Some(ref url) = base_url {
+        client_for_discovery = client_for_discovery.with_base_url(url.clone());
+    }
+
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let raw_models = runtime.block_on(client_for_discovery.list_remote_models()).unwrap_or_default();
+
+    // Build display list: "model-id (annotation)" for known models
+    let display_models: Vec<String> = raw_models.iter().map(|id| {
+        if let Some(ann) = api::model_annotation(id) {
+            format!("{id} ({ann})")
         } else {
-            print!("discovering authorized models... ");
-            let _ = io::stdout().flush();
-            let client = TernlangClient::from_auth(AuthSource::ApiKey(key)).with_provider(provider);
-            let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-            let discovered = runtime.block_on(client.list_remote_models()).unwrap_or_default();
-            if !discovered.is_empty() {
-                println!("{}", style("done.").green());
-            } else {
-                println!("{}", style("failed.").yellow());
-            }
-            discovered
+            id.clone()
+        }
+    }).collect();
+
+    if raw_models.is_empty() {
+        println!("{}", style("no models returned — manual entry").yellow());
+        let default_model = match selected_provider {
+            LlmProvider::Google    => "gemini-2.5-flash",
+            LlmProvider::Anthropic => "claude-sonnet-4-6",
+            LlmProvider::OpenAi    => "gpt-4o",
+            LlmProvider::Xai       => "grok-3-mini",
+            LlmProvider::DeepSeek  => "deepseek-chat",
+            LlmProvider::Mistral   => "mistral-large-latest",
+            LlmProvider::Ollama    => "llama3.2",
+            _                      => "gpt-4o",
         };
-        
-        if !discovered_models.is_empty() {
-            let selection = Select::new()
-                .with_prompt("pick your model")
-                .items(&discovered_models)
-                .default(0)
-                .interact()
-                .unwrap();
-            target_model = discovered_models[selection].clone();
-        } else {
+        target_model = Input::with_theme(&theme)
+            .with_prompt("model ID")
+            .default(default_model.to_string())
+            .interact_text()
+            .unwrap();
+    } else {
+        println!("{}", style(format!("{} models.", display_models.len())).green());
+        let mut items = display_models.clone();
+        items.push("  ↩  enter model ID manually".to_string());
+        let sel = Select::new()
+            .with_prompt("default model")
+            .items(&items)
+            .default(0)
+            .interact()
+            .unwrap();
+        if sel == items.len() - 1 {
             target_model = Input::with_theme(&theme)
-                .with_prompt("model (manual entry)")
-                .default(if selected_provider == "google" { "gemini-2.0-flash" } else { "gpt-4o" }.to_string())
+                .with_prompt("model ID")
                 .interact_text()
                 .unwrap();
-        }
-    } else if route_selection == 1 {
-        base_url = Some("http://localhost:11434/v1".to_string());
-        api_key = Some("ollama".to_string());
-        
-        print!("probing local ollama instance... ");
-        let _ = io::stdout().flush();
-        
-        let client = TernlangClient::from_auth(AuthSource::ApiKey("ollama".to_string()))
-            .with_provider(LlmProvider::Ollama)
-            .with_base_url("http://localhost:11434");
-        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
-        let discovered_models = runtime.block_on(client.list_remote_models()).unwrap_or_default();
-        
-        if !discovered_models.is_empty() {
-            println!("{}", style("found.").green());
-            let selection = Select::new()
-                .with_prompt("pick local model")
-                .items(&discovered_models)
-                .default(0)
-                .interact()
-                .unwrap();
-            target_model = discovered_models[selection].clone();
         } else {
-            println!("{}", style("not responding. using default.").yellow());
-            target_model = "llama3.2".to_string();
+            // Strip annotation from display string to get raw model id
+            target_model = raw_models[sel].clone();
         }
     }
 
@@ -292,7 +344,8 @@ pub fn wake_sequence() {
         user_role: role.clone(),
         cognitive_style: selected_style.to_string(),
         theme: "Dark mode".to_string(),
-        provider_architecture: routes[route_selection].to_string(),
+        provider: selected_config_key.to_string(),
+        provider_architecture: selected_config_key.to_string(),
         target_model,
         api_key,
         base_url,
@@ -368,6 +421,14 @@ pub fn wake_sequence() {
     thread::sleep(Duration::from_millis(1000));
 }
 
+/// Load the saved AlbertConfig (returns None if not configured yet).
+pub fn load_albert_config() -> Option<AlbertConfig> {
+    let mut path = dirs::config_dir().unwrap_or_else(|| PathBuf::from("~/.config"));
+    path.push("albert/config.toml");
+    let content = fs::read_to_string(path).ok()?;
+    toml::from_str(&content).ok()
+}
+
 fn save_albert_config(config: &AlbertConfig) {
     let mut path = dirs::config_dir().unwrap_or_else(|| PathBuf::from("~/.config"));
     path.push("albert");
@@ -379,18 +440,7 @@ fn save_albert_config(config: &AlbertConfig) {
 }
 
 fn sync_with_provider_system(config: &AlbertConfig) {
-    let provider_key = match config.provider_architecture.to_lowercase() {
-        a if a.contains("openai") => "openai",
-        a if a.contains("anthropic") => "anthropic",
-        a if a.contains("google") => "google",
-        a if a.contains("hugging face") => "huggingface",
-        a if a.contains("xai") => "xai",
-        a if a.contains("azure") => "azure",
-        a if a.contains("aws") => "aws",
-        a if a.contains("ollama") => "ollama",
-        _ => "ternlang",
-    };
-
+    let provider_key = if config.provider.is_empty() { "ternlang" } else { &config.provider };
     let _ = runtime::save_provider_config(provider_key, runtime::ProviderConfig {
         api_key: config.api_key.clone(),
         model: Some(config.target_model.clone()),

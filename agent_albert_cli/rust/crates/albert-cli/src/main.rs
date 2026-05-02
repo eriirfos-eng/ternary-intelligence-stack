@@ -4086,6 +4086,44 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
     }
 }
 
+fn provider_from_config_key(key: &str) -> Option<api::LlmProvider> {
+    use api::LlmProvider::*;
+    match key {
+        "anthropic"    => Some(Anthropic),
+        "openai"       => Some(OpenAi),
+        "google"       => Some(Google),
+        "xai"          => Some(Xai),
+        "groq"         => Some(Groq),
+        "mistral"      => Some(Mistral),
+        "deepseek"     => Some(DeepSeek),
+        "together"     => Some(Together),
+        "fireworks"    => Some(Fireworks),
+        "deepinfra"    => Some(DeepInfra),
+        "openrouter"   => Some(OpenRouter),
+        "perplexity"   => Some(Perplexity),
+        "cohere"       => Some(Cohere),
+        "cerebras"     => Some(Cerebras),
+        "novita"       => Some(Novita),
+        "sambanova"    => Some(SambaNova),
+        "nvidia"       => Some(NvidiaNim),
+        "zhipu"        => Some(Zhipu),
+        "minimax"      => Some(MiniMax),
+        "qwen"         => Some(Qwen),
+        "moonshot"     => Some(Moonshot),
+        "qianfan"      => Some(Qianfan),
+        "chutes"       => Some(Chutes),
+        "azure"        => Some(Azure),
+        "aws"          => Some(Aws),
+        "huggingface"  => Some(HuggingFace),
+        "github"       => Some(GitHub),
+        "ollama"       => Some(Ollama),
+        "lmstudio"     => Some(LmStudio),
+        "openai-compat"=> Some(OpenAiCompat),
+        "ternlang"     => Some(Ternlang),
+        _              => None,
+    }
+}
+
 fn provider_config_name(provider: api::LlmProvider) -> &'static str {
     use api::LlmProvider::*;
     match provider {
@@ -4109,6 +4147,9 @@ fn provider_config_name(provider: api::LlmProvider) -> &'static str {
         Zhipu        => "zhipu",
         MiniMax      => "minimax",
         Qwen         => "qwen",
+        Moonshot     => "moonshot",
+        Qianfan      => "qianfan",
+        Chutes       => "chutes",
         Azure        => "azure",
         Aws          => "aws",
         HuggingFace  => "huggingface",
@@ -4151,14 +4192,20 @@ fn resolve_provider_for_model(model: &str) -> api::LlmProvider {
     if m.contains("qwen") || m.contains("qwq") {
         return api::LlmProvider::Qwen;
     }
-    if m.starts_with("glm-") || m.contains("zhipu/") {
+    if m.starts_with("glm-") || m.contains("zhipu/") || m.starts_with("zai/glm") {
         return api::LlmProvider::Zhipu;
     }
-    if m.starts_with("abab") || m.contains("minimax/") {
+    if m.starts_with("abab") || m.contains("minimax/") || m.contains("minimax-text") {
         return api::LlmProvider::MiniMax;
     }
     if m.contains("nvidia/") || m.starts_with("nv-") || m.contains("nemotron") {
         return api::LlmProvider::NvidiaNim;
+    }
+    if m.contains("moonshot-v1") || m.starts_with("kimi-") {
+        return api::LlmProvider::Moonshot;
+    }
+    if m.contains("ernie-") || m.contains("qianfan/") {
+        return api::LlmProvider::Qianfan;
     }
     if m.starts_with("@cf/") || m.contains("cloudflare/") {
         return api::LlmProvider::OpenAiCompat; // Cloudflare AI uses OpenAI compat
@@ -4267,22 +4314,25 @@ fn build_runtime_with_mcp(
     let cwd = env::current_dir()?;
     let _config = ConfigLoader::default_for(&cwd).load()?;
 
-    let provider = resolve_provider_for_model(&model);
+    let provider = init::load_albert_config()
+        .and_then(|c| provider_from_config_key(&c.provider))
+        .unwrap_or_else(|| resolve_provider_for_model(&model));
     let provider_config = runtime::load_provider_config(provider_config_name(provider)).unwrap_or(None);
 
-    let auth_source = if let Some(config) = provider_config {
-        if let Some(key) = config.api_key {
+    let auth_source = if let Some(config) = &provider_config {
+        if let Some(key) = config.api_key.clone().filter(|k| !k.is_empty()) {
             api::AuthSource::ApiKey(key)
         } else {
-            // credentials.json has no key → fall through to env vars
             api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
         }
     } else {
-        // No credentials file → try provider-specific env vars
         api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
     };
 
-    let client = TernlangClient::from_auth(auth_source).with_provider(provider);
+    let mut client = TernlangClient::from_auth(auth_source).with_provider(provider);
+    if let Some(base) = provider_config.as_ref().and_then(|c| c.base_url.as_deref()) {
+        client = client.with_base_url(base);
+    }
     let api_client = TernlangRuntimeClient {
         client,
         model: model.clone(),
