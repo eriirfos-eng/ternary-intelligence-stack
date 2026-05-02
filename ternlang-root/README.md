@@ -124,101 +124,146 @@ cargo build --release
 ```
 ---
 
-## 4. Albert-MoE-13: Ternary-Native Scaling Research
+## 4. Albert-MoE-13 — Ternary-Native Mixture-of-Experts Intelligence
 
-**Albert** is our experimental framework for ternary Mixture-of-Experts (MoE). Unlike binary transformer architectures, Albert explores how scaling parameter counts ($N$) in a ternary manifold ($\{-1, 0, +1\}$) leads to stable loss convergence without the need for high-precision float training.
+Albert-MoE-13 is our unified research and execution framework for ternary-native Mixture-of-Experts (MoE) systems.
 
-> **Research Focus:** Ternary-native representation scaling laws & stable manifold training.
+It combines **theoretical scaling research** with a **fully implemented, production-grade deliberation architecture**, establishing a new class of AI systems built on the ternary manifold {−1, 0, +1}.
+
+Unlike binary transformer architectures, Albert explores how large-scale parameter systems converge under **discrete ternary constraints**, enabling deterministic uncertainty, sub-linear memory scaling, and auditable reasoning.
+
+---
+
+### Research Objective
+
+Develop and validate **ternary-native scaling laws and training methods** that allow models to reach trillion-parameter regimes without reliance on high-precision floating-point computation.
+
+---
 
 ### Core Research Dimensions
-- **Scaling Laws:** Predicting loss convergence as parameters scale to 1T+.
-- **Manifold Stability:** Quantifying signal integrity through ternary thresholds.
-- **Native Training:** Training from scratch on ternary manifolds via Straight-Through Estimators (STE).
-- **Sparse Geometry:** Exploiting weight sparsity for sub-linear memory scaling.
 
-### Architectural Advantages
-- **Deterministic Uncertainty:** `HOLD (0)` state provides a formal mechanism to defer decision-making.
-- **Sovereign Efficiency:** Offline-first execution on commodity or future ternary-native hardware.
-- **Explainable Reasoning:** Triadic votes offer an auditable path for Article 13/14/15 AI Act compliance.
-- **Native Integration:** Direct pipeline flow between Ternlang, BET-VM, and the MoE deliberation engine.
+- **Ternary Scaling Laws**  
+  Predict loss convergence behavior as parameter count (N) scales beyond 1T in a discrete manifold.
+
+- **Manifold Stability**  
+  Quantify signal preservation and degradation across ternary thresholds under forward and backward passes.
+
+- **Native Training (STE/QAT)**  
+  Train directly on ternary weights using Straight-Through Estimators and Quantization-Aware Training loops.
+
+- **Sparse Geometry**  
+  Leverage inherent weight sparsity (0-state) for sub-linear memory growth and efficient hardware execution.
+
+---
+
+### System Architecture (Current Implementation)
+
+Albert-MoE-13 is instantiated as a **13-expert deliberation system**, where each query is evaluated across epistemic domains instead of routed through purely computational layers.
+
+**Base Model:** Ternarized Llama 3.2 1B
+
+#### Ternary Model Pipeline
+
+| Stage | Description | Output |
+|------|-------------|--------|
+| Ternarization | f32 → {−1, 0, +1} via threshold mapping | `llama32-1b.tern.json` |
+| Coherence Packing | 4 trits/byte compression | `llama32-1b.tern.bin` |
+| Signal Verification | Forward-pass integrity check | 97.06% coherence |
+| QAT Fine-Tuning | STE-based latent weight adaptation | `SteTrainer` |
+| Perplexity Validation | Pre/post evaluation | PPL −43%, accuracy +6.2% |
+
+All components are implemented in `ternlang-ml` and fully reproducible.
 
 ---
 
-## 5. MoE-13: Explainable Mixture-of-Experts
+### The 13 Expert Domains
 
-> **Source:** [`albert-moe-13/`](albert-moe-13/) — fully implemented, all crates published to crates.io.
+Each inference is evaluated across a fixed set of epistemic agents implementing `ExpertLogic`, scored on a 6-axis competence vector:
+`[syntax, world_knowledge, reasoning, tool_use, persona, safety]`
 
+| Domain        | Function                          | Threshold Behavior        |
+|--------------|----------------------------------|---------------------------|
+| Ethics       | Normative constraints             | Conservative (asymmetric) |
+| Legal        | Regulatory compliance             | Conservative (asymmetric) |
+| Medical      | Clinical safety                   | Conservative (asymmetric) |
+| Ecological   | Environmental integrity           | Conservative (asymmetric) |
+| Logic        | Formal consistency                | Standard ±0.05            |
+| Science      | Empirical validation              | Standard ±0.05            |
+| Causal       | Cause–effect reasoning            | Standard ±0.05            |
+| Temporal     | Time-based reasoning              | Standard ±0.05            |
+| Spatial      | Physical/geometric reasoning      | Standard ±0.05            |
+| Mathematical | Quantitative validation           | Standard ±0.05            |
+| Linguistic   | Syntax and language               | Standard ±0.05            |
+| Cultural     | Social/persona alignment          | Standard ±0.05            |
+| Technical    | Tools and systems interaction     | Standard ±0.05            |
 
-MoE-13 is an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
-
-Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
-
-### Current Base Model: Ternarized Llama 3.2 1B
-
-The current native ternary foundation model is a fully ternarized Llama 3.2 1B, produced by our open-source `transmute_llama.py` ternarization pipeline:
-
-| Stage | What happens | Output |
-|-------|-------------|--------|
-| **Ternarization** (`transmute_llama.py`) | Map all f32 weights → `{-1, 0, +1}` via BitNet-style threshold | `llama32-1b.tern.json` |
-| **Coherence packing** (`ModelCoherence`) | Pack 4 trits/byte, reduce 1.2 GB JSON → 240 MB binary | `llama32-1b.tern.bin` |
-| **Signal verification** (Phase 12A) | Forward pass on ternarized weights — 97.06% signal coherence confirmed | — |
-| **QAT/STE fine-tuning** (Phase 12B) | Straight-Through Estimator loop on latent f32 shadow weights | `SteTrainer` in `ternlang-ml` |
-| **Perplexity validation** (Phase 12C) | Pre/post QAT pseudo-PPL comparison — PPL −43%, accuracy +6.2% | `PerplexityEvaluator` |
-
-All pipeline code is in [`ternlang-ml/src/qat.rs`](ternlang-root/ternlang-ml/src/qat.rs) and [`ternlang-ml/src/perplexity.rs`](ternlang-root/ternlang-ml/src/perplexity.rs). Runnable via:
-
-```bash
-cargo run --bin qat_train -p ternlang-ml        # QAT fine-tuning demo
-cargo run --bin perplexity_eval -p ternlang-ml  # pre/post PPL comparison
-```
-
-### The 13 Domain Experts
-
-Each expert implements the `ExpertLogic` trait in [`albert-moe-13/crates/moe-core`](albert-moe-13/crates/moe-core/src/experts/domains/). Every query is scored against a 6-axis competence vector `[syntax, world_knowledge, reasoning, tool_use, persona, safety]`:
-
-| Expert           | Role | Threshold |
-|------------------|------|-----------|
-| Ethics           | Normative constraints, persona safety | Conservative asymmetric |
-| Legal            | Regulatory compliance, world-knowledge | Conservative asymmetric |
-| Science          | Empirical claims, world-knowledge | Standard ±0.05 |
-| Causal           | Cause–effect integrity | Standard ±0.05 |
-| Temporal         | Time-sensitive reasoning | Standard ±0.05 |
-| Spatial          | Geometric / physical reasoning | Standard ±0.05 |
-| Linguistic       | Syntax and language form | Standard ±0.05 |
-| Mathematical     | Quantitative validation | Standard ±0.05 |
-| Medical          | Clinical safety, world-knowledge | Conservative asymmetric |
-| Cultural         | Persona and social alignment | Standard ±0.05 |
-| Technical        | Tool use and systems | Standard ±0.05 |
-| Ecological       | Environmental / safety co-domain | Conservative asymmetric |
-| Logic            | Formal consistency and reasoning | Standard ±0.05 |
-
-Safety-critical domains (Ethics, Legal, Medical, Ecological) use asymmetric thresholds that bias toward `hold` — the system withholds a decision rather than guessing.
-
-### Published Crate Stack (`albert-moe-13/`)
-
-| Crate | Role |
-|-------|------|
-| [`moe-core`](https://crates.io/crates/moe-core) | Routing engine, 13 domain experts, `ExpertBank13`, `DOMAIN_LAMBDA` bias |
-| [`moe-platform`](https://crates.io/crates/moe-platform) | Stable public API — model file loading, `Platform::load_model_from_file()` |
-| [`moe-runtime`](https://crates.io/crates/moe-runtime) | Graph executor, `ExpertScheduler`, multi-expert dispatch |
-| [`moe-plugin-sdk`](https://crates.io/crates/moe-plugin-sdk) | Third-party plugin interface, `PluginSandbox` with CPU time budget enforcement |
-| [`moe-ddel`](https://crates.io/crates/moe-ddel) | Distributed execution layer — core-weighted round-robin partitioner, `TaskTransport` |
-
-### Key Properties
-
-- **Deterministic uncertainty** via `HOLD (0)` — no forced binary guess
-- **Traceable reasoning** through per-expert votes, confidence scores, and veto rationale
-- **Built-in safety gating** — conservative asymmetric thresholds on all safety-critical domains
-- **Offline-first, sovereign deployment** — zero external API dependency in inference path
-- **Native Ternlang + BET-VM integration**
-
-Every inference emits: live vote state · confidence score · convergence momentum · trace logs · veto rationale — creating a fully auditable reasoning path for EU AI Act Article 13/14/15 compliance.
+Safety-critical domains are biased toward **HOLD (0)**, preventing forced decisions under uncertainty.
 
 ---
-## 6. Agent Albert — AI Intelligence Layer
 
-[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
-[![MIT](https://img.shields.io/badge/license-MIT-blue)](../agent_albert_cli/rust/LICENSE)
+### Architectural Properties
+
+- **Deterministic Uncertainty**  
+  The ternary HOLD (0) state enables explicit deferral instead of probabilistic guessing.
+
+- **Explainable Deliberation**  
+  Every inference produces per-expert votes, confidence scores, and veto rationale.
+
+- **Built-in Safety Gating**  
+  Asymmetric thresholds enforce conservative behavior in critical domains.
+
+- **Sovereign Deployment**  
+  Fully offline-capable, zero external API dependency.
+
+- **Hardware Efficiency**  
+  Ternary weights enable compression, sparsity, and future ternary-native compute compatibility.
+
+- **Native Stack Integration**  
+  Direct interoperability with Ternlang and BET-VM execution layers.
+
+---
+
+### Runtime and Infrastructure
+
+The system is implemented as a modular crate stack:
+
+| Crate            | Role |
+|------------------|------|
+| `moe-core`       | Expert system, routing, domain weighting |
+| `moe-platform`   | Public API and model loading interface |
+| `moe-runtime`    | Execution engine and expert scheduling |
+| `moe-plugin-sdk` | Secure third-party extension interface |
+| `moe-ddel`       | Distributed execution and task transport |
+
+---
+
+### Output & Compliance
+
+Each inference produces:
+
+- Expert vote distribution  
+- Confidence score and convergence signal  
+- Full reasoning trace logs  
+- Veto and override rationale  
+
+This creates a **fully auditable decision path**, aligned with **EU AI Act Articles 13, 14, and 15** (transparency, human oversight, and robustness).
+
+---
+
+### Positioning
+
+Albert-MoE-13 represents a shift from:
+- probabilistic → **deliberative**
+- continuous → **discrete ternary**
+- opaque → **traceable**
+- centralized → **sovereign**
+
+It serves as both:
+1. A **research platform** for post-binary AI scaling
+2. A **deployable system** for high-stakes, safety-critical environments
+
+---
+## 5. Agent Albert CLI — Agentic AI Intelligence Layer
 
 Albert is the sovereign, model-agnostic AI coding CLI built as the **orchestration layer** of the Ternary Intelligence Stack. He runs as a standalone terminal agent or embedded directly inside TernStudio — wired into the flow canvas to generate, debug, and explain ternary workflows.
 
@@ -336,7 +381,7 @@ Albert will be deployed as a sidecar service alongside the TernStudio API on Fly
 
 ---
 
-## 7. Sparse Ternary Inference
+## 6. Sparse Ternary Inference
 
 The core performance claim of TIS rests on a single hardware primitive: `@sparseskip` — an opcode that skips computation on zero-state (`tend`) weights entirely.
 
@@ -364,7 +409,7 @@ Full measured results with hardware specs: **[BENCHMARKS.md](BENCHMARKS.md)**
 
 ---
 
-## 8. Live API
+## 7. Live API
 
 The full TIS API runs at **`https://ternlang.com`** — deployed on Fly.io, Frankfurt region.
 
@@ -402,7 +447,7 @@ curl -X POST https://ternlang.com/api/trit_decide \
 | `POST /api/translate` | TernTranslator — Python/SQL/JSON rules → .tern with tend arms (Tier 2+) |
 
 ---
-### MCP Server — v1.1.0 (30 tools — all free)
+### 8. MCP Server — v1.1.0 (30 tools — all free)
 
 The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, Cursor, Gemini CLI, and any HTTP MCP client.
 
