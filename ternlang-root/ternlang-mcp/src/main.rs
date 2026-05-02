@@ -1335,7 +1335,7 @@ fn tools_list() -> Value {
         {
             "name": "sparse_benchmark",
             "description": "Run sparse vs dense ternary matrix multiply benchmark. Shows how many multiply-accumulate operations are skipped due to zero-state (hold) weights. Demonstrates the computational efficiency of ternary AI inference.",
-            "annotations": { "title": "Sparse Benchmark — Ternary Matmul Efficiency (up to 122x)", "readOnlyHint": true, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+            "annotations": { "title": "Sparse Benchmark — Ternary Matmul Efficiency (up to up to 122.3x (theoretical upper bound))", "readOnlyHint": true, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
             "inputSchema": {
                 "type": "object",
                 "properties": {

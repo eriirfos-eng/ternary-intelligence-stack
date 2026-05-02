@@ -289,7 +289,7 @@ tools:
       Run sparse vs dense ternary matrix multiply benchmark. Shows how many
       multiply-accumulate operations are skipped due to zero-state (hold) weights.
       Demonstrates the computational efficiency of ternary AI inference — up to
-      122x throughput at 99%+ sparsity.
+      up to 122.3x (theoretical upper bound) throughput at 99%+ sparsity.
     annotations:
       readOnlyHint: true
       idempotentHint: false

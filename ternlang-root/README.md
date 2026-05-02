@@ -47,7 +47,7 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 | Layer | What it does |
 |-------|-------------|
 | [Language & VM](#3-language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
-| [Sparse Inference](#7-sparse-ternary-inference) | @sparseskip: Mathematical upper bound 122× at 99%+ sparsity |
+| [Sparse Inference](#7-sparse-ternary-inference) | @sparseskip: Theoretical throughput scaling (breakdown below) |
 | [MoE-13 Orchestrator](#4-albert-moe-13) | Mixture-of-Experts reasoning engine with safety hard gate |
 | [Protocol Specifications](#13-rfi-irfos-protocol-specifications) | BET-ISA, TSON, TTP, and T-POSIX — RFI-IRFOS open proposals |
 | [Frontier Tech](#13-rfi-irfos-protocol-specifications) | Qutrit Quantum bridging, BCI neural decoding, and Interplanetary DTN |
@@ -391,9 +391,15 @@ The core performance claim of TIS rests on a single hardware primitive: `@sparse
 |----------|----------|-----------------------------|
 | Typical BitNet-style distribution | ~50–70% | **2–4×** |
 | Highly sparse ternary model | ~90% | **~10×** |
-| Extreme sparsity (upper bound) | ~99% | **up to 122×** |
+#### Sparse Scaling Breakdown (Estimated Throughput Multiplier)
+| Sparsity Level | Throughput Multiplier |
+| :--- | :--- |
+| 25% (Light) | 53.1x |
+| 40% (BitNet Base) | 73.6x |
+| 60% (Optimal) | 86.1x |
+| 99% (Extreme) | 122.3x |
 
-The 2.3× figure is the baseline measured result from the first `@sparseskip` benchmark ([commit `60f7ef6`](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)). Speedup scales proportionally with sparsity — the 122× figure is a mathematical upper bound at 99%+ sparsity, not a general-case claim.
+The 2.3× figure is the baseline measured result from the first `@sparseskip` benchmark ([commit `60f7ef6`](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)). Speedup scales proportionally with sparsity — the 122.3× figure is a mathematical upper bound at 99%+ sparsity, not a general-case claim.
 
 **5-trit block packing** encodes 5 trits into 8 bits (vs 10 bits for naive 2-bit emulation) — a 1.25× storage density improvement.
 

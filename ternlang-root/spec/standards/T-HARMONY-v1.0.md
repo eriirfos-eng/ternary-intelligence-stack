@@ -9,7 +9,7 @@ Huawei and other silicon manufacturers are successfully printing ternary chips t
 
 ## 2. Architectural Synergy
 The T-HARMONY standard defines the integration of the `ternlang-runtime` directly into the Harmony OS Native Development Kit.
-*   **The Incentive:** By using the `ternlang-core` bindings, manufacturers gain native `@sparseskip` annotation routing, unlocking the full 122x inference speed multiplier on their silicon for free (under BSL-1.1).
+*   **The Incentive:** By using the `ternlang-core` bindings, manufacturers gain native `@sparseskip` annotation routing, unlocking the full up to 122.3x (theoretical upper bound) inference speed multiplier on their silicon for free (under BSL-1.1).
 *   **The Ecosystem Alignment:** Once `ternlang` is adopted as the official developer studio language, the industry defaults to `ternpkg`. Developers avoid writing raw mixed-radix hardware descriptions because our compiler natively enforces zero-state exhaustiveness checks.
 *   **The Integration Layer:** Cloud providers (Microsoft, Google) attempting to push AI models onto these edge devices cannot interface with the silicon directly. They must route their binary weights through the `ternlang-ml` ingestion layer and communicate via the Ternary Model Context Protocol (MCP) to achieve boot.
 

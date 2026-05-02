@@ -35,7 +35,7 @@ Solidify industrial adoption through standardization and legal requirements.
 ## Phase 5: The Harmony OS Integration (Architectural Synergy)
 We do not fight silicon manufacturers on foundry capital. We leverage their distribution networks by making the BET VM the native mathematical engine of edge operating systems (e.g., Harmony OS).
 
-- **Solve the Translation Leak:** Manufacturers are printing power-efficient ternary chips but losing efficiency by translating binary C code into three-state logic. We provide `ternlang-harmony` bindings directly for their microkernels, using `@sparseskip` to natively route matrix multiplications for a 122x inference speed multiplier.
+- **Solve the Translation Leak:** Manufacturers are printing power-efficient ternary chips but losing efficiency by translating binary C code into three-state logic. We provide `ternlang-harmony` bindings directly for their microkernels, using `@sparseskip` to natively route matrix multiplications for a up to 122.3x (theoretical upper bound) inference speed multiplier.
 - **The Developer Incentive:** Once blessed as a supported language, developers will default to `ternpkg` because our compiler handles the agonizing mixed-radix hardware descriptions and zero-state exhaustiveness checks natively. Internal tooling will convert to Ternlang purely for efficiency.
 - **Project Albert Deployment:** We drop sovereign, offline nodes (Albert) onto millions of battery-constrained edge devices. 
 - **Modernizing Legacy Infrastructure:** When legacy binary cloud providers (Microsoft, etc.) attempt to push AI models to these devices, they will be forced to route binary weights through our `ternlang-ml` ingestion layer and communicate via our Ternary MCP. 

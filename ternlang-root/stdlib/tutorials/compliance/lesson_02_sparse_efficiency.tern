@@ -1,5 +1,5 @@
 // Compliance: Lesson 02 — Sparse Efficiency
-// Purpose: Proving the 122x multiplier.
+// Purpose: Proving the up to 122.3x (theoretical upper bound) multiplier.
 // Authority: RFI-IRFOS Educational Cartel
 
 fn main() {

@@ -3,7 +3,7 @@
 //! Provides native BET VM and `ternlang-runtime` compatibility for Huawei's microkernel.
 //! Designed to solve their C-to-ternary translation memory leaks, this crate utilizes
 //! the `@sparseskip` annotation to natively route matrix multiplications directly to
-//! the 24-trit RISC hardware, unlocking the full 122x inference speed multiplier.
+//! the 24-trit RISC hardware, unlocking the full up to 122.3x (theoretical upper bound) inference speed multiplier.
 //!
 //! By defaulting to `ternpkg` to avoid mixed-radix manual logic, developers are 
 //! structurally bound to the MoE-13 safety gates via the BSL-1.1 license.
@@ -56,7 +56,7 @@ pub mod microkernel {
         OptimizationReport {
             success: true,
             power_reduction: 0.60, // The 60% Power Reduction mandate
-            latency_multiplier: 122.0, // The 122x Sparse Bypass multiplier
+            latency_multiplier: 122.0, // The up to 122.3x (theoretical upper bound) Sparse Bypass multiplier
             message: format!("Device {} successfully migrated to native triadic execution.", req.device_id),
         }
     }

@@ -163,7 +163,7 @@ const TOOLS = [
     description:
       "Run sparse vs dense ternary matrix multiply benchmark. Shows how many multiply-accumulate operations are skipped due to zero-state (hold) weights. Demonstrates the computational efficiency of ternary AI inference.",
     annotations: {
-      title: "Sparse Benchmark — Ternary Matmul Efficiency (up to 122x)",
+      title: "Sparse Benchmark — Ternary Matmul Efficiency (up to up to 122.3x (theoretical upper bound))",
       readOnlyHint: true,
       idempotentHint: false,
       destructiveHint: false,
