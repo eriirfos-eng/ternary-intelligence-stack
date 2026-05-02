@@ -1,0 +1,133 @@
+# Smithery MCP Registry — albert-llb
+# Last Look Back Protocol — Deterministic Filesystem Safety Gate
+#
+# CLI:  npx @smithery/cli publish
+
+name: albert-llb
+displayName: "Last Look Back — Filesystem Safety Gate"
+description: |
+  **Deterministic filesystem containment for AI agents.**
+
+  Modern AI agents (Claude Code, Cursor, Copilot, autonomous agents) are granted
+  high-privilege access to local filesystems with no enforcement layer between the
+  model's probabilistic intent and the host's deterministic disk. LLB fixes this.
+
+  **Moves safety from the linguistic layer (system prompts) to the binary layer (Rust syscall boundary).**
+
+  Every filesystem mutation becomes an atomic transaction:
+
+  ```
+  MutationRequest → Gate 1 → [Snapshot] → Execute → IOCC Gate 2 → Commit / Rollback
+  ```
+
+  **4 tools — runs 100% locally, no API key required:**
+
+  - **llb_validate** — Gate 1 dry-run: check if a proposed mutation is safe before executing
+  - **llb_classify** — Instant safety tier classification (T0/T1/T2/T3) for any path+operation
+  - **llb_check** — Blacklist scanner: blocked paths (/etc /bin ~/.ssh) + forbidden binaries (rm, sudo, dd...)
+  - **llb_write_safe** — Full LLB-protected file write: Gate 1 → Snapshot → Write → IOCC → Commit/Rollback
+
+  **What LLB blocks:**
+  - Path traversal (`../` injection)
+  - Writes to `/etc`, `/bin`, `/sys`, `/proc`, `~/.ssh`, `~/.gnupg`, and other protected paths
+  - Shell commands containing `rm`, `sudo`, `chmod`, `dd`, `shred`, `fdisk`, `mkfs`, `crontab`
+  - Files created/modified with undeclared executable permissions (Gate 2)
+  - Filesystem spillover — extra files appearing that the agent didn't declare (IOCC Gate 2)
+
+  **Ternary decisions** (`+1` allow · `0` warn · `-1` hard veto) map directly to the
+  [Ternary Intelligence Stack](https://ternlang.com) trit values.
+
+  Built by RFI-IRFOS (ZVR: 1015608684) · Graz, Austria
+  Part of the [Albert](https://crates.io/crates/albert-cli) sovereign AI agent stack.
+
+version: "1.3.1"
+license: "LGPL-2.1"
+homepage: "https://ternlang.com"
+repository: "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+icon: "https://ternlang.com/favicon.ico"
+author:
+  name: "RFI-IRFOS"
+  email: "rfi.irfos@gmail.com"
+  url: "https://ternlang.com"
+
+categories:
+  - ai-safety
+  - developer-tools
+  - filesystem
+
+tags:
+  - ai-safety
+  - filesystem
+  - containment
+  - ternary
+  - atomic-transaction
+  - rollback
+  - mcp
+  - rust
+  - agent-safety
+  - llb
+
+# ─── Transport ────────────────────────────────────────────────────────────────
+# stdio — runs locally on the user's machine.
+# Install once: cargo install albert-llb
+# Then any MCP client picks it up via the command below.
+
+configSchema:
+  type: object
+  title: "LLB Configuration"
+  description: "No configuration required. albert-llb runs locally with zero external dependencies."
+  properties: {}
+  required: []
+
+startCommand:
+  type: stdio
+  commandFunction: |-
+    (config) => ({
+      command: "albert-llb-mcp",
+      args: [],
+      env: {}
+    })
+
+# ─── System Prompt ────────────────────────────────────────────────────────────
+systemPrompt: |
+  You have access to the Last Look Back (LLB) Protocol — a deterministic
+  filesystem safety gate that runs locally on the user's machine.
+
+  ## When to use LLB tools
+
+  Use **llb_validate** BEFORE any filesystem write to check that LLB will
+  permit it. This catches path traversal, blacklisted destinations, and
+  safety-tier escalations before anything touches the disk.
+
+  Use **llb_classify** when you need to understand the risk level of a
+  planned operation. T2 operations require a snapshot + audit; T3 (DELETE)
+  additionally require human confirmation.
+
+  Use **llb_check** to verify a file path isn't in a protected directory,
+  or to scan a shell command for forbidden binaries before executing it.
+
+  Use **llb_write_safe** to write a file through the full LLB transaction:
+  Gate 1 validation → automatic snapshot → write → IOCC integrity check →
+  commit (or automatic rollback on failure). This is the safest way to
+  write files when operating autonomously.
+
+  ## LLB Decision Trit Values
+
+  - `+1` (ALLOW) — transaction committed, file written successfully
+  - ` 0` (WARN)  — soft block, rethink the approach
+  - `-1` (VETO)  — hard block or rollback, filesystem left clean
+
+  ## DELETE is not available via MCP
+
+  File deletion (T3) requires local Human-In-The-Loop confirmation at the
+  terminal. If the user asks you to delete a file, instruct them to use
+  `albert-cli` locally, or ask them to confirm the deletion themselves.
+
+  ## The hold state protects the host
+
+  When llb_validate returns trit 0 (WARN), do not force the operation.
+  Gather more information, propose an alternative path, or ask the user
+  to confirm before proceeding.
+
+# ─── Protocol ─────────────────────────────────────────────────────────────────
+protocol: "2025-03-26"
