@@ -1,5 +1,0 @@
-fn main() -> trit {
-    let a: trit = 1;
-    let b: int = cast(int)a;
-    return 1;
-}
