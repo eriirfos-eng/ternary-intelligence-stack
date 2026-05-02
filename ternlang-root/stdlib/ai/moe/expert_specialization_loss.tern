@@ -1,0 +1,36 @@
+// Expert Specialization Loss: Penalizes experts that are too similar.
+// Encourages experts to specialize in different parts of the input space.
+
+fn expert_dist(w1: int[3], w2: int[3]) -> int {
+    let dist: int = 0;
+    let i: int = 0;
+    while i < 3 {
+        let diff: int = w1[i] - w2[i];
+        if diff < 0 { diff = 0 - diff; }
+        dist = dist + diff;
+        i = i + 1;
+    }
+    return dist;
+}
+
+fn main() -> trit {
+    let w0: int[3]; w0[0]=1; w0[1]=1; w0[2]=1;
+    let w1: int[3]; w1[0]=1; w1[1]=1; w1[2]=1; // Same
+    let w2: int[3]; w2[0]=-1; w2[1]=-1; w2[2]=-1; // Very different
+    
+    let d01: int = expert_dist(w0, w1);
+    let d02: int = expert_dist(w0, w2);
+    
+    let success: trit = 0;
+    if d01 == 0 {
+        if d02 == 6 {
+            success = 1;
+        } else { success = -1; }
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
