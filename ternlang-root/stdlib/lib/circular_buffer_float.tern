@@ -1,0 +1,42 @@
+// stdlib/lib/circular_buffer_float.tern
+// Fixed-size circular buffer for float values.
+// Tier: 1 - Open Core
+
+fn cb_push(buffer: float[10], head: int, val: float) -> int {
+    buffer[head] = val;
+    return (head + 1) % 10;
+}
+
+fn cb_get(buffer: float[10], head: int, index: int) -> float {
+    // index 0 is the most recent
+    let idx: int = (head - 1 - index);
+    while idx < 0 { idx = idx + 10; }
+    return buffer[idx % 10];
+}
+
+fn main() -> trit {
+    let buffer: float[10];
+    let head: int = 0;
+    
+    println("Pushing values 1.0 to 5.0...");
+    head = cb_push(buffer, head, 1.0);
+    head = cb_push(buffer, head, 2.0);
+    head = cb_push(buffer, head, 3.0);
+    head = cb_push(buffer, head, 4.0);
+    head = cb_push(buffer, head, 5.0);
+    
+    println("Most recent value (index 0):");
+    let v0: float = cb_get(buffer, head, 0);
+    println(v0);
+    
+    println("Value at index 2 (expected 3.0):");
+    let v2: float = cb_get(buffer, head, 2);
+    println(v2);
+    
+    if v0 == 5.0 && v2 == 3.0 {
+        println("Circular buffer validation successful.");
+        return 1;
+    }
+    
+    return -1;
+}
