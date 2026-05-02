@@ -1,0 +1,102 @@
+// stdlib/causal/frontdoor_criterion.tern
+// Verification of the Frontdoor Criterion for causal identification.
+// Tier: 1 - Open Core
+
+// A set of variables M satisfies the frontdoor criterion relative to (X, Y) if:
+// 1. M intercepts all directed paths from X to Y.
+// 2. There is no unblocked backdoor path from X to M.
+// 3. All backdoor paths from M to Y are blocked by X.
+
+fn is_descendant(adj: trittensor<25>, n: int, start: int, target: int) -> trit {
+    if start == target { return 1; }
+    let i: int = 0;
+    while i < n {
+        if adj[start * n + i] == 1 {
+            if is_descendant(adj, n, i, target) == 1 { return 1; }
+        }
+        i = i + 1;
+    }
+    return -1;
+}
+
+fn satisfies_frontdoor(adj: trittensor<25>, n: int, x: int, y: int, m: int) -> trit {
+    // 1. M intercepts all directed paths from X to Y
+    // Simplified: Check if X -> M and M -> Y exist, and X -> Y does not (direct).
+    if adj[x * n + m] == 1 && adj[m * n + y] == 1 {
+        if adj[x * n + y] == 1 {
+            println("Violation: Direct path X -> Y exists, not intercepted by M.");
+            return -1;
+        }
+    } else {
+        println("Violation: M does not intercept X -> Y path.");
+        return -1;
+    }
+    
+    // 2. No unblocked backdoor path from X to M.
+    // In Frontdoor models, we often have U -> X and U -> Y (unobserved).
+    // The path X <- U -> Y -> M would be a problem if it existed.
+    // Here we check if there are any parents of X that can reach M without going through X.
+    let p: int = 0;
+    while p < n {
+        if adj[p * n + x] == 1 {
+            if is_descendant(adj, n, p, m) == 1 {
+                // Check if the only path from p to m is through x
+                // (Simplified: if p -> m exists directly, it's a backdoor path)
+                if adj[p * n + m] == 1 {
+                    println("Violation: Unblocked backdoor path X <- P -> M.");
+                    return -1;
+                }
+            }
+        }
+        p = p + 1;
+    }
+    
+    // 3. All backdoor paths from M to Y are blocked by X.
+    // Backdoor paths from M: M <- X <- U -> Y.
+    // This is blocked if we condition on X.
+    println("Condition 3 (Blocked by X) assumed for valid Frontdoor structure.");
+    
+    return 1;
+}
+
+fn main() -> trit {
+    let n: int = 5;
+    // Model: X -> M, M -> Y, U -> X, U -> Y (U is unobserved)
+    // Nodes: X=0, Y=1, M=2, U=3
+    let adj: trittensor<25> = [
+        0, 0, 1, 0, 0, // X -> M
+        0, 0, 0, 0, 0, // Y
+        0, 1, 0, 0, 0, // M -> Y
+        1, 1, 0, 0, 0, // U -> X, U -> Y
+        0, 0, 0, 0, 0  
+    ];
+    
+    println("Model: X -> M -> Y, with unobserved confounding U (U -> X, U -> Y)");
+    
+    let x: int = 0;
+    let y: int = 1;
+    let m: int = 2;
+    
+    let res: trit = satisfies_frontdoor(adj, n, x, y, m);
+    print("Does M satisfy Frontdoor? "); println(res);
+    
+    match res {
+        1 => { println("Frontdoor criterion satisfied."); }
+        _ => { return -1; }
+    }
+    
+    // Model 2: X -> M -> Y AND X -> Y (Direct effect)
+    println("Model 2: Direct effect X -> Y exists.");
+    adj[x * n + y] = 1;
+    let res2: trit = satisfies_frontdoor(adj, n, x, y, m);
+    print("Does M satisfy Frontdoor? "); println(res2);
+    
+    if res2 == -1 {
+        println("Correct: Direct path violates frontdoor intercept requirement.");
+    } else {
+        return -1;
+    }
+
+    println("Frontdoor Criterion validation complete.");
+    return 1;
+}
