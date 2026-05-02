@@ -1,0 +1,50 @@
+// Shared Expert Logic: Combines a shared expert with routed experts.
+// This architecture (e.g., DeepSeek) improves expert specialization.
+
+fn shared_expert(x: float[3], out: float[3]) -> trit {
+    let i: int = 0;
+    while i < 3 {
+        out[i] = x[i] * 1.1; // Shared expert applies a small universal transformation
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn routed_expert(x: float[3], out: float[3]) -> trit {
+    let i: int = 0;
+    while i < 3 {
+        out[i] = x[i] * 2.0; // Routed expert applies specialized transformation
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let x: float[3];
+    x[0] = 10.0; x[1] = 10.0; x[2] = 10.0;
+    
+    let shared_out: float[3];
+    let routed_out: float[3];
+    
+    let ok1: trit = shared_expert(x, shared_out);
+    let ok2: trit = routed_expert(x, routed_out);
+    
+    let final_res: float[3];
+    let i: int = 0;
+    while i < 3 {
+        final_res[i] = shared_out[i] + routed_out[i];
+        i = i + 1;
+    }
+    
+    // Expected: 10*1.1 + 10*2.0 = 11 + 20 = 31
+    let success: trit = 0;
+    if final_res[0] == 31.0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
