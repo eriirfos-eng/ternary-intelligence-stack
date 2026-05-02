@@ -1,0 +1,67 @@
+fn main() -> trit {
+    println("Ternary FFT Lite 3-point DFT verification...");
+
+    // Inputs: x[0]=1, x[1]=1, x[2]=0
+    // We treat these as real inputs (imaginary parts = 0)
+    let x0: float = 1.0;
+    let x1: float = 1.0;
+    let x2: float = 0.0;
+
+    // DFT formula for 3 points:
+    // X[k] = sum_{n=0}^{2} x[n] * exp(-j * 2pi * n * k / 3)
+    
+    // X[0] = x[0] + x[1] + x[2]
+    let X0_re: float = x0 + x1 + x2;
+    let X0_im: float = 0.0;
+
+    // Twiddle factors:
+    // W = exp(-j*2pi/3) = -0.5 - 0.866i
+    // W^2 = exp(-j*4pi/3) = -0.5 + 0.866i
+    
+    // X[1] = x[0] + x[1]*W + x[2]*W^2
+    // X[1]_re = x[0] + x[1]*(-0.5) + x[2]*(-0.5)
+    // X[1]_im = x[1]*(-0.866) + x[2]*0.866
+    let X1_re: float = x0 + (x1 * -0.5) + (x2 * -0.5);
+    let X1_im: float = (x1 * -0.866) + (x2 * 0.866);
+
+    // X[2] = x[0] + x[1]*W^2 + x[2]*W^4
+    // W^4 = W (since period is 3)
+    // X[2]_re = x[0] + x[1]*(-0.5) + x[2]*(-0.5)
+    // X[2]_im = x[1]*0.866 + x[2]*(-0.866)
+    let X2_re: float = x0 + (x1 * -0.5) + (x2 * -0.5);
+    let X2_im: float = (x1 * 0.866) + (x2 * -0.866);
+
+    println("X[0] Real:");
+    println(X0_re);
+    
+    println("X[1] Real:");
+    println(X1_re);
+    println("X[1] Imaginary:");
+    println(X1_im);
+    
+    println("X[2] Real:");
+    println(X2_re);
+    println("X[2] Imaginary:");
+    println(X2_im);
+
+    // Verification:
+    // X[0] = 1 + 1 + 0 = 2.0
+    // X[1] = 1 - 0.5 - 0 = 0.5, Im = -0.866
+    // X[2] = 1 - 0.5 - 0 = 0.5, Im = 0.866
+    
+    let success: trit = 1;
+    if X0_re < 1.9 { success = -1; }
+    if X0_re > 2.1 { success = -1; }
+    if X1_re < 0.4 { success = -1; }
+    if X1_re > 0.6 { success = -1; }
+    if X1_im > -0.8 { if X1_im < 0.0 { } else { success = -1; } } // check negative
+    if X1_im < -0.9 { success = -1; }
+
+    if success == 1 {
+        println("FFT Lite Test: PASSED");
+        return 1;
+    }
+
+    println("FFT Lite Test: FAILED");
+    return -1;
+}

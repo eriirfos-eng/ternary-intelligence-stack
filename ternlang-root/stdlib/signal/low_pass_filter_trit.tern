@@ -1,0 +1,37 @@
+fn main() -> trit {
+    println("Low Pass Filter (EMA) verification...");
+    
+    let alpha: float = 0.2;
+    let y_prev: float = 0.0;
+    
+    // Test stream: 1, 1, 1, 1, 1
+    // alpha = 0.2
+    // y[n] = alpha * x[n] + (1 - alpha) * y[n-1]
+    
+    let i: int = 0;
+    while i < 5 {
+        let x_f: float = 1.0;
+        let y: float = (alpha * x_f) + ((1.0 - alpha) * y_prev);
+        
+        println("Input: 1.0, Output:");
+        println(y);
+        
+        y_prev = y;
+        i = i + 1;
+    }
+    
+    // Expected y values:
+    // y1 = 0.2*1 + 0.8*0 = 0.2
+    // y2 = 0.2*1 + 0.8*0.2 = 0.36
+    // y3 = 0.2*1 + 0.8*0.36 = 0.488
+    // y4 = 0.2*1 + 0.8*0.488 = 0.5904
+    // y5 = 0.2*1 + 0.8*0.5904 = 0.67232
+    
+    if y_prev > 0.67 && y_prev < 0.68 {
+        println("Low Pass Test: PASSED");
+        return 1;
+    }
+    
+    println("Low Pass Test: FAILED");
+    return -1;
+}

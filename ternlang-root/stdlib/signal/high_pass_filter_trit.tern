@@ -1,0 +1,38 @@
+fn main() -> trit {
+    println("High Pass Filter verification...");
+    
+    let alpha: float = 0.2;
+    let y_prev: float = 0.0; // EMA state
+    
+    // Test stream: 1, 1, 1, 1, 1
+    // High pass y[n] = x[n] - EMA[n]
+    
+    let i: int = 0;
+    let hp: float = 0.0;
+    while i < 5 {
+        let x_f: float = 1.0;
+        let ema: float = (alpha * x_f) + ((1.0 - alpha) * y_prev);
+        hp = x_f - ema;
+        
+        println("Input: 1.0, High Pass Output:");
+        println(hp);
+        
+        y_prev = ema;
+        i = i + 1;
+    }
+    
+    // Expected HP values:
+    // hp1 = 1.0 - 0.2 = 0.8
+    // hp2 = 1.0 - 0.36 = 0.64
+    // hp3 = 1.0 - 0.488 = 0.512
+    // hp4 = 1.0 - 0.5904 = 0.4096
+    // hp5 = 1.0 - 0.67232 = 0.32768
+    
+    if hp > 0.32 && hp < 0.33 {
+        println("High Pass Test: PASSED");
+        return 1;
+    }
+    
+    println("High Pass Test: FAILED");
+    return -1;
+}

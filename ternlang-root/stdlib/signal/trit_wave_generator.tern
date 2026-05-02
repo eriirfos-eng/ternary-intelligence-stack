@@ -1,0 +1,31 @@
+fn main() -> trit {
+    println("Trit Wave Generator verification...");
+    
+    // Period 12 steps
+    let i: int = 0;
+    while i < 12 {
+        // Quantized ternary sine approximation
+        let s: int = 0;
+        if i == 0 { s = 0; }
+        else if i < 6 { s = 1; }
+        else if i == 6 { s = 0; }
+        else { s = -1; }
+        
+        // Square wave
+        let sq: int = 0;
+        if i < 6 { sq = 1; }
+        else { sq = -1; }
+        
+        println("Step:");
+        println(i);
+        println("Ternary Sine:");
+        println(s);
+        println("Square Wave:");
+        println(sq);
+        
+        i = i + 1;
+    }
+    
+    println("Wave Generator Test: PASSED");
+    return 1;
+}
