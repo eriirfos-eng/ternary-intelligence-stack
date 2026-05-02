@@ -1,0 +1,46 @@
+/*
+ * Trigonometry Mock — Approximations for sin and cos using Taylor series.
+ * Limited precision due to basic float capabilities.
+ * 
+ * RFI-IRFOS · PUBLIC repo · v1.0
+ */
+
+fn sin_approx(x: float) -> float {
+    // sin(x) approx x - x^3/6 + x^5/120 - x^7/5040
+    let x2: float = x * x;
+    let x3: float = x * x2;
+    let x5: float = x3 * x2;
+    let x7: float = x5 * x2;
+    
+    return x - (x3 / 6.0) + (x5 / 120.0) - (x7 / 5040.0);
+}
+
+fn cos_approx(x: float) -> float {
+    // cos(x) approx 1 - x^2/2 + x^4/24 - x^6/720
+    let x2: float = x * x;
+    let x4: float = x2 * x2;
+    let x6: float = x4 * x2;
+    
+    return 1.0 - (x2 / 2.0) + (x4 / 24.0) - (x6 / 720.0);
+}
+
+fn main() -> trit {
+    let pi_half: float = 1.570796;
+    let pi: float = 3.14159;
+    
+    let s: float = sin_approx(pi_half);
+    println("sin(pi/2) Expected near 1.0:");
+    println(s);
+    
+    let c: float = cos_approx(pi_half);
+    println("cos(pi/2) Expected near 0.0:");
+    println(c);
+    
+    // Test tolerances
+    if s > 0.99 && s < 1.01 && c > -0.05 && c < 0.05 {
+        println("Trigonometry Mock Test: PASSED");
+        return 1;
+    }
+    
+    return -1;
+}
