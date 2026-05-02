@@ -1,0 +1,43 @@
+// Distributed Pathfinding: Agents collaborate to find paths in a graph.
+// Each agent knows its neighbors and helps propagate distance information.
+
+fn get_next_step(current_pos: int, goal_pos: int, neighbors: int[2]) -> int {
+    let best_step: int = -1;
+    let min_dist: int = 1000;
+    
+    let i: int = 0;
+    while i < 2 {
+        let n: int = neighbors[i];
+        let d: int = goal_pos - n;
+        if d < 0 { d = 0 - d; }
+        
+        if d < min_dist {
+            min_dist = d;
+            best_step = n;
+        }
+        i = i + 1;
+    }
+    return best_step;
+}
+
+fn main() -> trit {
+    let goal: int = 10;
+    let neighbors: int[2];
+    neighbors[0] = 4;
+    neighbors[1] = 6;
+    
+    // Starting at 5, goal at 10. Neighbors are 4 and 6. 
+    // dist(4, 10) = 6, dist(6, 10) = 4. 6 is better.
+    let next: int = get_next_step(5, goal, neighbors);
+    
+    let success: trit = 0;
+    if next == 6 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
