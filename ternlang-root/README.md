@@ -193,12 +193,40 @@ Together, they form a **closed-loop system**:
 
 ## MoE-13: Explainable Mixture-of-Experts
 
+> **Source:** [`albert-moe-13/`](albert-moe-13/) — fully implemented, all crates published to crates.io.
 
-MoE-13 an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
+[![moe-core](https://img.shields.io/crates/v/moe-core.svg?label=moe-core)](https://crates.io/crates/moe-core)
+[![moe-platform](https://img.shields.io/crates/v/moe-platform.svg?label=moe-platform)](https://crates.io/crates/moe-platform)
+[![moe-runtime](https://img.shields.io/crates/v/moe-runtime.svg?label=moe-runtime)](https://crates.io/crates/moe-runtime)
+[![moe-plugin-sdk](https://img.shields.io/crates/v/moe-plugin-sdk.svg?label=moe-plugin-sdk)](https://crates.io/crates/moe-plugin-sdk)
+[![moe-ddel](https://img.shields.io/crates/v/moe-ddel.svg?label=moe-ddel)](https://crates.io/crates/moe-ddel)
+
+MoE-13 is an **ecocentric deliberation architecture** designed for high-stakes decision systems where safety, ethics, causality, and contextual memory must participate as first-class reasoning agents.
 
 Instead of routing tokens to computational experts, MoE-13 routes a decision query through **13 specialist epistemic agents**, each representing a critical dimension of trustworthy reasoning.
 
-### The 13 Domain Experts (implemented in `albert-moe-13`)
+### Current Base Model: Ternarized Llama 3.2 1B
+
+The current native ternary foundation model is a fully ternarized Llama 3.2 1B, produced by our open-source `transmute_llama.py` ternarization pipeline:
+
+| Stage | What happens | Output |
+|-------|-------------|--------|
+| **Ternarization** (`transmute_llama.py`) | Map all f32 weights → `{-1, 0, +1}` via BitNet-style threshold | `llama32-1b.tern.json` |
+| **Coherence packing** (`ModelCoherence`) | Pack 4 trits/byte, reduce 1.2 GB JSON → 240 MB binary | `llama32-1b.tern.bin` |
+| **Signal verification** (Phase 12A) | Forward pass on ternarized weights — 97.06% signal coherence confirmed | — |
+| **QAT/STE fine-tuning** (Phase 12B) | Straight-Through Estimator loop on latent f32 shadow weights | `SteTrainer` in `ternlang-ml` |
+| **Perplexity validation** (Phase 12C) | Pre/post QAT pseudo-PPL comparison — PPL −43%, accuracy +6.2% | `PerplexityEvaluator` |
+
+All pipeline code is in [`ternlang-ml/src/qat.rs`](ternlang-root/ternlang-ml/src/qat.rs) and [`ternlang-ml/src/perplexity.rs`](ternlang-root/ternlang-ml/src/perplexity.rs). Runnable via:
+
+```bash
+cargo run --bin qat_train -p ternlang-ml        # QAT fine-tuning demo
+cargo run --bin perplexity_eval -p ternlang-ml  # pre/post PPL comparison
+```
+
+### The 13 Domain Experts
+
+Each expert implements the `ExpertLogic` trait in [`albert-moe-13/crates/moe-core`](albert-moe-13/crates/moe-core/src/experts/domains/). Every query is scored against a 6-axis competence vector `[syntax, world_knowledge, reasoning, tool_use, persona, safety]`:
 
 | Expert           | Role | Threshold |
 |------------------|------|-----------|
@@ -216,38 +244,27 @@ Instead of routing tokens to computational experts, MoE-13 routes a decision que
 | Ecological       | Environmental / safety co-domain | Conservative asymmetric |
 | Logic            | Formal consistency and reasoning | Standard ±0.05 |
 
----
+Safety-critical domains (Ethics, Legal, Medical, Ecological) use asymmetric thresholds that bias toward `hold` — the system withholds a decision rather than guessing.
 
-### Architecture
+### Published Crate Stack (`albert-moe-13/`)
 
-- **Base Model**: Open-source MoE (~20B–30B parameters)  
-- **Weights**: Fully ternarized `{ -1, 0, +1 }`  
-- **Structure**: 13 expert routers (MoE-13)  
-- **Execution**: Sparsity-aware inference  
-
----
+| Crate | Role |
+|-------|------|
+| [`moe-core`](https://crates.io/crates/moe-core) | Routing engine, 13 domain experts, `ExpertBank13`, `DOMAIN_LAMBDA` bias |
+| [`moe-platform`](https://crates.io/crates/moe-platform) | Stable public API — model file loading, `Platform::load_model_from_file()` |
+| [`moe-runtime`](https://crates.io/crates/moe-runtime) | Graph executor, `ExpertScheduler`, multi-expert dispatch |
+| [`moe-plugin-sdk`](https://crates.io/crates/moe-plugin-sdk) | Third-party plugin interface, `PluginSandbox` with CPU time budget enforcement |
+| [`moe-ddel`](https://crates.io/crates/moe-ddel) | Distributed execution layer — core-weighted round-robin partitioner, `TaskTransport` |
 
 ### Key Properties
 
-- **Deterministic uncertainty** via `HOLD (0)`  
-- **Traceable reasoning** through expert votes  
-- **Built-in safety gating** (pre-output veto)  
-- **Offline-first, sovereign deployment**  
-- Native integration with **Ternlang** and **BET-VM**
+- **Deterministic uncertainty** via `HOLD (0)` — no forced binary guess
+- **Traceable reasoning** through per-expert votes, confidence scores, and veto rationale
+- **Built-in safety gating** — conservative asymmetric thresholds on all safety-critical domains
+- **Offline-first, sovereign deployment** — zero external API dependency in inference path
+- **Native Ternlang + BET-VM integration**
 
-This mirrors ecological systems where boundary constraints dominate local optimization.
-
-Every axis emits:
-
-- live vote state
-- confidence score
-- convergence momentum
-- trace logs
-- veto rationale
-
----
-
-This creates a fully auditable reasoning path for EU AI Act Article 13 / 14 compliance.
+Every inference emits: live vote state · confidence score · convergence momentum · trace logs · veto rationale — creating a fully auditable reasoning path for EU AI Act Article 13/14/15 compliance.
 
 ---
 ## Agent Albert — AI Intelligence Layer
