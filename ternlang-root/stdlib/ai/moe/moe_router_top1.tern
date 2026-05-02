@@ -1,0 +1,39 @@
+// MoE Top-1 Router: Selects the expert with the highest score.
+// This implements a simple gating mechanism for Mixture of Experts.
+
+fn find_top1(scores: float[3]) -> int {
+    let max_score: float = scores[0];
+    let max_idx: int = 0;
+    let i: int = 1;
+    while i < 3 {
+        if scores[i] > max_score {
+            max_score = scores[i];
+            max_idx = i;
+        }
+        i = i + 1;
+    }
+    return max_idx;
+}
+
+fn main() -> trit {
+    let scores: float[3];
+    scores[0] = 0.2;
+    scores[1] = 0.8;
+    scores[2] = 0.1;
+    
+    let top: int = find_top1(scores);
+    
+    // Return 1 if the expected expert (index 1) was chosen, else -1.
+    let success: trit = 0;
+    if top == 1 {
+        success = 1;
+    } else {
+        success = -1;
+    }
+
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
