@@ -1,0 +1,35 @@
+// MoE Quantized Weights: Experts use trit weights for efficiency.
+// Demonstrates hybrid precision in Mixture of Experts.
+
+fn quantized_expert(input: float[3], weights: int[3], bias: float) -> float {
+    let sum: float = bias;
+    let i: int = 0;
+    while i < 3 {
+        let w_val: float = (weights[i] * 1.0);
+        sum = sum + (input[i] * w_val);
+        i = i + 1;
+    }
+    return sum;
+}
+
+fn main() -> trit {
+    let input: float[3];
+    input[0] = 0.5; input[1] = 1.0; input[2] = -0.5;
+    
+    let weights: int[3];
+    weights[0] = 1; weights[1] = -1; weights[2] = 0;
+    
+    // (0.5*1 + 1.0*-1 + -0.5*0) + 0.1 = 0.5 - 1.0 + 0 + 0.1 = -0.4
+    let result: float = quantized_expert(input, weights, 0.1);
+    
+    let success: trit = 0;
+    if result == -0.4 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
