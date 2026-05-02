@@ -1,4 +1,21 @@
-## 2026-05-02 — stdlib session — 50 files
+## 2026-05-02 — stdlib session — 50 files (Round 2)
+Dirs covered: stdlib/signal, stdlib/crypto, stdlib/physics, stdlib/finance, stdlib/ai
+Files written:
+- stdlib/signal/ternary_fft_lite.tern, low_pass_filter_trit.tern, high_pass_filter_trit.tern, trit_wave_generator.tern, convolution_2d_trit.tern, signal_quantizer.tern, trit_noise_generator.tern, amplitude_modulator_trit.tern, phase_shifter_trit.tern, spectrogram_slice_trit.tern
+- stdlib/crypto/trit_hash_sponge.tern, lfsr_ternary.tern, feistel_trit_cipher.tern, trit_otp.tern, trit_checksum_32.tern, hmac_trit_lite.tern, trit_permutation_network.tern, secure_trit_compare.tern, diffie_hellman_ternary.tern, trit_shuffle_fisher_yates.tern
+- stdlib/physics/quantum_qubit_to_qutrit.tern, fluid_grid_2d.tern, orbital_state_vector.tern, thermal_diffusion_1d.tern, rigid_body_gravity.tern, pendulum_swing_sim.tern, lorentz_attractor_trit.tern, elastic_collision_2d.tern, black_hole_event_horizon.tern, gas_particle_collision.tern
+- stdlib/finance/black_scholes_ternary.tern, sharpe_ratio_trit.tern, portfolio_variance_trit.tern, compound_interest_trit.tern, market_impact_sim.tern, order_book_matcher.tern, moving_average_crossover.tern, monte_carlo_price_path.tern, arbitrage_triangular.tern, discounted_cash_flow.tern
+- stdlib/ai/ternary_perceptron.tern, backprop_layer_trit.tern, adam_optimizer_trit.tern, q_learning_gridworld.tern, genetic_algorithm_trit.tern, simulated_annealing_trit.tern, decision_tree_entropy.tern, knn_classifier_trit.tern, rbf_kernel_trit.tern, boltzmann_machine_trit.tern
+
+Compiler/VM observations:
+- Custom workarounds for 'sqrt' (Newton's method) and 'pow' (loops) are stable for float calculations.
+- Tensor literals with float values like '[1.0, 0.0]' should be avoided in favor of manual element assignment due to parser/VM instability in current dev build.
+- Ternary FFT (Radix-3) is highly efficient when using native ternary twiddle factors (-0.5 ± 0.866i).
+- Fixed-size arrays passed by reference allow for in-place updates (e.g., in phase_shifter_trit.tern), but take care with index bounds.
+- 'match' on general integers remains unstable; 'if/else' preferred for safety.
+- 'consensus' remains the primary tool for ternary logic 'averaging' and state resolution across crypto and signal modules.
+
+## 2026-05-02 — stdlib session — 50 files (Round 1)
 Dirs covered: stdlib/causal, stdlib/lib, stdlib/math, stdlib/classical, stdlib/logic, stdlib/showcase, stdlib/tutorials
 Files written:
 - stdlib/causal/causal_graph.tern, do_calculus.tern, backdoor_criterion.tern, frontdoor_criterion.tern, intervention_sim.tern
