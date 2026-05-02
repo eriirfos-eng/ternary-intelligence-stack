@@ -1,0 +1,47 @@
+// stdlib/logic/ternary_half_adder.tern
+// Ternary half-adder implementation (Sum and Carry).
+// Tier: 1 - Open Core
+
+fn half_adder(a: trit, b: trit, out: trittensor<2>) -> trit {
+    // Balanced Ternary Half-Adder
+    // Sum = (a + b) mod 3 (balanced: -1, 0, 1)
+    // Carry = (a + b) div 3 (balanced: -1, 0, 1)
+    
+    let sum: int = cast(a) + cast(b);
+    
+    if sum == 2 {
+        out[0] = -1; // Sum
+        out[1] = 1;  // Carry
+    } else if sum == -2 {
+        out[0] = 1;
+        out[1] = -1;
+    } else {
+        out[0] = cast(sum);
+        out[1] = 0;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let out: trittensor<2>;
+    
+    println("Ternary Half-Adder Truth Table (Partial):");
+    
+    // 1 + 1 = 1 carry, -1 sum (in balanced ternary 2 = 1 -1)
+    half_adder(1, 1, out);
+    print("1 + 1 -> Sum: "); print(out[0]); print(", Carry: "); println(out[1]);
+    if out[0] != -1 || out[1] != 1 { return -1; }
+    
+    // 1 + 0 = 0 carry, 1 sum
+    half_adder(1, 0, out);
+    print("1 + 0 -> Sum: "); print(out[0]); print(", Carry: "); println(out[1]);
+    if out[0] != 1 || out[1] != 0 { return -1; }
+    
+    // -1 + -1 = -1 carry, 1 sum (in balanced ternary -2 = -1 1)
+    half_adder(-1, -1, out);
+    print("-1 + -1 -> Sum: "); print(out[0]); print(", Carry: "); println(out[1]);
+    if out[0] != 1 || out[1] != -1 { return -1; }
+
+    println("Half-adder validated.");
+    return 1;
+}
