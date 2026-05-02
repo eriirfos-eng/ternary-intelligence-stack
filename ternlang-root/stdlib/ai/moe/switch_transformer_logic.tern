@@ -1,0 +1,49 @@
+// Switch Transformer Routing: Implements Top-1 routing with capacity enforcement.
+// Foundational logic for extremely large MoE models.
+
+fn switch_route(scores: float[3], capacity: int, counts: int[3]) -> int {
+    let max_score: float = -1.0;
+    let winner: int = -1;
+    let i: int = 0;
+    while i < 3 {
+        if scores[i] > max_score {
+            max_score = scores[i];
+            winner = i;
+        }
+        i = i + 1;
+    }
+    
+    // Enforce capacity
+    if winner != -1 {
+        if counts[winner] < capacity {
+            counts[winner] = counts[winner] + 1;
+            return winner;
+        }
+    }
+    return -1; // Dropped token or routed to shared expert
+}
+
+fn main() -> trit {
+    let scores: float[3];
+    scores[0] = 0.8; scores[1] = 0.1; scores[2] = 0.1;
+    
+    let capacity_limit: int = 2;
+    let counts: int[3];
+    counts[0] = 2; // Expert 0 is full
+    counts[1] = 0;
+    counts[2] = 0;
+    
+    let expert_id: int = switch_route(scores, capacity_limit, counts);
+    
+    // Should return -1 because expert 0 (winner) is full
+    let success: trit = 0;
+    if expert_id == -1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
