@@ -659,45 +659,66 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
 
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 reveal">
 
-          <!-- Card 1 -->
+          <!-- Card 1: Inference Speed -->
           <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_teal flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">TRCE Compute</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">NVIDIA CUDA Core Parity</p>
+             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Inference Performance</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Inference Speed</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Inferences per second</p>
              
-             <div class="mt-auto space-y-2 mb-6">
-               <div class="flex justify-between text-[10px] text-t_muted font-bold uppercase tracking-widest border-b border-t_border pb-1"><span>Sparsity</span><span>512² Yield</span></div>
-               <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">25% (Light)</span><span class="text-t_text font-bold">53.1x</span></div>
-               <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">40% (BitNet Base)</span><span class="text-t_blue font-bold">73.6x</span></div>
-               <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">60% (Optimal)</span><span class="text-t_teal font-bold">86.1x</span></div>
-               <div class="flex justify-between text-xs"><span class="text-t_muted">99% (Extreme)</span><span class="text-t_teal font-black">122.3x</span></div>
-             </div>
-
-             <div class="flex items-end justify-between pt-6 border-t border-t_border">
-                <div>
-                   <div class="text-[10px] font-mono text-t_muted uppercase tracking-widest">Efficiency Metric</div>
-                   <div class="text-xs font-bold text-t_text mt-1">Sparse Matrix Bypass</div>
+             <div class="mt-auto space-y-4 mb-6">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_muted font-bold">Standard f32</span>
+                    <span class="text-t_text">25k/s</span>
                 </div>
-                <div class="text-3xl font-black text-t_teal">122.3x</div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_teal font-black">Ternary (Sparse)</span>
+                    <span class="text-t_teal font-black text-lg">363k/s</span>
+                </div>
+                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
+                    <div class="bg-t_teal h-full" style="width: 90%"></div>
+                </div>
              </div>
           </div>
 
-          <!-- Card 2 -->
+          <!-- Card 2: Routing Latency -->
           <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_blue flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">Thermal Load</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Intel x86 Pipeline Parity</p>
+             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Routing Performance</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Decision Latency</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Time to route per decision</p>
 
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
-               Measures strict Joule output across a standard execution loop. The BET-ISA architecture directly maps structural zeros to hardware bypass circuits.
-             </p>
-
-             <div class="flex items-end justify-between pt-6 border-t border-t_border">
-                <div>
-                   <div class="text-[10px] font-mono text-t_muted uppercase tracking-widest">Efficiency Metric</div>
-                   <div class="text-xs font-bold text-t_text mt-1">Joule Output Reduction</div>
+             <div class="mt-auto space-y-4 mb-6">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_muted font-bold">Typical MoE</span>
+                    <span class="text-t_text">~100 µs</span>
                 </div>
-                <div class="text-3xl font-black text-t_blue">5x</div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_blue font-black">Ternary MoE</span>
+                    <span class="text-t_blue font-black text-lg">2.75 µs</span>
+                </div>
+                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
+                    <div class="bg-t_blue h-full" style="width: 20%"></div>
+                </div>
+             </div>
+          </div>
+
+          <!-- Card 3: Training Stability -->
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_red flex flex-col shadow-sm">
+             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Training Convergence</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Error Rate</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Training stabilization (STE)</p>
+
+             <div class="mt-auto space-y-4 mb-6">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_muted font-bold">Baseline Loss</span>
+                    <span class="text-t_text">3,899</span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_red font-black">STE-Fine-tuned</span>
+                    <span class="text-t_red font-black text-lg">2,227</span>
+                </div>
+                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
+                    <div class="bg-t_red h-full" style="width: 60%"></div>
+                </div>
              </div>
           </div>
 
