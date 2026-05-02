@@ -66,9 +66,6 @@ This model is designed to:
 
 ## 3. Agent Albert — The Sovereign AI Assistant
 
-[![crates.io](https://img.shields.io/crates/v/albert-cli.svg)](https://crates.io/crates/albert-cli)
-[![version](https://img.shields.io/badge/version-v1.2.9-cyan)](https://crates.io/crates/albert-cli)
-
 **Albert** is also the terminal-native interface for the TIS. He runs entirely in your terminal, connects to local models (Ollama) or commercial bridges, and never “phones home.”
 
 ### Quick Install
