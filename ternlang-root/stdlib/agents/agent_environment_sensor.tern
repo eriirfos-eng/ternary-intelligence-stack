@@ -1,0 +1,31 @@
+// Environment Sensor: Maps raw sensory data to agent internal beliefs.
+// Demonstrates discretization of environmental signals.
+
+fn sense(value: float, low_th: float, high_th: float) -> trit {
+    if value > high_th {
+        return 1; // High/Positive
+    }
+    if value < low_th {
+        return -1; // Low/Negative
+    }
+    return 0; // Neutral/Optimal
+}
+
+fn main() -> trit {
+    let temp: float = 25.0;
+    let high: float = 30.0;
+    let low: float = 15.0;
+    
+    let belief: trit = sense(temp, low, high); // 0 (Optimal)
+    
+    let success: trit = 0;
+    if belief == 0 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
