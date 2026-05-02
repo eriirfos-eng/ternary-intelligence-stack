@@ -1,0 +1,43 @@
+// Collaborative Filter: Recommends an action based on peer preferences.
+// Implements a simple collective intelligence aggregation.
+
+fn recommend(prefs: int[3]) -> int {
+    // Return the majority preference
+    let c_pos: int = 0;
+    let c_neg: int = 0;
+    let c_neu: int = 0;
+    
+    let i: int = 0;
+    while i < 3 {
+        if prefs[i] == 1 { c_pos = c_pos + 1; }
+        if prefs[i] == -1 { c_neg = c_neg + 1; }
+        if prefs[i] == 0 { c_neu = c_neu + 1; }
+        i = i + 1;
+    }
+    
+    if c_pos > c_neg {
+        if c_pos > c_neu { return 1; }
+    }
+    if c_neg > c_pos {
+        if c_neg > c_neu { return -1; }
+    }
+    return 0;
+}
+
+fn main() -> trit {
+    let prefs: int[3];
+    prefs[0] = 1; prefs[1] = 1; prefs[2] = -1;
+    
+    let choice: int = recommend(prefs);
+    
+    let success: trit = 0;
+    if choice == 1 {
+        success = 1;
+    } else { success = -1; }
+    
+    match success {
+        1 => { return 1; }
+        0 => { return 0; }
+        -1 => { return -1; }
+    }
+}
