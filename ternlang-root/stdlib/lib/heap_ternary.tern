@@ -1,0 +1,88 @@
+// stdlib/lib/heap_ternary.tern
+// A max-heap implementation with 3-way branching (ternary heap).
+// Offers O(log3 N) push/pop, which is more efficient for priority queues.
+
+fn heap_push(heap: int[], count: int, val: int) -> int {
+    let i: int = count;
+    heap[i] = val;
+    
+    // Bubble up
+    while i > 0 {
+        let parent: int = (i - 1) / 3;
+        if heap[i] > heap[parent] {
+            let temp: int = heap[i];
+            heap[i] = heap[parent];
+            heap[parent] = temp;
+            i = parent;
+        } else {
+            i = 0; // Stop
+        }
+    }
+    return count + 1;
+}
+
+fn heap_pop(heap: int[], count: int) -> int {
+    if count <= 0 { return 0; }
+    
+    // Replace root with last element
+    heap[0] = heap[count - 1];
+    let new_count: int = count - 1;
+    
+    // Bubble down
+    let i: int = 0;
+    while i < new_count {
+        let child1: int = 3 * i + 1;
+        let child2: int = 3 * i + 2;
+        let child3: int = 3 * i + 3;
+        
+        let largest: int = i;
+        if child1 < new_count {
+            if heap[child1] > heap[largest] { largest = child1; }
+        }
+        if child2 < new_count {
+            if heap[child2] > heap[largest] { largest = child2; }
+        }
+        if child3 < new_count {
+            if heap[child3] > heap[largest] { largest = child3; }
+        }
+        
+        if largest != i {
+            let temp: int = heap[i];
+            heap[i] = heap[largest];
+            heap[largest] = temp;
+            i = largest;
+        } else {
+            i = new_count; // Stop
+        }
+    }
+    return new_count;
+}
+
+fn main() -> trit {
+    let heap: int[10];
+    let count: int = 0;
+    
+    print("Pushing: 10, 30, 20, 50, 40");
+    count = heap_push(heap, count, 10);
+    count = heap_push(heap, count, 30);
+    count = heap_push(heap, count, 20);
+    count = heap_push(heap, count, 50);
+    count = heap_push(heap, count, 40);
+    
+    print("Heap root (max): ");
+    print(heap[0]); // Expected 50
+
+    if heap[0] != 50 { return -1; }
+
+    print("Popping max...");
+    count = heap_pop(heap, count);
+    print("New root: ");
+    print(heap[0]); // Expected 40
+    
+    if heap[0] == 40 {
+        print("✓ Ternary heap test passed.");
+        return 1;
+    }
+    
+    return -1;
+}
