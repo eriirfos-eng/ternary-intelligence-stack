@@ -304,13 +304,23 @@ This makes Albert the intelligence behind every workflow — not just a chatbot 
 
 Albert dispatches to whichever provider you configure. No default billing, no vendor lock-in.
 
+**Recommended for sovereign/offline deployment — zero external API calls:**
+
+```bash
+ollama pull llama3.2          # or any model from ollama.com/library
+ollama serve                  # start local inference server
+albert                        # Albert auto-detects Ollama — no key needed
+```
+
+Full provider table:
+
 | Provider | Environment variable | Notes |
 |----------|---------------------|-------|
-| Google Gemini | `GEMINI_API_KEY` | Default model: `gemini-2.0-flash` |
+| **Ollama (local)** | *(none needed)* | `ollama serve` — fully air-gapped, **recommended** |
+| Google Gemini | `GEMINI_API_KEY` | Cloud model: `gemini-2.0-flash` |
 | Anthropic Claude | `ANTHROPIC_API_KEY` | Any Claude model |
 | OpenAI / GPT | `OPENAI_API_KEY` | GPT-4o and others |
 | XAI / Grok | `XAI_API_KEY` | Grok-2 and Grok-3 |
-| Ollama (local) | *(none needed)* | `ollama serve` — fully air-gapped |
 | HuggingFace | `HF_API_KEY` | Any HF inference endpoint |
 | Azure OpenAI | `AZURE_OPENAI_API_KEY` | Enterprise deployments |
 
