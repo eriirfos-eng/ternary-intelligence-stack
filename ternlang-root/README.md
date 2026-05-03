@@ -19,7 +19,7 @@
 
 Ternlang is a systems programming language and ML inference runtime built on balanced ternary logic. It is the foundational layer of a post-binary technology ecosystem designed to secure European technological sovereignty.
 
-Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28/files/8hzux]
+Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https://osf.io/cyn28]
 
 ---
 
