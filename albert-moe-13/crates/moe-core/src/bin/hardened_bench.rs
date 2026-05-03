@@ -139,6 +139,14 @@ fn main() {
         }
     }
 
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() > 1 {
+        let p: f32 = args[1].parse().expect("Sparsity must be a float");
+        let (lat, speed, std, cyc) = run_point(p);
+        println!("{:.2},{:.6},{:.4},{:.6},{:.0}", p, lat, speed, std, cyc);
+        return;
+    }
+
     println!("sparsity,latency_ms,speedup,stddev_ms,cycles");
     let points = [0.0, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 0.9];
     for &p in points.iter() {

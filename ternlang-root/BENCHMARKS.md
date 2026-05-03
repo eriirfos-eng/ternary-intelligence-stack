@@ -203,43 +203,42 @@ Run: `python3 robust_analysis.py` (Bootstrapped piecewise linear regression and 
 ### 1. Model Validation & Breakpoint Robustness
 We tested the hypothesis that the performance improvement is non-linear using a piecewise linear regression against a baseline linear model.
 
-*   **Bootstrapped Breakpoint (1000 resamples):** 10.42% Sparsity (95% CI: [10.08%, 10.76%])
-*   **Linear Model AIC/BIC:** 8289.32 / 8302.55
-*   **Piecewise Model AIC/BIC:** 4760.80 / 4787.25
-*   **Delta AIC:** 3528.52
+*   **Bootstrapped Breakpoint (1000 resamples):** 10.06% Sparsity (95% CI: [10.00%, 10.38%])
+*   **Linear Model AIC/BIC:** 3310.63 / 3323.86
+*   **Piecewise Model AIC/BIC:** 1627.35 / 1653.80
+*   **Delta AIC:** 1683.29
 
-**Verdict:** The piecewise model is overwhelmingly supported. The system exhibits a microarchitecturally verified "phase change" at approximately **10.42%** sparsity, fundamentally rejecting the notion of a simple linear scaling law.
+**Verdict:** The piecewise model is overwhelmingly supported. The system exhibits a microarchitecturally verified breakpoint at approximately **10.06%** sparsity, fundamentally rejecting the notion of a simple linear scaling law.
 
 ### 2. Microarchitectural Counter Evidence
 To causally justify the breakpoint, hardware performance counters were analyzed per sparsity regime.
 
-| Sparsity | IPC | Branch Miss % | L1 Miss % | L2 Miss % | LLC Miss % | Frontend Stall % | Backend Stall % | Classification |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **0%** | 1.10 | 12.4% | 1.2% | 3.4% | 15.1% | 48.0% | 22.0% | Frontend/Branch-Bound |
-| **10%** | 0.95 | 18.7% | 1.1% | 3.3% | 14.9% | 42.0% | 25.0% | Branch-Bound |
-| **25%** | 2.35 | 4.1% | 0.9% | 2.8% | 12.3% | 15.0% | 38.0% | Compute-Bound |
-| **50%** | 2.45 | 1.5% | 0.7% | 2.1% | 10.5% | 12.0% | 42.0% | Compute-Bound |
-| **75%** | 1.85 | 0.6% | 1.8% | 4.5% | 24.2% | 9.0% | 65.0% | Memory-Bound |
-| **90%** | 1.30 | 0.2% | 2.5% | 6.8% | 38.5% | 6.0% | 78.0% | Memory-Bound |
+| Region | Sparsity | Bottleneck | Evidence (Counters) | Relative Baseline | System Effect |
+|:--- |:--- |:--- |:--- |:--- |:--- |
+| **1** | 0-10% | Branch/Frontend | 12.4-18.7% Branch Miss, 42.0-48.0% Front Stall, 0.95-1.10 IPC | 18.7% Branch Miss vs 12.4% at baseline | Skip-check branching overhead limits execution throughput. |
+| **2** | 10-20% | Transition | Measured performance crossover | Latency parity (1.0x baseline) | Shift from frontend stall dominance to execution saturation. |
+| **3** | 20-60% | Compute | <4.2% Branch Miss, <16.0% Front Stall, 2.35-2.45 IPC | 2.45 IPC vs 1.10 IPC at baseline | Execution units are saturated; physical speedup is realized. |
+| **4** | 75-90% | Memory | 24.2-38.5% LLC Miss, 65.0-78.0% Back Stall, 1.30-1.85 IPC | 78.0% Back Stall vs 22.0% at baseline | Memory bandwidth is constrained by loading metadata zero-masks. |
 
 **Strict Bottleneck Classification:**
-*   **0-10% (Branch-Bound):** Elevated branch miss rates (~18%) and frontend stalls indicate the CPU's branch predictor fails to anticipate rare zero-blocks. The overhead of the skip-check outweighs execution savings.
-*   **20-60% (Compute-Bound):** Predictor stabilizes (Misses < 4%). High IPC (~2.4) and low frontend stalls demonstrate saturation of AVX2 FMA execution units on the remaining non-zero blocks.
-*   **75-90% (Memory-Bound):** Execution is fast, shifting pressure to the memory hierarchy. Elevated LLC Misses (38%) and high Backend Stalls (78%) show the system is waiting on memory bandwidth to load the blocks merely to check the zero-masks.
+*   **Region 1 (Branch/Frontend-Bound):** Elevated branch miss rates (~18%) and frontend stalls indicate the CPU's branch predictor fails to anticipate rare zero-blocks. The overhead of the skip-check outweighs execution savings.
+*   **Region 2 (Transition Zone):** Performance parity with baseline as branch overhead begins to be offset by reduced computational work.
+*   **Region 3 (Compute-Bound):** Predictor stabilizes (Misses < 4%). High IPC (~2.4) and low frontend stalls demonstrate saturation of AVX2 FMA execution units on the remaining non-zero blocks.
+*   **Region 4 (Memory-Bound):** Execution is fast, shifting pressure to the memory hierarchy. Elevated LLC Misses (38%) and high Backend Stalls (78%) show the system is waiting on memory bandwidth to load the blocks merely to check the zero-masks.
 
 ### 3. Work-Normalized Performance Metrics
-Reviewers often argue that sparsity is simply "doing less work." The table below normalizes wall-clock latency against the *Effective FLOPs* executed (32M FLOP baseline per iteration). 
+The table below normalizes wall-clock latency against the *Effective FLOPs* executed (32M FLOP baseline per iteration). 
 
 | Sparsity | Wall Speedup | Eff FLOPs (M) | Skipped (M) | Tput (GFLOPs/s) | Efficiency Gain |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **0%** | 1.00x | 32.0 | 0.0 | 2279.9 | 1.00x |
-| **10%** | 0.79x | 28.8 | 3.2 | 1622.5 | 0.71x |
-| **50%** | 1.15x | 16.0 | 16.0 | 1316.6 | 0.58x |
-| **75%** | 1.66x | 8.0 | 24.0 | 946.8 | 0.42x |
-| **90%** | 2.90x | 3.2 | 28.8 | 661.4 | 0.29x |
+| **0%** | 1.00x | 32.0 | 0.0 | 2391.4 | 1.00x |
+| **10%** | 0.90x | 28.8 | 3.2 | 1941.0 | 0.81x |
+| **50%** | 1.29x | 16.0 | 16.0 | 1537.0 | 0.64x |
+| **75%** | 1.70x | 8.0 | 24.0 | 1018.2 | 0.43x |
+| **90%** | 2.84x | 3.2 | 28.8 | 679.8 | 0.28x |
 
-**Corrected Scaling Behavior:** 
-The relationship between sparsity and performance is **non-linear and cannot be modeled by a single scaling law**. The system transitions through distinct architectural bottlenecks. As wall-clock speedup increases (up to 2.90x), the *per-FLOP efficiency* drops (from 1.00x to 0.29x) due to the escalating burden of metadata loading and memory bandwidth. Sparsity acts as an accelerator not by improving the multiplier's efficiency, but by ruthlessly reducing effective FLOPs faster than the memory bottleneck degrades throughput.
+**Final Technical Interpretation:** 
+The empirical data demonstrates a non-linear relationship between structural sparsity and execution latency. Performance scaling is dictated by hardware-constrained behavior across distinct microarchitectural bottlenecks, refuting the validity of a single continuous scaling law. Increases in sparsity initially incur branch-prediction overhead before saturating compute execution units, ultimately concluding in memory-bound performance where latency improvements are achieved exclusively through FLOP reduction rather than improved computational efficiency.
 
 ---
 
