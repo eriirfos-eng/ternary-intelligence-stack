@@ -7,6 +7,11 @@ Reverse chronological record of every working session (newest first). One row pe
 
 | Date | Session Update |
 |------|----------------|
+| 2026-05-03 | **[Hyperparameter Tuner]** Implemented `TernaryBayesianTuner` using Bayesian optimization for automated STE threshold tuning; integrated into training crate. |
+| 2026-05-03 | **[SIMD Math Kernels]** Implemented SIMD-optimized ternary matmul kernels (`simd_kernels.rs`) with AVX2 intrinsics; registered in model_adapter. |
+| 2026-05-03 | **[Training Infrastructure]** Implemented full data ingestion pipeline (`DataPipeline`) and sparse ternary weight checkpointing system (`CheckpointManager`) to satisfy frontier-scale requirements. |
+| 2026-05-03 | **[Architecture Documentation]** Hardened documentation: added comprehensive crate list and clear license/open-core mapping to `ternlang-root/README.md` and `README.md` (root) to ensure total transparency. |
+| 2026-05-03 | **[Trit-Drift Diagnostics]** Implemented `TritDriftLogger` for tracking ternary weight manifold stability during training; integrated and unit-tested in `core/model_adapter/`. |
 | 2026-05-02 | **[CI/CD Build Fix]** Diagnosed and resolved Fly.io deployment failure. The build container was missing the `docs/` asset directory, causing a runtime error in `include_str!`. Updated `Dockerfile` to include `docs/` in the build context. Verified deployment workflow. |
 | 2026-05-02 | **[Frontier Pivot: End-to-End Learned Routing & Specialization]** Implemented `DifferentiableRouter` in `core/router.rs` enabling learned domain routing for MoE-13. Integrated router into training loop and enhanced training metrics persistence via `training.log`. Verified convergence with N=1000 experiment. Sanitized "122x" claims and synchronized documentation. Pushed to remote. |
 | 2026-05-02 | **[Scaling Ternary Training and Persistence]** Scaled MoE-13 experiment to N=1000 parameters and integrated persistent logging to `training.log`. Debugged training loop and confirmed model responsiveness to gradients. |
