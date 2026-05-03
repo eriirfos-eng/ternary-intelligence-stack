@@ -1,0 +1,13 @@
+[package]
+name = "albert-llm-core"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+candle-core = "0.8.4"
+candle-nn = "0.8.4"
+tokenizers = "0.21.0"
+serde = { version = "1.0", features = ["derive"] }

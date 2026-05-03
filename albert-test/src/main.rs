@@ -3,33 +3,36 @@
 //! Bootstraps inference, audit logic, and interactive REPL for the TIS.
 
 use std::io::{self, Write};
-use std::path::Path;
+use albert_llm_core::model::{Transformer, TransformerConfig};
+use albert_llm_core::tokenizer::BpeTokenizer;
+use candle_nn::VarMap;
+use candle_core::{Device, DType};
 
 struct AlbertTest {
-    model_path: String,
-    trace: bool,
+    model: Transformer,
+    tokenizer: BpeTokenizer,
 }
 
 impl AlbertTest {
     fn new() -> Self {
-        // Auto-detect latest checkpoint (Mock logic)
-        let model = "copernicus-v1".to_string();
-        Self { model_path: model, trace: false }
+        let dev = &Device::Cpu;
+        let varmap = VarMap::new();
+        let vb = candle_nn::VarBuilder::from_varmap(&varmap, DType::F32, dev);
+        let config = TransformerConfig::default();
+        
+        // Use relative path for vocab
+        let tokenizer = BpeTokenizer::new("data/vocab.json"); 
+        let model = Transformer::new(config.vocab_size, config.hidden_size, vb).expect("Failed to init model");
+        
+        Self { 
+            model,
+            tokenizer,
+        }
     }
 
     fn bootstrap(&self) {
-        println!("System initialized: v1.0");
-        println!("Checkpoint: {}", self.model_path);
-        println!("Integrity: OK");
-    }
-
-    fn run_audit(&self) {
-        println!("--- System-Wide Integrity Audit ---");
-        println!("Model Integrity: PASS");
-        println!("MoE Routing Stability: PASS");
-        println!("Reproducibility: 100%");
-        println!("Weakness Scan: No nondeterminism detected.");
-        println!("Audit report generated: albert_system_report.md");
+        println!("System initialized: albert-llm-core-v0");
+        println!("Integrity: NEURAL-BACKEND-ACTIVE");
     }
 
     fn repl(&mut self) {
@@ -38,15 +41,28 @@ impl AlbertTest {
             io::stdout().flush().unwrap();
             
             let mut input = String::new();
-            io::stdin().read_line(&mut input).unwrap();
-            let cmd = input.trim();
-            
-            match cmd {
-                "evaluate system" => self.run_audit(),
-                "trace on" => self.trace = true,
-                "trace off" => self.trace = false,
-                "exit" => break,
-                _ => println!("Inference for: '{}' (Routed via MoE)", cmd),
+            match io::stdin().read_line(&mut input) {
+                Ok(0) => break, // Handle EOF (Ctrl+D or pipe empty)
+                Ok(_) => {
+                    let cmd = input.trim();
+                    if cmd == "exit" { break; }
+                    if cmd.is_empty() { continue; }
+
+                    let mut current_prompt = cmd.to_string();
+                    print!("[Albert]: ");
+                    for _ in 0..10 {
+                        let next_token = self.model.generate(&self.tokenizer, &current_prompt);
+                        if next_token.is_empty() { break; }
+                        print!("{} ", next_token);
+                        io::stdout().flush().unwrap();
+                        current_prompt.push_str(&next_token);
+                    }
+                    println!();
+                }
+                Err(e) => {
+                    eprintln!("Error reading input: {}", e);
+                    break;
+                }
             }
         }
     }
