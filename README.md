@@ -1,15 +1,15 @@
 # Ternary Intelligence Stack (TIS)
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![version](https://img.shields.io/badge/version-v1.2.9-blue)](#architecture)
+[![version](https://img.shields.io/badge/version-v1.3.5-blue)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 [![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
-[![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#example-library)
-[![stdlib](https://img.shields.io/badge/stdlib-1k+_open_%26_28k+_premium-blue)](stdlib/PREMIUM.md)
+[![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#architecture)
+[![stdlib](https://img.shields.io/badge/stdlib-28k+_open_%26_2.5k+_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 [![moe-core](https://img.shields.io/crates/v/moe-core.svg?label=moe-core)](https://crates.io/crates/moe-core)
 [![moe-platform](https://img.shields.io/crates/v/moe-platform.svg?label=moe-platform)](https://crates.io/crates/moe-platform)
@@ -112,14 +112,15 @@ albert-cli
 
 ---
 
-## Repository Architecture
+## 4. Repository Architecture
 
-This repository is split into two primary domains, each serving a distinct purpose in our research.
+This repository is split into three primary domains, each serving a distinct purpose in the TIS ecosystem:
 
 | Path | Purpose |
 |-----------|----------------|
-| `ternlang-root/` | **The Orchestration Layer:** Compiler, BET VM, and the MoE-13 Orchestrator MCP server. This layer handles logical routing and ternary decision-making. |
-| `albert-moe-13/` | **Model Development Framework:** The native research framework for training scaling. Houses the crates responsible for ternary manifold adaptation, STE-based training, and model architecture. |
+| [`ternlang-root/`](ternlang-root/) | **The Orchestration Layer:** Compiler, BET VM, and the MoE-13 Orchestrator MCP server. This layer handles logical routing and ternary decision-making. |
+| [`albert-moe-13/`](albert-moe-13/) | **Model Development Framework:** The native research framework for training scaling. Houses the crates responsible for ternary manifold adaptation, STE-based training, and model architecture. |
+| [`agent_albert_cli/`](agent_albert_cli/) | **Sovereign Agent Layer:** The terminal-native, model-agnostic AI agent (Albert) built in pure Rust for autonomous coding and orchestration. |
 
 ### Note on Training Infrastructure
 As of current development, this repository houses the foundational model architecture, ternary math, and scaling research framework (see `albert-moe-13/crates/`). Massive-scale distributed training infrastructure is currently managed in a separate, secured workflow or remains in pre-cluster, experimental development stages. Experimental benchmarks and logic can be found in `albert-moe-13/crates/moe-core/src/training/`.
@@ -130,10 +131,10 @@ As of current development, this repository houses the foundational model archite
 
 | Tier | Price | Details |
 |------|-------|---------|
-| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 1k+ open-core modules + 30 MCP tools |
-| Pro Standard (BSL-1.1) | €99/month | REST API, server-side memory, Tier 2 stdlib |
-| Industrial (BSL-1.1) | €349/month | QNN, SEC, T-HAL, TernAudit + Tier 3 stdlib |
-| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 stdlib |
+| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 28,500+ open-core modules + 30 MCP tools |
+| Pro Standard (BSL-1.1) | €99/month | REST API, server-side memory, Tier 2 'Masterwork' modules |
+| Industrial (BSL-1.1) | €349/month | QNN, SEC, T-HAL, TernAudit + Tier 3 'Masterwork' modules |
+| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 'Masterwork' modules |
 
 ---
 
