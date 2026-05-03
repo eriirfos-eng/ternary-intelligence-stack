@@ -358,3 +358,111 @@ Routing Probs: [0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07
 Epoch 18: loss=9.996533
 Routing Probs: [0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308, 0.07692308]
 Epoch 19: loss=9.993733
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=0 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=1 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=2 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=3 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=4 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=5 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=6 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=7 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=8 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=9 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=4.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=10 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=11 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=12 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=13 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=14 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=15 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=16 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=0.000000
+Epoch 40: loss=1.000000
+--- New Run: N=2048, LR=0.02, Tau=0.45, Seed=17 ---
+Epoch 0: loss=1.000000
+Epoch 10: loss=1.000000
+Epoch 20: loss=1.000000
+Epoch 30: loss=1.000000
+Epoch 40: loss=1.000000
