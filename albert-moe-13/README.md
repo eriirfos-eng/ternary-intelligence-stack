@@ -56,4 +56,15 @@ This project is an **Open-Core** research framework. All core training, orchestr
 *   **Compliance**: Built-in audit trails and hard-safety gating ensure compliance with EU AI Act frameworks.
 
 ---
+
+## 6. Project Structure
+To maintain a clean and professional research environment, artifacts are organized as follows:
+
+*   `benchmarks/`: Python analysis scripts (`robust_analysis.py`), hardware counter collection tools, and raw CSV results.
+*   `crates/`: Core Rust implementation of the MoE runtime and SIMD kernels.
+*   `data/`: Sharded training corpora and test datasets.
+*   `docs/`: Detailed architectural specs, roadmaps, and the verified **SPRIND Scientific Artifact**.
+*   `models/`: Checkpoints and metadata for the Copernicus model series.
+
+---
 **Built by RFI-IRFOS · Graz, Austria · [osf.io/cyn28](https://osf.io/cyn28)**

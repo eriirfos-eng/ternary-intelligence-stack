@@ -198,7 +198,7 @@ Task: Linear Layer Forward (512 tokens, 2048 embed dim).
 
 ## §10 — Microarchitectural Causal Evidence & Statistical Robustness
 
-Run: `python3 robust_analysis.py` (Bootstrapped piecewise linear regression and AIC/BIC model comparison over 500 samples/point hardware trace). Counter data collected via Linux `perf stat`.
+Run: `python3 benchmarks/robust_analysis.py` (Bootstrapped piecewise linear regression and AIC/BIC model comparison over 500 samples/point hardware trace). Counter data collected via Linux `perf stat`.
 
 ### 1. Model Validation & Breakpoint Robustness
 We tested the hypothesis that the performance improvement is non-linear using a piecewise linear regression against a baseline linear model.
@@ -248,7 +248,7 @@ The empirical data demonstrates a non-linear relationship between structural spa
 # Hardened Benchmark (§10)
 cd albert-moe-13
 cargo run --release --bin hardened_bench -p moe-core
-python3 robust_analysis.py
+python3 benchmarks/robust_analysis.py
 ```
 
 ---
