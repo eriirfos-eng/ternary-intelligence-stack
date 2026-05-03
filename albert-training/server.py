@@ -2,9 +2,14 @@ from flask import Flask, jsonify, request
 from flask_socketio import SocketIO, emit
 import subprocess
 import threading
+import sys
+
+# Add the albert-moe-13/crates/moe-core/src/core/model_adapter/ path to sys.path
+# This is a hacky way to access the router telemetry from Python; 
+# ideally we expose a Rust FFI or a dedicated telemetry collector binary.
+# Since we are using Rust, we will query the stats via a CLI call or an API.
 
 app = Flask(__name__)
-# Try without async_mode='eventlet' initially to see if standard Flask mode works
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route('/')
@@ -12,9 +17,12 @@ def index():
     with open('index.html', 'r') as f:
         return f.read()
 
-@socketio.on('connect')
-def test_connect():
-    print('Client connected')
+@app.route('/api/telemetry', methods=['GET'])
+def get_telemetry():
+    # In a real system, this would query the Rust process memory 
+    # or a shared state file. Here we mock it for demonstration.
+    import random
+    return jsonify({"experts": [random.randint(0, 100) for _ in range(13)]})
 
 @socketio.on('start_training')
 def handle_training(config):
