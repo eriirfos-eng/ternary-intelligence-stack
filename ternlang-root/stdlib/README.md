@@ -1,7 +1,7 @@
 # Ternlang Standard Library (StdLib)
 Welcome to the official standard library for the Ternary Intelligence Stack (TIS).
 
-**This public repo contains 567 open-core `.tern` modules** across the domains listed below.
+**This public repo contains 1000 open-core `.tern` modules** across the domains listed below.
 The full premium library (28,495+ modules across `nn::*`, `nlp::*`, `vision::*`, `bio::*`, `finance::*`, `crypto::*`, `qnn::*`, and more) is in the private `ternlang-premium` repo — see [PREMIUM.md](PREMIUM.md) for access.
 
 ## Repository Overview
