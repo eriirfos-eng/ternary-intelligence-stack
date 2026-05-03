@@ -3,8 +3,8 @@
 //! Bootstraps inference, audit logic, and interactive REPL for the TIS.
 
 use std::io::{self, Write};
-use albert_llm_core::model::{Transformer, TransformerConfig};
-use albert_llm_core::tokenizer::BpeTokenizer;
+use moe_llm_core::model::{Transformer, TransformerConfig};
+use moe_llm_core::tokenizer::BpeTokenizer;
 use candle_nn::VarMap;
 use candle_core::{Device, DType};
 
