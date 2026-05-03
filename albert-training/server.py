@@ -1,20 +1,31 @@
-from flask import Flask, jsonify
+from flask import Flask, render_template_string
+from flask_socketio import SocketIO, emit
 import subprocess
-import os
+import threading
+import time
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route('/')
 def index():
     return open('index.html').read()
 
-@app.route('/api/train', methods=['POST'])
-def train():
-    # Trigger the Rust training harness
-    cmd = ["cargo", "run", "--bin", "production_train", "-p", "moe-core"]
-    cwd = "../albert-moe-13/crates/moe-core"
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
-    return jsonify({"message": result.stdout + result.stderr})
+@socketio.on('start_training')
+def handle_training():
+    def run_training():
+        cmd = ["cargo", "run", "--bin", "production_train", "-p", "moe-core"]
+        cwd = "../albert-moe-13/crates/moe-core"
+        
+        # Stream logs in real-time
+        process = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        for line in iter(process.stdout.readline, ''):
+            socketio.emit('log', {'data': line.strip()})
+        process.stdout.close()
+        socketio.emit('status', {'data': 'Training Finished'})
+
+    threading.Thread(target=run_training).start()
+    emit('status', {'data': 'Training Started'})
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    socketio.run(app, port=5000)
