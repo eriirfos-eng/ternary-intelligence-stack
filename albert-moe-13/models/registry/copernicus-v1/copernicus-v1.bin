@@ -1,0 +1,4 @@
+[TIS-ARTIFACT-v1]
+weights: sparse-trit-packed
+experts: 13
+size: 1024
