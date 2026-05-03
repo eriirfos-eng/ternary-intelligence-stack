@@ -17,15 +17,14 @@ impl Albert1B {
         Self {
             layers: 12,
             embedding: TernaryEmbedding::new(50257, 768),
-            router: DifferentiableRouter::new(13),
+            router: DifferentiableRouter::new(768, 13, 0.5),
         }
     }
-...
+
     /// Initializes the model weights on the ternary manifold {-1, 0, 1}.
     pub fn initialize_weights(&self) -> Vec<i8> {
-        // Implementation: Xavier/Kaiming initialization mapped to ternary
-        // manifold thresholds.
-        vec![0; self.layers * self.expert_domains * self.manifold_dim]
+        // Based on layers and embedding dimensions
+        vec![0; self.layers * self.embedding.dim * 13]
     }
 }
 
@@ -37,6 +36,7 @@ mod tests {
     fn test_albert_1b_architecture() {
         let model = Albert1B::new();
         assert_eq!(model.layers, 12);
-        assert_eq!(model.expert_domains, 13);
+        // Correcting the test to verify router expert count
+        assert_eq!(model.router.num_experts, 13);
     }
 }

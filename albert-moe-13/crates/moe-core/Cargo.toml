@@ -18,3 +18,10 @@ anyhow = "1.0"
 ndarray = "0.15"
 rand = "0.8"
 log = "0.4"
+tokio = { version = "1.40.0", features = ["full"] }
+reqwest = { version = "0.13.3", features = ["json", "blocking"] }
+
+[features]
+default = []
+nccl = []
+
