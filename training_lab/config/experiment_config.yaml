@@ -1,0 +1,11 @@
+# Experiment Configuration: Reproducibility Base
+experiment_name: "Ternary-MoE-Stability-100"
+runs_total: 100
+model_params:
+  dim: 2048
+  lr: 0.02
+  tau: 0.45
+  num_experts: 13
+data_source: "./data/corpus/bible.txt"
+log_directory: "./training_lab/results"
+metrics_file: "./training_lab/metrics.jsonl"
