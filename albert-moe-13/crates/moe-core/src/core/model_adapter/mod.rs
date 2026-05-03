@@ -8,6 +8,7 @@ pub mod weight_stream;
 pub mod trit_drift;
 pub mod simd_kernels;
 pub mod albert_1b;
+pub mod albert_seed;
 pub mod embedding;
-pub mod umil;
+
 pub use umil::*;
