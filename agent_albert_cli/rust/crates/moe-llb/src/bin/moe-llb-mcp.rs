@@ -1,4 +1,4 @@
-// albert-llb MCP server — stdio transport
+// moe-llb MCP server — stdio transport
 //
 // Exposes LLB Protocol tools to any MCP-compatible AI agent:
 //   llb_validate      — Gate 1 dry-run (no execution, no snapshot)
@@ -6,8 +6,8 @@
 //   llb_check         — Path and shell command blacklist check
 //   llb_write_safe    — Full LLB-protected file write (T1/T2 only)
 //
-// Install: cargo install albert-llb
-// Run:     albert-llb-mcp   (reads from stdin, writes to stdout)
+// Install: cargo install moe-llb
+// Run:     moe-llb-mcp   (reads from stdin, writes to stdout)
 
 use albert_llb::{
     blacklist,
@@ -53,7 +53,7 @@ fn handle(msg: &Value) -> Value {
             "result": {
                 "protocolVersion": "2025-03-26",
                 "serverInfo": {
-                    "name": "albert-llb",
+                    "name": "moe-llb",
                     "version": env!("CARGO_PKG_VERSION")
                 },
                 "capabilities": { "tools": {} }

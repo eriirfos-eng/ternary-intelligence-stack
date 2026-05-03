@@ -835,7 +835,7 @@ dependencies = [
 
 [[package]]
 name = "moe-core"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "axum",
@@ -851,7 +851,7 @@ dependencies = [
 
 [[package]]
 name = "moe-ddel"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -862,7 +862,7 @@ dependencies = [
 
 [[package]]
 name = "moe-platform"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "log",
@@ -875,7 +875,7 @@ dependencies = [
 
 [[package]]
 name = "moe-plugin-sdk"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -886,7 +886,7 @@ dependencies = [
 
 [[package]]
 name = "moe-runtime"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -898,7 +898,7 @@ dependencies = [
 
 [[package]]
 name = "moe-sdk"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "moe-platform",
  "moe-plugin-sdk",
@@ -906,7 +906,7 @@ dependencies = [
 
 [[package]]
 name = "moe-uril"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "moe-core",
@@ -920,7 +920,7 @@ dependencies = [
 
 [[package]]
 name = "moe-validation-suite"
-version = "1.1.0"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "moe-sdk",
@@ -1624,7 +1624,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-core"
-version = "1.2.9"
+version = "1.3.5"
 dependencies = [
  "ariadne",
  "logos",
@@ -1633,7 +1633,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ml"
-version = "1.2.9"
+version = "1.3.5"
 dependencies = [
  "anyhow",
  "bincode",

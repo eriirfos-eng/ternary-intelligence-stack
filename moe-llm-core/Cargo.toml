@@ -1,6 +1,10 @@
 [package]
 name = "moe-llm-core"
 version = "1.3.5"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Part of the MoE-13 Ternary Intelligence Stack"
 edition = "2024"
 
 [lib]

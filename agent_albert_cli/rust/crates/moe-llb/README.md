@@ -1,7 +1,7 @@
-# albert-llb — Last Look Back Protocol
+# moe-llb — Last Look Back Protocol
 
-[![crates.io](https://img.shields.io/crates/v/albert-llb.svg)](https://crates.io/crates/albert-llb)
-[![docs.rs](https://img.shields.io/docsrs/albert-llb)](https://docs.rs/albert-llb)
+[![crates.io](https://img.shields.io/crates/v/moe-llb.svg)](https://crates.io/crates/moe-llb)
+[![docs.rs](https://img.shields.io/docsrs/moe-llb)](https://docs.rs/moe-llb)
 [![MIT](https://img.shields.io/badge/license-LGPL--2.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-18%20passing-brightgreen)]()
 
@@ -186,7 +186,7 @@ LLB enforces filesystem integrity **within its controlled execution scope only**
 ## Run the Demo
 
 ```bash
-cargo run --bin llb_demo -p albert-llb
+cargo run --bin llb_demo -p moe-llb
 ```
 
 Demonstrates all 6 scenarios: T1 happy path, T2 rollback on failure, path traversal block, blacklist block, forbidden binary intercept, and IOCC spillover detection.
@@ -195,7 +195,7 @@ Demonstrates all 6 scenarios: T1 happy path, T2 rollback on failure, path traver
 
 ## Part of the Ternary Intelligence Stack
 
-`albert-llb` is the containment layer for [Albert](https://crates.io/crates/albert-cli) — the sovereign AI coding agent built on the Ternary Intelligence Stack.
+`moe-llb` is the containment layer for [Albert](https://crates.io/crates/albert-cli) — the sovereign AI coding agent built on the Ternary Intelligence Stack.
 
 - [`albert-cli`](https://crates.io/crates/albert-cli) — agent binary
 - [`albert-runtime`](https://crates.io/crates/albert-runtime) — session management, MCP, tool dispatch

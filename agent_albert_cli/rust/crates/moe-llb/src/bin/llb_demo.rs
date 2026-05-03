@@ -1,7 +1,7 @@
 // LLB Protocol Demo — RFI-IRFOS Ternary Intelligence Stack
 //
 // Demonstrates all five safety tiers and the atomic rollback guarantee.
-// Run: cargo run --release --bin llb_demo -p albert-llb
+// Run: cargo run --release --bin llb_demo -p moe-llb
 
 use albert_llb::{
     blacklist,

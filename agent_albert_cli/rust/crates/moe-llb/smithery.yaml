@@ -1,9 +1,9 @@
-# Smithery MCP Registry — albert-llb
+# Smithery MCP Registry — moe-llb
 # Last Look Back Protocol — Deterministic Filesystem Safety Gate
 #
 # CLI:  npx @smithery/cli publish
 
-name: albert-llb
+name: moe-llb
 displayName: "Last Look Back — Filesystem Safety Gate"
 description: |
   **Deterministic filesystem containment for AI agents.**
@@ -69,13 +69,13 @@ tags:
 
 # ─── Transport ────────────────────────────────────────────────────────────────
 # stdio — runs locally on the user's machine.
-# Install once: cargo install albert-llb
+# Install once: cargo install moe-llb
 # Then any MCP client picks it up via the command below.
 
 configSchema:
   type: object
   title: "LLB Configuration"
-  description: "No configuration required. albert-llb runs locally with zero external dependencies."
+  description: "No configuration required. moe-llb runs locally with zero external dependencies."
   properties: {}
   required: []
 
@@ -83,7 +83,7 @@ startCommand:
   type: stdio
   commandFunction: |-
     (config) => ({
-      command: "albert-llb-mcp",
+      command: "moe-llb-mcp",
       args: [],
       env: {}
     })
