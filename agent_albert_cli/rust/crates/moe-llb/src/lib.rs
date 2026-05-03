@@ -1,4 +1,4 @@
-//! # albert-llb — Last Look Back Protocol
+//! # moe-llb — Last Look Back Protocol
 //!
 //! Deterministic filesystem containment gate for sovereign AI agents.
 //!
