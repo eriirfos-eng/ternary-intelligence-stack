@@ -3,23 +3,24 @@
 //! Architecture definition for the 1B parameter ternary MoE model.
 //! Scaling: 12 layers, 13 expert domains, ternary manifold embedding.
 
-use crate::core::model_adapter::expert_mapper::ExpertMapper;
+use crate::core::model_adapter::embedding::TernaryEmbedding;
+use crate::core::router::DifferentiableRouter;
 
 pub struct Albert1B {
     pub layers: usize,
-    pub expert_domains: usize,
-    pub manifold_dim: usize,
+    pub embedding: TernaryEmbedding,
+    pub router: DifferentiableRouter,
 }
 
 impl Albert1B {
     pub fn new() -> Self {
         Self {
             layers: 12,
-            expert_domains: 13,
-            manifold_dim: 768, // Hidden size for 1B class
+            embedding: TernaryEmbedding::new(50257, 768),
+            router: DifferentiableRouter::new(13),
         }
     }
-
+...
     /// Initializes the model weights on the ternary manifold {-1, 0, 1}.
     pub fn initialize_weights(&self) -> Vec<i8> {
         // Implementation: Xavier/Kaiming initialization mapped to ternary
