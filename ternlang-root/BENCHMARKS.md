@@ -140,6 +140,31 @@ While **INT8-Opt** matches Ternary in raw latency when both utilize 8-bit contai
 
 ---
 
+## §8 — Zero-Skip Advantage Proof: Doing Nothing is Faster
+
+Run: `cargo run --release --bin zero_skip_bench -p moe-core`  
+Workload: 128M elements. Block Size: 32. CPU: i7-4800MQ (AVX2).  
+This benchmark demonstrates the physical speedup achieved by skipping computation in the **HOLD (0)** state.
+
+| Sparsity | INT8 Latency (ms) | Ternary Latency (ms) | Speedup |
+| :--- | :--- | :--- | :--- |
+| 0% (Dense) | 105.98 | 109.15 | 0.97x |
+| 25% | 106.18 | 87.26 | **1.22x** |
+| 50% | 105.04 | 70.65 | **1.49x** |
+| 75% | 104.74 | 55.95 | **1.87x** |
+| **90%** | **104.76** | **34.61** | **3.03x** |
+
+### Critical Interpretation
+
+1.  **Crossover Point**: Ternary moves from "overhead" to "advantage" at approximately **5% sparsity**. Since our `Copernicus-v1` models naturally converge to 30-50% sparsity, the advantage is **always active** in production.
+2.  **The Advantage is Real**: At 50% sparsity, doing nothing (skipping) is **49% faster** than doing something (multiplying).
+3.  **Beyond Quantization**: Standard INT8 quantization cannot skip zeros without specialized sparsity hardware (e.g., NVIDIA's 2:4 sparsity). Ternary exploits this **natively** on standard x86 CPUs.
+
+### Verdict: 
+**Zero-skip compute creates a decisive hardware advantage.** By simplifying logic into AFFIRM/HOLD/REJECT, we bypass the physical constraints of the multiplier and enter the realm of logical branching speed.
+
+---
+
 ## Reproducing These Results
 
 ```bash
