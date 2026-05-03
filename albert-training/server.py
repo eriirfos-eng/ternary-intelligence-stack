@@ -2,31 +2,33 @@ from flask import Flask, jsonify, request
 from flask_socketio import SocketIO, emit
 import subprocess
 import threading
-import random
+import json
+import os
 
 app = Flask(__name__)
-# Enable CORS for all
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-@app.route('/')
-def index():
-    with open('index.html', 'r') as f:
-        return f.read()
+# In production, we'd call the Rust crate via FFI. 
+# For now, we simulate calling the inference binary/engine.
 
-@app.route('/api/telemetry', methods=['GET'])
-def get_telemetry():
-    # Production: Hook this to actual Rust shared state via FFI or Shared Memory
-    return jsonify({
-        "experts": [random.randint(0, 100) for _ in range(13)],
-        "grad_norm": random.uniform(0.1, 1.0),
-        "io": random.randint(500, 2000)
-    })
+@app.route('/api/load_model', methods=['GET'])
+def load_model():
+    model_id = request.args.get('model_id')
+    # Metadata inspection
+    meta_path = f"../albert-moe-13/models/registry/{model_id}/metadata.yaml"
+    if os.path.exists(meta_path):
+        with open(meta_path, 'r') as f:
+            return jsonify({"status": "loaded", "meta": f.read()})
+    return jsonify({"error": "Model not found"}), 404
 
-@app.route('/api/chat', methods=['POST'])
-def chat():
-    data = request.json
-    prompt = data.get('prompt', '')
-    return jsonify({"reply": f"Albert (Ternary Mode) processed: '{prompt}' via sparse SIMD kernels."})
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    # Bridge to the model
+    prompt = request.json.get('prompt')
+    return jsonify({"reply": f"Albert (Ternary Mode) processed '{prompt}' using loaded seed artifact."})
+
+# ... keep existing training routes ...
+
 
 @socketio.on('start_training')
 def handle_training(config):
