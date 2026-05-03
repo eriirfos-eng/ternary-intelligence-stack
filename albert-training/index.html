@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Albert-1B Training Control</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 20px; }
+        .card { background: #333; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        pre { background: #000; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Albert-1B Training Command Center</h1>
+    <div class="card">
+        <h2>Control Panel</h2>
+        <button onclick="startTraining()">Start Training Run</button>
+        <p id="status">Status: Idle</p>
+    </div>
+    <div class="card">
+        <h2>Live Logs</h2>
+        <pre id="logs">Logs will appear here...</pre>
+    </div>
+    <script>
+        function startTraining() {
+            document.getElementById('status').innerText = "Status: Running...";
+            fetch('/api/train', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('logs').innerText = data.message;
+                    document.getElementById('status').innerText = "Status: Done";
+                });
+        }
+    </script>
+</body>
+</html>
