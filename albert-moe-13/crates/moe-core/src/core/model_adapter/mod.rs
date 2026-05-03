@@ -5,5 +5,7 @@ pub mod expert_mapper;
 pub mod shard_registry;
 pub mod ternary_converter;
 pub mod weight_stream;
+pub mod trit_drift;
+pub mod simd_kernels;
 
 pub use umil::*;
