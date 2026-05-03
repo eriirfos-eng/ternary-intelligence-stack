@@ -2104,9 +2104,9 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
 
         "tier2": {
             "name":        "Tier 2 — Pro Standard",
-            "price":       "€24.99/month",
-            "monthly_calls": 10000,
-            "rate_limit":  "10,000 REST calls / month, resets 1st UTC",
+            "price":       "€99/month",
+            "monthly_calls": 20000,
+            "rate_limit":  "20,000 REST calls / month, resets 1st UTC",
             "sla":         "production",
             "moe_experts": "all 13 experts · full verdicts · triad field · routing pair",
             "streaming":   "GET /api/stream/moe_orchestrate — SSE, event-per-expert",
@@ -2131,9 +2131,9 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
 
         "tier3": {
             "name":        "Tier 3 — Industrial",
-            "price":       "€49.99/month",
-            "monthly_calls": 20000,
-            "rate_limit":  "20,000 REST calls / month, resets 1st UTC",
+            "price":       "€349/month",
+            "monthly_calls": 50000,
+            "rate_limit":  "50,000 REST calls / month, resets 1st UTC",
             "sla":         "production — elevated quota",
             "moe_experts": "all 13 experts · full verdicts · triad field · routing pair",
             "streaming":   "GET /api/stream/moe_orchestrate — SSE, event-per-expert",
@@ -3798,21 +3798,7 @@ fn mcp_tools_manifest() -> Value {
 // ─── GET /api/usage ───────────────────────────────────────────────────────────
 
 fn get_path_tier(path: &str) -> u8 {
-    let p = path.trim_start_matches("stdlib/");
-    if p.starts_with("core/") || p.starts_with("logic/") || p.starts_with("classical/") 
-       || p.starts_with("tutorials/") || p.starts_with("testing/") || p.starts_with("showcase/")
-       || p.starts_with("bughunt/") || p.starts_with("errors/") {
-        return 1;
-    }
-    if p.starts_with("agents/") || p.starts_with("apps/") || p.starts_with("ml/") 
-       || p.starts_with("nlp/") || p.starts_with("safety/") || p.starts_with("rl/")
-       || p.starts_with("distributed/") || p.starts_with("graph/") || p.starts_with("finance/")
-       || p.starts_with("econ/") || p.starts_with("ensemble/") || p.starts_with("control/")
-       || p.starts_with("societal/") || p.starts_with("net/") || p.starts_with("eval/") {
-        return 2;
-    }
-    if p.starts_with("premium/") { return 4; }
-    3 // Default for industrial tiers (bio, crypto, etc)
+    1
 }
 
 // ─── Agent Product Routes ─────────────────────────────────────────────────────
