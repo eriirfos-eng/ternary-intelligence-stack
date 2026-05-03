@@ -1,20 +1,20 @@
-from flask import Flask, render_template_string, request
+from flask import Flask, jsonify, request
 from flask_socketio import SocketIO, emit
 import subprocess
 import threading
-import eventlet
-
-# Ensure eventlet is used for async
-eventlet.monkey_patch()
 
 app = Flask(__name__)
-# Enable CORS for socket.io
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+# Try without async_mode='eventlet' initially to see if standard Flask mode works
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route('/')
 def index():
     with open('index.html', 'r') as f:
         return f.read()
+
+@socketio.on('connect')
+def test_connect():
+    print('Client connected')
 
 @socketio.on('start_training')
 def handle_training(config):
@@ -33,9 +33,9 @@ def handle_training(config):
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    prompt = request.json.get('prompt')
+    data = request.json
+    prompt = data.get('prompt')
     return jsonify({"reply": f"Albert (Ternary Mode) processed: '{prompt}' via sparse SIMD kernels."})
 
 if __name__ == '__main__':
-    # Use socketio.run instead of app.run
-    socketio.run(app, port=5000)
+    socketio.run(app, port=5000, debug=True)
