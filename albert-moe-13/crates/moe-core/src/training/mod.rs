@@ -4,5 +4,6 @@ pub mod checkpoint;
 pub mod tuner;
 pub mod config;
 pub mod controller;
+pub mod harness;
 pub mod finetune;
 pub mod sparsity;
