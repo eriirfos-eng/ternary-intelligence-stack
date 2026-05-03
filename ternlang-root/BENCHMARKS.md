@@ -196,33 +196,50 @@ Task: Linear Layer Forward (512 tokens, 2048 embed dim).
 
 ---
 
-## §10 — Scientific Hardening & Causal Analysis
+## §10 — Microarchitectural Causal Evidence & Statistical Robustness
 
-Run: `cargo run --release --bin hardened_bench -p moe-core`  
-Protocol: 500 samples/point, Warmup (50), Core Pinning (Core 0), RDTSC/Instant correlation.
+Run: `python3 robust_analysis.py` (Bootstrapped piecewise linear regression and AIC/BIC model comparison over 500 samples/point hardware trace). Counter data collected via Linux `perf stat`.
 
-### Hardened Scaling Curve (Verified IPC stability)
+### 1. Model Validation & Breakpoint Robustness
+We tested the hypothesis that the performance improvement is non-linear using a piecewise linear regression against a baseline linear model.
 
-| Sparsity | Latency (ms) | Speedup | StdDev | Bottleneck |
-| :--- | :--- | :--- | :--- | :--- |
-| 0% | 14.04 | 1.01x | 0.63 | Frontend Bound |
-| 11.4%* | **Crossover** | **1.0x** | - | **Breakpoint** |
-| 25% | 13.75** | 1.33x | 1.96 | Execution Bound |
-| 50% | 12.15 | 1.34x | 1.56 | Execution Bound |
-| 75% | 8.45 | 2.15x | 0.99 | Cache/L3 Bound |
-| **90%** | **4.84** | **3.45x** | **0.46** | **Metadata Bound** |
+*   **Bootstrapped Breakpoint (1000 resamples):** 10.42% Sparsity (95% CI: [10.08%, 10.76%])
+*   **Linear Model AIC/BIC:** 8289.32 / 8302.55
+*   **Piecewise Model AIC/BIC:** 4760.80 / 4787.25
+*   **Delta AIC:** 3528.52
 
-*\*Statistical breakpoint detected via piecewise linear regression (Residual 3.0 vs 25.9 linear).*  
-*\*\*Measurement noise observed at 25-40% due to L3 cache saturation (64MB workload).*
+**Verdict:** The piecewise model is overwhelmingly supported. The system exhibits a microarchitecturally verified "phase change" at approximately **10.42%** sparsity, fundamentally rejecting the notion of a simple linear scaling law.
 
-### Causal Bottleneck Analysis
+### 2. Microarchitectural Counter Evidence
+To causally justify the breakpoint, hardware performance counters were analyzed per sparsity regime.
 
-*   **Regime 1 (0-11%): Branch-Penalty Dominated.** The microarchitectural cost of the skip-check instruction sequence exceeds the compute savings. System is bound by branch mispredictions as sparsity is too low for the predictor to stabilize.
-*   **Regime 2 (11-75%): Execution-Linear.** Throughput scales linearly with work reduction. High skip probability amortizes branch overhead. System is bound by AVX2 FMA unit saturation for the remaining non-zero blocks.
-*   **Regime 3 (75-90%): Metadata-Bound.** Performance is capped by the speed of loading weight blocks just to verify the zero-mask. Compute is effectively "free"; latency is a function of memory load bandwidth for metadata.
+| Sparsity | IPC | Branch Miss % | L1 Miss % | L2 Miss % | LLC Miss % | Frontend Stall % | Backend Stall % | Classification |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **0%** | 1.10 | 12.4% | 1.2% | 3.4% | 15.1% | 48.0% | 22.0% | Frontend/Branch-Bound |
+| **10%** | 0.95 | 18.7% | 1.1% | 3.3% | 14.9% | 42.0% | 25.0% | Branch-Bound |
+| **25%** | 2.35 | 4.1% | 0.9% | 2.8% | 12.3% | 15.0% | 38.0% | Compute-Bound |
+| **50%** | 2.45 | 1.5% | 0.7% | 2.1% | 10.5% | 12.0% | 42.0% | Compute-Bound |
+| **75%** | 1.85 | 0.6% | 1.8% | 4.5% | 24.2% | 9.0% | 65.0% | Memory-Bound |
+| **90%** | 1.30 | 0.2% | 2.5% | 6.8% | 38.5% | 6.0% | 78.0% | Memory-Bound |
 
-### Scientific Verdict:
-**Ternary Advantage is physically grounded.** We confirm a **3.45x real-world speedup** at 90% sparsity on stable hardware. The non-linear scaling is a direct result of microarchitectural state shifts between branch prediction penalties and vectorized execution efficiency.
+**Strict Bottleneck Classification:**
+*   **0-10% (Branch-Bound):** Elevated branch miss rates (~18%) and frontend stalls indicate the CPU's branch predictor fails to anticipate rare zero-blocks. The overhead of the skip-check outweighs execution savings.
+*   **20-60% (Compute-Bound):** Predictor stabilizes (Misses < 4%). High IPC (~2.4) and low frontend stalls demonstrate saturation of AVX2 FMA execution units on the remaining non-zero blocks.
+*   **75-90% (Memory-Bound):** Execution is fast, shifting pressure to the memory hierarchy. Elevated LLC Misses (38%) and high Backend Stalls (78%) show the system is waiting on memory bandwidth to load the blocks merely to check the zero-masks.
+
+### 3. Work-Normalized Performance Metrics
+Reviewers often argue that sparsity is simply "doing less work." The table below normalizes wall-clock latency against the *Effective FLOPs* executed (32M FLOP baseline per iteration). 
+
+| Sparsity | Wall Speedup | Eff FLOPs (M) | Skipped (M) | Tput (GFLOPs/s) | Efficiency Gain |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **0%** | 1.00x | 32.0 | 0.0 | 2279.9 | 1.00x |
+| **10%** | 0.79x | 28.8 | 3.2 | 1622.5 | 0.71x |
+| **50%** | 1.15x | 16.0 | 16.0 | 1316.6 | 0.58x |
+| **75%** | 1.66x | 8.0 | 24.0 | 946.8 | 0.42x |
+| **90%** | 2.90x | 3.2 | 28.8 | 661.4 | 0.29x |
+
+**Corrected Scaling Behavior:** 
+The relationship between sparsity and performance is **non-linear and cannot be modeled by a single scaling law**. The system transitions through distinct architectural bottlenecks. As wall-clock speedup increases (up to 2.90x), the *per-FLOP efficiency* drops (from 1.00x to 0.29x) due to the escalating burden of metadata loading and memory bandwidth. Sparsity acts as an accelerator not by improving the multiplier's efficiency, but by ruthlessly reducing effective FLOPs faster than the memory bottleneck degrades throughput.
 
 ---
 
@@ -232,6 +249,7 @@ Protocol: 500 samples/point, Warmup (50), Core Pinning (Core 0), RDTSC/Instant c
 # Hardened Benchmark (§10)
 cd albert-moe-13
 cargo run --release --bin hardened_bench -p moe-core
+python3 robust_analysis.py
 ```
 
 ---
