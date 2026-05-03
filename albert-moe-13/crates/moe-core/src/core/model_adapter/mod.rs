@@ -6,6 +6,7 @@ pub mod shard_registry;
 pub mod ternary_converter;
 pub mod weight_stream;
 pub mod trit_drift;
+pub mod trit_attention;
 pub mod simd_kernels;
 pub mod albert_1b;
 pub mod albert_seed;
