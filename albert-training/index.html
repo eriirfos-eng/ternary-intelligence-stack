@@ -2,41 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Albert-1B Live Cockpit</title>
+    <title>Albert-1B Model Control Center</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
-        .card { background: #111; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
-        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
-        #logs { height: 300px; overflow-y: scroll; background: #000; padding: 10px; border: 1px solid #0f0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0e0e0e; color: #d1d1d1; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        h1, h2 { color: #00ff9d; }
+        input, button, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; }
+        button { background: #00ff9d; color: #000; font-weight: bold; border: none; cursor: pointer; }
+        #log { height: 200px; overflow-y: scroll; background: #000; color: #0f0; padding: 10px; font-family: monospace; }
     </style>
 </head>
 <body>
-    <h1>Albert-1B Frontier Cockpit</h1>
-    <div class="card">
-        <button id="startBtn">INITIATE TRAINING RUN</button>
-        <p id="status">STATUS: STANDBY</p>
-    </div>
-    <div class="card">
-        <h2>Live Telemetry Stream</h2>
-        <div id="logs"></div>
+    <h1>Albert-1B Model Control Center</h1>
+    <div class="grid">
+        <div class="card">
+            <h2>1. Training Control</h2>
+            <input type="number" id="lr" placeholder="Learning Rate (1e-4)">
+            <input type="number" id="threshold" placeholder="Ternary Threshold (0.5)">
+            <button onclick="startTraining()">START TRAINING</button>
+            <div id="log"></div>
+        </div>
+        <div class="card">
+            <h2>2. Model Interaction</h2>
+            <textarea id="prompt" placeholder="Chat with Albert..."></textarea>
+            <button onclick="chat()">SEND MESSAGE</button>
+            <div id="response" style="background:#000; padding:10px;"></div>
+        </div>
     </div>
     <script>
         const socket = io();
-        const logs = document.getElementById('logs');
-        const startBtn = document.getElementById('startBtn');
-        const status = document.getElementById('status');
-
-        startBtn.onclick = () => socket.emit('start_training');
+        const log = document.getElementById('log');
         
-        socket.on('log', (msg) => {
-            logs.innerHTML += msg.data + '<br>';
-            logs.scrollTop = logs.scrollHeight;
-        });
+        function startTraining() {
+            const config = { lr: document.getElementById('lr').value, th: document.getElementById('threshold').value };
+            socket.emit('start_training', config);
+        }
+        socket.on('log', (msg) => { log.innerHTML += msg.data + '<br>'; });
 
-        socket.on('status', (msg) => {
-            status.innerText = 'STATUS: ' + msg.data;
-        });
+        function chat() {
+            const prompt = document.getElementById('prompt').value;
+            fetch('/api/chat', { method: 'POST', body: JSON.stringify({prompt}), headers: {'Content-Type': 'application/json'}})
+                .then(r => r.json()).then(d => { document.getElementById('response').innerText = d.reply; });
+        }
     </script>
 </body>
 </html>
