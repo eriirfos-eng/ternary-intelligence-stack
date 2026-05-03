@@ -1,6 +1,14 @@
 import subprocess
 import csv
 import re
+import os
+
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Find binary
+bin_path = "./target/release/hardened_bench"
+if not os.path.exists(bin_path):
+    bin_path = "../target/release/hardened_bench"
 
 points = [0.0, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 0.9]
 results = []
@@ -20,7 +28,7 @@ print("-" * 100)
 for p in points:
     cmd = [
         "perf", "stat", "-x", ",", "-e", ",".join(events),
-        "./target/release/hardened_bench", str(p)
+        bin_path, str(p)
     ]
     
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -84,7 +92,8 @@ for p in points:
         print(f"Error parsing point {p}: {e}")
 
 # Save to CSV
-with open("perf_counters.csv", "w", newline="") as f:
+output_file = os.path.join(base_dir, "perf_counters.csv")
+with open(output_file, "w", newline="") as f:
     writer = csv.DictWriter(f, fieldnames=results[0].keys())
     writer.writeheader()
     writer.writerows(results)

@@ -1,5 +1,6 @@
 import numpy as np
 import csv
+import os
 from scipy.optimize import curve_fit
 import warnings
 warnings.filterwarnings('ignore')
@@ -14,10 +15,14 @@ def main():
     sparsity = []
     latency_ms = []
     stddev_ms = []
-    
-    with open('hardened_results.csv', 'r') as f:
+
+    # Get the directory of the script
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_file = os.path.join(base_dir, 'hardened_results.csv')
+
+    with open(data_file, 'r') as f:
         reader = csv.DictReader(f)
-        for row in reader:
+...
             sparsity.append(float(row['sparsity']))
             latency_ms.append(float(row['latency_ms']))
             stddev_ms.append(float(row['stddev_ms']))

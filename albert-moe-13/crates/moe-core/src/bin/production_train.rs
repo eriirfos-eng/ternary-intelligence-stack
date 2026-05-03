@@ -29,8 +29,8 @@ async fn main() -> Result<()> {
     let harness = TrainingHarness::new(model, controller, config);
     
     // 3. Execution
-    let dataset = Path::new("training_data.shard");
-    println!("Starting multi-epoch training sweep...");
+    let dataset = Path::new("./data/corpus/bible.txt");
+    println!("Starting multi-epoch training sweep on Bible corpus...");
     
     // In a real run, this would stream through petabytes.
     // For this experiment, we execute the production harness.
