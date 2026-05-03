@@ -1,63 +1,59 @@
 # Albert-MoE-13: Ternary-Native Frontier Research Framework
 
-**The foundational scaling research framework for balanced ternary intelligence.**
+**The foundational research framework for balanced ternary intelligence (weights $\in \{-1, 0, 1\}$).**
 
-Albert-MoE-13 is a high-performance research framework designed to investigate the scaling laws of natively trained ternary neural networks (weights $\in \{-1, 0, 1\}$). By operating directly on a ternary manifold, Albert-MoE-13 enables sub-linear memory growth, auditable reasoning via expert domains, and stable loss convergence without the overhead of high-precision floating-point arithmetic.
-
----
-
-## 1. Core Architecture (Crates)
-The system is implemented as a high-performance Rust crate stack, designed for both research-scale experimentation and production-grade training workloads:
-
-| Crate | Purpose |
-|---|---|
-| `moe-core` | The engine: Routing logic, ternary math, experts, and training orchestration |
-| `moe-runtime` | Execution engine and expert scheduling logic |
-| `moe-platform` | Public API interfaces and model loading abstractions |
-| `moe-sdk` | Extensible plugin architecture for custom research domains |
-| `moe-validation` | Quantitative benchmarks for manifold stability and convergence |
+Albert-MoE-13 investigates the fundamental physics of ternary neural networks. By operating on a discrete ternary manifold, we enable **sub-linear memory scaling**, **auditable decision pathways**, and **energy-efficient inference** that bypasses the limitations of floating-point arithmetic.
 
 ---
 
-## 2. Training Infrastructure
-Albert-MoE-13 provides the full stack required for frontier-scale model construction:
-*   **Distributed Orchestration**: Rank-based synchronization of ternary experts for multi-node training.
-*   **Data Pipeline**: Asynchronous, zero-copy streaming ingestion optimized for petabyte-scale datasets.
-*   **Checkpointing**: Ternary-native bit-packing serialization (5 trits/byte) to minimize I/O for 1T+ parameter models.
-*   **Training Controller**: End-to-end orchestration of ingestion, gradient passes, synchronization, and persistence.
+## 1. Mathematical Foundation: Ternary-Native Scaling
+Unlike binary quantization (where floats are downcasted), Albert-MoE-13 trains directly on a ternary manifold using **Straight-Through Estimation (STE)**.
+
+### Forward Pass (Ternary Mapping)
+$$f(x) = \text{sign}(x) \cdot \mathbb{I}(|x| > \tau), \quad \tau \in \mathbb{R}^+$$
+*Weights are strictly locked to $\{-1, 0, 1\}$, where $0$ acts as a formal "HOLD" (uncertainty/deferral) state.*
+
+### Backward Pass (Gradient Approximation)
+$$\frac{\partial L}{\partial x} \approx \frac{\partial L}{\partial y} \cdot \mathbb{I}(|x| \leq \tau)$$
+*Gradients are gated by the ternary threshold $\tau$, preserving signal amplitude stability ($\alpha \approx 0.55$).*
 
 ---
 
-## 3. Ternary Research Toolkit
-Advanced tools for validating the physics of ternary intelligence:
-*   **SIMD Math Kernels**: Hand-optimized AVX2 kernels for sparse ternary matmul, enabling hardware-level sparsity bypass (`@sparseskip`).
-*   **Trit-Drift Diagnostics**: Precision logging to measure weight state migration and manifold stability.
-*   **Bayesian Hyperparameter Tuner**: Automated threshold optimization for STE training using surrogate models.
+## 2. Distributed Training Architecture
+To support 1T+ parameter regimes, Albert-MoE-13 implements a multi-node, expert-parallel architecture:
+
+*   **Rank-Based Expert Partitioning**: The MoE layers are distributed across nodes, with each node owning a subset of the expert domain (e.g., Logic, Medical, Technical).
+*   **Asynchronous Data Ingestion**: Zero-copy `DataPipeline` handles petabyte-scale streaming, converting raw text shards directly into ternary trit-streams.
+*   **Ternary Synchronizer**: A dedicated orchestration layer (`DistributedOrchestrator`) manages gradient averaging across the discrete manifold, using bit-mask operations to minimize all-reduce latency.
+*   **Checkpointing**: Sparse, bit-packed weight storage (5 trits/byte) ensures I/O-efficient persistence for massive model states.
 
 ---
 
-## 4. Empirical Scaling Metrics
-We benchmark success via empirical convergence on ternary manifolds:
+## 3. High-Performance Execution Toolkit
+Our research toolkit is built for hardware-level efficiency:
 
-| Metric | Scientific Focus | Empirical Status |
+*   **SIMD Kernels**: AVX2/AVX-512 optimized sparse ternary matmul kernels, enabling the `@sparseskip` operation—skipping computation for all $0$ (HOLD) trits.
+*   **Trit-Drift Diagnostics**: Precision logging to quantify weight migration within the ternary manifold, ensuring convergence stability.
+*   **Bayesian Threshold Tuner**: An automated hyperparameter framework that optimizes STE thresholds ($\tau$) to maximize convergence and minimize gradient vanish in deep MoE layers.
+
+---
+
+## 4. Research Scope & Scaling Roadmap
+| Phase | Goal | Focus |
 |---|---|---|
-| **Loss Convergence** | Power-law scaling | Verified baseline convergence |
-| **Manifold Sparsity** | Sparse geometric efficiency | ~32% stable sparsity achieved |
-| **Amplitude Stability** | $\alpha$ signal invariance | $\alpha \approx 0.55$ target |
+| **Phase 1** | Stability Validation | Empirical convergence of small-scale MoE clusters |
+| **Phase 2** | Expert Specialization | Learned routing accuracy across 13 epistemic domains |
+| **Phase 3** | 1T Parameter Scaling | Benchmarking sub-linear memory growth on distributed clusters |
+| **Phase 4** | Native HW Bridging | Implementation on ternary-native FPGA/QNN hardware |
 
 ---
 
-## Quick Start
-```bash
-# Explore the research stack
-cd crates/moe-core
+## 5. Repository Integrity & Transparency
+This project is an **Open-Core** research framework. All core training, orchestration, and ternary logic are fully open-source (LGPL-3.0/BSL-1.1).
 
-# Run the training convergence sweep
-cargo run --bin train_experiment
-```
-
-## Licensing
-This research framework is part of the **Ternary Intelligence Stack (TIS)** ecosystem, released under LGPL-3.0 to protect the integrity of the open-source ternary core while allowing commercial integration.
+*   **Crate Documentation**: Full documentation is provided for each core crate in `crates/moe-core/`.
+*   **Reproducibility**: All experiments, including the convergence sweep and benchmark suite, are included in the repository.
+*   **Compliance**: Built-in audit trails and hard-safety gating ensure compliance with EU AI Act frameworks.
 
 ---
-**Built by RFI-IRFOS for the Ternary Intelligence Stack.**
+**Built by RFI-IRFOS · Graz, Austria · [osf.io/cyn28](https://osf.io/cyn28)**
