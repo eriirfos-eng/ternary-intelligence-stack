@@ -9,7 +9,7 @@
 [![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#example-library)
-[![stdlib](https://img.shields.io/badge/stdlib-1k+_open_%26_28k+_premium-blue)](stdlib/PREMIUM.md)
+[![stdlib](https://img.shields.io/badge/stdlib-28k%2B_open%20%2B%202.5k_premium-blue)](stdlib/PREMIUM.md)
 [![DOI](https://img.shields.io/badge/DOI-10.17605%2FOSF.IO%2FTZ7DC-informational)](https://doi.org/10.17605/OSF.IO/TZ7DC)
 [![moe-core](https://img.shields.io/crates/v/moe-core.svg?label=moe-core)](https://crates.io/crates/moe-core)
 [![moe-platform](https://img.shields.io/crates/v/moe-platform.svg?label=moe-platform)](https://crates.io/crates/moe-platform)
@@ -87,7 +87,7 @@ match conscious {
 ```
 
 ### Standard Library & Ecosystem
-**Standard Library:** 1k+ open-core modules in this repo · 28k+ proprietary modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md) — we are constantly adding new `.tern` definitions and building the stack weekly.
+**Standard Library:** 28,500+ open-core modules in this repo · 2,500+ "Masterwork" modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md) — we are constantly adding new `.tern` definitions and building the stack weekly.
  — including `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, `bio::*`, `crypto::*`, `finance::*`, and research-grade `qnn::*`.
 
 ### Compiler Capabilities
@@ -581,7 +581,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ## 11. Example Library
 
-**30,000+ `.tern` programs** (2,090 public examples + 1,000+ open-core stdlib modules + 28,000+ [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) — we commit and build weekly across all tiers, continuously expanding the TIS ecosystem.
+**31,000+ `.tern` programs** (2,090 public examples + 28,500+ open-core stdlib modules + 2,500+ "Masterwork" [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) — we commit and build weekly across all tiers, continuously expanding the TIS ecosystem.
 
 | Category | Examples |
 |----------|---------|
@@ -684,8 +684,8 @@ The Ternlang stdlib is split across two repositories to protect proprietary IP:
 
 | | Repo | Files | Access |
 |--|------|-------|--------|
-| **Tier 1 — Open Core** | [`ternary-intelligence-stack/stdlib/`](stdlib/) | +1000 `.tern` modules | Free — clone this repo |
-| **Tier 2/3/4 — Premium** | [`eriirfos-eng/ternlang-premium`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-premium) *(private)* | 28,000+ `.tern` modules | Paid license required |
+| **Tier 1 — Open Core** | [`ternary-intelligence-stack/stdlib/`](stdlib/) | 28,500+ `.tern` modules | Free — clone this repo |
+| **Tier 2/3/4 — Premium** | [`eriirfos-eng/ternlang-premium`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-premium) *(private)* | 2,500+ "Masterwork" modules | Paid license required |
 
 The open-core stdlib includes: `core/`, `ternary/`, `std/`, `showcase/`, `bughunt/`, `testing/`, `bench/`, `benchmarks/`, `classical/`, `errors/`, `tutorials/`, `lib/`
 
