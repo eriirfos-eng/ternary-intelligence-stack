@@ -1,7 +1,7 @@
 [package]
 name = "ternlang-wasmtime"
-version = "1.2.7"
-edition = "2021"
+version = "1.3.5"
+edition = "2024"
 license = "LicenseRef-BSL-1.1"
 description = "Wasmtime integration for Ternlang. Sovereign triadic WASM runtime."
 
