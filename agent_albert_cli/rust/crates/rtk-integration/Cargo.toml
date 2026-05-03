@@ -1,7 +1,7 @@
 [package]
 name = "rtk"
-version = "0.37.2"
-edition = "2021"
+version = "1.3.5"
+edition = "2024"
 publish = false  # External project — published separately at https://github.com/rtk-ai/rtk
 authors = ["Patrick Szymkowiak"]
 description = "Rust Token Killer - High-performance CLI proxy to minimize LLM token consumption"

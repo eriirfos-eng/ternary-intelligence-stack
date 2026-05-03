@@ -1,6 +1,6 @@
 [package]
-name = "albert-llm-core"
-version = "0.1.0"
+name = "moe-llm-core"
+version = "1.3.5"
 edition = "2024"
 
 [lib]

@@ -1,7 +1,7 @@
 [package]
-name = "albert-reference"
-version = "1.3.0"
-edition = "2021"
+name = "moe-reference"
+version = "1.3.5"
+edition = "2024"
 license.workspace = true
 repository.workspace = true
 description = "Embedded reference documentation for Albert CLI — production patterns, security, and best practices"

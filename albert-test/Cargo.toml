@@ -1,9 +1,0 @@
-[package]
-name = "albert-test"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-albert-llm-core = { path = "../albert-llm-core" }
-candle-core = "0.8.4"
-candle-nn = "0.8.4"
