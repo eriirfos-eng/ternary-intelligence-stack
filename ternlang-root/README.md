@@ -36,16 +36,17 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 | `+1` | **affirm** | Clear positive signal. Proceed. |
 
 ---
-## 2. What's in This Repository
+## Repository Architecture
 
-| Layer | What it does |
-|-------|-------------|
-| [Language & VM](#3-language--vm) | Compile and run `.tern` programs on the Balanced Ternary Execution VM |
-| [Sparse Inference](#7-sparse-ternary-inference) | @sparseskip: Theoretical throughput scaling (breakdown below) |
-| [MoE-13 Orchestrator](#4-albert-moe-13) | Mixture-of-Experts reasoning engine with safety hard gate |
-| [Protocol Specifications](#13-rfi-irfos-protocol-specifications) | BET-ISA, TSON, TTP, and T-POSIX — RFI-IRFOS open proposals |
-| [Frontier Tech](#13-rfi-irfos-protocol-specifications) | Qutrit Quantum bridging, BCI neural decoding, and Interplanetary DTN |
-| [Example Library](#11-example-library) | 30,000+ `.tern` programs across every domain |
+This repository is the core research engine. It is split into two primary domains, each serving a distinct purpose in our research:
+
+| Path | Purpose |
+|-----------|----------------|
+| `ternlang-root/` | **The Orchestration Layer:** Compiler, BET VM, and the MoE-13 Orchestrator MCP server. This layer handles logical routing and ternary decision-making. |
+| `albert-moe-13/` | **Model Development Framework:** The native research framework for training scaling. Houses the crates responsible for ternary manifold adaptation, STE-based training, and model architecture. |
+
+### Note on Training Infrastructure
+As of current development, this repository houses the foundational model architecture, ternary math, and scaling research framework (see `albert-moe-13/crates/`). Massive-scale distributed training infrastructure is currently managed in a separate, secured workflow or remains in pre-cluster, experimental development stages. Experimental benchmarks and logic can be found in `albert-moe-13/crates/moe-core/src/training/`.
 
 ---
 
@@ -391,9 +392,8 @@ The core performance claim of TIS rests on a single hardware primitive: `@sparse
 | 25% (Light) | 53.1x |
 | 40% (BitNet Base) | 73.6x |
 | 60% (Optimal) | 86.1x |
-| 99% (Extreme) | 122.3x |
 
-The 2.3× figure is the baseline measured result from the first `@sparseskip` benchmark ([commit `60f7ef6`](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)). Speedup scales proportionally with sparsity — the 122.3× figure is a mathematical upper bound at 99%+ sparsity, not a general-case claim.
+The 2.3× figure is the baseline measured result from the first `@sparseskip` benchmark ([commit `60f7ef6`](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)). Speedup scales proportionally with sparsity.
 
 **5-trit block packing** encodes 5 trits into 8 bits (vs 10 bits for naive 2-bit emulation) — a 1.25× storage density improvement.
 
