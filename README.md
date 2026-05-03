@@ -112,13 +112,17 @@ albert-cli
 
 ---
 
-## Repository layout
+## Repository Architecture
 
-| Path | Research Focus |
+This repository is split into two primary domains, each serving a distinct purpose in our research.
+
+| Path | Purpose |
 |-----------|----------------|
-| [`ternlang-root/`](ternlang-root/) | Research Engine: Compiler, VM, Ternary ML kernels |
-| [`albert-moe-13/`](albert-moe-13/) | Scaling Experiments: MoE-13 training & convergence framework |
-| [`ternlang-ml/`](ternlang-root/ternlang-ml/) | Training Infrastructure: QAT/STE and manifold adaptation logic |
+| `ternlang-root/` | **The Orchestration Layer:** Compiler, BET VM, and the MoE-13 Orchestrator MCP server. This layer handles logical routing and ternary decision-making. |
+| `albert-moe-13/` | **Model Development Framework:** The native research framework for training scaling. Houses the crates responsible for ternary manifold adaptation, STE-based training, and model architecture. |
+
+### Note on Training Infrastructure
+As of current development, this repository houses the foundational model architecture, ternary math, and scaling research framework (see `albert-moe-13/crates/`). Massive-scale distributed training infrastructure is currently managed in a separate, secured workflow or remains in pre-cluster, experimental development stages. Experimental benchmarks and logic can be found in `albert-moe-13/crates/moe-core/src/training/`.
 
 ---
 
