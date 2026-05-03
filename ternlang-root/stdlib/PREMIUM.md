@@ -5,25 +5,25 @@ The full Ternlang Standard Library is split across two repositories:
 ## This repo (Open Core — Tier 1, free)
 
 Available here in `stdlib/`:
-- `core/` — fundamental trit operations
-- `ternary/` — balanced ternary adders, comparators, mux
-- `std/` — language standard imports
-- `showcase/` — runnable demos
-- `bughunt/` — regression probes (public for transparency)
+- `core/`, `ternary/`, `std/` — foundational operations
+- `ml/`, `nn/`, `nlp/`, `rl/` — neural-native foundations (**Released v1.3.5**)
+- `agents/`, `apps/`, `distributed/`, `graph/` — orchestration foundations (**Released v1.3.5**)
+- `finance/`, `econ/`, `bio/`, `crypto/`, `security/` — vertical foundations (**Released v1.3.5**)
+- `physics/`, `stats/`, `math/`, `logic/`, `vision/` — scientific foundations (**Released v1.3.5**)
+- `showcase/`, `bughunt/`, `tutorials/` — demos and educational material
 - `testing/`, `bench/`, `benchmarks/` — test & benchmark harness
-- `classical/`, `errors/`, `tutorials/` — introductory material
 
-## Private repo (Tier 2/3/4 — paid access)
+## Private repo (Tier 2/3/4 — 'Masterwork' access)
 
 **[eriirfos-eng/ternlang-premium](https://github.com/eriirfos-eng/ternlang-premium)** *(private — requires license)*
 
-Contains 28,495+ proprietary `.tern` modules:
+Contains 2,500+ proprietary "Masterwork" `.tern` modules — the most precious high-security, high-frequency, and research-frontier algorithms:
 
-| Tier | Label | Directories |
+| Tier | Label | 'Masterwork' Focus |
 |------|-------|-------------|
-| Tier 2 | Pro Standard | `agents/`, `apps/`, `ml/`, `nlp/`, `safety/`, `rl/`, `distributed/`, `graph/`, `finance/`, `econ/`, `ensemble/`, `control/`, `eval/`, `data/`, `integrations/` |
-| Tier 3 | Industrial | `bio/`, `crypto/`, `hardware/`, `timeseries/`, `research/`, `gametheory/`, `causal/`, `sim/`, `nn/`, `vision/`, `stats/`, `scientific/`, `systems/`, `kernel/`, `database/`, `grid/`, `physical/`, `societal/`, `cad/`, `astro/`, `graphics/`, `qnn/`, `models/`, `shadow_tern/`, `programs/`, `net/`, `math/`, `logic/` |
-| Tier 4 | Enterprise | `premium/`, `science/`, `optimization/`, `security/`, `framework/`, `network/`, `pipelines/`, `specs/`, `tests/`, `domains/` |
+| Tier 2 | Pro Standard | Advanced agents, proprietary MoE-13 experts, high-throughput API runtime |
+| Tier 3 | Industrial | QNN (Quantum Neural Net) Kepp 2026 reference, proprietary SEC modules, T-HAL silicon bridges |
+| Tier 4 | Enterprise | HFT (High-Frequency Trading) low-latency kernels, custom FPGA IP, sovereign air-gap frameworks |
 
 ## Purchase a License
 
