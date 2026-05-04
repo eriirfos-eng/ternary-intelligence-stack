@@ -1,6 +1,6 @@
 # Ternary Intelligence Stack (TIS) | RFI-IRFOS — Master Development Chronicle
 ### Official Evaluation Artifact (SPRIND / Next Frontier AI)
-**Stack Version:** v1.3.7 (Native Ternary MoE-13)
+**Stack Version:** v1.3.5 (Ecosystem) / v1.3.7 (MoE-13 Model)
 **Last Updated:** 2026-05-04 
 **Status:** ACTIVE — PHASE 20: SOVEREIGN INTELLIGENCE INTEGRATION
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack
