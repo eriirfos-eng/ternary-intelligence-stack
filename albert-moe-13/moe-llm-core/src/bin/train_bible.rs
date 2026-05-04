@@ -11,12 +11,12 @@ fn main() -> Result<()> {
     let device = Device::Cpu;
 
     // 2. Load Tokenizer
-    let tokenizer = BpeTokenizer::new("albert-moe-13/data/vocab.json");
+    let tokenizer = BpeTokenizer::new("data/vocab.json");
     let vocab_size = tokenizer.vocab_size();
     println!("Vocab size: {}", vocab_size);
 
     // 3. Load Data
-    let corpus_path = "albert-moe-13/data/corpus/bible.txt";
+    let corpus_path = "data/corpus/bible.txt";
     let text = fs::read_to_string(corpus_path).expect("Unable to read bible.txt");
     let tokens = tokenizer.encode(&text);
     println!("Total tokens: {}", tokens.len());
