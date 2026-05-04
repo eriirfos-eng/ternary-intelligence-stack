@@ -22,12 +22,13 @@ fn main() -> Result<()> {
     println!("Total tokens: {}", tokens.len());
 
     // 4. Model Config
+    // 4. Model Config
     let mut config = TransformerConfig::default();
     config.vocab_size = vocab_size;
-    config.hidden_size = 64; // Smaller for faster CPU training
-    config.num_layers = 2;
+    config.hidden_size = 96; // Increased capacity
+    config.num_layers = 3;   // Increased depth
     config.num_heads = 4;
-    config.max_seq_len = 64;
+    config.max_seq_len = 128; // Doubled context
 
     // 5. Initialize Model
     let varmap = VarMap::new();
@@ -35,16 +36,16 @@ fn main() -> Result<()> {
     let model = Transformer::new(&config, vb)?;
 
     // 6. Optimizer
-    let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 5e-4)?; 
+    let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 1e-3)?; 
 
     // 7. Training Loop
-    let batch_size = 16;
+    let batch_size = 8;
     let seq_len = config.max_seq_len;
-    let epochs = 30;
+    let epochs = 50; 
 
     for epoch in 0..epochs {
         let mut total_loss = 0.0;
-        let num_batches = 200; 
+        let num_batches = 300; 
 
         for batch_idx in 0..num_batches {
             // ... (rest of sampling)
@@ -80,15 +81,15 @@ fn main() -> Result<()> {
             }
         }
         println!("Epoch {} complete. Avg loss: {:.4}", epoch, total_loss / num_batches as f32);
-        varmap.save("albert-moe-13/models/bible_ternary_v1.3.6.safetensors")?;
+        varmap.save("albert-moe-13/models/bible_ternary_v1.3.7.safetensors")?;
         println!("Checkpoint saved.");
     }
 
     println!("--- Training Finished ---");
 
     // 8. Save Weights
-    varmap.save("albert-moe-13/models/bible_ternary_v1.3.6.safetensors")?;
-    println!("Weights saved to albert-moe-13/models/bible_ternary_v1.3.6.safetensors");
+    varmap.save("albert-moe-13/models/bible_ternary_v1.3.7.safetensors")?;
+    println!("Weights saved to albert-moe-13/models/bible_ternary_v1.3.7.safetensors");
 
     Ok(())
 }
