@@ -1,33 +1,22 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_socketio import SocketIO, emit
 import subprocess
 import threading
 import json
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='/home/eri-irfos/Desktop/training_log', static_url_path='/static')
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# In production, we'd call the Rust crate via FFI. 
-# For now, we simulate calling the inference binary/engine.
+@app.route('/')
+def index():
+    return send_file('/home/eri-irfos/Desktop/training_log/index.html')
 
-@app.route('/api/load_model', methods=['GET'])
-def load_model():
-    model_id = request.args.get('model_id')
-    # Metadata inspection
-    meta_path = f"../albert-moe-13/models/registry/{model_id}/metadata.yaml"
-    if os.path.exists(meta_path):
-        with open(meta_path, 'r') as f:
-            return jsonify({"status": "loaded", "meta": f.read()})
-    return jsonify({"error": "Model not found"}), 404
+@app.route('/training.log')
+def get_training_log_file():
+    return send_file('/home/eri-irfos/Desktop/training_log/training.log')
 
-@app.route('/api/predict', methods=['POST'])
-def predict():
-    # Bridge to the model
-    prompt = request.json.get('prompt')
-    return jsonify({"reply": f"Albert (Ternary Mode) processed '{prompt}' using loaded seed artifact."})
-
-# ... keep existing training routes ...
+# ... keep existing routes ...
 
 
 @socketio.on('start_training')
@@ -49,5 +38,4 @@ def handle_training(config):
     emit('log', {'data': f"--- INITIALIZING SWEEP: LR={config.get('lr')} TH={config.get('th')} ---"})
 
 if __name__ == '__main__':
-    # Important: use socketio.run(app) to handle the routing
-    socketio.run(app, port=5000, debug=True)
+    socketio.run(app, port=8888, debug=False, host='0.0.0.0')

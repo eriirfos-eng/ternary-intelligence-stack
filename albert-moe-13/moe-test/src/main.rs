@@ -66,18 +66,18 @@ impl App {
         
         let mut config = TransformerConfig::default();
         config.vocab_size = tokenizer.vocab_size();
-        config.hidden_size = 96;
-        config.num_layers = 3;
-        config.num_heads = 4;
-        config.max_seq_len = 128;
+        config.hidden_size = 64;
+        config.num_layers = 2;
+        config.max_seq_len = 64;
+        config.num_experts = 0;
 
         let vb = VarBuilder::from_tensors(tensors, DType::F32, &dev);
         let model = Transformer::new(&config, vb).expect("Architecture mismatch");
 
         let meta_paths = [
-            "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.7.meta",
-            "models/bible_ternary_v1.3.7.meta",
-            "albert-moe-13/models/bible_ternary_v1.3.7.meta"
+            "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.6.meta",
+            "models/bible_ternary_v1.3.6.meta",
+            "albert-moe-13/models/bible_ternary_v1.3.6.meta"
         ];
         
         let mut total_epochs = 0;
@@ -92,7 +92,7 @@ impl App {
             model,
             tokenizer,
             input: String::new(),
-            transcript: format!("System: Model v1.3.7 loaded. Epoch Mileage: {}\n", total_epochs),
+            transcript: format!("System: Model v1.3.6 loaded. Epoch Mileage: {}\n", total_epochs),
             messages: Vec::new(),
             model_id: "MoE-13-Ternary".to_string(),
             checkpoint: version,
@@ -204,8 +204,8 @@ impl App {
 
 fn find_latest_checkpoint() -> (PathBuf, String) {
     let models_dir = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models";
-    let default_file = PathBuf::from(format!("{}/bible_ternary_v1.3.7.safetensors", models_dir));
-    if default_file.exists() { return (default_file, "v1.3.7".to_string()); }
+    let default_file = PathBuf::from(format!("{}/bible_ternary_v1.3.6.safetensors", models_dir));
+    if default_file.exists() { return (default_file, "v1.3.6".to_string()); }
     (default_file, "v1.3.x".to_string())
 }
 
@@ -315,6 +315,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     
     let sandbox = Paragraph::new(app.transcript.as_str())
         .block(Block::default().borders(Borders::ALL).title(format!(" Sandbox @ Simeon{} ", scroll_text)))
+        .style(Style::default().fg(Color::White))
         .wrap(Wrap { trim: true })
         .scroll((app.scroll_pos, 0));
     f.render_widget(sandbox, chunks[1]);

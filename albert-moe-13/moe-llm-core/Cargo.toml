@@ -16,3 +16,4 @@ candle-nn = "0.8.4"
 tokenizers = "0.21.0"
 serde = { version = "1.0", features = ["derive"] }
 rand = "0.8.5"
+rayon = "1.10.0"
