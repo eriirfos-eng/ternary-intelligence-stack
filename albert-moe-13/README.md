@@ -68,25 +68,33 @@ To maintain a clean and professional research environment, artifacts are organiz
 
 ---
 
-## 7. Training & Testing Workflow
+## 7. Unified Training & Dashboard Workflow
 
-We use a singular architecture for training and testing. 
+We have unified the training, monitoring, and dashboard orchestration under the `albert-train` command, which links to our Python orchestrator (`albert-run`).
 
-1. **Training**:
-   Use the production-optimized release binary to train:
-   ```bash
-   cd albert-moe-13/
-   # Clean build
-   cargo build --release --bin train_bible
-   # Run
-   ./target/release/train_bible
-   ```
-   *Training saves progress to `models/bible_ternary_v1.3.6.safetensors` and `models/bible_ternary_v1.3.6.meta`.*
+### 7.1. Running the Production Stack
+To start the full training suite (training binary + dashboard server + UI):
 
-2. **Testing**:
-   Use the TUI-based test suite to interact with the trained brain:
-   ```bash
-   cd albert-moe-13/
-   cargo run --bin moe-test
-   ```
+```bash
+# From project root
+albert-train
+```
+
+*   **Training Binary**: The system streams batch data directly to `/home/eri-irfos/Desktop/training_log/training.log`.
+*   **Dashboard Server**: Automatically spins up a `RobustHandler` server on `http://localhost:8888`.
+*   **UI Visualization**: Automatically launches a browser/window showing the real-time scatter plot with:
+    *   **High-precision X-axis**: Global Epoch + (Batch/300).
+    *   **Live Updates**: Turquoise drops represent batch loss, orange lines show the Simple Moving Average (SMA).
+    *   **Data Cleanup**: Automatically filters loss < 1.1 for clear convergence visualization.
+
+### 7.2. System Monitoring
+*   **Live Logs**: View raw telemetry at `Desktop/training_log/training.log`.
+*   **Model States**: Checkpoints are stored in `models/bible_ternary_v1.3.6.safetensors` and `models/bible_ternary_v1.3.6.meta`.
+*   **Orchestration**: `albert-run` handles subprocess lifecycle management for the Rust binaries and the Python dashboard server.
+
+### 7.3. Testing
+To run the standard test suite:
+```bash
+cargo run --bin moe-test
+```
 
