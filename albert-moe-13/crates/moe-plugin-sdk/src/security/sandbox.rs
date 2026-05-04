@@ -47,27 +47,31 @@ mod tests {
 
     #[test]
     fn test_sandbox_allows_fast_work() {
+        let mut axis = AxisMemory::new();
         let sandbox = PluginSandbox::new(64, 500);
-        let result = sandbox.enforce(|| Ok(42u32));
+        let result = sandbox.enforce(&mut axis, || Ok(42u32));
         assert_eq!(result.unwrap(), 42);
     }
 
     #[test]
     fn test_sandbox_enforces_timeout() {
+        let mut axis = AxisMemory::new();
         let sandbox = PluginSandbox::new(64, 50);
-        let result = sandbox.enforce::<(), _>(|| {
+        let result = sandbox.enforce::<(), _>(&mut axis, || {
             std::thread::sleep(Duration::from_millis(200));
             Ok(())
         });
         assert!(result.is_err(), "sandbox must reject work that exceeds time budget");
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("CPU time budget"), "error must mention time budget");
+        assert_eq!(axis.veto_log.len(), 1, "timeout must be logged as a VetoEntry");
     }
 
     #[test]
     fn test_sandbox_propagates_inner_error() {
+        let mut axis = AxisMemory::new();
         let sandbox = PluginSandbox::new(64, 500);
-        let result = sandbox.enforce::<(), _>(|| {
+        let result = sandbox.enforce::<(), _>(&mut axis, || {
             anyhow::bail!("plugin internal failure")
         });
         assert!(result.is_err());
