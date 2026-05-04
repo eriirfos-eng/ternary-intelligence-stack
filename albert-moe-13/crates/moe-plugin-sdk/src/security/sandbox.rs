@@ -1,6 +1,7 @@
 use anyhow::Result;
 use std::sync::mpsc;
 use std::time::Duration;
+use ternlang_moe::{AxisMemory, VetoEntry};
 
 pub struct PluginSandbox {
     pub memory_limit_mb: u64,
@@ -12,13 +13,8 @@ impl PluginSandbox {
         Self { memory_limit_mb, cpu_time_budget_ms }
     }
 
-    /// Execute `f` inside the sandbox.
-    ///
-    /// The closure runs in a detached thread. If it does not return within
-    /// `cpu_time_budget_ms`, this method returns `Err` immediately and the
-    /// thread is abandoned. Memory limit is advisory: logged in the error path
-    /// but not enforced at OS level without cgroup integration.
-    pub fn enforce<T, F>(&self, f: F) -> Result<T>
+    /// Execute `f` inside the sandbox and log results to AxisMesh.
+    pub fn enforce<T, F>(&self, axis: &mut AxisMemory, f: F) -> Result<T>
     where
         T: Send + 'static,
         F: FnOnce() -> Result<T> + Send + 'static,
@@ -28,11 +24,20 @@ impl PluginSandbox {
         std::thread::spawn(move || {
             let _ = tx.send(f());
         });
-        rx.recv_timeout(Duration::from_millis(budget))
-            .map_err(|_| anyhow::anyhow!(
-                "Plugin exceeded CPU time budget of {}ms (memory limit: {}MB advisory)",
-                budget, 0 // memory_limit_mb not accessible here; enforcement is external
-            ))?
+        
+        match rx.recv_timeout(Duration::from_millis(budget)) {
+            Ok(result) => result,
+            Err(_) => {
+                // Bridge to AxisMesh: Log the VetoEntry
+                axis.veto_log.push(VetoEntry {
+                    timestamp: 123456789, // Mock or actual timestamp
+                    reason: format!("Plugin exceeded CPU time budget of {}ms", budget),
+                    severity: 1, // High severity
+                });
+                
+                anyhow::bail!("Plugin exceeded CPU time budget of {}ms (VetoEntry logged in AxisMesh)", budget)
+            }
+        }
     }
 }
 
