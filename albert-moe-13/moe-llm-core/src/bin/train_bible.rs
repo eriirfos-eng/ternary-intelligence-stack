@@ -31,9 +31,26 @@ fn main() -> Result<()> {
     config.max_seq_len = 128; // Doubled context
 
     // 5. Initialize Model
-    let varmap = VarMap::new();
+    let mut varmap = VarMap::new();
+    let checkpoint_path = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.7.safetensors";
+    let meta_path = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.7.meta";
+    
+    // Create the model structure first so the VarMap has the correct keys
     let vb = VarBuilder::from_varmap(&varmap, DType::F32, &device);
     let model = Transformer::new(&config, vb)?;
+
+    if std::path::Path::new(checkpoint_path).exists() {
+        println!("Resuming from checkpoint: {}", checkpoint_path);
+        varmap.load(checkpoint_path).expect("Failed to load weights");
+    } else {
+        println!("No checkpoint found at {}. Starting from scratch.", checkpoint_path);
+    }
+
+    // 5.5 Metadata Odometer
+    let mut total_epochs = if let Ok(c) = fs::read_to_string(meta_path) {
+        c.trim().parse::<u32>().unwrap_or(0)
+    } else { 0 };
+    println!("Model Odometer: {} total epochs trained", total_epochs);
 
     // 6. Optimizer
     let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 2e-4)?; 
@@ -41,11 +58,13 @@ fn main() -> Result<()> {
     // 7. Training Loop
     let batch_size = 4;
     let seq_len = config.max_seq_len;
-    let epochs = 50; 
+    let session_epochs = 50; 
 
-    for epoch in 0..epochs {
+    for epoch in 0..session_epochs {
         let mut total_loss = 0.0;
         let num_batches = 300; 
+        
+        total_epochs += 1; // Increment global odometer
 
         for batch_idx in 0..num_batches {
             // ... (rest of sampling)
@@ -77,19 +96,29 @@ fn main() -> Result<()> {
             total_loss += loss.to_scalar::<f32>()?;
             
             if batch_idx % 20 == 0 {
-                println!("Epoch {}, Batch {}: loss = {:.4}", epoch, batch_idx, loss.to_scalar::<f32>()?);
+                println!("Epoch {} (Global {}), Batch {}: loss = {:.4}", epoch, total_epochs, batch_idx, loss.to_scalar::<f32>()?);
             }
         }
         println!("Epoch {} complete. Avg loss: {:.4}", epoch, total_loss / num_batches as f32);
-        varmap.save("albert-moe-13/models/bible_ternary_v1.3.7.safetensors")?;
-        println!("Checkpoint saved.");
+        
+        // Atomic Save: Weights
+        let tmp_path = format!("{}.tmp", checkpoint_path);
+        varmap.save(&tmp_path)?;
+        std::fs::rename(&tmp_path, checkpoint_path)?;
+        
+        // Atomic Save: Odometer
+        fs::write(meta_path, total_epochs.to_string())?;
+        
+        println!("Checkpoint saved. Odometer: {}", total_epochs);
     }
 
     println!("--- Training Finished ---");
 
-    // 8. Save Weights
-    varmap.save("albert-moe-13/models/bible_ternary_v1.3.7.safetensors")?;
-    println!("Weights saved to albert-moe-13/models/bible_ternary_v1.3.7.safetensors");
+    // Final Weight Save
+    let tmp_path = format!("{}.tmp", checkpoint_path);
+    varmap.save(&tmp_path)?;
+    std::fs::rename(&tmp_path, checkpoint_path)?;
+    println!("Final weights stabilized at {}", checkpoint_path);
 
     Ok(())
 }
