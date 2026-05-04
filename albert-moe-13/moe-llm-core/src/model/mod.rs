@@ -1,6 +1,12 @@
 pub mod config;
 pub mod embedding;
 pub mod attention;
+pub mod mlp;
+pub mod ste;
+pub mod ternary_linear;
 pub mod transformer;
+pub mod moe;
+pub mod packing;
+pub mod loader;
 pub use transformer::Transformer;
 pub use config::TransformerConfig;

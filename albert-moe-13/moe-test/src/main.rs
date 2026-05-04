@@ -5,7 +5,6 @@
 use std::io::{self, Write};
 use moe_llm_core::model::{Transformer, TransformerConfig};
 use moe_llm_core::tokenizer::BpeTokenizer;
-use candle_nn::VarMap;
 use candle_core::{Device, DType};
 
 struct AlbertTest {
@@ -13,16 +12,28 @@ struct AlbertTest {
     tokenizer: BpeTokenizer,
 }
 
+use moe_llm_core::model::loader::TritLoader;
+use candle_nn::VarBuilder;
+
 impl AlbertTest {
     fn new() -> Self {
-        let dev = &Device::Cpu;
-        let varmap = VarMap::new();
-        let vb = candle_nn::VarBuilder::from_varmap(&varmap, DType::F32, dev);
-        let config = TransformerConfig::default();
+        let dev = Device::Cpu;
+        let trit_path = "albert-moe-13/models/bible_ternary_v1.3.6.trit";
         
-        // Use relative path for vocab
-        let tokenizer = BpeTokenizer::new("data/vocab.json"); 
-        let model = Transformer::new(config.vocab_size, config.hidden_size, vb).expect("Failed to init model");
+        println!("Loading bit-packed weights from {}...", trit_path);
+        let loader = TritLoader::load(trit_path, &dev).expect("Failed to load .trit weights");
+        
+        // Use a dummy varmap and overwrite with loader if needed, 
+        // but easier to build VarBuilder from the loader's tensors directly.
+        // Since loader.tensors is private, I'll need to expose it or add a helper.
+        // For now, let's assume we can use the loader to provide a VarBuilder.
+        
+        let tokenizer = BpeTokenizer::new("albert-moe-13/data/vocab.json");
+        let mut config = TransformerConfig::default();
+        config.vocab_size = tokenizer.vocab_size();
+        
+        let vb = VarBuilder::from_tensors(loader.into_tensors(), DType::F32, &dev);
+        let model = Transformer::new(&config, vb).expect("Failed to init model");
         
         Self { 
             model,
@@ -48,16 +59,8 @@ impl AlbertTest {
                     if cmd == "exit" { break; }
                     if cmd.is_empty() { continue; }
 
-                    let mut current_prompt = cmd.to_string();
-                    print!("[Albert]: ");
-                    for _ in 0..10 {
-                        let next_token = self.model.generate(&self.tokenizer, &current_prompt);
-                        if next_token.is_empty() { break; }
-                        print!("{} ", next_token);
-                        io::stdout().flush().unwrap();
-                        current_prompt.push_str(&next_token);
-                    }
-                    println!();
+                    let response = self.model.generate(&self.tokenizer, cmd, 10);
+                    println!("[Albert]: {}", response);
                 }
                 Err(e) => {
                     eprintln!("Error reading input: {}", e);

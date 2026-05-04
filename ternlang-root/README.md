@@ -35,15 +35,15 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 | ` 0` | **tend** | Insufficient data. Gather more before acting. |
 | `+1` | **affirm** | Clear positive signal. Proceed. |
 
----
 ## Repository Architecture
 
-This repository is the core research engine. It is split into two primary domains, each serving a distinct purpose in our research:
+This repository is split into three primary domains, each serving a distinct purpose in the TIS ecosystem:
 
 | Path | Purpose |
 |-----------|----------------|
-| `ternlang-root/` | **The Orchestration Layer:** Compiler, BET VM, and the MoE-13 Orchestrator MCP server. This layer handles logical routing and ternary decision-making. |
-| `albert-moe-13/` | **Model Development Framework:** The native research framework for training scaling. Houses the crates responsible for ternary manifold adaptation, STE-based training, and model architecture. |
+| [`ternlang-root/`](../ternlang-root/) | **The Orchestration Layer:** Compiler, BET VM, and the MoE-13 Orchestrator MCP server. This layer handles logical routing and ternary decision-making. |
+| [`albert-moe-13/`](../albert-moe-13/) | **Model Development Framework:** The native research framework for training scaling. Houses the crates responsible for ternary manifold adaptation, STE-based training, and model architecture. |
+| [`agent_albert_cli/`](../agent_albert_cli/) | **Sovereign Agent Layer:** The terminal-native, model-agnostic AI agent (Albert) built in pure Rust for autonomous coding and orchestration. |
 
 ### Note on Training Infrastructure
 As of current development, this repository houses the foundational model architecture, ternary math, and scaling research framework (see `albert-moe-13/crates/`). Massive-scale distributed training infrastructure is currently managed in a separate, secured workflow or remains in pre-cluster, experimental development stages. Experimental benchmarks and logic can be found in `albert-moe-13/crates/moe-core/src/training/`.

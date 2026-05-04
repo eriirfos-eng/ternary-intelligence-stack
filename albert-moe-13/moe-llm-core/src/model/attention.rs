@@ -1,19 +1,20 @@
 use candle_core::{Result, Tensor};
-use candle_nn::{Linear, Module, VarBuilder};
+use candle_nn::VarBuilder;
+use super::ternary_linear::TernaryLinear;
 
 pub struct Attention {
-    q_proj: Linear,
-    k_proj: Linear,
-    v_proj: Linear,
+    q_proj: TernaryLinear,
+    k_proj: TernaryLinear,
+    v_proj: TernaryLinear,
     head_dim: usize,
 }
 
 impl Attention {
-    pub fn new(hidden_size: usize, num_heads: usize, vb: VarBuilder) -> Result<Self> {
+    pub fn new(hidden_size: usize, num_heads: usize, vb: VarBuilder, threshold: f32) -> Result<Self> {
         let head_dim = hidden_size / num_heads;
-        let q_proj = candle_nn::linear(hidden_size, hidden_size, vb.pp("q_proj"))?;
-        let k_proj = candle_nn::linear(hidden_size, hidden_size, vb.pp("k_proj"))?;
-        let v_proj = candle_nn::linear(hidden_size, hidden_size, vb.pp("v_proj"))?;
+        let q_proj = TernaryLinear::new(hidden_size, hidden_size, false, threshold, vb.pp("q_proj"))?;
+        let k_proj = TernaryLinear::new(hidden_size, hidden_size, false, threshold, vb.pp("k_proj"))?;
+        let v_proj = TernaryLinear::new(hidden_size, hidden_size, false, threshold, vb.pp("v_proj"))?;
         Ok(Self { q_proj, k_proj, v_proj, head_dim })
     }
 
