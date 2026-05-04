@@ -845,7 +845,7 @@
     "api_latency_ms": 444
   },
   {
-    "ts": "2026-05-04T17:30:08.149465+00:00",
+    "ts": "2026-05-04T18:28:38.119940+00:00",
     "total_footprint": 80461,
     "raw_footprint": 43073,
     "crates_total": 5111,
@@ -854,6 +854,6 @@
     "gh_clones": 23173,
     "gh_views": 3011,
     "smithery_calls_weekly": "10.70k",
-    "api_latency_ms": 453
+    "api_latency_ms": 504
   }
 ]
