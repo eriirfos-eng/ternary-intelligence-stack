@@ -1,13 +1,13 @@
 use candle_core::{Result, Tensor, IndexOp};
 use candle_nn::{Module, VarBuilder};
 use super::attention::Attention;
-use super::mlp::Mlp;
+use super::moe::MoeBlock;
 use super::config::TransformerConfig;
 use super::ternary_linear::TernaryLinear;
 
 pub struct Block {
     attention: Attention,
-    mlp: Mlp,
+    moe: MoeBlock,
     ln1: candle_nn::LayerNorm,
     ln2: candle_nn::LayerNorm,
 }
@@ -15,15 +15,15 @@ pub struct Block {
 impl Block {
     pub fn new(config: &TransformerConfig, vb: VarBuilder) -> Result<Self> {
         let attention = Attention::new(config.hidden_size, config.num_heads, vb.pp("attn"), config.threshold)?;
-        let mlp = Mlp::new(config.hidden_size, config.hidden_size * 4, vb.pp("mlp"), config.threshold)?;
+        let moe = MoeBlock::new(config.hidden_size, config.num_experts, vb.pp("moe"), config.threshold)?;
         let ln1 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln1"))?;
         let ln2 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln2"))?;
-        Ok(Self { attention, mlp, ln1, ln2 })
+        Ok(Self { attention, moe, ln1, ln2 })
     }
 
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         let x = (x + self.attention.forward(&self.ln1.forward(x)?)?)?;
-        let x = (&x + self.mlp.forward(&self.ln2.forward(&x)?)?)?;
+        let x = (&x + self.moe.forward(&self.ln2.forward(&x)?)?)?;
         Ok(x)
     }
 }
