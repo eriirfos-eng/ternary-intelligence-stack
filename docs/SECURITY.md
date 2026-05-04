@@ -1,28 +1,101 @@
-# Defending Post-Binary Sovereignty: Security Policy
+# Security Policy
 
-Security at TIS is not a patch; it is the **Neutrality Shield**. We don't just protect data; we protect the integrity of the deliberation process.
+## Overview
 
-## The Veto Protocol (Reporting)
-If you find a breach in our logic or a vulnerability in our crates, execute a **Safety Veto** immediately. 
-**Contact the Core Team:** [rfi.irfos@gmail.com](mailto:rfi.irfos@gmail.com)
+Security within the Ternary Intelligence Stack (TIS) is treated as a system-level requirement, not an afterthought. The goal is to ensure integrity, reproducibility, and robustness across all components of the stack.
 
-We don't do "bug bounties" in the traditional sense—we offer **recognition in the Logic Frontier** and the gratitude of the RFI-IRFOS collective.
+This policy defines how vulnerabilities are reported, evaluated, and resolved.
 
-## Sovereignty Status
-| Logic Gate | Status |
-|------------|--------|
-| **v0.3.1** | **Operational (Active Defense)** |
-| **Legacy** | **Decommissioned (No Veto Support)** |
+---
 
-## The Three Mandates of TIS Security
-1. **Zero-Guessing**: Vulnerabilities often live in the "undefined" space. Our Trit-0 architecture minimizes this by design.
-2. **Rust-Hardened**: We leverage the borrow checker as our primary line of defense. Raw pointers are a **Veto (-1)** offense unless strictly justified.
-3. **Safety-by-Design**: We align with **Articles 13 & 15 of the EU AI Act**. Our inference must be transparent and robust against adversarial manipulation.
+## Reporting a Vulnerability
 
-## Disclosure Timeline
-- **T+0h**: Vulnerability detected.
-- **T+48h**: Core team acknowledgement.
-- **T+7d**: Strategy finalized.
-- **T+30d**: Deployment of the Neutrality Patch.
+If you discover a security issue, please report it responsibly:
 
-*Stay sharp. Logic is our only shield.*
+* **Email:** [rfi.irfos@gmail.com](mailto:rfi.irfos@gmail.com)
+* **Subject:** `[SECURITY] <short description>`
+
+Include:
+
+* A clear description of the issue
+* Steps to reproduce
+* Affected components (crate/module)
+* Potential impact assessment (if known)
+
+Do **not** open public issues for security vulnerabilities.
+
+---
+
+## Response Process
+
+We aim to follow this timeline:
+
+* **Acknowledgement:** within 48 hours
+* **Initial assessment:** within 7 days
+* **Fix or mitigation:** within 30 days (depending on severity and complexity)
+
+If additional time is required, we will communicate transparently.
+
+---
+
+## Supported Versions
+
+| Version        | Support Status |
+| -------------- | -------------- |
+| Latest release | Supported      |
+| Older versions | Not supported  |
+
+Security fixes are only guaranteed for the most recent stable version.
+
+---
+
+## Security Principles
+
+### 1. Deterministic & Auditable Systems
+
+All critical components should be reproducible and traceable. Hidden or non-deterministic behavior is treated as a risk.
+
+### 2. Memory Safety by Default
+
+The project relies on Rust’s safety guarantees:
+
+* Unsafe code must be minimized and justified
+* All unsafe blocks require explicit review and documentation
+
+### 3. Minimal Attack Surface
+
+* Avoid unnecessary dependencies
+* Keep interfaces explicit and constrained
+* Prefer static analysis and compile-time guarantees over runtime checks
+
+### 4. Robustness Against Malformed Input
+
+* All external inputs must be validated
+* Parsers and loaders must fail safely (no silent corruption)
+
+### 5. Transparency & Inspectability
+
+* System behavior should be observable and debuggable
+* Logs and artifacts should support post-hoc verification
+
+---
+
+## Disclosure Policy
+
+* We follow responsible disclosure practices
+* Reported vulnerabilities are not made public until a fix or mitigation is available
+* Contributors who report valid issues may be acknowledged in release notes (upon request)
+
+---
+
+## Out of Scope
+
+* Issues in unsupported versions
+* Hypothetical vulnerabilities without reproducible evidence
+* Non-security bugs (use issue tracker instead)
+
+---
+
+## Notes
+
+This policy will evolve as the system matures. Contributions and improvements are welcome.
