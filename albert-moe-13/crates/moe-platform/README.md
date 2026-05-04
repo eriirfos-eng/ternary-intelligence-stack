@@ -1,50 +1,45 @@
-# moe-platform
+# MoE-Platform: Ternary Inference Runtime
 
-The **MoE-13 Platform API** is the stable, production-ready interface for the [MoE-13](https://github.com/eriirfos-eng/ternary-intelligence-stack) ternary inference ecosystem.
+The **MoE-Platform API** is the formal, production-ready interface for the [Albert-MoE-13](https://github.com/eriirfos-eng/ternary-intelligence-stack) ternary inference ecosystem.
 
-This crate provides a clean, decoupled facade for ingesting, loading, and executing ternary models using the MoE-13 deterministic runtime.
+This crate serves as the primary facade for loading, executing, and monitoring high-precision ternary models within the deterministic MoE-13 runtime.
 
-## Getting Started
+## 1. Technical Overview
+MoE-Platform decouples the public execution interface from the core ternary computational engine, ensuring high performance for both production inference and local research prototyping.
 
+## 2. Integration & Provenance
+By integrating with the platform, applications inherit the integrity guarantees of the MoE-13 framework, including:
+- **Reproducibility**: Guaranteed deterministic execution aligned with the [Artifact Registry](../models/README.md).
+- **Security**: Hard-gated input sanitization via the `trit_action_gate`.
+- **Performance**: Direct utilization of SIMD ternary-native kernels.
+
+## 3. Implementation Example
 ```rust
 use moe_platform::{Platform, PluginRegistry};
 
 fn main() -> anyhow::Result<()> {
-    // 1. Initialize the MoE-13 platform
+    // 1. Initialize the MoE-13 platform with core integrity checks
     let mut platform = Platform::new();
 
-    // 2. Register model providers (e.g., Ollama, HF, GGUF)
-    platform.register_plugin(OllamaProvider::new())?;
-
-    // 3. Ingest and execute offline MoE models
-    let model = platform.load_model("local-ternary-model")?;
-    let output = platform.run_inference(model, "Analyze the following triadic structure...")?;
+    // 2. Load model from the validated Artifact Registry
+    let model = platform.load_model("bible-moe-v1")?;
+    
+    // 3. Deterministic Inference
+    let output = platform.run_inference(model, "Analyze epistemic weight drift...")?;
     
     Ok(())
 }
 ```
 
-## Key Features
+## 4. Architecture
+*   **Provider-Agnostic Ingestion**: Ingest models from standardized formats (`.trit`, `.safetensors`) via the `ModelProviderPlugin` trait.
+*   **Offline-First Compliance**: Operates entirely offline, meeting EU AI Act data residency mandates.
+*   **Deterministic Runtime**: The execution path is fully auditable through the framework's telemetry logging.
 
-*   **Provider-Agnostic Ingestion**: Ingest models from any source via the `ModelProviderPlugin` trait.
-*   **Offline-First**: Guaranteed offline execution; zero runtime dependency on external cloud APIs or model vendors.
-*   **Deterministic Runtime**: Leverages the audited MoE-13 core for reproducible inference.
-*   **Modular Architecture**: Separates the private computational core from the public API surface.
+## 5. Official Research References
+- **Main Framework**: [Albert-MoE-13 README](../README.md)
+- **Model Artifacts**: [Provenance & Registry](../models/README.md)
+- **License**: Provided under [LGPL-3.0/BSL-1.1](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/LICENSE).
 
-## Plugin Ecosystem
-
-The platform supports a first-class plugin architecture. Third-party providers can be registered dynamically at runtime without affecting the platform's stability.
-
-```rust
-pub trait ModelProviderPlugin {
-    fn name(&self) -> &str;
-    fn version(&self) -> semver::Version;
-    fn load(&self, stream: Box<dyn ModelStream>) -> CMIR;
-}
-```
-
-## License
-
-This crate is provided under the [MIT License](LICENSE).
-
-For core licensing and commercial enterprise access, refer to the [TIS License](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/LICENSE).
+---
+*Maintained by the TIS Core Research Team. Part of the SPRIND Copernicus submission suite.*
