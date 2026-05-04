@@ -36,10 +36,10 @@ fn main() -> Result<()> {
     let model = Transformer::new(&config, vb)?;
 
     // 6. Optimizer
-    let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 1e-3)?; 
+    let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 2e-4)?; 
 
     // 7. Training Loop
-    let batch_size = 8;
+    let batch_size = 4;
     let seq_len = config.max_seq_len;
     let epochs = 50; 
 

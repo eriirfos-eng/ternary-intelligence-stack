@@ -11,6 +11,7 @@ members = [
     "moe-llm-core",
     "moe-test",
     "moe-compute",
+    "moe-data",
     "reproducibility_verifier",
 ]
 resolver = "2"
