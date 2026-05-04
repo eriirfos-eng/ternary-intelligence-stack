@@ -25,13 +25,13 @@
 
 ### Phase 18: TernAudit Infrastructure
 *Focus: Formal audibility and compliance with the EU AI Act (Articles 13, 14, 15).*
-- **CLI/REST Audit Framework**: Deployed a dedicated audit suite (`ternlang audit`) that processes JSON-RPC decision logs, transforming inference metadata into human-readable compliance artifacts.
+- **CLI/REST Audit Framework**: Deployed a dedicated audit suite (ternlang audit) that processes JSON-RPC decision logs, transforming inference metadata into human-readable compliance artifacts.
 - **Regulatory Mapping**: Developed a mapping layer between internal model confidence metrics (Affirm/Tend/Reject) and EU AI Act regulatory requirements, ensuring that every significant system decision is transparent and trace-backed.
 - **Extension Integration**: Developed VS Code extension functionality to allow developers to audit AI-generated code, providing inline verification markers for logic segments.
 
 ### Phase 17: WASM Runtime Execution
 *Focus: Achieving platform-agnostic, zero-overhead execution of the balanced ternary virtual machine.*
-- **WebAssembly Compilation**: Successfully compiled `ternlang-core` to `wasm32-unknown-unknown` target, ensuring consistent VM behavior between the CLI execution and the browser-based playground.
+- **WebAssembly Compilation**: Successfully compiled ternlang-core to wasm32-unknown-unknown target, ensuring consistent VM behavior between the CLI execution and the browser-based playground.
 - **VM Semantic Consistency**: Validated that the web-based VM maintains identical arithmetic properties (negation, ternary addition, carry logic) as the native Rust CLI implementation, removing the need for approximate JavaScript-based simulation.
 
 ### Phase 16: TernStudio IDE
@@ -43,7 +43,7 @@
 *Goal: Ensuring formal verification, standardization, and interoperability with established academic ternary standards.*
 - **Academic Outreach**: Initiated rigorous communication with established ternary research groups (USN), aligning TIS standards with existing BCT hardware-compiler pipelines.
 - **Standardization**: Publishing formal ISA specifications, IEEE-style LaTeX/DOCX whitepapers, and standardized dictionary formats to ensure academic rigor and falsifiability.
-- **Registry Integration**: Released `ternpkg`, a package management solution with a GitHub-backed registry to encourage modular development and ecosystem expansion.
+- **Registry Integration**: Released ternpkg, a package management solution with a GitHub-backed registry to encourage modular development and ecosystem expansion.
 
 ---
 
