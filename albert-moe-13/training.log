@@ -1,25 +1,8 @@
-warning: unused import: `Module`
- --> moe-llm-core/src/model/moe.rs:2:17
-  |
-2 | use candle_nn::{Module, VarBuilder};
-  |                 ^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
-
-warning: `moe-llm-core` (lib) generated 1 warning
-   Compiling moe-llm-core v1.3.5 (/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/moe-llm-core)
-    Finished `release` profile [optimized] target(s) in 1.42s
-     Running `target/release/train_bible`
 --- Training moe-llm-core on Bible corpus ---
 Vocab size: 8000
 Total tokens: 1014621
-Epoch 0, Batch 0: loss = 29.0276
-Epoch 0, Batch 20: loss = 27.8388
-Epoch 0, Batch 40: loss = 25.8102
-Epoch 0, Batch 60: loss = 22.7061
-Epoch 0, Batch 80: loss = 21.8731
-Epoch 0, Batch 100: loss = 20.7739
-Epoch 0, Batch 120: loss = 19.9668
-Epoch 0, Batch 140: loss = 19.0960
-Epoch 0, Batch 160: loss = 19.1251
-Epoch 0, Batch 180: loss = 16.6165
+Resuming from checkpoint: /home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.7.safetensors
+Model Odometer: 48 total epochs trained
+Epoch 0 (Global 49), Batch 0: loss = 8.9789
+Epoch 0 (Global 49), Batch 20: loss = 9.0116
+Epoch 0 (Global 49), Batch 40: loss = 8.8742

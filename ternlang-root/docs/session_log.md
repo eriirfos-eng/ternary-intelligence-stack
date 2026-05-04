@@ -3,6 +3,11 @@
 
 Reverse chronological record of every working session (newest first). One row per session or sub-session. For roadmap and phase status see [ROADMAP.md](ROADMAP.md).
 
+| 2026-05-04 | **[Longitudinal Tracking & Layout Polish]** Refactored TUI to use word-wrapping for readable chat transcripts. Implemented a Global Odometer in the training harness and the dashboard to track total training epoch mileage across sessions. |
+| 2026-05-04 | **[Dashboard Optimization & Scientific Telemetry]** Optimized TUI render loop for real-time responsiveness. Integrated scientific telemetry including TPS, active expert count (Top-2 verification), and estimated GFLOPS. Renamed 'Neural Transcript' to 'Sandbox' and 'Provenance' to 'Brain'. |
+| 2026-05-04 | **[High-Performance TUI Refactor]** Migrated training monitor to a high-fidelity Ratatui TUI with typewriter-style streaming, real-time metrics, and atomic checkpointing. Established absolute path resolution to eliminate binary ghosting. |
+| 2026-05-04 | **[Hardening & Atomic Save Protocol]** Refactored training harness to use temporary-then-rename atomic save protocol to prevent checkpoint corruption. Synchronized versions (v1.3.7) across binary and model registry. |
+| 2026-05-04 | **[Training Loop Initialization]** Started Bible corpus training (v1.3.7) with verified stable loss convergence (~9.3). Resolved weight-shadowing bugs to ensure consistent MoE-13 training progress. |
 ---
 
 | Date | Session Update |
