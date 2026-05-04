@@ -20,4 +20,8 @@ impl BpeTokenizer {
     pub fn decode(&self, ids: &[u32]) -> String {
         self.tokenizer.decode(ids, true).unwrap()
     }
+
+    pub fn vocab_size(&self) -> usize {
+        self.tokenizer.get_vocab_size(true)
+    }
 }

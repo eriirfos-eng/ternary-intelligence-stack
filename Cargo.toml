@@ -16,7 +16,7 @@ members = [
     "ternlang-root/integrations/ternlang-wasmtime",
     "ternlang-root/ternlang-hft", "ternlang-root/ternlang-ros2",
     "ternlang-root/ternlang-edu", "ternlang-root/ternlang-harmony", "ternlang-root/ternlang-driver",
-    "reproducibility_verifier", "moe-test", "moe-compute", "moe-llm-core"
+    "albert-moe-13/reproducibility_verifier", "albert-moe-13/moe-test", "albert-moe-13/moe-compute", "albert-moe-13/moe-llm-core"
 ]
 resolver = "2"
 

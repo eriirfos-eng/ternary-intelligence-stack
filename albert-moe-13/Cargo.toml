@@ -8,12 +8,28 @@ members = [
     "crates/moe-sdk",
     "crates/moe-uril",
     "crates/moe-validation-suite",
+    "moe-llm-core",
+    "moe-test",
+    "moe-compute",
+    "reproducibility_verifier",
 ]
 resolver = "2"
 
 [workspace.package]
-version = "1.3.5"
-edition = "2024"
-authors = ["RFI-IRFOS <licensing@ternlang.com>"]
-license = "MIT"
-repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+version     = "1.3.5"
+edition     = "2024"
+license     = "LGPL-3.0-or-later"
+repository  = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
+homepage    = "https://ternlang.com"
+authors     = [
+    "Simeon Kepp <rfi.irfos@gmail.com>",
+    "Nikoletta Csonka <csonikoletta@ternlang.com>",
+    "Zabih Karimi <z.karimi@ternlang.com>",
+    "RFI-IRFOS <licensing@ternlang.com>"
+]
+keywords    = [
+    "ternary-logic", "machine-learning", "inference-engine", "compiler", 
+    "ai-safety", "explainable-ai", "sparsity", "rust-lang", "low-latency", 
+    "post-binary", "quantization", "hpc", "deterministic"
+]
+categories  = ["compilers", "science", "embedded-programming", "development-tools::ffi"]
