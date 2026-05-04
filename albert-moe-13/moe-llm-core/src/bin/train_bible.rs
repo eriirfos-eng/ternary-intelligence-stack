@@ -71,7 +71,7 @@ fn main() -> Result<()> {
     let batch_size = 1; 
     let accumulation_steps = 8; // Increased for extra memory headroom
     let seq_len = config.max_seq_len;
-    let session_epochs = 50; 
+    let session_epochs = 200; 
 
     for epoch in 0..session_epochs {
         let mut total_loss = 0.0;
