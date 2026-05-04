@@ -18,8 +18,9 @@ This directory contains the production checkpoints for the Copernicus model seri
 | Version | ID | Epochs | Loss | Format | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **v1.3.5** | `bible-dense-v1` | 20 | 5.8799 | `.trit`, `.safetensors` | [VERIFIED] |
-| **v1.3.6** | `bible-pos-v1` | 2 | 7.8845 | `.trit`, `.safetensors` | [VERIFIED] |
-| **v1.3.7** | `bible-moe-v1` | 50 (In Progress) | ~10.0 (Current) | `.safetensors` | [EXPERIMENTAL] |
+| **v1.3.6** | `bible-pos-v1` | 170+ | 1.1245 | `.trit`, `.safetensors` | [STABLE] |
+| **v1.3.7** | `bible-moe-v1` | 175 (Live) | ~1.1032 | `.safetensors` | [CONVERGING] |
 
 ---
-**Verified by Reproducibility Verifier v1.3.5**
+**Continuous Update Policy**: v1.3.7 checkpoints are updated continuously via the `albert-train` orchestrator. Live weight streaming is enabled.
+**Verified by Reproducibility Verifier v1.3.6**
