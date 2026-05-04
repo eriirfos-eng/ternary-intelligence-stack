@@ -69,7 +69,7 @@ fn main() -> Result<()> {
 
     // 7. Training Loop
     let batch_size = 1; 
-    let accumulation_steps = 8; // Increased for extra memory headroom
+    let accumulation_steps = 16; // Stabilized for finer-grained gradient updates
     let seq_len = config.max_seq_len;
     let session_epochs = 200; 
 
