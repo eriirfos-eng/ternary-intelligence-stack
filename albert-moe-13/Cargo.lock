@@ -1710,6 +1710,7 @@ dependencies = [
  "candle-core",
  "candle-nn",
  "rand 0.8.6",
+ "rayon",
  "serde",
  "tokenizers",
 ]

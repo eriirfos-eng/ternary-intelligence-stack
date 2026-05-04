@@ -7,7 +7,7 @@ use super::ternary_linear::TernaryLinear;
 
 pub struct Block {
     attention: Attention,
-    moe: MoeBlock,
+    moe: Option<MoeBlock>,
     ln1: candle_nn::LayerNorm,
     ln2: candle_nn::LayerNorm,
 }
@@ -15,7 +15,7 @@ pub struct Block {
 impl Block {
     pub fn new(config: &TransformerConfig, vb: VarBuilder) -> Result<Self> {
         let attention = Attention::new(config.hidden_size, config.num_heads, vb.pp("attn"), config.threshold)?;
-        let moe = MoeBlock::new(config.hidden_size, config.num_experts, vb.pp("moe"), config.threshold)?;
+        let moe = if config.num_experts > 0 { Some(MoeBlock::new(config.hidden_size, config.num_experts, vb.pp("moe"), config.threshold)?) } else { None };
         let ln1 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln1"))?;
         let ln2 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln2"))?;
         Ok(Self { attention, moe, ln1, ln2 })
@@ -23,8 +23,12 @@ impl Block {
 
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         let x = (x + self.attention.forward(&self.ln1.forward(x)?)?)?;
-        let x = (&x + self.moe.forward(&self.ln2.forward(&x)?)?)?;
-        Ok(x)
+        if let Some(moe) = &self.moe {
+            let x = (&x + moe.forward(&self.ln2.forward(&x)?)?)?;
+            Ok(x)
+        } else {
+            Ok(x)
+        }
     }
 }
 

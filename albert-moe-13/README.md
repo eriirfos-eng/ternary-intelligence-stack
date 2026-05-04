@@ -67,4 +67,26 @@ To maintain a clean and professional research environment, artifacts are organiz
 *   `models/`: Checkpoints and metadata for the Copernicus model series.
 
 ---
-**Built by RFI-IRFOS · Graz, Austria · [osf.io/cyn28](https://osf.io/cyn28)**
+
+## 7. Training & Testing Workflow
+
+We use a singular architecture for training and testing. 
+
+1. **Training**:
+   Use the production-optimized release binary to train:
+   ```bash
+   cd albert-moe-13/
+   # Clean build
+   cargo build --release --bin train_bible
+   # Run
+   ./target/release/train_bible
+   ```
+   *Training saves progress to `models/bible_ternary_v1.3.6.safetensors` and `models/bible_ternary_v1.3.6.meta`.*
+
+2. **Testing**:
+   Use the TUI-based test suite to interact with the trained brain:
+   ```bash
+   cd albert-moe-13/
+   cargo run --bin moe-test
+   ```
+
