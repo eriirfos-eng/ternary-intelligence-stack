@@ -11,6 +11,7 @@ use candle_core::{Device, DType, Tensor, IndexOp};
 use candle_nn::VarBuilder;
 use moe_llm_core::model::{Transformer, TransformerConfig};
 use moe_llm_core::tokenizer::BpeTokenizer;
+use serde_json::Value;
 
 use ratatui::{
     backend::{Backend, CrosstermBackend},
@@ -61,45 +62,56 @@ impl App {
         let tensors = candle_core::safetensors::load(&checkpoint_path, &dev)
             .expect("Failed to load .safetensors weights");
         
-        let vocab_path = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/data/vocab.json";
+        let vocab_path = "data/vocab.json";
         let tokenizer = BpeTokenizer::new(vocab_path);
         
+        let config_path = format!("models/bible_ternary_{}.config.json", version);
+        let config_str = fs::read_to_string(&config_path).expect("Unable to read config.json. The HuggingFace standard requires a config file next to the model.");
+        let config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
+
         let mut config = TransformerConfig::default();
         config.vocab_size = tokenizer.vocab_size();
-        config.hidden_size = 64;
-        config.num_layers = 2;
-        config.max_seq_len = 64;
-        config.num_experts = 0;
+        config.hidden_size = config_json["hidden_size"].as_u64().unwrap() as usize;
+        config.num_layers = config_json["num_layers"].as_u64().unwrap() as usize;
+        config.num_heads = config_json["num_heads"].as_u64().unwrap() as usize;
+        config.max_seq_len = config_json["max_seq_len"].as_u64().unwrap() as usize;
+        config.num_experts = config_json["num_experts"].as_u64().unwrap() as usize;
 
-        let vb = VarBuilder::from_tensors(tensors, DType::F32, &dev);
-        let model = Transformer::new(&config, vb).expect("Architecture mismatch");
+        let varmap = candle_nn::VarMap::new();
+        let vb = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
+        let model = Transformer::new(&config, vb).expect("Architecture initialization failed");
 
-        let meta_paths = [
-            "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.6.meta",
-            "models/bible_ternary_v1.3.6.meta",
-            "albert-moe-13/models/bible_ternary_v1.3.6.meta"
-        ];
+        let checkpoint_data = candle_core::safetensors::load(&checkpoint_path, &dev)
+            .expect("Failed to load .safetensors weights");
+        let all_vars = varmap.data().lock().unwrap();
         
-        let mut total_epochs = 0;
-        for path in meta_paths {
-            if let Ok(c) = fs::read_to_string(path) {
-                total_epochs = c.trim().parse::<u32>().unwrap_or(0);
-                if total_epochs > 0 { break; }
+        let mut loaded_count = 0;
+        let mut missing_count = 0;
+
+        for (name, var) in all_vars.iter() {
+            if let Some(tensor) = checkpoint_data.get(name) {
+                let _ = var.set(tensor);
+                loaded_count += 1;
+            } else {
+                missing_count += 1;
             }
         }
+        
+        let meta_path = format!("models/bible_ternary_{}.meta", version);
+        let total_epochs = fs::read_to_string(&meta_path).unwrap_or("0".to_string()).trim().parse::<u32>().unwrap_or(0);
 
         Self {
             model,
             tokenizer,
             input: String::new(),
-            transcript: format!("System: Model v1.3.6 loaded. Epoch Mileage: {}\n", total_epochs),
+            transcript: format!("System: Model {} loaded. Epoch Mileage: {}\n", version, total_epochs),
             messages: Vec::new(),
             model_id: "MoE-13-Ternary".to_string(),
             checkpoint: version,
             total_epochs,
             token_latency_ms: 0,
             tokens_per_sec: 0.0,
-            active_experts: "2/8 (Top-2)".to_string(),
+            active_experts: format!("{}/{} (Top-2)", if config.num_experts > 0 { 2 } else { 0 }, config.num_experts),
             est_gflops: 0.0,
             is_generating: false,
             current_tokens: Vec::new(),
@@ -121,8 +133,11 @@ impl App {
         
         self.is_generating = true;
         self.tokens_to_generate = 64; 
+        
+        // Dynamic scroll adjustment based on line count (rough estimate)
         if self.auto_scroll {
-            self.scroll_pos = 1000; 
+            let line_count = self.transcript.lines().count() as u16;
+            self.scroll_pos = line_count.saturating_sub(10); // Aim for the bottom
         }
     }
 
@@ -177,6 +192,7 @@ impl App {
             self.transcript.push_str(&delta);
             msg.1 = albert_text;
             
+            // Stall detection
             let current_words: Vec<&str> = msg.1.split_whitespace().collect();
             if current_words.len() > 10 {
                 let last_n = 3;
@@ -193,7 +209,8 @@ impl App {
         }
 
         if self.auto_scroll {
-            self.scroll_pos = 1000; 
+            let line_count = self.transcript.lines().count() as u16;
+            self.scroll_pos = line_count.saturating_sub(10);
         }
 
         if self.tokens_to_generate == 0 {
@@ -203,10 +220,12 @@ impl App {
 }
 
 fn find_latest_checkpoint() -> (PathBuf, String) {
-    let models_dir = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models";
-    let default_file = PathBuf::from(format!("{}/bible_ternary_v1.3.6.safetensors", models_dir));
-    if default_file.exists() { return (default_file, "v1.3.6".to_string()); }
-    (default_file, "v1.3.x".to_string())
+    let models_dir = "models";
+    let v137 = PathBuf::from(format!("{}/bible_ternary_v1.3.7.safetensors", models_dir));
+    let v136 = PathBuf::from(format!("{}/bible_ternary_v1.3.6.safetensors", models_dir));
+    if v137.exists() { return (v137, "v1.3.7".to_string()); }
+    if v136.exists() { return (v136, "v1.3.6".to_string()); }
+    panic!("No checkpoints found in {}", models_dir);
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

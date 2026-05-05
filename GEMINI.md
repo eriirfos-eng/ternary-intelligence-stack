@@ -22,6 +22,25 @@
 3. **Phase 3**: Legal corpus ingestion (EU Law) for logical precision.
 4. **Phase 4**: General-purpose web-scale pre-training.
 
+## Operational Mapping: Path Integrity Protocol
+- **Absolute Anchoring**: Use `/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/` as the immutable root for all source code edits.
+- **Orchestration Boundary**: Distinguish between binary orchestrators in `~/bin/` and source logic in `moe-llm-core/`.
+- **Surgical Verification**: ALWAYS run `ls` on absolute paths before making `replace` or `write_file` calls to prevent 0-occurrence failures.
+
+### Detailed Source Map (Albert-MoE-13)
+- **Training Kernel**: `moe-llm-core/src/bin/train_bible.rs`
+- **TUI Dashboard**: `moe-test/src/main.rs`
+- **Routing Engine**: `moe-llm-core/src/model/moe.rs`
+- **Attention Logic**: `moe-llm-core/src/model/attention.rs`
+- **STE Engine**: `moe-llm-core/src/model/ste.rs`
+- **Ternary Core**: `moe-llm-core/src/model/ternary_linear.rs`
+
+### Telemetry & Infrastructure
+- **Active Log**: `albert-moe-13/dashboard/training.log`
+- **Model Config**: `albert-moe-13/models/bible_ternary_v1.3.7.config.json`
+- **Odometer**: `albert-moe-13/models/bible_ternary_v1.3.7.meta`
+- **Dashboard Server**: `albert-moe-13/dashboard/run_server.py`
+
 ## Current Status (v1.3.7)
 - **Training**: Active on `bible_ternary` corpus.
 - **Checkpoint**: `models/bible_ternary_v1.3.7.safetensors`.

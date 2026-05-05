@@ -2,12 +2,14 @@ use candle_core::{Result, Tensor, IndexOp};
 use candle_nn::{Module, VarBuilder};
 use super::attention::Attention;
 use super::moe::MoeBlock;
+use super::mlp::Mlp;
 use super::config::TransformerConfig;
 use super::ternary_linear::TernaryLinear;
 
 pub struct Block {
     attention: Attention,
     moe: Option<MoeBlock>,
+    mlp: Option<Mlp>,
     ln1: candle_nn::LayerNorm,
     ln2: candle_nn::LayerNorm,
 }
@@ -15,16 +17,28 @@ pub struct Block {
 impl Block {
     pub fn new(config: &TransformerConfig, vb: VarBuilder) -> Result<Self> {
         let attention = Attention::new(config.hidden_size, config.num_heads, vb.pp("attn"), config.threshold)?;
-        let moe = if config.num_experts > 0 { Some(MoeBlock::new(config.hidden_size, config.num_experts, vb.pp("moe"), config.threshold)?) } else { None };
+        
+        let (moe, mlp) = if config.num_experts > 0 {
+            let moe = MoeBlock::new(config.hidden_size, config.num_experts, vb.pp("moe"), config.threshold)?;
+            (Some(moe), None)
+        } else {
+            let mlp = Mlp::new(config.hidden_size, config.hidden_size * 4, vb.pp("mlp"), config.threshold)?;
+            (None, Some(mlp))
+        };
+
         let ln1 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln1"))?;
         let ln2 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln2"))?;
-        Ok(Self { attention, moe, ln1, ln2 })
+        Ok(Self { attention, moe, mlp, ln1, ln2 })
     }
 
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         let x = (x + self.attention.forward(&self.ln1.forward(x)?)?)?;
+        
         if let Some(moe) = &self.moe {
             let x = (&x + moe.forward(&self.ln2.forward(&x)?)?)?;
+            Ok(x)
+        } else if let Some(mlp) = &self.mlp {
+            let x = (&x + mlp.forward(&self.ln2.forward(&x)?)?)?;
             Ok(x)
         } else {
             Ok(x)
@@ -38,6 +52,7 @@ pub struct Transformer {
     blocks: Vec<Block>,
     ln_f: candle_nn::LayerNorm,
     lm_head: TernaryLinear,
+    config: TransformerConfig,
 }
 
 impl Transformer {
@@ -60,7 +75,8 @@ impl Transformer {
             pos_embedding,
             blocks, 
             ln_f, 
-            lm_head 
+            lm_head,
+            config: config.clone(),
         })
     }
 
@@ -70,7 +86,7 @@ impl Transformer {
         
         let x_embed = self.embedding.forward(x)?;
         
-        let pos = Tensor::arange(0u32, seq_len as u32, dev)?.unsqueeze(0)?;
+        let pos = Tensor::arange(0u32, seq_len as u32, dev)?.unsqueeze(0)?.to_dtype(candle_core::DType::U32)?;
         let pos_embed = self.pos_embedding.forward(&pos)?;
         
         let mut x = x_embed.broadcast_add(&pos_embed)?;
@@ -92,34 +108,25 @@ impl Transformer {
         let mut rng = rand::thread_rng();
 
         for _ in 0..max_new_tokens {
-            // Only use the last max_seq_len tokens
-            let start_idx = tokens.len().saturating_sub(64);
+            let start_idx = tokens.len().saturating_sub(self.config.max_seq_len);
             let context = &tokens[start_idx..];
             
-            let input = Tensor::new(context, &dev).unwrap().unsqueeze(0).unwrap();
+            let input = Tensor::new(&context[..], &dev).unwrap().unsqueeze(0).unwrap().to_dtype(candle_core::DType::U32).unwrap();
             let logits = self.forward(&input).unwrap();
             
             let dims = logits.dims();
             let seq_len = dims[1];
             
-            // Get logits for the last token
             let last_logits = logits.i((0, seq_len - 1)).unwrap();
             
-            // Temperature sampling (simple version: add some noise or just use softmax)
-            // For now, let's just do top-k or simple random sample if we want "conversations"
-            // But greedy argmax is safer for tiny models.
-            // Let's at least avoid index 0 ([UNK]) if possible
             let probs = candle_nn::ops::softmax(&last_logits, 0).unwrap();
             let pr = probs.to_vec1::<f32>().unwrap();
             
-            // Sample from pr
             use rand::distributions::{Distribution, WeightedIndex};
             let dist = WeightedIndex::new(&pr).unwrap();
             let next_token_idx = dist.sample(&mut rng) as u32;
             
             tokens.push(next_token_idx);
-            
-            // Stop if we hit a stop token (if we had one)
         }
         
         tokenizer.decode(&tokens)

@@ -1,0 +1,2412 @@
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.140001
+Epoch 10: avg_loss=1.000000, mean_w=0.380004
+Epoch 20: avg_loss=1.000000, mean_w=0.380004
+Epoch 30: avg_loss=1.000000, mean_w=0.140001
+Epoch 40: avg_loss=1.000000, mean_w=-0.020000
+Epoch 50: avg_loss=1.000000, mean_w=0.220001
+Epoch 60: avg_loss=1.000000, mean_w=0.299994
+Epoch 70: avg_loss=1.000000, mean_w=0.220001
+Epoch 80: avg_loss=1.000000, mean_w=0.299994
+Epoch 90: avg_loss=1.000000, mean_w=0.380004
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.299994
+Epoch 20: avg_loss=1.000000, mean_w=0.299994
+Epoch 30: avg_loss=1.000000, mean_w=0.299994
+Epoch 40: avg_loss=1.000000, mean_w=0.380004
+Epoch 50: avg_loss=1.000000, mean_w=0.380004
+Epoch 60: avg_loss=1.000000, mean_w=0.299994
+Epoch 70: avg_loss=1.000000, mean_w=0.460009
+Epoch 80: avg_loss=1.000000, mean_w=0.460009
+Epoch 90: avg_loss=1.000000, mean_w=0.340005
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.059999
+Epoch 20: avg_loss=1.000000, mean_w=-0.020000
+Epoch 30: avg_loss=1.000000, mean_w=-0.100002
+Epoch 40: avg_loss=1.000000, mean_w=-0.179995
+Epoch 50: avg_loss=1.000000, mean_w=-0.179995
+Epoch 60: avg_loss=1.000000, mean_w=-0.179995
+Epoch 70: avg_loss=1.000000, mean_w=-0.179995
+Epoch 80: avg_loss=1.000000, mean_w=-0.100002
+Epoch 90: avg_loss=1.000000, mean_w=-0.100002
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.220001
+Epoch 20: avg_loss=1.000000, mean_w=0.140001
+Epoch 30: avg_loss=1.000000, mean_w=0.299994
+Epoch 40: avg_loss=1.000000, mean_w=0.220001
+Epoch 50: avg_loss=1.000000, mean_w=0.220001
+Epoch 60: avg_loss=1.000000, mean_w=0.059999
+Epoch 70: avg_loss=1.000000, mean_w=0.140001
+Epoch 80: avg_loss=1.000000, mean_w=0.140001
+Epoch 90: avg_loss=1.000000, mean_w=0.059999
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.140001
+Epoch 20: avg_loss=1.000000, mean_w=0.140001
+Epoch 30: avg_loss=1.000000, mean_w=0.220001
+Epoch 40: avg_loss=1.000000, mean_w=0.380004
+Epoch 50: avg_loss=1.000000, mean_w=0.220001
+Epoch 60: avg_loss=1.000000, mean_w=0.140001
+Epoch 70: avg_loss=1.000000, mean_w=0.140001
+Epoch 80: avg_loss=1.000000, mean_w=0.140001
+Epoch 90: avg_loss=1.000000, mean_w=0.140001
+--- Launching Functional Convergence Training ---
+Epoch 0: avg_loss = 1.0000, mean_w = 0.1400
+Epoch 10: avg_loss = 1.0000, mean_w = 0.3800
+Epoch 20: avg_loss = 1.0000, mean_w = 0.3800
+Epoch 30: avg_loss = 1.0000, mean_w = 0.1400
+Epoch 40: avg_loss = 1.0000, mean_w = -0.0200
+Epoch 50: avg_loss = 1.0000, mean_w = 0.2200
+Epoch 60: avg_loss = 1.0000, mean_w = 0.3000
+Epoch 70: avg_loss = 1.0000, mean_w = 0.2200
+Epoch 80: avg_loss = 1.0000, mean_w = 0.3000
+Epoch 90: avg_loss = 1.0000, mean_w = 0.3800
+--- Training Complete. Convergence Logged. ---
+--- Launching Functional Convergence Training ---
+Epoch 0: avg_loss = 1.0000, mean_w = 0.0600
+Epoch 10: avg_loss = 1.0000, mean_w = 0.3000
+Epoch 20: avg_loss = 1.0000, mean_w = 0.3000
+Epoch 30: avg_loss = 1.0000, mean_w = 0.3000
+Epoch 40: avg_loss = 1.0000, mean_w = 0.3800
+Epoch 50: avg_loss = 1.0000, mean_w = 0.3800
+Epoch 60: avg_loss = 1.0000, mean_w = 0.3000
+Epoch 70: avg_loss = 1.0000, mean_w = 0.4600
+Epoch 80: avg_loss = 1.0000, mean_w = 0.4600
+Epoch 90: avg_loss = 1.0000, mean_w = 0.3400
+--- Training Complete. Convergence Logged. ---
+--- Launching Functional Convergence Training ---
+Epoch 0: avg_loss = 1.0000, mean_w = 0.0600
+Epoch 10: avg_loss = 1.0000, mean_w = 0.0600
+Epoch 20: avg_loss = 1.0000, mean_w = -0.0200
+Epoch 30: avg_loss = 1.0000, mean_w = -0.1000
+Epoch 40: avg_loss = 1.0000, mean_w = -0.1800
+Epoch 50: avg_loss = 1.0000, mean_w = -0.1800
+Epoch 60: avg_loss = 1.0000, mean_w = -0.1800
+Epoch 70: avg_loss = 1.0000, mean_w = -0.1800
+Epoch 80: avg_loss = 1.0000, mean_w = -0.1000
+Epoch 90: avg_loss = 1.0000, mean_w = -0.1000
+--- Training Complete. Convergence Logged. ---
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.140001
+Epoch 10: avg_loss=1.000000, mean_w=0.380004
+Epoch 20: avg_loss=1.000000, mean_w=0.380004
+Epoch 30: avg_loss=1.000000, mean_w=0.140001
+Epoch 40: avg_loss=1.000000, mean_w=-0.020000
+Epoch 50: avg_loss=1.000000, mean_w=0.220001
+Epoch 60: avg_loss=1.000000, mean_w=0.299994
+Epoch 70: avg_loss=1.000000, mean_w=0.220001
+Epoch 80: avg_loss=1.000000, mean_w=0.299994
+Epoch 90: avg_loss=1.000000, mean_w=0.380004
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.299994
+Epoch 20: avg_loss=1.000000, mean_w=0.299994
+Epoch 30: avg_loss=1.000000, mean_w=0.299994
+Epoch 40: avg_loss=1.000000, mean_w=0.380004
+Epoch 50: avg_loss=1.000000, mean_w=0.380004
+Epoch 60: avg_loss=1.000000, mean_w=0.299994
+Epoch 70: avg_loss=1.000000, mean_w=0.460009
+Epoch 80: avg_loss=1.000000, mean_w=0.460009
+Epoch 90: avg_loss=1.000000, mean_w=0.340005
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.059999
+Epoch 20: avg_loss=1.000000, mean_w=-0.020000
+Epoch 30: avg_loss=1.000000, mean_w=-0.100002
+Epoch 40: avg_loss=1.000000, mean_w=-0.179995
+Epoch 50: avg_loss=1.000000, mean_w=-0.179995
+Epoch 60: avg_loss=1.000000, mean_w=-0.179995
+Epoch 70: avg_loss=1.000000, mean_w=-0.179995
+Epoch 80: avg_loss=1.000000, mean_w=-0.100002
+Epoch 90: avg_loss=1.000000, mean_w=-0.100002
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.220001
+Epoch 20: avg_loss=1.000000, mean_w=0.140001
+Epoch 30: avg_loss=1.000000, mean_w=0.299994
+Epoch 40: avg_loss=1.000000, mean_w=0.220001
+Epoch 50: avg_loss=1.000000, mean_w=0.220001
+Epoch 60: avg_loss=1.000000, mean_w=0.059999
+Epoch 70: avg_loss=1.000000, mean_w=0.140001
+Epoch 80: avg_loss=1.000000, mean_w=0.140001
+Epoch 90: avg_loss=1.000000, mean_w=0.059999
+--- New Functional Run: N=2048, LR=0.02, Tau=0.45 ---
+Epoch 0: avg_loss=1.000000, mean_w=0.059999
+Epoch 10: avg_loss=1.000000, mean_w=0.140001
+Epoch 20: avg_loss=1.000000, mean_w=0.140001
+Epoch 30: avg_loss=1.000000, mean_w=0.220001
+Epoch 40: avg_loss=1.000000, mean_w=0.380004
+Epoch 50: avg_loss=1.000000, mean_w=0.220001
+Epoch 60: avg_loss=1.000000, mean_w=0.140001
+Epoch 70: avg_loss=1.000000, mean_w=0.140001
+Epoch 80: avg_loss=1.000000, mean_w=0.140001
+Epoch 90: avg_loss=1.000000, mean_w=0.140001
+Epoch 12 (Global 126), Batch 180: loss = 77.5372
+Epoch 12 (Global 126), Batch 200: loss = 73.2471
+Epoch 12 (Global 126), Batch 220: loss = 78.9841
+Epoch 12 (Global 126), Batch 240: loss = 79.7733
+Epoch 12 (Global 126), Batch 260: loss = 77.8162
+Epoch 12 (Global 126), Batch 280: loss = 71.5936
+Epoch 12 complete. Avg loss: 9.5798
+Checkpoint saved. Odometer: 126
+Epoch 13 (Global 127), Batch 0: loss = 76.1514
+Epoch 13 (Global 127), Batch 20: loss = 74.0245
+Epoch 13 (Global 127), Batch 40: loss = 81.7242
+Epoch 13 (Global 127), Batch 60: loss = 73.1297
+Epoch 13 (Global 127), Batch 80: loss = 74.8020
+Epoch 13 (Global 127), Batch 100: loss = 74.5741
+Epoch 13 (Global 127), Batch 120: loss = 76.9225
+Epoch 13 (Global 127), Batch 140: loss = 78.9515
+Epoch 13 (Global 127), Batch 160: loss = 75.3618
+Epoch 13 (Global 127), Batch 180: loss = 79.6499
+Epoch 13 (Global 127), Batch 200: loss = 75.7695
+Epoch 13 (Global 127), Batch 220: loss = 77.9741
+Epoch 13 (Global 127), Batch 240: loss = 79.3559
+Epoch 13 (Global 127), Batch 260: loss = 78.5848
+Epoch 13 (Global 127), Batch 280: loss = 77.1923
+Epoch 13 complete. Avg loss: 9.6392
+Checkpoint saved. Odometer: 127
+Epoch 14 (Global 128), Batch 0: loss = 81.0382
+Epoch 14 (Global 128), Batch 20: loss = 79.4206
+Epoch 14 (Global 128), Batch 40: loss = 83.9317
+Epoch 14 (Global 128), Batch 60: loss = 78.9885
+Epoch 14 (Global 128), Batch 80: loss = 74.4438
+Epoch 14 (Global 128), Batch 100: loss = 75.2162
+Epoch 14 (Global 128), Batch 120: loss = 77.1679
+Epoch 14 (Global 128), Batch 140: loss = 79.5516
+Epoch 14 (Global 128), Batch 160: loss = 79.0798
+Epoch 14 (Global 128), Batch 180: loss = 75.4699
+Epoch 14 (Global 128), Batch 200: loss = 75.1541
+Epoch 14 (Global 128), Batch 220: loss = 80.0585
+Epoch 14 (Global 128), Batch 240: loss = 72.1939
+Epoch 14 (Global 128), Batch 260: loss = 79.6338
+Epoch 14 (Global 128), Batch 280: loss = 80.1132
+Epoch 14 complete. Avg loss: 9.7164
+Checkpoint saved. Odometer: 128
+Epoch 15 (Global 129), Batch 0: loss = 79.4349
+Epoch 15 (Global 129), Batch 20: loss = 80.4541
+Epoch 15 (Global 129), Batch 40: loss = 76.0279
+Epoch 15 (Global 129), Batch 60: loss = 77.6530
+Epoch 15 (Global 129), Batch 80: loss = 76.2674
+Epoch 15 (Global 129), Batch 100: loss = 76.2068
+Epoch 15 (Global 129), Batch 120: loss = 83.7917
+Epoch 15 (Global 129), Batch 140: loss = 78.4846
+Epoch 15 (Global 129), Batch 160: loss = 80.8509
+Epoch 15 (Global 129), Batch 180: loss = 79.4995
+Epoch 15 (Global 129), Batch 200: loss = 77.8028
+Epoch 15 (Global 129), Batch 220: loss = 77.2087
+Epoch 15 (Global 129), Batch 240: loss = 75.5372
+Epoch 15 (Global 129), Batch 260: loss = 79.3050
+Epoch 15 (Global 129), Batch 280: loss = 79.3818
+Epoch 15 complete. Avg loss: 9.7465
+Checkpoint saved. Odometer: 129
+Epoch 16 (Global 130), Batch 0: loss = 73.8015
+Epoch 16 (Global 130), Batch 20: loss = 78.4237
+Epoch 16 (Global 130), Batch 40: loss = 79.5270
+Epoch 16 (Global 130), Batch 60: loss = 74.5325
+Epoch 16 (Global 130), Batch 80: loss = 76.9748
+Epoch 16 (Global 130), Batch 100: loss = 75.6787
+Epoch 16 (Global 130), Batch 120: loss = 83.7072
+Epoch 16 (Global 130), Batch 140: loss = 77.8039
+Epoch 16 (Global 130), Batch 160: loss = 82.5759
+Epoch 16 (Global 130), Batch 180: loss = 77.5352
+Epoch 16 (Global 130), Batch 200: loss = 83.1881
+Epoch 16 (Global 130), Batch 220: loss = 76.2286
+Epoch 16 (Global 130), Batch 240: loss = 82.5190
+Epoch 16 (Global 130), Batch 260: loss = 82.0470
+Epoch 16 (Global 130), Batch 280: loss = 77.6188
+Epoch 16 complete. Avg loss: 9.7251
+Checkpoint saved. Odometer: 130
+Epoch 17 (Global 131), Batch 0: loss = 80.5410
+Epoch 17 (Global 131), Batch 20: loss = 80.1645
+Epoch 17 (Global 131), Batch 40: loss = 77.1628
+Epoch 17 (Global 131), Batch 60: loss = 76.8340
+Epoch 17 (Global 131), Batch 80: loss = 80.3010
+Epoch 17 (Global 131), Batch 100: loss = 75.2933
+Epoch 17 (Global 131), Batch 120: loss = 84.1990
+Epoch 17 (Global 131), Batch 140: loss = 77.8689
+Epoch 17 (Global 131), Batch 160: loss = 80.8434
+Epoch 17 (Global 131), Batch 180: loss = 78.4491
+Epoch 17 (Global 131), Batch 200: loss = 80.6787
+Epoch 17 (Global 131), Batch 220: loss = 80.2422
+Epoch 17 (Global 131), Batch 240: loss = 81.1941
+Epoch 17 (Global 131), Batch 260: loss = 79.2719
+Epoch 17 (Global 131), Batch 280: loss = 77.7127
+Epoch 17 complete. Avg loss: 9.7647
+Checkpoint saved. Odometer: 131
+Epoch 18 (Global 132), Batch 0: loss = 79.0689
+Epoch 18 (Global 132), Batch 20: loss = 75.8237
+Epoch 18 (Global 132), Batch 40: loss = 78.4110
+Epoch 18 (Global 132), Batch 60: loss = 77.7450
+Epoch 18 (Global 132), Batch 80: loss = 79.1016
+Epoch 18 (Global 132), Batch 100: loss = 76.6347
+Epoch 18 (Global 132), Batch 120: loss = 80.5050
+Epoch 18 (Global 132), Batch 140: loss = 69.8769
+Epoch 18 (Global 132), Batch 160: loss = 74.7861
+Epoch 18 (Global 132), Batch 180: loss = 77.7479
+Epoch 18 (Global 132), Batch 200: loss = 79.1956
+Epoch 18 (Global 132), Batch 220: loss = 79.0555
+Epoch 18 (Global 132), Batch 240: loss = 76.5342
+Epoch 18 (Global 132), Batch 260: loss = 77.5494
+Epoch 18 (Global 132), Batch 280: loss = 78.3817
+Epoch 18 complete. Avg loss: 9.8126
+Checkpoint saved. Odometer: 132
+Epoch 19 (Global 133), Batch 0: loss = 76.8491
+Epoch 19 (Global 133), Batch 20: loss = 81.9745
+Epoch 19 (Global 133), Batch 40: loss = 77.5614
+Epoch 19 (Global 133), Batch 60: loss = 80.2174
+Epoch 19 (Global 133), Batch 80: loss = 78.4444
+Epoch 19 (Global 133), Batch 100: loss = 77.6912
+Epoch 19 (Global 133), Batch 120: loss = 82.7744
+Epoch 19 (Global 133), Batch 140: loss = 80.9742
+Epoch 19 (Global 133), Batch 160: loss = 79.8570
+Epoch 19 (Global 133), Batch 180: loss = 84.0645
+Epoch 19 (Global 133), Batch 200: loss = 78.8144
+Epoch 19 (Global 133), Batch 220: loss = 79.7156
+Epoch 19 (Global 133), Batch 240: loss = 79.0013
+Epoch 19 (Global 133), Batch 260: loss = 79.5436
+Epoch 19 (Global 133), Batch 280: loss = 77.4879
+Epoch 19 complete. Avg loss: 9.8345
+Checkpoint saved. Odometer: 133
+Epoch 20 (Global 134), Batch 0: loss = 74.6303
+Epoch 20 (Global 134), Batch 20: loss = 82.5045
+Epoch 20 (Global 134), Batch 40: loss = 78.6071
+Epoch 20 (Global 134), Batch 60: loss = 79.7602
+Epoch 20 (Global 134), Batch 80: loss = 84.4338
+Epoch 20 (Global 134), Batch 100: loss = 78.0767
+Epoch 20 (Global 134), Batch 120: loss = 75.7037
+Epoch 20 (Global 134), Batch 140: loss = 78.0811
+Epoch 20 (Global 134), Batch 160: loss = 77.6544
+Epoch 20 (Global 134), Batch 180: loss = 80.8214
+Epoch 20 (Global 134), Batch 200: loss = 81.2199
+Epoch 20 (Global 134), Batch 220: loss = 79.9477
+Epoch 20 (Global 134), Batch 240: loss = 79.5872
+Epoch 20 (Global 134), Batch 260: loss = 79.1242
+Epoch 20 (Global 134), Batch 280: loss = 79.1232
+Epoch 20 complete. Avg loss: 9.8168
+Checkpoint saved. Odometer: 134
+Epoch 21 (Global 135), Batch 0: loss = 79.4318
+Epoch 21 (Global 135), Batch 20: loss = 76.8781
+Epoch 21 (Global 135), Batch 40: loss = 79.0627
+Epoch 21 (Global 135), Batch 60: loss = 77.1665
+Epoch 21 (Global 135), Batch 80: loss = 72.9303
+Epoch 21 (Global 135), Batch 100: loss = 83.3745
+Epoch 21 (Global 135), Batch 120: loss = 80.6503
+Epoch 21 (Global 135), Batch 140: loss = 80.8710
+Epoch 21 (Global 135), Batch 160: loss = 79.4264
+Epoch 21 (Global 135), Batch 180: loss = 77.4151
+Epoch 21 (Global 135), Batch 200: loss = 79.8902
+Epoch 21 (Global 135), Batch 220: loss = 75.1001
+Epoch 21 (Global 135), Batch 240: loss = 76.5953
+Epoch 21 (Global 135), Batch 260: loss = 83.3841
+Epoch 21 (Global 135), Batch 280: loss = 84.2574
+Epoch 21 complete. Avg loss: 9.8753
+Checkpoint saved. Odometer: 135
+Epoch 22 (Global 136), Batch 0: loss = 78.5692
+Epoch 22 (Global 136), Batch 20: loss = 81.3317
+Epoch 22 (Global 136), Batch 40: loss = 78.1787
+Epoch 22 (Global 136), Batch 60: loss = 76.8075
+Epoch 22 (Global 136), Batch 80: loss = 76.4047
+Epoch 22 (Global 136), Batch 100: loss = 77.5950
+Epoch 22 (Global 136), Batch 120: loss = 78.3990
+Epoch 22 (Global 136), Batch 140: loss = 80.8190
+Epoch 22 (Global 136), Batch 160: loss = 80.2431
+Epoch 22 (Global 136), Batch 180: loss = 80.6604
+Epoch 22 (Global 136), Batch 200: loss = 78.5647
+Epoch 22 (Global 136), Batch 220: loss = 81.0159
+Epoch 22 (Global 136), Batch 240: loss = 83.5749
+Epoch 22 (Global 136), Batch 260: loss = 77.8116
+Epoch 22 (Global 136), Batch 280: loss = 74.6724
+Epoch 22 complete. Avg loss: 9.8797
+Checkpoint saved. Odometer: 136
+Epoch 23 (Global 137), Batch 0: loss = 77.1271
+Epoch 23 (Global 137), Batch 20: loss = 78.6108
+Epoch 23 (Global 137), Batch 40: loss = 88.5834
+Epoch 23 (Global 137), Batch 60: loss = 80.5265
+Epoch 23 (Global 137), Batch 80: loss = 82.5434
+Epoch 23 (Global 137), Batch 100: loss = 77.9737
+Epoch 23 (Global 137), Batch 120: loss = 79.4172
+Epoch 23 (Global 137), Batch 140: loss = 81.4565
+Epoch 23 (Global 137), Batch 160: loss = 76.1190
+Epoch 23 (Global 137), Batch 180: loss = 77.4685
+Epoch 23 (Global 137), Batch 200: loss = 76.4409
+Epoch 23 (Global 137), Batch 220: loss = 77.5396
+Epoch 23 (Global 137), Batch 240: loss = 79.1953
+Epoch 23 (Global 137), Batch 260: loss = 79.8721
+Epoch 23 (Global 137), Batch 280: loss = 83.6560
+Epoch 23 complete. Avg loss: 9.9289
+Checkpoint saved. Odometer: 137
+Epoch 24 (Global 138), Batch 0: loss = 74.1972
+Epoch 24 (Global 138), Batch 20: loss = 78.7238
+Epoch 24 (Global 138), Batch 40: loss = 77.7852
+Epoch 24 (Global 138), Batch 60: loss = 78.5836
+Epoch 24 (Global 138), Batch 80: loss = 80.3172
+Epoch 24 (Global 138), Batch 100: loss = 82.9377
+Epoch 24 (Global 138), Batch 120: loss = 79.4411
+Epoch 24 (Global 138), Batch 140: loss = 77.6263
+Epoch 24 (Global 138), Batch 160: loss = 78.8811
+Epoch 24 (Global 138), Batch 180: loss = 79.7139
+Epoch 24 (Global 138), Batch 200: loss = 76.4503
+Epoch 24 (Global 138), Batch 220: loss = 79.7223
+Epoch 24 (Global 138), Batch 240: loss = 82.8934
+Epoch 24 (Global 138), Batch 260: loss = 81.2955
+Epoch 24 (Global 138), Batch 280: loss = 77.7590
+Epoch 24 complete. Avg loss: 9.9311
+Checkpoint saved. Odometer: 138
+Epoch 25 (Global 139), Batch 0: loss = 77.0124
+Epoch 25 (Global 139), Batch 20: loss = 81.8741
+Epoch 25 (Global 139), Batch 40: loss = 76.9093
+Epoch 25 (Global 139), Batch 60: loss = 80.3775
+Epoch 25 (Global 139), Batch 80: loss = 78.7845
+Epoch 25 (Global 139), Batch 100: loss = 78.4758
+Epoch 25 (Global 139), Batch 120: loss = 86.3824
+Epoch 25 (Global 139), Batch 140: loss = 81.0105
+Epoch 25 (Global 139), Batch 160: loss = 81.0882
+Epoch 25 (Global 139), Batch 180: loss = 80.4795
+Epoch 25 (Global 139), Batch 200: loss = 81.4251
+Epoch 25 (Global 139), Batch 220: loss = 79.2951
+Epoch 25 (Global 139), Batch 240: loss = 81.4121
+Epoch 25 (Global 139), Batch 260: loss = 78.8566
+Epoch 25 (Global 139), Batch 280: loss = 88.8591
+Epoch 25 complete. Avg loss: 9.9659
+Checkpoint saved. Odometer: 139
+Epoch 26 (Global 140), Batch 0: loss = 79.9557
+Epoch 26 (Global 140), Batch 20: loss = 76.0166
+Epoch 26 (Global 140), Batch 40: loss = 80.8696
+Epoch 26 (Global 140), Batch 60: loss = 81.1803
+Epoch 26 (Global 140), Batch 80: loss = 80.2932
+Epoch 26 (Global 140), Batch 100: loss = 79.0752
+Epoch 0 (Global 166), Batch 0: loss = 83.2623
+Epoch 0 (Global 166), Batch 0: loss = 78.1482
+Epoch 0 (Global 166), Batch 0: loss = 84.1061
+Epoch 0 (Global 166), Batch 20: loss = 82.0243
+Epoch 0 (Global 166), Batch 0: loss = 83.1545
+Epoch 0 (Global 166), Batch 20: loss = 81.5243
+Epoch 0 (Global 166), Batch 40: loss = 88.1324
+Epoch 0 (Global 166), Batch 0: loss = 84.2931
+Epoch 0 (Global 166), Batch 20: loss = 86.5308
+Epoch 0 (Global 166), Batch 40: loss = 87.4237
+Epoch 0 (Global 166), Batch 60: loss = 84.8512
+Epoch 0 (Global 166), Batch 80: loss = 82.9501
+Epoch 0 (Global 166), Batch 100: loss = 81.5247
+Epoch 0 (Global 166), Batch 120: loss = 84.7304
+Epoch 0 (Global 166), Batch 140: loss = 83.7005
+Epoch 0 (Global 166), Batch 160: loss = 87.3384
+Epoch 0 (Global 166), Batch 180: loss = 77.3371
+Epoch 0 (Global 166), Batch 200: loss = 79.5608
+Epoch 0 (Global 166), Batch 220: loss = 79.9128
+Epoch 0 (Global 166), Batch 240: loss = 85.4432
+Epoch 0 (Global 166), Batch 260: loss = 80.4724
+Epoch 0 (Global 166), Batch 280: loss = 84.2648
+Epoch 0 complete. Avg loss: 10.3536
+Epoch 1 (Global 167), Batch 0: loss = 74.8188
+Epoch 1 (Global 167), Batch 20: loss = 82.3199
+Epoch 1 (Global 167), Batch 40: loss = 82.6900
+Epoch 1 (Global 167), Batch 60: loss = 84.4669
+Epoch 1 (Global 167), Batch 80: loss = 82.3136
+Epoch 1 (Global 167), Batch 100: loss = 77.8596
+Epoch 1 (Global 167), Batch 120: loss = 83.7552
+Epoch 1 (Global 167), Batch 140: loss = 81.7912
+Epoch 1 (Global 167), Batch 160: loss = 83.3617
+Epoch 1 (Global 167), Batch 180: loss = 86.7703
+Epoch 1 (Global 167), Batch 200: loss = 79.8651
+Epoch 1 (Global 167), Batch 220: loss = 87.9428
+Epoch 1 (Global 167), Batch 240: loss = 82.4841
+Epoch 1 (Global 167), Batch 260: loss = 78.4828
+Epoch 1 (Global 167), Batch 280: loss = 81.7286
+Epoch 1 complete. Avg loss: 10.3213
+Epoch 2 (Global 168), Batch 0: loss = 79.9918
+Epoch 2 (Global 168), Batch 20: loss = 82.9914
+Epoch 2 (Global 168), Batch 40: loss = 84.5883
+Epoch 2 (Global 168), Batch 60: loss = 81.0467
+Epoch 2 (Global 168), Batch 80: loss = 88.7419
+Epoch 2 (Global 168), Batch 100: loss = 82.1754
+Epoch 2 (Global 168), Batch 120: loss = 78.7830
+Epoch 2 (Global 168), Batch 140: loss = 84.4736
+Epoch 2 (Global 168), Batch 160: loss = 81.9816
+Epoch 2 (Global 168), Batch 180: loss = 82.6056
+Epoch 2 (Global 168), Batch 200: loss = 75.1670
+Epoch 2 (Global 168), Batch 220: loss = 74.4063
+Epoch 2 (Global 168), Batch 240: loss = 86.5581
+Epoch 2 (Global 168), Batch 260: loss = 82.8690
+Epoch 2 (Global 168), Batch 280: loss = 80.1392
+Epoch 2 complete. Avg loss: 10.3075
+Epoch 3 (Global 169), Batch 0: loss = 79.6264
+Epoch 3 (Global 169), Batch 20: loss = 80.1449
+Epoch 3 (Global 169), Batch 40: loss = 81.9332
+Epoch 3 (Global 169), Batch 60: loss = 81.4055
+Epoch 3 (Global 169), Batch 80: loss = 83.8694
+Epoch 3 (Global 169), Batch 100: loss = 83.3455
+Epoch 3 (Global 169), Batch 120: loss = 80.6419
+Epoch 3 (Global 169), Batch 140: loss = 87.8846
+Epoch 3 (Global 169), Batch 160: loss = 86.0370
+Epoch 3 (Global 169), Batch 180: loss = 82.0271
+Epoch 3 (Global 169), Batch 200: loss = 84.9586
+Epoch 3 (Global 169), Batch 220: loss = 78.2657
+Epoch 3 (Global 169), Batch 240: loss = 84.3689
+Epoch 3 (Global 169), Batch 260: loss = 81.9007
+Epoch 3 (Global 169), Batch 280: loss = 84.8565
+Epoch 3 complete. Avg loss: 10.3252
+Epoch 4 (Global 170), Batch 0: loss = 82.0234
+Epoch 4 (Global 170), Batch 20: loss = 80.3191
+Epoch 4 (Global 170), Batch 40: loss = 82.4525
+Epoch 4 (Global 170), Batch 60: loss = 84.7159
+Epoch 4 (Global 170), Batch 80: loss = 79.2902
+Epoch 4 (Global 170), Batch 100: loss = 79.2642
+Epoch 4 (Global 170), Batch 120: loss = 77.5361
+Epoch 4 (Global 170), Batch 140: loss = 81.3739
+Epoch 4 (Global 170), Batch 160: loss = 80.4762
+Epoch 4 (Global 170), Batch 180: loss = 79.0462
+Epoch 4 (Global 170), Batch 200: loss = 87.4694
+Epoch 4 (Global 170), Batch 220: loss = 82.5423
+Epoch 4 (Global 170), Batch 240: loss = 84.1323
+Epoch 4 (Global 170), Batch 260: loss = 74.4162
+Epoch 4 (Global 170), Batch 280: loss = 80.1357
+Epoch 4 complete. Avg loss: 10.3094
+Epoch 5 (Global 171), Batch 0: loss = 84.6026
+Epoch 5 (Global 171), Batch 20: loss = 82.5521
+Epoch 5 (Global 171), Batch 40: loss = 87.2274
+Epoch 5 (Global 171), Batch 60: loss = 84.6037
+Epoch 5 (Global 171), Batch 80: loss = 84.0581
+Epoch 5 (Global 171), Batch 100: loss = 88.1021
+Epoch 5 (Global 171), Batch 120: loss = 84.3724
+Epoch 5 (Global 171), Batch 140: loss = 77.8850
+Epoch 5 (Global 171), Batch 160: loss = 80.1272
+Epoch 5 (Global 171), Batch 180: loss = 75.2677
+Epoch 5 (Global 171), Batch 200: loss = 79.8852
+Epoch 5 (Global 171), Batch 220: loss = 85.5831
+Epoch 5 (Global 171), Batch 240: loss = 80.2633
+Epoch 5 (Global 171), Batch 260: loss = 83.5024
+Epoch 5 (Global 171), Batch 280: loss = 75.0829
+Epoch 5 complete. Avg loss: 10.3075
+Epoch 6 (Global 172), Batch 0: loss = 81.1637
+Epoch 6 (Global 172), Batch 20: loss = 83.1152
+Epoch 6 (Global 172), Batch 40: loss = 80.0988
+Epoch 6 (Global 172), Batch 60: loss = 86.9911
+Epoch 6 (Global 172), Batch 80: loss = 83.8691
+Epoch 6 (Global 172), Batch 100: loss = 78.6340
+Epoch 6 (Global 172), Batch 120: loss = 77.7255
+Epoch 6 (Global 172), Batch 140: loss = 87.0462
+Epoch 6 (Global 172), Batch 160: loss = 83.7279
+Epoch 6 (Global 172), Batch 180: loss = 80.0639
+Epoch 6 (Global 172), Batch 200: loss = 82.2208
+Epoch 6 (Global 172), Batch 220: loss = 78.5036
+Epoch 6 (Global 172), Batch 240: loss = 78.1865
+Epoch 6 (Global 172), Batch 260: loss = 82.3105
+Epoch 6 (Global 172), Batch 280: loss = 81.8537
+Epoch 6 complete. Avg loss: 10.3402
+Epoch 7 (Global 173), Batch 0: loss = 78.2225
+Epoch 7 (Global 173), Batch 20: loss = 83.7858
+Epoch 7 (Global 173), Batch 40: loss = 80.3604
+Epoch 7 (Global 173), Batch 60: loss = 84.7653
+Epoch 7 (Global 173), Batch 80: loss = 83.5936
+Epoch 7 (Global 173), Batch 100: loss = 84.3617
+Epoch 7 (Global 173), Batch 120: loss = 81.3163
+Epoch 7 (Global 173), Batch 140: loss = 85.8471
+Epoch 7 (Global 173), Batch 160: loss = 83.1939
+Epoch 7 (Global 173), Batch 180: loss = 88.2227
+Epoch 7 (Global 173), Batch 200: loss = 83.9025
+Epoch 7 (Global 173), Batch 220: loss = 81.9940
+Epoch 7 (Global 173), Batch 240: loss = 84.7899
+Epoch 7 (Global 173), Batch 260: loss = 86.6862
+Epoch 7 (Global 173), Batch 280: loss = 82.9388
+Epoch 7 complete. Avg loss: 10.3376
+Epoch 8 (Global 174), Batch 0: loss = 81.4133
+Epoch 8 (Global 174), Batch 20: loss = 81.7069
+Epoch 8 (Global 174), Batch 40: loss = 81.5230
+Epoch 8 (Global 174), Batch 60: loss = 83.5000
+Epoch 8 (Global 174), Batch 80: loss = 76.6422
+Epoch 8 (Global 174), Batch 100: loss = 84.0538
+Epoch 8 (Global 174), Batch 120: loss = 78.7694
+Epoch 8 (Global 174), Batch 140: loss = 87.1041
+Epoch 8 (Global 174), Batch 160: loss = 80.4703
+Epoch 8 (Global 174), Batch 180: loss = 81.8622
+Epoch 8 (Global 174), Batch 200: loss = 77.5426
+Epoch 8 (Global 174), Batch 220: loss = 85.8155
+Epoch 8 (Global 174), Batch 240: loss = 86.8893
+Epoch 8 (Global 174), Batch 260: loss = 86.5983
+Epoch 8 (Global 174), Batch 280: loss = 83.2661
+Epoch 8 complete. Avg loss: 10.3718
+Epoch 9 (Global 175), Batch 0: loss = 84.6859
+Epoch 9 (Global 175), Batch 20: loss = 88.7702
+Epoch 9 (Global 175), Batch 40: loss = 80.7889
+Epoch 9 (Global 175), Batch 60: loss = 81.6956
+Epoch 9 (Global 175), Batch 80: loss = 83.2131
+Epoch 9 (Global 175), Batch 100: loss = 80.7322
+Epoch 9 (Global 175), Batch 120: loss = 83.0809
+Epoch 9 (Global 175), Batch 140: loss = 83.7441
+Epoch 9 (Global 175), Batch 160: loss = 78.9621
+Epoch 9 (Global 175), Batch 180: loss = 75.7704
+Epoch 9 (Global 175), Batch 200: loss = 85.0883
+Epoch 9 (Global 175), Batch 220: loss = 85.0760
+Epoch 9 (Global 175), Batch 240: loss = 81.4915
+Epoch 9 (Global 175), Batch 260: loss = 81.8973
+Epoch 9 (Global 175), Batch 280: loss = 83.9294
+Epoch 9 complete. Avg loss: 10.3318
+Epoch 10 (Global 176), Batch 0: loss = 80.4225
+Epoch 10 (Global 176), Batch 20: loss = 81.5610
+Epoch 10 (Global 176), Batch 40: loss = 83.1999
+Epoch 10 (Global 176), Batch 60: loss = 83.4627
+Epoch 10 (Global 176), Batch 80: loss = 81.4799
+Epoch 10 (Global 176), Batch 100: loss = 81.7277
+Epoch 10 (Global 176), Batch 120: loss = 87.3959
+Epoch 10 (Global 176), Batch 140: loss = 83.4124
+Epoch 10 (Global 176), Batch 160: loss = 81.4415
+Epoch 10 (Global 176), Batch 180: loss = 83.5347
+Epoch 10 (Global 176), Batch 200: loss = 79.2929
+Epoch 10 (Global 176), Batch 220: loss = 86.4074
+Epoch 10 (Global 176), Batch 240: loss = 84.7560
+Epoch 10 (Global 176), Batch 260: loss = 85.1644
+Epoch 10 (Global 176), Batch 280: loss = 82.0978
+Epoch 10 complete. Avg loss: 10.3342
+Epoch 11 (Global 177), Batch 0: loss = 83.1913
+Epoch 11 (Global 177), Batch 20: loss = 83.3596
+Epoch 11 (Global 177), Batch 40: loss = 81.2264
+Epoch 11 (Global 177), Batch 60: loss = 81.9438
+Epoch 11 (Global 177), Batch 80: loss = 84.9995
+Epoch 11 (Global 177), Batch 100: loss = 82.7568
+Epoch 11 (Global 177), Batch 120: loss = 88.1326
+Epoch 11 (Global 177), Batch 140: loss = 76.5868
+Epoch 11 (Global 177), Batch 160: loss = 86.6671
+Epoch 11 (Global 177), Batch 180: loss = 78.2427
+Epoch 11 (Global 177), Batch 200: loss = 85.2935
+Epoch 11 (Global 177), Batch 220: loss = 84.5453
+Epoch 11 (Global 177), Batch 240: loss = 84.7526
+Epoch 11 (Global 177), Batch 260: loss = 83.3831
+Epoch 11 (Global 177), Batch 280: loss = 80.6891
+Epoch 11 complete. Avg loss: 10.3916
+Epoch 12 (Global 178), Batch 0: loss = 84.1339
+Epoch 12 (Global 178), Batch 20: loss = 82.2899
+Epoch 12 (Global 178), Batch 40: loss = 83.6129
+Epoch 12 (Global 178), Batch 60: loss = 78.8146
+Epoch 12 (Global 178), Batch 80: loss = 83.4889
+Epoch 12 (Global 178), Batch 100: loss = 84.8359
+Epoch 12 (Global 178), Batch 120: loss = 80.7888
+Epoch 12 (Global 178), Batch 140: loss = 84.6071
+Epoch 12 (Global 178), Batch 160: loss = 86.5288
+Epoch 12 (Global 178), Batch 180: loss = 86.9735
+Epoch 12 (Global 178), Batch 200: loss = 85.5085
+Epoch 12 (Global 178), Batch 220: loss = 87.5901
+Epoch 12 (Global 178), Batch 240: loss = 70.2834
+Epoch 12 (Global 178), Batch 260: loss = 85.6198
+Epoch 12 (Global 178), Batch 280: loss = 77.5992
+Epoch 12 complete. Avg loss: 10.3464
+Epoch 13 (Global 179), Batch 0: loss = 82.4713
+Epoch 13 (Global 179), Batch 20: loss = 86.0831
+Epoch 13 (Global 179), Batch 40: loss = 76.8605
+Epoch 13 (Global 179), Batch 60: loss = 88.0779
+Epoch 13 (Global 179), Batch 80: loss = 84.0115
+Epoch 13 (Global 179), Batch 100: loss = 86.0869
+Epoch 13 (Global 179), Batch 120: loss = 84.3898
+Epoch 13 (Global 179), Batch 140: loss = 80.1336
+Epoch 13 (Global 179), Batch 160: loss = 77.4783
+Epoch 13 (Global 179), Batch 180: loss = 86.0069
+Epoch 13 (Global 179), Batch 200: loss = 86.3455
+Epoch 13 (Global 179), Batch 220: loss = 80.3057
+Epoch 13 (Global 179), Batch 240: loss = 85.7716
+Epoch 13 (Global 179), Batch 260: loss = 82.2408
+Epoch 13 (Global 179), Batch 280: loss = 85.4723
+Epoch 13 complete. Avg loss: 10.3456
+Epoch 14 (Global 180), Batch 0: loss = 77.4447
+Epoch 14 (Global 180), Batch 20: loss = 77.6742
+Epoch 14 (Global 180), Batch 40: loss = 84.1191
+Epoch 14 (Global 180), Batch 60: loss = 81.6068
+Epoch 14 (Global 180), Batch 80: loss = 84.2168
+Epoch 14 (Global 180), Batch 100: loss = 86.6974
+Epoch 14 (Global 180), Batch 120: loss = 81.4052
+Epoch 14 (Global 180), Batch 140: loss = 79.8835
+Epoch 14 (Global 180), Batch 160: loss = 82.7739
+Epoch 14 (Global 180), Batch 180: loss = 87.2095
+Epoch 14 (Global 180), Batch 200: loss = 90.1167
+Epoch 14 (Global 180), Batch 220: loss = 81.2351
+Epoch 14 (Global 180), Batch 240: loss = 78.8730
+Epoch 14 (Global 180), Batch 260: loss = 81.3770
+Epoch 14 (Global 180), Batch 280: loss = 86.5734
+Epoch 14 complete. Avg loss: 10.3657
+Epoch 15 (Global 181), Batch 0: loss = 81.7665
+Epoch 15 (Global 181), Batch 20: loss = 83.8452
+Epoch 15 (Global 181), Batch 40: loss = 83.6824
+Epoch 15 (Global 181), Batch 60: loss = 87.9916
+Epoch 15 (Global 181), Batch 80: loss = 82.0788
+Epoch 15 (Global 181), Batch 100: loss = 82.2932
+Epoch 15 (Global 181), Batch 120: loss = 86.5258
+Epoch 15 (Global 181), Batch 140: loss = 84.3131
+Epoch 15 (Global 181), Batch 160: loss = 81.8557
+Epoch 15 (Global 181), Batch 180: loss = 82.9669
+Epoch 15 (Global 181), Batch 200: loss = 85.8757
+Epoch 15 (Global 181), Batch 220: loss = 87.2363
+Epoch 15 (Global 181), Batch 240: loss = 84.6768
+Epoch 15 (Global 181), Batch 260: loss = 83.5568
+Epoch 15 (Global 181), Batch 280: loss = 84.5395
+Epoch 15 complete. Avg loss: 10.4120
+Epoch 16 (Global 182), Batch 0: loss = 87.6929
+Epoch 16 (Global 182), Batch 20: loss = 82.8361
+Epoch 16 (Global 182), Batch 40: loss = 86.0454
+Epoch 16 (Global 182), Batch 60: loss = 82.5005
+Epoch 16 (Global 182), Batch 80: loss = 83.3406
+Epoch 16 (Global 182), Batch 100: loss = 85.6279
+Epoch 16 (Global 182), Batch 120: loss = 82.4227
+Epoch 16 (Global 182), Batch 140: loss = 88.0195
+Epoch 16 (Global 182), Batch 160: loss = 80.6365
+Epoch 16 (Global 182), Batch 180: loss = 84.4612
+Epoch 16 (Global 182), Batch 200: loss = 84.8383
+Epoch 16 (Global 182), Batch 220: loss = 84.7215
+Epoch 16 (Global 182), Batch 240: loss = 83.5597
+Epoch 16 (Global 182), Batch 260: loss = 84.0057
+Epoch 16 (Global 182), Batch 280: loss = 86.1933
+Epoch 16 complete. Avg loss: 10.3564
+Epoch 17 (Global 183), Batch 0: loss = 79.1729
+Epoch 17 (Global 183), Batch 20: loss = 85.7952
+Epoch 17 (Global 183), Batch 40: loss = 83.0590
+Epoch 17 (Global 183), Batch 60: loss = 88.0206
+Epoch 17 (Global 183), Batch 80: loss = 79.3418
+Epoch 17 (Global 183), Batch 100: loss = 86.4505
+Epoch 17 (Global 183), Batch 120: loss = 78.1550
+Epoch 17 (Global 183), Batch 140: loss = 88.3071
+Epoch 17 (Global 183), Batch 160: loss = 87.1634
+Epoch 17 (Global 183), Batch 180: loss = 84.1503
+Epoch 17 (Global 183), Batch 200: loss = 81.7142
+Epoch 17 (Global 183), Batch 220: loss = 86.1493
+Epoch 17 (Global 183), Batch 240: loss = 81.3797
+Epoch 17 (Global 183), Batch 260: loss = 86.8967
+Epoch 17 (Global 183), Batch 280: loss = 80.8344
+Epoch 17 complete. Avg loss: 10.3998
+Epoch 18 (Global 184), Batch 0: loss = 79.6241
+Epoch 18 (Global 184), Batch 20: loss = 82.7239
+Epoch 18 (Global 184), Batch 40: loss = 82.5744
+Epoch 18 (Global 184), Batch 60: loss = 85.8694
+Epoch 18 (Global 184), Batch 80: loss = 79.7150
+Epoch 18 (Global 184), Batch 100: loss = 83.9659
+Epoch 18 (Global 184), Batch 120: loss = 85.3764
+Epoch 18 (Global 184), Batch 140: loss = 83.6380
+Epoch 18 (Global 184), Batch 160: loss = 85.2399
+Epoch 18 (Global 184), Batch 180: loss = 85.6518
+Epoch 18 (Global 184), Batch 200: loss = 79.4146
+Epoch 18 (Global 184), Batch 220: loss = 82.3434
+Epoch 18 (Global 184), Batch 240: loss = 82.0438
+Epoch 18 (Global 184), Batch 260: loss = 83.3168
+Epoch 18 (Global 184), Batch 280: loss = 81.2384
+Epoch 18 complete. Avg loss: 10.3684
+Epoch 19 (Global 185), Batch 0: loss = 85.6394
+Epoch 19 (Global 185), Batch 20: loss = 79.5624
+Epoch 19 (Global 185), Batch 40: loss = 92.3655
+Epoch 19 (Global 185), Batch 60: loss = 82.8151
+Epoch 19 (Global 185), Batch 80: loss = 86.7754
+Epoch 19 (Global 185), Batch 100: loss = 80.9379
+Epoch 19 (Global 185), Batch 120: loss = 83.3263
+Epoch 19 (Global 185), Batch 140: loss = 87.6635
+Epoch 19 (Global 185), Batch 160: loss = 82.5313
+Epoch 19 (Global 185), Batch 180: loss = 83.8100
+Epoch 19 (Global 185), Batch 200: loss = 87.2997
+Epoch 19 (Global 185), Batch 220: loss = 80.9969
+Epoch 19 (Global 185), Batch 240: loss = 84.1785
+Epoch 19 (Global 185), Batch 260: loss = 83.6881
+Epoch 19 (Global 185), Batch 280: loss = 80.6298
+Epoch 19 complete. Avg loss: 10.4516
+Epoch 20 (Global 186), Batch 0: loss = 88.1393
+Epoch 20 (Global 186), Batch 20: loss = 81.4828
+Epoch 20 (Global 186), Batch 40: loss = 80.5767
+Epoch 20 (Global 186), Batch 60: loss = 80.9888
+Epoch 20 (Global 186), Batch 80: loss = 80.9304
+Epoch 20 (Global 186), Batch 100: loss = 90.5106
+Epoch 20 (Global 186), Batch 120: loss = 82.5691
+Epoch 20 (Global 186), Batch 140: loss = 82.3208
+Epoch 20 (Global 186), Batch 160: loss = 76.2775
+Epoch 20 (Global 186), Batch 180: loss = 80.3601
+Epoch 20 (Global 186), Batch 200: loss = 76.1328
+Epoch 20 (Global 186), Batch 220: loss = 81.7854
+Epoch 20 (Global 186), Batch 240: loss = 80.4918
+Epoch 20 (Global 186), Batch 260: loss = 82.2902
+Epoch 20 (Global 186), Batch 280: loss = 85.4599
+Epoch 20 complete. Avg loss: 10.3928
+Epoch 21 (Global 187), Batch 0: loss = 87.2962
+Epoch 21 (Global 187), Batch 20: loss = 85.4094
+Epoch 21 (Global 187), Batch 40: loss = 79.9594
+Epoch 21 (Global 187), Batch 60: loss = 83.1452
+Epoch 21 (Global 187), Batch 80: loss = 86.6663
+Epoch 21 (Global 187), Batch 100: loss = 82.1578
+Epoch 21 (Global 187), Batch 120: loss = 88.7201
+Epoch 21 (Global 187), Batch 140: loss = 85.1746
+Epoch 21 (Global 187), Batch 160: loss = 80.4847
+Epoch 21 (Global 187), Batch 180: loss = 80.7195
+Epoch 21 (Global 187), Batch 200: loss = 88.1719
+Epoch 21 (Global 187), Batch 220: loss = 84.7059
+Epoch 21 (Global 187), Batch 240: loss = 86.2858
+Epoch 21 (Global 187), Batch 260: loss = 84.2862
+Epoch 21 (Global 187), Batch 280: loss = 82.8128
+Epoch 21 complete. Avg loss: 10.4135
+Epoch 22 (Global 188), Batch 0: loss = 73.9082
+Epoch 22 (Global 188), Batch 20: loss = 82.0546
+Epoch 22 (Global 188), Batch 40: loss = 81.9650
+Epoch 22 (Global 188), Batch 60: loss = 85.3307
+Epoch 22 (Global 188), Batch 80: loss = 81.8329
+Epoch 22 (Global 188), Batch 100: loss = 84.6099
+Epoch 22 (Global 188), Batch 120: loss = 89.6900
+Epoch 22 (Global 188), Batch 140: loss = 74.0649
+Epoch 22 (Global 188), Batch 160: loss = 81.1994
+Epoch 22 (Global 188), Batch 180: loss = 83.9870
+Epoch 22 (Global 188), Batch 200: loss = 84.0058
+Epoch 22 (Global 188), Batch 220: loss = 88.3898
+Epoch 22 (Global 188), Batch 240: loss = 86.1975
+Epoch 22 (Global 188), Batch 260: loss = 83.5053
+Epoch 22 (Global 188), Batch 280: loss = 81.9466
+Epoch 22 complete. Avg loss: 10.4122
+Epoch 23 (Global 189), Batch 0: loss = 83.7082
+Epoch 23 (Global 189), Batch 20: loss = 84.7031
+Epoch 23 (Global 189), Batch 40: loss = 80.8067
+Epoch 23 (Global 189), Batch 60: loss = 85.1947
+Epoch 23 (Global 189), Batch 80: loss = 77.0963
+Epoch 23 (Global 189), Batch 100: loss = 85.2954
+Epoch 23 (Global 189), Batch 120: loss = 84.0270
+Epoch 23 (Global 189), Batch 140: loss = 82.5292
+Epoch 23 (Global 189), Batch 160: loss = 86.8216
+Epoch 23 (Global 189), Batch 180: loss = 76.3629
+Epoch 23 (Global 189), Batch 200: loss = 84.4767
+Epoch 23 (Global 189), Batch 220: loss = 84.2964
+Epoch 23 (Global 189), Batch 240: loss = 80.1908
+Epoch 23 (Global 189), Batch 260: loss = 80.5141
+Epoch 23 (Global 189), Batch 280: loss = 84.4417
+Epoch 23 complete. Avg loss: 10.4299
+Epoch 24 (Global 190), Batch 0: loss = 84.3451
+Epoch 24 (Global 190), Batch 20: loss = 85.0381
+Epoch 24 (Global 190), Batch 40: loss = 84.5547
+Epoch 24 (Global 190), Batch 60: loss = 83.3440
+Epoch 24 (Global 190), Batch 80: loss = 85.8346
+Epoch 24 (Global 190), Batch 100: loss = 83.6797
+Epoch 24 (Global 190), Batch 120: loss = 80.3982
+Epoch 24 (Global 190), Batch 140: loss = 81.3628
+Epoch 24 (Global 190), Batch 160: loss = 76.5886
+Epoch 24 (Global 190), Batch 180: loss = 87.0715
+Epoch 24 (Global 190), Batch 200: loss = 84.0043
+Epoch 24 (Global 190), Batch 220: loss = 77.8872
+Epoch 24 (Global 190), Batch 240: loss = 82.6417
+Epoch 24 (Global 190), Batch 260: loss = 84.3185
+Epoch 24 (Global 190), Batch 280: loss = 85.1862
+Epoch 24 complete. Avg loss: 10.3868
+Epoch 25 (Global 191), Batch 0: loss = 86.9220
+Epoch 25 (Global 191), Batch 20: loss = 85.0228
+Epoch 25 (Global 191), Batch 40: loss = 84.2405
+Epoch 25 (Global 191), Batch 60: loss = 86.7986
+Epoch 25 (Global 191), Batch 80: loss = 86.0095
+Epoch 25 (Global 191), Batch 100: loss = 85.5413
+Epoch 25 (Global 191), Batch 120: loss = 86.7025
+Epoch 25 (Global 191), Batch 140: loss = 83.7040
+Epoch 25 (Global 191), Batch 160: loss = 85.4844
+Epoch 25 (Global 191), Batch 180: loss = 81.9944
+Epoch 25 (Global 191), Batch 200: loss = 82.8095
+Epoch 25 (Global 191), Batch 220: loss = 91.2729
+Epoch 25 (Global 191), Batch 240: loss = 89.7080
+Epoch 25 (Global 191), Batch 260: loss = 80.9691
+Epoch 25 (Global 191), Batch 280: loss = 83.9174
+Epoch 25 complete. Avg loss: 10.4608
+Epoch 26 (Global 192), Batch 0: loss = 78.5087
+Epoch 26 (Global 192), Batch 20: loss = 82.6496
+Epoch 26 (Global 192), Batch 40: loss = 87.3367
+Epoch 26 (Global 192), Batch 60: loss = 83.3424
+Epoch 26 (Global 192), Batch 80: loss = 87.1210
+Epoch 26 (Global 192), Batch 100: loss = 83.8318
+Epoch 26 (Global 192), Batch 120: loss = 77.7757
+Epoch 26 (Global 192), Batch 140: loss = 78.3429
+Epoch 26 (Global 192), Batch 160: loss = 85.4657
+Epoch 26 (Global 192), Batch 180: loss = 81.3695
+Epoch 26 (Global 192), Batch 200: loss = 82.0399
+Epoch 26 (Global 192), Batch 220: loss = 84.8149
+Epoch 26 (Global 192), Batch 240: loss = 83.5026
+Epoch 26 (Global 192), Batch 260: loss = 81.2176
+Epoch 26 (Global 192), Batch 280: loss = 77.6502
+Epoch 26 complete. Avg loss: 10.4435
+Epoch 27 (Global 193), Batch 0: loss = 82.1365
+Epoch 27 (Global 193), Batch 20: loss = 87.3883
+Epoch 27 (Global 193), Batch 40: loss = 84.5050
+Epoch 27 (Global 193), Batch 60: loss = 81.8028
+Epoch 27 (Global 193), Batch 80: loss = 86.7884
+Epoch 27 (Global 193), Batch 100: loss = 85.7067
+Epoch 27 (Global 193), Batch 120: loss = 79.8098
+Epoch 27 (Global 193), Batch 140: loss = 86.9051
+Epoch 27 (Global 193), Batch 160: loss = 85.2439
+Epoch 27 (Global 193), Batch 180: loss = 84.6643
+Epoch 27 (Global 193), Batch 200: loss = 87.6430
+Epoch 27 (Global 193), Batch 220: loss = 86.6522
+Epoch 27 (Global 193), Batch 240: loss = 84.8787
+Epoch 27 (Global 193), Batch 260: loss = 81.3781
+Epoch 27 (Global 193), Batch 280: loss = 78.7715
+Epoch 27 complete. Avg loss: 10.4563
+Epoch 28 (Global 194), Batch 0: loss = 82.3660
+Epoch 28 (Global 194), Batch 20: loss = 78.4585
+Epoch 28 (Global 194), Batch 40: loss = 83.7423
+Epoch 28 (Global 194), Batch 60: loss = 87.8826
+Epoch 28 (Global 194), Batch 80: loss = 76.8380
+Epoch 28 (Global 194), Batch 100: loss = 85.8649
+Epoch 28 (Global 194), Batch 120: loss = 81.1164
+Epoch 28 (Global 194), Batch 140: loss = 87.4749
+Epoch 28 (Global 194), Batch 160: loss = 86.1682
+Epoch 28 (Global 194), Batch 180: loss = 80.7039
+Epoch 28 (Global 194), Batch 200: loss = 83.3221
+Epoch 28 (Global 194), Batch 220: loss = 83.5923
+Epoch 28 (Global 194), Batch 240: loss = 87.8044
+Epoch 28 (Global 194), Batch 260: loss = 80.6579
+Epoch 28 (Global 194), Batch 280: loss = 83.1808
+Epoch 28 complete. Avg loss: 10.4192
+Epoch 29 (Global 195), Batch 0: loss = 83.7248
+Epoch 29 (Global 195), Batch 20: loss = 80.9163
+Epoch 29 (Global 195), Batch 40: loss = 83.4290
+Epoch 29 (Global 195), Batch 60: loss = 77.8277
+Epoch 29 (Global 195), Batch 80: loss = 88.4726
+Epoch 29 (Global 195), Batch 100: loss = 84.3530
+Epoch 29 (Global 195), Batch 120: loss = 84.1329
+Epoch 29 (Global 195), Batch 140: loss = 79.2810
+Epoch 29 (Global 195), Batch 160: loss = 86.5217
+Epoch 29 (Global 195), Batch 180: loss = 91.0432
+Epoch 29 (Global 195), Batch 200: loss = 83.3535
+Epoch 29 (Global 195), Batch 220: loss = 77.0243
+Epoch 29 (Global 195), Batch 240: loss = 83.1655
+Epoch 29 (Global 195), Batch 260: loss = 85.3088
+Epoch 29 (Global 195), Batch 280: loss = 80.4720
+Epoch 29 complete. Avg loss: 10.4440
+Epoch 30 (Global 196), Batch 0: loss = 86.2341
+Epoch 30 (Global 196), Batch 20: loss = 83.2132
+Epoch 30 (Global 196), Batch 40: loss = 81.8418
+Epoch 30 (Global 196), Batch 60: loss = 84.6086
+Epoch 30 (Global 196), Batch 80: loss = 88.4139
+Epoch 30 (Global 196), Batch 100: loss = 86.2552
+Epoch 30 (Global 196), Batch 120: loss = 82.8422
+Epoch 30 (Global 196), Batch 140: loss = 76.8739
+Epoch 30 (Global 196), Batch 160: loss = 81.1467
+Epoch 30 (Global 196), Batch 180: loss = 87.2788
+Epoch 30 (Global 196), Batch 200: loss = 85.2032
+Epoch 30 (Global 196), Batch 220: loss = 85.0344
+Epoch 30 (Global 196), Batch 240: loss = 89.4000
+Epoch 30 (Global 196), Batch 260: loss = 84.0542
+Epoch 30 (Global 196), Batch 280: loss = 81.3157
+Epoch 30 complete. Avg loss: 10.4341
+Epoch 31 (Global 197), Batch 0: loss = 81.9887
+Epoch 31 (Global 197), Batch 20: loss = 79.9056
+Epoch 31 (Global 197), Batch 40: loss = 82.3872
+Epoch 31 (Global 197), Batch 60: loss = 87.3874
+Epoch 31 (Global 197), Batch 80: loss = 87.6584
+Epoch 31 (Global 197), Batch 100: loss = 83.5005
+Epoch 31 (Global 197), Batch 120: loss = 84.9790
+Epoch 31 (Global 197), Batch 140: loss = 86.2226
+Epoch 31 (Global 197), Batch 160: loss = 77.6822
+Epoch 31 (Global 197), Batch 180: loss = 80.2432
+Epoch 31 (Global 197), Batch 200: loss = 81.8845
+Epoch 31 (Global 197), Batch 220: loss = 82.0258
+Epoch 31 (Global 197), Batch 240: loss = 86.2006
+Epoch 31 (Global 197), Batch 260: loss = 80.3271
+Epoch 31 (Global 197), Batch 280: loss = 82.8758
+Epoch 31 complete. Avg loss: 10.4254
+Epoch 32 (Global 198), Batch 0: loss = 83.6287
+Epoch 32 (Global 198), Batch 20: loss = 81.9824
+Epoch 32 (Global 198), Batch 40: loss = 86.9935
+Epoch 32 (Global 198), Batch 60: loss = 75.7066
+Epoch 32 (Global 198), Batch 80: loss = 84.0209
+Epoch 32 (Global 198), Batch 100: loss = 82.9652
+Epoch 32 (Global 198), Batch 120: loss = 80.1545
+Epoch 32 (Global 198), Batch 140: loss = 80.7140
+Epoch 32 (Global 198), Batch 160: loss = 82.4809
+Epoch 32 (Global 198), Batch 180: loss = 80.3919
+Epoch 32 (Global 198), Batch 200: loss = 77.0836
+Epoch 32 (Global 198), Batch 220: loss = 80.6268
+Epoch 32 (Global 198), Batch 240: loss = 82.7708
+Epoch 32 (Global 198), Batch 260: loss = 81.0370
+Epoch 32 (Global 198), Batch 280: loss = 88.2785
+Epoch 32 complete. Avg loss: 10.4559
+Epoch 33 (Global 199), Batch 0: loss = 80.1414
+Epoch 33 (Global 199), Batch 20: loss = 89.3870
+Epoch 33 (Global 199), Batch 40: loss = 84.2237
+Epoch 33 (Global 199), Batch 60: loss = 81.4201
+Epoch 33 (Global 199), Batch 80: loss = 82.7823
+Epoch 33 (Global 199), Batch 100: loss = 80.2247
+Epoch 33 (Global 199), Batch 120: loss = 83.1391
+Epoch 33 (Global 199), Batch 140: loss = 84.3562
+Epoch 33 (Global 199), Batch 160: loss = 90.0971
+Epoch 33 (Global 199), Batch 180: loss = 85.8047
+Epoch 33 (Global 199), Batch 200: loss = 84.1301
+Epoch 33 (Global 199), Batch 220: loss = 85.2078
+Epoch 33 (Global 199), Batch 240: loss = 87.0875
+Epoch 33 (Global 199), Batch 260: loss = 85.5688
+Epoch 33 (Global 199), Batch 280: loss = 86.5425
+Epoch 33 complete. Avg loss: 10.4607
+Epoch 34 (Global 200), Batch 0: loss = 82.3284
+Epoch 34 (Global 200), Batch 20: loss = 82.1738
+Epoch 34 (Global 200), Batch 40: loss = 87.4580
+Epoch 34 (Global 200), Batch 60: loss = 85.7098
+Epoch 34 (Global 200), Batch 80: loss = 78.2355
+Epoch 34 (Global 200), Batch 100: loss = 84.6830
+Epoch 34 (Global 200), Batch 120: loss = 82.8321
+Epoch 34 (Global 200), Batch 140: loss = 84.2488
+Epoch 34 (Global 200), Batch 160: loss = 86.1761
+Epoch 34 (Global 200), Batch 180: loss = 83.1870
+Epoch 34 (Global 200), Batch 200: loss = 84.8187
+Epoch 34 (Global 200), Batch 220: loss = 79.1308
+Epoch 34 (Global 200), Batch 240: loss = 86.6979
+Epoch 34 (Global 200), Batch 260: loss = 83.9375
+Epoch 34 (Global 200), Batch 280: loss = 79.4863
+Epoch 34 complete. Avg loss: 10.4547
+Epoch 35 (Global 201), Batch 0: loss = 81.2569
+Epoch 35 (Global 201), Batch 20: loss = 76.6345
+Epoch 35 (Global 201), Batch 40: loss = 82.7279
+Epoch 35 (Global 201), Batch 60: loss = 85.5705
+Epoch 35 (Global 201), Batch 80: loss = 85.5267
+Epoch 35 (Global 201), Batch 100: loss = 85.2368
+Epoch 35 (Global 201), Batch 120: loss = 84.7885
+Epoch 35 (Global 201), Batch 140: loss = 80.0849
+Epoch 35 (Global 201), Batch 160: loss = 87.8082
+Epoch 35 (Global 201), Batch 180: loss = 87.1531
+Epoch 35 (Global 201), Batch 200: loss = 78.7745
+Epoch 35 (Global 201), Batch 220: loss = 87.9176
+Epoch 35 (Global 201), Batch 240: loss = 83.5565
+Epoch 35 (Global 201), Batch 260: loss = 85.9863
+Epoch 35 (Global 201), Batch 280: loss = 83.9704
+Epoch 35 complete. Avg loss: 10.4545
+Epoch 36 (Global 202), Batch 0: loss = 86.4632
+Epoch 36 (Global 202), Batch 20: loss = 79.5440
+Epoch 36 (Global 202), Batch 40: loss = 81.5037
+Epoch 36 (Global 202), Batch 60: loss = 84.9460
+Epoch 36 (Global 202), Batch 80: loss = 84.0554
+Epoch 36 (Global 202), Batch 100: loss = 83.4511
+Epoch 36 (Global 202), Batch 120: loss = 79.2187
+Epoch 36 (Global 202), Batch 140: loss = 80.6152
+Epoch 36 (Global 202), Batch 160: loss = 85.7054
+Epoch 36 (Global 202), Batch 180: loss = 87.6033
+Epoch 36 (Global 202), Batch 200: loss = 78.7986
+Epoch 36 (Global 202), Batch 220: loss = 86.6748
+Epoch 36 (Global 202), Batch 240: loss = 86.1328
+Epoch 36 (Global 202), Batch 260: loss = 89.5342
+Epoch 36 (Global 202), Batch 280: loss = 82.0423
+Epoch 36 complete. Avg loss: 10.4261
+Epoch 37 (Global 203), Batch 0: loss = 81.0684
+Epoch 37 (Global 203), Batch 20: loss = 86.4886
+Epoch 37 (Global 203), Batch 40: loss = 86.5191
+Epoch 37 (Global 203), Batch 60: loss = 85.0454
+Epoch 37 (Global 203), Batch 80: loss = 85.8575
+Epoch 37 (Global 203), Batch 100: loss = 88.2370
+Epoch 37 (Global 203), Batch 120: loss = 80.9000
+Epoch 37 (Global 203), Batch 140: loss = 83.6265
+Epoch 37 (Global 203), Batch 160: loss = 75.1433
+Epoch 37 (Global 203), Batch 180: loss = 84.3214
+Epoch 37 (Global 203), Batch 200: loss = 86.1896
+Epoch 37 (Global 203), Batch 220: loss = 81.7106
+Epoch 37 (Global 203), Batch 240: loss = 86.0034
+Epoch 37 (Global 203), Batch 260: loss = 80.5455
+Epoch 37 (Global 203), Batch 280: loss = 85.1291
+Epoch 37 complete. Avg loss: 10.4721
+Epoch 38 (Global 204), Batch 0: loss = 78.5407
+Epoch 38 (Global 204), Batch 20: loss = 82.9846
+Epoch 38 (Global 204), Batch 40: loss = 85.2697
+Epoch 38 (Global 204), Batch 60: loss = 86.2493
+Epoch 38 (Global 204), Batch 80: loss = 88.9740
+Epoch 38 (Global 204), Batch 100: loss = 81.9524
+Epoch 38 (Global 204), Batch 120: loss = 85.3152
+Epoch 38 (Global 204), Batch 140: loss = 81.6752
+Epoch 38 (Global 204), Batch 160: loss = 80.6658
+Epoch 38 (Global 204), Batch 180: loss = 77.8438
+Epoch 38 (Global 204), Batch 200: loss = 84.8457
+Epoch 38 (Global 204), Batch 220: loss = 84.7862
+Epoch 38 (Global 204), Batch 240: loss = 82.3786
+Epoch 38 (Global 204), Batch 260: loss = 79.2936
+Epoch 38 (Global 204), Batch 280: loss = 90.7491
+Epoch 38 complete. Avg loss: 10.4625
+Epoch 39 (Global 205), Batch 0: loss = 90.0931
+Epoch 39 (Global 205), Batch 20: loss = 90.8475
+Epoch 39 (Global 205), Batch 40: loss = 78.2178
+Epoch 39 (Global 205), Batch 60: loss = 87.0739
+Epoch 39 (Global 205), Batch 80: loss = 82.4731
+Epoch 39 (Global 205), Batch 100: loss = 81.3161
+Epoch 39 (Global 205), Batch 120: loss = 85.7883
+Epoch 39 (Global 205), Batch 140: loss = 85.1948
+Epoch 39 (Global 205), Batch 160: loss = 83.5894
+Epoch 39 (Global 205), Batch 180: loss = 84.0917
+Epoch 39 (Global 205), Batch 200: loss = 88.5965
+Epoch 39 (Global 205), Batch 220: loss = 82.0186
+Epoch 39 (Global 205), Batch 240: loss = 81.2251
+Epoch 39 (Global 205), Batch 260: loss = 79.6501
+Epoch 39 (Global 205), Batch 280: loss = 86.5716
+Epoch 39 complete. Avg loss: 10.4831
+Epoch 40 (Global 206), Batch 0: loss = 86.6896
+Epoch 40 (Global 206), Batch 20: loss = 82.9424
+Epoch 40 (Global 206), Batch 40: loss = 80.0726
+Epoch 40 (Global 206), Batch 60: loss = 80.5767
+Epoch 40 (Global 206), Batch 80: loss = 79.0418
+Epoch 40 (Global 206), Batch 100: loss = 84.0723
+Epoch 40 (Global 206), Batch 120: loss = 86.4948
+Epoch 40 (Global 206), Batch 140: loss = 84.7825
+Epoch 40 (Global 206), Batch 160: loss = 85.3301
+Epoch 40 (Global 206), Batch 180: loss = 87.1733
+Epoch 40 (Global 206), Batch 200: loss = 76.5807
+Epoch 40 (Global 206), Batch 220: loss = 89.4541
+Epoch 40 (Global 206), Batch 240: loss = 81.9651
+Epoch 40 (Global 206), Batch 260: loss = 85.7245
+Epoch 40 (Global 206), Batch 280: loss = 83.4044
+Epoch 40 complete. Avg loss: 10.4311
+Epoch 41 (Global 207), Batch 0: loss = 89.3437
+Epoch 41 (Global 207), Batch 20: loss = 82.0816
+Epoch 41 (Global 207), Batch 40: loss = 85.3869
+Epoch 41 (Global 207), Batch 60: loss = 85.0568
+Epoch 41 (Global 207), Batch 80: loss = 82.2695
+Epoch 41 (Global 207), Batch 100: loss = 86.4861
+Epoch 41 (Global 207), Batch 120: loss = 85.0714
+Epoch 41 (Global 207), Batch 140: loss = 81.5451
+Epoch 41 (Global 207), Batch 160: loss = 84.8197
+Epoch 41 (Global 207), Batch 180: loss = 86.4257
+Epoch 41 (Global 207), Batch 200: loss = 84.8188
+Epoch 41 (Global 207), Batch 220: loss = 86.4014
+Epoch 41 (Global 207), Batch 240: loss = 88.2908
+Epoch 41 (Global 207), Batch 260: loss = 84.8055
+Epoch 41 (Global 207), Batch 280: loss = 83.2801
+Epoch 41 complete. Avg loss: 10.4869
+Epoch 42 (Global 208), Batch 0: loss = 88.0250
+Epoch 42 (Global 208), Batch 20: loss = 89.5158
+Epoch 42 (Global 208), Batch 40: loss = 83.5071
+Epoch 42 (Global 208), Batch 60: loss = 90.0333
+Epoch 42 (Global 208), Batch 80: loss = 85.7041
+Epoch 42 (Global 208), Batch 100: loss = 84.1761
+Epoch 42 (Global 208), Batch 120: loss = 84.2005
+Epoch 42 (Global 208), Batch 140: loss = 76.9444
+Epoch 42 (Global 208), Batch 160: loss = 86.8151
+Epoch 42 (Global 208), Batch 180: loss = 80.4504
+Epoch 42 (Global 208), Batch 200: loss = 81.3456
+Epoch 42 (Global 208), Batch 220: loss = 88.0630
+Epoch 42 (Global 208), Batch 240: loss = 83.1608
+Epoch 42 (Global 208), Batch 260: loss = 91.5209
+Epoch 42 (Global 208), Batch 280: loss = 90.2612
+Epoch 42 complete. Avg loss: 10.4991
+Epoch 43 (Global 209), Batch 0: loss = 90.1150
+Epoch 43 (Global 209), Batch 20: loss = 80.5941
+Epoch 43 (Global 209), Batch 40: loss = 85.6494
+Epoch 43 (Global 209), Batch 60: loss = 87.1925
+Epoch 43 (Global 209), Batch 80: loss = 84.0408
+Epoch 43 (Global 209), Batch 100: loss = 85.9471
+Epoch 43 (Global 209), Batch 120: loss = 85.7205
+Epoch 43 (Global 209), Batch 140: loss = 84.2226
+Epoch 43 (Global 209), Batch 160: loss = 88.4236
+Epoch 43 (Global 209), Batch 180: loss = 92.1852
+Epoch 43 (Global 209), Batch 200: loss = 79.6729
+Epoch 43 (Global 209), Batch 220: loss = 85.7184
+Epoch 43 (Global 209), Batch 240: loss = 81.9333
+Epoch 43 (Global 209), Batch 260: loss = 89.9060
+Epoch 43 (Global 209), Batch 280: loss = 85.4857
+Epoch 43 complete. Avg loss: 10.4868
+Epoch 44 (Global 210), Batch 0: loss = 79.1955
+Epoch 44 (Global 210), Batch 20: loss = 83.8178
+Epoch 44 (Global 210), Batch 40: loss = 89.3692
+Epoch 44 (Global 210), Batch 60: loss = 81.7467
+Epoch 44 (Global 210), Batch 80: loss = 78.5530
+Epoch 44 (Global 210), Batch 100: loss = 82.4842
+Epoch 44 (Global 210), Batch 120: loss = 83.1331
+Epoch 44 (Global 210), Batch 140: loss = 81.9797
+Epoch 44 (Global 210), Batch 160: loss = 81.5809
+Epoch 44 (Global 210), Batch 180: loss = 79.1152
+Epoch 44 (Global 210), Batch 200: loss = 80.1836
+Epoch 44 (Global 210), Batch 220: loss = 83.9203
+Epoch 44 (Global 210), Batch 240: loss = 84.4541
+Epoch 44 (Global 210), Batch 260: loss = 79.9520
+Epoch 44 (Global 210), Batch 280: loss = 82.0815
+Epoch 44 complete. Avg loss: 10.4805
+Epoch 45 (Global 211), Batch 0: loss = 84.4951
+Epoch 45 (Global 211), Batch 20: loss = 86.5392
+Epoch 45 (Global 211), Batch 40: loss = 82.6593
+Epoch 45 (Global 211), Batch 60: loss = 85.6612
+Epoch 45 (Global 211), Batch 80: loss = 82.5567
+Epoch 45 (Global 211), Batch 100: loss = 83.7370
+Epoch 45 (Global 211), Batch 120: loss = 83.8833
+Epoch 45 (Global 211), Batch 140: loss = 83.7110
+Epoch 45 (Global 211), Batch 160: loss = 83.2473
+Epoch 45 (Global 211), Batch 180: loss = 84.9880
+Epoch 45 (Global 211), Batch 200: loss = 83.7638
+Epoch 45 (Global 211), Batch 220: loss = 82.8236
+Epoch 45 (Global 211), Batch 240: loss = 84.2245
+Epoch 45 (Global 211), Batch 260: loss = 85.7254
+Epoch 45 (Global 211), Batch 280: loss = 85.0467
+Epoch 45 complete. Avg loss: 10.4619
+Epoch 46 (Global 212), Batch 0: loss = 80.1737
+Epoch 46 (Global 212), Batch 20: loss = 85.0292
+Epoch 46 (Global 212), Batch 40: loss = 87.8153
+Epoch 46 (Global 212), Batch 60: loss = 84.3970
+Epoch 46 (Global 212), Batch 80: loss = 88.8462
+Epoch 46 (Global 212), Batch 100: loss = 85.5717
+Epoch 46 (Global 212), Batch 120: loss = 85.6073
+Epoch 46 (Global 212), Batch 140: loss = 83.2019
+Epoch 46 (Global 212), Batch 160: loss = 80.0354
+Epoch 46 (Global 212), Batch 180: loss = 88.8391
+Epoch 46 (Global 212), Batch 200: loss = 83.9684
+Epoch 46 (Global 212), Batch 220: loss = 87.9214
+Epoch 46 (Global 212), Batch 240: loss = 84.4320
+Epoch 46 (Global 212), Batch 260: loss = 80.0562
+Epoch 46 (Global 212), Batch 280: loss = 78.7548
+Epoch 46 complete. Avg loss: 10.4840
+Epoch 47 (Global 213), Batch 0: loss = 84.4489
+Epoch 47 (Global 213), Batch 20: loss = 82.2378
+Epoch 47 (Global 213), Batch 40: loss = 84.3589
+Epoch 47 (Global 213), Batch 60: loss = 92.7345
+Epoch 47 (Global 213), Batch 80: loss = 78.4413
+Epoch 47 (Global 213), Batch 100: loss = 86.3639
+Epoch 47 (Global 213), Batch 120: loss = 79.3980
+Epoch 47 (Global 213), Batch 140: loss = 82.1281
+Epoch 47 (Global 213), Batch 160: loss = 85.1087
+Epoch 47 (Global 213), Batch 180: loss = 83.1232
+Epoch 47 (Global 213), Batch 200: loss = 87.1588
+Epoch 47 (Global 213), Batch 220: loss = 81.9427
+Epoch 47 (Global 213), Batch 240: loss = 83.3126
+Epoch 47 (Global 213), Batch 260: loss = 82.9661
+Epoch 47 (Global 213), Batch 280: loss = 87.1863
+Epoch 47 complete. Avg loss: 10.4563
+Epoch 48 (Global 214), Batch 0: loss = 84.0455
+Epoch 48 (Global 214), Batch 20: loss = 82.8471
+Epoch 48 (Global 214), Batch 40: loss = 80.9511
+Epoch 48 (Global 214), Batch 60: loss = 85.5204
+Epoch 48 (Global 214), Batch 80: loss = 82.9938
+Epoch 48 (Global 214), Batch 100: loss = 83.1411
+Epoch 48 (Global 214), Batch 120: loss = 75.2185
+Epoch 48 (Global 214), Batch 140: loss = 83.4054
+Epoch 48 (Global 214), Batch 160: loss = 83.9071
+Epoch 48 (Global 214), Batch 180: loss = 84.2267
+Epoch 48 (Global 214), Batch 200: loss = 88.1559
+Epoch 48 (Global 214), Batch 220: loss = 85.8079
+Epoch 48 (Global 214), Batch 240: loss = 80.6707
+Epoch 48 (Global 214), Batch 260: loss = 78.6202
+Epoch 48 (Global 214), Batch 280: loss = 80.6673
+Epoch 48 complete. Avg loss: 10.4685
+Epoch 49 (Global 215), Batch 0: loss = 84.3942
+Epoch 49 (Global 215), Batch 20: loss = 78.4030
+Epoch 49 (Global 215), Batch 40: loss = 87.8635
+Epoch 49 (Global 215), Batch 60: loss = 80.6204
+Epoch 49 (Global 215), Batch 80: loss = 86.3792
+Epoch 49 (Global 215), Batch 100: loss = 83.2826
+Epoch 49 (Global 215), Batch 120: loss = 85.9223
+Epoch 49 (Global 215), Batch 140: loss = 82.3928
+Epoch 49 (Global 215), Batch 160: loss = 84.0664
+Epoch 49 (Global 215), Batch 180: loss = 81.6460
+Epoch 49 (Global 215), Batch 200: loss = 83.2504
+Epoch 49 (Global 215), Batch 220: loss = 78.8526
+Epoch 49 (Global 215), Batch 240: loss = 83.7704
+Epoch 49 (Global 215), Batch 260: loss = 84.7199
+Epoch 49 (Global 215), Batch 280: loss = 86.3146
+Epoch 49 complete. Avg loss: 10.4539
+Epoch 0 (Global 216), Batch 0: loss = 86.1433
+Epoch 0 (Global 216), Batch 20: loss = 83.5256
+Epoch 0 (Global 216), Batch 40: loss = 84.1033
+Epoch 0 (Global 216), Batch 60: loss = 90.7449
+Epoch 0 (Global 216), Batch 80: loss = 85.1085
+Epoch 0 (Global 216), Batch 100: loss = 83.4905
+Epoch 0 (Global 216), Batch 120: loss = 81.1458
+Epoch 0 (Global 216), Batch 140: loss = 85.6566
+Epoch 0 (Global 216), Batch 160: loss = 86.6245
+Epoch 0 (Global 216), Batch 180: loss = 79.4387
+Epoch 0 (Global 216), Batch 200: loss = 88.5069
+Epoch 0 (Global 216), Batch 220: loss = 81.8559
+Epoch 0 (Global 216), Batch 240: loss = 87.2158
+Epoch 0 (Global 216), Batch 260: loss = 90.4436
+Epoch 0 (Global 216), Batch 280: loss = 85.1616
+Epoch 0 complete. Avg loss: 10.5560
+Epoch 1 (Global 217), Batch 0: loss = 86.6037
+Epoch 1 (Global 217), Batch 20: loss = 82.6581
+Epoch 1 (Global 217), Batch 40: loss = 85.4114
+Epoch 1 (Global 217), Batch 60: loss = 84.6486
+Epoch 1 (Global 217), Batch 80: loss = 82.1870
+Epoch 1 (Global 217), Batch 100: loss = 87.4599
+Epoch 1 (Global 217), Batch 120: loss = 89.3298
+Epoch 1 (Global 217), Batch 140: loss = 89.0766
+Epoch 1 (Global 217), Batch 160: loss = 86.0598
+Epoch 1 (Global 217), Batch 180: loss = 83.0290
+Epoch 1 (Global 217), Batch 200: loss = 90.8142
+Epoch 1 (Global 217), Batch 220: loss = 83.2579
+Epoch 1 (Global 217), Batch 240: loss = 80.4952
+Epoch 1 (Global 217), Batch 260: loss = 82.8354
+Epoch 1 (Global 217), Batch 280: loss = 86.7086
+Epoch 1 complete. Avg loss: 10.5603
+Epoch 2 (Global 218), Batch 0: loss = 82.9109
+Epoch 2 (Global 218), Batch 20: loss = 88.6704
+Epoch 2 (Global 218), Batch 40: loss = 89.7448
+Epoch 2 (Global 218), Batch 60: loss = 85.0109
+Epoch 2 (Global 218), Batch 80: loss = 80.5440
+Epoch 2 (Global 218), Batch 100: loss = 81.6964
+Epoch 2 (Global 218), Batch 120: loss = 84.1420
+Epoch 2 (Global 218), Batch 140: loss = 82.6655
+Epoch 2 (Global 218), Batch 160: loss = 79.5073
+Epoch 2 (Global 218), Batch 180: loss = 87.7485
+Epoch 2 (Global 218), Batch 200: loss = 82.6719
+Epoch 2 (Global 218), Batch 220: loss = 83.2001
+Epoch 2 (Global 218), Batch 240: loss = 84.0756
+Epoch 2 (Global 218), Batch 260: loss = 84.2592
+Epoch 2 (Global 218), Batch 280: loss = 82.1451
+Epoch 2 complete. Avg loss: 10.5211
+Epoch 3 (Global 219), Batch 0: loss = 83.1176
+Epoch 3 (Global 219), Batch 20: loss = 88.7001
+Epoch 3 (Global 219), Batch 40: loss = 82.8326
+Epoch 3 (Global 219), Batch 60: loss = 87.9019
+Epoch 3 (Global 219), Batch 80: loss = 83.8020
+Epoch 3 (Global 219), Batch 100: loss = 85.0875
+Epoch 3 (Global 219), Batch 120: loss = 79.1248
+Epoch 3 (Global 219), Batch 140: loss = 88.4659
+Epoch 3 (Global 219), Batch 160: loss = 88.6335
+Epoch 3 (Global 219), Batch 180: loss = 85.9050
+Epoch 3 (Global 219), Batch 200: loss = 84.8800
+Epoch 3 (Global 219), Batch 220: loss = 84.6632
+Epoch 3 (Global 219), Batch 240: loss = 78.5447
+Epoch 3 (Global 219), Batch 260: loss = 82.0720
+Epoch 3 (Global 219), Batch 280: loss = 86.6694
+Epoch 3 complete. Avg loss: 10.5083
+Epoch 4 (Global 220), Batch 0: loss = 81.1880
+Epoch 4 (Global 220), Batch 20: loss = 83.1198
+Epoch 4 (Global 220), Batch 40: loss = 83.3649
+Epoch 4 (Global 220), Batch 60: loss = 83.6043
+Epoch 4 (Global 220), Batch 80: loss = 88.7207
+Epoch 4 (Global 220), Batch 100: loss = 79.4434
+Epoch 4 (Global 220), Batch 120: loss = 75.9262
+Epoch 4 (Global 220), Batch 140: loss = 82.6158
+Epoch 4 (Global 220), Batch 160: loss = 84.0563
+Epoch 4 (Global 220), Batch 180: loss = 83.5195
+Epoch 4 (Global 220), Batch 200: loss = 86.7023
+Epoch 4 (Global 220), Batch 220: loss = 85.8514
+Epoch 0 (Global 220), Batch 0: loss = 89.1830
+Epoch 0 (Global 220), Batch 20: loss = 91.3845
+Epoch 0 (Global 220), Batch 40: loss = 88.3560
+Epoch 0 (Global 220), Batch 60: loss = 88.2798
+Epoch 0 (Global 220), Batch 80: loss = 80.5238
+Epoch 0 (Global 220), Batch 100: loss = 91.4448
+Epoch 0 (Global 220), Batch 120: loss = 82.1583
+Epoch 0 (Global 220), Batch 140: loss = 88.1141
+Epoch 0 (Global 220), Batch 160: loss = 89.8068
+Epoch 0 (Global 220), Batch 180: loss = 86.7320
+Epoch 0 (Global 220), Batch 200: loss = 82.5460
+Epoch 0 (Global 220), Batch 220: loss = 83.6641
+Epoch 0 (Global 220), Batch 0: loss = 87.2068
+Epoch 0 (Global 220), Batch 20: loss = 87.7297
+Epoch 0 (Global 220), Batch 40: loss = 86.2649
+Epoch 0 (Global 220), Batch 60: loss = 85.9133
+Epoch 0 (Global 220), Batch 80: loss = 86.1169
+Epoch 0 (Global 220), Batch 100: loss = 86.0528
+Epoch 0 (Global 220), Batch 120: loss = 84.7038
+Epoch 0 (Global 220), Batch 140: loss = 83.3253
+Epoch 0 (Global 220), Batch 160: loss = 84.5737
+Epoch 0 (Global 220), Batch 180: loss = 84.3111
+Epoch 0 (Global 220), Batch 200: loss = 88.4761
+Epoch 0 (Global 220), Batch 220: loss = 87.4544
+Epoch 0 (Global 220), Batch 240: loss = 88.1094
+Epoch 0 (Global 220), Batch 260: loss = 85.4702
+Epoch 0 (Global 220), Batch 280: loss = 86.2800
+Epoch 0 complete. Avg loss: 10.6285
+Epoch 1 (Global 221), Batch 0: loss = 80.1324
+Epoch 1 (Global 221), Batch 20: loss = 81.2770
+Epoch 1 (Global 221), Batch 40: loss = 85.2060
+Epoch 1 (Global 221), Batch 60: loss = 85.5897
+Epoch 1 (Global 221), Batch 80: loss = 87.5682
+Epoch 1 (Global 221), Batch 100: loss = 84.6429
+Epoch 1 (Global 221), Batch 120: loss = 86.5778
+Epoch 1 (Global 221), Batch 140: loss = 85.1366
+Epoch 1 (Global 221), Batch 160: loss = 88.2946
+Epoch 1 (Global 221), Batch 180: loss = 79.6442
+Epoch 1 (Global 221), Batch 200: loss = 87.6072
+Epoch 1 (Global 221), Batch 220: loss = 87.0669
+Epoch 1 (Global 221), Batch 240: loss = 84.9394
+Epoch 1 (Global 221), Batch 260: loss = 87.0174
+Epoch 1 (Global 221), Batch 280: loss = 85.5993
+Epoch 1 complete. Avg loss: 10.5563
+Epoch 2 (Global 222), Batch 0: loss = 82.7218
+Epoch 2 (Global 222), Batch 20: loss = 78.5748
+Epoch 2 (Global 222), Batch 40: loss = 84.0761
+Epoch 2 (Global 222), Batch 60: loss = 81.6697
+Epoch 2 (Global 222), Batch 80: loss = 84.9582
+Epoch 2 (Global 222), Batch 100: loss = 79.5530
+Epoch 2 (Global 222), Batch 120: loss = 80.8531
+Epoch 2 (Global 222), Batch 140: loss = 86.6663
+Epoch 2 (Global 222), Batch 160: loss = 81.7503
+Epoch 2 (Global 222), Batch 180: loss = 88.3546
+Epoch 2 (Global 222), Batch 200: loss = 85.3479
+Epoch 2 (Global 222), Batch 220: loss = 80.3956
+Epoch 2 (Global 222), Batch 240: loss = 80.3855
+Epoch 2 (Global 222), Batch 260: loss = 87.4994
+Epoch 2 (Global 222), Batch 280: loss = 83.2984
+Epoch 2 complete. Avg loss: 10.5546
+Epoch 3 (Global 223), Batch 0: loss = 86.5228
+Epoch 3 (Global 223), Batch 20: loss = 75.4022
+Epoch 3 (Global 223), Batch 40: loss = 87.9649
+Epoch 3 (Global 223), Batch 60: loss = 81.5442
+Epoch 3 (Global 223), Batch 80: loss = 87.1177
+Epoch 3 (Global 223), Batch 100: loss = 87.3283
+Epoch 3 (Global 223), Batch 120: loss = 86.5138
+Epoch 3 (Global 223), Batch 140: loss = 86.5788
+Epoch 3 (Global 223), Batch 160: loss = 83.6782
+Epoch 3 (Global 223), Batch 180: loss = 81.3718
+Epoch 3 (Global 223), Batch 200: loss = 90.2024
+Epoch 3 (Global 223), Batch 220: loss = 87.5634
+Epoch 3 (Global 223), Batch 240: loss = 85.4189
+Epoch 3 (Global 223), Batch 260: loss = 89.0079
+Epoch 3 (Global 223), Batch 280: loss = 81.5648
+Epoch 3 complete. Avg loss: 10.5405
+Epoch 4 (Global 224), Batch 0: loss = 82.8112
+Epoch 4 (Global 224), Batch 20: loss = 84.2317
+Epoch 4 (Global 224), Batch 40: loss = 81.9112
+Epoch 4 (Global 224), Batch 60: loss = 81.1916
+Epoch 4 (Global 224), Batch 80: loss = 82.0502
+Epoch 4 (Global 224), Batch 100: loss = 85.9137
+Epoch 4 (Global 224), Batch 120: loss = 76.1522
+Epoch 4 (Global 224), Batch 140: loss = 78.0366
+Epoch 4 (Global 224), Batch 160: loss = 83.6959
+Epoch 4 (Global 224), Batch 180: loss = 85.4313
+Epoch 4 (Global 224), Batch 200: loss = 86.9426
+Epoch 4 (Global 224), Batch 220: loss = 88.0832
+Epoch 4 (Global 224), Batch 240: loss = 88.6745
+Epoch 4 (Global 224), Batch 260: loss = 89.5383
+Epoch 4 (Global 224), Batch 280: loss = 87.8589
+Epoch 4 complete. Avg loss: 10.5131
+Epoch 5 (Global 225), Batch 0: loss = 79.9791
+Epoch 5 (Global 225), Batch 20: loss = 86.1024
+Epoch 5 (Global 225), Batch 40: loss = 80.6894
+Epoch 5 (Global 225), Batch 60: loss = 84.2220
+Epoch 5 (Global 225), Batch 80: loss = 79.6107
+Epoch 5 (Global 225), Batch 100: loss = 82.3672
+Epoch 5 (Global 225), Batch 120: loss = 79.9222
+Epoch 5 (Global 225), Batch 140: loss = 81.3820
+Epoch 5 (Global 225), Batch 160: loss = 82.2980
+Epoch 5 (Global 225), Batch 180: loss = 87.1660
+Epoch 5 (Global 225), Batch 200: loss = 85.6666
+Epoch 5 (Global 225), Batch 220: loss = 84.5817
+Epoch 5 (Global 225), Batch 240: loss = 84.5162
+Epoch 5 (Global 225), Batch 260: loss = 83.6481
+Epoch 5 (Global 225), Batch 280: loss = 84.6099
+Epoch 5 complete. Avg loss: 10.5444
+Epoch 6 (Global 226), Batch 0: loss = 83.1584
+Epoch 6 (Global 226), Batch 20: loss = 80.2704
+Epoch 6 (Global 226), Batch 40: loss = 84.8165
+Epoch 6 (Global 226), Batch 60: loss = 85.0681
+Epoch 6 (Global 226), Batch 80: loss = 86.7600
+Epoch 6 (Global 226), Batch 100: loss = 89.5102
+Epoch 6 (Global 226), Batch 120: loss = 83.4205
+Epoch 6 (Global 226), Batch 140: loss = 84.7790
+Epoch 6 (Global 226), Batch 160: loss = 86.1570
+Epoch 6 (Global 226), Batch 180: loss = 81.9160
+Epoch 6 (Global 226), Batch 200: loss = 85.8398
+Epoch 6 (Global 226), Batch 220: loss = 84.8466
+Epoch 6 (Global 226), Batch 240: loss = 86.5603
+Epoch 6 (Global 226), Batch 260: loss = 91.1390
+Epoch 6 (Global 226), Batch 280: loss = 83.0305
+Epoch 6 complete. Avg loss: 10.4992
+Epoch 7 (Global 227), Batch 0: loss = 88.4491
+Epoch 7 (Global 227), Batch 20: loss = 82.3275
+Epoch 7 (Global 227), Batch 40: loss = 89.6334
+Epoch 7 (Global 227), Batch 60: loss = 86.3502
+Epoch 7 (Global 227), Batch 80: loss = 86.3974
+Epoch 7 (Global 227), Batch 100: loss = 87.4623
+Epoch 7 (Global 227), Batch 120: loss = 85.1154
+Epoch 7 (Global 227), Batch 140: loss = 87.7230
+Epoch 7 (Global 227), Batch 160: loss = 82.7884
+Epoch 7 (Global 227), Batch 180: loss = 79.0525
+Epoch 7 (Global 227), Batch 200: loss = 82.1483
+Epoch 7 (Global 227), Batch 220: loss = 85.1026
+Epoch 7 (Global 227), Batch 240: loss = 87.0366
+Epoch 7 (Global 227), Batch 260: loss = 81.4644
+Epoch 7 (Global 227), Batch 280: loss = 86.9972
+Epoch 7 complete. Avg loss: 10.4821
+Epoch 8 (Global 228), Batch 0: loss = 82.6906
+Epoch 8 (Global 228), Batch 20: loss = 86.8706
+Epoch 8 (Global 228), Batch 40: loss = 82.3620
+Epoch 8 (Global 228), Batch 60: loss = 85.7136
+Epoch 8 (Global 228), Batch 80: loss = 79.2284
+Epoch 8 (Global 228), Batch 100: loss = 81.1467
+Epoch 8 (Global 228), Batch 120: loss = 82.0574
+Epoch 8 (Global 228), Batch 140: loss = 85.3767
+Epoch 8 (Global 228), Batch 160: loss = 78.1875
+Epoch 8 (Global 228), Batch 180: loss = 85.2722
+Epoch 8 (Global 228), Batch 200: loss = 86.0084
+Epoch 8 (Global 228), Batch 220: loss = 85.4752
+Epoch 8 (Global 228), Batch 240: loss = 89.7729
+Epoch 8 (Global 228), Batch 260: loss = 78.5094
+Epoch 8 (Global 228), Batch 280: loss = 86.0437
+Epoch 8 complete. Avg loss: 10.5003
+Epoch 9 (Global 229), Batch 0: loss = 84.2704
+Epoch 9 (Global 229), Batch 20: loss = 86.7775
+Epoch 9 (Global 229), Batch 40: loss = 83.1103
+Epoch 9 (Global 229), Batch 60: loss = 84.1055
+Epoch 9 (Global 229), Batch 80: loss = 82.4531
+Epoch 9 (Global 229), Batch 100: loss = 77.6811
+Epoch 9 (Global 229), Batch 120: loss = 80.4907
+Epoch 9 (Global 229), Batch 140: loss = 86.3408
+Epoch 9 (Global 229), Batch 160: loss = 84.9397
+Epoch 9 (Global 229), Batch 180: loss = 89.4967
+Epoch 9 (Global 229), Batch 200: loss = 84.8636
+Epoch 9 (Global 229), Batch 220: loss = 89.1544
+Epoch 9 (Global 229), Batch 240: loss = 89.5998
+Epoch 9 (Global 229), Batch 260: loss = 87.7802
+Epoch 9 (Global 229), Batch 280: loss = 87.5016
+Epoch 9 complete. Avg loss: 10.5427
+Epoch 10 (Global 230), Batch 0: loss = 87.8432
+Epoch 10 (Global 230), Batch 20: loss = 79.6469
+Epoch 10 (Global 230), Batch 40: loss = 80.1981
+Epoch 10 (Global 230), Batch 60: loss = 81.6112
+Epoch 10 (Global 230), Batch 80: loss = 85.4264
+Epoch 10 (Global 230), Batch 100: loss = 87.0335
+Epoch 10 (Global 230), Batch 120: loss = 84.8133
+Epoch 10 (Global 230), Batch 140: loss = 87.1574
+Epoch 10 (Global 230), Batch 160: loss = 84.4656
+Epoch 10 (Global 230), Batch 180: loss = 81.9813
+Epoch 10 (Global 230), Batch 200: loss = 86.2998
+Epoch 10 (Global 230), Batch 220: loss = 86.0792
+Epoch 10 (Global 230), Batch 240: loss = 81.8655
+Epoch 10 (Global 230), Batch 260: loss = 89.3518
+Epoch 10 (Global 230), Batch 280: loss = 89.4563
+Epoch 10 complete. Avg loss: 10.5319
+Epoch 11 (Global 231), Batch 0: loss = 87.0194
+Epoch 11 (Global 231), Batch 20: loss = 85.1086
+Epoch 11 (Global 231), Batch 40: loss = 85.7755
+Epoch 11 (Global 231), Batch 60: loss = 82.1103
+Epoch 11 (Global 231), Batch 80: loss = 82.0631
+Epoch 11 (Global 231), Batch 100: loss = 82.9902
+Epoch 11 (Global 231), Batch 120: loss = 85.5656
+Epoch 11 (Global 231), Batch 140: loss = 82.8521
+Epoch 11 (Global 231), Batch 160: loss = 88.4170
+Epoch 11 (Global 231), Batch 180: loss = 82.2215
+Epoch 11 (Global 231), Batch 200: loss = 82.5822
+Epoch 11 (Global 231), Batch 220: loss = 84.4618
+Epoch 11 (Global 231), Batch 240: loss = 82.1783
+Epoch 11 (Global 231), Batch 260: loss = 87.1871
+Epoch 11 (Global 231), Batch 280: loss = 80.1814
+Epoch 11 complete. Avg loss: 10.5070
+Epoch 12 (Global 232), Batch 0: loss = 88.8872
+Epoch 12 (Global 232), Batch 20: loss = 77.0547
+Epoch 12 (Global 232), Batch 40: loss = 82.1703
+Epoch 12 (Global 232), Batch 60: loss = 85.0977
+Epoch 12 (Global 232), Batch 80: loss = 84.0944
+Epoch 12 (Global 232), Batch 100: loss = 83.9326
+Epoch 12 (Global 232), Batch 120: loss = 83.9569
+Epoch 12 (Global 232), Batch 140: loss = 81.4738
+Epoch 12 (Global 232), Batch 160: loss = 79.3689
+Epoch 12 (Global 232), Batch 180: loss = 82.2089
+Epoch 12 (Global 232), Batch 200: loss = 91.0210
+Epoch 12 (Global 232), Batch 220: loss = 82.3062
+Epoch 12 (Global 232), Batch 240: loss = 87.0889
+Epoch 12 (Global 232), Batch 260: loss = 80.8692
+Epoch 12 (Global 232), Batch 280: loss = 79.0649
+Epoch 12 complete. Avg loss: 10.4955
+Epoch 13 (Global 233), Batch 0: loss = 84.5404
+Epoch 13 (Global 233), Batch 20: loss = 82.3703
+Epoch 13 (Global 233), Batch 40: loss = 86.1968
+Epoch 13 (Global 233), Batch 60: loss = 81.8057
+Epoch 13 (Global 233), Batch 80: loss = 82.2791
+Epoch 13 (Global 233), Batch 100: loss = 83.9827
+Epoch 13 (Global 233), Batch 120: loss = 86.1085
+Epoch 13 (Global 233), Batch 140: loss = 87.7554
+Epoch 13 (Global 233), Batch 160: loss = 81.0100
+Epoch 13 (Global 233), Batch 180: loss = 85.7372
+Epoch 13 (Global 233), Batch 200: loss = 87.4905
+Epoch 13 (Global 233), Batch 220: loss = 79.5509
+Epoch 13 (Global 233), Batch 240: loss = 83.0468
+Epoch 13 (Global 233), Batch 260: loss = 84.2127
+Epoch 13 (Global 233), Batch 280: loss = 85.8677
+Epoch 13 complete. Avg loss: 10.4809
+Epoch 14 (Global 234), Batch 0: loss = 86.2953
+Epoch 14 (Global 234), Batch 20: loss = 75.7363
+Epoch 14 (Global 234), Batch 40: loss = 82.5185
+Epoch 14 (Global 234), Batch 60: loss = 86.2275
+Epoch 14 (Global 234), Batch 80: loss = 85.4351
+Epoch 14 (Global 234), Batch 100: loss = 81.4767
+Epoch 14 (Global 234), Batch 120: loss = 83.4764
+Epoch 14 (Global 234), Batch 140: loss = 81.8423
+Epoch 14 (Global 234), Batch 160: loss = 83.7178
+Epoch 14 (Global 234), Batch 180: loss = 83.1591
+Epoch 14 (Global 234), Batch 200: loss = 84.0692
+Epoch 14 (Global 234), Batch 220: loss = 84.5087
+Epoch 14 (Global 234), Batch 240: loss = 86.8611
+Epoch 14 (Global 234), Batch 260: loss = 78.5443
+Epoch 14 (Global 234), Batch 280: loss = 79.1285
+Epoch 14 complete. Avg loss: 10.4874
+Epoch 15 (Global 235), Batch 0: loss = 80.4539
+Epoch 15 (Global 235), Batch 20: loss = 82.5010
+Epoch 15 (Global 235), Batch 40: loss = 83.2150
+Epoch 15 (Global 235), Batch 60: loss = 72.1907
+Epoch 15 (Global 235), Batch 80: loss = 85.1801
+Epoch 15 (Global 235), Batch 100: loss = 80.0871
+Epoch 15 (Global 235), Batch 120: loss = 82.2681
+Epoch 15 (Global 235), Batch 140: loss = 85.0617
+Epoch 15 (Global 235), Batch 160: loss = 82.9039
+Epoch 15 (Global 235), Batch 180: loss = 79.6032
+Epoch 15 (Global 235), Batch 200: loss = 84.4334
+Epoch 15 (Global 235), Batch 220: loss = 85.5784
+Epoch 15 (Global 235), Batch 240: loss = 82.0238
+Epoch 15 (Global 235), Batch 260: loss = 83.2607
+Epoch 15 (Global 235), Batch 280: loss = 85.9521
+Epoch 15 complete. Avg loss: 10.5069
+Epoch 16 (Global 236), Batch 0: loss = 75.9483
+Epoch 16 (Global 236), Batch 20: loss = 82.5051
+Epoch 16 (Global 236), Batch 40: loss = 84.1209
+Epoch 16 (Global 236), Batch 60: loss = 78.2346
+Epoch 16 (Global 236), Batch 80: loss = 83.9605
+Epoch 16 (Global 236), Batch 100: loss = 93.4920
+Epoch 16 (Global 236), Batch 120: loss = 81.8728
+Epoch 16 (Global 236), Batch 140: loss = 80.5898
+Epoch 16 (Global 236), Batch 160: loss = 85.0347
+Epoch 16 (Global 236), Batch 180: loss = 85.3620
+Epoch 16 (Global 236), Batch 200: loss = 84.5014
+Epoch 16 (Global 236), Batch 220: loss = 82.1071
+Epoch 16 (Global 236), Batch 240: loss = 86.1798
+Epoch 16 (Global 236), Batch 260: loss = 90.3652
+Epoch 16 (Global 236), Batch 280: loss = 85.4303
+Epoch 16 complete. Avg loss: 10.4519
+Epoch 17 (Global 237), Batch 0: loss = 84.4142
+Epoch 17 (Global 237), Batch 20: loss = 90.8278
+Epoch 17 (Global 237), Batch 40: loss = 86.0150
+Epoch 17 (Global 237), Batch 60: loss = 88.8278
+Epoch 17 (Global 237), Batch 80: loss = 81.8611
+Epoch 17 (Global 237), Batch 100: loss = 84.8211
+Epoch 17 (Global 237), Batch 120: loss = 86.0246
+Epoch 17 (Global 237), Batch 140: loss = 79.1195
+Epoch 17 (Global 237), Batch 160: loss = 87.3481
+Epoch 17 (Global 237), Batch 180: loss = 87.3004
+Epoch 17 (Global 237), Batch 200: loss = 84.0913
+Epoch 17 (Global 237), Batch 220: loss = 86.0127
+Epoch 17 (Global 237), Batch 240: loss = 78.0715
+Epoch 17 (Global 237), Batch 260: loss = 87.5479
+Epoch 17 (Global 237), Batch 280: loss = 83.8860
+Epoch 17 complete. Avg loss: 10.5066
+Epoch 18 (Global 238), Batch 0: loss = 83.4538
+Epoch 18 (Global 238), Batch 20: loss = 80.1546
+Epoch 18 (Global 238), Batch 40: loss = 84.0582
+Epoch 18 (Global 238), Batch 60: loss = 88.9292
+Epoch 18 (Global 238), Batch 80: loss = 84.7012
+Epoch 18 (Global 238), Batch 100: loss = 78.7712
+Epoch 18 (Global 238), Batch 120: loss = 86.2231
+Epoch 18 (Global 238), Batch 140: loss = 84.7282
+Epoch 18 (Global 238), Batch 160: loss = 80.2537
+Epoch 18 (Global 238), Batch 180: loss = 85.6662
+Epoch 18 (Global 238), Batch 200: loss = 81.5457
+Epoch 18 (Global 238), Batch 220: loss = 83.2839
+Epoch 18 (Global 238), Batch 240: loss = 84.2482
+Epoch 18 (Global 238), Batch 260: loss = 82.5834
+Epoch 18 (Global 238), Batch 280: loss = 89.8321
+Epoch 18 complete. Avg loss: 10.5170
+Epoch 19 (Global 239), Batch 0: loss = 81.6238
+Epoch 19 (Global 239), Batch 20: loss = 83.3313
+Epoch 19 (Global 239), Batch 40: loss = 89.3073
+Epoch 19 (Global 239), Batch 60: loss = 85.6740
+Epoch 19 (Global 239), Batch 80: loss = 87.4730
+Epoch 19 (Global 239), Batch 100: loss = 81.4227
+Epoch 19 (Global 239), Batch 120: loss = 85.5022
+Epoch 19 (Global 239), Batch 140: loss = 84.3614
+Epoch 19 (Global 239), Batch 160: loss = 88.0923
+Epoch 19 (Global 239), Batch 180: loss = 85.3607
+Epoch 19 (Global 239), Batch 200: loss = 71.2946
+Epoch 19 (Global 239), Batch 220: loss = 86.5296
+Epoch 19 (Global 239), Batch 240: loss = 80.6283
+Epoch 19 (Global 239), Batch 260: loss = 86.4770
+Epoch 19 (Global 239), Batch 280: loss = 81.1948
+Epoch 19 complete. Avg loss: 10.5230
+Epoch 20 (Global 240), Batch 0: loss = 86.1345
+Epoch 20 (Global 240), Batch 20: loss = 86.3101
+Epoch 20 (Global 240), Batch 40: loss = 85.0452
+Epoch 20 (Global 240), Batch 60: loss = 88.3544
+Epoch 20 (Global 240), Batch 80: loss = 90.1594
+Epoch 20 (Global 240), Batch 100: loss = 83.8765
+Epoch 20 (Global 240), Batch 120: loss = 82.4943
+Epoch 20 (Global 240), Batch 140: loss = 86.2625
+Epoch 20 (Global 240), Batch 160: loss = 84.3036
+Epoch 20 (Global 240), Batch 180: loss = 84.7576
+Epoch 20 (Global 240), Batch 200: loss = 83.5932
+Epoch 20 (Global 240), Batch 220: loss = 89.7374
+Epoch 20 (Global 240), Batch 240: loss = 80.6883
+Epoch 20 (Global 240), Batch 260: loss = 76.0791
+Epoch 20 (Global 240), Batch 280: loss = 83.8558
+Epoch 20 complete. Avg loss: 10.5342
+Epoch 21 (Global 241), Batch 0: loss = 81.8681
+Epoch 21 (Global 241), Batch 20: loss = 86.4933
+Epoch 21 (Global 241), Batch 40: loss = 83.1598
+Epoch 21 (Global 241), Batch 60: loss = 81.8994
+Epoch 21 (Global 241), Batch 80: loss = 86.8472
+Epoch 21 (Global 241), Batch 100: loss = 85.3130
+Epoch 21 (Global 241), Batch 120: loss = 82.5712
+Epoch 21 (Global 241), Batch 140: loss = 81.1440
+Epoch 21 (Global 241), Batch 160: loss = 86.4106
+Epoch 21 (Global 241), Batch 180: loss = 85.0229
+Epoch 21 (Global 241), Batch 200: loss = 81.9234
+Epoch 21 (Global 241), Batch 220: loss = 87.5658
+Epoch 21 (Global 241), Batch 240: loss = 89.9851
+Epoch 21 (Global 241), Batch 260: loss = 84.2410
+Epoch 21 (Global 241), Batch 280: loss = 82.4299
+Epoch 21 complete. Avg loss: 10.5386
+Epoch 22 (Global 242), Batch 0: loss = 86.3358
+Epoch 22 (Global 242), Batch 20: loss = 81.7463
+Epoch 22 (Global 242), Batch 40: loss = 88.6987
+Epoch 22 (Global 242), Batch 60: loss = 85.1072
+Epoch 22 (Global 242), Batch 80: loss = 84.6236
+Epoch 22 (Global 242), Batch 100: loss = 81.8160
+Epoch 22 (Global 242), Batch 120: loss = 89.0422
+Epoch 22 (Global 242), Batch 140: loss = 87.5144
+Epoch 22 (Global 242), Batch 160: loss = 86.5014
+Epoch 22 (Global 242), Batch 180: loss = 79.1964
+Epoch 22 (Global 242), Batch 200: loss = 84.5154
+Epoch 22 (Global 242), Batch 220: loss = 85.7307
+Epoch 22 (Global 242), Batch 240: loss = 80.3094
+Epoch 22 (Global 242), Batch 260: loss = 84.7464
+Epoch 22 (Global 242), Batch 280: loss = 88.0044
+Epoch 22 complete. Avg loss: 10.5102
+Epoch 23 (Global 243), Batch 0: loss = 78.8549
+Epoch 23 (Global 243), Batch 20: loss = 83.6053
+Epoch 23 (Global 243), Batch 40: loss = 87.9353
+Epoch 23 (Global 243), Batch 60: loss = 85.4420
+Epoch 23 (Global 243), Batch 80: loss = 90.1181
+Epoch 23 (Global 243), Batch 100: loss = 83.9673
+Epoch 23 (Global 243), Batch 120: loss = 81.0443
+Epoch 23 (Global 243), Batch 140: loss = 82.3784
+Epoch 23 (Global 243), Batch 160: loss = 88.6516
+Epoch 23 (Global 243), Batch 180: loss = 85.8908
+Epoch 23 (Global 243), Batch 200: loss = 80.4927
+Epoch 23 (Global 243), Batch 220: loss = 83.4552
+Epoch 23 (Global 243), Batch 240: loss = 81.7777
+Epoch 23 (Global 243), Batch 260: loss = 87.2316
+Epoch 23 (Global 243), Batch 280: loss = 85.9323
+Epoch 23 complete. Avg loss: 10.5341
+Epoch 24 (Global 244), Batch 0: loss = 91.3044
+Epoch 24 (Global 244), Batch 20: loss = 89.5132
+Epoch 24 (Global 244), Batch 40: loss = 85.8667
+Epoch 24 (Global 244), Batch 60: loss = 77.0914
+Epoch 24 (Global 244), Batch 80: loss = 81.2379
+Epoch 24 (Global 244), Batch 100: loss = 84.4633
+Epoch 24 (Global 244), Batch 120: loss = 86.9222
+Epoch 24 (Global 244), Batch 140: loss = 84.9393
+Epoch 24 (Global 244), Batch 160: loss = 87.8516
+Epoch 24 (Global 244), Batch 180: loss = 83.5087
+Epoch 24 (Global 244), Batch 200: loss = 81.9258
+Epoch 24 (Global 244), Batch 220: loss = 86.2583
+Epoch 24 (Global 244), Batch 240: loss = 75.9555
+Epoch 24 (Global 244), Batch 260: loss = 93.9686
+Epoch 24 (Global 244), Batch 280: loss = 80.7104
+Epoch 24 complete. Avg loss: 10.5039
+Epoch 25 (Global 245), Batch 0: loss = 83.8326
+Epoch 25 (Global 245), Batch 20: loss = 79.4971
+Epoch 25 (Global 245), Batch 40: loss = 82.3894
+Epoch 25 (Global 245), Batch 60: loss = 83.0274
+Epoch 25 (Global 245), Batch 80: loss = 88.2520
+Epoch 25 (Global 245), Batch 100: loss = 85.0965
+Epoch 25 (Global 245), Batch 120: loss = 87.4964
+Epoch 25 (Global 245), Batch 140: loss = 84.9801
+Epoch 25 (Global 245), Batch 160: loss = 88.6747
+Epoch 25 (Global 245), Batch 180: loss = 84.2976
+Epoch 25 (Global 245), Batch 200: loss = 87.8233
+Epoch 25 (Global 245), Batch 220: loss = 87.3045
+Epoch 25 (Global 245), Batch 240: loss = 81.2561
+Epoch 25 (Global 245), Batch 260: loss = 83.1537
+Epoch 25 (Global 245), Batch 280: loss = 93.2874
+Epoch 25 complete. Avg loss: 10.5511
+Epoch 26 (Global 246), Batch 0: loss = 82.7653
+Epoch 26 (Global 246), Batch 20: loss = 85.8396
+Epoch 26 (Global 246), Batch 40: loss = 83.9568
+Epoch 26 (Global 246), Batch 60: loss = 81.9270
+Epoch 26 (Global 246), Batch 80: loss = 88.7865
+Epoch 26 (Global 246), Batch 100: loss = 80.8318
+Epoch 26 (Global 246), Batch 120: loss = 85.7869
+Epoch 26 (Global 246), Batch 140: loss = 85.6192
+Epoch 26 (Global 246), Batch 160: loss = 88.9268
+Epoch 26 (Global 246), Batch 180: loss = 86.7260
+Epoch 26 (Global 246), Batch 200: loss = 73.4901
+Epoch 26 (Global 246), Batch 220: loss = 74.7659
+Epoch 26 (Global 246), Batch 240: loss = 79.4788
+Epoch 26 (Global 246), Batch 260: loss = 79.0447
+Epoch 26 (Global 246), Batch 280: loss = 84.0628
+Epoch 26 complete. Avg loss: 10.5203
+Epoch 27 (Global 247), Batch 0: loss = 83.4148
+Epoch 27 (Global 247), Batch 20: loss = 85.1742
+Epoch 27 (Global 247), Batch 40: loss = 84.2770
+Epoch 27 (Global 247), Batch 60: loss = 90.3058
+Epoch 27 (Global 247), Batch 80: loss = 87.2116
+Epoch 27 (Global 247), Batch 100: loss = 78.4571
+Epoch 27 (Global 247), Batch 120: loss = 86.0694
+Epoch 27 (Global 247), Batch 140: loss = 87.3591
+Epoch 27 (Global 247), Batch 160: loss = 85.6619
+Epoch 27 (Global 247), Batch 180: loss = 84.7166
+Epoch 27 (Global 247), Batch 200: loss = 83.5738
+Epoch 27 (Global 247), Batch 220: loss = 87.9072
+Epoch 27 (Global 247), Batch 240: loss = 87.2189
+Epoch 27 (Global 247), Batch 260: loss = 84.6466
+Epoch 27 (Global 247), Batch 280: loss = 87.8534
+Epoch 27 complete. Avg loss: 10.5095
+Epoch 28 (Global 248), Batch 0: loss = 85.1365
+Epoch 28 (Global 248), Batch 20: loss = 83.7306
+Epoch 28 (Global 248), Batch 40: loss = 85.3842
+Epoch 28 (Global 248), Batch 60: loss = 87.7483
+Epoch 28 (Global 248), Batch 80: loss = 85.8843
+Epoch 28 (Global 248), Batch 100: loss = 85.6586
+Epoch 28 (Global 248), Batch 120: loss = 85.1602
+Epoch 28 (Global 248), Batch 140: loss = 80.4420
+Epoch 28 (Global 248), Batch 160: loss = 81.1333
+Epoch 28 (Global 248), Batch 180: loss = 81.3259
+Epoch 28 (Global 248), Batch 200: loss = 86.9382
+Epoch 28 (Global 248), Batch 220: loss = 85.4809
+Epoch 28 (Global 248), Batch 240: loss = 80.5281
+Epoch 28 (Global 248), Batch 260: loss = 83.8512
+Epoch 28 (Global 248), Batch 280: loss = 79.5483
+Epoch 28 complete. Avg loss: 10.4997
+Epoch 29 (Global 249), Batch 0: loss = 89.5811
+Epoch 29 (Global 249), Batch 20: loss = 86.3288
+Epoch 29 (Global 249), Batch 40: loss = 83.2963
+Epoch 29 (Global 249), Batch 60: loss = 84.3726
+Epoch 29 (Global 249), Batch 80: loss = 83.2962
+Epoch 29 (Global 249), Batch 100: loss = 78.2776
+Epoch 29 (Global 249), Batch 120: loss = 85.9872
+Epoch 29 (Global 249), Batch 140: loss = 83.1762
+Epoch 29 (Global 249), Batch 160: loss = 81.6923
+Epoch 29 (Global 249), Batch 180: loss = 87.1706
+Epoch 29 (Global 249), Batch 200: loss = 80.3357
+Epoch 29 (Global 249), Batch 220: loss = 87.0604
+Epoch 29 (Global 249), Batch 240: loss = 88.0788
+Epoch 29 (Global 249), Batch 260: loss = 79.6954
+Epoch 29 (Global 249), Batch 280: loss = 84.7104
+Epoch 29 complete. Avg loss: 10.5307
+Epoch 30 (Global 250), Batch 0: loss = 85.4468
+Epoch 30 (Global 250), Batch 20: loss = 87.3561
+Epoch 30 (Global 250), Batch 40: loss = 79.6080
+Epoch 30 (Global 250), Batch 60: loss = 86.2903
+Epoch 30 (Global 250), Batch 80: loss = 86.6776
+Epoch 30 (Global 250), Batch 100: loss = 85.0449
+Epoch 30 (Global 250), Batch 120: loss = 84.8859
+Epoch 30 (Global 250), Batch 140: loss = 87.8094
+Epoch 30 (Global 250), Batch 160: loss = 79.0058
+Epoch 30 (Global 250), Batch 180: loss = 87.0094
+Epoch 30 (Global 250), Batch 200: loss = 86.2596
+Epoch 30 (Global 250), Batch 220: loss = 89.4331
+Epoch 30 (Global 250), Batch 240: loss = 84.2609
+Epoch 30 (Global 250), Batch 260: loss = 88.7123
+Epoch 30 (Global 250), Batch 280: loss = 84.2351
+Epoch 30 complete. Avg loss: 10.5146
+Epoch 31 (Global 251), Batch 0: loss = 85.9523
+Epoch 31 (Global 251), Batch 20: loss = 89.8326
+Epoch 31 (Global 251), Batch 40: loss = 84.6730
+Epoch 31 (Global 251), Batch 60: loss = 84.4622
+Epoch 31 (Global 251), Batch 80: loss = 86.9357
+Epoch 31 (Global 251), Batch 100: loss = 92.4361
+Epoch 31 (Global 251), Batch 120: loss = 90.1802
+Epoch 31 (Global 251), Batch 140: loss = 84.5061
+Epoch 31 (Global 251), Batch 160: loss = 86.3638
+Epoch 31 (Global 251), Batch 180: loss = 82.2621
+Epoch 31 (Global 251), Batch 200: loss = 83.1741
+Epoch 31 (Global 251), Batch 220: loss = 84.2644
+Epoch 31 (Global 251), Batch 240: loss = 84.1224
+Epoch 31 (Global 251), Batch 260: loss = 80.4444
+Epoch 31 (Global 251), Batch 280: loss = 82.0676
+Epoch 31 complete. Avg loss: 10.4821
+Epoch 32 (Global 252), Batch 0: loss = 83.9108
+Epoch 32 (Global 252), Batch 20: loss = 83.8640
+Epoch 32 (Global 252), Batch 40: loss = 90.7953
+Epoch 32 (Global 252), Batch 60: loss = 86.4305
+Epoch 32 (Global 252), Batch 80: loss = 84.0802
+Epoch 32 (Global 252), Batch 100: loss = 82.4347
+Epoch 32 (Global 252), Batch 120: loss = 83.1928
+Epoch 32 (Global 252), Batch 140: loss = 86.7008
+Epoch 32 (Global 252), Batch 160: loss = 78.3375
+Epoch 32 (Global 252), Batch 180: loss = 84.6625
+Epoch 32 (Global 252), Batch 200: loss = 79.6693
+Epoch 32 (Global 252), Batch 220: loss = 76.5769
+Epoch 32 (Global 252), Batch 240: loss = 83.8841
+Epoch 32 (Global 252), Batch 260: loss = 84.9923
+Epoch 32 (Global 252), Batch 280: loss = 78.7046
+Epoch 32 complete. Avg loss: 10.5242
+Epoch 33 (Global 253), Batch 0: loss = 84.9483
+Epoch 33 (Global 253), Batch 20: loss = 85.9650
+Epoch 33 (Global 253), Batch 40: loss = 84.6191
+Epoch 33 (Global 253), Batch 60: loss = 90.6739
+Epoch 33 (Global 253), Batch 80: loss = 86.0003
+Epoch 33 (Global 253), Batch 100: loss = 78.6118
+Epoch 33 (Global 253), Batch 120: loss = 81.5911
+Epoch 33 (Global 253), Batch 140: loss = 87.9748
+Epoch 33 (Global 253), Batch 160: loss = 87.2449
+Epoch 33 (Global 253), Batch 180: loss = 82.9164
+Epoch 33 (Global 253), Batch 200: loss = 84.1586
+Epoch 33 (Global 253), Batch 220: loss = 86.1217
+Epoch 33 (Global 253), Batch 240: loss = 78.9508
+Epoch 33 (Global 253), Batch 260: loss = 79.0921
+Epoch 33 (Global 253), Batch 280: loss = 87.3369
+Epoch 33 complete. Avg loss: 10.5552
+Epoch 34 (Global 254), Batch 0: loss = 86.5136
+Epoch 34 (Global 254), Batch 20: loss = 81.8885
+Epoch 34 (Global 254), Batch 40: loss = 83.1667
+Epoch 34 (Global 254), Batch 60: loss = 85.1788
+Epoch 34 (Global 254), Batch 80: loss = 82.8303
+Epoch 34 (Global 254), Batch 100: loss = 82.0508
+Epoch 34 (Global 254), Batch 120: loss = 86.6441
+Epoch 34 (Global 254), Batch 140: loss = 88.1729
+Epoch 34 (Global 254), Batch 160: loss = 85.7802
+Epoch 34 (Global 254), Batch 180: loss = 86.6443
+Epoch 34 (Global 254), Batch 200: loss = 78.3212
+Epoch 34 (Global 254), Batch 220: loss = 86.1897
+Epoch 34 (Global 254), Batch 240: loss = 84.5848
+Epoch 34 (Global 254), Batch 260: loss = 80.5565
+Epoch 34 (Global 254), Batch 280: loss = 89.2520
+Epoch 34 complete. Avg loss: 10.5118
+Epoch 35 (Global 255), Batch 0: loss = 82.8651
+Epoch 35 (Global 255), Batch 20: loss = 88.2927
+Epoch 35 (Global 255), Batch 40: loss = 83.5160
+Epoch 35 (Global 255), Batch 60: loss = 83.6153
+Epoch 35 (Global 255), Batch 80: loss = 82.5456
+Epoch 35 (Global 255), Batch 100: loss = 82.0434
+Epoch 35 (Global 255), Batch 120: loss = 88.1001
+Epoch 35 (Global 255), Batch 140: loss = 81.7954
+Epoch 35 (Global 255), Batch 160: loss = 83.4061
+Epoch 35 (Global 255), Batch 180: loss = 82.0736
+Epoch 35 (Global 255), Batch 200: loss = 80.8539
+Epoch 35 (Global 255), Batch 220: loss = 82.0545
+Epoch 35 (Global 255), Batch 240: loss = 83.5404
+Epoch 35 (Global 255), Batch 260: loss = 88.3607
+Epoch 35 (Global 255), Batch 280: loss = 83.7183
+Epoch 35 complete. Avg loss: 10.5627
+Epoch 36 (Global 256), Batch 0: loss = 84.5480
+Epoch 36 (Global 256), Batch 20: loss = 84.6518
+Epoch 36 (Global 256), Batch 40: loss = 86.7362
+Epoch 36 (Global 256), Batch 60: loss = 87.3957
+Epoch 36 (Global 256), Batch 80: loss = 84.3742
+Epoch 36 (Global 256), Batch 100: loss = 78.9282
+Epoch 36 (Global 256), Batch 120: loss = 85.5650
+Epoch 36 (Global 256), Batch 140: loss = 82.9662
+Epoch 36 (Global 256), Batch 160: loss = 86.3851
+Epoch 36 (Global 256), Batch 180: loss = 88.7673
+Epoch 36 (Global 256), Batch 200: loss = 78.4157
+Epoch 36 (Global 256), Batch 220: loss = 84.8331
+Epoch 36 (Global 256), Batch 240: loss = 83.3681
+Epoch 36 (Global 256), Batch 260: loss = 77.2665
+Epoch 36 (Global 256), Batch 280: loss = 88.3971
+Epoch 36 complete. Avg loss: 10.5339
+Epoch 37 (Global 257), Batch 0: loss = 87.2070
+Epoch 37 (Global 257), Batch 20: loss = 81.6925
+Epoch 37 (Global 257), Batch 40: loss = 76.1593
+Epoch 37 (Global 257), Batch 60: loss = 80.4054
+Epoch 37 (Global 257), Batch 80: loss = 87.4720
+Epoch 37 (Global 257), Batch 100: loss = 86.5283
+Epoch 37 (Global 257), Batch 120: loss = 82.9821
+Epoch 37 (Global 257), Batch 140: loss = 80.3455
+Epoch 37 (Global 257), Batch 160: loss = 79.5819
+Epoch 37 (Global 257), Batch 180: loss = 83.5020
+Epoch 37 (Global 257), Batch 200: loss = 88.5668
+Epoch 37 (Global 257), Batch 220: loss = 79.7739
+Epoch 37 (Global 257), Batch 240: loss = 86.4338
+Epoch 37 (Global 257), Batch 260: loss = 91.6857
+Epoch 37 (Global 257), Batch 280: loss = 88.9278
+Epoch 37 complete. Avg loss: 10.5669
+Epoch 38 (Global 258), Batch 0: loss = 88.1786
+Epoch 38 (Global 258), Batch 20: loss = 81.8071
+Epoch 38 (Global 258), Batch 40: loss = 88.4905
+Epoch 38 (Global 258), Batch 60: loss = 82.7146
+Epoch 38 (Global 258), Batch 80: loss = 88.6550
+Epoch 38 (Global 258), Batch 100: loss = 93.3735
+Epoch 38 (Global 258), Batch 120: loss = 83.2330
+Epoch 38 (Global 258), Batch 140: loss = 82.8997
+Epoch 38 (Global 258), Batch 160: loss = 85.2962
+Epoch 38 (Global 258), Batch 180: loss = 81.5286
+Epoch 38 (Global 258), Batch 200: loss = 84.1535
+Epoch 38 (Global 258), Batch 220: loss = 84.3652
+Epoch 38 (Global 258), Batch 240: loss = 83.7272
+Epoch 38 (Global 258), Batch 260: loss = 83.3272
+Epoch 38 (Global 258), Batch 280: loss = 85.1089
+Epoch 38 complete. Avg loss: 10.5475
+Epoch 39 (Global 259), Batch 0: loss = 91.5616
+Epoch 39 (Global 259), Batch 20: loss = 85.9816
+Epoch 39 (Global 259), Batch 40: loss = 83.7670
+Epoch 39 (Global 259), Batch 60: loss = 81.2279
+Epoch 39 (Global 259), Batch 80: loss = 84.6073
+Epoch 39 (Global 259), Batch 100: loss = 83.4300
+Epoch 39 (Global 259), Batch 120: loss = 86.7403
+Epoch 39 (Global 259), Batch 140: loss = 90.1025
+Epoch 39 (Global 259), Batch 160: loss = 82.4666
+Epoch 39 (Global 259), Batch 180: loss = 87.6201
+Epoch 39 (Global 259), Batch 200: loss = 86.3562
+Epoch 39 (Global 259), Batch 220: loss = 84.5550
+Epoch 39 (Global 259), Batch 240: loss = 85.6710
+Epoch 39 (Global 259), Batch 260: loss = 85.0152
+Epoch 39 (Global 259), Batch 280: loss = 84.9564
+Epoch 39 complete. Avg loss: 10.5213
+Epoch 40 (Global 260), Batch 0: loss = 77.6313
+Epoch 40 (Global 260), Batch 20: loss = 85.8154
+Epoch 40 (Global 260), Batch 40: loss = 86.9025
+Epoch 40 (Global 260), Batch 60: loss = 85.0231
+Epoch 40 (Global 260), Batch 80: loss = 84.8023
+Epoch 40 (Global 260), Batch 100: loss = 80.5548
+Epoch 40 (Global 260), Batch 120: loss = 82.5702
+Epoch 40 (Global 260), Batch 140: loss = 85.7546
+Epoch 40 (Global 260), Batch 160: loss = 82.3103
+Epoch 40 (Global 260), Batch 180: loss = 83.3885
+Epoch 40 (Global 260), Batch 200: loss = 75.8394
+Epoch 40 (Global 260), Batch 220: loss = 71.2149
+Epoch 40 (Global 260), Batch 240: loss = 80.3002
+Epoch 40 (Global 260), Batch 260: loss = 89.3448
+Epoch 40 (Global 260), Batch 280: loss = 86.7314
+Epoch 40 complete. Avg loss: 10.5255
+Epoch 41 (Global 261), Batch 0: loss = 86.4844
+Epoch 41 (Global 261), Batch 20: loss = 85.9289
+Epoch 41 (Global 261), Batch 40: loss = 84.5281
+Epoch 41 (Global 261), Batch 60: loss = 85.0031
+Epoch 41 (Global 261), Batch 80: loss = 86.2572
+Epoch 41 (Global 261), Batch 100: loss = 83.7207
+Epoch 41 (Global 261), Batch 120: loss = 85.9478
+Epoch 41 (Global 261), Batch 140: loss = 91.7320
+Epoch 41 (Global 261), Batch 160: loss = 85.2201
+Epoch 41 (Global 261), Batch 180: loss = 85.9415
+Epoch 41 (Global 261), Batch 200: loss = 88.2112
+Epoch 41 (Global 261), Batch 220: loss = 79.7387
+Epoch 41 (Global 261), Batch 240: loss = 85.2909
+Epoch 41 (Global 261), Batch 260: loss = 89.4934
+Epoch 41 (Global 261), Batch 280: loss = 80.5335
+Epoch 41 complete. Avg loss: 10.5148
+Epoch 42 (Global 262), Batch 0: loss = 88.9754
+Epoch 42 (Global 262), Batch 20: loss = 86.4745
+Epoch 42 (Global 262), Batch 40: loss = 88.6804
+Epoch 42 (Global 262), Batch 60: loss = 87.0234
+Epoch 42 (Global 262), Batch 80: loss = 84.8093
+Epoch 42 (Global 262), Batch 100: loss = 88.7645
+Epoch 42 (Global 262), Batch 120: loss = 85.3134
+Epoch 42 (Global 262), Batch 140: loss = 80.6247
+Epoch 42 (Global 262), Batch 160: loss = 87.2283
+Epoch 42 (Global 262), Batch 180: loss = 83.0139
+Epoch 42 (Global 262), Batch 200: loss = 83.1603
+Epoch 42 (Global 262), Batch 220: loss = 89.1072
+Epoch 42 (Global 262), Batch 240: loss = 84.1498
+Epoch 42 (Global 262), Batch 260: loss = 73.3777
+Epoch 42 (Global 262), Batch 280: loss = 81.6124
+Epoch 42 complete. Avg loss: 10.5671
+Epoch 43 (Global 263), Batch 0: loss = 83.9904
+Epoch 43 (Global 263), Batch 20: loss = 84.7356
+Epoch 43 (Global 263), Batch 40: loss = 83.9343
+Epoch 43 (Global 263), Batch 60: loss = 89.3885
+Epoch 43 (Global 263), Batch 80: loss = 78.5454
+Epoch 43 (Global 263), Batch 100: loss = 85.8267
+Epoch 43 (Global 263), Batch 120: loss = 84.5602
+Epoch 43 (Global 263), Batch 140: loss = 82.9272
+Epoch 43 (Global 263), Batch 160: loss = 87.8204
+Epoch 43 (Global 263), Batch 180: loss = 81.3998
+Epoch 43 (Global 263), Batch 200: loss = 85.1083
+Epoch 0 (Global 263), Batch 0: loss = 170.0321
+Epoch 0 (Global 263), Batch 20: loss = 172.7952
+Epoch 0 (Global 263), Batch 40: loss = 166.8855
+Epoch 0 (Global 263), Batch 60: loss = 171.3232
+Epoch 0 (Global 263), Batch 80: loss = 170.7099
+Epoch 0 (Global 263), Batch 100: loss = 179.2748
+Epoch 0 (Global 263), Batch 120: loss = 167.2159
+Epoch 0 (Global 263), Batch 140: loss = 163.9229
+Epoch 0 (Global 263), Batch 160: loss = 171.7525
+Epoch 0 (Global 263), Batch 180: loss = 167.5426
+Epoch 0 (Global 263), Batch 200: loss = 167.8271
+Epoch 0 (Global 263), Batch 220: loss = 175.5079
+Epoch 0 (Global 263), Batch 240: loss = 162.6264
+Epoch 0 (Global 263), Batch 260: loss = 168.0331
+Epoch 0 (Global 263), Batch 280: loss = 161.1856
+Epoch 0 complete. Avg loss: 10.6060
+Epoch 1 (Global 264), Batch 0: loss = 175.1724
+Epoch 0 (Global 264), Batch 0: loss = 169.2804
+Epoch 0 (Global 264), Batch 20: loss = 168.7014
+Epoch 0 (Global 264), Batch 40: loss = 166.7014
+Epoch 0 (Global 264), Batch 60: loss = 174.4635
+Epoch 0 (Global 264), Batch 80: loss = 164.9957
+Epoch 0 (Global 264), Batch 100: loss = 176.1540
+Epoch 0 (Global 264), Batch 120: loss = 167.5126
+Epoch 0 (Global 264), Batch 140: loss = 158.8195
+Epoch 0 (Global 264), Batch 160: loss = 172.0712
+Epoch 0 (Global 264), Batch 180: loss = 171.7078
+Epoch 0 (Global 264), Batch 200: loss = 162.5342
+Epoch 0 (Global 264), Batch 220: loss = 168.8537
+Epoch 0 (Global 264), Batch 240: loss = 159.4940
+Epoch 0 (Global 264), Batch 260: loss = 171.5214
+Epoch 0 (Global 264), Batch 280: loss = 170.5664
+Epoch 0 complete. Avg loss: 10.5576
+Epoch 1 (Global 265), Batch 0: loss = 167.7581
+Epoch 1 (Global 265), Batch 20: loss = 171.1057
+Epoch 1 (Global 265), Batch 40: loss = 165.3690
+Epoch 1 (Global 265), Batch 60: loss = 175.2818
+Epoch 1 (Global 265), Batch 80: loss = 168.8058
+Epoch 1 (Global 265), Batch 100: loss = 170.9033
+Epoch 1 (Global 265), Batch 120: loss = 170.1801
+Epoch 1 (Global 265), Batch 140: loss = 167.5318
+Epoch 1 (Global 265), Batch 160: loss = 164.2746
+Epoch 1 (Global 265), Batch 180: loss = 175.0166
+Epoch 1 (Global 265), Batch 200: loss = 168.5755
+Epoch 1 (Global 265), Batch 220: loss = 166.3333
+Epoch 1 (Global 265), Batch 240: loss = 168.4417
+Epoch 1 (Global 265), Batch 260: loss = 156.4568
+Epoch 1 (Global 265), Batch 280: loss = 170.4814
+Epoch 1 complete. Avg loss: 10.5668
+Epoch 2 (Global 266), Batch 0: loss = 160.5292
+Epoch 2 (Global 266), Batch 20: loss = 172.4524
+Epoch 2 (Global 266), Batch 40: loss = 170.3847
+Epoch 2 (Global 266), Batch 60: loss = 170.5139
+Epoch 2 (Global 266), Batch 80: loss = 167.2575
+Epoch 2 (Global 266), Batch 100: loss = 167.1648
+Epoch 2 (Global 266), Batch 120: loss = 163.0386
+Epoch 2 (Global 266), Batch 140: loss = 167.0524
+Epoch 2 (Global 266), Batch 160: loss = 170.9276
+Epoch 2 (Global 266), Batch 180: loss = 163.3262
+Epoch 2 (Global 266), Batch 200: loss = 168.3802
+Epoch 2 (Global 266), Batch 220: loss = 173.4736
+Epoch 2 (Global 266), Batch 240: loss = 165.8521
+Epoch 2 (Global 266), Batch 260: loss = 165.4580
+Epoch 2 (Global 266), Batch 280: loss = 164.2853
+Epoch 2 complete. Avg loss: 10.5449
+Epoch 3 (Global 267), Batch 0: loss = 170.8584
+Epoch 3 (Global 267), Batch 20: loss = 174.3624
+Epoch 3 (Global 267), Batch 40: loss = 165.2596
+Epoch 3 (Global 267), Batch 60: loss = 172.5379
+Epoch 3 (Global 267), Batch 80: loss = 170.6094
+Epoch 3 (Global 267), Batch 100: loss = 169.8967
+Epoch 3 (Global 267), Batch 120: loss = 167.3441
+Epoch 3 (Global 267), Batch 140: loss = 170.8344
+Epoch 3 (Global 267), Batch 160: loss = 170.4155
+Epoch 3 (Global 267), Batch 180: loss = 162.4068
+Epoch 3 (Global 267), Batch 200: loss = 171.3310
+Epoch 3 (Global 267), Batch 220: loss = 162.1390
+Epoch 3 (Global 267), Batch 240: loss = 158.6409
+Epoch 3 (Global 267), Batch 260: loss = 171.6728
+Epoch 3 (Global 267), Batch 280: loss = 170.8405
+Epoch 3 complete. Avg loss: 10.5349
+Epoch 4 (Global 268), Batch 0: loss = 172.8004
+Epoch 4 (Global 268), Batch 20: loss = 166.5704
+Epoch 4 (Global 268), Batch 40: loss = 167.5222
+Epoch 4 (Global 268), Batch 60: loss = 168.9459
+Epoch 4 (Global 268), Batch 80: loss = 171.3725
+Epoch 4 (Global 268), Batch 100: loss = 175.4573
+Epoch 4 (Global 268), Batch 120: loss = 167.7195
+Epoch 4 (Global 268), Batch 140: loss = 164.0073
+Epoch 4 (Global 268), Batch 160: loss = 169.2363
+Epoch 4 (Global 268), Batch 180: loss = 168.4863
+Epoch 4 (Global 268), Batch 200: loss = 165.4506
+Epoch 4 (Global 268), Batch 220: loss = 167.0620
+Epoch 4 (Global 268), Batch 240: loss = 162.5093
+Epoch 4 (Global 268), Batch 260: loss = 167.6941
+Epoch 4 (Global 268), Batch 280: loss = 168.9823
+Epoch 4 complete. Avg loss: 10.5412
+Epoch 5 (Global 269), Batch 0: loss = 169.1418
+Epoch 5 (Global 269), Batch 20: loss = 159.6090
+Epoch 5 (Global 269), Batch 40: loss = 170.6955
+Epoch 5 (Global 269), Batch 60: loss = 171.0229
+Epoch 5 (Global 269), Batch 80: loss = 167.0973
+Epoch 5 (Global 269), Batch 100: loss = 166.4807
+Epoch 5 (Global 269), Batch 120: loss = 168.2745
+Epoch 5 (Global 269), Batch 140: loss = 170.0539
+Epoch 5 (Global 269), Batch 160: loss = 173.5241
+Epoch 5 (Global 269), Batch 180: loss = 168.8291
+Epoch 5 (Global 269), Batch 200: loss = 174.1896
+Epoch 5 (Global 269), Batch 220: loss = 168.1813
+Epoch 5 (Global 269), Batch 240: loss = 170.7101
+Epoch 5 (Global 269), Batch 260: loss = 165.1042
+Epoch 5 (Global 269), Batch 280: loss = 165.4001
+Epoch 5 complete. Avg loss: 10.5459
+Epoch 6 (Global 270), Batch 0: loss = 167.2127
+Epoch 6 (Global 270), Batch 20: loss = 164.6084
+Epoch 6 (Global 270), Batch 40: loss = 163.2810
+Epoch 6 (Global 270), Batch 60: loss = 167.5072
+Epoch 6 (Global 270), Batch 80: loss = 167.0429
+Epoch 6 (Global 270), Batch 100: loss = 166.6911
+Epoch 6 (Global 270), Batch 120: loss = 174.5863
+Epoch 6 (Global 270), Batch 140: loss = 168.1678
+Epoch 6 (Global 270), Batch 160: loss = 172.6414
+Epoch 6 (Global 270), Batch 180: loss = 166.8911
+Epoch 6 (Global 270), Batch 200: loss = 171.0173
+Epoch 6 (Global 270), Batch 220: loss = 178.0484
+Epoch 6 (Global 270), Batch 240: loss = 163.0867
+Epoch 6 (Global 270), Batch 260: loss = 169.8212
+Epoch 6 (Global 270), Batch 280: loss = 166.4177
+Epoch 6 complete. Avg loss: 10.5485
+Epoch 7 (Global 271), Batch 0: loss = 166.1220
+Epoch 7 (Global 271), Batch 20: loss = 175.9911
+Epoch 7 (Global 271), Batch 40: loss = 170.3111
+Epoch 7 (Global 271), Batch 60: loss = 175.8102
+Epoch 7 (Global 271), Batch 80: loss = 167.0319
+Epoch 7 (Global 271), Batch 100: loss = 167.7411
+Epoch 7 (Global 271), Batch 120: loss = 166.6389
+Epoch 7 (Global 271), Batch 140: loss = 165.2471
+Epoch 7 (Global 271), Batch 160: loss = 165.2464
+Epoch 7 (Global 271), Batch 180: loss = 172.5937
+Epoch 7 (Global 271), Batch 200: loss = 168.4597
+Epoch 7 (Global 271), Batch 220: loss = 171.4930
+Epoch 7 (Global 271), Batch 240: loss = 165.6462
+Epoch 7 (Global 271), Batch 260: loss = 172.8518
+Epoch 7 (Global 271), Batch 280: loss = 165.9267
+Epoch 7 complete. Avg loss: 10.5276
+Epoch 8 (Global 272), Batch 0: loss = 168.5842
+Epoch 8 (Global 272), Batch 20: loss = 173.7745
+Epoch 8 (Global 272), Batch 40: loss = 172.7422
+Epoch 8 (Global 272), Batch 60: loss = 167.6183
+Epoch 8 (Global 272), Batch 80: loss = 170.1521
+Epoch 8 (Global 272), Batch 100: loss = 168.2413
+Epoch 8 (Global 272), Batch 120: loss = 168.1642
+Epoch 8 (Global 272), Batch 140: loss = 172.4100
+Epoch 8 (Global 272), Batch 160: loss = 163.9428
+Epoch 8 (Global 272), Batch 180: loss = 172.6003
+Epoch 8 (Global 272), Batch 200: loss = 171.0483
+Epoch 8 (Global 272), Batch 220: loss = 165.6740
+Epoch 8 (Global 272), Batch 240: loss = 174.4436
+Epoch 8 (Global 272), Batch 260: loss = 161.8107
+Epoch 8 (Global 272), Batch 280: loss = 167.2585
+Epoch 8 complete. Avg loss: 10.5624
+Epoch 9 (Global 273), Batch 0: loss = 163.3885
+Epoch 9 (Global 273), Batch 20: loss = 168.9604
+Epoch 9 (Global 273), Batch 40: loss = 175.7848
+Epoch 9 (Global 273), Batch 60: loss = 168.4262
+Epoch 9 (Global 273), Batch 80: loss = 170.5311
+Epoch 9 (Global 273), Batch 100: loss = 160.1082
+Epoch 9 (Global 273), Batch 120: loss = 168.0457
+Epoch 9 (Global 273), Batch 140: loss = 168.7522
+Epoch 9 (Global 273), Batch 160: loss = 161.6065
+Epoch 9 (Global 273), Batch 180: loss = 164.5113
+Epoch 9 (Global 273), Batch 200: loss = 167.8318
+Epoch 9 (Global 273), Batch 220: loss = 166.2525
+Epoch 9 (Global 273), Batch 240: loss = 164.1717
+Epoch 9 (Global 273), Batch 260: loss = 164.8793
+Epoch 9 (Global 273), Batch 280: loss = 162.3667
+Epoch 9 complete. Avg loss: 10.5316
+Epoch 10 (Global 274), Batch 0: loss = 173.8064
+Epoch 10 (Global 274), Batch 20: loss = 166.0090
+Epoch 10 (Global 274), Batch 40: loss = 169.9709
+Epoch 10 (Global 274), Batch 60: loss = 160.5530
+Epoch 10 (Global 274), Batch 80: loss = 171.4403
+Epoch 10 (Global 274), Batch 100: loss = 166.2360
+Epoch 10 (Global 274), Batch 120: loss = 168.3498
+Epoch 10 (Global 274), Batch 140: loss = 171.7155
+Epoch 10 (Global 274), Batch 160: loss = 166.6065
+Epoch 10 (Global 274), Batch 180: loss = 169.0041
+Epoch 10 (Global 274), Batch 200: loss = 165.8508
+Epoch 10 (Global 274), Batch 220: loss = 172.3290
+Epoch 10 (Global 274), Batch 240: loss = 165.5178
+Epoch 10 (Global 274), Batch 260: loss = 163.2465
+Epoch 10 (Global 274), Batch 280: loss = 168.4852
+Epoch 10 complete. Avg loss: 10.5262
+Epoch 11 (Global 275), Batch 0: loss = 160.1733
+Epoch 11 (Global 275), Batch 20: loss = 171.5289
+Epoch 11 (Global 275), Batch 40: loss = 176.5962
+Epoch 11 (Global 275), Batch 60: loss = 168.4028
+Epoch 11 (Global 275), Batch 80: loss = 167.3095
+Epoch 11 (Global 275), Batch 100: loss = 167.5832
+Epoch 11 (Global 275), Batch 120: loss = 168.2050
+Epoch 11 (Global 275), Batch 140: loss = 165.5879
+Epoch 11 (Global 275), Batch 160: loss = 164.7821
+Epoch 11 (Global 275), Batch 180: loss = 166.3136
+Epoch 11 (Global 275), Batch 200: loss = 173.4101
+Epoch 11 (Global 275), Batch 220: loss = 164.8998
+Epoch 11 (Global 275), Batch 240: loss = 176.2727
+Epoch 11 (Global 275), Batch 260: loss = 166.6877
+Epoch 11 (Global 275), Batch 280: loss = 167.0840
+Epoch 11 complete. Avg loss: 10.5004
+Epoch 12 (Global 276), Batch 0: loss = 172.8659
+Epoch 12 (Global 276), Batch 20: loss = 172.8292
+Epoch 12 (Global 276), Batch 40: loss = 168.3486
+Epoch 12 (Global 276), Batch 60: loss = 167.0141
+Epoch 12 (Global 276), Batch 80: loss = 167.8155
+Epoch 12 (Global 276), Batch 100: loss = 171.5843
+Epoch 12 (Global 276), Batch 120: loss = 165.5935
+Epoch 12 (Global 276), Batch 140: loss = 162.4065
+Epoch 12 (Global 276), Batch 160: loss = 176.9386
+Epoch 12 (Global 276), Batch 180: loss = 168.3221
+Epoch 12 (Global 276), Batch 200: loss = 165.4710
+Epoch 12 (Global 276), Batch 220: loss = 159.0263
+Epoch 12 (Global 276), Batch 240: loss = 166.0878
+Epoch 12 (Global 276), Batch 260: loss = 173.7218
+Epoch 12 (Global 276), Batch 280: loss = 165.4904
+Epoch 12 complete. Avg loss: 10.5025
+Epoch 13 (Global 277), Batch 0: loss = 173.3661
+Epoch 13 (Global 277), Batch 20: loss = 172.2414
+Epoch 13 (Global 277), Batch 40: loss = 162.1217
+Epoch 13 (Global 277), Batch 60: loss = 168.7423
+Epoch 13 (Global 277), Batch 80: loss = 165.2616
+Epoch 13 (Global 277), Batch 100: loss = 165.8841
+Epoch 13 (Global 277), Batch 120: loss = 165.9444
+Epoch 13 (Global 277), Batch 140: loss = 168.3331
+Epoch 13 (Global 277), Batch 160: loss = 170.6436
+Epoch 13 (Global 277), Batch 180: loss = 169.2504
+Epoch 13 (Global 277), Batch 200: loss = 171.7033
+Epoch 13 (Global 277), Batch 220: loss = 171.9866
+Epoch 13 (Global 277), Batch 240: loss = 172.2055
+Epoch 13 (Global 277), Batch 260: loss = 171.1771
+Epoch 13 (Global 277), Batch 280: loss = 152.2101
+Epoch 13 complete. Avg loss: 10.5270
+Epoch 14 (Global 278), Batch 0: loss = 170.5691
+Epoch 14 (Global 278), Batch 20: loss = 172.8534
+Epoch 14 (Global 278), Batch 40: loss = 161.3062
+Epoch 14 (Global 278), Batch 60: loss = 168.9738
+Epoch 14 (Global 278), Batch 80: loss = 163.2115
+Epoch 14 (Global 278), Batch 100: loss = 164.5796
+Epoch 14 (Global 278), Batch 120: loss = 160.2025
+Epoch 14 (Global 278), Batch 140: loss = 168.5018
+Epoch 14 (Global 278), Batch 160: loss = 169.2091
+Epoch 14 (Global 278), Batch 180: loss = 168.1841
+Epoch 14 (Global 278), Batch 200: loss = 161.6593
+Epoch 14 (Global 278), Batch 220: loss = 167.6701
+Epoch 14 (Global 278), Batch 240: loss = 170.6749
+Epoch 14 (Global 278), Batch 260: loss = 165.8275
+Epoch 14 (Global 278), Batch 280: loss = 176.4790
+Epoch 14 complete. Avg loss: 10.5426
+Epoch 15 (Global 279), Batch 0: loss = 177.4791
+Epoch 15 (Global 279), Batch 20: loss = 172.4619
+Epoch 15 (Global 279), Batch 40: loss = 166.2141
+Epoch 15 (Global 279), Batch 60: loss = 163.3886
+Epoch 15 (Global 279), Batch 80: loss = 171.7425
+Epoch 15 (Global 279), Batch 100: loss = 161.2737
+Epoch 15 (Global 279), Batch 120: loss = 175.5642
+Epoch 15 (Global 279), Batch 140: loss = 171.4106
+Epoch 15 (Global 279), Batch 160: loss = 172.5685
+Epoch 15 (Global 279), Batch 180: loss = 166.2787
+Epoch 15 (Global 279), Batch 200: loss = 169.2874
+Epoch 15 (Global 279), Batch 220: loss = 158.7875
+Epoch 15 (Global 279), Batch 240: loss = 171.9313
+Epoch 15 (Global 279), Batch 260: loss = 168.5841
+Epoch 15 (Global 279), Batch 280: loss = 165.2773
+Epoch 15 complete. Avg loss: 10.5281
+Epoch 16 (Global 280), Batch 0: loss = 170.3540
+Epoch 16 (Global 280), Batch 20: loss = 168.7609
+Epoch 16 (Global 280), Batch 40: loss = 173.4700
+Epoch 16 (Global 280), Batch 60: loss = 172.3191
+Epoch 16 (Global 280), Batch 80: loss = 159.4095
+Epoch 16 (Global 280), Batch 100: loss = 164.0218
+Epoch 16 (Global 280), Batch 120: loss = 166.2720
+Epoch 16 (Global 280), Batch 140: loss = 166.8185
+Epoch 16 (Global 280), Batch 160: loss = 164.3203
+Epoch 16 (Global 280), Batch 180: loss = 169.2240
+Epoch 16 (Global 280), Batch 200: loss = 170.7594
+Epoch 16 (Global 280), Batch 220: loss = 173.1380
+Epoch 16 (Global 280), Batch 240: loss = 171.5871
+Epoch 16 (Global 280), Batch 260: loss = 169.7615
+Epoch 16 (Global 280), Batch 280: loss = 172.5399
+Epoch 16 complete. Avg loss: 10.5194
+Epoch 17 (Global 281), Batch 0: loss = 175.2962
+Epoch 17 (Global 281), Batch 20: loss = 167.2195
+Epoch 17 (Global 281), Batch 40: loss = 167.9637
+Epoch 17 (Global 281), Batch 60: loss = 173.0438
+Epoch 17 (Global 281), Batch 80: loss = 161.6415
+Epoch 17 (Global 281), Batch 100: loss = 169.8339
+Epoch 17 (Global 281), Batch 120: loss = 175.8286
+Epoch 17 (Global 281), Batch 140: loss = 164.3995
+Epoch 17 (Global 281), Batch 160: loss = 173.0132
+Epoch 17 (Global 281), Batch 180: loss = 172.8974
+Epoch 17 (Global 281), Batch 200: loss = 155.5028
+Epoch 17 (Global 281), Batch 220: loss = 171.5217
+Epoch 17 (Global 281), Batch 240: loss = 162.9336
+Epoch 17 (Global 281), Batch 260: loss = 171.2454
+Epoch 17 (Global 281), Batch 280: loss = 171.5105
+Epoch 17 complete. Avg loss: 10.5435
+Epoch 18 (Global 282), Batch 0: loss = 172.8912
+Epoch 18 (Global 282), Batch 20: loss = 173.1539
+Epoch 18 (Global 282), Batch 40: loss = 171.4166
+Epoch 18 (Global 282), Batch 60: loss = 163.5273
+Epoch 18 (Global 282), Batch 80: loss = 162.6304
+Epoch 18 (Global 282), Batch 100: loss = 168.0680
+Epoch 18 (Global 282), Batch 120: loss = 164.4848
+Epoch 18 (Global 282), Batch 140: loss = 165.5013
+Epoch 18 (Global 282), Batch 160: loss = 171.5050
+Epoch 18 (Global 282), Batch 180: loss = 166.3468
+Epoch 18 (Global 282), Batch 200: loss = 166.5256
+Epoch 18 (Global 282), Batch 220: loss = 165.9212
+Epoch 18 (Global 282), Batch 240: loss = 168.6193
+Epoch 18 (Global 282), Batch 260: loss = 162.2686
+Epoch 18 (Global 282), Batch 280: loss = 167.7220
+Epoch 18 complete. Avg loss: 10.5265
+Epoch 19 (Global 283), Batch 0: loss = 178.0870
+Epoch 19 (Global 283), Batch 20: loss = 166.8215
+Epoch 19 (Global 283), Batch 40: loss = 178.2807
+Epoch 19 (Global 283), Batch 60: loss = 173.9434
+Epoch 19 (Global 283), Batch 80: loss = 166.1111
+Epoch 19 (Global 283), Batch 100: loss = 170.4367
+Epoch 19 (Global 283), Batch 120: loss = 179.0057
+Epoch 19 (Global 283), Batch 140: loss = 174.9136
+Epoch 19 (Global 283), Batch 160: loss = 161.3703
+Epoch 19 (Global 283), Batch 180: loss = 175.1321
+Epoch 19 (Global 283), Batch 200: loss = 177.9812
+Epoch 19 (Global 283), Batch 220: loss = 166.1422
+Epoch 19 (Global 283), Batch 240: loss = 170.2615
+Epoch 19 (Global 283), Batch 260: loss = 167.2271
+Epoch 19 (Global 283), Batch 280: loss = 172.9217
+Epoch 19 complete. Avg loss: 10.5543
+Epoch 20 (Global 284), Batch 0: loss = 164.4904
+Epoch 20 (Global 284), Batch 20: loss = 167.5066
+Epoch 20 (Global 284), Batch 40: loss = 166.4260
+Epoch 20 (Global 284), Batch 60: loss = 168.6378
+Epoch 20 (Global 284), Batch 80: loss = 169.7391
+Epoch 20 (Global 284), Batch 100: loss = 168.9782
+Epoch 20 (Global 284), Batch 120: loss = 165.3313
+Epoch 20 (Global 284), Batch 140: loss = 164.7849
+Epoch 20 (Global 284), Batch 160: loss = 162.9926
+Epoch 20 (Global 284), Batch 180: loss = 165.3642
+Epoch 20 (Global 284), Batch 200: loss = 167.8327
+Epoch 20 (Global 284), Batch 220: loss = 170.0658
+Epoch 20 (Global 284), Batch 240: loss = 165.3181
+Epoch 20 (Global 284), Batch 260: loss = 171.5656
+Epoch 20 (Global 284), Batch 280: loss = 169.9065
+Epoch 20 complete. Avg loss: 10.5202
+Epoch 21 (Global 285), Batch 0: loss = 167.0788
+Epoch 21 (Global 285), Batch 20: loss = 160.7354
+Epoch 0 (Global 433), Batch 0: loss = 141.5344
+Epoch 0 (Global 433), Batch 20: loss = 128.1249
+Epoch 0 (Global 433), Batch 40: loss = 122.2474
+Epoch 0 (Global 433), Batch 60: loss = 120.2318
+Epoch 0 (Global 433), Batch 80: loss = 115.8941
+Epoch 0 (Global 433), Batch 100: loss = 112.5997
+Epoch 0 (Global 433), Batch 120: loss = 111.1898
+Epoch 0 (Global 433), Batch 140: loss = 112.8793
+Epoch 0 (Global 433), Batch 160: loss = 111.6748
+Epoch 0 (Global 433), Batch 180: loss = 108.6429
+Epoch 0 (Global 433), Batch 200: loss = 109.0810
+Epoch 0 (Global 433), Batch 220: loss = 107.2912
+Epoch 0 (Global 433), Batch 240: loss = 108.3612
+Epoch 0 (Global 433), Batch 260: loss = 104.9888
+Epoch 0 (Global 433), Batch 280: loss = 105.3831
+Epoch 0 complete. Avg loss: 7.0761
+Epoch 1 (Global 434), Batch 0: loss = 105.4991
+Epoch 1 (Global 434), Batch 20: loss = 105.1309
+Epoch 1 (Global 434), Batch 40: loss = 105.4350
+Epoch 1 (Global 434), Batch 60: loss = 106.0841
+Epoch 0 (Global 434), Batch 0: loss = 105.3250
+Epoch 0 (Global 434), Batch 0: loss = 107.8345
+Epoch 0 (Global 434), Batch 0: loss = 104.1584
+Epoch 0 (Global 434), Batch 20: loss = 105.9921
+Epoch 0 (Global 434), Batch 40: loss = 108.4797
+Epoch 0 (Global 434), Batch 0: loss = 105.5098
+Epoch 0 (Global 434), Batch 20: loss = 106.7991
+Epoch 0 (Global 434), Batch 40: loss = 101.4425
+Epoch 0 (Global 434), Batch 60: loss = 105.5075
+Epoch 0 (Global 434), Batch 0: loss = 105.0605
+Epoch 0 (Global 434), Batch 10: loss = 108.5359
+Epoch 0 (Global 434), Batch 20: loss = 106.0024
+Epoch 0 (Global 434), Batch 30: loss = 107.9662
+Epoch 0 (Global 434), Batch 40: loss = 104.7090
+Epoch 0 (Global 434), Batch 50: loss = 101.0491
+Epoch 0 (Global 434), Batch 60: loss = 103.5344
+Epoch 0 (Global 434), Batch 0: loss = 106.4540
+Epoch 0 (Global 434), Batch 10: loss = 106.0412
+Epoch 0 (Global 434), Batch 20: loss = 107.0609
+Epoch 0 (Global 434), Batch 30: loss = 103.4463
+Epoch 0 (Global 434), Batch 40: loss = 102.5689
+Epoch 0 (Global 434), Batch 0: loss = 103.0594
+Epoch 0 (Global 434), Batch 10: loss = 106.2945
+Epoch 0 (Global 434), Batch 20: loss = 104.6489
+Epoch 0 (Global 434), Batch 30: loss = 108.2198
+Epoch 0 (Global 434), Batch 40: loss = 102.7354
+Epoch 0 (Global 434), Batch 50: loss = 104.8408
+Epoch 0 (Global 434), Batch 60: loss = 102.1880
+Epoch 0 (Global 434), Batch 70: loss = 102.5225
+Epoch 0 (Global 434), Batch 80: loss = 106.6091
+Epoch 0 (Global 434), Batch 90: loss = 104.3943
+Epoch 0 (Global 434), Batch 100: loss = 105.1957
+Epoch 0 (Global 434), Batch 110: loss = 100.4963
+Epoch 0 (Global 434), Batch 120: loss = 99.5273
+Epoch 0 (Global 434), Batch 130: loss = 99.9608
+Epoch 0 (Global 434), Batch 140: loss = 101.4753
+Epoch 0 (Global 434), Batch 150: loss = 99.5913
+Epoch 0 (Global 434), Batch 160: loss = 103.0950
+Epoch 0 (Global 434), Batch 170: loss = 103.2110
+Epoch 0 (Global 434), Batch 180: loss = 104.0672
+Epoch 0 (Global 434), Batch 190: loss = 103.9669
+Epoch 0 (Global 434), Batch 200: loss = 100.5391
+Epoch 0 (Global 434), Batch 210: loss = 102.5322
+Epoch 0 (Global 434), Batch 220: loss = 103.3610
+Epoch 0 (Global 434), Batch 230: loss = 101.1743
+Epoch 0 (Global 434), Batch 240: loss = 105.2847
+Epoch 0 (Global 434), Batch 250: loss = 99.7603
+Epoch 0 (Global 434), Batch 260: loss = 97.6973
+Epoch 0 (Global 434), Batch 270: loss = 102.4331
+Epoch 0 (Global 434), Batch 280: loss = 101.2540
+Epoch 0 (Global 434), Batch 290: loss = 102.1416
+Epoch 0 complete. Avg loss: 6.4188
+Epoch 1 (Global 435), Batch 0: loss = 100.4722
+Epoch 1 (Global 435), Batch 10: loss = 103.6541
+Epoch 1 (Global 435), Batch 20: loss = 102.3590
+Epoch 1 (Global 435), Batch 30: loss = 103.0393
+Epoch 1 (Global 435), Batch 40: loss = 97.3668
+Epoch 1 (Global 435), Batch 50: loss = 99.7716
+Epoch 1 (Global 435), Batch 60: loss = 99.3554
+Epoch 1 (Global 435), Batch 70: loss = 100.3797
+Epoch 1 (Global 435), Batch 80: loss = 99.3062
+Epoch 1 (Global 435), Batch 90: loss = 101.2498

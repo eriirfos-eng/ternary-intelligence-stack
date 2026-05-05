@@ -1712,6 +1712,7 @@ dependencies = [
  "rand 0.8.6",
  "rayon",
  "serde",
+ "serde_json",
  "tokenizers",
 ]
 
@@ -1770,6 +1771,7 @@ dependencies = [
  "crossterm",
  "moe-llm-core",
  "ratatui",
+ "serde_json",
 ]
 
 [[package]]

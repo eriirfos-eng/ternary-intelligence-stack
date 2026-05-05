@@ -7,6 +7,11 @@ Reverse chronological record of every working session (newest first). One row pe
 
 | Date | Session Update |
 |------|----------------|
+| 2026-05-05 | **[MoE-13 Architecture Restoration]** Successfully diagnosed and resolved the training plateau by restoring the true v1.3.7 architecture (96 hidden, 3 layers, 8 experts). Purged legacy dense configuration and synchronized the system odometer to Global Epoch 434+. |
+| 2026-05-05 | **[HuggingFace-Standard Refactor]** Decoupled model architecture from binary logic by implementing a sidecar `config.json` standard. Enabled fail-fast initialization with strict tensor shape validation to prevent out-of-sync training runs. |
+| 2026-05-05 | **[CPU Expert Gating Optimization]** Achieved massive performance recovery by refactoring `moe.rs` with conditional expert execution. The engine now identifies active tokens and skips the MLP math for unused experts, significantly boosting training batches-per-second on CPU hardware. |
+| 2026-05-05 | **[Dashboard Resynchronization]** Fixed Chart.js visualization bugs related to odometer resets and log formatting. Refactored the frontend to be state-aware (Index-Aware logic) to ensure seamless real-time telemetry streaming during long-duration runs. |
+| 2026-05-05 | **[Path Integrity Protocol]** Hardened the workspace by establishing the 'Path Integrity Protocol' in `GEMINI.md`. Locked absolute project roots into agent memory to ensure surgical edits across the multi-project stack and orchestration scripts. |
 | 2026-05-04 | **[Multidisciplinary Training Pipeline]** Advanced training to Epoch 280. Core Bible corpus training stable, nearing sub-2.0 loss threshold for validation. Three-pillar architecture (Foundational Wikipedia, Dialectical Reddit, Professional Engineering) fully integrated into ingest pipeline. |
 | 2026-05-04 | **[Universal Knowledge Layer]** Successfully bootstrapped multi-faith corpus (Abrahamic, Vedic) as a foundational knowledge layer. Prepared ingestion pipeline to transition from foundational JSON text to dialectical comparative-reasoning analysis. |
 | 2026-05-04 | **[Engineering Reasoning Corpus]** Deployed automated multi-language GitHub scraper targeting 13 key repositories (Rust, Python, Go, etc.). Dataset curated to provide language-agnostic code-reasoning benchmarks for agentic fine-tuning. |

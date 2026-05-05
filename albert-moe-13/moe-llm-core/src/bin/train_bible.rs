@@ -5,71 +5,94 @@ use moe_llm_core::tokenizer::BpeTokenizer;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use rayon::ThreadPoolBuilder;
+use serde_json::Value;
 
 fn main() -> Result<()> {
-    // Initialize Rayon thread pool to use all 8 cores
     let _ = ThreadPoolBuilder::new().num_threads(8).build_global();
     println!("--- Training moe-llm-core on Bible corpus ---");
 
-    // 1. Setup Device
     let device = Device::Cpu;
 
-    // 2. Load Tokenizer
-    let tokenizer = BpeTokenizer::new("/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/data/vocab.json");
+    let vocab_path = "data/vocab.json";
+    let corpus_path = "data/corpus/bible.txt";
+    let checkpoint_path = "models/bible_ternary_v1.3.7.safetensors";
+    let meta_path = "models/bible_ternary_v1.3.7.meta";
+    let config_path = "models/bible_ternary_v1.3.7.config.json";
+    let log_path = "dashboard/training.log";
+
+    if !std::path::Path::new(vocab_path).exists() {
+        panic!("Vocab file not found at {}. Are you running from the project root?", vocab_path);
+    }
+    let tokenizer = BpeTokenizer::new(vocab_path);
     let vocab_size = tokenizer.vocab_size();
     println!("Vocab size: {}", vocab_size);
 
-    // 3. Load Data
-    let corpus_path = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/data/corpus/bible.txt";
-    let text = fs::read_to_string(corpus_path).expect("Unable to read bible.txt");
+    let text = fs::read_to_string(corpus_path).expect("Unable to read corpus.txt");
     let tokens = tokenizer.encode(&text);
     println!("Total tokens: {}", tokens.len());
 
-    // 4. Model Config
+    let config_str = fs::read_to_string(config_path).expect("Unable to read config.json. The HuggingFace standard requires a config file next to the model.");
+    let config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
+
     let mut config = TransformerConfig::default();
     config.vocab_size = vocab_size;
-    config.hidden_size = 64; 
-    config.num_layers = 2;   
-    config.num_heads = 4;
-    config.max_seq_len = 64; 
-    config.num_experts = 0; 
+    config.hidden_size = config_json["hidden_size"].as_u64().unwrap() as usize;
+    config.num_layers = config_json["num_layers"].as_u64().unwrap() as usize;
+    config.num_heads = config_json["num_heads"].as_u64().unwrap() as usize;
+    config.max_seq_len = config_json["max_seq_len"].as_u64().unwrap() as usize;
+    config.num_experts = config_json["num_experts"].as_u64().unwrap() as usize;
 
-    // 5. Initialize Model
-    let mut varmap = VarMap::new();
-    let checkpoint_path = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.6.safetensors";
-    let meta_path = "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/models/bible_ternary_v1.3.6.meta";
-    
-    // Create the model structure first so the VarMap has the correct keys
+    println!("Loaded Architecture: {} layers, {} hidden, {} experts", config.num_layers, config.hidden_size, config.num_experts);
+
+    let varmap = VarMap::new();
     let vb = VarBuilder::from_varmap(&varmap, DType::F32, &device);
     let model = Transformer::new(&config, vb)?;
 
     if std::path::Path::new(checkpoint_path).exists() {
         println!("Resuming from checkpoint: {}", checkpoint_path);
-        varmap.load(checkpoint_path).expect("Failed to load weights");
+        let checkpoint_data = candle_core::safetensors::load(checkpoint_path, &device)?;
+        let all_vars = varmap.data().lock().unwrap();
+        
+        let mut loaded_count = 0;
+        let mut missing_count = 0;
+
+        for (name, var) in all_vars.iter() {
+            if let Some(tensor) = checkpoint_data.get(name) {
+                if tensor.shape() != var.shape() {
+                    panic!("SHAPE MISMATCH FATAL ERROR! Tensor {} expects shape {:?}, but checkpoint has shape {:?}. Config and weights are out of sync!", name, var.shape(), tensor.shape());
+                }
+                var.set(tensor)?;
+                loaded_count += 1;
+            } else {
+                missing_count += 1;
+            }
+        }
+        
+        if missing_count > 5 {
+            panic!("TOO MANY MISSING TENSORS. Expected architecture does not match checkpoint!");
+        }
+        
+        println!("Full load complete: {} tensors restored.", loaded_count);
     } else {
         println!("No checkpoint found at {}. Starting from scratch.", checkpoint_path);
     }
 
-    // 5.5 Metadata Odometer
     let mut total_epochs = if let Ok(c) = fs::read_to_string(meta_path) {
         c.trim().parse::<u32>().unwrap_or(0)
     } else { 0 };
     println!("Model Odometer: {} total epochs trained", total_epochs);
 
-    // 6. Optimizer
     let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 2e-4)?; 
 
-    // 6.5 Logging Setup
-    let desktop_log_path = "/home/eri-irfos/Desktop/training_log/training.log";
+    fs::create_dir_all("dashboard").unwrap_or(());
     let mut log_file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(desktop_log_path)
+        .open(log_path)
         .ok();
 
-    // 7. Training Loop
     let batch_size = 1; 
-    let accumulation_steps = 16; // Stabilized for finer-grained gradient updates
+    let accumulation_steps = 16;
     let seq_len = config.max_seq_len;
     let session_epochs = 200; 
 
@@ -77,7 +100,7 @@ fn main() -> Result<()> {
         let mut total_loss = 0.0;
         let num_batches = 300; 
         
-        total_epochs += 1; // Increment global odometer
+        total_epochs += 1;
 
         for batch_idx in 0..num_batches {
             let mut step_loss = 0.0;
@@ -94,21 +117,16 @@ fn main() -> Result<()> {
                     batch_targets.extend_from_slice(target_tokens);
                 }
 
-                let input_tensor = Tensor::new(batch_inputs, &device)?.reshape((batch_size, seq_len))?;
-                let target_tensor = Tensor::new(batch_targets, &device)?.reshape((batch_size, seq_len))?;
+                let input_tensor = Tensor::new(&batch_inputs[..], &device)?.reshape((batch_size, seq_len))?.to_dtype(DType::U32)?;
+                let target_tensor = Tensor::new(&batch_targets[..], &device)?.reshape((batch_size, seq_len))?.to_dtype(DType::U32)?;
 
-                // Forward
                 let logits = model.forward(&input_tensor)?;
-                
-                // Loss
-                let logits = logits.reshape((batch_size * seq_len, vocab_size))?;
+                let logits = logits.reshape((batch_size * seq_len, config.vocab_size))?;
                 let target_tensor = target_tensor.flatten_all()?;
+                
                 let loss = loss::cross_entropy(&logits, &target_tensor)?;
-
-                // Scale loss for accumulation
                 let loss = (loss / accumulation_steps as f64)?;
                 
-                // Backward & Step
                 opt.backward_step(&loss)?;
 
                 step_loss += loss.to_scalar::<f32>()?;
@@ -116,11 +134,13 @@ fn main() -> Result<()> {
 
             total_loss += step_loss;
             
-            if batch_idx % 20 == 0 {
+            // INCREASED LOGGING FREQUENCY: Every 10 batches
+            if batch_idx % 10 == 0 {
                 let log_line = format!("Epoch {} (Global {}), Batch {}: loss = {:.4}", epoch, total_epochs, batch_idx, step_loss * accumulation_steps as f32);
                 println!("{}", log_line);
                 if let Some(ref mut f) = log_file {
                     let _ = writeln!(f, "{}", log_line);
+                    let _ = f.flush();
                 }
             }
         }
@@ -128,14 +148,13 @@ fn main() -> Result<()> {
         println!("{}", end_epoch_line);
         if let Some(ref mut f) = log_file {
             let _ = writeln!(f, "{}", end_epoch_line);
+            let _ = f.flush();
         }
         
-        // Atomic Save: Weights
         let tmp_path = format!("{}.tmp", checkpoint_path);
         varmap.save(&tmp_path)?;
         std::fs::rename(&tmp_path, checkpoint_path)?;
         
-        // Atomic Save: Odometer
         fs::write(meta_path, total_epochs.to_string())?;
         
         println!("Checkpoint saved. Odometer: {}", total_epochs);
@@ -143,7 +162,6 @@ fn main() -> Result<()> {
 
     println!("--- Training Finished ---");
 
-    // Final Weight Save
     let tmp_path = format!("{}.tmp", checkpoint_path);
     varmap.save(&tmp_path)?;
     std::fs::rename(&tmp_path, checkpoint_path)?;

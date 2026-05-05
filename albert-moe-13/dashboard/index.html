@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Albert MoE-13 Live Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <style>
+        body { background: #000000; color: #ffffff; font-family: 'Courier New', Courier, monospace; margin: 0; padding: 20px; overflow: hidden; }
+        #chart-container { width: 96vw; height: 82vh; margin: auto; position: relative; border: 1px solid #333; background: #000; cursor: grab; }
+        #chart-container:active { cursor: grabbing; }
+        h1 { text-align: center; color: #ffffff; font-size: 1.8rem; letter-spacing: 5px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: bold; }
+        .controls { text-align: center; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 1.1rem; }
+        select, button { background: #111; color: #00ffcc; border: 2px solid #00ffcc; padding: 8px 20px; font-family: inherit; cursor: pointer; border-radius: 4px; font-size: 1rem; transition: all 0.2s; font-weight: bold; }
+        button:hover { background: #00ffcc; color: #000; }
+        .hint { text-align: center; color: #ffffff; font-size: 0.9rem; margin-top: 10px; letter-spacing: 2px; font-weight: bold; }
+        #status-bar { text-align: center; color: #ff9900; font-size: 1.1rem; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+        label { color: #ffffff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>MoE-13 v1.3.7 LOG-STREAM</h1>
+    <div id="status-bar">STATUS: LIVE // ANALYZING BIBLE CORPUS // 128 CONTEXT</div>
+    
+    <div class="controls">
+        <label for="viewFilter">TIME WINDOW:</label>
+        <select id="viewFilter">
+            <option value="all" selected>COMPLETE LOG</option>
+            <option value="100">100 EPOCHS</option>
+            <option value="50">50 EPOCHS</option>
+            <option value="10">10 EPOCHS (FOCUS)</option>
+        </select>
+        <button id="resetBtn">CENTER CAMERA</button>
+    </div>
+
+    <div id="chart-container">
+        <canvas id="lossChart"></canvas>
+    </div>
+    <div class="hint">DRAG: PAN | SCROLL: ZOOM | NEW BATCHES DROP FROM SKY</div>
+
+    <script>
+        const ctx = document.getElementById('lossChart').getContext('2d');
+        const viewFilter = document.getElementById('viewFilter');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        let manualMode = false;
+        let isFirstLoad = true;
+        let lastLogLength = 0;
+
+        const lossChart = new Chart(ctx, {
+            data: { 
+                datasets: [
+                    { 
+                        type: 'scatter',
+                        label: 'INDIVIDUAL BATCH LOSS (TURQUOISE)', 
+                        data: [], 
+                        backgroundColor: '#00ffcc', 
+                        pointRadius: 4,
+                        order: 2,
+                        animations: {
+                            y: {
+                                from: (ctx) => ctx.raw && ctx.raw._sp ? undefined : 0,
+                                duration: (ctx) => ctx.raw && ctx.raw._sp ? 0 : 800,
+                                easing: 'easeOutBounce'
+                            }
+                        }
+                    },
+                    {
+                        type: 'line',
+                        label: 'CONVERGENCE TREND (ORANGE)',
+                        data: [],
+                        borderColor: '#ff9900',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        order: 1,
+                        animations: { y: { duration: 0 } }
+                    }
+                ] 
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 },
+                scales: { 
+                    x: { 
+                        type: 'linear', 
+                        title: { display: true, text: 'GLOBAL EPOCH (BATCH PRECISION)', color: '#ffffff', font: { size: 14, weight: 'bold' } },
+                        grid: { color: '#222' },
+                        ticks: { color: '#ffffff', font: { size: 12, weight: 'bold' } }
+                    },
+                    y: { 
+                        title: { display: true, text: 'LOSS RATE', color: '#ffffff', font: { size: 14, weight: 'bold' } },
+                        grid: { color: '#222' },
+                        ticks: { color: '#ffffff', font: { size: 12, weight: 'bold' } }
+                    }
+                },
+                plugins: { 
+                    legend: { 
+                        labels: { 
+                            color: '#ffffff', 
+                            font: { family: 'monospace', size: 12, weight: 'bold' },
+                            padding: 20
+                        } 
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#000',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        callbacks: {
+                            label: (c) => ` EPOCH: ${c.parsed.x.toFixed(2)} | LOSS: ${c.parsed.y.toFixed(4)}`
+                        }
+                    },
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'xy',
+                            threshold: 5,
+                            onPanStart: () => { manualMode = true; }
+                        },
+                        zoom: {
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
+                            mode: 'xy',
+                            onZoomStart: () => { manualMode = true; }
+                        }
+                    }
+                }
+            }
+        });
+
+        function calculateSMA(data, windowSize) {
+            const sma = [];
+            for (let i = 0; i < data.length; i++) {
+                const start = Math.max(0, i - windowSize + 1);
+                const avg = data.slice(start, i + 1).reduce((a, b) => a + b.y, 0) / (i - start + 1);
+                sma.push({ x: data[i].x, y: avg });
+            }
+            return sma;
+        }
+
+        async function updateData() {
+            try {
+                const response = await fetch('training.log?t=' + Date.now()); 
+                const text = await response.text();
+                const lines = text.split('\n').filter(l => l.trim() !== "");
+                
+                if (lines.length < lastLogLength) {
+                    console.log("RESTART DETECTED: Log truncated. Resetting chart.");
+                    lossChart.data.datasets[0].data = [];
+                    isFirstLoad = true;
+                }
+                
+                let logData = [];
+                lines.forEach(line => {
+                    const mLive = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
+                    if (mLive) {
+                        const globalEpoch = parseFloat(mLive[1]);
+                        const batchIdx = parseFloat(mLive[2]);
+                        const loss = parseFloat(mLive[3]);
+                        const x = globalEpoch + (batchIdx / 300);
+                        logData.push({ x: x, y: loss });
+                    }
+                });
+
+                if (logData.length === 0) {
+                    lastLogLength = lines.length;
+                    return;
+                }
+
+                const chartPoints = lossChart.data.datasets[0].data;
+                
+                // If we have more data points than before, identify the NEW ones
+                if (logData.length > chartPoints.length || isFirstLoad) {
+                    const newPoints = isFirstLoad ? logData : logData.slice(chartPoints.length);
+                    
+                    if (isFirstLoad) {
+                        newPoints.forEach(p => p._sp = true);
+                        chartPoints.push(...newPoints);
+                        isFirstLoad = false;
+                        lossChart.update('none');
+                    } else {
+                        newPoints.forEach(p => {
+                            p._sp = false;
+                            chartPoints.push(p);
+                        });
+                        lossChart.update({ duration: 1500 });
+                        // Transition _sp to true after update to mark as "old" for next points
+                        setTimeout(() => {
+                            newPoints.forEach(p => p._sp = true);
+                        }, 2000);
+                    }
+                    
+                    // Update Trend Line
+                    lossChart.data.datasets[1].data = calculateSMA(chartPoints, 20);
+                }
+
+                lastLogLength = lines.length;
+                document.getElementById('status-bar').innerText = `STATUS: LIVE // DATA_POINTS: ${chartPoints.length} // LATEST_LOG: Global ${logData[logData.length-1].x.toFixed(2)}`;
+
+                if (!manualMode) {
+                    const filterVal = viewFilter.value;
+                    const maxEpoch = logData[logData.length - 1].x;
+                    const minEpoch = filterVal === 'all' ? 0 : Math.max(0, maxEpoch - parseInt(filterVal));
+                    
+                    lossChart.options.scales.x.min = minEpoch;
+                    lossChart.options.scales.x.max = maxEpoch + (filterVal === 'all' ? 5 : 2);
+                    lossChart.update('none'); 
+                }
+            } catch (e) { console.error("SYNC_FAIL", e); }
+        }
+
+        resetBtn.addEventListener('click', () => {
+            manualMode = false;
+            lossChart.resetZoom();
+            updateData();
+        });
+
+        viewFilter.addEventListener('change', () => { manualMode = false; updateData(); });
+        
+        updateData();
+        setInterval(updateData, 3000);
+    </script>
+</body>
+</html>
