@@ -33,12 +33,11 @@
         #topbar {
             display: flex;
             align-items: center;
-            gap: 0;
-            height: 36px;
+            flex-wrap: wrap;
+            min-height: 36px;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
-            padding: 0 10px;
-            overflow: hidden;
+            padding: 0;
         }
         .tb-cell {
             display: flex;
@@ -46,10 +45,15 @@
             gap: 5px;
             padding: 0 10px;
             border-right: 1px solid var(--border);
-            height: 100%;
+            height: 36px;
             white-space: nowrap;
+            flex: 0 0 auto;
         }
-        .tb-cell:last-child { border-right: none; margin-left: auto; }
+        /* ARCH shrinks and truncates before anything else */
+        .tb-cell.arch { flex: 1 1 120px; min-width: 0; overflow: hidden; }
+        .tb-cell.arch .tb-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+        /* Controls always hug right; no right border */
+        .tb-cell.controls { border-right: none; margin-left: auto; gap: 6px; }
         .tb-label { color: #999; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .tb-val   { color: #fff; font-weight: bold; font-size: 13px; }
         .tb-val.accent { color: var(--accent); font-size: 16px; }
@@ -112,7 +116,7 @@
 <body>
 
 <div id="topbar">
-    <div class="tb-cell" style="padding-left:0; border-right:1px solid var(--border)">
+    <div class="tb-cell">
         <span id="dot"></span>
         <span id="model-name">ALBERT MoE-13</span>
     </div>
@@ -143,12 +147,12 @@
         <span class="tb-val muted" id="v-pts">0</span>
     </div>
 
-    <div class="tb-cell">
+    <div class="tb-cell arch">
         <span class="tb-label">ARCH</span>
         <span class="tb-val muted">3 LAYERS · 128 HIDDEN · 4 HEADS · 12 EXPERTS · 128 CTX</span>
     </div>
 
-    <div class="tb-cell" style="border-right:none; margin-left:auto; gap:6px;">
+    <div class="tb-cell controls">
         <button id="toggleDots">· DOTS</button>
         <button id="toggleSMA">~ SMA</button>
         <select id="viewFilter">
@@ -166,6 +170,7 @@
 
 <div id="chart-wrap">
     <canvas id="lossChart"></canvas>
+    <canvas id="dotPulse" style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
     <div id="waiting">
         WAITING FOR TRAINING DATA
         <br><span>fire albert-train to begin</span>
@@ -188,11 +193,14 @@
 
     // ── State ──────────────────────────────────────────────────────────
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
-    let manualMode       = false;
     let lastLossVal      = null;
     let bestLoss         = Infinity;
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
+    let pulseActive      = false;
+    let pulseDataX       = 0;
+    let pulseDataY       = 0;
+    let pulseEndMs       = 0;
 
     // ── Last-SMA reference line (MT5-style "closing price" line) ──────
     let lastSmaY = null;
@@ -219,6 +227,37 @@
             ctx.restore();
         }
     });
+
+    // ── Pulse overlay ─────────────────────────────────────────────────
+    const pulseCanvas = document.getElementById('dotPulse');
+    const pulseCtx    = pulseCanvas.getContext('2d');
+
+    function pulseTick(now) {
+        pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
+        if (now >= pulseEndMs) { pulseActive = false; return; }
+        try {
+            const px = chart.scales.x.getPixelForValue(pulseDataX);
+            const py = chart.scales.y.getPixelForValue(pulseDataY);
+            const { chartArea } = chart;
+            if (px >= chartArea.left && px <= chartArea.right &&
+                py >= chartArea.top  && py <= chartArea.bottom) {
+                const t = (now % 1200) / 1200;
+                pulseCtx.beginPath();
+                pulseCtx.arc(px, py, 3 + 12 * t, 0, Math.PI * 2);
+                pulseCtx.strokeStyle = `rgba(0,229,160,${(1 - t) * 0.65})`;
+                pulseCtx.lineWidth = 1.5;
+                pulseCtx.stroke();
+            }
+        } catch(e) {}
+        requestAnimationFrame(pulseTick);
+    }
+
+    function startPulse(dataX, dataY) {
+        pulseDataX = dataX;
+        pulseDataY = dataY;
+        pulseEndMs = performance.now() + 5000;
+        if (!pulseActive) { pulseActive = true; requestAnimationFrame(pulseTick); }
+    }
 
     // ── Chart ──────────────────────────────────────────────────────────
     const ctx = document.getElementById('lossChart').getContext('2d');
@@ -287,13 +326,8 @@
                     }
                 },
                 zoom: {
-                    pan:  { enabled: true, mode: 'xy', onPanStart: () => { manualMode = true; } },
-                    zoom: {
-                        wheel: { enabled: true },
-                        pinch: { enabled: true },
-                        mode: 'xy',
-                        onZoomStart: () => { manualMode = true; }
-                    }
+                    pan:  { enabled: true, mode: 'xy' },
+                    zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }
                 }
             }
         }
@@ -398,18 +432,15 @@
             chart.data.datasets[1].data = smaData;
             if (smaData.length > 0) lastSmaY = smaData[smaData.length - 1].y;
 
-            // Auto-follow X axis unless user is panning/zooming
-            if (!manualMode && pts.length > 0) {
-                const maxX = pts[pts.length - 1].x;
-                const fv   = document.getElementById('viewFilter').value;
-                chart.options.scales.x.min = fv === 'all' ? undefined : Math.max(0, maxX - parseInt(fv));
-                chart.options.scales.x.max = maxX + (fv === 'all' ? 0 : 2);
-            }
-
             // Live updates (≤5 new pts) get the drop animation; bulk loads skip it
             const isLive = newPts.length <= 5;
             newPointStartIdx = isLive ? pts.length - newPts.length : Infinity;
             chart.update(isLive ? undefined : 'none');
+
+            if (isLive) {
+                const last = newPts[newPts.length - 1];
+                startPulse(last.x, last.y);
+            }
 
             updateTopbar(newPts[newPts.length - 1]);
         } catch (e) {
@@ -430,20 +461,32 @@
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-        manualMode = false;
+        chart.options.scales.x.min = undefined;
+        chart.options.scales.x.max = undefined;
         chart.resetZoom();
-        poll();
+        chart.update('none');
     });
-    document.getElementById('viewFilter').addEventListener('change', () => {
-        manualMode = false;
-        poll();
+    document.getElementById('viewFilter').addEventListener('change', function() {
+        const fv  = this.value;
+        const pts = chart.data.datasets[0].data;
+        if (fv !== 'all' && pts.length > 0) {
+            const maxX = pts[pts.length - 1].x;
+            chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
+            chart.options.scales.x.max = maxX + 2;
+        } else {
+            chart.options.scales.x.min = undefined;
+            chart.options.scales.x.max = undefined;
+        }
+        chart.resetZoom();
+        chart.update('none');
     });
 
     // ── Resize ────────────────────────────────────────────────────────
     function resize() {
         const wrap = document.getElementById('chart-wrap');
-        ctx.canvas.width  = wrap.clientWidth;
-        ctx.canvas.height = wrap.clientHeight;
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        ctx.canvas.width  = w; ctx.canvas.height = h;
+        pulseCanvas.width = w; pulseCanvas.height = h;
         chart.resize();
     }
     window.addEventListener('resize', resize);
