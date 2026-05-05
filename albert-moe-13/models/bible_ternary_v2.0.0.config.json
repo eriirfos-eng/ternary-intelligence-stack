@@ -1,5 +1,5 @@
 {
-  "hidden_size": 128,
+  "hidden_size": 256,
   "num_layers": 3,
   "num_heads": 4,
   "max_seq_len": 128,

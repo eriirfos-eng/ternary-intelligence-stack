@@ -1,26 +1,18 @@
 use candle_core::{Result, Tensor};
 
-/// Straight-Through Estimator (STE) for ternary quantization with scaling.
-/// 
-/// Refined for stability in deep networks by incorporating a scaling factor
-/// that preserves the variance of the activation flow.
+/// Full ternarize with gamma computed from weights. Call sparingly.
 pub fn ternarize_ste(w: &Tensor, threshold: f32) -> Result<Tensor> {
-    let dtype = w.dtype();
-    
-    // Mask for positive: w > threshold
-    let pos_mask = w.gt(threshold)?;
-    // Mask for negative: w < -threshold
-    let neg_mask = w.lt(-threshold)?;
-
-    // Quantized = 1.0 * pos_mask - 1.0 * neg_mask
-    let quantized = pos_mask.to_dtype(dtype)?.broadcast_sub(&neg_mask.to_dtype(dtype)?)?;
-
-    // Scaling factor (gamma): mean absolute value of the weights
-    // This helps with "Static Weights" and "STE Instability" by maintaining magnitude.
     let gamma = w.abs()?.mean_all()?;
-    let quantized = quantized.broadcast_mul(&gamma)?;
+    ternarize_ste_with_gamma(w, threshold, &gamma)
+}
 
-    // y = w + (quantized - w).detach()
+/// Ternarize using a pre-computed gamma scalar. Hot path — no mean_all().
+pub fn ternarize_ste_with_gamma(w: &Tensor, threshold: f32, gamma: &Tensor) -> Result<Tensor> {
+    let dtype = w.dtype();
+    let pos_mask = w.gt(threshold)?;
+    let neg_mask = w.lt(-threshold)?;
+    let quantized = pos_mask.to_dtype(dtype)?.broadcast_sub(&neg_mask.to_dtype(dtype)?)?;
+    let quantized = quantized.broadcast_mul(gamma)?;
     let diff = quantized.broadcast_sub(w)?;
     Ok(w.broadcast_add(&diff.detach())?)
 }

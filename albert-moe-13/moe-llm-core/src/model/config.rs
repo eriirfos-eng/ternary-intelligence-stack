@@ -22,3 +22,19 @@ impl Default for TransformerConfig {
         }
     }
 }
+
+impl TransformerConfig {
+    /// Per-layer ternary threshold: early layers stay dense (small threshold = more weights active),
+    /// deeper layers grow sparse (larger threshold = more weights zeroed → faster inference).
+    /// Range: 0.01 (layer 0) → up to 0.05 (deepest layer).
+    pub fn layer_threshold(&self, layer_idx: usize) -> f32 {
+        let base = 0.01_f32;
+        let top  = self.threshold.max(0.03);
+        let step = if self.num_layers > 1 {
+            (top - base) / (self.num_layers - 1) as f32
+        } else {
+            0.0
+        };
+        (base + step * layer_idx as f32).min(0.05)
+    }
+}
