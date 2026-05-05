@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Albert MoE-13 Live Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <style>
         body { background: #000000; color: #ffffff; font-family: 'Courier New', Courier, monospace; margin: 0; padding: 20px; overflow: hidden; }
         #chart-container { width: 96vw; height: 82vh; margin: auto; position: relative; border: 1px solid #333; background: #000; cursor: grab; }
@@ -15,14 +14,16 @@
         select, button { background: #111; color: #00ffcc; border: 2px solid #00ffcc; padding: 8px 20px; font-family: inherit; cursor: pointer; border-radius: 4px; font-size: 1rem; transition: all 0.2s; font-weight: bold; }
         button:hover { background: #00ffcc; color: #000; }
         .hint { text-align: center; color: #ffffff; font-size: 0.9rem; margin-top: 10px; letter-spacing: 2px; font-weight: bold; }
-        #status-bar { text-align: center; color: #ff9900; font-size: 1.1rem; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+        #status-bar { text-align: center; font-size: 1.1rem; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+        #status-bar.live { color: #ff9900; }
+        #status-bar.standby { color: #666; }
         label { color: #ffffff; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>MoE-13 v2.2: AUTO-EVOLUTIONARY (13-NODE)</h1>
-    <div id="status-bar">STATUS: LIVE // EPISYTEMIC ROUTING ACTIVE // 128 CONTEXT</div>
-    
+    <div id="status-bar" class="standby">STATUS: WAITING FOR TRAINING LOG...</div>
+
     <div class="controls">
         <label for="viewFilter">TIME WINDOW:</label>
         <select id="viewFilter">
@@ -40,22 +41,28 @@
     <div class="hint">DRAG: PAN | SCROLL: ZOOM | NEW BATCHES DROP FROM SKY</div>
 
     <script>
+        // Must match accumulation_steps in train_bible.rs — the log writes
+        // step_loss * ACCUMULATION_STEPS, so we divide here to recover real loss.
+        const ACCUMULATION_STEPS = 16;
+
         const ctx = document.getElementById('lossChart').getContext('2d');
         const viewFilter = document.getElementById('viewFilter');
         const resetBtn = document.getElementById('resetBtn');
-        
+        const statusBar = document.getElementById('status-bar');
+
         let manualMode = false;
         let isFirstLoad = true;
         let seenKeys = new Set();
+        let lastNewPointTime = null;
 
         const lossChart = new Chart(ctx, {
-            data: { 
+            data: {
                 datasets: [
-                    { 
+                    {
                         type: 'scatter',
-                        label: 'INDIVIDUAL BATCH LOSS (TURQUOISE)', 
-                        data: [], 
-                        backgroundColor: '#00ffcc', 
+                        label: 'BATCH LOSS (TURQUOISE)',
+                        data: [],
+                        backgroundColor: '#00ffcc',
                         pointRadius: 4,
                         order: 2,
                         animations: {
@@ -78,32 +85,32 @@
                         order: 1,
                         animations: { y: { duration: 0 } }
                     }
-                ] 
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: { duration: 0 },
-                scales: { 
-                    x: { 
-                        type: 'linear', 
+                scales: {
+                    x: {
+                        type: 'linear',
                         title: { display: true, text: 'GLOBAL EPOCH (BATCH PRECISION)', color: '#ffffff', font: { size: 14, weight: 'bold' } },
                         grid: { color: '#222' },
                         ticks: { color: '#ffffff', font: { size: 12, weight: 'bold' } }
                     },
-                    y: { 
-                        title: { display: true, text: 'LOSS RATE', color: '#ffffff', font: { size: 14, weight: 'bold' } },
+                    y: {
+                        title: { display: true, text: 'LOSS', color: '#ffffff', font: { size: 14, weight: 'bold' } },
                         grid: { color: '#222' },
                         ticks: { color: '#ffffff', font: { size: 12, weight: 'bold' } }
                     }
                 },
-                plugins: { 
-                    legend: { 
-                        labels: { 
-                            color: '#ffffff', 
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff',
                             font: { family: 'monospace', size: 12, weight: 'bold' },
                             padding: 20
-                        } 
+                        }
                     },
                     tooltip: {
                         enabled: true,
@@ -145,31 +152,27 @@
         async function updateData() {
             try {
                 let fetchOptions = { cache: "no-store" };
-                
-                // OPTIMIZATION: Tail-Fetch (only download the new stuff)
-                // If we've already loaded data, only ask for the last 50KB of the file
                 if (!isFirstLoad) {
                     fetchOptions.headers = { 'Range': 'bytes=-50000' };
                 }
 
-                const response = await fetch('training.log?t=' + Date.now(), fetchOptions); 
-                
-                // Handle 206 Partial Content (Normal for Range) or 200 OK
+                const response = await fetch('training.log?t=' + Date.now(), fetchOptions);
                 if (!response.ok && response.status !== 206) return;
-                
+
                 const text = await response.text();
                 const lines = text.split('\n').filter(l => l.trim() !== "");
-                
+
                 let logData = [];
                 lines.forEach(line => {
-                    const mLive = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
-                    if (mLive) {
-                        const globalEpoch = mLive[1];
-                        const batchIdx = mLive[2];
-                        const loss = parseFloat(mLive[3]);
+                    const m = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
+                    if (m) {
+                        const globalEpoch = m[1];
+                        const batchIdx = m[2];
+                        // Divide by ACCUMULATION_STEPS to recover the true averaged loss
+                        const loss = parseFloat(m[3]) / ACCUMULATION_STEPS;
                         const key = `${globalEpoch}_${batchIdx}`;
                         const x = parseFloat(globalEpoch) + (parseFloat(batchIdx) / 300);
-                        logData.push({ x: x, y: loss, key: key });
+                        logData.push({ x, y: loss, key });
                     }
                 });
 
@@ -192,39 +195,43 @@
                         isFirstLoad = false;
                         lossChart.update('none');
                     } else {
-                        // Incremental append
                         newPoints.forEach(p => {
                             p._sp = false;
                             chartPoints.push(p);
                         });
-                        
-                        // Limit total points in UI to 5000 for performance
+
                         if (chartPoints.length > 5000) {
                             chartPoints.splice(0, chartPoints.length - 5000);
                         }
 
                         lossChart.update({ duration: 800 });
-                        setTimeout(() => {
-                            newPoints.forEach(p => p._sp = true);
-                        }, 1000);
+                        setTimeout(() => { newPoints.forEach(p => p._sp = true); }, 1000);
                     }
-                    
+
                     chartPoints.sort((a, b) => a.x - b.x);
-                    
-                    // INCREMENTAL SMA: Only calculate for the visible window if dataset is huge
                     lossChart.data.datasets[1].data = calculateSMA(chartPoints, 20);
+
+                    if (newPoints.length > 0) lastNewPointTime = Date.now();
                 }
 
-                document.getElementById('status-bar').innerText = `STATUS: LIVE // POINTS: ${chartPoints.length} // LATEST: Global ${logData[logData.length-1].x.toFixed(2)}`;
+                // Status bar: show LIVE if we got new points in last 10s, else STANDBY
+                const latest = logData[logData.length - 1];
+                const isLive = lastNewPointTime && (Date.now() - lastNewPointTime < 10000);
+                if (isLive) {
+                    statusBar.className = 'live';
+                    statusBar.innerText = `STATUS: LIVE // EPISTEMIC ROUTING ACTIVE // POINTS: ${chartPoints.length} // EPOCH: ${latest.x.toFixed(2)} // LOSS: ${latest.y.toFixed(4)}`;
+                } else {
+                    statusBar.className = 'standby';
+                    statusBar.innerText = `STATUS: STANDBY // POINTS: ${chartPoints.length} // LAST EPOCH: ${latest.x.toFixed(2)} // LAST LOSS: ${latest.y.toFixed(4)}`;
+                }
 
                 if (!manualMode && chartPoints.length > 0) {
                     const filterVal = viewFilter.value;
                     const maxEpoch = chartPoints[chartPoints.length - 1].x;
                     const minEpoch = filterVal === 'all' ? 0 : Math.max(0, maxEpoch - parseInt(filterVal));
-                    
                     lossChart.options.scales.x.min = minEpoch;
                     lossChart.options.scales.x.max = maxEpoch + (filterVal === 'all' ? 5 : 2);
-                    lossChart.update('none'); 
+                    lossChart.update('none');
                 }
             } catch (e) { console.error("SYNC_FAIL", e); }
         }
@@ -236,7 +243,7 @@
         });
 
         viewFilter.addEventListener('change', () => { manualMode = false; updateData(); });
-        
+
         updateData();
         setInterval(updateData, 3000);
     </script>
