@@ -20,7 +20,7 @@
     </style>
 </head>
 <body>
-    <h1>MoE-13 v2.0.0 DOMAIN-AWARE (13-NODE)</h1>
+    <h1>MoE-13 v2.2: AUTO-EVOLUTIONARY (13-NODE)</h1>
     <div id="status-bar">STATUS: LIVE // EPISYTEMIC ROUTING ACTIVE // 128 CONTEXT</div>
     
     <div class="controls">
@@ -144,25 +144,31 @@
 
         async function updateData() {
             try {
-                // ADDED CACHE: NO-STORE to prevent browser caching the log file
-                const response = await fetch('training.log?t=' + Date.now(), { cache: "no-store" }); 
+                let fetchOptions = { cache: "no-store" };
+                
+                // OPTIMIZATION: Tail-Fetch (only download the new stuff)
+                // If we've already loaded data, only ask for the last 50KB of the file
+                if (!isFirstLoad) {
+                    fetchOptions.headers = { 'Range': 'bytes=-50000' };
+                }
+
+                const response = await fetch('training.log?t=' + Date.now(), fetchOptions); 
+                
+                // Handle 206 Partial Content (Normal for Range) or 200 OK
+                if (!response.ok && response.status !== 206) return;
+                
                 const text = await response.text();
                 const lines = text.split('\n').filter(l => l.trim() !== "");
                 
                 let logData = [];
-                let currentBatchKeys = new Set();
-
                 lines.forEach(line => {
                     const mLive = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
                     if (mLive) {
                         const globalEpoch = mLive[1];
                         const batchIdx = mLive[2];
                         const loss = parseFloat(mLive[3]);
-                        
-                        // KEY-BASED DEDUPLICATION: Ensures we only track unique events
                         const key = `${globalEpoch}_${batchIdx}`;
                         const x = parseFloat(globalEpoch) + (parseFloat(batchIdx) / 300);
-                        
                         logData.push({ x: x, y: loss, key: key });
                     }
                 });
@@ -186,24 +192,30 @@
                         isFirstLoad = false;
                         lossChart.update('none');
                     } else {
+                        // Incremental append
                         newPoints.forEach(p => {
                             p._sp = false;
                             chartPoints.push(p);
                         });
-                        lossChart.update({ duration: 1500 });
+                        
+                        // Limit total points in UI to 5000 for performance
+                        if (chartPoints.length > 5000) {
+                            chartPoints.splice(0, chartPoints.length - 5000);
+                        }
+
+                        lossChart.update({ duration: 800 });
                         setTimeout(() => {
                             newPoints.forEach(p => p._sp = true);
-                        }, 2000);
+                        }, 1000);
                     }
                     
-                    // Always re-sort chart points to handle out-of-order restarts gracefully
                     chartPoints.sort((a, b) => a.x - b.x);
                     
-                    // Update Trend Line based on the full unique history
+                    // INCREMENTAL SMA: Only calculate for the visible window if dataset is huge
                     lossChart.data.datasets[1].data = calculateSMA(chartPoints, 20);
                 }
 
-                document.getElementById('status-bar').innerText = `STATUS: LIVE // UNIQUE_POINTS: ${chartPoints.length} // LATEST: Global ${logData[logData.length-1].x.toFixed(2)}`;
+                document.getElementById('status-bar').innerText = `STATUS: LIVE // POINTS: ${chartPoints.length} // LATEST: Global ${logData[logData.length-1].x.toFixed(2)}`;
 
                 if (!manualMode && chartPoints.length > 0) {
                     const filterVal = viewFilter.value;
