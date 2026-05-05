@@ -1,45 +1,43 @@
-# MoE-Platform: Ternary Inference Runtime
+# MoE-Platform — Inference Runtime (Planned)
 
-The **MoE-Platform API** is the formal, production-ready interface for the [Albert-MoE-13](https://github.com/eriirfos-eng/ternary-intelligence-stack) ternary inference ecosystem.
-
-This crate serves as the primary facade for loading, executing, and monitoring high-precision ternary models within the deterministic MoE-13 runtime.
-
-## 1. Technical Overview
-MoE-Platform decouples the public execution interface from the core ternary computational engine, ensuring high performance for both production inference and local research prototyping.
-
-## 2. Integration & Provenance
-By integrating with the platform, applications inherit the integrity guarantees of the MoE-13 framework, including:
-- **Reproducibility**: Guaranteed deterministic execution aligned with the [Artifact Registry](../models/README.md).
-- **Security**: Hard-gated input sanitization via the `trit_action_gate`.
-- **Performance**: Direct utilization of SIMD ternary-native kernels.
-
-## 3. Implementation Example
-```rust
-use moe_platform::{Platform, PluginRegistry};
-
-fn main() -> anyhow::Result<()> {
-    // 1. Initialize the MoE-13 platform with core integrity checks
-    let mut platform = Platform::new();
-
-    // 2. Load model from the validated Artifact Registry
-    let model = platform.load_model("bible-moe-v1")?;
-    
-    // 3. Deterministic Inference
-    let output = platform.run_inference(model, "Analyze epistemic weight drift...")?;
-    
-    Ok(())
-}
-```
-
-## 4. Architecture
-*   **Provider-Agnostic Ingestion**: Ingest models from standardized formats (`.trit`, `.safetensors`) via the `ModelProviderPlugin` trait.
-*   **Offline-First Compliance**: Operates entirely offline, meeting EU AI Act data residency mandates.
-*   **Deterministic Runtime**: The execution path is fully auditable through the framework's telemetry logging.
-
-## 5. Official Research References
-- **Main Framework**: [Albert-MoE-13 README](../README.md)
-- **Model Artifacts**: [Provenance & Registry](../models/README.md)
-- **License**: Provided under [LGPL-3.0/BSL-1.1](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/LICENSE).
+Future production inference API for Albert MoE-13. Not yet implemented — this crate is a placeholder for the deployment-facing interface that will wrap the trained ternary model.
 
 ---
-*Maintained by the TIS Core Research Team. Part of the SPRIND Copernicus submission suite.*
+
+## Planned Scope
+
+The platform crate will decouple inference from the training code and provide:
+
+- **Model loading** from `.safetensors` checkpoint + `config.json`
+- **Batched inference** with top-k / temperature sampling
+- **Ternary-native execution** — apply STE quantization at load time and run integer-only matmuls
+- **REST API** via Axum for serving Albert as a local endpoint
+- **MCP server integration** — expose Albert as a tool callable from Claude/TernLang-MCP
+
+---
+
+## Current State
+
+Training and inference share the same `moe-llm-core` crate. The `Transformer::generate()` method in `transformer.rs` handles greedy/sampled generation for local testing. This is sufficient for research purposes.
+
+The `moe-platform` crate will be built once the model reaches stable loss convergence and the architecture is frozen for a production release.
+
+---
+
+## Integration Target
+
+```rust
+// Future API (not yet implemented)
+use moe_platform::Albert;
+
+let albert = Albert::load("models/bible_ternary_v2.0.0")?;
+let response = albert.generate("In the beginning", 128)?;
+```
+
+---
+
+## See Also
+
+- [Main README](../../README.md) — current training setup
+- [Architecture](../../docs/architecture.md) — model internals
+- [TernLang-MCP](../../../ternlang-root/ternlang-mcp/) — MCP server (live)
