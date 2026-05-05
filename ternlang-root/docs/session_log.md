@@ -7,6 +7,7 @@ Reverse chronological record of every working session (newest first). One row pe
 
 | Date | Session Update |
 |------|----------------|
+| 2026-05-05 | **EVOLUTIONARY STABILIZATION: LR & DIVERGENCE FIX**. Diagnosed 3-hour loss divergence (6.19 -> 6.87) in 3-layer Toddler phase. Reduced learning rate from **2e-4 to 1e-4**. Updated `EvolutionManager` with a **Divergence Trigger**: consistent loss increase (Delta < -0.1) now forces a Neural Surgery expansion, treating saturation as a need for more capacity. |
 | 2026-05-05 | **MOE-13 v2.2: AUTO-EVOLUTIONARY FRAMEWORK**. Implemented `EvolutionManager` plateau-mastery state machine. Training now starts at 3-layer "Toddler" phase (1 tick/sec) and dynamically expands. Verified **Net2Net "Safe Copy" surgery** (copying Layer $N \to N+1$) to inject new parameters without destroying existing linguistic maturity. |
 | 2026-05-05 | **DASHBOARD THROUGHPUT OPTIMIZATION**. Upgraded `run_server.py` to support **HTTP Range Requests**. Implemented "Tail-Fetch" in `index.html` to download only the final 50KB of logs. Eliminated 5-minute UI buffering delay; dashboard now supports 5000+ real-time points with zero lag. |
 | 2026-05-05 | **INSTANT FEEDBACK KERNEL**. Refactored `train_bible.rs` for high-frequency synchronization. Moved from 10-batch logging to **every-batch logging** with explicit **OS-level disk flushing** (`f.flush()`). Latency between terminal output and dashboard rendering reduced from ~50s to < 3s. |
