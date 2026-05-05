@@ -441,7 +441,8 @@
 
             if (isLive) {
                 const last = newPts[newPts.length - 1];
-                startPulse(last.x, last.y);
+                // Wait for the 500ms drop animation to finish, then wrap the landed dot
+                setTimeout(() => startPulse(last.x, last.y), 550);
             }
 
             updateTopbar(newPts[newPts.length - 1]);
