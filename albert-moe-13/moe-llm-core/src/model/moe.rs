@@ -1,5 +1,5 @@
 use candle_core::{Result, Tensor};
-use candle_nn::{Module, VarBuilder};
+use candle_nn::VarBuilder;
 use super::ternary_linear::TernaryLinear;
 use super::mlp::Mlp;
 
@@ -22,51 +22,69 @@ impl MoeBlock {
 
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         let (b, s, h) = x.dims3()?;
+        let dev = x.device();
+        let x_flat = x.reshape((b * s, h))?;
         
         // 1. Gate logits
-        let gate_logits = self.gate.forward(x)?; // [B, S, E]
+        let mut gate_logits = self.gate.forward(x)?; // [B, S, E]
         
-        // 2. Manual Top-k routing (k=2) using argmax twice
-        let max1_indices = gate_logits.argmax(candle_core::D::Minus1)?;
+        // Add Gating Jitter (Noise)
+        let noise = Tensor::rand(0.98f32, 1.02f32, gate_logits.shape(), dev)?;
+        gate_logits = gate_logits.broadcast_mul(&noise)?;
+
+        // 2. Top-2 Routing
+        let max1_indices = gate_logits.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let max1_values = gate_logits.max(candle_core::D::Minus1)?;
         
-        // Create mask for max1 to find the second best
-        let dev = gate_logits.device();
         let range = Tensor::arange(0u32, self.num_experts as u32, dev)?
-            .reshape((1, 1, self.num_experts))?;
+            .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?;
         let mask1 = range.broadcast_eq(&max1_indices.unsqueeze(candle_core::D::Minus1)?)?;
         
         let large_neg = Tensor::new(&[-1e9f32], dev)?.broadcast_as(gate_logits.shape())?;
         let gate_logits_masked = mask1.where_cond(&large_neg, &gate_logits)?;
         
-        let max2_indices = gate_logits_masked.argmax(candle_core::D::Minus1)?;
+        let max2_indices = gate_logits_masked.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let max2_values = gate_logits_masked.max(candle_core::D::Minus1)?;
         
-        let top_k_indices = Tensor::stack(&[max1_indices, max2_indices], candle_core::D::Minus1)?;
-        let top_k_values = Tensor::stack(&[max1_values, max2_values], candle_core::D::Minus1)?;
+        // Stack for Top-2 probs
+        let top2_probs_flat = candle_nn::ops::softmax(&Tensor::stack(&[max1_values.flatten_all()?, max2_values.flatten_all()?], 1)?, 1)?;
+
+        let mut final_output = Tensor::zeros((b * s, h), x.dtype(), dev)?;
+
+        // 3. Expert Execution (Optimized implementation using boolean masking)
+        // Since 'nonzero()' is not available in this Candle version, we use 
+        // broadcast multiplication which is still faster than running the full expert
+        // if we properly weight it.
         
-        // 3. Softmax over top-k values
-        let top_k_probs = candle_nn::ops::softmax(&top_k_values, candle_core::D::Minus1)?;
-        
-        // 4. Vectorized expert execution and combining
-        let mut final_output = Tensor::zeros((b, s, h), x.dtype(), x.device())?;
-        
-        let k = 2;
-        for j in 0..k {
-            let expert_indices = top_k_indices.narrow(candle_core::D::Minus1, j, 1)?;
-            let expert_weights = top_k_probs.narrow(candle_core::D::Minus1, j, 1)?;
+        let max1_flat = max1_indices.flatten_all()?;
+        let max2_flat = max2_indices.flatten_all()?;
+
+        for expert_idx in 0..self.num_experts {
+            let mask1 = max1_flat.eq(expert_idx as u32)?.to_dtype(x.dtype())?;
+            let mask2 = max2_flat.eq(expert_idx as u32)?.to_dtype(x.dtype())?;
             
-            for expert_idx in 0..self.num_experts {
-                // mask: [B, S, 1]
-                let mask = expert_indices.eq(expert_idx as u32)?.to_dtype(x.dtype())?;
+            // Check if expert is used AT ALL to skip the MLP entirely if not
+            let combined_sum = (mask1.sum_all()?.to_scalar::<f32>()? + mask2.sum_all()?.to_scalar::<f32>()?);
+            
+            if combined_sum > 0.0 {
+                // We use a weighted input approach. This is the fastest alternative
+                // to index_select on CPU without custom kernels.
+                let prob1 = top2_probs_flat.narrow(1, 0, 1)?.flatten_all()?;
+                let prob2 = top2_probs_flat.narrow(1, 1, 1)?.flatten_all()?;
                 
-                let expert_out = self.experts[expert_idx].forward(x)?;
-                let weighted_expert_out = expert_out.broadcast_mul(&mask)?.broadcast_mul(&expert_weights)?;
+                let weight1 = (mask1 * prob1)?;
+                let weight2 = (mask2 * prob2)?;
+                let total_weight = (weight1 + weight2)?.unsqueeze(1)?;
                 
-                final_output = (final_output + weighted_expert_out)?;
+                // Still masking the input to zero out irrelevant tokens 
+                // This helps the expert MLP concentrate on active tokens
+                let expert_in = x_flat.broadcast_mul(&total_weight.gt(0.0)?.to_dtype(x.dtype())?)?;
+                let expert_out = self.experts[expert_idx].forward(&expert_in)?;
+                
+                final_output = (final_output + expert_out.broadcast_mul(&total_weight)?)?;
             }
         }
         
-        Ok(final_output)
+        final_output.reshape((b, s, h))
     }
 }

@@ -1,3 +1,4 @@
+#[derive(Clone, Debug)]
 pub struct TransformerConfig {
     pub vocab_size: usize,
     pub hidden_size: usize,
