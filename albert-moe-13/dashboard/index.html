@@ -20,8 +20,8 @@
     </style>
 </head>
 <body>
-    <h1>MoE-13 v1.3.7 LOG-STREAM</h1>
-    <div id="status-bar">STATUS: LIVE // ANALYZING BIBLE CORPUS // 128 CONTEXT</div>
+    <h1>MoE-13 v2.0.0 DOMAIN-AWARE (13-NODE)</h1>
+    <div id="status-bar">STATUS: LIVE // EPISYTEMIC ROUTING ACTIVE // 128 CONTEXT</div>
     
     <div class="controls">
         <label for="viewFilter">TIME WINDOW:</label>
@@ -46,7 +46,7 @@
         
         let manualMode = false;
         let isFirstLoad = true;
-        let lastLogLength = 0;
+        let seenKeys = new Set();
 
         const lossChart = new Chart(ctx, {
             data: { 
@@ -144,39 +144,42 @@
 
         async function updateData() {
             try {
-                const response = await fetch('training.log?t=' + Date.now()); 
+                // ADDED CACHE: NO-STORE to prevent browser caching the log file
+                const response = await fetch('training.log?t=' + Date.now(), { cache: "no-store" }); 
                 const text = await response.text();
                 const lines = text.split('\n').filter(l => l.trim() !== "");
                 
-                if (lines.length < lastLogLength) {
-                    console.log("RESTART DETECTED: Log truncated. Resetting chart.");
-                    lossChart.data.datasets[0].data = [];
-                    isFirstLoad = true;
-                }
-                
                 let logData = [];
+                let currentBatchKeys = new Set();
+
                 lines.forEach(line => {
                     const mLive = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
                     if (mLive) {
-                        const globalEpoch = parseFloat(mLive[1]);
-                        const batchIdx = parseFloat(mLive[2]);
+                        const globalEpoch = mLive[1];
+                        const batchIdx = mLive[2];
                         const loss = parseFloat(mLive[3]);
-                        const x = globalEpoch + (batchIdx / 300);
-                        logData.push({ x: x, y: loss });
+                        
+                        // KEY-BASED DEDUPLICATION: Ensures we only track unique events
+                        const key = `${globalEpoch}_${batchIdx}`;
+                        const x = parseFloat(globalEpoch) + (parseFloat(batchIdx) / 300);
+                        
+                        logData.push({ x: x, y: loss, key: key });
                     }
                 });
 
-                if (logData.length === 0) {
-                    lastLogLength = lines.length;
-                    return;
-                }
+                if (logData.length === 0) return;
 
                 const chartPoints = lossChart.data.datasets[0].data;
-                
-                // If we have more data points than before, identify the NEW ones
-                if (logData.length > chartPoints.length || isFirstLoad) {
-                    const newPoints = isFirstLoad ? logData : logData.slice(chartPoints.length);
-                    
+                const newPoints = [];
+
+                logData.forEach(p => {
+                    if (!seenKeys.has(p.key)) {
+                        newPoints.push(p);
+                        seenKeys.add(p.key);
+                    }
+                });
+
+                if (newPoints.length > 0 || isFirstLoad) {
                     if (isFirstLoad) {
                         newPoints.forEach(p => p._sp = true);
                         chartPoints.push(...newPoints);
@@ -188,22 +191,23 @@
                             chartPoints.push(p);
                         });
                         lossChart.update({ duration: 1500 });
-                        // Transition _sp to true after update to mark as "old" for next points
                         setTimeout(() => {
                             newPoints.forEach(p => p._sp = true);
                         }, 2000);
                     }
                     
-                    // Update Trend Line
+                    // Always re-sort chart points to handle out-of-order restarts gracefully
+                    chartPoints.sort((a, b) => a.x - b.x);
+                    
+                    // Update Trend Line based on the full unique history
                     lossChart.data.datasets[1].data = calculateSMA(chartPoints, 20);
                 }
 
-                lastLogLength = lines.length;
-                document.getElementById('status-bar').innerText = `STATUS: LIVE // DATA_POINTS: ${chartPoints.length} // LATEST_LOG: Global ${logData[logData.length-1].x.toFixed(2)}`;
+                document.getElementById('status-bar').innerText = `STATUS: LIVE // UNIQUE_POINTS: ${chartPoints.length} // LATEST: Global ${logData[logData.length-1].x.toFixed(2)}`;
 
-                if (!manualMode) {
+                if (!manualMode && chartPoints.length > 0) {
                     const filterVal = viewFilter.value;
-                    const maxEpoch = logData[logData.length - 1].x;
+                    const maxEpoch = chartPoints[chartPoints.length - 1].x;
                     const minEpoch = filterVal === 'all' ? 0 : Math.max(0, maxEpoch - parseInt(filterVal));
                     
                     lossChart.options.scales.x.min = minEpoch;

@@ -28,48 +28,79 @@ impl MoeBlock {
         // 1. Gate logits
         let mut gate_logits = self.gate.forward(x)?; // [B, S, E]
         
-        // Add Gating Jitter (Noise)
+        // Add Gating Jitter (Noise) for exploration
         let noise = Tensor::rand(0.98f32, 1.02f32, gate_logits.shape(), dev)?;
         gate_logits = gate_logits.broadcast_mul(&noise)?;
 
-        // 2. Top-2 Routing
-        let max1_indices = gate_logits.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
-        let max1_values = gate_logits.max(candle_core::D::Minus1)?;
-        
-        let range = Tensor::arange(0u32, self.num_experts as u32, dev)?
-            .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?;
-        let mask1 = range.broadcast_eq(&max1_indices.unsqueeze(candle_core::D::Minus1)?)?;
-        
+        // 2. Top-3 Routing (v2.0 Evolution)
+        // Iterative masking for Top-K=3
         let large_neg = Tensor::new(&[-1e9f32], dev)?.broadcast_as(gate_logits.shape())?;
-        let gate_logits_masked = mask1.where_cond(&large_neg, &gate_logits)?;
         
-        let max2_indices = gate_logits_masked.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
-        let max2_values = gate_logits_masked.max(candle_core::D::Minus1)?;
+        // Max 1
+        let max1_indices = gate_logits.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
+        let mask1 = Tensor::arange(0u32, self.num_experts as u32, dev)?
+            .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
+            .broadcast_eq(&max1_indices.unsqueeze(candle_core::D::Minus1)?)?;
         
-        // Stack for Top-2 probs
-        let top2_probs_flat = candle_nn::ops::softmax(&Tensor::stack(&[max1_values.flatten_all()?, max2_values.flatten_all()?], 1)?, 1)?;
+        // Max 2
+        let gate_logits_m1 = mask1.where_cond(&large_neg, &gate_logits)?;
+        let max2_indices = gate_logits_m1.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
+        let mask2 = Tensor::arange(0u32, self.num_experts as u32, dev)?
+            .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
+            .broadcast_eq(&max2_indices.unsqueeze(candle_core::D::Minus1)?)?;
+            
+        // Max 3
+        let gate_logits_m2 = mask2.where_cond(&large_neg, &gate_logits_m1)?;
+        let max3_indices = gate_logits_m2.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
+
+        // Get Values
+        let max1_values = gate_logits.max(candle_core::D::Minus1)?;
+        let max2_values = gate_logits_m1.max(candle_core::D::Minus1)?;
+        let max3_values = gate_logits_m2.max(candle_core::D::Minus1)?;
+        
+        // 3. ASYMMETRIC SAFETY LOGIC (v2.0)
+        // Experts 0-3 are Safety-Critical (Ethics, Legal, Medical, Ecological).
+        // Bias toward HOLD (0) if confidence is below 0.05.
+        let safety_threshold = 0.05f32;
+        let apply_safety = |idx_tensor: &Tensor, val_tensor: &Tensor| -> Result<Tensor> {
+            let is_safety = idx_tensor.lt(4u32)?.to_dtype(candle_core::DType::F32)?;
+            let is_low_conf = val_tensor.lt(safety_threshold)?.to_dtype(candle_core::DType::F32)?;
+            let should_hold = (is_safety * is_low_conf)?;
+            // multiplier = 1.0 - should_hold
+            let multiplier = (should_hold.neg()? + 1.0)?;
+            val_tensor.broadcast_mul(&multiplier)
+        };
+
+        let max1_values = apply_safety(&max1_indices, &max1_values)?;
+        let max2_values = apply_safety(&max2_indices, &max2_values)?;
+        let max3_values = apply_safety(&max3_indices, &max3_values)?;
+
+        // Softmax across Top-3
+        let top3_logits = Tensor::stack(&[max1_values.flatten_all()?, max2_values.flatten_all()?, max3_values.flatten_all()?], 1)?;
+        let top3_probs = candle_nn::ops::softmax(&top3_logits, 1)?;
 
         let mut final_output = Tensor::zeros((b * s, h), x.dtype(), dev)?;
 
-        // 3. Streamlined Expert Execution
-        // We remove the slow to_scalar() calls and use pure tensor masking.
-        // Even if an expert isn't used, the matmul on a zero-mask is extremely fast on CPU.
-        let max1_flat = max1_indices.flatten_all()?;
-        let max2_flat = max2_indices.flatten_all()?;
+        // 4. Streamlined Expert Execution (Top-3)
+        let m1_flat = max1_indices.flatten_all()?;
+        let m2_flat = max2_indices.flatten_all()?;
+        let m3_flat = max3_indices.flatten_all()?;
         
-        let prob1 = top2_probs_flat.narrow(1, 0, 1)?.flatten_all()?;
-        let prob2 = top2_probs_flat.narrow(1, 1, 1)?.flatten_all()?;
+        let p1 = top3_probs.narrow(1, 0, 1)?.flatten_all()?;
+        let p2 = top3_probs.narrow(1, 1, 1)?.flatten_all()?;
+        let p3 = top3_probs.narrow(1, 2, 1)?.flatten_all()?;
 
         for expert_idx in 0..self.num_experts {
-            let mask1_bool = max1_flat.eq(expert_idx as u32)?;
-            let mask2_bool = max2_flat.eq(expert_idx as u32)?;
+            let mask1_bool = m1_flat.eq(expert_idx as u32)?;
+            let mask2_bool = m2_flat.eq(expert_idx as u32)?;
+            let mask3_bool = m3_flat.eq(expert_idx as u32)?;
             
-            let w1 = (mask1_bool.to_dtype(x.dtype())? * &prob1)?;
-            let w2 = (mask2_bool.to_dtype(x.dtype())? * &prob2)?;
-            let combined_weight = (w1 + w2)?.unsqueeze(1)?;
+            let w1 = (mask1_bool.to_dtype(x.dtype())? * &p1)?;
+            let w2 = (mask2_bool.to_dtype(x.dtype())? * &p2)?;
+            let w3 = (mask3_bool.to_dtype(x.dtype())? * &p3)?;
+            let combined_weight = (w1 + w2 + w3)?.unsqueeze(1)?;
             
-            // Mask the input: tokens not for this expert become 0
-            // This is efficient because most of the input matrix will be 0.
+            // Mask input for efficiency: only process tokens assigned to this expert
             let expert_in = x_flat.broadcast_mul(&combined_weight.gt(0.0)?.to_dtype(x.dtype())?)?;
             let expert_out = self.experts[expert_idx].forward(&expert_in)?;
             
