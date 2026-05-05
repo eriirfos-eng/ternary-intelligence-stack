@@ -50,10 +50,10 @@
             white-space: nowrap;
         }
         .tb-cell:last-child { border-right: none; margin-left: auto; }
-        .tb-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tb-val   { color: var(--text); font-weight: bold; }
-        .tb-val.accent { color: var(--accent); font-size: 15px; }
-        .tb-val.muted  { color: #666; }
+        .tb-label { color: #999; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tb-val   { color: #fff; font-weight: bold; font-size: 13px; }
+        .tb-val.accent { color: var(--accent); font-size: 16px; }
+        .tb-val.muted  { color: #aaa; font-size: 12px; font-weight: normal; }
 
         #model-name { color: var(--accent); font-weight: bold; font-size: 13px; letter-spacing: 1px; }
 
@@ -135,7 +135,7 @@
 
     <div class="tb-cell">
         <span class="tb-label">BEST</span>
-        <span class="tb-val" id="v-best" style="color:#666">—</span>
+        <span class="tb-val" id="v-best">—</span>
     </div>
 
     <div class="tb-cell">
@@ -145,7 +145,7 @@
 
     <div class="tb-cell">
         <span class="tb-label">ARCH</span>
-        <span class="tb-val muted">3L · 128H · 4HD · 12E · 128CTX</span>
+        <span class="tb-val muted">3 LAYERS · 128 HIDDEN · 4 HEADS · 12 EXPERTS · 128 CTX</span>
     </div>
 
     <div class="tb-cell" style="border-right:none; margin-left:auto; gap:6px;">
@@ -187,11 +187,38 @@
     const MAX_CHART_PTS      = 5000;
 
     // ── State ──────────────────────────────────────────────────────────
-    let lastBytePos   = 0;   // byte offset into training.log — only fetch new bytes
-    let manualMode    = false;
-    let lastLossVal   = null;
-    let bestLoss      = Infinity;
-    let totalPts      = 0;
+    let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
+    let manualMode       = false;
+    let lastLossVal      = null;
+    let bestLoss         = Infinity;
+    let totalPts         = 0;
+    let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
+
+    // ── Last-SMA reference line (MT5-style "closing price" line) ──────
+    let lastSmaY = null;
+    Chart.register({
+        id: 'lastSmaLine',
+        afterDraw(chart) {
+            if (lastSmaY === null) return;
+            const { ctx, chartArea, scales } = chart;
+            const y = scales.y.getPixelForValue(lastSmaY);
+            if (y < chartArea.top || y > chartArea.bottom) return;
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(chartArea.left, y);
+            ctx.lineTo(chartArea.right, y);
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'rgba(255,107,53,0.55)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#ff6b35';
+            ctx.textAlign = 'right';
+            ctx.fillText(lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
+            ctx.restore();
+        }
+    });
 
     // ── Chart ──────────────────────────────────────────────────────────
     const ctx = document.getElementById('lossChart').getContext('2d');
@@ -226,10 +253,13 @@
             maintainAspectRatio: false,
             animations: {
                 y: {
-                    duration: 500,
+                    // Only the new incoming point animates; old points get duration 0 (instant)
+                    duration: (ctx) => ctx.dataIndex >= newPointStartIdx ? 500 : 0,
                     easing: 'easeOutBounce',
                     from: (ctx) => {
-                        try { return ctx.chart.scales.y.max; } catch(e) { return 20; }
+                        if (ctx.dataIndex >= newPointStartIdx) {
+                            try { return ctx.chart.scales.y.max; } catch(e) { return 20; }
+                        }
                     }
                 }
             },
@@ -364,7 +394,9 @@
             pts.sort((a, b) => a.x - b.x);
             totalPts += newPts.length;
 
-            chart.data.datasets[1].data = sma(pts, 30);
+            const smaData = sma(pts, 30);
+            chart.data.datasets[1].data = smaData;
+            if (smaData.length > 0) lastSmaY = smaData[smaData.length - 1].y;
 
             // Auto-follow X axis unless user is panning/zooming
             if (!manualMode && pts.length > 0) {
@@ -376,6 +408,7 @@
 
             // Live updates (≤5 new pts) get the drop animation; bulk loads skip it
             const isLive = newPts.length <= 5;
+            newPointStartIdx = isLive ? pts.length - newPts.length : Infinity;
             chart.update(isLive ? undefined : 'none');
 
             updateTopbar(newPts[newPts.length - 1]);
