@@ -35,18 +35,44 @@ Every AI system today is forced to answer yes or no — even when the evidence i
 | ` 0` | **tend** | Insufficient data. Gather more before acting. |
 | `+1` | **affirm** | Clear positive signal. Proceed. |
 
-## Repository Architecture
+## 2. Repository Architecture
 
-This repository is split into three primary domains, each serving a distinct purpose in the TIS ecosystem:
+The Ternary Intelligence Stack is organized across three sibling repositories:
 
-| Path | Purpose |
+| Repository | Purpose |
 |-----------|----------------|
-| [`ternlang-root/`](../ternlang-root/) | **The Orchestration Layer:** Compiler, BET VM, and the MoE-13 Orchestrator MCP server. This layer handles logical routing and ternary decision-making. |
-| [`albert-moe-13/`](../albert-moe-13/) | **Model Development Framework:** The native research framework for training scaling. Houses the crates responsible for ternary manifold adaptation, STE-based training, and model architecture. |
-| [`agent_albert_cli/`](../agent_albert_cli/) | **Sovereign Agent Layer:** The terminal-native, model-agnostic AI agent (Albert) built in pure Rust for autonomous coding and orchestration. |
+| [`ternlang-root/`](../ternlang-root/) | **Core stack** — Compiler, BET VM, MCP server, REST API, all ternlang-* crates |
+| [`albert-moe-13/`](../albert-moe-13/) | **Model training** — From-scratch ternary LM training on CPU with live dashboard |
+| [`agent_albert_cli/`](../agent_albert_cli/) | **Agent layer** — Terminal-native, model-agnostic AI coding agent in Rust |
 
-### Note on Training Infrastructure
-As of current development, this repository houses the foundational model architecture, ternary math, and scaling research framework (see `albert-moe-13/crates/`). Massive-scale distributed training infrastructure is currently managed in a separate, secured workflow or remains in pre-cluster, experimental development stages. Experimental benchmarks and logic can be found in `albert-moe-13/crates/moe-core/src/training/`.
+### ternlang-root directory layout
+
+```
+ternlang-root/
+├── ternlang-core/        # Lexer, parser, AST, BET VM (53 opcodes)
+├── ternlang-cli/         # run · build · sim · fmt · repl · audit
+├── ternlang-lsp/         # LSP 3.17 — hover, completion, diagnostics
+├── ternlang-compat/      # 9-trit RISC assembler, Owlet S-expr parser
+├── ternlang-mcp/         # MCP server — 30 tools, stdio + HTTP transport
+├── ternlang-api/         # REST + SSE API, multi-tenant key management
+├── ternlang-moe/         # MoE-13 orchestrator — routing, memory, deliberation
+├── ternlang-ml/          # Sparse matmul, BitNet QAT, STE trainer, coalition vote
+├── ternlang-mkl/         # cuTern: Math Kernel Library with sparsity bypass
+├── ternlang-sql/         # Ternary graph database driver
+├── ternlang-bridge/      # Binary-to-ternary transpiler
+├── ternlang-net/         # Triadic networking stack
+├── ternlang-hdl/         # Verilog-2001 codegen, BET processor, FPGA sim
+├── ternlang-runtime/     # Distributed TCP actor runtime
+├── ternlang-studio/      # TernStudio flow canvas UI
+├── ternlang-*/           # 15+ additional protocol and domain crates
+├── ternpkg/              # Package manager
+├── stdlib/               # 28,500+ open-core .tern modules
+├── examples/             # 2,090+ example programs
+├── spec/                 # Grammar (EBNF), language reference, 30+ T-* protocol specs
+├── docs/                 # Architecture, roadmap, session log, ecosystem map
+├── whitepaper/           # IEEE two-column LaTeX whitepaper (DOI: 10.17605/OSF.IO/TZ7DC)
+└── research/             # Domain-specific research: market, legal, hardware, security…
+```
 
 ---
 
@@ -121,53 +147,29 @@ cargo build --release
 
 ## 4. Albert-MoE-13 — Ternary-Native Mixture-of-Experts Intelligence
 
-Albert-MoE-13 is our unified research and execution framework for ternary-native Mixture-of-Experts (MoE) systems.
-
-It combines **theoretical scaling research** with a **fully implemented, production-grade deliberation architecture**, establishing a new class of AI systems built on the ternary manifold {−1, 0, +1}.
-
-Unlike binary transformer architectures, Albert explores how large-scale parameter systems converge under **discrete ternary constraints**, enabling deterministic uncertainty, sub-linear memory scaling, and auditable reasoning.
+Albert-MoE-13 is our research and execution framework for ternary-native Mixture-of-Experts systems, combining **from-scratch ternary training** with a **production-grade deliberation architecture** built on the manifold {−1, 0, +1}.
 
 ---
 
 ### Research Objective
 
-Develop and validate **ternary-native scaling laws and training methods** that allow models to reach trillion-parameter regimes without reliance on high-precision floating-point computation.
+Demonstrate that ternary-native training — weights constrained to {−1, 0, +1} throughout both forward and backward passes via Straight-Through Estimation — can match or exceed float32 performance at a fraction of the inference cost. Ternary matmuls reduce to integer additions (no multiplies), making inference 2–5× cheaper per parameter on standard hardware and substantially cheaper on future ternary silicon.
 
 ---
 
 ### Core Research Dimensions
 
-- **Ternary Scaling Laws**  
-  Predict loss convergence behavior as parameter count (N) scales beyond 1T in a discrete manifold.
-
-- **Manifold Stability**  
-  Quantify signal preservation and degradation across ternary thresholds under forward and backward passes.
-
-- **Native Training (STE/QAT)**  
-  Train directly on ternary weights using Straight-Through Estimators and Quantization-Aware Training loops.
-
-- **Sparse Geometry**  
-  Leverage inherent weight sparsity (0-state) for sub-linear memory growth and efficient hardware execution.
+- **From-scratch ternary training** — STE-based end-to-end training with no float32 weight baseline required
+- **Auto-evolutionary depth** — model grows its own transformer layers when it plateaus (Net2Net safe-copy surgery)
+- **Per-layer sparsity gradient** — early layers stay dense (syntax), deep layers become sparse (abstraction)
+- **L1 sparsity reward** in the loss function, so the model learns strategically where to be zero
+- **QAT pipeline** (roadmap) — post-training quantization of third-party checkpoints via `ternlang-ml`'s `SteTrainer`
 
 ---
 
-### System Architecture (Current Implementation)
+### The 13-Expert Deliberation Architecture
 
-Albert-MoE-13 is instantiated as a **13-expert deliberation system**, where each query is evaluated across epistemic domains instead of routed through purely computational layers.
-
-**Base Model:** Ternarized Llama 3.2 1B
-
-#### Ternary Model Pipeline
-
-| Stage | Description | Output |
-|------|-------------|--------|
-| Ternarization | f32 → {−1, 0, +1} via threshold mapping | `llama32-1b.tern.json` |
-| Coherence Packing | 4 trits/byte compression | `llama32-1b.tern.bin` |
-| Signal Verification | Forward-pass integrity check | 97.06% coherence |
-| QAT Fine-Tuning | STE-based latent weight adaptation | `SteTrainer` |
-| Perplexity Validation | Pre/post evaluation | PPL −43%, accuracy +6.2% |
-
-All components are implemented in `ternlang-ml` and fully reproducible.
+The `ternlang-moe` orchestrator evaluates each query across a fixed set of epistemic domains. Each expert implements `ExpertLogic` and is scored on a 6-axis competence vector: `[syntax, world_knowledge, reasoning, tool_use, persona, safety]`
 
 ---
 
@@ -380,20 +382,15 @@ Albert will be deployed as a sidecar service alongside the TernStudio API on Fly
 
 The core performance claim of TIS rests on a single hardware primitive: `@sparseskip` — an opcode that skips computation on zero-state (`tend`) weights entirely.
 
-**Measured baseline (v0.3.0, `ternlang-ml` on x86):**
+**Measured results (`ternlang-ml` on x86, [commit `60f7ef6`](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)):**
 
 | Scenario | Sparsity | Speedup over dense float32 |
 |----------|----------|-----------------------------|
-| Typical BitNet-style distribution | ~50–70% | **2–4×** |
-| Highly sparse ternary model | ~90% | **~10×** |
-#### Sparse Scaling Breakdown (Estimated Throughput Multiplier)
-| Sparsity Level | Throughput Multiplier |
-| :--- | :--- |
-| 25% (Light) | 53.1x |
-| 40% (BitNet Base) | 73.6x |
-| 60% (Optimal) | 86.1x |
+| BitNet-style distribution | ~56% | **2.3×** (baseline) |
+| Typical sparse ternary | ~70% | **~4×** |
+| Highly sparse ternary | ~90% | **~10×** |
 
-The 2.3× figure is the baseline measured result from the first `@sparseskip` benchmark ([commit `60f7ef6`](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)). Speedup scales proportionally with sparsity.
+Speedup scales proportionally with sparsity — every zero-weight skipped is a full multiply-add saved. The 2.3× baseline is a conservative floor measured at 56% sparsity; Albert-MoE-13's L1 regularization and per-layer thresholding push trained models toward 70–90%.
 
 **5-trit block packing** encodes 5 trits into 8 bits (vs 10 bits for naive 2-bit emulation) — a 1.25× storage density improvement.
 
@@ -612,7 +609,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 | [`ternlang-ml`](ternlang-ml/) | BSL-1.1 | Sparse matmul, BitNet quantization, TernaryMLP, deliberation engine, coalition vote, action gate |
 | [`ternlang-moe`](ternlang-moe/) | BSL-1.1 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, AgentHarness |
 | [`ternlang-api`](ternlang-api/) | BSL-1.1 | REST + SSE API, multi-tenant key management, GitHub repo invite flow |
-| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 19 tools (10 free + 9 premium), stdio + HTTP transport, server-side 3-layer memory, TernAudit |
+| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 30 tools (all free), stdio + HTTP transport, server-side 3-layer memory, TernAudit |
 | [`ternlang-mkl`](ternlang-mkl/) | BSL-1.1 | **cuTern**: Math Kernel Library with native sparsity bypass |
 | [`ternlang-sql`](ternlang-sql/) | BSL-1.1 | Native Ternary Graph Database driver (50% speedup) |
 | [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The Seamless Migration Layer) |
@@ -699,13 +696,12 @@ For developers and startups building AI agents. **All 30 MCP tools are free** fo
 Production-grade deployment for teams requiring EU AI Act-compliant safety gating, audit trails, and high-volume inference. Includes 50,000 API calls/month, QNN & SEC modules, T-HAL silicon bindings, and TernAudit log access. **€349/month** · [Subscribe](https://buy.stripe.com/eVq7sNfle0bl86937a7N609)
 
 ### Tier 4 — Enterprise
-Unlimited API calls/month
-On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimited throughput, dedicated SLA, and direct BSL-1.1 source access for air-gapped or regulated environments. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) — **from €2,500/month.**
+Unlimited API calls/month. On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimited throughput, dedicated SLA, and direct BSL-1.1 source access for air-gapped or regulated environments. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) — **from €2,500/month.**
 
-```
 **After purchasing a license:** Visit **[ternlang.com/activate](https://ternlang.com/activate)**, enter your API key and GitHub username, and you will receive a collaborator invite to the private repo automatically.
 
 → [See full tier table in stdlib/PREMIUM.md](stdlib/PREMIUM.md)
+
 ---
 
 ## 15. Ecosystem Position
