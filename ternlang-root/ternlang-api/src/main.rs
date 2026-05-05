@@ -489,6 +489,7 @@ async fn require_api_key(
         || path.starts_with("/api/stdlib/read/")
         || path == "/kpi"
         || path.starts_with("/kpi/")
+        || path.starts_with("/api/kpi/")
         || path.starts_with("/assets/")
         || path == "/favicon.ico"
         || path.ends_with(".map")
@@ -605,6 +606,30 @@ async fn kpi_data(axum::extract::Path(filename): axum::extract::Path<String>) ->
         Err(_) => StatusCode::NOT_FOUND.into_response()
     }
 }
+async fn kpi_upload(
+    axum::extract::Path(filename): axum::extract::Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> impl axum::response::IntoResponse {
+    const ALLOWED: &[&str] = &["index.html", "ternlang_kpi_log.json", "ternlang_gh_traffic.json"];
+    if !ALLOWED.contains(&filename.as_str()) {
+        return (StatusCode::BAD_REQUEST, "invalid filename").into_response();
+    }
+    let secret = std::env::var("KPI_SECRET").unwrap_or_default();
+    let token = headers.get("X-Kpi-Token").and_then(|v| v.to_str().ok()).unwrap_or("");
+    if secret.is_empty() || token != secret {
+        return (StatusCode::UNAUTHORIZED, "unauthorized").into_response();
+    }
+    let dir = std::path::Path::new("/data/kpi");
+    if let Err(e) = tokio::fs::create_dir_all(dir).await {
+        return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response();
+    }
+    match tokio::fs::write(dir.join(&filename), &body).await {
+        Ok(_) => (StatusCode::OK, "ok").into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
 static WASM_JS:         &str = include_str!("../../playground/pkg/ternlang_wasm.js");
 static WASM_BYTES:      &[u8] = include_bytes!("../../playground/pkg/ternlang_wasm_bg.wasm");
 
@@ -5049,6 +5074,7 @@ async fn main() {
         .route("/activate",             get(activate_page))
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))
+        .route("/api/kpi/upload/{filename}", post(kpi_upload))
         .route("/fortune",              get(fortune_page))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))

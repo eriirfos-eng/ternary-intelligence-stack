@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 permissions:
-  contents: read # No write — history stays clean
+  contents: read
 
 jobs:
   update-kpis:
@@ -20,16 +20,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Setup flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Fetch existing KPI data from Fly.io
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Fetch existing KPI data from API
         run: |
           mkdir -p docs/kpi
-          flyctl ssh sftp get --app ternlang-api /data/kpi/ternlang_kpi_log.json docs/kpi/ternlang_kpi_log.json || true
-          flyctl ssh sftp get --app ternlang-api /data/kpi/ternlang_gh_traffic.json docs/kpi/ternlang_gh_traffic.json || true
+          curl -sf -o docs/kpi/ternlang_kpi_log.json    https://ternlang.com/kpi/ternlang_kpi_log.json    || true
+          curl -sf -o docs/kpi/ternlang_gh_traffic.json https://ternlang.com/kpi/ternlang_gh_traffic.json || true
 
       - name: Run KPI Generator
         env:
@@ -37,11 +32,19 @@ jobs:
         run: |
           python scripts/generate_kpi.py
 
-      - name: Push KPI data to Fly.io volume
+      - name: Push updated KPI data to API
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          KPI_SECRET: ${{ secrets.KPI_SECRET }}
         run: |
-          flyctl ssh console --app ternlang-api -C "mkdir -p /data/kpi"
-          flyctl ssh sftp put --app ternlang-api docs/kpi/index.html /data/kpi/index.html
-          flyctl ssh sftp put --app ternlang-api docs/kpi/ternlang_kpi_log.json /data/kpi/ternlang_kpi_log.json
-          flyctl ssh sftp put --app ternlang-api docs/kpi/ternlang_gh_traffic.json /data/kpi/ternlang_gh_traffic.json
+          curl -sf -X POST https://ternlang.com/api/kpi/upload/index.html \
+               -H "X-Kpi-Token: $KPI_SECRET" \
+               -H "Content-Type: text/html" \
+               --data-binary @docs/kpi/index.html
+          curl -sf -X POST https://ternlang.com/api/kpi/upload/ternlang_kpi_log.json \
+               -H "X-Kpi-Token: $KPI_SECRET" \
+               -H "Content-Type: application/json" \
+               --data-binary @docs/kpi/ternlang_kpi_log.json
+          curl -sf -X POST https://ternlang.com/api/kpi/upload/ternlang_gh_traffic.json \
+               -H "X-Kpi-Token: $KPI_SECRET" \
+               -H "Content-Type: application/json" \
+               --data-binary @docs/kpi/ternlang_gh_traffic.json
