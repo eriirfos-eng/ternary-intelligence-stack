@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 permissions:
-  contents: write
+  contents: read # No write — history stays clean
 
 jobs:
   update-kpis:
@@ -20,20 +20,22 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Fetch existing KPI data from Fly.io
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          mkdir -p docs/kpi
+          flyctl ssh sftp get --app ternlang-api /data/kpi/ternlang_kpi_log.json docs/kpi/ternlang_kpi_log.json || true
+          flyctl ssh sftp get --app ternlang-api /data/kpi/ternlang_gh_traffic.json docs/kpi/ternlang_gh_traffic.json || true
+
       - name: Run KPI Generator
         env:
           KPI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python scripts/generate_kpi.py
-
-      - name: Commit and Push Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "docs(kpi): auto-update dashboard data [skip ci]"
-          file_pattern: "docs/kpi/*"
-
-      - name: Setup flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Push KPI data to Fly.io volume
         env:
