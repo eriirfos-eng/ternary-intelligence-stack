@@ -1,0 +1,1150 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% Ternary Intelligence Stack: A Sovereign Full-Stack Post-Binary Architecture
+% for Sparse Neural Intelligence, Auto-Evolutionary Language Model Training,
+% and Regulatory-Compliant Agentic Systems
+%
+% RFI-IRFOS — Research Focus Institute
+% Elisabethinergasse 25, 8020 Graz, Austria | ZVR: 1015608684
+%
+% Submission: SPRIND — Agentur für Sprunginnovationen (Next Frontier AI 2026)
+% Format: IEEE two-column (IEEEtran)
+% Version: v1.3.5 Ecosystem / v1.3.7 MoE-13 Model
+% ─────────────────────────────────────────────────────────────────────────────
+
+\documentclass[journal,10pt,twocolumn]{IEEEtran}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{array}
+
+% ── Ternlang code style ───────────────────────────────────────────────────────
+\definecolor{ternkw}{RGB}{0,164,140}
+\definecolor{terncmt}{RGB}{120,120,150}
+\definecolor{ternlit}{RGB}{220,80,80}
+\definecolor{ternbg}{RGB}{18,18,30}
+\definecolor{ternfg}{RGB}{220,220,230}
+
+\lstdefinelanguage{ternlang}{
+  morekeywords={fn,let,match,if,for,in,loop,break,return,
+                agent,spawn,send,await,struct,trit,trittensor,agentref,
+                truth,hold,conflict,consensus,invert,matmul,sparsity,cast},
+  morecomment=[l]{//},
+  morestring=[b]",
+  sensitive=true
+}
+
+\lstset{
+  language=ternlang,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{ternkw}\bfseries,
+  commentstyle=\color{terncmt}\itshape,
+  stringstyle=\color{ternlit},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{terncmt},
+  numbersep=4pt,
+  xleftmargin=10pt
+}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+
+\title{Ternary Intelligence Stack: A Sovereign Full-Stack Post-Binary
+       Architecture for Sparse Neural Intelligence,
+       Auto-Evolutionary Language Model Training, and
+       Regulatory-Compliant Agentic Systems}
+
+\author{Simeon~Kepp~\IEEEmembership{(Lead Architect)},\;
+        Zabih~Karimi~\IEEEmembership{(ML \& Network Engineering)},\;
+        Nikoletta~Csonka~\IEEEmembership{(International Relations)},\;
+        Lisa~Scharler~\IEEEmembership{(Social Technology)},\;
+        and Louis~Paul~Ehrig~\IEEEmembership{(Public Affairs)}
+\thanks{All authors are with \textbf{RFI-IRFOS} (Research Focus Institute ---
+Interdisciplinary Research Facility for Open Sciences),
+Elisabethinergasse~25, 8020~Graz, Austria.
+E-mail: \texttt{\{s.kepp, z.karimi, csonikoletta, l.scharler, l.ehrig\}@ternlang.com}.
+Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}.
+ZVR:~1015608684. Patent Pending A50296/2026.}
+}
+
+\begin{document}
+
+\maketitle
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{abstract}
+We present the \textbf{Ternary Intelligence Stack (TIS)}, a sovereign,
+full-stack post-binary architecture for neural intelligence built and
+maintained from Graz, Austria by RFI-IRFOS. TIS comprises
+\textbf{34 published crates} at ecosystem version v1.3.5 spanning: a
+domain-specific language (Ternlang), a bytecode compiler, a stack-based
+virtual machine (BET VM), a hardware description language backend, a
+distributed actor runtime, machine learning inference kernels, a
+live-training auto-evolutionary language model (Albert-MoE-13), and a
+full EU AI Act compliance layer—all unified under a single coherent
+primitive: the \emph{trit} $t \in \{-1, 0, +1\}$, where the value
+$0$ represents an \emph{active neutral state} rather than absence.
+
+The principal computational contribution is \textbf{TSPARSE\_MATMUL}: a
+first-class VM opcode that elides multiply operations against zero-weighted
+trit elements. Hardware-verified profiling identifies a non-linear performance
+breakpoint at $10.06\%$ sparsity ($95\%$ CI: $[10.00\%, 10.38\%]$,
+bootstrap $n = 1{,}000$, $\Delta\text{AIC} = 1683.29$), with a maximum
+$2.84\times$ wall-clock speedup at $90\%$ sparsity and four distinct
+microarchitectural regimes---branch-bound, transition, compute-bound, and
+memory-bound---each characterised by measurable hardware counter transitions.
+
+The \textbf{Albert-MoE-13 Training System} introduces an
+\textbf{EvolutionManager}: a plateau-mastery finite state machine that
+governs dynamic model expansion via \textbf{Net2Net Safe Copy Surgery}
+(Function-Preserving Transforms), allowing the model to grow from a
+3-layer Toddler phase to arbitrarily deep architectures without
+catastrophic forgetting. A four-pillar training corpus---biblical
+linguistics, encyclopedic knowledge (Wikipedia), dialectical reasoning
+(Reddit), and engineering case studies (GitHub)---feeds a sub-2.0 loss
+convergence target. Version v1.3.7 is archived as ``Stable Biblical
+Foundation'' at average loss $7.01$.
+
+The \textbf{MoE-13 v2.0 Orchestrator} scales to 1~Router and 12~Domain
+Experts with Top-3 Sparse Routing and Asymmetric Safety Logic. The
+\textbf{ternaudit-guard} crate maps ternary decision states directly
+to EU AI Act Articles~13--15, providing the first language-native
+regulatory compliance architecture for an AI execution substrate.
+
+Beyond computation, TIS represents Europe's answer to the binary
+hyperscaling paradigm: a complete, sovereign, open-core AI stack,
+developed in Austria, licensed under LGPL and BSL, and designed to
+operate without dependency on external proprietary AI infrastructure.
+\end{abstract}
+
+\begin{IEEEkeywords}
+balanced ternary, post-binary AI, sovereign AI infrastructure, sparse
+inference, BitNet, domain-specific language, virtual machine, actor model,
+FPGA synthesis, Verilog, mixture-of-experts, auto-evolutionary training,
+Net2Net surgery, EU AI Act, ternary orchestration, European sovereignty
+\end{IEEEkeywords}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+\label{sec:intro}
+
+The computational substrate underlying modern artificial intelligence is
+binary. Floating-point arithmetic, two-state memory, and Boolean logic gates
+have driven five decades of progress---but they introduce a fundamental
+representational mismatch when modelling systems that are inherently
+three-valued: \emph{affirmed}, \emph{denied}, and \emph{undecided}.
+
+Clinical diagnosis, legal reasoning, sensor fusion under noise, and
+multi-agent consensus all require a native neutral state that binary
+computing forces to encode as a special case---null pointers, NaN, sentinel
+values, or probabilistic scores collapsed to a threshold. Each encoding is a
+workaround for an absent primitive.
+
+Balanced ternary~\cite{knuth1997art} provides that primitive. A \emph{trit}
+$t \in \{-1, 0, +1\}$ carries three symmetric values. The neutral value $0$
+is \emph{active}---a deliberate state of hold, not an empty bit pattern.
+This is not a theoretical curiosity: at the scale of modern neural networks,
+BitNet~\cite{ma2024era} and related work demonstrate that ternary-quantized
+weights preserve accuracy with dramatically reduced computation. The case for
+a ternary-native execution substrate is both theoretical and empirical.
+
+Despite this, the ternary computing field remains fragmented: hobbyist
+emulators, academic EDA tools for memristor hardware~\cite{bos2020ternary},
+isolated Lisp interpreters, and hardware simulators without compiler support.
+No project provides the full vertical stack. No project trains a language
+model natively on a ternary substrate. No project maps ternary logic directly
+to regulatory compliance requirements.
+
+\textbf{Europe in particular faces a critical juncture.} The binary
+hyperscaling paradigm—trillion-parameter models trained on proprietary
+infrastructure at billion-dollar cost—is both technically brittle and
+strategically vulnerable. The \textbf{Ternary Intelligence Stack (TIS)} is
+the RFI-IRFOS response: a complete, sovereign, open-core AI platform built in
+Austria, requiring no external proprietary AI infrastructure, and designed for
+the post-binary frontier.
+
+\noindent Our contributions span eleven dimensions:
+
+\begin{enumerate}
+  \item A \emph{language design} for balanced ternary: three-way exhaustive
+        pattern matching, first-class trit tensors, and an actor model for
+        ternary message passing (\S\ref{sec:language}).
+  \item The \textbf{BET ISA}: a formal 2-bit-encoded instruction set with
+        opcode coverage from arithmetic through tensor operations and
+        distributed agent control (\S\ref{sec:isa}).
+  \item \textbf{TSPARSE\_MATMUL}: a VM opcode that skips zero-weight
+        multiplications at the instruction level, with hardware-verified
+        profiling across four microarchitectural regimes (\S\ref{sec:sparse}).
+  \item A \textbf{Verilog-2001 hardware backend} with synthesisable sparse
+        matmul array and full BET processor (\S\ref{sec:hdl}).
+  \item A \textbf{Ternary AI Reasoning Toolkit}: five structural primitives
+        that make any AI agent's decision loop architecturally ternary
+        (\S\ref{sec:reasoning}).
+  \item The \textbf{MoE-13 v2.0 Ternary Orchestrator}: 1~Router + 12~Domain
+        Experts with Top-3 Sparse Routing, Asymmetric Safety Logic, dual-key
+        synergistic routing, $1{+}1{=}3$ emergent triad synthesis, and
+        three-tier memory mesh (\S\ref{sec:moe}).
+  \item \textbf{Albert-MoE-13}: the first language model trained natively
+        within a ternary execution stack, governed by an \textbf{EvolutionManager}
+        and expanded via \textbf{Net2Net Safe Copy Surgery}
+        (\S\ref{sec:albert}).
+  \item \textbf{EU AI Act compliance} via \texttt{ternaudit-guard}: the
+        first language-native mapping of ternary trit states to regulatory
+        requirements under Articles~13--15 (\S\ref{sec:euaiact}).
+  \item \textbf{Ecosystem bridges} connecting existing ternary projects to
+        the BET VM as a common runtime (\S\ref{sec:ecosystem}).
+  \item A \textbf{34-crate sovereign ecosystem} at v1.3.5: the complete
+        vertical stack from trit arithmetic to REST API, CLI tooling,
+        package management, and VS~Code IDE---all published open-core to
+        \texttt{crates.io} (\S\ref{sec:status}).
+  \item A \textbf{reference example corpus}: 275+ executable \texttt{.tern}
+        programs demonstrating the hold state across aerospace, medicine,
+        distributed systems, civic governance, and AI agent design.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Background: Balanced Ternary}
+\label{sec:background}
+
+\subsection{Trit arithmetic}
+
+A \emph{trit} $t \in T = \{-1, 0, +1\}$ participates in the following
+complete operations~\cite{knuth1997art}:
+
+\begin{definition}[Ternary addition with carry]
+For trits $a, b \in T$, define $s = \mathrm{sum}(a,b)$ and
+$c = \mathrm{carry}(a,b)$ such that $a + b = 3c + s$, where
+$s, c \in T$.
+\end{definition}
+
+The complete sum/carry table is:
+
+\begin{table}[h]
+\centering
+\small
+\caption{Balanced ternary addition (sum, carry)}
+\label{tab:add}
+\begin{tabular}{c|ccc}
+\toprule
+$a \backslash b$ & $-1$ & $0$ & $+1$ \\
+\midrule
+$-1$ & $(+1,-1)$ & $(-1,\ 0)$ & $(0,\ 0)$ \\
+$\ 0$ & $(-1,\ 0)$ & $(0,\ 0)$ & $(+1,\ 0)$ \\
+$+1$ & $(0,\ 0)$ & $(+1,\ 0)$ & $(-1,+1)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{definition}[Ternary multiplication]
+$\mathrm{mul}(a,b) = a \cdot b$ under integer multiplication,
+restricted to $T$: $\mathrm{mul}(a,b) \in T$ since $|a|,|b| \leq 1$.
+\end{definition}
+
+\begin{definition}[Consensus (ternary OR)]
+$\mathrm{cons}(a,b) = a$ if $a = b$, else $0$.
+\end{definition}
+
+\begin{definition}[Negation]
+$\mathrm{neg}(t) = -t$. Note $\mathrm{neg}(0) = 0$.
+\end{definition}
+
+\subsection{The 2-bit BET encoding}
+
+Hardware naturally operates in binary. We encode trits as 2-bit pairs:
+
+\begin{table}[h]
+\centering
+\small
+\caption{BET 2-bit trit encoding}
+\label{tab:encoding}
+\begin{tabular}{ccc}
+\toprule
+Bits & Value & Meaning \\
+\midrule
+\texttt{0b01} & $-1$ & conflict \\
+\texttt{0b10} & $+1$ & truth \\
+\texttt{0b11} & $\ 0$ & hold \\
+\texttt{0b00} & --- & FAULT (invalid) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This encoding is \emph{not} two's complement. The bit pattern \texttt{0b11}
+for zero is chosen so that the all-ones reset state of a register file
+initialises every register to hold---the semantically correct neutral
+value---without special reset logic. Negation maps to a simple bit swap:
+\texttt{0b01} $\leftrightarrow$ \texttt{0b10}, leaving \texttt{0b11}
+invariant.
+
+\begin{proposition}[Negation as bit swap]
+For encoding $e(t)$ as above, $e(\mathrm{neg}(t)) = \{e(t)[0], e(t)[1]\}$
+(swap bits).
+\end{proposition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The Ternlang Language}
+\label{sec:language}
+
+\subsection{Design principles}
+
+Ternlang is statically typed, expression-oriented, and compiled to BET
+bytecode. Three design decisions distinguish it from binary-native languages
+adapted to ternary:
+
+\textbf{Exhaustive three-way matching.} Every \texttt{match} expression must
+cover all three trit arms. The compiler rejects non-exhaustive matches at
+parse time, eliminating an entire class of runtime error present in languages
+that bolt ternary logic onto binary pattern matching.
+
+\textbf{$0$ is active.} The type system and semantics assign distinct meaning
+to $-1$ (conflict), $0$ (hold, active neutral), and $+1$ (truth). There is no
+null, no undefined, no NaN. A trit always carries a definite value.
+
+\textbf{Sparsity is a language feature.} The \texttt{@sparseskip} directive
+marks a tensor operation as sparse-aware, routing the compiler to emit
+\texttt{TSPARSE\_MATMUL} instead of \texttt{TMATMUL}. Sparsity is expressed
+in the source language, not discovered by the optimizer.
+
+\subsection{Core language constructs}
+
+\begin{lstlisting}[caption={Ternary classifier with exhaustive match}]
+fn classify(signal: trit) -> trit {
+    match signal {
+        -1 => conflict()  // disagreement confirmed
+         0 => hold()      // awaiting evidence
+        +1 => truth()     // assertion confirmed
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Sparse matrix multiply with @sparseskip}]
+// Route to TSPARSE_MATMUL at the ISA level
+@sparseskip
+let output: trittensor<8 x 8> =
+    matmul(input, weights);
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Actor model for ternary message passing}]
+agent Voter {
+    fn handle(msg: trit) -> trit {
+        consensus(msg, hold())
+    }
+}
+
+let v: agentref = spawn Voter;
+send v truth();
+let decision: trit = await v;
+\end{lstlisting}
+
+\subsection{Type system}
+
+The core types are \texttt{trit} (a single balanced ternary value),
+\texttt{trittensor<N x M>} (an $N \times M$ matrix of trits stored on the
+tensor heap), and \texttt{agentref} (a handle to a running actor instance,
+local or remote). Struct types with trit/tensor fields are supported via
+field-name mangling in the register allocator.
+
+\subsection{Ternary Error Propagation}
+\label{subsec:propagate}
+
+Ternlang introduces a postfix \texttt{?} operator for ternary-native error
+propagation, analogous to Rust's \texttt{?} operator but grounded in the
+three-valued semantics of the trit space. For any expression $e$ of type
+\texttt{trit}, writing $e\texttt{?}$ has the following semantics:
+
+\begin{equation}
+  e\texttt{?} \;\triangleq\;
+  \begin{cases}
+    \text{return}\;{-1} & \text{if } e = {-1} \\
+    e                   & \text{otherwise}
+  \end{cases}
+  \label{eq:propagate}
+\end{equation}
+
+This elevates trit $-1$ (conflict) from a value to a structural signal: any
+function that receives a conflict can propagate it up the call chain without
+explicit match arms.
+
+\subsection{Cross-File Module System}
+\label{subsec:modules}
+
+Ternlang's module system supports two resolution strategies, tried in order:
+(1)~\textbf{Built-in stdlib} (compile-time embedded): \texttt{std::trit},
+\texttt{std::math}, \texttt{std::tensor}, \texttt{std::io},
+\texttt{ml::quantize}, \texttt{ml::inference} are embedded in the compiler
+binary via \texttt{include\_str!}---zero filesystem I/O at runtime;
+(2)~\textbf{User-defined modules}: a \texttt{ModuleResolver} walks
+\texttt{use} paths relative to the source file's directory. Both strategies
+deduplicate: a module loaded by multiple \texttt{use} statements is parsed
+exactly once.
+
+\subsection{Diagnostic Philosophy}
+\label{subsec:diagnostics}
+
+Every diagnostic carries a machine-readable code and a human-readable nudge
+framed in ternary philosophy: \texttt{[PARSE-004]} ``\emph{ternary has three
+states---cover all three or the compiler won't let you through}'';
+\texttt{[SCOPE-001]} ``\emph{hold state---declare before use}'';
+\texttt{[BET-001]} ``\emph{you tried to pop a truth that wasn't there.}''
+This ensures that newcomers receive both actionable guidance and an
+introduction to the philosophy underpinning the type system.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The BET Instruction Set Architecture}
+\label{sec:isa}
+
+\subsection{Machine model}
+
+The BET VM is a stack-based machine with 27 registers (2 bits each, reset to
+\texttt{0b11} / hold), an unbounded value stack, a tensor heap, a call stack,
+an agent table, and a carry register. The choice of 27 registers reflects the
+ternary motif: $27 = 3^3$.
+
+\subsection{Instruction encoding}
+
+Instructions are variable-length, with a 1-byte opcode followed by 0--2
+operand bytes. Table~\ref{tab:isa} lists selected opcodes from the 51-opcode
+BET ISA.
+
+\begin{table}[h]
+\centering
+\small
+\caption{BET ISA opcode reference (selected)}
+\label{tab:isa}
+\begin{tabular}{lll}
+\toprule
+Opcode & Mnemonic & Stack effect \\
+\midrule
+\texttt{0x00} & THALT            & --- \\
+\texttt{0x01} & TPUSH \textit{t} & $\to t$ \\
+\texttt{0x02} & TADD             & $a\ b \to s\ c$ \\
+\texttt{0x03} & TMUL             & $a\ b \to t$ \\
+\texttt{0x04} & TNEG             & $t \to \mathrm{neg}(t)$ \\
+\texttt{0x05} & TJMP\_POS        & $t \to$ (jmp if $t=+1$) \\
+\texttt{0x06} & TJMP\_ZERO       & $t \to$ (jmp if $t=0$) \\
+\texttt{0x07} & TJMP\_NEG        & $t \to$ (jmp if $t=-1$) \\
+\texttt{0x10} & TCALL            & (push PC; jmp) \\
+\texttt{0x11} & TRET             & (pop PC; jmp) \\
+\texttt{0x20} & TMATMUL          & $r_A\ r_B \to r_C$ \\
+\texttt{0x21} & TSPARSE\_MATMUL  & $r_A\ r_B \to r_C$ \\
+\texttt{0x22} & TIDX             & ref $i\ j \to t$ \\
+\texttt{0x23} & TSET             & ref $i\ j\ t \to$ \\
+\texttt{0x24} & TSHAPE           & ref $\to N\ M$ \\
+\texttt{0x25} & TSPARSITY        & ref $\to$ count \\
+\texttt{0x30} & TSPAWN           & $\to$ agentref \\
+\texttt{0x31} & TSEND            & agentref $m \to$ \\
+\texttt{0x32} & TAWAIT           & agentref $\to t$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Sparse Ternary Inference}
+\label{sec:sparse}
+
+\subsection{Ternary quantization}
+
+BitNet-style ternary weight quantization~\cite{ma2024era} maps floating-point
+weights $w \in \mathbb{R}$ to $\hat{w} \in \{-1, 0, +1\}$ using a threshold
+$\tau$:
+
+\begin{equation}
+  \hat{w} = \begin{cases}
+    +1 & w >  \tau \\
+     0 & |w| \leq \tau \\
+    -1 & w < -\tau
+  \end{cases}
+  \qquad \tau = \frac{1}{2} \cdot \mathbb{E}[|w|]
+  \label{eq:quantize}
+\end{equation}
+
+The resulting weight distribution is heavily concentrated at $0$ (hold):
+typical language model weights at BitNet scale show $55$--$65\%$ zero
+elements after quantization.
+
+\subsection{TSPARSE\_MATMUL}
+
+The key insight is that a multiply against a zero-weight trit produces zero
+regardless of the input value:
+$\mathrm{mul}(a, 0) = 0\ \forall a \in T$.
+\texttt{TSPARSE\_MATMUL} implements a sparse inner-product loop that tests
+the weight trit before executing the multiply, skipping all zero-weight
+elements. Sparsity awareness is thus a \emph{source-language} property
+surfaced at the ISA level via the \texttt{@sparseskip} directive---not a
+runtime optimization that may or may not trigger.
+
+\subsection{Hardware-Verified Performance Profiling}
+\label{subsec:hwperf}
+
+Standard micro-benchmarks on quantized weight matrices establish a
+theoretical baseline; the SPRIND Scientific Artifact~\cite{sprind2026}
+provides hardware-counter-verified profiling using bootstrap resampling
+($n = 1{,}000$ iterations) with piecewise linear regression.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Measured sparsity vs.\ wall-clock speedup and per-FLOP efficiency}
+\label{tab:benchmark}
+\begin{tabular}{rrrl}
+\toprule
+Sparsity & Speedup & Efficiency & Regime \\
+\midrule
+\phantom{0}0\%  & $1.00\times$ & $1.00\times$ & Branch-Bound \\
+\phantom{0}5\%  & $1.02\times$ & $0.97\times$ & Branch-Bound \\
+10\%            & $0.90\times$ & $0.81\times$ & Branch-Bound \\
+15\%            & $1.04\times$ & $0.88\times$ & Transition \\
+20\%            & $0.98\times$ & $0.79\times$ & Transition \\
+30\%            & $1.07\times$ & $0.75\times$ & Compute-Bound \\
+40\%            & $1.11\times$ & $0.66\times$ & Compute-Bound \\
+50\%            & $1.29\times$ & $0.64\times$ & Compute-Bound \\
+60\%            & $1.39\times$ & $0.56\times$ & Compute-Bound \\
+75\%            & $1.70\times$ & $0.43\times$ & Memory-Bound \\
+90\%            & $\mathbf{2.84\times}$ & $0.28\times$ & Memory-Bound \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Breakpoint analysis.} A statistically confirmed non-linear breakpoint
+occurs at $10.06\%$ sparsity ($95\%$ CI: $[10.00\%, 10.38\%]$;
+$\Delta\text{AIC} = 1683.29$ favoring piecewise over linear model), marking
+the shift from branch-predictor overhead to physical execution speedup.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Microarchitectural regime transitions}
+\label{tab:regimes}
+\begin{tabular}{p{1.0cm}p{1.4cm}p{4.8cm}}
+\toprule
+Region & Bottleneck & Key hardware evidence \\
+\midrule
+0--10\% & Branch / Frontend & 12.4--18.7\% branch miss, $\sim$1.10 IPC; skip-check overhead dominates \\
+10--20\% & Transition & Performance crossover; frontend stall dominance recedes \\
+20--60\% & Compute-Bound & ${<}4.2\%$ branch miss, 2.35--2.45 IPC; execution units saturated \\
+75--90\% & Memory-Bound & 24.2--38.5\% LLC miss, 78.0\% back stall; bandwidth constrained \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The $2.84\times$ maximum wall-clock speedup entails a $0.28\times$ per-FLOP
+efficiency at 90\% sparsity---a principled trade-off: wall-clock gains
+derive from FLOP reduction while sustained throughput per executed FLOP
+declines as memory bandwidth dominates. This refutes the validity of a single
+continuous sparsity scaling law and establishes discrete bottleneck regimes as
+the correct analytical framework.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Hardware Backend}
+\label{sec:hdl}
+
+\subsection{Verilog-2001 primitives}
+
+The \texttt{ternlang-hdl} crate generates synthesisable Verilog-2001 modules
+from the BET ISA. Each trit becomes a \texttt{[1:0]} bus. The core primitives
+are: \texttt{trit\_neg} (bit swap), \texttt{trit\_cons} (consensus gate),
+\texttt{trit\_mul} (zero-skip detect with combinational multiply),
+\texttt{trit\_add} (9-case Verilog \texttt{case} with carry),
+\texttt{trit\_reg} (synchronous D-register with reset-to-hold), and
+\texttt{bet\_alu} (top-level ALU).
+
+\subsection{Sparse matmul array}
+
+The synthesisable sparse matmul array instantiates an $N \times N$ grid of
+processing elements. Each cell contains a weight register and a clock-gate
+signal derived from the weight trit: when the weight is hold (\texttt{0b11}),
+the cell is clock-gated, delivering dynamic power reduction proportional to
+sparsity.
+
+\subsection{BET processor}
+
+The full \texttt{bet\_processor} module wires together: \texttt{bet\_regfile}
+(27-register file, $27 \times 2$ bits), \texttt{bet\_pc} (16-bit program
+counter with load port for jumps), and \texttt{bet\_control} (single-cycle
+decode, all 51 opcodes). An Icarus Verilog simulation wrapper
+(\texttt{BetSimEmitter}) generates complete self-contained testbenches from
+BET bytecode, including inline ROM initialization, reset sequencing, and VCD
+waveform export for GTKWave.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Native Compilation: AST-to-C Backend}
+\label{sec:codegen}
+
+The \texttt{ternlang-codegen} crate provides a second compilation target: a
+self-contained C11 source file compilable with any standard C compiler,
+opening native-speed execution, cross-compilation to embedded targets, and
+human-readable output for security audit.
+
+\begin{equation}
+  \texttt{.tern} \xrightarrow{\text{parse}} \text{AST}
+  \xrightarrow{\text{CTranspiler}} \texttt{.c}
+  \xrightarrow{\text{gcc/clang}} \text{native binary}
+  \label{eq:ctranspile}
+\end{equation}
+
+The generated C file is fully self-contained: a header of inline trit
+primitives using \texttt{int8\_t} covers \texttt{trit\_add},
+\texttt{trit\_mul}, \texttt{trit\_neg}, \texttt{trit\_consensus},
+\texttt{trit\_abs}, and the built-in constants. Every ternlang construct maps
+to its natural C equivalent: \texttt{match} $\rightarrow$ \texttt{switch},
+\texttt{struct} $\rightarrow$ \texttt{typedef struct},
+\texttt{expr?} $\rightarrow$ \texttt{\_\_TERN\_PROPAGATE(expr)} macro.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Actor Model and Distributed Runtime}
+\label{sec:actors}
+
+Ternlang implements the actor model via three ISA primitives:
+\texttt{TSPAWN} creates an agent instance and returns an \texttt{agentref};
+\texttt{TSEND} enqueues a trit message in the agent's mailbox;
+\texttt{TAWAIT} dequeues a message, invokes the handler, and returns the trit
+result. The \texttt{ternlang-runtime} crate extends the actor model to
+multi-node systems via TCP transport, with a newline-delimited JSON wire
+protocol and four message types (\texttt{Send}, \texttt{Await},
+\texttt{Reply}, \texttt{Error}).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Ternary AI Reasoning Toolkit}
+\label{sec:reasoning}
+
+Phase~8 of the TIS introduces five primitives in \texttt{ternlang-ml} that
+make any AI agent's decision loop architecturally ternary.
+
+\textbf{Deliberation Engine.} Models iterative evidence accumulation via an
+EMA: $S_r = \alpha \cdot e_r + (1-\alpha) \cdot S_{r-1}$. Commits only when
+confidence exceeds a threshold; otherwise remains in the hold state---the
+native ternary analogue of ``let me think about it.''
+
+\textbf{Coalition Vote.} Aggregates $N$ independent agent verdicts---each a
+trit with confidence and weight---into a single result with quorum, dissent,
+and abstain statistics:
+$\hat{t} = \mathrm{sign}\!\left(\sum_i w_i c_i t_i / \sum_i w_i c_i\right)$.
+
+\textbf{Action Gate.} Enforces a structural separation between hard
+constraints and soft preferences. A \texttt{hard\_block} dimension with
+negative evidence vetoes the action unconditionally, regardless of all other
+dimensions---the structural analogue of a safety interlock.
+
+\textbf{Scalar Temperature.} Bridges the ternary decision to the LLM sampling
+temperature domain: affirm at high confidence maps to low temperature (focused
+generation), hold to mid temperature (exploratory), reject to near-zero
+(cautious refusal).
+
+\textbf{Hallucination Score.} Maps the variance of an evidence signal vector
+to a trust trit: low variance (consistent signals) yields trust $+1$; high
+variance yields $-1$, signalling incoherent signals that should not be acted
+upon.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{MoE-13 Ternary Orchestrator}
+\label{sec:moe}
+
+The MoE-13 architecture~\cite{moe13_2026} is implemented in the
+\texttt{ternlang-moe} crate. It realises a ternary Mixture-of-Experts head
+whose routing, synthesis, safety gate, and memory are all expressed natively
+in balanced ternary semantics.
+
+\subsection{MoE-13 v2.0: 13-Node Domain-Aware Architecture}
+\label{subsec:moev2}
+
+Version 2.0 scales to \textbf{1~Router + 12~Domain Experts} with
+\textbf{Top-3 Sparse Routing}: for each query, the router selects the three
+most-relevant expert heads rather than activating all twelve. An
+\textbf{Asymmetric Safety Logic} layer biases Experts 0--3 (safety-critical
+domains) to the hold state on low-confidence queries, preventing unsafe
+speculation before evidence accumulates. Hidden dimension is expanded to 128.
+Version v1.3.7 of the underlying model is archived to the registry as
+``Stable Biblical Foundation'' with average loss $7.01$.
+
+\subsection{Six-Dimensional Competence Space}
+
+Each expert is characterised by a competence vector
+$\mathbf{v} \in [-1,1]^6$ across six axes: syntax, world knowledge,
+reasoning, tool use, persona, and safety. The synergy between two experts
+is the complement of their cosine similarity---orthogonal experts are
+maximally complementary:
+
+\begin{equation}
+  \sigma(\mathbf{v}_i, \mathbf{v}_j)
+    = \frac{1 - \cos(\mathbf{v}_i, \mathbf{v}_j)}{2}
+    \;\in\; [0, 1]
+  \label{eq:synergy}
+\end{equation}
+
+\subsection{Dual-Key Synergistic Routing}
+
+For each candidate expert pair $(i, j)$, the routing score combines
+relevance with inter-expert synergy:
+
+\begin{equation}
+  \mathrm{score}(i, j)
+    = \rho_i(\mathbf{q}) \cdot \rho_j(\mathbf{q}) \cdot \sigma(\mathbf{v}_i, \mathbf{v}_j)
+  \label{eq:routing}
+\end{equation}
+
+where $\rho_k(\mathbf{q}) = \max(0, \cos(\mathbf{v}_k, \mathbf{q}))$.
+Two highly relevant but similar experts are penalised by low $\sigma$; the
+router favours complementary coverage over redundant strength.
+
+\subsection{$1{+}1{=}3$ Triad Synthesis}
+
+After expert evaluation, an emergent triad field is synthesised:
+
+\begin{equation}
+  \mathbf{E}_k = \sigma_{ij} \cdot \frac{\mathbf{v}_i + \mathbf{v}_j}{2}
+  \label{eq:triad}
+\end{equation}
+
+This is the formal expression of $1{+}1{=}3$: two expert signals at high
+synergy produce a third signal that neither expert could produce in isolation.
+
+\subsection{Safety Hard Gate and Introspective Hold}
+
+Dimension~6 of every competence vector is the safety axis. A veto is
+triggered when $E_{k,\text{safety}} < \theta_s$ (default $-0.3$), returning
+trit $-1$ at confidence $1.0$ before any downstream reasoning. The stable
+attractor hold condition---$|\text{affirm} - \text{conflict}| \leq 1$ across
+$\geq 4$ engaged agents---ensures that genuinely balanced evidence returns a
+hold trit rather than an arbitrary binary choice.
+
+\subsection{Three-Tier Memory Mesh}
+
+\textbf{Node} (TTL: seconds): LRU volatile within-session context.
+\textbf{Cluster} (TTL: minutes): routing frequency counters for mode-collapse
+detection. \textbf{Axis} (persistent): immutable audit log of safety vetoes
+with timestamp, expert identity, and query hash.
+
+\subsection{MCP Exposure}
+
+The orchestrator is exposed as MCP tool calls: \texttt{moe\_orchestrate},
+\texttt{moe\_deliberate}, and \texttt{trit\_action\_gate}. Any MCP-compatible
+AI client connected to \texttt{ternlang-mcp} gains access to the full ternary
+reasoning stack without modification.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Albert-MoE-13: Auto-Evolutionary Language Model Training}
+\label{sec:albert}
+
+Albert-MoE-13 is the first language model trained \emph{natively} within a
+ternary execution stack. Unlike post-hoc ternary quantization approaches
+(BitNet b1.58, which ternarizes pre-trained binary weights), Albert learns
+ternary representations from scratch using the \texttt{moe-llm-core},
+\texttt{moe-compute}, \texttt{albert-runtime}, and \texttt{token-train}
+crates. The neutral trit value $0$ becomes an intrinsic property of the
+model's learned knowledge representations rather than a quantization artifact.
+
+\subsection{Architecture: TritTransformer and ModelCoherence}
+
+The \textbf{TritTransformer} implements a Llama-3 style transformer
+architecture with strictly ternary weights. Optimised kernels for RMSNorm,
+RoPE positional encoding, and SwiGLU activations are implemented for the
+ternary weight regime. The \textbf{ModelCoherence binary format} reduces the
+packed model footprint by $5\times$ (e.g., 1.2~GB JSON representation to
+240~MB), enabling fast checkpointing across auto-evolutionary phases.
+
+\subsection{EvolutionManager: Plateau-Mastery State Machine}
+\label{subsec:evolution}
+
+The \textbf{EvolutionManager} $\mathcal{E}$ governs dynamic model expansion
+as a finite state machine over training phases:
+
+\begin{equation}
+  \mathcal{E}: S \times \mathcal{M} \to S \times \mathcal{A}
+\end{equation}
+
+\noindent where states $S = \{\text{Toddler},\,\text{Expanding},\,\text{Mature}\}$
+and actions $\mathcal{A} = \{\text{continue},\,\text{surgery},\,\text{lr\_reduce}\}$.
+
+\textbf{Plateau transition.} When the exponential moving average of the per-batch
+loss delta falls below a threshold for $N_\text{cons}$ consecutive checkpoints:
+
+\begin{equation}
+  \overline{\Delta L}_k < \epsilon_\text{plateau}
+  \;\;\text{for}\;\; N_\text{cons} \text{ steps}
+  \;\;\Rightarrow\;\; \text{surgery}
+  \label{eq:plateau}
+\end{equation}
+
+\textbf{Divergence trigger.} Consistent loss \emph{increase}---historically
+interpreted as a training pathology requiring learning rate reduction or
+early stopping---is reinterpreted in the EvolutionManager as a signal that
+the current architecture has insufficient capacity. When $\Delta L_k > +\delta_\text{div}$
+for $N_\text{div}$ consecutive checkpoints:
+
+\begin{equation}
+  \frac{1}{N_\text{div}}\sum_{k=t-N_\text{div}}^{t} \Delta L_k > +\delta_\text{div}
+  \;\;\Rightarrow\;\; \text{surgery}
+  \label{eq:divergence}
+\end{equation}
+
+This was validated in production: a 3-layer Toddler phase showed loss
+divergence $6.19 \to 6.87$ over 3~hours. The divergence trigger fired,
+Neural Surgery was performed, and the learning rate was simultaneously
+reduced from $\eta = 2\times10^{-4}$ to $\eta = 1\times10^{-4}$.
+
+\subsection{Net2Net Safe Copy Surgery}
+\label{subsec:net2net}
+
+When $\mathcal{E}$ fires the \texttt{surgery} action, a new layer is injected
+via a \textbf{Function-Preserving Transform}:
+
+\begin{theorem}[Net2Net Safe Copy, Chen et al.]
+For a transformer with $n$ layers $\{W^{(1)},\ldots,W^{(n)}\}$,
+inserting an identical copy of layer $n$ as layer $n+1$ yields a network
+$f_\text{deep}(\mathbf{x};\, W^{(1)},\ldots,W^{(n)},W^{(n)})$ that is
+functionally equivalent to $f_\text{shallow}(\mathbf{x};\, W^{(1)},\ldots,W^{(n)})$
+for all inputs $\mathbf{x}$.
+\end{theorem}
+
+\noindent The practical consequence: the expanded model initialises with
+\emph{zero degradation} of existing linguistic knowledge. The newly injected
+layer begins as an identity transform and diverges as training continues,
+adding representational capacity without destroying previously learned
+structure. This is a principled alternative to random initialisation, which
+would require the model to ``unlearn'' disruptions before making progress.
+
+\subsection{Training Corpus Architecture}
+
+Albert's training pipeline follows a four-pillar ingestion sequence:
+
+\begin{enumerate}
+  \item \textbf{Biblical Foundation.} Structured theological corpus providing
+        dense linguistic regularity, parallel text (multilingual), and rich
+        rhetorical patterns. Version v1.3.7 trained exclusively on this corpus
+        is archived as ``Stable Biblical Foundation'' at average loss $7.01$.
+  \item \textbf{Wikipedia Factual Layer.} Encyclopedic factual grounding in
+        English and German. Provides structured knowledge with embedded
+        disambiguation---a natural training ground for the hold state.
+  \item \textbf{Reddit Dialectical Threads.} Conversational reasoning,
+        counter-argument structures, and opinion-holding patterns. This pillar
+        exercises the model's ability to maintain positions under challenge or
+        to update them on evidence---core behaviours for a ternary reasoning
+        agent.
+  \item \textbf{GitHub Engineering Corpus.} Automated multi-language
+        harvester targeting 13 key repositories (Rust, Python, Go, and
+        others). Provides language-agnostic code reasoning, error propagation
+        patterns, and engineering problem-solving benchmarks.
+\end{enumerate}
+
+All pillars are gated for post-Biblical-convergence ingestion to prevent
+catastrophic forgetting of the foundational linguistic structure.
+
+\subsection{Live Training Telemetry}
+
+A production-grade observability infrastructure accompanies the training loop:
+
+\begin{itemize}
+  \item \textbf{HTTP Range Request tail-fetch}: only the final 50~KB of log
+        data is downloaded per dashboard poll, eliminating the multi-minute
+        buffering delay that plagues full-log streaming.
+  \item \textbf{Every-batch logging with OS-level disk flushing}:
+        \texttt{f.flush()} called after every batch write, reducing terminal-to-dashboard
+        latency from $\sim$50~s to ${<}3$~s.
+  \item \textbf{5000+ real-time data points} rendered without frame-drop via
+        Chart.js Index-Aware state management.
+  \item \textbf{Global Odometer}: persists total training epoch mileage across
+        sessions (current: Epoch 434+), providing a continuous measure of
+        model maturity independent of session boundaries.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{EU AI Act Compliance Architecture}
+\label{sec:euaiact}
+
+The EU AI Act establishes risk-tiered obligations for AI systems deployed in
+Europe. High-risk systems must satisfy Articles~13 (transparency), 14 (human
+oversight), and 15 (accuracy, robustness, and cybersecurity). The Ternary
+Intelligence Stack is the first AI execution substrate where compliance with
+these three articles is \emph{structurally native} rather than bolt-on.
+
+\subsection{The Natural Regulatory Correspondence}
+
+The three trit values map directly to three regulatory stances:
+
+\begin{table}[h]
+\centering
+\small
+\caption{Ternary trit states and EU AI Act regulatory correspondence}
+\label{tab:euaiact}
+\begin{tabular}{p{1.0cm}p{1.4cm}p{1.3cm}p{3.4cm}}
+\toprule
+Trit & State & Article & Regulatory response \\
+\midrule
+$+1$ & Affirm & Art.~13 & Transparency satisfied: output may be acted upon \\
+$\ 0$ & Hold & Art.~14 & Human oversight required: system withholds decision \\
+$-1$ & Conflict & Art.~15 & Safety measure triggered: action blocked, audit logged \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This correspondence is not incidental. The EU AI Act's requirement that
+high-risk systems express uncertainty rather than hallucinate confident
+incorrect answers is precisely what the trit hold state encodes at the
+language and ISA level. Binary systems must retrofit uncertainty
+quantification on top of deterministic outputs; ternary systems produce
+it natively.
+
+\subsection{ternaudit-guard}
+
+The \texttt{ternaudit-guard} crate provides the operational compliance layer:
+
+\begin{itemize}
+  \item \textbf{Decision log processing}: Parses JSON-RPC audit logs emitted
+        by the BET VM and maps each decision record to the corresponding
+        Article~13--15 requirement.
+  \item \textbf{Regulatory mapping layer}: Converts internal confidence
+        metrics (Affirm / Tend / Reject) to structured compliance reports
+        with per-decision regulatory status.
+  \item \textbf{Immutable audit trail}: Every safety veto and hold decision
+        is logged to the Axis-tier memory with timestamp, expert identity,
+        and query hash---satisfying the Article~15 robustness and
+        cybersecurity logging requirements.
+  \item \textbf{VS~Code extension integration}: Inline verification markers
+        in TernStudio IDE allow developers to audit AI-generated code with
+        per-logic-segment compliance status before deployment.
+\end{itemize}
+
+\subsection{GDPR and Data Sovereignty}
+
+All TIS components execute on-premise or within EU jurisdiction (Fly.io
+Frankfurt). No training data, model weights, or inference results transit
+to non-EU infrastructure. The open-core licensing (LGPL-3.0-or-later for
+the compiler and CLI; BSL-1.1 converting to LGPL in 2030 for the ML engine)
+ensures that the sovereignty guarantee is contractually enforceable, not
+merely a runtime policy.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Qutrit Neural Networks and Ternlang}
+\label{sec:qnn}
+
+The Qutrit Neural Network (QNN) framework~\cite{kepp2026qnn} establishes a
+formal correspondence between quantum qutrit states and balanced ternary
+values: $\lvert -\rangle \leftrightarrow -1$,\;
+$\lvert 0\rangle \leftrightarrow 0$,\;
+$\lvert +\rangle \leftrightarrow +1$.
+
+This correspondence is not coincidental. Balanced ternary's symmetric
+structure around zero and its active neutral state mirror the physical
+properties of three-state quantum systems, making ternlang a natural
+implementation substrate for QNN inference. The \texttt{@sparseskip}
+directive applies directly to qutrit weight matrices: at realistic qutrit
+sparsity levels ($\approx 33\%$ zero states at initialisation), the
+\texttt{TSPARSE\_MATMUL} kernel provides comparable speedup to classical
+BitNet workloads. The repository contains 15 QNN-inspired \texttt{.tern}
+programs covering qutrit superposition, ternary attention mechanisms, TRS
+stabilisation loops, and qutrit gradient approximation.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Balanced ternary computing.} Knuth~\cite{knuth1997art} provides the
+mathematical foundation. The Setun computer (1958)~\cite{brousentsov2002setun}
+demonstrated physical ternary hardware. Modern revivals include academic
+hardware studies at the University of South-Eastern
+Norway~\cite{bos2020ternary}, targeting C-to-ternary compilation for EDA
+tools---an approach that inherits binary-native semantics and misses the
+symmetric properties that TIS exploits natively.
+
+\textbf{Ternary emulators.} Several open-source projects implement ternary
+VMs in Python or JavaScript without compiler, ML kernel, or hardware backend.
+\texttt{ternlang-compat} provides assembler-level bridges to the most
+significant of these.
+
+\textbf{Ternary quantization for neural networks.} BitNet~\cite{ma2024era}
+and BitNet b1.58~\cite{ma2024bitnet158} demonstrate that large language
+models can be trained with ternary weights while retaining competitive
+perplexity. The present work is the first to: (a) surface this property as a
+first-class ISA opcode; (b) train a language model natively within a ternary
+execution stack rather than applying quantization post-hoc; and (c) provide
+hardware-verified profiling of the four distinct microarchitectural regimes
+that govern real-world sparsity speedup.
+
+\textbf{Sovereign AI infrastructure.} The EU's AI Act and the broader
+digital sovereignty agenda have driven interest in auditable, on-premise AI
+execution. TIS is the first full-stack architecture where regulatory
+compliance is structurally native to the execution model rather than
+implemented as middleware.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The Ternary Computing Ecosystem}
+\label{sec:ecosystem}
+
+A stated goal of TIS is to serve as a \emph{convergence point} for the
+fragmented ternary computing field. Table~\ref{tab:ecosystem} maps active
+projects to their interoperability path via \texttt{ternlang-compat}.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Ecosystem compatibility map}
+\label{tab:ecosystem}
+\begin{tabular}{p{2.0cm}p{1.8cm}p{3.3cm}}
+\toprule
+Project & Interface & Bridge \\
+\midrule
+Brandon Smith 9-trit sim & \texttt{.tasm} assembly & \texttt{TasmAssembler} $\to$ BET bytecode \\
+Owlet (S-expr) & S-expression & \texttt{OwletParser} $\to$ ternlang AST \\
+USN / EDA tools & C-to-ternary & Academic whitepaper; ISA interop \\
+BitNet b1.58 & Ternary weights & \texttt{moe-llm-core} weight ingest \\
+Q-Ternary & Qutrits & \texttt{trittensor} state model (future) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Beyond runtime interoperability, TIS serves as a \emph{technical archive}
+for prior ternary computing work. Brandon Smith's Python 9-trit RISC
+simulator demonstrated a complete fetch-decode-execute cycle in balanced
+ternary---an existence proof that received little downstream adoption due to
+the absence of a compiler ecosystem. Both Smith's pipeline and the Owlet
+interpreter are honoured in the \texttt{examples/} corpus as runnable
+\texttt{.tern} programs on the same VM that drives the MoE-13 orchestrator.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Implementation Status}
+\label{sec:status}
+
+The Ternary Intelligence Stack is implemented in Rust and comprises
+\textbf{34 published crates} at ecosystem version \textbf{v1.3.5}
+(\texttt{crates.io}). Table~\ref{tab:status} lists the primary crates;
+the full manifest is maintained in the repository.
+
+\begin{table}[h]
+\centering
+\small
+\caption{TIS crate manifest and descriptions (v1.3.5)}
+\label{tab:status}
+\begin{tabular}{p{2.6cm}p{5.0cm}}
+\toprule
+Crate & Role \\
+\midrule
+\texttt{ternlang-core}      & Lexer, parser, AST, semantic checker, BET VM (51 opcodes) \\
+\texttt{ternlang-ml}        & BitNet quantization, sparse/CSC matmul, reasoning toolkit \\
+\texttt{ternlang-moe}       & MoE-13 v2.0 orchestrator: dual-key routing, triad synthesis \\
+\texttt{ternlang-codegen}   & AST-to-C11 transpiler \\
+\texttt{ternlang-test}      & Full-pipeline test framework: \texttt{TernTestCase}, \texttt{assert\_tern!} \\
+\texttt{ternlang-hdl}       & Verilog-2001 codegen, BET RTL simulator \\
+\texttt{ternlang-runtime}   & Distributed TCP actor runtime (\texttt{TernNode}) \\
+\texttt{ternlang-compat}    & \texttt{.tasm} assembler (9-trit RISC), Owlet S-expr parser \\
+\texttt{ternlang-lsp}       & LSP 3.17: hover, completion (19 snippets), diagnostics \\
+\texttt{ternlang-mcp}       & MCP server, 13 tools: \texttt{moe\_orchestrate}, \texttt{trit\_action\_gate}, \ldots \\
+\texttt{ternlang-api}       & REST API (18 endpoints), multi-tenant key management, SSE \\
+\texttt{ternlang-compress}  & Ternary compression primitives \\
+\texttt{ternlang-ruvector}  & SIMD-aligned ternary vector operations \\
+\texttt{ternpkg}            & Package manager, GitHub-backed registry \\
+\texttt{ternlang-*}         & 14 additional domain crates: \texttt{-hdl}, \texttt{-wasm}, \texttt{-sec}, \texttt{-hft}, \texttt{-ros2}, \texttt{-qutrit}, \texttt{-sql}, \texttt{-ui}, \texttt{-web}, \texttt{-translator}, \texttt{-harmony}, \texttt{-swarm}, \texttt{-consensus}, \texttt{-crypto} \\
+\midrule
+\texttt{albert-cli}         & Sovereign intelligence CLI (model-agnostic) \\
+\texttt{albert-runtime}     & Albert training and inference runtime \\
+\texttt{albert-api}         & Albert REST API \\
+\texttt{albert-commands}    & CLI command registry \\
+\texttt{albert-tools / compat} & Tooling and compatibility bridge \\
+\midrule
+\texttt{moe-core}           & Internal MoE-13 inference engine \\
+\texttt{moe-platform}       & Stable API for MoE-13 \\
+\texttt{moe-plugin-sdk}     & SDK for third-party expert plugins \\
+\texttt{moe-runtime}        & Training/inference runtime \\
+\texttt{moe-llm-core}       & TritTransformer architecture \\
+\texttt{moe-compute}        & Kernel acceleration and compute graph \\
+\texttt{moe-validation-suite} & Reproducibility and benchmark harness \\
+\texttt{moe-uril / moe-ddel / moe-sdk / moe-test} & Utility, deployment, and test layers \\
+\midrule
+\texttt{pytern}             & Python bindings \\
+\texttt{ternaudit-guard}    & EU AI Act compliance, JSON-RPC audit \\
+\midrule
+\texttt{moe-reference}      & Reference implementation (v1.3.6) \\
+\texttt{moe-llb}            & Low-level backend (v1.3.6) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{CI-verified test suite}: 138+ fast tests across five
+self-contained crates (core: 43, codegen: 8, moe: 24, compat: 29, hdl: 34);
+network-bound crates validated locally. \textbf{Live deployment}: REST API
+and MCP endpoint at \texttt{https://ternlang.com/mcp} (Fly.io Frankfurt, TLS
+via Let's~Encrypt). \textbf{IDE tooling}: VS~Code extension
+(\texttt{ternlang-0.1.0}) published on Open~VSX Registry (publisher
+\texttt{rfi-irfos}), providing syntax highlighting, LSP diagnostics, and
+snippet completion. \textbf{Example corpus}: 275+ executable \texttt{.tern}
+programs spanning aerospace, medicine, distributed systems, hardware
+pipelines, civic governance, finance, AI agent design, and ten Qutrit Neural
+Network modules. \textbf{CI/CD}: GitHub Actions automatically builds, tests,
+and deploys to Fly.io on every push to \texttt{main}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented the \textbf{Ternary Intelligence Stack v1.3.5}---a
+sovereign, full-stack post-binary architecture for neural intelligence,
+built by RFI-IRFOS from Graz, Austria. Eleven dimensions of contribution
+are unified under the foundational primitive of the trit $t \in \{-1,0,+1\}$
+with an active neutral state:
+
+\begin{enumerate}
+  \item \textbf{Language and execution substrate}: Ternlang with exhaustive
+        three-way matching, TSPARSE\_MATMUL achieving up to $2.84\times$
+        wall-clock speedup (hardware-verified, four-regime model), and a
+        native C11 compilation path.
+
+  \item \textbf{Hardware}: Synthesisable Verilog-2001 BET processor with
+        per-cell clock gating and an Icarus Verilog simulation wrapper.
+
+  \item \textbf{Reasoning infrastructure}: Five-tool Ternary AI Reasoning
+        Toolkit (deliberation, coalition vote, action gate, temperature
+        bridge, hallucination score) and the MoE-13 v2.0 orchestrator with
+        13-agent dual-signal deliberation and an introspective hold stable
+        attractor.
+
+  \item \textbf{Auto-Evolutionary Training}: Albert-MoE-13 with
+        EvolutionManager plateau-mastery state machine, Net2Net Safe Copy
+        Surgery for zero-degradation layer injection, four-pillar training
+        corpus, and sub-3-second terminal-to-dashboard telemetry latency.
+
+  \item \textbf{Regulatory compliance}: ternaudit-guard providing the first
+        language-native EU AI Act mapping where trit $+1$/0/$-1$ correspond
+        structurally to Articles~13, 14, and 15.
+
+  \item \textbf{Sovereignty}: 34 published crates, all under open-core LGPL
+        licensing, deployed exclusively within EU jurisdiction, with no
+        dependency on proprietary AI infrastructure.
+
+  \item \textbf{Ecosystem}: 275+ example programs, VS~Code LSP extension,
+        MCP server, REST API, \texttt{ternpkg} package manager, and
+        interoperability bridges to the broader ternary computing field.
+\end{enumerate}
+
+The ternary computing field has been fragmented for decades. TIS is designed
+to be the substrate where those fragments converge---from ISA to orchestrator,
+from single trit to 13-expert MoE, from native EU compliance to quantum-adjacent
+qutrit networks. Europe does not need to catch up. It needs to leap ahead.
+
+Binary sees yes and no. Ternary also sees \emph{not yet}---and that changes
+everything.
+
+\vspace{1em}
+\noindent\textbf{Near-term targets}: submission to VS~Code Marketplace; FPGA
+synthesis of the full \texttt{bet\_processor} on Xilinx Artix-7 and Lattice
+ECP5; Albert-MoE-13 sub-2.0 loss convergence on the consolidated knowledge
+corpus; Hindley-Milner type inference to eliminate explicit trit type
+annotations; formal academic outreach to the USN memristor hardware group for
+joint hardware-software co-design; Phase~22 commercialisation targeting
+industrial sovereign AI deployments in regulated sectors (healthcare, legal,
+defense-adjacent, critical infrastructure).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
