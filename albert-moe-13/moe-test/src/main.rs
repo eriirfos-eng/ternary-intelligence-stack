@@ -1,4 +1,4 @@
-//! # Albert-Test: Scientific Dashboard v1.3.7 (Refined)
+//! # Albert-Test: Scientific Dashboard v2.0.0 (13-Node Evolution)
 //! 
 //! High-fidelity interactive Sandbox for the TIS with real-time telemetry, Smart-Stop, and Scrolling.
 
@@ -65,7 +65,10 @@ impl App {
         let vocab_path = "data/vocab.json";
         let tokenizer = BpeTokenizer::new(vocab_path);
         
-        let config_path = format!("models/bible_ternary_{}.config.json", version);
+        let mut config_path = format!("models/bible_ternary_{}.config.json", version);
+        if !std::path::Path::new(&config_path).exists() {
+            config_path = format!("models/registry/bible_ternary_{}.config.json", version);
+        }
         let config_str = fs::read_to_string(&config_path).expect("Unable to read config.json. The HuggingFace standard requires a config file next to the model.");
         let config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
 
@@ -111,7 +114,7 @@ impl App {
             total_epochs,
             token_latency_ms: 0,
             tokens_per_sec: 0.0,
-            active_experts: format!("{}/{} (Top-2)", if config.num_experts > 0 { 2 } else { 0 }, config.num_experts),
+            active_experts: format!("{}/{} (Top-3)", if config.num_experts > 0 { 3 } else { 0 }, config.num_experts),
             est_gflops: 0.0,
             is_generating: false,
             current_tokens: Vec::new(),
@@ -221,11 +224,21 @@ impl App {
 
 fn find_latest_checkpoint() -> (PathBuf, String) {
     let models_dir = "models";
-    let v137 = PathBuf::from(format!("{}/bible_ternary_v1.3.7.safetensors", models_dir));
-    let v136 = PathBuf::from(format!("{}/bible_ternary_v1.3.6.safetensors", models_dir));
-    if v137.exists() { return (v137, "v1.3.7".to_string()); }
-    if v136.exists() { return (v136, "v1.3.6".to_string()); }
-    panic!("No checkpoints found in {}", models_dir);
+    let search_paths = [
+        ("v2.0.0", format!("{}/bible_ternary_v2.0.0.safetensors", models_dir)),
+        ("v1.3.7", format!("{}/registry/bible_ternary_v1.3.7.safetensors", models_dir)),
+        ("v1.3.7", format!("{}/bible_ternary_v1.3.7.safetensors", models_dir)),
+        ("v1.3.6", format!("{}/bible_ternary_v1.3.6.safetensors", models_dir)),
+        ("v1.3.5", format!("{}/bible_ternary_v1.3.5.safetensors", models_dir)),
+    ];
+
+    for (version, path_str) in search_paths {
+        let path = PathBuf::from(path_str);
+        if path.exists() {
+            return (path, version.to_string());
+        }
+    }
+    panic!("No checkpoints found in models/ or models/registry/. Start training first!");
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

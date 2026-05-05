@@ -15,9 +15,9 @@ fn main() -> Result<()> {
 
     let vocab_path = "data/vocab.json";
     let corpus_path = "data/corpus/bible.txt";
-    let checkpoint_path = "models/bible_ternary_v1.3.7.safetensors";
-    let meta_path = "models/bible_ternary_v1.3.7.meta";
-    let config_path = "models/bible_ternary_v1.3.7.config.json";
+    let checkpoint_path = "models/bible_ternary_v2.0.0.safetensors";
+    let meta_path = "models/bible_ternary_v2.0.0.meta";
+    let config_path = "models/bible_ternary_v2.0.0.config.json";
     let log_path = "dashboard/training.log";
 
     if !std::path::Path::new(vocab_path).exists() {
@@ -85,11 +85,6 @@ fn main() -> Result<()> {
     let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 2e-4)?; 
 
     fs::create_dir_all("dashboard").unwrap_or(());
-    let mut log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_path)
-        .ok();
 
     let batch_size = 1; 
     let accumulation_steps = 16;
@@ -138,7 +133,10 @@ fn main() -> Result<()> {
             if batch_idx % 10 == 0 {
                 let log_line = format!("Epoch {} (Global {}), Batch {}: loss = {:.4}", epoch, total_epochs, batch_idx, step_loss * accumulation_steps as f32);
                 println!("{}", log_line);
-                if let Some(ref mut f) = log_file {
+                
+                // ROBUST LOGGING: Open, write, and close every time.
+                // This survives file system changes (git pull, manual deletes, etc.)
+                if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
                     let _ = writeln!(f, "{}", log_line);
                     let _ = f.flush();
                 }
@@ -146,7 +144,7 @@ fn main() -> Result<()> {
         }
         let end_epoch_line = format!("Epoch {} complete. Avg loss: {:.4}", epoch, total_loss / num_batches as f32);
         println!("{}", end_epoch_line);
-        if let Some(ref mut f) = log_file {
+        if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
             let _ = writeln!(f, "{}", end_epoch_line);
             let _ = f.flush();
         }

@@ -13,7 +13,7 @@ pub fn ternarize_ste(w: &Tensor, threshold: f32) -> Result<Tensor> {
     let neg_mask = w.lt(-threshold)?;
 
     // Quantized = 1.0 * pos_mask - 1.0 * neg_mask
-    let quantized = (pos_mask.to_dtype(dtype)? - neg_mask.to_dtype(dtype)?)?;
+    let quantized = pos_mask.to_dtype(dtype)?.broadcast_sub(&neg_mask.to_dtype(dtype)?)?;
 
     // Scaling factor (gamma): mean absolute value of the weights
     // This helps with "Static Weights" and "STE Instability" by maintaining magnitude.
@@ -21,5 +21,6 @@ pub fn ternarize_ste(w: &Tensor, threshold: f32) -> Result<Tensor> {
     let quantized = quantized.broadcast_mul(&gamma)?;
 
     // y = w + (quantized - w).detach()
-    w + (quantized - w)?.detach()
+    let diff = quantized.broadcast_sub(w)?;
+    Ok(w.broadcast_add(&diff.detach())?)
 }
