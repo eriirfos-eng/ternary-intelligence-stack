@@ -1,53 +1,84 @@
-# Albert-MoE-13: Technical Appendix & Artifact Provenance
-## SPRIND Submission: Copernicus Ternary-Native AI Framework
+# Albert MoE-13 — Checkpoint Registry
 
-This document serves as the formal technical appendix regarding the serialization, artifact life-cycle, and reproducibility protocol for the Copernicus series of MoE-13 models.
-
----
-
-## 1. Executive Summary
-The Copernicus series represents the first research implementation of balanced ternary-native neural architectures (weights $\in \{-1, 0, 1\}$). To support reproducibility for the SPRIND research mandate, we maintain a strict artifact provenance chain from raw training state to production-ready deployment trits.
-
-## 2. Serialization Architecture
-To balance high-speed training interop and low-latency hardware execution, we utilize a three-tier serialization strategy:
-
-### 2.1. Reference Artifacts (.safetensors)
-Standardized uncompressed float32/fp16 representations.
-- **Role**: Intermediate research validation and framework cross-compatibility.
-- **Specification**: Header-based memory-mapped tensors.
-
-### 2.2. Native Ternary Artifacts (.trit)
-Custom-engineered **ExaTern Packing** format.
-- **Role**: Hardware-level deployment on ternary-native logic.
-- **Specification**: 5 trits packed into 1-byte (8-bit) words, achieving a theoretical 99.2% entropy efficiency for ternary values.
-- **Encoding**: $00_2 \rightarrow -1, 01_2 \rightarrow 0, 10_2 \rightarrow 1$.
-
-### 2.3. State Metadata (.meta)
-JSON-Schema 7 compliant configuration state.
-- **Fields**:
-  - `ternary_threshold_tau`: Current gradient-gating threshold.
-  - `moe_routing_alpha`: Expert-synergy coefficient.
-  - `odometer_epoch`: Global epoch marker (175+).
-
-## 3. Provenance & Integrity Protocol
-Every checkpoint follows an automated CI/CD pipeline, enforced by the `ReproducibilityVerifier` unit:
-
-1. **Deterministic Reconstruction**: Any `.trit` artifact must reconstruct to within $10^{-6}$ error of the training-time `.safetensors` reference via the `TritLoader` primitive.
-2. **Telemetry Validation**: Checkpoint metadata must cross-reference with the `training.log` heartbeat (Global Epoch + Batch Offset) for timestamp/event synchronization.
-3. **Epistemic Domain Check**: Each expert layer (1-13) undergoes an audit to ensure learned routing accuracy remains within the defined bounds for its epistemic category (e.g., Logic/Technical).
-
-## 4. Operational Registry (v1.3.x Series)
-
-| Version | ID | Epochs | Loss | Status | Key Artifacts |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **v1.3.5** | `bible-dense-v1` | 20 | 5.8799 | [VERIFIED] | Baseline ternary dense model. |
-| **v1.3.6** | `bible-pos-v1` | 170+ | 1.1245 | [STABLE] | High-routing MoE specialization. |
-| **v1.3.7** | `bible-moe-v1` | 175 (Live) | ~1.1032 | [CONVERGING] | Live-streamed training artifact. |
+Training artifacts for the Albert MoE-13 ternary language model.
 
 ---
 
-## 5. Compliance & Security
-- **Hard-Gate Safety**: All checkpoints include an audit log of `trit_action_gate` operations to detect and prevent unauthorized heuristic drift.
-- **Data Residency**: Artifact storage compliant with EU AI Act residency requirements.
+## Active Checkpoint
 
-*For formal research inquiries regarding this artifact suite, contact the TIS Core Research Team.*
+**`bible_ternary_v2.0.0`** — current training state
+
+| Field | Value |
+|-------|-------|
+| Format | `.safetensors` (float32 weights, HuggingFace standard) |
+| Config | `bible_ternary_v2.0.0.config.json` |
+| Epoch counter | `bible_ternary_v2.0.0.meta` (plain text integer) |
+| Architecture | 256H · 3–12L (auto-evolving) · 4H · 12E · 128CTX |
+| Corpus | Bible KJV + Alice in Wonderland (active); staged corpus ready |
+
+The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` file stores the global epoch count across all training sessions so the odometer never resets.
+
+---
+
+## Config Schema
+
+`bible_ternary_v2.0.0.config.json`:
+```json
+{
+  "hidden_size": 256,
+  "num_layers": 3,
+  "num_heads": 4,
+  "max_seq_len": 128,
+  "num_experts": 12
+}
+```
+
+`num_layers` is updated in-place by the `EvolutionManager` when Neural Surgery fires. Load code reads this file on each `train_cycle` start, so the growing architecture is always picked up correctly.
+
+---
+
+## Version History
+
+| Version | Architecture | Key Event | Notes |
+|---------|-------------|-----------|-------|
+| v2.3 | 256H · 3L · 12E | 256H upgrade + L1 sparsity + per-layer threshold | Current |
+| v2.2 | 128H · 3L · 12E | EvolutionManager, Net2Net surgery | Archived |
+| v2.0 | 128H · 3L · 12E | 13-node MoE, top-3 routing | Archived |
+| v1.3.7 | 96H · 3L · 8E | Stable Biblical Foundation | Registry: `models/registry/` |
+
+Archived snapshots in `models/registry/` include config, report, and evolution metadata.
+
+---
+
+## Checkpoint Loading
+
+The training binary loads the checkpoint with strict shape matching:
+
+```rust
+for (name, var) in all_vars.iter() {
+    if let Some(tensor) = checkpoint_data.get(name) {
+        if tensor.shape() == var.shape() {
+            var.set(tensor)?;  // only loaded if shapes match exactly
+        }
+    }
+}
+```
+
+**Architecture change (e.g. hidden_size):** shapes mismatch → all vars initialize fresh. Safe to change config without deleting the old checkpoint file — it is silently ignored.
+
+**Layer addition (surgery):** new layer weights are copied from the deepest existing layer before saving. On next load, all shapes match.
+
+---
+
+## Serialization Format
+
+Checkpoints use the [SafeTensors](https://github.com/huggingface/safetensors) format — header-based, memory-mapped, cross-framework compatible. Weights are stored in float32 for training precision; ternary quantization is applied at runtime during the forward pass.
+
+Future: `.trit` packed format (5 trits/byte) for hardware deployment — not yet implemented.
+
+---
+
+## See Also
+
+- [Main README](../README.md)
+- [Architecture](../docs/architecture.md)
