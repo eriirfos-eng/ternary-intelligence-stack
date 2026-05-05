@@ -2,250 +2,424 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Albert MoE-13 Live Dashboard</title>
+    <title>Albert MoE-13</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <style>
-        body { background: #000000; color: #ffffff; font-family: 'Courier New', Courier, monospace; margin: 0; padding: 20px; overflow: hidden; }
-        #chart-container { width: 96vw; height: 82vh; margin: auto; position: relative; border: 1px solid #333; background: #000; cursor: grab; }
-        #chart-container:active { cursor: grabbing; }
-        h1 { text-align: center; color: #ffffff; font-size: 1.8rem; letter-spacing: 5px; margin: 0 0 15px 0; text-transform: uppercase; font-weight: bold; }
-        .controls { text-align: center; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 1.1rem; }
-        select, button { background: #111; color: #00ffcc; border: 2px solid #00ffcc; padding: 8px 20px; font-family: inherit; cursor: pointer; border-radius: 4px; font-size: 1rem; transition: all 0.2s; font-weight: bold; }
-        button:hover { background: #00ffcc; color: #000; }
-        .hint { text-align: center; color: #ffffff; font-size: 0.9rem; margin-top: 10px; letter-spacing: 2px; font-weight: bold; }
-        #status-bar { text-align: center; font-size: 1.1rem; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
-        #status-bar.live { color: #ff9900; }
-        #status-bar.standby { color: #666; }
-        label { color: #ffffff; font-weight: bold; }
+        :root {
+            --bg: #080808;
+            --surface: #111;
+            --border: #1c1c1c;
+            --text: #d0d0d0;
+            --muted: #444;
+            --accent: #00e5a0;
+            --warn: #ff6b35;
+            --red: #ff4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 12px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Top bar ─────────────────────────────────────────────── */
+        #topbar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            height: 36px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            padding: 0 10px;
+            overflow: hidden;
+        }
+        .tb-cell {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 10px;
+            border-right: 1px solid var(--border);
+            height: 100%;
+            white-space: nowrap;
+        }
+        .tb-cell:last-child { border-right: none; margin-left: auto; }
+        .tb-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tb-val   { color: var(--text); font-weight: bold; }
+        .tb-val.accent { color: var(--accent); font-size: 15px; }
+        .tb-val.muted  { color: #666; }
+
+        #model-name { color: var(--accent); font-weight: bold; font-size: 13px; letter-spacing: 1px; }
+
+        #dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--muted); flex-shrink: 0;
+        }
+        #dot.live { background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+        #dot.stale { background: var(--warn); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+        #delta { font-size: 11px; }
+        #delta.up   { color: var(--red); }
+        #delta.down { color: var(--accent); }
+        #delta.flat { color: var(--muted); }
+
+        select, button {
+            background: var(--surface); color: var(--accent);
+            border: 1px solid var(--border);
+            padding: 3px 8px; border-radius: 2px;
+            font-family: inherit; font-size: 11px; cursor: pointer;
+        }
+        select:hover, button:hover { border-color: var(--accent); }
+
+        /* ── Chart ───────────────────────────────────────────────── */
+        #chart-wrap {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            padding: 6px 8px 4px;
+        }
+        canvas { display: block; }
+
+        #waiting {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--muted); text-align: center; pointer-events: none;
+            font-size: 13px; line-height: 2;
+        }
+        #waiting span { font-size: 10px; color: #2a2a2a; }
+        #waiting.hidden { display: none; }
+
+        /* ── Bottom hint ─────────────────────────────────────────── */
+        #hint {
+            height: 20px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center;
+            padding: 0 10px; gap: 16px;
+            flex-shrink: 0;
+        }
+        .hint-item { color: #2a2a2a; font-size: 10px; }
+        .hint-item b { color: var(--muted); }
     </style>
 </head>
 <body>
-    <h1>MoE-13 v2.2: AUTO-EVOLUTIONARY (13-NODE)</h1>
-    <div id="status-bar" class="standby">STATUS: WAITING FOR TRAINING LOG...</div>
 
-    <div class="controls">
-        <label for="viewFilter">TIME WINDOW:</label>
+<div id="topbar">
+    <div class="tb-cell" style="padding-left:0; border-right:1px solid var(--border)">
+        <span id="dot"></span>
+        <span id="model-name">ALBERT MoE-13</span>
+    </div>
+
+    <div class="tb-cell">
+        <span class="tb-label">LOSS</span>
+        <span class="tb-val accent" id="v-loss">—</span>
+        <span id="delta" class="flat"></span>
+    </div>
+
+    <div class="tb-cell">
+        <span class="tb-label">EPOCH</span>
+        <span class="tb-val" id="v-epoch">—</span>
+    </div>
+
+    <div class="tb-cell">
+        <span class="tb-label">BATCH</span>
+        <span class="tb-val" id="v-batch">— / 300</span>
+    </div>
+
+    <div class="tb-cell">
+        <span class="tb-label">BEST</span>
+        <span class="tb-val" id="v-best" style="color:#666">—</span>
+    </div>
+
+    <div class="tb-cell">
+        <span class="tb-label">PTS</span>
+        <span class="tb-val muted" id="v-pts">0</span>
+    </div>
+
+    <div class="tb-cell">
+        <span class="tb-label">ARCH</span>
+        <span class="tb-val muted">3L · 128H · 4HD · 12E · 128CTX</span>
+    </div>
+
+    <div class="tb-cell" style="border-right:none; margin-left:auto; gap:6px;">
         <select id="viewFilter">
-            <option value="all" selected>COMPLETE LOG</option>
-            <option value="100">100 EPOCHS</option>
-            <option value="50">50 EPOCHS</option>
-            <option value="10">10 EPOCHS (FOCUS)</option>
+            <option value="all" selected>ALL</option>
+            <option value="100">100 EP</option>
+            <option value="50">50 EP</option>
+            <option value="10">10 EP</option>
         </select>
-        <button id="resetBtn">CENTER CAMERA</button>
+        <button id="resetBtn">RESET ZOOM</button>
     </div>
+</div>
 
-    <div id="chart-container">
-        <canvas id="lossChart"></canvas>
+<div id="chart-wrap">
+    <canvas id="lossChart"></canvas>
+    <div id="waiting">
+        WAITING FOR TRAINING DATA
+        <br><span>fire albert-train to begin</span>
     </div>
-    <div class="hint">DRAG: PAN | SCROLL: ZOOM | NEW BATCHES DROP FROM SKY</div>
+</div>
 
-    <script>
-        // Must match accumulation_steps in train_bible.rs — the log writes
-        // step_loss * ACCUMULATION_STEPS, so we divide here to recover real loss.
-        const ACCUMULATION_STEPS = 16;
+<div id="hint">
+    <span class="hint-item"><b>DRAG</b> pan</span>
+    <span class="hint-item"><b>SCROLL</b> zoom</span>
+    <span class="hint-item"><b>RESET ZOOM</b> re-follow</span>
+</div>
 
-        const ctx = document.getElementById('lossChart').getContext('2d');
-        const viewFilter = document.getElementById('viewFilter');
-        const resetBtn = document.getElementById('resetBtn');
-        const statusBar = document.getElementById('status-bar');
+<script>
+    // Must match accumulation_steps in train_bible.rs.
+    // The log writes step_loss * ACCUMULATION_STEPS, so we divide to recover real loss.
+    const ACCUMULATION_STEPS = 16;
+    const BATCHES_PER_EPOCH  = 300;
+    const POLL_MS            = 1000;
+    const MAX_CHART_PTS      = 5000;
 
-        let manualMode = false;
-        let isFirstLoad = true;
-        let seenKeys = new Set();
-        let lastNewPointTime = null;
+    // ── State ──────────────────────────────────────────────────────────
+    let lastBytePos   = 0;   // byte offset into training.log — only fetch new bytes
+    let manualMode    = false;
+    let lastLossVal   = null;
+    let bestLoss      = Infinity;
+    let lastDataMs    = null;
+    let totalPts      = 0;
 
-        const lossChart = new Chart(ctx, {
-            data: {
-                datasets: [
-                    {
-                        type: 'scatter',
-                        label: 'BATCH LOSS (TURQUOISE)',
-                        data: [],
-                        backgroundColor: '#00ffcc',
-                        pointRadius: 4,
-                        order: 2,
-                        animations: {
-                            y: {
-                                from: (ctx) => ctx.raw && ctx.raw._sp ? undefined : 0,
-                                duration: (ctx) => ctx.raw && ctx.raw._sp ? 0 : 800,
-                                easing: 'easeOutBounce'
-                            }
-                        }
-                    },
-                    {
-                        type: 'line',
-                        label: 'CONVERGENCE TREND (ORANGE)',
-                        data: [],
-                        borderColor: '#ff9900',
-                        borderWidth: 2,
-                        fill: false,
-                        pointRadius: 0,
-                        tension: 0.4,
-                        order: 1,
-                        animations: { y: { duration: 0 } }
-                    }
-                ]
+    // ── Chart ──────────────────────────────────────────────────────────
+    const ctx = document.getElementById('lossChart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+        data: {
+            datasets: [
+                {
+                    type: 'scatter',
+                    label: 'Batch loss',
+                    data: [],
+                    backgroundColor: 'rgba(0,229,160,0.55)',
+                    pointRadius: 3,
+                    order: 2,
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-30 trend',
+                    data: [],
+                    borderColor: '#ff6b35',
+                    borderWidth: 1.5,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.4,
+                    order: 1,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            scales: {
+                x: {
+                    type: 'linear',
+                    title: { display: true, text: 'Global Epoch', color: '#333', font: { size: 11 } },
+                    grid: { color: '#131313' },
+                    ticks: { color: '#444', font: { size: 10 } }
+                },
+                y: {
+                    title: { display: true, text: 'Loss', color: '#333', font: { size: 11 } },
+                    grid: { color: '#131313' },
+                    ticks: { color: '#444', font: { size: 10 } }
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 0 },
-                scales: {
-                    x: {
-                        type: 'linear',
-                        title: { display: true, text: 'GLOBAL EPOCH (BATCH PRECISION)', color: '#ffffff', font: { size: 14, weight: 'bold' } },
-                        grid: { color: '#222' },
-                        ticks: { color: '#ffffff', font: { size: 12, weight: 'bold' } }
-                    },
-                    y: {
-                        title: { display: true, text: 'LOSS', color: '#ffffff', font: { size: 14, weight: 'bold' } },
-                        grid: { color: '#222' },
-                        ticks: { color: '#ffffff', font: { size: 12, weight: 'bold' } }
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#111',
+                    bodyColor: '#ccc',
+                    titleColor: '#00e5a0',
+                    callbacks: {
+                        label: c => ` loss ${c.parsed.y.toFixed(4)}  @ epoch ${c.parsed.x.toFixed(3)}`
                     }
                 },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#ffffff',
-                            font: { family: 'monospace', size: 12, weight: 'bold' },
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        enabled: true,
-                        backgroundColor: '#000',
-                        titleFont: { size: 14, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        callbacks: {
-                            label: (c) => ` EPOCH: ${c.parsed.x.toFixed(2)} | LOSS: ${c.parsed.y.toFixed(4)}`
-                        }
-                    },
+                zoom: {
+                    pan:  { enabled: true, mode: 'xy', onPanStart: () => { manualMode = true; } },
                     zoom: {
-                        pan: {
-                            enabled: true,
-                            mode: 'xy',
-                            threshold: 5,
-                            onPanStart: () => { manualMode = true; }
-                        },
-                        zoom: {
-                            wheel: { enabled: true },
-                            pinch: { enabled: true },
-                            mode: 'xy',
-                            onZoomStart: () => { manualMode = true; }
-                        }
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        mode: 'xy',
+                        onZoomStart: () => { manualMode = true; }
                     }
                 }
             }
-        });
+        }
+    });
 
-        function calculateSMA(data, windowSize) {
-            const sma = [];
-            for (let i = 0; i < data.length; i++) {
-                const start = Math.max(0, i - windowSize + 1);
-                const avg = data.slice(start, i + 1).reduce((a, b) => a + b.y, 0) / (i - start + 1);
-                sma.push({ x: data[i].x, y: avg });
+    // ── SMA ────────────────────────────────────────────────────────────
+    function sma(data, w) {
+        return data.map((_, i) => {
+            const s = Math.max(0, i - w + 1);
+            const avg = data.slice(s, i + 1).reduce((a, b) => a + b.y, 0) / (i - s + 1);
+            return { x: data[i].x, y: avg };
+        });
+    }
+
+    // ── Status bar helpers ─────────────────────────────────────────────
+    function setStatus(live) {
+        const dot   = document.getElementById('dot');
+        const label = document.getElementById('model-name');
+        if (live === 'live') {
+            dot.className = 'live';
+            label.style.color = 'var(--accent)';
+        } else if (live === 'stale') {
+            dot.className = 'stale';
+            label.style.color = 'var(--warn)';
+        } else {
+            dot.className = '';
+            label.style.color = 'var(--muted)';
+        }
+    }
+
+    function updateTopbar(latest) {
+        const loss = latest.y;
+
+        document.getElementById('v-loss').textContent  = loss.toFixed(4);
+        document.getElementById('v-epoch').textContent = Math.floor(latest.epoch);
+        document.getElementById('v-batch').textContent = `${latest.batch} / ${BATCHES_PER_EPOCH}`;
+        document.getElementById('v-pts').textContent   = totalPts;
+
+        if (loss < bestLoss) { bestLoss = loss; }
+        document.getElementById('v-best').textContent = bestLoss === Infinity ? '—' : bestLoss.toFixed(4);
+
+        const deltaEl = document.getElementById('delta');
+        if (lastLossVal !== null) {
+            const d = loss - lastLossVal;
+            if (Math.abs(d) < 0.0001) {
+                deltaEl.textContent = '→';
+                deltaEl.className   = 'flat';
+            } else if (d > 0) {
+                deltaEl.textContent = `▲ ${d.toFixed(4)}`;
+                deltaEl.className   = 'up';
+            } else {
+                deltaEl.textContent = `▼ ${Math.abs(d).toFixed(4)}`;
+                deltaEl.className   = 'down';
             }
-            return sma;
         }
+        lastLossVal = loss;
+    }
 
-        async function updateData() {
-            try {
-                let fetchOptions = { cache: "no-store" };
-                if (!isFirstLoad) {
-                    fetchOptions.headers = { 'Range': 'bytes=-50000' };
+    // ── Main poll ──────────────────────────────────────────────────────
+    async function poll() {
+        try {
+            const headers = {};
+            if (lastBytePos > 0) headers['Range'] = `bytes=${lastBytePos}-`;
+
+            const res = await fetch('training.log?t=' + Date.now(), {
+                cache: 'no-store',
+                headers
+            });
+
+            // 416 = no new bytes yet (file position at end) → normal, skip
+            if (res.status === 416) return;
+            if (!res.ok && res.status !== 206) return;
+
+            const text = await res.text();
+            if (!text) return;
+
+            // Advance byte position
+            if (res.status === 206) {
+                const cr = res.headers.get('Content-Range'); // bytes START-END/TOTAL
+                if (cr) {
+                    const m = cr.match(/bytes (\d+)-(\d+)\/(\d+)/);
+                    if (m) lastBytePos = parseInt(m[2]) + 1;
                 }
+            } else {
+                // 200 OK (first full load) — advance to current file size
+                lastBytePos = new TextEncoder().encode(text).length;
+            }
 
-                const response = await fetch('training.log?t=' + Date.now(), fetchOptions);
-                if (!response.ok && response.status !== 206) return;
-
-                const text = await response.text();
-                const lines = text.split('\n').filter(l => l.trim() !== "");
-
-                let logData = [];
-                lines.forEach(line => {
-                    const m = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
-                    if (m) {
-                        const globalEpoch = m[1];
-                        const batchIdx = m[2];
-                        // Divide by ACCUMULATION_STEPS to recover the true averaged loss
-                        const loss = parseFloat(m[3]) / ACCUMULATION_STEPS;
-                        const key = `${globalEpoch}_${batchIdx}`;
-                        const x = parseFloat(globalEpoch) + (parseFloat(batchIdx) / 300);
-                        logData.push({ x, y: loss, key });
-                    }
+            // Parse new lines
+            const newPts = [];
+            for (const line of text.split('\n')) {
+                const m = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
+                if (!m) continue;
+                const epoch = parseInt(m[1]);
+                const batch = parseInt(m[2]);
+                const loss  = parseFloat(m[3]) / ACCUMULATION_STEPS;
+                newPts.push({
+                    x: epoch + batch / BATCHES_PER_EPOCH,
+                    y: loss,
+                    epoch, batch
                 });
+            }
 
-                if (logData.length === 0) return;
+            if (newPts.length === 0) return;
 
-                const chartPoints = lossChart.data.datasets[0].data;
-                const newPoints = [];
+            // Hide waiting overlay on first data
+            document.getElementById('waiting').classList.add('hidden');
 
-                logData.forEach(p => {
-                    if (!seenKeys.has(p.key)) {
-                        newPoints.push(p);
-                        seenKeys.add(p.key);
-                    }
-                });
+            // Append to chart
+            const pts = chart.data.datasets[0].data;
+            pts.push(...newPts);
+            if (pts.length > MAX_CHART_PTS) pts.splice(0, pts.length - MAX_CHART_PTS);
+            pts.sort((a, b) => a.x - b.x);
+            totalPts += newPts.length;
 
-                if (newPoints.length > 0 || isFirstLoad) {
-                    if (isFirstLoad) {
-                        newPoints.forEach(p => p._sp = true);
-                        chartPoints.push(...newPoints);
-                        isFirstLoad = false;
-                        lossChart.update('none');
-                    } else {
-                        newPoints.forEach(p => {
-                            p._sp = false;
-                            chartPoints.push(p);
-                        });
+            chart.data.datasets[1].data = sma(pts, 30);
+            chart.update('none');
 
-                        if (chartPoints.length > 5000) {
-                            chartPoints.splice(0, chartPoints.length - 5000);
-                        }
+            // Auto-follow X axis unless user is panning/zooming
+            if (!manualMode && pts.length > 0) {
+                const maxX = pts[pts.length - 1].x;
+                const fv   = document.getElementById('viewFilter').value;
+                chart.options.scales.x.min = fv === 'all' ? undefined : Math.max(0, maxX - parseInt(fv));
+                chart.options.scales.x.max = maxX + (fv === 'all' ? 0 : 2);
+                chart.update('none');
+            }
 
-                        lossChart.update({ duration: 800 });
-                        setTimeout(() => { newPoints.forEach(p => p._sp = true); }, 1000);
-                    }
-
-                    chartPoints.sort((a, b) => a.x - b.x);
-                    lossChart.data.datasets[1].data = calculateSMA(chartPoints, 20);
-
-                    if (newPoints.length > 0) lastNewPointTime = Date.now();
-                }
-
-                // Status bar: show LIVE if we got new points in last 10s, else STANDBY
-                const latest = logData[logData.length - 1];
-                const isLive = lastNewPointTime && (Date.now() - lastNewPointTime < 10000);
-                if (isLive) {
-                    statusBar.className = 'live';
-                    statusBar.innerText = `STATUS: LIVE // EPISTEMIC ROUTING ACTIVE // POINTS: ${chartPoints.length} // EPOCH: ${latest.x.toFixed(2)} // LOSS: ${latest.y.toFixed(4)}`;
-                } else {
-                    statusBar.className = 'standby';
-                    statusBar.innerText = `STATUS: STANDBY // POINTS: ${chartPoints.length} // LAST EPOCH: ${latest.x.toFixed(2)} // LAST LOSS: ${latest.y.toFixed(4)}`;
-                }
-
-                if (!manualMode && chartPoints.length > 0) {
-                    const filterVal = viewFilter.value;
-                    const maxEpoch = chartPoints[chartPoints.length - 1].x;
-                    const minEpoch = filterVal === 'all' ? 0 : Math.max(0, maxEpoch - parseInt(filterVal));
-                    lossChart.options.scales.x.min = minEpoch;
-                    lossChart.options.scales.x.max = maxEpoch + (filterVal === 'all' ? 5 : 2);
-                    lossChart.update('none');
-                }
-            } catch (e) { console.error("SYNC_FAIL", e); }
+            lastDataMs = Date.now();
+            updateTopbar(newPts[newPts.length - 1]);
+        } catch (e) {
+            console.error('poll error', e);
         }
+    }
 
-        resetBtn.addEventListener('click', () => {
-            manualMode = false;
-            lossChart.resetZoom();
-            updateData();
-        });
+    // ── Liveness watchdog ──────────────────────────────────────────────
+    function checkLiveness() {
+        if (!lastDataMs) {
+            setStatus('off');
+        } else {
+            const age = Date.now() - lastDataMs;
+            if      (age <  6000) setStatus('live');
+            else if (age < 30000) setStatus('stale');
+            else                  setStatus('off');
+        }
+    }
 
-        viewFilter.addEventListener('change', () => { manualMode = false; updateData(); });
+    // ── Controls ───────────────────────────────────────────────────────
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        manualMode = false;
+        chart.resetZoom();
+        poll();
+    });
+    document.getElementById('viewFilter').addEventListener('change', () => {
+        manualMode = false;
+        poll();
+    });
 
-        updateData();
-        setInterval(updateData, 3000);
-    </script>
+    // ── Resize ────────────────────────────────────────────────────────
+    function resize() {
+        const wrap = document.getElementById('chart-wrap');
+        ctx.canvas.width  = wrap.clientWidth;
+        ctx.canvas.height = wrap.clientHeight;
+        chart.resize();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // ── Boot ──────────────────────────────────────────────────────────
+    poll();
+    setInterval(poll,          POLL_MS);
+    setInterval(checkLiveness, 2000);
+</script>
 </body>
 </html>
