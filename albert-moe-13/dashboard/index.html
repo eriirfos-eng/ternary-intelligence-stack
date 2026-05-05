@@ -88,7 +88,8 @@
             flex: 1;
             position: relative;
             min-height: 0;
-            padding: 6px 8px 4px;
+            /* no CSS padding — inset handled by chart layout.padding so both
+               canvases share the same (0,0) origin and pulse coords align exactly */
         }
         canvas { display: block; }
 
@@ -290,6 +291,7 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { top: 6, right: 8, bottom: 4, left: 8 } },
             animations: {
                 y: {
                     // Only the new incoming point animates; old points get duration 0 (instant)
@@ -483,11 +485,14 @@
 
     // ── Resize ────────────────────────────────────────────────────────
     function resize() {
-        const wrap = document.getElementById('chart-wrap');
-        const w = wrap.clientWidth, h = wrap.clientHeight;
-        ctx.canvas.width  = w; ctx.canvas.height = h;
-        pulseCanvas.width = w; pulseCanvas.height = h;
-        chart.resize();
+        chart.resize(); // Chart.js owns the lossChart canvas size
+        // Mirror the lossChart CSS display size onto the overlay so they share coords
+        const lc = ctx.canvas;
+        const w = lc.offsetWidth, h = lc.offsetHeight;
+        pulseCanvas.width        = w;
+        pulseCanvas.height       = h;
+        pulseCanvas.style.width  = w + 'px';
+        pulseCanvas.style.height = h + 'px';
     }
     window.addEventListener('resize', resize);
     resize();
