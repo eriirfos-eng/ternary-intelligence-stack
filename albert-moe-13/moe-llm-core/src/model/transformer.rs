@@ -15,14 +15,14 @@ pub struct Block {
 }
 
 impl Block {
-    pub fn new(config: &TransformerConfig, vb: VarBuilder) -> Result<Self> {
-        let attention = Attention::new(config.hidden_size, config.num_heads, vb.pp("attn"), config.threshold)?;
+    pub fn new(config: &TransformerConfig, vb: VarBuilder, threshold: f32) -> Result<Self> {
+        let attention = Attention::new(config.hidden_size, config.num_heads, vb.pp("attn"), threshold)?;
         
         let (moe, mlp) = if config.num_experts > 0 {
-            let moe = MoeBlock::new(config.hidden_size, config.num_experts, vb.pp("moe"), config.threshold)?;
+            let moe = MoeBlock::new(config.hidden_size, config.num_experts, vb.pp("moe"), threshold)?;
             (Some(moe), None)
         } else {
-            let mlp = Mlp::new(config.hidden_size, config.hidden_size * 4, vb.pp("mlp"), config.threshold)?;
+            let mlp = Mlp::new(config.hidden_size, config.hidden_size * 4, vb.pp("mlp"), threshold)?;
             (None, Some(mlp))
         };
 
@@ -63,7 +63,8 @@ impl Transformer {
         let mut blocks = Vec::new();
         let vb_blocks = vb.pp("blocks");
         for i in 0..config.num_layers {
-            blocks.push(Block::new(config, vb_blocks.pp(i))?);
+            let layer_threshold = config.layer_threshold(i);
+            blocks.push(Block::new(config, vb_blocks.pp(i), layer_threshold)?);
         }
 
         let ln_f = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln_f"))?;

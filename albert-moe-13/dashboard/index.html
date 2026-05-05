@@ -150,7 +150,7 @@
 
     <div class="tb-cell arch">
         <span class="tb-label">ARCH</span>
-        <span class="tb-val muted">3 LAYERS · 128 HIDDEN · 4 HEADS · 12 EXPERTS · 128 CTX</span>
+        <span class="tb-val muted" id="v-arch">—</span>
     </div>
 
     <div class="tb-cell controls">
@@ -185,11 +185,9 @@
 </div>
 
 <script>
-    // Must match accumulation_steps in train_bible.rs.
-    // The log writes step_loss * ACCUMULATION_STEPS, so we divide to recover real loss.
-    const ACCUMULATION_STEPS = 16;
+    // Log now writes real cross-entropy loss directly — no division needed.
     const BATCHES_PER_EPOCH  = 300;
-    const POLL_MS            = 1000;
+    const POLL_MS            = 1500;  // ~2s/batch at 256H — one poll per batch
     const MAX_CHART_PTS      = 5000;
 
     // ── State ──────────────────────────────────────────────────────────
@@ -203,8 +201,8 @@
     let pulseDataY       = 0;
     let pulseEndMs       = 0;
 
-    // ── Last-SMA reference line (MT5-style "closing price" line) ──────
-    let lastSmaY = null;
+    // ── Last epoch average reference line (MT5-style "closing price" line) ──
+    let lastSmaY = null;   // tracks last completed epoch's avg loss
     Chart.register({
         id: 'lastSmaLine',
         afterDraw(chart) {
@@ -224,7 +222,7 @@
             ctx.font = '10px monospace';
             ctx.fillStyle = '#ff6b35';
             ctx.textAlign = 'right';
-            ctx.fillText(lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
+            ctx.fillText('EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
             ctx.restore();
         }
     });
@@ -328,8 +326,10 @@
                     }
                 },
                 zoom: {
-                    pan:  { enabled: true, mode: 'xy' },
-                    zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }
+                    pan:  { enabled: true, mode: 'xy',
+                            onPanStart: () => { document.getElementById('viewFilter').value = 'all'; } },
+                    zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
+                            onZoomStart: () => { document.getElementById('viewFilter').value = 'all'; } }
                 }
             }
         }
@@ -349,7 +349,8 @@
         const loss = latest.y;
 
         document.getElementById('v-loss').textContent  = loss.toFixed(4);
-        document.getElementById('v-epoch').textContent = Math.floor(latest.epoch);
+        document.getElementById('v-epoch').textContent =
+            latest.layers ? `${Math.floor(latest.epoch)} (${latest.layers}L)` : Math.floor(latest.epoch);
         document.getElementById('v-batch').textContent = `${latest.batch} / ${BATCHES_PER_EPOCH}`;
         document.getElementById('v-pts').textContent   = totalPts;
 
@@ -404,17 +405,27 @@
             }
 
             // Parse new lines
+            const lines = text.split('\n');
             const newPts = [];
-            for (const line of text.split('\n')) {
-                const m = line.match(/Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
+            for (const line of lines) {
+                // ARCH metadata line — update topbar display
+                const am = line.match(/^ARCH\s+(\d+)L\s+(\d+)H\s+(\d+)E\s+(\d+)CTX\s+(\d+)V/);
+                if (am) {
+                    document.getElementById('v-arch').textContent =
+                        `${am[1]} LAYERS · ${am[2]} HIDDEN · ${am[3]} EXPERTS · ${am[4]} CTX · ${am[5]} VOCAB`;
+                    continue;
+                }
+                // Batch loss line — capture layer count too
+                const m = line.match(/Epoch\s+(\d+)\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
                 if (!m) continue;
-                const epoch = parseInt(m[1]);
-                const batch = parseInt(m[2]);
-                const loss  = parseFloat(m[3]) / ACCUMULATION_STEPS;
+                const layers = parseInt(m[1]);
+                const epoch  = parseInt(m[2]);
+                const batch  = parseInt(m[3]);
+                const loss   = parseFloat(m[4]);
                 newPts.push({
                     x: epoch + batch / BATCHES_PER_EPOCH,
                     y: loss,
-                    epoch, batch
+                    epoch, batch, layers
                 });
             }
 
@@ -432,17 +443,26 @@
 
             const smaData = sma(pts, 30);
             chart.data.datasets[1].data = smaData;
-            if (smaData.length > 0) lastSmaY = smaData[smaData.length - 1].y;
 
-            // Live updates (≤5 new pts) get the drop animation; bulk loads skip it
-            const isLive = newPts.length <= 5;
-            newPointStartIdx = isLive ? pts.length - newPts.length : Infinity;
+            // Update reference line from epoch summary lines ("Avg Loss: X.XXXX")
+            for (const line of lines) {
+                const em = line.match(/Avg Loss:\s*([\d.]+)/);
+                if (em) lastSmaY = parseFloat(em[1]);
+            }
+
+            // Only the very last arriving point gets the drop animation.
+            // Older points in the same poll batch are added silently (duration=0).
+            const isLive = newPts.length <= 20;
+            newPointStartIdx = isLive ? pts.length - 1 : Infinity;
             chart.update(isLive ? undefined : 'none');
 
-            if (isLive) {
-                const last = newPts[newPts.length - 1];
-                // Wait for the 500ms drop animation to finish, then wrap the landed dot
-                setTimeout(() => startPulse(last.x, last.y), 550);
+            // If a live filter is active, advance the viewport with new data
+            const fv = document.getElementById('viewFilter').value;
+            if (fv !== 'all' && pts.length > 0) {
+                const maxX = pts[pts.length - 1].x;
+                chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
+                chart.options.scales.x.max = maxX + 2;
+                chart.update('none');
             }
 
             updateTopbar(newPts[newPts.length - 1]);
