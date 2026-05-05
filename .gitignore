@@ -32,8 +32,12 @@ venv/
 ternlang-root/ternlang-studio/.ternstudio-local.js
 legacy_archive/
 
-# TIS logs
+# TIS logs and generated artifacts
 logs/
+*.log
+docs/*.log
+docs/*.csv
+e2e.log
 llama32-1b.tern.json
 llama32-1b.tern.bin
 target/
