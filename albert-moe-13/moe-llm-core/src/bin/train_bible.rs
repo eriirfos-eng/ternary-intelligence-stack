@@ -40,15 +40,24 @@ impl EvolutionManager {
 
         let latest = *self.loss_history.back().unwrap();
         
+        // Mastery: Model has learned the patterns sufficiently
         if latest < self.mastery_threshold {
             println!("--- MASTERY EVOLUTION TRIGGERED (Loss {:.4} < {:.4}) ---", latest, self.mastery_threshold);
             return true;
         }
 
         let first = *self.loss_history.front().unwrap();
-        let diff = (first - latest).abs();
-        if diff < self.plateau_threshold {
-            println!("--- PLATEAU EVOLUTION TRIGGERED (Improvement {:.4} < {:.4}) ---", diff, self.plateau_threshold);
+        
+        // Plateau: No significant improvement (Delta < 0.05)
+        let diff = first - latest; // Positive means improvement, Negative means divergence
+        if diff.abs() < self.plateau_threshold {
+            println!("--- PLATEAU EVOLUTION TRIGGERED (Stability {:.4} < {:.4}) ---", diff.abs(), self.plateau_threshold);
+            return true;
+        }
+
+        // Divergence: Loss is consistently rising (indicating capacity bottleneck)
+        if diff < -0.1 {
+            println!("--- DIVERGENCE EVOLUTION TRIGGERED (Loss Rising: {:.4}) ---", diff);
             return true;
         }
 
@@ -138,7 +147,7 @@ fn train_cycle(
         c.trim().parse::<u32>().unwrap_or(0)
     } else { 0 };
 
-    let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 2e-4)?; 
+    let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), 1e-4)?; 
 
     let batch_size = 1; 
     let accumulation_steps = 16;
