@@ -33,8 +33,7 @@ impl MoeBlock {
         gate_logits = gate_logits.broadcast_mul(&noise)?;
 
         // 2. Top-3 Routing (v2.0 Evolution)
-        // Iterative masking for Top-K=3
-        let large_neg = Tensor::new(&[-1e9f32], dev)?.broadcast_as(gate_logits.shape())?;
+        let large_neg_val = Tensor::new(&[-1e9f32], dev)?;
         
         // Max 1
         let max1_indices = gate_logits.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
@@ -43,30 +42,27 @@ impl MoeBlock {
             .broadcast_eq(&max1_indices.unsqueeze(candle_core::D::Minus1)?)?;
         
         // Max 2
-        let gate_logits_m1 = mask1.where_cond(&large_neg, &gate_logits)?;
+        let gate_logits_m1 = mask1.where_cond(&large_neg_val.broadcast_as(gate_logits.shape())?, &gate_logits)?;
         let max2_indices = gate_logits_m1.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let mask2 = Tensor::arange(0u32, self.num_experts as u32, dev)?
             .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
             .broadcast_eq(&max2_indices.unsqueeze(candle_core::D::Minus1)?)?;
             
         // Max 3
-        let gate_logits_m2 = mask2.where_cond(&large_neg, &gate_logits_m1)?;
+        let gate_logits_m2 = mask2.where_cond(&large_neg_val.broadcast_as(gate_logits.shape())?, &gate_logits_m1)?;
         let max3_indices = gate_logits_m2.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
 
-        // Get Values
         let max1_values = gate_logits.max(candle_core::D::Minus1)?;
         let max2_values = gate_logits_m1.max(candle_core::D::Minus1)?;
         let max3_values = gate_logits_m2.max(candle_core::D::Minus1)?;
         
         // 3. ASYMMETRIC SAFETY LOGIC (v2.0)
-        // Experts 0-3 are Safety-Critical (Ethics, Legal, Medical, Ecological).
-        // Bias toward HOLD (0) if confidence is below 0.05.
         let safety_threshold = 0.05f32;
+        
         let apply_safety = |idx_tensor: &Tensor, val_tensor: &Tensor| -> Result<Tensor> {
             let is_safety = idx_tensor.lt(4u32)?.to_dtype(candle_core::DType::F32)?;
             let is_low_conf = val_tensor.lt(safety_threshold)?.to_dtype(candle_core::DType::F32)?;
             let should_hold = (is_safety * is_low_conf)?;
-            // multiplier = 1.0 - should_hold
             let multiplier = (should_hold.neg()? + 1.0)?;
             val_tensor.broadcast_mul(&multiplier)
         };
@@ -81,7 +77,7 @@ impl MoeBlock {
 
         let mut final_output = Tensor::zeros((b * s, h), x.dtype(), dev)?;
 
-        // 4. Streamlined Expert Execution (Top-3)
+        // 4. Sequential Expert Execution (Stable)
         let m1_flat = max1_indices.flatten_all()?;
         let m2_flat = max2_indices.flatten_all()?;
         let m3_flat = max3_indices.flatten_all()?;
