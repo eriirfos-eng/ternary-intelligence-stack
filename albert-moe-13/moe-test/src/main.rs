@@ -45,6 +45,7 @@ struct App {
     // UI State
     is_generating: bool,
     current_tokens: Vec<u32>,
+    prompt_token_len: usize,
     tokens_to_generate: usize,
     scroll_pos: u16,
     auto_scroll: bool,
@@ -58,9 +59,6 @@ impl App {
         let metadata = fs::metadata(&checkpoint_path).ok();
         let mtime = metadata.and_then(|m| m.modified().ok()).unwrap_or(UNIX_EPOCH);
         let elapsed = mtime.duration_since(UNIX_EPOCH).unwrap_or(Duration::ZERO).as_secs();
-        
-        let tensors = candle_core::safetensors::load(&checkpoint_path, &dev)
-            .expect("Failed to load .safetensors weights");
         
         let vocab_path = "data/vocab.json";
         let tokenizer = BpeTokenizer::new(vocab_path);
@@ -118,6 +116,7 @@ impl App {
             est_gflops: 0.0,
             is_generating: false,
             current_tokens: Vec::new(),
+            prompt_token_len: 0,
             tokens_to_generate: 0,
             scroll_pos: 0,
             auto_scroll: true,
@@ -126,11 +125,12 @@ impl App {
 
     fn start_generation(&mut self) {
         if self.input.trim().is_empty() { return; }
-        
+
         let user_msg = self.input.drain(..).collect::<String>();
         self.transcript.push_str(&format!("\nUser: {}\nAlbert: ", user_msg));
-        
+
         self.current_tokens = self.tokenizer.encode(&user_msg);
+        self.prompt_token_len = self.current_tokens.len();
         self.messages.push(("User".to_string(), user_msg));
         self.messages.push(("Albert".to_string(), String::new()));
         
@@ -178,20 +178,15 @@ impl App {
             self.est_gflops = (self.tokens_per_sec * 2_000_000.0) / 1_000_000_000.0;
         }
 
-        let full_text = self.tokenizer.decode(&self.current_tokens);
-        let prompt_text = self.messages[self.messages.len()-2].1.clone();
-        
+        // Decode only the generated tokens (everything after the prompt)
+        let generated = &self.current_tokens[self.prompt_token_len..];
+        let albert_text = self.tokenizer.decode(generated);
+
         if let Some(msg) = self.messages.last_mut() {
-            let albert_text = if full_text.starts_with(&prompt_text) {
-                full_text[prompt_text.len()..].to_string()
-            } else {
-                full_text.clone()
-            };
-            
             let delta = if albert_text.len() > msg.1.len() {
                 albert_text[msg.1.len()..].to_string()
             } else { String::new() };
-            
+
             self.transcript.push_str(&delta);
             msg.1 = albert_text;
             

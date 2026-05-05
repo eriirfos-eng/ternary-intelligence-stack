@@ -408,9 +408,29 @@
             const lines = text.split('\n');
             const newPts = [];
             for (const line of lines) {
-                // ARCH metadata line — update topbar display
+                // ARCH metadata line — update topbar display; also acts as new-session sentinel
                 const am = line.match(/^ARCH\s+(\d+)L\s+(\d+)H\s+(\d+)E\s+(\d+)CTX\s+(\d+)V/);
                 if (am) {
+                    // If there is already chart data, this ARCH line signals a new training session.
+                    // Clear everything so old-run epochs don't collide with the new run.
+                    if (chart.data.datasets[0].data.length > 0) {
+                        chart.data.datasets[0].data.length = 0;
+                        chart.data.datasets[1].data = [];
+                        lastSmaY  = null;
+                        bestLoss  = Infinity;
+                        totalPts  = 0;
+                        lastLossVal = null;
+                        newPointStartIdx = Infinity;
+                        document.getElementById('v-loss').textContent  = '—';
+                        document.getElementById('v-epoch').textContent = '—';
+                        document.getElementById('v-best').textContent  = '—';
+                        document.getElementById('v-pts').textContent   = '0';
+                        document.getElementById('delta').textContent   = '';
+                        document.getElementById('delta').className     = 'flat';
+                        document.getElementById('waiting').classList.remove('hidden');
+                        chart.options.scales.x.min = undefined;
+                        chart.options.scales.x.max = undefined;
+                    }
                     document.getElementById('v-arch').textContent =
                         `${am[1]} LAYERS · ${am[2]} HIDDEN · ${am[3]} EXPERTS · ${am[4]} CTX · ${am[5]} VOCAB`;
                     continue;
