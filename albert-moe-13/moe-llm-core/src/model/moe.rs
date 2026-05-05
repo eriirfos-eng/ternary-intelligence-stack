@@ -51,38 +51,30 @@ impl MoeBlock {
 
         let mut final_output = Tensor::zeros((b * s, h), x.dtype(), dev)?;
 
-        // 3. Expert Execution (Optimized implementation using boolean masking)
-        // Since 'nonzero()' is not available in this Candle version, we use 
-        // broadcast multiplication which is still faster than running the full expert
-        // if we properly weight it.
-        
+        // 3. Streamlined Expert Execution
+        // We remove the slow to_scalar() calls and use pure tensor masking.
+        // Even if an expert isn't used, the matmul on a zero-mask is extremely fast on CPU.
         let max1_flat = max1_indices.flatten_all()?;
         let max2_flat = max2_indices.flatten_all()?;
+        
+        let prob1 = top2_probs_flat.narrow(1, 0, 1)?.flatten_all()?;
+        let prob2 = top2_probs_flat.narrow(1, 1, 1)?.flatten_all()?;
 
         for expert_idx in 0..self.num_experts {
-            let mask1 = max1_flat.eq(expert_idx as u32)?.to_dtype(x.dtype())?;
-            let mask2 = max2_flat.eq(expert_idx as u32)?.to_dtype(x.dtype())?;
+            let mask1_bool = max1_flat.eq(expert_idx as u32)?;
+            let mask2_bool = max2_flat.eq(expert_idx as u32)?;
             
-            // Check if expert is used AT ALL to skip the MLP entirely if not
-            let combined_sum = (mask1.sum_all()?.to_scalar::<f32>()? + mask2.sum_all()?.to_scalar::<f32>()?);
+            let w1 = (mask1_bool.to_dtype(x.dtype())? * &prob1)?;
+            let w2 = (mask2_bool.to_dtype(x.dtype())? * &prob2)?;
+            let combined_weight = (w1 + w2)?.unsqueeze(1)?;
             
-            if combined_sum > 0.0 {
-                // We use a weighted input approach. This is the fastest alternative
-                // to index_select on CPU without custom kernels.
-                let prob1 = top2_probs_flat.narrow(1, 0, 1)?.flatten_all()?;
-                let prob2 = top2_probs_flat.narrow(1, 1, 1)?.flatten_all()?;
-                
-                let weight1 = (mask1 * prob1)?;
-                let weight2 = (mask2 * prob2)?;
-                let total_weight = (weight1 + weight2)?.unsqueeze(1)?;
-                
-                // Still masking the input to zero out irrelevant tokens 
-                // This helps the expert MLP concentrate on active tokens
-                let expert_in = x_flat.broadcast_mul(&total_weight.gt(0.0)?.to_dtype(x.dtype())?)?;
-                let expert_out = self.experts[expert_idx].forward(&expert_in)?;
-                
-                final_output = (final_output + expert_out.broadcast_mul(&total_weight)?)?;
-            }
+            // Mask the input: tokens not for this expert become 0
+            // This is efficient because most of the input matrix will be 0.
+            let expert_in = x_flat.broadcast_mul(&combined_weight.gt(0.0)?.to_dtype(x.dtype())?)?;
+            let expert_out = self.experts[expert_idx].forward(&expert_in)?;
+            
+            // Accumulate weighted output
+            final_output = (final_output + expert_out.broadcast_mul(&combined_weight)?)?;
         }
         
         final_output.reshape((b, s, h))
