@@ -710,7 +710,7 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "url":         "https://ternlang.com/mcp",
             "transport":   "HTTP JSON-RPC 2.0",
             "smithery":    "https://smithery.ai/server/ternlang",
-            "description": "POST /mcp — 30 tools, all free. Pass X-Ternlang-Key for server-side persistent memory and REST API access.",
+            "description": "POST /mcp — 34 tools, all free. Pass X-Ternlang-Key for server-side persistent memory and REST API access.",
         },
         "acquire_key": "https://ternlang.com/#licensing"
     })).into_response()
@@ -1623,8 +1623,8 @@ async fn mcp_info() -> Json<Value> {
         "transport":   "http",
         "endpoint":    "https://ternlang.com/mcp",
         "usage":       "POST JSON-RPC 2.0 — methods: initialize, tools/list, tools/call",
-        "tools":         30,
-        "free_tools":    30,
+        "tools":         34,
+        "free_tools":    34,
         "premium_tools": 0,
         "auth":        "all MCP tools free — no key required | upgrade for REST API: Tier 2 €99/mo (10k/mo) | Tier 3 €349/mo (50k/mo) | Tier 4 enterprise — see ternlang.com/pricing",
         "highlight":   "server-side 3-layer memory (working/session/core) + ternary attention + MoE-13 deliberation + ternary compression",
@@ -1653,7 +1653,7 @@ struct McpRpcRequest {
     params:  Option<Value>,
 }
 
-// All 30 MCP tools are free — no API key required.
+// All 34 MCP tools are free — no API key required.
 // Premium upsell is via the REST API (rate limits, SSE streaming, SLA).
 const MCP_PREMIUM_TOOLS: &[&str] = &[];
 
@@ -1828,6 +1828,10 @@ fn mcp_dispatch_tool(name: &str, params: &Value, api_key: &str, mem: &MemStore) 
         "tsql_join"                => mcp_tsql_join(params),
         "audit_ternary_logic"      => mcp_audit_ternary_logic(params),
         "get_industrial_standards" => mcp_get_industrial_standards(),
+        "llb_check"                => mcp_llb_check(params),
+        "llb_classify"             => mcp_llb_classify(params),
+        "llb_validate"             => mcp_llb_validate(params),
+        "llb_write_safe"           => mcp_llb_write_safe(params),
         _ => Err(format!("unknown tool: {}", name)),
     }?;
 
@@ -3445,6 +3449,135 @@ fn mcp_get_industrial_standards() -> Result<Value, String> {
     }))
 }
 
+// ─── LLB tools (HTTP/stateless variants) ─────────────────────────────────────
+//
+// Pure-logic reimplementations of the LLB gates — no filesystem writes on the
+// server. llb_check / llb_classify / llb_validate run as policy classifiers.
+// llb_write_safe advises the agent but defers actual writes to local stdio.
+
+fn llb_blacklist_check(path: &str) -> Option<&'static str> {
+    let protected = ["/etc/", "/proc/", "/sys/", "/dev/", "/boot/", "/bin/", "/sbin/",
+                     "/usr/bin/", "/usr/sbin/", "/lib/", "/lib64/",
+                     "/.ssh/", "/.gnupg/", "/.config/", "/.aws/",
+                     "/root/", "/etc/passwd", "/etc/shadow", "/etc/hosts"];
+    for pat in &protected {
+        if path.starts_with(pat) || path == pat.trim_end_matches('/') {
+            return Some("system or credential path protected by LLB blacklist");
+        }
+    }
+    None
+}
+
+fn llb_tier_label(op: &str) -> (&'static str, &'static str, bool, bool) {
+    match op.to_uppercase().as_str() {
+        "READ"      => ("T0/READ",   "Low — read-only path resolution only",                         false, false),
+        "CREATE"    => ("T1/CREATE", "Moderate — new file; Gate 1 + blacklist check",                false, false),
+        "OVERWRITE" => ("T2/MODIFY", "High — existing file mutation; Gate 1 + snapshot + Gate 2",   true,  false),
+        "CHMOD"     => ("T2/MODIFY", "High — permission change; Gate 1 + snapshot + Gate 2",        true,  false),
+        "DELETE"    => ("T3/DELETE", "Critical — irreversible; Gate 1 + HITL + snapshot + Gate 2",  true,  true),
+        _           => ("T1/CREATE", "Moderate — unknown op treated as CREATE",                     false, false),
+    }
+}
+
+fn mcp_llb_check(params: &Value) -> Result<Value, String> {
+    let path = params["path"].as_str().ok_or("path must be a string")?;
+    match llb_blacklist_check(path) {
+        None => Ok(json!({
+            "path":      path,
+            "protected": false,
+            "allowed":   true,
+            "trit":      1,
+            "verdict":   "clear — path is not on the LLB blacklist",
+        })),
+        Some(reason) => Ok(json!({
+            "path":      path,
+            "protected": true,
+            "allowed":   false,
+            "trit":      -1,
+            "verdict":   format!("blocked — {reason}"),
+        })),
+    }
+}
+
+fn mcp_llb_classify(params: &Value) -> Result<Value, String> {
+    let path = params["path"].as_str().ok_or("path must be a string")?;
+    let op   = params["operation"].as_str().ok_or("operation must be a string (CREATE/OVERWRITE/DELETE/CHMOD/READ)")?;
+    let (tier, risk, needs_snap, needs_hitl) = llb_tier_label(op);
+    Ok(json!({
+        "path":              path,
+        "operation":         op.to_uppercase(),
+        "tier":              tier,
+        "risk_summary":      risk,
+        "requires_snapshot": needs_snap,
+        "requires_hitl":     needs_hitl,
+        "trit": match tier { "T0/READ" | "T1/CREATE" => 1i8, "T2/MODIFY" => 0, _ => -1 },
+    }))
+}
+
+fn mcp_llb_validate(params: &Value) -> Result<Value, String> {
+    let path    = params["path"].as_str().ok_or("path must be a string")?;
+    let op      = params["operation"].as_str().ok_or("operation must be a string")?;
+    let goal    = params["goal"].as_str().unwrap_or("validate request");
+    let just    = params["justification"].as_str().unwrap_or("");
+
+    if let Some(reason) = llb_blacklist_check(path) {
+        return Ok(json!({
+            "allowed": false,
+            "trit":    -1,
+            "verdict": format!("Gate 1 rejected — {reason}"),
+        }));
+    }
+
+    let (tier, risk, needs_snap, _) = llb_tier_label(op);
+    let preflight_ok = !just.is_empty() && !goal.is_empty();
+
+    Ok(json!({
+        "allowed":          preflight_ok,
+        "trit":             if preflight_ok { 1i8 } else { 0 },
+        "tier":             tier,
+        "risk_summary":     risk,
+        "requires_snapshot": needs_snap,
+        "verdict": if preflight_ok {
+            format!("Gate 1 passed — {} operation at '{}' authorised (tier {})", op.to_uppercase(), path, tier)
+        } else {
+            "Gate 1 hold — goal or justification missing; provide both to authorise".to_string()
+        },
+    }))
+}
+
+fn mcp_llb_write_safe(params: &Value) -> Result<Value, String> {
+    let path    = params["path"].as_str().ok_or("path must be a string")?;
+    let op      = params["operation"].as_str().unwrap_or("CREATE");
+    let goal    = params["goal"].as_str().unwrap_or("write file");
+    let just    = params["justification"].as_str().unwrap_or("");
+
+    if let Some(reason) = llb_blacklist_check(path) {
+        return Ok(json!({
+            "trit": -1, "decision": "hard_veto", "written": false,
+            "verdict": format!("LLB Hard Veto (-1) — {reason}"),
+        }));
+    }
+
+    let (tier, _, needs_snap, needs_hitl) = llb_tier_label(op);
+
+    Ok(json!({
+        "trit":     0,
+        "decision": "local_only",
+        "written":  false,
+        "tier":     tier,
+        "requires_snapshot": needs_snap,
+        "requires_hitl":     needs_hitl,
+        "verdict": format!(
+            "LLB Warn (0) — llb_write_safe requires local stdio for filesystem writes. \
+             Gate 1 pre-check passed for '{}' ({}): goal='{}', justification='{}'. \
+             Install via: cargo install ternlang-mcp && configure in your MCP client.",
+            path, tier, goal, if just.is_empty() { "not provided" } else { just }
+        ),
+        "install": "cargo install ternlang-mcp",
+        "docs":    "https://ternlang.com/#quickstart",
+    }))
+}
+
 // ─── mcp_tools_manifest ───────────────────────────────────────────────────────
 //
 // Returns { "tools": [...] } with top-level `title` hoisted from annotations.title
@@ -3803,6 +3936,56 @@ fn mcp_tools_manifest() -> Value {
             "properties": {
               "query":    { "type": "string", "description": "The question or decision to route through the full 13-expert ensemble." },
               "evidence": { "type": "array", "items": { "type": "number" }, "description": "Optional 6-element evidence vector [syntax, world_knowledge, reasoning, tool_use, persona, safety] ∈ [-1.0, 1.0]." }
+            }
+          }
+        },
+        {
+          "name": "llb_check",
+          "description": "Last Look Back — blacklist check. Returns whether a path is protected by the LLB permanent blacklist (system paths, credential directories, kernel interfaces). Read-only — no disk mutation.",
+          "annotations": { "title": "LLB Check — Blacklist Path Guard", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["path"],
+            "properties": {
+              "path": { "type": "string", "description": "Absolute path to check against the LLB blacklist." }
+            }
+          }
+        },
+        {
+          "name": "llb_classify",
+          "description": "Last Look Back — safety tier classification. Classifies a path + operation into LLB safety tiers: T0/READ (low) → T1/CREATE (moderate) → T2/MODIFY (high) → T3/DELETE (critical). Each tier requires additional gates. Use before any filesystem mutation.",
+          "annotations": { "title": "LLB Classify — Safety Tier Classification", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["path", "operation"],
+            "properties": {
+              "path":      { "type": "string", "description": "Absolute path to classify." },
+              "operation": { "type": "string", "enum": ["READ","CREATE","OVERWRITE","DELETE","CHMOD"], "description": "The operation to perform on the path." }
+            }
+          }
+        },
+        {
+          "name": "llb_validate",
+          "description": "Last Look Back — Gate 1 preflight. Validates a structured mutation request: checks blacklist, resolves path, assesses tier, and issues an authorisation verdict. No disk mutation occurs — this is the pre-flight check only.",
+          "annotations": { "title": "LLB Validate — Gate 1 Preflight", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["path", "operation", "goal", "justification"],
+            "properties": {
+              "path":          { "type": "string", "description": "Absolute path to validate." },
+              "operation":     { "type": "string", "enum": ["CREATE","OVERWRITE","DELETE","CHMOD"], "description": "Intended operation." },
+              "goal":          { "type": "string", "description": "What the agent is trying to accomplish." },
+              "justification": { "type": "string", "description": "Why this mutation is necessary." },
+              "fallback":      { "type": "string", "description": "What the agent will do if the request is rejected." }
+            }
+          }
+        },
+        {
+          "name": "llb_write_safe",
+          "description": "Last Look Back — Safe Atomic Write advisory. Runs the full LLB preflight (Gate 1: blacklist + tier classification + intent validation) and returns a ternary verdict: +1 allow / 0 hold (local-only) / -1 veto. Note: actual filesystem writes require local stdio installation (cargo install ternlang-mcp) — this HTTP endpoint returns the pre-flight verdict only.",
+          "annotations": { "title": "LLB Write Safe — Atomic Write Advisory", "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["path", "content", "goal", "justification", "fallback"],
+            "properties": {
+              "path":          { "type": "string", "description": "Absolute path to write to." },
+              "content":       { "type": "string", "description": "Text content to write." },
+              "operation":     { "type": "string", "enum": ["CREATE","OVERWRITE"], "description": "CREATE for new files, OVERWRITE for existing. Default: CREATE." },
+              "goal":          { "type": "string", "description": "What the agent is trying to accomplish." },
+              "justification": { "type": "string", "description": "Why this write is necessary." },
+              "fallback":      { "type": "string", "description": "What the agent will do if the write is vetoed." }
             }
           }
         }
