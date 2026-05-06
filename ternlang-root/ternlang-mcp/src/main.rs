@@ -17,6 +17,10 @@
 ///   trit_translate        — Python/SQL/JSON rules → .tern equivalent with hold zones injected
 ///   trit_eco_check        — human trit + eco trit → synthesise tension as tend when they diverge
 ///   trit_audit            — full TernAudit: binary ratio, EU AI Act heuristic, flagged decisions
+///   llb_check             — LLB blacklist check: is this path protected?
+///   llb_classify          — LLB safety tier: T0/READ → T1/CREATE → T2/MODIFY → T3/DELETE
+///   llb_validate          — LLB Gate 1 preflight: authorize a mutation request (no write)
+///   llb_write_safe        — LLB full atomic write: Gate1 → [snapshot] → write → Gate2 IOCC
 
 use std::io::{self, BufRead, Write};
 use serde::{Deserialize, Serialize};
@@ -26,7 +30,7 @@ use ternlang_ml::{TritMatrix, TritScalar, TritEvidenceVec, TEND_BOUNDARY,
                    bitnet_threshold, benchmark, dense_matmul, sparse_matmul,
                    DeliberationEngine, action_gate, GateDimension, GateVerdict};
 use ternlang_moe::TernMoeOrchestrator;
-use albert_llb::{blacklist, gate1, tier::SafetyTier, types::{MutationRequest, Operation, StructuredIntent}, LlbError};
+use albert_llb::{blacklist, execute as llb_execute, gate1, tier::SafetyTier, types::{MutationRequest, Operation, StructuredIntent}, LlbDecision, LlbError};
 
 // ─── JSON-RPC types ──────────────────────────────────────────────────────────
 
@@ -1167,6 +1171,147 @@ fn tool_trit_audit(params: &Value) -> Result<Value, String> {
 
 // ─── Tool dispatch ───────────────────────────────────────────────────────────
 
+// ─── LLB helpers ─────────────────────────────────────────────────────────────
+
+fn parse_operation(s: &str) -> Result<Operation, String> {
+    serde_json::from_value(serde_json::Value::String(s.to_uppercase()))
+        .map_err(|_| format!("invalid operation '{}': use CREATE/OVERWRITE/DELETE/CHMOD", s))
+}
+
+// ─── Tool: llb_check ─────────────────────────────────────────────────────────
+//
+// Check whether a path falls under the LLB permanent blacklist (system paths,
+// protected home files). Read-only — no disk mutation, no ticket issued.
+
+fn tool_llb_check(params: &Value) -> Result<Value, String> {
+    let path_str = params["path"].as_str().ok_or("path must be a string")?;
+    let path = std::path::Path::new(path_str);
+    match blacklist::check_path(path) {
+        Ok(()) => Ok(json!({
+            "path":      path_str,
+            "protected": false,
+            "allowed":   true,
+            "verdict":   "clear — path is not on the LLB blacklist",
+        })),
+        Err(e) => Ok(json!({
+            "path":      path_str,
+            "protected": true,
+            "allowed":   false,
+            "verdict":   format!("blocked — {e}"),
+        })),
+    }
+}
+
+// ─── Tool: llb_classify ──────────────────────────────────────────────────────
+//
+// Classify a path + operation into a LLB safety tier without touching disk.
+// T0/READ → T1/CREATE → T2/MODIFY → T3/DELETE — each tier adds more gates.
+
+fn tool_llb_classify(params: &Value) -> Result<Value, String> {
+    let path_str = params["path"].as_str().ok_or("path must be a string")?;
+    let op_str   = params["operation"].as_str().ok_or("operation must be a string (CREATE/OVERWRITE/DELETE/CHMOD)")?;
+    let op       = parse_operation(op_str)?;
+    let path     = std::path::Path::new(path_str);
+    let tier     = SafetyTier::classify(path, &op);
+    Ok(json!({
+        "path":              path_str,
+        "operation":         op.to_string(),
+        "tier":              tier.to_string(),
+        "tier_code":         tier as u8,
+        "requires_snapshot": tier.requires_snapshot(),
+        "requires_hitl":     tier.requires_hitl(),
+        "risk_summary": match tier {
+            SafetyTier::T0Read    => "Low — read-only path resolution only",
+            SafetyTier::T1Create  => "Moderate — new file; Gate 1 + blacklist check",
+            SafetyTier::T2Modify  => "High — existing file mutation; Gate 1 + snapshot + Gate 2 IOCC",
+            SafetyTier::T3Delete  => "Critical — irreversible; Gate 1 + HITL + snapshot + Gate 2",
+        },
+    }))
+}
+
+// ─── Tool: llb_validate ──────────────────────────────────────────────────────
+//
+// Run Gate 1 preflight on a structured mutation request. Returns the
+// ExecutionTicket details if the request is authorized, or the rejection
+// reason if it fails blacklist/traversal checks. No disk mutation occurs.
+
+fn tool_llb_validate(params: &Value) -> Result<Value, String> {
+    let path_str    = params["path"].as_str().ok_or("path must be a string")?;
+    let op_str      = params["operation"].as_str().ok_or("operation must be a string")?;
+    let goal        = params["goal"].as_str().unwrap_or("validate request").to_string();
+    let just        = params["justification"].as_str().unwrap_or("LLB preflight check").to_string();
+    let fallback    = params["fallback"].as_str().unwrap_or("abort").to_string();
+    let op          = parse_operation(op_str)?;
+    let req = MutationRequest {
+        path:      path_str.to_string(),
+        operation: op,
+        intent:    StructuredIntent { goal, justification: just, fallback_if_rejected: fallback },
+    };
+    match gate1::run(&req) {
+        Ok(ticket) => Ok(json!({
+            "allowed":       true,
+            "tier":          ticket.tier.to_string(),
+            "ticket_id":     &ticket.id[..16],
+            "resolved_path": ticket.resolved_path.to_string_lossy(),
+            "verdict":       format!("Gate 1 passed — ticket issued for {} operation at {}",
+                                    ticket.operation, ticket.resolved_path.display()),
+        })),
+        Err(e) => Ok(json!({
+            "allowed": false,
+            "verdict": format!("Gate 1 rejected — {e}"),
+            "error":   e.to_string(),
+        })),
+    }
+}
+
+// ─── Tool: llb_write_safe ────────────────────────────────────────────────────
+//
+// Full LLB atomic write: Gate 1 → [Snapshot if T2+] → write → Gate 2 IOCC.
+// Use for any AI-agent file creation or overwrite that must be auditable and
+// rollback-safe. Returns ternary decision: allow (+1) / warn (0) / veto (-1).
+
+fn tool_llb_write_safe(params: &Value) -> Result<Value, String> {
+    let path_str = params["path"].as_str().ok_or("path must be a string")?;
+    let content  = params["content"].as_str().ok_or("content must be a string")?.to_string();
+    let op_str   = params["operation"].as_str().unwrap_or("CREATE");
+    let goal     = params["goal"].as_str().unwrap_or("write file").to_string();
+    let just     = params["justification"].as_str().unwrap_or("agent-requested write").to_string();
+    let fallback = params["fallback"].as_str().unwrap_or("abort").to_string();
+    let op       = parse_operation(op_str)?;
+    let req = MutationRequest {
+        path:      path_str.to_string(),
+        operation: op,
+        intent:    StructuredIntent { goal, justification: just, fallback_if_rejected: fallback },
+    };
+    match llb_execute(req, |p| std::fs::write(p, content.as_bytes()).map_err(LlbError::Io)) {
+        Ok(LlbDecision::Allow) => Ok(json!({
+            "trit":     1,
+            "decision": "allow",
+            "written":  true,
+            "verdict":  format!("LLB Allow (+1) — file written and committed to {path_str}"),
+        })),
+        Ok(LlbDecision::Warn(msg)) => Ok(json!({
+            "trit":     0,
+            "decision": "warn",
+            "written":  false,
+            "verdict":  format!("LLB Warn (0) — soft block: {msg}"),
+        })),
+        Ok(LlbDecision::HardVeto) => Ok(json!({
+            "trit":     -1,
+            "decision": "hard_veto",
+            "written":  false,
+            "verdict":  "LLB Hard Veto (-1) — operation permanently blocked and rolled back",
+        })),
+        Err(e) => Ok(json!({
+            "trit":     -1,
+            "decision": "error",
+            "written":  false,
+            "verdict":  format!("LLB gate error — {e}"),
+            "error":    e.to_string(),
+        })),
+    }
+}
+
 fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
     match name {
         "trit_decide"       => tool_trit_decide(params),
@@ -1188,6 +1333,10 @@ fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
         "trit_translate"           => tool_trit_translate(params),
         "trit_eco_check"           => tool_trit_eco_check(params),
         "trit_audit"               => tool_trit_audit(params),
+        "llb_check"                => tool_llb_check(params),
+        "llb_classify"             => tool_llb_classify(params),
+        "llb_validate"             => tool_llb_validate(params),
+        "llb_write_safe"           => tool_llb_write_safe(params),
         _ => Err(format!("unknown tool: {}", name)),
     }
 }
@@ -1556,6 +1705,64 @@ fn tools_list() -> Value {
                 },
                 "required": ["record_a", "record_b"]
             }
+        },
+        {
+            "name": "llb_check",
+            "description": "Last Look Back — Blacklist Check. Instantly verifies whether a filesystem path falls under the LLB permanent protection list (system binaries, /etc, protected home files). Read-only, no ticket required. Returns clear/blocked + reason.",
+            "annotations": { "title": "LLB Blacklist Check", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string", "description": "Absolute filesystem path to check against the LLB blacklist." }
+                },
+                "required": ["path"]
+            }
+        },
+        {
+            "name": "llb_classify",
+            "description": "Last Look Back — Safety Tier Classifier. Classifies any path + operation into the LLB tier system: T0/READ (low risk), T1/CREATE (moderate), T2/MODIFY (high — snapshot required), T3/DELETE (critical — HITL required). No disk mutation.",
+            "annotations": { "title": "LLB Safety Tier Classifier", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path":      { "type": "string", "description": "Filesystem path to classify." },
+                    "operation": { "type": "string", "enum": ["CREATE", "OVERWRITE", "DELETE", "CHMOD"], "description": "Intended filesystem operation." }
+                },
+                "required": ["path", "operation"]
+            }
+        },
+        {
+            "name": "llb_validate",
+            "description": "Last Look Back — Gate 1 Preflight. Runs the full LLB Gate 1 on a structured mutation request: path traversal check, blacklist enforcement, safety tier classification, and ticket issuance. Returns the ExecutionTicket ID if authorized, or the rejection reason if blocked. No write occurs.",
+            "annotations": { "title": "LLB Gate 1 Preflight Validator", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path":          { "type": "string", "description": "Absolute path of the intended mutation target." },
+                    "operation":     { "type": "string", "enum": ["CREATE", "OVERWRITE", "DELETE", "CHMOD"], "description": "Intended filesystem operation." },
+                    "goal":          { "type": "string", "description": "What the agent is trying to accomplish." },
+                    "justification": { "type": "string", "description": "Why this mutation is necessary." },
+                    "fallback":      { "type": "string", "description": "What the agent will do if this request is rejected." }
+                },
+                "required": ["path", "operation", "goal", "justification", "fallback"]
+            }
+        },
+        {
+            "name": "llb_write_safe",
+            "description": "Last Look Back — Safe Atomic Write. Executes the full LLB transaction for a file write: Gate 1 preflight → optional snapshot (T2+) → write → Gate 2 IOCC integrity check → commit or rollback. Returns a ternary verdict: +1 allow (committed), 0 warn (soft block), -1 veto (rolled back). This is the sovereign AI agent's sanctioned path for all filesystem mutations.",
+            "annotations": { "title": "LLB Safe Atomic Write", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path":          { "type": "string", "description": "Absolute path to write to." },
+                    "content":       { "type": "string", "description": "Text content to write to the file." },
+                    "operation":     { "type": "string", "enum": ["CREATE", "OVERWRITE"], "description": "CREATE for new files, OVERWRITE for existing (triggers snapshot). Defaults to CREATE." },
+                    "goal":          { "type": "string", "description": "What the agent is trying to accomplish." },
+                    "justification": { "type": "string", "description": "Why this write is necessary." },
+                    "fallback":      { "type": "string", "description": "What the agent will do if the write is vetoed." }
+                },
+                "required": ["path", "content", "goal", "justification", "fallback"]
+            }
         }
     ]})
 }
@@ -1585,8 +1792,8 @@ fn initialize_response() -> Value {
         "serverInfo": {
             "name":        "ternlang-mcp",
             "displayName": "Ternary Intelligence Stack",
-            "version":     "0.3.3",
-            "description": "Turns binary AI agents into ternary decision engines. 19 tools across 4 layers: core trit primitives, BET VM, MoE-13 orchestration, EcoCore + Audit. Built by RFI-IRFOS (ZVR: 1015608684), Graz, Austria. EU AI Act Articles 13/14/15 compliant design.",
+            "version":     "0.4.0",
+            "description": "Turns binary AI agents into ternary decision engines. 23 tools across 5 layers: core trit primitives, BET VM, MoE-13 orchestration, EcoCore + Audit, and the Last Look Back (LLB) sovereign filesystem gate. Built by RFI-IRFOS (ZVR: 1015608684), Graz, Austria. EU AI Act Articles 13/14/15 compliant design.",
             "homepage":    "https://ternlang.com",
             "icon":        "https://ternlang.com/favicon.ico",
             "author": {
