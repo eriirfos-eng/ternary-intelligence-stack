@@ -1,6 +1,6 @@
 # RFI-IRFOS Leadership Team
 
-> **Building Europe’s post-binary intelligence frontier from Graz, Austria.**  
+> **Building Europe's post-binary intelligence frontier from Graz, Austria.**  
 > Ternlang and the Ternary Intelligence Stack (TIS) are developed by **RFI-IRFOS**, an interdisciplinary research facility dedicated to frontier deep technology and European technological sovereignty.
 
 ---
@@ -10,16 +10,15 @@
 ---
 
 ### Simeon Kepp  
-#### Co-Founder & Head of Research  
-*Operational Lead*
+#### Co-Founder & Head of Research · Operational Lead
 
-> Architecting the transition from scaling-centric AI to **logic-centric intelligence systems**.
+> *"Architecting the transition from scaling-centric AI to logic-centric intelligence systems."*
 
-Simeon leads the architectural vision and research direction of the Ternary Intelligence Stack, focusing on robust causal routing, transparent model behavior, and post-binary computational frameworks.
+Simeon leads the architectural vision and research direction of the Ternary Intelligence Stack. He is the primary author of the ternary compiler pipeline, the Albert MoE-13 training loop, the BET VM runtime, and the Last Look Back (LLB) filesystem safety protocol. He works at the intersection of formal logic, distributed systems, and frontier ML — building the entire stack in native Rust with candle.
 
-| Leadership Role | Research Focus |
+| Role | Focus |
 |---|---|
-| Operational Lead · Lead Architect | Balanced Ternary Logic · Causal Routing · Systems Architecture |
+| Operational Lead · Lead Architect | Balanced Ternary Logic · Causal Routing · Systems Architecture · Compiler Design · ML Training |
 
 **Connect**
 - **LinkedIn:** [Simeon Kepp](https://www.linkedin.com/in/simeon-kepp/)
@@ -27,17 +26,39 @@ Simeon leads the architectural vision and research direction of the Ternary Inte
 
 ---
 
-### Zabih Karimi  
-#### Co-Founder & IT Technician  
-*Network & ML Application Specialist*
+### Nikoletta Csonka  
+#### Co-Founder & Head of International Relations · Strategic Outreach Lead
 
-> Turning architecture into resilient deployment-ready infrastructure.
+> *"I always tell you what you have to hear — not what you want to hear."*
 
-Zabih specializes in technical implementation across networking protocols, ML inference pipelines, and real-world sovereign deployments of the BET VM and MoE expert environments.
+Nikoletta is the team's critical evaluator and strategic anchor. Her core directive is truth over comfort. She does not soften assessments — if something is genuinely flawed, she says so plainly; if she calls something good, it earned that verdict without diplomatic cushioning. In a field flooded with hype, this makes her the most reliable signal the team has.
 
-| Leadership Role | Technical Focus |
+She oversees the full external footprint of the stack: global partnerships, fundraising, fund application status (including SPRIND and EU grant pipelines), lead management, and social media presence. She ensures the stack's public narrative stays grounded in what TIS actually does — not what AI hype cycles demand.
+
+Nikoletta leads EU AI Act alignment, regulatory positioning, and international strategic partnerships, keeping TIS on the right side of both compliance and credibility.
+
+| Role | Focus |
 |---|---|
-| IT Technician · Network Specialist · ML Engineer | Networking · ML Inference · BET VM Stability |
+| Strategic Outreach · Regulatory Alignment · Fundraising | EU AI Act Compliance · International Relations · Partnerships · Lead Management · Social Media |
+
+**Connect**
+- **LinkedIn:** [Nikoletta Csonka](https://www.linkedin.com/in/csonikoletta/)
+- **Email:** csonikoletta@ternlang.com
+
+---
+
+### Zabih Karimi  
+#### Co-Founder & IT Technician · Network & ML Application Specialist · Stress-Tester
+
+> *"Turning architecture into resilient, deployment-ready infrastructure — then breaking it to find the limits."*
+
+Zabih's path to RFI-IRFOS is one of the team's most remarkable stories. Born near Kabul, Afghanistan, he rebuilt his life entirely on his own terms, relocating to Graz and building an exceptional technical career from the ground up. He now speaks multiple languages and holds more professional licenses than most engineers have professional tools — heavy machinery, crane operation, LKW, Hochstapler — a testament to his conviction that competence is built through mastery, not just theory.
+
+At RFI-IRFOS, Zabih is the physical and logical infrastructure owner. He handles in-house cabling and network architecture, process management, and — critically — hours of side-by-side architectural sessions where he scrutinises parameter choices and system design with the same rigour he applies to physical builds. He is TIS's stress-tester: if the system holds under Zabih's scrutiny, it holds.
+
+| Role | Technical Focus |
+|---|---|
+| IT Technician · Network Specialist · ML Engineer | Physical Infrastructure · Networking · ML Inference · BET VM Stability · Process Management · Stress Testing |
 
 **Connect**
 - **LinkedIn:** [Zabih Karimi](https://www.linkedin.com/in/zabih-karimi-3292ab349/)
@@ -45,34 +66,23 @@ Zabih specializes in technical implementation across networking protocols, ML in
 
 ---
 
-### Nikoletta Csonka  
-#### Co-Founder & Head of International Relations  
-*Strategic Outreach*
-
-> Aligning frontier AI with European policy, partnerships, and sovereign deployment.
-
-Nikoletta leads international strategy, regulatory positioning, and strategic partnerships, ensuring TIS aligns with frameworks such as the **EU AI Act**.
-
-| Leadership Role | Strategic Focus |
-|---|---|
-| Strategic Outreach · Regulatory Alignment | EU AI Act Compliance · International Relations · Partnerships |
-
-**Connect**
-- **LinkedIn:** [Nikoletta Csonka](https://www.linkedin.com/in/csonikoletta/)
-- **Email:** csonikoletta@ternlang.com
-
----
 ### Lisa Scharler  
-#### Head of Social Technology & Ecocentric Systems  
-*Societal Integration Lead*
+#### Head of Social Technology, AI Leadership & Ecocentric Systems · Societal Integration Lead
 
-> Reframing intelligence systems through ecocentric logic — where technology serves life, not the other way around.
+> *"If anyone understands the difference between a stochastic parrot and a genuinely comprehensible model, it's a linguist."*
 
-Lisa leads the integration of social technology within the Ternary Intelligence Stack, focusing on aligning computational systems with ecological thinking, societal impact, and long-term human-centered adaptability.
+Lisa brings a rare combination to the team: a **BSc and MSc in Linguistics**, expertise in AI Leadership and Work Transformation, and deep roots in ecocentric systems thinking. She operates at the intersection of social science and technology — using social dynamics to define precise acceptance criteria and enable the ethical, equitable integration of AI into complex work environments.
 
-| Leadership Role | Strategic Focus |
+Her work at RFI-IRFOS focuses on building sociotechnical models and strategic AI frameworks that go beyond performance benchmarks to ask: *What does this system actually do to the people and environments it touches?* She is the team's domain expert on what constitutes genuine language understanding versus statistical pattern-matching — a distinction that matters enormously when your model is built on ternary logic rather than scaled probability.
+
+Lisa is a European thought leader in AI Leadership, combining strategic vision with expertise in process management and requirements engineering. She shapes how the Ternary Intelligence Stack is evaluated not just technically, but socially — defining what it means for an AI system to be *worthy* of deployment in human contexts.
+
+| Role | Focus |
 |---|---|
-| Societal Integration · Social Technology Lead | Ecocentric Systems · Social Resilience · Ethical System Design |
+| Societal Integration · Social Technology Lead · AI Ethics | Ecocentric Systems · AI Leadership · Work Transformation · Linguistics · Acceptance Criteria · Ethical System Design |
+
+**Academic Background**
+- **BSc Linguistics** | **MSc Linguistics** — deep grounding in how syntax, semantics, and language function at a structural level
 
 **Connect**
 - **LinkedIn:** [Lisa Scharler](https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/?locale=en)
@@ -81,16 +91,23 @@ Lisa leads the integration of social technology within the Ternary Intelligence 
 ---
 
 ### Louis Paul Ehrig  
-#### Co-Founder & Head of Public Affairs  
-*Corporate Secretary · Press & Media Relations*
+#### Co-Founder & Head of Public Affairs · Corporate Secretary · Press & Media Relations · Dataset Curator
 
-> Translating frontier research into public trust, visibility, and institutional narrative.
+> *"Quality training data isn't just a technical problem. It's an editorial one."*
 
-Louis oversees press relations, public communication, institutional releases, and external messaging across media and stakeholder channels.
+Louis brings something rare to a deep-tech team: journalism runs in his blood. His family owns **Augusta Presse GmbH**, a German media house — meaning Louis grew up with editorial rigour, source evaluation, and the discipline of distinguishing verified reporting from noise as a daily practice, not an acquired skill.
 
-| Leadership Role | Communications Focus |
+At RFI-IRFOS, that instinct translates directly into one of the team's most undervalued functions: **dataset curation and news intelligence**. Louis is the team's real-time filter on what is actually happening in the world. He monitors global news feeds, evaluates source quality, and ensures that Albert's training corpus draws from Reuters-grade primary reporting — not from tabloid half-claims, social media amplification, or opinion dressed as fact. The quality of a language model's world-knowledge is only as good as the quality of its training data; Louis is the editorial layer that enforces that standard.
+
+Beyond dataset work, Louis manages press relations, institutional releases, and external messaging across media and stakeholder channels. He is the team member most attuned to how TIS is perceived by the outside world — and why that perception should be earned through substance, not spin.
+
+| Role | Focus |
 |---|---|
-| Corporate Secretary · Public Affairs | Press Releases · Media Relations · Public Communication |
+| Corporate Secretary · Public Affairs · Dataset Curation | Press Releases · Media Relations · Public Communication · Training Data Quality · News Intelligence |
+
+**Background**
+- Family: Augusta Presse GmbH (Germany) — print and media publishing
+- Editorial instinct applied to ML training data sourcing and quality control
 
 **Connect**
 - **LinkedIn:** [Louis Paul Ehrig](https://www.linkedin.com/in/louis-ehrig-317941335/)
@@ -100,20 +117,20 @@ Louis oversees press relations, public communication, institutional releases, an
 
 ## Our Mission
 
-> *“Europe does not need to catch up — it needs to leap ahead.”*
+> *"Europe does not need to catch up — it needs to leap ahead."*
 
 We are **Styrian Rebels** in frontier deep technology.
 
-We believe Europe’s path to technological sovereignty lies not in competing within the limits of binary hyperscaling, but in advancing toward the next frontier:
+We believe Europe's path to technological sovereignty lies not in competing within the limits of binary hyperscaling, but in advancing toward the next frontier:
 
 **Post-Binary Intelligence**
 
-Ternlang is the first step in this journey — a full-stack ecosystem built on the honest logic of the `trit`.
+Ternlang is the first step in this journey — a full-stack ecosystem built on the honest logic of the `trit`. Three states: affirm, reject, or hold. Not because it is simpler — but because it is truer.
 
 ---
 
 **RFI-IRFOS**  
 Research Focus Institute — Interdisciplinary Research Facility for Open Sciences  
-Elisabethinergasse 25, 8020 Graz, Austria  
+Elisabethinergasse 25/10, 8020 Graz, Austria  
 **ZVR:** 1015608684  
 [ternlang.com](https://ternlang.com)
