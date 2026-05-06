@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for invoice_generator
-fn invoice_generator_bench() -> trit {
-    return affirm;
-}

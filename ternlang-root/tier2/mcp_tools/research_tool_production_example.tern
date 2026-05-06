@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Production example for research_tool
-fn research_tool_production_example() -> trit {
-    return affirm;
-}

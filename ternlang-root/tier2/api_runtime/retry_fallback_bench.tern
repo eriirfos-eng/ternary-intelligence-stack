@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for retry_fallback
-fn retry_fallback_bench() -> trit {
-    return affirm;
-}

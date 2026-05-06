@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Production example for key_rotator
-fn key_rotator_production_example() -> trit {
-    return affirm;
-}

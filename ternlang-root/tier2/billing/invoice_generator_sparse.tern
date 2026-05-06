@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for invoice_generator
-fn invoice_generator_sparse() -> trit {
-    return affirm;
-}

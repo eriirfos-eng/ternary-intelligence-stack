@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for multi_tool_dispatch
-fn multi_tool_dispatch_distributed() -> trit {
-    return affirm;
-}

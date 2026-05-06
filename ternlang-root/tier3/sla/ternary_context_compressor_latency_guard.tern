@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// ternary_context_compressor — sla deployment variant
-agent ternary_context_compressor_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

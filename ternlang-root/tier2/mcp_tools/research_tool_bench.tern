@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for research_tool
-fn research_tool_bench() -> trit {
-    return affirm;
-}

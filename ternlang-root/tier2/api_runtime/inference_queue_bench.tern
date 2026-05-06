@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for inference_queue
-fn inference_queue_bench() -> trit {
-    return affirm;
-}

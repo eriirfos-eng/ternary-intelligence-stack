@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for retry_fallback
-fn retry_fallback_restore() -> trit {
-    return affirm;
-}

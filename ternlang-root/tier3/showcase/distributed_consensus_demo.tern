@@ -1,3 +1,0 @@
-// --- RFI-IRFOS TIER 3 SHOWCASE ---
-// Demo: distributed_consensus_demo.tern
-fn run_demo() -> trit { return affirm; }

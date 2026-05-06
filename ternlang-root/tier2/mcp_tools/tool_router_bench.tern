@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for tool_router
-fn tool_router_bench() -> trit {
-    return affirm;
-}

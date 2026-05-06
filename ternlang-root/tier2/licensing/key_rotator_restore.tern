@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for key_rotator
-fn key_rotator_restore() -> trit {
-    return affirm;
-}

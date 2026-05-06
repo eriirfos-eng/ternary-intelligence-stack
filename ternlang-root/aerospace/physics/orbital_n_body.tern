@@ -1,4 +1,0 @@
-// aerospace/physics/orbital_n_body.tern
-fn main() -> trit {
-    return 1;
-}

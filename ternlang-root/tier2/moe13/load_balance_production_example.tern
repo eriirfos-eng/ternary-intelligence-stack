@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Production example for load_balance
-fn load_balance_production_example() -> trit {
-    return affirm;
-}

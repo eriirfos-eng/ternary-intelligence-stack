@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for research_tool
-fn research_tool_distributed() -> trit {
-    return affirm;
-}

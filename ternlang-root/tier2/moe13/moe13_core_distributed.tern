@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for moe13_core
-fn moe13_core_distributed() -> trit {
-    return affirm;
-}

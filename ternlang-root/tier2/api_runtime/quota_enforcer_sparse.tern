@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for quota_enforcer
-fn quota_enforcer_sparse() -> trit {
-    return affirm;
-}

@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for inference_queue
-fn inference_queue_distributed() -> trit {
-    return affirm;
-}

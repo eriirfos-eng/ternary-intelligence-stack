@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// key_rotator — onprem deployment variant
-agent key_rotator_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

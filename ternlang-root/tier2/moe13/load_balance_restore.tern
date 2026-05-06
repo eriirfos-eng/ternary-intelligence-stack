@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for load_balance
-fn load_balance_restore() -> trit {
-    return affirm;
-}

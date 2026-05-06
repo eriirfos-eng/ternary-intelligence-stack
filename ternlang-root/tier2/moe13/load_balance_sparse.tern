@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for load_balance
-fn load_balance_sparse() -> trit {
-    return affirm;
-}

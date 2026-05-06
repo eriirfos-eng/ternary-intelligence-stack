@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Usage example for context_scheduler
-fn context_scheduler_example() -> trit {
-    return affirm;
-}

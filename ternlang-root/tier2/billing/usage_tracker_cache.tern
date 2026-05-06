@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Cache layer for usage_tracker
-fn usage_tracker_cache() -> trit {
-    return affirm;
-}

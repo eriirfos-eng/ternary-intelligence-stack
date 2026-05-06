@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// load_balance — onprem deployment variant
-agent load_balance_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

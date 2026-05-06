@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for retrieval_gate
-fn retrieval_gate_pipeline() -> trit {
-    return affirm;
-}

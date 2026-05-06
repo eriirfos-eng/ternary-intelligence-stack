@@ -1,4 +1,0 @@
-// moe/src/deployment/genesis_drop.tern
-fn main() -> trit {
-    return 1;
-}

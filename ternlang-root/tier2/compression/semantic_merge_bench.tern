@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for semantic_merge
-fn semantic_merge_bench() -> trit {
-    return affirm;
-}

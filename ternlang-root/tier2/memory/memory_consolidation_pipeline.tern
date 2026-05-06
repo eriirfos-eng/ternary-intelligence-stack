@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for memory_consolidation
-fn memory_consolidation_pipeline() -> trit {
-    return affirm;
-}

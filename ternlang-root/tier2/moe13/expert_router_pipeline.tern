@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for expert_router
-fn expert_router_pipeline() -> trit {
-    return affirm;
-}

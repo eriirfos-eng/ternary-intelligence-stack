@@ -1,4 +1,0 @@
-// security/guardian/dark_mode_v1.tern
-fn main() -> trit {
-    return 1;
-}

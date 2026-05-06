@@ -1,4 +1,0 @@
-// research/theory/triadic_entropy.tern
-fn main() -> trit {
-    return 1;
-}

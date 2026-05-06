@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for quota_enforcer
-fn quota_enforcer_bench() -> trit {
-    return affirm;
-}

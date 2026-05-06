@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for semantic_memory
-fn semantic_memory_sparse() -> trit {
-    return affirm;
-}

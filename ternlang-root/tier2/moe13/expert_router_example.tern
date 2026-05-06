@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Usage example for expert_router
-fn expert_router_example() -> trit {
-    return affirm;
-}

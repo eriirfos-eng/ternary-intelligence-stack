@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// TIER 2 VERTICAL: CYBERSECURITY System 2
-fn cybersecurity_op_2() -> trit {
-    return affirm;
-}

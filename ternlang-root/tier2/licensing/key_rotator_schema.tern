@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for key_rotator
-fn key_rotator_schema() -> trit {
-    return affirm;
-}

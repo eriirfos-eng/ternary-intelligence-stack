@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for memory_tool_bridge
-fn memory_tool_bridge_schema() -> trit {
-    return affirm;
-}

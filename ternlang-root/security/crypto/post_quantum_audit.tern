@@ -1,4 +1,0 @@
-// security/crypto/post_quantum_audit.tern
-fn main() -> trit {
-    return 1;
-}

@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for semantic_memory
-fn semantic_memory_pipeline() -> trit {
-    return affirm;
-}

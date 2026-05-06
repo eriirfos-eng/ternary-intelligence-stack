@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for memory_tool_bridge
-fn memory_tool_bridge_distributed() -> trit {
-    return affirm;
-}

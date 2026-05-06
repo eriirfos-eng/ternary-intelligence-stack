@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// lossy_tend_compression — onprem deployment variant
-agent lossy_tend_compression_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// TIER 2 VERTICAL: HEALTHCARE System 1
-fn healthcare_op_1() -> trit {
-    return affirm;
-}

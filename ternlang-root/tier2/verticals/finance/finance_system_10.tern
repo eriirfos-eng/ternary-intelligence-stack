@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// TIER 2 VERTICAL: FINANCE System 10
-fn finance_op_10() -> trit {
-    return affirm;
-}

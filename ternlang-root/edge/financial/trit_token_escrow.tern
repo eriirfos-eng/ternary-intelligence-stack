@@ -1,4 +1,0 @@
-// edge/financial/trit_token_escrow.tern
-fn main() -> trit {
-    return 1;
-}

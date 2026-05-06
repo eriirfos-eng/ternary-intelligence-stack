@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for expert_consensus
-fn expert_consensus_bench() -> trit {
-    return affirm;
-}

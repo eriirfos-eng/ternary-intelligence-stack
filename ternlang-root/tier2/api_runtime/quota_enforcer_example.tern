@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Usage example for quota_enforcer
-fn quota_enforcer_example() -> trit {
-    return affirm;
-}

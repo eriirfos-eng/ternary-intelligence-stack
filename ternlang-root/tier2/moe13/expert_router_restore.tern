@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for expert_router
-fn expert_router_restore() -> trit {
-    return affirm;
-}

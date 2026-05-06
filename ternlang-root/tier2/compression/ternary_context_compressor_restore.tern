@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for ternary_context_compressor
-fn ternary_context_compressor_restore() -> trit {
-    return affirm;
-}

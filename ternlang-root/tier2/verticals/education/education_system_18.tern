@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// TIER 2 VERTICAL: EDUCATION System 18
-fn education_op_18() -> trit {
-    return affirm;
-}

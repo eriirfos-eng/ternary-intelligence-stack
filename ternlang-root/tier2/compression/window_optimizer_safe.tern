@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety-hardened variant of window_optimizer
-fn window_optimizer_safe() -> trit {
-    return affirm;
-}

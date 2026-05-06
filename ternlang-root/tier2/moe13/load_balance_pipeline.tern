@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for load_balance
-fn load_balance_pipeline() -> trit {
-    return affirm;
-}

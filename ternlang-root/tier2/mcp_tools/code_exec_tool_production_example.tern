@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Production example for code_exec_tool
-fn code_exec_tool_production_example() -> trit {
-    return affirm;
-}

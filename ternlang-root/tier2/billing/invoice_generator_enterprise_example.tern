@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Enterprise example for invoice_generator
-fn invoice_generator_enterprise_example() -> trit {
-    return affirm;
-}

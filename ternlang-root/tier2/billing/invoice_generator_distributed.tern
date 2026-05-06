@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for invoice_generator
-fn invoice_generator_distributed() -> trit {
-    return affirm;
-}

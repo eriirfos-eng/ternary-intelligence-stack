@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Production example for multi_tool_dispatch
-fn multi_tool_dispatch_production_example() -> trit {
-    return affirm;
-}

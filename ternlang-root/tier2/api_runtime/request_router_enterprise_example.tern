@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Enterprise example for request_router
-fn request_router_enterprise_example() -> trit {
-    return affirm;
-}

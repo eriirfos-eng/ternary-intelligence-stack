@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for usage_tracker
-fn usage_tracker_restore() -> trit {
-    return affirm;
-}

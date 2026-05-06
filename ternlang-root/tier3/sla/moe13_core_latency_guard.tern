@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// moe13_core — sla deployment variant
-agent moe13_core_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

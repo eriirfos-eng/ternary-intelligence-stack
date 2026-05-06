@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for tether_verifier
-fn tether_verifier_distributed() -> trit {
-    return affirm;
-}

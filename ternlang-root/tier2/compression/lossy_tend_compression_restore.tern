@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for lossy_tend_compression
-fn lossy_tend_compression_restore() -> trit {
-    return affirm;
-}

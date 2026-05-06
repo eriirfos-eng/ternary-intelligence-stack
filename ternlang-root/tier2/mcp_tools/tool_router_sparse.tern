@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for tool_router
-fn tool_router_sparse() -> trit {
-    return affirm;
-}

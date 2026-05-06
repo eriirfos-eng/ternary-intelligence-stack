@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// memory_consolidation — fpga deployment variant
-agent memory_consolidation_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

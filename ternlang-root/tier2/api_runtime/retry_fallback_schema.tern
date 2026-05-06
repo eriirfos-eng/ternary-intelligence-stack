@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for retry_fallback
-fn retry_fallback_schema() -> trit {
-    return affirm;
-}

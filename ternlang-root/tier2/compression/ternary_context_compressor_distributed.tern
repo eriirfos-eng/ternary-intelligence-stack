@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Distributed logic for ternary_context_compressor
-fn ternary_context_compressor_distributed() -> trit {
-    return affirm;
-}

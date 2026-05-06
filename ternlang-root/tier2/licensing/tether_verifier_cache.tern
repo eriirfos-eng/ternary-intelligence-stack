@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Cache layer for tether_verifier
-fn tether_verifier_cache() -> trit {
-    return affirm;
-}

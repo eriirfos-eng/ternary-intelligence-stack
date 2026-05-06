@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for window_optimizer
-fn window_optimizer_restore() -> trit {
-    return affirm;
-}

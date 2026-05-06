@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for usage_tracker
-fn usage_tracker_schema() -> trit {
-    return affirm;
-}

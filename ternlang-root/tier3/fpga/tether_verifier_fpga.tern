@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// tether_verifier — fpga deployment variant
-agent tether_verifier_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

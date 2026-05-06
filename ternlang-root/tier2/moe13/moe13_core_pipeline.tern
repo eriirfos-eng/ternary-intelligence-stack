@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for moe13_core
-fn moe13_core_pipeline() -> trit {
-    return affirm;
-}

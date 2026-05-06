@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for invoice_generator
-fn invoice_generator_schema() -> trit {
-    return affirm;
-}

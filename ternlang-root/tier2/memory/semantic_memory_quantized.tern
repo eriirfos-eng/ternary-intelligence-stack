@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Quantized model for semantic_memory
-fn semantic_memory_quantized() -> trit {
-    return affirm;
-}

@@ -1,3 +1,0 @@
-// --- RFI-IRFOS TIER 2 SHOWCASE ---
-// Demo: risk_dashboard_demo.tern
-fn run_demo() -> trit { return affirm; }

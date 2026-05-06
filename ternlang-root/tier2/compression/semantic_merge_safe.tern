@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety-hardened variant of semantic_merge
-fn semantic_merge_safe() -> trit {
-    return affirm;
-}

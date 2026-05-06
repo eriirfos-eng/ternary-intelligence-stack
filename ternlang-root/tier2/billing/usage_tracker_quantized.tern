@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Quantized model for usage_tracker
-fn usage_tracker_quantized() -> trit {
-    return affirm;
-}

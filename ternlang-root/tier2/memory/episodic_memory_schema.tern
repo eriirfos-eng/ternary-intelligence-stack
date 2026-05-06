@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for episodic_memory
-fn episodic_memory_schema() -> trit {
-    return affirm;
-}

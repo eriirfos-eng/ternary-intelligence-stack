@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Cache layer for decay_controller
-fn decay_controller_cache() -> trit {
-    return affirm;
-}

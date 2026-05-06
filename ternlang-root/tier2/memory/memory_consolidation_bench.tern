@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for memory_consolidation
-fn memory_consolidation_bench() -> trit {
-    return affirm;
-}

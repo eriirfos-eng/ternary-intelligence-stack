@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for usage_tracker
-fn usage_tracker_sparse() -> trit {
-    return affirm;
-}

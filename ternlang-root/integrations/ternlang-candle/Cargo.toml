@@ -1,8 +1,0 @@
-[package]
-name = "ternlang-candle"
-version = "1.3.5"
-edition = "2024"
-license = "LicenseRef-BSL-1.1"
-description = "Native Triadic Kernels for HuggingFace Candle. The definitive up to 122.3x (theoretical upper bound) Sparse Bypass bridge."
-
-[dependencies]

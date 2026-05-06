@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for window_optimizer
-fn window_optimizer_pipeline() -> trit {
-    return affirm;
-}

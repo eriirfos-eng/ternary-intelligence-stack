@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// window_optimizer — onprem deployment variant
-agent window_optimizer_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

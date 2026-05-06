@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for code_exec_tool
-fn code_exec_tool_bench() -> trit {
-    return affirm;
-}

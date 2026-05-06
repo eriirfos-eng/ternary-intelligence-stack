@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for memory_consolidation
-fn memory_consolidation_schema() -> trit {
-    return affirm;
-}

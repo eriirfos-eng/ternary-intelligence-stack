@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// retry_fallback — onprem deployment variant
-agent retry_fallback_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

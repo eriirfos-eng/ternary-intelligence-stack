@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Cache layer for semantic_merge
-fn semantic_merge_cache() -> trit {
-    return affirm;
-}

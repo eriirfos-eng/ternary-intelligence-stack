@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Usage example for expert_dispatch
-fn expert_dispatch_example() -> trit {
-    return affirm;
-}

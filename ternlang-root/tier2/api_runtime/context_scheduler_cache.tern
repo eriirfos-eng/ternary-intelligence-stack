@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Cache layer for context_scheduler
-fn context_scheduler_cache() -> trit {
-    return affirm;
-}

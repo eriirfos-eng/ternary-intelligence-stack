@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Restore layer for semantic_memory
-fn semantic_memory_restore() -> trit {
-    return affirm;
-}

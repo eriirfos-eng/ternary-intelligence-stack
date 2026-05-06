@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Production example for expert_consensus
-fn expert_consensus_production_example() -> trit {
-    return affirm;
-}

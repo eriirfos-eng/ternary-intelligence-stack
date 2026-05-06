@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety-hardened variant of usage_tracker
-fn usage_tracker_safe() -> trit {
-    return affirm;
-}

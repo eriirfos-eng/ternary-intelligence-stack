@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// retrieval_gate — fpga deployment variant
-agent retrieval_gate_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 3 ENTERPRISE ---
-// memory_tool_bridge — sla deployment variant
-agent memory_tool_bridge_Enterprise {
-    fn execute() -> trit { return affirm; }
-}

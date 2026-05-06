@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Cache layer for expert_dispatch
-fn expert_dispatch_cache() -> trit {
-    return affirm;
-}

@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Safety-hardened variant of lossy_tend_compression
-fn lossy_tend_compression_safe() -> trit {
-    return affirm;
-}

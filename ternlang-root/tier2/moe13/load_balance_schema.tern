@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Schema definition for load_balance
-fn load_balance_schema() -> trit {
-    return affirm;
-}

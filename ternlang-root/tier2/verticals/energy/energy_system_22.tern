@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// TIER 2 VERTICAL: ENERGY System 22
-fn energy_op_22() -> trit {
-    return affirm;
-}

@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Usage example for moe13_core
-fn moe13_core_example() -> trit {
-    return affirm;
-}

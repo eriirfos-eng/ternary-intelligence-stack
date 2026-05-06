@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for retry_fallback
-fn retry_fallback_sparse() -> trit {
-    return affirm;
-}

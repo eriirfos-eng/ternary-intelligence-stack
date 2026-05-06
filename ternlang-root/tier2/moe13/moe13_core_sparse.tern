@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Sparse execution for moe13_core
-fn moe13_core_sparse() -> trit {
-    return affirm;
-}

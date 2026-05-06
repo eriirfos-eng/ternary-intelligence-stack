@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Benchmark for decay_controller
-fn decay_controller_bench() -> trit {
-    return affirm;
-}

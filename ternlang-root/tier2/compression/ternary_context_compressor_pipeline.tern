@@ -1,5 +1,0 @@
-// --- RFI-IRFOS TIER 2 PROPRIETARY ---
-// Pipeline stream for ternary_context_compressor
-fn ternary_context_compressor_pipeline() -> trit {
-    return affirm;
-}
