@@ -724,54 +724,313 @@ fn run_check(path: &std::path::PathBuf) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REPL — interactive trit expression evaluator
+// REPL — mini TUI (ratatui)
 // ─────────────────────────────────────────────────────────────────────────────
 fn run_repl() {
-    use std::io::{self, Write};
-    println!("ternlang REPL v0.1 — type a trit expression and press Enter. :q to quit.");
-    println!("Examples: consensus(1, 0)   invert(-1)   1 + -1");
-    println!();
-    loop {
-        print!("tern> ");
-        io::stdout().flush().unwrap();
-        let mut line = String::new();
-        if io::stdin().read_line(&mut line).is_err() { break; }
-        let line = line.trim();
-        if line == ":q" || line == "quit" || line.is_empty() && line == "" {
-            if line == ":q" { break; }
-            if line.is_empty() { continue; }
-        }
-        // Wrap in a minimal function so the parser can handle it
-        let wrapped = format!("fn __repl__() -> trit {{ return {}; }}", line);
-        let mut parser = Parser::new(&wrapped);
+    use crossterm::{
+        event::{self, Event, KeyCode, KeyModifiers},
+        execute,
+        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    };
+    use ratatui::{
+        backend::CrosstermBackend,
+        layout::{Constraint, Direction, Layout},
+        style::{Color, Modifier, Style},
+        text::{Line, Span},
+        widgets::{Block, Borders, Paragraph, Wrap},
+        Terminal,
+    };
+    use std::io;
+
+    // ── colours ───────────────────────────────────────────────────────────────
+    const AFFIRM_C: Color = Color::Rgb(0,   210, 120);
+    const HOLD_C:   Color = Color::Rgb(200, 180,  60);
+    const REJECT_C: Color = Color::Rgb(220,  60,  60);
+    const DIM:      Color = Color::Rgb(80,   80,  80);
+    const CYAN:     Color = Color::Rgb(0,   200, 220);
+    const FG:       Color = Color::Rgb(210, 210, 210);
+    const BG:       Color = Color::Rgb(14,   14,  18);
+    const BORDER:   Color = Color::Rgb(50,   50,  60);
+
+    // ── state ─────────────────────────────────────────────────────────────────
+    struct ReplLine {
+        source: String,
+        result: String,       // formatted result or error
+        is_err: bool,
+        trit:   Option<i8>,   // -1 / 0 / 1 / None (multiline output)
+        output: Vec<String>,  // VM print() lines
+    }
+
+    let mut history:   Vec<String>    = Vec::new();  // submitted inputs
+    let mut hist_idx:  Option<usize>  = None;
+    let mut hist_save: String         = String::new();
+    let mut log:       Vec<ReplLine>  = Vec::new();
+    let mut input:     String         = String::new();
+    let mut cursor:    usize          = 0;
+    let mut scroll:    u16            = 0;
+
+    // helper: evaluate one snippet
+    let eval = |src: &str| -> ReplLine {
+        // Try as full program first, then as snippet
+        let mut emitter = BytecodeEmitter::new();
+        let header_patch = emitter.emit_header_jump();
+
+        let mut parser = Parser::new(src);
         match parser.parse_program() {
-            Err(e) => { eprintln!("  parse error: {:?}", e); continue; }
             Ok(prog) => {
-                let mut emitter = BytecodeEmitter::new();
                 emitter.emit_program(&prog);
-                let code = emitter.finalize();
-                let mut vm = BetVm::new(code);
-            emitter.register_agents(&mut vm);
-                match vm.run() {
-                    Ok(_) => {
-                        let result = vm.get_register(0);
-                        match result {
-                            Value::Trit(t) => println!("  → {}", t),
-                            Value::Int(v)  => println!("  → {}", v),
-                            Value::Float(f) => println!("  → {}", f),
-                            Value::TensorRef(r) => println!("  → tensor_ref({})", r),
-                            Value::AgentRef(a, _)  => println!("  → agent_ref({})", a),
-                            Value::String(s) => println!("  → {:?}", s),
-                            Value::Struct(f) => println!("  → struct{{{:?}}}", f),
-                            Value::TensorView { tensor_id, offset, length, .. } =>
-                                println!("  → view@{}[{}..{}]", tensor_id, offset, offset + length),
+                emitter.patch_header_jump(header_patch);
+                emitter.emit_entry_call("main");
+            }
+            Err(_) => {
+                // snippet mode: wrap in __repl__ fn
+                let wrapped = format!("fn __repl__() -> trit {{ {} }}", src);
+                let mut p2 = Parser::new(&wrapped);
+                emitter = BytecodeEmitter::new();
+                let hp2 = emitter.emit_header_jump();
+                match p2.parse_program() {
+                    Ok(prog) => {
+                        emitter.emit_program(&prog);
+                        emitter.patch_header_jump(hp2);
+                        emitter.emit_entry_call("__repl__");
+                    }
+                    Err(e) => {
+                        return ReplLine {
+                            source: src.to_string(),
+                            result: format!("parse error: {:?}", e),
+                            is_err: true, trit: None, output: vec![],
+                        };
+                    }
+                }
+            }
+        }
+
+        let code = emitter.finalize();
+        let mut vm = BetVm::new(code);
+        emitter.register_agents(&mut vm);
+
+        match vm.run() {
+            Err(e) => ReplLine {
+                source: src.to_string(),
+                result: format!("vm error: {}", e),
+                is_err: true, trit: None, output: vm.take_output(),
+            },
+            Ok(_) => {
+                let out = vm.take_output();
+                let val = vm.peek_stack();
+                let (result, trit) = match &val {
+                    Some(Value::Trit(ternlang_core::trit::Trit::Affirm)) => ("+1  affirm".into(), Some(1i8)),
+                    Some(Value::Trit(ternlang_core::trit::Trit::Tend))   => (" 0  hold".into(),   Some(0i8)),
+                    Some(Value::Trit(ternlang_core::trit::Trit::Reject)) => ("-1  reject".into(),  Some(-1i8)),
+                    Some(v) => (format_value(v), None),
+                    None    => ("(empty)".into(), None),
+                };
+                ReplLine { source: src.to_string(), result, is_err: false, trit, output: out }
+            }
+        }
+    };
+
+    // ── terminal setup ────────────────────────────────────────────────────────
+    enable_raw_mode().unwrap();
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen).unwrap();
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend).unwrap();
+
+    'main: loop {
+        terminal.draw(|f| {
+            let area = f.area();
+
+            // Layout: output (flex) | input (3) | footer (1)
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Min(3), Constraint::Length(3), Constraint::Length(1)])
+                .split(area);
+
+            // ── output pane ───────────────────────────────────────────────────
+            let mut lines: Vec<Line<'static>> = Vec::new();
+
+            if log.is_empty() {
+                lines.push(Line::from(Span::styled(
+                    "  ternlang REPL  —  type .tern code and press Enter",
+                    Style::default().fg(DIM),
+                )));
+                lines.push(Line::from(""));
+                lines.push(Line::from(vec![
+                    Span::styled("  Examples: ", Style::default().fg(DIM)),
+                    Span::styled("consensus(1, 0)", Style::default().fg(CYAN)),
+                    Span::styled("   invert(-1)   ", Style::default().fg(DIM)),
+                    Span::styled("1 + -1", Style::default().fg(CYAN)),
+                ]));
+                lines.push(Line::from(vec![
+                    Span::styled("  Multi-line: ", Style::default().fg(DIM)),
+                    Span::styled("fn main() -> trit { return 1; }", Style::default().fg(CYAN)),
+                ]));
+                lines.push(Line::from(""));
+                lines.push(Line::from(vec![
+                    Span::styled("  Ctrl+C / Ctrl+Q to quit", Style::default().fg(DIM)),
+                ]));
+            }
+
+            for entry in &log {
+                // input line
+                lines.push(Line::from(vec![
+                    Span::styled("  ≻ ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+                    Span::styled(entry.source.clone(), Style::default().fg(FG)),
+                ]));
+                // vm print() output
+                for o in &entry.output {
+                    lines.push(Line::from(vec![
+                        Span::styled("    ", Style::default()),
+                        Span::styled(o.clone(), Style::default().fg(FG)),
+                    ]));
+                }
+                // result line
+                let (col, glyph) = if entry.is_err {
+                    (REJECT_C, "✗")
+                } else {
+                    match entry.trit {
+                        Some(1)  => (AFFIRM_C, "●"),
+                        Some(-1) => (REJECT_C, "●"),
+                        _        => (HOLD_C,   "●"),
+                    }
+                };
+                lines.push(Line::from(vec![
+                    Span::styled(format!("    {} ", glyph), Style::default().fg(col).add_modifier(Modifier::BOLD)),
+                    Span::styled(entry.result.clone(), Style::default().fg(col)),
+                ]));
+                lines.push(Line::from(""));
+            }
+
+            let content_h = lines.len() as u16;
+            let pane_h = chunks[0].height.saturating_sub(2); // inside border
+            let max_scroll = content_h.saturating_sub(pane_h);
+            // auto-scroll to bottom unless user scrolled up
+            if scroll > max_scroll { scroll = max_scroll; }
+
+            let para = Paragraph::new(ratatui::text::Text::from(lines))
+                .block(Block::default()
+                    .title(" ternlang ")
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(BORDER)))
+                .style(Style::default().bg(BG).fg(FG))
+                .scroll((scroll, 0))
+                .wrap(Wrap { trim: false });
+            f.render_widget(para, chunks[0]);
+
+            // ── input bar ─────────────────────────────────────────────────────
+            let display_input = if input.is_empty() {
+                Span::styled("type .tern code here…", Style::default().fg(DIM))
+            } else {
+                Span::styled(input.clone(), Style::default().fg(FG))
+            };
+            let input_para = Paragraph::new(Line::from(vec![
+                Span::styled(" ≻ ", Style::default().fg(CYAN).add_modifier(Modifier::BOLD)),
+                display_input,
+            ]))
+            .block(Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(CYAN)))
+            .style(Style::default().bg(BG));
+            f.render_widget(input_para, chunks[1]);
+
+            // cursor
+            let cx = chunks[1].x + 4 + cursor as u16;
+            let cy = chunks[1].y + 1;
+            f.set_cursor_position((cx.min(chunks[1].x + chunks[1].width - 2), cy));
+
+            // ── footer ────────────────────────────────────────────────────────
+            let footer = Paragraph::new(Line::from(vec![
+                Span::styled("  ↑↓ scroll  ·  ↑↓ history (Ctrl+↑↓)  ·  Ctrl+C quit", Style::default().fg(DIM)),
+            ])).style(Style::default().bg(BG));
+            f.render_widget(footer, chunks[2]);
+        }).unwrap();
+
+        // ── events ───────────────────────────────────────────────────────────
+        if event::poll(std::time::Duration::from_millis(50)).unwrap() {
+            if let Event::Key(key) = event::read().unwrap() {
+                match (key.code, key.modifiers) {
+                    // Quit
+                    (KeyCode::Char('c'), KeyModifiers::CONTROL)
+                    | (KeyCode::Char('q'), KeyModifiers::CONTROL) => break 'main,
+
+                    // Submit
+                    (KeyCode::Enter, _) if !input.trim().is_empty() => {
+                        let src = input.trim().to_string();
+                        history.push(src.clone());
+                        hist_idx = None;
+                        hist_save = String::new();
+                        let line = eval(&src);
+                        log.push(line);
+                        input.clear();
+                        cursor = 0;
+                        scroll = u16::MAX; // will be clamped to bottom in draw
+                    }
+                    (KeyCode::Enter, _) => {}
+
+                    // History — Ctrl+Up / Ctrl+Down
+                    (KeyCode::Up, KeyModifiers::CONTROL) if !history.is_empty() => {
+                        if hist_idx.is_none() { hist_save = input.clone(); }
+                        let new_idx = hist_idx.map(|i| i.saturating_sub(1))
+                            .unwrap_or(history.len() - 1);
+                        hist_idx = Some(new_idx);
+                        input = history[new_idx].clone();
+                        cursor = input.len();
+                    }
+                    (KeyCode::Down, KeyModifiers::CONTROL) => {
+                        if let Some(idx) = hist_idx {
+                            if idx + 1 < history.len() {
+                                hist_idx = Some(idx + 1);
+                                input = history[idx + 1].clone();
+                            } else {
+                                hist_idx = None;
+                                input = hist_save.clone();
+                            }
+                            cursor = input.len();
                         }
                     }
-                    Err(e) => eprintln!("  vm error: {}", e),
+
+                    // Scroll output — plain Up/Down
+                    (KeyCode::Up, _)   => { scroll = scroll.saturating_sub(1); }
+                    (KeyCode::Down, _) => { scroll = scroll.saturating_add(1); }
+                    (KeyCode::PageUp, _)   => { scroll = scroll.saturating_sub(10); }
+                    (KeyCode::PageDown, _) => { scroll = scroll.saturating_add(10); }
+
+                    // Cursor movement in input
+                    (KeyCode::Left, _)  => { if cursor > 0 { cursor -= 1; } }
+                    (KeyCode::Right, _) => { if cursor < input.len() { cursor += 1; } }
+                    (KeyCode::Home, _)  => { cursor = 0; }
+                    (KeyCode::End, _)   => { cursor = input.len(); }
+
+                    // Backspace / Delete
+                    (KeyCode::Backspace, _) if cursor > 0 => {
+                        cursor -= 1;
+                        input.remove(cursor);
+                    }
+                    (KeyCode::Delete, _) if cursor < input.len() => {
+                        input.remove(cursor);
+                    }
+
+                    // Clear line
+                    (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                        input.clear(); cursor = 0;
+                    }
+
+                    // Typing
+                    (KeyCode::Char(c), _) => {
+                        input.insert(cursor, c);
+                        cursor += 1;
+                    }
+
+                    _ => {}
                 }
             }
         }
     }
+
+    // ── cleanup ───────────────────────────────────────────────────────────────
+    disable_raw_mode().unwrap();
+    execute!(io::stdout(), LeaveAlternateScreen).unwrap();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

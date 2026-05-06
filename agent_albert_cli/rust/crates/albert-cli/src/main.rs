@@ -829,23 +829,7 @@ fn format_resume_report(session_path: &str, message_count: usize, turns: u32) ->
     )
 }
 
-fn format_compact_report(removed: usize, resulting_messages: usize, skipped: bool) -> String {
-    if skipped {
-        format!(
-            "Compact
-  Result           skipped
-  Reason           session below compaction threshold
-  Messages kept    {resulting_messages}"
-        )
-    } else {
-        format!(
-            "Compact
-  Result           compacted
-  Messages removed {removed}
-  Messages kept    {resulting_messages}"
-        )
-    }
-}
+
 
 fn format_auto_compaction_notice(removed: usize) -> String {
     format!("[auto-compacted: removed {removed} messages]")

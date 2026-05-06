@@ -1,5 +1,5 @@
 [package]
-publish = true
+publish = false  # deploy-only server binary — ships via fly.io, not crates.io
 name              = "ternlang-api"
 description       = "ternlang.com Institutional API Gateway — Core REST interface for the Ternary Intelligence Stack. Powers /api/trit_decide, /api/trit_vector, and the TaaS mesh."
 version.workspace = true
