@@ -102,6 +102,179 @@
         #waiting span { font-size: 10px; color: #555; }
         #waiting.hidden { display: none; }
 
+        /* ── Neural Viz ──────────────────────────────────────────── */
+        #neural-wrap {
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0;
+            flex-shrink: 0;
+            height: 160px;
+            overflow: hidden;
+        }
+        .nv-panel {
+            flex: 1;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 4px 8px;
+            min-width: 0;
+        }
+        .nv-panel:last-child { border-right: none; }
+        .nv-label {
+            font-size: 9px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+        /* Layer topology */
+        #layer-viz {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        .topo-node {
+            font-size: 9px;
+            color: #555;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .topo-arrow {
+            color: #333;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+        .topo-layer {
+            border: 1px solid var(--accent);
+            border-radius: 3px;
+            padding: 3px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            flex-shrink: 0;
+            min-width: 36px;
+            cursor: default;
+            transition: border-color 0.6s, opacity 0.6s;
+        }
+        .topo-layer-label { font-size: 10px; color: #fff; font-weight: bold; }
+        .topo-layer-sparsity { font-size: 9px; color: #888; }
+        /* Expert heatmap */
+        #expert-viz {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            flex: 1;
+        }
+        .expert-cell {
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+            transition: background 0.8s;
+        }
+        .expert-label { font-size: 8px; color: rgba(0,0,0,0.55); line-height: 1; }
+        .expert-act   { font-size: 9px; color: rgba(0,0,0,0.85); font-weight: bold; line-height: 1.2; }
+        /* Sparsity bars */
+        #sparsity-viz {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            justify-content: space-around;
+        }
+        .sbar-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px;
+        }
+        .sbar-label { color: #666; width: 22px; flex-shrink: 0; }
+        .sbar-track {
+            flex: 1;
+            height: 8px;
+            background: #1c1c1c;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .sbar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.8s ease;
+        }
+        .sbar-val { color: #888; width: 30px; text-align: right; flex-shrink: 0; }
+
+        /* Routing heatmap (Panel D) */
+        #routing-viz {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            overflow: hidden;
+        }
+        .route-row {
+            display: flex;
+            gap: 1px;
+            flex: 1;
+            align-items: center;
+        }
+        .route-label { font-size: 8px; color: #555; width: 18px; flex-shrink: 0; }
+        .route-cells { display: flex; gap: 1px; flex: 1; overflow: hidden; }
+        .route-cell {
+            flex: 1;
+            height: 100%;
+            min-width: 3px;
+            border-radius: 1px;
+            transition: background 0.3s;
+        }
+
+        /* Gradient norm bars (Panel E) */
+        #grad-viz {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            justify-content: space-around;
+        }
+        .gbar-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px;
+        }
+        .gbar-label { color: #666; width: 22px; flex-shrink: 0; }
+        .gbar-track {
+            flex: 1;
+            height: 8px;
+            background: #1c1c1c;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .gbar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.4s ease, background 0.4s;
+        }
+        .gbar-val { color: #888; width: 38px; text-align: right; flex-shrink: 0; }
+        #grad-norm-global { font-size: 8px; color: #444; margin-top: 2px; flex-shrink: 0; }
+
+        #neural-waiting {
+            color: #333;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            letter-spacing: 1px;
+        }
+
         /* ── Bottom hint ─────────────────────────────────────────── */
         #hint {
             height: 20px;
@@ -155,7 +328,10 @@
 
     <div class="tb-cell controls">
         <button id="toggleDots">· DOTS</button>
-        <button id="toggleSMA">~ SMA</button>
+        <button id="toggleSMA20" title="Short-term trend (reactive)">~ SMA-20</button>
+        <button id="toggleSMA30" title="Mid-term trend">~ SMA-30</button>
+        <button id="toggleSMA150" title="Long-term trend (smooth)">~ SMA-150</button>
+        <button id="toggleTMA" title="Ternary Moving Average — flat in HOLD, steps on AFFIRM/REJECT">≡ TMA</button>
         <select id="viewFilter">
             <option value="all" selected>ALL</option>
             <option value="200">200 EP</option>
@@ -178,10 +354,46 @@
     </div>
 </div>
 
+<div id="neural-wrap">
+    <!-- Panel A: Layer topology — grows as Net2Net surgery fires -->
+    <div class="nv-panel">
+        <div class="nv-label">&#9632; Layer Topology &amp; Sparsity</div>
+        <div id="layer-viz">
+            <div id="neural-waiting">WAITING FOR TELE DATA — fires after first epoch</div>
+        </div>
+    </div>
+
+    <!-- Panel B: Expert activity heatmap -->
+    <div class="nv-panel">
+        <div class="nv-label">&#9632; Expert Activity (12 MoE Experts)</div>
+        <div id="expert-viz"></div>
+    </div>
+
+    <!-- Panel C: Per-layer sparsity bars -->
+    <div class="nv-panel">
+        <div class="nv-label">&#9632; Per-Layer Weight Sparsity</div>
+        <div id="sparsity-viz"></div>
+    </div>
+
+    <!-- Panel D: Expert routing heatmap (live, per batch) -->
+    <div class="nv-panel">
+        <div class="nv-label">&#9632; Expert Routing — Last 60 Steps</div>
+        <div id="routing-viz"><div id="routing-waiting" style="color:#333;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR ROUTE DATA</div></div>
+    </div>
+
+    <!-- Panel E: Per-layer gradient magnitude -->
+    <div class="nv-panel">
+        <div class="nv-label">&#9632; Per-Layer Gradient Norm</div>
+        <div id="grad-viz"><div id="grad-waiting" style="color:#333;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
+        <div id="grad-norm-global"></div>
+    </div>
+</div>
+
 <div id="hint">
     <span class="hint-item"><b>DRAG</b> pan</span>
     <span class="hint-item"><b>SCROLL</b> zoom</span>
     <span class="hint-item"><b>RESET ZOOM</b> re-follow</span>
+    <span class="hint-item" style="margin-left:auto; color:#444;">TELE/epoch · GRAD/batch · ROUTE/10 batches</span>
 </div>
 
 <script>
@@ -194,6 +406,10 @@
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
     let lastLossVal      = null;
     let bestLoss         = Infinity;
+
+    const ROUTE_WINDOW   = 60;   // columns in the routing heatmap
+    let routingHistory   = [];   // [{step, weights:[...]}]
+    let latestGrad       = null; // {norm, layerNorms:[...]}
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -201,6 +417,7 @@
     let pulseDataY       = 0;
     let pulseEndMs       = 0;
     let lastKnownEpoch   = -1;  // last epoch seen — used to detect genuine session resets
+    let isInteracting    = false; // true during pan/zoom — suppresses pulse & drop animations
 
     // ── Last epoch average reference line (MT5-style "closing price" line) ──
     let lastSmaY = null;   // tracks last completed epoch's avg loss
@@ -234,7 +451,7 @@
 
     function pulseTick(now) {
         pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
-        if (now >= pulseEndMs) { pulseActive = false; return; }
+        if (now >= pulseEndMs || isInteracting) { pulseActive = false; return; }
         try {
             const px = chart.scales.x.getPixelForValue(pulseDataX);
             const py = chart.scales.y.getPixelForValue(pulseDataY);
@@ -275,7 +492,19 @@
                 },
                 {
                     type: 'line',
-                    label: 'SMA-30 trend',
+                    label: 'SMA-20',
+                    data: [],
+                    borderColor: '#ffd700',
+                    borderWidth: 1,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.4,
+                    order: 1,
+                    animation: false,
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-30',
                     data: [],
                     borderColor: '#ff6b35',
                     borderWidth: 1.5,
@@ -284,6 +513,33 @@
                     tension: 0.4,
                     order: 1,
                     animation: false,
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-150',
+                    data: [],
+                    borderColor: '#8899ff',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    order: 1,
+                    animation: false,
+                },
+                {
+                    type: 'line',
+                    label: 'TMA',
+                    data: [],
+                    borderColor: '#00e5ff',
+                    borderWidth: 1.5,
+                    borderDash: [4, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,          // step-function — no smoothing
+                    stepped: 'before',
+                    order: 1,
+                    animation: false,
+                    hidden: true,        // off by default, user enables it
                 }
             ]
         },
@@ -293,11 +549,12 @@
             layout: { padding: { top: 6, right: 8, bottom: 4, left: 8 } },
             animations: {
                 y: {
-                    // Only the new incoming point animates; old points get duration 0 (instant)
-                    duration: (ctx) => ctx.dataIndex >= newPointStartIdx ? 500 : 0,
+                    // Only the newest live point gets the drop animation.
+                    // Suppress entirely during pan/zoom to avoid fighting the redraw.
+                    duration: (ctx) => (!isInteracting && ctx.dataIndex >= newPointStartIdx) ? 500 : 0,
                     easing: 'easeOutBounce',
                     from: (ctx) => {
-                        if (ctx.dataIndex >= newPointStartIdx) {
+                        if (!isInteracting && ctx.dataIndex >= newPointStartIdx) {
                             try { return ctx.chart.scales.y.max; } catch(e) { return 20; }
                         }
                     }
@@ -327,10 +584,24 @@
                     }
                 },
                 zoom: {
-                    pan:  { enabled: true, mode: 'xy',
-                            onPanStart: () => { document.getElementById('viewFilter').value = 'all'; } },
-                    zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
-                            onZoomStart: () => { document.getElementById('viewFilter').value = 'all'; } }
+                    pan: {
+                        enabled: true, mode: 'xy',
+                        onPanStart: () => {
+                            document.getElementById('viewFilter').value = 'all';
+                            isInteracting = true;
+                            pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
+                        },
+                        onPanComplete: () => { isInteracting = false; resize(); }
+                    },
+                    zoom: {
+                        wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
+                        onZoomStart: () => {
+                            document.getElementById('viewFilter').value = 'all';
+                            isInteracting = true;
+                            pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
+                        },
+                        onZoomComplete: () => { isInteracting = false; resize(); }
+                    }
                 }
             }
         }
@@ -343,6 +614,35 @@
             const avg = data.slice(s, i + 1).reduce((a, b) => a + b.y, 0) / (i - s + 1);
             return { x: data[i].x, y: avg };
         });
+    }
+
+    // ── TMA — Ternary Moving Average ───────────────────────────────────
+    // The TMA applies ternary logic to trend detection:
+    //   AFFIRM (+1): window avg rose above threshold → loss genuinely rising   → level jumps up
+    //   REJECT  (-1): window avg fell below threshold → loss genuinely falling  → level steps down
+    //   HOLD    (0):  change within threshold → inconclusive, keep level flat
+    //
+    // The result is a step-function line: flat segments are HOLD states (the model is
+    // in "Deterministic Uncertainty" — not confidently improving or degrading).
+    // Steps down = confirmed improvement epochs. Steps up = confirmed regressions.
+    function tma(data, w = 30, thresholdPct = 0.012) {
+        if (data.length === 0) return [];
+        const result = [];
+        let level = null;
+        for (let i = 0; i < data.length; i++) {
+            const s = Math.max(0, i - w + 1);
+            const windowAvg = data.slice(s, i + 1).reduce((a, b) => a + b.y, 0) / (i - s + 1);
+            if (level === null) { level = windowAvg; }
+            const delta = (windowAvg - level) / Math.max(level, 1e-6);
+            if (delta > thresholdPct) {
+                level = windowAvg;   // AFFIRM — loss rising, update level
+            } else if (delta < -thresholdPct) {
+                level = windowAvg;   // REJECT — loss falling (good!), step down
+            }
+            // HOLD: level stays flat — ternary 0-state
+            result.push({ x: data[i].x, y: level });
+        }
+        return result;
     }
 
     // ── Status bar helpers ─────────────────────────────────────────────
@@ -416,6 +716,36 @@
                         `${am[1]} LAYERS · ${am[2]} HIDDEN · ${am[3]} EXPERTS · ${am[4]} CTX · ${am[5]} VOCAB`;
                     continue;
                 }
+                // TELE line — feed the neural viz panels
+                const tm = line.match(/^TELE L=(\d+) S=([\d.,]+) E=([\d.,]+)/);
+                if (tm) {
+                    const numLayers      = parseInt(tm[1]);
+                    const layerSparsity  = tm[2].split(',').map(Number);
+                    const expertActivity = tm[3].split(',').map(Number);
+                    latestTele = { numLayers, layerSparsity, expertActivity };
+                    renderNeuralViz(latestTele);
+                    continue;
+                }
+                // ROUTE line — expert routing weights per step
+                const rm = line.match(/^ROUTE step=(\d+) E=([\d.,]+)/);
+                if (rm) {
+                    const step    = parseInt(rm[1]);
+                    const weights = rm[2].split(',').map(Number);
+                    routingHistory.push({ step, weights });
+                    if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
+                    renderRoutingHeatmap();
+                    continue;
+                }
+                // GRAD line — per-layer gradient norms
+                const gm = line.match(/^GRAD step=(\d+) n=([\d.]+) L=([\d.,]+)/);
+                if (gm) {
+                    latestGrad = {
+                        norm:       parseFloat(gm[2]),
+                        layerNorms: gm[3].split(',').map(Number),
+                    };
+                    renderGradBars();
+                    continue;
+                }
                 // Batch loss line — capture layer count too
                 const m = line.match(/Epoch\s+(\d+)\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
                 if (!m) continue;
@@ -439,6 +769,9 @@
             if (lastKnownEpoch > 0 && firstNewEpoch < lastKnownEpoch - 5) {
                 chart.data.datasets[0].data = [];
                 chart.data.datasets[1].data = [];
+                chart.data.datasets[2].data = [];
+                chart.data.datasets[3].data = [];
+                chart.data.datasets[4].data = [];
                 lastSmaY     = null;
                 bestLoss     = Infinity;
                 totalPts     = 0;
@@ -471,8 +804,10 @@
             chart.data.datasets[0].data = merged;   // replace reference, not mutate
             totalPts += newPts.length;
 
-            const smaData = sma(merged, 30);
-            chart.data.datasets[1].data = smaData;
+            chart.data.datasets[1].data = sma(merged, 20);
+            chart.data.datasets[2].data = sma(merged, 30);
+            chart.data.datasets[3].data = sma(merged, 150);
+            chart.data.datasets[4].data = tma(merged, 30);
 
             // Update reference line from epoch summary lines ("Avg Loss: X.XXXX")
             for (const line of lines) {
@@ -507,17 +842,32 @@
         this.classList.toggle('dim', !!chart.data.datasets[0].hidden);
         chart.update('none');
     });
-    document.getElementById('toggleSMA').addEventListener('click', function() {
+    document.getElementById('toggleSMA20').addEventListener('click', function() {
         chart.data.datasets[1].hidden = !chart.data.datasets[1].hidden;
         this.classList.toggle('dim', !!chart.data.datasets[1].hidden);
         chart.update('none');
     });
+    document.getElementById('toggleSMA30').addEventListener('click', function() {
+        chart.data.datasets[2].hidden = !chart.data.datasets[2].hidden;
+        this.classList.toggle('dim', !!chart.data.datasets[2].hidden);
+        chart.update('none');
+    });
+    document.getElementById('toggleSMA150').addEventListener('click', function() {
+        chart.data.datasets[3].hidden = !chart.data.datasets[3].hidden;
+        this.classList.toggle('dim', !!chart.data.datasets[3].hidden);
+        chart.update('none');
+    });
+    document.getElementById('toggleTMA').addEventListener('click', function() {
+        chart.data.datasets[4].hidden = !chart.data.datasets[4].hidden;
+        this.classList.toggle('dim', !!chart.data.datasets[4].hidden);
+        chart.update('none');
+    });
+    // TMA starts hidden — button starts dimmed
+    document.getElementById('toggleTMA').classList.add('dim');
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-        chart.options.scales.x.min = undefined;
-        chart.options.scales.x.max = undefined;
-        chart.resetZoom();
-        chart.update('none');
+        isInteracting = false;
+        chart.resetZoom();  // plugin clears its internal transform; scales auto-fit to data
     });
     document.getElementById('viewFilter').addEventListener('change', function() {
         const fv  = this.value;
@@ -547,6 +897,196 @@
     }
     window.addEventListener('resize', resize);
     resize();
+
+    // ── Neural Viz ─────────────────────────────────────────────────────
+    let latestTele = null;
+
+    function sparsityColor(s) {
+        // s: 0.0 (dense) → 1.0 (fully sparse)
+        // dense = warm green #00e5a0, sparse = muted cyan, overdense = warn orange
+        const r = Math.round(s * 40);
+        const g = Math.round(229 - s * 100);
+        const b = Math.round(160 - s * 40);
+        return `rgb(${r},${g},${b})`;
+    }
+
+    function expertColor(act) {
+        // act: 0.0 (dormant) → 1.0 (fully active)
+        // Muted forest-green palette — no neon, comfortable on the eyes.
+        if (act < 0.05) return '#0d130d';
+        const g = Math.round(35 + act * 90);   // 35–125, never neon
+        const r = Math.round(act * 12);
+        const b = Math.round(act * 35);
+        return `rgb(${r},${g},${b})`;
+    }
+
+    function renderNeuralViz(tele) {
+        const waiting = document.getElementById('neural-waiting');
+        if (waiting) waiting.remove();
+
+        // ── Panel A: Layer topology ───────────────────────────────────
+        const layerDiv = document.getElementById('layer-viz');
+        layerDiv.innerHTML = '';
+
+        const addNode = (label, cls) => {
+            const d = document.createElement('div');
+            d.className = 'topo-node';
+            d.style.color = '#444';
+            d.textContent = label;
+            layerDiv.appendChild(d);
+        };
+        const addArrow = () => {
+            const d = document.createElement('div');
+            d.className = 'topo-arrow';
+            d.textContent = '→';
+            layerDiv.appendChild(d);
+        };
+
+        addNode('IN');
+        addArrow();
+
+        for (let i = 0; i < tele.numLayers; i++) {
+            const s = tele.layerSparsity[i] || 0;
+            const col = sparsityColor(s);
+            const opacity = 0.35 + (1 - s) * 0.65;
+
+            const block = document.createElement('div');
+            block.className = 'topo-layer';
+            block.style.borderColor = col;
+            block.style.opacity = opacity;
+            block.title = `Layer ${i} — ${(s * 100).toFixed(1)}% weights near-zero`;
+
+            block.innerHTML =
+                `<div class="topo-layer-label">L${i}</div>` +
+                `<div class="topo-layer-sparsity" style="color:${col}">${(s * 100).toFixed(0)}%↓</div>`;
+            layerDiv.appendChild(block);
+
+            if (i < tele.numLayers - 1) addArrow();
+        }
+
+        addArrow();
+        addNode('OUT');
+
+        // ── Panel B: Expert heatmap ────────────────────────────────────
+        const expDiv = document.getElementById('expert-viz');
+        expDiv.innerHTML = '';
+        for (let e = 0; e < tele.expertActivity.length; e++) {
+            const act = tele.expertActivity[e];
+            const cell = document.createElement('div');
+            cell.className = 'expert-cell';
+            cell.style.background = expertColor(act);
+            cell.title = `Expert ${e} — activity ${(act * 100).toFixed(0)}%`;
+            cell.innerHTML =
+                `<span class="expert-label">E${e}</span>` +
+                `<span class="expert-act">${(act * 100).toFixed(0)}%</span>`;
+            expDiv.appendChild(cell);
+        }
+
+        // ── Panel C: Per-layer sparsity bars ───────────────────────────
+        const spDiv = document.getElementById('sparsity-viz');
+        spDiv.innerHTML = '';
+        for (let i = 0; i < tele.numLayers; i++) {
+            const s = tele.layerSparsity[i] || 0;
+            const col = sparsityColor(s);
+            const pct = (s * 100).toFixed(0);
+            const row = document.createElement('div');
+            row.className = 'sbar-row';
+            row.innerHTML =
+                `<span class="sbar-label">L${i}</span>` +
+                `<div class="sbar-track">` +
+                  `<div class="sbar-fill" style="width:${pct}%; background:${col};"></div>` +
+                `</div>` +
+                `<span class="sbar-val">${pct}%</span>`;
+            spDiv.appendChild(row);
+        }
+    }
+
+    // ── Panel D: Expert Routing Heatmap ───────────────────────────────
+    function routingColor(w) {
+        // 0 = dark charcoal, 1 = vivid teal
+        const v = Math.min(1, w);
+        const r = Math.round(20  + v * 10);
+        const g = Math.round(20  + v * 180);
+        const b = Math.round(20  + v * 160);
+        return `rgb(${r},${g},${b})`;
+    }
+
+    function renderRoutingHeatmap() {
+        const wrap = document.getElementById('routing-viz');
+        const waiting = document.getElementById('routing-waiting');
+        if (waiting) waiting.remove();
+        if (routingHistory.length === 0) return;
+
+        const numExperts = routingHistory[0].weights.length;
+        wrap.innerHTML = '';
+        // One row per expert, cells = time steps (oldest → newest)
+        for (let e = 0; e < numExperts; e++) {
+            const row = document.createElement('div');
+            row.className = 'route-row';
+            const lbl = document.createElement('span');
+            lbl.className = 'route-label';
+            lbl.textContent = `E${e}`;
+            row.appendChild(lbl);
+
+            const cells = document.createElement('div');
+            cells.className = 'route-cells';
+            for (let t = 0; t < routingHistory.length; t++) {
+                const w = routingHistory[t].weights[e] || 0;
+                const cell = document.createElement('div');
+                cell.className = 'route-cell';
+                cell.style.background = routingColor(w);
+                cell.title = `E${e} @ step ${routingHistory[t].step}: ${(w*100).toFixed(1)}%`;
+                cells.appendChild(cell);
+            }
+            row.appendChild(cells);
+            wrap.appendChild(row);
+        }
+    }
+
+    // ── Panel E: Per-Layer Gradient Norms ─────────────────────────────
+    function gradColor(norm, maxNorm) {
+        if (maxNorm < 1e-9) return '#1c3a2a';
+        const ratio = Math.min(1, norm / maxNorm);
+        // low = teal-ish green, high = warm amber → red
+        if (ratio < 0.5) {
+            const t = ratio * 2;
+            return `rgb(${Math.round(30+t*80)},${Math.round(160-t*60)},${Math.round(80-t*40)})`;
+        } else {
+            const t = (ratio - 0.5) * 2;
+            return `rgb(${Math.round(110+t*145)},${Math.round(100-t*80)},${Math.round(40-t*30)})`;
+        }
+    }
+
+    function renderGradBars() {
+        if (!latestGrad) return;
+        const wrap = document.getElementById('grad-viz');
+        const waiting = document.getElementById('grad-waiting');
+        if (waiting) waiting.remove();
+        wrap.innerHTML = '';
+
+        const { norm, layerNorms } = latestGrad;
+        const maxN = Math.max(...layerNorms, 1e-9);
+
+        for (let i = 0; i < layerNorms.length; i++) {
+            const n = layerNorms[i];
+            const pct = Math.min(100, (n / maxN) * 100).toFixed(1);
+            const col = gradColor(n, maxN);
+            const row = document.createElement('div');
+            row.className = 'gbar-row';
+            row.innerHTML =
+                `<span class="gbar-label">L${i}</span>` +
+                `<div class="gbar-track">` +
+                  `<div class="gbar-fill" style="width:${pct}%; background:${col};"></div>` +
+                `</div>` +
+                `<span class="gbar-val">${n.toFixed(4)}</span>`;
+            wrap.appendChild(row);
+        }
+
+        const globalEl = document.getElementById('grad-norm-global');
+        const clipped  = norm > 1.0;
+        globalEl.textContent = `global ∥g∥ = ${norm.toFixed(4)}${clipped ? ' ⚡CLIP' : ''}`;
+        globalEl.style.color  = clipped ? '#e0a030' : '#444';
+    }
 
     // ── Boot ──────────────────────────────────────────────────────────
     poll();

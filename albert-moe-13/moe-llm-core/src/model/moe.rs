@@ -2,6 +2,27 @@ use candle_core::{Result, Tensor};
 use candle_nn::VarBuilder;
 use super::ternary_linear::TernaryLinear;
 use super::mlp::Mlp;
+use std::cell::RefCell;
+
+// Thread-local accumulator: sum of each expert's mean routing weight across the batch.
+// train_bible.rs calls clear_routing_capture() before a forward and
+// take_routing_capture() after — no locks, no perf cost on the hot path.
+thread_local! {
+    static ROUTING_ACC: RefCell<Vec<f32>> = RefCell::new(Vec::new());
+}
+
+pub fn clear_routing_capture() {
+    ROUTING_ACC.with(|r| r.borrow_mut().clear());
+}
+
+pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
+    ROUTING_ACC.with(|r| {
+        let acc = r.borrow();
+        if acc.is_empty() { return vec![0.0; num_experts]; }
+        let total: f32 = acc.iter().sum::<f32>().max(1e-9);
+        acc.iter().map(|&w| w / total).collect()
+    })
+}
 
 pub struct MoeBlock {
     gate: TernaryLinear,
@@ -90,17 +111,28 @@ impl MoeBlock {
             let mask1_bool = m1_flat.eq(expert_idx as u32)?;
             let mask2_bool = m2_flat.eq(expert_idx as u32)?;
             let mask3_bool = m3_flat.eq(expert_idx as u32)?;
-            
+
             let w1 = (mask1_bool.to_dtype(x.dtype())? * &p1)?;
             let w2 = (mask2_bool.to_dtype(x.dtype())? * &p2)?;
             let w3 = (mask3_bool.to_dtype(x.dtype())? * &p3)?;
             let combined_weight = (w1 + w2 + w3)?.unsqueeze(1)?;
-            
-            // Mask input for efficiency: only process tokens assigned to this expert
-            let expert_in = x_flat.broadcast_mul(&combined_weight.gt(0.0)?.to_dtype(x.dtype())?)?;
-            let expert_out = self.experts[expert_idx].forward(&expert_in)?;
-            
-            // Accumulate weighted output
+
+            // SparseSkip: if no token is routed to this expert, skip the MLP entirely.
+            // For single-token inference (Top-3, 12 experts) this skips 9/12 experts — ~4× speedup.
+            let max_w = combined_weight.max_all()?.to_scalar::<f32>()?;
+
+            // Accumulate routing weight for telemetry (thread-local, zero overhead).
+            ROUTING_ACC.with(|r| {
+                let mut acc = r.borrow_mut();
+                if acc.len() <= expert_idx { acc.resize(expert_idx + 1, 0.0); }
+                acc[expert_idx] += max_w;
+            });
+
+            if max_w == 0.0 {
+                continue;
+            }
+
+            let expert_out = self.experts[expert_idx].forward(&x_flat)?;
             final_output = (final_output + expert_out.broadcast_mul(&combined_weight)?)?;
         }
         

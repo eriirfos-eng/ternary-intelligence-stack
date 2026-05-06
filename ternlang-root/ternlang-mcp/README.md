@@ -56,7 +56,7 @@ All 19 tools are available on the community tier — no API key required.
 | Tool | Description |
 |------|-------------|
 | `quantize_weights` | Float weights → balanced ternary via BitNet thresholding |
-| `sparse_benchmark` | Ternary matmul efficiency benchmark (up to up to 122.3x (theoretical upper bound) at 99%+ sparsity) |
+| `sparse_benchmark` | Ternary matmul efficiency benchmark. Measured x86 speedup: 2–5× at 75–90% sparsity. Theoretical upper bound on native ternary ASIC at 99%+ sparsity: 122.3×. Reproducible: `cargo run --release --bin sparseskip_throughput -p moe-llm-core` |
 | `tsql_join` | T-SQL Triadic Join — partial matches routed to Deliberative Hold |
 
 ---

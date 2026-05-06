@@ -10,3 +10,4 @@ pub mod packing;
 pub mod loader;
 pub use transformer::Transformer;
 pub use config::TransformerConfig;
+pub use moe::{clear_routing_capture, take_routing_capture};

@@ -1,5 +1,37 @@
 # Albert MoE-13 — Architecture
 
+## Canonical Source File Map
+
+This section exists to resolve audit path confusion. The public repository uses a flat
+workspace layout — not the `crates/moe-core/src/` hierarchy that automated tools may
+expect from conventional monorepos.
+
+| Conceptual Component | Actual Path in Repository |
+|---|---|
+| STE backward-pass math | `moe-llm-core/src/ste.rs` |
+| Ternary linear layer | `moe-llm-core/src/model/ternary_linear.rs` |
+| MoE routing & SparseSkip | `moe-llm-core/src/model/moe.rs` |
+| Transformer / attention | `moe-llm-core/src/model/transformer.rs` |
+| MLP expert | `moe-llm-core/src/model/mlp.rs` |
+| Training loop (main) | `moe-llm-core/src/bin/train_bible.rs` |
+| EvolutionManager | `moe-llm-core/src/model/transformer.rs` (inline) |
+| Dataset / corpus loader | `moe-llm-core/src/lib.rs` → `load_corpus()` |
+| BPE tokenizer | `moe-llm-core/src/tokenizer.rs` |
+| SparseskipThroughput bench | `moe-llm-core/src/bin/sparseskip_throughput.rs` |
+| Workspace manifest | `albert-moe-13/Cargo.toml` |
+| Dashboard front-end | `dashboard/index.html` |
+| Dashboard HTTP server | `dashboard/run_server.py` |
+| Training launch script | `~/bin/albert-train` (system-wide) |
+| Model checkpoints | `models/bible_ternary_v*.safetensors` |
+| Inference / test client | `moe-test/src/main.rs` |
+
+> **Note for auditors:** The directory `crates/` in this workspace contains the legacy
+> MoE orchestration crates (moe-core, moe-runtime, moe-platform, etc.) which govern
+> the MCP control plane. The *neural training stack* is in `moe-llm-core/`. Both are
+> members of the same Cargo workspace (`albert-moe-13/Cargo.toml`).
+
+---
+
 ## Overview
 
 Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture is designed to grow its own depth autonomously through the `EvolutionManager`.

@@ -29,19 +29,21 @@ use crossterm::{
 struct App {
     model: Transformer,
     tokenizer: BpeTokenizer,
+    dev: Device,
     input: String,
-    transcript: String, 
-    messages: Vec<(String, String)>, 
+    transcript: String,
+    messages: Vec<(String, String)>,
     model_id: String,
     checkpoint: String,
     total_epochs: u32,
-    
+    num_experts: usize,
+
     // Scientific Metrics
     token_latency_ms: u64,
     tokens_per_sec: f32,
     active_experts: String,
     est_gflops: f32,
-    
+
     // UI State
     is_generating: bool,
     current_tokens: Vec<u32>,
@@ -101,18 +103,21 @@ impl App {
         let meta_path = format!("models/bible_ternary_{}.meta", version);
         let total_epochs = fs::read_to_string(&meta_path).unwrap_or("0".to_string()).trim().parse::<u32>().unwrap_or(0);
 
+        let num_experts = config.num_experts;
         Self {
             model,
             tokenizer,
+            dev,
             input: String::new(),
             transcript: format!("System: Model {} loaded. Epoch Mileage: {}\n", version, total_epochs),
             messages: Vec::new(),
             model_id: "MoE-13-Ternary".to_string(),
             checkpoint: version,
             total_epochs,
+            num_experts,
             token_latency_ms: 0,
             tokens_per_sec: 0.0,
-            active_experts: format!("{}/{} (Top-3)", if config.num_experts > 0 { 3 } else { 0 }, config.num_experts),
+            active_experts: format!("3/{} (Top-3, idle)", num_experts),
             est_gflops: 0.0,
             is_generating: false,
             current_tokens: Vec::new(),
@@ -137,11 +142,7 @@ impl App {
         self.is_generating = true;
         self.tokens_to_generate = 64; 
         
-        // Dynamic scroll adjustment based on line count (rough estimate)
-        if self.auto_scroll {
-            let line_count = self.transcript.lines().count() as u16;
-            self.scroll_pos = line_count.saturating_sub(10); // Aim for the bottom
-        }
+        // scroll_pos is computed in ui() when auto_scroll is true
     }
 
     fn step_generation(&mut self) {
@@ -151,13 +152,23 @@ impl App {
         }
 
         let start = Instant::now();
-        let dev = Device::Cpu;
-        
+
         let context_len = 64;
         let start_idx = self.current_tokens.len().saturating_sub(context_len);
         let context = &self.current_tokens[start_idx..];
-        
-        let input = Tensor::new(context, &dev).unwrap().unsqueeze(0).unwrap();
+        let n_ctx = context.len();
+
+        // Estimate active experts: with N context tokens and Top-3 routing,
+        // the expected number of non-empty expert slots grows with N.
+        // For n_ctx tokens, ~min(num_experts, n_ctx * 3) slots may be filled.
+        let est_active = (n_ctx * 3).min(self.num_experts);
+        let est_skipped = self.num_experts - est_active;
+        self.active_experts = format!(
+            "{}/{} ({}↓ sparse)",
+            est_active, self.num_experts, est_skipped
+        );
+
+        let input = Tensor::new(context, &self.dev).unwrap().unsqueeze(0).unwrap();
         let logits = self.model.forward(&input).unwrap();
         let dims = logits.dims();
         let last_logits = logits.i((0, dims[1] - 1)).unwrap();
@@ -206,13 +217,19 @@ impl App {
             }
         }
 
-        if self.auto_scroll {
-            let line_count = self.transcript.lines().count() as u16;
-            self.scroll_pos = line_count.saturating_sub(10);
-        }
+        // scroll_pos is computed in ui() when auto_scroll is true
 
         if self.tokens_to_generate == 0 {
             self.is_generating = false;
+        }
+
+        // Keep transcript under 100KB — trim from the front, preserving whole lines.
+        const MAX_TRANSCRIPT_BYTES: usize = 100 * 1024;
+        if self.transcript.len() > MAX_TRANSCRIPT_BYTES {
+            let overflow = self.transcript.len() - MAX_TRANSCRIPT_BYTES;
+            if let Some(nl) = self.transcript[overflow..].find('\n') {
+                self.transcript = format!("[...trimmed...]\n{}", &self.transcript[overflow + nl + 1..]);
+            }
         }
     }
 }
@@ -300,7 +317,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     }
                     KeyCode::End => {
                         app.auto_scroll = true;
-                        app.scroll_pos = 1000;
+                        app.scroll_pos = app.transcript.lines().count() as u16;
                     }
                     _ => {}
                 }
@@ -334,20 +351,34 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         .style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(header, chunks[0]);
 
-    let scroll_text = if app.auto_scroll { 
-        " [AUTO-FOLLOW] ".to_string() 
-    } else { 
-        format!(" [SCROLL: {}] ", app.scroll_pos) 
+    // Compute scroll offset: when auto-following, anchor to the last line of content.
+    // chunks[1] is the sandbox rect; inner height = total - 2 borders.
+    let sandbox_inner_h = chunks[1].height.saturating_sub(2);
+    let raw_line_count = app.transcript.lines().count() as u16;
+    let scroll_offset = if app.auto_scroll {
+        raw_line_count.saturating_sub(sandbox_inner_h)
+    } else {
+        app.scroll_pos
     };
-    
+
+    let scroll_text = if app.auto_scroll {
+        " [AUTO-FOLLOW] ".to_string()
+    } else {
+        format!(" [SCROLL: {}] ", app.scroll_pos)
+    };
+
     let sandbox = Paragraph::new(app.transcript.as_str())
         .block(Block::default().borders(Borders::ALL).title(format!(" Sandbox @ Simeon{} ", scroll_text)))
         .style(Style::default().fg(Color::White))
         .wrap(Wrap { trim: true })
-        .scroll((app.scroll_pos, 0));
+        .scroll((scroll_offset, 0));
     f.render_widget(sandbox, chunks[1]);
 
-    let input_title = if app.is_generating { " [THINKING...] (Esc to Stop) " } else { " Input Terminal (Arrows to Scroll) " };
+    let input_title = if app.is_generating {
+        " [THINKING...] (Esc to Stop) "
+    } else {
+        " Type & Enter to send  |  ↑↓ PgUp/Dn to scroll  |  End = follow bottom  |  Esc = quit "
+    };
     let input = Paragraph::new(app.input.as_str())
         .block(Block::default().borders(Borders::ALL).title(input_title));
     f.render_widget(input, chunks[2]);
