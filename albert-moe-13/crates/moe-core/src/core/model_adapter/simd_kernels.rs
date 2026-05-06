@@ -65,8 +65,8 @@ pub unsafe fn ternary_dot_product_avx2(weights: &[i8], inputs: &[f32]) -> f32 {
 }
 
 pub fn ternary_dot_product_scalar(weights: &[i8], inputs: &[f32]) -> f32 {
-    weights.iter().zip(inputs.iter())
-           .filter(|(&w, _)| w != 0)
-           .map(|(&w, &i)| (w as f32) * i)
+    weights.iter().copied().zip(inputs.iter().copied())
+           .filter(|(w, _)| *w != 0)
+           .map(|(w, i)| (w as f32) * i)
            .sum()
 }

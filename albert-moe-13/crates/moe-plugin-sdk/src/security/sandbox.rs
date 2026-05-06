@@ -30,9 +30,10 @@ impl PluginSandbox {
             Err(_) => {
                 // Bridge to AxisMesh: Log the VetoEntry
                 axis.veto_log.push(VetoEntry {
-                    timestamp: 123456789, // Mock or actual timestamp
+                    timestamp: std::time::SystemTime::now(),
+                    expert_id: 0,
                     reason: format!("Plugin exceeded CPU time budget of {}ms", budget),
-                    severity: 1, // High severity
+                    query_hash: 0,
                 });
                 
                 anyhow::bail!("Plugin exceeded CPU time budget of {}ms (VetoEntry logged in AxisMesh)", budget)
