@@ -1046,7 +1046,7 @@ fn run_tui(
 
     // Sync initial state and show banner
     {
-        let mut state = tui_state.lock().unwrap();
+        let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
         state.trusted = trusted;
         state.push_exec(tui::ExecBlock::SystemMsg(cli.startup_banner()));
     }
@@ -1082,7 +1082,7 @@ fn run_tui(
 
         // ── Auth flow: if waiting for an API key, treat this submission as the key ──
         {
-            let auth_provider = tui_state.lock().unwrap().auth_flow.clone();
+            let auth_provider = tui_state.lock().unwrap_or_else(|p| p.into_inner()).auth_flow.clone();
             if let Some(provider) = auth_provider {
                 let api_key = input.trim().to_string();
                 let msg = if api_key.is_empty() {
@@ -1097,7 +1097,7 @@ fn run_tui(
                         Err(e) => format!("auth: failed to save key — {e}"),
                     }
                 };
-                let mut st = tui_state.lock().unwrap();
+                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                 st.auth_flow = None;
                 st.push_exec(tui::ExecBlock::SystemMsg(msg));
                 continue;
@@ -1106,7 +1106,7 @@ fn run_tui(
 
         // ── Image-path overlay: treat submission as file path to attach ──────────
         {
-            let overlay_active = tui_state.lock().unwrap().image_path_overlay;
+            let overlay_active = tui_state.lock().unwrap_or_else(|p| p.into_inner()).image_path_overlay;
             if overlay_active {
                 let path_str = input.trim().to_string();
                 let msg = if path_str.is_empty() {
@@ -1123,7 +1123,7 @@ fn run_tui(
                                 .unwrap_or(&path_str)
                                 .chars().take(40).collect::<String>();
                             let att = tui::ImageAttachment { path, base64: b64, mime, thumb: thumb.clone() };
-                            let mut st = tui_state.lock().unwrap();
+                            let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                             st.pending_images.push(att);
                             st.image_path_overlay = false;
                             format!("📎 attached: {thumb}")
@@ -1131,7 +1131,7 @@ fn run_tui(
                         Err(e) => format!("📎 error reading file: {e}"),
                     }
                 };
-                let mut st = tui_state.lock().unwrap();
+                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                 st.image_path_overlay = false;
                 st.push_exec(tui::ExecBlock::SystemMsg(msg));
                 continue;
@@ -1180,7 +1180,7 @@ fn run_tui(
                         format!("permissions: {}", cli.permission_mode.as_str())
                     };
                     {
-                        let mut st = tui_state.lock().unwrap();
+                        let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                         st.permission_mode = cli.permission_mode.as_str().to_string();
                         st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     }
@@ -1212,7 +1212,7 @@ fn run_tui(
                         }
                     };
                     {
-                        let mut st = tui_state.lock().unwrap();
+                        let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                         st.model = cli.model.clone();
                         st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     }
@@ -1241,7 +1241,7 @@ fn run_tui(
                 }
                 // /auth — inline key entry: activates masked input mode
                 commands::SlashCommand::Auth { provider } => {
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     match provider {
                         Some(p) => {
                             st.push_exec(tui::ExecBlock::SystemMsg(
@@ -1311,17 +1311,17 @@ fn run_tui(
                                     ));
                                 }
                                 Err(e) => {
-                                    let mut st = tui_state.lock().unwrap();
+                                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                                     st.push_exec(tui::ExecBlock::SystemMsg(format!("session-recap: failed to load previous session — {e}")));
                                 }
                             }
                         }
                         Ok(None) => {
-                            let mut st = tui_state.lock().unwrap();
+                            let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                             st.push_exec(tui::ExecBlock::SystemMsg("session-recap: no previous sessions found".to_string()));
                         }
                         Err(e) => {
-                            let mut st = tui_state.lock().unwrap();
+                            let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                             st.push_exec(tui::ExecBlock::SystemMsg(format!("session-recap: error finding session — {e}")));
                         }
                     }
@@ -1382,7 +1382,7 @@ fn run_tui(
                 // /compress — compress session history to ~40-50k tokens
                 commands::SlashCommand::Compress => {
                     let msg = cli.compress_inline()?;
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1397,7 +1397,7 @@ fn run_tui(
                         }
                         None => "/remember <text>  — what should I remember?".to_string(),
                     };
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1415,7 +1415,7 @@ fn run_tui(
                         Ok(_) => "◯ Nothing found in vault.".to_string(),
                         Err(e) => format!("vault error: {e}"),
                     };
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1433,25 +1433,25 @@ fn run_tui(
                         Ok(_) => "◯ Vault is empty.".to_string(),
                         Err(e) => format!("vault error: {e}"),
                     };
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
                 commands::SlashCommand::Soul => {
                     let msg = format!("{}\n\n[Reference: SOUL.md — Core Principles]", reference::SOUL);
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
                 commands::SlashCommand::Patterns => {
                     let msg = format!("{}\n\n[Reference: patterns.md — Design Patterns]", reference::PATTERNS);
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
                 commands::SlashCommand::Security => {
                     let msg = format!("{}\n\n[Reference: SECURITY.md — Threat Model]", reference::SECURITY);
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1460,7 +1460,7 @@ fn run_tui(
                     msg.push_str("### Core Principles (SOUL)\n");
                     msg.push_str(&reference::SOUL[..std::cmp::min(1500, reference::SOUL.len())]);
                     msg.push_str("\n\n[See /soul, /patterns, /security for full details]");
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1524,7 +1524,7 @@ fn run_tui(
                         }
                         Err(e) => format!("Failed to access cron registry: {}", e),
                     };
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1581,7 +1581,7 @@ fn run_tui(
                         }
                         Err(e) => format!("Failed to access skill registry: {}", e),
                     };
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1605,7 +1605,7 @@ fn run_tui(
                     } else {
                         "Usage: `/teach-skill <name> <script-path>`\n\nExample: `/teach-skill generate-report ./scripts/report.md`".to_string()
                     };
-                    let mut st = tui_state.lock().unwrap();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     true
                 }
@@ -1639,7 +1639,7 @@ fn run_tui(
 
                 // Sync any state changes back into TUI
                 {
-                    let mut state = tui_state.lock().unwrap();
+                    let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     state.model = cli.model.clone();
                     state.permission_mode = cli.permission_mode.as_str().to_string();
                 }
@@ -1657,7 +1657,7 @@ fn run_tui(
                     Ok(_) => {
                         let new_cwd = std::env::current_dir().unwrap_or(path).to_string_lossy().to_string();
                         {
-                            let mut st = tui_state.lock().unwrap();
+                            let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                             st.cwd = new_cwd.clone();
                         }
                         format!("directory changed to: {new_cwd}")
@@ -1668,7 +1668,7 @@ fn run_tui(
                 format!("cd failed: not a directory ({target})")
             };
             {
-                let mut st = tui_state.lock().unwrap();
+                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                 st.push_exec(tui::ExecBlock::SystemMsg(msg));
             }
             continue;
@@ -1677,7 +1677,7 @@ fn run_tui(
         // ── @trust command ───────────────────────────────────────────────────
         if input.trim() == "@trust" {
             {
-                let mut st = tui_state.lock().unwrap();
+                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                 st.trusted = true;
                 st.push_exec(tui::ExecBlock::SystemMsg("folder trusted — tools will run without approval if permitted".to_string()));
             }
@@ -1689,7 +1689,7 @@ fn run_tui(
 
         // Drain pending images before launching the thread.
         let pending_images: Vec<(String, String)> = {
-            let mut state = tui_state.lock().unwrap();
+            let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
             state.pending_images.drain(..)
                 .map(|att| (att.mime, att.base64))
                 .collect()
@@ -1697,7 +1697,7 @@ fn run_tui(
 
         // Push user message and set working
         {
-            let mut state = tui_state.lock().unwrap();
+            let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
             state.push_exec(tui::ExecBlock::UserMessage(input.clone()));
             state.working = true;
             state.turn_start = Some(std::time::Instant::now());
@@ -1724,7 +1724,7 @@ fn run_tui(
             Some(tui_event_tx.clone()),
         );
         {
-            let st = tui_state.lock().unwrap();
+            let st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
             prompter.is_prompting = Some(Arc::clone(&st.is_prompting));
         }
 
@@ -1751,7 +1751,7 @@ fn run_tui(
                         if is_cancelled {
                             // Immediately update TUI so it feels responsive — the agent thread
                             // continues running in the background until handle.join() below.
-                            let mut state = tui_state_cancel.lock().unwrap();
+                            let mut state = tui_state_cancel.lock().unwrap_or_else(|p| p.into_inner());
                             state.working = false;
                             state.deactivate_all_tools();
                             state.turn_start = None;
@@ -1790,7 +1790,7 @@ fn run_tui(
         // ── turn finished ───────────────────────────────────────────────────
         let was_cancelled = cancel_flag.load(Ordering::Relaxed);
         let turn_secs = {
-            let mut state = tui_state.lock().unwrap();
+            let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
             let secs = state.turn_start.take().map(|t| t.elapsed().as_secs()).unwrap_or(0);
             state.working = false;
             state.deactivate_all_tools();
@@ -1829,7 +1829,7 @@ fn run_tui(
                 .collect();
 
             if !tool_results_data.is_empty() {
-                let mut state = tui_state.lock().unwrap();
+                let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                 // Create a NEW log with outputs injected, then swap it in.
                 let mut new_log = VecDeque::with_capacity(state.exec_log.len() + tool_results_data.len());
                 let mut out_iter = tool_results_data.into_iter();
@@ -1862,11 +1862,11 @@ fn run_tui(
             // "cancelled" is expected on ESC — already shown as "interrupted" in the TUI.
             Ok(Err(ref e)) if e.to_string() == "cancelled" => {}
             Ok(Err(e)) => {
-                let mut state = tui_state.lock().unwrap();
+                let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                 state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
             }
             Err(e) => {
-                let mut state = tui_state.lock().unwrap();
+                let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                 state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
             }
             Ok(Ok(ref summary)) => {
@@ -1888,7 +1888,7 @@ fn run_tui(
                         ) {
                             Ok(rt) => {
                                 cli.runtime = rt;
-                                let mut st = tui_state.lock().unwrap();
+                                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                                 st.tokens_in = 0;
                                 st.tokens_out = 0;
                                 st.push_exec(tui::ExecBlock::SystemMsg(format!(
@@ -1904,7 +1904,7 @@ fn run_tui(
 
         // Show elapsed time for non-cancelled turns
         if !was_cancelled && turn_secs > 0 {
-            let mut state = tui_state.lock().unwrap();
+            let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
             state.push_exec(tui::ExecBlock::WorkedFor(turn_secs));
             
             // Track total active time and estimate breakdown (API 70% / Tool 30% as heuristic)
