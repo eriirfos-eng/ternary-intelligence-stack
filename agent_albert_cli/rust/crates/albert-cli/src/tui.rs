@@ -500,14 +500,10 @@ impl TuiState {
     pub fn input_backspace(&mut self) {
         self.paste_line_count = None;
         if self.cursor > 0 {
-            let pos = self
-                .input
-                .char_indices()
-                .nth(self.cursor - 1)
-                .map(|(i, _)| i)
-                .unwrap();
-            self.input.remove(pos);
-            self.cursor -= 1;
+            if let Some((pos, _)) = self.input.char_indices().nth(self.cursor - 1) {
+                self.input.remove(pos);
+                self.cursor -= 1;
+            }
         }
     }
 
@@ -515,13 +511,9 @@ impl TuiState {
         self.paste_line_count = None;
         let len = self.input.chars().count();
         if self.cursor < len {
-            let pos = self
-                .input
-                .char_indices()
-                .nth(self.cursor)
-                .map(|(i, _)| i)
-                .unwrap();
-            self.input.remove(pos);
+            if let Some((pos, _)) = self.input.char_indices().nth(self.cursor) {
+                self.input.remove(pos);
+            }
         }
     }
 
@@ -1178,7 +1170,7 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     render_footer(f, layout[idx], state);
 
     if let Some(approval_arc) = &state.awaiting_tool_approval {
-        if let Some(approval) = &*approval_arc.lock().unwrap() {
+        if let Some(approval) = &*approval_arc.lock().unwrap_or_else(|p| p.into_inner()) {
             let area = centered_rect(60, 40, f.area());
             render_tool_approval_modal(f, area, &approval.name, &approval.input);
         }
@@ -2542,7 +2534,7 @@ impl TuiApp {
                 // Draw if enough time has passed since the last frame.
                 if last_draw.elapsed() >= DRAW_INTERVAL {
                     {
-                        let state = self.state.lock().unwrap();
+                        let state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         terminal.draw(|f| render(f, &state))?;
                     }
                     last_draw = Instant::now();
@@ -2563,7 +2555,7 @@ impl TuiApp {
                         // voice_toggle: true=start recording, false=stop recording, None=no change
                         let mut voice_toggle: Option<bool> = None;
                         {
-                            let mut state = self.state.lock().unwrap();
+                            let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                             let items = popup_items(&state.input);
                             let has_popup = !items.is_empty();
 
@@ -2903,9 +2895,9 @@ impl TuiApp {
                         if let Some(text) = submit_text {
                             let trimmed = text.trim();
                             if trimmed == "/help" || trimmed == "/?" {
-                                self.state.lock().unwrap().help_open = true;
+                                self.state.lock().unwrap_or_else(|p| p.into_inner()).help_open = true;
                             } else {
-                                self.state.lock().unwrap().history_push(&text);
+                                self.state.lock().unwrap_or_else(|p| p.into_inner()).history_push(&text);
                                 let _ = self.submit_tx.send(text);
                             }
                         }
@@ -2920,20 +2912,20 @@ impl TuiApp {
                                     .spawn()
                                 {
                                     Ok(child) => {
-                                        *self.voice_process.lock().unwrap() = Some(child);
+                                        *self.voice_process.lock().unwrap_or_else(|p| p.into_inner()) = Some(child);
                                     }
                                     Err(_) => {
                                         // arecord not available
                                         let _ = self.event_tx.send(TuiEvent::VoiceError(
                                             "voice: arecord not found (install alsa-utils)".to_string(),
                                         ));
-                                        self.state.lock().unwrap().is_recording = false;
+                                        self.state.lock().unwrap_or_else(|p| p.into_inner()).is_recording = false;
                                     }
                                 }
                             }
                             Some(false) => {
                                 // Stop recording and transcribe
-                                if let Some(mut child) = self.voice_process.lock().unwrap().take() {
+                                if let Some(mut child) = self.voice_process.lock().unwrap_or_else(|p| p.into_inner()).take() {
                                     let _ = child.kill();
                                     let _ = child.wait();
                                 }
@@ -2967,7 +2959,7 @@ impl TuiApp {
 
                     // ── agent events ──────────────────────────────────────────
                     Some(TuiEvent::AgentEvent(ev)) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         match ev {
                             AssistantEvent::TextDelta(delta) => {
                                 // Filter Empty Deltas: Ignore whitespace-only or empty events.
@@ -3046,7 +3038,7 @@ impl TuiApp {
 
                     // ── HITL ──────────────────────────────────────────────────
                     Some(TuiEvent::ToolApprovalRequestSync { id, name, input, tx }) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         state.awaiting_tool_approval = Some(Arc::new(Mutex::new(Some(ToolApprovalState {
                             _id: id,
                             name,
@@ -3055,9 +3047,9 @@ impl TuiApp {
                         }))));
                     }
                     Some(TuiEvent::ToolApprovalResponse { approved, feedback }) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         if let Some(approval_arc) = state.awaiting_tool_approval.take() {
-                            if let Some(approval) = approval_arc.lock().unwrap().take() {
+                            if let Some(approval) = approval_arc.lock().unwrap_or_else(|p| p.into_inner()).take() {
                                 let decision = if approved {
                                     match feedback {
                                         Some(new_input) => runtime::PermissionPromptDecision::AllowWithEdits { new_input },
@@ -3100,11 +3092,11 @@ impl TuiApp {
 
                     // ── voice transcription result ────────────────────────────
                     Some(TuiEvent::VoiceTranscribing) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         state.voice_transcribing = true;
                     }
                     Some(TuiEvent::VoiceText(text)) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         state.is_recording = false;
                         state.voice_transcribing = false;
                         for ch in text.trim().chars() {
@@ -3112,7 +3104,7 @@ impl TuiApp {
                         }
                     }
                     Some(TuiEvent::VoiceError(msg)) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         state.is_recording = false;
                         state.voice_transcribing = false;
                         state.push_exec(ExecBlock::SystemMsg(msg));
@@ -3120,7 +3112,7 @@ impl TuiApp {
 
                     // ── bracketed paste ───────────────────────────────────────
                     Some(TuiEvent::PasteText(text)) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         let line_count = text.lines().count();
                         if line_count > 1 || text.chars().count() > 2000 {
                             // Multi-line paste: store raw, show compact badge in render_input.
@@ -3142,17 +3134,17 @@ impl TuiApp {
                     }
 
                     Some(TuiEvent::ScrollUp) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         state.scroll = state.scroll.saturating_add(5);
                     }
                     Some(TuiEvent::ScrollDown) => {
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                         state.scroll = state.scroll.saturating_sub(5);
                     }
 
                     Some(TuiEvent::Tick) | Some(TuiEvent::Resume) => {
                         // Tick fires at 100ms — redraws the screen (spinner, timer).
-                        let mut state = self.state.lock().unwrap();
+                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
 
                         // Advance spine animation frame when working (cycles │ ╎ ┆ ┊ at ~2Hz)
                         if state.working {
@@ -3189,7 +3181,7 @@ impl TuiApp {
                     Some(TuiEvent::QuitWithReport) => {
                         // Show report card and wait for any keypress before exiting
                         {
-                            let state = self.state.lock().unwrap();
+                            let state = self.state.lock().unwrap_or_else(|p| p.into_inner());
                             terminal.draw(|f| render_report_card(f, &state))?;
                         }
                         // Drain any pending keys then wait for a fresh one
