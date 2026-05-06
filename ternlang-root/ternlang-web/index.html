@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="assets/ternlang_logo_notext.png">
   <link rel="shortcut icon" href="assets/ternlang_logo_notext.png">
   <link rel="canonical" href="https://ternlang.com/" />
@@ -176,6 +176,26 @@
     details.learn-more[open] summary::before { transform: rotate(90deg); }
     details.learn-more .learn-body { margin-top: 0.6rem; padding: 0.75rem; background: rgba(0,0,0,0.25); border-left: 2px solid rgba(0,245,196,0.25); border-radius: 0 6px 6px 0; font-size: 0.75rem; line-height: 1.65; color: rgb(var(--theme-text)); }
     [data-theme="light"] details.learn-more .learn-body { background: rgba(0,0,0,0.05); }
+
+    /* ── Mobile: stack pages vertically ───────────────────────────────────── */
+    @media (max-width: 1023px) {
+      #page-slider {
+        display: block !important;
+        width: 100% !important;
+        transform: none !important;
+        transition: none !important;
+        overflow-x: hidden;
+      }
+      .slide-page {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        flex-shrink: unset !important;
+        overflow-x: hidden;
+      }
+      /* Replace bottom dot nav with a sticky scroll-to-top bar */
+      #mobile-pagenav { display: none !important; }
+    }
   </style>
 </head>
 <body class="bg-t_bg text-t_text antialiased">
@@ -1448,12 +1468,8 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
 
   </div>
 
-  <!-- Mobile bottom page navigator (hidden on desktop) -->
-  <nav id="mobile-pagenav" class="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-t_bg/95 backdrop-blur-xl border-t border-t_border px-4 py-3 flex items-center justify-between gap-2">
-    <button id="nav-prev" onclick="showPage(currentPage - 1)" class="w-10 h-8 flex items-center justify-center text-t_muted hover:text-t_teal transition-colors font-black text-xl leading-none select-none" aria-label="Previous page">←</button>
-    <div class="flex items-center gap-1.5 flex-1 justify-center" id="nav-dots"></div>
-    <button id="nav-next" onclick="showPage(currentPage + 1)" class="w-10 h-8 flex items-center justify-center text-t_muted hover:text-t_teal transition-colors font-black text-xl leading-none select-none" aria-label="Next page">→</button>
-  </nav>
+  <!-- Mobile scroll-to-top bar (hidden on desktop, hidden via CSS on mobile too since we use vertical layout) -->
+  <div id="mobile-pagenav" class="hidden"></div>
 
   <!-- Footer -->
   <footer class="relative z-10 bg-[#020205] py-20 px-6 border-t border-t_border text-center">
@@ -1481,38 +1497,35 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
     const TOTAL_PAGES = 10;
     const PAGE_NAMES = ['Home','Albert','Translator','Audit','Library','MCP','Benchmarks','Architecture','Pricing','TernGround'];
 
+    const isMobile = () => window.innerWidth < 1024;
+
     function updateMobileNav() {
-      const dots = document.getElementById('nav-dots');
-      if (!dots) return;
-      dots.innerHTML = PAGE_NAMES.map((name, i) =>
-        `<button onclick="showPage(${i})" title="${name}" style="transition:all .2s" class="rounded-full ${i === currentPage ? 'bg-t_teal' : 'bg-t_border hover:bg-t_muted'}" style="width:${i === currentPage ? '20px' : '8px'};height:8px;"></button>`
-      ).join('');
-      // Use inline style for dynamic width since Tailwind can't do dynamic classes
-      dots.querySelectorAll('button').forEach((btn, i) => {
-        btn.style.width = i === currentPage ? '20px' : '8px';
-        btn.style.height = '8px';
-        btn.style.flexShrink = '0';
-      });
-      const prev = document.getElementById('nav-prev');
-      const next = document.getElementById('nav-next');
-      if (prev) prev.style.opacity = currentPage === 0 ? '0.3' : '1';
-      if (next) next.style.opacity = currentPage === TOTAL_PAGES - 1 ? '0.3' : '1';
+      // No-op on mobile (vertical layout, no dot nav)
     }
 
     function showPage(index) {
       currentPage = Math.max(0, Math.min(index, TOTAL_PAGES - 1));
-      document.getElementById('page-slider').style.transform = `translateX(-${currentPage * 100}vw)`;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      updateMobileNav();
+      if (isMobile()) {
+        // On mobile: pages are stacked vertically — scroll to the right one
+        const pages = document.querySelectorAll('.slide-page');
+        if (pages[currentPage]) {
+          // Offset for the fixed top nav
+          const top = pages[currentPage].getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      } else {
+        document.getElementById('page-slider').style.transform = `translateX(-${currentPage * 100}vw)`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
-    // Init nav on load
+    // Init
     document.addEventListener('DOMContentLoaded', updateMobileNav);
-    // Fallback in case DOMContentLoaded already fired
     if (document.readyState !== 'loading') updateMobileNav();
 
-    // SWIPE GESTURE SUPPORT (mobile)
+    // SWIPE GESTURE — desktop only
     (function() {
+      if (isMobile()) return;
       const slider = document.getElementById('page-slider');
       let touchStartX = 0, touchStartY = 0;
       slider.addEventListener('touchstart', (e) => {
