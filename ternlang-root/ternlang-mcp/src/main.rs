@@ -1,26 +1,50 @@
-/// ternlang-mcp — Model Context Protocol server
+#![recursion_limit = "512"]
+
+/// ternlang-mcp — Model Context Protocol server (34 tools)
 ///
 /// Turns any binary AI agent into a ternary decision engine.
 /// Transport: JSON-RPC 2.0 over stdio (MCP standard).
 ///
-/// Tools exposed:
+/// Core trit primitives:
 ///   trit_decide           — scalar ternary decision: evidence[] → reject/tend/affirm + confidence
 ///   trit_vector           — multi-dimensional evidence aggregation with named dimensions + weights
 ///   trit_consensus        — consensus(a, b) → ternary result
 ///   trit_eval             — evaluate a trit expression string
-///   ternlang_run          — compile + run a .tern snippet
-///   quantize_weights      — f32 array → ternary weights
-///   sparse_benchmark      — run sparse vs dense matmul, report skip rate
 ///   trit_debate           — two competing claims → 3-way verdict with tension score
 ///   trit_uncertainty_map  — annotate any text with trit signals per sentence/paragraph
 ///   trit_calibrate        — AI decision log → binary habituation report + calibration score
 ///   trit_translate        — Python/SQL/JSON rules → .tern equivalent with hold zones injected
 ///   trit_eco_check        — human trit + eco trit → synthesise tension as tend when they diverge
 ///   trit_audit            — full TernAudit: binary ratio, EU AI Act heuristic, flagged decisions
-///   llb_check             — LLB blacklist check: is this path protected?
-///   llb_classify          — LLB safety tier: T0/READ → T1/CREATE → T2/MODIFY → T3/DELETE
-///   llb_validate          — LLB Gate 1 preflight: authorize a mutation request (no write)
-///   llb_write_safe        — LLB full atomic write: Gate1 → [snapshot] → write → Gate2 IOCC
+///   trit_upgrade          — feature map and tier upgrade recommendation
+///   trit_compress         — context compression by information density scoring
+///   trit_triage           — relevance prioritisation: word-overlap → action/hold/drop queue
+///   trit_plan             — goal decomposition into scored subtasks with hold queue
+///   trit_factcheck        — sub-claim decomposition and ternary evidence scoring
+/// BET VM:
+///   ternlang_run          — compile + run a .tern snippet
+///   quantize_weights      — f32 array → ternary weights
+///   sparse_benchmark      — run sparse vs dense matmul, report skip rate
+/// MoE-13 orchestration:
+///   moe_orchestrate       — route query through 13-expert pool, return aggregate verdict
+///   moe_deliberate        — EMA deliberation engine: converge scalar toward target confidence
+///   moe_full              — complete orchestration trace with all 13 expert voices
+/// Three-layer ternary memory:
+///   trit_mem_write        — write key/value to working|session|core layer (TTL + trit_bias)
+///   trit_mem_read         — attention-scored retrieval: key×0.35 + value×0.55 + bias×0.10
+///   trit_mem_consolidate  — promotion cycle: working→session→core, evict below threshold
+///   trit_mem_stats        — layer health report: count, avg priority, trit distribution
+///   trit_mem_compress     — sparsity compression: evict zero-trit low-priority entries
+/// Utility / standards:
+///   trit_action_gate      — multi-dimensional hard-block safety gate
+///   get_industrial_standards — T-TOKEN, T-KV-CACHE, T-Fi, T-HAL, T-BIO standard specs
+///   audit_ternary_logic   — scan code for binary habituation vs triadic fluency
+///   tsql_join             — triadic record-similarity JOIN (cosine → trit label)
+/// Last Look Back (LLB) filesystem gate:
+///   llb_check             — blacklist check: is this path protected?
+///   llb_classify          — safety tier: T0/READ → T1/CREATE → T2/MODIFY → T3/DELETE
+///   llb_validate          — Gate 1 preflight: authorize a mutation request (no write)
+///   llb_write_safe        — full atomic write: Gate1 → [snapshot] → write → Gate2 IOCC
 
 use std::io::{self, BufRead, Write};
 use serde::{Deserialize, Serialize};
@@ -1312,6 +1336,585 @@ fn tool_llb_write_safe(params: &Value) -> Result<Value, String> {
     }
 }
 
+// ─── Tool: trit_upgrade ──────────────────────────────────────────────────────
+//
+// Feature map across Community / Pro / Industrial / Enterprise tiers.
+// Returns tier comparison and upgrade recommendation based on requested features.
+
+fn tool_trit_upgrade(params: &Value) -> Result<Value, String> {
+    let requested: Vec<&str> = match params["features"].as_array() {
+        Some(arr) => arr.iter().filter_map(|v| v.as_str()).collect(),
+        None => vec![],
+    };
+    let current = params["current_tier"].as_str().unwrap_or("community");
+
+    let needs_enterprise = requested.iter().any(|f| ["on_premise","fpga","custom_sla","masterwork_tier4"].contains(f));
+    let needs_industrial = requested.iter().any(|f| ["qnn","t_hal","sec","tern_audit_full","masterwork_tier3"].contains(f));
+    let needs_pro        = requested.iter().any(|f| ["rest_api","server_memory","trit_audit","masterwork_tier2"].contains(f));
+
+    let (rec_tier, rec_price, trit): (&str, &str, i8) = if needs_enterprise {
+        ("Enterprise", "From €2,500/month", 0)
+    } else if needs_industrial {
+        ("Industrial", "€349/month", 0)
+    } else if needs_pro {
+        ("Pro Standard", "€99/month", 0)
+    } else {
+        ("Community", "Free", 1)
+    };
+
+    let label = if trit == 1 { "affirm (current tier sufficient)" } else { "tend (upgrade recommended)" };
+
+    Ok(json!({
+        "current_tier":      current,
+        "recommended_tier":  rec_tier,
+        "recommended_price": rec_price,
+        "trit":  trit,
+        "label": label,
+        "tiers": [
+            { "name": "Community",    "price": "Free (LGPL-3.0)",        "mcp_tools": 34, "highlights": ["All 34 MCP tools", "BET VM", "REPL", "MoE-13 orchestration", "28,500+ open .tern modules"] },
+            { "name": "Pro Standard", "price": "€99/month (BSL-1.1)",    "highlights": ["REST API", "server-side memory", "Tier 2 Masterwork modules", "trit_audit full suite"] },
+            { "name": "Industrial",   "price": "€349/month (BSL-1.1)",   "highlights": ["QNN", "T-HAL", "SEC", "TernAudit", "Tier 3 Masterwork modules"] },
+            { "name": "Enterprise",   "price": "From €2,500/month",      "highlights": ["On-premise", "FPGA", "custom SLA", "Tier 4 Masterwork modules", "dedicated engineering"] }
+        ],
+        "upgrade_url": "https://ternlang.com/activate"
+    }))
+}
+
+// ─── Tool: trit_mem_write ────────────────────────────────────────────────────
+//
+// Three-layer memory write: working (TTL 5m) / session (TTL 1h) / core (TTL 24h).
+// trit_bias annotates the entry's ternary priority: +1=affirm, 0=hold, -1=reject.
+
+fn tool_trit_mem_write(params: &Value) -> Result<Value, String> {
+    let key   = params["key"].as_str().ok_or("key must be a string")?;
+    let value = params["value"].as_str().ok_or("value must be a string")?;
+    let layer = params["layer"].as_str().unwrap_or("working");
+    if !["working","session","core"].contains(&layer) {
+        return Err(format!("layer must be working|session|core, got '{}'", layer));
+    }
+    let trit_bias = {
+        let v = params["trit_bias"].as_i64().unwrap_or(0);
+        if ![-1i64,0,1].contains(&v) { return Err("trit_bias must be -1, 0, or 1".into()); }
+        v as i8
+    };
+    let ttl_default: u64 = match layer { "core" => 86400, "session" => 3600, _ => 300 };
+    let ttl        = params["ttl_seconds"].as_u64().unwrap_or(ttl_default);
+    let base_p: f32 = match layer { "core" => 0.9, "session" => 0.6, _ => 0.3 };
+    let priority   = (base_p + trit_bias as f32 * 0.05).min(1.0).max(0.0);
+    let bias_label = if trit_bias > 0 { "affirm" } else if trit_bias < 0 { "reject" } else { "tend" };
+
+    Ok(json!({
+        "entry": {
+            "key": key, "value": value, "layer": layer,
+            "trit_bias": trit_bias, "bias_label": bias_label,
+            "ttl_seconds": ttl,
+            "priority": (priority * 1000.0).round() / 1000.0,
+        },
+        "status": "written",
+        "summary": format!("Wrote '{}' to {} layer (TTL {}s, priority {:.3}, bias: {})", key, layer, ttl, priority, bias_label)
+    }))
+}
+
+// ─── Tool: trit_mem_read ─────────────────────────────────────────────────────
+//
+// Ternary attention read. Score = key_overlap×0.35 + value_overlap×0.55 + trit_bias×0.10
+
+fn tool_trit_mem_read(params: &Value) -> Result<Value, String> {
+    let query    = params["query"].as_str().ok_or("query must be a string")?;
+    let memories = params["memories"].as_array().ok_or("memories must be an array")?;
+    let top_k    = params["top_k"].as_u64().unwrap_or(5) as usize;
+
+    let q_words: Vec<String> = query.split_whitespace().map(|w| w.to_lowercase()).collect();
+
+    let mut scored: Vec<(usize, f32)> = memories.iter().enumerate().map(|(i, m)| {
+        let overlap = |text: &str| -> f32 {
+            if q_words.is_empty() || text.is_empty() { return 0.0; }
+            let lower = text.to_lowercase();
+            q_words.iter().filter(|w| lower.contains(w.as_str())).count() as f32 / q_words.len() as f32
+        };
+        let key_ov  = overlap(m["key"].as_str().unwrap_or(""));
+        let val_ov  = overlap(m["value"].as_str().unwrap_or(""));
+        let tb_norm = (m["trit_bias"].as_i64().unwrap_or(0) as f32 + 1.0) / 2.0;
+        (i, key_ov * 0.35 + val_ov * 0.55 + tb_norm * 0.10)
+    }).collect();
+
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    scored.truncate(top_k);
+
+    let matches: Vec<Value> = scored.iter().map(|(i, score)| {
+        let m  = &memories[*i];
+        let tb = m["trit_bias"].as_i64().unwrap_or(0) as i8;
+        json!({
+            "key":       m["key"],
+            "value":     m["value"],
+            "layer":     m.get("layer").unwrap_or(&Value::Null),
+            "trit_bias": tb,
+            "label":     if tb > 0 { "affirm" } else if tb < 0 { "reject" } else { "tend" },
+            "score":     (score * 1000.0).round() / 1000.0,
+        })
+    }).collect();
+
+    Ok(json!({
+        "query":    query,
+        "searched": memories.len(),
+        "returned": matches.len(),
+        "matches":  matches,
+        "scoring_formula": "key_overlap×0.35 + value_overlap×0.55 + trit_bias_norm×0.10"
+    }))
+}
+
+// ─── Tool: trit_mem_consolidate ──────────────────────────────────────────────
+//
+// Memory promotion cycle: working→session (priority ≥ promote_working_threshold),
+// session→core (priority ≥ promote_session_threshold). Evicts below evict_threshold.
+
+fn tool_trit_mem_consolidate(params: &Value) -> Result<Value, String> {
+    let pw_thr = params["promote_working_threshold"].as_f64().unwrap_or(0.5) as f32;
+    let ps_thr = params["promote_session_threshold"].as_f64().unwrap_or(0.8) as f32;
+    let ev_thr = params["evict_threshold"].as_f64().unwrap_or(0.1) as f32;
+
+    let working_in = params["working"].as_array().cloned().unwrap_or_default();
+    let session_in = params["session"].as_array().cloned().unwrap_or_default();
+    let core_in    = params["core"].as_array().cloned().unwrap_or_default();
+
+    let prio = |m: &Value| m["priority"].as_f64().unwrap_or(0.3) as f32;
+
+    let mut promoted_to_session: Vec<Value> = Vec::new();
+    let mut promoted_to_core:    Vec<Value> = Vec::new();
+    let mut evicted:             Vec<Value> = Vec::new();
+    let mut working_out:         Vec<Value> = Vec::new();
+    let mut session_out:         Vec<Value> = Vec::new();
+    let mut core_out = core_in;
+
+    for m in &working_in {
+        let p = prio(m);
+        if p < ev_thr {
+            evicted.push(json!({ "key": m["key"], "from": "working", "reason": "below evict threshold" }));
+        } else if p >= pw_thr {
+            promoted_to_session.push(m.clone());
+        } else {
+            working_out.push(m.clone());
+        }
+    }
+    for m in &session_in {
+        let p = prio(m);
+        if p < ev_thr {
+            evicted.push(json!({ "key": m["key"], "from": "session", "reason": "below evict threshold" }));
+        } else if p >= ps_thr {
+            promoted_to_core.push(m.clone());
+        } else {
+            session_out.push(m.clone());
+        }
+    }
+    session_out.extend(promoted_to_session.clone());
+    core_out.extend(promoted_to_core.clone());
+
+    Ok(json!({
+        "working": working_out,
+        "session": session_out,
+        "core":    core_out,
+        "cycle": {
+            "promoted_to_session": promoted_to_session.len(),
+            "promoted_to_core":    promoted_to_core.len(),
+            "evicted":             evicted.len(),
+            "evicted_entries":     evicted,
+        },
+        "summary": format!(
+            "Cycle: {} → session, {} → core, {} evicted",
+            promoted_to_session.len(), promoted_to_core.len(), evicted.len()
+        )
+    }))
+}
+
+// ─── Tool: trit_mem_stats ────────────────────────────────────────────────────
+
+fn tool_trit_mem_stats(params: &Value) -> Result<Value, String> {
+    let working = params["working"].as_array().cloned().unwrap_or_default();
+    let session = params["session"].as_array().cloned().unwrap_or_default();
+    let core    = params["core"].as_array().cloned().unwrap_or_default();
+
+    let layer_stats = |entries: &Vec<Value>, name: &str| -> Value {
+        let n = entries.len();
+        if n == 0 {
+            return json!({ "layer": name, "count": 0, "avg_priority": 0.0,
+                            "trit_distribution": {"affirm":0,"tend":0,"reject":0}, "health": "empty" });
+        }
+        let avg_p: f32 = entries.iter().map(|m| m["priority"].as_f64().unwrap_or(0.3) as f32).sum::<f32>() / n as f32;
+        let affirm = entries.iter().filter(|m| m["trit_bias"].as_i64().unwrap_or(0) > 0).count();
+        let reject = entries.iter().filter(|m| m["trit_bias"].as_i64().unwrap_or(0) < 0).count();
+        let tend   = n - affirm - reject;
+        let health = if avg_p >= 0.7 { "affirm" } else if avg_p >= 0.4 { "tend" } else { "reject" };
+        json!({
+            "layer": name, "count": n,
+            "avg_priority": (avg_p * 1000.0).round() / 1000.0,
+            "trit_distribution": { "affirm": affirm, "tend": tend, "reject": reject },
+            "health": health
+        })
+    };
+
+    let total = working.len() + session.len() + core.len();
+    Ok(json!({
+        "total_entries": total,
+        "working": layer_stats(&working, "working"),
+        "session": layer_stats(&session, "session"),
+        "core":    layer_stats(&core, "core"),
+        "summary": format!("{} total: {} working / {} session / {} core", total, working.len(), session.len(), core.len())
+    }))
+}
+
+// ─── Tool: trit_mem_compress ─────────────────────────────────────────────────
+//
+// Ternary sparsity compression: zero-trit + low-priority entries are evicted,
+// shrinking the memory footprint while preserving high-signal entries.
+
+fn tool_trit_mem_compress(params: &Value) -> Result<Value, String> {
+    let memories = params["memories"].as_array().ok_or("memories must be an array")?;
+    let threshold = params["sparsity_threshold"].as_f64().unwrap_or(0.3) as f32;
+
+    let mut kept:       Vec<&Value> = Vec::new();
+    let mut compressed: Vec<Value>  = Vec::new();
+
+    for m in memories {
+        let tb = m["trit_bias"].as_i64().unwrap_or(0);
+        let p  = m["priority"].as_f64().unwrap_or(0.5) as f32;
+        if tb == 0 && p < threshold {
+            compressed.push(json!({ "key": m["key"], "reason": "zero-trit hold with low priority" }));
+        } else {
+            kept.push(m);
+        }
+    }
+
+    let original = memories.len();
+    let comp_n   = compressed.len();
+    let sparsity = comp_n as f32 / original.max(1) as f32;
+
+    Ok(json!({
+        "original_count":    original,
+        "kept_count":        kept.len(),
+        "compressed_count":  comp_n,
+        "sparsity_achieved": (sparsity * 1000.0).round() / 1000.0,
+        "kept":              kept,
+        "compressed":        compressed,
+        "summary": format!(
+            "Compressed {}/{} entries ({:.1}% sparsity). {} retained.",
+            comp_n, original, sparsity * 100.0, kept.len()
+        )
+    }))
+}
+
+// ─── Tool: trit_compress ─────────────────────────────────────────────────────
+//
+// Ternary context compression: score text chunks by information density (TTR),
+// keep the top-k highest-signal chunks for context-window efficiency.
+
+fn tool_trit_compress(params: &Value) -> Result<Value, String> {
+    let text        = params["text"].as_str().unwrap_or("");
+    let max_chunks  = params["max_chunks"].as_u64().unwrap_or(10) as usize;
+    let granularity = params["granularity"].as_str().unwrap_or("sentence");
+
+    let raw_chunks: Vec<&str> = if !text.is_empty() {
+        if granularity == "paragraph" {
+            text.split("\n\n").map(str::trim).filter(|s| !s.is_empty()).collect()
+        } else {
+            text.split(|c: char| c == '.' || c == '?' || c == '!')
+                .map(str::trim).filter(|s| !s.is_empty()).collect()
+        }
+    } else {
+        match params["chunks"].as_array() {
+            Some(arr) => arr.iter().filter_map(|v| v.as_str()).collect(),
+            None      => return Err("provide 'text' (string) or 'chunks' (array of strings)".into()),
+        }
+    };
+
+    if raw_chunks.is_empty() {
+        return Err("no chunks to compress".into());
+    }
+
+    let density = |chunk: &str| -> f32 {
+        let words: Vec<&str> = chunk.split_whitespace().collect();
+        if words.is_empty() { return 0.0; }
+        let unique = words.iter().map(|w| w.to_lowercase()).collect::<std::collections::HashSet<_>>();
+        let ttr    = unique.len() as f32 / words.len() as f32;
+        let len_b  = (words.len().min(20) as f32 / 20.0) * 0.2;
+        (ttr * 0.8 + len_b).min(1.0)
+    };
+
+    let mut scored: Vec<(&str, f32, i8)> = raw_chunks.iter().map(|&c| {
+        let s = density(c);
+        let t: i8 = if s > 0.6 { 1 } else if s > 0.35 { 0 } else { -1 };
+        (c, s, t)
+    }).collect();
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    let total  = scored.len();
+    let chunks: Vec<Value> = scored.iter().take(max_chunks).map(|(c, s, t)| json!({
+        "chunk":         c,
+        "density_score": (s * 1000.0).round() / 1000.0,
+        "trit":  t,
+        "label": if *t > 0 { "affirm (high density)" } else if *t == 0 { "tend (medium)" } else { "reject (low density)" },
+    })).collect();
+
+    let pruned = total.saturating_sub(max_chunks);
+    Ok(json!({
+        "total_chunks":       total,
+        "kept_chunks":        chunks.len(),
+        "pruned_chunks":      pruned,
+        "compression_ratio":  if total > 0 { (chunks.len() as f32 / total as f32 * 1000.0).round() / 1000.0 } else { 1.0 },
+        "chunks":             chunks,
+        "summary": format!("Compressed {} → {} chunks ({} pruned).", total, chunks.len().min(max_chunks), pruned)
+    }))
+}
+
+// ─── Tool: trit_triage ───────────────────────────────────────────────────────
+//
+// Ternary relevance prioritisation. Ranks items by word overlap with the query.
+// affirm = act on it; tend = hold for more context; reject = drop.
+
+fn tool_trit_triage(params: &Value) -> Result<Value, String> {
+    let query = params["query"].as_str().ok_or("query must be a string")?;
+    let items = params["items"].as_array().ok_or("items must be an array")?;
+    let thr_affirm = params["threshold_affirm"].as_f64().unwrap_or(0.4) as f32;
+    let thr_reject = params["threshold_reject"].as_f64().unwrap_or(0.15) as f32;
+
+    let q_words: Vec<String> = query.split_whitespace().map(|w| w.to_lowercase()).collect();
+
+    let overlap = |text: &str| -> f32 {
+        if q_words.is_empty() || text.is_empty() { return 0.0; }
+        let lower = text.to_lowercase();
+        q_words.iter().filter(|w| lower.contains(w.as_str())).count() as f32 / q_words.len() as f32
+    };
+
+    let mut scored: Vec<(usize, f32)> = items.iter().enumerate().map(|(i, item)| {
+        let text: String = if let Some(s) = item.as_str() {
+            s.to_string()
+        } else {
+            item.get("text").or_else(|| item.get("content")).or_else(|| item.get("label"))
+                .and_then(|v| v.as_str()).unwrap_or("").to_string()
+        };
+        (i, overlap(&text))
+    }).collect();
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    let result: Vec<Value> = scored.iter().enumerate().map(|(rank, (i, score))| {
+        let item  = &items[*i];
+        let trit: i8 = if *score >= thr_affirm { 1 } else if *score < thr_reject { -1 } else { 0 };
+        json!({
+            "rank":            rank + 1,
+            "item":            item,
+            "relevance_score": (score * 1000.0).round() / 1000.0,
+            "trit":  trit,
+            "label": if trit > 0 { "affirm (high relevance)" } else if trit == 0 { "tend (moderate)" } else { "reject (low relevance)" },
+        })
+    }).collect();
+
+    let affirm_n = result.iter().filter(|r| r["trit"] == 1).count();
+    let tend_n   = result.iter().filter(|r| r["trit"] == 0).count();
+    let reject_n = result.iter().filter(|r| r["trit"] == -1).count();
+
+    Ok(json!({
+        "query":   query,
+        "total":   items.len(),
+        "summary": { "affirm": affirm_n, "tend": tend_n, "reject": reject_n },
+        "items":   result,
+        "thresholds": { "affirm": thr_affirm, "reject": thr_reject }
+    }))
+}
+
+// ─── Tool: trit_plan ─────────────────────────────────────────────────────────
+//
+// Ternary task decomposition. Breaks a goal into scored subtasks.
+// High-confidence steps → affirm (action queue); low-confidence → tend (hold queue).
+
+fn tool_trit_plan(params: &Value) -> Result<Value, String> {
+    let goal      = params["goal"].as_str().ok_or("goal must be a string")?;
+    let context   = params["context"].as_str().unwrap_or("");
+    let max_steps = params["max_steps"].as_u64().unwrap_or(7) as usize;
+
+    let subtasks: Vec<(String, f32)> = if let Some(arr) = params["subtasks"].as_array() {
+        arr.iter().enumerate().map(|(i, s)| {
+            let label = s.as_str().map(|x| x.to_string())
+                .unwrap_or_else(|| s["label"].as_str().unwrap_or("task").to_string());
+            let default_conf = (0.9 - i as f32 * 0.08).max(0.1);
+            let conf = s["confidence"].as_f64().unwrap_or(default_conf as f64) as f32;
+            (label, conf.max(0.05).min(1.0))
+        }).take(max_steps).collect()
+    } else {
+        let gl = goal.to_lowercase();
+        let cx = context.to_lowercase();
+        let has_research = gl.contains("research") || gl.contains("analy") || cx.contains("unknown");
+        let has_impl     = gl.contains("implement") || gl.contains("build") || gl.contains("creat");
+        let has_test     = gl.contains("test") || gl.contains("valid");
+        let mut steps: Vec<(String, f32)> = vec![
+            ("Clarify goal and constraints".to_string(), 0.95),
+        ];
+        if has_research { steps.push(("Research and gather evidence".to_string(), 0.80)); }
+        steps.push(("Decompose into sub-components".to_string(), 0.85));
+        if has_impl { steps.push(("Implement core logic".to_string(), 0.75)); }
+        if has_test { steps.push(("Validate and test outputs".to_string(), 0.70)); }
+        steps.push(("Review and confirm quality".to_string(), 0.65));
+        steps.push(("Document and finalise".to_string(), 0.60));
+        steps.truncate(max_steps);
+        steps
+    };
+
+    let mut action_queue: Vec<Value> = Vec::new();
+    let mut hold_queue:   Vec<Value> = Vec::new();
+
+    for (label, conf) in &subtasks {
+        let trit: i8 = if *conf >= 0.7 { 1 } else if *conf >= 0.4 { 0 } else { -1 };
+        let entry = json!({
+            "task":       label,
+            "confidence": (conf * 1000.0).round() / 1000.0,
+            "trit":  trit,
+            "label": if trit > 0 { "affirm" } else if trit == 0 { "tend" } else { "reject" },
+        });
+        if trit >= 0 { action_queue.push(entry); } else { hold_queue.push(entry); }
+    }
+
+    let overall_conf = subtasks.iter().map(|(_, c)| c).sum::<f32>() / subtasks.len().max(1) as f32;
+    let overall_trit: i8 = if overall_conf >= 0.7 { 1 } else if overall_conf >= 0.4 { 0 } else { -1 };
+
+    Ok(json!({
+        "goal":                goal,
+        "context":             context,
+        "overall_trit":        overall_trit,
+        "overall_confidence":  (overall_conf * 1000.0).round() / 1000.0,
+        "action_queue":        action_queue,
+        "hold_queue":          hold_queue,
+        "summary": format!(
+            "Decomposed '{}' into {} steps: {} actionable, {} on hold",
+            goal, subtasks.len(), action_queue.len(), hold_queue.len()
+        )
+    }))
+}
+
+// ─── Tool: trit_factcheck ────────────────────────────────────────────────────
+//
+// Ternary claim verification. Decomposes a compound claim into sub-claims,
+// scores each against provided evidence, returns per-sub-claim trit verdicts.
+
+fn tool_trit_factcheck(params: &Value) -> Result<Value, String> {
+    let claim    = params["claim"].as_str().ok_or("claim must be a string")?;
+    let evidence: Vec<String> = match params["evidence"].as_array() {
+        Some(arr) => arr.iter().filter_map(|v| v.as_str().map(|s| s.to_lowercase())).collect(),
+        None => vec![],
+    };
+
+    let sub_claims: Vec<&str> = claim
+        .split(|c| c == '.' || c == ',' || c == ';')
+        .map(str::trim).filter(|s| s.len() > 8).collect();
+
+    let hedge_words  = ["maybe","possibly","could","might","unclear","uncertain","perhaps","seems","approximately","often","sometimes","suggested"];
+    let affirm_words = ["definitely","clearly","proven","confirmed","established","certainly","always","verified","demonstrates","shows"];
+    let refute_words = ["false","wrong","incorrect","impossible","never","debunked","refuted","contradicts","myth","invalid","denied"];
+
+    let score_sub = |sub: &str| -> (i8, f32) {
+        let lower = sub.to_lowercase();
+        let ev_support = evidence.iter().filter(|e| {
+            sub.split_whitespace().any(|w| e.contains(&w.to_lowercase()))
+        }).count();
+        let ev_signal: f32 = if !evidence.is_empty() {
+            ev_support as f32 / evidence.len() as f32
+        } else { 0.0 };
+        let ha = affirm_words.iter().filter(|w| lower.contains(*w)).count();
+        let hh = hedge_words.iter().filter(|w| lower.contains(*w)).count();
+        let hr = refute_words.iter().filter(|w| lower.contains(*w)).count();
+
+        if hr > ha || (!evidence.is_empty() && ev_signal < 0.1) {
+            (-1, (0.5 + ev_signal * 0.3).min(1.0))
+        } else if hh > ha || ev_signal < 0.3 {
+            (0,  (0.3 + ev_signal * 0.3).min(1.0))
+        } else {
+            (1,  (0.5 + ev_signal * 0.4).min(1.0))
+        }
+    };
+
+    let sub_results: Vec<Value> = sub_claims.iter().map(|sub| {
+        let (trit, conf) = score_sub(sub);
+        json!({
+            "sub_claim":  sub,
+            "trit":       trit,
+            "label":      if trit > 0 { "affirm" } else if trit < 0 { "reject" } else { "tend" },
+            "confidence": (conf * 1000.0).round() / 1000.0,
+        })
+    }).collect();
+
+    let overall_trit = if sub_results.is_empty() { 0i8 } else {
+        let sum: i64 = sub_results.iter().map(|r| r["trit"].as_i64().unwrap_or(0)).sum();
+        let mean = sum as f64 / sub_results.len() as f64;
+        if mean > 0.2 { 1 } else if mean < -0.2 { -1 } else { 0 }
+    };
+
+    Ok(json!({
+        "claim":          claim,
+        "evidence_count": evidence.len(),
+        "overall_trit":   overall_trit,
+        "overall_label":  if overall_trit > 0 { "affirm" } else if overall_trit < 0 { "reject" } else { "tend" },
+        "sub_claims":     sub_results,
+        "summary": format!(
+            "Claim split into {} sub-claims. Overall: {} ({})",
+            sub_claims.len(),
+            if overall_trit > 0 { "AFFIRM" } else if overall_trit < 0 { "REJECT" } else { "TEND" },
+            overall_trit
+        )
+    }))
+}
+
+// ─── Tool: moe_full ──────────────────────────────────────────────────────────
+//
+// Complete MoE-13 orchestration with full triad field and all 13 expert voices.
+// Extends moe_orchestrate with a detailed per-expert trace and expert summary.
+
+fn tool_moe_full(params: &Value) -> Result<Value, String> {
+    let query = params["query"].as_str().ok_or("query must be a string")?;
+    let evidence: Vec<f32> = match params["evidence"].as_array() {
+        Some(arr) => arr.iter().map(|v| v.as_f64().unwrap_or(0.0) as f32).collect(),
+        None      => vec![0.0f32; 6],
+    };
+
+    let mut orch   = TernMoeOrchestrator::with_standard_experts();
+    let result     = orch.orchestrate(query, &evidence);
+    let label      = match result.trit { 1 => "affirm", -1 => "reject", _ => "tend" };
+
+    let experts: Vec<Value> = result.verdicts.iter().map(|v| json!({
+        "expert_id":   v.expert_id,
+        "expert_name": v.expert_name,
+        "trit":        v.trit,
+        "label":       match v.trit { 1 => "affirm", -1 => "reject", _ => "tend" },
+        "confidence":  (v.confidence * 1000.0).round() / 1000.0,
+        "reasoning":   v.reasoning,
+    })).collect();
+
+    let affirm_n = result.verdicts.iter().filter(|v| v.trit == 1).count();
+    let reject_n = result.verdicts.iter().filter(|v| v.trit == -1).count();
+    let tend_n   = result.verdicts.iter().filter(|v| v.trit == 0).count();
+
+    Ok(json!({
+        "query":         query,
+        "trit":          result.trit,
+        "label":         label,
+        "confidence":    (result.confidence * 1000.0).round() / 1000.0,
+        "held":          result.held,
+        "safety_vetoed": result.safety_vetoed,
+        "temperature":   (result.temperature * 1000.0).round() / 1000.0,
+        "prompt_hint":   result.prompt_hint,
+        "triad_field": {
+            "synergy_weight": (result.triad_field.synergy_weight * 1000.0).round() / 1000.0,
+            "field":          result.triad_field.field.raw,
+            "is_amplifying":  result.triad_field.is_amplifying(),
+        },
+        "expert_vote_summary": { "affirm": affirm_n, "tend": tend_n, "reject": reject_n },
+        "experts": experts,
+        "routing_pair": result.pair.as_ref().map(|p| json!({
+            "expert_a":  p.expert_a,
+            "expert_b":  p.expert_b,
+            "relevance": (p.relevance * 1000.0).round() / 1000.0,
+            "synergy":   (p.synergy   * 1000.0).round() / 1000.0,
+            "combined":  (p.combined  * 1000.0).round() / 1000.0,
+        })),
+    }))
+}
+
 fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
     match name {
         "trit_decide"       => tool_trit_decide(params),
@@ -1337,6 +1940,17 @@ fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
         "llb_classify"             => tool_llb_classify(params),
         "llb_validate"             => tool_llb_validate(params),
         "llb_write_safe"           => tool_llb_write_safe(params),
+        "trit_upgrade"             => tool_trit_upgrade(params),
+        "trit_mem_write"           => tool_trit_mem_write(params),
+        "trit_mem_read"            => tool_trit_mem_read(params),
+        "trit_mem_consolidate"     => tool_trit_mem_consolidate(params),
+        "trit_mem_stats"           => tool_trit_mem_stats(params),
+        "trit_mem_compress"        => tool_trit_mem_compress(params),
+        "trit_compress"            => tool_trit_compress(params),
+        "trit_triage"              => tool_trit_triage(params),
+        "trit_plan"                => tool_trit_plan(params),
+        "trit_factcheck"           => tool_trit_factcheck(params),
+        "moe_full"                 => tool_moe_full(params),
         _ => Err(format!("unknown tool: {}", name)),
     }
 }
@@ -1763,6 +2377,160 @@ fn tools_list() -> Value {
                 },
                 "required": ["path", "content", "goal", "justification", "fallback"]
             }
+        },
+        {
+            "name": "trit_upgrade",
+            "description": "Feature map across Community / Pro / Industrial / Enterprise tiers. Pass your current_tier and a list of features you need; get back a ternary-scored upgrade recommendation and the full tier comparison table.",
+            "annotations": { "title": "Trit Upgrade — Tier Feature Map", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "current_tier": { "type": "string", "description": "Your current tier: community | pro | industrial | enterprise. Default: community." },
+                    "features":     { "type": "array", "items": { "type": "string" }, "description": "Features you want: rest_api, server_memory, trit_audit, qnn, t_hal, on_premise, fpga, custom_sla, etc." }
+                }
+            }
+        },
+        {
+            "name": "trit_mem_write",
+            "description": "Three-layer ternary memory write. Writes a key/value pair to the working (TTL 5m), session (TTL 1h), or core (TTL 24h) memory layer with a trit_bias annotation (+1 affirm / 0 hold / -1 reject) and computed priority score. Returns the structured entry for caller-managed state.",
+            "annotations": { "title": "Trit Mem Write — Three-Layer Memory Store", "readOnlyHint": false, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "key":          { "type": "string",  "description": "Memory key." },
+                    "value":        { "type": "string",  "description": "Memory value." },
+                    "layer":        { "type": "string",  "enum": ["working","session","core"], "description": "Memory layer. Default: working." },
+                    "trit_bias":    { "type": "integer", "enum": [-1,0,1], "description": "Ternary priority annotation. Default: 0 (hold)." },
+                    "ttl_seconds":  { "type": "integer", "description": "Override default TTL. Defaults: working=300, session=3600, core=86400." }
+                },
+                "required": ["key", "value"]
+            }
+        },
+        {
+            "name": "trit_mem_read",
+            "description": "Ternary attention memory read. Scores each memory entry against a query using: key_overlap×0.35 + value_overlap×0.55 + trit_bias_norm×0.10. Returns top-k matches ranked by attention score.",
+            "annotations": { "title": "Trit Mem Read — Ternary Attention Retrieval", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query":    { "type": "string",  "description": "Query string to match against memory entries." },
+                    "memories": { "type": "array",   "description": "Array of memory entries: [{key, value, layer?, trit_bias?}]." },
+                    "top_k":    { "type": "integer", "description": "Number of top results to return. Default: 5." }
+                },
+                "required": ["query", "memories"]
+            }
+        },
+        {
+            "name": "trit_mem_consolidate",
+            "description": "Memory promotion cycle. Promotes high-priority working entries to session, high-priority session entries to core. Evicts entries below the evict threshold. Pass in all three layer arrays; receive updated arrays plus a cycle report.",
+            "annotations": { "title": "Trit Mem Consolidate — Promotion Cycle", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "working":                    { "type": "array", "description": "Working layer entries (each with a 'priority' field)." },
+                    "session":                    { "type": "array", "description": "Session layer entries." },
+                    "core":                       { "type": "array", "description": "Core layer entries." },
+                    "promote_working_threshold":  { "type": "number", "description": "Priority ≥ this → promote working→session. Default: 0.5." },
+                    "promote_session_threshold":  { "type": "number", "description": "Priority ≥ this → promote session→core. Default: 0.8." },
+                    "evict_threshold":            { "type": "number", "description": "Priority < this → evict. Default: 0.1." }
+                }
+            }
+        },
+        {
+            "name": "trit_mem_stats",
+            "description": "Memory layer health report. Computes count, average priority, trit distribution, and health label (affirm/tend/reject) for each of the three memory layers.",
+            "annotations": { "title": "Trit Mem Stats — Layer Health Report", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "working": { "type": "array", "description": "Working layer entries." },
+                    "session": { "type": "array", "description": "Session layer entries." },
+                    "core":    { "type": "array", "description": "Core layer entries." }
+                }
+            }
+        },
+        {
+            "name": "trit_mem_compress",
+            "description": "Ternary sparsity compression of a memory layer. Zero-trit (tend) entries with priority below sparsity_threshold are evicted, reducing memory footprint while preserving high-signal entries. Returns kept and compressed entry lists.",
+            "annotations": { "title": "Trit Mem Compress — Sparsity Eviction", "readOnlyHint": false, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "memories":           { "type": "array",  "description": "Memory entries to compress (each with trit_bias and priority fields)." },
+                    "sparsity_threshold": { "type": "number", "description": "Priority threshold below which zero-trit entries are evicted. Default: 0.3." }
+                },
+                "required": ["memories"]
+            }
+        },
+        {
+            "name": "trit_compress",
+            "description": "Ternary context compression. Scores text chunks by information density (type-token ratio), keeps the top-k highest-signal chunks. Use to shrink large context windows without losing high-value content.",
+            "annotations": { "title": "Trit Compress — Context Window Compression", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "text":        { "type": "string",  "description": "Raw text to split and compress. Alternative to 'chunks'." },
+                    "chunks":      { "type": "array",   "items": { "type": "string" }, "description": "Pre-split text chunks. Alternative to 'text'." },
+                    "granularity": { "type": "string",  "enum": ["sentence","paragraph"], "description": "How to split 'text'. Default: sentence." },
+                    "max_chunks":  { "type": "integer", "description": "Maximum chunks to keep. Default: 10." }
+                }
+            }
+        },
+        {
+            "name": "trit_triage",
+            "description": "Ternary relevance prioritisation. Ranks an array of items by word-overlap with a query, assigns trit labels: affirm (high relevance — act), tend (moderate — hold), reject (low relevance — drop). Use to build a priority queue before multi-step reasoning.",
+            "annotations": { "title": "Trit Triage — Relevance Priority Queue", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query":             { "type": "string", "description": "The query or goal to rank items against." },
+                    "items":             { "type": "array",  "description": "Items to rank. Each can be a string or {text/content/label, ...}." },
+                    "threshold_affirm":  { "type": "number", "description": "Overlap score ≥ this → affirm. Default: 0.4." },
+                    "threshold_reject":  { "type": "number", "description": "Overlap score < this → reject. Default: 0.15." }
+                },
+                "required": ["query", "items"]
+            }
+        },
+        {
+            "name": "trit_plan",
+            "description": "Ternary task decomposition. Decomposes a goal into scored subtasks with trit-annotated action queues and hold queues. High-confidence steps (≥0.7) go to the action queue; low-confidence steps go to the hold queue. Accepts explicit subtask lists or uses a heuristic decomposition.",
+            "annotations": { "title": "Trit Plan — Goal Decomposition", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "goal":      { "type": "string",  "description": "The goal to decompose." },
+                    "context":   { "type": "string",  "description": "Optional context or constraints." },
+                    "subtasks":  { "type": "array",   "description": "Optional explicit subtasks: [{label: string, confidence?: number}]. Omit for auto-decomposition." },
+                    "max_steps": { "type": "integer", "description": "Maximum steps to generate. Default: 7." }
+                },
+                "required": ["goal"]
+            }
+        },
+        {
+            "name": "trit_factcheck",
+            "description": "Ternary claim verification. Decomposes a compound claim into sub-claims, scores each against provided evidence using keyword + overlap scoring, and returns per-sub-claim trit verdicts plus an overall ternary conclusion.",
+            "annotations": { "title": "Trit Factcheck — Sub-Claim Verification", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "claim":    { "type": "string", "description": "The compound claim to verify." },
+                    "evidence": { "type": "array",  "items": { "type": "string" }, "description": "Supporting or contradicting evidence strings. Omit if scoring by language alone." }
+                },
+                "required": ["claim"]
+            }
+        },
+        {
+            "name": "moe_full",
+            "description": "Complete MoE-13 orchestration with full triad field and all expert voices. Like moe_orchestrate but returns the complete per-expert reasoning trace, expert vote summary (affirm/tend/reject counts), and routing pair detail. Use when you need full transparency into how the 13-expert pool reached its verdict.",
+            "annotations": { "title": "MoE Full — Complete 13-Expert Orchestration Trace", "readOnlyHint": true, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query":    { "type": "string", "description": "The query or decision to route through all 13 experts." },
+                    "evidence": { "type": "array",  "items": { "type": "number" }, "description": "Optional 6-dim evidence vector [syntax, world_knowledge, reasoning, tool_use, persona, safety]. Default: all zeros." }
+                },
+                "required": ["query"]
+            }
         }
     ]})
 }
@@ -1782,7 +2550,7 @@ fn initialize_response() -> Value {
                     "apiKey": {
                         "type": "string",
                         "title": "API Key (optional)",
-                        "description": "Required for paid tiers. Obtain at https://ternlang.com/activate. Community tier (all 19 tools) is free without a key.",
+                        "description": "Required for paid tiers. Obtain at https://ternlang.com/activate. Community tier (all 34 tools) is free without a key.",
                         "x-smithery-secret": true
                     }
                 },
@@ -1793,7 +2561,7 @@ fn initialize_response() -> Value {
             "name":        "ternlang-mcp",
             "displayName": "Ternary Intelligence Stack",
             "version":     "0.4.0",
-            "description": "Turns binary AI agents into ternary decision engines. 23 tools across 5 layers: core trit primitives, BET VM, MoE-13 orchestration, EcoCore + Audit, and the Last Look Back (LLB) sovereign filesystem gate. Built by RFI-IRFOS (ZVR: 1015608684), Graz, Austria. EU AI Act Articles 13/14/15 compliant design.",
+            "description": "Turns binary AI agents into ternary decision engines. 34 tools across 6 layers: core trit primitives, BET VM, MoE-13 orchestration, three-layer ternary memory, EcoCore + Audit, and the Last Look Back (LLB) sovereign filesystem gate. Built by RFI-IRFOS (ZVR: 1015608684), Graz, Austria. EU AI Act Articles 13/14/15 compliant design.",
             "homepage":    "https://ternlang.com",
             "icon":        "https://ternlang.com/favicon.ico",
             "author": {
