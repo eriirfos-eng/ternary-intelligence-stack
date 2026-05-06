@@ -20,6 +20,10 @@ Simeon leads the architectural vision and research direction of the Ternary Inte
 |---|---|
 | Operational Lead · Lead Architect | Balanced Ternary Logic · Causal Routing · Systems Architecture · Compiler Design · ML Training |
 
+**Academic Background**
+- **MBA, Business Administration (Artificial Intelligence)** — strategic management, AI systems design, organisational leadership
+- **Matura, Business Informatics** — HAK Bregenz (Handelsakademie), Austria — formal grounding in business information systems, economics, and software engineering
+
 **Connect**
 - **LinkedIn:** [Simeon Kepp](https://www.linkedin.com/in/simeon-kepp/)
 - **Email:** s.kepp@ternlang.com
@@ -40,6 +44,9 @@ Nikoletta leads EU AI Act alignment, regulatory positioning, and international s
 | Role | Focus |
 |---|---|
 | Strategic Outreach · Regulatory Alignment · Fundraising | EU AI Act Compliance · International Relations · Partnerships · Lead Management · Social Media |
+
+**Academic Background**
+- **PTE University, Pécs, Hungary** (Pécsi Tudományegyetem) — University of Pécs
 
 **Connect**
 - **LinkedIn:** [Nikoletta Csonka](https://www.linkedin.com/in/csonikoletta/)
