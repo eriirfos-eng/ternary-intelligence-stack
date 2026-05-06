@@ -15,6 +15,8 @@ struct EvolutionManager {
     plateau_threshold: f32,
     mastery_threshold: f32,
     max_layers: usize,
+    surgery_cooldown: usize,
+    cooldown_remaining: usize,
 }
 
 impl EvolutionManager {
@@ -25,6 +27,8 @@ impl EvolutionManager {
             plateau_threshold: 0.02,
             mastery_threshold: 4.5,
             max_layers: 12,
+            surgery_cooldown: 20,  // epochs to ignore after any surgery
+            cooldown_remaining: 0,
         }
     }
 
@@ -33,11 +37,19 @@ impl EvolutionManager {
             self.loss_history.pop_front();
         }
         self.loss_history.push_back(loss);
+        if self.cooldown_remaining > 0 {
+            self.cooldown_remaining -= 1;
+        }
     }
 
     fn should_evolve(&self, current_layers: usize) -> bool {
         if current_layers >= self.max_layers { return false; }
         if self.loss_history.len() < self.history_len { return false; }
+        if self.cooldown_remaining > 0 {
+            println!("[evolution] cooldown active ({} epochs remaining) — skipping check",
+                self.cooldown_remaining);
+            return false;
+        }
 
         let latest = *self.loss_history.back().unwrap();
 
@@ -48,24 +60,23 @@ impl EvolutionManager {
         }
 
         let first = *self.loss_history.front().unwrap();
-        let diff = first - latest;
+        let diff = first - latest;  // positive = improving, negative = diverging
 
         if diff.abs() < self.plateau_threshold {
-            println!("--- PLATEAU EVOLUTION TRIGGERED (Stability {:.4} < {:.4} over {} epochs) ---",
+            println!("--- PLATEAU EVOLUTION TRIGGERED (Δ {:.4} < {:.4} over {} epochs) ---",
                 diff.abs(), self.plateau_threshold, self.history_len);
             return true;
         }
 
-        if diff < -0.1 {
-            println!("--- DIVERGENCE EVOLUTION TRIGGERED (Loss Rising: {:.4}) ---", diff);
-            return true;
-        }
+        // NOTE: no divergence trigger — post-surgery loss rise is normal and temporary.
+        // Expanding layers into a diverging model compounds the problem.
 
         false
     }
 
     fn reset_history(&mut self) {
         self.loss_history.clear();
+        self.cooldown_remaining = self.surgery_cooldown;
     }
 }
 
@@ -352,6 +363,7 @@ fn main() -> Result<()> {
         )?;
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, &device)?;
+            global_step = 0;  // restart cosine LR at base_lr after surgery
         }
     }
 }
