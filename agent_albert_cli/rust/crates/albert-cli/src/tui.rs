@@ -426,7 +426,7 @@ impl TuiState {
 
         // Suppress consecutive identical SystemMsg entries (e.g. repeated voice errors).
         if let ExecBlock::SystemMsg(ref msg) = block {
-            if let Some(ExecBlock::SystemMsg(ref last)) = self.exec_log.back() {
+            if let Some(ExecBlock::SystemMsg(last)) = self.exec_log.back() {
                 if last == msg {
                     return;
                 }
@@ -3171,7 +3171,7 @@ impl TuiApp {
                             
                             let mut appended = false;
                             if let Some(idx) = state.current_assistant_block_index {
-                                if let Some(ExecBlock::AgentText(ref mut s, _)) = state.exec_log.get_mut(idx) {
+                                if let Some(ExecBlock::AgentText(s, _)) = state.exec_log.get_mut(idx) {
                                     s.push_str(&chars);
                                     appended = true;
                                 }

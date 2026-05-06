@@ -2239,7 +2239,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-core"
-version = "1.3.5"
+version = "1.3.6"
 dependencies = [
  "ariadne",
  "logos",
@@ -2248,7 +2248,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ml"
-version = "1.3.5"
+version = "1.3.6"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2261,7 +2261,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ruvector"
-version = "1.3.5"
+version = "1.3.6"
 dependencies = [
  "anyhow",
  "rayon",
