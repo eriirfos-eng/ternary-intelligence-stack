@@ -42,3 +42,9 @@ llama32-1b.tern.json
 llama32-1b.tern.bin
 target/
 data/
+
+# Large model checkpoints — stored outside git (too large for GitHub)
+*.safetensors
+*.trit
+*.bin
+*.onnx
