@@ -9,7 +9,7 @@
 // stubbed, to be completed when integrating candle or llama.cpp bindings).
 
 use crate::model::{LayerStorage, TernLayer, TernModel};
-use crate::quantize::{PerLayerQuant, quantize_layers};
+use crate::quantize::PerLayerQuant;
 use crate::sparse::SparseIndex;
 use crate::FORMAT_VERSION;
 

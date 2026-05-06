@@ -478,7 +478,6 @@ async fn require_api_key(
         || path == "/studio.js"
         || path == "/translator"
         || path == "/playground"
-        || path.starts_with("/playground/pkg/")
         || path == "/fortune"
         || path == "/activate"
         || path == "/api/run"
@@ -573,7 +572,6 @@ static PRICING_HTML:    &str = include_str!("../../ternlang-web/pricing.html");
 static STUDIO_HTML:     &str = include_str!("../../ternlang-studio/index.html");
 static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
 static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templates/index.html");
-static PLAYGROUND_HTML: &str = include_str!("../../playground/index.html");
 static KPI_HTML:        &str = include_str!("kpi.html");
 static FORTUNE_HTML:    &str = include_str!("../../docs/fortune_cookie.html");
 
@@ -630,9 +628,6 @@ async fn kpi_upload(
     }
 }
 
-static WASM_JS:         &str = include_str!("../../playground/pkg/ternlang_wasm.js");
-static WASM_BYTES:      &[u8] = include_bytes!("../../playground/pkg/ternlang_wasm_bg.wasm");
-
 async fn studio_page() -> Html<&'static str> {
     Html(STUDIO_HTML)
 }
@@ -649,16 +644,8 @@ async fn studio_js() -> impl axum::response::IntoResponse {
     ([(axum::http::header::CONTENT_TYPE, "application/javascript")], STUDIO_JS)
 }
 
-async fn playground_page() -> Html<&'static str> {
-    Html(PLAYGROUND_HTML)
-}
-
-async fn wasm_js() -> impl axum::response::IntoResponse {
-    ([(axum::http::header::CONTENT_TYPE, "application/javascript")], WASM_JS)
-}
-
-async fn wasm_binary() -> impl axum::response::IntoResponse {
-    ([(axum::http::header::CONTENT_TYPE, "application/wasm")], WASM_BYTES)
+async fn playground_page() -> impl axum::response::IntoResponse {
+    axum::response::Redirect::permanent("/studio")
 }
 
 async fn pricing_page() -> Html<&'static str> {
@@ -1645,6 +1632,7 @@ async fn mcp_info() -> Json<Value> {
 //   tools/call              — dispatch to a tool by name
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct McpRpcRequest {
     #[allow(dead_code)]
     jsonrpc: Option<String>,
@@ -4005,7 +3993,7 @@ fn mcp_tools_manifest() -> Value {
 
 // ─── GET /api/usage ───────────────────────────────────────────────────────────
 
-fn get_path_tier(path: &str) -> u8 {
+fn get_path_tier(_path: &str) -> u8 {
     1
 }
 
@@ -5252,8 +5240,6 @@ async fn main() {
         .route("/studio",               get(studio_page))
         .route("/studio.js",            get(studio_js))
         .route("/playground",           get(playground_page))
-        .route("/playground/pkg/ternlang_wasm.js",       get(wasm_js))
-        .route("/playground/pkg/ternlang_wasm_bg.wasm",  get(wasm_binary))
         .route("/activate",             get(activate_page))
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))

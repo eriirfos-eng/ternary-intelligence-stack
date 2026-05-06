@@ -227,7 +227,7 @@ pub fn wake_sequence() {
 
     let mut api_key: Option<String> = None;
     let mut base_url: Option<String> = None;
-    let mut target_model = String::from("ternlang-moe-13");
+    let target_model: String;
 
     // Local providers skip key entry; custom-URL providers ask for base URL
     let is_local = matches!(selected_provider, LlmProvider::Ollama | LlmProvider::LmStudio);

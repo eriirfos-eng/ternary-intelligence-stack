@@ -80,7 +80,7 @@ fn execute(src: &str) -> Result<RunResult, String> {
             emitter.emit_entry_call("main");
         }
         Err(e) => {
-            let error_str = format!("{:?}", e);
+            let _error_str = format!("{:?}", e);
             {
                 // Fallback for scripts/snippets: parse stmt-by-stmt
                 let mut parser = Parser::new(src);
