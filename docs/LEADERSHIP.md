@@ -22,7 +22,8 @@ Simeon leads the architectural vision and research direction of the Ternary Inte
 
 **Academic Background**
 - **MBA, Business Administration (Artificial Intelligence)** — strategic management, AI systems design, organisational leadership
-- **Matura, Business Informatics** — HAK Bregenz (Handelsakademie), Austria — formal grounding in business information systems, economics, and software engineering
+- **Degree in Business Informatics** — HAK Bregenz (Handelsakademie Bregenz), Austria — business information systems, economics, and software engineering
+- **Matura** — BORG Götzis (Bundesoberstufenrealgymnasium Götzis), Austria
 
 **Connect**
 - **LinkedIn:** [Simeon Kepp](https://www.linkedin.com/in/simeon-kepp/)
