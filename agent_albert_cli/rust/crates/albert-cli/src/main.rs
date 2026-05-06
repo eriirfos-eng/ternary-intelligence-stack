@@ -3989,11 +3989,17 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
             PermissionMode::Allow => runtime::PermissionPromptDecision::Allow,
         };
 
-        if !self.interactive || !matches!(default, runtime::PermissionPromptDecision::Allow) {
+        // Only surface the interactive popup in Prompt mode. All other modes
+        // (DangerFullAccess, Allow, WorkspaceWrite, ReadOnly) use the computed
+        // default directly — no popup.
+        if !self.interactive
+            || self.permission_mode != PermissionMode::Prompt
+            || !matches!(default, runtime::PermissionPromptDecision::Allow)
+        {
             return default;
         }
 
-        // ── Interactive TUI Prompt ──────────────────────────────────────────
+        // ── Interactive TUI Prompt (Prompt mode only) ───────────────────────
         if let Some(tx) = &self.tui_event_tx {
             let (resp_tx, resp_rx) = std::sync::mpsc::sync_channel(1);
             let input_val = serde_json::from_str(&request.input).unwrap_or(serde_json::json!({ "raw": request.input }));

@@ -446,6 +446,7 @@ impl TuiState {
         // Keep the log bounded so rendering stays fast — older blocks are trimmed.
         while self.exec_log.len() > 120 {
             self.exec_log.pop_front();
+            // Adjust current_assistant_block_index for the removed front element.
             if let Some(ref mut idx) = self.current_assistant_block_index {
                 if *idx == 0 {
                     self.current_assistant_block_index = None;
@@ -453,6 +454,12 @@ impl TuiState {
                     *idx -= 1;
                 }
             }
+            // Adjust collapsed_blocks — all indices shift down by 1 after pop_front.
+            // Entries at 0 referred to the block that was just removed; drop them.
+            self.collapsed_blocks = self.collapsed_blocks
+                .drain()
+                .filter_map(|i| if i == 0 { None } else { Some(i - 1) })
+                .collect();
         }
     }
 
@@ -1171,8 +1178,14 @@ pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
 
     if let Some(approval_arc) = &state.awaiting_tool_approval {
         if let Some(approval) = &*approval_arc.lock().unwrap_or_else(|p| p.into_inner()) {
-            let area = centered_rect(60, 40, f.area());
-            render_tool_approval_modal(f, area, &approval.name, &approval.input);
+            // Anchor just above the input bar, matching slash-command popup style.
+            let input_rect = layout[2];
+            let modal_w = (area.width * 70 / 100).max(40).min(area.width);
+            let modal_h = 12u16.min(input_rect.y.saturating_sub(1));
+            let modal_x = (area.width.saturating_sub(modal_w)) / 2;
+            let modal_y = input_rect.y.saturating_sub(modal_h);
+            let modal_area = Rect { x: modal_x, y: modal_y, width: modal_w, height: modal_h };
+            render_tool_approval_modal(f, modal_area, &approval.name, &approval.input);
         }
     }
     // Help overlay floats on top of everything — rendered last so it covers all other widgets.
@@ -3038,13 +3051,22 @@ impl TuiApp {
 
                     // ── HITL ──────────────────────────────────────────────────
                     Some(TuiEvent::ToolApprovalRequestSync { id, name, input, tx }) => {
-                        let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
-                        state.awaiting_tool_approval = Some(Arc::new(Mutex::new(Some(ToolApprovalState {
-                            _id: id,
-                            name,
-                            input,
-                            resp_tx: tx,
-                        }))));
+                        // Communication tools never need user approval — auto-allow them silently.
+                        let auto_approve = matches!(
+                            name.as_str(),
+                            "SendUserMessage" | "send_user_message" | "Brief" | "brief"
+                        );
+                        if auto_approve {
+                            let _ = tx.send(runtime::PermissionPromptDecision::Allow);
+                        } else {
+                            let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
+                            state.awaiting_tool_approval = Some(Arc::new(Mutex::new(Some(ToolApprovalState {
+                                _id: id,
+                                name,
+                                input,
+                                resp_tx: tx,
+                            }))));
+                        }
                     }
                     Some(TuiEvent::ToolApprovalResponse { approved, feedback }) => {
                         let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());

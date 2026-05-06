@@ -10,6 +10,14 @@ use rayon::ThreadPoolBuilder;
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
+// Gradient clipping threshold — prevents weight explosions.
+// Healthy grad norms for this model are typically 0.1–2.0.
+const MAX_GRAD_NORM: f32 = 1.0;
+
+// If a single batch loss exceeds this, the weights have already exploded.
+// ln(vocab≈8006) ≈ 8.988 — anything above 9.5 is catastrophic.
+const LOSS_EXPLOSION_THRESHOLD: f32 = 9.5;
+
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
     let secs = now.as_secs();
@@ -24,7 +32,51 @@ fn cosine_lr(base_lr: f64, min_lr: f64, step: usize, total_steps: usize) -> f64 
     min_lr + 0.5 * (base_lr - min_lr) * (1.0 + (std::f64::consts::PI * t).cos())
 }
 
-fn perform_surgery(config_path: &str, checkpoint_path: &str, device: &Device) -> Result<()> {
+/// Save the current varmap weights to a file.
+fn save_checkpoint(varmap: &VarMap, path: &str) -> Result<()> {
+    let all_vars = varmap.data().lock().unwrap();
+    let mut tensor_map = HashMap::new();
+    for (name, var) in all_vars.iter() {
+        tensor_map.insert(name.clone(), var.as_tensor().clone());
+    }
+    candle_core::safetensors::save(&tensor_map, path)?;
+    Ok(())
+}
+
+/// Load checkpoint weights into an existing varmap (shape-guarded).
+fn load_checkpoint(varmap: &VarMap, path: &str, device: &Device) -> Result<usize> {
+    let checkpoint_data = candle_core::safetensors::load(path, device)?;
+    let all_vars = varmap.data().lock().unwrap();
+    let mut loaded = 0usize;
+    for (name, var) in all_vars.iter() {
+        if let Some(tensor) = checkpoint_data.get(name) {
+            if tensor.shape() == var.shape() {
+                var.set(tensor)?;
+                loaded += 1;
+            }
+        }
+    }
+    Ok(loaded)
+}
+
+/// Compute the global L2 gradient norm across all variables.
+/// Returns 0.0 if no gradients are present.
+fn global_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore) -> f32 {
+    let mut sq_sum = 0.0_f32;
+    let all_vars = varmap.all_vars();
+    for var in &all_vars {
+        if let Some(g) = grads.get(var.as_tensor()) {
+            if let Ok(sq) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
+                if sq.is_finite() {
+                    sq_sum += sq;
+                }
+            }
+        }
+    }
+    sq_sum.sqrt()
+}
+
+fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device) -> Result<()> {
     println!("[{}] --- INITIATING NEURAL SURGERY: Net2Net Safe Copy ---", timestamp());
 
     let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
@@ -35,7 +87,9 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, device: &Device) ->
     fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap())?;
     println!("[{}] Evolution: Architecture expanded to {} layers.", timestamp(), new_layers);
 
-    let tensors = candle_core::safetensors::load(checkpoint_path, device)?;
+    // Surgery reads from the BEST checkpoint, not the latest — prevents expanding from bad weights.
+    let source = if std::path::Path::new(best_path).exists() { best_path } else { checkpoint_path };
+    let tensors = candle_core::safetensors::load(source, device)?;
     let mut new_tensors = HashMap::new();
 
     let source_layer = old_layers - 1;
@@ -51,6 +105,8 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, device: &Device) ->
     }
 
     candle_core::safetensors::save(&new_tensors, checkpoint_path)?;
+    // Best checkpoint is now outdated (wrong architecture) — remove it so we don't accidentally load it.
+    let _ = fs::remove_file(best_path);
     println!("[{}] Surgery Complete: Layer {} cloned from Layer {}.", timestamp(), target_layer, source_layer);
     Ok(())
 }
@@ -63,8 +119,10 @@ fn train_cycle(
     global_step: &mut usize,
 ) -> Result<bool> {
     let checkpoint_path = "models/bible_ternary_v2.0.0.safetensors";
+    let best_path       = "models/bible_ternary_v2.0.0.best.safetensors";
     let config_path     = "models/bible_ternary_v2.0.0.config.json";
     let meta_path       = "models/bible_ternary_v2.0.0.meta";
+    let best_meta_path  = "models/bible_ternary_v2.0.0.best_loss";
     let log_path        = "dashboard/training.log";
 
     let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
@@ -86,33 +144,33 @@ fn train_cycle(
     let vb     = VarBuilder::from_varmap(&varmap, DType::F32, device);
     let model  = Transformer::new(&config, vb)?;
 
+    // Load latest checkpoint if present.
     if std::path::Path::new(checkpoint_path).exists() {
-        let checkpoint_data = candle_core::safetensors::load(checkpoint_path, device)?;
-        let all_vars = varmap.data().lock().unwrap();
-        for (name, var) in all_vars.iter() {
-            if let Some(tensor) = checkpoint_data.get(name) {
-                if tensor.shape() == var.shape() {
-                    var.set(tensor)?;
-                }
-            }
-        }
+        let loaded = load_checkpoint(&varmap, checkpoint_path, device)?;
+        println!("[{}] Loaded {} tensors from checkpoint.", timestamp(), loaded);
     }
+
+    // Track best epoch-average loss across the entire training run.
+    let mut best_epoch_loss: f32 = fs::read_to_string(best_meta_path)
+        .ok()
+        .and_then(|s| s.trim().parse::<f32>().ok())
+        .unwrap_or(f32::MAX);
 
     let mut total_epochs = if let Ok(c) = fs::read_to_string(meta_path) {
         c.trim().parse::<u32>().unwrap_or(0)
     } else { 0 };
 
     // Cosine LR: starts high, decays to near-zero over lr_cycle_steps global steps
-    let base_lr       = 2e-4_f64;
-    let min_lr        = 1e-5_f64;
+    let base_lr        = 2e-4_f64;
+    let min_lr         = 1e-5_f64;
     let lr_cycle_steps = 500_usize;
 
     let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), base_lr)?;
 
-    let seq_len    = config.max_seq_len;
+    let seq_len     = config.max_seq_len;
     let num_batches = 300_usize;
 
-    // Write arch metadata once per train_cycle so the dashboard can display it
+    // Write arch metadata once per train_cycle so the dashboard can display it.
     if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
         let _ = writeln!(f, "ARCH {}L {}H {}E {}CTX {}V",
             config.num_layers, config.hidden_size, config.num_experts,
@@ -120,10 +178,12 @@ fn train_cycle(
     }
 
     loop {
-        let mut total_loss = 0.0_f32;
+        let mut total_loss    = 0.0_f32;
+        let mut counted_batches = 0u32; // only count non-skipped batches in avg
         total_epochs += 1;
+        let mut clipped_steps = 0u32;
+        let mut skipped_steps = 0u32;
 
-        // Open log file ONCE per epoch, close when epoch ends
         let mut log_file = OpenOptions::new()
             .create(true)
             .append(true)
@@ -135,11 +195,9 @@ fn train_cycle(
         for batch_idx in 0..num_batches {
             let batch_start = Instant::now();
 
-            // Update LR on cosine schedule
             let lr = cosine_lr(base_lr, min_lr, *global_step % lr_cycle_steps, lr_cycle_steps);
             opt.set_learning_rate(lr);
 
-            // Single forward pass, single backward step — correct gradient descent
             let start = rand::random::<usize>() % (tokens.len() - seq_len - 1);
             let input_tensor = Tensor::new(&tokens[start..start + seq_len], device)?
                 .reshape((1, seq_len))?
@@ -153,8 +211,7 @@ fn train_cycle(
             let target_flat = target_tensor.flatten_all()?;
             let ce_loss     = loss::cross_entropy(&logits, &target_flat)?;
 
-            // L1 sparsity reward: push weights toward 0 so ternary zeroing is strategic,
-            // not random. Lambda small enough not to compete with CE loss.
+            // L1 sparsity reward: push weights toward 0 so ternary zeroing is strategic.
             let l1_lambda = 1e-5_f64;
             let l1_penalty = {
                 let vars = varmap.data().lock().unwrap();
@@ -172,10 +229,39 @@ fn train_cycle(
                 }
             };
             let batch_loss = (&ce_loss + (l1_penalty * l1_lambda)?)?;
-            opt.backward_step(&batch_loss)?;
 
-            let real_loss  = ce_loss.to_scalar::<f32>()?;
-            total_loss    += real_loss;
+            // ── Gradient Clipping ─────────────────────────────────────────────
+            // Split backward() and step() so we can inspect the gradient norm
+            // before applying the update. If norm > MAX_GRAD_NORM, scale the
+            // loss down proportionally (equivalent to clipping all gradients).
+            let grads = batch_loss.backward()?;
+            let norm  = global_grad_norm(&varmap, &grads);
+
+            let real_loss = ce_loss.to_scalar::<f32>()?;
+
+            // Skip batches where the model has already exploded.
+            if real_loss.is_nan() || real_loss.is_infinite() || real_loss > LOSS_EXPLOSION_THRESHOLD {
+                skipped_steps += 1;
+                println!("[{}] [SKIP] Batch {} — loss {:.4} (explosion), skip & preserve weights.",
+                    timestamp(), batch_idx, real_loss);
+                *global_step += 1;
+                continue;
+            }
+
+            if norm > MAX_GRAD_NORM && norm.is_finite() {
+                // Gradient norm is too large — recompute with scaled loss so the
+                // effective gradient is exactly MAX_GRAD_NORM.
+                clipped_steps += 1;
+                let scale = (MAX_GRAD_NORM / norm) as f64;
+                let scaled_loss = (&batch_loss * scale)?;
+                opt.backward_step(&scaled_loss)?;
+            } else {
+                opt.step(&grads)?;
+            }
+
+            total_loss       += real_loss;
+            counted_batches  += 1;
+
             let batch_ms   = batch_start.elapsed().as_millis();
             let elapsed_s  = epoch_start.elapsed().as_secs();
             let remaining_s = if batch_idx > 0 {
@@ -206,29 +292,36 @@ fn train_cycle(
             *global_step += 1;
         }
 
-        let avg_loss  = total_loss / num_batches as f32;
-        let epoch_s   = epoch_start.elapsed().as_secs();
-        let summary = format!("=== Epoch {}L done | Avg Loss: {:.4} | {:02}:{:02} elapsed ===",
-            config.num_layers, avg_loss, epoch_s / 60, epoch_s % 60);
+        let avg_loss = if counted_batches > 0 {
+            total_loss / counted_batches as f32
+        } else {
+            f32::MAX
+        };
+
+        let epoch_s = epoch_start.elapsed().as_secs();
+        let summary = format!(
+            "=== Epoch {}L done | Avg Loss: {:.4} | Clipped: {} | Skipped: {} | {:02}:{:02} elapsed ===",
+            config.num_layers, avg_loss, clipped_steps, skipped_steps, epoch_s / 60, epoch_s % 60
+        );
         println!("[{}] {}", timestamp(), summary);
 
-        // Write epoch summary to log so dashboard reference line can parse it
         if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
             let _ = writeln!(f, "{}", summary);
         }
 
         evolution_manager.add_loss(avg_loss);
 
-        // Checkpoint
-        {
-            let all_vars = varmap.data().lock().unwrap();
-            let mut tensor_map = HashMap::new();
-            for (name, var) in all_vars.iter() {
-                tensor_map.insert(name.clone(), var.as_tensor().clone());
-            }
-            candle_core::safetensors::save(&tensor_map, checkpoint_path)?;
-        }
+        // ── Checkpoint (always save latest) ──────────────────────────────────
+        save_checkpoint(&varmap, checkpoint_path)?;
         fs::write(meta_path, total_epochs.to_string())?;
+
+        // ── Best Checkpoint (save only when avg_loss improves) ───────────────
+        if avg_loss < best_epoch_loss {
+            best_epoch_loss = avg_loss;
+            save_checkpoint(&varmap, best_path)?;
+            fs::write(best_meta_path, avg_loss.to_string())?;
+            println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
+        }
 
         if evolution_manager.should_evolve(config.num_layers) {
             evolution_manager.reset_history();
@@ -238,12 +331,9 @@ fn train_cycle(
 }
 
 fn load_corpus(tokenizer: &BpeTokenizer) -> Vec<u32> {
-    // Load every text file we have and concatenate into one token stream.
-    // Order: Bible (primary), then any extras found in data/corpus/.
     let corpus_dir = "data/corpus";
     let mut all_text = String::new();
 
-    // Deterministic order: sort filenames
     if let Ok(entries) = fs::read_dir(corpus_dir) {
         let mut paths: Vec<_> = entries
             .filter_map(|e| e.ok())
@@ -272,12 +362,13 @@ fn load_corpus(tokenizer: &BpeTokenizer) -> Vec<u32> {
 
 fn main() -> Result<()> {
     let _ = ThreadPoolBuilder::new().num_threads(8).build_global();
-    println!("--- ALBERT EVOLUTIONARY ORCHESTRATOR v2.3 ---");
+    println!("--- ALBERT EVOLUTIONARY ORCHESTRATOR v2.4 (Gradient Clipping + Best Checkpoint) ---");
 
-    let device      = Device::Cpu;
-    let vocab_path  = "data/vocab.json";
-    let config_path = "models/bible_ternary_v2.0.0.config.json";
+    let device          = Device::Cpu;
+    let vocab_path      = "data/vocab.json";
+    let config_path     = "models/bible_ternary_v2.0.0.config.json";
     let checkpoint_path = "models/bible_ternary_v2.0.0.safetensors";
+    let best_path       = "models/bible_ternary_v2.0.0.best.safetensors";
 
     let tokenizer = BpeTokenizer::new(vocab_path);
     let tokens    = load_corpus(&tokenizer);
@@ -292,8 +383,8 @@ fn main() -> Result<()> {
             &tokens, &tokenizer, &device, &mut evolution_manager, &mut global_step
         )?;
         if needs_evolution {
-            perform_surgery(config_path, checkpoint_path, &device)?;
-            global_step = 0;  // restart cosine LR at base_lr after surgery
+            perform_surgery(config_path, checkpoint_path, best_path, &device)?;
+            global_step = 0;
         }
     }
 }

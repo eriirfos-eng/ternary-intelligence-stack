@@ -193,6 +193,8 @@ pub fn execute_bash(input: BashCommandInput) -> io::Result<BashCommandOutput> {
     runtime.block_on(execute_bash_async(input, sandbox_status, cwd))
 }
 
+const DEFAULT_BASH_TIMEOUT_MS: u64 = 120_000; // 2 minutes hard cap for multi-day stability
+
 async fn execute_bash_async(
     input: BashCommandInput,
     sandbox_status: SandboxStatus,
@@ -200,6 +202,8 @@ async fn execute_bash_async(
 ) -> io::Result<BashCommandOutput> {
     use std::process::Stdio;
     use tokio::io::AsyncReadExt;
+    let timeout_ms = input.timeout.unwrap_or(DEFAULT_BASH_TIMEOUT_MS);
+    let deadline = std::time::Duration::from_millis(timeout_ms);
 
     let mut cmd = prepare_tokio_command(&input.command, &cwd, &sandbox_status, true);
     cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
@@ -210,10 +214,14 @@ async fn execute_bash_async(
 
     let mut stdout_vec = Vec::new();
     let mut stderr_vec = Vec::new();
-    
+
     // Persistent buffers to ensure no data is lost during tokio::select! races
     let mut stdout_buf = [0u8; 4096];
     let mut stderr_buf = [0u8; 4096];
+
+    let mut timed_out = false;
+    let sleep = tokio::time::sleep(deadline);
+    tokio::pin!(sleep);
 
     loop {
         tokio::select! {
@@ -239,13 +247,13 @@ async fn execute_bash_async(
             }
             status = child.wait() => {
                 let status = status?;
-                
+
                 // Final drain to capture any remaining output after process exit
                 let mut final_stdout = Vec::new();
                 let mut final_stderr = Vec::new();
                 stdout.read_to_end(&mut final_stdout).await.ok();
                 stderr.read_to_end(&mut final_stderr).await.ok();
-                
+
                 if !final_stdout.is_empty() {
                     stdout_vec.push(String::from_utf8_lossy(&final_stdout).to_string());
                 }
@@ -271,10 +279,37 @@ async fn execute_bash_async(
                     validation_state: 1,
                 });
             }
+            _ = &mut sleep => {
+                timed_out = true;
+                break;
+            }
         }
     }
-    
-    // Fallback if loop ends prematurely
+
+    // Kill the child if it was a timeout or if the loop ended due to stream errors.
+    let _ = child.kill().await;
+    let _ = child.wait().await;
+    if timed_out {
+        return Ok(BashCommandOutput {
+            stdout: stdout_vec.concat(),
+            stderr: format!("[timeout: command exceeded {}ms]\n{}", timeout_ms, stderr_vec.concat()),
+            raw_output_path: None,
+            interrupted: true,
+            is_image: None,
+            background_task_id: None,
+            backgrounded_by_user: None,
+            assistant_auto_backgrounded: None,
+            return_code_interpretation: Some("exit_code:124".to_string()), // standard timeout exit code
+            no_output_expected: Some(false),
+            structured_content: None,
+            persisted_output_path: None,
+            persisted_output_size: None,
+            sandbox_status: Some(sandbox_status),
+            validation_state: 1,
+        });
+    }
+
+    // Fallback if loop ends prematurely (stream errors before child exits)
     let status = child.wait().await?;
     Ok(BashCommandOutput {
         stdout: stdout_vec.concat(),
