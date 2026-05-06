@@ -1,0 +1,14 @@
+{
+  "snapshot_date": "2026-05-06",
+  "snapshot_time_utc": "11:24",
+  "global_epoch": 14,
+  "architecture_phase": "3L",
+  "batch": "284/300",
+  "loss_current": 6.9049,
+  "loss_best_ever": 2.1353,
+  "epoch_avg": 6.6949,
+  "lr_current": 1.87e-4,
+  "pts_logged": 3670,
+  "eta_epoch_end_min": 0.95,
+  "notes": "Epoch 12 (3L) wrapping up at time of snapshot. Loss variance narrowing — funnel shape visible on dashboard. MoE expert consensus stabilizing. EvolutionManager monitoring for next surgery trigger."
+}
