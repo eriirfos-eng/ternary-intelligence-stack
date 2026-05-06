@@ -101,21 +101,30 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 init::wake_sequence();
             }
 
-            // Check for updates at startup with a 3-second timeout
-            if let Ok(async_rt) = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-            {
-                if let Ok(update_result) = async_rt.block_on(async {
+            // Auto-update: check crates.io and install newer version before entering workspace.
+            if let Ok(async_rt) = tokio::runtime::Builder::new_current_thread().enable_all().build() {
+                if let Ok(Ok(Some(latest))) = async_rt.block_on(async {
                     let client = api::TernlangClient::from_auth(api::AuthSource::None);
-                    tokio::time::timeout(
-                        Duration::from_secs(3),
-                        client.check_for_updates(),
-                    ).await
+                    tokio::time::timeout(Duration::from_secs(5), client.check_for_updates()).await
                 }) {
-                    if let Ok(Some(version)) = update_result {
-                        if version != VERSION {
-                            println!("Update available: albert-cli v{version} (current: v{VERSION}). Run /upgrade after launch to update.");
+                    if is_newer_version(&latest, VERSION) {
+                        println!("New version available: albert-cli v{latest} (current: v{VERSION}) — updating now...\n");
+                        match Command::new("cargo").args(["install", "albert-cli"]).status() {
+                            Ok(s) if s.success() => {
+                                println!("\nUpdate complete. Restarting...\n");
+                                let exe = std::env::current_exe().unwrap_or_else(|_| "albert-cli".into());
+                                let restart_args: Vec<String> = std::env::args().skip(1).collect();
+                                use std::os::unix::process::CommandExt;
+                                let err = Command::new(&exe).args(&restart_args).exec();
+                                // exec() only returns on failure — fall through to current version
+                                eprintln!("Restart failed: {err}. Continuing with current version.");
+                            }
+                            Ok(s) => {
+                                eprintln!("Update failed (cargo exited {}). Continuing with current version.\n", s);
+                            }
+                            Err(e) => {
+                                eprintln!("Update failed ({e}). Continuing with current version.\n");
+                            }
                         }
                     }
                 }
@@ -2391,47 +2400,29 @@ impl LiveCli {
             }
             SlashCommand::Upgrade => {
                 println!("Checking for updates on crates.io...");
-                
-                // Use a one-off client for the version check
                 let async_rt = tokio::runtime::Builder::new_current_thread()
                     .enable_all()
                     .build()
                     .expect("failed to build runtime");
-                
                 let client = api::TernlangClient::from_auth(api::AuthSource::None);
-                let latest = async_rt.block_on(client.check_for_updates());
-
-                match latest {
-                    Ok(Some(version)) if version != VERSION => {
-                        println!("A new version is available: v{} (current: v{})", version, VERSION);
-                        println!("Starting upgrade via `cargo install albert-cli`...");
-                        
-                        let status = Command::new("cargo")
-                            .args(["install", "albert-cli"])
-                            .status();
-                        
-                        match status {
+                match async_rt.block_on(client.check_for_updates()) {
+                    Ok(Some(version)) if is_newer_version(&version, VERSION) => {
+                        println!("Installing albert-cli v{version} (current: v{VERSION})...");
+                        match Command::new("cargo").args(["install", "albert-cli"]).status() {
                             Ok(s) if s.success() => {
-                                println!("\nUpgrade successful! Please restart albert-cli to use the new version.");
+                                println!("\nUpdate complete. Restarting...\n");
+                                let exe = std::env::current_exe().unwrap_or_else(|_| "albert-cli".into());
+                                let restart_args: Vec<String> = std::env::args().skip(1).collect();
+                                use std::os::unix::process::CommandExt;
+                                let err = Command::new(&exe).args(&restart_args).exec();
+                                eprintln!("Restart failed: {err}. Please run albert-cli manually.");
                             }
-                            Ok(s) => {
-                                eprintln!("\nUpgrade failed with exit code: {}", s);
-                                println!("You may need to run `cargo install albert-cli` manually.");
-                            }
-                            Err(e) => {
-                                eprintln!("\nFailed to execute cargo: {}", e);
-                            }
+                            Ok(s) => eprintln!("Update failed (exit code: {s}). Try: cargo install albert-cli"),
+                            Err(e) => eprintln!("Update failed: {e}. Try: cargo install albert-cli"),
                         }
                     }
-                    Ok(Some(_)) => {
-                        println!("You are already on the latest version (v{}).", VERSION);
-                    }
-                    Ok(None) => {
-                        println!("Could not determine the latest version from crates.io.");
-                    }
-                    Err(e) => {
-                        eprintln!("Error checking for updates: {}", e);
-                    }
+                    Ok(Some(_)) | Ok(None) => println!("You are on the latest version (v{VERSION})."),
+                    Err(e) => eprintln!("Could not check for updates: {e}"),
                 }
                 false
             }
@@ -5149,5 +5140,13 @@ fn find_previous_session(current_id: &str) -> Result<Option<SessionHandle>, Box<
         }
     }
     Ok(None)
+}
+
+fn is_newer_version(remote: &str, current: &str) -> bool {
+    fn parse(v: &str) -> (u32, u32, u32) {
+        let mut it = v.splitn(3, '.').map(|s| s.parse::<u32>().unwrap_or(0));
+        (it.next().unwrap_or(0), it.next().unwrap_or(0), it.next().unwrap_or(0))
+    }
+    parse(remote) > parse(current)
 }
 
