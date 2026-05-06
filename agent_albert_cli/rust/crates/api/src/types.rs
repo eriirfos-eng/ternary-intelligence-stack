@@ -254,6 +254,7 @@ impl AuthSource {
             (_, Self::ApiKeyAndBearer { api_key, bearer_token }) => {
                 rb.header("x-api-key", api_key).bearer_auth(bearer_token)
             }
+            (LlmProvider::Ternlang, Self::ApiKey(key)) => rb.header("x-api-key", key),
             _ => rb,
         }
     }

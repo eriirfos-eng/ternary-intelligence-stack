@@ -359,6 +359,87 @@ impl TernlangClient {
                 Ok(models)
             }
             LlmProvider::Anthropic => Ok(curated_models(self.provider)),
+            LlmProvider::Ternlang => {
+                // Try the live /v1/models endpoint with auth; fall back to curated list.
+                let url = format!("{}/v1/models", self.base_url.trim_end_matches('/'));
+                if let Ok(res) = self.auth.apply(self.provider, self.http.get(&url)).send().await {
+                    if res.status().is_success() {
+                        if let Ok(json) = res.json::<serde_json::Value>().await {
+                            let mut models = vec![];
+                            if let Some(list) = json.get("data").and_then(|m| m.as_array()) {
+                                for m in list {
+                                    if let Some(id) = m.get("id").and_then(|i| i.as_str()) {
+                                        if !models.contains(&id.to_string()) {
+                                            models.push(id.to_string());
+                                        }
+                                    }
+                                }
+                            }
+                            if !models.is_empty() {
+                                return Ok(models);
+                            }
+                        }
+                    }
+                }
+                Ok(curated_models(self.provider))
+            }
+            LlmProvider::Ollama => {
+                let base = self.base_url.trim_end_matches('/');
+                // Try OpenAI-compat /v1/models first (Ollama 0.1.14+ supports it).
+                if let Ok(res) = self.http.get(&format!("{}/v1/models", base)).send().await {
+                    if res.status().is_success() {
+                        if let Ok(json) = res.json::<serde_json::Value>().await {
+                            let mut models = vec![];
+                            if let Some(list) = json.get("data").and_then(|m| m.as_array()) {
+                                for m in list {
+                                    if let Some(id) = m.get("id").and_then(|i| i.as_str()) {
+                                        if !models.contains(&id.to_string()) {
+                                            models.push(id.to_string());
+                                        }
+                                    }
+                                }
+                            }
+                            if !models.is_empty() {
+                                return Ok(models);
+                            }
+                        }
+                    }
+                }
+                // Fall back to Ollama native /api/tags — returns actually installed models.
+                let res = self
+                    .http
+                    .get(&format!("{}/api/tags", base))
+                    .send()
+                    .await
+                    .map_err(|e| ApiError::Config(format!(
+                        "Ollama is not reachable at {} — is it running? ({})",
+                        base, e
+                    )))?;
+                if !res.status().is_success() {
+                    return Err(ApiError::Config(format!(
+                        "Ollama returned HTTP {} from /api/tags — check that it is running",
+                        res.status()
+                    )));
+                }
+                let json: serde_json::Value = res.json().await.map_err(ApiError::from)?;
+                let mut models = vec![];
+                if let Some(list) = json.get("models").and_then(|m| m.as_array()) {
+                    for m in list {
+                        if let Some(name) = m.get("name").and_then(|n| n.as_str()) {
+                            if !models.contains(&name.to_string()) {
+                                models.push(name.to_string());
+                            }
+                        }
+                    }
+                }
+                if models.is_empty() {
+                    Err(ApiError::Config(
+                        "Ollama is running but has no models installed. Run: ollama pull <model-name>".to_string()
+                    ))
+                } else {
+                    Ok(models)
+                }
+            }
             _ if self.provider.is_openai_compat() => {
                 let url = format!("{}/v1/models", self.base_url.trim_end_matches('/'));
                 let res = self.auth.apply(self.provider, self.http.get(&url)).send().await.map_err(ApiError::from)?;
@@ -797,6 +878,7 @@ fn translate_from_gemini(response: serde_json::Value, model: &str) -> MessageRes
 /// Curated fallback model list for providers that don't expose a /v1/models endpoint.
 pub fn curated_models(provider: LlmProvider) -> Vec<String> {
     let list: &[&str] = match provider {
+        LlmProvider::Ternlang => &["albert-moe-13"],
         LlmProvider::Anthropic => &[
             "claude-opus-4-7",
             "claude-sonnet-4-6",
