@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AGB — Ternlang / RFI-IRFOS</title>
+  <link rel="icon" type="image/png" href="assets/ternlang_logo_notext.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="robots" content="noindex">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #0d0d14; --bg2: #13131f; --border: #1e2030; --teal: #00f5c4; --muted: #7a7d99; --text: #dde0f0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.75; padding: 48px 24px 80px; }
+    .page { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 48px; transition: color 0.2s; }
+    .back:hover { color: var(--teal); }
+    .back::before { content: '←'; font-size: 14px; }
+    .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); border: 1px solid rgba(0,245,196,0.3); border-radius: 4px; padding: 3px 10px; margin-bottom: 16px; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 48px; }
+    .section { margin-bottom: 40px; border-top: 1px solid var(--border); padding-top: 28px; }
+    h2 { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
+    p { color: var(--muted); font-size: 0.9rem; margin-bottom: 10px; }
+    p strong { color: var(--text); }
+    ol, ul { color: var(--muted); font-size: 0.9rem; padding-left: 20px; margin-bottom: 10px; }
+    li { margin-bottom: 8px; }
+    a { color: var(--teal); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .tier-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.85rem; }
+    .tier-table th { text-align: left; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); border-bottom: 1px solid var(--border); }
+    .tier-table td { padding: 8px 12px; border-bottom: 1px solid rgba(30,32,48,0.5); color: var(--muted); vertical-align: top; }
+    .tier-table td strong { color: var(--text); }
+    .page-footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; font-size: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <a href="/" class="back">Zurück zu ternlang.com</a>
+
+    <div class="badge">Allgemeine Geschäftsbedingungen</div>
+    <h1>AGB</h1>
+    <p class="subtitle">Stand: Mai 2026 · RFI-IRFOS, Graz, Österreich · Gültig für alle Leistungen von ternlang.com</p>
+
+    <div class="section">
+      <h2>§1 Geltungsbereich</h2>
+      <p>Diese Allgemeinen Geschäftsbedingungen gelten für alle Verträge zwischen <strong>RFI-IRFOS</strong> (Elisabethinergasse 25/10, 8020 Graz, ZVR 1015608684 — nachfolgend „Anbieter") und Nutzern der Website <strong>ternlang.com</strong> sowie der bereitgestellten API, MCP-Tools und Softwarelizenzen.</p>
+      <p>Entgegenstehende oder abweichende Bedingungen des Nutzers werden nicht anerkannt, sofern der Anbieter ihrer Geltung nicht ausdrücklich schriftlich zugestimmt hat.</p>
+    </div>
+
+    <div class="section">
+      <h2>§2 Leistungen</h2>
+      <p>Der Anbieter stellt folgende Leistungen bereit:</p>
+      <ol>
+        <li><strong>Open Access (kostenlos):</strong> ternlang-mcp mit 23 MCP-Tools, öffentliche Dokumentation, Community-Zugang.</li>
+        <li><strong>Restricted API (kostenpflichtig):</strong> Zugang zur Albert-MoE-13-Inferenz-API, erweiterte Tool-Kontingente, kommerzielle Nutzungsrechte.</li>
+        <li><strong>Commercial License:</strong> Individuelle Lizenzvereinbarungen für OEM-Integration, Deployment in geschlossenen Systemen oder Weitervertrieb.</li>
+      </ol>
+      <table class="tier-table">
+        <thead>
+          <tr><th>Tier</th><th>Preis</th><th>Nutzungsrecht</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Open Access</strong></td><td>kostenlos</td><td>LGPL-3.0 / non-commercial</td></tr>
+          <tr><td><strong>Restricted API</strong></td><td>ab €99/Monat</td><td>BSL 1.1 · kommerziell mit Einschränkungen</td></tr>
+          <tr><td><strong>Commercial License</strong></td><td>auf Anfrage</td><td>Individuell verhandelt</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>§3 Vertragsschluss</h2>
+      <p>Kostenpflichtige Leistungen werden durch Registrierung und Bezahlung über die Plattform oder per schriftlichem Lizenzvertrag abgeschlossen. Mit Abschluss des Registrierungsprozesses erkennt der Nutzer diese AGB an.</p>
+      <p>Für kostenlose Leistungen (MCP-Tools, Open Access) gilt die Nutzung als konkludente Zustimmung zu diesen AGB.</p>
+    </div>
+
+    <div class="section">
+      <h2>§4 Nutzungsrechte &amp; Lizenzen</h2>
+      <p>Der Quellcode des Ternary Intelligence Stack unterliegt der <strong>LGPL-3.0-or-later</strong> für Open-Source-Komponenten und der <strong>Business Source License 1.1 (BSL 1.1)</strong> für kommerzielle Nutzung. Einzelheiten siehe <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener">GitHub Repository</a>.</p>
+      <p>Der Nutzer erhält ein nicht-exklusives, nicht übertragbares Nutzungsrecht im Umfang des gewählten Tarifs. Jede Nutzung außerhalb des lizenzierten Umfangs ist untersagt.</p>
+    </div>
+
+    <div class="section">
+      <h2>§5 Pflichten des Nutzers</h2>
+      <ol>
+        <li>Der Nutzer verpflichtet sich, die bereitgestellten Dienste nicht für rechtswidrige Zwecke zu nutzen.</li>
+        <li>API-Zugangsdaten sind vertraulich zu behandeln und dürfen nicht weitergegeben werden.</li>
+        <li>Automatisierte Massenanfragen, die den Betrieb beeinträchtigen (DoS), sind verboten.</li>
+        <li>Der Nutzer haftet für alle Aktivitäten, die über seinen Account durchgeführt werden.</li>
+      </ol>
+    </div>
+
+    <div class="section">
+      <h2>§6 Haftungsbeschränkung</h2>
+      <p>Der Anbieter haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Verhalten entstanden sind. Die Haftung für leichte Fahrlässigkeit sowie für mittelbare Schäden, entgangenen Gewinn und Datenverlust ist — soweit gesetzlich zulässig — ausgeschlossen.</p>
+      <p>Die Verfügbarkeit der API und MCP-Tools wird ohne Gewähr bereitgestellt. Der Anbieter übernimmt keine Garantie für ununterbrochene Verfügbarkeit.</p>
+    </div>
+
+    <div class="section">
+      <h2>§7 Preise &amp; Zahlungsbedingungen</h2>
+      <p>Alle Preise verstehen sich zuzüglich der gesetzlichen Umsatzsteuer, sofern nicht anders angegeben. Rechnungen sind innerhalb von 14 Tagen ab Ausstellungsdatum zu begleichen.</p>
+      <p>Bei Zahlungsverzug ist der Anbieter berechtigt, den Zugang zu kostenpflichtigen Diensten bis zum Ausgleich der offenen Beträge zu sperren.</p>
+    </div>
+
+    <div class="section">
+      <h2>§8 Laufzeit &amp; Kündigung</h2>
+      <p>Monatliche Abonnements können jederzeit zum Ende des laufenden Abrechnungszeitraums gekündigt werden. Jahresabonnements können mit einer Frist von 30 Tagen zum Ablauf des Jahres gekündigt werden.</p>
+      <p>Der Anbieter behält sich das Recht vor, Accounts bei schwerwiegenden Verstößen gegen diese AGB fristlos zu sperren.</p>
+    </div>
+
+    <div class="section">
+      <h2>§9 Änderungen der AGB</h2>
+      <p>Der Anbieter behält sich vor, diese AGB jederzeit zu ändern. Änderungen werden mit einer Frist von 30 Tagen per E-Mail oder durch Veröffentlichung auf der Website bekannt gegeben. Bei Weiternutzung nach Ablauf der Frist gelten die neuen AGB als akzeptiert.</p>
+    </div>
+
+    <div class="section">
+      <h2>§10 Anwendbares Recht &amp; Gerichtsstand</h2>
+      <p>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts (CISG). Ausschließlicher Gerichtsstand für alle Streitigkeiten ist — soweit gesetzlich zulässig — Graz, Österreich.</p>
+      <p>Für Verbraucher gilt ergänzend das österreichische Konsumentenschutzgesetz (KSchG). Die EU-Kommission stellt eine Online-Streitbeilegungsplattform bereit: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a></p>
+      <p>Wir sind weder bereit noch verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+    </div>
+
+    <div class="section">
+      <h2>§11 Kontakt</h2>
+      <p>Fragen zu diesen AGB richten Sie bitte an:<br>
+      <strong>RFI-IRFOS</strong> · Elisabethinergasse 25/10, 8020 Graz<br>
+      <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+    </div>
+
+    <div class="page-footer">
+      <p>&copy; 2026 RFI-IRFOS · <a href="/">ternlang.com</a></p>
+      <p style="margin-top:8px;font-size:0.7rem;">
+        <a href="impressum.html">Impressum</a> &nbsp;·&nbsp;
+        <a href="datenschutz.html">Datenschutz</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>

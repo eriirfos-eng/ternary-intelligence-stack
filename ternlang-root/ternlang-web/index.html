@@ -42,7 +42,7 @@
         "url": "https://ternlang.com",
         "address": {
           "@type": "PostalAddress",
-          "streetAddress": "Elisabethinergasse 25",
+          "streetAddress": "Elisabethinergasse 25/10",
           "addressLocality": "Graz",
           "postalCode": "8020",
           "addressCountry": "AT"
@@ -98,9 +98,27 @@
       --theme-bg2: 238 240 247;
       --theme-bg3: 226 228 238;
       --theme-text: 15 15 25;
-      --theme-muted: 75 80 110; 
+      --theme-muted: 75 80 110;
       --theme-border: 205 210 225;
     }
+    [data-theme="hc"] {
+      --theme-bg: 0 0 0;
+      --theme-bg2: 10 10 10;
+      --theme-bg3: 20 20 20;
+      --theme-text: 255 255 255;
+      --theme-muted: 200 200 200;
+      --theme-border: 255 255 255;
+    }
+    [data-theme="hc"] body { background: #000; color: #fff; }
+    [data-theme="hc"] .glass-card { background: #111; border: 2px solid #fff; }
+    [data-theme="hc"] a { color: #ffff00 !important; }
+    [data-theme="hc"] .text-t_teal, [data-theme="hc"] .hover\:text-t_teal:hover { color: #ffff00 !important; }
+    [data-theme="hc"] nav { background: #000 !important; border-bottom: 2px solid #fff !important; }
+    [data-theme="hc"] footer { background: #000 !important; border-top: 2px solid #fff !important; }
+    [data-theme="hc"] button, [data-theme="hc"] .theme-toggle { border-color: #fff !important; }
+    [data-theme="hc"] input, [data-theme="hc"] select, [data-theme="hc"] textarea { background: #000 !important; color: #fff !important; border: 2px solid #fff !important; }
+    [data-theme="hc"] .term-window, [data-theme="hc"] .term-titlebar, [data-theme="hc"] .term-body, [data-theme="hc"] .term-editor, [data-theme="hc"] .term-output { background: #000 !important; border-color: #fff !important; color: #fff !important; }
+    [data-theme="hc"] canvas { filter: contrast(2) brightness(0.6); }
     
     body { font-family: 'Inter', sans-serif; background-color: rgb(var(--theme-bg)); color: rgb(var(--theme-text)); overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
     
@@ -117,10 +135,15 @@
     /* Theme Toggle */
     .theme-toggle { width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgb(var(--theme-border)); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; }
     .theme-toggle:hover { background: rgba(0,245,196,0.1); border-color: #00f5c4; }
-    .theme-toggle .icon-moon { display: inline; }
-    .theme-toggle .icon-sun  { display: none; }
-    [data-theme="light"] .theme-toggle .icon-moon { display: none; }
-    [data-theme="light"] .theme-toggle .icon-sun  { display: inline; }
+    .theme-toggle .icon-moon     { display: inline; }
+    .theme-toggle .icon-sun      { display: none; }
+    .theme-toggle .icon-contrast { display: none; }
+    [data-theme="light"] .theme-toggle .icon-moon     { display: none; }
+    [data-theme="light"] .theme-toggle .icon-sun      { display: inline; }
+    [data-theme="light"] .theme-toggle .icon-contrast { display: none; }
+    [data-theme="hc"] .theme-toggle .icon-moon     { display: none; }
+    [data-theme="hc"] .theme-toggle .icon-sun      { display: none; }
+    [data-theme="hc"] .theme-toggle .icon-contrast { display: inline; }
 
     /* Mobile Hamburger */
     .hamburger span { transition: transform 0.3s, opacity 0.3s; }
@@ -237,9 +260,10 @@
         </div>
       </div>
       <div class="flex items-center gap-4">
-        <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme">
+        <button class="theme-toggle" id="theme-toggle" title="Toggle dark / light / high-contrast" aria-label="Toggle theme">
           <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
           <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          <svg class="icon-contrast w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3a9 9 0 100 18A9 9 0 0012 3zm0 2v14a7 7 0 000-14z"></path></svg>
         </button>
         <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" class="hidden md:block transition-transform hover:scale-110" aria-label="GitHub">
           <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
@@ -1474,12 +1498,19 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
   <!-- Footer -->
   <footer class="relative z-10 bg-[#020205] py-20 px-6 border-t border-t_border text-center">
     <div class="max-w-7xl mx-auto">
-      <div class="flex flex-wrap justify-center gap-8 md:gap-12 text-[10px] font-black text-t_muted uppercase tracking-[0.3em] mb-12">
+      <div class="flex flex-wrap justify-center gap-8 md:gap-12 text-[10px] font-black text-t_muted uppercase tracking-[0.3em] mb-8">
         <a href="#" onclick="navTo(0)" class="hover:text-t_teal transition-all">Home</a>
         <a href="#" onclick="navTo(5)" class="hover:text-t_teal transition-all">API</a>
         <a href="#" onclick="navTo(9)" class="hover:text-t_teal transition-all">TernGround</a>
         <a href="#" onclick="navTo(8)" class="hover:text-t_teal transition-all">Pricing</a>
         <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" class="hover:text-t_text transition-all">Source</a>
+      </div>
+      <div class="flex flex-wrap justify-center gap-6 md:gap-10 text-[9px] font-mono text-t_muted/60 uppercase tracking-[0.25em] mb-10">
+        <a href="impressum.html" class="hover:text-t_teal transition-all">Impressum</a>
+        <a href="agb.html" class="hover:text-t_teal transition-all">AGB</a>
+        <a href="datenschutz.html" class="hover:text-t_teal transition-all">Datenschutz</a>
+        <span>ZVR 1015608684</span>
+        <span>EU AI Act Art.13/14/15</span>
       </div>
       <p class="text-t_muted text-[10px] font-black tracking-widest uppercase mb-4">
         &copy; 2026 RFI-IRFOS &middot; GRAZ, AT &middot; TERNARY INTELLIGENCE STACK
@@ -1576,13 +1607,16 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
       closeMobileMenu();
     }
 
-    // THEME TOGGLE LOGIC
+    // THEME TOGGLE LOGIC — 3-state cycle: dark → light → hc → dark
     const themeToggle = document.getElementById('theme-toggle');
     const html = document.documentElement;
     const savedTheme = localStorage.getItem('ternlang-theme') || 'dark';
     html.setAttribute('data-theme', savedTheme);
+    const themeOrder = ['dark', 'light', 'hc'];
     themeToggle.addEventListener('click', () => {
-      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      const cur = html.getAttribute('data-theme');
+      const idx = themeOrder.indexOf(cur);
+      const next = themeOrder[(idx + 1) % themeOrder.length];
       html.setAttribute('data-theme', next);
       localStorage.setItem('ternlang-theme', next);
     });

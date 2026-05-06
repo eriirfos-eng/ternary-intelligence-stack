@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impressum — Ternlang / RFI-IRFOS</title>
+  <link rel="icon" type="image/png" href="assets/ternlang_logo_notext.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="robots" content="noindex">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:     #0d0d14;
+      --bg2:    #13131f;
+      --border: #1e2030;
+      --teal:   #00f5c4;
+      --muted:  #7a7d99;
+      --text:   #dde0f0;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.75;
+      padding: 48px 24px 80px;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .page { max-width: 760px; margin: 0 auto; }
+
+    /* Back link */
+    .back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--muted); text-decoration: none; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 48px;
+      transition: color 0.2s;
+    }
+    .back:hover { color: var(--teal); }
+    .back::before { content: '←'; font-size: 14px; }
+
+    /* Header */
+    .page-header { margin-bottom: 48px; }
+    .badge {
+      display: inline-block; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--teal);
+      border: 1px solid rgba(0,245,196,0.3); border-radius: 4px;
+      padding: 3px 10px; margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900;
+      letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px;
+    }
+    .subtitle { color: var(--muted); font-size: 0.9rem; }
+
+    /* Sections */
+    .section { margin-bottom: 48px; border-top: 1px solid var(--border); padding-top: 32px; }
+    .section:first-of-type { border-top: none; padding-top: 0; }
+    h2 {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 16px;
+    }
+    h3 {
+      font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: var(--text);
+    }
+    p { color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }
+    p strong { color: var(--text); }
+    a { color: var(--teal); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Info block */
+    .info-block {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 24px 28px; margin-bottom: 16px;
+    }
+    .info-row {
+      display: flex; gap: 16px; padding: 6px 0;
+      border-bottom: 1px solid var(--border); font-size: 0.875rem;
+    }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-label { color: var(--muted); min-width: 140px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.05em; }
+    .info-value { color: var(--text); }
+
+    /* Team grid */
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .team-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px 24px;
+    }
+    .team-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: var(--text); }
+    .team-role { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
+    .team-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .team-link {
+      font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--teal); border: 1px solid rgba(0,245,196,0.25);
+      border-radius: 4px; padding: 2px 8px; text-decoration: none;
+      transition: all 0.15s;
+    }
+    .team-link:hover { background: rgba(0,245,196,0.08); text-decoration: none; }
+
+    /* Placeholder notice */
+    .placeholder {
+      display: inline-block; background: rgba(249,226,175,0.1);
+      border: 1px solid rgba(249,226,175,0.3); border-radius: 4px;
+      color: #f9e2af; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; padding: 2px 8px; letter-spacing: 0.05em;
+    }
+
+    /* Footer */
+    .page-footer {
+      margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
+      text-align: center; font-size: 0.75rem; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <a href="/" class="back">Zurück zu ternlang.com</a>
+
+    <div class="page-header">
+      <div class="badge">Pflichtangaben gemäß §5 E-Commerce-Gesetz (ECG)</div>
+      <h1>Impressum</h1>
+      <p class="subtitle">Angaben gemäß §5 ECG, §14 UGB und §25 MedienG</p>
+    </div>
+
+    <!-- Company identity -->
+    <div class="section">
+      <h2>Unternehmensangaben</h2>
+      <div class="info-block">
+        <div class="info-row">
+          <span class="info-label">Vollständiger Name</span>
+          <span class="info-value"><strong>Research Focus Institute — Interdisciplinary Research Facility for Open Sciences</strong></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Kurzbezeichnung</span>
+          <span class="info-value">RFI-IRFOS</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Produkt / Marke</span>
+          <span class="info-value">Ternlang · Ternary Intelligence Stack (TIS)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Rechtsform</span>
+          <span class="info-value">Verein (gemeinnützige Forschungseinrichtung)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ZVR-Zahl</span>
+          <span class="info-value mono">1015608684</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">GISA-Zahl</span>
+          <span class="info-value mono">39261441</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Gewerbewortlaut</span>
+          <span class="info-value">Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik (freies Gewerbe)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Gewerbebehörde</span>
+          <span class="info-value">Magistrat der Stadt Graz</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Entstehung</span>
+          <span class="info-value">19.03.2026</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">GLN</span>
+          <span class="info-value mono">9110038490191</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">UID / ATU</span>
+          <span class="info-value"><span class="placeholder">ATU-XXXXXXXX — wird ergänzt sobald vergeben</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Gew. Geschäftsführer</span>
+          <span class="info-value">Simeon-Andreas Johann Manfred Kepp</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address & contact -->
+    <div class="section">
+      <h2>Anschrift &amp; Kontakt</h2>
+      <div class="info-block">
+        <div class="info-row">
+          <span class="info-label">Adresse</span>
+          <span class="info-value">Elisabethinergasse 25/10, 8020 Graz, Österreich</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">E-Mail (allgemein)</span>
+          <span class="info-value"><a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Website</span>
+          <span class="info-value"><a href="https://ternlang.com">https://ternlang.com</a></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Patentanmeldung</span>
+          <span class="info-value mono">A50296/2026 (Österreichisches Patentamt)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regulatory / applicable law -->
+    <div class="section">
+      <h2>Aufsichtsbehörde &amp; anwendbares Recht</h2>
+      <p>Zuständige Aufsichtsbehörde: Gewerbebehörde der Stadt Graz (Magistrat Graz)</p>
+      <p>Anwendbares Recht: Österreich · Europäische Union</p>
+      <p>Die Verarbeitung personenbezogener Daten erfolgt gemäß der DSGVO (EU 2016/679) sowie dem österreichischen Datenschutzgesetz (DSG 2018).</p>
+      <p>Alle KI-Systeme und Entscheidungsprozesse werden gemäß <strong>EU AI Act Art. 13 / 14 / 15</strong> (Transparenz, menschliche Aufsicht, Robustheit) entwickelt und dokumentiert.</p>
+    </div>
+
+    <!-- Team -->
+    <div class="section">
+      <h2>Führungsteam</h2>
+      <p style="margin-bottom:20px;">Verantwortliche Personen gemäß §25 MedienG und §5 ECG:</p>
+      <div class="team-grid">
+
+        <div class="team-card">
+          <div class="team-name">Simeon Kepp</div>
+          <div class="team-role">Co-Founder · Head of Research · Operational Lead</div>
+          <div class="team-links">
+            <a href="https://www.linkedin.com/in/simeon-kepp/" target="_blank" rel="noopener" class="team-link">LinkedIn</a>
+            <a href="mailto:s.kepp@ternlang.com" class="team-link">E-Mail</a>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="team-name">Nikoletta Csonka</div>
+          <div class="team-role">Co-Founder · Head of International Relations</div>
+          <div class="team-links">
+            <a href="https://www.linkedin.com/in/csonikoletta/" target="_blank" rel="noopener" class="team-link">LinkedIn</a>
+            <a href="mailto:csonikoletta@ternlang.com" class="team-link">E-Mail</a>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="team-name">Zabih Karimi</div>
+          <div class="team-role">Co-Founder · IT Technician · Network &amp; ML Specialist</div>
+          <div class="team-links">
+            <a href="https://www.linkedin.com/in/zabih-karimi-3292ab349/" target="_blank" rel="noopener" class="team-link">LinkedIn</a>
+            <a href="mailto:z.karimi@ternlang.com" class="team-link">E-Mail</a>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="team-name">Lisa Scharler</div>
+          <div class="team-role">Head of Social Technology &amp; Ecocentric Systems</div>
+          <div class="team-links">
+            <a href="https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/" target="_blank" rel="noopener" class="team-link">LinkedIn</a>
+            <a href="mailto:l.scharler@ternlang.com" class="team-link">E-Mail</a>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="team-name">Louis Paul Ehrig</div>
+          <div class="team-role">Co-Founder · Head of Public Affairs · Corporate Secretary</div>
+          <div class="team-links">
+            <a href="https://www.linkedin.com/in/louis-ehrig-317941335/" target="_blank" rel="noopener" class="team-link">LinkedIn</a>
+            <a href="mailto:l.ehrig@ternlang.com" class="team-link">E-Mail</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Haftungsausschluss -->
+    <div class="section">
+      <h2>Haftungsausschluss</h2>
+      <p>Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.</p>
+      <p>Die auf dieser Website bereitgestellten Informationen wurden sorgfältig zusammengestellt. RFI-IRFOS übernimmt jedoch keine Gewährleistung für die Aktualität, Vollständigkeit oder Richtigkeit der Inhalte.</p>
+    </div>
+
+    <!-- Urheberrecht -->
+    <div class="section">
+      <h2>Urheberrecht</h2>
+      <p>Alle Inhalte dieser Website (Texte, Grafiken, Code, Logos) sind urheberrechtlich geschützt und Eigentum von RFI-IRFOS, sofern nicht anders angegeben.</p>
+      <p>Der Quellcode des Ternary Intelligence Stack steht unter der <strong>LGPL-3.0-or-later</strong>-Lizenz (Open-Source-Komponenten) sowie der <strong>Business Source License 1.1 (BSL 1.1)</strong> für kommerzielle Nutzung. Lizenzanfragen: <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+    </div>
+
+    <div class="page-footer">
+      <p>&copy; 2026 RFI-IRFOS · Graz, Österreich · <a href="/">ternlang.com</a></p>
+      <p style="margin-top:8px;font-size:0.7rem;">
+        <a href="agb.html">AGB</a> &nbsp;·&nbsp;
+        <a href="datenschutz.html">Datenschutzerklärung</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>
