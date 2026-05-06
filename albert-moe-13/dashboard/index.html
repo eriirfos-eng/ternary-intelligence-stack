@@ -200,6 +200,7 @@
     let pulseDataX       = 0;
     let pulseDataY       = 0;
     let pulseEndMs       = 0;
+    let lastKnownEpoch   = -1;  // last epoch seen — used to detect genuine session resets
 
     // ── Last epoch average reference line (MT5-style "closing price" line) ──
     let lastSmaY = null;   // tracks last completed epoch's avg loss
@@ -408,29 +409,9 @@
             const lines = text.split('\n');
             const newPts = [];
             for (const line of lines) {
-                // ARCH metadata line — update topbar display; also acts as new-session sentinel
+                // ARCH metadata line — update topbar only; session detection is epoch-based below
                 const am = line.match(/^ARCH\s+(\d+)L\s+(\d+)H\s+(\d+)E\s+(\d+)CTX\s+(\d+)V/);
                 if (am) {
-                    // If there is already chart data, this ARCH line signals a new training session.
-                    // Clear everything so old-run epochs don't collide with the new run.
-                    if (chart.data.datasets[0].data.length > 0) {
-                        chart.data.datasets[0].data.length = 0;
-                        chart.data.datasets[1].data = [];
-                        lastSmaY  = null;
-                        bestLoss  = Infinity;
-                        totalPts  = 0;
-                        lastLossVal = null;
-                        newPointStartIdx = Infinity;
-                        document.getElementById('v-loss').textContent  = '—';
-                        document.getElementById('v-epoch').textContent = '—';
-                        document.getElementById('v-best').textContent  = '—';
-                        document.getElementById('v-pts').textContent   = '0';
-                        document.getElementById('delta').textContent   = '';
-                        document.getElementById('delta').className     = 'flat';
-                        document.getElementById('waiting').classList.remove('hidden');
-                        chart.options.scales.x.min = undefined;
-                        chart.options.scales.x.max = undefined;
-                    }
                     document.getElementById('v-arch').textContent =
                         `${am[1]} LAYERS · ${am[2]} HIDDEN · ${am[3]} EXPERTS · ${am[4]} CTX · ${am[5]} VOCAB`;
                     continue;
@@ -450,6 +431,31 @@
             }
 
             if (newPts.length === 0) return;
+
+            // Detect genuine session reset: epoch went backwards by more than 5.
+            // Surgeries and manual restarts continue from the same epoch, so they
+            // won't trigger this. Only a cold restart from epoch 0 will.
+            const firstNewEpoch = newPts[0].epoch;
+            if (lastKnownEpoch > 0 && firstNewEpoch < lastKnownEpoch - 5) {
+                chart.data.datasets[0].data.length = 0;
+                chart.data.datasets[1].data = [];
+                lastSmaY     = null;
+                bestLoss     = Infinity;
+                totalPts     = 0;
+                lastLossVal  = null;
+                lastKnownEpoch = -1;
+                newPointStartIdx = Infinity;
+                document.getElementById('v-loss').textContent  = '—';
+                document.getElementById('v-epoch').textContent = '—';
+                document.getElementById('v-best').textContent  = '—';
+                document.getElementById('v-pts').textContent   = '0';
+                document.getElementById('delta').textContent   = '';
+                document.getElementById('delta').className     = 'flat';
+                document.getElementById('waiting').classList.remove('hidden');
+                chart.options.scales.x.min = undefined;
+                chart.options.scales.x.max = undefined;
+            }
+            lastKnownEpoch = newPts[newPts.length - 1].epoch;
 
             // Hide waiting overlay on first data
             document.getElementById('waiting').classList.add('hidden');
