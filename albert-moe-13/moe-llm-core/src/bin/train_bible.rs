@@ -1,6 +1,6 @@
 use candle_core::{Device, DType, Result, Tensor};
 use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
-use moe_llm_core::model::{Transformer, TransformerConfig};
+use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture};
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use std::fs::{self, OpenOptions};
@@ -74,6 +74,111 @@ fn global_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore) -
         }
     }
     sq_sum.sqrt()
+}
+
+/// Compute L2 gradient norm per transformer layer.
+/// Returns a Vec of length num_layers; each entry is sqrt(sum of squared grads
+/// for all tensors whose name starts with "blocks.N.").
+fn per_layer_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore, num_layers: usize) -> Vec<f32> {
+    let mut sq: Vec<f32> = vec![0.0; num_layers];
+    let all_vars = varmap.data().lock().unwrap();
+    for (name, var) in all_vars.iter() {
+        let li = name.strip_prefix("blocks.")
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<usize>().ok());
+        if let Some(i) = li {
+            if i < num_layers {
+                if let Some(g) = grads.get(var.as_tensor()) {
+                    if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
+                        if s.is_finite() { sq[i] += s; }
+                    }
+                }
+            }
+        }
+    }
+    sq.iter().map(|&s| s.sqrt()).collect()
+}
+
+/// Emit a TELE line to the training log once per epoch.
+/// The dashboard parses this to drive the live neural viz panels.
+///
+/// Format: TELE L=<layers> S=<sparsity per layer, comma> E=<expert activity, comma>
+///
+/// Sparsity: fraction of weights with |w| < 0.1 (i.e. ternary zero) per layer.
+/// Expert activity: mean absolute weight in each expert's MLP, normalised 0–1.
+fn emit_telemetry(varmap: &VarMap, num_layers: usize, num_experts: usize, log_path: &str) {
+    let all_vars = match varmap.data().lock() {
+        Ok(v) => v,
+        Err(_) => return,
+    };
+
+    let mut layer_zeros = vec![0u64; num_layers];
+    let mut layer_total = vec![0u64; num_layers];
+    let mut expert_sum  = vec![0.0f32; num_experts];
+    let mut expert_cnt  = vec![0u64; num_experts];
+
+    for (name, var) in all_vars.iter() {
+        if !name.contains("weight") { continue; }
+
+        let data: Vec<f32> = match var.as_tensor()
+            .flatten_all()
+            .and_then(|t| t.to_vec1::<f32>())
+        {
+            Ok(d) => d,
+            Err(_) => continue,
+        };
+
+        // Per-layer sparsity: extract layer index from "blocks.N."
+        let layer_idx = name.strip_prefix("blocks.")
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<usize>().ok());
+
+        if let Some(li) = layer_idx {
+            if li < num_layers {
+                layer_zeros[li] += data.iter().filter(|&&w| w.abs() < 0.1).count() as u64;
+                layer_total[li] += data.len() as u64;
+            }
+        }
+
+        // Per-expert activity: extract expert index from "experts.N."
+        if name.contains("experts.") {
+            let ei = name.split("experts.")
+                .nth(1)
+                .and_then(|s| s.split('.').next())
+                .and_then(|s| s.parse::<usize>().ok());
+            if let Some(e) = ei {
+                if e < num_experts {
+                    expert_sum[e] += data.iter().map(|w| w.abs()).sum::<f32>();
+                    expert_cnt[e] += data.len() as u64;
+                }
+            }
+        }
+    }
+
+    let sparsity: Vec<String> = (0..num_layers).map(|i| {
+        if layer_total[i] > 0 {
+            format!("{:.3}", layer_zeros[i] as f32 / layer_total[i] as f32)
+        } else { "0.000".to_string() }
+    }).collect();
+
+    // Normalise expert activity to 0–1 relative to the most active expert.
+    let acts: Vec<f32> = (0..num_experts).map(|e| {
+        if expert_cnt[e] > 0 { expert_sum[e] / expert_cnt[e] as f32 } else { 0.0 }
+    }).collect();
+    let max_act = acts.iter().cloned().fold(0.0f32, f32::max).max(1e-9);
+    let expert_act: Vec<String> = acts.iter()
+        .map(|&a| format!("{:.3}", a / max_act))
+        .collect();
+
+    let line = format!("TELE L={} S={} E={}",
+        num_layers,
+        sparsity.join(","),
+        expert_act.join(","),
+    );
+
+    if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+        let _ = writeln!(f, "{}", line);
+    }
 }
 
 fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device) -> Result<()> {
@@ -286,6 +391,24 @@ fn train_cycle(
 
             if let Some(ref mut f) = log_file {
                 let _ = writeln!(f, "{}", log_line);
+
+                // GRAD — per-layer gradient norm, emitted every batch.
+                // Dashboard parses "GRAD step=N n=X.XXXX L=n0,n1,n2,..."
+                let layer_norms = per_layer_grad_norm(&varmap, &grads, config.num_layers);
+                let ln_str: Vec<String> = layer_norms.iter()
+                    .map(|n| format!("{:.4}", n)).collect();
+                let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, norm, ln_str.join(","));
+
+                // ROUTE — expert routing weights, emitted every 10 batches to keep log lean.
+                // Dashboard parses "ROUTE step=N E=w0,w1,...,w11"
+                if batch_idx % 10 == 0 {
+                    let routing = take_routing_capture(config.num_experts);
+                    let route_str: Vec<String> = routing.iter()
+                        .map(|&w| format!("{:.3}", w)).collect();
+                    let _ = writeln!(f, "ROUTE step={} E={}", *global_step, route_str.join(","));
+                }
+                clear_routing_capture();
+
                 let _ = f.flush();
             }
 
@@ -322,6 +445,9 @@ fn train_cycle(
             fs::write(best_meta_path, avg_loss.to_string())?;
             println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
         }
+
+        // Emit telemetry for the dashboard neural viz panels.
+        emit_telemetry(&varmap, config.num_layers, config.num_experts, log_path);
 
         if evolution_manager.should_evolve(config.num_layers) {
             evolution_manager.reset_history();

@@ -25,9 +25,16 @@ Speedup from `sparse_matmul` over dense float32 scales proportionally with zero-
 |----------|------------------------|
 | ~50–70% (typical BitNet) | 2–4× |
 | ~90% | ~10× |
-| ~99% (upper bound) | up to 122× |
+| ~99% (theoretical upper bound, native ternary ASIC) | up to 122× |
 
-Baseline measured result: **2.3×** at typical distributions ([commit 60f7ef6](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)).
+**x86/ARM measured baseline:** **2.3×** at typical distributions on binary ALU hardware
+([commit 60f7ef6](https://github.com/eriirfos-eng/ternary-intelligence-stack--tis-/commit/60f7ef659)).
+Run the reproducible benchmark: `cargo run --release --bin sparseskip_throughput -p moe-llm-core`
+
+> The 122× figure is the mathematical upper bound for native ternary ASIC silicon at
+> 99%+ weight sparsity, where bit-masking overhead is eliminated at the hardware level.
+> On x86/ARM (binary ALU emulation) the realized speedup is lower due to branch
+> prediction and cache effects. Real measured x86 numbers are in the benchmark output.
 
 ## Usage
 
