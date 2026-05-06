@@ -132,6 +132,12 @@
     .reveal { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
     .reveal.active { opacity: 1; transform: translateY(0); }
     
+    /* Language Toggle */
+    [data-lang="en"] .lang-de { display: none !important; }
+    [data-lang="de"] .lang-en { display: none !important; }
+    .lang-toggle-btn { height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid rgb(var(--theme-border)); background: transparent; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: rgb(var(--theme-muted)); transition: all 0.2s; }
+    .lang-toggle-btn:hover { background: rgba(0,245,196,0.1); border-color: #00f5c4; color: #00f5c4; }
+
     /* Theme Toggle */
     .theme-toggle { width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgb(var(--theme-border)); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; }
     .theme-toggle:hover { background: rgba(0,245,196,0.1); border-color: #00f5c4; }
@@ -260,6 +266,7 @@
         </div>
       </div>
       <div class="flex items-center gap-4">
+        <button class="lang-toggle-btn" id="lang-toggle" title="Switch language / Sprache wechseln" aria-label="Switch language">EN</button>
         <button class="theme-toggle" id="theme-toggle" title="Toggle dark / light / high-contrast" aria-label="Toggle theme">
           <svg class="icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
           <svg class="icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -1605,6 +1612,21 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
     function navTo(index) {
       showPage(index);
       closeMobileMenu();
+    }
+
+    // LANGUAGE TOGGLE — EN ↔ DE, synced via localStorage across all pages
+    const langToggleBtn = document.getElementById('lang-toggle');
+    const savedLang = localStorage.getItem('ternlang-lang') || 'en';
+    applyLang(savedLang);
+    langToggleBtn.addEventListener('click', () => {
+      const next = html.getAttribute('data-lang') === 'en' ? 'de' : 'en';
+      applyLang(next);
+      localStorage.setItem('ternlang-lang', next);
+    });
+    function applyLang(lang) {
+      html.setAttribute('data-lang', lang);
+      html.setAttribute('lang', lang);
+      langToggleBtn.textContent = lang === 'en' ? 'DE' : 'EN';
     }
 
     // THEME TOGGLE LOGIC — 3-state cycle: dark → light → hc → dark

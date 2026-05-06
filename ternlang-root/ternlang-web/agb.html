@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en" data-lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AGB — Ternlang / RFI-IRFOS</title>
+  <title>Terms &amp; Conditions / AGB — Ternlang / RFI-IRFOS</title>
   <link rel="icon" type="image/png" href="assets/ternlang_logo_notext.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <meta name="robots" content="noindex">
@@ -12,9 +12,17 @@
     :root { --bg: #0d0d14; --bg2: #13131f; --border: #1e2030; --teal: #00f5c4; --muted: #7a7d99; --text: #dde0f0; }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.75; padding: 48px 24px 80px; }
     .page { max-width: 760px; margin: 0 auto; }
-    .back { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 48px; transition: color 0.2s; }
+    [data-lang="en"] .lang-de { display: none; }
+    [data-lang="de"] .lang-en { display: none; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; }
     .back:hover { color: var(--teal); }
     .back::before { content: '←'; font-size: 14px; }
+    .lang-toggle { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; background: none; }
+    .lang-toggle span { padding: 5px 10px; color: var(--muted); transition: all 0.15s; user-select: none; }
+    .lang-toggle span.active { background: rgba(0,245,196,0.1); color: var(--teal); }
+    .lang-toggle:hover { border-color: rgba(0,245,196,0.4); }
+    .lang-toggle .sep { color: var(--border); padding: 0; }
     .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); border: 1px solid rgba(0,245,196,0.3); border-radius: 4px; padding: 3px 10px; margin-bottom: 16px; }
     h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
     .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 48px; }
@@ -36,105 +44,275 @@
 <body>
   <div class="page">
 
-    <a href="/" class="back">Zurück zu ternlang.com</a>
-
-    <div class="badge">Allgemeine Geschäftsbedingungen</div>
-    <h1>AGB</h1>
-    <p class="subtitle">Stand: Mai 2026 · RFI-IRFOS, Graz, Österreich · Gültig für alle Leistungen von ternlang.com</p>
-
-    <div class="section">
-      <h2>§1 Geltungsbereich</h2>
-      <p>Diese Allgemeinen Geschäftsbedingungen gelten für alle Verträge zwischen <strong>RFI-IRFOS</strong> (Elisabethinergasse 25/10, 8020 Graz, ZVR 1015608684 — nachfolgend „Anbieter") und Nutzern der Website <strong>ternlang.com</strong> sowie der bereitgestellten API, MCP-Tools und Softwarelizenzen.</p>
-      <p>Entgegenstehende oder abweichende Bedingungen des Nutzers werden nicht anerkannt, sofern der Anbieter ihrer Geltung nicht ausdrücklich schriftlich zugestimmt hat.</p>
+    <div class="topbar">
+      <a href="/" class="back">
+        <span class="lang-en">Back to ternlang.com</span>
+        <span class="lang-de">Zurück zu ternlang.com</span>
+      </a>
+      <button class="lang-toggle" id="lang-toggle" aria-label="Switch language">
+        <span id="lt-en">EN</span>
+        <span class="sep">&nbsp;|&nbsp;</span>
+        <span id="lt-de">DE</span>
+      </button>
     </div>
 
+    <div class="badge">
+      <span class="lang-en">Terms &amp; Conditions</span>
+      <span class="lang-de">Allgemeine Geschäftsbedingungen</span>
+    </div>
+    <h1>
+      <span class="lang-en">Terms &amp; Conditions</span>
+      <span class="lang-de">AGB</span>
+    </h1>
+    <p class="subtitle">
+      <span class="lang-en">Effective May 2026 · RFI-IRFOS, Graz, Austria · Applies to all services at ternlang.com</span>
+      <span class="lang-de">Stand: Mai 2026 · RFI-IRFOS, Graz, Österreich · Gültig für alle Leistungen von ternlang.com</span>
+    </p>
+
+    <!-- §1 Scope -->
     <div class="section">
-      <h2>§2 Leistungen</h2>
-      <p>Der Anbieter stellt folgende Leistungen bereit:</p>
-      <ol>
-        <li><strong>Open Access (kostenlos):</strong> ternlang-mcp mit 23 MCP-Tools, öffentliche Dokumentation, Community-Zugang.</li>
-        <li><strong>Restricted API (kostenpflichtig):</strong> Zugang zur Albert-MoE-13-Inferenz-API, erweiterte Tool-Kontingente, kommerzielle Nutzungsrechte.</li>
-        <li><strong>Commercial License:</strong> Individuelle Lizenzvereinbarungen für OEM-Integration, Deployment in geschlossenen Systemen oder Weitervertrieb.</li>
-      </ol>
-      <table class="tier-table">
-        <thead>
-          <tr><th>Tier</th><th>Preis</th><th>Nutzungsrecht</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>Open Access</strong></td><td>kostenlos</td><td>LGPL-3.0 / non-commercial</td></tr>
-          <tr><td><strong>Restricted API</strong></td><td>ab €99/Monat</td><td>BSL 1.1 · kommerziell mit Einschränkungen</td></tr>
-          <tr><td><strong>Commercial License</strong></td><td>auf Anfrage</td><td>Individuell verhandelt</td></tr>
-        </tbody>
-      </table>
+      <h2>
+        <span class="lang-en">§1 Scope</span>
+        <span class="lang-de">§1 Geltungsbereich</span>
+      </h2>
+      <div class="lang-en">
+        <p>These Terms and Conditions govern all contracts between <strong>RFI-IRFOS</strong> (Elisabethinergasse 25/10, 8020 Graz, ZVR 1015608684 — hereinafter "Provider") and users of <strong>ternlang.com</strong>, including the API, MCP tools and software licences offered therein.</p>
+        <p>Conflicting or deviating terms of the user are not recognised unless the Provider has explicitly agreed to them in writing.</p>
+      </div>
+      <div class="lang-de">
+        <p>Diese Allgemeinen Geschäftsbedingungen gelten für alle Verträge zwischen <strong>RFI-IRFOS</strong> (Elisabethinergasse 25/10, 8020 Graz, ZVR 1015608684 — nachfolgend „Anbieter") und Nutzern der Website <strong>ternlang.com</strong> sowie der bereitgestellten API, MCP-Tools und Softwarelizenzen.</p>
+        <p>Entgegenstehende oder abweichende Bedingungen des Nutzers werden nicht anerkannt, sofern der Anbieter ihrer Geltung nicht ausdrücklich schriftlich zugestimmt hat.</p>
+      </div>
     </div>
 
+    <!-- §2 Services -->
     <div class="section">
-      <h2>§3 Vertragsschluss</h2>
-      <p>Kostenpflichtige Leistungen werden durch Registrierung und Bezahlung über die Plattform oder per schriftlichem Lizenzvertrag abgeschlossen. Mit Abschluss des Registrierungsprozesses erkennt der Nutzer diese AGB an.</p>
-      <p>Für kostenlose Leistungen (MCP-Tools, Open Access) gilt die Nutzung als konkludente Zustimmung zu diesen AGB.</p>
+      <h2>
+        <span class="lang-en">§2 Services</span>
+        <span class="lang-de">§2 Leistungen</span>
+      </h2>
+      <div class="lang-en">
+        <p>The Provider makes available:</p>
+        <ol>
+          <li><strong>Open Access (free):</strong> ternlang-mcp with 23 MCP tools, public documentation, community access.</li>
+          <li><strong>Restricted API (paid):</strong> Access to Albert MoE-13 inference API, extended tool quotas, commercial usage rights.</li>
+          <li><strong>Commercial Licence:</strong> Individual licence agreements for OEM integration, closed-system deployment or redistribution.</li>
+        </ol>
+        <table class="tier-table">
+          <thead><tr><th>Tier</th><th>Price</th><th>Licence</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Open Access</strong></td><td>Free</td><td>LGPL-3.0 / non-commercial</td></tr>
+            <tr><td><strong>Restricted API</strong></td><td>from €99/month</td><td>BSL 1.1 · commercial with restrictions</td></tr>
+            <tr><td><strong>Commercial Licence</strong></td><td>On request</td><td>Individually negotiated</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="lang-de">
+        <p>Der Anbieter stellt folgende Leistungen bereit:</p>
+        <ol>
+          <li><strong>Open Access (kostenlos):</strong> ternlang-mcp mit 23 MCP-Tools, öffentliche Dokumentation, Community-Zugang.</li>
+          <li><strong>Restricted API (kostenpflichtig):</strong> Zugang zur Albert-MoE-13-Inferenz-API, erweiterte Tool-Kontingente, kommerzielle Nutzungsrechte.</li>
+          <li><strong>Commercial License:</strong> Individuelle Lizenzvereinbarungen für OEM-Integration, Deployment in geschlossenen Systemen oder Weitervertrieb.</li>
+        </ol>
+        <table class="tier-table">
+          <thead><tr><th>Tier</th><th>Preis</th><th>Nutzungsrecht</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Open Access</strong></td><td>kostenlos</td><td>LGPL-3.0 / non-commercial</td></tr>
+            <tr><td><strong>Restricted API</strong></td><td>ab €99/Monat</td><td>BSL 1.1 · kommerziell mit Einschränkungen</td></tr>
+            <tr><td><strong>Commercial License</strong></td><td>auf Anfrage</td><td>Individuell verhandelt</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
+    <!-- §3 Contract formation -->
     <div class="section">
-      <h2>§4 Nutzungsrechte &amp; Lizenzen</h2>
-      <p>Der Quellcode des Ternary Intelligence Stack unterliegt der <strong>LGPL-3.0-or-later</strong> für Open-Source-Komponenten und der <strong>Business Source License 1.1 (BSL 1.1)</strong> für kommerzielle Nutzung. Einzelheiten siehe <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener">GitHub Repository</a>.</p>
-      <p>Der Nutzer erhält ein nicht-exklusives, nicht übertragbares Nutzungsrecht im Umfang des gewählten Tarifs. Jede Nutzung außerhalb des lizenzierten Umfangs ist untersagt.</p>
+      <h2>
+        <span class="lang-en">§3 Contract Formation</span>
+        <span class="lang-de">§3 Vertragsschluss</span>
+      </h2>
+      <div class="lang-en">
+        <p>Paid services are activated upon registration and payment via the platform, or by written licence agreement. By completing registration the user accepts these Terms.</p>
+        <p>For free services (MCP tools, Open Access), use of the service constitutes implicit acceptance of these Terms.</p>
+      </div>
+      <div class="lang-de">
+        <p>Kostenpflichtige Leistungen werden durch Registrierung und Bezahlung über die Plattform oder per schriftlichem Lizenzvertrag abgeschlossen. Mit Abschluss des Registrierungsprozesses erkennt der Nutzer diese AGB an.</p>
+        <p>Für kostenlose Leistungen (MCP-Tools, Open Access) gilt die Nutzung als konkludente Zustimmung zu diesen AGB.</p>
+      </div>
     </div>
 
+    <!-- §4 Licences -->
     <div class="section">
-      <h2>§5 Pflichten des Nutzers</h2>
-      <ol>
-        <li>Der Nutzer verpflichtet sich, die bereitgestellten Dienste nicht für rechtswidrige Zwecke zu nutzen.</li>
-        <li>API-Zugangsdaten sind vertraulich zu behandeln und dürfen nicht weitergegeben werden.</li>
-        <li>Automatisierte Massenanfragen, die den Betrieb beeinträchtigen (DoS), sind verboten.</li>
-        <li>Der Nutzer haftet für alle Aktivitäten, die über seinen Account durchgeführt werden.</li>
-      </ol>
+      <h2>
+        <span class="lang-en">§4 Usage Rights &amp; Licences</span>
+        <span class="lang-de">§4 Nutzungsrechte &amp; Lizenzen</span>
+      </h2>
+      <div class="lang-en">
+        <p>The source code of the Ternary Intelligence Stack is available under <strong>LGPL-3.0-or-later</strong> for open-source components and the <strong>Business Source License 1.1 (BSL 1.1)</strong> for commercial use. See the <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener">GitHub repository</a> for details.</p>
+        <p>Users receive a non-exclusive, non-transferable licence to use the software within the scope of their chosen tier. Any use beyond the licensed scope is prohibited.</p>
+      </div>
+      <div class="lang-de">
+        <p>Der Quellcode des Ternary Intelligence Stack unterliegt der <strong>LGPL-3.0-or-later</strong> für Open-Source-Komponenten und der <strong>Business Source License 1.1 (BSL 1.1)</strong> für kommerzielle Nutzung. Einzelheiten siehe <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" rel="noopener">GitHub Repository</a>.</p>
+        <p>Der Nutzer erhält ein nicht-exklusives, nicht übertragbares Nutzungsrecht im Umfang des gewählten Tarifs. Jede Nutzung außerhalb des lizenzierten Umfangs ist untersagt.</p>
+      </div>
     </div>
 
+    <!-- §5 User obligations -->
     <div class="section">
-      <h2>§6 Haftungsbeschränkung</h2>
-      <p>Der Anbieter haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Verhalten entstanden sind. Die Haftung für leichte Fahrlässigkeit sowie für mittelbare Schäden, entgangenen Gewinn und Datenverlust ist — soweit gesetzlich zulässig — ausgeschlossen.</p>
-      <p>Die Verfügbarkeit der API und MCP-Tools wird ohne Gewähr bereitgestellt. Der Anbieter übernimmt keine Garantie für ununterbrochene Verfügbarkeit.</p>
+      <h2>
+        <span class="lang-en">§5 User Obligations</span>
+        <span class="lang-de">§5 Pflichten des Nutzers</span>
+      </h2>
+      <div class="lang-en">
+        <ol>
+          <li>Users must not use the services for unlawful purposes.</li>
+          <li>API credentials are confidential and must not be shared with third parties.</li>
+          <li>Automated bulk requests that impair operations (DoS) are prohibited.</li>
+          <li>Users are liable for all activities carried out via their account.</li>
+        </ol>
+      </div>
+      <div class="lang-de">
+        <ol>
+          <li>Der Nutzer verpflichtet sich, die bereitgestellten Dienste nicht für rechtswidrige Zwecke zu nutzen.</li>
+          <li>API-Zugangsdaten sind vertraulich zu behandeln und dürfen nicht weitergegeben werden.</li>
+          <li>Automatisierte Massenanfragen, die den Betrieb beeinträchtigen (DoS), sind verboten.</li>
+          <li>Der Nutzer haftet für alle Aktivitäten, die über seinen Account durchgeführt werden.</li>
+        </ol>
+      </div>
     </div>
 
+    <!-- §6 Liability -->
     <div class="section">
-      <h2>§7 Preise &amp; Zahlungsbedingungen</h2>
-      <p>Alle Preise verstehen sich zuzüglich der gesetzlichen Umsatzsteuer, sofern nicht anders angegeben. Rechnungen sind innerhalb von 14 Tagen ab Ausstellungsdatum zu begleichen.</p>
-      <p>Bei Zahlungsverzug ist der Anbieter berechtigt, den Zugang zu kostenpflichtigen Diensten bis zum Ausgleich der offenen Beträge zu sperren.</p>
+      <h2>
+        <span class="lang-en">§6 Limitation of Liability</span>
+        <span class="lang-de">§6 Haftungsbeschränkung</span>
+      </h2>
+      <div class="lang-en">
+        <p>The Provider is liable only for damages caused by intentional or grossly negligent conduct. Liability for slight negligence and for indirect damages, lost profits and data loss is excluded to the extent permitted by law.</p>
+        <p>The API and MCP tools are provided without guarantee of uninterrupted availability.</p>
+      </div>
+      <div class="lang-de">
+        <p>Der Anbieter haftet nur für Schäden, die durch vorsätzliches oder grob fahrlässiges Verhalten entstanden sind. Die Haftung für leichte Fahrlässigkeit sowie für mittelbare Schäden, entgangenen Gewinn und Datenverlust ist — soweit gesetzlich zulässig — ausgeschlossen.</p>
+        <p>Die Verfügbarkeit der API und MCP-Tools wird ohne Gewähr bereitgestellt.</p>
+      </div>
     </div>
 
+    <!-- §7 Pricing -->
     <div class="section">
-      <h2>§8 Laufzeit &amp; Kündigung</h2>
-      <p>Monatliche Abonnements können jederzeit zum Ende des laufenden Abrechnungszeitraums gekündigt werden. Jahresabonnements können mit einer Frist von 30 Tagen zum Ablauf des Jahres gekündigt werden.</p>
-      <p>Der Anbieter behält sich das Recht vor, Accounts bei schwerwiegenden Verstößen gegen diese AGB fristlos zu sperren.</p>
+      <h2>
+        <span class="lang-en">§7 Pricing &amp; Payment</span>
+        <span class="lang-de">§7 Preise &amp; Zahlungsbedingungen</span>
+      </h2>
+      <div class="lang-en">
+        <p>All prices are exclusive of statutory VAT unless stated otherwise. Invoices are due within 14 days of issue.</p>
+        <p>In the event of payment default, the Provider may suspend access to paid services until outstanding amounts are settled.</p>
+      </div>
+      <div class="lang-de">
+        <p>Alle Preise verstehen sich zuzüglich der gesetzlichen Umsatzsteuer, sofern nicht anders angegeben. Rechnungen sind innerhalb von 14 Tagen ab Ausstellungsdatum zu begleichen.</p>
+        <p>Bei Zahlungsverzug ist der Anbieter berechtigt, den Zugang zu kostenpflichtigen Diensten bis zum Ausgleich der offenen Beträge zu sperren.</p>
+      </div>
     </div>
 
+    <!-- §8 Term & termination -->
     <div class="section">
-      <h2>§9 Änderungen der AGB</h2>
-      <p>Der Anbieter behält sich vor, diese AGB jederzeit zu ändern. Änderungen werden mit einer Frist von 30 Tagen per E-Mail oder durch Veröffentlichung auf der Website bekannt gegeben. Bei Weiternutzung nach Ablauf der Frist gelten die neuen AGB als akzeptiert.</p>
+      <h2>
+        <span class="lang-en">§8 Term &amp; Termination</span>
+        <span class="lang-de">§8 Laufzeit &amp; Kündigung</span>
+      </h2>
+      <div class="lang-en">
+        <p>Monthly subscriptions may be cancelled at any time with effect from the end of the current billing period. Annual subscriptions may be cancelled with 30 days' notice before the end of the annual term.</p>
+        <p>The Provider reserves the right to suspend accounts immediately in the event of serious violations of these Terms.</p>
+      </div>
+      <div class="lang-de">
+        <p>Monatliche Abonnements können jederzeit zum Ende des laufenden Abrechnungszeitraums gekündigt werden. Jahresabonnements können mit einer Frist von 30 Tagen zum Ablauf des Jahres gekündigt werden.</p>
+        <p>Der Anbieter behält sich das Recht vor, Accounts bei schwerwiegenden Verstößen gegen diese AGB fristlos zu sperren.</p>
+      </div>
     </div>
 
+    <!-- §9 Amendments -->
     <div class="section">
-      <h2>§10 Anwendbares Recht &amp; Gerichtsstand</h2>
-      <p>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts (CISG). Ausschließlicher Gerichtsstand für alle Streitigkeiten ist — soweit gesetzlich zulässig — Graz, Österreich.</p>
-      <p>Für Verbraucher gilt ergänzend das österreichische Konsumentenschutzgesetz (KSchG). Die EU-Kommission stellt eine Online-Streitbeilegungsplattform bereit: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a></p>
-      <p>Wir sind weder bereit noch verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+      <h2>
+        <span class="lang-en">§9 Amendments to These Terms</span>
+        <span class="lang-de">§9 Änderungen der AGB</span>
+      </h2>
+      <div class="lang-en">
+        <p>The Provider reserves the right to amend these Terms at any time. Changes will be communicated with 30 days' notice by email or by publication on the website. Continued use after the notice period constitutes acceptance of the new Terms.</p>
+      </div>
+      <div class="lang-de">
+        <p>Der Anbieter behält sich vor, diese AGB jederzeit zu ändern. Änderungen werden mit einer Frist von 30 Tagen per E-Mail oder durch Veröffentlichung auf der Website bekannt gegeben. Bei Weiternutzung nach Ablauf der Frist gelten die neuen AGB als akzeptiert.</p>
+      </div>
     </div>
 
+    <!-- §10 Governing law -->
     <div class="section">
-      <h2>§11 Kontakt</h2>
-      <p>Fragen zu diesen AGB richten Sie bitte an:<br>
-      <strong>RFI-IRFOS</strong> · Elisabethinergasse 25/10, 8020 Graz<br>
-      <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+      <h2>
+        <span class="lang-en">§10 Governing Law &amp; Jurisdiction</span>
+        <span class="lang-de">§10 Anwendbares Recht &amp; Gerichtsstand</span>
+      </h2>
+      <div class="lang-en">
+        <p>Austrian law applies, excluding the UN Convention on Contracts for the International Sale of Goods (CISG). The exclusive place of jurisdiction for all disputes is — to the extent permitted by law — Graz, Austria.</p>
+        <p>Consumer protection provisions under the Austrian Consumer Protection Act (KSchG) apply additionally for consumers. The European Commission provides an online dispute resolution platform: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a></p>
+        <p>We are neither willing nor obligated to participate in dispute resolution proceedings before a consumer arbitration board.</p>
+      </div>
+      <div class="lang-de">
+        <p>Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts (CISG). Ausschließlicher Gerichtsstand für alle Streitigkeiten ist — soweit gesetzlich zulässig — Graz, Österreich.</p>
+        <p>Für Verbraucher gilt ergänzend das österreichische Konsumentenschutzgesetz (KSchG). Die EU-Kommission stellt eine Online-Streitbeilegungsplattform bereit: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a></p>
+        <p>Wir sind weder bereit noch verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+      </div>
+    </div>
+
+    <!-- §11 Contact -->
+    <div class="section">
+      <h2>
+        <span class="lang-en">§11 Contact</span>
+        <span class="lang-de">§11 Kontakt</span>
+      </h2>
+      <div class="lang-en">
+        <p>Questions about these Terms:<br>
+        <strong>RFI-IRFOS</strong> · Elisabethinergasse 25/10, 8020 Graz, Austria<br>
+        <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+      </div>
+      <div class="lang-de">
+        <p>Fragen zu diesen AGB:<br>
+        <strong>RFI-IRFOS</strong> · Elisabethinergasse 25/10, 8020 Graz, Österreich<br>
+        <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+      </div>
     </div>
 
     <div class="page-footer">
       <p>&copy; 2026 RFI-IRFOS · <a href="/">ternlang.com</a></p>
       <p style="margin-top:8px;font-size:0.7rem;">
-        <a href="impressum.html">Impressum</a> &nbsp;·&nbsp;
-        <a href="datenschutz.html">Datenschutz</a>
+        <a href="impressum.html">
+          <span class="lang-en">Legal Notice</span>
+          <span class="lang-de">Impressum</span>
+        </a>
+        &nbsp;·&nbsp;
+        <a href="datenschutz.html">
+          <span class="lang-en">Privacy Policy</span>
+          <span class="lang-de">Datenschutz</span>
+        </a>
       </p>
     </div>
 
   </div>
+
+  <script>
+    const html = document.documentElement;
+    const saved = localStorage.getItem('ternlang-lang') || 'en';
+    setLang(saved);
+
+    document.getElementById('lang-toggle').addEventListener('click', () => {
+      const next = html.getAttribute('data-lang') === 'en' ? 'de' : 'en';
+      setLang(next);
+      localStorage.setItem('ternlang-lang', next);
+    });
+
+    function setLang(lang) {
+      html.setAttribute('data-lang', lang);
+      html.setAttribute('lang', lang);
+      document.getElementById('lt-en').className = lang === 'en' ? 'active' : '';
+      document.getElementById('lt-de').className = lang === 'de' ? 'active' : '';
+    }
+  </script>
 </body>
 </html>

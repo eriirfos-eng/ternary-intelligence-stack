@@ -1,168 +1,179 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en" data-lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Impressum — Ternlang / RFI-IRFOS</title>
+  <title>Impressum / Legal Notice — Ternlang / RFI-IRFOS</title>
   <link rel="icon" type="image/png" href="assets/ternlang_logo_notext.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <meta name="robots" content="noindex">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:     #0d0d14;
-      --bg2:    #13131f;
-      --border: #1e2030;
-      --teal:   #00f5c4;
-      --muted:  #7a7d99;
-      --text:   #dde0f0;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      line-height: 1.75;
-      padding: 48px 24px 80px;
-    }
+    :root { --bg: #0d0d14; --bg2: #13131f; --border: #1e2030; --teal: #00f5c4; --muted: #7a7d99; --text: #dde0f0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.75; padding: 48px 24px 80px; }
     .mono { font-family: 'JetBrains Mono', monospace; }
     .page { max-width: 760px; margin: 0 auto; }
 
-    /* Back link */
-    .back {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: 'JetBrains Mono', monospace; font-size: 11px;
-      color: var(--muted); text-decoration: none; letter-spacing: 0.08em;
-      text-transform: uppercase; margin-bottom: 48px;
-      transition: color 0.2s;
-    }
+    /* Language hide/show */
+    [data-lang="en"] .lang-de { display: none; }
+    [data-lang="de"] .lang-en { display: none; }
+
+    /* Top bar */
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; }
     .back:hover { color: var(--teal); }
     .back::before { content: '←'; font-size: 14px; }
+    .lang-toggle { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; background: none; }
+    .lang-toggle span { padding: 5px 10px; color: var(--muted); transition: all 0.15s; user-select: none; }
+    .lang-toggle span.active { background: rgba(0,245,196,0.1); color: var(--teal); }
+    .lang-toggle:hover { border-color: rgba(0,245,196,0.4); }
+    .lang-toggle .sep { color: var(--border); padding: 0; }
 
     /* Header */
     .page-header { margin-bottom: 48px; }
-    .badge {
-      display: inline-block; font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
-      text-transform: uppercase; color: var(--teal);
-      border: 1px solid rgba(0,245,196,0.3); border-radius: 4px;
-      padding: 3px 10px; margin-bottom: 16px;
-    }
-    h1 {
-      font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900;
-      letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px;
-    }
+    .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); border: 1px solid rgba(0,245,196,0.3); border-radius: 4px; padding: 3px 10px; margin-bottom: 16px; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
     .subtitle { color: var(--muted); font-size: 0.9rem; }
 
     /* Sections */
     .section { margin-bottom: 48px; border-top: 1px solid var(--border); padding-top: 32px; }
-    .section:first-of-type { border-top: none; padding-top: 0; }
-    h2 {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
-      font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--teal); margin-bottom: 16px;
-    }
-    h3 {
-      font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: var(--text);
-    }
+    h2 { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; }
     p { color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }
     p strong { color: var(--text); }
     a { color: var(--teal); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
     /* Info block */
-    .info-block {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 24px 28px; margin-bottom: 16px;
-    }
-    .info-row {
-      display: flex; gap: 16px; padding: 6px 0;
-      border-bottom: 1px solid var(--border); font-size: 0.875rem;
-    }
+    .info-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 24px 28px; margin-bottom: 16px; }
+    .info-row { display: flex; gap: 16px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
     .info-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .info-label { color: var(--muted); min-width: 140px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.05em; }
+    .info-label { color: var(--muted); min-width: 160px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.05em; }
     .info-value { color: var(--text); }
 
     /* Team grid */
     .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-    .team-card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 20px 24px;
-    }
+    .team-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
     .team-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: var(--text); }
-    .team-role { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
+    .team-role { font-size: 0.72rem; color: var(--muted); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
     .team-links { display: flex; flex-wrap: wrap; gap: 8px; }
-    .team-link {
-      font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
-      color: var(--teal); border: 1px solid rgba(0,245,196,0.25);
-      border-radius: 4px; padding: 2px 8px; text-decoration: none;
-      transition: all 0.15s;
-    }
+    .team-link { font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; color: var(--teal); border: 1px solid rgba(0,245,196,0.25); border-radius: 4px; padding: 2px 8px; text-decoration: none; transition: all 0.15s; }
     .team-link:hover { background: rgba(0,245,196,0.08); text-decoration: none; }
 
-    /* Placeholder notice */
-    .placeholder {
-      display: inline-block; background: rgba(249,226,175,0.1);
-      border: 1px solid rgba(249,226,175,0.3); border-radius: 4px;
-      color: #f9e2af; font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem; padding: 2px 8px; letter-spacing: 0.05em;
-    }
+    /* Placeholder */
+    .placeholder { display: inline-block; background: rgba(249,226,175,0.1); border: 1px solid rgba(249,226,175,0.3); border-radius: 4px; color: #f9e2af; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; padding: 2px 8px; }
 
     /* Footer */
-    .page-footer {
-      margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
-      text-align: center; font-size: 0.75rem; color: var(--muted);
-    }
+    .page-footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; font-size: 0.75rem; color: var(--muted); }
   </style>
 </head>
 <body>
   <div class="page">
 
-    <a href="/" class="back">Zurück zu ternlang.com</a>
+    <div class="topbar">
+      <a href="/" class="back">
+        <span class="lang-en">Back to ternlang.com</span>
+        <span class="lang-de">Zurück zu ternlang.com</span>
+      </a>
+      <button class="lang-toggle" id="lang-toggle" aria-label="Switch language">
+        <span id="lt-en">EN</span>
+        <span class="sep">&nbsp;|&nbsp;</span>
+        <span id="lt-de">DE</span>
+      </button>
+    </div>
 
+    <!-- Header -->
     <div class="page-header">
-      <div class="badge">Pflichtangaben gemäß §5 E-Commerce-Gesetz (ECG)</div>
-      <h1>Impressum</h1>
-      <p class="subtitle">Angaben gemäß §5 ECG, §14 UGB und §25 MedienG</p>
+      <div class="badge">
+        <span class="lang-en">Mandatory disclosures · §5 Austrian E-Commerce Act (ECG)</span>
+        <span class="lang-de">Pflichtangaben gemäß §5 E-Commerce-Gesetz (ECG)</span>
+      </div>
+      <h1>
+        <span class="lang-en">Legal Notice</span>
+        <span class="lang-de">Impressum</span>
+      </h1>
+      <p class="subtitle">
+        <span class="lang-en">Information pursuant to §5 ECG, §14 UGB and §25 Austrian Media Act (MedienG)</span>
+        <span class="lang-de">Angaben gemäß §5 ECG, §14 UGB und §25 MedienG</span>
+      </p>
     </div>
 
     <!-- Company identity -->
     <div class="section">
-      <h2>Unternehmensangaben</h2>
+      <h2>
+        <span class="lang-en">Company Details</span>
+        <span class="lang-de">Unternehmensangaben</span>
+      </h2>
       <div class="info-block">
         <div class="info-row">
-          <span class="info-label">Vollständiger Name</span>
+          <span class="info-label">
+            <span class="lang-en">Legal Name</span>
+            <span class="lang-de">Vollständiger Name</span>
+          </span>
           <span class="info-value"><strong>Research Focus Institute — Interdisciplinary Research Facility for Open Sciences</strong></span>
         </div>
         <div class="info-row">
-          <span class="info-label">Kurzbezeichnung</span>
+          <span class="info-label">
+            <span class="lang-en">Short Name</span>
+            <span class="lang-de">Kurzbezeichnung</span>
+          </span>
           <span class="info-value">RFI-IRFOS</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Produkt / Marke</span>
+          <span class="info-label">
+            <span class="lang-en">Product / Brand</span>
+            <span class="lang-de">Produkt / Marke</span>
+          </span>
           <span class="info-value">Ternlang · Ternary Intelligence Stack (TIS)</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Rechtsform</span>
-          <span class="info-value">Verein (gemeinnützige Forschungseinrichtung)</span>
+          <span class="info-label">
+            <span class="lang-en">Legal Form</span>
+            <span class="lang-de">Rechtsform</span>
+          </span>
+          <span class="info-value">
+            <span class="lang-en">Registered Association (non-profit research institution)</span>
+            <span class="lang-de">Verein (gemeinnützige Forschungseinrichtung)</span>
+          </span>
         </div>
         <div class="info-row">
-          <span class="info-label">ZVR-Zahl</span>
+          <span class="info-label">
+            <span class="lang-en">ZVR No. (Association Register)</span>
+            <span class="lang-de">ZVR-Zahl</span>
+          </span>
           <span class="info-value mono">1015608684</span>
         </div>
         <div class="info-row">
-          <span class="info-label">GISA-Zahl</span>
+          <span class="info-label">
+            <span class="lang-en">GISA No. (Trade Register)</span>
+            <span class="lang-de">GISA-Zahl</span>
+          </span>
           <span class="info-value mono">39261441</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Gewerbewortlaut</span>
-          <span class="info-value">Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik (freies Gewerbe)</span>
+          <span class="info-label">
+            <span class="lang-en">Registered Trade Activity</span>
+            <span class="lang-de">Gewerbewortlaut</span>
+          </span>
+          <span class="info-value">
+            <span class="lang-en">IT services and automated data processing (unregulated trade)</span>
+            <span class="lang-de">Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik (freies Gewerbe)</span>
+          </span>
         </div>
         <div class="info-row">
-          <span class="info-label">Gewerbebehörde</span>
-          <span class="info-value">Magistrat der Stadt Graz</span>
+          <span class="info-label">
+            <span class="lang-en">Trade Authority</span>
+            <span class="lang-de">Gewerbebehörde</span>
+          </span>
+          <span class="info-value">
+            <span class="lang-en">Municipal Authority of the City of Graz (Magistrat Graz)</span>
+            <span class="lang-de">Magistrat der Stadt Graz</span>
+          </span>
         </div>
         <div class="info-row">
-          <span class="info-label">Entstehung</span>
+          <span class="info-label">
+            <span class="lang-en">Registration Date</span>
+            <span class="lang-de">Entstehung</span>
+          </span>
           <span class="info-value">19.03.2026</span>
         </div>
         <div class="info-row">
@@ -170,11 +181,20 @@
           <span class="info-value mono">9110038490191</span>
         </div>
         <div class="info-row">
-          <span class="info-label">UID / ATU</span>
-          <span class="info-value"><span class="placeholder">ATU-XXXXXXXX — wird ergänzt sobald vergeben</span></span>
+          <span class="info-label">
+            <span class="lang-en">VAT Number (UID)</span>
+            <span class="lang-de">UID / ATU</span>
+          </span>
+          <span class="info-value">
+            <span class="placeholder lang-en">ATU-XXXXXXXX — to be added once assigned</span>
+            <span class="placeholder lang-de">ATU-XXXXXXXX — wird ergänzt sobald vergeben</span>
+          </span>
         </div>
         <div class="info-row">
-          <span class="info-label">Gew. Geschäftsführer</span>
+          <span class="info-label">
+            <span class="lang-en">Trade Manager</span>
+            <span class="lang-de">Gew. Geschäftsführer</span>
+          </span>
           <span class="info-value">Simeon-Andreas Johann Manfred Kepp</span>
         </div>
       </div>
@@ -182,14 +202,20 @@
 
     <!-- Address & contact -->
     <div class="section">
-      <h2>Anschrift &amp; Kontakt</h2>
+      <h2>
+        <span class="lang-en">Address &amp; Contact</span>
+        <span class="lang-de">Anschrift &amp; Kontakt</span>
+      </h2>
       <div class="info-block">
         <div class="info-row">
-          <span class="info-label">Adresse</span>
-          <span class="info-value">Elisabethinergasse 25/10, 8020 Graz, Österreich</span>
+          <span class="info-label">
+            <span class="lang-en">Address</span>
+            <span class="lang-de">Adresse</span>
+          </span>
+          <span class="info-value">Elisabethinergasse 25/10, 8020 Graz, Austria</span>
         </div>
         <div class="info-row">
-          <span class="info-label">E-Mail (allgemein)</span>
+          <span class="info-label">E-Mail</span>
           <span class="info-value"><a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></span>
         </div>
         <div class="info-row">
@@ -197,25 +223,48 @@
           <span class="info-value"><a href="https://ternlang.com">https://ternlang.com</a></span>
         </div>
         <div class="info-row">
-          <span class="info-label">Patentanmeldung</span>
-          <span class="info-value mono">A50296/2026 (Österreichisches Patentamt)</span>
+          <span class="info-label">
+            <span class="lang-en">Patent Application</span>
+            <span class="lang-de">Patentanmeldung</span>
+          </span>
+          <span class="info-value mono">
+            <span class="lang-en">A50296/2026 (Austrian Patent Office)</span>
+            <span class="lang-de">A50296/2026 (Österreichisches Patentamt)</span>
+          </span>
         </div>
       </div>
     </div>
 
     <!-- Regulatory / applicable law -->
     <div class="section">
-      <h2>Aufsichtsbehörde &amp; anwendbares Recht</h2>
-      <p>Zuständige Aufsichtsbehörde: Gewerbebehörde der Stadt Graz (Magistrat Graz)</p>
-      <p>Anwendbares Recht: Österreich · Europäische Union</p>
-      <p>Die Verarbeitung personenbezogener Daten erfolgt gemäß der DSGVO (EU 2016/679) sowie dem österreichischen Datenschutzgesetz (DSG 2018).</p>
-      <p>Alle KI-Systeme und Entscheidungsprozesse werden gemäß <strong>EU AI Act Art. 13 / 14 / 15</strong> (Transparenz, menschliche Aufsicht, Robustheit) entwickelt und dokumentiert.</p>
+      <h2>
+        <span class="lang-en">Supervisory Authority &amp; Applicable Law</span>
+        <span class="lang-de">Aufsichtsbehörde &amp; anwendbares Recht</span>
+      </h2>
+      <div class="lang-en">
+        <p>Supervisory authority: Trade Authority of the City of Graz (Magistrat Graz)</p>
+        <p>Applicable law: Republic of Austria · European Union</p>
+        <p>The processing of personal data is carried out in accordance with the GDPR (EU 2016/679) and the Austrian Data Protection Act (DSG 2018).</p>
+        <p>All AI systems and decision processes are developed and documented in accordance with <strong>EU AI Act Art. 13 / 14 / 15</strong> (transparency, human oversight, robustness).</p>
+      </div>
+      <div class="lang-de">
+        <p>Zuständige Aufsichtsbehörde: Gewerbebehörde der Stadt Graz (Magistrat Graz)</p>
+        <p>Anwendbares Recht: Österreich · Europäische Union</p>
+        <p>Die Verarbeitung personenbezogener Daten erfolgt gemäß der DSGVO (EU 2016/679) sowie dem österreichischen Datenschutzgesetz (DSG 2018).</p>
+        <p>Alle KI-Systeme und Entscheidungsprozesse werden gemäß <strong>EU AI Act Art. 13 / 14 / 15</strong> (Transparenz, menschliche Aufsicht, Robustheit) entwickelt und dokumentiert.</p>
+      </div>
     </div>
 
     <!-- Team -->
     <div class="section">
-      <h2>Führungsteam</h2>
-      <p style="margin-bottom:20px;">Verantwortliche Personen gemäß §25 MedienG und §5 ECG:</p>
+      <h2>
+        <span class="lang-en">Leadership Team</span>
+        <span class="lang-de">Führungsteam</span>
+      </h2>
+      <p style="margin-bottom:20px;">
+        <span class="lang-en">Responsible persons pursuant to §25 Austrian Media Act (MedienG) and §5 ECG:</span>
+        <span class="lang-de">Verantwortliche Personen gemäß §25 MedienG und §5 ECG:</span>
+      </p>
       <div class="team-grid">
 
         <div class="team-card">
@@ -266,28 +315,72 @@
       </div>
     </div>
 
-    <!-- Haftungsausschluss -->
+    <!-- Disclaimer -->
     <div class="section">
-      <h2>Haftungsausschluss</h2>
-      <p>Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.</p>
-      <p>Die auf dieser Website bereitgestellten Informationen wurden sorgfältig zusammengestellt. RFI-IRFOS übernimmt jedoch keine Gewährleistung für die Aktualität, Vollständigkeit oder Richtigkeit der Inhalte.</p>
+      <h2>
+        <span class="lang-en">Disclaimer</span>
+        <span class="lang-de">Haftungsausschluss</span>
+      </h2>
+      <div class="lang-en">
+        <p>Despite careful review, we accept no liability for the content of external links. The operators of linked pages are solely responsible for their content.</p>
+        <p>The information provided on this website has been compiled with care. However, RFI-IRFOS provides no warranty for the currency, completeness or accuracy of the content.</p>
+      </div>
+      <div class="lang-de">
+        <p>Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.</p>
+        <p>Die auf dieser Website bereitgestellten Informationen wurden sorgfältig zusammengestellt. RFI-IRFOS übernimmt jedoch keine Gewährleistung für die Aktualität, Vollständigkeit oder Richtigkeit der Inhalte.</p>
+      </div>
     </div>
 
-    <!-- Urheberrecht -->
+    <!-- Copyright -->
     <div class="section">
-      <h2>Urheberrecht</h2>
-      <p>Alle Inhalte dieser Website (Texte, Grafiken, Code, Logos) sind urheberrechtlich geschützt und Eigentum von RFI-IRFOS, sofern nicht anders angegeben.</p>
-      <p>Der Quellcode des Ternary Intelligence Stack steht unter der <strong>LGPL-3.0-or-later</strong>-Lizenz (Open-Source-Komponenten) sowie der <strong>Business Source License 1.1 (BSL 1.1)</strong> für kommerzielle Nutzung. Lizenzanfragen: <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+      <h2>
+        <span class="lang-en">Copyright</span>
+        <span class="lang-de">Urheberrecht</span>
+      </h2>
+      <div class="lang-en">
+        <p>All content on this website (text, graphics, code, logos) is protected by copyright and is the property of RFI-IRFOS unless otherwise stated.</p>
+        <p>The source code of the Ternary Intelligence Stack is available under the <strong>LGPL-3.0-or-later</strong> licence (open-source components) and the <strong>Business Source License 1.1 (BSL 1.1)</strong> for commercial use. Licensing enquiries: <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+      </div>
+      <div class="lang-de">
+        <p>Alle Inhalte dieser Website (Texte, Grafiken, Code, Logos) sind urheberrechtlich geschützt und Eigentum von RFI-IRFOS, sofern nicht anders angegeben.</p>
+        <p>Der Quellcode des Ternary Intelligence Stack steht unter der <strong>LGPL-3.0-or-later</strong>-Lizenz (Open-Source-Komponenten) sowie der <strong>Business Source License 1.1 (BSL 1.1)</strong> für kommerzielle Nutzung. Lizenzanfragen: <a href="mailto:licensing@ternlang.com">licensing@ternlang.com</a></p>
+      </div>
     </div>
 
     <div class="page-footer">
-      <p>&copy; 2026 RFI-IRFOS · Graz, Österreich · <a href="/">ternlang.com</a></p>
+      <p>&copy; 2026 RFI-IRFOS · Graz, Austria · <a href="/">ternlang.com</a></p>
       <p style="margin-top:8px;font-size:0.7rem;">
-        <a href="agb.html">AGB</a> &nbsp;·&nbsp;
-        <a href="datenschutz.html">Datenschutzerklärung</a>
+        <a href="agb.html">
+          <span class="lang-en">Terms &amp; Conditions</span>
+          <span class="lang-de">AGB</span>
+        </a>
+        &nbsp;·&nbsp;
+        <a href="datenschutz.html">
+          <span class="lang-en">Privacy Policy</span>
+          <span class="lang-de">Datenschutzerklärung</span>
+        </a>
       </p>
     </div>
 
   </div>
+
+  <script>
+    const html = document.documentElement;
+    const saved = localStorage.getItem('ternlang-lang') || 'en';
+    setLang(saved);
+
+    document.getElementById('lang-toggle').addEventListener('click', () => {
+      const next = html.getAttribute('data-lang') === 'en' ? 'de' : 'en';
+      setLang(next);
+      localStorage.setItem('ternlang-lang', next);
+    });
+
+    function setLang(lang) {
+      html.setAttribute('data-lang', lang);
+      html.setAttribute('lang', lang);
+      document.getElementById('lt-en').className = lang === 'en' ? 'active' : '';
+      document.getElementById('lt-de').className = lang === 'de' ? 'active' : '';
+    }
+  </script>
 </body>
 </html>
