@@ -6,7 +6,7 @@
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
-[![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
+[![MCP](https://img.shields.io/badge/MCP-34_tools-orange)](#mcp-server--v040-34-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#architecture)
 [![stdlib](https://img.shields.io/badge/stdlib-28k+_open_%26_2.5k+_premium-blue)](ternlang-root/stdlib/PREMIUM.md)
@@ -131,7 +131,7 @@ As of current development, this repository houses the foundational model archite
 
 | Tier | Price | Details |
 |------|-------|---------|
-| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 28,500+ open-core modules + 30 MCP tools |
+| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 28,500+ open-core modules + 34 MCP tools |
 | Pro Standard (BSL-1.1) | €99/month | REST API, server-side memory, Tier 2 'Masterwork' modules |
 | Industrial (BSL-1.1) | €349/month | QNN, SEC, T-HAL, TernAudit + Tier 3 'Masterwork' modules |
 | Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 'Masterwork' modules |
