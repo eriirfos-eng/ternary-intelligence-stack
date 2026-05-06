@@ -6,6 +6,21 @@
   <link rel="icon" type="image/png" href="assets/ternlang_logo_notext.png">
   <link rel="shortcut icon" href="assets/ternlang_logo_notext.png">
   <link rel="canonical" href="https://ternlang.com/" />
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://ternlang.com/" />
+  <meta property="og:title"       content="Ternlang | Balanced Ternary Intelligence Stack" />
+  <meta property="og:description" content="A complete AI ecosystem built on three-state logic: frontier LLM (Albert MoE-13), compiler, BET VM, 23 MCP tools, and filesystem safety gate. Built in Austria. EU AI Act compliant by design." />
+  <meta property="og:image"       content="https://ternlang.com/assets/ternlang_logo_notext.png" />
+  <meta property="og:site_name"   content="Ternlang" />
+  <!-- Twitter / X -->
+  <meta name="twitter:card"        content="summary" />
+  <meta name="twitter:title"       content="Ternlang | Balanced Ternary Intelligence Stack" />
+  <meta name="twitter:description" content="Three-state AI: Yes, No, or Hold. Frontier LLM trained from scratch in Rust. 23 free MCP tools. EU AI Act compliant. Built by RFI-IRFOS, Graz, Austria." />
+  <meta name="twitter:image"       content="https://ternlang.com/assets/ternlang_logo_notext.png" />
+  <!-- SEO -->
+  <meta name="description" content="Ternlang is a balanced ternary AI ecosystem: Albert MoE-13 frontier language model, BET VM compiler, 23 MCP tools, and the Last Look Back filesystem safety gate. Built in Austria, EU AI Act Art.13/14/15 compliant." />
+  <meta name="keywords"    content="ternary AI, balanced ternary, MoE, language model, BET VM, MCP tools, EU AI Act, Austria, SPRIND" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -20,7 +35,7 @@
         "name": "Restricted API (BSL 1.1)"
       },
       "description": "Systems programming language, compiler, and inference runtime built on balanced ternary logic. Provides deterministic uncertainty (trit = −1/0/+1), sparsity-aware BET VM execution, and EU AI Act Article 13/14 compliant decision tracing.",
-      "softwareVersion": "1.1.1",
+      "softwareVersion": "1.3.6",
       "publisher": {
         "@type": "Organization",
         "name": "RFI-IRFOS",
@@ -227,6 +242,7 @@
       <div class="h-px w-full bg-t_border/50"></div>
       <p class="text-[10px] text-t_muted">Core Products</p>
       <a href="#" onclick="navTo(1)" class="text-t_text hover:text-t_teal transition-colors pl-4">Agent Albert <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">CLI</span></a>
+      <a href="#" onclick="navTo(1); setTimeout(()=>document.getElementById('moe13-section').scrollIntoView({behavior:'smooth'}),350)" class="text-t_text hover:text-t_teal transition-colors pl-4">MoE-13 <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">FRONTIER</span></a>
       <a href="#" onclick="navTo(2)" class="text-t_text hover:text-t_teal transition-colors pl-4">TernTranslator</a>
       <a href="#" onclick="navTo(3)" class="text-t_text hover:text-t_teal transition-colors pl-4">TernAudit</a>
       <a href="#" onclick="navTo(4)" class="text-t_text hover:text-t_teal transition-colors pl-4">Logic Library</a>
@@ -410,7 +426,7 @@
             <div class="p-6 bg-t_bg font-mono text-xs overflow-y-auto h-[460px] text-t_text space-y-4">
               <div><span class="text-t_blue font-bold">$</span> cargo install albert-cli &amp;&amp; albert-cli</div>
               <div class="text-t_muted font-medium">
-                ✦ Albert v1.1.1 — Ternary Intelligence Stack<br/>
+                ✦ Albert v1.3.6 — Ternary Intelligence Stack<br/>
                 ✦ Provider: Gemini · Model: gemini-2.5-flash<br/>
                 ✦ Memory loaded from ~/.ternlang/memory.md<br/>
                 ✦ 3 MCP servers active (gmail, filesystem, github)<br/>
@@ -1017,6 +1033,40 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-swarm" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_border bg-t_bg rounded-xl hover:border-t_red/50 transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_text font-black text-sm">ternlang-swarm</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_red transition-colors">↗ source</span></div>
                 <span class="text-xs text-t_muted leading-relaxed">Robotic swarm kinematics. Models biological hesitation — trit = 0 when proximity sensors conflict, suspending actuation until the contradiction resolves.</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Frontier Model -->
+          <div class="reveal">
+            <div class="flex items-center gap-4 mb-6 border-b border-t_border pb-3">
+              <h3 class="text-xl font-black text-t_text uppercase tracking-tight">Frontier Model — Albert MoE-13</h3>
+              <span class="text-[10px] font-mono font-bold bg-t_blue/20 text-t_blue px-2 py-1 rounded">Native Training · Rust / candle · In Progress</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">moe-llm-core</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">The Albert training and inference core. Transformer + Mixture-of-Experts (12 experts, top-3 routing), ternary linear layers, custom BPE tokenizer, STE-based QAT, and <code class="text-t_blue">.trit</code> binary export. Trained from scratch on candle — no base model.</span>
+              </a>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/evolution.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">EvolutionManager</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Automatic architecture growth engine. Monitors loss and triggers Net2Net safe-copy layer surgery when mastery or plateau conditions are met. Grows 3L → 12L without human intervention. 20-epoch cooldown prevents cascade expansion.</span>
+              </a>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/ste.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ste.rs — STE</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Straight-Through Estimator for ternary QAT. <code class="text-t_blue">ternary_project</code> maps F32 → {−1, 0, +1}. <code class="text-t_blue">ste_forward</code> returns quantized values in the forward pass while gradient flows through as identity: <code class="text-t_blue font-mono">w + sg(q(w)−w)</code>.</span>
+              </a>
+              <a href="https://crates.io/crates/moe-llb" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">moe-llb</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ crates.io</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Last Look Back Protocol — deterministic filesystem containment gate for sovereign AI agents. Moves safety from the prompt layer to the binary layer: Gate 1 (blacklist + ticket) → Execute → Gate 2 (IOCC integrity check) → Commit or Rollback. T0/T1/T2/T3 risk tiers.</span>
+              </a>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/bin/train_bible.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">train_bible.rs</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Main training loop: AdamW + cosine LR schedule, L1 sparsity regularisation (λ=1e-5), per-batch CE loss, 300 batches/epoch, SafeTensors checkpointing. Calls EvolutionManager after each epoch. Corpus: growing from Bible + Alice toward Wikipedia + domain text.</span>
+              </a>
+              <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/bin/quantize_model.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
+                <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">quantize_model.rs</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
+                <span class="text-xs text-t_muted leading-relaxed">Phase 3 export: packs F32 SafeTensors checkpoint into the <code class="text-t_blue">.trit</code> binary format using BitNet-style threshold quantization (τ = 0.5 × mean(|W|)). ~75% size reduction vs. F32. No floating point at inference.</span>
               </a>
             </div>
           </div>
