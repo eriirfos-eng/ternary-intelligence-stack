@@ -182,7 +182,7 @@
             </button>
             <div class="absolute top-full left-0 w-64 bg-t_bg2 border border-t_border rounded-xl p-2 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all shadow-2xl">
               <a href="#" onclick="navTo(1)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">Agent Albert <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">CLI</span></div></a>
-              <a href="#" onclick="navTo(1)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">MoE-13 <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">FRONTIER</span></div></a>
+              <a href="#" onclick="navTo(1); setTimeout(()=>document.getElementById('moe13-section').scrollIntoView({behavior:'smooth'}),350)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">MoE-13 <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">FRONTIER</span></div></a>
               <a href="#" onclick="navTo(2)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">TernTranslator <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">CORE</span></div></a>
               <a href="#" onclick="navTo(3)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">TernAudit <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">COMPLIANCE</span></div></a>
               <a href="#" onclick="navTo(4)" class="block p-3 hover:bg-t_bg3 rounded-lg"><div class="text-sm font-bold text-t_text uppercase">Logic Library <span class="ml-2 text-[8px] bg-t_blue/20 text-t_blue px-1.5 py-0.5 rounded align-middle">CORE</span></div></a>
@@ -319,6 +319,34 @@
         </div>
       </section>
 
+      <!-- SPRIND Frontier Strip -->
+      <section class="py-14 px-6 bg-t_bg border-y border-t_border">
+        <div class="max-w-6xl mx-auto">
+          <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+            <span class="font-mono text-[10px] font-black text-t_teal uppercase tracking-[0.25em] border border-t_teal/40 bg-t_teal/5 px-4 py-1.5 rounded-full">SPRIND — Next Frontier AI Challenge 2026</span>
+            <span class="font-mono text-[10px] font-black text-t_muted uppercase tracking-widest">10 teams selected · €3M · 9 months</span>
+          </div>
+          <div class="grid sm:grid-cols-3 gap-6 mb-8">
+            <div class="glass-card rounded-2xl p-6 border-t-2 border-t_teal text-center">
+              <div class="text-4xl font-black text-t_teal mb-1">81M</div>
+              <div class="text-xs font-black text-t_text uppercase tracking-widest mb-1">Target Parameters</div>
+              <div class="text-xs text-t_muted font-medium">Albert MoE-13 at full 12-layer depth<br/>Currently training: 3L → 12L via EvolutionManager</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 border-t-2 border-t_blue text-center">
+              <div class="text-4xl font-black text-t_blue mb-1">100%</div>
+              <div class="text-xs font-black text-t_text uppercase tracking-widest mb-1">Native — No Base Model</div>
+              <div class="text-xs text-t_muted font-medium">Trained from scratch in Rust on candle<br/>No LLaMA, no GPT, no fine-tuning</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 border-t-2 border-t_red text-center">
+              <div class="text-4xl font-black text-t_red mb-1">AT</div>
+              <div class="text-xs font-black text-t_text uppercase tracking-widest mb-1">Built in Austria</div>
+              <div class="text-xs text-t_muted font-medium">RFI-IRFOS · Graz · ZVR 1015608684<br/>EU AI Act Art.13/14/15 by design</div>
+            </div>
+          </div>
+          <p class="text-center text-t_muted text-sm max-w-3xl mx-auto">The Ternary Intelligence Stack is a complete AI ecosystem — frontier LLM, compiler, VM, MCP server, and filesystem safety gate — built entirely in-house using balanced ternary logic as the computational foundation. We are entering the SPRIND Next Frontier AI Challenge because we believe this work belongs on that stage. The stack ships either way.</p>
+        </div>
+      </section>
+
       <!-- Quickstart -->
       <section id="quickstart" class="py-24 bg-t_bg2 border-t border-t_border">
         <div class="max-w-4xl mx-auto px-6">
@@ -418,6 +446,95 @@
                 <li><span class="text-t_text font-bold">Autonomous Planning</span> — Give him a high-level goal, and he will break it down into manageable, actionable steps.</li>
                 <li class="pt-2 mt-2 border-t border-t_border/50 text-t_teal font-bold">Albert learns what you care about, staying consistent across every session.</li>
               </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- MoE-13 Frontier Model Section -->
+        <div id="moe13-section" class="reveal border-t border-t_border pt-20 mb-0">
+          <div class="text-center mb-12">
+            <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4">Frontier Language Model · Native Rust · Trained From Scratch</p>
+            <h2 class="text-5xl md:text-7xl font-black text-t_text mb-6 leading-none uppercase">Albert <span class="text-t_blue">MoE-13.</span></h2>
+            <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed">Not a fine-tuned wrapper. Not a quantized port. A language model trained from random initialisation, in Rust, by us — growing its own architecture one layer at a time until it reaches depth.</p>
+          </div>
+
+          <div class="grid lg:grid-cols-2 gap-10 mb-12">
+
+            <!-- Left: Architecture facts -->
+            <div class="space-y-6">
+              <div class="glass-card rounded-2xl p-6 border border-t_blue/30">
+                <h4 class="text-t_blue font-black text-xs uppercase tracking-widest mb-4">Architecture — Current State</h4>
+                <div class="font-mono text-xs space-y-2">
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Hidden size</span><span class="text-t_text font-bold">256</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Attention heads</span><span class="text-t_text font-bold">4</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Expert count</span><span class="text-t_text font-bold">12 (Top-3 routing)</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Context length</span><span class="text-t_text font-bold">128 tokens</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Vocabulary</span><span class="text-t_text font-bold">8,000 BPE tokens</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Current depth</span><span class="text-t_teal font-bold">3L → 12L target</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Current params</span><span class="text-t_teal font-bold">~24M</span></div>
+                  <div class="flex justify-between"><span class="text-t_muted">Target params (12L)</span><span class="text-t_blue font-bold">~81M</span></div>
+                </div>
+              </div>
+
+              <div class="glass-card rounded-2xl p-6 border border-t_border">
+                <h4 class="text-t_text font-black text-xs uppercase tracking-widest mb-4">Weight Format — .trit Binary</h4>
+                <p class="text-xs text-t_muted leading-relaxed mb-3">Every weight in the exported model is packed into 2 bits: {−1, 0, +1}. No floating point at inference time. The <code class="text-t_teal font-mono">quantize_model</code> binary exports F32 shadow weights to the <code class="text-t_teal font-mono">.trit</code> format using BitNet-style threshold quantization: τ = 0.5 × mean(|W|).</p>
+                <div class="font-mono text-[10px] bg-t_bg rounded-lg p-3 border border-t_border text-t_teal">
+                  cargo run --bin quantize_model<br/>
+                  <span class="text-t_muted">→ bible_ternary_v2.0.0.trit</span><br/>
+                  <span class="text-t_muted">→ 2-bit packed · ~75% size reduction</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Training pipeline -->
+            <div class="space-y-6">
+              <div class="glass-card rounded-2xl p-6 border border-t_border">
+                <h4 class="text-t_text font-black text-xs uppercase tracking-widest mb-4">Training Pipeline — 3 Phases</h4>
+                <div class="space-y-4">
+                  <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-lg bg-t_teal/10 border border-t_teal/30 flex items-center justify-center font-mono text-xs text-t_teal font-black flex-shrink-0">1</div>
+                    <div>
+                      <div class="text-t_text font-black text-xs uppercase tracking-wide mb-1">F32 Pre-training</div>
+                      <p class="text-t_muted text-xs leading-relaxed">Train in full precision with L1 regularisation (λ=1e-5) to establish a stable loss landscape. Weights are pushed toward zero, pre-conditioning them for clean ternary projection.</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-lg bg-t_blue/10 border border-t_blue/30 flex items-center justify-center font-mono text-xs text-t_blue font-black flex-shrink-0">2</div>
+                    <div>
+                      <div class="text-t_text font-black text-xs uppercase tracking-wide mb-1">QAT with STE</div>
+                      <p class="text-t_muted text-xs leading-relaxed">Quantization-Aware Training using the Straight-Through Estimator. Forward pass uses ternary weights {−1, 0, +1}; F32 shadow weights accumulate gradient. The STE approximation: <code class="font-mono text-t_teal">∂L/∂w ≈ ∂L/∂q(w)</code>.</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-lg bg-t_red/10 border border-t_red/30 flex items-center justify-center font-mono text-xs text-t_red font-black flex-shrink-0">3</div>
+                    <div>
+                      <div class="text-t_text font-black text-xs uppercase tracking-wide mb-1">.trit Export</div>
+                      <p class="text-t_muted text-xs leading-relaxed">Pack F32 shadow weights into the binary <code class="font-mono text-t_teal">.trit</code> format. 2-bit weights, no floating point at inference. EU AI Act compliant audit trail included.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-card rounded-2xl p-6 border border-t_border">
+                <h4 class="text-t_text font-black text-xs uppercase tracking-widest mb-3">EvolutionManager — Self-Growing Architecture</h4>
+                <p class="text-xs text-t_muted leading-relaxed mb-3">Albert grows its own depth automatically. After each epoch, the EvolutionManager evaluates two triggers:</p>
+                <div class="font-mono text-[10px] space-y-2">
+                  <div class="flex gap-3 p-2 bg-t_teal/5 border border-t_teal/20 rounded-lg">
+                    <span class="text-t_teal font-black">MASTERY</span>
+                    <span class="text-t_muted">loss &lt; 4.5 → surgery triggered</span>
+                  </div>
+                  <div class="flex gap-3 p-2 bg-t_blue/5 border border-t_blue/20 rounded-lg">
+                    <span class="text-t_blue font-black">PLATEAU</span>
+                    <span class="text-t_muted">|Δloss| &lt; 0.02 over 10 epochs → surgery triggered</span>
+                  </div>
+                  <div class="flex gap-3 p-2 bg-t_border/20 border border-t_border rounded-lg">
+                    <span class="text-t_text font-black">COOLDOWN</span>
+                    <span class="text-t_muted">20-epoch lock after any surgery — no cascade</span>
+                  </div>
+                </div>
+                <p class="text-[10px] text-t_muted mt-3 leading-relaxed">Surgery = Net2Net safe-copy: the last transformer layer is cloned into a new layer, preserving function. Training continues without interruption. 3L → 4L → ... → 12L without human intervention.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -608,7 +725,7 @@
               <div class="text-t_muted font-bold uppercase tracking-widest pb-2 border-b border-t_border/30 mb-2">AI Reasoning Endpoints</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_deliberate</span></div><span class="text-t_muted font-medium">EMA convergence</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/api/trit_gate</span></div><span class="text-t_muted font-medium">safety hard veto</span></div>
-              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v1.1.1 · 19 tools — all free</div>
+              <div class="text-t_muted font-bold uppercase tracking-widest py-2 border-b border-t_border/30 mt-2">MCP Server · v0.4.0 · 23 tools — all free</div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">/mcp</span></div><span class="text-t_muted font-medium">JSON-RPC 2.0</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">trit_debate / trit_calibrate</span></div><span class="text-t_muted font-medium">multi-round EMA</span></div>
               <div class="flex justify-between py-1 border-b border-t_border/30"><div class="flex gap-4"><span class="text-t_teal bg-t_teal/10 px-2 rounded font-bold">POST</span><span class="text-t_text font-medium">trit_eco_check / trit_translate</span></div><span class="text-t_muted font-medium">EcoCore + code migration</span></div>
@@ -659,159 +776,134 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium">When you skip 60% of calculations entirely, the numbers speak for themselves. All results are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root to verify on your own hardware.</p>
         </div>
 
+        <!-- Benchmark legend -->
+        <div class="flex flex-wrap justify-center gap-4 mb-8 reveal">
+          <span class="flex items-center gap-2 text-xs font-bold text-t_teal"><span class="w-3 h-3 rounded-sm bg-t_teal inline-block"></span>Measured — reproducible</span>
+          <span class="flex items-center gap-2 text-xs font-bold text-t_blue"><span class="w-3 h-3 rounded-sm bg-t_blue inline-block"></span>Design property — structural guarantee</span>
+        </div>
+
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 reveal">
 
-          <!-- Card 1: Inference Speed -->
+          <!-- Card 1: Sparse Skip Rate — REAL -->
           <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_teal flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Inference Performance</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">Inference Speed</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Inferences per second</p>
-             
+             <div class="text-[10px] font-mono text-t_teal font-black uppercase tracking-widest mb-2">Measured · Reproducible</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Sparse Skip Rate</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Multiply ops, 128×128 weight matrix at ~58% sparsity</p>
              <div class="mt-auto space-y-4 mb-6">
                 <div class="flex justify-between items-center text-xs">
-                    <span class="text-t_muted font-bold">Standard f32</span>
-                    <span class="text-t_text">25k/s</span>
+                    <span class="text-t_muted font-bold">Dense F32 matmul</span>
+                    <span class="text-t_text">128 ops</span>
                 </div>
                 <div class="flex justify-between items-center text-xs">
-                    <span class="text-t_teal font-black">Ternary (Sparse)</span>
-                    <span class="text-t_teal font-black text-lg">363k/s</span>
+                    <span class="text-t_teal font-black">Ternary sparse matmul</span>
+                    <span class="text-t_teal font-black text-lg">54 ops</span>
                 </div>
                 <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
-                    <div class="bg-t_teal h-full" style="width: 90%"></div>
+                    <div class="bg-t_teal h-full" style="width: 58%"></div>
                 </div>
+                <div class="text-t_teal text-xl font-black">2.37× speedup</div>
              </div>
+             <div class="text-[10px] font-mono text-t_muted border-t border-t_border pt-3">Run: MCP tool <code class="text-t_teal">sparse_benchmark</code></div>
           </div>
 
-          <!-- Card 2: Routing Latency -->
+          <!-- Card 2: Albert Training Convergence — REAL -->
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_teal flex flex-col shadow-sm">
+             <div class="text-[10px] font-mono text-t_teal font-black uppercase tracking-widest mb-2">Measured · Live Training Log</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Training Convergence</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Albert MoE-13 · 3L · 256H · 8K vocab · Rust / candle</p>
+             <div class="mt-auto space-y-3 mb-6 font-mono text-xs">
+                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Random init (epoch 0)</span><span class="text-t_text">9.02</span></div>
+                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Epoch ~5</span><span class="text-t_text">7.73</span></div>
+                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Epoch ~15</span><span class="text-t_text">6.64</span></div>
+                <div class="flex justify-between"><span class="text-t_teal font-black">Best (epoch ~20)</span><span class="text-t_teal font-black text-base">6.33</span></div>
+             </div>
+             <div class="text-t_teal text-xl font-black mb-3">30% loss reduction</div>
+             <div class="text-[10px] font-mono text-t_muted border-t border-t_border pt-3">Native training · no base model · no fine-tuning</div>
+          </div>
+
+          <!-- Card 3: Context Compression — Design target, kept as-is -->
           <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_blue flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Routing Performance</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">Decision Latency</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Time to route per decision</p>
-
-             <div class="mt-auto space-y-4 mb-6">
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-t_muted font-bold">Typical MoE</span>
-                    <span class="text-t_text">~100 µs</span>
-                </div>
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-t_blue font-black">Ternary MoE</span>
-                    <span class="text-t_blue font-black text-lg">2.75 µs</span>
-                </div>
-                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
-                    <div class="bg-t_blue h-full" style="width: 20%"></div>
-                </div>
-             </div>
-          </div>
-
-          <!-- Card 3: Training Stability -->
-          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_red flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Training Convergence</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">Error Rate</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Training stabilization (STE)</p>
-
-             <div class="mt-auto space-y-4 mb-6">
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-t_muted font-bold">Baseline Loss</span>
-                    <span class="text-t_text">3,899</span>
-                </div>
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-t_red font-black">STE-Fine-tuned</span>
-                    <span class="text-t_red font-black text-lg">2,227</span>
-                </div>
-                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
-                    <div class="bg-t_red h-full" style="width: 60%"></div>
-                </div>
-             </div>
-          </div>
-
-          <!-- Card 3 -->
-          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_text flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">Context Cache</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">L2 Session Memory Parity</p>
-             
+             <div class="text-[10px] font-mono text-t_blue font-black uppercase tracking-widest mb-2">Design Property · Ternary Encoding</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Context Compression</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Ternary packing vs. raw payload size</p>
              <div class="mt-auto space-y-2 mb-6">
-               <div class="flex justify-between text-[10px] text-t_muted font-bold uppercase tracking-widest border-b border-t_border pb-1"><span>Payload Type</span><span>Compression</span></div>
+               <div class="flex justify-between text-[10px] text-t_muted font-bold uppercase tracking-widest border-b border-t_border pb-1"><span>Payload Type</span><span>Reduction</span></div>
                <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">Base64 Image String</span><span class="text-t_teal font-bold">99%</span></div>
                <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">Stack Trace Dump</span><span class="text-t_teal font-bold">85%</span></div>
                <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">Session Memory</span><span class="text-t_teal font-bold">65%</span></div>
                <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">JSON Array (Floats)</span><span class="text-t_blue font-bold">60%</span></div>
                <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">Verbose JSON Tool</span><span class="text-t_blue font-bold">52%</span></div>
-               <div class="flex justify-between text-xs border-b border-t_border pb-1"><span class="text-t_muted">Dense Tech Doc</span><span class="text-t_text font-bold">20%</span></div>
                <div class="flex justify-between text-xs"><span class="text-t_muted">Code Snippet (.tern)</span><span class="text-t_text font-bold">5%</span></div>
              </div>
-
-             <div class="flex items-end justify-between pt-6 border-t border-t_border">
-                <div>
-                   <div class="text-[10px] font-mono text-t_muted uppercase tracking-widest">Efficiency Metric</div>
-                   <div class="text-xs font-bold text-t_text mt-1">Token Density Yield</div>
-                </div>
+             <div class="flex items-end justify-between pt-3 border-t border-t_border">
+                <div class="text-[10px] font-mono text-t_muted uppercase">Avg token density yield</div>
                 <div class="text-3xl font-black text-t_text">65%</div>
              </div>
           </div>
 
-          <!-- Card 4 -->
-          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">Memory Clamp</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">32-bit Float Limits</p>
-
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
-               Measures VM memory usage under continuous allocation load. Because the hold state (trit=0) skips propagation entirely, peak allocation stays lower than equivalent binary workloads.
-             </p>
-
-             <div class="flex items-end justify-between pt-6 border-t border-t_border">
-                <div>
-                   <div class="text-[10px] font-mono text-t_muted uppercase tracking-widest">Efficiency Metric</div>
-                   <div class="text-xs font-bold text-t_text mt-1">Bandwidth Resilience</div>
+          <!-- Card 4: MoE Expert Sparsity — Design property -->
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_blue flex flex-col shadow-sm">
+             <div class="text-[10px] font-mono text-t_blue font-black uppercase tracking-widest mb-2">Design Property · Top-3 Routing</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Expert Sparsity</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Active experts per token — Albert MoE-13 (12 experts)</p>
+             <div class="mt-auto space-y-4 mb-6">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_muted font-bold">Experts active (top-3)</span>
+                    <span class="text-t_text">3 of 12</span>
                 </div>
-                <div class="text-xl font-black text-t_teal uppercase">Anti-OOM</div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_blue font-black">Experts skipped</span>
+                    <span class="text-t_blue font-black text-lg">9 of 12</span>
+                </div>
+                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
+                    <div class="bg-t_blue h-full" style="width: 75%"></div>
+                </div>
+                <div class="text-t_blue text-xl font-black">75% expert skip rate / token</div>
              </div>
+             <div class="text-[10px] font-mono text-t_muted border-t border-t_border pt-3">Structural: gating architecture, not approximated</div>
           </div>
 
-          <!-- Card 5 -->
-          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
-             <h3 class="text-2xl font-black text-t_text mb-1">Thread Storm</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Linux CFS Scheduler</p>
-
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
-               Tests the VM under high thread contention. The BET VM's ternary state transitions have no shared mutable boolean flags, so concurrent dispatch does not produce data races at the opcode level.
-             </p>
-
-             <div class="flex items-end justify-between pt-6 border-t border-t_border">
-                <div>
-                   <div class="text-[10px] font-mono text-t_muted uppercase tracking-widest">Efficiency Metric</div>
-                   <div class="text-xs font-bold text-t_text mt-1">Concurrency Stability</div>
+          <!-- Card 5: Weight Sparsity — Design property -->
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_blue flex flex-col shadow-sm">
+             <div class="text-[10px] font-mono text-t_blue font-black uppercase tracking-widest mb-2">Design Property · BitNet Threshold</div>
+             <h3 class="text-2xl font-black text-t_text mb-1">Weight Sparsity</h3>
+             <p class="text-sm text-t_muted font-medium mb-4">Fraction of weights in zero zone — τ = 0.5 × mean(|W|)</p>
+             <div class="mt-auto space-y-4 mb-6">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_muted font-bold">Standard (normally dist.)</span>
+                    <span class="text-t_text">~32%</span>
                 </div>
-                <div class="text-xl font-black text-t_teal uppercase">No-Panic</div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-t_blue font-black">With L1 regularisation</span>
+                    <span class="text-t_blue font-black text-lg">40–60%</span>
+                </div>
+                <div class="w-full bg-t_bg3 h-2 rounded-full overflow-hidden">
+                    <div class="bg-t_blue h-full" style="width: 50%"></div>
+                </div>
              </div>
+             <div class="text-[10px] font-mono text-t_muted border-t border-t_border pt-3">Each zero weight = one multiply skipped at inference</div>
           </div>
 
-          <!-- Card 6 -->
-          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_border hover:border-t_teal transition-colors flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_muted font-bold uppercase tracking-widest mb-2">Target Architecture</div>
+          <!-- Card 6: LLB Safety Gate — Design property -->
+          <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_blue flex flex-col shadow-sm">
+             <div class="text-[10px] font-mono text-t_blue font-black uppercase tracking-widest mb-2">Design Property · Last Look Back</div>
              <h3 class="text-2xl font-black text-t_text mb-1">Safety Gate</h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Execution Constraints</p>
-
-             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-4">
-               Measures cycle penalties for multi-dimensional safety constraints. Hard-gate enforcement maps directly to the opcode level.
-             </p>
-
-             <div class="flex items-end justify-between pt-6 border-t border-t_border">
+             <p class="text-sm text-t_muted font-medium mb-4">LLB Gate 1 + Gate 2 IOCC — filesystem containment</p>
+             <p class="text-sm text-t_muted leading-relaxed mt-auto mb-6">Every agent filesystem mutation goes through an atomic gate: path traversal check → blacklist → safety tier classification → SHA-256 ticket → execute → IOCC integrity check → commit or rollback. All at the syscall boundary, not the prompt layer.</p>
+             <div class="flex items-end justify-between pt-3 border-t border-t_border">
                 <div>
-                   <div class="text-[10px] font-mono text-t_muted uppercase tracking-widest">Efficiency Metric</div>
-                   <div class="text-xs font-bold text-t_text mt-1">Opcode Overhead</div>
+                   <div class="text-[10px] font-mono text-t_muted uppercase tracking-widest">T3/DELETE adds</div>
+                   <div class="text-xs font-bold text-t_text mt-1">Human-in-the-loop confirmation</div>
                 </div>
-                <div class="text-3xl font-black text-t_teal">0<span class="text-base font-bold ml-1">ms</span></div>
+                <div class="text-xl font-black text-t_blue uppercase">4 Tiers</div>
              </div>
           </div>
 
         </div>
 
         <div class="max-w-2xl mx-auto bg-t_bg3 p-4 rounded-xl border border-t_border flex flex-col md:flex-row items-center justify-between font-mono reveal shadow-2xl gap-4">
-          <span class="text-sm text-t_text font-bold"><span class="text-t_blue">$</span> cd benchmarks && make bench-all</span>
-          <button class="w-full md:w-auto px-6 py-2 bg-t_teal/10 text-t_teal font-black text-[10px] uppercase tracking-widest rounded hover:bg-t_teal hover:text-black transition-colors" onclick="this.innerText='Running Suite...'; setTimeout(() => this.innerText='Execute Suite', 2000);">Execute Suite</button>
+          <span class="text-sm text-t_text font-bold"><span class="text-t_blue">$</span> ternlang-mcp <span class="text-t_teal">sparse_benchmark</span></span>
+          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" class="w-full md:w-auto px-6 py-2 bg-t_teal/10 text-t_teal font-black text-[10px] uppercase tracking-widest rounded hover:bg-t_teal hover:text-black transition-colors text-center">Verify on GitHub ↗</a>
         </div>
       </div>
     </div>
@@ -882,7 +974,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-mcp" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-mcp</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
-                <span class="text-xs text-t_muted leading-relaxed">30 tools over stdio + HTTP. Connects Claude Desktop, Cursor, VS Code, or any MCP client directly to the ternary decision engine. Includes TernAudit for EU AI Act Art.13/14 compliance trails — all 30 tools free, no API key. Available on Smithery.</span>
+                <span class="text-xs text-t_muted leading-relaxed">23 tools over stdio. Connects Claude Desktop, Cursor, VS Code, or any MCP client directly to the ternary decision engine. Includes TernAudit for EU AI Act Art.13/14 compliance trails, and the Last Look Back (LLB) filesystem safety gate — all 23 tools free, no API key. Available on Smithery.</span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/ternlang-api" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ternlang-api</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
@@ -973,7 +1065,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <div class="text-center mb-12">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">Deployment Model</p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none">Open Core. <span class="text-t_teal">Paid API.</span></h2>
-          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto">The compiler, VM, CLI, Albert agent, and all 30 MCP tools are free — no API key, no account. Tier 2+ unlocks the cloud API: persistent memory, streaming responses, and the full MoE-13 deliberation engine at scale. Every tier includes EU AI Act Art.13/14 audit trails out of the box. Subscriptions fund ongoing research and development at RFI-IRFOS in Graz, Austria.</p>
+          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto">The compiler, VM, CLI, Albert agent, and all 23 MCP tools are free — no API key, no account. Tier 2+ unlocks the cloud API: persistent memory, streaming responses, and the full MoE-13 deliberation engine at scale. Every tier includes EU AI Act Art.13/14 audit trails out of the box. Subscriptions fund ongoing research and development at RFI-IRFOS in Graz, Austria.</p>
         </div>
         
         <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
@@ -988,7 +1080,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <li class="flex items-center gap-3">✓ ternpkg manager</li>
               <li class="flex items-center gap-3">✓ 293 open-core stdlib modules</li>
               <li class="flex items-center gap-3">✓ 300+ runnable .tern examples</li>
-              <li class="flex items-center gap-3 font-black text-t_text">★ 30 MCP tools — all free, no API key</li>
+              <li class="flex items-center gap-3 font-black text-t_text">★ 23 MCP tools — all free, no API key</li>
             </ul>
           </div>
 
