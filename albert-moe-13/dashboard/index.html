@@ -437,7 +437,7 @@
             // won't trigger this. Only a cold restart from epoch 0 will.
             const firstNewEpoch = newPts[0].epoch;
             if (lastKnownEpoch > 0 && firstNewEpoch < lastKnownEpoch - 5) {
-                chart.data.datasets[0].data.length = 0;
+                chart.data.datasets[0].data = [];
                 chart.data.datasets[1].data = [];
                 lastSmaY     = null;
                 bestLoss     = Infinity;
@@ -460,14 +460,18 @@
             // Hide waiting overlay on first data
             document.getElementById('waiting').classList.add('hidden');
 
-            // Append to chart
-            const pts = chart.data.datasets[0].data;
-            pts.push(...newPts);
-            if (pts.length > MAX_CHART_PTS) pts.splice(0, pts.length - MAX_CHART_PTS);
-            pts.sort((a, b) => a.x - b.x);
+            // Build new dataset as a fresh array — never splice the live Chart.js
+            // data array in-place (its internal element cache goes out of sync).
+            let merged = chart.data.datasets[0].data.concat(newPts);
+            if (merged.length > MAX_CHART_PTS) {
+                merged = merged.slice(merged.length - MAX_CHART_PTS);
+            }
+            merged.sort((a, b) => a.x - b.x);
+
+            chart.data.datasets[0].data = merged;   // replace reference, not mutate
             totalPts += newPts.length;
 
-            const smaData = sma(pts, 30);
+            const smaData = sma(merged, 30);
             chart.data.datasets[1].data = smaData;
 
             // Update reference line from epoch summary lines ("Avg Loss: X.XXXX")
@@ -479,13 +483,13 @@
             // Only the very last arriving point gets the drop animation.
             // Older points in the same poll batch are added silently (duration=0).
             const isLive = newPts.length <= 20;
-            newPointStartIdx = isLive ? pts.length - 1 : Infinity;
+            newPointStartIdx = isLive ? merged.length - 1 : Infinity;
             chart.update(isLive ? undefined : 'none');
 
             // If a live filter is active, advance the viewport with new data
             const fv = document.getElementById('viewFilter').value;
-            if (fv !== 'all' && pts.length > 0) {
-                const maxX = pts[pts.length - 1].x;
+            if (fv !== 'all' && merged.length > 0) {
+                const maxX = merged[merged.length - 1].x;
                 chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
                 chart.options.scales.x.max = maxX + 2;
                 chart.update('none');
