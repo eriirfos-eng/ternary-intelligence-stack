@@ -1,1 +1,14 @@
-*\n!.gitignore
+# Block raw weight files — too large for GitHub (>50MB hard limit)
+*.safetensors
+*.trit
+*.bin
+*.onnx
+*.bak
+
+# Allow everything else (configs, metas, manifests, reports, registry)
+!*.json
+!*.yaml
+!*.toml
+!*.txt
+!*.md
+!.gitignore

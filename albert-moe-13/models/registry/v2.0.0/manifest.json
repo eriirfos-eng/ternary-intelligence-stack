@@ -1,0 +1,55 @@
+{
+  "model_id": "albert-moe-13",
+  "version": "2.0.0",
+  "codename": "Toddler-256H",
+  "date": "2026-05-06",
+  "status": "active_training",
+  "architecture": {
+    "hidden_size": 256,
+    "num_layers": 3,
+    "num_heads": 4,
+    "num_experts": 12,
+    "max_seq_len": 128,
+    "routing": "top-3-sparse",
+    "weight_format": "ternary (-1, 0, +1)"
+  },
+  "training": {
+    "corpus": "King James Bible",
+    "global_epoch": 14,
+    "best_loss": 2.1353,
+    "current_loss_approx": 6.5,
+    "lr_schedule": "cosine 2e-4 -> 1e-5 over 500 steps",
+    "batch_size": 300,
+    "optimizer": "AdamW"
+  },
+  "evolution": {
+    "manager": "EvolutionManager",
+    "strategy": "Net2Net safe-copy layer surgery",
+    "surgery_triggered": true,
+    "surgery_type": "3L -> 5L depth expansion",
+    "surgery_date": "2026-05-06",
+    "pre_surgery_checkpoint_size_mb": 41,
+    "post_surgery_checkpoint_size_mb": 91
+  },
+  "upgrades_from": "v1.3.7",
+  "changes": [
+    "Hidden dimension scaled 96 -> 128 (v1.3.7) -> 256 (v2.0.0)",
+    "Expert count scaled 8 -> 12",
+    "Routing upgraded from Top-2 to Top-3 sparse",
+    "Gradient accumulation bug fixed (50x training speedup: 50s/batch -> 2s/batch)",
+    "L1 sparsity regularization added (lambda=1e-5)",
+    "Per-layer threshold gradient implemented",
+    "Gamma cache in TernaryLinear (recompute every 20 forward calls)",
+    "Causal mask cached in Attention (rebuild only on seq_len change)",
+    "EvolutionManager plateau-mastery state machine",
+    "Cosine LR schedule"
+  ],
+  "artifacts": {
+    "config": "models/bible_ternary_v2.0.0.config.json",
+    "meta": "models/bible_ternary_v2.0.0.meta",
+    "weights": "NOT IN GIT — stored on Fly.io volume (>100MB)",
+    "5l_backup": "NOT IN GIT — stored on Fly.io volume (142MB)"
+  },
+  "published_by": "RFI-IRFOS",
+  "license": "Patent Pending A50296/2026"
+}
