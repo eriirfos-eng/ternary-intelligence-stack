@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth" data-theme="dark">
+<html lang="en" class="scroll-smooth" data-theme="dark" data-lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1708,6 +1708,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
     }
 
     // LANGUAGE TOGGLE — EN ↔ DE, synced via localStorage across all pages
+    const html = document.documentElement;
     const langToggleBtn = document.getElementById('lang-toggle');
     const savedLang = localStorage.getItem('ternlang-lang') || 'en';
     applyLang(savedLang);
@@ -1724,7 +1725,6 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
 
     // THEME TOGGLE LOGIC — 3-state cycle: dark → light → hc → dark
     const themeToggle = document.getElementById('theme-toggle');
-    const html = document.documentElement;
     const savedTheme = localStorage.getItem('ternlang-theme') || 'dark';
     html.setAttribute('data-theme', savedTheme);
     const themeOrder = ['dark', 'light', 'hc'];
