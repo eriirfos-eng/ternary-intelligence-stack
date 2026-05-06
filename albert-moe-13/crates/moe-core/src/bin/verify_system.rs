@@ -58,10 +58,16 @@ async fn main() -> Result<()> {
 
     // 4. Inference Bridge Simulation
     println!("\n[4] Verifying Inference Bridge...");
-    let mut bridge = AgenticInferenceBridge::new(8080);
+    let bridge = AgenticInferenceBridge::new(8080);
     bridge.start_server().await?;
-    let response = bridge.handle_inference_request("Verify system").await;
-    println!("Response: {}", response);
+    // handler is an axum route fn — hit it over HTTP
+    let client = reqwest::Client::new();
+    let resp = client
+        .post("http://127.0.0.1:8080/infer")
+        .json(&serde_json::json!({ "prompt": "Verify system" }))
+        .send().await?
+        .text().await?;
+    println!("Response: {}", resp);
 
     // 5. Governance Ledger Streaming
     println!("\n[5] Verifying Governance Audit Ledger...");

@@ -72,7 +72,7 @@ fn run_stats(sparsity: f32) -> (f64, f64, f64) {
     
     let num_blocks = DIM / 32;
     for i in 0..num_blocks {
-        if rng.gen::<f32>() > sparsity {
+        if rng.r#gen::<f32>() > sparsity {
             for j in 0..32 {
                 weights[i * 32 + j] = 1;
             }
