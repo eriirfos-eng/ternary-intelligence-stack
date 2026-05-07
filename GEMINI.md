@@ -13,6 +13,26 @@
 
 ---
 
+## ⚠️ MODULE COUNT — DO NOT INFER FROM DIRECTORY NAMES
+
+**This is the single most common agent error in this repo. Read this before touching any file.**
+
+| Directory | Classification | Count | Meaning |
+|-----------|---------------|-------|---------|
+| `ternlang-root/stdlib/` | **Open-core, Tier-1 foundation** | ~293 .tern scripts | Canonical core modules |
+| `ternlang-root/premlib/` | **Open-core, domain-specialized** | **28,500+ .tern modules** | Free, published, open |
+
+**`premlib/` does NOT mean proprietary or closed-source.**
+The name means "domain-specialized premium use cases" (aerospace, medical, legal, etc.).
+Every module in premlib is free and open. Classifying premlib as "proprietary" is INCORRECT.
+
+**Total open-core: 28,500+ modules (stdlib + premlib combined).**
+
+If you are about to write "293 open-core modules and 28,000 proprietary modules" — STOP.
+That is exactly backwards. Read `ternlang-root/README.md` §Standard Library for the authoritative count.
+
+---
+
 ## Architecture: Albert MoE-13 (v2.0.0) — CURRENT
 
 | Parameter | Value |
