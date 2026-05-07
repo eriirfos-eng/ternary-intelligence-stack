@@ -11,6 +11,9 @@ pub struct TernaryLinear {
     // Cached gamma: (call_count, cached_scalar_tensor).
     // Recomputed every GAMMA_REFRESH calls; stable enough since weights change slowly.
     gamma_cache: RefCell<(u32, Option<Tensor>)>,
+    // Inference-mode pre-ternarized weight cache (None = training mode).
+    // Populated once by prepare_inference(); avoids re-quantizing on every forward pass.
+    inference_cache: RefCell<Option<Tensor>>,
 }
 
 const GAMMA_REFRESH: u32 = 20;
@@ -31,12 +34,30 @@ impl TernaryLinear {
             bias,
             threshold,
             gamma_cache: RefCell::new((0, None)),
+            inference_cache: RefCell::new(None),
         })
     }
 
-    pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
-        let gamma = self.get_gamma()?;
+    /// Pre-ternarize weights once for inference (no backward pass, no STE graph).
+    /// Call on all layers after model load; avoids re-quantizing on every forward pass.
+    pub fn prepare_inference(&self) -> Result<()> {
+        let gamma = self.weight.abs()?.mean_all()?;
         let w_ternary = ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma)?;
+        *self.inference_cache.borrow_mut() = Some(w_ternary.detach());
+        Ok(())
+    }
+
+    pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
+        let w_ternary = {
+            let cache = self.inference_cache.borrow();
+            match *cache {
+                Some(ref w) => w.clone(),
+                None => {
+                    let gamma = self.get_gamma()?;
+                    ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma)?
+                }
+            }
+        };
 
         let dims = x.dims();
         let out = if dims.len() == 3 {
