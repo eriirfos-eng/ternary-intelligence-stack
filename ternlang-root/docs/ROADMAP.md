@@ -1,93 +1,158 @@
 # Ternary Intelligence Stack (TIS) | RFI-IRFOS — Master Development Chronicle
 ### Official Evaluation Artifact (SPRIND / Next Frontier AI)
-**Stack Version:** v1.3.5 (Ecosystem) / v1.3.7 (MoE-13 Model)
-**Last Updated:** 2026-05-04 
-**Status:** ACTIVE — PHASE 20: SOVEREIGN INTELLIGENCE INTEGRATION
+**Stack Version:** v1.3.6 (Ecosystem) / v2.0.0 (Albert MoE-13 Model)
+**Last Updated:** 2026-05-07
+**Status:** ACTIVE — PHASE 20: AUTO-EVOLUTIONARY TERNARY TRAINING
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack
+**Patent Pending:** A50296/2026 (@sparseskip sparse matmul primitive)
 
 ---
 
-## 1.0 STRATEGIC CHRONICLE (Reverse Chronological)
+## 1.0 ACTIVE & UPCOMING PHASES (Reverse Chronological)
 
-### 1.0.1 Phase 21: Sovereign Knowledge Scaling
-*Focus: Progressive ingestion of the full global knowledge corpus to achieve general-purpose agentic reasoning.*
-- [ ] 1.0.1.1 Linux Kernel Analysis: Full-text ingestion of the Linux source tree and documented kernel issue history for systems-level reasoning.
-- [ ] 1.0.1.2 Global Knowledge Corpus: Sequential integration of remaining domains (Policy, Cognitive Science, Cybernetic Theory, etc.) at 48-hour intervals.
-- [ ] 1.0.1.3 Multilingual Alignment: Applying cross-lingual transfer learning to unify knowledge representation across all supported European languages.
-- [ ] 1.0.1.4 Convergence Validation: Achieving sub-2.0 loss threshold across the consolidated 26B+ parameter MoE.
+### Phase 25: tern-forge — Hierarchical Code Synthesis Framework
+*Target: First non-zero score on ProgramBench (May 2026 benchmark; every major model scored 0)*
+*ETA: 2026 Q4 (dependent on Albert reaching 10L+ with code corpus)*
 
-### 1.0.2 Phase 22: Commercialization Strategy
-*Focus: Transitioning the TIS stack from a research artifact to a market-ready deep-tech product.*
-- [ ] 1.0.2.1 Productization: Finalizing the Albert CLI as a sovereign intelligence tool for enterprise deployment.
-- [ ] 1.0.2.2 Pitch Preparation: Constructing a high-density, factually grounded pitch deck targeting Tier-1 DeepTech VCs.
-- [ ] 1.0.2.3 Value Proposition: Positioning the TIS stack as the premier sovereign, sparse-compute, ternary-native reasoning architecture for industrial AI sovereignty.
-- [ ] 1.0.2.4 Market Engagement: Initiating targeted outreach to industrial entities requiring audited, high-precision, low-footprint reasoning agents.
+ProgramBench exposes the gap between "code assistance" and "systems engineering": models fail to coordinate thousands of functions into a compilable system from a blank slate, with no internet and no docs. The TIS stack has native primitives to attack this:
 
-### 1.2 Phase 19: Universal Knowledge Layer
-*Focus: Structural integrity and breadth of the model's foundational knowledge base.*
-- [x] 1.2.1 Taxonomy Development: Implemented a 13-domain hierarchical classification system to organize diverse knowledge sources (Engineering, Theological, Scientific, etc.).
-- [x] 1.2.2 Multi-lingual Ingestion Pipeline: Developed foundational ingestion tooling for English and German, leveraging structured data sources to minimize hallucination risks associated with raw-text scraping.
-- [x] 1.2.3 GitHub Engineering Reasoning Corpus: Successfully implemented a high-performance GitHub API harvester for multi-language case study curation.
-- [x] 1.2.4 Dataset Orchestration: Integrated a tri-pillar ingestion strategy: foundational knowledge (Wikipedia), dialectical threads (Reddit), and professional engineering problem-solving (GitHub).
+- [ ] **25.1 Orchestration Scaffold** — `crates/tern-forge/` Rust crate using albert-cli infrastructure. Phases: Blueprint (module tree only) → Stub (empty functions, trait signatures) → Recursive Refinement (one MoE expert per module domain) → Verify.
+- [ ] **25.2 Compiler Veto Gate** — Integrate `rustc` / `ternlang` compiler output as a ternary signal: `{-1=reject, 0=hold, +1=accept}`. Failed compilation issues a Reject verdict and forces targeted re-roll on the failing module only — not the entire codebase.
+- [ ] **25.3 Structural Diffing Corpus** — Train Albert on repository evolution sequences (git diff chains: `main.rs` → 50-file library). Teaches that "building from scratch" is a sequence of refactors, not a monolithic generation.
+- [ ] **25.4 Expert-to-Module Routing** — Map MoE expert domains to code subsystem types (I/O, core logic, data structures, tests). Each module routes to its specialist expert rather than averaging across all.
+- [ ] **25.5 BET VM Sandbox Execution** — Use the BET VM to simulate generated sub-module execution in isolation before system integration, catching semantic errors before the compiler sees them.
 
-### 1.3 Phase 18: TernAudit Infrastructure
-*Focus: Formal audibility and compliance with the EU AI Act (Articles 13, 14, 15).*
-- [x] 1.3.1 CLI/REST Audit Framework: Deployed a dedicated audit suite (ternlang audit) that processes JSON-RPC decision logs.
-- [x] 1.3.2 Regulatory Mapping: Developed a mapping layer between internal model confidence metrics (Affirm/Tend/Reject) and EU AI Act regulatory requirements.
-- [x] 1.3.3 Extension Integration: Developed VS Code extension functionality to allow developers to audit AI-generated code, providing inline verification markers for logic segments.
-
-### 1.4 Phase 17: WASM Runtime Execution
-*Focus: Achieving platform-agnostic, zero-overhead execution of the balanced ternary virtual machine.*
-- [x] 1.4.1 WebAssembly Compilation: Successfully compiled ternlang-core to wasm32-unknown-unknown target, ensuring consistent VM behavior.
-- [x] 1.4.2 VM Semantic Consistency: Validated that the web-based VM maintains identical arithmetic properties (negation, ternary addition, carry logic) as the native Rust CLI implementation.
-
-### 1.5 Phase 16: TernStudio IDE
-*Focus: Building professional-grade development environments for ternary systems programming.*
-- [x] 1.5.1 Integrated Development Suite: Constructed a Monaco-based IDE platform that provides an end-to-end interface for ternary code development, debugging, and audit.
-- [x] 1.5.2 Hardware-Aligned Debugging: Implemented a Trit-value watch panel and low-level opcode step-debugger.
-
-### 1.6 Phase 15: Academic & Ecosystem Convergence
-*Goal: Ensuring formal verification, standardization, and interoperability.*
-- [x] 1.6.1 Academic Outreach: Initiated rigorous communication with established ternary research groups (USN), aligning TIS standards with existing BCT hardware-compiler pipelines.
-- [x] 1.6.2 Standardization: Publishing formal ISA specifications, IEEE-style LaTeX/DOCX whitepapers, and standardized dictionary formats to ensure academic rigor and falsifiability.
-- [x] 1.6.3 Registry Integration: Released ternpkg, a package management solution with a GitHub-backed registry to encourage modular development and ecosystem expansion.
+> **Honest note:** Albert at 6L with word-level vocabulary cannot generate coherent Rust today. tern-forge will initially use Claude/GPT as interim code intelligence, with Albert replacing it as he matures. The TIS-native contribution is the orchestration framework and the ternary veto gate — those are buildable now.
 
 ---
 
-## 2.0 LEGACY PHASES (1–14) — RETROSPECTIVE RECORD
+### Phase 24: General Purpose Transition — Instruction Following & Chain-of-Thought
+*Target: Albert answers questions, not just continues text. ETA: 2026 Q3 (9L+)*
+
+- [ ] **24.1 Instruction Fine-Tuning** — `qa_instruction.txt` (2196 User:/Albert: pairs, generated 2026-05-07) unlocks automatically at stage_9 in the staged corpus loader. Albert sees the `User:/Albert:` format statistically and learns query-response continuation.
+- [ ] **24.2 Chain-of-Thought Emergence** — At 9-10L depth, intermediate layer representations form stable "thought" attractors before the final token. No architectural change needed — depth is the mechanism.
+- [ ] **24.3 Reasoning Corpus** — Add structured Q&A with explicit reasoning steps (math, logic, code explanation) to stage_11 corpus.
+- [ ] **24.4 Evaluation Harness** — Held-out test set perplexity vs. unigram baseline. `scripts/eval_perplexity.py` harness ready; requires albert-test `--eval` mode.
+
+---
+
+### Phase 23: GPU Backend — CUDA Ternary Sparse Matmul
+*Target: 10-50× inference speedup on NVIDIA Pascal+ hardware. ETA: 2026 Q3*
+
+- [ ] **23.1 INT2-Packed Weight Encoding** — Pack ternary weights as 2-bit values (4 weights per byte). 16× memory reduction vs F32. Architecture documented in `cuda_matmul.rs` (TRL 3).
+- [ ] **23.2 dp4a GEMV Kernel** — CUDA `ternary_gemv_dp4a`: uses `__dp4a` integer dot product instruction (Pascal+, compute 6.1+). Projected 10-50× vs CPU baseline at 56% sparsity.
+- [ ] **23.3 candle CustomOp1 Integration** — Wire CUDA kernel into the candle tensor graph via `CustomOp1` trait so training and inference use the same code path.
+- [ ] **23.4 Benchmark Publication** — Docker image reproducing the sparsity speedup table. `docker run rfi-irfos/tis-bench` → reproduces all numbers from `BENCHMARKS.md`.
+
+---
+
+### Phase 22: SPRIND Credibility & Benchmark Reproducibility
+*Target: Satisfy SPRIND evaluator audit requirements. ETA: 2026 May (deadline May 15)*
+
+- [x] **22.1 Whitepaper** — `docs/tis-sprind-submission-2026.tex` submitted (IEEE two-column LaTeX, all 5 authors, Patent Pending A50296/2026).
+- [x] **22.2 EU AI Act Mapping** — `docs/compliance/eu_ai_act_mapping.md` — article-by-article for Art. 5, 9–15, 53.
+- [x] **22.3 Evolution Evidence** — `albert-moe-13/docs/EVOLUTION_EVIDENCE.md` — verified 3L→6L surgery timeline with Net2Net code and scaling table.
+- [x] **22.4 Reproducibility Spec** — `docs/REPRODUCIBILITY.md` + `repro_check.rs` + `verify_reproducibility.sh`.
+- [x] **22.5 Security Audit** — SQL injection fixed (2026-05-07), `.env` removed from repo, auth middleware verified globally applied.
+- [ ] **22.6 Held-out Perplexity** — Run `eval_perplexity.py` and publish `eval_results.json` as benchmark artifact. Float32 baseline comparison required.
+- [ ] **22.7 Benchmark Docker** — Reproduce sparsity speedup table in a pinned container with statistical uncertainty intervals.
+
+---
+
+### Phase 21: Staged Knowledge Scaling (ACTIVE)
+*Focus: Match corpus complexity to model depth — autonomous knowledge unlocking per surgery.*
+
+- [x] **21.1 Staged Corpus Loader** — `load_corpus(num_layers)` reads `data/corpus/stage_N/` dirs where N ≤ num_layers. Surgery increments depth; next restart auto-unlocks richer data. (2026-05-07)
+- [x] **21.2 Stage 3: Foundational** — Bible + Alice. Grammar, vocabulary, basic syntax. Active from 3L.
+- [x] **21.3 Stage 6: Narrative** — 12 Gutenberg classics (Moby Dick, War and Peace, Crime & Punishment, Frankenstein, etc.). Complex sentence structure, wider vocabulary. Active from 6L.
+- [ ] **21.4 Stage 7: Factual** — Simple Wikipedia (120k lines, 500k+ tokens). Diverse topics, factual prose, topic-sentence structure. Unlocks on next surgery → 7L. 🎯 *Imminent.*
+- [ ] **21.5 Stage 9: Instruction** — `qa_instruction.txt` (2196 User:/Albert: pairs from Wikipedia + Bible + Gutenberg). Instruction format unlock at 9L.
+- [ ] **21.6 Stage 11: Technical** — Linux kernel docs, EU AI Act text. Specialized language, legal/technical register. Unlocks at 11L.
+- [ ] **21.7 Stage 13: Command/Response** — TLDR pages (Unix command → description pairs). Terse instruction-following format. Unlocks at 13L.
+
+---
+
+### Phase 20: Auto-Evolutionary Ternary Training (ACTIVE — CURRENT)
+*Focus: Albert MoE-13 trains and expands its own architecture autonomously.*
+
+- [x] **20.1 Net2Net Surgery** — Safe-copy layer expansion: layer N weights copied to N+1 for warm-start. EvolutionManager triggers autonomously on plateau/collapse. Witnessed live: 3L→4L→5L→6L.
+- [x] **20.2 @sparseskip Element-Level** — `SparseCache` with `pos_indices[i]` / `neg_indices[i]` per output neuron. `forward_sparse()` skips ~56% of multiplications. Patent Pending A50296/2026.
+- [x] **20.3 KV-Cache** — `Attention.kv_cache`: prefill stores full K/V; decode concatenates single new token. O(1) per step vs O(seq²). Result: **83-125 tok/s** from ~5 tok/s baseline.
+- [x] **20.4 Pre-Ternarized Weight Cache** — `prepare_inference()` computes ternary weights once at load. Eliminates 8 candle ops per `TernaryLinear` per forward pass.
+- [x] **20.5 F32 Gate Fix** — MoE routing gate changed from TernaryLinear to `candle_nn::Linear`. Ternary at 256→12 scale caused routing collapse (0.333/0.333/0.333). F32 gate has full resolution to differentiate 12 experts.
+- [x] **20.6 Collapse→Surgery Escalation** — When best checkpoint doesn't exist or is also above collapse threshold, rollback skipped; surgery fires directly. Breaks infinite rollback loop.
+- [x] **20.7 Whitepaper Annotations** — All core algorithm files annotated with §N.N cross-references (ste.rs §5.1, ternary_linear.rs §5.1+5.2, moe.rs §11.1+10.4, evolution.rs §11.2, train_bible.rs §11.4+11.6).
+- [x] **20.8 GPU Backend Sketch** — `cuda_matmul.rs`: INT2-packed weight encoding, dp4a kernel outline, candle CustomOp1 skeleton, 3-phase roadmap. TRL 3.
+- [x] **20.9 Dashboard Live Telemetry** — TELE every 30 batches (~60s), GRAD every batch, ROUTE every 10 batches. 6dp precision for sub-millinorm grad norm visibility.
+- [ ] **20.10 albert-test `--eval` Mode** — Enable `eval_perplexity.py` by adding held-out evaluation forward pass to albert-test binary.
+
+---
+
+### Phase 19: Universal Knowledge Layer ✅
+- [x] Joint Alice + Bible 8000-token WordLevel tokenizer (min_freq=2). All major characters tokenized.
+- [x] Multi-corpus pipeline: `load_corpus()` auto-discovers all `.txt` in corpus dir.
+- [x] GitHub engineering reasoning corpus harvester (`scripts/ingest_github.py`).
+- [x] Reddit scraper (`scripts/reddit_scraper.py`) — staged pending API keys.
+
+### Phase 18: TernAudit Infrastructure ✅
+- [x] CLI/REST audit framework with EU AI Act regulatory mapping.
+- [x] VS Code extension inline audit markers.
+
+### Phase 17: WASM Runtime ✅
+- [x] BET VM compiled to wasm32-unknown-unknown. Semantic consistency validated.
+
+### Phase 16: TernStudio IDE ✅
+- [x] Monaco-based IDE with Liquid Time, TAP (Ternary Actuator Protocol), Pyodide WASM sandbox.
+
+### Phase 15: Academic & Ecosystem Convergence ✅
+- [x] USN ternary research group alignment. IEEE-style whitepaper. `ternpkg` registry.
+
+---
+
+## 2.0 LEGACY PHASES (1–14)
 
 | Phase | Description | Key Artifact | Status |
 | :--- | :--- | :--- | :--- |
-| **14** | **TernTranslator** | `ternlang translate` CLI logic | Partial |
-| **13** | **Repo Professionalization** | `CODEOWNERS`, SEO-optimized READMEs | COMPLETE |
-| **12** | **Model Coherence (QAT)** | Quantized 1.2B TernTransformer | COMPLETE |
-| **11.6**| **ExaTern Foundation** | SIMD/Trit-Packing logic | COMPLETE |
-| **11.5**| **Ternary Compression** | Llama3.2 1B weight transmutation | COMPLETE |
-| **11**  | **MCP Intelligence Upgrade** | 20+ standardized MCP tools | COMPLETE |
-| **10.5**| **Tern Ecosystem Collaboration**| TERN-ASM Emitter | COMPLETE |
-| **10**  | **Extension Maturity** | Ghost Decoration/Hints | COMPLETE |
-| **9**   | **MoE-13 Orchestrator** | 13-Expert Sparse MoE | COMPLETE |
-| **8**   | **AI Reasoning Toolkit** | DeliberationEngine (EMA) | COMPLETE |
-| **7**   | **Ecosystem Bridges** | crates.io registry | COMPLETE |
-| **6**   | **Hardware HDL/ISA** | `BetRtlProcessor` simulation | COMPLETE |
-| **5**   | **Actor Model/Distributed** | `TernNode` TCP/Actor protocol | COMPLETE |
-| **4**   | **Language Completeness** | `for`, `loop`, `struct` parser/codegen | COMPLETE |
-| **3**   | **TritTensors & Sparse Inference** | `TSPARSE_MATMUL` kernel | COMPLETE |
-| **2**   | **Stdlib & CLI** | `ternlang` compiler CLI | COMPLETE |
-| **1**   | **Foundation** | `BET VM` byte-machine architecture | COMPLETE |
+| **14** | TernTranslator | `ternlang translate` CLI | Partial |
+| **13** | Repo Professionalization | `CODEOWNERS`, SEO READMEs | COMPLETE |
+| **12** | Model Coherence (QAT/STE) | STE ternary training from scratch | COMPLETE |
+| **11.6** | ExaTern Foundation | SIMD/Trit-Packing AVX2 kernels | COMPLETE |
+| **11.5** | Ternary Compression | Weight transmutation pipeline | COMPLETE |
+| **11** | MCP Intelligence Upgrade | 34 MCP tools (all free) | COMPLETE |
+| **10.5** | Ecosystem Collaboration | TERN-ASM Emitter | COMPLETE |
+| **10** | Extension Maturity | VS Code ghost hints/decorations | COMPLETE |
+| **9** | MoE-13 Orchestrator | 12 experts, Top-3 sparse routing | COMPLETE |
+| **8** | AI Reasoning Toolkit | DeliberationEngine (EMA) | COMPLETE |
+| **7** | Ecosystem Bridges | crates.io — 38 crates at v1.3.6 | COMPLETE |
+| **6** | Hardware HDL/ISA | `BetRtlProcessor` simulation | COMPLETE |
+| **5** | Actor Model/Distributed | `TernNode` TCP/Actor protocol | COMPLETE |
+| **4** | Language Completeness | `for`, `loop`, `struct`, `match` | COMPLETE |
+| **3** | TritTensors & Sparse Inference | `TSPARSE_MATMUL` — @sparseskip origin | COMPLETE |
+| **2** | Stdlib & CLI | `ternlang` compiler CLI | COMPLETE |
+| **1** | Foundation | BET VM byte-machine architecture | COMPLETE |
 
 ---
 
-## 3.0 VERIFICATION & METRICS
-- **Convergence Protocol**: Training is held to a strict sub-2.0 loss threshold on the foundational corpus.
-- **Performance Architecture**: System optimized for sparse execution. Sparsity-aware kernels are verified via micro-benchmarks against standard dense float32 implementations.
-- **Compliance Status**: Full 4-Tier EU AI Act / GDPR readiness documentation finalized, including systematic mapping of internal logic states to regulatory requirements.
-- **Scientific Reproducibility**: All training and inference artifacts are versioned, documented, and reproducible via independent audit scripts.
+## 3.0 CURRENT METRICS (2026-05-07)
+
+| Metric | Value | Context |
+| :--- | :--- | :--- |
+| Albert architecture | 6L · 256H · 12E · 128CTX · 8000V | Auto-expanding; surgery to 7L imminent |
+| Albert parameters | ~35M (F32) / ~4M (ternary bits) | Ternary weights: {-γ, 0, +γ} |
+| Training loss (best) | 8.6171 (6L era) / 6.10 (pre-surgery) | ln(8000)=8.987 = max entropy |
+| Inference speed | 83–125 tok/s | CPU only, KV-cache + @sparseskip |
+| Sparsity | 56% zero weights → 44% ops executed | Element-level @sparseskip active |
+| MoE routing | 3/12 experts active per decode step | 9/12 skipped — expert-level @sparseskip |
+| Corpus (active) | Bible + Alice + 12 Gutenberg novels | stage_3 + stage_6 loaded at 6L |
+| Corpus (staged) | Wikipedia (7L), Q&A (9L), Technical (11L) | Auto-unlocked on surgery |
+| Patent | A50296/2026 | @sparseskip sparse matmul primitive |
+| Crates published | 38 crates at v1.3.6 | crates.io, all open-core |
+| MCP tools | 34 tools | All free via Smithery + HTTP |
 
 ---
 
 ## 4.0 ROADMAP MAINTENANCE PROTOCOL
-1. **Chronology**: All updates must be entered in reverse-chronological order.
-2. **Technical Density**: Entries must be expanded to provide deep technical context.
-3. **Factual Grounding**: Avoid hyperbolic metrics; refer to specific artifacts.
-4. **Verification Requirement**: Phases remain active until a corresponding verified artifact is registered.
+1. **Honesty first** — no hyperbolic parameter counts or capability claims without verifiable artifacts.
+2. **Reverse chronological** — newest phases at top.
+3. **Artifact requirement** — phases remain active until a corresponding verified artifact is registered.
+4. **Metric grounding** — all numbers in §3.0 must match current `config.json` and training logs.
