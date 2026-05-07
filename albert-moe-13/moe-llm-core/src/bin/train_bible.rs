@@ -113,7 +113,9 @@ fn per_layer_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore
 ///
 /// Sparsity: fraction of weights with |w| < 0.1 (i.e. ternary zero) per layer.
 /// Expert activity: mean absolute weight in each expert's MLP, normalised 0–1.
-fn emit_telemetry(varmap: &VarMap, num_layers: usize, num_experts: usize, log_path: &str) {
+fn emit_telemetry(varmap: &VarMap, config: &TransformerConfig, log_path: &str) {
+    let num_layers = config.num_layers;
+    let num_experts = config.num_experts;
     let all_vars = match varmap.data().lock() {
         Ok(v) => v,
         Err(_) => return,
@@ -142,7 +144,8 @@ fn emit_telemetry(varmap: &VarMap, num_layers: usize, num_experts: usize, log_pa
 
         if let Some(li) = layer_idx {
             if li < num_layers {
-                layer_zeros[li] += data.iter().filter(|&&w| w.abs() < 0.1).count() as u64;
+                let thr = config.layer_threshold(li);
+                layer_zeros[li] += data.iter().filter(|&&w| w.abs() < thr).count() as u64;
                 layer_total[li] += data.len() as u64;
             }
         }
@@ -349,6 +352,9 @@ fn train_cycle(
             // loss down proportionally (equivalent to clipping all gradients).
             let grads = batch_loss.backward()?;
             let norm  = global_grad_norm(&varmap, &grads);
+            // Capture per-layer norms BEFORE opt.step() — optimizer updates tensor IDs in place,
+            // which invalidates the GradStore lookup for any Var used after the step.
+            let layer_norms = per_layer_grad_norm(&varmap, &grads, config.num_layers);
 
             let real_loss = ce_loss.to_scalar::<f32>()?;
 
@@ -400,9 +406,8 @@ fn train_cycle(
             if let Some(ref mut f) = log_file {
                 let _ = writeln!(f, "{}", log_line);
 
-                // GRAD — per-layer gradient norm, emitted every batch.
+                // GRAD — per-layer gradient norm (computed above, before opt.step).
                 // Dashboard parses "GRAD step=N n=X.XXXX L=n0,n1,n2,..."
-                let layer_norms = per_layer_grad_norm(&varmap, &grads, config.num_layers);
                 let ln_str: Vec<String> = layer_norms.iter()
                     .map(|n| format!("{:.4}", n)).collect();
                 let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, norm, ln_str.join(","));
@@ -455,7 +460,30 @@ fn train_cycle(
         }
 
         // Emit telemetry for the dashboard neural viz panels.
-        emit_telemetry(&varmap, config.num_layers, config.num_experts, log_path);
+        emit_telemetry(&varmap, &config, log_path);
+
+        // Write training_telemetry.json for the public /benchmarks/training API endpoint.
+        // The KPI workflow uploads this file to the Fly.io volume every sync cycle.
+        let telem_json = serde_json::json!({
+            "model": "albert-moe-13",
+            "version": "v2.0.0",
+            "timestamp": timestamp(),
+            "architecture": {
+                "layers": config.num_layers,
+                "hidden": config.hidden_size,
+                "experts": config.num_experts,
+                "ctx": config.max_seq_len,
+                "vocab": config.vocab_size
+            },
+            "training": {
+                "global_epoch": total_epochs,
+                "avg_loss": avg_loss,
+                "best_loss": best_epoch_loss,
+                "clipped_steps": clipped_steps,
+                "skipped_steps": skipped_steps
+            }
+        });
+        let _ = fs::write("dashboard/training_telemetry.json", telem_json.to_string());
 
         // ── Collapse Detection & Rollback ─────────────────────────────────────
         // A post-surgery layer can destabilise the model — avg loss locks at

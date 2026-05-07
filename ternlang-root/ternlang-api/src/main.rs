@@ -489,6 +489,7 @@ async fn require_api_key(
         || path == "/kpi"
         || path.starts_with("/kpi/")
         || path.starts_with("/api/kpi/")
+        || path == "/benchmarks/training"
         || path.starts_with("/assets/")
         || path == "/favicon.ico"
         || path.ends_with(".map")
@@ -609,7 +610,7 @@ async fn kpi_upload(
     headers: HeaderMap,
     body: Bytes,
 ) -> impl axum::response::IntoResponse {
-    const ALLOWED: &[&str] = &["index.html", "ternlang_kpi_log.json", "ternlang_gh_traffic.json"];
+    const ALLOWED: &[&str] = &["index.html", "ternlang_kpi_log.json", "ternlang_gh_traffic.json", "training_telemetry.json"];
     if !ALLOWED.contains(&filename.as_str()) {
         return (StatusCode::BAD_REQUEST, "invalid filename").into_response();
     }
@@ -631,6 +632,64 @@ async fn kpi_upload(
 async fn studio_page() -> Html<&'static str> {
     Html(STUDIO_HTML)
 }
+
+// ─── GET /benchmarks/training ─────────────────────────────────────────────────
+// Public endpoint: returns the latest Albert-MoE-13 training telemetry as JSON.
+// Served from /data/kpi/training_telemetry.json (uploaded by KPI workflow).
+// Falls back to a static summary when no live data is available.
+async fn benchmarks_training() -> impl axum::response::IntoResponse {
+    let path = std::path::Path::new("/data/kpi/training_telemetry.json");
+    if let Ok(content) = tokio::fs::read_to_string(path).await {
+        return (
+            [
+                (axum::http::header::CONTENT_TYPE, "application/json"),
+                (axum::http::header::CACHE_CONTROL, "public, max-age=60"),
+                (axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"),
+            ],
+            content,
+        ).into_response();
+    }
+    // Static fallback: last known training state
+    let fallback = serde_json::json!({
+        "model": "albert-moe-13",
+        "version": "v2.0.0",
+        "architecture": { "layers": 6, "hidden": 256, "experts": 12, "ctx": 128, "vocab": 8000 },
+        "training": {
+            "global_epoch": 87,
+            "best_loss": 5.9174,
+            "corpus_mb": 26,
+            "corpus_files": 16,
+            "note": "Live telemetry not yet synced — restart in progress after 6L surgery"
+        },
+        "evolution": [
+            { "event": "3L_start",    "date": "2026-05-05", "loss_before": null },
+            { "event": "3L_to_4L",    "date": "2026-05-05", "loss_before": 7.01 },
+            { "event": "4L_to_5L",    "date": "2026-05-06", "loss_before": 6.2  },
+            { "event": "5L_to_6L",    "date": "2026-05-06", "loss_before": 5.9174, "witnessed_live": true }
+        ],
+        "benchmarks": {
+            "sparsity_56pct_speedup": 2.3,
+            "sparsity_90pct_speedup": 2.84,
+            "batch_ms_6L_laptop_cpu": 2000
+        },
+        "telemetry_schema": {
+            "ROUTE": "ROUTE step=N E=w0,...,w11 (per-expert routing weight every 10 batches)",
+            "GRAD":  "GRAD step=N n=X L=n0,...,n5 (per-layer gradient norm every batch)",
+            "TELE":  "TELE L=6 S=s0,...,s5 E=e0,...,e11 (sparsity + expert activity per epoch)"
+        }
+    });
+    (
+        [
+            (axum::http::header::CONTENT_TYPE, "application/json"),
+            (axum::http::header::CACHE_CONTROL, "public, max-age=300"),
+            (axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"),
+        ],
+        fallback.to_string(),
+    ).into_response()
+}
+
+// ─── POST /api/kpi/upload/{filename} extended allowlist ───────────────────────
+// training_telemetry.json is uploaded by the KPI workflow after each training cycle.
 
 async fn fortune_page() -> Html<&'static str> {
     Html(FORTUNE_HTML)
@@ -5244,6 +5303,7 @@ async fn main() {
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))
         .route("/api/kpi/upload/{filename}", post(kpi_upload))
+        .route("/benchmarks/training",  get(benchmarks_training))
         .route("/fortune",              get(fortune_page))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))

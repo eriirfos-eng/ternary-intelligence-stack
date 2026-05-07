@@ -48,3 +48,10 @@ jobs:
                -H "X-Kpi-Token: $KPI_SECRET" \
                -H "Content-Type: application/json" \
                --data-binary @docs/kpi/ternlang_gh_traffic.json
+          # Upload Albert training telemetry if the file was committed in this run
+          if [ -f albert-moe-13/dashboard/training_telemetry.json ]; then
+            curl -sf -X POST https://ternlang.com/api/kpi/upload/training_telemetry.json \
+                 -H "X-Kpi-Token: $KPI_SECRET" \
+                 -H "Content-Type: application/json" \
+                 --data-binary @albert-moe-13/dashboard/training_telemetry.json || true
+          fi
