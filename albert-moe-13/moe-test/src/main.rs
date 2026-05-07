@@ -4,7 +4,7 @@
 
 use std::io;
 use std::path::PathBuf;
-use std::time::{Duration, Instant, UNIX_EPOCH};
+use std::time::{Duration, Instant};
 use std::fs;
 
 use candle_core::{Device, DType, Tensor, IndexOp};
@@ -51,6 +51,10 @@ struct App {
     tokens_to_generate: usize,
     scroll_pos: u16,
     auto_scroll: bool,
+
+    // KV-cache decode state
+    need_prefill: bool,   // true on first step after start_generation()
+    kv_seq_pos: usize,    // absolute position of next token to decode
 }
 
 impl App {
@@ -58,9 +62,7 @@ impl App {
         let dev = Device::Cpu;
         let (checkpoint_path, version) = find_latest_checkpoint();
         
-        let metadata = fs::metadata(&checkpoint_path).ok();
-        let mtime = metadata.and_then(|m| m.modified().ok()).unwrap_or(UNIX_EPOCH);
-        let elapsed = mtime.duration_since(UNIX_EPOCH).unwrap_or(Duration::ZERO).as_secs();
+        let _metadata = fs::metadata(&checkpoint_path).ok();
         
         let vocab_path = "data/vocab.json";
         let tokenizer = BpeTokenizer::new(vocab_path);
@@ -87,7 +89,7 @@ impl App {
         let checkpoint_data = candle_core::safetensors::load(&checkpoint_path, &dev)
             .expect("Failed to load .safetensors weights");
         let all_vars = varmap.data().lock().unwrap();
-        
+
         let mut loaded_count = 0;
         let mut missing_count = 0;
 
@@ -99,6 +101,10 @@ impl App {
                 missing_count += 1;
             }
         }
+        drop(all_vars);
+
+        // Pre-ternarize all weights once — avoids re-quantizing on every decode step.
+        model.prepare_inference().expect("inference weight cache failed");
         
         let meta_path = format!("models/bible_ternary_{}.meta", version);
         let total_epochs = fs::read_to_string(&meta_path).unwrap_or("0".to_string()).trim().parse::<u32>().unwrap_or(0);
@@ -125,6 +131,8 @@ impl App {
             tokens_to_generate: 0,
             scroll_pos: 0,
             auto_scroll: true,
+            need_prefill: false,
+            kv_seq_pos: 0,
         }
     }
 
@@ -138,11 +146,14 @@ impl App {
         self.prompt_token_len = self.current_tokens.len();
         self.messages.push(("User".to_string(), user_msg));
         self.messages.push(("Albert".to_string(), String::new()));
-        
+
+        // Reset KV-cache for new conversation turn.
+        self.model.clear_kv_cache();
+        self.need_prefill = true;
+        self.kv_seq_pos = 0;
+
         self.is_generating = true;
-        self.tokens_to_generate = 64; 
-        
-        // scroll_pos is computed in ui() when auto_scroll is true
+        self.tokens_to_generate = 64;
     }
 
     fn step_generation(&mut self) {
@@ -153,31 +164,41 @@ impl App {
 
         let start = Instant::now();
 
-        let context_len = 64;
-        let start_idx = self.current_tokens.len().saturating_sub(context_len);
-        let context = &self.current_tokens[start_idx..];
-        let n_ctx = context.len();
+        let next_token = if self.need_prefill {
+            // ── Prefill: process full prompt through all layers, populate KV-cache ──
+            let context = &self.current_tokens[..];
+            let n_ctx = context.len();
+            let est_active = (n_ctx * 3).min(self.num_experts);
+            self.active_experts = format!("{}/{} (prefill)", est_active, self.num_experts);
 
-        // Estimate active experts: with N context tokens and Top-3 routing,
-        // the expected number of non-empty expert slots grows with N.
-        // For n_ctx tokens, ~min(num_experts, n_ctx * 3) slots may be filled.
-        let est_active = (n_ctx * 3).min(self.num_experts);
-        let est_skipped = self.num_experts - est_active;
-        self.active_experts = format!(
-            "{}/{} ({}↓ sparse)",
-            est_active, self.num_experts, est_skipped
-        );
+            let input = Tensor::new(context, &self.dev).unwrap()
+                .unsqueeze(0).unwrap().to_dtype(candle_core::DType::U32).unwrap();
+            let logits = self.model.forward_prefill(&input).unwrap();
+            let dims = logits.dims();
+            let last_logits = logits.i((0, dims[1] - 1)).unwrap();
 
-        let input = Tensor::new(context, &self.dev).unwrap().unsqueeze(0).unwrap();
-        let logits = self.model.forward(&input).unwrap();
-        let dims = logits.dims();
-        let last_logits = logits.i((0, dims[1] - 1)).unwrap();
-        
-        let pr = candle_nn::ops::softmax(&last_logits, 0).unwrap().to_vec1::<f32>().unwrap();
-        let next_token = pr.iter().enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i, _)| i as u32)
-            .unwrap();
+            self.kv_seq_pos = context.len(); // next token goes at this position
+            self.need_prefill = false;
+
+            let pr = candle_nn::ops::softmax(&last_logits, 0).unwrap().to_vec1::<f32>().unwrap();
+            pr.iter().enumerate()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .map(|(i, _)| i as u32).unwrap()
+        } else {
+            // ── Decode: single token, O(1) per layer via KV-cache ──
+            // 3 experts active, 9 skipped — SparseSkip is at full effect here.
+            self.active_experts = format!("3/{} (3↑ 9↓ sparse)", self.num_experts);
+
+            let last_token = *self.current_tokens.last().unwrap();
+            let logits = self.model.forward_decode(last_token, self.kv_seq_pos, &self.dev).unwrap();
+            self.kv_seq_pos += 1;
+
+            let last_logits = logits.i((0, 0)).unwrap();
+            let pr = candle_nn::ops::softmax(&last_logits, 0).unwrap().to_vec1::<f32>().unwrap();
+            pr.iter().enumerate()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .map(|(i, _)| i as u32).unwrap()
+        };
 
         self.current_tokens.push(next_token);
         self.tokens_to_generate -= 1;

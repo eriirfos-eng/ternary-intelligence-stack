@@ -14,6 +14,11 @@ impl Mlp {
         Ok(Self { c_fc, c_proj })
     }
 
+    pub fn prepare_inference(&self) -> Result<()> {
+        self.c_fc.prepare_inference()?;
+        self.c_proj.prepare_inference()
+    }
+
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         let x = self.c_fc.forward(x)?;
         let x = x.gelu()?;

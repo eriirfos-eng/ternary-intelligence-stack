@@ -42,6 +42,12 @@ impl MoeBlock {
         Ok(Self { gate, experts, num_experts })
     }
 
+    pub fn prepare_inference(&self) -> Result<()> {
+        self.gate.prepare_inference()?;
+        for expert in &self.experts { expert.prepare_inference()?; }
+        Ok(())
+    }
+
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         let (b, s, h) = x.dims3()?;
         let dev = x.device();
