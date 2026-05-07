@@ -8,6 +8,7 @@ pub mod transformer;
 pub mod moe;
 pub mod packing;
 pub mod loader;
+pub mod cuda_matmul; // GPU backend sketch (TRL 3 → roadmap) — see module docs
 pub use transformer::Transformer;
 pub use config::TransformerConfig;
 pub use moe::{clear_routing_capture, take_routing_capture};
