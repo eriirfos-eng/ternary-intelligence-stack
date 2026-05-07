@@ -1,7 +1,8 @@
 // Sparse Top-3 MoE routing with asymmetric safety gate — whitepaper §11.1, §10.4
+// Gate kept in F32 (candle_nn::Linear): routing needs fine-grained signal that
+// ternary resolution can't provide at 256→12 scale. Expert MLPs remain ternary.
 use candle_core::{Result, Tensor};
-use candle_nn::VarBuilder;
-use super::ternary_linear::TernaryLinear;
+use candle_nn::{Module, VarBuilder};
 use super::mlp::Mlp;
 use std::cell::RefCell;
 
@@ -26,14 +27,14 @@ pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
 }
 
 pub struct MoeBlock {
-    gate: TernaryLinear,
+    gate: candle_nn::Linear,
     experts: Vec<Mlp>,
     num_experts: usize,
 }
 
 impl MoeBlock {
     pub fn new(hidden_size: usize, num_experts: usize, vb: VarBuilder, threshold: f32) -> Result<Self> {
-        let gate = TernaryLinear::new(hidden_size, num_experts, false, threshold, vb.pp("gate"))?;
+        let gate = candle_nn::linear_no_bias(hidden_size, num_experts, vb.pp("gate"))?;
         let mut experts = Vec::new();
         let vb_experts = vb.pp("experts");
         for i in 0..num_experts {
@@ -43,7 +44,6 @@ impl MoeBlock {
     }
 
     pub fn prepare_inference(&self) -> Result<()> {
-        self.gate.prepare_inference()?;
         for expert in &self.experts { expert.prepare_inference()?; }
         Ok(())
     }
@@ -53,7 +53,7 @@ impl MoeBlock {
         let dev = x.device();
         let x_flat = x.reshape((b * s, h))?;
         
-        // 1. Gate logits
+        // 1. Gate logits — F32 linear for routing resolution (ternary too coarse at 256→12)
         let mut gate_logits = self.gate.forward(x)?; // [B, S, E]
         
         // Add Gating Jitter (Noise) for exploration
