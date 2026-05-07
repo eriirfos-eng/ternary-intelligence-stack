@@ -18,6 +18,13 @@ const MAX_GRAD_NORM: f32 = 1.0;
 // ln(vocab≈8006) ≈ 8.988 — anything above 9.5 is catastrophic.
 const LOSS_EXPLOSION_THRESHOLD: f32 = 9.5;
 
+// If the epoch-average loss sits at or above this for COLLAPSE_STREAK_LIMIT
+// consecutive epochs the model has collapsed to uniform distribution.
+// ln(8000) ≈ 8.987 — we trigger at 8.5 to catch early collapse before it
+// wastes too many epochs.
+const COLLAPSE_THRESHOLD:    f32 = 8.5;
+const COLLAPSE_STREAK_LIMIT: u32 = 3;
+
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
     let secs = now.as_secs();
@@ -271,6 +278,7 @@ fn train_cycle(
     let lr_cycle_steps = 500_usize;
 
     let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), base_lr)?;
+    let mut collapse_streak: u32 = 0;
 
     let seq_len     = config.max_seq_len;
     let num_batches = 300_usize;
@@ -448,6 +456,43 @@ fn train_cycle(
 
         // Emit telemetry for the dashboard neural viz panels.
         emit_telemetry(&varmap, config.num_layers, config.num_experts, log_path);
+
+        // ── Collapse Detection & Rollback ─────────────────────────────────────
+        // A post-surgery layer can destabilise the model — avg loss locks at
+        // ln(vocab) ≈ 8.987 (uniform distribution). Detect 3 consecutive such
+        // epochs and roll back to the best checkpoint before triggering surgery.
+        if avg_loss > COLLAPSE_THRESHOLD {
+            collapse_streak += 1;
+            println!("[{}] ⚠ Collapse streak {}/{}: avg loss {:.4} above threshold {:.1}",
+                timestamp(), collapse_streak, COLLAPSE_STREAK_LIMIT, avg_loss, COLLAPSE_THRESHOLD);
+
+            if collapse_streak >= COLLAPSE_STREAK_LIMIT {
+                let rollback_src = if std::path::Path::new(best_path).exists() {
+                    best_path
+                } else {
+                    checkpoint_path
+                };
+                let msg = format!("COLLAPSE_ROLLBACK streak={} avg={:.4} src={}",
+                    collapse_streak, avg_loss, rollback_src);
+                println!("[{}] ★ {}", timestamp(), msg);
+                if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+                    let _ = writeln!(f, "{}", msg);
+                }
+
+                // Restore best weights.
+                if let Ok(n) = load_checkpoint(&varmap, rollback_src, device) {
+                    println!("[{}] Rolled back {} tensors from {}.", timestamp(), n, rollback_src);
+                }
+                // Fresh optimizer — AdamW momentum is stale/corrupted after collapse.
+                opt = candle_nn::AdamW::new_lr(varmap.all_vars(), base_lr)?;
+
+                collapse_streak = 0;
+                evolution_manager.reset_history(); // don't immediately re-trigger surgery
+                continue; // skip should_evolve this epoch — give the model a clean epoch
+            }
+        } else {
+            collapse_streak = 0; // healthy epoch resets the streak
+        }
 
         if evolution_manager.should_evolve(config.num_layers) {
             evolution_manager.reset_history();
