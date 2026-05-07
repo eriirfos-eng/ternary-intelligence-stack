@@ -477,6 +477,7 @@
             <option value="5">5 EP</option>
         </select>
         <button id="resetBtn">RESET ZOOM</button>
+        <button id="exportBtn" title="Download training curve as CSV">↓ CSV</button>
     </div>
 </div>
 
@@ -559,6 +560,19 @@
         'Information density & compression',
         'Cross-domain integration & fusion',
     ];
+
+    // SVG icons for anomaly event pills — 12×12 viewBox, currentColor
+    const ICON_SVG = {
+        clip:     `<svg viewBox="0 0 12 12" fill="currentColor" width="12" height="12"><path d="M7.5 1L2 7h3.2L4 11 10 5.2H6.8z"/></svg>`,
+        route:    `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M1 4h7"/><path d="M6 2l2 2-2 2"/><path d="M1 8h7"/><path d="M6 6l2 2-2 2"/><path d="M2 4l6 4"/></svg>`,
+        spike:    `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M6 10V2"/><path d="M3 5l3-3 3 3"/></svg>`,
+        best:     `<svg viewBox="0 0 12 12" fill="currentColor" width="12" height="12"><path d="M6 1l1.3 2.9H10l-2.2 1.7.8 2.9L6 7l-2.6 1.5.8-2.9L2 4h2.7z"/></svg>`,
+        epoch:    `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M2 6.5l2.5 2.5 5.5-5.5"/></svg>`,
+        plateau:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" width="12" height="12"><path d="M1 6h10"/><path d="M4 3v6"/><path d="M8 3v6"/></svg>`,
+        surgery:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="12" height="12"><path d="M6 2v4"/><path d="M6 6l-3 4"/><path d="M6 6l3 4"/><circle cx="6" cy="2" r="1.2" fill="currentColor" stroke="none"/><circle cx="3" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg>`,
+        mastery:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4 10h4M6 8v2"/><path d="M3 1h6v3.5A3 3 0 016 7.5 3 3 0 013 4.5V1z"/><path d="M3 2.5H1.5v1.5A2 2 0 003 6"/><path d="M9 2.5h1.5v1.5A2 2 0 019 6"/></svg>`,
+        rollback: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4.5 2L1.5 5l3 3"/><path d="M1.5 5H8a2.5 2.5 0 010 5H5.5"/></svg>`,
+    };
 
     const POLL_MS            = 1500;  // ~2s/batch at 256H — one poll per batch
     const MAX_CHART_PTS      = 5000;
@@ -934,7 +948,7 @@
                     const layerSparsity  = tm[2].split(',').map(Number);
                     const expertActivity = tm[3].split(',').map(Number);
                     if (lastNumLayers !== null && numLayers > lastNumLayers) {
-                        addEvent('🧬', `SURGERY ${lastNumLayers}L→${numLayers}L`, 'gold',
+                        addEvent('surgery', `SURGERY ${lastNumLayers}L→${numLayers}L`, 'gold',
                             `Net2Net surgery fired — model expanded from ${lastNumLayers} to ${numLayers} layers.<br>New layer inserted with identity mapping. Expect brief loss spike.`);
                     }
                     lastNumLayers = numLayers;
@@ -954,7 +968,7 @@
                     const domIdx = weights.indexOf(maxW);
                     if (maxW > 0.25 && domIdx !== lastDomExpert) {
                         lastDomExpert = domIdx;
-                        addEvent('🔀', `${EXPERT_NAMES[domIdx]} routing (${(maxW*100).toFixed(0)}%)`, 'info',
+                        addEvent('route', `${EXPERT_NAMES[domIdx]} routing (${(maxW*100).toFixed(0)}%)`, 'info',
                             `Expert E${domIdx} · <b>${EXPERT_NAMES[domIdx]}</b> became dominant router.<br>${EXPERT_DESC[domIdx]}<br>Gate weight: ${(maxW*100).toFixed(1)}%`);
                     }
                     continue;
@@ -971,7 +985,7 @@
                         const now = Date.now();
                         if (now - lastClipTs > 30000) {
                             lastClipTs = now;
-                            addEvent('⚡', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
+                            addEvent('clip', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
                                 `Gradient clipped — global norm was <b>${latestGrad.norm.toFixed(4)}</b>, clamped to 1.0.<br>Optimizer step damped. Model making large weight updates.`);
                         }
                     }
@@ -980,22 +994,22 @@
                 // Evolution & system event lines
                 if (line.includes('[evolution] Plateau detected')) {
                     const lm = line.match(/loss ([\d.]+)/);
-                    addEvent('⏸', `Plateau · ${lm ? lm[1] : ''}`, 'warn',
+                    addEvent('plateau', `Plateau · ${lm ? lm[1] : ''}`, 'warn',
                         `EvolutionManager: plateau detected. Loss > 8.0 threshold — surgery suppressed until model improves.`);
                     continue;
                 }
                 if (line.includes('[evolution]') && (line.toLowerCase().includes('surgery') || line.includes('Net2Net'))) {
-                    addEvent('🧬', 'Surgery triggered', 'gold',
+                    addEvent('surgery', 'Surgery triggered', 'gold',
                         'EvolutionManager: Net2Net surgery triggered. New layer being inserted.');
                     continue;
                 }
                 if (line.includes('[evolution]') && line.toLowerCase().includes('mastery')) {
-                    addEvent('✨', 'Mastery!', 'gold',
+                    addEvent('mastery', 'Mastery!', 'gold',
                         'Loss crossed mastery threshold (< 4.5). Architecture expansion imminent.');
                     continue;
                 }
                 if (line.includes('Rollback') && line.includes('checkpoint')) {
-                    addEvent('⏮', 'Rollback!', 'warn',
+                    addEvent('rollback', 'Rollback!', 'warn',
                         'Collapse detected — rolling back to best checkpoint. Loss exceeded 8.5 for 2 consecutive epochs.');
                     continue;
                 }
@@ -1010,7 +1024,7 @@
                 // Spike detection — loss significantly above last epoch average (once per epoch)
                 if (lastSmaY !== null && loss > lastSmaY + 0.4 && epoch !== spikeFiredEp) {
                     spikeFiredEp = epoch;
-                    addEvent('↑', `SPIKE ${loss.toFixed(3)} +${(loss - lastSmaY).toFixed(3)}`, 'crit',
+                    addEvent('spike', `SPIKE ${loss.toFixed(3)} +${(loss - lastSmaY).toFixed(3)}`, 'crit',
                         `Batch loss <b>${loss.toFixed(4)}</b> is ${(loss - lastSmaY).toFixed(4)} above EP AVG (${lastSmaY.toFixed(4)}).<br>Possible LR overshoot or difficult batch.`);
                 }
                 newPts.push({
@@ -1078,10 +1092,10 @@
                     if (epochAvg < bestEpochAvg - 0.005) {
                         const prevBest = bestEpochAvg;
                         bestEpochAvg = epochAvg;
-                        addEvent('★', `BEST avg ${epochAvg.toFixed(4)}`, 'gold',
+                        addEvent('best', `BEST avg ${epochAvg.toFixed(4)}`, 'gold',
                             `New best epoch average: <b>${epochAvg.toFixed(4)}</b>.<br>Previous best: ${prevBest === Infinity ? '—' : prevBest.toFixed(4)}`);
                     } else {
-                        addEvent('✓', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
+                        addEvent('epoch', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
                             `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`);
                     }
                 }
@@ -1480,12 +1494,19 @@
         }
         for (let i = 0; i < anomalyEvents.length; i++) {
             const ev = anomalyEvents[i];
-            const idx = i;   // capture for closure
+            const idx = i;
             const pill = document.createElement('div');
             pill.className = 'ev-pill ' + ev.level + (i === 0 ? ' newpill' : '');
 
+            // SVG icon
+            const iconWrap = document.createElement('span');
+            iconWrap.style.cssText = 'display:inline-flex;align-items:center;flex-shrink:0;';
+            iconWrap.innerHTML = ICON_SVG[ev.icon] || '';
+            pill.appendChild(iconWrap);
+
             const label = document.createElement('span');
-            label.textContent = ev.icon + ' ' + ev.text;
+            label.textContent = ev.text;
+            label.style.marginLeft = '5px';
             pill.appendChild(label);
 
             const close = document.createElement('span');
@@ -1500,7 +1521,8 @@
             pill.appendChild(close);
 
             pill.addEventListener('mouseenter', e => showTip(e,
-                '<b>' + ev.icon + ' ' + ev.text + '</b><br>' +
+                (ICON_SVG[ev.icon] ? '<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + ICON_SVG[ev.icon] + '</span> ' : '') +
+                '<b>' + ev.text + '</b><br>' +
                 ev.detail + '<br><span style="color:#555">' + ev.ts + '</span>'));
             pill.addEventListener('mouseleave', hideTip);
 
@@ -1564,6 +1586,18 @@
         document.body.style.cursor     = '';
         document.body.style.userSelect = '';
         chart.update('none');
+    });
+
+    // ── Export ───────────────────────────────────────────────────────
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        const pts = chart.data.datasets[0].data;
+        if (!pts.length) return;
+        const rows = ['epoch,loss', ...pts.map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`)];
+        const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+        const url  = URL.createObjectURL(blob);
+        const a    = Object.assign(document.createElement('a'), { href: url, download: `albert_${Date.now()}.csv` });
+        a.click();
+        URL.revokeObjectURL(url);
     });
 
     // ── Boot ──────────────────────────────────────────────────────────
