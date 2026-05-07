@@ -556,33 +556,63 @@ fn train_cycle(
     }
 }
 
-fn load_corpus(tokenizer: &BpeTokenizer) -> Vec<u32> {
-    let corpus_dir = "data/corpus";
+/// Stage-aware corpus loader. Loads all data/corpus/stage_N/ dirs where N ≤ num_layers.
+/// Each surgery increments num_layers, automatically unlocking richer data.
+///
+/// Stage plan:
+///   stage_3  — Bible + Alice          (grammar, vocab, basic syntax)
+///   stage_6  — Gutenberg novels       (complex narrative, wider vocabulary)
+///   stage_7  — Simple Wikipedia       (factual, diverse topics)
+///   stage_9  — qa_instruction.txt     (User:/Albert: instruction format)
+///   stage_11 — Linux docs, EU AI Act  (technical/specialized language)
+fn load_corpus(tokenizer: &BpeTokenizer, num_layers: usize) -> Vec<u32> {
+    let corpus_root = "data/corpus";
     let mut all_text = String::new();
+    let mut stages_loaded: Vec<usize> = Vec::new();
 
-    if let Ok(entries) = fs::read_dir(corpus_dir) {
-        let mut paths: Vec<_> = entries
+    // Collect all stage_N subdirectories where N ≤ num_layers
+    if let Ok(entries) = fs::read_dir(corpus_root) {
+        let mut stage_dirs: Vec<(usize, std::path::PathBuf)> = entries
             .filter_map(|e| e.ok())
-            .filter(|e| e.path().extension().map(|x| x == "txt").unwrap_or(false))
-            .map(|e| e.path())
+            .filter_map(|e| {
+                let name = e.file_name().into_string().ok()?;
+                let n: usize = name.strip_prefix("stage_")?.parse().ok()?;
+                Some((n, e.path()))
+            })
+            .filter(|(n, _)| *n <= num_layers)
             .collect();
-        paths.sort();
-        for path in &paths {
-            match fs::read_to_string(path) {
-                Ok(text) => {
-                    println!("[{}] Loaded corpus: {} ({} chars)", timestamp(), path.display(), text.len());
-                    all_text.push_str(&text);
-                    all_text.push('\n');
+        stage_dirs.sort_by_key(|(n, _)| *n);
+
+        for (stage_n, dir) in &stage_dirs {
+            if let Ok(files) = fs::read_dir(dir) {
+                let mut paths: Vec<_> = files
+                    .filter_map(|e| e.ok())
+                    .filter(|e| e.path().extension().map(|x| x == "txt").unwrap_or(false))
+                    .map(|e| e.path())
+                    .collect();
+                paths.sort();
+                for path in &paths {
+                    match fs::read_to_string(path) {
+                        Ok(text) => {
+                            println!("[{}] Corpus stage_{}: {} ({} chars)",
+                                timestamp(), stage_n, path.file_name().unwrap().to_string_lossy(), text.len());
+                            all_text.push_str(&text);
+                            all_text.push('\n');
+                        }
+                        Err(e) => eprintln!("Warning: could not read {:?}: {}", path, e),
+                    }
                 }
-                Err(e) => eprintln!("Warning: could not read {:?}: {}", path, e),
+                stages_loaded.push(*stage_n);
             }
         }
     }
 
     if all_text.is_empty() {
-        panic!("No corpus files found in {}", corpus_dir);
+        panic!("No corpus found in {}/stage_N/ dirs for num_layers={}", corpus_root, num_layers);
     }
 
+    println!("[{}] Active corpus stages: {:?} (model depth: {}L)",
+        timestamp(), stages_loaded, num_layers);
     tokenizer.encode(&all_text)
 }
 
@@ -597,20 +627,29 @@ fn main() -> Result<()> {
     let best_path       = "models/bible_ternary_v2.0.0.best.safetensors";
 
     let tokenizer = BpeTokenizer::new(vocab_path);
-    let tokens    = load_corpus(&tokenizer);
-
-    println!("[{}] Total corpus: {} tokens across all sources", timestamp(), tokens.len());
 
     let mut evolution_manager = EvolutionManager::new();
     let mut global_step       = 0_usize;
 
     loop {
+        // Read current layer depth to select the right corpus stages.
+        let num_layers: usize = fs::read_to_string(config_path)
+            .ok()
+            .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+            .and_then(|v| v["num_layers"].as_u64())
+            .unwrap_or(3) as usize;
+
+        let tokens = load_corpus(&tokenizer, num_layers);
+        println!("[{}] Total corpus: {} tokens ({}L model, stages ≤{})",
+            timestamp(), tokens.len(), num_layers, num_layers);
+
         let needs_evolution = train_cycle(
             &tokens, &tokenizer, &device, &mut evolution_manager, &mut global_step
         )?;
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, best_path, &device)?;
             global_step = 0;
+            // Corpus reloaded at top of next loop iteration with updated num_layers.
         }
     }
 }
