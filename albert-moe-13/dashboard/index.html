@@ -527,6 +527,7 @@
     <span class="hint-item" style="margin-left:auto; color:#444;">TELE/30 batches · GRAD/batch · ROUTE/10 batches</span>
 </div>
 
+<div id="tooltip"></div>
 <script>
     // Log now writes real cross-entropy loss directly — no division needed.
     const BATCHES_PER_EPOCH  = 300;
@@ -790,7 +791,7 @@
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
                         },
-                        onPanComplete: () => { isInteracting = false; resize(); }
+                        onPanComplete: () => { isInteracting = false; chart.update('none'); }
                     },
                     zoom: {
                         wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
@@ -799,7 +800,7 @@
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
                         },
-                        onZoomComplete: () => { isInteracting = false; resize(); }
+                        onZoomComplete: () => { isInteracting = false; chart.update('none'); }
                     }
                 }
             }
@@ -1079,7 +1080,7 @@
             // Older points in the same poll batch are added silently (duration=0).
             const isLive = newPts.length <= 20;
             newPointStartIdx = isLive ? merged.length - 1 : Infinity;
-            chart.update(isLive ? undefined : 'none');
+            chart.update(isLive && !isInteracting ? undefined : 'none');
 
             // If a live filter is active, advance the viewport with new data
             const fv = document.getElementById('viewFilter').value;
@@ -1526,7 +1527,5 @@
     poll();
     setInterval(poll, POLL_MS);
 </script>
-
-<div id="tooltip"></div>
 </body>
 </html>
