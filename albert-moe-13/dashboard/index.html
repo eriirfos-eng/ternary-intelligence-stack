@@ -310,6 +310,53 @@
         }
         .hint-item { color: #ccc; font-size: 11px; }
         .hint-item b { color: #bbb; }
+
+        /* ── Anomaly event feed ───────────────────────────────────── */
+        #anomaly-strip {
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            height: 36px;
+            padding: 0 10px;
+            gap: 10px;
+            overflow: hidden;
+        }
+        #anomaly-label {
+            font-size: 9px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        #anomaly-scroll {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            flex: 1;
+            align-items: center;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+        }
+        #anomaly-scroll::-webkit-scrollbar { display: none; }
+        .ev-pill {
+            display: flex; align-items: center; gap: 4px;
+            padding: 2px 7px; border-radius: 3px;
+            font-size: 10px; white-space: nowrap;
+            flex-shrink: 0; cursor: default;
+            border: 1px solid transparent;
+        }
+        .ev-pill.info { background:#0c1810; border-color:#1a2e1e; color:#7ecfa0; }
+        .ev-pill.warn { background:#1a1200; border-color:#3a2800; color:#e0a030; }
+        .ev-pill.crit { background:#1a0000; border-color:#3a0000; color:#ff6060; }
+        .ev-pill.good { background:#0a1a05; border-color:#1c3210; color:#90e050; }
+        .ev-pill.gold { background:#1a1400; border-color:#3a2c00; color:#ffd700; }
+        .ev-pill.newpill { animation: evpulse 1.8s ease-out; }
+        @keyframes evpulse {
+            0%   { box-shadow: 0 0 0 2px rgba(0,229,160,0.55); }
+            100% { box-shadow: 0 0 0 0px rgba(0,229,160,0); }
+        }
     </style>
 </head>
 <body>
@@ -414,6 +461,13 @@
     </div>
 </div>
 
+<div id="anomaly-strip">
+    <span id="anomaly-label">EVENTS</span>
+    <div id="anomaly-scroll">
+        <span style="color:#2a2a2a;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>
+    </div>
+</div>
+
 <div id="hint">
     <span class="hint-item"><b>DRAG</b> pan</span>
     <span class="hint-item"><b>SCROLL</b> zoom</span>
@@ -461,6 +515,15 @@
     let pulseEndMs       = 0;
     let lastKnownEpoch   = -1;  // last epoch seen — used to detect genuine session resets
     let isInteracting    = false; // true during pan/zoom — suppresses pulse & drop animations
+
+    // ── Anomaly feed state ─────────────────────────────────────────────
+    const ANOMALY_MAX = 30;
+    let anomalyEvents = [];
+    let lastNumLayers = null;
+    let lastDomExpert = -1;
+    let lastClipTs    = 0;
+    let bestEpochAvg  = Infinity;
+    let spikeFiredEp  = -1;
 
     // ── Tooltip ──────────────────────────────────────────────────────
     const ttDiv = document.getElementById('tooltip');
@@ -806,6 +869,11 @@
                     const numLayers      = parseInt(tm[1]);
                     const layerSparsity  = tm[2].split(',').map(Number);
                     const expertActivity = tm[3].split(',').map(Number);
+                    if (lastNumLayers !== null && numLayers > lastNumLayers) {
+                        addEvent('🧬', `SURGERY ${lastNumLayers}L→${numLayers}L`, 'gold',
+                            `Net2Net surgery fired — model expanded from ${lastNumLayers} to ${numLayers} layers.<br>New layer inserted with identity mapping. Expect brief loss spike.`);
+                    }
+                    lastNumLayers = numLayers;
                     latestTele = { numLayers, layerSparsity, expertActivity };
                     renderNeuralViz(latestTele);
                     continue;
@@ -818,6 +886,13 @@
                     routingHistory.push({ step, weights });
                     if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
                     renderRoutingHeatmap();
+                    const maxW   = Math.max(...weights);
+                    const domIdx = weights.indexOf(maxW);
+                    if (maxW > 0.25 && domIdx !== lastDomExpert) {
+                        lastDomExpert = domIdx;
+                        addEvent('🔀', `${EXPERT_NAMES[domIdx]} routing (${(maxW*100).toFixed(0)}%)`, 'info',
+                            `Expert E${domIdx} · <b>${EXPERT_NAMES[domIdx]}</b> became dominant router.<br>${EXPERT_DESC[domIdx]}<br>Gate weight: ${(maxW*100).toFixed(1)}%`);
+                    }
                     continue;
                 }
                 // GRAD line — per-layer gradient norms
@@ -828,8 +903,39 @@
                         layerNorms: gm[3].split(',').map(Number),
                     };
                     renderGradBars();
+                    if (latestGrad.norm > 1.0) {
+                        const now = Date.now();
+                        if (now - lastClipTs > 30000) {
+                            lastClipTs = now;
+                            addEvent('⚡', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
+                                `Gradient clipped — global norm was <b>${latestGrad.norm.toFixed(4)}</b>, clamped to 1.0.<br>Optimizer step damped. Model making large weight updates.`);
+                        }
+                    }
                     continue;
                 }
+                // Evolution & system event lines
+                if (line.includes('[evolution] Plateau detected')) {
+                    const lm = line.match(/loss ([\d.]+)/);
+                    addEvent('⏸', `Plateau · ${lm ? lm[1] : ''}`, 'warn',
+                        `EvolutionManager: plateau detected. Loss > 8.0 threshold — surgery suppressed until model improves.`);
+                    continue;
+                }
+                if (line.includes('[evolution]') && (line.toLowerCase().includes('surgery') || line.includes('Net2Net'))) {
+                    addEvent('🧬', 'Surgery triggered', 'gold',
+                        'EvolutionManager: Net2Net surgery triggered. New layer being inserted.');
+                    continue;
+                }
+                if (line.includes('[evolution]') && line.toLowerCase().includes('mastery')) {
+                    addEvent('✨', 'Mastery!', 'gold',
+                        'Loss crossed mastery threshold (< 4.5). Architecture expansion imminent.');
+                    continue;
+                }
+                if (line.includes('Rollback') && line.includes('checkpoint')) {
+                    addEvent('⏮', 'Rollback!', 'warn',
+                        'Collapse detected — rolling back to best checkpoint. Loss exceeded 8.5 for 2 consecutive epochs.');
+                    continue;
+                }
+
                 // Batch loss line — capture layer count too
                 const m = line.match(/Epoch\s+(\d+)\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
                 if (!m) continue;
@@ -837,6 +943,12 @@
                 const epoch  = parseInt(m[2]);
                 const batch  = parseInt(m[3]);
                 const loss   = parseFloat(m[4]);
+                // Spike detection — loss significantly above last epoch average (once per epoch)
+                if (lastSmaY !== null && loss > lastSmaY + 0.4 && epoch !== spikeFiredEp) {
+                    spikeFiredEp = epoch;
+                    addEvent('↑', `SPIKE ${loss.toFixed(3)} +${(loss - lastSmaY).toFixed(3)}`, 'crit',
+                        `Batch loss <b>${loss.toFixed(4)}</b> is ${(loss - lastSmaY).toFixed(4)} above EP AVG (${lastSmaY.toFixed(4)}).<br>Possible LR overshoot or difficult batch.`);
+                }
                 newPts.push({
                     x: epoch + batch / BATCHES_PER_EPOCH,
                     y: loss,
@@ -893,10 +1005,22 @@
             chart.data.datasets[3].data = sma(merged, 150);
             chart.data.datasets[4].data = tma(merged, 30);
 
-            // Update reference line from epoch summary lines ("Avg Loss: X.XXXX")
+            // Update reference line from epoch summary lines and emit EPOCH / BEST events
             for (const line of lines) {
                 const em = line.match(/Avg Loss:\s*([\d.]+)/);
-                if (em) lastSmaY = parseFloat(em[1]);
+                if (em) {
+                    const epochAvg = parseFloat(em[1]);
+                    lastSmaY = epochAvg;
+                    if (epochAvg < bestEpochAvg - 0.005) {
+                        const prevBest = bestEpochAvg;
+                        bestEpochAvg = epochAvg;
+                        addEvent('★', `BEST avg ${epochAvg.toFixed(4)}`, 'gold',
+                            `New best epoch average: <b>${epochAvg.toFixed(4)}</b>.<br>Previous best: ${prevBest === Infinity ? '—' : prevBest.toFixed(4)}`);
+                    } else {
+                        addEvent('✓', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
+                            `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`);
+                    }
+                }
             }
 
             // Only the very last arriving point gets the drop animation.
@@ -1224,6 +1348,35 @@
                 ? '⚡ <b>Clipped to 1.0</b> — optimizer step was damped. Model making large updates.'
                 : 'Within clip threshold (1.0) — full gradient step applied. Gradients stable.'));
         globalEl.onmouseleave = hideTip;
+    }
+
+    // ── Anomaly Event Feed ────────────────────────────────────────────
+    function addEvent(icon, text, level, detail) {
+        const ts = new Date().toTimeString().slice(0, 8);
+        anomalyEvents.unshift({ icon, text, level, ts, detail: detail || text });
+        if (anomalyEvents.length > ANOMALY_MAX) anomalyEvents.pop();
+        renderAnomalyFeed();
+    }
+
+    function renderAnomalyFeed() {
+        const scroll = document.getElementById('anomaly-scroll');
+        scroll.innerHTML = '';
+        if (anomalyEvents.length === 0) {
+            scroll.innerHTML = '<span style="color:#2a2a2a;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>';
+            return;
+        }
+        for (let i = 0; i < anomalyEvents.length; i++) {
+            const ev = anomalyEvents[i];
+            const pill = document.createElement('div');
+            pill.className = 'ev-pill ' + ev.level + (i === 0 ? ' newpill' : '');
+            pill.textContent = ev.icon + ' ' + ev.text;
+            pill.addEventListener('mouseenter', e => showTip(e,
+                '<b>' + ev.icon + ' ' + ev.text + '</b><br>' +
+                ev.detail + '<br><span style="color:#555">' + ev.ts + '</span>'));
+            pill.addEventListener('mouseleave', hideTip);
+            scroll.appendChild(pill);
+        }
+        scroll.scrollLeft = 0;
     }
 
     // ── Hint bar tooltips ─────────────────────────────────────────────
