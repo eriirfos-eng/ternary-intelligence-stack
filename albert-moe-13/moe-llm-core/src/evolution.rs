@@ -1,3 +1,4 @@
+// EvolutionManager: mastery + plateau triggers for Net2Net layer surgery — whitepaper §11.2
 use std::collections::VecDeque;
 
 /// Orchestrates automatic topological growth of the Albert MoE architecture.
@@ -66,6 +67,7 @@ impl EvolutionManager {
         }
 
         let latest = *self.loss_history.back().unwrap();
+        // Mastery trigger: model has outgrown current depth (§11.2).
         if latest < self.mastery_threshold {
             println!("--- MASTERY EVOLUTION TRIGGERED (loss {:.4} < {:.4}) ---",
                 latest, self.mastery_threshold);
@@ -74,6 +76,7 @@ impl EvolutionManager {
 
         let first = *self.loss_history.front().unwrap();
         let diff = first - latest;
+        // Plateau trigger: loss delta below threshold over history window (§11.2).
         if diff.abs() < self.plateau_threshold {
             println!("--- PLATEAU EVOLUTION TRIGGERED (Δ {:.4} < {:.4} over {} epochs) ---",
                 diff.abs(), self.plateau_threshold, self.history_len);

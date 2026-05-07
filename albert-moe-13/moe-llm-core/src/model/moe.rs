@@ -1,3 +1,4 @@
+// Sparse Top-3 MoE routing with asymmetric safety gate — whitepaper §11.1, §10.4
 use candle_core::{Result, Tensor};
 use candle_nn::VarBuilder;
 use super::ternary_linear::TernaryLinear;
@@ -119,7 +120,7 @@ impl MoeBlock {
             let w3 = (mask3_bool.to_dtype(x.dtype())? * &p3)?;
             let combined_weight = (w1 + w2 + w3)?.unsqueeze(1)?;
 
-            // SparseSkip: if no token is routed to this expert, skip the MLP entirely.
+            // SparseSkip: if no token is routed to this expert, skip the MLP entirely — whitepaper §5.2.
             // For single-token inference (Top-3, 12 experts) this skips 9/12 experts — ~4× speedup.
             let max_w = combined_weight.max_all()?.to_scalar::<f32>()?;
 

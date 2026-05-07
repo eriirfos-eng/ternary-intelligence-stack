@@ -1,3 +1,4 @@
+// TernaryLinear: weight-scaled ternary matmul with cached gamma — whitepaper §5.1
 use candle_core::{Result, Tensor};
 use candle_nn::VarBuilder;
 use super::ste::ternarize_ste_with_gamma;
@@ -57,6 +58,7 @@ impl TernaryLinear {
         let mut cache = self.gamma_cache.borrow_mut();
         let (count, ref mut stored) = *cache;
         if count % GAMMA_REFRESH == 0 || stored.is_none() {
+            // γ = E[|W|] — the per-layer scaling factor from §5.1 Eq. (1).
             let g = self.weight.abs()?.mean_all()?;
             *stored = Some(g.detach()); // detach: gamma is a stat, not part of the graph
         }
