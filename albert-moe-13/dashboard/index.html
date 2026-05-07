@@ -108,7 +108,7 @@
             display: flex;
             gap: 0;
             flex-shrink: 0;
-            height: 160px;
+            height: 210px;
             overflow: hidden;
         }
         .nv-panel {
@@ -179,8 +179,27 @@
             cursor: default;
             transition: background 0.8s;
         }
-        .expert-label { font-size: 8px; color: rgba(0,0,0,0.55); line-height: 1; }
-        .expert-act   { font-size: 9px; color: rgba(0,0,0,0.85); font-weight: bold; line-height: 1.2; }
+        .expert-label { font-size: 9px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1; }
+        .expert-act   { font-size: 9px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: bold; line-height: 1.2; }
+
+        /* ── Styled tooltip ────────────────────────────────────── */
+        #tooltip {
+            display: none;
+            position: fixed;
+            background: #141414;
+            border: 1px solid #2c2c2c;
+            color: #ddd;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 11px;
+            padding: 7px 11px;
+            border-radius: 4px;
+            z-index: 9999;
+            pointer-events: none;
+            line-height: 1.8;
+            max-width: 260px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        }
+        #tooltip b { color: var(--accent); }
         /* Sparsity bars */
         #sparsity-viz {
             display: flex;
@@ -225,9 +244,9 @@
             align-items: stretch;
         }
         .route-label {
-            font-size: 10px;
+            font-size: 9px;
             color: #ccc;
-            width: 20px;
+            width: 26px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
@@ -363,7 +382,7 @@
 <div id="neural-wrap">
     <!-- Panel A: Layer topology — grows as Net2Net surgery fires -->
     <div class="nv-panel">
-        <div class="nv-label">&#9632; Layer Topology &amp; Sparsity</div>
+        <div class="nv-label">&#9632; Layer Topology</div>
         <div id="layer-viz">
             <div id="neural-waiting">WAITING FOR TELE DATA — fires after first epoch</div>
         </div>
@@ -405,6 +424,24 @@
 <script>
     // Log now writes real cross-entropy loss directly — no division needed.
     const BATCHES_PER_EPOCH  = 300;
+
+    // Domain labels for the 12 MoE experts (learned specializations — labels are functional)
+    const EXPERT_NAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
+    const EXPERT_DESC  = [
+        'Surface structure & token patterns',
+        'Word meaning & semantic similarity',
+        'Long-range dependencies & context',
+        'Reasoning chains & inference',
+        'Retrieval, repetition & recall',
+        'Fluency, coherence & generation',
+        'Structured & logical reasoning',
+        'Style, register & language form',
+        'High-level concepts & abstraction',
+        'Sequence planning & structure',
+        'Information density & compression',
+        'Cross-domain integration & fusion',
+    ];
+
     const POLL_MS            = 1500;  // ~2s/batch at 256H — one poll per batch
     const MAX_CHART_PTS      = 5000;
 
@@ -424,6 +461,22 @@
     let pulseEndMs       = 0;
     let lastKnownEpoch   = -1;  // last epoch seen — used to detect genuine session resets
     let isInteracting    = false; // true during pan/zoom — suppresses pulse & drop animations
+
+    // ── Tooltip ──────────────────────────────────────────────────────
+    const ttDiv = document.getElementById('tooltip');
+    document.addEventListener('mousemove', ev => {
+        if (ttDiv.style.display === 'block') {
+            ttDiv.style.left = (ev.clientX + 14) + 'px';
+            ttDiv.style.top  = Math.max(4, ev.clientY - 70) + 'px';
+        }
+    });
+    function showTip(ev, html) {
+        ttDiv.innerHTML = html;
+        ttDiv.style.display = 'block';
+        ttDiv.style.left = (ev.clientX + 14) + 'px';
+        ttDiv.style.top  = Math.max(4, ev.clientY - 70) + 'px';
+    }
+    function hideTip() { ttDiv.style.display = 'none'; }
 
     // ── Last epoch average reference line (MT5-style "closing price" line) ──
     let lastSmaY = null;   // tracks last completed epoch's avg loss
@@ -959,11 +1012,16 @@
         const layerDiv = document.getElementById('layer-viz');
         layerDiv.innerHTML = '';
 
-        const addNode = (label, cls) => {
+        const addNode = (label, tipHtml) => {
             const d = document.createElement('div');
             d.className = 'topo-node';
             d.style.color = '#444';
             d.textContent = label;
+            if (tipHtml) {
+                d.style.cursor = 'default';
+                d.addEventListener('mouseenter', ev => showTip(ev, tipHtml));
+                d.addEventListener('mouseleave', hideTip);
+            }
             layerDiv.appendChild(d);
         };
         const addArrow = () => {
@@ -973,7 +1031,7 @@
             layerDiv.appendChild(d);
         };
 
-        addNode('IN');
+        addNode('IN', '<b>Input</b><br>Token embeddings enter the transformer stack.<br>Vocab: 8000 BPE tokens · Embedding dim: 256');
         addArrow();
 
         for (let i = 0; i < tele.numLayers; i++) {
@@ -985,7 +1043,12 @@
             block.className = 'topo-layer';
             block.style.borderColor = col;
             block.style.opacity = opacity;
-            block.title = `Layer ${i} — ${(s * 100).toFixed(1)}% weights near-zero`;
+            block.addEventListener('mouseenter', ev => showTip(ev,
+                `<b>Layer ${i}</b><br>` +
+                `Weight sparsity: <b>${(s * 100).toFixed(1)}%</b> near-zero<br>` +
+                `Border brightness = density — brighter = more active weights.<br>` +
+                `Opacity = density — faded = high sparsity.`));
+            block.addEventListener('mouseleave', hideTip);
 
             block.innerHTML =
                 `<div class="topo-layer-label">L${i}</div>`;
@@ -995,7 +1058,7 @@
         }
 
         addArrow();
-        addNode('OUT');
+        addNode('OUT', '<b>Output</b><br>Logits projected to vocab (8000 tokens).<br>Next-token prediction via cross-entropy loss.');
 
         // ── Panel B: Expert heatmap ────────────────────────────────────
         const expDiv = document.getElementById('expert-viz');
@@ -1005,10 +1068,14 @@
             const cell = document.createElement('div');
             cell.className = 'expert-cell';
             cell.style.background = expertColor(act);
-            cell.title = `Expert ${e} — activity ${(act * 100).toFixed(0)}%`;
+            const eName = EXPERT_NAMES[e] || `E${e}`;
+            const pctStr = (act * 100).toFixed(0);
             cell.innerHTML =
-                `<span class="expert-label">E${e}</span>` +
-                `<span class="expert-act">${(act * 100).toFixed(0)}%</span>`;
+                `<span class="expert-label">${eName}</span>` +
+                `<span class="expert-act">${pctStr}%</span>`;
+            cell.addEventListener('mouseenter', ev => showTip(ev,
+                `<b>E${e} · ${eName}</b><br>${EXPERT_DESC[e] || ''}<br>Activity: <b>${pctStr}%</b>`));
+            cell.addEventListener('mouseleave', hideTip);
             expDiv.appendChild(cell);
         }
 
@@ -1027,6 +1094,12 @@
                   `<div class="sbar-fill" style="width:${pct}%; background:${col};"></div>` +
                 `</div>` +
                 `<span class="sbar-val">${pct}%</span>`;
+            row.addEventListener('mouseenter', ev => showTip(ev,
+                `<b>Layer ${i} — Weight Sparsity</b><br>` +
+                `<b>${pct}%</b> of ternary weights are near-zero (|w| < threshold).<br>` +
+                `Higher sparsity → more @sparseskip savings at inference.<br>` +
+                `Deep layers are expected to be sparser than early layers.`));
+            row.addEventListener('mouseleave', hideTip);
             spDiv.appendChild(row);
         }
     }
@@ -1068,7 +1141,11 @@
             row.className = 'route-row';
             const lbl = document.createElement('span');
             lbl.className = 'route-label';
-            lbl.textContent = `E${e}`;
+            lbl.textContent = EXPERT_NAMES[e] || `E${e}`;
+            lbl.style.cursor = 'default';
+            lbl.addEventListener('mouseenter', ev => showTip(ev,
+                `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}`));
+            lbl.addEventListener('mouseleave', hideTip);
             row.appendChild(lbl);
 
             const cells = document.createElement('div');
@@ -1079,7 +1156,11 @@
                 const cell = document.createElement('div');
                 cell.className = 'route-cell';
                 cell.style.background = routingColor(v);
-                cell.title = `E${e} @ step ${routingHistory[t].step}: ${(w*100).toFixed(1)}%`;
+                const stepNum = routingHistory[t].step;
+                const wPct = (w*100).toFixed(1);
+                cell.addEventListener('mouseenter', ev => showTip(ev,
+                    `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}<br>Step ${stepNum}: <b>${wPct}%</b>`));
+                cell.addEventListener('mouseleave', hideTip);
                 cells.appendChild(cell);
             }
             row.appendChild(cells);
@@ -1123,6 +1204,12 @@
                   `<div class="gbar-fill" style="width:${pct}%; background:${col};"></div>` +
                 `</div>` +
                 `<span class="gbar-val">${n.toFixed(6)}</span>`;
+            row.addEventListener('mouseenter', ev => showTip(ev,
+                `<b>Layer ${i} — Gradient Norm</b><br>` +
+                `∥∇L∥ = <b>${n.toFixed(6)}</b><br>` +
+                `Bar = fraction of the highest-norm layer this batch.<br>` +
+                `Very low values across all layers may indicate vanishing gradients.`));
+            row.addEventListener('mouseleave', hideTip);
             wrap.appendChild(row);
         }
 
@@ -1130,11 +1217,47 @@
         const clipped  = norm > 1.0;
         globalEl.textContent = `global ∥g∥ = ${norm.toFixed(4)}${clipped ? ' ⚡CLIP' : ''}`;
         globalEl.style.color  = clipped ? '#e0a030' : '#444';
+        globalEl.onmouseenter = ev => showTip(ev,
+            `<b>Global Gradient Norm</b><br>` +
+            `∥∇L∥ = <b>${norm.toFixed(4)}</b><br>` +
+            (norm > 1.0
+                ? '⚡ <b>Clipped to 1.0</b> — optimizer step was damped. Model making large updates.'
+                : 'Within clip threshold (1.0) — full gradient step applied. Gradients stable.'));
+        globalEl.onmouseleave = hideTip;
+    }
+
+    // ── Hint bar tooltips ─────────────────────────────────────────────
+    const hintTips = [
+        ['DRAG pan',         '<b>Drag</b> to pan the loss chart left/right.'],
+        ['SCROLL zoom',      '<b>Scroll wheel</b> to zoom in/out on the loss timeline.'],
+        ['RESET ZOOM re-follow', '<b>Reset Zoom</b> — snaps back to auto-follow mode,<br>keeping the latest data point always in view.'],
+    ];
+    document.querySelectorAll('.hint-item').forEach(el => {
+        const text = el.textContent.trim();
+        const match = hintTips.find(([key]) => text.includes(key.split(' ')[0]));
+        if (match) {
+            el.style.cursor = 'default';
+            el.addEventListener('mouseenter', ev => showTip(ev, match[1]));
+            el.addEventListener('mouseleave', hideTip);
+        }
+    });
+    // Telemetry cadence note
+    const telNote = document.querySelector('#hint .hint-item[style]');
+    if (telNote) {
+        telNote.style.cursor = 'default';
+        telNote.addEventListener('mouseenter', ev => showTip(ev,
+            '<b>Telemetry cadence</b><br>' +
+            'TELE — layer topology &amp; sparsity: every 30 batches<br>' +
+            'GRAD — per-layer gradient norms: every batch<br>' +
+            'ROUTE — expert routing weights: every 10 batches'));
+        telNote.addEventListener('mouseleave', hideTip);
     }
 
     // ── Boot ──────────────────────────────────────────────────────────
     poll();
     setInterval(poll, POLL_MS);
 </script>
+
+<div id="tooltip"></div>
 </body>
 </html>
