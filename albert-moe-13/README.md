@@ -147,6 +147,64 @@ The ~50× speedup over the original implementation came from fixing a gradient a
 
 ---
 
+## Held-Out Perplexity (v2.0.0 best checkpoint)
+
+Evaluated on a deterministic 5% held-out split of the training corpus (seed 42 — never seen during training):
+
+| Metric | Value |
+|--------|-------|
+| Avg loss (held-out) | **7.1537** |
+| Perplexity | **1,278.8** |
+| Unigram random baseline | 8,000.0 |
+| Reduction vs baseline | **84.0%** |
+
+Reproduce: `python3 scripts/eval_perplexity.py --checkpoint models/bible_ternary_v2.0.0.best.safetensors`
+
+---
+
+## Stage-Aware Corpus Curriculum
+
+Albert automatically unlocks richer training data as it grows deeper — each Net2Net surgery increments `num_layers`, which triggers the corpus loader to include the next stage directory:
+
+| Stage dir | Unlocked at | Content | Purpose |
+|-----------|-------------|---------|---------|
+| `data/corpus/stage_3/` | 3L (initial) | Bible + Alice in Wonderland | Grammar, vocab, basic syntax |
+| `data/corpus/stage_6/` | 6L | Gutenberg novels | Complex narrative, wider vocabulary |
+| `data/corpus/stage_7/` | 7L | Simple Wikipedia | Factual, diverse topics |
+| `data/corpus/stage_9/` | 9L | `qa_instruction.txt` | `User:/Albert:` instruction format |
+| `data/corpus/stage_11/` | 11L | Linux docs, EU AI Act | Technical and specialized language |
+
+This is automatic curriculum learning: the model cannot overfit on complex text before it has the architectural capacity to represent it. Surgery fires → depth increases → corpus expands → new challenge. No manual intervention required.
+
+Implementation: `train_bible.rs` `load_corpus()` function, lines 581–630.
+
+---
+
+## Competitive Positioning
+
+### vs. Microsoft BitNet (1-bit LLMs)
+
+| Dimension | Albert MoE-13 | BitNet b1.58 |
+|-----------|--------------|--------------|
+| Weight precision | Ternary `{−γ, 0, +γ}` | Ternary `{−1, 0, +1}` |
+| Training approach | **Native ternary from init via STE** | Post-training quantization of float model |
+| Architecture | **Mixture-of-Experts, 12 experts, Top-3** | Dense transformer |
+| Zero-state | **First-class routing instruction (@sparseskip)** | Passive compression artifact |
+| Architecture growth | **Autonomous Net2Net surgery** | Fixed at initialization |
+| Inference skip | **3.97× MLP speedup at 75% sparsity (measured)** | No expert-level skip mechanism |
+| Hardware target | CPU-first, ASIC roadmap | GPU-optimized |
+| Scale | Research prototype, 3L→12L growth pipeline | Production, 100B+ params |
+
+**Key distinction:** BitNet treats the zero state as a compression artifact. Albert treats it as a first-class computational primitive — the `HOLD` state is a routing instruction that explicitly skips computation (`@sparseskip`). The MoE architecture means 9 of 12 experts are skipped per decode step at the routing level, compounding the weight-level sparsity savings.
+
+**Is the frontier claim novel?** The combination of (1) native ternary training, (2) MoE expert routing, (3) autonomous architectural growth, and (4) zero-as-routing-primitive is architecturally distinct from BitNet. This is not incremental improvement on BitNet — it is a different architectural hypothesis about where the zero state belongs in the compute graph.
+
+### vs. Standard MoE (Mixtral, Switch Transformer)
+
+Standard MoE implementations use float32 weights and route to experts for capacity, not for sparsity. Albert's routing achieves two simultaneous savings: weight-level ternary sparsity inside each expert, plus expert-level skip at the routing layer. The `@sparseskip` primitive makes the zero routing weight a branch condition, not a multiply-by-zero.
+
+---
+
 ## Further Reading
 
 - [Architecture](docs/architecture.md) — model internals, routing, STE

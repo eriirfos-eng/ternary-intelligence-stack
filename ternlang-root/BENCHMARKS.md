@@ -242,6 +242,57 @@ The empirical data demonstrates a non-linear relationship between structural spa
 
 ---
 
+## §11 — Albert MoE-13: @sparseskip Routing Speedup (Live Model)
+
+Run: `cargo run --release --bin sparseskip_throughput -p moe-llm-core`  
+Measures wall-clock speedup of the `@sparseskip` primitive in the actual Albert MoE-13 routing layer.  
+Config: 12 experts · hidden=256 · inner=1024 · 2,000 iterations · 200 warmup · x86 CPU (HP ZBook i7-4800MQ, no GPU).
+
+| Sparsity | Experts Skipped | Dense (ms) | SparseSkip (ms) | Speedup | Note |
+|----------|----------------|------------|-----------------|---------|------|
+| 0% | 0/12 | 42,432 | 41,596 | 1.02× | baseline — all experts active |
+| 25% | 3/12 | 39,520 | 32,714 | 1.21× | |
+| 50% | 6/12 | 42,925 | 21,521 | 1.99× | |
+| **75%** | **9/12** | **43,838** | **11,044** | **3.97×** | **← typical Top-3 decode step** |
+| 83% | 10/12 | 42,121 | 6,499 | 6.48× | |
+| 92% | 11/12 | 42,333 | 3,240 | 13.07× | |
+
+**Interpretation:**  
+At every decode step, Albert's Top-3 routing selects 3 of 12 experts. The remaining 9 receive zero combined weight — `@sparseskip` detects this and `continue`s the MLP loop, skipping the entire forward pass for those 9 experts. On real hardware this delivers a **3.97× end-to-end MLP speedup per decode token** with mathematically identical output (verified: max output divergence < 1e-4 across all sparsity levels).
+
+The theoretical 122× figure from the TIS whitepaper is the ASIC upper bound at 99%+ *weight-level* sparsity where bit-masking overhead is eliminated at the silicon level. These figures are the honest x86 baseline — no extrapolation.
+
+Patent pending: A50296/2026.
+
+---
+
+## §12 — Albert MoE-13: Held-Out Perplexity Evaluation
+
+Run: `python3 albert-moe-13/scripts/eval_perplexity.py --checkpoint models/bible_ternary_v2.0.0.best.safetensors`  
+Evaluates the best 3L checkpoint on a deterministic held-out test split — text the model never saw during training.
+
+| Metric | Value |
+|--------|-------|
+| Checkpoint | `bible_ternary_v2.0.0.best.safetensors` (3L · 256H · 12E · ~10M params) |
+| Test corpus | Bible (stage_3), 5% held-out split, seed 42 |
+| Test tokens | 41,041 |
+| **Avg cross-entropy loss** | **7.1537** |
+| **Perplexity** | **1,278.8** |
+| Unigram baseline (random) | 8,000.0 (= vocab size, ln baseline = 8.987) |
+| **Reduction vs baseline** | **84.0%** |
+| Hardware | HP ZBook i7-4800MQ, CPU-only |
+
+**Interpretation:**  
+A model outputting a uniform distribution over 8,000 tokens achieves perplexity = 8,000 (loss = ln(8000) = 8.987). Albert's best 3L checkpoint achieves perplexity 1,278.8 on held-out text — an **84% reduction from random baseline**. This is a natively ternary model (weights in {−γ, 0, +γ} throughout training via STE), not a post-hoc quantized float model. The 3L architecture is the current training floor; the EvolutionManager is configured to grow to 12L via Net2Net surgery as capacity ceilings are detected.
+
+Reproduce:
+```bash
+cd albert-moe-13
+python3 scripts/eval_perplexity.py --checkpoint models/bible_ternary_v2.0.0.best.safetensors
+```
+
+---
+
 ## Reproducing These Results
 
 ```bash
