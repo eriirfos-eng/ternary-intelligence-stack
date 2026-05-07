@@ -3,7 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
 [![version](https://img.shields.io/badge/version-v1.3.6-blue)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
+[![tests](https://img.shields.io/badge/tests-138%20CI%20%7C%205%20crates-yellow)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
 [![MCP](https://img.shields.io/badge/MCP-34_tools-orange)](#mcp-server--v040-34-tools)
@@ -57,30 +57,42 @@ ternlang run my_program.tern   # explicit form
 
 ## 2. What is Albert-MoE-13? (The Intelligence Layer)
 
-We are researching the fundamental scaling laws of natively trained ternary neural networks.
+Albert is a ternary Mixture-of-Experts language model trained from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus.
 
-**Albert** is our experimental framework for ternary Mixture-of-Experts (MoE). Unlike binary transformer architectures, Albert explores how scaling parameter counts ($N$) in a ternary manifold ($\{-1, 0, +1\}$) leads to stable loss convergence without the need for high-precision float training.
+**Current state (2026-05-07):** 7L · 256H · 12E · Top-3 routing · 128CTX · 8000 vocab · ~35M params · training on CPU.
 
-- **Scaling Dimension**: Investigating how ternary-native representations scale predictably to 1T+ parameters.
-- **Manifold Stability**: Empirically measuring loss convergence and gradient flow through discrete ternary thresholds (STE).
-- **Native Ternary Training**: Training from scratch on the ternary manifold to optimize representation efficiency.
-- **Sparse Geometric Scaling**: Leveraging the sparse geometry of ternary weights for sub-linear memory requirements.
+### What makes it different
 
-Base Architecture: Scalable Ternary MoE (Multi-Domain Experts)
-Objective: Demonstrate empirical scaling laws and representation efficiency of native ternary manifolds.
-Why This Matters: Move AI scaling beyond the energy-intensive binary-float paradigm.
+| Feature | Albert MoE-13 | Standard LLM |
+|--------|--------------|--------------|
+| Weight precision | Ternary `{-γ, 0, +γ}` from scratch | Float32 / post-hoc INT4 |
+| **@sparseskip** | Skips 56% of matmul ops at element level | Dense matmul always |
+| Architecture growth | Autonomous Net2Net surgery (3L→7L live) | Fixed at init |
+| Inference speed | **83–125 tok/s on laptop CPU** | Requires GPU at this quality |
+| Routing | 9/12 experts skipped per decode step | All experts active |
+| Patent | A50296/2026 (@sparseskip primitive) | — |
 
-### Empirical Scaling Metrics
+### Try it (API — no install needed)
+```bash
+# Ternary decision: affirm / hold / reject
+curl -s https://ternlang-api.fly.dev/api/trit_decide \
+  -H "Content-Type: application/json" \
+  -d '{"statement": "This architecture is worth funding"}' | jq .
 
-We measure architectural success through ternary convergence and scaling efficiency.
+# Sparse MoE reasoning over 13 expert domains
+curl -s https://ternlang-api.fly.dev/api/moe/orchestrate \
+  -H "Content-Type: application/json" \
+  -H "X-Ternlang-Key: YOUR_KEY" \
+  -d '{"query": "What is ternary logic?", "evidence": [0.9, 0.1]}' | jq .
+```
 
-| Metric | Scientific Focus | Empirical Baseline |
-|--------|------------------|--------------------|
-| **Loss Convergence ($N$)** | Power-law scaling | Stable scaling up to 1T params |
-| **Manifold Sparsity** | Sparse geometric efficiency | ~32% stable sparsity |
-| **Ternary Manifold ($\alpha$)** | Signal amplitude stability | $\alpha \approx 0.55$ invariant |
+*See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full sparsity speedup data and [`albert-moe-13/`](albert-moe-13/) for training code.*
 
-*See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full experimental data.*
+### Known Limitations (honest)
+- Albert at 7L is a **research prototype**, not a production LLM. He generates statistically coherent text but does not yet answer questions — that capability is targeted at 9L+ with instruction fine-tuning.
+- Training runs on a single CPU (HP ZBook, no GPU). A proper GPU cluster would run 10-50× faster.
+- Held-out perplexity vs float32 baseline is not yet published (in progress — `scripts/eval_perplexity.py`).
+- The CUDA backend (`cuda_matmul.rs`) is a design sketch at TRL 3, not yet a running kernel.
 
 ---
 
@@ -148,7 +160,7 @@ The Ternary Intelligence Stack is built by a core team of five co-founders from 
 *   **Lisa Scharler**: Head of Social Technology & Ecocentric Systems.
 *   **Louis Ehrig**: Corporate Secretary and Press & Media Relations.
 
-→ **[Read our BIO and Mission in LEADERSHIP.md](docs/LEADERSHIP.md)**
+→ **[Read our BIO and Mission in LEADERSHIP.md](LEADERSHIP.md)**
 
 ---
 
