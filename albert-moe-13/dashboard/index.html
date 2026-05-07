@@ -113,13 +113,36 @@
         }
         .nv-panel {
             flex: 1;
-            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             padding: 4px 8px;
             min-width: 0;
+            overflow: hidden;
         }
-        .nv-panel:last-child { border-right: none; }
+        /* ── Panel horizontal resize handles ─────────────────────── */
+        .panel-resize-handle {
+            width: 5px;
+            flex-shrink: 0;
+            cursor: ew-resize;
+            background: transparent;
+            border-left: 1px solid var(--border);
+            position: relative;
+            transition: border-color 0.15s;
+        }
+        .panel-resize-handle:hover,
+        .panel-resize-handle.h-dragging { border-color: var(--accent); }
+        .panel-resize-handle::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 1px;
+            transform: translateY(-50%);
+            width: 2px; height: 28px;
+            background: #222;
+            border-radius: 1px;
+            transition: background 0.15s;
+        }
+        .panel-resize-handle:hover::after,
+        .panel-resize-handle.h-dragging::after { background: var(--accent); }
         .nv-label {
             font-size: 10px;
             color: #aaa;
@@ -329,16 +352,6 @@
         #bottom-resize-handle:hover::after,
         #bottom-resize-handle.dragging::after { background: var(--accent); }
 
-        /* ── Bottom hint ─────────────────────────────────────────── */
-        #hint {
-            height: 20px;
-            border-top: 1px solid var(--border);
-            display: flex; align-items: center;
-            padding: 0 10px; gap: 16px;
-            flex-shrink: 0;
-        }
-        .hint-item { color: #555; font-size: 11px; }
-        .hint-item b { color: #666; }
 
         /* ── Anomaly event feed ───────────────────────────────────── */
         #anomaly-strip {
@@ -493,24 +506,28 @@
             <div id="neural-waiting">WAITING FOR TELE DATA — fires after first epoch</div>
         </div>
     </div>
+    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel B: Expert activity heatmap -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Expert Activity (12 MoE Experts)</div>
         <div id="expert-viz"><div id="expert-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
+    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel C: Per-layer sparsity bars -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Per-Layer Weight Sparsity</div>
         <div id="sparsity-viz"><div id="sparsity-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
+    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel D: Expert routing heatmap (live, per batch) -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Expert Routing — Last 60 Steps</div>
         <div id="routing-viz"><div id="routing-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR ROUTE DATA</div></div>
     </div>
+    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel E: Per-layer gradient magnitude -->
     <div class="nv-panel">
@@ -520,12 +537,6 @@
     </div>
 </div>
 
-<div id="hint">
-    <span class="hint-item"><b>DRAG</b> pan</span>
-    <span class="hint-item"><b>SCROLL</b> zoom</span>
-    <span class="hint-item"><b>RESET ZOOM</b> re-follow</span>
-    <span class="hint-item" style="margin-left:auto; color:#444;">TELE/30 batches · GRAD/batch · ROUTE/10 batches</span>
-</div>
 
 <div id="tooltip"></div>
 <script>
@@ -1496,32 +1507,44 @@
         scroll.scrollLeft = 0;
     }
 
-    // ── Hint bar tooltips ─────────────────────────────────────────────
-    const hintTips = [
-        ['DRAG pan',         '<b>Drag</b> to pan the loss chart left/right.'],
-        ['SCROLL zoom',      '<b>Scroll wheel</b> to zoom in/out on the loss timeline.'],
-        ['RESET ZOOM re-follow', '<b>Reset Zoom</b> — snaps back to auto-follow mode,<br>keeping the latest data point always in view.'],
-    ];
-    document.querySelectorAll('.hint-item').forEach(el => {
-        const text = el.textContent.trim();
-        const match = hintTips.find(([key]) => text.includes(key.split(' ')[0]));
-        if (match) {
-            el.style.cursor = 'default';
-            el.addEventListener('mouseenter', ev => showTip(ev, match[1]));
-            el.addEventListener('mouseleave', hideTip);
-        }
+    // ── Panel horizontal resize ───────────────────────────────────────
+    let hResizing     = false;
+    let hLeftPanel    = null;
+    let hActiveHandle = null;
+    let hStartX       = 0;
+    let hStartW       = 0;
+
+    document.querySelectorAll('.panel-resize-handle').forEach(handle => {
+        handle.addEventListener('mousedown', e => {
+            hLeftPanel    = handle.previousElementSibling;
+            hActiveHandle = handle;
+            hResizing     = true;
+            hStartX       = e.clientX;
+            hStartW       = hLeftPanel.offsetWidth;
+            handle.classList.add('h-dragging');
+            document.body.style.cursor     = 'ew-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        handle.addEventListener('dblclick', () => {
+            handle.previousElementSibling.style.flex = '';   // snap back to CSS default
+        });
     });
-    // Telemetry cadence note
-    const telNote = document.querySelector('#hint .hint-item[style]');
-    if (telNote) {
-        telNote.style.cursor = 'default';
-        telNote.addEventListener('mouseenter', ev => showTip(ev,
-            '<b>Telemetry cadence</b><br>' +
-            'TELE — layer topology &amp; sparsity: every 30 batches<br>' +
-            'GRAD — per-layer gradient norms: every batch<br>' +
-            'ROUTE — expert routing weights: every 10 batches'));
-        telNote.addEventListener('mouseleave', hideTip);
-    }
+    document.addEventListener('mousemove', e => {
+        if (!hResizing || !hLeftPanel) return;
+        const delta = e.clientX - hStartX;
+        const newW  = Math.max(60, Math.min(700, hStartW + delta));
+        hLeftPanel.style.flex = `0 0 ${newW}px`;
+    });
+    document.addEventListener('mouseup', () => {
+        if (!hResizing) return;
+        hResizing = false;
+        if (hActiveHandle) hActiveHandle.classList.remove('h-dragging');
+        hActiveHandle = null;
+        hLeftPanel    = null;
+        document.body.style.cursor     = '';
+        document.body.style.userSelect = '';
+    });
 
     // ── Boot ──────────────────────────────────────────────────────────
     poll();
