@@ -59,7 +59,7 @@ ternlang run my_program.tern   # explicit form
 
 Albert is a ternary Mixture-of-Experts language model trained from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus.
 
-**Current state (2026-05-07):** 7L · 256H · 12E · Top-3 routing · 128CTX · 8000 vocab · ~35M params · training on CPU.
+**Current state (2026-05-07):** 3L · 256H · 12E · Top-3 routing · 128CTX · 8000 vocab · ~10M params · training on CPU · growing autonomously via Net2Net surgery (target: 12L · ~58M params).
 
 ### What makes it different
 
@@ -67,7 +67,7 @@ Albert is a ternary Mixture-of-Experts language model trained from scratch — n
 |--------|--------------|--------------|
 | Weight precision | Ternary `{-γ, 0, +γ}` from scratch | Float32 / post-hoc INT4 |
 | **@sparseskip** | Skips 56% of matmul ops at element level | Dense matmul always |
-| Architecture growth | Autonomous Net2Net surgery (3L→7L live) | Fixed at init |
+| Architecture growth | Autonomous Net2Net surgery (3L→12L, live on CPU) | Fixed at init |
 | Inference speed | **83–125 tok/s on laptop CPU** | Requires GPU at this quality |
 | Routing | 9/12 experts skipped per decode step | All experts active |
 | Patent | A50296/2026 (@sparseskip primitive) | — |
@@ -135,7 +135,7 @@ This repository is split into three primary domains, each serving a distinct pur
 | [`agent_albert_cli/`](agent_albert_cli/) | **Sovereign Agent Layer:** The terminal-native, model-agnostic AI agent (Albert) built in pure Rust for autonomous coding and orchestration. |
 
 ### Note on Training Infrastructure
-As of current development, this repository houses the foundational model architecture, ternary math, and scaling research framework (see `albert-moe-13/crates/`). Massive-scale distributed training infrastructure is currently managed in a separate, secured workflow or remains in pre-cluster, experimental development stages. Experimental benchmarks and logic can be found in `albert-moe-13/crates/moe-core/src/training/`.
+The full training pipeline — including the Straight-Through Estimator (STE) backward pass, EvolutionManager, and cosine LR schedule — is implemented in `albert-moe-13/moe-llm-core/src/bin/train_bible.rs`. The STE quantization primitive is at `albert-moe-13/moe-llm-core/src/model/ste.rs`. Empirical loss convergence data (25 epochs, descending from random baseline 8.987 to 6.95) is in `albert-moe-13/docs/convergence_log.md`. Massive-scale distributed training on GPU clusters is on the roadmap (Phase 23).
 
 ---
 
