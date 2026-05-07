@@ -61,7 +61,11 @@ def unigram_baseline_perplexity(test_text, vocab_path):
     """
     with open(vocab_path, encoding="utf-8") as f:
         vocab = json.load(f)
-    vocab_size = len(vocab)
+    # HuggingFace tokenizer JSON nests vocab under model.vocab
+    if isinstance(vocab, dict) and 'model' in vocab and 'vocab' in vocab['model']:
+        vocab_size = len(vocab['model']['vocab'])
+    else:
+        vocab_size = len(vocab)
     return float(vocab_size)
 
 def run_albert_eval(test_text, checkpoint):
