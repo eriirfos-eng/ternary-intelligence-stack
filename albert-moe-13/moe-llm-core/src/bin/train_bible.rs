@@ -1,6 +1,6 @@
 use candle_core::{Device, DType, Result, Tensor};
 use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
-use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture};
+use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture};
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use std::fs::{self, OpenOptions};
@@ -333,17 +333,31 @@ fn train_cycle(
                 .reshape((1, seq_len))?
                 .to_dtype(DType::U32)?;
 
+            clear_entropy_capture();
             let logits      = model.forward(&input_tensor)?;
             let logits      = logits.reshape((seq_len, config.vocab_size))?;
             let target_flat = target_tensor.flatten_all()?;
             let ce_loss     = loss::cross_entropy(&logits, &target_flat)?;
 
-            // L1 sparsity reward: push weights toward 0 so ternary zeroing is strategic.
-            // Only active once the model is learning (loss below 8.0); applying L1 to a
-            // collapsed model actively pushes weights toward zero — making the dead state worse.
+            // ── Auxiliary losses ──────────────────────────────────────────────
+            // Both L1 and routing entropy are gated on loss < 8.0 — applying either
+            // to a collapsed model makes recovery harder (L1 zeroes weights, entropy
+            // gradient vanishes at uniform). Once learning is productive both engage.
             let real_loss_preview = ce_loss.to_scalar::<f32>().unwrap_or(f32::MAX);
-            let l1_lambda = if real_loss_preview < 8.0 { 1e-5_f64 } else { 0.0_f64 };
-            let batch_loss = if l1_lambda > 0.0 {
+            let aux_active     = real_loss_preview < 8.0;
+            let l1_lambda      = if aux_active { 1e-5_f64  } else { 0.0_f64 };
+            // Routing entropy: λ=0.01 contributes ~0.1% of CE loss as gradient signal,
+            // strong enough to prevent Nash-equilibrium drift without destabilising LR.
+            let entropy_lambda = if aux_active { 0.01_f64  } else { 0.0_f64 };
+
+            // Take entropy term from thread-local (populated by moe.rs during forward).
+            // Always drain even when inactive so the accumulator is clean next batch.
+            let entropy_term   = take_entropy_capture();
+            let entropy_scalar = entropy_term.as_ref()
+                .and_then(|t| t.to_scalar::<f32>().ok())
+                .unwrap_or(0.0);
+
+            let batch_loss = if aux_active {
                 let l1_penalty = {
                     let vars = varmap.data().lock().unwrap();
                     let mut terms: Vec<Tensor> = Vec::new();
@@ -359,7 +373,11 @@ fn train_cycle(
                         Tensor::stack(&terms, 0)?.sum_all()?
                     }
                 };
-                (&ce_loss + (l1_penalty * l1_lambda)?)?
+                let mut loss = (&ce_loss + (l1_penalty * l1_lambda)?)?;
+                if let Some(et) = entropy_term {
+                    loss = (&loss + (et * entropy_lambda)?)?;
+                }
+                loss
             } else {
                 ce_loss.clone()
             };
@@ -438,6 +456,12 @@ fn train_cycle(
                     let route_str: Vec<String> = routing.iter()
                         .map(|&w| format!("{:.3}", w)).collect();
                     let _ = writeln!(f, "ROUTE step={} E={}", *global_step, route_str.join(","));
+                    // ENTR — routing entropy per MoE layer (nats). Max = ln(12) ≈ 2.485.
+                    // Dashboard can parse "ENTR step=N avg=X.XXXX" for entropy trending.
+                    let entr_per_layer = if config.num_layers > 0 {
+                        -entropy_scalar / config.num_layers as f32
+                    } else { 0.0 };
+                    let _ = writeln!(f, "ENTR step={} avg={:.4}", *global_step, entr_per_layer);
                 }
                 clear_routing_capture();
 
