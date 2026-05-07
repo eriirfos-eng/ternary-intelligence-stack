@@ -1180,8 +1180,12 @@
     let resizeStartY    = 0;
     let resizeStartH    = 0;
 
+    let vRafId    = null;
+    let vPendingH = null;
+
     resizeHandle.addEventListener('mousedown', e => {
         resizing      = true;
+        isInteracting = true;
         resizeStartY  = e.clientY;
         resizeStartH  = neuralWrap.offsetHeight;
         resizeHandle.classList.add('dragging');
@@ -1191,18 +1195,24 @@
     });
     document.addEventListener('mousemove', e => {
         if (!resizing) return;
-        const delta = resizeStartY - e.clientY;   // up = positive = taller panel
-        const newH  = Math.min(NEURAL_H_MAX, Math.max(NEURAL_H_MIN, resizeStartH + delta));
-        neuralWrap.style.height = newH + 'px';
-        resize();
+        vPendingH = Math.min(NEURAL_H_MAX, Math.max(NEURAL_H_MIN, resizeStartH + (resizeStartY - e.clientY)));
+        if (vRafId) return;
+        vRafId = requestAnimationFrame(() => {
+            if (vPendingH !== null) { neuralWrap.style.height = vPendingH + 'px'; resize(); }
+            vRafId = null;
+        });
     });
     document.addEventListener('mouseup', () => {
         if (!resizing) return;
-        resizing = false;
+        resizing      = false;
+        isInteracting = false;
         resizeHandle.classList.remove('dragging');
         document.body.style.cursor     = '';
         document.body.style.userSelect = '';
+        if (vRafId) { cancelAnimationFrame(vRafId); vRafId = null; }
+        vPendingH = null;
         resize();
+        chart.update('none');
     });
     resizeHandle.addEventListener('dblclick', () => {
         neuralWrap.style.height = NEURAL_H_DEF + 'px';
@@ -1513,12 +1523,15 @@
     let hActiveHandle = null;
     let hStartX       = 0;
     let hStartW       = 0;
+    let hRafId        = null;
+    let hPendingW     = null;
 
     document.querySelectorAll('.panel-resize-handle').forEach(handle => {
         handle.addEventListener('mousedown', e => {
             hLeftPanel    = handle.previousElementSibling;
             hActiveHandle = handle;
             hResizing     = true;
+            isInteracting = true;
             hStartX       = e.clientX;
             hStartW       = hLeftPanel.offsetWidth;
             handle.classList.add('h-dragging');
@@ -1527,23 +1540,30 @@
             e.preventDefault();
         });
         handle.addEventListener('dblclick', () => {
-            handle.previousElementSibling.style.flex = '';   // snap back to CSS default
+            handle.previousElementSibling.style.flex = '';
         });
     });
     document.addEventListener('mousemove', e => {
         if (!hResizing || !hLeftPanel) return;
-        const delta = e.clientX - hStartX;
-        const newW  = Math.max(60, Math.min(700, hStartW + delta));
-        hLeftPanel.style.flex = `0 0 ${newW}px`;
+        hPendingW = Math.max(60, Math.min(700, hStartW + (e.clientX - hStartX)));
+        if (hRafId) return;
+        hRafId = requestAnimationFrame(() => {
+            if (hLeftPanel && hPendingW !== null) hLeftPanel.style.flex = `0 0 ${hPendingW}px`;
+            hRafId = null;
+        });
     });
     document.addEventListener('mouseup', () => {
         if (!hResizing) return;
-        hResizing = false;
+        hResizing     = false;
+        isInteracting = false;
         if (hActiveHandle) hActiveHandle.classList.remove('h-dragging');
         hActiveHandle = null;
         hLeftPanel    = null;
+        if (hRafId) { cancelAnimationFrame(hRafId); hRafId = null; }
+        hPendingW     = null;
         document.body.style.cursor     = '';
         document.body.style.userSelect = '';
+        chart.update('none');
     });
 
     // ── Boot ──────────────────────────────────────────────────────────
