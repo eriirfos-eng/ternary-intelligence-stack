@@ -33,12 +33,13 @@ import argparse
 import random
 from datetime import datetime, timezone
 
-CORPUS_PATH   = "data/corpus/bible.txt"
+CORPUS_PATH   = "data/corpus/stage_3/bible.txt"
 VOCAB_PATH    = "data/vocab.json"
-ALBERT_TEST   = "../target/release/moe-test"   # relative to albert-moe-13/
+ALBERT_TEST   = "target/release/moe-test"   # relative to albert-moe-13/ (after os.chdir)
 EVAL_OUT      = "eval_results.json"
-TEST_FRACTION = 0.05   # hold out 5% of tokens
-RANDOM_SEED   = 42
+TEST_FRACTION  = 0.05   # hold out 5% of tokens
+RANDOM_SEED    = 42
+MAX_EVAL_CHARS = 6000   # cap eval input so CPU eval completes in < 5 min (~10 windows)
 
 def load_corpus(path):
     with open(path, encoding="utf-8") as f:
@@ -69,6 +70,10 @@ def run_albert_eval(test_text, checkpoint):
     Requires albert-test to support --eval-mode flag (added below if missing).
     Falls back to estimating from training log if binary doesn't support eval mode.
     """
+    # Cap to MAX_EVAL_CHARS so CPU eval completes in a reasonable time.
+    if len(test_text) > MAX_EVAL_CHARS:
+        test_text = test_text[:MAX_EVAL_CHARS]
+
     # Write test text to temp file
     tmp = "/tmp/albert_eval_input.txt"
     with open(tmp, "w", encoding="utf-8") as f:
@@ -76,7 +81,7 @@ def run_albert_eval(test_text, checkpoint):
 
     result = subprocess.run(
         [ALBERT_TEST, "--eval", tmp, "--checkpoint", checkpoint],
-        capture_output=True, text=True, timeout=300
+        capture_output=True, text=True, timeout=600
     )
     if result.returncode != 0:
         return None, result.stderr

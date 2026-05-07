@@ -225,8 +225,14 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
     }
 
     candle_core::safetensors::save(&new_tensors, checkpoint_path)?;
-    // Best checkpoint is now outdated (wrong architecture) — remove it so we don't accidentally load it.
-    let _ = fs::remove_file(best_path);
+    // Archive the pre-surgery best checkpoint with a versioned name instead of deleting it.
+    // Deleting was the original bug: if the new layer can't learn, the good pre-surgery weights
+    // are lost forever. The archive preserves rollback capability.
+    let archive_path = format!("models/bible_ternary_v2.0.0.best.{}L.safetensors", old_layers);
+    if std::path::Path::new(best_path).exists() {
+        let _ = fs::rename(best_path, &archive_path);
+        println!("[{}] Pre-surgery best archived to {}.", timestamp(), archive_path);
+    }
     println!("[{}] Surgery Complete: Layer {} cloned from Layer {}.", timestamp(), target_layer, source_layer);
     Ok(())
 }
@@ -281,7 +287,7 @@ fn train_cycle(
     } else { 0 };
 
     // Cosine LR: starts high, decays to near-zero over lr_cycle_steps global steps
-    let base_lr        = 2e-4_f64;
+    let base_lr        = 3e-4_f64;   // 2e-4 → 3e-4: stronger signal to escape zero basin
     let min_lr         = 1e-5_f64;
     let lr_cycle_steps = 500_usize;
 
@@ -333,23 +339,30 @@ fn train_cycle(
             let ce_loss     = loss::cross_entropy(&logits, &target_flat)?;
 
             // L1 sparsity reward: push weights toward 0 so ternary zeroing is strategic.
-            let l1_lambda = 1e-5_f64;
-            let l1_penalty = {
-                let vars = varmap.data().lock().unwrap();
-                let mut terms: Vec<Tensor> = Vec::new();
-                for (name, var) in vars.iter() {
-                    if name.ends_with("weight") {
-                        terms.push(var.abs()?.mean_all()?);
+            // Only active once the model is learning (loss below 8.0); applying L1 to a
+            // collapsed model actively pushes weights toward zero — making the dead state worse.
+            let real_loss_preview = ce_loss.to_scalar::<f32>().unwrap_or(f32::MAX);
+            let l1_lambda = if real_loss_preview < 8.0 { 1e-5_f64 } else { 0.0_f64 };
+            let batch_loss = if l1_lambda > 0.0 {
+                let l1_penalty = {
+                    let vars = varmap.data().lock().unwrap();
+                    let mut terms: Vec<Tensor> = Vec::new();
+                    for (name, var) in vars.iter() {
+                        if name.ends_with("weight") {
+                            terms.push(var.abs()?.mean_all()?);
+                        }
                     }
-                }
-                drop(vars);
-                if terms.is_empty() {
-                    Tensor::zeros((), DType::F32, &device)?
-                } else {
-                    Tensor::stack(&terms, 0)?.sum_all()?
-                }
+                    drop(vars);
+                    if terms.is_empty() {
+                        Tensor::zeros((), DType::F32, &device)?
+                    } else {
+                        Tensor::stack(&terms, 0)?.sum_all()?
+                    }
+                };
+                (&ce_loss + (l1_penalty * l1_lambda)?)?
+            } else {
+                ce_loss.clone()
             };
-            let batch_loss = (&ce_loss + (l1_penalty * l1_lambda)?)?;
 
             // ── Gradient Clipping ─────────────────────────────────────────────
             // Split backward() and step() so we can inspect the gradient norm
