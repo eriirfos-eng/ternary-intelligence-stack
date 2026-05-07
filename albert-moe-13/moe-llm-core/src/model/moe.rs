@@ -78,7 +78,9 @@ impl MoeBlock {
         let max3_values = gate_logits_m2.max(candle_core::D::Minus1)?;
         
         // 3. ASYMMETRIC SAFETY LOGIC (v2.0)
-        let safety_threshold = 0.05f32;
+        // Threshold 0.0: only zero out experts with negative gate confidence.
+        // Positive-signal experts are allowed through so routing can differentiate.
+        let safety_threshold = 0.0f32;
         
         let apply_safety = |idx_tensor: &Tensor, val_tensor: &Tensor| -> Result<Tensor> {
             let is_safety = idx_tensor.lt(4u32)?.to_dtype(candle_core::DType::F32)?;
