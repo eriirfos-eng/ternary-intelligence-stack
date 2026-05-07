@@ -304,6 +304,31 @@
             letter-spacing: 1px;
         }
 
+        /* ── Bottom panel resize handle ──────────────────────────── */
+        #bottom-resize-handle {
+            height: 5px;
+            flex-shrink: 0;
+            cursor: ns-resize;
+            background: transparent;
+            border-top: 1px solid var(--border);
+            position: relative;
+            transition: border-color 0.15s;
+        }
+        #bottom-resize-handle:hover,
+        #bottom-resize-handle.dragging { border-color: var(--accent); }
+        #bottom-resize-handle::after {
+            content: '';
+            position: absolute;
+            left: 50%; top: 1px;
+            transform: translateX(-50%);
+            width: 36px; height: 2px;
+            background: #222;
+            border-radius: 1px;
+            transition: background 0.15s;
+        }
+        #bottom-resize-handle:hover::after,
+        #bottom-resize-handle.dragging::after { background: var(--accent); }
+
         /* ── Bottom hint ─────────────────────────────────────────── */
         #hint {
             height: 20px;
@@ -450,6 +475,8 @@
         <br><span>fire albert-train to begin</span>
     </div>
 </div>
+
+<div id="bottom-resize-handle" title="Drag to resize · double-click to reset"></div>
 
 <div id="anomaly-strip">
     <span id="anomaly-label">EVENTS</span>
@@ -1130,6 +1157,45 @@
     }
     window.addEventListener('resize', resize);
     resize();
+
+    // ── Bottom panel resize ───────────────────────────────────────────
+    const resizeHandle  = document.getElementById('bottom-resize-handle');
+    const neuralWrap    = document.getElementById('neural-wrap');
+    const NEURAL_H_MIN  = 80;
+    const NEURAL_H_MAX  = 480;
+    const NEURAL_H_DEF  = 210;
+    let resizing        = false;
+    let resizeStartY    = 0;
+    let resizeStartH    = 0;
+
+    resizeHandle.addEventListener('mousedown', e => {
+        resizing      = true;
+        resizeStartY  = e.clientY;
+        resizeStartH  = neuralWrap.offsetHeight;
+        resizeHandle.classList.add('dragging');
+        document.body.style.cursor     = 'ns-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+        if (!resizing) return;
+        const delta = resizeStartY - e.clientY;   // up = positive = taller panel
+        const newH  = Math.min(NEURAL_H_MAX, Math.max(NEURAL_H_MIN, resizeStartH + delta));
+        neuralWrap.style.height = newH + 'px';
+        resize();
+    });
+    document.addEventListener('mouseup', () => {
+        if (!resizing) return;
+        resizing = false;
+        resizeHandle.classList.remove('dragging');
+        document.body.style.cursor     = '';
+        document.body.style.userSelect = '';
+        resize();
+    });
+    resizeHandle.addEventListener('dblclick', () => {
+        neuralWrap.style.height = NEURAL_H_DEF + 'px';
+        resize();
+    });
 
     // ── Neural Viz ─────────────────────────────────────────────────────
     let latestTele = null;
