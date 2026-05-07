@@ -15,25 +15,29 @@ use std::collections::VecDeque;
 /// deliberately omitted: post-surgery loss elevation is a normal and temporary artefact
 /// of weight initialisation and should not be penalised with further expansion.
 pub struct EvolutionManager {
-    pub loss_history:       VecDeque<f32>,
-    pub history_len:        usize,
-    pub plateau_threshold:  f32,
-    pub mastery_threshold:  f32,
-    pub max_layers:         usize,
-    pub surgery_cooldown:   usize,
-    pub cooldown_remaining: usize,
+    pub loss_history:          VecDeque<f32>,
+    pub history_len:           usize,
+    pub plateau_threshold:     f32,
+    pub mastery_threshold:     f32,
+    pub max_layers:            usize,
+    pub surgery_cooldown:      usize,
+    pub cooldown_remaining:    usize,
+    /// Plateau surgery only fires when the model has loss below this threshold.
+    /// Prevents growing a dead/collapsed model (which never helps).
+    pub min_loss_for_plateau:  f32,
 }
 
 impl EvolutionManager {
     pub fn new() -> Self {
         Self {
-            loss_history:       VecDeque::with_capacity(10),
-            history_len:        10,
-            plateau_threshold:  0.02,
-            mastery_threshold:  4.5,
-            max_layers:         12,
-            surgery_cooldown:   20,
-            cooldown_remaining: 0,
+            loss_history:         VecDeque::with_capacity(10),
+            history_len:          10,
+            plateau_threshold:    0.02,
+            mastery_threshold:    4.5,
+            max_layers:           12,
+            surgery_cooldown:     20,
+            cooldown_remaining:   0,
+            min_loss_for_plateau: 8.0,   // don't grow if model is still near the random baseline
         }
     }
 
@@ -77,7 +81,15 @@ impl EvolutionManager {
         let first = *self.loss_history.front().unwrap();
         let diff = first - latest;
         // Plateau trigger: loss delta below threshold over history window (§11.2).
+        // Guard: only fire when the model is actually learning (loss below the random baseline).
+        // Growing a dead model (loss ≈ ln(vocab)) never helps — it just compounds the damage.
         if diff.abs() < self.plateau_threshold {
+            if latest > self.min_loss_for_plateau {
+                println!("[evolution] Plateau detected but loss {:.4} > {:.4} threshold — \
+                    model not yet learning. Surgery suppressed until loss improves.",
+                    latest, self.min_loss_for_plateau);
+                return false;
+            }
             println!("--- PLATEAU EVOLUTION TRIGGERED (Δ {:.4} < {:.4} over {} epochs) ---",
                 diff.abs(), self.plateau_threshold, self.history_len);
             return true;

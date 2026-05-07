@@ -19,6 +19,23 @@ The architecture combines:
 
 ---
 
+## Auditor Quick-Reference — Ternary Authenticity
+
+For independent verification of the native ternary training claim:
+
+| Claim | File | What to look for |
+|-------|------|-----------------|
+| STE backward pass | `moe-llm-core/src/model/ste.rs` | `quantize_ternary()` — hard threshold forward, identity gradient backward |
+| Training loop with STE | `moe-llm-core/src/bin/train_bible.rs` | `backward()` → `opt.step()` → gradient flows through `TernaryLinear` via STE |
+| TernaryLinear (forward pass) | `moe-llm-core/src/model/ternary_linear.rs` | Gamma-scaled quantization, gamma cache every 20 steps, `inference_cache` for pre-ternarized weights |
+| MoE routing | `moe-llm-core/src/model/moe.rs` | Top-3 sparse gating, routing telemetry, F32 gate (not ternary — intentional: 256→12 resolution) |
+| Auto-evolutionary scaling | `moe-llm-core/src/bin/train_bible.rs` | `EvolutionManager` — plateau detection, Net2Net surgery, layer expansion |
+| Empirical loss convergence | `docs/convergence_log.md` | 25-epoch loss curve showing 7.87 → 6.95 descent from random init |
+
+> **Note for auditors:** The training binary is at `moe-llm-core/src/bin/train_bible.rs`, not `src/training.rs`. The `src/` path does not exist — the workspace uses the standard Cargo `src/bin/` layout under `moe-llm-core/`.
+
+---
+
 ## Current Architecture (v2.3)
 
 | Parameter | Value |

@@ -274,7 +274,102 @@ fn find_latest_checkpoint() -> (PathBuf, String) {
     panic!("No checkpoints found in models/ or models/registry/. Start training first!");
 }
 
+/// Eval mode: compute avg cross-entropy on a text file, print AVG_LOSS for eval_perplexity.py.
+/// Usage: moe-test --eval <text_file> [--checkpoint <path>]
+fn run_eval_mode(text_path: &str, checkpoint_override: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+    let dev = Device::Cpu;
+    let vocab_path = "data/vocab.json";
+    let tokenizer = BpeTokenizer::new(vocab_path);
+
+    let (default_ckpt, version) = find_latest_checkpoint();
+    let checkpoint_path = checkpoint_override
+        .map(std::path::PathBuf::from)
+        .unwrap_or(default_ckpt);
+
+    let mut config_path = format!("models/bible_ternary_{}.config.json", version);
+    if !std::path::Path::new(&config_path).exists() {
+        config_path = "models/bible_ternary_v2.0.0.config.json".to_string();
+    }
+    let config_str = fs::read_to_string(&config_path)?;
+    let config_json: Value = serde_json::from_str(&config_str)?;
+
+    let mut config = moe_llm_core::model::TransformerConfig::default();
+    config.vocab_size    = tokenizer.vocab_size();
+    config.hidden_size   = config_json["hidden_size"].as_u64().unwrap_or(256) as usize;
+    config.num_layers    = config_json["num_layers"].as_u64().unwrap_or(7)   as usize;
+    config.num_heads     = config_json["num_heads"].as_u64().unwrap_or(8)    as usize;
+    config.max_seq_len   = config_json["max_seq_len"].as_u64().unwrap_or(128) as usize;
+    config.num_experts   = config_json["num_experts"].as_u64().unwrap_or(12) as usize;
+
+    let varmap = candle_nn::VarMap::new();
+    let vb = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
+    let model = Transformer::new(&config, vb)?;
+
+    let ckpt_data = candle_core::safetensors::load(&checkpoint_path, &dev)?;
+    let all_vars = varmap.data().lock().unwrap();
+    for (name, var) in all_vars.iter() {
+        if let Some(t) = ckpt_data.get(name) { let _ = var.set(t); }
+    }
+    drop(all_vars);
+    model.prepare_inference()?;
+
+    let text = fs::read_to_string(text_path)?;
+    let tokens = tokenizer.encode(&text);
+    let ctx = config.max_seq_len;
+
+    eprintln!("Eval: {} tokens, context={}, checkpoint={}", tokens.len(), ctx, checkpoint_path.display());
+
+    let mut total_loss = 0.0f64;
+    let mut count = 0usize;
+
+    // Slide a non-overlapping window of size ctx over the token sequence.
+    // Non-overlapping (step=ctx) is standard for LM perplexity and fastest on CPU.
+    let windows: Vec<&[u32]> = tokens.windows(ctx + 1)
+        .step_by(ctx)
+        .collect();
+
+    for window in &windows {
+        let input_ids = &window[..ctx];
+        let target_ids = &window[1..=ctx];
+
+        let input_t = Tensor::from_slice(input_ids, (1, ctx), &dev)?
+            .to_dtype(DType::U32)?;
+        let logits = model.forward(&input_t)?; // [1, ctx, vocab]
+
+        // Cross-entropy over all positions in window
+        let vocab = config.vocab_size;
+        let logits_2d = logits.squeeze(0)?; // [ctx, vocab]
+
+        for (pos, &target) in target_ids.iter().enumerate() {
+            let logit_row = logits_2d.narrow(0, pos, 1)?.squeeze(0)?; // [vocab]
+            let log_probs = candle_nn::ops::log_softmax(&logit_row, 0)?;
+            let lp = log_probs.to_vec1::<f32>()?;
+            if (target as usize) < vocab {
+                total_loss += -(lp[target as usize] as f64);
+                count += 1;
+            }
+        }
+    }
+
+    let avg_loss = if count > 0 { total_loss / count as f64 } else { f64::NAN };
+    println!("AVG_LOSS: {:.6}", avg_loss);
+    println!("TOKENS_EVALUATED: {}", count);
+    println!("PERPLEXITY: {:.2}", avg_loss.exp());
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Check for --eval mode before starting the TUI
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(eval_idx) = args.iter().position(|a| a == "--eval") {
+        let text_path = args.get(eval_idx + 1)
+            .expect("--eval requires a file path argument");
+        let checkpoint = args.iter().position(|a| a == "--checkpoint")
+            .and_then(|i| args.get(i + 1))
+            .map(|s| s.as_str());
+        return run_eval_mode(text_path, checkpoint);
+    }
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;

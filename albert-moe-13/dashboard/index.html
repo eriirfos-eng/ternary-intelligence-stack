@@ -121,8 +121,8 @@
         }
         .nv-panel:last-child { border-right: none; }
         .nv-label {
-            font-size: 9px;
-            color: #555;
+            font-size: 10px;
+            color: #aaa;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             margin-bottom: 4px;
@@ -138,13 +138,13 @@
             overflow-y: hidden;
         }
         .topo-node {
-            font-size: 9px;
-            color: #555;
+            font-size: 10px;
+            color: #aaa;
             white-space: nowrap;
             flex-shrink: 0;
         }
         .topo-arrow {
-            color: #333;
+            color: #777;
             font-size: 10px;
             flex-shrink: 0;
         }
@@ -162,7 +162,7 @@
             transition: border-color 0.6s, opacity 0.6s;
         }
         .topo-layer-label { font-size: 10px; color: #fff; font-weight: bold; }
-        .topo-layer-sparsity { font-size: 9px; color: #888; }
+        .topo-layer-sparsity { font-size: 10px; color: #ccc; }
         /* Expert heatmap */
         #expert-viz {
             display: grid;
@@ -193,9 +193,9 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            font-size: 9px;
+            font-size: 10px;
         }
-        .sbar-label { color: #666; width: 22px; flex-shrink: 0; }
+        .sbar-label { color: #ccc; width: 22px; flex-shrink: 0; }
         .sbar-track {
             flex: 1;
             height: 8px;
@@ -208,7 +208,7 @@
             border-radius: 2px;
             transition: width 0.8s ease;
         }
-        .sbar-val { color: #888; width: 30px; text-align: right; flex-shrink: 0; }
+        .sbar-val { color: #fff; width: 30px; text-align: right; flex-shrink: 0; }
 
         /* Routing heatmap (Panel D) */
         #routing-viz {
@@ -222,13 +222,19 @@
             display: flex;
             gap: 1px;
             flex: 1;
+            align-items: stretch;
+        }
+        .route-label {
+            font-size: 10px;
+            color: #ccc;
+            width: 20px;
+            flex-shrink: 0;
+            display: flex;
             align-items: center;
         }
-        .route-label { font-size: 8px; color: #555; width: 18px; flex-shrink: 0; }
         .route-cells { display: flex; gap: 1px; flex: 1; overflow: hidden; }
         .route-cell {
             flex: 1;
-            height: 100%;
             min-width: 3px;
             border-radius: 1px;
             transition: background 0.3s;
@@ -246,9 +252,9 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            font-size: 9px;
+            font-size: 10px;
         }
-        .gbar-label { color: #666; width: 22px; flex-shrink: 0; }
+        .gbar-label { color: #ccc; width: 22px; flex-shrink: 0; }
         .gbar-track {
             flex: 1;
             height: 8px;
@@ -261,8 +267,8 @@
             border-radius: 2px;
             transition: width 0.4s ease, background 0.4s;
         }
-        .gbar-val { color: #888; width: 38px; text-align: right; flex-shrink: 0; }
-        #grad-norm-global { font-size: 8px; color: #444; margin-top: 2px; flex-shrink: 0; }
+        .gbar-val { color: #fff; width: 46px; text-align: right; flex-shrink: 0; }
+        #grad-norm-global { font-size: 10px; color: #aaa; margin-top: 2px; flex-shrink: 0; }
 
         #neural-waiting {
             color: #333;
@@ -283,7 +289,7 @@
             padding: 0 10px; gap: 16px;
             flex-shrink: 0;
         }
-        .hint-item { color: #888; font-size: 10px; }
+        .hint-item { color: #ccc; font-size: 11px; }
         .hint-item b { color: #bbb; }
     </style>
 </head>
@@ -378,13 +384,13 @@
     <!-- Panel D: Expert routing heatmap (live, per batch) -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Expert Routing — Last 60 Steps</div>
-        <div id="routing-viz"><div id="routing-waiting" style="color:#333;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR ROUTE DATA</div></div>
+        <div id="routing-viz"><div id="routing-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR ROUTE DATA</div></div>
     </div>
 
     <!-- Panel E: Per-layer gradient magnitude -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Per-Layer Gradient Norm</div>
-        <div id="grad-viz"><div id="grad-waiting" style="color:#333;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
+        <div id="grad-viz"><div id="grad-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
         <div id="grad-norm-global"></div>
     </div>
 </div>
@@ -424,24 +430,49 @@
     Chart.register({
         id: 'lastSmaLine',
         afterDraw(chart) {
-            if (lastSmaY === null) return;
             const { ctx, chartArea, scales } = chart;
-            const y = scales.y.getPixelForValue(lastSmaY);
-            if (y < chartArea.top || y > chartArea.bottom) return;
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(chartArea.left, y);
-            ctx.lineTo(chartArea.right, y);
-            ctx.setLineDash([5, 5]);
-            ctx.strokeStyle = 'rgba(255,107,53,0.55)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.setLineDash([]);
-            ctx.font = '10px monospace';
-            ctx.fillStyle = '#ff6b35';
-            ctx.textAlign = 'right';
-            ctx.fillText('EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
-            ctx.restore();
+
+            // EP AVG line — red dashed
+            if (lastSmaY !== null) {
+                const y = scales.y.getPixelForValue(lastSmaY);
+                if (y >= chartArea.top && y <= chartArea.bottom) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left, y);
+                    ctx.lineTo(chartArea.right, y);
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeStyle = 'rgba(255,107,53,0.55)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.font = '11px monospace';
+                    ctx.fillStyle = '#ff6b35';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
+                    ctx.restore();
+                }
+            }
+
+            // BEST line — golden dashed with crown
+            if (bestLoss !== Infinity) {
+                const y = scales.y.getPixelForValue(bestLoss);
+                if (y >= chartArea.top && y <= chartArea.bottom) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left, y);
+                    ctx.lineTo(chartArea.right, y);
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeStyle = 'rgba(255,215,0,0.45)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.font = '11px monospace';
+                    ctx.fillStyle = '#ffd700';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('♛ BEST ' + bestLoss.toFixed(4), chartArea.right - 4, y - 3);
+                    ctx.restore();
+                }
+            }
         }
     });
 
@@ -957,8 +988,7 @@
             block.title = `Layer ${i} — ${(s * 100).toFixed(1)}% weights near-zero`;
 
             block.innerHTML =
-                `<div class="topo-layer-label">L${i}</div>` +
-                `<div class="topo-layer-sparsity" style="color:${col}">${(s * 100).toFixed(0)}%↓</div>`;
+                `<div class="topo-layer-label">L${i}</div>`;
             layerDiv.appendChild(block);
 
             if (i < tele.numLayers - 1) addArrow();
@@ -1002,13 +1032,23 @@
     }
 
     // ── Panel D: Expert Routing Heatmap ───────────────────────────────
-    function routingColor(w) {
-        // 0 = dark charcoal, 1 = vivid teal
-        const v = Math.min(1, w);
-        const r = Math.round(20  + v * 10);
-        const g = Math.round(20  + v * 180);
-        const b = Math.round(20  + v * 160);
-        return `rgb(${r},${g},${b})`;
+    function routingColor(v) {
+        // Thermal heatmap: black → deep red → orange → yellow → white
+        // v=0 inactive, v=1 dominant expert this step
+        if (v <= 0) return 'rgb(10,10,10)';
+        if (v < 0.25) {
+            const t = v / 0.25;
+            return `rgb(${Math.round(t*180)},0,0)`;
+        } else if (v < 0.5) {
+            const t = (v - 0.25) / 0.25;
+            return `rgb(180,${Math.round(t*100)},0)`;
+        } else if (v < 0.75) {
+            const t = (v - 0.5) / 0.25;
+            return `rgb(${Math.round(180+t*75)},${Math.round(100+t*120)},0)`;
+        } else {
+            const t = (v - 0.75) / 0.25;
+            return `rgb(255,${Math.round(220+t*35)},${Math.round(t*200)})`;
+        }
     }
 
     function renderRoutingHeatmap() {
@@ -1019,6 +1059,9 @@
 
         const numExperts = routingHistory[0].weights.length;
         wrap.innerHTML = '';
+        // Normalize each timestep column by its max weight so that even uniform routing
+        // renders as a visible (equal-brightness) pattern rather than solid near-black.
+        const colMax = routingHistory.map(step => Math.max(...step.weights, 1e-9));
         // One row per expert, cells = time steps (oldest → newest)
         for (let e = 0; e < numExperts; e++) {
             const row = document.createElement('div');
@@ -1032,9 +1075,10 @@
             cells.className = 'route-cells';
             for (let t = 0; t < routingHistory.length; t++) {
                 const w = routingHistory[t].weights[e] || 0;
+                const v = w / colMax[t];   // normalized: 1.0 = most active expert this step
                 const cell = document.createElement('div');
                 cell.className = 'route-cell';
-                cell.style.background = routingColor(w);
+                cell.style.background = routingColor(v);
                 cell.title = `E${e} @ step ${routingHistory[t].step}: ${(w*100).toFixed(1)}%`;
                 cells.appendChild(cell);
             }
