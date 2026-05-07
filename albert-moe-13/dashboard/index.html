@@ -151,18 +151,20 @@
         .topo-layer {
             border: 1px solid var(--accent);
             border-radius: 3px;
-            padding: 3px 5px;
+            padding: 6px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1px;
+            gap: 2px;
             flex-shrink: 0;
-            min-width: 36px;
+            min-width: 48px;
             cursor: default;
             transition: border-color 0.6s, opacity 0.6s;
         }
-        .topo-layer-label { font-size: 10px; color: #fff; font-weight: bold; }
+        .topo-layer-label { font-size: 12px; color: #fff; font-weight: bold; }
         .topo-layer-sparsity { font-size: 10px; color: #ccc; }
+        /* Layer topology panel gets extra width */
+        .nv-panel:first-child { flex: 1.6; }
         /* Expert heatmap */
         #expert-viz {
             display: grid;
@@ -179,8 +181,10 @@
             cursor: default;
             transition: background 0.8s;
         }
-        .expert-label { font-size: 9px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1; }
-        .expert-act   { font-size: 9px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: bold; line-height: 1.2; }
+        .expert-label { font-size: 10px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1; }
+        .expert-act   { font-size: 11px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: bold; line-height: 1.3; }
+        /* Topbar value overrides — white for PTS and ARCH values */
+        #v-arch { color: #fff; }
 
         /* ── Styled tooltip ────────────────────────────────────── */
         #tooltip {
@@ -308,8 +312,8 @@
             padding: 0 10px; gap: 16px;
             flex-shrink: 0;
         }
-        .hint-item { color: #ccc; font-size: 11px; }
-        .hint-item b { color: #bbb; }
+        .hint-item { color: #555; font-size: 11px; }
+        .hint-item b { color: #666; }
 
         /* ── Anomaly event feed ───────────────────────────────────── */
         #anomaly-strip {
@@ -390,7 +394,7 @@
 
     <div class="tb-cell">
         <span class="tb-label">PTS</span>
-        <span class="tb-val muted" id="v-pts">0</span>
+        <span class="tb-val" id="v-pts">0</span>
     </div>
 
     <div class="tb-cell arch">
@@ -426,6 +430,13 @@
     </div>
 </div>
 
+<div id="anomaly-strip">
+    <span id="anomaly-label">EVENTS</span>
+    <div id="anomaly-scroll">
+        <span style="color:#2a2a2a;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>
+    </div>
+</div>
+
 <div id="neural-wrap">
     <!-- Panel A: Layer topology — grows as Net2Net surgery fires -->
     <div class="nv-panel">
@@ -458,13 +469,6 @@
         <div class="nv-label">&#9632; Per-Layer Gradient Norm</div>
         <div id="grad-viz"><div id="grad-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
         <div id="grad-norm-global"></div>
-    </div>
-</div>
-
-<div id="anomaly-strip">
-    <span id="anomaly-label">EVENTS</span>
-    <div id="anomaly-scroll">
-        <span style="color:#2a2a2a;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>
     </div>
 </div>
 
@@ -1367,9 +1371,27 @@
         }
         for (let i = 0; i < anomalyEvents.length; i++) {
             const ev = anomalyEvents[i];
+            const idx = i;   // capture for closure
             const pill = document.createElement('div');
             pill.className = 'ev-pill ' + ev.level + (i === 0 ? ' newpill' : '');
-            pill.textContent = ev.icon + ' ' + ev.text;
+
+            const label = document.createElement('span');
+            label.textContent = ev.icon + ' ' + ev.text;
+            pill.appendChild(label);
+
+            const close = document.createElement('span');
+            close.textContent = '×';
+            close.style.cssText = 'margin-left:5px;opacity:0.45;cursor:pointer;font-size:11px;line-height:1;';
+            close.addEventListener('mouseenter', () => close.style.opacity = '0.9');
+            close.addEventListener('mouseleave', () => close.style.opacity = '0.45');
+            close.addEventListener('click', e => {
+                e.stopPropagation();
+                hideTip();
+                anomalyEvents.splice(idx, 1);
+                renderAnomalyFeed();
+            });
+            pill.appendChild(close);
+
             pill.addEventListener('mouseenter', e => showTip(e,
                 '<b>' + ev.icon + ' ' + ev.text + '</b><br>' +
                 ev.detail + '<br><span style="color:#555">' + ev.ts + '</span>'));
