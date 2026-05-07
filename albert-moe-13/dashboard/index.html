@@ -361,6 +361,27 @@
             0%   { box-shadow: 0 0 0 2px rgba(0,229,160,0.55); }
             100% { box-shadow: 0 0 0 0px rgba(0,229,160,0); }
         }
+        /* Latest event persistent wrapper */
+        .ev-latest-wrap {
+            display: flex; align-items: center;
+            border: 1px solid rgba(0,229,160,0.38);
+            border-radius: 5px;
+            padding: 2px;
+            flex-shrink: 0;
+            background: rgba(0,229,160,0.04);
+        }
+        /* Dismiss × — large enough to actually hit */
+        .ev-close {
+            margin-left: 5px;
+            padding: 1px 5px;
+            opacity: 0.4;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .ev-close:hover { opacity: 1; background: rgba(255,255,255,0.08); }
     </style>
 </head>
 <body>
@@ -1380,10 +1401,8 @@
             pill.appendChild(label);
 
             const close = document.createElement('span');
+            close.className = 'ev-close';
             close.textContent = '×';
-            close.style.cssText = 'margin-left:5px;opacity:0.45;cursor:pointer;font-size:11px;line-height:1;';
-            close.addEventListener('mouseenter', () => close.style.opacity = '0.9');
-            close.addEventListener('mouseleave', () => close.style.opacity = '0.45');
             close.addEventListener('click', e => {
                 e.stopPropagation();
                 hideTip();
@@ -1396,7 +1415,16 @@
                 '<b>' + ev.icon + ' ' + ev.text + '</b><br>' +
                 ev.detail + '<br><span style="color:#555">' + ev.ts + '</span>'));
             pill.addEventListener('mouseleave', hideTip);
-            scroll.appendChild(pill);
+
+            if (i === 0) {
+                // Wrap newest event in accent frame so it stands out permanently
+                const wrap = document.createElement('div');
+                wrap.className = 'ev-latest-wrap';
+                wrap.appendChild(pill);
+                scroll.appendChild(wrap);
+            } else {
+                scroll.appendChild(pill);
+            }
         }
         scroll.scrollLeft = 0;
     }
