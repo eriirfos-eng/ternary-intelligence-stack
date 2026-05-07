@@ -507,6 +507,20 @@ fn train_cycle(
                 timestamp(), collapse_streak, COLLAPSE_STREAK_LIMIT, avg_loss, COLLAPSE_THRESHOLD);
 
             if collapse_streak >= COLLAPSE_STREAK_LIMIT {
+                // If the best checkpoint is itself above threshold, rolling back
+                // won't help — the model needs more capacity. Force surgery now.
+                let best_recorded: f32 = fs::read_to_string(best_meta_path)
+                    .ok().and_then(|s| s.trim().parse().ok())
+                    .unwrap_or(f32::MAX);
+                if best_recorded >= COLLAPSE_THRESHOLD {
+                    println!("[{}] ★ COLLAPSE→SURGERY: best checkpoint ({:.4}) also above threshold \
+                        — rolling back won't recover. Forcing layer surgery.",
+                        timestamp(), best_recorded);
+                    collapse_streak = 0;
+                    // Return true to trigger surgery in the outer loop.
+                    return Ok(true);
+                }
+
                 let rollback_src = if std::path::Path::new(best_path).exists() {
                     best_path
                 } else {
