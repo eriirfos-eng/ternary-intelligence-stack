@@ -23,9 +23,10 @@ const LOSS_EXPLOSION_THRESHOLD: f32 = 9.5;
 // If the epoch-average loss sits at or above this for COLLAPSE_STREAK_LIMIT
 // consecutive epochs the model has collapsed to uniform distribution.
 // ln(8000) ≈ 8.987 — we trigger at 8.5 to catch early collapse before it
-// wastes too many epochs.
+// wastes too many epochs. 2 epochs is enough signal at 6L+ — a genuine
+// plateau never self-recovers at this depth; a transient would not hit 8.5.
 const COLLAPSE_THRESHOLD:    f32 = 8.5;
-const COLLAPSE_STREAK_LIMIT: u32 = 3;
+const COLLAPSE_STREAK_LIMIT: u32 = 2;
 
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
