@@ -581,6 +581,7 @@
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
     let lastLossVal      = null;
     let bestLoss         = Infinity;
+    let worstLoss        = -Infinity;
 
     const ROUTE_WINDOW   = 60;   // columns in the routing heatmap
     let routingHistory   = [];   // [{step, weights:[...]}]
@@ -626,7 +627,7 @@
         afterDraw(chart) {
             const { ctx, chartArea, scales } = chart;
 
-            // EP AVG line — red dashed
+            // EP AVG line — turquoise dashed
             if (lastSmaY !== null) {
                 const y = scales.y.getPixelForValue(lastSmaY);
                 if (y >= chartArea.top && y <= chartArea.bottom) {
@@ -635,14 +636,35 @@
                     ctx.moveTo(chartArea.left, y);
                     ctx.lineTo(chartArea.right, y);
                     ctx.setLineDash([5, 5]);
-                    ctx.strokeStyle = 'rgba(255,107,53,0.55)';
+                    ctx.strokeStyle = 'rgba(0,229,160,0.50)';
                     ctx.lineWidth = 1;
                     ctx.stroke();
                     ctx.setLineDash([]);
                     ctx.font = '11px monospace';
-                    ctx.fillStyle = '#ff6b35';
+                    ctx.fillStyle = '#00e5a0';
                     ctx.textAlign = 'right';
                     ctx.fillText('EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
+                    ctx.restore();
+                }
+            }
+
+            // WORST line — red dotted
+            if (worstLoss !== -Infinity) {
+                const y = scales.y.getPixelForValue(worstLoss);
+                if (y >= chartArea.top && y <= chartArea.bottom) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left, y);
+                    ctx.lineTo(chartArea.right, y);
+                    ctx.setLineDash([2, 5]);
+                    ctx.strokeStyle = 'rgba(255,68,68,0.40)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.font = '11px monospace';
+                    ctx.fillStyle = '#ff4444';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('▼ WORST ' + worstLoss.toFixed(4), chartArea.right - 4, y + 12);
                     ctx.restore();
                 }
             }
@@ -880,7 +902,8 @@
         document.getElementById('v-batch').textContent = `${latest.batch} / ${BATCHES_PER_EPOCH}`;
         document.getElementById('v-pts').textContent   = totalPts;
 
-        if (loss < bestLoss) { bestLoss = loss; }
+        if (loss < bestLoss)  { bestLoss  = loss; }
+        if (loss > worstLoss) { worstLoss = loss; }
         document.getElementById('v-best').textContent = bestLoss === Infinity ? '—' : bestLoss.toFixed(4);
 
         const deltaEl = document.getElementById('delta');
@@ -1048,6 +1071,7 @@
                 chart.data.datasets[4].data = [];
                 lastSmaY     = null;
                 bestLoss     = Infinity;
+                worstLoss    = -Infinity;
                 totalPts     = 0;
                 lastLossVal  = null;
                 lastKnownEpoch = -1;
