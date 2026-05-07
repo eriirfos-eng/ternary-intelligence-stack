@@ -5000,13 +5000,15 @@ async fn run_program(
     let bytecode_len = bytecode.len();
     let mut vm = BetVm::new(bytecode);
     
-    // Task 2: Pull SQL data if requested and encode it
+    // Task 2: Pull SQL data via allowlisted query key — raw SQL from callers is rejected.
     let mut sql_data = Vec::new();
-    if let Some(sql) = body["sql"].as_str() {
-        if let Ok(results) = state.db_manager.query(sql) {
-            if let Some(arr) = results.as_array() {
-                let encoder = StandardMap;
-                sql_data = arr.iter().map(|v| encoder.encode(v)).collect();
+    if let Some(query_key) = body["sql_query"].as_str() {
+        if let Some((_, sql)) = ALLOWED_QUERIES.iter().find(|(k, _)| *k == query_key) {
+            if let Ok(results) = state.db_manager.query(sql) {
+                if let Some(arr) = results.as_array() {
+                    let encoder = StandardMap;
+                    sql_data = arr.iter().map(|v| encoder.encode(v)).collect();
+                }
             }
         }
     }
@@ -5094,13 +5096,25 @@ async fn translate_endpoint(Json(body): Json<Value>) -> Response {
     }
 }
 
+// Allowlisted read-only queries — prevents SQL injection from authenticated users.
+// Add entries here only for specific internal dashboard queries; never accept raw SQL from callers.
+const ALLOWED_QUERIES: &[(&str, &str)] = &[
+    ("training_telemetry", "SELECT * FROM training_telemetry ORDER BY epoch DESC LIMIT 100"),
+    ("kpi_summary",        "SELECT * FROM kpi_log ORDER BY ts DESC LIMIT 50"),
+];
+
 async fn data_query(
     State(state): State<Arc<AppState>>,
     Json(body): Json<Value>
 ) -> Response {
-    let sql = match body["sql"].as_str() {
+    let key = match body["query"].as_str() {
         Some(s) => s,
-        None => return (StatusCode::BAD_REQUEST, Json(json!({ "error": "sql field required" }))).into_response(),
+        None => return (StatusCode::BAD_REQUEST, Json(json!({ "error": "query key required" }))).into_response(),
+    };
+
+    let sql = match ALLOWED_QUERIES.iter().find(|(k, _)| *k == key) {
+        Some((_, sql)) => *sql,
+        None => return (StatusCode::FORBIDDEN, Json(json!({ "error": "unknown query key" }))).into_response(),
     };
 
     match state.db_manager.query(sql) {
