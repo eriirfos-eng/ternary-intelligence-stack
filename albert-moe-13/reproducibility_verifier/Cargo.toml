@@ -10,3 +10,4 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
+serde_json = "1.0"
