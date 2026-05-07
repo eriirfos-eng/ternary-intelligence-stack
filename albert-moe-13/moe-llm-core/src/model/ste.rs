@@ -1,3 +1,4 @@
+// Straight-Through Estimator for ternary quantization — whitepaper §5.1
 use candle_core::{Result, Tensor};
 
 /// Full ternarize with gamma computed from weights. Call sparingly.
@@ -7,6 +8,7 @@ pub fn ternarize_ste(w: &Tensor, threshold: f32) -> Result<Tensor> {
 }
 
 /// Ternarize using a pre-computed gamma scalar. Hot path — no mean_all().
+// STE trick: diff.detach() passes gradients through the quantization step unchanged (§5.1).
 pub fn ternarize_ste_with_gamma(w: &Tensor, threshold: f32, gamma: &Tensor) -> Result<Tensor> {
     let dtype = w.dtype();
     let pos_mask = w.gt(threshold)?;

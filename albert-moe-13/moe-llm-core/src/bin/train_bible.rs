@@ -10,6 +10,8 @@ use rayon::ThreadPoolBuilder;
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
+// Gradient clipping + collapse detection — whitepaper §11.4 (Ternary Training Innovations)
+
 // Gradient clipping threshold — prevents weight explosions.
 // Healthy grad norms for this model are typically 0.1–2.0.
 const MAX_GRAD_NORM: f32 = 1.0;
@@ -34,6 +36,7 @@ fn timestamp() -> String {
     format!("{:02}:{:02}:{:02}", h, m, s)
 }
 
+// Cosine annealing with warm restart — whitepaper §11.4
 fn cosine_lr(base_lr: f64, min_lr: f64, step: usize, total_steps: usize) -> f64 {
     let t = step as f64 / total_steps.max(1) as f64;
     min_lr + 0.5 * (base_lr - min_lr) * (1.0 + (std::f64::consts::PI * t).cos())
@@ -191,6 +194,7 @@ fn emit_telemetry(varmap: &VarMap, config: &TransformerConfig, log_path: &str) {
     }
 }
 
+// Net2Net safe-copy layer surgery — whitepaper §11.2 (EvolutionManager)
 fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device) -> Result<()> {
     println!("[{}] --- INITIATING NEURAL SURGERY: Net2Net Safe Copy ---", timestamp());
 
@@ -451,7 +455,7 @@ fn train_cycle(
         save_checkpoint(&varmap, checkpoint_path)?;
         fs::write(meta_path, total_epochs.to_string())?;
 
-        // ── Best Checkpoint (save only when avg_loss improves) ───────────────
+        // ── Best Checkpoint (save only when avg_loss improves) — LLB §11.6 ───
         if avg_loss < best_epoch_loss {
             best_epoch_loss = avg_loss;
             save_checkpoint(&varmap, best_path)?;
