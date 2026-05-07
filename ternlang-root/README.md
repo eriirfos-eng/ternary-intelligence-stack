@@ -113,7 +113,7 @@ match conscious {
 ```
 
 ### Standard Library & Ecosystem
-**Standard Library:** 28,500+ open-core modules in this repo · 2,500+ "Masterwork" modules across Tier 2/3/4 in the [private premium repo](stdlib/PREMIUM.md) — we are constantly adding new `.tern` definitions and building the stack weekly.
+**Standard Library:** 31,000+ open-source `.tern` modules — all in this repository (`stdlib/` + `premlib/`). Tier 2/3/4 labels refer to API service levels (quota, memory, SLA), not code access. All modules are free to read, clone, and use. We commit new `.tern` definitions weekly across every tier.
  — including `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, `bio::*`, `crypto::*`, `finance::*`, and research-grade `qnn::*`.
 
 ### Compiler Capabilities
@@ -578,7 +578,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ## 11. Example Library
 
-**31,000+ `.tern` programs** (2,090 public examples + 28,500+ open-core stdlib modules + 2,500+ "Masterwork" [premium stdlib modules](stdlib/PREMIUM.md) in the private `ternlang-premium` repo) — we commit and build weekly across all tiers, continuously expanding the TIS ecosystem.
+**31,000+ `.tern` programs** (2,090 public examples + 28,500+ open-core `stdlib/` modules + 2,500+ domain-specialized `premlib/` modules) — all open-source in this repository, committed and built weekly across every tier.
 
 | Category | Examples |
 |----------|---------|
@@ -677,16 +677,14 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 ## 14. Licensing Tiers
 ### Standard Library Access
 
-The Ternlang stdlib is split across two repositories to protect proprietary IP:
+All 31,000+ `.tern` modules are open-source in this repository. The tier labels (Tier 2/3/4) refer to **API service levels** — quota, persistent memory, and SLA — not code access. You can clone, read, and run every module for free.
 
-| | Repo | Files | Access |
-|--|------|-------|--------|
-| **Tier 1 — Open Core** | [`ternary-intelligence-stack/stdlib/`](stdlib/) | 28,500+ `.tern` modules | Free — clone this repo |
-| **Tier 2/3/4 — Premium** | [`eriirfos-eng/ternlang-premium`](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-premium) *(private)* | 2,500+ "Masterwork" modules | Paid license required |
+| | Directory | Files | Code Access |
+|--|-----------|-------|-------------|
+| **Foundation** | [`stdlib/`](stdlib/) | 28,500+ `.tern` modules | Free — in this repo |
+| **Domain-specialized** | [`premlib/`](premlib/) | 2,500+ modules (`agents/`, `ml/`, `nn/`, `nlp/`, `finance/`, `bio/`, `crypto/`, `security/`, `math/`, `logic/`, `vision/`, `stats/`, `physics/`, `qnn/`, 40+ more) | Free — in this repo |
 
-The open-core stdlib includes: `core/`, `ternary/`, `std/`, `showcase/`, `bughunt/`, `testing/`, `bench/`, `benchmarks/`, `classical/`, `errors/`, `tutorials/`, `lib/`
-
-The premium repo includes all paid-tier directories: `agents/`, `ml/`, `nn/`, `nlp/`, `finance/`, `bio/`, `crypto/`, `security/`, `math/`, `logic/`, `vision/`, `stats/`, `physics/`, `qnn/`, and 40+ more.
+We commit new `.tern` files weekly across both directories, continuously expanding coverage.
 
 
 ### Tier 2 — Pro Standard
@@ -698,7 +696,7 @@ Production-grade deployment for teams requiring EU AI Act-compliant safety gatin
 ### Tier 4 — Enterprise
 Unlimited API calls/month. On-premise BET-VM clusters, custom FPGA integration via `ternlang-hdl`, unlimited throughput, dedicated SLA, and direct BSL-1.1 source access for air-gapped or regulated environments. Contact [licensing@ternlang.com](mailto:licensing@ternlang.com) — **from €2,500/month.**
 
-**After purchasing a license:** Visit **[ternlang.com/activate](https://ternlang.com/activate)**, enter your API key and GitHub username, and you will receive a collaborator invite to the private repo automatically.
+**After purchasing a license:** Visit **[ternlang.com/activate](https://ternlang.com/activate)** to activate your API key and unlock server-side features (persistent memory, higher quota, production SLA). All `.tern` source modules are already public in this repository — no invite required.
 
 → [See full tier table in stdlib/PREMIUM.md](stdlib/PREMIUM.md)
 
