@@ -11,6 +11,10 @@ use std::cell::RefCell;
 // take_routing_capture() after — no locks, no perf cost on the hot path.
 thread_local! {
     static ROUTING_ACC: RefCell<Vec<f32>> = RefCell::new(Vec::new());
+    // Routing diversity: negative entropy summed across all MoE layers in one forward pass.
+    // train_bible.rs takes this after forward() and adds it to the loss (entropy_lambda scale).
+    // Minimizing neg-entropy = maximizing routing entropy = preventing gate collapse.
+    static ENTROPY_ACC: RefCell<Option<Tensor>> = RefCell::new(None);
 }
 
 pub fn clear_routing_capture() {
@@ -24,6 +28,17 @@ pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
         let total: f32 = acc.iter().sum::<f32>().max(1e-9);
         acc.iter().map(|&w| w / total).collect()
     })
+}
+
+pub fn clear_entropy_capture() {
+    ENTROPY_ACC.with(|e| *e.borrow_mut() = None);
+}
+
+/// Returns the accumulated negative-entropy tensor (sum across all MoE layers in one forward pass).
+/// Adding `entropy_lambda * take_entropy_capture()` to the loss minimises neg-entropy,
+/// i.e. maximises routing diversity and prevents gate collapse.
+pub fn take_entropy_capture() -> Option<Tensor> {
+    ENTROPY_ACC.with(|e| e.borrow_mut().take())
 }
 
 pub struct MoeBlock {
@@ -55,7 +70,24 @@ impl MoeBlock {
         
         // 1. Gate logits — F32 linear for routing resolution (ternary too coarse at 256→12)
         let mut gate_logits = self.gate.forward(x)?; // [B, S, E]
-        
+
+        // Routing diversity: compute neg-entropy over the full gate distribution before noise.
+        // Neg-entropy = sum(p * log(p+ε)) — minimising it in the loss maximises entropy,
+        // keeping the gate from collapsing to a uniform or single-expert Nash equilibrium.
+        // Accumulated across layers; train_bible.rs calls take_entropy_capture() after forward.
+        {
+            let full_probs = candle_nn::ops::softmax(&gate_logits, candle_core::D::Minus1)?;
+            let log_p = (&full_probs + 1e-9_f64)?.log()?;
+            let neg_entropy = (&full_probs * log_p)?.sum(candle_core::D::Minus1)?.mean_all()?;
+            ENTROPY_ACC.with(|e| {
+                let mut cell = e.borrow_mut();
+                *cell = match cell.take() {
+                    None => Some(neg_entropy),
+                    Some(prev) => Some((&prev + &neg_entropy).unwrap()),
+                };
+            });
+        }
+
         // Add Gating Jitter (Noise) for exploration
         let noise = Tensor::rand(0.98f32, 1.02f32, gate_logits.shape(), dev)?;
         gate_logits = gate_logits.broadcast_mul(&noise)?;
