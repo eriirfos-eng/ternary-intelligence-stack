@@ -412,8 +412,9 @@ fn train_cycle(
 
                 // GRAD — per-layer gradient norm (computed above, before opt.step).
                 // Dashboard parses "GRAD step=N n=X.XXXX L=n0,n1,n2,..."
+                // 6dp so sub-millinorm block values are legible (embed dominates global norm).
                 let ln_str: Vec<String> = layer_norms.iter()
-                    .map(|n| format!("{:.4}", n)).collect();
+                    .map(|n| format!("{:.6}", n)).collect();
                 let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, norm, ln_str.join(","));
 
                 // ROUTE — expert routing weights, emitted every 10 batches to keep log lean.
@@ -425,6 +426,12 @@ fn train_cycle(
                     let _ = writeln!(f, "ROUTE step={} E={}", *global_step, route_str.join(","));
                 }
                 clear_routing_capture();
+
+                // TELE — sparsity snapshot every 30 batches (~60s) for live dashboard panels.
+                // Epoch-end emit still fires below; this keeps LAYER/EXPERT panels from going stale.
+                if batch_idx % 30 == 0 {
+                    emit_telemetry(&varmap, &config, log_path);
+                }
 
                 let _ = f.flush();
             }
