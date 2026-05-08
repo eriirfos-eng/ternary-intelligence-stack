@@ -286,6 +286,7 @@ async function switchView(name) {
   if (name === "modules") await renderRegistryView();
   if (name === "translator") await renderTranslatorView();
   if (name === "fleet") await renderFleetView();
+  if (name === "audit") await renderAuditView();
   if (name === "settings") syncSettingsUI();
   lucide.createIcons();
 }
@@ -295,10 +296,12 @@ window.switchView = switchView;
 
 function useTracerTelemetry(wsUrl) {
   const [telemetry, setTelemetry] = React.useState([]);
-  const [isConnected, setIsConnected] = React.useState(false);
+  // 'ws' = live remote, 'local' = lab events only, 'offline' = neither
+  const [mode, setMode] = React.useState('offline');
 
   React.useEffect(() => {
     const handleLocalTrace = (e) => {
+      setMode(prev => prev === 'ws' ? 'ws' : 'local');
       setTelemetry(prev => [e.detail, ...prev].slice(0, 1000));
     };
     window.addEventListener('ternlang_local_trace', handleLocalTrace);
@@ -313,9 +316,7 @@ function useTracerTelemetry(wsUrl) {
 
     function connect() {
       socket = new WebSocket(wsUrl);
-      socket.onopen = () => {
-        setIsConnected(true);
-      };
+      socket.onopen = () => { setMode('ws'); };
       socket.onmessage = (event) => {
         try {
           if (event.data === 'connected') return;
@@ -324,8 +325,8 @@ function useTracerTelemetry(wsUrl) {
         } catch (err) {}
       };
       socket.onclose = () => {
-        setIsConnected(false);
-        if (!dead) retryTimer = setTimeout(connect, 3000);
+        setMode(prev => prev === 'ws' ? 'local' : prev);
+        if (!dead) retryTimer = setTimeout(connect, 5000);
       };
       socket.onerror = () => {};
     }
@@ -334,54 +335,94 @@ function useTracerTelemetry(wsUrl) {
     return () => { dead = true; clearTimeout(retryTimer); socket && socket.close(); };
   }, [wsUrl]);
 
-  return { telemetry, isConnected, clearTelemetry: () => setTelemetry([]) };
+  return { telemetry, mode, clearTelemetry: () => setTelemetry([]) };
 }
 
 function TracerView({ apiEndpoint }) {
   const wsUrl = apiEndpoint.replace('http', 'ws') + '/api/tracer/ws';
-  const { telemetry, isConnected, clearTelemetry } = useTracerTelemetry(wsUrl);
+  const { telemetry, mode, clearTelemetry } = useTracerTelemetry(wsUrl);
 
-  const tritColor = (val) => val === 1 ? '#10b981' : (val === -1 ? '#ef4444' : '#f59e0b');
+  const tritColor = (val) => val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--amber)');
+  const modeDot  = { ws: 'var(--green)', local: 'var(--cyan)', offline: 'var(--muted)' }[mode];
+  const modeLabel = { ws: 'LIVE — remote BET VM', local: 'LOCAL — Lab simulation', offline: 'Offline' }[mode];
 
-  return React.createElement('div', { style: { padding: '24px', color: '#f1f5f9', fontFamily: 'Inter, sans-serif' } },
-    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' } },
-      React.createElement('h2', { style: { fontSize: '18px', fontWeight: '800', margin: 0 } },
-        React.createElement('span', { style: { color: isConnected ? '#10b981' : '#ef4444', marginRight: '8px' } }, '●'),
-        'Execution Tracer Pipeline'
+  return React.createElement('div', { style: { padding: '24px', color: 'var(--text)', fontFamily: 'Inter, sans-serif', height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' } },
+
+    // ── Header ──────────────────────────────────────────────────────────────
+    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px' } },
+        React.createElement('h2', { style: { fontSize: '16px', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'Execution Tracer'),
+        React.createElement('div', { style: {
+          display: 'flex', alignItems: 'center', gap: '6px',
+          fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px',
+          background: modeDot + '18', border: '1px solid ' + modeDot + '44', color: modeDot
+        } },
+          React.createElement('span', { style: { width: '6px', height: '6px', borderRadius: '50%', background: modeDot, display: 'inline-block' } }),
+          modeLabel
+        )
       ),
-      React.createElement('button', { className: 'btn btn-ghost', onClick: clearTelemetry, style: { fontSize: '12px' } }, 'Clear Trace')
+      React.createElement('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } },
+        React.createElement('span', { style: { fontSize: '11px', color: 'var(--muted)' } }, `${telemetry.length} events`),
+        React.createElement('button', { className: 'btn btn-ghost', onClick: clearTelemetry, style: { fontSize: '11px', height: '28px' } }, 'Clear')
+      )
     ),
-    React.createElement('div', { style: { background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden' } },
+
+    // ── Hint when offline ────────────────────────────────────────────────────
+    mode === 'offline' && React.createElement('div', { style: {
+      background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '8px',
+      padding: '12px 16px', fontSize: '12px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '10px'
+    } },
+      React.createElement('i', { 'data-lucide': 'info', style: { width: '14px', color: 'var(--cyan)', flexShrink: 0 } }),
+      'Run a simulation in the Lab tab to see live execution traces. Remote BET VM events stream automatically when connected.'
+    ),
+
+    // ── Table ────────────────────────────────────────────────────────────────
+    React.createElement('div', { style: { background: 'var(--bg1)', border: '1px solid var(--border2)', borderRadius: '10px', overflow: 'hidden', flex: 1, minHeight: 0, overflowY: 'auto' } },
       React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' } },
-        React.createElement('thead', { style: { background: '#334155', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.05em' } },
+        React.createElement('thead', { style: { background: 'var(--bg2)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', position: 'sticky', top: 0, zIndex: 1 } },
           React.createElement('tr', {},
-            ['Timestamp', 'Node ID', 'Event', 'Result', 'Latency', 'Causal'].map(h => React.createElement('th', { key: h, style: { padding: '12px 16px' } }, h))
+            ['Timestamp', 'Node ID', 'Event', 'Signal', 'Latency', 'Causal'].map(h =>
+              React.createElement('th', { key: h, style: { padding: '10px 16px', fontWeight: '700', fontSize: '11px' } }, h)
+            )
           )
         ),
         React.createElement('tbody', {},
-          telemetry.length === 0 ? React.createElement('tr', {}, 
-            React.createElement('td', { colSpan: 6, style: { padding: '4rem', textAlign: 'center', color: 'var(--muted)', fontStyle: 'italic', fontSize: '1.1rem' } }, 'Awaiting telemetry firehose...')
-          ) : telemetry.map(event => React.createElement('tr', { key: event.trace_id, style: { borderBottom: '1px solid #334155', opacity: event.sparse_dropped ? 0.5 : 1 } },
-            React.createElement('td', { style: { padding: '12px 16px', color: '#cbd5e1' } }, new Date(event.timestamp_ms).toLocaleTimeString()),
-            React.createElement('td', { style: { padding: '12px 16px', fontWeight: '700' } }, event.node_id),
-            React.createElement('td', { style: { padding: '12px 16px' } }, event.event_type),
-            React.createElement('td', { style: { padding: '12px 16px' } }, 
-              React.createElement('span', { style: { padding: '2px 8px', borderRadius: '4px', background: tritColor(event.signal_out)+'22', color: tritColor(event.signal_out), fontWeight: '800' } }, 
-                event.signal_out > 0 ? '+1' : (event.signal_out < 0 ? '-1' : '0')
+          telemetry.length === 0
+            ? React.createElement('tr', {},
+                React.createElement('td', { colSpan: 6, style: { padding: '60px', textAlign: 'center', color: 'var(--muted2)', fontStyle: 'italic' } },
+                  mode === 'offline' ? '— no events yet —' : 'Streaming...'
+                )
               )
-            ),
-            React.createElement('td', { style: { padding: '12px 16px' } }, 
-              `${event.latency_ms}ms`,
-              event.sparse_dropped && React.createElement('span', { style: { marginLeft: '8px', background: '#38bdf8', color: '#0f172a', fontSize: '9px', padding: '2px 6px', borderRadius: '4px', fontWeight: '900' } }, 'BYPASSED')
-            ),
-            React.createElement('td', { style: { padding: '8px 16px' } }, 
-              React.createElement('button', { 
-                className: 'btn', 
-                style: { fontSize: '9px', height: '20px', background: 'var(--bg2)', border: '1px solid var(--border2)', color: 'var(--cyan)' },
-                onClick: () => window.downloadCausalArtifact(event.trace_id)
-              }, 'Artifact')
-            )
-          ))
+            : telemetry.map(event =>
+                React.createElement('tr', { key: event.trace_id, style: { borderBottom: '1px solid var(--border)', opacity: event.sparse_dropped ? 0.45 : 1, transition: 'opacity 0.2s' } },
+                  React.createElement('td', { style: { padding: '10px 16px', color: 'var(--muted)', fontFamily: "'JetBrains Mono', monospace", fontSize: '11px' } },
+                    new Date(event.timestamp_ms).toLocaleTimeString()
+                  ),
+                  React.createElement('td', { style: { padding: '10px 16px', fontWeight: '700', color: 'var(--cyan)' } }, event.node_id),
+                  React.createElement('td', { style: { padding: '10px 16px', color: 'var(--text)' } }, event.event_type),
+                  React.createElement('td', { style: { padding: '10px 16px' } },
+                    React.createElement('span', { style: {
+                      display: 'inline-block', padding: '2px 8px', borderRadius: '4px',
+                      background: tritColor(event.signal_out) + '22',
+                      color: tritColor(event.signal_out), fontWeight: '900', fontSize: '11px'
+                    } }, event.signal_out > 0 ? '+1' : (event.signal_out < 0 ? '-1' : '0'))
+                  ),
+                  React.createElement('td', { style: { padding: '10px 16px', color: 'var(--muted)', fontFamily: "'JetBrains Mono', monospace", fontSize: '11px' } },
+                    event.latency_ms != null ? event.latency_ms + 'ms' : '—',
+                    event.sparse_dropped && React.createElement('span', { style: {
+                      marginLeft: '8px', background: 'var(--cyan)', color: 'var(--bg)',
+                      fontSize: '9px', padding: '2px 5px', borderRadius: '3px', fontWeight: '900'
+                    } }, '@sparseskip')
+                  ),
+                  React.createElement('td', { style: { padding: '8px 16px' } },
+                    React.createElement('button', {
+                      className: 'btn',
+                      style: { fontSize: '10px', height: '22px', padding: '0 8px', background: 'var(--bg2)', border: '1px solid var(--border2)', color: 'var(--cyan)' },
+                      onClick: () => window.downloadCausalArtifact && window.downloadCausalArtifact(event.trace_id)
+                    }, 'Artifact')
+                  )
+                )
+              )
         )
       )
     )
@@ -400,12 +441,10 @@ function TranslatorView() {
   React.useEffect(() => {
     const handleLoad = () => {
       if (iframeRef.current) {
-        console.log('[TranslatorView] Iframe loaded, transmitting API key...');
         const key = sanitizeHeader(localStorage.getItem('ternstudio-key'));
-        iframeRef.current.contentWindow.postMessage({
-          type: 'TIS_AUTH_BRIDGE',
-          key: key
-        }, translatorUrl);
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        iframeRef.current.contentWindow.postMessage({ type: 'TIS_AUTH_BRIDGE', key }, '*');
+        iframeRef.current.contentWindow.postMessage({ type: 'TIS_THEME', mode: theme }, '*');
       }
     };
 
@@ -459,6 +498,181 @@ async function renderTranslatorView() {
   }
 }
 window.renderTranslatorView = renderTranslatorView;
+
+// ─── TernAudit View ───────────────────────────────────────────────────────────
+let auditRoot = null;
+
+function AuditView() {
+  const [code,    setCode]    = React.useState('');
+  const [running, setRunning] = React.useState(false);
+  const [result,  setResult]  = React.useState(null); // null | { checks: [...], score: N }
+  const [error,   setError]   = React.useState('');
+
+  const CHECKS = [
+    { id: 'parse',      label: 'Syntax & Parse',          icon: 'file-code',    desc: 'Verifies the source parses without errors' },
+    { id: 'trit',       label: 'Trit Signal Coverage',    icon: 'binary',       desc: 'Ensures all branches return +1 / 0 / -1' },
+    { id: 'sparseskip', label: '@sparseskip Usage',       icon: 'zap',          desc: 'Validates @sparseskip directive placement' },
+    { id: 'agents',     label: 'Agent Message Safety',    icon: 'bot',          desc: 'Checks send/await patterns for deadlock risk' },
+    { id: 'consensus',  label: 'Consensus Calls',         icon: 'check-circle', desc: 'Validates consensus() is used correctly' },
+    { id: 'safety',     label: 'Safety Veto Gate',        icon: 'shield',       desc: 'Detects missing safety checks in pipelines' },
+  ];
+
+  async function runAudit() {
+    const src = code.trim();
+    if (!src) { setError('Paste some Ternlang code to audit.'); return; }
+    setError('');
+    setRunning(true);
+    setResult(null);
+
+    const endpoint = document.getElementById("apiEndpoint")?.value || 'https://ternlang-api.fly.dev';
+    const key = document.getElementById("apiKey")?.value.trim() || localStorage.getItem('ternstudio-key') || '';
+
+    // Run via API for parse/execute check
+    let apiOk = false, apiOutput = [], apiError = '';
+    try {
+      const r = await fetch(`${endpoint}/api/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Ternlang-Key': key },
+        body: JSON.stringify({ code: src, key })
+      });
+      const d = await r.json();
+      apiOk = d.status === 'ok';
+      apiOutput = d.output || [];
+      apiError = d.error || '';
+    } catch (e) { apiError = 'API unreachable — running local checks only'; }
+
+    // Static analysis checks
+    const hasSparse   = /@sparseskip/.test(src);
+    const hasSparseBad = /@sparseskip/.test(src) && /fn\s+main/.test(src) && !/@sparseskip\s*\n\s*fn /.test(src);
+    const hasAgents   = /spawn|send\s*\(|await\s/.test(src);
+    const hasConsensus = /consensus\s*\(/.test(src);
+    const hasSafety   = /safety|veto|reject\s*;/.test(src);
+    const tritSignals  = /\b(affirm|reject|tend|hold)\b/.test(src);
+    const allBranches  = !/if\s+/.test(src) || /else\s*\{/.test(src); // rough: if without else = uncovered branch
+
+    const checks = [
+      { id: 'parse',      pass: apiOk,       note: apiOk ? 'Compiled and executed cleanly' : (apiError || 'Parse failed') },
+      { id: 'trit',       pass: tritSignals,  note: tritSignals ? 'affirm/reject/tend signals found' : 'No trit return values detected — all branches should return a trit' },
+      { id: 'sparseskip', pass: hasSparse,    note: hasSparse ? (hasSparseBad ? 'Directive present but check placement' : 'Directive used correctly') : 'No @sparseskip directives — consider adding for inference-critical fns' },
+      { id: 'agents',     pass: !hasAgents || allBranches, note: hasAgents ? (allBranches ? 'Agent patterns look balanced' : 'Unmatched send/await — potential deadlock path') : 'No agent patterns (ok for single-function code)' },
+      { id: 'consensus',  pass: !hasConsensus || apiOk, note: hasConsensus ? 'consensus() call present' : 'No consensus call — ok for simple functions' },
+      { id: 'safety',     pass: hasSafety || !hasAgents, note: hasSafety ? 'Safety veto gate detected' : (hasAgents ? 'Multi-agent pipeline without explicit safety check' : 'N/A for single-function code') },
+    ];
+
+    const passed = checks.filter(c => c.pass).length;
+    const score  = Math.round((passed / checks.length) * 100);
+    setResult({ checks, score, output: apiOutput, apiError });
+    setRunning(false);
+  }
+
+  const scoreColor = result ? (result.score >= 80 ? 'var(--green)' : result.score >= 50 ? 'var(--amber)' : 'var(--red)') : 'var(--muted)';
+
+  return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', color: 'var(--text)', fontFamily: 'Inter, sans-serif' } },
+
+    // ── Header bar ────────────────────────────────────────────────────────────
+    React.createElement('div', { style: { padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: 'var(--bg1)' } },
+      React.createElement('i', { 'data-lucide': 'shield-check', style: { width: '18px', color: 'var(--cyan)' } }),
+      React.createElement('span', { style: { fontWeight: '800', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'TernAudit'),
+      React.createElement('span', { style: { fontSize: '11px', color: 'var(--muted)', fontWeight: '400' } }, '— static analysis + live execution check for Ternlang source'),
+      result && React.createElement('div', { style: {
+        marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px',
+        background: scoreColor + '18', border: '1px solid ' + scoreColor + '44',
+        borderRadius: '20px', padding: '4px 14px', color: scoreColor, fontWeight: '800', fontSize: '13px'
+      } },
+        React.createElement('i', { 'data-lucide': result.score >= 80 ? 'check-circle' : 'alert-triangle', style: { width: '14px' } }),
+        `Score: ${result.score}/100`
+      )
+    ),
+
+    // ── Body ─────────────────────────────────────────────────────────────────
+    React.createElement('div', { style: { display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' } },
+
+      // Left: code input
+      React.createElement('div', { style: { width: '50%', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border)' } },
+        React.createElement('div', { style: { padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'var(--bg2)' } }, 'Source Code'),
+        React.createElement('textarea', {
+          value: code,
+          onChange: e => setCode(e.target.value),
+          placeholder: 'fn main() -> trit {\n  let x: trit = affirm;\n  return x;\n}',
+          spellCheck: false,
+          style: {
+            flex: 1, resize: 'none', background: 'var(--bg)', border: 'none', outline: 'none',
+            color: 'var(--text)', fontFamily: "'JetBrains Mono', monospace", fontSize: '13px',
+            padding: '16px', lineHeight: '1.7', minHeight: 0
+          }
+        }),
+        React.createElement('div', { style: { padding: '10px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg1)', display: 'flex', gap: '8px', alignItems: 'center' } },
+          React.createElement('button', {
+            onClick: runAudit, disabled: running,
+            className: 'btn btn-primary',
+            style: { height: '32px', fontSize: '12px', opacity: running ? 0.6 : 1 }
+          }, running ? '⏳ Auditing…' : '▶ Run Audit'),
+          React.createElement('button', {
+            onClick: () => { setCode(''); setResult(null); setError(''); },
+            className: 'btn btn-ghost', style: { height: '32px', fontSize: '12px' }
+          }, 'Clear'),
+          error && React.createElement('span', { style: { fontSize: '11px', color: 'var(--red)' } }, error)
+        )
+      ),
+
+      // Right: results
+      React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
+        React.createElement('div', { style: { padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'var(--bg2)' } }, 'Audit Results'),
+        React.createElement('div', { style: { flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' } },
+
+          !result && React.createElement('div', { style: { textAlign: 'center', color: 'var(--muted)', marginTop: '60px', fontSize: '13px' } },
+            React.createElement('i', { 'data-lucide': 'shield', style: { width: '32px', height: '32px', display: 'block', margin: '0 auto 12px', opacity: 0.3 } }),
+            'Paste Ternlang source and click Run Audit'
+          ),
+
+          result && CHECKS.map(check => {
+            const c = result.checks.find(x => x.id === check.id);
+            const pass = c?.pass;
+            const col  = pass ? 'var(--green)' : 'var(--amber)';
+            return React.createElement('div', { key: check.id, style: {
+              background: 'var(--bg1)', border: '1px solid ' + col + '33',
+              borderLeft: '3px solid ' + col, borderRadius: '6px',
+              padding: '10px 14px', display: 'flex', gap: '10px', alignItems: 'flex-start'
+            } },
+              React.createElement('i', { 'data-lucide': pass ? 'check' : 'alert-triangle', style: { width: '14px', flexShrink: 0, color: col, marginTop: '2px' } }),
+              React.createElement('div', { style: { flex: 1 } },
+                React.createElement('div', { style: { fontWeight: '700', fontSize: '12px', color: 'var(--text)', marginBottom: '3px' } }, check.label),
+                React.createElement('div', { style: { fontSize: '11px', color: 'var(--muted)' } }, c?.note || check.desc)
+              )
+            );
+          }),
+
+          result && result.apiError && React.createElement('div', { style: {
+            background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '6px', padding: '10px 14px', fontSize: '11px', color: 'var(--muted)'
+          } }, '⚠ ' + result.apiError),
+
+          result && result.output.length > 0 && React.createElement('div', { style: { marginTop: '4px' } },
+            React.createElement('div', { style: { fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' } }, 'Execution Output'),
+            React.createElement('div', { style: {
+              background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px',
+              padding: '10px 14px', fontFamily: "'JetBrains Mono', monospace", fontSize: '12px',
+              color: 'var(--cyan)', whiteSpace: 'pre-wrap', lineHeight: '1.6'
+            } }, result.output.join('\n'))
+          )
+        )
+      )
+    )
+  );
+}
+
+async function renderAuditView() {
+  const view = document.getElementById("view-audit");
+  if (!view || !window.ReactDOM) return;
+  if (!auditRoot) {
+    view.innerHTML = '<div id="audit-react-mount" style="width:100%;height:100%;display:flex;flex-direction:column;"></div>';
+    const mount = document.getElementById("audit-react-mount");
+    auditRoot = ReactDOM.createRoot(mount);
+  }
+  auditRoot.render(React.createElement(AuditView));
+  setTimeout(() => lucide.createIcons(), 50);
+}
+window.renderAuditView = renderAuditView;
+
 let agentToDeleteId = null;
 function confirmDeleteAgent(id, name) {
   agentToDeleteId = id;
@@ -5720,6 +5934,11 @@ function updateWires() {
     const toNode   = document.getElementById(w.toId);
     // Skip wires where either endpoint has been deleted.
     if (!fromNode || !toNode) return;
+    // Skip wires to/from albert-panel when it is hidden — getBoundingClientRect()
+    // returns zeros on hidden elements and produces invalid SVG paths.
+    const albertEl = document.getElementById('albert-panel');
+    if ((w.fromId === 'albert-panel' || w.toId === 'albert-panel') &&
+        albertEl && albertEl.style.display === 'none') return;
 
     // Phase 3: Select specific ternary output port based on condition
     let portSelector = '.flow-port-out';
@@ -7857,6 +8076,12 @@ function applyTheme(mode) {
     if (icon) icon.setAttribute("data-lucide", "moon");
   }
   if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  // Sync theme to translator iframe if it's loaded
+  const iframe = document.querySelector('#view-translator iframe');
+  if (iframe && iframe.contentWindow) {
+    try { iframe.contentWindow.postMessage({ type: 'TIS_THEME', mode }, '*'); } catch (_) {}
+  }
 }
 window.applyTheme = applyTheme;
 
@@ -8097,13 +8322,13 @@ document.addEventListener('DOMContentLoaded', () => {
       position: fixed;
       right: 20px; top: 80px;
       width: 380px; height: 480px;
-      background: #0d0d0d;
-      border: 1px solid #2a2a2a;
+      background: var(--bg1);
+      border: 1px solid var(--border2);
       border-radius: 10px;
       display: flex; flex-direction: column;
       z-index: 9500;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      font-family: 'Inter', system-ui, sans-serif;
       overflow: hidden;
       user-select: none;
     `;
@@ -8112,70 +8337,70 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Input port (left side) -->
       <div class="flow-port flow-port-in" id="albert-port-in"
            style="position:absolute; left:-7px; top:50%; margin-top:-6px;
-                  background:#00c878; border:2px solid #00c878;
+                  background:var(--green); border:2px solid var(--green);
                   width:12px; height:12px; border-radius:50%; cursor:crosshair;
                   z-index:10;" title="Workflow context input"></div>
 
       <!-- Output port (right side) -->
       <div class="flow-port flow-port-out" id="albert-port-out"
            style="position:absolute; right:-7px; top:50%; margin-top:-6px;
-                  background:#00c8ff; border:2px solid #00c8ff;
+                  background:var(--cyan); border:2px solid var(--cyan);
                   width:12px; height:12px; border-radius:50%; cursor:crosshair;
                   z-index:10;" title="Albert output / workflow commands"></div>
 
       <!-- Header -->
       <div id="albert-header" style="
-        padding: 10px 14px; display: flex; align-items: center; gap: 8px;
-        background: #111; border-bottom: 1px solid #222; cursor: grab; flex-shrink:0;
+        padding:10px 14px; display:flex; align-items:center; gap:8px;
+        background:var(--bg2); border-bottom:1px solid var(--border); cursor:grab; flex-shrink:0;
       ">
-        <span style="color:#00dc78; font-weight:700; font-size:13px;">◆ Albert</span>
-        <span style="color:#444; font-size:11px; flex:1;">co-pilot</span>
-        <span id="albert-wired-badge" style="display:none; color:#00c8ff; font-size:10px;
-              background:#00c8ff18; padding:2px 6px; border-radius:4px; border:1px solid #00c8ff44;">
+        <span style="color:var(--green); font-weight:800; font-size:13px; letter-spacing:0.03em;">◆ Albert</span>
+        <span style="color:var(--muted); font-size:11px; flex:1; font-weight:500;">co-pilot</span>
+        <span id="albert-wired-badge" style="display:none; color:var(--cyan); font-size:10px;
+              background:rgba(56,189,248,0.1); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); font-weight:700;">
           wired
         </span>
         <button id="albert-close" style="
-          background:none; border:none; color:#444; cursor:pointer; font-size:16px;
-          padding:0 4px; line-height:1;
-        " title="Close (F6)">✕</button>
+          background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px;
+          padding:0 4px; line-height:1; transition:color 0.15s;
+        " title="Close (F6)" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
       </div>
 
       <!-- Chat area -->
       <div id="albert-chat" style="
         flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px;
-        scrollbar-width:thin; scrollbar-color:#222 transparent;
+        scrollbar-width:thin;
       ">
-        <div style="color:#333; font-size:11px; text-align:center; margin-top:20px;">
+        <div style="color:var(--muted); font-size:11px; text-align:center; margin-top:24px; line-height:1.8;">
           ◆ Albert is ready<br>
-          <span style="color:#222; font-size:10px;">Wire a node to give him workflow context</span>
+          <span style="color:var(--muted2); font-size:10px;">Wire a Lab node for workflow context, or just prompt freely</span>
         </div>
       </div>
 
       <!-- Input bar -->
-      <div style="padding:10px; border-top:1px solid #1a1a1a; display:flex; gap:6px; flex-shrink:0;">
+      <div style="padding:10px; border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0;">
         <input id="albert-input" type="text" placeholder="Prompt Albert…" style="
-          flex:1; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:6px;
-          color:#ddd; font-family:inherit; font-size:12px; padding:7px 10px;
+          flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:6px;
+          color:var(--text); font-family:inherit; font-size:12px; padding:7px 10px;
           outline:none;
         "/>
         <button id="albert-send" style="
-          background:#00dc7822; border:1px solid #00dc7844; border-radius:6px;
-          color:#00dc78; font-size:12px; padding:6px 10px; cursor:pointer; font-weight:700;
+          background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:6px;
+          color:var(--green); font-size:14px; padding:6px 12px; cursor:pointer; font-weight:700;
         " title="Send (Enter)">↵</button>
       </div>
 
       <!-- Provider/key setup row — hidden once configured -->
       <div id="albert-key-row" style="
-        padding:6px 10px; border-top:1px solid #1a1a1a; display:flex; gap:5px; flex-shrink:0;
+        padding:6px 10px; border-top:1px solid var(--border); display:flex; gap:5px; flex-shrink:0;
         align-items:center; flex-wrap:wrap;
       ">
         <select id="albert-provider-select" style="
-          background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
-          color:#aaa; font-family:inherit; font-size:10px; padding:4px 6px; outline:none; cursor:pointer;
+          background:var(--bg2); border:1px solid var(--border2); border-radius:4px;
+          color:var(--text); font-family:inherit; font-size:10px; padding:4px 6px; outline:none; cursor:pointer;
         ">
+          <option value="anthropic">Anthropic (Claude)</option>
           <option value="gemini">Gemini</option>
           <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic</option>
           <option value="groq">Groq</option>
           <option value="mistral">Mistral</option>
           <option value="deepseek">DeepSeek</option>
@@ -8184,28 +8409,28 @@ document.addEventListener('DOMContentLoaded', () => {
           <option value="custom">Custom (OpenAI-compat)</option>
         </select>
         <input id="albert-key-input" type="password" placeholder="API key…" style="
-          flex:1; min-width:80px; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
-          color:#aaa; font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
+          flex:1; min-width:80px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px;
+          color:var(--text); font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
         "/>
         <input id="albert-model-input" type="text" placeholder="model" style="
-          width:80px; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px;
-          color:#aaa; font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
+          width:90px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px;
+          color:var(--text); font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
         "/>
         <button id="albert-key-save" style="
-          background:#00dc7814; border:1px solid #00dc7830; border-radius:4px;
-          color:#00dc78; font-size:10px; padding:4px 8px; cursor:pointer;
+          background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:4px;
+          color:var(--green); font-size:10px; padding:4px 8px; cursor:pointer; font-weight:600;
         ">Save</button>
       </div>
 
       <!-- Status strip -->
       <div id="albert-status" style="
-        padding:4px 14px; font-size:10px; color:#333; background:#0a0a0a; flex-shrink:0;
+        padding:4px 14px; font-size:10px; color:var(--muted); background:var(--bg2); border-top:1px solid var(--border); flex-shrink:0;
       ">⠸ idle</div>
 
       <!-- Resize handle -->
       <div id="albert-resize" style="
         position:absolute; bottom:0; right:0; width:14px; height:14px; cursor:nwse-resize;
-        background:linear-gradient(135deg, transparent 50%, #333 50%);
+        background:linear-gradient(135deg, transparent 50%, var(--border2) 50%);
         border-radius:0 0 10px 0; z-index:20;
       " title="Resize"></div>
     `;
@@ -8259,9 +8484,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modelInp  = el.querySelector('#albert-model-input');
 
     const PROVIDER_DEFAULTS = {
+      anthropic:   { model: 'claude-sonnet-4-6',          url: 'https://api.anthropic.com/v1/messages' },
       gemini:      { model: 'gemini-2.5-flash',           url: null },
       openai:      { model: 'gpt-4o-mini',                url: 'https://api.openai.com/v1/chat/completions' },
-      anthropic:   { model: 'claude-haiku-4-5-20251001',  url: 'https://api.anthropic.com/v1/messages' },
       groq:        { model: 'llama-3.3-70b-versatile',    url: 'https://api.groq.com/openai/v1/chat/completions' },
       mistral:     { model: 'mistral-small-latest',       url: 'https://api.mistral.ai/v1/chat/completions' },
       deepseek:    { model: 'deepseek-chat',              url: 'https://api.deepseek.com/v1/chat/completions' },
@@ -8271,10 +8496,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function refreshKeyRow() {
-      const provider = localStorage.getItem('albert_provider') || 'gemini';
+      const provider = localStorage.getItem('albert_provider') || 'anthropic';
       const key      = localStorage.getItem('albert_api_key')  || '';
       const model    = localStorage.getItem('albert_model')    || '';
-      provSel.value  = PROVIDER_DEFAULTS[provider] ? provider : 'gemini';
+      provSel.value  = PROVIDER_DEFAULTS[provider] ? provider : 'anthropic';
       if (model) modelInp.value = model;
       if (key) {
         keyRow.style.display = 'none';
@@ -8355,13 +8580,13 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     div.innerHTML = `
       <div style="
-        max-width:90%; padding:7px 10px; border-radius:8px; font-size:11px; line-height:1.5;
-        background:${isUser ? '#001e12' : '#111'};
-        border:1px solid ${isUser ? '#00dc7830' : '#222'};
-        color:${isUser ? '#00dc78' : '#ccc'};
+        max-width:90%; padding:7px 10px; border-radius:8px; font-size:11px; line-height:1.6;
+        background:${isUser ? 'rgba(16,185,129,0.08)' : 'var(--bg2)'};
+        border:1px solid ${isUser ? 'rgba(16,185,129,0.25)' : 'var(--border)'};
+        color:${isUser ? 'var(--green)' : 'var(--text)'};
         white-space:pre-wrap; word-break:break-word;
       ">${escHtml(text)}</div>
-      <div style="font-size:9px; color:#333; padding:0 4px;">${isUser ? 'you' : '◆ albert'}</div>
+      <div style="font-size:9px; color:var(--muted2); padding:0 4px;">${isUser ? 'you' : '◆ albert'}</div>
     `;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;

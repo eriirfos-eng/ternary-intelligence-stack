@@ -62,8 +62,36 @@
     }
     html[data-theme="light"] body { background: var(--bg); }
     html[data-theme="light"] .tree-file.active { background: var(--active-file-bg); }
-    html[data-theme="light"] .badge-t2 { background: #dceeff; border-color: #a0c8f0; }
-    html[data-theme="light"] .badge-t3 { background: #fff0d8; border-color: #f0c080; }
+
+    /* ── Topbar in light mode ─────────────────────────────────────── */
+    html[data-theme="light"] #topbar {
+      background: #ffffff;
+      border-bottom-color: var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    html[data-theme="light"] .nav-tab { color: var(--muted); }
+    html[data-theme="light"] .nav-tab:hover {
+      background: rgba(0,0,0,0.05) !important;
+      color: var(--text);
+    }
+    html[data-theme="light"] .nav-tab.active {
+      color: var(--blue);
+      border-top-color: var(--blue) !important;
+    }
+    html[data-theme="light"] .tb-btn { color: var(--muted); }
+    html[data-theme="light"] .tb-btn:hover { background: var(--bg2); color: var(--text); border-color: var(--border); }
+    html[data-theme="light"] .tb-sep { background: var(--border); }
+    html[data-theme="light"] .tb-logo { border-right-color: var(--border); }
+
+    /* ── Tier badges in light mode ────────────────────────────────── */
+    html[data-theme="light"] .tier-badge,
+    html[data-theme="light"] .tb-badge { background: var(--bg2); border-color: var(--border2); color: var(--muted); }
+    html[data-theme="light"] .badge-t2,
+    html[data-theme="light"] .tb-badge.badge-t2 { background: #dceeff; border-color: #a0c8f0; color: #1a5fb4; }
+    html[data-theme="light"] .badge-t3,
+    html[data-theme="light"] .tb-badge.badge-t3 { background: #fff0d8; border-color: #f0c080; color: #b45309; }
+    html[data-theme="light"] .tb-badge.badge-t4 { background: #f5f0ff; border-color: #c4b5fd; color: #6d28d9; }
+
     html[data-theme="light"] .status-ok { background: #d8f5e8; color: var(--green); border-color: #90d8b0; }
     html[data-theme="light"] .status-error { background: #fde8eb; color: var(--red); border-color: #f0a0a8; }
     html[data-theme="light"] .status-running { background: #fff3d8; color: var(--amber); border-color: #f0c878; }
@@ -71,9 +99,19 @@
     html[data-theme="light"] .print-output { background: #f8fff8; border-color: #b0d8b0; }
     html[data-theme="light"] .error-output { background: #fff8f8; border-color: #f0b0b0; }
     html[data-theme="light"] .meta-item { background: var(--bg2); border-color: var(--border); }
-    html[data-theme="light"] #statusbar { background: #e0e4e8; }
+    html[data-theme="light"] #statusbar { background: #e0e4e8; color: var(--muted); }
     html[data-theme="light"] .dash-card { background: var(--bg1); border-color: var(--border); }
     html[data-theme="light"] .activity-bar { background: #e8ebef; border-color: var(--border); }
+
+    /* ── Premium library text in light mode ───────────────────────── */
+    html[data-theme="light"] #premium-file-tree .tree-dir { color: var(--text); opacity: 1; }
+    html[data-theme="light"] #premium-file-tree .tree-file { color: var(--muted); }
+    html[data-theme="light"] #premium-file-tree .tree-file:hover { color: var(--text); }
+    html[data-theme="light"] #premium-file-tree .tree-file.active {
+      background: var(--active-file-bg);
+      color: var(--blue);
+    }
+    html[data-theme="light"] #premium-tree-container .tree-root-header { color: var(--text); opacity: 1; }
 
     /* ─── Modern Components ────────────────────────────────────────── */
     .btn {
@@ -676,17 +714,21 @@
     #view-dashboard { overflow-y: auto; padding: 20px 28px; }
     .dash-grid {
       display: grid;
-      grid-template-columns: 360px 1fr 360px;
-      grid-template-rows: auto auto auto;
+      grid-template-columns: 340px 1fr 340px;
+      grid-template-rows: auto minmax(200px, 1fr) auto;
       gap: 16px;
-      max-width: 1600px;
+      max-width: 1500px;
       margin: 0 auto;
+      align-items: stretch;
     }
     .dash-col { display: flex; flex-direction: column; gap: 16px; }
     .dash-col-1 { grid-column: 1; grid-row: 1 / span 3; }
     .dash-col-2 { grid-column: 2; }
     .dash-col-3 { grid-column: 3; }
     .dash-footer { grid-column: 2 / span 2; }
+    /* Cards in the middle row stretch to fill equal height */
+    .dash-col-2[style*="grid-row: 2"],
+    .dash-col-3[style*="grid-row: 2"] { align-self: stretch; }
 
     .dash-section-title {
       font-size: 0.8462rem; font-weight: 700; color: var(--muted);
@@ -694,11 +736,12 @@
       margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
     }
     .dash-card {
-      background: #131b2e; border: 1px solid #1e2a42;
+      background: var(--bg1); border: 1px solid var(--border2);
       border-radius: var(--radius); padding: 16px;
       box-shadow: var(--shadow); display: flex; flex-direction: column;
       transition: transform 0.2s, box-shadow 0.2s;
     }
+    html:not([data-theme="light"]) .dash-card { background: #131b2e; border-color: #1e2a42; }
     .dash-card-title {
       font-size: 1.0000rem; font-weight: 600; color: var(--text);
       margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
@@ -1188,8 +1231,8 @@
     }
     
     .industrial-card {
-      background: #0f131a !important;
-      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      background: var(--bg1) !important;
+      border: 1px solid var(--border) !important;
       padding: 32px !important;
       border-radius: 4px !important;
       margin-bottom: 32px !important;
@@ -1198,8 +1241,13 @@
       display: flex !important;
       flex-direction: column !important;
       gap: 24px !important;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+      box-shadow: var(--shadow) !important;
       position: relative;
+    }
+    html:not([data-theme="light"]) .industrial-card {
+      background: #0f131a !important;
+      border-color: rgba(255,255,255,0.05) !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
     }
     
     .industrial-card::before {
@@ -1262,7 +1310,7 @@
     .industrial-title {
       font-size: 1.0769rem !important;
       font-weight: 800 !important;
-      color: #ffffff !important;
+      color: var(--text) !important;
       letter-spacing: 1px !important;
       text-transform: uppercase !important;
       margin-bottom: 4px !important;

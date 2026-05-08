@@ -34,6 +34,7 @@
       <button class="nav-tab"        id="vt-debugger"  onclick="switchView('debugger')"><i data-lucide="bug"></i> Tracer</button>
       <button class="nav-tab"        id="vt-modules"   onclick="switchView('modules')"><i data-lucide="package"></i> Registry</button>
       <button class="nav-tab"        id="vt-translator" onclick="switchView('translator')"><i data-lucide="languages"></i> Translator</button>
+      <button class="nav-tab"        id="vt-audit"     onclick="switchView('audit')"><i data-lucide="shield-check"></i> Audit</button>
       <button class="nav-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings"></i> Config</button>
     </div>
   </div>
@@ -52,7 +53,7 @@
       <div id="tierBadge" class="tier-badge" onclick="toggleKeyInput()" style="cursor:pointer" title="Click to enter API Key">Tier 1</div>
       <div class="tb-sep"></div>
       <div style="display:flex; align-items:center; gap:2px;">
-        <button class="tb-btn" onclick="toggleKeyInput()" title="Account Settings"><i data-lucide="user-circle"></i></button>
+        <button class="tb-btn" onclick="toggleKeyInput()" title="API Key"><i data-lucide="key"></i></button>
         <button class="tb-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme (Light/Dark)">
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
@@ -1163,6 +1164,8 @@
 <!-- ═══ MODULES VIEW (Registry) ══════════════════════════════════════════════ -->
 <div class="view" id="view-modules"></div>
 <div class="view" id="view-translator"></div>
+<!-- ═══ AUDIT VIEW (TernAudit) ════════════════════════════════════════════════ -->
+<div class="view" id="view-audit"></div>
 
 <div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
   <div class="modal-box">
