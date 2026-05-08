@@ -1055,9 +1055,9 @@ async function renderRegistryView() {
         <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:12px; padding:16px; position:relative;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
             <button onclick="confirmDeleteAgent('${r.id}', '${r.name}')" 
-                    style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:4px; cursor:pointer; color:var(--red); padding:2px 6px; font-size:10px; font-weight:700;"
+                    style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:8px; cursor:pointer; color:var(--red); padding:2px 6px; font-size:10px; font-weight:700;"
                     title="Delete Agent">DELETE</button>
-            <div style="font-size:10px; padding:2px 6px; background:rgba(6,182,212,0.1); border-radius:4px; color:var(--cyan); border:1px solid var(--cyan);">${r.pricing}</div>
+            <div style="font-size:10px; padding:2px 6px; background:rgba(6,182,212,0.1); border-radius:8px; color:var(--cyan); border:1px solid var(--cyan);">${r.pricing}</div>
           </div>
           <div style="font-weight:700; color:var(--text); font-size:14px; margin-bottom:4px;">${r.name}</div>
           <div style="font-size:11px; color:var(--muted); margin-bottom:12px; height:32px; overflow:hidden;">${r.desc || "Custom ternary pipeline"}</div>
@@ -1187,11 +1187,11 @@ async function renderFleetView() {
         </div>
         <div style="flex: 1; overflow-y: auto; padding: 8px;">
           ${localReg.map(a => {
-            if (!a || !a.id) return '<div style="padding:12px; color:var(--red); border:1px solid var(--red); border-radius:8px; margin-bottom:4px;">Unknown Node</div>';
+            if (!a || !a.id) return '<div style="padding:12px; color:var(--red); border:1px solid var(--red); border-radius:12px; margin-bottom:4px;">Unknown Node</div>';
             const displayId = (a.id || a.name || a.endpoint || 'unknown').substring(0, 8);
             return `
             <div onclick="window.selectedFleetAgentId='${a.id}'; renderFleetView();" 
-                 style="padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; transition: all 0.2s;
+                 style="padding: 12px; border-radius: 12px; cursor: pointer; margin-bottom: 4px; transition: all 0.2s;
                         background: ${window.selectedFleetAgentId === a.id ? 'var(--active-file-bg)' : 'transparent'};
                         border: 1px solid ${window.selectedFleetAgentId === a.id ? 'var(--cyan)' : 'transparent'};">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
@@ -1233,7 +1233,7 @@ async function renderFleetView() {
           <div style="font-size:10px; font-weight:700; color:var(--muted2); text-transform:uppercase; margin-bottom:10px;">Public API Endpoint</div>
           <div style="display:flex; gap:10px;">
             <input readonly value="https://ternlang-api.fly.dev/api/agent/${agent.id}" 
-                   style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); outline:none;">
+                   style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); outline:none;">
             <button class="btn btn-primary" onclick="navigator.clipboard.writeText('https://ternlang-api.fly.dev/api/agent/${agent.id}'); showToast('Endpoint copied', 'ok')">
               <i data-lucide="copy" style="width:14px;"></i> Copy
             </button>
@@ -1270,7 +1270,7 @@ async function renderFleetView() {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <h3 style="font-size:14px; font-weight:700;">Live Execution Stream</h3>
               <div style="display:flex; gap:6px;">
-                <span style="font-size:9px; padding:2px 6px; background:var(--bg2); border-radius:4px; color:var(--muted2);">FILTER: ALL EVENTS</span>
+                <span style="font-size:9px; padding:2px 6px; background:var(--bg2); border-radius:8px; color:var(--muted2);">FILTER: ALL EVENTS</span>
               </div>
             </div>
             <div style="flex:1; background:#000; border:1px solid var(--border2); border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:11px; padding:16px; overflow-y:auto; color:#a5f3fc;" id="fleet-stream-${agent.id}">
@@ -1287,7 +1287,7 @@ async function renderFleetView() {
               </div>
               <div style="height:200px; background:#0f172a; position:relative; display:flex; align-items:center; justify-content:center; color:var(--muted2);">
                 <i data-lucide="network" style="width:48px; height:48px; opacity:0.1;"></i>
-                <div style="position:absolute; bottom:8px; right:8px; font-size:9px; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">REAL-TIME HEATMAP</div>
+                <div style="position:absolute; bottom:8px; right:8px; font-size:9px; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:8px;">REAL-TIME HEATMAP</div>
               </div>
               <div style="padding:12px; font-size:10px; color:var(--muted);">
                 Snapshot updates after each simulation run.
@@ -3023,7 +3023,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
            <div id="moe-conf-${id}-${axis.id}" style="text-align:right; color:var(--cyan);">0%</div>
          `).join('')}
        </div>
-       <div id="moe-veto-alert-${id}" style="display:none; margin-top:10px; padding:6px; background:rgba(239,68,68,0.2); border:1px solid var(--red); color:var(--red); font-size:9px; font-weight:800; text-align:center; border-radius:4px;">
+       <div id="moe-veto-alert-${id}" style="display:none; margin-top:10px; padding:6px; background:rgba(239,68,68,0.2); border:1px solid var(--red); color:var(--red); font-size:9px; font-weight:800; text-align:center; border-radius:8px;">
          🛑 CRITICAL SAFETY VETO ENGAGED
        </div>
      `;
@@ -3039,12 +3039,12 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
            <button class="art-btn" onmousedown="event.stopPropagation()" onclick="event.stopPropagation(); setArtifactState('${id}', 'extend')" title="Extend Topology"><i data-lucide="external-link" style="width:10px"></i></button>
          </div>
        </div>
-       <div id="art-body-${id}" class="art-display" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid var(--border2);">
+       <div id="art-body-${id}" class="art-display" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.2); padding:8px; border-radius:8px; border:1px solid var(--border2);">
          <pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); white-space:pre-wrap;">(Awaiting signal...)</pre>
        </div>
-       <textarea id="art-edit-${id}" class="art-editor" style="display:none; flex:1; background:var(--bg2); color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; border:1px solid var(--cyan); padding:8px; border-radius:4px; outline:none; resize:none;" oninput="updateArtifactPayload('${id}', this.value)"></textarea>
+       <textarea id="art-edit-${id}" class="art-editor" style="display:none; flex:1; background:var(--bg2); color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; border:1px solid var(--cyan); padding:8px; border-radius:8px; outline:none; resize:none;" oninput="updateArtifactPayload('${id}', this.value)"></textarea>
        <div id="art-socket-label-${id}" style="margin-top:8px; display:none; justify-content:flex-end;">
-         <div style="font-size:9px; color:var(--green); font-weight:800; border:1px solid var(--green); padding:2px 4px; border-radius:3px;">EXTEND SOCKET ACTIVE</div>
+         <div style="font-size:9px; color:var(--green); font-weight:800; border:1px solid var(--green); padding:2px 4px; border-radius:6px;">EXTEND SOCKET ACTIVE</div>
        </div>
      `;
   }
@@ -3467,13 +3467,13 @@ const NodePanelController = {
       </div>
       <div class="prop-section">
         <div class="prop-label-strict">Evolutionary State</div>
-        <div style="font-size:11px; color:var(--text); font-weight:600; background:rgba(255,255,255,0.05); padding:6px; border-radius:4px; border:1px solid var(--border2);">
+        <div style="font-size:11px; color:var(--text); font-weight:600; background:rgba(255,255,255,0.05); padding:6px; border-radius:8px; border:1px solid var(--border2);">
            ${node.isStub ? 'STUB (DATA CHECKPOINT)' : 'EXPANDED (RESOLUTION CARD)'}
         </div>
       </div>
       <div class="prop-section">
         <div class="prop-label-strict">Payload Memory</div>
-        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border2); padding:10px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap; max-height:280px; overflow-y:auto; color:var(--text); line-height:1.5;">${payload}</div>
+        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border2); padding:10px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap; max-height:280px; overflow-y:auto; color:var(--text); line-height:1.5;">${payload}</div>
       </div>
       <div style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border2); display:flex; flex-direction:column; gap:8px;">
           <button class="btn-pill" style="flex:1; background:var(--bg2);" onclick="collapseArtifactToStub('${node.id}')">
@@ -3650,7 +3650,7 @@ const NodePanelController = {
         <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" onchange="updateNodeColor('${node.id}', this.value)" title="Custom Color">
+            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:8px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" onchange="updateNodeColor('${node.id}', this.value)" title="Custom Color">
             <code id="color-hex-${node.id}" style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
           </div>
         </div>
@@ -3708,7 +3708,7 @@ const NodePanelController = {
         </div>
       </div>
 
-      <div class="prop-section" style="border:1px solid var(--amber); padding:8px; border-radius:4px; background:rgba(245,158,11,0.05);">
+      <div class="prop-section" style="border:1px solid var(--amber); padding:8px; border-radius:8px; background:rgba(245,158,11,0.05);">
         <div class="prop-label-strict" style="color:var(--amber);">Decision Mode</div>
         <div style="font-size:11px; font-weight:700; display:flex; align-items:center; gap:6px;">
           <i data-lucide="zap" style="width:14px"></i> PROBABILISTIC (LLM BRIDGE)
@@ -3765,7 +3765,7 @@ const NodePanelController = {
         <div style="display:flex; flex-direction:column; gap:4px;">
           <div style="color:white; font-weight:bold; font-size:10px; text-transform:uppercase; letter-spacing:0.05em;">Custom Color</div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:4px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" onchange="updateNodeColor('${node.id}', this.value)" title="Custom Color">
+            <input type="color" id="color-pick-${node.id}" class="prop-input-strict" style="width:34px; padding:0; border:1px solid var(--border2); height:24px; cursor:pointer; background:none; border-radius:8px;" value="${customColor}" oninput="previewNodeColor('${node.id}', this.value)" onchange="updateNodeColor('${node.id}', this.value)" title="Custom Color">
             <code id="color-hex-${node.id}" style="font-size:11px; color:var(--text); font-family:'JetBrains Mono',monospace; opacity:0.8; letter-spacing:0.5px;">${customColor.toUpperCase()}</code>
           </div>
         </div>
@@ -3877,7 +3877,7 @@ const EdgePanelController = {
       <!-- Condition Rail -->
       <div class="prop-group" style="margin-bottom:8px;">
         <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Activation Logic</div>
-        <div style="display:flex; align-items:stretch; height:24px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="display:flex; align-items:stretch; height:24px; background:var(--bg2); border:1px solid var(--border2); border-radius:8px; overflow:hidden;">
           <button title="value == +1" class="rail-btn ${String(cond)==='1'?'active':''}" onclick="updateWireProp('condition','1');updateWireProp('label','+1 only');">+1</button>
           <button title="value == 0"  class="rail-btn ${String(cond)==='0'?'active':''}"   onclick="updateWireProp('condition','0');updateWireProp('label','0 only');">0</button>
           <button title="value == -1" class="rail-btn ${String(cond)==='-1'?'active':''}" onclick="updateWireProp('condition','-1');updateWireProp('label','-1 only');">-1</button>
@@ -3912,7 +3912,7 @@ const EdgePanelController = {
 
       <div class="prop-group" style="margin-bottom:8px;">
         <div class="prop-label-strict" style="font-size:10px; margin-bottom:4px;">Priority</div>
-        <div style="display:flex; height:24px; border-radius:4px; overflow:hidden; border:1px solid var(--border2); background:var(--bg2);">
+        <div style="display:flex; height:24px; border-radius:8px; overflow:hidden; border:1px solid var(--border2); background:var(--bg2);">
           <button class="rail-btn ${priority<=2 ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 2); updateEdgePanel();">Low</button>
           <button class="rail-btn ${(priority>2 && priority<10) ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 5); updateEdgePanel();">Norm</button>
           <button class="rail-btn ${priority>=10 ? 'active' : ''}" style="flex:1; font-size:9px;" onclick="updateWireProp('priority', 10); updateEdgePanel();">High</button>
@@ -3930,7 +3930,7 @@ const EdgePanelController = {
         <label for="wire-feedback-sem" class="prop-label-strict" style="margin:0; font-size:10px; cursor:pointer;">Feedback Loop</label>
       </div>
 
-      <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); padding:6px; border-radius:4px; border:1px solid var(--border2); margin-top:auto;">
+      <div class="prop-group" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); padding:6px; border-radius:8px; border:1px solid var(--border2); margin-top:auto;">
         <div class="prop-label-strict" style="font-size:10px; margin:0;">Custom Wire Color</div>
         <div style="display:flex; align-items:center; gap:8px;">
           <code id="color-hex-${wire.id}" style="font-size:10px; color:var(--muted2);">${customColor}</code>
@@ -4620,10 +4620,10 @@ function renderArchetypes(q = "") {
         const nBridges  = arch.nodes.filter(n => n.type === 'external').length;
         const nSources  = arch.nodes.filter(n => n.type === 'datasource').length;
         const pills = [
-          nAgents  > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(6,182,212,0.15);color:var(--cyan);font-weight:700;letter-spacing:0.03em;">${nAgents} Agent${nAgents>1?'s':''}</span>` : '',
-          nGates   > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,0.15);color:var(--amber);font-weight:700;letter-spacing:0.03em;">${nGates} Gate${nGates>1?'s':''}</span>` : '',
-          nBridges > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(217,70,239,0.15);color:var(--magenta);font-weight:700;letter-spacing:0.03em;">${nBridges} Bridge${nBridges>1?'s':''}</span>` : '',
-          nSources > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(244,63,94,0.15);color:#f43f5e;font-weight:700;letter-spacing:0.03em;">${nSources} Source${nSources>1?'s':''}</span>` : '',
+          nAgents  > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(6,182,212,0.15);color:var(--cyan);font-weight:700;letter-spacing:0.03em;">${nAgents} Agent${nAgents>1?'s':''}</span>` : '',
+          nGates   > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(245,158,11,0.15);color:var(--amber);font-weight:700;letter-spacing:0.03em;">${nGates} Gate${nGates>1?'s':''}</span>` : '',
+          nBridges > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(217,70,239,0.15);color:var(--magenta);font-weight:700;letter-spacing:0.03em;">${nBridges} Bridge${nBridges>1?'s':''}</span>` : '',
+          nSources > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:rgba(244,63,94,0.15);color:#f43f5e;font-weight:700;letter-spacing:0.03em;">${nSources} Source${nSources>1?'s':''}</span>` : '',
         ].filter(Boolean).join('');
         card.innerHTML = `
           <div class="archetype-card-title" style="display:flex;align-items:center;gap:6px;">
@@ -8972,7 +8972,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <span style="color:var(--green); font-weight:800; font-size:13px; letter-spacing:0.03em;">◆ Albert</span>
         <span style="color:var(--muted); font-size:11px; flex:1; font-weight:500;">co-pilot</span>
         <span id="albert-wired-badge" style="display:none; color:var(--cyan); font-size:10px;
-              background:rgba(56,189,248,0.1); padding:2px 6px; border-radius:4px; border:1px solid rgba(56,189,248,0.3); font-weight:700;">
+              background:rgba(56,189,248,0.1); padding:2px 6px; border-radius:8px; border:1px solid rgba(56,189,248,0.3); font-weight:700;">
           wired
         </span>
         <button id="albert-close" style="
@@ -8995,12 +8995,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Input bar -->
       <div style="padding:10px; border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0;">
         <input id="albert-input" type="text" placeholder="Prompt Albert…" style="
-          flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
+          flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:12px;
           color:var(--text); font-family:inherit; font-size:12px; padding:7px 10px;
           outline:none;
         "/>
         <button id="albert-send" style="
-          background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:8px;
+          background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:12px;
           color:var(--green); font-size:14px; padding:6px 12px; cursor:pointer; font-weight:700;
         " title="Send (Enter)">↵</button>
       </div>
@@ -9011,7 +9011,7 @@ document.addEventListener('DOMContentLoaded', () => {
         align-items:center; flex-wrap:wrap;
       ">
         <select id="albert-provider-select" style="
-          background:var(--bg2); border:1px solid var(--border2); border-radius:4px;
+          background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
           color:var(--text); font-family:inherit; font-size:10px; padding:4px 6px; outline:none; cursor:pointer;
         ">
           <option value="anthropic">Anthropic (Claude)</option>
@@ -9025,15 +9025,15 @@ document.addEventListener('DOMContentLoaded', () => {
           <option value="custom">Custom (OpenAI-compat)</option>
         </select>
         <input id="albert-key-input" type="password" placeholder="API key…" style="
-          flex:1; min-width:80px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px;
+          flex:1; min-width:80px; background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
           color:var(--text); font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
         "/>
         <input id="albert-model-input" type="text" placeholder="model" style="
-          width:90px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px;
+          width:90px; background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
           color:var(--text); font-family:inherit; font-size:10px; padding:4px 7px; outline:none;
         "/>
         <button id="albert-key-save" style="
-          background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:4px;
+          background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px;
           color:var(--green); font-size:10px; padding:4px 8px; cursor:pointer; font-weight:600;
         ">Save</button>
       </div>
@@ -9047,7 +9047,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div id="albert-resize" style="
         position:absolute; bottom:0; right:0; width:14px; height:14px; cursor:nwse-resize;
         background:linear-gradient(135deg, transparent 50%, var(--border2) 50%);
-        border-radius:0 0 10px 0; z-index:20;
+        border-radius:0 0 12px 0; z-index:20;
       " title="Resize"></div>
     `;
 
@@ -9196,7 +9196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     div.innerHTML = `
       <div style="
-        max-width:90%; padding:7px 10px; border-radius:8px; font-size:11px; line-height:1.6;
+        max-width:90%; padding:7px 10px; border-radius:12px; font-size:11px; line-height:1.6;
         background:${isUser ? 'rgba(16,185,129,0.08)' : 'var(--bg2)'};
         border:1px solid ${isUser ? 'rgba(16,185,129,0.25)' : 'var(--border)'};
         color:${isUser ? 'var(--green)' : 'var(--text)'};
