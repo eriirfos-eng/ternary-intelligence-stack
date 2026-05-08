@@ -224,6 +224,24 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
         }
     }
 
+    // Break symmetry: the new layer is an exact copy of the source layer, so CE gradients
+    // flow identically through both and they can never diverge. Small Gaussian noise (σ=0.01)
+    // breaks this without destroying the transferred knowledge.
+    let target_prefix = format!("blocks.{}.", target_layer);
+    let perturb_keys: Vec<String> = new_tensors.keys()
+        .filter(|k| k.starts_with(&target_prefix))
+        .cloned()
+        .collect();
+    for key in perturb_keys {
+        if let Some(t) = new_tensors.get(&key) {
+            let noise = Tensor::randn(0.0f32, 0.01f32, t.shape(), device)?;
+            let perturbed = (t + noise)?;
+            new_tensors.insert(key, perturbed);
+        }
+    }
+    println!("[{}] Symmetry break: Gaussian noise σ=0.01 applied to {} tensors in layer {}.",
+        timestamp(), target_prefix.len(), target_layer);
+
     candle_core::safetensors::save(&new_tensors, checkpoint_path)?;
     // Archive the pre-surgery best checkpoint with a versioned name instead of deleting it.
     // Deleting was the original bug: if the new layer can't learn, the good pre-surgery weights
@@ -375,7 +393,13 @@ fn train_cycle(
                 };
                 let mut loss = (&ce_loss + (l1_penalty * l1_lambda)?)?;
                 if let Some(et) = entropy_term {
-                    loss = (&loss + (et * entropy_lambda)?)?;
+                    // Entropy regularization is only useful when the router can still be pushed.
+                    // At max entropy (ENTR ≥ ln(12) ≈ 2.485), the gradient is ~0 at the saddle
+                    // point AND the term blocks CE-driven specialization. Disengage it there.
+                    let entr_now = (-entropy_scalar / config.num_layers as f32) as f64;
+                    if entropy_lambda > 0.0 && entr_now < 2.2 {
+                        loss = (&loss + (et * entropy_lambda)?)?;
+                    }
                 }
                 loss
             } else {
