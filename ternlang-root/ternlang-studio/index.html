@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
   <!-- Logic extracted to studio.js -->
-  <link rel="stylesheet" href="/assets/studio.css?v=20260508c">
+  <link rel="stylesheet" href="/assets/studio.css?v=20260508d">
 </head>
 <body>
 
@@ -207,167 +207,168 @@
 <div id="viewbar" style="display:none"></div>
 <!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
 <div class="view active" id="view-dashboard">
+  <div class="dash-8grid">
 
-  <!-- ── Status strip ─────────────────────────────────────────────────────── -->
-  <div class="dash-status-strip">
-    <div class="dash-status-chip">
-      <span class="dot" id="dashVmDot"></span>
-      <span class="dash-status-label">API</span>
-      <span id="dashVmLabel" class="dash-status-value">Checking…</span>
-    </div>
-    <div class="dash-status-chip">
-      <span class="dot" id="dashWasmDot" style="background:var(--muted2)"></span>
-      <span class="dash-status-label">WASM</span>
-      <span id="sbWasmStatus2" class="dash-status-value">Loading…</span>
-    </div>
-    <div class="dash-status-chip">
-      <span class="dash-status-label">Tier</span>
-      <span id="dashTierBadge" class="tb-badge badge-free" style="margin-left:4px;">Free</span>
-    </div>
-    <div class="dash-status-chip">
-      <span class="dash-status-label">Runs</span>
-      <span id="statRuns" class="dash-status-value">0</span>
-      <span class="dash-status-label" style="margin-left:8px;">OK</span>
-      <span id="statOk" class="dash-status-value" style="color:var(--green)">0</span>
-      <span class="dash-status-label" style="margin-left:8px;">Err</span>
-      <span id="statErr" class="dash-status-value" style="color:var(--red)">0</span>
-    </div>
-    <div class="dash-status-chip" style="margin-left:auto;">
-      <span class="dash-status-label">Endpoint:</span>
-      <span id="dashEndpoint" class="dash-status-value" style="color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:10px">ternlang-api.fly.dev</span>
-      <button class="tb-btn" style="height:22px;width:22px;margin-left:6px;" onclick="checkConnection(); showToast('Connection check triggered', 'ok')" title="Recheck"><i data-lucide="refresh-cw" style="width:11px;height:11px;"></i></button>
-    </div>
-  </div>
-
-  <!-- ── Main grid ────────────────────────────────────────────────────────── -->
-  <div class="dash-grid">
-
-    <!-- Column 1: REPL -->
-    <div class="dash-col dash-col-1">
-
-      <!-- Quota -->
-      <div class="dash-card" style="padding:14px 16px;">
-        <div class="dash-card-title" style="margin-bottom:10px;"><i data-lucide="credit-card"></i> Plan &amp; Quota</div>
-        <div id="dash-quota-wrap">
+    <!-- Box 1: System Health -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="activity"></i> System Health</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;flex:1;">
+        <div class="dash-spec-row">
+          <span class="dash-spec-key">API</span>
+          <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);">ternlang-api.fly.dev</span>
+        </div>
+        <div class="dash-spec-row">
+          <span class="dash-spec-key">Runtime</span>
+          <span class="dash-spec-val" style="color:var(--green);">BET-VM v1.0 · WASM</span>
+        </div>
+        <div class="dash-spec-row">
+          <span class="dash-spec-key">Deploy</span>
+          <span class="dash-spec-val">Fly.io · GitHub Actions</span>
+        </div>
+        <div class="dash-spec-row">
+          <span class="dash-spec-key">Auth</span>
+          <span class="dash-spec-val">X-Ternlang-Key · tier-gated</span>
+        </div>
+        <div class="dash-spec-row">
+          <span class="dash-spec-key">MCP</span>
+          <span class="dash-spec-val">Smithery · stdio + HTTP</span>
+        </div>
+        <div id="dash-quota-wrap" style="margin-top:4px;">
           <div class="usage-bar-wrap"><div class="usage-bar-fill" id="dashUsageBar" style="width:0%"></div></div>
-          <div class="usage-meta" id="dashUsageMeta" style="font-size:10px; margin-top:4px;">Enter API key to see quota</div>
+          <div class="usage-meta" id="dashUsageMeta" style="font-size:10px;margin-top:3px;">Enter API key for quota</div>
         </div>
         <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
       </div>
-
-      <!-- Ternary Playground (WASM REPL) -->
-      <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
-        <div class="dash-card-title" style="display:flex;align-items:center;justify-content:space-between;">
-          <span><i data-lucide="terminal"></i> BET-VM Playground</span>
-          <span id="wasmBadge" style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.1);border:1px solid var(--green);color:var(--green);opacity:0;transition:opacity 0.3s">⚡ WASM</span>
-        </div>
-        <textarea id="dashReplInput" class="prop-input" style="flex:1;min-height:160px;resize:none;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin-top:10px;"
-          onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();runReplExpr();}"
-          placeholder="fn main() -> trit {&#10;    print(&quot;@ Hello&quot;);&#10;    return affirm;&#10;}"></textarea>
-        <div id="dashReplRes" class="repl-res" style="min-height:28px;margin-top:8px;white-space:pre;font-family:'JetBrains Mono',monospace;font-size:11px;"></div>
-        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;">
-          <button class="btn btn-primary" style="font-size:11px;padding:5px 14px;border-radius:6px;" onclick="runReplExpr()">▶ Run <span style="font-size:9px;opacity:0.7">Ctrl+↵</span></button>
-          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('hello')">Hello</button>
-          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('consensus')">Consensus</button>
-          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('match')">Match</button>
-          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('dec13')">13→trit</button>
-          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;margin-left:auto;" onclick="openReplInEditor()" title="Open in full Editor">↗ Editor</button>
-        </div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-shrink:0;">
+        <button class="btn btn-ghost" style="flex:1;font-size:10px;justify-content:center;" onclick="checkConnection();showToast('Ping sent','ok')">⟳ Ping</button>
+        <button class="btn btn-ghost" style="flex:1;font-size:10px;justify-content:center;" onclick="switchView('settings')">⚙ Config</button>
       </div>
     </div>
 
-    <!-- Column 2: Actions + Activity -->
-    <div class="dash-col dash-col-2">
-
-      <!-- Quick Actions -->
-      <div class="dash-card">
-        <div class="dash-card-title"><i data-lucide="zap"></i> Quick Actions</div>
-        <div class="dash-quick-btns">
-          <button class="dash-quick-btn" onclick="switchView('editor'); newFile()">
-            <i data-lucide="file-plus"></i> <span>New file</span>
-          </button>
-          <button class="dash-quick-btn" onclick="switchView('editor'); openFile('examples/hello_trit.tern')">
-            <i data-lucide="play"></i> <span>Run Hello Trit</span>
-          </button>
-          <button class="dash-quick-btn" onclick="switchView('flow')">
-            <i data-lucide="brain-circuit"></i> <span>Flow Lab</span>
-          </button>
-          <button class="dash-quick-btn" onclick="switchView('bench')">
-            <i data-lucide="gauge"></i> <span>Benchmarks</span>
-          </button>
-          <button class="dash-quick-btn" onclick="switchView('docs')">
-            <i data-lucide="book-open"></i> <span>Documentation</span>
-          </button>
-          <button class="dash-quick-btn" onclick="switchView('audit')">
-            <i data-lucide="shield-check"></i> <span>Safety Audit</span>
-          </button>
+    <!-- Box 2: Albert MoE-13 -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="brain-circuit"></i> Albert MoE-13</div>
+      <div style="display:flex;gap:16px;margin-bottom:10px;flex-shrink:0;">
+        <div>
+          <div class="dash-box-stat" style="font-size:17px;" title="Global training epoch">229+</div>
+          <div class="dash-box-label">Global Epoch</div>
+        </div>
+        <div>
+          <div class="dash-box-stat" style="font-size:17px;color:var(--green);" title="Best checkpoint loss">6.9541</div>
+          <div class="dash-box-label">Best Loss</div>
+        </div>
+        <div>
+          <div class="dash-box-stat" style="font-size:17px;color:var(--cyan);" title="Gradient steps this run">12k+</div>
+          <div class="dash-box-label">Grad Steps</div>
         </div>
       </div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;flex:1;">
+        <div class="dash-spec-row"><span class="dash-spec-key">Architecture</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">3L × 12E × 256H</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Quantisation</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BitNet 1.58-bit</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Corpus</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">King James Bible</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Status</span><span class="dash-spec-val" style="color:var(--green);">● Training · 3L record run</span></div>
+      </div>
+      <a href="http://localhost:8888" target="_blank" class="dash-box-link" style="margin-top:10px;flex-shrink:0;"><i data-lucide="external-link"></i> Training Dashboard</a>
+    </div>
 
-      <!-- Recent Activity -->
-      <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
-        <div class="dash-card-title"><i data-lucide="history"></i> Execution Log</div>
-        <div class="dash-run-list" id="dashRunList" style="flex:1">
-          <div class="dash-run-empty">No executions this session</div>
+    <!-- Box 3: @sparseskip -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="zap"></i> @sparseskip</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;flex-shrink:0;">
+        <span class="dash-box-badge patent" title="Patent application filed 2026">A50296/2026 · Pending</span>
+        <span class="dash-box-badge measured" title="Measured on live hardware">Measured</span>
+      </div>
+      <div style="display:flex;gap:14px;margin-bottom:10px;flex-shrink:0;">
+        <div title="Measured throughput multiplier vs dense MoE on same hardware">
+          <div class="dash-box-stat">2.80×</div>
+          <div class="dash-box-label">vs dense MoE</div>
         </div>
+        <div title="Tokens per second per million active parameters — beats A100 (llm.c) 3×">
+          <div class="dash-box-stat" style="color:var(--cyan);">4,304</div>
+          <div class="dash-box-label">tok/s per M params</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;flex:1;">
+        <div class="dash-spec-row"><span class="dash-spec-key">Routing</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">Top-3 / 12 experts</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Skip ratio</span><span class="dash-spec-val" style="color:var(--green);">75% experts skipped / tok</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">vs A100 llm.c</span><span class="dash-spec-val" style="color:var(--green);">3× per active param</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">GPU proj. 8×H100</span><span class="dash-spec-val" style="color:var(--cyan);">12.7× vs dense float16</span></div>
       </div>
     </div>
 
-    <!-- Column 3: Architecture + Stdlib -->
-    <div class="dash-col dash-col-3">
-
-      <!-- Architecture summary -->
-      <div class="dash-card">
-        <div class="dash-card-title" style="margin-bottom:12px;"><i data-lucide="cpu"></i> Stack Architecture</div>
-        <div style="display:flex;flex-direction:column;gap:7px;font-size:11px;">
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">Runtime</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BET-VM v1.0 · WASM</span>
-          </div>
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">Arithmetic</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">Balanced Ternary {-1, 0, +1}</span>
-          </div>
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">Quantisation</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BitNet 1.58-bit</span>
-          </div>
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">MoE model</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">Albert MoE-13 · 3L×12E×256H</span>
-          </div>
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">@sparseskip</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace; color:var(--cyan)">3/12 experts · 0.1176 GF/tok</span>
-          </div>
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">Throughput</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace; color:var(--green)">83+ tok/s (A50296/2026)</span>
-          </div>
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">MCP tools</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">34 · smithery.ai/server/ternlang</span>
-          </div>
-          <div class="dash-spec-row">
-            <span class="dash-spec-key">Transport</span>
-            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">HTTP JSON-RPC 2.0 · SSE streams</span>
-          </div>
-        </div>
+    <!-- Box 4: Stack Architecture -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="cpu"></i> Stack</div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;flex:1;">
+        <div class="dash-spec-row"><span class="dash-spec-key">Language</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">ternlang · .tern</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Arithmetic</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">{−1, 0, +1}</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Runtime</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BET-VM v1.0 · WASM</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">MCP tools</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">34 · smithery.ai</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Stdlib</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">core · math · agents · ml</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Transport</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">JSON-RPC 2.0 · SSE</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Throughput</span><span class="dash-spec-val" style="color:var(--green);font-family:'JetBrains Mono',monospace;">83+ tok/s</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Compute</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">0.1176 GF/tok</span></div>
       </div>
+    </div>
 
-      <!-- Stdlib -->
-      <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
-        <div class="dash-card-title"><i data-lucide="library"></i> Standard Library</div>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:11px;flex:1">
-          <div class="dash-spec-row"><span class="dash-spec-key">core/</span><span class="dash-spec-val" style="color:var(--green)">12 modules</span></div>
-          <div class="dash-spec-row"><span class="dash-spec-key">math/</span><span class="dash-spec-val" style="color:var(--green)">8 modules</span></div>
-          <div class="dash-spec-row"><span class="dash-spec-key">agents/</span><span class="dash-spec-val" style="color:var(--cyan)">15 modules</span></div>
-          <div class="dash-spec-row"><span class="dash-spec-key">safety/</span><span class="dash-spec-val" style="color:var(--cyan)">5 modules</span></div>
-          <div class="dash-spec-row"><span class="dash-spec-key">ml/bitnet</span><span class="dash-spec-val" style="color:var(--amber)">v1.58b</span></div>
+    <!-- Box 5: BET-VM Playground -->
+    <div class="dash-box">
+      <div class="dash-box-title">
+        <i data-lucide="terminal"></i> BET-VM Playground
+        <span id="wasmBadge" style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.1);border:1px solid var(--green);color:var(--green);opacity:0;transition:opacity 0.3s;margin-left:auto;">⚡ WASM</span>
+      </div>
+      <textarea id="dashReplInput" class="prop-input" style="flex:1;min-height:0;resize:none;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;"
+        onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();runReplExpr();}"
+        placeholder="fn main() -> trit {&#10;    print(&quot;⊕ Hello&quot;);&#10;    return affirm;&#10;}"></textarea>
+      <div id="dashReplRes" class="repl-res" style="min-height:22px;margin-top:6px;white-space:pre;font-family:'JetBrains Mono',monospace;font-size:11px;flex-shrink:0;"></div>
+      <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;align-items:center;flex-shrink:0;">
+        <button class="btn btn-primary" style="font-size:11px;padding:4px 12px;" onclick="runReplExpr()">▶ Run <span style="font-size:9px;opacity:0.7">Ctrl+↵</span></button>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 7px;" onclick="setReplSnippet('hello')">Hello</button>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 7px;" onclick="setReplSnippet('consensus')">Consensus</button>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 7px;" onclick="setReplSnippet('match')">Match</button>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 7px;margin-left:auto;" onclick="openReplInEditor()" title="Open in Editor">↗</button>
+      </div>
+    </div>
+
+    <!-- Box 6: Quick Actions -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="layout-grid"></i> Quick Actions</div>
+      <div class="dash-quick-btns" style="flex:1;align-content:start;">
+        <button class="dash-quick-btn" onclick="switchView('editor');newFile()"><i data-lucide="file-plus"></i> <span>New file</span></button>
+        <button class="dash-quick-btn" onclick="switchView('editor');openFile('examples/hello_trit.tern')"><i data-lucide="play"></i> <span>Run Hello Trit</span></button>
+        <button class="dash-quick-btn" onclick="switchView('flow')"><i data-lucide="brain-circuit"></i> <span>Flow Lab</span></button>
+        <button class="dash-quick-btn" onclick="switchView('bench')"><i data-lucide="gauge"></i> <span>Benchmarks</span></button>
+        <button class="dash-quick-btn" onclick="switchView('docs')"><i data-lucide="book-open"></i> <span>Docs</span></button>
+        <button class="dash-quick-btn" onclick="switchView('audit')"><i data-lucide="shield-check"></i> <span>Safety Audit</span></button>
+      </div>
+    </div>
+
+    <!-- Box 7: Execution Log -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="history"></i> Execution Log</div>
+      <div class="dash-run-list" id="dashRunList" style="flex:1;overflow-y:auto;">
+        <div class="dash-run-empty">No executions this session</div>
+      </div>
+    </div>
+
+    <!-- Box 8: Resources -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="external-link"></i> Resources</div>
+      <div style="display:flex;flex-direction:column;gap:7px;flex:1;">
+        <a href="https://ternlang.com" target="_blank" class="dash-box-link"><i data-lucide="globe"></i> ternlang.com</a>
+        <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" class="dash-box-link"><i data-lucide="github"></i> ternary-intelligence-stack</a>
+        <a href="https://smithery.ai/server/ternlang" target="_blank" class="dash-box-link"><i data-lucide="plug"></i> MCP · smithery.ai/server/ternlang</a>
+        <a href="https://ternlang.com/docs" target="_blank" class="dash-box-link"><i data-lucide="book-open"></i> Documentation</a>
+        <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;">
+          <div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Patent</div>
+            <span class="dash-box-badge patent" style="cursor:default;" title="Sparse routing primitive — filed 2026">@sparseskip · A50296/2026 · Pending</span>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">SPRIND Challenge</div>
+            <div style="font-size:10px;color:var(--text);font-family:'JetBrains Mono',monospace;">KI-Zuverlässigkeit · Stage 1</div>
+          </div>
         </div>
-        <button class="dash-quick-btn" style="margin-top:12px;justify-content:center;" onclick="switchSidebarPanel('explorer'); switchView('editor')">
-          <i data-lucide="search"></i> <span>Browse in Editor</span>
-        </button>
       </div>
     </div>
 
@@ -1235,13 +1236,25 @@
     <span id="cursorPos">Ln 1, Col 1</span>
   </div>
   <div class="sb-item">
-    <span id="sbTier" style="color:var(--muted2)">Tier 1 — Open Core</span>
+    <span class="sb-dot" id="dashVmDot" style="background:var(--muted2)"></span>
+    <span id="dashVmLabel" style="font-size:10px;color:var(--muted);">Checking…</span>
   </div>
   <div class="sb-item">
-    <span id="connLabel" style="color:var(--muted2)">Offline</span>
+    <span class="sb-dot" id="dashWasmDot" style="background:var(--muted2)"></span>
+    <span id="sbWasmStatus" style="color:var(--muted2)">WASM…</span>
   </div>
-  <div class="sb-item" style="border-right:none; margin-left:auto;">
-    <span id="sbWasmStatus" style="color:var(--muted2)">WASM loading…</span>
+  <div class="sb-item">
+    <span id="dashTierBadge" class="tb-badge badge-free" style="font-size:9px;">Free</span>
+  </div>
+  <div class="sb-item">
+    <span style="color:var(--muted);font-size:10px;">Runs</span>
+    <span id="statRuns" style="font-weight:600;font-size:10px;margin-left:3px;">0</span>
+    <span style="color:var(--green);margin-left:6px;font-size:10px;">✓</span><span id="statOk" style="color:var(--green);font-weight:600;font-size:10px;">0</span>
+    <span style="color:var(--red);margin-left:4px;font-size:10px;">✕</span><span id="statErr" style="color:var(--red);font-weight:600;font-size:10px;">0</span>
+  </div>
+  <div class="sb-item" style="border-right:none;margin-left:auto;">
+    <span id="dashEndpoint" style="color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:10px;">ternlang-api.fly.dev</span>
+    <button onclick="checkConnection();showToast('Ping sent','ok')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0 3px;font-size:12px;line-height:1;" title="Recheck connection">⟳</button>
   </div>
 </div>
 
@@ -1271,7 +1284,7 @@
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
-<script type="module" src="/studio.js?v=20260508c"></script>
+<script type="module" src="/studio.js?v=20260508d"></script>
 
 <!-- Albert F6 floating panel -->
 <div id="albert-panel" style="
