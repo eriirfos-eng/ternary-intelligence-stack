@@ -947,9 +947,14 @@ async function deleteAgent() {
       const d = await r.json();
       if (d.status !== "ok") {
         if (r.status === 403) {
-          // Real ownership block — another key owns this agent
-          showToast("Ownership mismatch — agent belongs to a different key", "err");
-          return;
+          // Check if it's in localReg — if so it's local-only, delete locally regardless
+          let localCheck = [];
+          try { localCheck = JSON.parse(localStorage.getItem("ternflow_registry") || "[]"); } catch(e){}
+          if (!localCheck.find(a => a.id === agentToDeleteId)) {
+            showToast("Ownership mismatch — agent belongs to a different key", "err");
+            return;
+          }
+          // Local-only agent: fall through to localStorage cleanup
         }
         // 404 = agent was never persisted server-side (local-only deploy)
         // Fall through and clean up localStorage anyway
@@ -2320,7 +2325,8 @@ function restoreCanvasState() {
     state.nodes.forEach(n => createFlowNode(n.name, n.path, n.x, n.y, n.type, n.id, n.isStub));
     state.nodes.forEach(n => { const node = flowNodes.find(f => f.id === n.id); if (node) { node.props = n.props; node.parentId = n.parentId || null; node.isStub = n.isStub || false; updateNodeSchemaDisplay(n.id); } });
     flowWires = state.wires || [];
-    updateWires();
+    // Defer wire rendering until after browser has laid out the newly-created nodes
+    requestAnimationFrame(() => requestAnimationFrame(() => updateWires()));
     if (flowNodes.length > 0) { const hint = document.getElementById("canvas-hint"); if (hint) hint.style.display = "none"; }
     return true;
   } catch(e) { return false; }
@@ -2372,8 +2378,8 @@ function renderFlow() {
       if (hint) hint.style.display = "flex";
     }
   } else {
-    // Re-render wires when switching back to flow view (wires are in memory but not visually rendered)
-    updateWires();
+    // Re-render wires after view becomes visible (getBoundingClientRect needs layout pass)
+    requestAnimationFrame(() => updateWires());
   }
 }
 window.renderFlow = renderFlow;
@@ -2925,7 +2931,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
   if (isStub) node.classList.add('artifact-stub');
   if (type === 'datasource') {
     node.style.borderLeft = "4px solid #f43f5e";
-    node.style.borderRadius = "0 8px 8px 0";
+    node.style.borderRadius = "0 14px 14px 0";
   }
   
   // Dynamic Sizing
@@ -3017,7 +3023,7 @@ function createFlowNode(name, path, x, y, type = 'agent', id, isStub = false) {
         ${label}
       </div>
       <div class="fn-status" id="status-${id}" title="idle"></div>
-      <button onclick="event.stopPropagation(); traceCausalPath('${id}')" style="padding:2px 4px; background:none; border:none; cursor:pointer; color:var(--cyan); line-height:1; margin-left:4px;" title="Causal Trace">🔍</button>
+      <button onclick="event.stopPropagation(); traceCausalPath('${id}')" style="padding:2px 4px; background:none; border:none; cursor:pointer; color:var(--cyan); line-height:1; margin-left:4px; display:flex; align-items:center;" title="Causal Trace"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button onclick="event.stopPropagation(); deleteNode('${id}')" style="padding:2px 4px; background:none; border:none; cursor:pointer; color:var(--muted); line-height:1; margin-left:4px;" title="Remove">✕</button>
     </div>
     <div class="fn-body" style="${type === 'artifact' ? 'flex:1; display:flex; flex-direction:column; overflow:hidden;' : ''}">
@@ -7616,8 +7622,9 @@ function loadToEditor(path, content) {
   if (monacoEditor) {
     monacoEditor.setValue(content);
     const model = monacoEditor.getModel();
-    const ext = path.split(".").pop();
-    if (ext === "tern") monaco.editor.setModelLanguage(model, "ternlang");
+    const ext = path.split(".").pop().toLowerCase();
+    const lang = (window._LANG_MAP || {})[ext] || "ternlang";
+    monaco.editor.setModelLanguage(model, lang);
   }
   renderTabs();
   refreshTreeHighlight();
@@ -8442,7 +8449,9 @@ function updateTopbarTier(tier) {
   if (badge) { badge.textContent = TIER_LABELS[tier] || "Tier 1"; badge.className = "tier-badge tb-badge " + (TIER_BADGE_CLASS[tier] || "badge-free"); }
   const sbTierEl = document.getElementById("sbTier"); if (sbTierEl) sbTierEl.textContent = TIER_LABELS[tier] || "Tier 1 — Open Core";
   const upBtn = document.getElementById("topbarUpskillBtn");
+  const upSep = document.getElementById("upskillSep");
   if (upBtn) upBtn.style.display = tier <= 1 ? "flex" : "none";
+  if (upSep) upSep.style.display = tier <= 1 ? "block" : "none";
   // Sync dashboard tier badge
   const dashBadge = document.getElementById("dashTierBadge");
   if (dashBadge) {
@@ -8622,6 +8631,55 @@ require(["vs/editor/editor.main"], function () {
       ],
     },
   });
+
+  // ── TernLang IntelliSense ─────────────────────────────────────────────────
+  monaco.languages.registerCompletionItemProvider("ternlang", {
+    provideCompletionItems(model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
+      const mk = monaco.languages.CompletionItemKind;
+      return { suggestions: [
+        { label:"fn",         kind:mk.Keyword,       insertText:"fn ${1:name}(${2:params}) -> ${3:trit} {\n\t$0\n}", insertTextRules:4, documentation:"Define a function", range },
+        { label:"let",        kind:mk.Keyword,       insertText:"let ${1:name}: ${2:trit} = $0;", insertTextRules:4, documentation:"Declare a variable", range },
+        { label:"return",     kind:mk.Keyword,       insertText:"return $0;", insertTextRules:4, range },
+        { label:"match",      kind:mk.Keyword,       insertText:"match ${1:expr} {\n\taffirm => { $2 }\n\ttend   => { $3 }\n\treject => { $4 }\n}", insertTextRules:4, documentation:"Ternary match — three branches", range },
+        { label:"if",         kind:mk.Keyword,       insertText:"if ${1:cond} {\n\t$0\n}", insertTextRules:4, range },
+        { label:"while",      kind:mk.Keyword,       insertText:"while ${1:cond} {\n\t$0\n}", insertTextRules:4, range },
+        { label:"for",        kind:mk.Keyword,       insertText:"for ${1:x} in ${2:iter} {\n\t$0\n}", insertTextRules:4, range },
+        { label:"agent",      kind:mk.Class,         insertText:"agent ${1:Name} {\n\thandle(${2:signal}: trit) {\n\t\t$0\n\t}\n}", insertTextRules:4, documentation:"Define a ternary agent", range },
+        { label:"spawn",      kind:mk.Function,      insertText:"spawn ${1:AgentName}(${2:signal});", insertTextRules:4, documentation:"Spawn a new agent instance", range },
+        { label:"send",       kind:mk.Function,      insertText:"send ${1:agent} ${2:signal};", insertTextRules:4, range },
+        { label:"await",      kind:mk.Keyword,       insertText:"await ${1:agent}", insertTextRules:4, range },
+        { label:"@sparseskip",kind:mk.Operator,      insertText:"@sparseskip", documentation:"Skip computation when trit is 0 (patent A50296/2026)", range },
+        { label:"@inline",    kind:mk.Operator,      insertText:"@inline", range },
+        { label:"@export",    kind:mk.Operator,      insertText:"@export", range },
+        { label:"trit",       kind:mk.TypeParameter, insertText:"trit", documentation:"+1 affirm / 0 tend / -1 reject", range },
+        { label:"trittensor", kind:mk.TypeParameter, insertText:"trittensor[${1:N}]", insertTextRules:4, documentation:"Balanced ternary tensor", range },
+        { label:"int",        kind:mk.TypeParameter, insertText:"int", range },
+        { label:"float",      kind:mk.TypeParameter, insertText:"float", range },
+        { label:"bool",       kind:mk.TypeParameter, insertText:"bool", range },
+        { label:"affirm",     kind:mk.Value,         insertText:"affirm", documentation:"+1 (true / yes)", range },
+        { label:"reject",     kind:mk.Value,         insertText:"reject", documentation:"-1 (false / no)", range },
+        { label:"tend",       kind:mk.Value,         insertText:"tend",   documentation:"0 (uncertain / hold)", range },
+        { label:"consensus",  kind:mk.Function,      insertText:"consensus(${1:a}, ${2:b})", insertTextRules:4, documentation:"min(a,b) — ternary AND", range },
+        { label:"println",    kind:mk.Function,      insertText:"println(${1:value})", insertTextRules:4, range },
+        { label:"print",      kind:mk.Function,      insertText:"print(${1:value})", insertTextRules:4, range },
+        { label:"truth",      kind:mk.Function,      insertText:"truth(${1:expr})", insertTextRules:4, documentation:"bool → trit", range },
+        { label:"hold",       kind:mk.Function,      insertText:"hold(${1:expr})", insertTextRules:4, documentation:"Force trit=0", range },
+        { label:"conflict",   kind:mk.Function,      insertText:"conflict(${1:a}, ${2:b})", insertTextRules:4, documentation:"Returns reject if inputs differ", range },
+      ]};
+    }
+  });
+
+  // ── Multi-language support (file extension → Monaco language ID) ───────────
+  window._LANG_MAP = {
+    "rs":"rust", "py":"python", "js":"javascript", "ts":"typescript",
+    "jsx":"javascript", "tsx":"typescript", "cpp":"cpp", "cc":"cpp",
+    "c":"c", "h":"cpp", "java":"java", "go":"go", "rb":"ruby",
+    "sh":"shell", "bash":"shell", "toml":"ini", "yaml":"yaml",
+    "yml":"yaml", "json":"json", "md":"markdown", "css":"css",
+    "html":"html", "sql":"sql", "tern":"ternlang",
+  };
 
   monaco.editor.defineTheme("ternstudio-dark", {
     base: "vs-dark", inherit: true,

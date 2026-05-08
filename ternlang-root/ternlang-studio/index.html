@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
   <!-- Logic extracted to studio.js -->
-  <link rel="stylesheet" href="/assets/studio.css?v=20260508h">
+  <link rel="stylesheet" href="/assets/studio.css?v=20260508i">
 </head>
 <body>
 
@@ -59,12 +59,13 @@
           <i data-lucide="moon" id="themeIcon"></i>
         </button>
       </div>
-      <div class="tb-sep"></div>
+      <div class="tb-sep" id="upskillSep"></div>
       <button id="topbarUpskillBtn" class="btn btn-hero secondary" style="color:var(--amber); border-color:var(--amber); height:32px" onclick="openUpskillModal()">Upskill</button>
-    </div>    <!-- Auto-detect endpoint: same origin when served from the API server, else default to ternlang.com -->
-    <input type="hidden" id="apiEndpoint" value="https://ternlang-api.fly.dev" />
-    <input type="password" id="apiKey" style="display:none;" />
+    </div>
   </div>
+  <!-- These inputs are read by JS but must not be flex children of tb-right -->
+  <input type="hidden" id="apiEndpoint" value="https://ternlang-api.fly.dev" />
+  <input type="password" id="apiKey" style="display:none; position:absolute;" />
 </div>
 
 <!-- ─── Modals (Global Context) ────────────────────────────────────────── -->
@@ -1283,7 +1284,7 @@
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
-<script type="module" src="/studio.js?v=20260508h"></script>
+<script type="module" src="/studio.js?v=20260508i"></script>
 
 <!-- Albert F6 floating panel -->
 <div id="albert-panel" style="
