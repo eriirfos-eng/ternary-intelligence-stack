@@ -477,7 +477,8 @@
             <option value="5">5 EP</option>
         </select>
         <button id="resetBtn">RESET ZOOM</button>
-        <button id="exportBtn" title="Download training curve as CSV">↓ CSV</button>
+        <button id="exportBtn" title="Download full per-batch telemetry as CSV (loss, grad, routing, entropy, TELE)">↓ Batch CSV</button>
+        <button id="epochCsvBtn" title="Download per-epoch summaries as CSV (avg loss, clipped, skipped)">↓ Epoch CSV</button>
     </div>
 </div>
 
@@ -586,6 +587,9 @@
     const ROUTE_WINDOW   = 60;   // columns in the routing heatmap
     let routingHistory   = [];   // [{step, weights:[...]}]
     let latestGrad       = null; // {norm, layerNorms:[...]}
+    let pendingEntropy   = null; // most recent ENTR avg — snapshotted per batch record
+    let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
+    let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -1014,6 +1018,12 @@
                     }
                     continue;
                 }
+                // ENTR line — per-step router entropy
+                const enm = line.match(/^ENTR step=(\d+) avg=([\d.]+)/);
+                if (enm) {
+                    pendingEntropy = parseFloat(enm[2]);
+                    continue;
+                }
                 // Evolution & system event lines
                 if (line.includes('[evolution] Plateau detected')) {
                     const lm = line.match(/loss ([\d.]+)/);
@@ -1055,6 +1065,20 @@
                     y: loss,
                     epoch, batch, layers
                 });
+                // Snapshot all available telemetry into the batch log for CSV export
+                batchLog.push({
+                    step:          (epoch - 1) * BATCHES_PER_EPOCH + batch,
+                    global_epoch:  epoch,
+                    batch,
+                    layers,
+                    loss,
+                    grad_norm:     latestGrad ? latestGrad.norm : null,
+                    layer_norms:   latestGrad ? [...latestGrad.layerNorms] : null,
+                    route_weights: routingHistory.length ? [...routingHistory[routingHistory.length - 1].weights] : null,
+                    entropy:       pendingEntropy,
+                    tele_sparsity: latestTele ? [...latestTele.layerSparsity] : null,
+                    tele_activity: latestTele ? [...latestTele.expertActivity] : null,
+                });
             }
 
             if (newPts.length === 0) return;
@@ -1069,11 +1093,14 @@
                 chart.data.datasets[2].data = [];
                 chart.data.datasets[3].data = [];
                 chart.data.datasets[4].data = [];
-                lastSmaY     = null;
-                bestLoss     = Infinity;
-                worstLoss    = -Infinity;
-                totalPts     = 0;
-                lastLossVal  = null;
+                lastSmaY       = null;
+                bestLoss       = Infinity;
+                worstLoss      = -Infinity;
+                totalPts       = 0;
+                lastLossVal    = null;
+                pendingEntropy = null;
+                batchLog       = [];
+                epochLog       = [];
                 lastKnownEpoch = -1;
                 newPointStartIdx = Infinity;
                 document.getElementById('v-loss').textContent  = '—';
@@ -1122,6 +1149,16 @@
                         addEvent('epoch', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
                             `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`);
                     }
+                    // Log epoch summary for CSV export
+                    const esm = line.match(/=== Epoch (\d+)L?\s*done \| Avg Loss:\s*[\d.]+ \| Clipped:\s*(\d+) \| Skipped:\s*(\d+)/);
+                    epochLog.push({
+                        local_epoch:  esm ? parseInt(esm[1]) : null,
+                        global_epoch: lastKnownEpoch,
+                        layers:       lastNumLayers,
+                        avg_loss:     epochAvg,
+                        clipped:      esm ? parseInt(esm[2]) : null,
+                        skipped:      esm ? parseInt(esm[3]) : null,
+                    });
                 }
             }
 
@@ -1613,15 +1650,70 @@
     });
 
     // ── Export ───────────────────────────────────────────────────────
-    document.getElementById('exportBtn').addEventListener('click', () => {
-        const pts = chart.data.datasets[0].data;
-        if (!pts.length) return;
-        const rows = ['epoch,loss', ...pts.map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`)];
-        const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    function csvDownload(content, filename) {
+        const blob = new Blob([content], { type: 'text/csv' });
         const url  = URL.createObjectURL(blob);
-        const a    = Object.assign(document.createElement('a'), { href: url, download: `albert_${Date.now()}.csv` });
-        a.click();
+        Object.assign(document.createElement('a'), { href: url, download: filename }).click();
         URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        if (!batchLog.length) {
+            // Fallback: export raw chart points if batchLog hasn't accumulated yet
+            const pts = chart.data.datasets[0].data;
+            if (!pts.length) return;
+            const rows = ['global_epoch,loss', ...pts.map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`)];
+            csvDownload(rows.join('\n'), `albert_batch_${Date.now()}.csv`);
+            return;
+        }
+        // Derive column widths dynamically (model layer count changes at surgery)
+        const maxLayerNorms = Math.max(...batchLog.map(r => r.layer_norms   ? r.layer_norms.length   : 0), 0);
+        const maxExperts    = Math.max(...batchLog.map(r => r.route_weights  ? r.route_weights.length : 0), 0);
+        const maxSparsity   = Math.max(...batchLog.map(r => r.tele_sparsity  ? r.tele_sparsity.length : 0), 0);
+        const maxActivity   = Math.max(...batchLog.map(r => r.tele_activity  ? r.tele_activity.length : 0), 0);
+
+        const layerNormCols = Array.from({length: maxLayerNorms}, (_, i) => `l1_l${i}`);
+        const expertCols    = Array.from({length: maxExperts},    (_, i) => `route_e${i}`);
+        const sparsityCols  = Array.from({length: maxSparsity},   (_, i) => `sp_l${i}`);
+        const actCols       = Array.from({length: maxActivity},   (_, i) => `act_e${i}`);
+
+        const header = [
+            'step', 'global_epoch', 'batch', 'layers', 'loss', 'grad_norm',
+            ...layerNormCols, ...expertCols, 'entropy', ...sparsityCols, ...actCols
+        ].join(',');
+
+        const fmt6 = v => v != null ? v.toFixed(6) : '';
+        const fmt4 = v => v != null ? v.toFixed(4) : '';
+
+        const rows = batchLog.map(r => [
+            r.step,
+            r.global_epoch,
+            r.batch,
+            r.layers,
+            fmt6(r.loss),
+            fmt6(r.grad_norm),
+            ...layerNormCols.map((_, i) => fmt6(r.layer_norms  ? r.layer_norms[i]  : null)),
+            ...expertCols.map(   (_, i) => fmt6(r.route_weights ? r.route_weights[i] : null)),
+            fmt6(r.entropy),
+            ...sparsityCols.map( (_, i) => fmt4(r.tele_sparsity ? r.tele_sparsity[i] : null)),
+            ...actCols.map(      (_, i) => fmt6(r.tele_activity ? r.tele_activity[i] : null)),
+        ].join(','));
+
+        csvDownload([header, ...rows].join('\n'), `albert_batch_${Date.now()}.csv`);
+    });
+
+    document.getElementById('epochCsvBtn').addEventListener('click', () => {
+        if (!epochLog.length) return;
+        const header = 'local_epoch,global_epoch,layers,avg_loss,clipped,skipped';
+        const rows   = epochLog.map(r => [
+            r.local_epoch  ?? '',
+            r.global_epoch ?? '',
+            r.layers       ?? '',
+            r.avg_loss != null ? r.avg_loss.toFixed(6) : '',
+            r.clipped  ?? '',
+            r.skipped  ?? '',
+        ].join(','));
+        csvDownload([header, ...rows].join('\n'), `albert_epochs_${Date.now()}.csv`);
     });
 
     // ── Boot ──────────────────────────────────────────────────────────
