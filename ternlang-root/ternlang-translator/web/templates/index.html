@@ -200,12 +200,17 @@
     const transUpload = document.getElementById('trans-upload');
     const swapBtn = document.getElementById('swap-direction-btn');
     
-    // Auth Bridge
+    // Auth + Theme Bridge
     let apiKey = '';
     window.addEventListener('message', (event) => {
       if (event.data.type === 'TIS_AUTH_BRIDGE') {
         apiKey = event.data.key;
-        console.log('[TernTranslator] API Key received via bridge');
+      }
+      // Theme sync from parent studio
+      if (event.data.type === 'TIS_THEME') {
+        const isDark = event.data.mode !== 'light';
+        if (isDark) htmlElement.classList.add('dark');
+        else htmlElement.classList.remove('dark');
       }
     });
 
@@ -214,7 +219,7 @@
     const inputLabel = document.getElementById('input-label');
     const outputLabel = document.getElementById('output-label');
 
-    // Theme Toggle Logic
+    // Theme Toggle Logic (local toggle still works when opened standalone)
     themeToggle.addEventListener('click', () => {
       htmlElement.classList.toggle('dark');
     });
