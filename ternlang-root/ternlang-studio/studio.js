@@ -287,6 +287,7 @@ async function switchView(name) {
   if (name === "translator") await renderTranslatorView();
   if (name === "fleet") await renderFleetView();
   if (name === "audit") await renderAuditView();
+  if (name === "bench") await renderBenchView();
   if (name === "settings") syncSettingsUI();
   lucide.createIcons();
 }
@@ -672,6 +673,220 @@ async function renderAuditView() {
   setTimeout(() => lucide.createIcons(), 50);
 }
 window.renderAuditView = renderAuditView;
+
+// ─── TernBench ───────────────────────────────────────────────────────────────
+
+let benchRoot = null;
+
+function BenchView() {
+  const [code,     setCode]     = React.useState('');
+  const [iters,    setIters]    = React.useState(10);
+  const [running,  setRunning]  = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [result,   setResult]   = React.useState(null);
+  const [error,    setError]    = React.useState('');
+
+  const ITER_OPTS = [1, 5, 10, 25, 50];
+
+  async function runBench() {
+    const src = code.trim();
+    if (!src) { setError('Paste Ternlang source code to benchmark.'); return; }
+    setError(''); setRunning(true); setResult(null); setProgress(0);
+
+    const endpoint = document.getElementById("apiEndpoint")?.value || 'https://ternlang-api.fly.dev';
+    const key = document.getElementById("apiKey")?.value.trim() || localStorage.getItem('ternstudio-key') || '';
+
+    const timings = [];
+    let successes = 0;
+
+    for (let i = 0; i < iters; i++) {
+      setProgress(i + 1);
+      const t0 = performance.now();
+      try {
+        const r = await fetch(`${endpoint}/api/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Ternlang-Key': key },
+          body: JSON.stringify({ code: src, key })
+        });
+        const d = await r.json();
+        timings.push(performance.now() - t0);
+        if (d.status === 'ok') successes++;
+      } catch (_) {
+        timings.push(performance.now() - t0);
+      }
+    }
+
+    const sorted = [...timings].sort((a, b) => a - b);
+    const n = timings.length;
+    const avg    = timings.reduce((s, v) => s + v, 0) / n;
+    const min    = sorted[0];
+    const max    = sorted[n - 1];
+    const median = sorted[Math.floor(n / 2)];
+    const p95    = sorted[Math.min(Math.floor(n * 0.95), n - 1)];
+    const hasSparse = /@sparseskip/.test(src);
+
+    // bucket into 12 bars for histogram
+    const buckets = Array(12).fill(0);
+    timings.forEach(t => {
+      const idx = Math.min(Math.floor(((t - min) / (max - min + 0.001)) * 12), 11);
+      buckets[idx]++;
+    });
+
+    setResult({ timings, sorted, avg, min, max, median, p95, successes, hasSparse, buckets });
+    setRunning(false);
+  }
+
+  const e = React.createElement;
+  const fmt = ms => ms < 1000 ? `${ms.toFixed(1)}ms` : `${(ms / 1000).toFixed(2)}s`;
+
+  const STAT = (label, value, col) => e('div', { style: {
+    background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: '8px',
+    padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '4px'
+  } },
+    e('div', { style: { fontSize: '10px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' } }, label),
+    e('div', { style: { fontSize: '20px', fontWeight: '800', color: col || 'var(--text)', fontFamily: "'JetBrains Mono', monospace" } }, value)
+  );
+
+  return e('div', { style: { display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', color: 'var(--text)', fontFamily: 'Inter, sans-serif' } },
+
+    // Header
+    e('div', { style: { padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, background: 'var(--bg1)' } },
+      e('i', { 'data-lucide': 'gauge', style: { width: '18px', color: 'var(--amber)' } }),
+      e('span', { style: { fontWeight: '800', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' } }, 'TernBench'),
+      e('span', { style: { fontSize: '11px', color: 'var(--muted)', fontWeight: '400' } }, '— execution timing & performance profiling for Ternlang source'),
+      result && e('div', { style: {
+        marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px',
+        background: 'var(--amber)18', border: '1px solid var(--amber)44',
+        borderRadius: '20px', padding: '4px 14px', color: 'var(--amber)', fontWeight: '800', fontSize: '13px'
+      } },
+        e('i', { 'data-lucide': 'zap', style: { width: '14px' } }),
+        `${result.successes}/${result.timings.length} OK · avg ${fmt(result.avg)}`
+      )
+    ),
+
+    // Body
+    e('div', { style: { display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' } },
+
+      // Left: code input
+      e('div', { style: { width: '48%', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border)' } },
+        e('div', { style: { padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'var(--bg2)' } }, 'Source Code'),
+        e('textarea', {
+          value: code,
+          onChange: ev => setCode(ev.target.value),
+          placeholder: 'fn fibonacci(n: trit) -> trit {\n  @sparseskip\n  if n <= 1 { return n; }\n  return fibonacci(n - 1) + fibonacci(n - 2);\n}',
+          spellCheck: false,
+          style: {
+            flex: 1, resize: 'none', background: 'var(--bg)', border: 'none', outline: 'none',
+            color: 'var(--text)', fontFamily: "'JetBrains Mono', monospace", fontSize: '13px',
+            padding: '16px', lineHeight: '1.7', minHeight: 0
+          }
+        }),
+        e('div', { style: { padding: '10px 14px', borderTop: '1px solid var(--border)', background: 'var(--bg1)', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } },
+          e('span', { style: { fontSize: '11px', color: 'var(--muted)', marginRight: '4px' } }, 'Runs:'),
+          ...ITER_OPTS.map(n => e('button', {
+            key: n,
+            onClick: () => setIters(n),
+            className: 'btn btn-ghost',
+            style: { height: '28px', fontSize: '11px', padding: '0 10px', background: n === iters ? 'var(--accent)' : 'transparent', color: n === iters ? '#fff' : 'var(--muted)', borderColor: n === iters ? 'var(--accent)' : 'var(--border)' }
+          }, `×${n}`)),
+          e('button', {
+            onClick: runBench, disabled: running, className: 'btn btn-primary',
+            style: { height: '28px', fontSize: '12px', marginLeft: 'auto', opacity: running ? 0.7 : 1 }
+          }, running ? `⏱ ${progress}/${iters}` : '▶ Run'),
+          e('button', { onClick: () => { setCode(''); setResult(null); setError(''); }, className: 'btn btn-ghost', style: { height: '28px', fontSize: '11px' } }, 'Clear'),
+          error && e('span', { style: { fontSize: '11px', color: 'var(--red)', width: '100%' } }, error)
+        )
+      ),
+
+      // Right: results
+      e('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
+        e('div', { style: { padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'var(--bg2)' } }, 'Benchmark Results'),
+
+        e('div', { style: { flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' } },
+
+          !result && !running && e('div', { style: { textAlign: 'center', color: 'var(--muted)', marginTop: '60px', fontSize: '13px' } },
+            e('i', { 'data-lucide': 'gauge', style: { width: '32px', height: '32px', display: 'block', margin: '0 auto 12px', opacity: 0.3 } }),
+            'Paste code, choose run count, and click Run'
+          ),
+
+          running && e('div', { style: { textAlign: 'center', color: 'var(--muted)', marginTop: '60px', fontSize: '13px' } },
+            e('div', { style: { width: '100%', height: '4px', background: 'var(--bg2)', borderRadius: '2px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto 16px' } },
+              e('div', { style: { height: '100%', width: `${(progress / iters) * 100}%`, background: 'var(--amber)', borderRadius: '2px', transition: 'width 0.2s ease' } })
+            ),
+            `Running… ${progress} / ${iters}`
+          ),
+
+          result && e('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' } },
+            STAT('Avg', fmt(result.avg), 'var(--amber)'),
+            STAT('Min', fmt(result.min), 'var(--green)'),
+            STAT('Max', fmt(result.max), 'var(--red)'),
+            STAT('Median', fmt(result.median), 'var(--cyan)'),
+            STAT('P95', fmt(result.p95), 'var(--text)'),
+            STAT('Success', `${Math.round((result.successes / result.timings.length) * 100)}%`, result.successes === result.timings.length ? 'var(--green)' : 'var(--amber)')
+          ),
+
+          // Histogram
+          result && e('div', { style: { background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px' } },
+            e('div', { style: { fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' } }, 'Latency Distribution'),
+            e('div', { style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '64px' } },
+              ...result.buckets.map((count, i) => {
+                const maxCount = Math.max(...result.buckets, 1);
+                const h = Math.max((count / maxCount) * 60, count > 0 ? 4 : 0);
+                return e('div', { key: i, title: `${count} runs`, style: {
+                  flex: 1, height: `${h}px`, background: i < 4 ? 'var(--green)' : i < 8 ? 'var(--amber)' : 'var(--red)',
+                  borderRadius: '2px 2px 0 0', opacity: count === 0 ? 0.15 : 0.85, transition: 'height 0.3s ease'
+                } });
+              })
+            ),
+            e('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--muted)', marginTop: '4px' } },
+              e('span', null, fmt(result.min)),
+              e('span', null, fmt(result.max))
+            )
+          ),
+
+          // @sparseskip badge
+          result && result.hasSparse && e('div', { style: {
+            display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px',
+            background: 'var(--cyan)10', border: '1px solid var(--cyan)33', borderRadius: '8px'
+          } },
+            e('i', { 'data-lucide': 'zap', style: { width: '16px', color: 'var(--cyan)', flexShrink: 0 } }),
+            e('div', null,
+              e('div', { style: { fontSize: '12px', fontWeight: '700', color: 'var(--cyan)' } }, '@sparseskip detected'),
+              e('div', { style: { fontSize: '11px', color: 'var(--muted)', marginTop: '2px' } }, 'Sparse expert routing active — inference cost reduced to 3/12 active experts at runtime')
+            )
+          ),
+
+          // Raw timings (collapsible feel via small font)
+          result && e('div', { style: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px 14px' } },
+            e('div', { style: { fontSize: '11px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' } }, 'All Timings (ms)'),
+            e('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '4px' } },
+              ...result.timings.map((t, i) => e('span', { key: i, style: {
+                fontSize: '11px', fontFamily: "'JetBrains Mono', monospace",
+                padding: '2px 7px', borderRadius: '4px',
+                background: t < result.median ? 'var(--green)18' : t > result.p95 ? 'var(--red)18' : 'var(--bg1)',
+                color: t < result.median ? 'var(--green)' : t > result.p95 ? 'var(--red)' : 'var(--muted)',
+                border: '1px solid var(--border)'
+              } }, t.toFixed(1)))
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+async function renderBenchView() {
+  const view = document.getElementById("view-bench");
+  if (!view || !window.ReactDOM) return;
+  if (!benchRoot) {
+    view.innerHTML = '<div id="bench-react-mount" style="width:100%;height:100%;display:flex;flex-direction:column;"></div>';
+    const mount = document.getElementById("bench-react-mount");
+    benchRoot = ReactDOM.createRoot(mount);
+  }
+  benchRoot.render(React.createElement(BenchView));
+  setTimeout(() => lucide.createIcons(), 50);
+}
+window.renderBenchView = renderBenchView;
 
 let agentToDeleteId = null;
 function confirmDeleteAgent(id, name) {

@@ -35,6 +35,7 @@
       <button class="nav-tab"        id="vt-modules"   onclick="switchView('modules')"><i data-lucide="package"></i> Registry</button>
       <button class="nav-tab"        id="vt-translator" onclick="switchView('translator')"><i data-lucide="languages"></i> Translator</button>
       <button class="nav-tab"        id="vt-audit"     onclick="switchView('audit')"><i data-lucide="shield-check"></i> Audit</button>
+      <button class="nav-tab"        id="vt-bench"     onclick="switchView('bench')"><i data-lucide="gauge"></i> Bench</button>
       <button class="nav-tab"        id="vt-settings"  onclick="switchView('settings')"><i data-lucide="settings"></i> Config</button>
     </div>
   </div>
@@ -1166,6 +1167,7 @@
 <div class="view" id="view-translator"></div>
 <!-- ═══ AUDIT VIEW (TernAudit) ════════════════════════════════════════════════ -->
 <div class="view" id="view-audit"></div>
+<div class="view" id="view-bench"></div>
 
 <div class="modal-overlay" id="upskillModal" onclick="if(event.target===this)closeUpskillModal()">
   <div class="modal-box">
