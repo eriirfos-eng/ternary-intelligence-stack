@@ -2305,6 +2305,31 @@ const BUILTIN_AGENTS = {
     desc: "The ultimate kill switch. If even one agent says no, the whole process shuts down immediately.",
     code: `fn main() -> trit {\n    let votes: trit[] = read_all();\n    if votes.contains(reject) { return reject; }\n    return affirm;\n}`,
     icon: "octagon", color: "var(--red)"
+  },
+  "PythonAgent": {
+    desc: "Runs Python logic in Pyodide WASM. Return truthy→affirm, None→tend, exception→reject.",
+    code: `# PythonAgent — Pyodide WASM sandbox\n# truthy return → affirm | None → tend | exception → reject\n\ndef main(signal):\n    if signal == 'affirm':\n        return True\n    elif signal == 'reject':\n        return False\n    return None`,
+    icon: "code-2", color: "#3b82f6", group: "polyglot"
+  },
+  "JSAgent": {
+    desc: "Runs JavaScript in a sandboxed context. Return truthy→affirm, null/undefined→tend, throw→reject.",
+    code: `// JSAgent — sandboxed JS execution\n// truthy → affirm | null/undefined → tend | throw → reject\n\nfunction main(signal) {\n  if (signal === 'affirm') return true;\n  if (signal === 'reject') return false;\n  return null;\n}`,
+    icon: "braces", color: "#f59e0b", group: "polyglot"
+  },
+  "PolyglotBridge": {
+    desc: "Translates signals between language runtimes. Routes trit signals to the correct executor.",
+    code: `fn main() -> trit {\n    let sig: trit = read_input();\n    @bridge lang:"auto" signal:sig;\n    return affirm;\n}`,
+    icon: "arrow-left-right", color: "#10b981", group: "polyglot"
+  },
+  "CodeAuditor": {
+    desc: "Audits code payloads for ternary safety. Affirm = safe, Tend = uncertain, Reject = unsafe.",
+    code: `fn main() -> trit {\n    let code: string = read_payload();\n    let unsafe_patterns = [\"eval\", \"exec\", \"system\", \"__import__\"];\n    for pattern in unsafe_patterns {\n        if code.contains(pattern) { return reject; }\n    }\n    return affirm;\n}`,
+    icon: "scan-search", color: "#8b5cf6", group: "polyglot"
+  },
+  "CrossLangOrchestrator": {
+    desc: "Coordinates agents across language runtimes. Aggregates outputs into a single ternary consensus.",
+    code: `fn main() -> trit {\n    let py_result: trit = await_agent(\"PythonAgent\");\n    let js_result: trit = await_agent(\"JSAgent\");\n    if py_result == affirm && js_result == affirm { return affirm; }\n    if py_result == reject || js_result == reject  { return reject; }\n    return tend;\n}`,
+    icon: "network", color: "#06b6d4", group: "polyglot"
   }
 };
 
@@ -2713,8 +2738,20 @@ function renderPaletteResults(q) {
     { label: "Agent",        sub: "Blank Ternlang agent node",                icon: "bot",        color: "var(--cyan)",  spawn: () => { openNewAgentModal(); closeLabPalette(); } },
   ];
 
-  // Built-in agents
-  const builtins = Object.entries(BUILTIN_AGENTS).map(([name, ag]) => ({
+  // Built-in agents (excluding polyglot group)
+  const builtins = Object.entries(BUILTIN_AGENTS).filter(([_, ag]) => !ag.group).map(([name, ag]) => ({
+    label: name, sub: ag.desc, icon: ag.icon, color: ag.color,
+    spawn: () => {
+      const id = "node_" + Date.now(); const p = spawnPos();
+      createFlowNode(name, "__builtin__", p.x, p.y, "agent", id);
+      const node = flowNodes.find(n => n.id === id);
+      if (node) { node.props.code = ag.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "signal: trit"; }
+      closeLabPalette();
+    }
+  }));
+
+  // Polyglot agents
+  const polyglot = Object.entries(BUILTIN_AGENTS).filter(([_, ag]) => ag.group === 'polyglot').map(([name, ag]) => ({
     label: name, sub: ag.desc, icon: ag.icon, color: ag.color,
     spawn: () => {
       const id = "node_" + Date.now(); const p = spawnPos();
@@ -2760,6 +2797,7 @@ function renderPaletteResults(q) {
   }
 
   addSection("Primitives", primitives);
+  addSection("Polyglot", polyglot);
   addSection("Built-in Agents", builtins);
   addSection("Archetypes", archs);
 
@@ -4480,6 +4518,35 @@ const ARCHETYPES = [
     ],
     wires: [[0,2],[1,2],[2,3],[3,4]],
     edgeConds: ["all","all","all","affirm"]
+  },
+  {
+    id: "polyglot_pipeline",
+    name: "Polyglot Pipeline",
+    desc: "Cross-language execution chain. Python and JS agents coordinate under a ternary orchestrator.",
+    icon: "arrow-left-right",
+    color: "#10b981",
+    nodes: [
+      { name: "PythonAgent",            type: "agent", dx: 40,  dy: 60  },
+      { name: "JSAgent",                type: "agent", dx: 40,  dy: 260 },
+      { name: "CrossLangOrchestrator",  type: "agent", dx: 260, dy: 160 },
+      { name: "PolyglotBridge",         type: "agent", dx: 480, dy: 160 }
+    ],
+    wires: [[0,2],[1,2],[2,3]],
+    edgeConds: ["all","all","affirm"]
+  },
+  {
+    id: "code_audit_chain",
+    name: "Code Audit Chain",
+    desc: "Audits any code payload for ternary safety before execution — blocks unsafe patterns.",
+    icon: "scan-search",
+    color: "#8b5cf6",
+    nodes: [
+      { name: "CodeAuditor",   type: "agent", dx: 40,  dy: 160 },
+      { name: "SafetyGate",    type: "agent", dx: 260, dy: 160 },
+      { name: "PolyglotBridge",type: "agent", dx: 480, dy: 160 }
+    ],
+    wires: [[0,1],[1,2]],
+    edgeConds: ["affirm","affirm"]
   }
 ];
 

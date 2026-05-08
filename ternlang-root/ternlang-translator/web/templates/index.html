@@ -105,7 +105,7 @@
           <div class="hidden md:block" style="width:1px; height:16px; background:var(--border-color);"></div>
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full bg-t_teal animate-pulse"></div>
-            <span id="mode-label" class="text-t_text font-mono text-[13px] uppercase tracking-widest min-w-[110px]">Source Engine</span>
+            <span id="mode-label" class="text-t_text font-mono text-[13px] uppercase tracking-widest min-w-[180px]">Python → TernLang</span>
           </div>
           <select id="trans-lang" class="bg-studio_editor border border-studio_border text-t_text focus:text-t_teal focus:border-t_teal transition-colors font-mono text-[15px] px-3 py-1.5 rounded-md outline-none cursor-pointer">
             <option value="python">Python</option>
@@ -167,26 +167,23 @@
 
 
   <script>
-    // State Matrix
     let isTernToBinary = false;
 
-    // UI Elements
     const htmlElement = document.documentElement;
-    const transInput = document.getElementById('trans-input');
+    const transInput  = document.getElementById('trans-input');
     const transOutput = document.getElementById('trans-output');
     const transInsight = document.getElementById('trans-insight');
-    const transBtn = document.getElementById('trans-run-btn');
-    const transBtnText = document.getElementById('trans-run-text');
+    const transBtn    = document.getElementById('trans-run-btn');
     const transUpload = document.getElementById('trans-upload');
-    const swapBtn = document.getElementById('swap-direction-btn');
-    
-    // Auth + Theme Bridge
+    const swapBtn     = document.getElementById('swap-direction-btn');
+    const transLang   = document.getElementById('trans-lang');
+    const modeLabel   = document.getElementById('mode-label');
+    const inputLabel  = document.getElementById('input-label');
+    const outputLabel = document.getElementById('output-label');
+
     let apiKey = '';
     window.addEventListener('message', (event) => {
-      if (event.data.type === 'TIS_AUTH_BRIDGE') {
-        apiKey = event.data.key;
-      }
-      // Theme sync from parent studio
+      if (event.data.type === 'TIS_AUTH_BRIDGE') apiKey = event.data.key;
       if (event.data.type === 'TIS_THEME') {
         const isDark = event.data.mode !== 'light';
         if (isDark) htmlElement.classList.add('dark');
@@ -194,104 +191,308 @@
       }
     });
 
-    // Labels
-    const modeLabel = document.getElementById('mode-label');
-    const inputLabel = document.getElementById('input-label');
-    const outputLabel = document.getElementById('output-label');
+    const LANG_DISPLAY = { python: 'Python', rust: 'Rust', java: 'Java', cpp: 'C++', javascript: 'JavaScript' };
 
-    // Swap Direction Logic
+    function updateDirectionLabels() {
+      const langName = LANG_DISPLAY[transLang.value] || transLang.value;
+      if (isTernToBinary) {
+        modeLabel.textContent = `TernLang → ${langName}`;
+        inputLabel.textContent = `Input // TernLang`;
+        inputLabel.classList.remove('text-t_subtext'); inputLabel.classList.add('text-t_teal');
+        outputLabel.textContent = `Output // ${langName}`;
+        outputLabel.classList.remove('text-t_teal'); outputLabel.classList.add('text-t_subtext');
+        transOutput.classList.remove('text-t_teal'); transOutput.classList.add('text-t_subtext');
+        transInput.classList.remove('text-t_subtext'); transInput.classList.add('text-t_teal');
+      } else {
+        modeLabel.textContent = `${langName} → TernLang`;
+        inputLabel.textContent = `Input // ${langName}`;
+        inputLabel.classList.remove('text-t_teal'); inputLabel.classList.add('text-t_subtext');
+        outputLabel.textContent = `Output // TernLang`;
+        outputLabel.classList.remove('text-t_subtext'); outputLabel.classList.add('text-t_teal');
+        transOutput.classList.remove('text-t_subtext'); transOutput.classList.add('text-t_teal');
+        transInput.classList.remove('text-t_teal'); transInput.classList.add('text-t_subtext');
+      }
+    }
+
+    // Language-specific rule sets — forward = source→TernLang, reverse = TernLang→source
+    const LANG_RULES = {
+      python: {
+        forward: [
+          { regex: /\bTrue\b/g,          repl: 'affirm',                        note: 'Python True → +1 (affirm)' },
+          { regex: /\bFalse\b/g,         repl: 'reject',                        note: 'Python False → -1 (reject)' },
+          { regex: /\bNone\b/g,          repl: 'tend',                          note: 'Python None → 0 (tend)' },
+          { regex: /\bbool\b/g,          repl: 'trit',                          note: 'bool → trit' },
+          { regex: /\bpass\b/g,          repl: 'hold',                          note: 'pass → hold (ternary suspension)' },
+          { regex: /\braise\b/g,         repl: 'conflict',                      note: 'raise → conflict (fault signal)' },
+          { regex: /\bprint\(/g,         repl: 'println(',                      note: 'print() → println()' },
+          { regex: /\bclass\b/g,         repl: 'agent',                         note: 'class → agent' },
+          { regex: /\bdef\b/g,           repl: 'fn',                            note: 'def → fn' },
+          { regex: /\blambda\b/g,        repl: 'fn',                            note: 'lambda → fn' },
+          { regex: /elif (.+?):/g,       repl: '} affirm => { // elif:',        note: 'elif → affirm branch' },
+          { regex: /if (.+?):/g,         repl: 'match $1 {',                    note: 'if → match block' },
+          { regex: /else:/g,             repl: '} tend => {',                   note: 'else → tend branch' },
+          { regex: /\breturn True\b/g,   repl: 'return affirm',                 note: 'return True → return affirm' },
+          { regex: /\breturn False\b/g,  repl: 'return reject',                 note: 'return False → return reject' },
+          { regex: /\breturn None\b/g,   repl: 'return tend',                   note: 'return None → return tend' },
+          { regex: /\band\b/g,           repl: '&&',                            note: 'and → &&' },
+          { regex: /\bor\b/g,            repl: '||',                            note: 'or → ||' },
+          { regex: /\bnot\b/g,           repl: '!',                             note: 'not → !' },
+          { regex: /^from\s+/gm,         repl: '// @from ',                     note: 'from-import → @from annotation' },
+          { regex: /^import\s+/gm,       repl: '// @import ',                   note: 'import → @import annotation' },
+        ],
+        reverse: [
+          { regex: /\baffirm\b/g,        repl: 'True',                          note: 'affirm → Python True' },
+          { regex: /\breject\b/g,        repl: 'False',                         note: 'reject → Python False' },
+          { regex: /\btend\b/g,          repl: 'None',                          note: 'tend → Python None' },
+          { regex: /\btrit\b/g,          repl: 'bool',                          note: 'trit → bool' },
+          { regex: /\bhold\b/g,          repl: 'pass',                          note: 'hold → pass' },
+          { regex: /\bconflict\b/g,      repl: 'raise',                         note: 'conflict → raise' },
+          { regex: /\bprintln\(/g,       repl: 'print(',                        note: 'println → print' },
+          { regex: /\bagent\b/g,         repl: 'class',                         note: 'agent → class' },
+          { regex: /\bfn\b/g,            repl: 'def',                           note: 'fn → def' },
+          { regex: /\} affirm => \{ \/\/ elif:/g, repl: 'elif',                note: 'affirm branch → elif' },
+          { regex: /match (.+?) \{/g,    repl: 'if $1:',                        note: 'match → if' },
+          { regex: /\} tend => \{/g,     repl: 'else:',                         note: 'tend → else' },
+          { regex: /\breturn affirm\b/g, repl: 'return True',                   note: 'return affirm → return True' },
+          { regex: /\breturn reject\b/g, repl: 'return False',                  note: 'return reject → return False' },
+          { regex: /\breturn tend\b/g,   repl: 'return None',                   note: 'return tend → return None' },
+          { regex: /&&/g,                repl: 'and',                           note: '&& → and' },
+          { regex: /\|\|/g,              repl: 'or',                            note: '|| → or' },
+          { regex: /!/g,                 repl: 'not ',                          note: '! → not' },
+          { regex: /\/\/ @from /g,       repl: 'from ',                         note: '@from → from' },
+          { regex: /\/\/ @import /g,     repl: 'import ',                       note: '@import → import' },
+        ]
+      },
+      rust: {
+        forward: [
+          { regex: /\btrue\b/g,          repl: 'affirm',                        note: 'Rust true → affirm' },
+          { regex: /\bfalse\b/g,         repl: 'reject',                        note: 'Rust false → reject' },
+          { regex: /\bNone\b/g,          repl: 'tend',                          note: 'Rust None → tend' },
+          { regex: /\bbool\b/g,          repl: 'trit',                          note: 'bool → trit' },
+          { regex: /\bOption<bool>/g,    repl: 'trit',                          note: 'Option<bool> → trit' },
+          { regex: /\bSome\(true\)/g,    repl: 'affirm',                        note: 'Some(true) → affirm' },
+          { regex: /\bSome\(false\)/g,   repl: 'reject',                        note: 'Some(false) → reject' },
+          { regex: /\bpanic!\(/g,        repl: 'conflict(',                     note: 'panic! → conflict' },
+          { regex: /println!\(/g,        repl: 'println(',                      note: 'println! → println' },
+          { regex: /print!\(/g,          repl: 'print(',                        note: 'print! → print' },
+          { regex: /\bstruct\b/g,        repl: 'agent',                         note: 'struct → agent' },
+          { regex: /\benum\b/g,          repl: 'agent',                         note: 'enum → agent' },
+          { regex: /if (.+?) \{/g,       repl: 'match $1 {',                    note: 'if-block → match block' },
+          { regex: /\} else \{/g,        repl: '} tend => {',                   note: 'else → tend branch' },
+          { regex: /\breturn true;/g,    repl: 'return affirm;',                note: 'return true → return affirm' },
+          { regex: /\breturn false;/g,   repl: 'return reject;',                note: 'return false → return reject' },
+          { regex: /\breturn None;/g,    repl: 'return tend;',                  note: 'return None → return tend' },
+          { regex: /\blet mut\b/g,       repl: 'let',                           note: 'let mut → let (mutability implicit)' },
+          { regex: /\bi32\b|\bi64\b|\bu32\b|\bu64\b|\busize\b|\bisize\b/g, repl: 'int', note: 'integer types → int' },
+          { regex: /\bf32\b|\bf64\b/g,   repl: 'float',                         note: 'float types → float' },
+          { regex: /\bString\b|\b&str\b/g, repl: 'str',                        note: 'String/&str → str' },
+          { regex: /^use\s+/gm,          repl: '// @use ',                      note: 'use → @use annotation' },
+        ],
+        reverse: [
+          { regex: /\baffirm\b/g,        repl: 'true',                          note: 'affirm → Rust true' },
+          { regex: /\breject\b/g,        repl: 'false',                         note: 'reject → Rust false' },
+          { regex: /\btend\b/g,          repl: 'None',                          note: 'tend → Rust None' },
+          { regex: /\btrit\b/g,          repl: 'bool',                          note: 'trit → bool' },
+          { regex: /\bconflict\(/g,      repl: 'panic!(',                       note: 'conflict → panic!' },
+          { regex: /\bprintln\(/g,       repl: 'println!(',                     note: 'println → println!' },
+          { regex: /\bprint\(/g,         repl: 'print!(',                       note: 'print → print!' },
+          { regex: /\bagent\b/g,         repl: 'struct',                        note: 'agent → struct' },
+          { regex: /match (.+?) \{/g,    repl: 'if $1 {',                       note: 'match → if' },
+          { regex: /\} tend => \{/g,     repl: '} else {',                      note: 'tend → else' },
+          { regex: /\breturn affirm;/g,  repl: 'return true;',                  note: 'return affirm → return true' },
+          { regex: /\breturn reject;/g,  repl: 'return false;',                 note: 'return reject → return false' },
+          { regex: /\breturn tend;/g,    repl: 'return None;',                  note: 'return tend → return None' },
+          { regex: /\bint\b/g,           repl: 'i64',                           note: 'int → i64' },
+          { regex: /\bfloat\b/g,         repl: 'f64',                           note: 'float → f64' },
+          { regex: /\bstr\b/g,           repl: 'String',                        note: 'str → String' },
+          { regex: /\/\/ @use /g,        repl: 'use ',                          note: '@use → use' },
+        ]
+      },
+      java: {
+        forward: [
+          { regex: /\btrue\b/g,                  repl: 'affirm',                note: 'Java true → affirm' },
+          { regex: /\bfalse\b/g,                 repl: 'reject',                note: 'Java false → reject' },
+          { regex: /\bnull\b/g,                  repl: 'tend',                  note: 'Java null → tend' },
+          { regex: /\bBoolean\b/g,               repl: 'trit',                  note: 'Boolean → trit' },
+          { regex: /\bboolean\b/g,               repl: 'trit',                  note: 'boolean → trit' },
+          { regex: /System\.out\.println\(/g,    repl: 'println(',              note: 'System.out.println → println' },
+          { regex: /System\.out\.print\(/g,      repl: 'print(',                note: 'System.out.print → print' },
+          { regex: /\binterface\b/g,             repl: 'agent',                 note: 'interface → agent' },
+          { regex: /\bclass\b/g,                 repl: 'agent',                 note: 'class → agent' },
+          { regex: /\bvoid\b/g,                  repl: 'fn',                    note: 'void → fn' },
+          { regex: /if\s*\((.+?)\)\s*\{/g,      repl: 'match $1 {',            note: 'if-block → match block' },
+          { regex: /\} else \{/g,                repl: '} tend => {',           note: 'else → tend branch' },
+          { regex: /\breturn true;/g,            repl: 'return affirm;',        note: 'return true → return affirm' },
+          { regex: /\breturn false;/g,           repl: 'return reject;',        note: 'return false → return reject' },
+          { regex: /\breturn null;/g,            repl: 'return tend;',          note: 'return null → return tend' },
+          { regex: /\bthrow\b/g,                 repl: 'conflict',              note: 'throw → conflict' },
+          { regex: /\blong\b|\bshort\b|\bbyte\b/g, repl: 'int',                note: 'long/short/byte → int' },
+          { regex: /\bdouble\b/g,                repl: 'float',                 note: 'double → float' },
+          { regex: /\bString\b/g,                repl: 'str',                   note: 'String → str' },
+          { regex: /^import\s+/gm,               repl: '// @import ',           note: 'import → @import annotation' },
+          { regex: /\bnew\s+/g,                  repl: 'spawn ',                note: 'new → spawn' },
+        ],
+        reverse: [
+          { regex: /\baffirm\b/g,        repl: 'true',                          note: 'affirm → Java true' },
+          { regex: /\breject\b/g,        repl: 'false',                         note: 'reject → Java false' },
+          { regex: /\btend\b/g,          repl: 'null',                          note: 'tend → Java null' },
+          { regex: /\btrit\b/g,          repl: 'boolean',                       note: 'trit → boolean' },
+          { regex: /\bprintln\(/g,       repl: 'System.out.println(',           note: 'println → System.out.println' },
+          { regex: /\bprint\(/g,         repl: 'System.out.print(',             note: 'print → System.out.print' },
+          { regex: /\bagent\b/g,         repl: 'class',                         note: 'agent → class' },
+          { regex: /\bfn\b/g,            repl: 'void',                          note: 'fn → void' },
+          { regex: /match (.+?) \{/g,    repl: 'if ($1) {',                     note: 'match → if' },
+          { regex: /\} tend => \{/g,     repl: '} else {',                      note: 'tend → else' },
+          { regex: /\breturn affirm;/g,  repl: 'return true;',                  note: 'return affirm → return true' },
+          { regex: /\breturn reject;/g,  repl: 'return false;',                 note: 'return reject → return false' },
+          { regex: /\breturn tend;/g,    repl: 'return null;',                  note: 'return tend → return null' },
+          { regex: /\bconflict\b/g,      repl: 'throw new RuntimeException',    note: 'conflict → throw' },
+          { regex: /\bfloat\b/g,         repl: 'double',                        note: 'float → double' },
+          { regex: /\bstr\b/g,           repl: 'String',                        note: 'str → String' },
+          { regex: /\/\/ @import /g,     repl: 'import ',                       note: '@import → import' },
+          { regex: /\bspawn\s+/g,        repl: 'new ',                          note: 'spawn → new' },
+        ]
+      },
+      cpp: {
+        forward: [
+          { regex: /\btrue\b/g,           repl: 'affirm',                       note: 'C++ true → affirm' },
+          { regex: /\bfalse\b/g,          repl: 'reject',                       note: 'C++ false → reject' },
+          { regex: /\bnullptr\b|\bNULL\b/g, repl: 'tend',                       note: 'nullptr/NULL → tend' },
+          { regex: /\bbool\b/g,           repl: 'trit',                         note: 'bool → trit' },
+          { regex: /std::cout\s*<<\s*(.+?)\s*<<\s*std::endl\s*;/g, repl: 'println($1);', note: 'std::cout → println' },
+          { regex: /std::cout\s*<<\s*/g,  repl: 'print(',                       note: 'std::cout << → print(' },
+          { regex: /\bstruct\b/g,         repl: 'agent',                        note: 'struct → agent' },
+          { regex: /\bclass\b/g,          repl: 'agent',                        note: 'class → agent' },
+          { regex: /\bvoid\b/g,           repl: 'fn',                           note: 'void → fn' },
+          { regex: /if\s*\((.+?)\)\s*\{/g, repl: 'match $1 {',                 note: 'if-block → match block' },
+          { regex: /\} else \{/g,         repl: '} tend => {',                  note: 'else → tend branch' },
+          { regex: /\breturn true;/g,     repl: 'return affirm;',               note: 'return true → return affirm' },
+          { regex: /\breturn false;/g,    repl: 'return reject;',               note: 'return false → return reject' },
+          { regex: /\breturn nullptr;/g,  repl: 'return tend;',                 note: 'return nullptr → return tend' },
+          { regex: /\bthrow\b/g,          repl: 'conflict',                     note: 'throw → conflict' },
+          { regex: /\bint64_t\b|\buint64_t\b|\bint32_t\b|\buint32_t\b|\blong\b|\bshort\b/g, repl: 'int', note: 'integer types → int' },
+          { regex: /\bdouble\b/g,         repl: 'float',                        note: 'double → float' },
+          { regex: /\bstd::string\b/g,    repl: 'str',                          note: 'std::string → str' },
+          { regex: /^#include/gm,         repl: '// @include',                  note: '#include → @include annotation' },
+          { regex: /\bnew\s+/g,           repl: 'spawn ',                       note: 'new → spawn' },
+          { regex: /\bdelete\s+/g,        repl: '// @free ',                    note: 'delete → @free annotation' },
+        ],
+        reverse: [
+          { regex: /\baffirm\b/g,         repl: 'true',                         note: 'affirm → C++ true' },
+          { regex: /\breject\b/g,         repl: 'false',                        note: 'reject → C++ false' },
+          { regex: /\btend\b/g,           repl: 'nullptr',                      note: 'tend → nullptr' },
+          { regex: /\btrit\b/g,           repl: 'bool',                         note: 'trit → bool' },
+          { regex: /\bprintln\((.+?)\)/g, repl: 'std::cout << $1 << std::endl', note: 'println → std::cout' },
+          { regex: /\bprint\(/g,          repl: 'std::cout << ',                note: 'print( → std::cout <<' },
+          { regex: /\bagent\b/g,          repl: 'class',                        note: 'agent → class' },
+          { regex: /\bfn\b/g,             repl: 'void',                         note: 'fn → void' },
+          { regex: /match (.+?) \{/g,     repl: 'if ($1) {',                    note: 'match → if' },
+          { regex: /\} tend => \{/g,      repl: '} else {',                     note: 'tend → else' },
+          { regex: /\breturn affirm;/g,   repl: 'return true;',                 note: 'return affirm → return true' },
+          { regex: /\breturn reject;/g,   repl: 'return false;',                note: 'return reject → return false' },
+          { regex: /\breturn tend;/g,     repl: 'return nullptr;',              note: 'return tend → return nullptr' },
+          { regex: /\bconflict\b/g,       repl: 'throw std::runtime_error',     note: 'conflict → throw' },
+          { regex: /\bfloat\b/g,          repl: 'double',                       note: 'float → double' },
+          { regex: /\bstr\b/g,            repl: 'std::string',                  note: 'str → std::string' },
+          { regex: /\/\/ @include/g,      repl: '#include',                     note: '@include → #include' },
+          { regex: /\bspawn\s+/g,         repl: 'new ',                         note: 'spawn → new' },
+          { regex: /\/\/ @free /g,        repl: 'delete ',                      note: '@free → delete' },
+        ]
+      },
+      javascript: {
+        forward: [
+          { regex: /\btrue\b/g,           repl: 'affirm',                       note: 'JS true → affirm' },
+          { regex: /\bfalse\b/g,          repl: 'reject',                       note: 'JS false → reject' },
+          { regex: /\bnull\b|\bundefined\b/g, repl: 'tend',                     note: 'null/undefined → tend' },
+          { regex: /\bfunction\b/g,       repl: 'fn',                           note: 'function → fn' },
+          { regex: /\bconst\b|\bvar\b/g,  repl: 'let',                          note: 'const/var → let' },
+          { regex: /\bclass\b/g,          repl: 'agent',                        note: 'class → agent' },
+          { regex: /console\.log\(/g,     repl: 'println(',                     note: 'console.log → println' },
+          { regex: /console\.error\(/g,   repl: 'conflict(',                    note: 'console.error → conflict' },
+          { regex: /if\s*\((.+?)\)\s*\{/g, repl: 'match $1 {',                 note: 'if-block → match block' },
+          { regex: /\} else \{/g,         repl: '} tend => {',                  note: 'else → tend branch' },
+          { regex: /\breturn true;/g,     repl: 'return affirm;',               note: 'return true → return affirm' },
+          { regex: /\breturn false;/g,    repl: 'return reject;',               note: 'return false → return reject' },
+          { regex: /\breturn null;|\breturn undefined;/g, repl: 'return tend;', note: 'return null/undefined → return tend' },
+          { regex: /\bthrow\b/g,          repl: 'conflict',                     note: 'throw → conflict' },
+          { regex: /===/g,                repl: '==',                           note: '=== → == (ternary equality)' },
+          { regex: /!==/g,                repl: '!=',                           note: '!== → !=' },
+          { regex: /\btypeof\b/g,         repl: 'type',                         note: 'typeof → type' },
+          { regex: /\binstanceof\b/g,     repl: 'is',                           note: 'instanceof → is' },
+          { regex: /\bnew\s+/g,           repl: 'spawn ',                       note: 'new → spawn' },
+          { regex: /\basync\s+/g,         repl: '@async ',                      note: 'async → @async' },
+          { regex: /^export\s+/gm,        repl: '@export ',                     note: 'export → @export' },
+          { regex: /^import\s+/gm,        repl: '// @import ',                  note: 'import → @import annotation' },
+        ],
+        reverse: [
+          { regex: /\baffirm\b/g,         repl: 'true',                         note: 'affirm → JS true' },
+          { regex: /\breject\b/g,         repl: 'false',                        note: 'reject → JS false' },
+          { regex: /\btend\b/g,           repl: 'null',                         note: 'tend → JS null' },
+          { regex: /\bfn\b/g,             repl: 'function',                     note: 'fn → function' },
+          { regex: /\bagent\b/g,          repl: 'class',                        note: 'agent → class' },
+          { regex: /\bprintln\(/g,        repl: 'console.log(',                 note: 'println → console.log' },
+          { regex: /\bconflict\(/g,       repl: 'console.error(',               note: 'conflict → console.error' },
+          { regex: /match (.+?) \{/g,     repl: 'if ($1) {',                    note: 'match → if' },
+          { regex: /\} tend => \{/g,      repl: '} else {',                     note: 'tend → else' },
+          { regex: /\breturn affirm;/g,   repl: 'return true;',                 note: 'return affirm → return true' },
+          { regex: /\breturn reject;/g,   repl: 'return false;',                note: 'return reject → return false' },
+          { regex: /\breturn tend;/g,     repl: 'return null;',                 note: 'return tend → return null' },
+          { regex: /\btype\b/g,           repl: 'typeof',                       note: 'type → typeof' },
+          { regex: /\bis\b/g,             repl: 'instanceof',                   note: 'is → instanceof' },
+          { regex: /\bspawn\s+/g,         repl: 'new ',                         note: 'spawn → new' },
+          { regex: /@async\s+/g,          repl: 'async ',                       note: '@async → async' },
+          { regex: /@export\s+/g,         repl: 'export ',                      note: '@export → export' },
+          { regex: /\/\/ @import /g,      repl: 'import ',                      note: '@import → import' },
+        ]
+      }
+    };
+
     swapBtn.addEventListener('click', () => {
       isTernToBinary = !isTernToBinary;
-      
-      // Physically swap the code buffers
       const tempBuffer = transInput.value;
       transInput.value = transOutput.textContent;
       transOutput.textContent = tempBuffer;
-
-      // Update Polarity UI
-      if (isTernToBinary) {
-        modeLabel.textContent = "Target Engine";
-        inputLabel.textContent = "Input // Ternary";
-        inputLabel.classList.replace('text-t_subtext', 'text-t_teal');
-        
-        outputLabel.textContent = "Output // Binary";
-        outputLabel.classList.replace('text-t_teal', 'text-t_subtext');
-        
-        transOutput.classList.replace('text-t_teal', 'text-t_subtext');
-        transInput.classList.replace('text-t_subtext', 'text-t_teal');
-      } else {
-        modeLabel.textContent = "Source Engine";
-        inputLabel.textContent = "Input // Binary";
-        inputLabel.classList.replace('text-t_teal', 'text-t_subtext');
-        
-        outputLabel.textContent = "Output // Ternary";
-        outputLabel.classList.replace('text-t_subtext', 'text-t_teal');
-
-        transOutput.classList.replace('text-t_subtext', 'text-t_teal');
-        transInput.classList.replace('text-t_teal', 'text-t_subtext');
-      }
-      
+      updateDirectionLabels();
       transInsight.innerHTML = `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border rounded font-mono text-[13px] text-t_subtext">Vector polarity reversed. Awaiting input...</div>`;
     });
 
-    // Translation Matrices
-    const TERN_RULES = [
-      { regex: /\bbool\b/g, repl: 'trit', note: 'Mapped binary bool to triadic trit.' },
-      { regex: /\btrue\b/g, repl: 'affirm', note: 'Mapped true to +1 (affirm).' },
-      { regex: /\bfalse\b/g, repl: 'reject', note: 'Mapped false to -1 (reject).' },
-      { regex: /\bNone\b|\bnull\b|\bundefined\b/g, repl: 'tend', note: 'Mapped null/empty to 0 (tend).' },
-      { regex: /if\s*\((.*)\)\s*\{/g, repl: 'match $1 {', note: 'Converted if-statement to exhaustive match block.' },
-      { regex: /if\s+(.*):/g, repl: 'match $1 {', note: 'Python-style if converted to match.' },
-      { regex: /else\s*\{|else:/g, repl: 'tend => { // auto-injected safety hold\n    }\n    reject => {', note: 'Injected state 0 (tend) for logic exhaustiveness.' },
-      { regex: /return\s+1\b|return\s+True\b/gi, repl: 'return affirm', note: 'Normalised positive return.' },
-      { regex: /return\s+0\b|return\s+False\b/gi, repl: 'return reject', note: 'Normalised negative return.' },
-      { regex: /\bvoid\b|\bdef\b|\bfn\b/g, repl: 'fn', note: 'Unified function declaration.' },
-    ];
-
-    const REVERSE_RULES = [
-      { regex: /\btrit\b/g, repl: 'bool', note: 'De-resolved triadic trit back to binary bool.' },
-      { regex: /\baffirm\b/g, repl: 'true', note: 'Flattened +1 (affirm) to binary true.' },
-      { regex: /\breject\b/g, repl: 'false', note: 'Flattened -1 (reject) to binary false.' },
-      { regex: /\btend\b/g, repl: 'null', note: 'Collapsed 0 (tend) to null/None dependency.' },
-      { regex: /match\s+(.*)\s*\{/g, repl: 'switch ($1) {', note: 'Reverted exhaustive match to standard switch/if.' },
-      { regex: /tend\s*=>\s*\{[\s\S]*?\}\s*reject\s*=>\s*\{/g, repl: 'default: {', note: 'Collapsed safety hold (tend) back into binary default/else block.' },
-      { regex: /return\s+affirm\b/g, repl: 'return true', note: 'Restored boolean positive return.' },
-      { regex: /return\s+reject\b/g, repl: 'return false', note: 'Restored boolean negative return.' },
-      { regex: /\bfn\b/g, repl: 'function', note: 'Reverted generic function declaration.' },
-    ];
+    transLang.addEventListener('change', updateDirectionLabels);
+    updateDirectionLabels();
 
     function translate() {
       let code = transInput.value;
       if (!code.trim()) return;
 
       transBtn.disabled = true;
-      transBtnText.textContent = 'Parsing...';
-      const originalSvg = transBtn.querySelector('svg').outerHTML;
-      transBtn.innerHTML = `<svg class="w-5 h-5 shrink-0 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><span id="trans-run-text">Parsing...</span>`;
-      
+      const originalInner = transBtn.innerHTML;
+      transBtn.innerHTML = `<svg class="w-5 h-5 shrink-0 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><span>Parsing...</span>`;
+
+      const lang = transLang.value;
+      const rules = LANG_RULES[lang] || LANG_RULES.javascript;
+      const activeRules = isTernToBinary ? rules.reverse : rules.forward;
       const insights = new Set();
       let translated = code;
-      const activeRules = isTernToBinary ? REVERSE_RULES : TERN_RULES;
 
       activeRules.forEach(rule => {
-        if (rule.regex.test(translated)) {
-          translated = translated.replace(rule.regex, rule.repl);
-          insights.add(rule.note);
-        }
+        rule.regex.lastIndex = 0; // reset stateful /g regex
+        const before = translated;
+        translated = translated.replace(rule.regex, rule.repl);
+        if (translated !== before) insights.add(rule.note);
       });
 
-      // Signature header adjustment based on polarity
-      if (!isTernToBinary && !translated.includes('fn main')) {
-        translated = "// Translated via Ternlang BET VM Protocol\n\n" + translated;
-      } else if (isTernToBinary && !translated.includes('function main')) {
-        translated = "// De-resolved from Ternlang BET VM Protocol\n\n" + translated;
+      // Language-aware header comment
+      const langName = LANG_DISPLAY[lang] || lang;
+      const commentChar = lang === 'python' ? '#' : '//';
+      if (!isTernToBinary) {
+        translated = `// TernLang BET VM — translated from ${langName}\n\n` + translated;
+      } else {
+        translated = `${commentChar} De-resolved from TernLang BET VM to ${langName}\n\n` + translated;
       }
 
       setTimeout(() => {
         transOutput.textContent = translated;
-        
         if (insights.size > 0) {
-          transInsight.innerHTML = Array.from(insights).map(note => 
+          transInsight.innerHTML = Array.from(insights).map(note =>
             `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border rounded flex items-center gap-2">
               <span class="w-1.5 h-1.5 rounded-full bg-t_teal"></span>
               <span class="text-t_text font-mono text-[13px]">${note}</span>
@@ -300,22 +501,23 @@
         } else {
           transInsight.innerHTML = `<div class="px-3 py-1.5 bg-studio_editor border border-studio_border rounded font-mono text-[13px] text-t_text">System baseline logic detected. No morphing required.</div>`;
         }
-        
         transBtn.disabled = false;
-        transBtn.innerHTML = `${originalSvg}<span id="trans-run-text">Translate</span>`;
+        transBtn.innerHTML = originalInner;
       }, 400);
     }
 
     transBtn.addEventListener('click', translate);
 
+    const EXT_TO_LANG = { py:'python', rs:'rust', java:'java', cpp:'cpp', cc:'cpp', h:'cpp', js:'javascript', ts:'javascript', jsx:'javascript', tsx:'javascript' };
+
     transUpload.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
+      const detected = EXT_TO_LANG[ext];
+      if (detected) { transLang.value = detected; updateDirectionLabels(); }
       const reader = new FileReader();
-      reader.onload = (e) => {
-        transInput.value = e.target.result;
-        translate();
-      };
+      reader.onload = (ev) => { transInput.value = ev.target.result; translate(); };
       reader.readAsText(file);
     });
   </script>
