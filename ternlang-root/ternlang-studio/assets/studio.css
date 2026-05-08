@@ -83,25 +83,48 @@
     html[data-theme="light"] .tb-sep { background: var(--border); }
     html[data-theme="light"] .tb-logo { border-right-color: var(--border); }
 
-    /* ── Tier badges in light mode ────────────────────────────────── */
+    /* ── Tier badges ─────────────────────────────────────────────── */
     html[data-theme="light"] .tier-badge,
-    html[data-theme="light"] .tb-badge { background: var(--bg2); border-color: var(--border2); color: var(--muted); }
+    html[data-theme="light"] .tb-badge        { background: var(--bg2) !important; border-color: var(--border2) !important; color: var(--muted) !important; }
     html[data-theme="light"] .badge-t2,
-    html[data-theme="light"] .tb-badge.badge-t2 { background: #dceeff; border-color: #a0c8f0; color: #1a5fb4; }
+    html[data-theme="light"] .tb-badge.badge-t2,
+    html[data-theme="light"] .tier-badge.badge-t2 { background: #dceeff !important; border-color: #a0c8f0 !important; color: #1a5fb4 !important; }
     html[data-theme="light"] .badge-t3,
-    html[data-theme="light"] .tb-badge.badge-t3 { background: #fff0d8; border-color: #f0c080; color: #b45309; }
-    html[data-theme="light"] .tb-badge.badge-t4 { background: #f5f0ff; border-color: #c4b5fd; color: #6d28d9; }
+    html[data-theme="light"] .tb-badge.badge-t3,
+    html[data-theme="light"] .tier-badge.badge-t3 { background: #fff0d8 !important; border-color: #f0c080 !important; color: #b45309 !important; }
+    html[data-theme="light"] .badge-t4,
+    html[data-theme="light"] .tb-badge.badge-t4,
+    html[data-theme="light"] .tier-badge.badge-t4 { background: #f5f0ff !important; border-color: #c4b5fd !important; color: #6d28d9 !important; }
 
-    html[data-theme="light"] .status-ok { background: #d8f5e8; color: var(--green); border-color: #90d8b0; }
-    html[data-theme="light"] .status-error { background: #fde8eb; color: var(--red); border-color: #f0a0a8; }
+    /* ── Status badges ───────────────────────────────────────────── */
+    html[data-theme="light"] .status-ok      { background: #d8f5e8; color: var(--green); border-color: #90d8b0; }
+    html[data-theme="light"] .status-error   { background: #fde8eb; color: var(--red);   border-color: #f0a0a8; }
     html[data-theme="light"] .status-running { background: #fff3d8; color: var(--amber); border-color: #f0c878; }
-    html[data-theme="light"] .status-idle { background: var(--bg2); color: var(--muted); border-color: var(--border); }
+    html[data-theme="light"] .status-idle    { background: var(--bg2); color: var(--muted); border-color: var(--border); }
+
+    /* ── Output panels ───────────────────────────────────────────── */
     html[data-theme="light"] .print-output { background: #f8fff8; border-color: #b0d8b0; }
     html[data-theme="light"] .error-output { background: #fff8f8; border-color: #f0b0b0; }
-    html[data-theme="light"] .meta-item { background: var(--bg2); border-color: var(--border); }
-    html[data-theme="light"] #statusbar { background: #e0e4e8; color: var(--muted); }
-    html[data-theme="light"] .dash-card { background: var(--bg1); border-color: var(--border); }
+    html[data-theme="light"] .meta-item    { background: var(--bg2); border-color: var(--border); }
+    html[data-theme="light"] .err-box      { background: #fff0f0; border-color: #f0b0b0; color: var(--red); }
+
+    /* ── Shell UI surfaces ───────────────────────────────────────── */
+    html[data-theme="light"] #statusbar    { background: #e0e4e8; color: var(--muted); }
     html[data-theme="light"] .activity-bar { background: #e8ebef; border-color: var(--border); }
+    html[data-theme="light"] .dash-card    { background: var(--bg1); border-color: var(--border); }
+
+    /* ── Upskill / plan modal ────────────────────────────────────── */
+    html[data-theme="light"] .plan-card            { background: var(--bg1); border-color: var(--border); }
+    html[data-theme="light"] .plan-card.highlight  { background: #fffbeb; border-color: var(--amber); }
+    html[data-theme="light"] .plan-btn-std  { background: #dceeff; color: #1a5fb4; border-color: #a0c8f0; }
+    html[data-theme="light"] .plan-btn-std:hover { background: #c0ddff; }
+    html[data-theme="light"] .plan-btn-pro  { background: #fff0d8; color: #b45309; border-color: #f0c080; }
+    html[data-theme="light"] .plan-btn-pro:hover { background: #ffe8c0; }
+    html[data-theme="light"] .upskill-inline-btn      { background: var(--bg2); color: var(--text); }
+    html[data-theme="light"] .upskill-inline-btn:hover { background: var(--bg3); }
+
+    /* ── Library item separators ─────────────────────────────────── */
+    html[data-theme="light"] .lib-item { border-bottom-color: var(--border); }
 
     /* ── Premium library text in light mode ───────────────────────── */
     html[data-theme="light"] #premium-file-tree .tree-dir { color: var(--text); opacity: 1; }
