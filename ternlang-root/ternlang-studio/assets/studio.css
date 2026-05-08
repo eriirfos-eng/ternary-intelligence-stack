@@ -240,9 +240,9 @@
     }
     .wire-handle.active { display: block; }
     .wire-handle:hover { background: #fff; transform: translate(-50%, -50%) scale(1.2); }
-    /* Canvas Zoom controls — bottom-left corner, above timeline bar */
+    /* Canvas Zoom controls — top-right corner */
     #zoom-indicator {
-      position: absolute; bottom: 80px; left: 24px; top: auto; right: auto;
+      position: absolute; top: 16px; right: 20px; bottom: auto; left: auto;
       display: flex; align-items: center; gap: 4px;
       background: var(--bg1); backdrop-filter: blur(12px);
       border: 1px solid var(--cyan); border-radius: 20px;
