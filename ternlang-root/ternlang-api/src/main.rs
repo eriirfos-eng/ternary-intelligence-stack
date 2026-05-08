@@ -478,6 +478,7 @@ async fn require_api_key(
         || path == "/studio.js"
         || path == "/translator"
         || path == "/playground"
+        || path.starts_with("/playground/pkg/")
         || path == "/fortune"
         || path == "/activate"
         || path == "/api/run"
@@ -575,6 +576,8 @@ static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
 static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templates/index.html");
 static KPI_HTML:        &str = include_str!("kpi.html");
 static FORTUNE_HTML:    &str = include_str!("../../docs/fortune_cookie.html");
+static WASM_JS:         &str = include_str!("../../premlib/playground/pkg/ternlang_wasm.js");
+static WASM_BG:        &[u8] = include_bytes!("../../premlib/playground/pkg/ternlang_wasm_bg.wasm");
 
 async fn kpi_page() -> impl axum::response::IntoResponse {
     let dynamic = if std::path::Path::new("/data/kpi/index.html").exists() {
@@ -705,6 +708,14 @@ async fn studio_js() -> impl axum::response::IntoResponse {
 
 async fn playground_page() -> impl axum::response::IntoResponse {
     axum::response::Redirect::permanent("/studio")
+}
+
+async fn wasm_js_handler() -> impl axum::response::IntoResponse {
+    ([(axum::http::header::CONTENT_TYPE, "application/javascript")], WASM_JS)
+}
+
+async fn wasm_bg_handler() -> impl axum::response::IntoResponse {
+    ([(axum::http::header::CONTENT_TYPE, "application/wasm")], WASM_BG)
 }
 
 async fn pricing_page() -> Html<&'static str> {
@@ -5312,7 +5323,9 @@ async fn main() {
         .route("/pricing",              get(pricing_page))
         .route("/studio",               get(studio_page))
         .route("/studio.js",            get(studio_js))
-        .route("/playground",           get(playground_page))
+        .route("/playground",                       get(playground_page))
+        .route("/playground/pkg/ternlang_wasm.js",  get(wasm_js_handler))
+        .route("/playground/pkg/ternlang_wasm_bg.wasm", get(wasm_bg_handler))
         .route("/activate",             get(activate_page))
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))

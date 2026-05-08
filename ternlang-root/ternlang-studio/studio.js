@@ -4758,11 +4758,10 @@ function logInspector(nodeName, msg) {
   const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const row = document.createElement("div");
   row.className = "ins-row";
-  row.innerHTML = `
-    <span class="ins-time">[${time}]</span>
-    <span class="ins-node">${nodeName}</span>
-    <span class="ins-msg">${msg}</span>
-  `;
+  const t = document.createElement("span"); t.className = "ins-time"; t.textContent = `[${time}]`;
+  const n = document.createElement("span"); n.className = "ins-node"; n.textContent = nodeName;
+  const m = document.createElement("span"); m.className = "ins-msg";  m.textContent = msg;
+  row.appendChild(t); row.appendChild(n); row.appendChild(m);
   body.appendChild(row);
   body.scrollTop = body.scrollHeight;
 }
@@ -6041,7 +6040,11 @@ async function simulateNode(node, inSignal, isPhantom = false) {
          context_bridge: node.props.runtime_buffer || {}
        };
        const yamlStr = jsyaml.dump(payload);
-       artEl.innerHTML = `<pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap;">${yamlStr}</pre>`;
+       const pre6044 = document.createElement('pre');
+       pre6044.style.cssText = 'margin:0;font-family:\'JetBrains Mono\',monospace;font-size:11px;white-space:pre-wrap;';
+       pre6044.textContent = yamlStr;
+       artEl.innerHTML = '';
+       artEl.appendChild(pre6044);
        artEl.style.color = outSignal === 1 ? 'var(--green)' : (outSignal === -1 ? 'var(--red)' : 'var(--text)');
     }
   });
@@ -6160,7 +6163,11 @@ function spawnResultArtifact(sourceNode, val) {
      existing.props.payload = payloadStr;
      const artEl = document.getElementById(`art-body-${existing.id}`);
      if (artEl) {
-        artEl.innerHTML = `<pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap;">${payloadStr}</pre>`;
+        const pre6163 = document.createElement('pre');
+        pre6163.style.cssText = 'margin:0;font-family:\'JetBrains Mono\',monospace;font-size:11px;white-space:pre-wrap;';
+        pre6163.textContent = payloadStr;
+        artEl.innerHTML = '';
+        artEl.appendChild(pre6163);
         artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
         if (isSuspended) renderActuatorControls(existing.id, sourceNode.id);
      }
@@ -6193,7 +6200,11 @@ function spawnResultArtifact(sourceNode, val) {
 
   const artEl = document.getElementById(`art-body-${id}`);
   if (artEl) {
-     artEl.innerHTML = `<pre style="margin:0; font-family:'JetBrains Mono',monospace; font-size:11px; white-space:pre-wrap;">${payloadStr}</pre>`;
+     const pre6196 = document.createElement('pre');
+     pre6196.style.cssText = 'margin:0;font-family:\'JetBrains Mono\',monospace;font-size:11px;white-space:pre-wrap;';
+     pre6196.textContent = payloadStr;
+     artEl.innerHTML = '';
+     artEl.appendChild(pre6196);
      artEl.style.color = isSuspended ? 'var(--amber)' : (val === 1 ? 'var(--green)' : (val === -1 ? 'var(--red)' : 'var(--text)'));
      if (isSuspended) renderActuatorControls(id, sourceNode.id);
   }
@@ -7675,6 +7686,10 @@ window.addEventListener('wasmready', () => {
   if (badge) badge.style.opacity = "1";
   const sbw = document.getElementById("sbWasmStatus");
   if (sbw) { sbw.textContent = "⚡ WASM"; sbw.style.color = "var(--green)"; }
+  const sbw2 = document.getElementById("sbWasmStatus2");
+  if (sbw2) { sbw2.textContent = "Ready"; sbw2.style.color = "var(--green)"; }
+  const dot = document.getElementById("dashWasmDot");
+  if (dot) dot.style.background = "var(--green)";
 });
 
 function showResult(data) {

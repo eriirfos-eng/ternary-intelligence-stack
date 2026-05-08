@@ -1,0 +1,1 @@
+{"architecture":{"ctx":128,"experts":12,"hidden":256,"layers":3,"vocab":8000},"model":"albert-moe-13","timestamp":"06:34:38","training":{"avg_loss":8.327716827392578,"best_loss":6.954155445098877,"clipped_steps":0,"global_epoch":203,"skipped_steps":0},"version":"v2.0.0"}
