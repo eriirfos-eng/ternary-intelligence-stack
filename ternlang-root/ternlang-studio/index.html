@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
   <!-- Logic extracted to studio.js -->
-  <link rel="stylesheet" href="/assets/studio.css?v=20260508d">
+  <link rel="stylesheet" href="/assets/studio.css?v=20260508h">
 </head>
 <body>
 
@@ -108,7 +108,7 @@
       </div>
       <div>
         <label class="prop-label">Ternlang Logic (Source)</label>
-        <textarea id="newAgentCode" style="width:100%; height:300px; background:var(--bg2); border:1px solid var(--border2); border-radius:6px; color:var(--cyan); padding:12px; font-family:'JetBrains Mono',monospace; font-size:11px; resize:none;"></textarea>
+        <textarea id="newAgentCode" style="width:100%; height:300px; background:var(--bg2); border:1px solid var(--border2); border-radius:8px; color:var(--cyan); padding:12px; font-family:'JetBrains Mono',monospace; font-size:11px; resize:none;"></textarea>
       </div>
     </div>
   </div>
@@ -150,14 +150,14 @@
     <div id="deploy-step-2" style="display:none; flex-direction:column; gap:14px;">
       <div class="prop-label">Market Visibility & Pricing</div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <label class="deploy-pricing-opt" style="display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:8px; cursor:pointer;">
+        <label class="deploy-pricing-opt" style="display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:12px; cursor:pointer;">
            <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-weight:700; font-size:12px; color:var(--text);">Private</span>
               <input type="radio" name="deploy-pricing" value="private" checked>
            </div>
            <div style="font-size:10px; color:var(--muted); line-height:1.4;">Only you can see and call this agent. Free.</div>
         </label>
-        <label class="deploy-pricing-opt" style="display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:8px; cursor:pointer;">
+        <label class="deploy-pricing-opt" style="display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:12px; cursor:pointer;">
            <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-weight:700; font-size:12px; color:var(--cyan);">Per Call</span>
               <input type="radio" name="deploy-pricing" value="per_call">
@@ -177,7 +177,7 @@
         <div class="deploy-step-row" id="dstep-compile"><span class="dstep-icon">⏳</span> Compiling agent flow…</div>
         <div class="deploy-step-row" id="dstep-register"><span class="dstep-icon">⏳</span> Registering endpoint…</div>
         <div class="deploy-step-row" id="dstep-publish"><span class="dstep-icon">⏳</span> Publishing to runtime…</div>
-        <div id="deploy-result" style="display:none; padding:14px; background:rgba(16,185,129,0.08); border:1px solid var(--green); border-radius:8px; margin-top:4px;"></div>
+        <div id="deploy-result" style="display:none; padding:14px; background:rgba(16,185,129,0.08); border:1px solid var(--green); border-radius:12px; margin-top:4px;"></div>
       </div>
       <div id="deploy-confirm-btns" style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
         <button onclick="deployStep(2)" class="btn btn-ghost">← Back</button>
@@ -212,7 +212,7 @@
     <!-- Box 1: System Health -->
     <div class="dash-box">
       <div class="dash-box-title"><i data-lucide="activity"></i> System Health</div>
-      <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;flex:1;">
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:13px;flex:1;">
         <div class="dash-spec-row">
           <span class="dash-spec-key">API</span>
           <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);">ternlang-api.fly.dev</span>
@@ -250,23 +250,23 @@
       <div class="dash-box-title"><i data-lucide="brain-circuit"></i> Albert MoE-13</div>
       <div style="display:flex;gap:16px;margin-bottom:10px;flex-shrink:0;">
         <div>
-          <div class="dash-box-stat" style="font-size:17px;" title="Global training epoch">229+</div>
+          <div class="dash-box-stat" style="font-size:24px;" title="Global training epoch">240+</div>
           <div class="dash-box-label">Global Epoch</div>
         </div>
         <div>
-          <div class="dash-box-stat" style="font-size:17px;color:var(--green);" title="Best checkpoint loss">6.9541</div>
+          <div class="dash-box-stat" style="font-size:24px;color:var(--green);" title="Best checkpoint loss">6.9003</div>
           <div class="dash-box-label">Best Loss</div>
         </div>
         <div>
-          <div class="dash-box-stat" style="font-size:17px;color:var(--cyan);" title="Gradient steps this run">12k+</div>
+          <div class="dash-box-stat" style="font-size:24px;color:var(--cyan);" title="Gradient steps this run">12k+</div>
           <div class="dash-box-label">Grad Steps</div>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;flex:1;">
-        <div class="dash-spec-row"><span class="dash-spec-key">Architecture</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">3L × 12E × 256H</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+        <div class="dash-spec-row"><span class="dash-spec-key">Architecture</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">4L × 12E × 256H</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">Quantisation</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BitNet 1.58-bit</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">Corpus</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">King James Bible</span></div>
-        <div class="dash-spec-row"><span class="dash-spec-key">Status</span><span class="dash-spec-val" style="color:var(--green);">● Training · 3L record run</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Status</span><span class="dash-spec-val" style="color:var(--green);">● Training · 4L evolved</span></div>
       </div>
       <a href="http://localhost:8888" target="_blank" class="dash-box-link" style="margin-top:10px;flex-shrink:0;"><i data-lucide="external-link"></i> Training Dashboard</a>
     </div>
@@ -279,19 +279,21 @@
         <span class="dash-box-badge measured" title="Measured on live hardware">Measured</span>
       </div>
       <div style="display:flex;gap:14px;margin-bottom:10px;flex-shrink:0;">
-        <div title="Measured throughput multiplier vs dense MoE on same hardware">
+        <div title="Measured throughput multiplier vs dense MoE on same hardware (Top-3/12 routing, 4L)">
           <div class="dash-box-stat">2.80×</div>
           <div class="dash-box-label">vs dense MoE</div>
         </div>
-        <div title="Tokens per second per million active parameters — beats A100 (llm.c) 3×">
-          <div class="dash-box-stat" style="color:var(--cyan);">4,304</div>
-          <div class="dash-box-label">tok/s per M params</div>
+        <div title="Tokens per second per million parameters — 4L architecture, same inference speed as 3L (no regression measured)">
+          <div class="dash-box-stat" style="color:var(--cyan);">3,228</div>
+          <div class="dash-box-label">tok/s per M params · 4L</div>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;flex:1;">
-        <div class="dash-spec-row"><span class="dash-spec-key">Routing</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">Top-3 / 12 experts</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+        <div class="dash-spec-row"><span class="dash-spec-key">Routing</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">Top-3 / 12 · 4L</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">Skip ratio</span><span class="dash-spec-val" style="color:var(--green);">75% experts skipped / tok</span></div>
-        <div class="dash-spec-row"><span class="dash-spec-key">vs A100 llm.c</span><span class="dash-spec-val" style="color:var(--green);">3× per active param</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Train 3L</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">4:30 / epoch</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Train 4L</span><span class="dash-spec-val" style="color:var(--amber);font-family:'JetBrains Mono',monospace;">15:18 / epoch</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Infer 4L</span><span class="dash-spec-val" style="color:var(--green);">no regression · 83+ tok/s</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">GPU proj. 8×H100</span><span class="dash-spec-val" style="color:var(--cyan);">12.7× vs dense float16</span></div>
       </div>
     </div>
@@ -299,15 +301,15 @@
     <!-- Box 4: Stack Architecture -->
     <div class="dash-box">
       <div class="dash-box-title"><i data-lucide="cpu"></i> Stack</div>
-      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;flex:1;">
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
         <div class="dash-spec-row"><span class="dash-spec-key">Language</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">ternlang · .tern</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">Arithmetic</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">{−1, 0, +1}</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">Runtime</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BET-VM v1.0 · WASM</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">MCP tools</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">34 · smithery.ai</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">Stdlib</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">core · math · agents · ml</span></div>
         <div class="dash-spec-row"><span class="dash-spec-key">Transport</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">JSON-RPC 2.0 · SSE</span></div>
-        <div class="dash-spec-row"><span class="dash-spec-key">Throughput</span><span class="dash-spec-val" style="color:var(--green);font-family:'JetBrains Mono',monospace;">83+ tok/s</span></div>
-        <div class="dash-spec-row"><span class="dash-spec-key">Compute</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">0.1176 GF/tok</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Throughput</span><span class="dash-spec-val" style="color:var(--green);font-family:'JetBrains Mono',monospace;">83+ tok/s · 4L</span></div>
+        <div class="dash-spec-row"><span class="dash-spec-key">Compute</span><span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">0.157 GF/tok · 4L</span></div>
       </div>
     </div>
 
@@ -330,20 +332,7 @@
       </div>
     </div>
 
-    <!-- Box 6: Quick Actions -->
-    <div class="dash-box">
-      <div class="dash-box-title"><i data-lucide="layout-grid"></i> Quick Actions</div>
-      <div class="dash-quick-btns" style="flex:1;align-content:start;">
-        <button class="dash-quick-btn" onclick="switchView('editor');newFile()"><i data-lucide="file-plus"></i> <span>New file</span></button>
-        <button class="dash-quick-btn" onclick="switchView('editor');openFile('examples/hello_trit.tern')"><i data-lucide="play"></i> <span>Run Hello Trit</span></button>
-        <button class="dash-quick-btn" onclick="switchView('flow')"><i data-lucide="brain-circuit"></i> <span>Flow Lab</span></button>
-        <button class="dash-quick-btn" onclick="switchView('bench')"><i data-lucide="gauge"></i> <span>Benchmarks</span></button>
-        <button class="dash-quick-btn" onclick="switchView('docs')"><i data-lucide="book-open"></i> <span>Docs</span></button>
-        <button class="dash-quick-btn" onclick="switchView('audit')"><i data-lucide="shield-check"></i> <span>Safety Audit</span></button>
-      </div>
-    </div>
-
-    <!-- Box 7: Execution Log -->
+    <!-- Box 6: Execution Log -->
     <div class="dash-box">
       <div class="dash-box-title"><i data-lucide="history"></i> Execution Log</div>
       <div class="dash-run-list" id="dashRunList" style="flex:1;overflow-y:auto;">
@@ -351,7 +340,7 @@
       </div>
     </div>
 
-    <!-- Box 8: Resources -->
+    <!-- Box 7: Resources -->
     <div class="dash-box">
       <div class="dash-box-title"><i data-lucide="external-link"></i> Resources</div>
       <div style="display:flex;flex-direction:column;gap:7px;flex:1;">
@@ -361,14 +350,27 @@
         <a href="https://ternlang.com/docs" target="_blank" class="dash-box-link"><i data-lucide="book-open"></i> Documentation</a>
         <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;">
           <div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Patent</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Patent</div>
             <span class="dash-box-badge patent" style="cursor:default;" title="Sparse routing primitive — filed 2026">@sparseskip · A50296/2026 · Pending</span>
           </div>
           <div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">SPRIND Challenge</div>
-            <div style="font-size:10px;color:var(--text);font-family:'JetBrains Mono',monospace;">KI-Zuverlässigkeit · Stage 1</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">SPRIND Challenge</div>
+            <div style="font-size:12px;color:var(--text);font-family:'JetBrains Mono',monospace;">KI-Zuverlässigkeit · Stage 1</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Box 8: Quick Actions -->
+    <div class="dash-box">
+      <div class="dash-box-title"><i data-lucide="layout-grid"></i> Quick Actions</div>
+      <div class="dash-quick-btns" style="flex:1;align-content:start;">
+        <button class="dash-quick-btn" onclick="switchView('editor');newFile()"><i data-lucide="file-plus"></i> <span>New file</span></button>
+        <button class="dash-quick-btn" onclick="switchView('editor');openFile('examples/hello_trit.tern')"><i data-lucide="play"></i> <span>Run Hello Trit</span></button>
+        <button class="dash-quick-btn" onclick="switchView('flow')"><i data-lucide="brain-circuit"></i> <span>Flow Lab</span></button>
+        <button class="dash-quick-btn" onclick="switchView('bench')"><i data-lucide="gauge"></i> <span>Benchmarks</span></button>
+        <button class="dash-quick-btn" onclick="switchView('docs')"><i data-lucide="book-open"></i> <span>Docs</span></button>
+        <button class="dash-quick-btn" onclick="switchView('audit')"><i data-lucide="shield-check"></i> <span>Safety Audit</span></button>
       </div>
     </div>
 
@@ -857,7 +859,7 @@
       <div id="secretsVaultList" style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px;">
         <!-- Dynamically populated -->
       </div>
-      <div style="background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 16px;">
+      <div style="background: var(--bg); border: 1px solid var(--border2); border-radius: 12px; padding: 16px;">
         <div style="font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">Add / Update Secret</div>
         <div style="display: grid; grid-template-columns: 140px 1fr auto; gap: 12px; align-items: center;">
           <select id="newSecretProvider" class="settings-select" style="width: 100%;">
@@ -879,7 +881,7 @@
         <div class="industrial-title">◆ Albert AI Panel</div>
         <div class="industrial-desc">Configure which LLM provider and model Albert uses when invoked from the canvas. Press F6 to open the panel.</div>
       </div>
-      <div id="albertConfigBlock" style="background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 16px;">
+      <div id="albertConfigBlock" style="background: var(--bg); border: 1px solid var(--border2); border-radius: 12px; padding: 16px;">
         <!-- Dynamically populated by renderVaultUI -->
       </div>
     </div>
@@ -955,23 +957,20 @@
 
 
 <!-- ═══ DOCS VIEW (TernWiki) ══════════════════════════════════════════════════ -->
-<div class="view" id="view-docs">
-  <div style="padding: 40px; max-width: 1200px; margin: 0 auto; overflow-y: auto;">
-    <div style="display:flex; align-items:center; gap:20px; margin-bottom:48px;">
-      <div style="width:64px; height:64px; background:var(--bg1); border:1px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)">
-        <i data-lucide="book-open" style="width:32px; height:32px; color:var(--cyan)"></i>
-      </div>
-      <div>
-        <h1 style="font-size:28px; font-weight:800; color:var(--text); letter-spacing:-0.02em;">TernWiki</h1>
-        <p style="font-size:14px; color:var(--muted)">Technical Reference for Balanced Ternary Intelligence</p>
-        <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
-          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/examples" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="book" style="width:13px;height:13px;"></i> Examples</a>
-          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/QUICKSTART.md" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="zap" style="width:13px;height:13px;"></i> Quickstart</a>
-          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><i data-lucide="library" style="width:13px;height:13px;"></i> Browse Stdlib</a>
-          <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg> GitHub</a>
-        </div>
-      </div>
+<div class="view" id="view-docs" style="flex-direction:column; overflow:hidden;">
+  <!-- Header bar — matches Bench/Audit/Tracer chrome -->
+  <div style="padding:12px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; background:var(--bg1);">
+    <i data-lucide="book-open" style="width:16px; height:16px; color:var(--cyan);"></i>
+    <span style="font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text);">TernWiki</span>
+    <span style="font-size:11px; color:var(--muted); font-weight:400;">— technical reference for balanced ternary intelligence</span>
+    <div style="margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/examples" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;"><i data-lucide="book" style="width:11px;height:11px;"></i> Examples</a>
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/docs/QUICKSTART.md" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border2);color:var(--cyan);text-decoration:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;"><i data-lucide="zap" style="width:11px;height:11px;"></i> Quickstart</a>
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/ternlang-root/stdlib" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;"><i data-lucide="library" style="width:11px;height:11px;"></i> Stdlib</a>
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);text-decoration:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;"><i data-lucide="github" style="width:11px;height:11px;"></i> GitHub</a>
     </div>
+  </div>
+  <div style="padding: 32px 40px; max-width: 1200px; margin: 0 auto; overflow-y: auto; width:100%; box-sizing:border-box;">
 
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
       
@@ -985,14 +984,14 @@
           
           <div style="margin-bottom:24px;">
             <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Functions</div>
-            <pre style="background:var(--bg2); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); border:1px solid var(--border2)">fn add(a: int, b: int) -> int {
+            <pre style="background:var(--bg2); padding:16px; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); border:1px solid var(--border2)">fn add(a: int, b: int) -> int {
   return a + b;
 }</pre>
           </div>
 
           <div style="margin-bottom:24px;">
             <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Control Flow</div>
-            <pre style="background:var(--bg2); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green); border:1px solid var(--border2)">match signal {
+            <pre style="background:var(--bg2); padding:16px; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green); border:1px solid var(--border2)">match signal {
   affirm => { println("YES"); }
   tend   => { println("HOLD"); }
   reject => { println("NO"); }
@@ -1001,7 +1000,7 @@
 
           <div style="margin-bottom:0;">
             <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">Agents</div>
-            <pre style="background:var(--bg2); padding:16px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--amber); border:1px solid var(--border2)">agent Sensor {
+            <pre style="background:var(--bg2); padding:16px; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--amber); border:1px solid var(--border2)">agent Sensor {
   handle(s: trit) {
     spawn Consensus(s);
   }
@@ -1018,7 +1017,7 @@
             <i data-lucide="table" style="width:18px; color:var(--amber)"></i> Truth Tables
           </h2>
 
-          <div style="background:var(--bg2); border-radius:8px; border:1px solid var(--border2); overflow:hidden;">
+          <div style="background:var(--bg2); border-radius:12px; border:1px solid var(--border2); overflow:hidden;">
             <table style="width:100%; border-collapse:collapse; font-size:12px; font-family:'JetBrains Mono',monospace;">
               <thead style="background:var(--bg3);">
                 <tr style="border-bottom:1px solid var(--border2)">
@@ -1062,7 +1061,7 @@
             </table>
           </div>
           
-          <div style="margin-top:24px; padding:16px; background:var(--bg2); border-radius:8px; font-size:12px; color:var(--muted); line-height:1.6;">
+          <div style="margin-top:24px; padding:16px; background:var(--bg2); border-radius:12px; font-size:12px; color:var(--muted); line-height:1.6;">
             <div style="font-weight:700; color:var(--text); margin-bottom:4px;">Did you know?</div>
             The <b>Consensus</b> operator is the ternary equivalent of a logical AND. It resolves to the <i>minimum</i> value of its inputs: 
             <code style="color:var(--cyan)">consensus(A, B) = min(A, B)</code> where <code style="color:var(--text)">+1 > 0 > -1</code>.
@@ -1114,15 +1113,15 @@
                 When a signal fails your logic check, you have choices.
               </p>
               <div style="display:flex; flex-direction:column; gap:12px;">
-                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                <div style="background:var(--bg2); padding:12px; border-radius:12px; border:1px solid var(--border2);">
                   <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Drop</div>
                   <div style="font-size:11px; color:var(--muted);">Silently kills the execution branch to save computer power.</div>
                 </div>
-                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                <div style="background:var(--bg2); padding:12px; border-radius:12px; border:1px solid var(--border2);">
                   <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Fallback</div>
                   <div style="font-size:11px; color:var(--muted);">Routes the failure to a designated secondary recovery path.</div>
                 </div>
-                <div style="background:var(--bg2); padding:12px; border-radius:8px; border:1px solid var(--border2);">
+                <div style="background:var(--bg2); padding:12px; border-radius:12px; border:1px solid var(--border2);">
                   <div style="font-size:11px; font-weight:800; color:var(--text); margin-bottom:4px; text-transform:uppercase;">Hold (0)</div>
                   <div style="font-size:11px; color:var(--muted);">Converts the failure into a neutral state. This is the magic of ternary computing: a failure does not have to break the machine; it can just mean 'pending'.</div>
                 </div>
@@ -1284,7 +1283,7 @@
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
-<script type="module" src="/studio.js?v=20260508d"></script>
+<script type="module" src="/studio.js?v=20260508h"></script>
 
 <!-- Albert F6 floating panel -->
 <div id="albert-panel" style="
@@ -1320,12 +1319,12 @@
     </div>
     <div style="display:flex; gap:6px;">
       <input id="albert-input" type="text" placeholder="Ask Albert anything…" style="
-        flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:6px;
+        flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
         color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px;
         padding:6px 10px; outline:none;
       " onkeydown="if(event.key==='Enter') albertSend()">
       <button onclick="albertSend()" style="
-        background:var(--cyan); color:var(--bg1); border:none; border-radius:6px;
+        background:var(--cyan); color:var(--bg1); border:none; border-radius:8px;
         padding:6px 12px; font-family:'JetBrains Mono',monospace; font-size:11px;
         font-weight:700; cursor:pointer;
       ">Send</button>

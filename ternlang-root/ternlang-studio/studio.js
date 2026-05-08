@@ -764,6 +764,38 @@ function BenchView() {
       )
     ),
 
+    // Albert 4L vs 3L performance card (static, real measured data)
+    e('div', { style: {
+      padding: '12px 20px', borderBottom: '1px solid var(--border)',
+      background: 'var(--bg)', flexShrink: 0, overflowX: 'auto'
+    } },
+      e('div', { style: { fontSize: '10px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' } },
+        e('i', { 'data-lucide': 'brain-circuit', style: { width: '12px', color: 'var(--cyan)' } }),
+        'Albert MoE-13 · 4L vs 3L Performance (measured)'
+      ),
+      e('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+        ...[
+          { label: 'Epoch train · 3L', val: '4:30', note: 'measured avg', col: 'var(--text)' },
+          { label: 'Epoch train · 4L', val: '15:18', note: '+aux terms active', col: 'var(--amber)' },
+          { label: 'Train overhead', val: '3.4×', note: '+1 layer + aux', col: 'var(--amber)' },
+          { label: 'Inference · 4L', val: '83+ tok/s', note: 'no regression', col: 'var(--green)' },
+          { label: 'Active experts', val: '12 / tok', note: '4L × Top-3', col: 'var(--cyan)' },
+          { label: 'GF/tok · 4L', val: '0.157', note: '↑33% vs 3L', col: 'var(--text)' },
+          { label: 'Skip ratio', val: '75%', note: 'invariant at 4L', col: 'var(--green)' },
+          { label: 'Best epoch avg', val: '6.9004', note: 'epoch 240 · 4L', col: 'var(--green)' },
+        ].map(({ label, val, note, col }) =>
+          e('div', { style: {
+            background: 'var(--bg1)', border: '1px solid var(--border2)', borderRadius: '6px',
+            padding: '8px 12px', minWidth: '110px', display: 'flex', flexDirection: 'column', gap: '2px'
+          } },
+            e('div', { style: { fontSize: '10px', color: 'var(--muted)', fontWeight: '600' } }, label),
+            e('div', { style: { fontSize: '16px', fontWeight: '800', color: col, fontFamily: "'JetBrains Mono', monospace", lineHeight: '1.2' } }, val),
+            e('div', { style: { fontSize: '9px', color: 'var(--muted2)' } }, note)
+          )
+        )
+      )
+    ),
+
     // Body
     e('div', { style: { display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' } },
 
@@ -995,27 +1027,27 @@ async function renderRegistryView() {
   try { localReg = JSON.parse(localStorage.getItem("ternflow_registry") || "[]"); } catch(e){}
 
   let html = `
-    <div style="padding: 40px; overflow-y: auto; align-items: flex-start; justify-content: flex-start; width:100%;">
+    <!-- Header bar — matches Bench/Audit/Tracer chrome -->
+    <div style="padding:12px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; background:var(--bg1);">
+      <i data-lucide="package" style="width:16px; height:16px; color:var(--cyan);"></i>
+      <span style="font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text);">TernPkg Registry</span>
+      <span style="font-size:11px; color:var(--muted); font-weight:400;">— deployed node architectures and standard library modules</span>
+      <button class="btn btn-primary" style="margin-left:auto; gap:6px; font-size:12px; padding:4px 12px;" onclick="switchView('flow')"><i data-lucide="plus" style="width:12px;"></i> New Agent</button>
+    </div>
+    <div style="padding: 32px 40px; overflow-y: auto; align-items: flex-start; justify-content: flex-start; width:100%; box-sizing:border-box; flex:1;">
       <div style="max-width: 900px; width: 100%; margin: 0 auto;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 24px;">
-          <div>
-            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">TernPkg Registry</h2>
-            <p style="color: var(--muted); font-size:13px;">Manage deployed node architectures and standard library modules.</p>
-          </div>
-          <button class="btn btn-primary" style="gap:6px;" onclick="switchView('flow')"><i data-lucide="plus" style="width:14px;"></i> Create Agent</button>
-        </div>
-        
+
         <!-- Local Flows -->
-        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; border-bottom: 1px solid var(--border2); padding-bottom: 8px; margin-top:30px;">Deployed Architectures (Local Node)</h3>
+        <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border2);">Deployed Architectures · Local Node</div>
   `;
 
   if (localReg.length === 0) {
-    html += `<div style="padding:30px; text-align:center; border:1px dashed var(--border2); border-radius:8px; color:var(--muted2); font-size:12px; margin-bottom:40px;">No custom architectures deployed yet.<br>Click "Deploy" in the Flow Lab to publish one.</div>`;
+    html += `<div style="padding:30px; text-align:center; border:1px dashed var(--border2); border-radius:12px; color:var(--muted2); font-size:12px; margin-bottom:40px;">No custom architectures deployed yet.<br>Click "Deploy" in the Flow Lab to publish one.</div>`;
   } else {
     html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom:40px;">`;
     localReg.forEach(r => {
       html += `
-        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px; position:relative;">
+        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:12px; padding:16px; position:relative;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
             <button onclick="confirmDeleteAgent('${r.id}', '${r.name}')" 
                     style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:4px; cursor:pointer; color:var(--red); padding:2px 6px; font-size:10px; font-weight:700;"
@@ -1036,13 +1068,13 @@ async function renderRegistryView() {
 
   html += `
         <!-- Stdlib -->
-        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; border-bottom: 1px solid var(--border2); padding-bottom: 8px;">Standard Library (Remote)</h3>
+        <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border2); margin-top:32px;">Standard Library · Remote</div>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom:40px;">
   `;
 
   Object.entries(BUILTIN_AGENTS).forEach(([name, agent]) => {
     html += `
-        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px;">
+        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:12px; padding:16px;">
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
             <i data-lucide="${agent.icon}" style="color:${agent.color}; width:16px;"></i>
             <div style="font-weight:700; color:var(--text); font-size:14px;">${name}</div>
@@ -1059,7 +1091,7 @@ async function renderRegistryView() {
   _flowLibPaths.forEach(p => {
     const name = p.split('/').pop().replace('.tern', '');
     html += `
-        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:16px;">
+        <div style="background:var(--bg2); border:1px solid var(--border2); border-radius:12px; padding:16px;">
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
             <i data-lucide="bot" style="color:var(--muted); width:16px;"></i>
             <div style="font-weight:700; color:var(--text); font-size:14px;">${name}</div>
@@ -1073,7 +1105,7 @@ async function renderRegistryView() {
     `;
   });
 
-  html += `</div></div></div>`;
+  html += `</div></div></div></div>`;
   view.innerHTML = html;
   lucide.createIcons();
 }
@@ -1135,19 +1167,26 @@ async function renderFleetView() {
   const stats = fleetStats[agent.id] || null;
 
   let html = `
-    <div style="display: flex; height: 100%; width:100%; overflow:hidden; color:var(--text);">
+    <div style="display: flex; flex-direction:column; height: 100%; width:100%; overflow:hidden; color:var(--text);">
+      <!-- Header bar — matches Bench/Audit/Tracer chrome -->
+      <div style="padding:12px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; background:var(--bg1);">
+        <i data-lucide="tower-control" style="width:16px; height:16px; color:var(--cyan);"></i>
+        <span style="font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text);">Live Fleet</span>
+        <span style="font-size:11px; color:var(--muted); font-weight:400;">— deployed agent monitoring and execution streams</span>
+      </div>
+      <div style="display: flex; flex: 1; min-height:0; overflow:hidden;">
       <!-- Fleet Sidebar -->
-      <div style="width: 280px; border-right: 1px solid var(--border); background: var(--bg1); display: flex; flex-direction: column; flex-shrink: 0;">
-        <div style="padding: 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
-          Live Fleet Units
+      <div style="width: 220px; border-right: 1px solid var(--border); background: var(--bg1); display: flex; flex-direction: column; flex-shrink: 0;">
+        <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">
+          Fleet Units
         </div>
         <div style="flex: 1; overflow-y: auto; padding: 8px;">
           ${localReg.map(a => {
-            if (!a || !a.id) return '<div style="padding:12px; color:var(--red); border:1px solid var(--red); border-radius:6px; margin-bottom:4px;">Unknown Node</div>';
+            if (!a || !a.id) return '<div style="padding:12px; color:var(--red); border:1px solid var(--red); border-radius:8px; margin-bottom:4px;">Unknown Node</div>';
             const displayId = (a.id || a.name || a.endpoint || 'unknown').substring(0, 8);
             return `
             <div onclick="window.selectedFleetAgentId='${a.id}'; renderFleetView();" 
-                 style="padding: 12px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; transition: all 0.2s;
+                 style="padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; transition: all 0.2s;
                         background: ${window.selectedFleetAgentId === a.id ? 'var(--active-file-bg)' : 'transparent'};
                         border: 1px solid ${window.selectedFleetAgentId === a.id ? 'var(--cyan)' : 'transparent'};">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
@@ -1167,9 +1206,9 @@ async function renderFleetView() {
       <!-- Main Ops Panel -->
       <div style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg);">
         <!-- Ops Header -->
-        <div style="padding: 24px 32px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <h2 style="font-size: 24px; font-weight: 800;">${agent.name}</h2>
+            <div style="font-size:16px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--text);">${agent.name}</div>
             <div style="display:flex; gap:12px; margin-top:4px; font-size:11px; color:var(--muted);">
               <span>ID: <code style="color:var(--cyan)">${agent.id}</code></span>
               <span>•</span>
@@ -1229,7 +1268,7 @@ async function renderFleetView() {
                 <span style="font-size:9px; padding:2px 6px; background:var(--bg2); border-radius:4px; color:var(--muted2);">FILTER: ALL EVENTS</span>
               </div>
             </div>
-            <div style="flex:1; background:#000; border:1px solid var(--border2); border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:11px; padding:16px; overflow-y:auto; color:#a5f3fc;" id="fleet-stream-${agent.id}">
+            <div style="flex:1; background:#000; border:1px solid var(--border2); border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:11px; padding:16px; overflow-y:auto; color:#a5f3fc;" id="fleet-stream-${agent.id}">
               <div style="color:var(--muted2);">// Run a simulation in the Lab to see live events here.</div>
             </div>
           </div>
@@ -1260,6 +1299,8 @@ async function renderFleetView() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
       </div>
     </div>
   `;
@@ -4876,7 +4917,7 @@ function showValidationPanel(errors, warnings) {
   body.innerHTML = `
     <div style="font-size:11px;color:var(--muted2);margin-bottom:12px;">${errors.length} error${errors.length!==1?'s':''}, ${warnings.length} warning${warnings.length!==1?'s':''}</div>
     ${items.map(i => `
-      <div style="display:flex;gap:8px;padding:8px;margin-bottom:4px;border-radius:6px;background:${i.level==='error'?'rgba(239,68,68,0.08)':'rgba(245,158,11,0.08)'};border:1px solid ${i.level==='error'?'var(--red)':'var(--amber)'};cursor:${i.nodeId?'pointer':'default'};"
+      <div style="display:flex;gap:8px;padding:8px;margin-bottom:4px;border-radius:8px;background:${i.level==='error'?'rgba(239,68,68,0.08)':'rgba(245,158,11,0.08)'};border:1px solid ${i.level==='error'?'var(--red)':'var(--amber)'};cursor:${i.nodeId?'pointer':'default'};"
            ${i.nodeId ? `onclick="selectNode('${i.nodeId}');updatePropertyPanel()"` : ''}>
         <span style="color:${i.level==='error'?'var(--red)':'var(--amber)'};font-size:14px;flex-shrink:0;">${i.level==='error'?'✗':'⚠'}</span>
         <span style="font-size:11px;color:var(--text);line-height:1.5;">${i.msg}</span>
@@ -8774,7 +8815,7 @@ document.addEventListener('DOMContentLoaded', () => {
       width: 380px; height: 480px;
       background: var(--bg1);
       border: 1px solid var(--border2);
-      border-radius: 10px;
+      border-radius: 14px;
       display: flex; flex-direction: column;
       z-index: 9500;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
@@ -8829,12 +8870,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Input bar -->
       <div style="padding:10px; border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0;">
         <input id="albert-input" type="text" placeholder="Prompt Albert…" style="
-          flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:6px;
+          flex:1; background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
           color:var(--text); font-family:inherit; font-size:12px; padding:7px 10px;
           outline:none;
         "/>
         <button id="albert-send" style="
-          background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:6px;
+          background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:8px;
           color:var(--green); font-size:14px; padding:6px 12px; cursor:pointer; font-weight:700;
         " title="Send (Enter)">↵</button>
       </div>
