@@ -745,54 +745,50 @@
 
     /* ─── Dashboard ────────────────────────────────────────────────── */
     #view-dashboard { overflow: hidden; padding: 0; flex-direction: column; }
-    /* ── Dashboard status strip ───────────────────────────────────────── */
-    .dash-status-strip {
-      display: flex; align-items: center; gap: 0;
-      padding: 0 24px;
-      height: 38px;
-      background: var(--bg1);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    html:not([data-theme="light"]) .dash-status-strip { background: #0d1526; border-color: #1e2a42; }
-    .dash-status-chip {
-      display: flex; align-items: center; gap: 6px;
-      padding: 0 16px; height: 100%;
-      border-right: 1px solid var(--border);
-      font-size: 11px;
-    }
-    .dash-status-chip:first-child { padding-left: 0; }
-    .dash-status-label { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; }
-    .dash-status-value { color: var(--text); font-weight: 600; }
 
-    /* ── Dashboard main grid ──────────────────────────────────────────── */
-    .dash-grid {
+    /* ── 8-box equal grid ─────────────────────────────────────────────── */
+    .dash-8grid {
       display: grid;
-      grid-template-columns: 320px 1fr 320px;
-      gap: 16px;
-      padding: 16px;
-      max-width: 1500px;
-      margin: 0 auto;
-      align-items: start;
-      height: calc(100% - 38px);
-      overflow-y: auto;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 12px;
+      padding: 14px;
+      height: 100%;
+      box-sizing: border-box;
     }
-    .dash-col { display: flex; flex-direction: column; gap: 12px; }
-    .dash-col-1 { grid-column: 1; }
-    .dash-col-2 { grid-column: 2; }
-    .dash-col-3 { grid-column: 3; }
-
-    .dash-card {
+    .dash-box {
       background: var(--bg1); border: 1px solid var(--border2);
-      border-radius: var(--radius); padding: 16px;
-      box-shadow: var(--shadow); display: flex; flex-direction: column;
+      border-radius: var(--radius); padding: 14px 16px;
+      display: flex; flex-direction: column; overflow: hidden; min-height: 0;
     }
-    html:not([data-theme="light"]) .dash-card { background: #131b2e; border-color: #1e2a42; }
-    .dash-card-title {
-      font-size: 0.923rem; font-weight: 600; color: var(--text);
-      margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+    html:not([data-theme="light"]) .dash-box { background: #131b2e; border-color: #1e2a42; }
+    html[data-theme="light"] .dash-box { background: var(--bg1); border-color: var(--border); }
+    .dash-box-title {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 10px; flex-shrink: 0;
     }
-    .dash-card-title i { width: 14px; color: var(--cyan); }
+    .dash-box-title i { width: 12px; color: var(--cyan); }
+    .dash-box-stat {
+      font-size: 22px; font-weight: 700; color: var(--text);
+      font-family: 'JetBrains Mono', monospace; line-height: 1;
+    }
+    .dash-box-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .dash-box-link {
+      font-size: 10px; color: var(--cyan); text-decoration: none;
+      display: inline-flex; align-items: center; gap: 4px;
+      opacity: 0.8; transition: opacity 0.15s; padding: 2px 0;
+    }
+    .dash-box-link:hover { opacity: 1; }
+    .dash-box-link i { width: 10px; height: 10px; }
+    .dash-box-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 9px; font-weight: 700; padding: 2px 8px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .dash-box-badge.patent  { background: rgba(0,212,170,0.1); border: 1px solid var(--cyan); color: var(--cyan); }
+    .dash-box-badge.measured { background: rgba(16,185,129,0.1); border: 1px solid var(--green); color: var(--green); }
 
     /* spec table rows inside architecture card */
     .dash-spec-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--border); }
