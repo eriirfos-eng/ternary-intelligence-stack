@@ -4284,6 +4284,7 @@ function renderArchetypes(q = "") {
       items.forEach(arch => {
         const card = document.createElement("div");
         card.className = "archetype-card";
+        card.style.borderLeft = `3px solid ${arch.color}`;
         
         card.onmouseenter = (e) => {
           TooltipController.startDelay(arch.desc, e.clientX, e.clientY);
@@ -4295,12 +4296,26 @@ function renderArchetypes(q = "") {
           e.dataTransfer.setData("tern-node-type", "archetype");
           e.dataTransfer.setData("tern-arch-id", arch.id);
         };
+        const nAgents   = arch.nodes.filter(n => n.type === 'agent').length;
+        const nGates    = arch.nodes.filter(n => n.type === 'gate').length;
+        const nBridges  = arch.nodes.filter(n => n.type === 'external').length;
+        const nSources  = arch.nodes.filter(n => n.type === 'datasource').length;
+        const pills = [
+          nAgents  > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(6,182,212,0.15);color:var(--cyan);font-weight:700;letter-spacing:0.03em;">${nAgents} Agent${nAgents>1?'s':''}</span>` : '',
+          nGates   > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,0.15);color:var(--amber);font-weight:700;letter-spacing:0.03em;">${nGates} Gate${nGates>1?'s':''}</span>` : '',
+          nBridges > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(217,70,239,0.15);color:var(--magenta);font-weight:700;letter-spacing:0.03em;">${nBridges} Bridge${nBridges>1?'s':''}</span>` : '',
+          nSources > 0 ? `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(244,63,94,0.15);color:#f43f5e;font-weight:700;letter-spacing:0.03em;">${nSources} Source${nSources>1?'s':''}</span>` : '',
+        ].filter(Boolean).join('');
         card.innerHTML = `
           <div class="archetype-card-title" style="display:flex;align-items:center;gap:6px;">
             <i data-lucide="${arch.icon}" style="width:12px;height:12px;color:${arch.color}"></i>
             ${arch.name}
           </div>
           <div class="archetype-card-desc">${arch.desc}</div>
+          <div style="margin-top:8px;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+            ${pills}
+            <span style="margin-left:auto;font-size:10px;color:var(--muted2);white-space:nowrap;">${arch.wires.length} wire${arch.wires.length!==1?'s':''}</span>
+          </div>
         `;
         card.onclick = () => spawnArchetype(arch);
         itemsDiv.appendChild(card);

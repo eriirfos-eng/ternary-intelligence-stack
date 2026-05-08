@@ -113,6 +113,16 @@
     }
     html[data-theme="light"] #premium-tree-container .tree-root-header { color: var(--text); opacity: 1; }
 
+    /* ── Lab / Flow light mode fixes ──────────────────────────────── */
+    html[data-theme="light"] .fn-head { background: rgba(0,0,0,0.04); }
+    html[data-theme="light"] .toolbar-group { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
+    html[data-theme="light"] .lib-category-header { border-bottom-color: var(--border); }
+    html[data-theme="light"] #flow-inspector { box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+    html[data-theme="light"] .flow-toolbar { box-shadow: 0 4px 20px rgba(0,0,0,0.12); border-color: var(--border); }
+    html[data-theme="light"] #global-timeline::-webkit-slider-runnable-track { background: rgba(0,0,0,0.12) !important; }
+    html[data-theme="light"] #global-timeline::-moz-range-track { background: rgba(0,0,0,0.12) !important; }
+    html[data-theme="light"] .timeline-slider { background: rgba(0,0,0,0.12); }
+
     /* ─── Modern Components ────────────────────────────────────────── */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
