@@ -37,7 +37,7 @@ impl EvolutionManager {
             max_layers:           12,
             surgery_cooldown:     20,
             cooldown_remaining:   0,
-            min_loss_for_plateau: 8.0,   // don't grow if model is still near the random baseline
+            min_loss_for_plateau: 8.4,   // don't grow if model is still near the random baseline (8.987 = ln(8000))
         }
     }
 

@@ -138,12 +138,6 @@
         </div>
 
         <div class="flex items-center gap-4 w-full md:w-auto">
-          <!-- Highly visible Theme Toggle -->
-          <button id="theme-toggle" class="p-2 rounded-md border border-studio_border bg-studio_editor text-t_subtext hover:text-t_teal transition-colors" title="Toggle Polarity (+1 / -1)">
-            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-          </button>
-
           <button id="trans-run-btn" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 border border-t_teal/50 text-t_teal font-mono text-[15px] font-bold uppercase tracking-wider rounded-md transition-all btn-glow bg-t_teal_dim">
             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             <span id="trans-run-text">Translate</span>
@@ -190,7 +184,6 @@
     let isTernToBinary = false;
 
     // UI Elements
-    const themeToggle = document.getElementById('theme-toggle');
     const htmlElement = document.documentElement;
     const transInput = document.getElementById('trans-input');
     const transOutput = document.getElementById('trans-output');
@@ -218,11 +211,6 @@
     const modeLabel = document.getElementById('mode-label');
     const inputLabel = document.getElementById('input-label');
     const outputLabel = document.getElementById('output-label');
-
-    // Theme Toggle Logic (local toggle still works when opened standalone)
-    themeToggle.addEventListener('click', () => {
-      htmlElement.classList.toggle('dark');
-    });
 
     // Swap Direction Logic
     swapBtn.addEventListener('click', () => {
