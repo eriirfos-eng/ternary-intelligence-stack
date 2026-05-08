@@ -13,6 +13,7 @@ export function check_tern(src: string): string;
  * Returns JSON:
  * ```json
  * { "ok": true, "output": ["hello"], "trit": 1, "label": "affirm",
+ *   "registers": ["Trit(Affirm)", "Int(42)"],
  *   "error": null, "cycles": 42 }
  * ```
  * On any error `ok` is false and `error` carries the message.
@@ -23,8 +24,8 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly run_tern: (a: number, b: number) => [number, number];
     readonly check_tern: (a: number, b: number) => [number, number];
+    readonly run_tern: (a: number, b: number) => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

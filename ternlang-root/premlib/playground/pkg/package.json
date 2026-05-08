@@ -2,13 +2,15 @@
   "name": "ternlang-wasm",
   "type": "module",
   "collaborators": [
-    "Simeon Kepp <rfi.irfos@gmail.com>",
-    "Nikoletta Csonka <csonikoletta@ternlang.com>",
-    "Zabih Karimi <z.karimi@ternlang.com>",
+    "Simeon Kepp <s.kepp@ternlang.com> (https://www.linkedin.com/in/simeon-kepp/)",
+    "Nikoletta Csonka <csonikoletta@ternlang.com> (https://www.linkedin.com/in/csonikoletta/)",
+    "Zabih Karimi <z.karimi@ternlang.com> (https://www.linkedin.com/in/zabih-karimi-3292ab349/)",
+    "Lisa Scharler <l.scharler@ternlang.com> (https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/)",
+    "Louis Paul Ehrig <l.ehrig@ternlang.com> (https://www.linkedin.com/in/louis-ehrig-317941335/)",
     "RFI-IRFOS <licensing@ternlang.com>"
   ],
   "description": "WebAssembly bindings for the Ternlang BET VM — runs real .tern programs in the browser.",
-  "version": "1.0.0",
+  "version": "1.3.6",
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

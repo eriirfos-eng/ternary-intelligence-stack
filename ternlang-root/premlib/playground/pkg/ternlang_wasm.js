@@ -27,6 +27,7 @@ export function check_tern(src) {
  * Returns JSON:
  * ```json
  * { "ok": true, "output": ["hello"], "trit": 1, "label": "affirm",
+ *   "registers": ["Trit(Affirm)", "Int(42)"],
  *   "error": null, "cycles": 42 }
  * ```
  * On any error `ok` is false and `error` carries the message.
