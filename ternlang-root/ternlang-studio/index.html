@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
   <!-- Logic extracted to studio.js -->
-  <link rel="stylesheet" href="/assets/studio.css?v=20260508b">
+  <link rel="stylesheet" href="/assets/studio.css?v=20260508c">
 </head>
 <body>
 
@@ -208,151 +208,166 @@
 <!-- ═══ DASHBOARD VIEW ════════════════════════════════════════════════════════ -->
 <div class="view active" id="view-dashboard">
 
+  <!-- ── Status strip ─────────────────────────────────────────────────────── -->
+  <div class="dash-status-strip">
+    <div class="dash-status-chip">
+      <span class="dot" id="dashVmDot"></span>
+      <span class="dash-status-label">API</span>
+      <span id="dashVmLabel" class="dash-status-value">Checking…</span>
+    </div>
+    <div class="dash-status-chip">
+      <span class="dot" id="dashWasmDot" style="background:var(--muted2)"></span>
+      <span class="dash-status-label">WASM</span>
+      <span id="sbWasmStatus2" class="dash-status-value">Loading…</span>
+    </div>
+    <div class="dash-status-chip">
+      <span class="dash-status-label">Tier</span>
+      <span id="dashTierBadge" class="tb-badge badge-free" style="margin-left:4px;">Free</span>
+    </div>
+    <div class="dash-status-chip">
+      <span class="dash-status-label">Runs</span>
+      <span id="statRuns" class="dash-status-value">0</span>
+      <span class="dash-status-label" style="margin-left:8px;">OK</span>
+      <span id="statOk" class="dash-status-value" style="color:var(--green)">0</span>
+      <span class="dash-status-label" style="margin-left:8px;">Err</span>
+      <span id="statErr" class="dash-status-value" style="color:var(--red)">0</span>
+    </div>
+    <div class="dash-status-chip" style="margin-left:auto;">
+      <span class="dash-status-label">Endpoint:</span>
+      <span id="dashEndpoint" class="dash-status-value" style="color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:10px">ternlang-api.fly.dev</span>
+      <button class="tb-btn" style="height:22px;width:22px;margin-left:6px;" onclick="checkConnection(); showToast('Connection check triggered', 'ok')" title="Recheck"><i data-lucide="refresh-cw" style="width:11px;height:11px;"></i></button>
+    </div>
+  </div>
+
+  <!-- ── Main grid ────────────────────────────────────────────────────────── -->
   <div class="dash-grid">
 
-    <!-- Column 1: Environment -->
+    <!-- Column 1: REPL -->
     <div class="dash-col dash-col-1">
-      <div class="dash-section-title">Environment</div>
-      
-      <!-- VM Status -->
-      <div class="dash-card">
-        <div class="dash-card-title"><i data-lucide="server"></i> VM Status</div>
-        <div id="dash-vm-stat" class="dash-pill"><span class="dot" id="dashVmDot"></span><span id="dashVmLabel">Checking…</span></div>
-        <div style="margin-top: 14px; font-size: 11px; color: var(--muted); line-height: 1.6;">
-          Endpoint: <span id="dashEndpoint" style="color: var(--cyan);">ternlang-api.fly.dev</span><br>
-          Node ID: <span style="color:var(--text)">bet-node-013</span>
-        </div>
-        <button class="dash-quick-btn" style="margin-top: 16px; justify-content: center;" onclick="checkConnection(); showToast('Connection check triggered', 'ok')">
-          <i data-lucide="refresh-cw"></i> <span>Recheck System</span>
-        </button>
-      </div>
 
-      <!-- Plan & Quota -->
-      <div class="dash-card">
-        <div class="dash-card-title"><i data-lucide="credit-card"></i> Plan &amp; Quota</div>
-        <div id="dashTierBadge" class="tb-badge badge-free" style="margin-bottom: 12px; display: inline-block;">Tier 1 — Free</div>
+      <!-- Quota -->
+      <div class="dash-card" style="padding:14px 16px;">
+        <div class="dash-card-title" style="margin-bottom:10px;"><i data-lucide="credit-card"></i> Plan &amp; Quota</div>
         <div id="dash-quota-wrap">
-          <div class="usage-label" style="font-size:11px">Monthly calls</div>
           <div class="usage-bar-wrap"><div class="usage-bar-fill" id="dashUsageBar" style="width:0%"></div></div>
-          <div class="usage-meta" id="dashUsageMeta" style="font-size:10px">Enter API key to see quota</div>
+          <div class="usage-meta" id="dashUsageMeta" style="font-size:10px; margin-top:4px;">Enter API key to see quota</div>
         </div>
         <div id="dash-unlimited-badge" style="display:none;" class="usage-unlimited">∞ Unlimited</div>
-        <div style="margin-top:14px; font-size:10px; color:var(--muted2); text-align:center;">
-          Need more? Use <span style="color:var(--amber); cursor:pointer;" onclick="openUpskillModal()">Upskill ↑</span> in the top bar
-        </div>
       </div>
 
       <!-- Ternary Playground (WASM REPL) -->
       <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
         <div class="dash-card-title" style="display:flex;align-items:center;justify-content:space-between;">
-          <span><i data-lucide="terminal"></i> Ternary Playground</span>
+          <span><i data-lucide="terminal"></i> BET-VM Playground</span>
           <span id="wasmBadge" style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.1);border:1px solid var(--green);color:var(--green);opacity:0;transition:opacity 0.3s">⚡ WASM</span>
         </div>
-        <textarea id="dashReplInput" class="prop-input" style="flex:1;min-height:140px;resize:none;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin-top:10px;"
+        <textarea id="dashReplInput" class="prop-input" style="flex:1;min-height:160px;resize:none;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin-top:10px;"
           onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();runReplExpr();}"
           placeholder="fn main() -> trit {&#10;    print(&quot;@ Hello&quot;);&#10;    return affirm;&#10;}"></textarea>
-        <div id="dashReplRes" class="repl-res" style="min-height:28px;margin-top:8px;white-space:pre;"></div>
+        <div id="dashReplRes" class="repl-res" style="min-height:28px;margin-top:8px;white-space:pre;font-family:'JetBrains Mono',monospace;font-size:11px;"></div>
         <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;">
           <button class="btn btn-primary" style="font-size:11px;padding:5px 14px;border-radius:6px;" onclick="runReplExpr()">▶ Run <span style="font-size:9px;opacity:0.7">Ctrl+↵</span></button>
           <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('hello')">Hello</button>
           <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('consensus')">Consensus</button>
           <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('match')">Match</button>
           <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setReplSnippet('dec13')">13→trit</button>
-          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;margin-left:auto;" onclick="openReplInEditor()" title="Open in Editor">↗</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;margin-left:auto;" onclick="openReplInEditor()" title="Open in full Editor">↗ Editor</button>
         </div>
       </div>
     </div>
 
-    <!-- Column 2: Work (Top) -->
+    <!-- Column 2: Actions + Activity -->
     <div class="dash-col dash-col-2">
-      <div class="dash-section-title">Work</div>
-      
+
       <!-- Quick Actions -->
       <div class="dash-card">
         <div class="dash-card-title"><i data-lucide="zap"></i> Quick Actions</div>
         <div class="dash-quick-btns">
           <button class="dash-quick-btn" onclick="switchView('editor'); newFile()">
-            <i data-lucide="file-plus"></i> <span>New scratch file</span>
+            <i data-lucide="file-plus"></i> <span>New file</span>
           </button>
           <button class="dash-quick-btn" onclick="switchView('editor'); openFile('examples/hello_trit.tern')">
             <i data-lucide="play"></i> <span>Run Hello Trit</span>
           </button>
+          <button class="dash-quick-btn" onclick="switchView('flow')">
+            <i data-lucide="brain-circuit"></i> <span>Flow Lab</span>
+          </button>
+          <button class="dash-quick-btn" onclick="switchView('bench')">
+            <i data-lucide="gauge"></i> <span>Benchmarks</span>
+          </button>
           <button class="dash-quick-btn" onclick="switchView('docs')">
             <i data-lucide="book-open"></i> <span>Documentation</span>
           </button>
-          <button class="dash-quick-btn" onclick="switchView('flow')">
-            <i data-lucide="brain-circuit"></i> <span>Open Flow Lab</span>
+          <button class="dash-quick-btn" onclick="switchView('audit')">
+            <i data-lucide="shield-check"></i> <span>Safety Audit</span>
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Column 3: Analytics (Top) -->
-    <div class="dash-col dash-col-3">
-      <div class="dash-section-title">Analytics</div>
-
-      <!-- Session Stats -->
-      <div class="dash-card">
-        <div class="dash-card-title"><i data-lucide="bar-chart-3"></i> Session Stats</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-          <div>
-            <div class="dash-stat" id="statRuns">0</div>
-            <div class="dash-stat-sub">Runs</div>
-          </div>
-          <div>
-            <div class="dash-stat" id="statOk" style="color: var(--green);">0</div>
-            <div class="dash-stat-sub">Ok</div>
-          </div>
-          <div>
-            <div class="dash-stat" id="statErr" style="color: var(--red);">0</div>
-            <div class="dash-stat-sub">Err</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Column 2: Recent Activity (Center) -->
-    <div class="dash-col dash-col-2" style="grid-row: 2;">
-      <div class="dash-card" style="height:100%">
-        <div class="dash-card-title"><i data-lucide="history"></i> Recent Activity</div>
+      <!-- Recent Activity -->
+      <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
+        <div class="dash-card-title"><i data-lucide="history"></i> Execution Log</div>
         <div class="dash-run-list" id="dashRunList" style="flex:1">
-          <div class="dash-run-empty">No runs yet this session</div>
+          <div class="dash-run-empty">No executions this session</div>
         </div>
       </div>
     </div>
 
-    <!-- Column 3: Stdlib (Center) -->
-    <div class="dash-col dash-col-3" style="grid-row: 2;">
-      <div class="dash-card" style="height:100%">
-        <div class="dash-card-title"><i data-lucide="library"></i> Stdlib Coverage</div>
-        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px; flex:1">
-          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">core/</span><span style="color:var(--green); font-weight:600">12 modules</span></div>
-          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">math/</span><span style="color:var(--green); font-weight:600">8 modules</span></div>
-          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">agents/</span><span style="color:var(--cyan); font-weight:600">15 modules</span></div>
-          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">safety/</span><span style="color:var(--cyan); font-weight:600">5 modules</span></div>
-          <div style="display:flex; justify-content: space-between;"><span style="color:var(--muted)">ml/bitnet</span><span style="color:var(--amber); font-weight:600">v1.58b</span></div>
+    <!-- Column 3: Architecture + Stdlib -->
+    <div class="dash-col dash-col-3">
+
+      <!-- Architecture summary -->
+      <div class="dash-card">
+        <div class="dash-card-title" style="margin-bottom:12px;"><i data-lucide="cpu"></i> Stack Architecture</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:11px;">
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">Runtime</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BET-VM v1.0 · WASM</span>
+          </div>
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">Arithmetic</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">Balanced Ternary {-1, 0, +1}</span>
+          </div>
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">Quantisation</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">BitNet 1.58-bit</span>
+          </div>
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">MoE model</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">Albert MoE-13 · 3L×12E×256H</span>
+          </div>
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">@sparseskip</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace; color:var(--cyan)">3/12 experts · 0.1176 GF/tok</span>
+          </div>
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">Throughput</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace; color:var(--green)">83+ tok/s (A50296/2026)</span>
+          </div>
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">MCP tools</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">34 · smithery.ai/server/ternlang</span>
+          </div>
+          <div class="dash-spec-row">
+            <span class="dash-spec-key">Transport</span>
+            <span class="dash-spec-val" style="font-family:'JetBrains Mono',monospace;">HTTP JSON-RPC 2.0 · SSE streams</span>
+          </div>
         </div>
-        <button class="dash-quick-btn" style="margin-top: 16px; justify-content: center;" onclick="switchSidebarPanel('explorer'); switchView('editor')">
-          <i data-lucide="search"></i> <span>Browse Library</span>
+      </div>
+
+      <!-- Stdlib -->
+      <div class="dash-card" style="flex:1; display:flex; flex-direction:column;">
+        <div class="dash-card-title"><i data-lucide="library"></i> Standard Library</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:11px;flex:1">
+          <div class="dash-spec-row"><span class="dash-spec-key">core/</span><span class="dash-spec-val" style="color:var(--green)">12 modules</span></div>
+          <div class="dash-spec-row"><span class="dash-spec-key">math/</span><span class="dash-spec-val" style="color:var(--green)">8 modules</span></div>
+          <div class="dash-spec-row"><span class="dash-spec-key">agents/</span><span class="dash-spec-val" style="color:var(--cyan)">15 modules</span></div>
+          <div class="dash-spec-row"><span class="dash-spec-key">safety/</span><span class="dash-spec-val" style="color:var(--cyan)">5 modules</span></div>
+          <div class="dash-spec-row"><span class="dash-spec-key">ml/bitnet</span><span class="dash-spec-val" style="color:var(--amber)">v1.58b</span></div>
+        </div>
+        <button class="dash-quick-btn" style="margin-top:12px;justify-content:center;" onclick="switchSidebarPanel('explorer'); switchView('editor')">
+          <i data-lucide="search"></i> <span>Browse in Editor</span>
         </button>
-      </div>
-    </div>
-
-    <!-- Spanned Footer: Logic Field -->
-    <div class="dash-footer" style="grid-row: 3;">
-      <div class="dash-card logic-field-card">
-        <div style="display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 20px;">
-          <div style="flex: 1; min-width: 280px;">
-            <div class="dash-card-title" style="color:var(--cyan); margin-bottom:4px;"><i data-lucide="binary"></i> Logic Field Visualizer</div>
-            <div style="font-size:10px; color:var(--muted2); margin-bottom:12px;">Real-time state monitoring of the Balanced Ternary Engine (BET-013)</div>
-            <div id="logic-field-grid" class="logic-field-grid"></div>
-          </div>
-          <div style="display:flex; gap:30px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; border: 1px solid var(--border);">
-             <div style="text-align:center;"><div style="color:var(--red); font-weight:900; font-size:28px; line-height:1;">-1</div><div style="font-size:9px; color:var(--muted); font-weight:700; margin-top:4px;">REJECT</div></div>
-             <div style="text-align:center;"><div style="color:var(--amber); font-weight:900; font-size:28px; line-height:1;">0</div><div style="font-size:9px; color:var(--muted); font-weight:700; margin-top:4px;">HOLD</div></div>
-             <div style="text-align:center;"><div style="color:var(--green); font-weight:900; font-size:28px; line-height:1;">+1</div><div style="font-size:9px; color:var(--muted); font-weight:700; margin-top:4px;">AFFIRM</div></div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1256,7 +1271,7 @@
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
-<script type="module" src="/studio.js?v=20260508b"></script>
+<script type="module" src="/studio.js?v=20260508c"></script>
 
 <!-- Albert F6 floating panel -->
 <div id="albert-panel" style="

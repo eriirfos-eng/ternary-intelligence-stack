@@ -44,6 +44,7 @@ COPY docs/                  docs/
 COPY ternlang-web/          ternlang-web/
 COPY ternlang-studio/       ternlang-studio/
 COPY ternlang-translator/   ternlang-translator/
+COPY premlib/               premlib/
 COPY compiler/legacy_shim/ternlang-core/src      compiler/legacy_shim/ternlang-core/src
 COPY compiler/legacy_shim/ternlang-core/stdlib   compiler/legacy_shim/ternlang-core/stdlib
 COPY ternlang-ml/src        ternlang-ml/src
