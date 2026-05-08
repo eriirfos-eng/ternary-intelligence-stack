@@ -752,7 +752,7 @@
                     type: 'scatter',
                     label: 'Batch loss',
                     data: [],
-                    backgroundColor: 'rgba(34,211,238,0.55)',
+                    backgroundColor: 'rgba(0,229,160,0.55)',
                     pointRadius: 3,
                     order: 2,
                 },
@@ -1313,21 +1313,24 @@
     let latestTele = null;
 
     function sparsityColor(s) {
-        // s: 0.0 (dense) → 1.0 (fully sparse)
-        // dense = cyan #22d3ee, sparse = deep blue
-        const r = Math.round(34  + s * 25);
-        const g = Math.round(211 - s * 120);
-        const b = Math.round(238 - s * 50);
-        return `rgb(${r},${g},${b})`;
+        // s: 0.0 (dense/healthy) → 1.0 (fully sparse/concerning)
+        // yellow → orange → red
+        if (s < 0.5) {
+            const t = s * 2;
+            return `rgb(255,${Math.round(210 - t * 70)},0)`;
+        } else {
+            const t = (s - 0.5) * 2;
+            return `rgb(${Math.round(255 - t * 16)},${Math.round(140 - t * 140)},${Math.round(t * 68)})`;
+        }
     }
 
     function expertColor(act) {
         // act: 0.0 (dormant) → 1.0 (fully active)
-        // Dark-blue palette: dormant = near-black navy, active = bright cyan
-        if (act < 0.05) return '#080c14';
-        const r = Math.round(act * 34);
-        const g = Math.round(20 + act * 191);
-        const b = Math.round(30 + act * 208);
+        // Forest-green palette — comfortable, readable contrast on dark cells
+        if (act < 0.05) return '#0d130d';
+        const g = Math.round(35 + act * 90);
+        const r = Math.round(act * 12);
+        const b = Math.round(act * 35);
         return `rgb(${r},${g},${b})`;
     }
 

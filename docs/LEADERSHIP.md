@@ -56,17 +56,23 @@ Nikoletta leads EU AI Act alignment, regulatory positioning, and international s
 ---
 
 ### Zabih Karimi  
-#### Co-Founder & IT Technician · Network & ML Application Specialist · Stress-Tester
+#### Co-Founder & Systems Engineer · Infrastructure Lead · ML Stress-Tester
 
 > *"Turning architecture into resilient, deployment-ready infrastructure — then breaking it to find the limits."*
 
-Zabih's path to RFI-IRFOS is one of the team's most remarkable stories. Born near Kabul, Afghanistan, he rebuilt his life entirely on his own terms, relocating to Graz and building an exceptional technical career from the ground up. He now speaks multiple languages and holds more professional licenses than most engineers have professional tools — heavy machinery, crane operation, LKW, Hochstapler — a testament to his conviction that competence is built through mastery, not just theory.
+Zabih is the team's infrastructure anchor — the person who closes the gap between architectural vision and a system that actually runs. His career is a study in the principle that genuine technical authority is earned through mastery at every layer, not just the ones that look good on a slide.
 
-At RFI-IRFOS, Zabih is the physical and logical infrastructure owner. He handles in-house cabling and network architecture, process management, and — critically — hours of side-by-side architectural sessions where he scrutinises parameter choices and system design with the same rigour he applies to physical builds. He is TIS's stress-tester: if the system holds under Zabih's scrutiny, it holds.
+Graz-based and formally trained in IT and network infrastructure, Zabih holds a diploma from **Schulungscenter Vonsdorf (SZF)**, Styria, Austria — a Styrian technical institution with a rigorous vocational curriculum. He is multilingual, operationally certified across a broad range of professional technical domains, and brings a hands-on precision to his work that is rare in a field where most people only ever model systems rather than build them.
+
+At RFI-IRFOS, Zabih owns the full physical and logical infrastructure stack — in-house cabling, network architecture, process management, and deployment pipelines. Equally important: he brings that same structural exactness into extended side-by-side architectural sessions, scrutinising parameter choices, routing logic, and system design with the kind of rigour that only comes from someone who knows what it costs when a system fails in the real world. He is TIS's stress-tester: if the system holds under Zabih's scrutiny, it holds.
 
 | Role | Technical Focus |
 |---|---|
-| IT Technician · Network Specialist · ML Engineer | Physical Infrastructure · Networking · ML Inference · BET VM Stability · Process Management · Stress Testing |
+| Systems Engineer · Infrastructure Lead · ML Engineer | Physical Infrastructure · Network Architecture · ML Inference · BET VM Stability · Process Management · Deployment · Stress Testing |
+
+**Academic Background**
+- **Diploma, IT & Network Infrastructure** — Schulungscenter Vonsdorf SZF, Styria, Austria
+- Broad professional technical certifications across operations and systems engineering
 
 **Connect**
 - **LinkedIn:** [Zabih Karimi](https://www.linkedin.com/in/zabih-karimi-3292ab349/)
