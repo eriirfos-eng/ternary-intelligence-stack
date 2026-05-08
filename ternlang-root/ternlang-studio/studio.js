@@ -1849,6 +1849,14 @@ function initCanvasInteraction() {
       wrap.style.cursor = "grab";
       e.preventDefault();
     }
+    // / opens quick-add palette when Lab is active and no text input is focused
+    if (e.key === "/" && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) {
+      const labView = document.getElementById("view-flow");
+      if (labView && labView.classList.contains("active")) {
+        e.preventDefault();
+        openLabPalette();
+      }
+    }
   });
   document.addEventListener("keyup", e => {
     if (e.code === "Space") { spaceDown = false; wrap.style.cursor = ""; wrap.classList.remove("panning"); }
@@ -2313,6 +2321,7 @@ function renderFlow() {
     applyTransform();
     _canvasInteractionInited = true;
   }
+  initLabPalette();
   renderFlowLibrary();
   // Restore canvas from localStorage (don't wipe on every view switch)
   if (flowNodes.length === 0) {
@@ -2523,6 +2532,197 @@ function filterFlowLib(q) {
 }
 window.filterFlowLib = filterFlowLib;
 
+// ─── Lab Quick-Add Palette (/ key or double-click empty canvas) ─────────────
+
+let _paletteMouse = { x: 0, y: 0 };
+let _paletteInited = false;
+
+function initLabPalette() {
+  if (_paletteInited) return;
+  _paletteInited = true;
+
+  const wrap = document.getElementById("flow-canvas-wrap");
+  if (!wrap) return;
+
+  // Track mouse position inside canvas wrap for spawn coordinates
+  wrap.addEventListener("mousemove", e => {
+    const r = wrap.getBoundingClientRect();
+    _paletteMouse = { x: e.clientX - r.left, y: e.clientY - r.top };
+  });
+
+  // Double-click on empty canvas background opens palette
+  wrap.addEventListener("dblclick", e => {
+    const tag = e.target.tagName;
+    const isBackground = e.target === wrap
+      || e.target.id === "flow-canvas"
+      || e.target.id === "flow-svg-layer"
+      || e.target.id === "canvas-hint"
+      || e.target.id === "rubber-band";
+    if (isBackground) openLabPalette();
+  });
+
+  // Inject palette DOM
+  const pal = document.createElement("div");
+  pal.id = "lab-palette";
+  pal.innerHTML = `
+    <div id="lab-palette-inner">
+      <input id="lab-palette-input" type="text" placeholder="Search nodes & archetypes…" autocomplete="off" spellcheck="false">
+      <div id="lab-palette-hint">
+        <span><kbd>↑↓</kbd> navigate</span>
+        <span><kbd>Enter</kbd> spawn</span>
+        <span><kbd>Esc</kbd> close</span>
+      </div>
+      <div id="lab-palette-results"></div>
+    </div>
+  `;
+  wrap.appendChild(pal);
+
+  // Close on click on the backdrop overlay
+  pal.addEventListener("mousedown", e => {
+    if (e.target === pal) closeLabPalette();
+  });
+
+  const input = () => document.getElementById("lab-palette-input");
+
+  // Filter as user types
+  pal.addEventListener("input", e => {
+    if (e.target.id === "lab-palette-input") renderPaletteResults(e.target.value);
+  });
+
+  // Keyboard nav inside palette
+  pal.addEventListener("keydown", e => {
+    if (e.key === "Escape") { e.preventDefault(); closeLabPalette(); return; }
+
+    const items = [...document.querySelectorAll(".palette-item")];
+    const focusIdx = items.findIndex(i => i.classList.contains("focused"));
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const next = items[(focusIdx + 1) % items.length];
+      items.forEach(i => i.classList.remove("focused"));
+      if (next) { next.classList.add("focused"); next.scrollIntoView({ block: "nearest" }); }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prev = items[(focusIdx - 1 + items.length) % items.length];
+      items.forEach(i => i.classList.remove("focused"));
+      if (prev) { prev.classList.add("focused"); prev.scrollIntoView({ block: "nearest" }); }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const focused = document.querySelector(".palette-item.focused");
+      if (focused) focused.click();
+    }
+  });
+}
+
+function openLabPalette() {
+  const pal = document.getElementById("lab-palette");
+  if (!pal) return;
+
+  // Position near cursor, clamped inside wrap
+  const wrap = document.getElementById("flow-canvas-wrap");
+  const wr = wrap.getBoundingClientRect();
+  let x = _paletteMouse.x + 20;
+  let y = _paletteMouse.y + 10;
+  x = Math.min(Math.max(x, 8), wr.width - 336);
+  y = Math.min(Math.max(y, 8), wr.height - 420);
+
+  const inner = document.getElementById("lab-palette-inner");
+  inner.style.left = x + "px";
+  inner.style.top  = y + "px";
+
+  pal.style.display = "flex";
+  const inp = document.getElementById("lab-palette-input");
+  inp.value = "";
+  renderPaletteResults("");
+  setTimeout(() => inp.focus(), 20);
+}
+window.openLabPalette = openLabPalette;
+
+function closeLabPalette() {
+  const pal = document.getElementById("lab-palette");
+  if (pal) pal.style.display = "none";
+}
+window.closeLabPalette = closeLabPalette;
+
+function renderPaletteResults(q) {
+  const container = document.getElementById("lab-palette-results");
+  if (!container) return;
+  container.innerHTML = "";
+  const lq = q.toLowerCase();
+
+  function match(item) {
+    return !q || item.label.toLowerCase().includes(lq) || item.sub.toLowerCase().includes(lq);
+  }
+
+  function spawnPos() {
+    return { x: (_paletteMouse.x - CT.x) / CT.scale, y: (_paletteMouse.y - CT.y) / CT.scale };
+  }
+
+  // Primitives
+  const primitives = [
+    { label: "Trit Gate",    sub: "Ternary routing gate (+1/0/-1 branches)", icon: "git-merge",  color: "var(--cyan)",  spawn: () => { const id = "node_"+Date.now(); const p=spawnPos(); createFlowNode("Gate","__arch__",p.x,p.y,"gate",id); closeLabPalette(); } },
+    { label: "LLM Bridge",   sub: "External LLM connector (GPT, Claude…)",   icon: "zap",        color: "var(--amber)", spawn: () => { addExternalBridge(); closeLabPalette(); } },
+    { label: "Data Source",  sub: "Static data, CSV, JSON payload",           icon: "database",   color: "#f43f5e",      spawn: () => { addDataSource(); closeLabPalette(); } },
+    { label: "Agent",        sub: "Blank Ternlang agent node",                icon: "bot",        color: "var(--cyan)",  spawn: () => { openNewAgentModal(); closeLabPalette(); } },
+  ];
+
+  // Built-in agents
+  const builtins = Object.entries(BUILTIN_AGENTS).map(([name, ag]) => ({
+    label: name, sub: ag.desc, icon: ag.icon, color: ag.color,
+    spawn: () => {
+      const id = "node_" + Date.now(); const p = spawnPos();
+      createFlowNode(name, "__builtin__", p.x, p.y, "agent", id);
+      const node = flowNodes.find(n => n.id === id);
+      if (node) { node.props.code = ag.code; node.props.input_schema = "signal: trit"; node.props.output_schema = "signal: trit"; }
+      closeLabPalette();
+    }
+  }));
+
+  // Archetypes
+  const archs = ARCHETYPES.map(arch => ({
+    label: arch.name, sub: arch.desc, icon: arch.icon, color: arch.color, isArch: true,
+    spawn: () => { spawnArchetype(arch); closeLabPalette(); }
+  }));
+
+  function addSection(title, items) {
+    const filtered = items.filter(match);
+    if (filtered.length === 0) return;
+    const hdr = document.createElement("div");
+    hdr.className = "palette-section-header";
+    hdr.textContent = title;
+    container.appendChild(hdr);
+    filtered.forEach((item, i) => {
+      const row = document.createElement("div");
+      const isFirstEver = container.querySelectorAll(".palette-item").length === 0;
+      row.className = "palette-item" + (isFirstEver ? " focused" : "") + (item.isArch ? " palette-arch" : "");
+      row.innerHTML = `
+        <i data-lucide="${item.icon}" style="width:14px;height:14px;color:${item.color};flex-shrink:0;"></i>
+        <div style="min-width:0;flex:1;">
+          <div class="palette-item-name">${item.label}</div>
+          <div class="palette-item-sub">${item.sub}</div>
+        </div>
+        ${item.isArch ? `<span class="palette-arch-badge">arch</span>` : ''}
+      `;
+      row.onclick = () => item.spawn();
+      row.onmouseenter = () => {
+        document.querySelectorAll(".palette-item").forEach(r => r.classList.remove("focused"));
+        row.classList.add("focused");
+      };
+      container.appendChild(row);
+    });
+  }
+
+  addSection("Primitives", primitives);
+  addSection("Built-in Agents", builtins);
+  addSection("Archetypes", archs);
+
+  if (container.children.length === 0) {
+    container.innerHTML = `<div style="padding:16px;color:var(--muted);font-size:11px;text-align:center;">No results for "<strong>${q}</strong>"</div>`;
+  }
+  lucide.createIcons();
+}
+window.renderPaletteResults = renderPaletteResults;
+
 function populateNewAgentPicker(paths) {
   const sel = document.getElementById("newAgentLibPick");
   if (!sel) return;
@@ -2548,7 +2748,12 @@ function closeNewAgentModal() {
 }
 window.closeNewAgentModal = closeNewAgentModal;
 
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeNewAgentModal(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    closeNewAgentModal();
+    closeLabPalette();
+  }
+});
 
 async function loadNewAgentTemplate() {
   const path = document.getElementById("newAgentLibPick").value;
