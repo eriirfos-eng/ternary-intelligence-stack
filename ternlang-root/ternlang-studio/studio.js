@@ -6490,15 +6490,14 @@ function updateWires() {
   });
 
   flowWires.forEach(w => {
+    // Albert-panel wires are rendered on a dedicated screen-space overlay SVG that is immune
+    // to flow-canvas-wrap's overflow:hidden clipping. Skip them in the canvas SVG entirely.
+    if (w.fromId === 'albert-panel' || w.toId === 'albert-panel') return;
+
     const fromNode = document.getElementById(w.fromId);
     const toNode   = document.getElementById(w.toId);
     // Skip wires where either endpoint has been deleted.
     if (!fromNode || !toNode) return;
-    // Skip wires to/from albert-panel when it is hidden — getBoundingClientRect()
-    // returns zeros on hidden elements and produces invalid SVG paths.
-    const albertEl = document.getElementById('albert-panel');
-    if ((w.fromId === 'albert-panel' || w.toId === 'albert-panel') &&
-        albertEl && albertEl.style.display === 'none') return;
 
     // Phase 3: Select specific ternary output port based on condition
     let portSelector = '.flow-port-out';
@@ -6566,8 +6565,63 @@ function updateWires() {
     const ghost = document.getElementById("evolution-ghost");
     if (ghost) ghost.style.display = "none";
   }
+
+  // Albert-panel wires need screen-space rendering — handled separately.
+  updateAlbertWire();
 }
 window.updateWires = updateWires;
+
+// Draw wires connected to the albert panel on a fixed screen-space SVG overlay.
+// The albert panel is position:fixed so its port lives outside the canvas coordinate system.
+// Drawing in canvas SVG (inside overflow:hidden flow-canvas-wrap) clips the wire endpoint.
+// A full-viewport overlay SVG sidesteps this entirely.
+function updateAlbertWire() {
+  let overlay = document.getElementById('albert-wire-overlay');
+  if (!overlay) {
+    overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    overlay.id = 'albert-wire-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1001;overflow:visible;';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = '';
+
+  const albertEl = document.getElementById('albert-panel');
+  if (!albertEl || albertEl.style.display === 'none') return;
+
+  flowWires.forEach(w => {
+    if (w.fromId !== 'albert-panel' && w.toId !== 'albert-panel') return;
+
+    const fromNode = document.getElementById(w.fromId);
+    const toNode   = document.getElementById(w.toId);
+    if (!fromNode || !toNode) return;
+
+    // fromPort: output port of the canvas node; toPort: input port of albert (or vice versa).
+    const fromPort = fromNode.querySelector('.flow-port-out') || fromNode.querySelector('.flow-port');
+    const toPort   = toNode.querySelector('.flow-port-in')  || toNode.querySelector('.flow-port');
+    if (!fromPort || !toPort) return;
+
+    // Use raw screen coordinates — getBoundingClientRect() returns rendered position for both
+    // canvas nodes (after CSS transform) and the fixed albert panel.
+    const fr = fromPort.getBoundingClientRect();
+    const tr = toPort.getBoundingClientRect();
+    const x1 = fr.left + fr.width  / 2, y1 = fr.top + fr.height / 2;
+    const x2 = tr.left + tr.width  / 2, y2 = tr.top + tr.height / 2;
+
+    const dx = x2 - x1;
+    const curve = Math.max(60, Math.abs(dx) * 0.5);
+    const d = `M ${x1} ${y1} C ${x1 + curve} ${y1}, ${x2 - curve} ${y2}, ${x2} ${y2}`;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'var(--cyan)');
+    path.setAttribute('stroke-width', '2.5');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('opacity', '0.9');
+    overlay.appendChild(path);
+  });
+}
+window.updateAlbertWire = updateAlbertWire;
 
 function computeWirePath(start, end, wire) {
   const dx = end.x - start.x;
@@ -7253,7 +7307,8 @@ function onMouseUp(e) {
             if (portEl) portEl.dispatchEvent(new Event('mouseup'));
           }
           activeWire = null;
-          updateWires();
+          // Defer wire draw by one animation frame so the panel port has a settled layout rect.
+          requestAnimationFrame(() => { updateWires(); updateAlbertWire(); });
           return;
         }
         const toNode = targetPort.closest('.flow-node');
@@ -9067,6 +9122,8 @@ document.addEventListener('DOMContentLoaded', () => {
       el.style.left = (dragStart.ex + dx) + 'px';
       el.style.top  = (dragStart.ey + dy) + 'px';
       el.style.right = 'auto';
+      // Keep any connected wire tracking the panel as it moves.
+      if (typeof updateAlbertWire === 'function') updateAlbertWire();
     });
     document.addEventListener('mouseup', () => {
       dragStart = null;
@@ -9401,6 +9458,8 @@ Otherwise, respond naturally and concisely.`;
     if (panelEl) panelEl.style.display = 'none';
     visible = false;
     updateWires();
+    const ov = document.getElementById('albert-wire-overlay');
+    if (ov) ov.innerHTML = '';
   }
 
   window.toggleAlbertPanel = function() {
