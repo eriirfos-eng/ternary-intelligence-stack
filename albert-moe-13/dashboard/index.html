@@ -8,14 +8,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <style>
         :root {
-            --bg: #080808;
-            --surface: #111;
-            --border: #1c1c1c;
-            --text: #f0f0f0;
-            --muted: #666;
-            --accent: #00e5a0;
-            --warn: #ff6b35;
-            --red: #ff4444;
+            --bg:      #080c14;
+            --bg1:     #0d1117;
+            --bg2:     #111827;
+            --bg3:     #1f2937;
+            --border:  #1e2d40;
+            --border2: #2a3a50;
+            --surface: #0d1117;
+            --text:    #e2e8f0;
+            --muted:   #64748b;
+            --muted2:  #475569;
+            --accent:  #22d3ee;
+            --cyan:    #22d3ee;
+            --amber:   #f59e0b;
+            --warn:    #f59e0b;
+            --green:   #10b981;
+            --red:     #ef4444;
+            --blue:    #3b82f6;
+            --shadow:  0 4px 20px rgba(0,0,0,0.5);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -34,7 +44,8 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            min-height: 36px;
+            min-height: 40px;
+            background: var(--bg1);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
             padding: 0;
@@ -43,30 +54,32 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            padding: 0 10px;
+            padding: 0 12px;
             border-right: 1px solid var(--border);
-            height: 36px;
+            height: 40px;
             white-space: nowrap;
             flex: 0 0 auto;
         }
-        /* ARCH shrinks and truncates before anything else */
         .tb-cell.arch { flex: 1 1 120px; min-width: 0; overflow: hidden; }
         .tb-cell.arch .tb-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-        /* Controls always hug right; no right border */
-        .tb-cell.controls { border-right: none; margin-left: auto; gap: 6px; }
-        .tb-label { color: #999; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tb-val   { color: #fff; font-weight: bold; font-size: 13px; }
+        .tb-cell.controls { border-right: none; margin-left: auto; gap: 6px; padding-right: 12px; }
+        .tb-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tb-val   { color: var(--text); font-weight: bold; font-size: 13px; }
         .tb-val.accent { color: var(--accent); font-size: 16px; }
-        .tb-val.muted  { color: #aaa; font-size: 12px; font-weight: normal; }
+        .tb-val.muted  { color: var(--muted); font-size: 12px; font-weight: normal; }
 
         #model-name { color: var(--accent); font-weight: bold; font-size: 13px; letter-spacing: 1px; }
 
         #dot {
-            width: 7px; height: 7px; border-radius: 50%;
+            width: 8px; height: 8px; border-radius: 50%;
             background: var(--accent); flex-shrink: 0;
+            box-shadow: 0 0 8px var(--accent);
             animation: pulse 2.2s ease-in-out infinite;
         }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+        @keyframes pulse {
+            0%,100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+            50%      { opacity: 0.3; box-shadow: none; }
+        }
 
         #delta { font-size: 11px; }
         #delta.up   { color: var(--red); }
@@ -74,22 +87,25 @@
         #delta.flat { color: var(--muted); }
 
         select, button {
-            background: var(--surface); color: var(--accent);
-            border: 1px solid var(--border);
-            padding: 3px 8px; border-radius: 2px;
-            font-family: inherit; font-size: 11px; cursor: pointer;
+            background: var(--bg2);
+            color: var(--accent);
+            border: 1px solid var(--border2);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
         }
-        select:hover, button:hover { border-color: var(--accent); }
+        select:hover, button:hover { border-color: var(--accent); background: var(--bg3); }
         button.dim { color: var(--muted); border-color: var(--border); }
-        button.dim:hover { border-color: var(--muted); }
+        button.dim:hover { border-color: var(--muted2); }
 
         /* ── Chart ───────────────────────────────────────────────── */
         #chart-wrap {
             flex: 1;
             position: relative;
             min-height: 0;
-            /* no CSS padding — inset handled by chart layout.padding so both
-               canvases share the same (0,0) origin and pulse coords align exactly */
         }
         canvas { display: block; }
 
@@ -99,7 +115,7 @@
             color: var(--muted); text-align: center; pointer-events: none;
             font-size: 13px; line-height: 2;
         }
-        #waiting span { font-size: 10px; color: #555; }
+        #waiting span { font-size: 10px; color: var(--muted2); }
         #waiting.hidden { display: none; }
 
         /* ── Neural Viz ──────────────────────────────────────────── */
@@ -110,12 +126,13 @@
             flex-shrink: 0;
             height: 210px;
             overflow: hidden;
+            background: var(--bg1);
         }
         .nv-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 4px 8px;
+            padding: 6px 10px;
             min-width: 0;
             overflow: hidden;
         }
@@ -137,15 +154,15 @@
             top: 50%; left: 1px;
             transform: translateY(-50%);
             width: 2px; height: 28px;
-            background: #222;
-            border-radius: 1px;
+            background: var(--bg3);
+            border-radius: 4px;
             transition: background 0.15s;
         }
         .panel-resize-handle:hover::after,
         .panel-resize-handle.h-dragging::after { background: var(--accent); }
         .nv-label {
             font-size: 10px;
-            color: #aaa;
+            color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 0.8px;
             margin-bottom: 4px;
@@ -162,18 +179,18 @@
         }
         .topo-node {
             font-size: 10px;
-            color: #aaa;
+            color: var(--muted);
             white-space: nowrap;
             flex-shrink: 0;
         }
         .topo-arrow {
-            color: #777;
+            color: var(--muted2);
             font-size: 10px;
             flex-shrink: 0;
         }
         .topo-layer {
             border: 1px solid var(--accent);
-            border-radius: 3px;
+            border-radius: 10px;
             padding: 6px 10px;
             display: flex;
             flex-direction: column;
@@ -183,20 +200,21 @@
             min-width: 48px;
             cursor: default;
             transition: border-color 0.6s, opacity 0.6s;
+            background: rgba(34,211,238,0.04);
         }
-        .topo-layer-label { font-size: 12px; color: #fff; font-weight: bold; }
-        .topo-layer-sparsity { font-size: 10px; color: #ccc; }
+        .topo-layer-label { font-size: 12px; color: var(--text); font-weight: bold; }
+        .topo-layer-sparsity { font-size: 10px; color: var(--muted); }
         /* Layer topology panel gets extra width */
         .nv-panel:first-child { flex: 1.6; }
         /* Expert heatmap */
         #expert-viz {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 2px;
+            gap: 3px;
             flex: 1;
         }
         .expert-cell {
-            border-radius: 2px;
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -206,25 +224,24 @@
         }
         .expert-label { font-size: 10px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1; }
         .expert-act   { font-size: 11px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: bold; line-height: 1.3; }
-        /* Topbar value overrides — white for PTS and ARCH values */
-        #v-arch { color: #fff; }
+        #v-arch { color: var(--text); }
 
         /* ── Styled tooltip ────────────────────────────────────── */
         #tooltip {
             display: none;
             position: fixed;
-            background: #141414;
-            border: 1px solid #2c2c2c;
-            color: #ddd;
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            color: var(--text);
             font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
             font-size: 11px;
-            padding: 7px 11px;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border-radius: 10px;
             z-index: 9999;
             pointer-events: none;
             line-height: 1.8;
             max-width: 260px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
         }
         #tooltip b { color: var(--accent); }
         /* Sparsity bars */
@@ -241,48 +258,48 @@
             gap: 5px;
             font-size: 10px;
         }
-        .sbar-label { color: #ccc; width: 22px; flex-shrink: 0; }
+        .sbar-label { color: var(--muted); width: 22px; flex-shrink: 0; }
         .sbar-track {
             flex: 1;
             height: 8px;
-            background: #1c1c1c;
-            border-radius: 2px;
+            background: var(--bg3);
+            border-radius: 6px;
             overflow: hidden;
         }
         .sbar-fill {
             height: 100%;
-            border-radius: 2px;
+            border-radius: 6px;
             transition: width 0.8s ease;
         }
-        .sbar-val { color: #fff; width: 30px; text-align: right; flex-shrink: 0; }
+        .sbar-val { color: var(--text); width: 30px; text-align: right; flex-shrink: 0; }
 
         /* Routing heatmap (Panel D) */
         #routing-viz {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1px;
+            gap: 2px;
             overflow: hidden;
         }
         .route-row {
             display: flex;
-            gap: 1px;
+            gap: 2px;
             flex: 1;
             align-items: stretch;
         }
         .route-label {
             font-size: 9px;
-            color: #ccc;
+            color: var(--muted);
             width: 26px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
         }
-        .route-cells { display: flex; gap: 1px; flex: 1; overflow: hidden; }
+        .route-cells { display: flex; gap: 2px; flex: 1; overflow: hidden; }
         .route-cell {
             flex: 1;
             min-width: 3px;
-            border-radius: 1px;
+            border-radius: 3px;
             transition: background 0.3s;
         }
 
@@ -300,24 +317,24 @@
             gap: 5px;
             font-size: 10px;
         }
-        .gbar-label { color: #ccc; width: 22px; flex-shrink: 0; }
+        .gbar-label { color: var(--muted); width: 22px; flex-shrink: 0; }
         .gbar-track {
             flex: 1;
             height: 8px;
-            background: #1c1c1c;
-            border-radius: 2px;
+            background: var(--bg3);
+            border-radius: 6px;
             overflow: hidden;
         }
         .gbar-fill {
             height: 100%;
-            border-radius: 2px;
+            border-radius: 6px;
             transition: width 0.4s ease, background 0.4s;
         }
-        .gbar-val { color: #fff; width: 46px; text-align: right; flex-shrink: 0; }
-        #grad-norm-global { font-size: 10px; color: #aaa; margin-top: 2px; flex-shrink: 0; }
+        .gbar-val { color: var(--text); width: 46px; text-align: right; flex-shrink: 0; }
+        #grad-norm-global { font-size: 10px; color: var(--muted); margin-top: 2px; flex-shrink: 0; }
 
         #neural-waiting {
-            color: #333;
+            color: var(--border2);
             font-size: 10px;
             display: flex;
             align-items: center;
@@ -345,13 +362,12 @@
             left: 50%; top: 1px;
             transform: translateX(-50%);
             width: 36px; height: 2px;
-            background: #222;
-            border-radius: 1px;
+            background: var(--bg3);
+            border-radius: 4px;
             transition: background 0.15s;
         }
         #bottom-resize-handle:hover::after,
         #bottom-resize-handle.dragging::after { background: var(--accent); }
-
 
         /* ── Anomaly event feed ───────────────────────────────────── */
         #anomaly-strip {
@@ -359,14 +375,15 @@
             display: flex;
             align-items: center;
             flex-shrink: 0;
-            height: 36px;
-            padding: 0 10px;
+            height: 38px;
+            padding: 0 12px;
             gap: 10px;
             overflow: hidden;
+            background: var(--bg1);
         }
         #anomaly-label {
             font-size: 9px;
-            color: #444;
+            color: var(--muted2);
             text-transform: uppercase;
             letter-spacing: 0.8px;
             flex-shrink: 0;
@@ -374,7 +391,7 @@
         }
         #anomaly-scroll {
             display: flex;
-            gap: 5px;
+            gap: 6px;
             overflow-x: auto;
             flex: 1;
             align-items: center;
@@ -384,31 +401,29 @@
         #anomaly-scroll::-webkit-scrollbar { display: none; }
         .ev-pill {
             display: flex; align-items: center; gap: 4px;
-            padding: 2px 7px; border-radius: 3px;
+            padding: 3px 10px; border-radius: 10px;
             font-size: 10px; white-space: nowrap;
             flex-shrink: 0; cursor: default;
             border: 1px solid transparent;
         }
-        .ev-pill.info { background:#0c1810; border-color:#1a2e1e; color:#7ecfa0; }
-        .ev-pill.warn { background:#1a1200; border-color:#3a2800; color:#e0a030; }
-        .ev-pill.crit { background:#1a0000; border-color:#3a0000; color:#ff6060; }
-        .ev-pill.good { background:#0a1a05; border-color:#1c3210; color:#90e050; }
-        .ev-pill.gold { background:#1a1400; border-color:#3a2c00; color:#ffd700; }
+        .ev-pill.info { background: rgba(34,211,238,0.08); border-color: rgba(34,211,238,0.25); color: var(--cyan); }
+        .ev-pill.warn { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.30); color: var(--amber); }
+        .ev-pill.crit { background: rgba(239,68,68,0.08);  border-color: rgba(239,68,68,0.30);  color: var(--red); }
+        .ev-pill.good { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.30); color: var(--green); }
+        .ev-pill.gold { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); color: #ffd700; }
         .ev-pill.newpill { animation: evpulse 1.8s ease-out; }
         @keyframes evpulse {
-            0%   { box-shadow: 0 0 0 2px rgba(0,229,160,0.55); }
-            100% { box-shadow: 0 0 0 0px rgba(0,229,160,0); }
+            0%   { box-shadow: 0 0 0 2px rgba(34,211,238,0.55); }
+            100% { box-shadow: 0 0 0 0px rgba(34,211,238,0); }
         }
-        /* Latest event persistent wrapper */
         .ev-latest-wrap {
             display: flex; align-items: center;
-            border: 1px solid rgba(0,229,160,0.38);
-            border-radius: 5px;
-            padding: 2px;
+            border: 1px solid rgba(34,211,238,0.35);
+            border-radius: 12px;
+            padding: 2px 4px;
             flex-shrink: 0;
-            background: rgba(0,229,160,0.04);
+            background: rgba(34,211,238,0.04);
         }
-        /* Dismiss × — large enough to actually hit */
         .ev-close {
             margin-left: 5px;
             padding: 1px 5px;
@@ -416,7 +431,7 @@
             cursor: pointer;
             font-size: 12px;
             line-height: 1;
-            border-radius: 2px;
+            border-radius: 6px;
             flex-shrink: 0;
         }
         .ev-close:hover { opacity: 1; background: rgba(255,255,255,0.08); }
@@ -496,7 +511,7 @@
 <div id="anomaly-strip">
     <span id="anomaly-label">EVENTS</span>
     <div id="anomaly-scroll">
-        <span style="color:#2a2a2a;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>
+        <span style="color:#2a3a50;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>
     </div>
 </div>
 
@@ -513,28 +528,28 @@
     <!-- Panel B: Expert activity heatmap -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Expert Activity (12 MoE Experts)</div>
-        <div id="expert-viz"><div id="expert-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
+        <div id="expert-viz"><div id="expert-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel C: Per-layer sparsity bars -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Per-Layer Weight Sparsity</div>
-        <div id="sparsity-viz"><div id="sparsity-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
+        <div id="sparsity-viz"><div id="sparsity-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel D: Expert routing heatmap (live, per batch) -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Expert Routing — Last 60 Steps</div>
-        <div id="routing-viz"><div id="routing-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR ROUTE DATA</div></div>
+        <div id="routing-viz"><div id="routing-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR ROUTE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel E: Per-layer gradient magnitude -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Per-Layer Gradient Norm</div>
-        <div id="grad-viz"><div id="grad-waiting" style="color:#666;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
+        <div id="grad-viz"><div id="grad-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
         <div id="grad-norm-global"></div>
     </div>
 </div>
@@ -640,12 +655,12 @@
                     ctx.moveTo(chartArea.left, y);
                     ctx.lineTo(chartArea.right, y);
                     ctx.setLineDash([5, 5]);
-                    ctx.strokeStyle = 'rgba(0,229,160,0.50)';
+                    ctx.strokeStyle = 'rgba(34,211,238,0.50)';
                     ctx.lineWidth = 1;
                     ctx.stroke();
                     ctx.setLineDash([]);
                     ctx.font = '11px monospace';
-                    ctx.fillStyle = '#00e5a0';
+                    ctx.fillStyle = '#22d3ee';
                     ctx.textAlign = 'right';
                     ctx.fillText('EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
                     ctx.restore();
@@ -661,12 +676,12 @@
                     ctx.moveTo(chartArea.left, y);
                     ctx.lineTo(chartArea.right, y);
                     ctx.setLineDash([5, 5]);
-                    ctx.strokeStyle = 'rgba(255,68,68,0.50)';
+                    ctx.strokeStyle = 'rgba(239,68,68,0.50)';
                     ctx.lineWidth = 1;
                     ctx.stroke();
                     ctx.setLineDash([]);
                     ctx.font = '11px monospace';
-                    ctx.fillStyle = '#ff4444';
+                    ctx.fillStyle = '#ef4444';
                     ctx.textAlign = 'right';
                     ctx.fillText('▼ WORST ' + worstLoss.toFixed(4), chartArea.right - 4, y + 12);
                     ctx.restore();
@@ -712,7 +727,7 @@
                 const t = (now % 1200) / 1200;
                 pulseCtx.beginPath();
                 pulseCtx.arc(px, py, 3 + 12 * t, 0, Math.PI * 2);
-                pulseCtx.strokeStyle = `rgba(0,229,160,${(1 - t) * 0.65})`;
+                pulseCtx.strokeStyle = `rgba(34,211,238,${(1 - t) * 0.65})`;
                 pulseCtx.lineWidth = 1.5;
                 pulseCtx.stroke();
             }
@@ -737,7 +752,7 @@
                     type: 'scatter',
                     label: 'Batch loss',
                     data: [],
-                    backgroundColor: 'rgba(0,229,160,0.55)',
+                    backgroundColor: 'rgba(34,211,238,0.55)',
                     pointRadius: 3,
                     order: 2,
                 },
@@ -757,7 +772,7 @@
                     type: 'line',
                     label: 'SMA-30',
                     data: [],
-                    borderColor: '#ff6b35',
+                    borderColor: '#f59e0b',
                     borderWidth: 1.5,
                     fill: false,
                     pointRadius: 0,
@@ -814,22 +829,22 @@
             scales: {
                 x: {
                     type: 'linear',
-                    title: { display: true, text: 'Global Epoch', color: '#888', font: { size: 11 } },
-                    grid: { color: '#131313' },
-                    ticks: { color: '#bbb', font: { size: 10 } }
+                    title: { display: true, text: 'Global Epoch', color: '#64748b', font: { size: 11 } },
+                    grid: { color: '#1e2d40' },
+                    ticks: { color: '#94a3b8', font: { size: 10 } }
                 },
                 y: {
-                    title: { display: true, text: 'Loss', color: '#888', font: { size: 11 } },
-                    grid: { color: '#131313' },
-                    ticks: { color: '#bbb', font: { size: 10 } }
+                    title: { display: true, text: 'Loss', color: '#64748b', font: { size: 11 } },
+                    grid: { color: '#1e2d40' },
+                    ticks: { color: '#94a3b8', font: { size: 10 } }
                 }
             },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#111',
-                    bodyColor: '#ccc',
-                    titleColor: '#00e5a0',
+                    backgroundColor: '#0d1117',
+                    bodyColor: '#94a3b8',
+                    titleColor: '#22d3ee',
                     callbacks: {
                         label: c => ` loss ${c.parsed.y.toFixed(4)}  @ epoch ${c.parsed.x.toFixed(3)}`
                     }
@@ -1299,20 +1314,20 @@
 
     function sparsityColor(s) {
         // s: 0.0 (dense) → 1.0 (fully sparse)
-        // dense = warm green #00e5a0, sparse = muted cyan, overdense = warn orange
-        const r = Math.round(s * 40);
-        const g = Math.round(229 - s * 100);
-        const b = Math.round(160 - s * 40);
+        // dense = cyan #22d3ee, sparse = deep blue
+        const r = Math.round(34  + s * 25);
+        const g = Math.round(211 - s * 120);
+        const b = Math.round(238 - s * 50);
         return `rgb(${r},${g},${b})`;
     }
 
     function expertColor(act) {
         // act: 0.0 (dormant) → 1.0 (fully active)
-        // Muted forest-green palette — no neon, comfortable on the eyes.
-        if (act < 0.05) return '#0d130d';
-        const g = Math.round(35 + act * 90);   // 35–125, never neon
-        const r = Math.round(act * 12);
-        const b = Math.round(act * 35);
+        // Dark-blue palette: dormant = near-black navy, active = bright cyan
+        if (act < 0.05) return '#080c14';
+        const r = Math.round(act * 34);
+        const g = Math.round(20 + act * 191);
+        const b = Math.round(30 + act * 208);
         return `rgb(${r},${g},${b})`;
     }
 
@@ -1550,7 +1565,7 @@
         const scroll = document.getElementById('anomaly-scroll');
         scroll.innerHTML = '';
         if (anomalyEvents.length === 0) {
-            scroll.innerHTML = '<span style="color:#2a2a2a;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>';
+            scroll.innerHTML = '<span style="color:#2a3a50;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>';
             return;
         }
         for (let i = 0; i < anomalyEvents.length; i++) {
@@ -1584,7 +1599,7 @@
             pill.addEventListener('mouseenter', e => showTip(e,
                 (ICON_SVG[ev.icon] ? '<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + ICON_SVG[ev.icon] + '</span> ' : '') +
                 '<b>' + ev.text + '</b><br>' +
-                ev.detail + '<br><span style="color:#555">' + ev.ts + '</span>'));
+                ev.detail + '<br><span style="color:#64748b">' + ev.ts + '</span>'));
             pill.addEventListener('mouseleave', hideTip);
 
             if (i === 0) {
