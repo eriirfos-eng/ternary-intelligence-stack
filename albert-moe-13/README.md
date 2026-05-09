@@ -216,6 +216,9 @@ Standard MoE uses float32 weights and routes for capacity, not sparsity. Albert 
 
 ---
 
+<img width="1872" height="931" alt="image" src="https://github.com/user-attachments/assets/ea0198ed-c29d-4872-8fa5-6cf7b2a1513a" />
+
+
 ## Further Reading
 
 - [Architecture](docs/architecture.md) — model internals, routing, STE
