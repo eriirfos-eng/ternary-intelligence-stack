@@ -1,26 +1,45 @@
 # MoE-Platform — Inference Runtime (Planned)
 
-Future production inference API for Albert MoE-13. Not yet implemented — this crate is a placeholder for the deployment-facing interface that will wrap the trained ternary model.
+Future production inference API for Albert MoE-13. This crate is a placeholder for the deployment-facing interface that will wrap the trained ternary model for external consumption.
+
+For current inference and benchmarking, use the `moe-test` crate.
+
+---
+
+## Current Inference Interface (`moe-test`)
+
+Until `moe-platform` is built, all inference runs through `moe-test`:
+
+```bash
+# Interactive TUI (type prompts, see tok/s live)
+./target/release/moe-test
+
+# Full benchmark suite — speed + @sparseskip + perplexity + CSV export
+./target/release/moe-test --bench --csv results.csv
+
+# Perplexity evaluation on a text file
+./target/release/moe-test --eval data/corpus/stage_3/bible.txt
+
+# One-line installer for external evaluators (Linux + macOS)
+curl -fsSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/albert-moe-13/bench/install.sh | sh
+```
+
+**Measured performance (v2.0.0, 5L × 12E × 256H, CPU only):**
+- 84.4 tok/s on Intel i7-4800MQ (2013 laptop)
+- 75% expert skip rate per decode step (@sparseskip)
+- No GPU required
 
 ---
 
 ## Planned Scope
 
-The platform crate will decouple inference from the training code and provide:
+The platform crate will decouple inference from the training code:
 
-- **Model loading** from `.safetensors` checkpoint + `config.json`
+- **Model loading** from `.safetensors` + `config.json`
 - **Batched inference** with top-k / temperature sampling
-- **Ternary-native execution** — apply STE quantization at load time and run integer-only matmuls
+- **Ternary-native execution** — pre-ternarized weights at load time, integer-only matmuls
 - **REST API** via Axum for serving Albert as a local endpoint
-- **MCP server integration** — expose Albert as a tool callable from Claude/TernLang-MCP
-
----
-
-## Current State
-
-Training and inference share the same `moe-llm-core` crate. The `Transformer::generate()` method in `transformer.rs` handles greedy/sampled generation for local testing. This is sufficient for research purposes.
-
-The `moe-platform` crate will be built once the model reaches stable loss convergence and the architecture is frozen for a production release.
+- **MCP server integration** — expose Albert as a tool callable from Claude / TernLang-MCP
 
 ---
 
@@ -38,6 +57,7 @@ let response = albert.generate("In the beginning", 128)?;
 
 ## See Also
 
-- [Main README](../../README.md) — current training setup
-- [Architecture](../../docs/architecture.md) — model internals
+- [Main README](../../README.md) — current architecture and training setup
+- [moe-test](../../moe-test/) — current inference + benchmark binary
+- [Benchmark installer](../../bench/install.sh) — one-line external evaluator setup
 - [TernLang-MCP](../../../ternlang-root/ternlang-mcp/) — MCP server (live)
