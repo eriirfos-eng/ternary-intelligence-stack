@@ -415,8 +415,8 @@ fn train_cycle(
             let aux_active     = real_loss_preview < 8.0;
             let l1_lambda      = if aux_active { 1e-5_f64  } else { 0.0_f64 };
             let entropy_lambda = 0.0_f64;
-            // Switch Transformer load-balancing coefficient. Bumped 0.01→0.02 at Global ~361 to arrest ENTR re-uniformization.
-            let lb_lambda      = 0.02_f64;
+            // Switch Transformer load-balancing coefficient. Bumped 0.01→0.02 at Global ~361, 0.02→0.03 at Global ~385 to arrest ENTR re-uniformization.
+            let lb_lambda      = 0.03_f64;
 
             // Drain both thread-locals regardless — keeps accumulators clean next batch.
             let entropy_term   = take_entropy_capture();
