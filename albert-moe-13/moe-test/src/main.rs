@@ -4,6 +4,8 @@
 
 use std::io;
 use std::path::PathBuf;
+#[cfg(target_os = "macos")]
+use std::process::Command;
 use std::time::{Duration, Instant};
 use std::fs;
 
@@ -255,6 +257,98 @@ impl App {
     }
 }
 
+struct SysInfo {
+    cpu_model: String,
+    cpu_cores: usize,
+    ram_gb: f64,
+    os: String,
+    arch: String,
+}
+
+impl SysInfo {
+    fn collect() -> Self {
+        let arch = std::env::consts::ARCH.to_string();
+        let os = std::env::consts::OS.to_string();
+
+        #[cfg(target_os = "linux")]
+        {
+            let cpu_model = fs::read_to_string("/proc/cpuinfo")
+                .unwrap_or_default()
+                .lines()
+                .find(|l| l.starts_with("model name"))
+                .and_then(|l| l.splitn(2, ':').nth(1))
+                .map(|s| s.trim().to_string())
+                .unwrap_or_else(|| "unknown".to_string());
+
+            let cpu_cores = fs::read_to_string("/proc/cpuinfo")
+                .unwrap_or_default()
+                .lines()
+                .filter(|l| l.starts_with("processor"))
+                .count()
+                .max(1);
+
+            let ram_kb: u64 = fs::read_to_string("/proc/meminfo")
+                .unwrap_or_default()
+                .lines()
+                .find(|l| l.starts_with("MemTotal:"))
+                .and_then(|l| l.split_whitespace().nth(1))
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0);
+            let ram_gb = ram_kb as f64 / 1_048_576.0;
+
+            return SysInfo { cpu_model, cpu_cores, ram_gb, os, arch };
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let cpu_model = Command::new("sysctl")
+                .args(["-n", "machdep.cpu.brand_string"])
+                .output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+                .unwrap_or_else(|_| "unknown".to_string());
+
+            let cpu_cores = Command::new("sysctl")
+                .args(["-n", "hw.logicalcpu"])
+                .output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().parse().unwrap_or(1))
+                .unwrap_or(1);
+
+            let ram_bytes: u64 = Command::new("sysctl")
+                .args(["-n", "hw.memsize"])
+                .output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().parse().unwrap_or(0))
+                .unwrap_or(0);
+            let ram_gb = ram_bytes as f64 / 1_073_741_824.0;
+
+            return SysInfo { cpu_model, cpu_cores, ram_gb, os, arch };
+        }
+
+        #[allow(unreachable_code)]
+        SysInfo {
+            cpu_model: "unknown".to_string(),
+            cpu_cores: 1,
+            ram_gb: 0.0,
+            os,
+            arch,
+        }
+    }
+
+    fn display(&self) -> String {
+        format!("{} ({} cores, {:.0} GB RAM) — {}-{}",
+            self.cpu_model, self.cpu_cores, self.ram_gb, self.os, self.arch)
+    }
+
+    fn csv_header() -> &'static str {
+        "cpu_model,cpu_cores,ram_gb,os,arch"
+    }
+
+    fn csv_row(&self) -> String {
+        format!("\"{}\",{},{:.1},{},{}",
+            self.cpu_model.replace('"', "'"),
+            self.cpu_cores, self.ram_gb, self.os, self.arch)
+    }
+}
+
 fn find_latest_checkpoint() -> (PathBuf, String) {
     let models_dir = "models";
     let search_paths = [
@@ -435,7 +529,7 @@ fn perplexity_on_text(
 /// Usage: moe-test --bench [--csv <path>]
 fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
     let dev = Device::Cpu;
-    let platform = format!("{}-{}", std::env::consts::OS, std::env::consts::ARCH);
+    let sys = SysInfo::collect();
 
     eprintln!("Loading Albert MoE-13...");
     let lm = load_model()?;
@@ -451,7 +545,9 @@ fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Erro
     println!("  Architecture : {}L × {}E × {}H  BitNet 1.58b", c.num_layers, c.num_experts, c.hidden_size);
     println!("  Routing      : @sparseskip Top-{}/{}", top_k, c.num_experts);
     println!("  Checkpoint   : bible_ternary_{}", lm.version);
-    println!("  Platform     : {}", platform);
+    println!("  CPU          : {} ({} cores)", sys.cpu_model, sys.cpu_cores);
+    println!("  RAM          : {:.0} GB", sys.ram_gb);
+    println!("  Platform     : {}-{}", sys.os, sys.arch);
 
     // ── [1/3] Inference Speed ───────────────────────────────────────────
     println!("\n{}", sep);
@@ -554,10 +650,16 @@ fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Erro
     println!("  Model size   : {}L × {}E × {}H  ({} params)", c.num_layers, c.num_experts, c.hidden_size,
         c.num_layers * c.num_experts * c.hidden_size * c.hidden_size * 3 / 1_000_000);
 
+    // ── Summary ─ system info ────────────────────────────────────────────
+    println!("  Measured on  : {}", sys.display());
+
     // ── CSV Export ──────────────────────────────────────────────────────
     let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
     let csv_out = csv_path.unwrap_or("albert_bench_results.csv");
-    let header = "timestamp,model,version,arch,layers,experts,hidden,top_k,tokens_per_sec,latency_ms,gflops,avg_loss,perplexity,tokens_evaluated,skip_rate,platform";
+    let header = format!(
+        "timestamp,model,version,arch,layers,experts,hidden,top_k,tokens_per_sec,latency_ms,gflops,avg_loss,perplexity,tokens_evaluated,skip_rate,{}",
+        SysInfo::csv_header()
+    );
     let row = format!(
         "{},{},{},{}L×{}E×{}H,{},{},{},{},{:.1},{:.1},{:.4},{},{},{},{:.3},{}",
         now, "albert-moe-13", lm.version,
@@ -566,14 +668,14 @@ fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Erro
         tps, lat_ms, gflops,
         if avg_loss.is_nan() { "".to_string() } else { format!("{:.4}", avg_loss) },
         if ppl.is_nan() { "".to_string() } else { format!("{:.2}", ppl) },
-        tokens_evaluated, skip_rate, platform,
+        tokens_evaluated, skip_rate,
+        sys.csv_row(),
     );
-    let csv_content = if std::path::Path::new(csv_out).exists() {
-        format!("{}\n", row)
-    } else {
-        format!("{}\n{}\n", header, row)
-    };
-    fs::write(csv_out, csv_content)?;
+    let write_header = !std::path::Path::new(csv_out).exists();
+    let mut file = fs::OpenOptions::new().create(true).append(true).open(csv_out)?;
+    use std::io::Write as _;
+    if write_header { writeln!(file, "{}", header)?; }
+    writeln!(file, "{}", row)?;
     println!("\n  CSV exported  : {}", csv_out);
     println!();
 
