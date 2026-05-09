@@ -620,15 +620,20 @@ fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Erro
     println!("[3/3] PERPLEXITY  (eval_sample.txt)");
     println!("{}", sep);
 
-    let eval_path = "eval_sample.txt";
-    let (avg_loss, tokens_evaluated) = if std::path::Path::new(eval_path).exists() {
-        eprint!("  Evaluating...");
-        let text = fs::read_to_string(eval_path)?;
+    let eval_candidates = [
+        "eval_sample.txt",
+        "data/corpus/stage_3/bible.txt",
+        "../data/corpus/stage_3/bible.txt",
+    ];
+    let eval_path = eval_candidates.iter().find(|p| std::path::Path::new(p).exists()).copied();
+    let (avg_loss, tokens_evaluated) = if let Some(path) = eval_path {
+        eprintln!("  Evaluating on {}...", path);
+        let text = fs::read_to_string(path)?;
         let result = perplexity_on_text(&lm, &text)?;
-        eprintln!(" done.");
+        eprintln!("  done.");
         result
     } else {
-        println!("  eval_sample.txt not found — skipping perplexity");
+        println!("  No eval file found — place eval_sample.txt in current directory to enable");
         (f64::NAN, 0)
     };
     let ppl = avg_loss.exp();
@@ -647,7 +652,7 @@ fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Erro
     println!("  Latency      : {:.1} ms/tok", lat_ms);
     println!("  Perplexity   : {}", if avg_loss.is_nan() { "n/a".to_string() } else { format!("{:.2}", ppl) });
     println!("  Skip rate    : {:.0}%  ({} of {} experts skipped per step)", skip_rate * 100.0, skipped, c.num_experts);
-    println!("  Model size   : {}L × {}E × {}H  ({} params)", c.num_layers, c.num_experts, c.hidden_size,
+    println!("  Model size   : {}L × {}E × {}H  (~{}M params)", c.num_layers, c.num_experts, c.hidden_size,
         c.num_layers * c.num_experts * c.hidden_size * c.hidden_size * 3 / 1_000_000);
 
     // ── Summary ─ system info ────────────────────────────────────────────
