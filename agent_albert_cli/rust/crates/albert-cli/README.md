@@ -8,8 +8,10 @@ The `albert-cli` binary — part of the [Ternary Intelligence Stack](https://git
 ## Install
 
 ```bash
-cargo install albert-cli
+# One line — installs Rust (if needed) + albert-cli, ready immediately
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && cargo install albert-cli
 ```
+> **Note:** Do not use `sudo apt install cargo` — Ubuntu's packaged version is too old (1.75). The line above installs the current toolchain via rustup.
 
 Then run:
 

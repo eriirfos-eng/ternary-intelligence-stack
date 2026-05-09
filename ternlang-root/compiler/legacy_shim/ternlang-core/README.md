@@ -18,10 +18,12 @@ Every value is a `trit`: `reject` (−1), `tend` (0), or `affirm` (+1). The `ten
 ## Quick start
 
 ```bash
-cargo install ternlang-cli
+# One line — installs Rust (if needed) + ternlang-cli, ready immediately
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && cargo install ternlang-cli
 ternlang run my_program.tern
 ternlang repl
 ```
+> **Note:** Do not use `sudo apt install cargo` — Ubuntu's packaged version is too old (1.75). The line above installs the current toolchain via rustup.
 
 Or use the API directly:
 

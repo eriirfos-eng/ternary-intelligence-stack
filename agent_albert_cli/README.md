@@ -19,15 +19,13 @@ Albert is a terminal-native, model-agnostic AI agent built in pure Rust. It runs
 
 ### Quick Start
 ```bash
-# Ensure Rust is installed
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Install Agent Albert
-cargo install albert-cli
+# One line — installs Rust (if needed) + albert-cli, ready immediately
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && cargo install albert-cli
 
 # Launch the agent
 albert-cli
 ```
+> **Note:** Do not use `sudo apt install cargo` — Ubuntu's packaged version is too old (1.75). The line above installs the current toolchain via rustup.
 
 That's it. Albert spins up the REPL and the onboarding will start.
 ---

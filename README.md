@@ -41,13 +41,12 @@ The core type is `trit`: three values — `−1` (reject), `0` (hold), `+1` (aff
 
 ### Quick Start
 ```bash
-# Ensure Rust is installed
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# One line — installs Rust (if needed) + ternlang-cli, ready immediately
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && cargo install ternlang-cli
+```
+> **Note:** Do not use `sudo apt install cargo` — Ubuntu's packaged version is too old (1.75). The line above installs the current toolchain via rustup.
 
-# Install the Ternlang CLI
-cargo install ternlang-cli
-
-# Start developing
+```bash
 ternlang                       # launch interactive REPL immediately
 ternlang my_program.tern       # run a .tern file directly
 ternlang run my_program.tern   # explicit form
@@ -102,14 +101,13 @@ curl -s https://ternlang-api.fly.dev/api/moe/orchestrate \
 
 ### Quick Start
 ```bash
-# Ensure Rust is installed
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# One line — installs Rust (if needed) + albert-cli, ready immediately
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && cargo install albert-cli
+```
+> **Note:** Do not use `sudo apt install cargo` — Ubuntu's packaged version is too old (1.75). The line above installs the current toolchain via rustup.
 
-# Install Agent Albert
-cargo install albert-cli
-
-# Launch the agent
-albert-cli
+```bash
+albert-cli     # launch immediately
 ```
 ---
 
