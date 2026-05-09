@@ -100,6 +100,7 @@
         select:hover, button:hover { border-color: var(--accent); background: var(--bg3); }
         button.dim { color: var(--muted); border-color: var(--border); }
         button.dim:hover { border-color: var(--muted2); }
+        button.active { border-color: var(--accent); background: rgba(0,229,160,0.12); color: var(--accent); }
 
         /* ── Custom dropdowns ────────────────────────────────────── */
         .dd-wrap { position: relative; display: inline-block; }
@@ -127,7 +128,8 @@
             position: relative;
             min-height: 0;
         }
-        canvas { display: block; }
+        canvas { display: block; cursor: grab; }
+        canvas:active { cursor: grabbing; }
 
         #waiting {
             position: absolute; top: 50%; left: 50%;
@@ -147,6 +149,7 @@
             height: 210px;
             overflow: hidden;
             background: var(--bg1);
+            border-radius: 0 0 12px 12px;
         }
         .nv-panel {
             flex: 1;
@@ -191,41 +194,42 @@
         /* Layer topology */
         #layer-viz {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 3px;
+            justify-content: center;
+            gap: 1px;
             flex: 1;
-            overflow-x: auto;
-            overflow-y: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         .topo-node {
-            font-size: 10px;
-            color: var(--muted);
-            white-space: nowrap;
-            flex-shrink: 0;
+            font-size: 9px;
+            color: var(--muted2);
+            text-align: center;
+            letter-spacing: 1px;
         }
         .topo-arrow {
             color: var(--muted2);
-            font-size: 10px;
-            flex-shrink: 0;
+            font-size: 8px;
+            text-align: center;
+            line-height: 1;
         }
         .topo-layer {
             border: 1px solid var(--accent);
             border-radius: 10px;
-            padding: 6px 10px;
+            padding: 3px 10px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 2px;
+            justify-content: center;
             flex-shrink: 0;
-            min-width: 48px;
+            min-width: 44px;
             cursor: default;
             transition: border-color 0.6s, opacity 0.6s;
             background: rgba(34,211,238,0.04);
         }
-        .topo-layer-label { font-size: 12px; color: var(--text); font-weight: bold; }
-        .topo-layer-sparsity { font-size: 10px; color: var(--muted); }
-        /* Layer topology panel: same width as others, topology nodes scale to fit */
-        .nv-panel:first-child { flex: 1.0; }
+        .topo-layer-label { font-size: 11px; color: var(--text); font-weight: bold; }
+        /* Layer topology — sleek fixed-width column */
+        .nv-panel:first-child { flex: 0 0 70px; }
         /* Expert heatmap */
         #expert-viz {
             display: grid;
@@ -239,11 +243,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: default;
-            transition: background 0.8s;
+            cursor: pointer;
+            transition: background 0.8s, outline 0.15s;
+            position: relative;
         }
+        .expert-cell:hover { outline: 1px solid rgba(255,255,255,0.25); }
         .expert-label { font-size: 10px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1; }
         .expert-act   { font-size: 11px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: bold; line-height: 1.3; }
+
         #v-arch { color: var(--text); }
 
         /* ── Styled tooltip ────────────────────────────────────── */
@@ -260,7 +267,7 @@
             z-index: 9999;
             pointer-events: none;
             line-height: 1.8;
-            max-width: 260px;
+            max-width: 300px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.6);
         }
         #tooltip b { color: var(--accent); }
@@ -283,12 +290,12 @@
             flex: 1;
             height: 8px;
             background: var(--bg3);
-            border-radius: 6px;
+            border-radius: 99px;
             overflow: hidden;
         }
         .sbar-fill {
             height: 100%;
-            border-radius: 6px;
+            border-radius: 99px;
             transition: width 0.8s ease;
         }
         .sbar-val { color: var(--text); width: 30px; text-align: right; flex-shrink: 0; }
@@ -319,7 +326,7 @@
         .route-cell {
             flex: 1;
             min-width: 3px;
-            border-radius: 3px;
+            border-radius: 6px;
             transition: background 0.3s;
         }
 
@@ -342,12 +349,12 @@
             flex: 1;
             height: 8px;
             background: var(--bg3);
-            border-radius: 6px;
+            border-radius: 99px;
             overflow: hidden;
         }
         .gbar-fill {
             height: 100%;
-            border-radius: 6px;
+            border-radius: 99px;
             transition: width 0.4s ease, background 0.4s;
         }
         .gbar-val { color: var(--text); width: 46px; text-align: right; flex-shrink: 0; }
@@ -431,6 +438,7 @@
         .ev-pill.crit { background: rgba(239,68,68,0.08);  border-color: rgba(239,68,68,0.30);  color: var(--red); }
         .ev-pill.good { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.30); color: var(--green); }
         .ev-pill.gold { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); color: #ffd700; }
+        .ev-pill.focused { outline: 1px solid currentColor; opacity: 1 !important; cursor: pointer; }
         .ev-pill.newpill { animation: evpulse 1.8s ease-out; }
         @keyframes evpulse {
             0%   { box-shadow: 0 0 0 2px rgba(34,211,238,0.55); }
@@ -517,6 +525,7 @@
             <option value="10">10 EP</option>
             <option value="5">5 EP</option>
         </select>
+        <button id="fibBtn" title="Toggle Fibonacci retracement zones (WORST → BEST)">FIB</button>
         <button id="resetBtn">RESET ZOOM</button>
         <div class="dd-wrap">
             <button id="exportDropBtn" title="Download training data as CSV">↓ EXPORT ▾</button>
@@ -616,6 +625,20 @@
         'Information density & compression',
         'Cross-domain integration & fusion',
     ];
+    const EXPERT_HUMAN = [
+        'The grammar brain. Fires when sentence shape matters — punctuation, word order, how clauses fit together. It keeps Albert from writing nonsense sentences even when it has no idea what it\'s saying.',
+        'The meaning engine. Knows what words actually refer to — objects, actions, relationships. Fires heavily on nouns, definitions, and anything where "what does this word mean?" is the right question.',
+        'The memory keeper. Holds the thread across hundreds of tokens. When Albert uses "it" or "she" or "the same problem", this expert is the one that remembers what those words point back to.',
+        'The logic follower. Traces cause and effect, conditions, conclusions. Fires on words like "because", "therefore", "if… then". This is Albert building a chain of thought, not just predicting the next word.',
+        'The pattern recogniser. Spots repeated formats, familiar names, recurring structures. When you see the same kind of sentence show up again, this expert noticed and said "I\'ve seen this before".',
+        'The flow master. Keeps text smooth, natural, and human-sounding. Doesn\'t care so much about meaning — cares about rhythm. Fires when the next word just has to sound right.',
+        'The rule enforcer. Handles structured, formal reasoning — code logic, mathematical statements, legal text, step-by-step instructions. If there\'s a right and a wrong answer, this expert is watching.',
+        'The voice detector. Figures out the register — formal or casual, poetic or technical, warm or cold. Fires when tone shifts. Responsible for Albert not writing a PhD abstract in emoji.',
+        'The concept handler. Works with ideas bigger than individual words — themes, principles, categories. When Albert talks about "justice" or "entropy" or "growth", this expert is operating above the word level.',
+        'The architect. Tracks where a sequence is going — narrative arcs, numbered steps, list structures, dialogue turns. Fires at transitions and structural markers. Keeps Albert from losing the plot.',
+        'The editor. Packs maximum meaning into minimum words. Fires on dense, precise writing — technical documentation, definitions, anything where every word earns its place.',
+        'The bridge builder. Connects ideas across domains. When a cooking metaphor explains a software concept, or a physics principle maps to economics, this expert is what made that leap possible.',
+    ];
 
     // SVG icons for anomaly event pills — 12×12 viewBox, currentColor
     const ICON_SVG = {
@@ -644,6 +667,8 @@
     let latestGrad       = null; // {norm, layerNorms:[...]}
     let pendingEntropy   = null; // most recent ENTR avg — snapshotted per batch record
     let pendingTlight    = null; // most recent TLIGHT snapshot [{g,o,r,states}] per layer
+    const TLIGHT_WIN     = 60;
+    let tlightHistory    = []; // [{step, layers:[{layer,states,g,o,r}]}]
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let totalPts         = 0;
@@ -658,6 +683,8 @@
     // ── Anomaly feed state ─────────────────────────────────────────────
     const ANOMALY_MAX = 30;
     let anomalyEvents = [];
+    let lastBatchX = null;
+    let lastBatchY = null;
     let lastNumLayers = null;
     let lastDomExpert = -1;
     let lastClipTs    = 0;
@@ -675,8 +702,22 @@
     function showTip(ev, html) {
         ttDiv.innerHTML = html;
         ttDiv.style.display = 'block';
-        ttDiv.style.left = (ev.clientX + 14) + 'px';
-        ttDiv.style.top  = Math.max(4, ev.clientY - 70) + 'px';
+        // Measure after render so we know the real size
+        const tw = ttDiv.offsetWidth  || 300;
+        const th = ttDiv.offsetHeight || 120;
+        const pad = 10;
+        let x = ev.clientX + 14;
+        let y = ev.clientY - 70;
+        // Clamp right edge
+        if (x + tw + pad > window.innerWidth)  x = ev.clientX - tw - 14;
+        // Clamp bottom edge
+        if (y + th + pad > window.innerHeight) y = window.innerHeight - th - pad;
+        // Clamp top edge
+        if (y < pad) y = pad;
+        // Clamp left edge (after possible flip)
+        if (x < pad) x = pad;
+        ttDiv.style.left = x + 'px';
+        ttDiv.style.top  = y + 'px';
     }
     function hideTip() { ttDiv.style.display = 'none'; }
 
@@ -783,6 +824,117 @@
         if (!pulseActive) { pulseActive = true; requestAnimationFrame(pulseTick); }
     }
 
+    // ── Anomaly annotation plugin ─────────────────────────────────────
+    const SEVERITY_COLOR = { info: '#22d3ee', warn: '#f59e0b', crit: '#ef4444', gold: '#ffd700', good: '#10b981' };
+    let focusedEvent = null;
+
+    const annotationPlugin = {
+        id: 'anomalyAnnotations',
+        afterDraw(c) {
+            if (!anomalyEvents.length) return;
+            const x = c.scales.x, y = c.scales.y, a = c.chartArea, ctx2 = c.ctx;
+            ctx2.save();
+            ctx2.beginPath();
+            ctx2.rect(a.left, a.top, a.width, a.height);
+            ctx2.clip();
+            for (const ev of anomalyEvents) {
+                if (ev.cx == null || ev.cy == null) continue;
+                const px = x.getPixelForValue(ev.cx);
+                const py = y.getPixelForValue(ev.cy);
+                const col = SEVERITY_COLOR[ev.level] || '#22d3ee';
+                const focused = ev === focusedEvent;
+                const s = focused ? 8 : 5;
+                ctx2.globalAlpha = focused ? 1.0 : 0.7;
+                ctx2.strokeStyle = col;
+                ctx2.lineWidth   = focused ? 2 : 1.5;
+                // Diamond marker
+                ctx2.beginPath();
+                ctx2.moveTo(px,     py - s);
+                ctx2.lineTo(px + s, py);
+                ctx2.lineTo(px,     py + s);
+                ctx2.lineTo(px - s, py);
+                ctx2.closePath();
+                ctx2.stroke();
+                if (focused) {
+                    // Outer ring
+                    ctx2.globalAlpha = 0.35;
+                    ctx2.lineWidth = 1;
+                    ctx2.beginPath();
+                    ctx2.arc(px, py, 16, 0, Math.PI * 2);
+                    ctx2.stroke();
+                }
+            }
+            ctx2.restore();
+        }
+    };
+    Chart.register(annotationPlugin);
+
+    // ── Fibonacci retracement plugin ──────────────────────────────────
+    // Zones drawn between worstLoss (100%) and bestLoss (0%) — full dynamic range.
+    // Standard Fib levels with EM-spectrum-inspired zone colors.
+    let fibVisible = false;
+    const FIB_LEVELS = [
+        { r: 0.000, label: '0',    color: 'rgba(160, 10, 10,  0.10)' },
+        { r: 0.236, label: '0.236',color: 'rgba(220, 90,  0,  0.10)' },
+        { r: 0.382, label: '0.382',color: 'rgba(200,185,  0,  0.10)' },
+        { r: 0.500, label: '0.500',color: 'rgba(0,  170, 45,  0.10)' },
+        { r: 0.618, label: '0.618',color: 'rgba(0,  195,205,  0.10)' },
+        { r: 0.786, label: '0.786',color: 'rgba(20, 120,230,  0.10)' },
+        { r: 1.000, label: '1',    color: 'rgba(10,  45,180,  0.10)' },
+    ];
+
+    const fibPlugin = {
+        id: 'fibRetracement',
+        // Bands behind data points
+        beforeDatasetsDraw(c) {
+            if (!fibVisible) return;
+            if (bestLoss === Infinity || worstLoss === -Infinity) return;
+            const ctx2 = c.ctx, yS = c.scales.y, a = c.chartArea;
+            const hi = worstLoss, lo = bestLoss, range = hi - lo;
+            if (range < 1e-6) return;
+            ctx2.save();
+            ctx2.beginPath();
+            ctx2.rect(a.left, a.top, a.width, a.height);
+            ctx2.clip();
+            for (let i = 0; i < FIB_LEVELS.length - 1; i++) {
+                const yTop = yS.getPixelForValue(lo + range * FIB_LEVELS[i + 1].r);
+                const yBot = yS.getPixelForValue(lo + range * FIB_LEVELS[i].r);
+                ctx2.fillStyle = FIB_LEVELS[i + 1].color;
+                ctx2.fillRect(a.left, yTop, a.width, yBot - yTop);
+            }
+            ctx2.restore();
+        },
+        // Lines + labels on top of data
+        afterDraw(c) {
+            if (!fibVisible) return;
+            if (bestLoss === Infinity || worstLoss === -Infinity) return;
+            const ctx2 = c.ctx, yS = c.scales.y, a = c.chartArea;
+            const hi = worstLoss, lo = bestLoss, range = hi - lo;
+            if (range < 1e-6) return;
+            ctx2.save();
+            ctx2.font = '10px "JetBrains Mono", monospace';
+            ctx2.textAlign = 'right';
+            for (const lvl of FIB_LEVELS) {
+                const yv = lo + range * lvl.r;
+                const py = yS.getPixelForValue(yv);
+                if (py < a.top || py > a.bottom) continue;
+                const lineCol = lvl.color.replace(/[\d.]+\)$/, '0.5)');
+                ctx2.strokeStyle = lineCol;
+                ctx2.lineWidth   = 0.75;
+                ctx2.setLineDash([4, 4]);
+                ctx2.beginPath();
+                ctx2.moveTo(a.left, py);
+                ctx2.lineTo(a.right, py);
+                ctx2.stroke();
+                ctx2.setLineDash([]);
+                ctx2.fillStyle = lineCol.replace(/[\d.]+\)$/, '0.9)');
+                ctx2.fillText(`${lvl.label}  ${yv.toFixed(4)}`, a.right - 4, py - 3);
+            }
+            ctx2.restore();
+        }
+    };
+    Chart.register(fibPlugin);
+
     // ── Chart ──────────────────────────────────────────────────────────
     const ctx = document.getElementById('lossChart').getContext('2d');
 
@@ -854,6 +1006,10 @@
             responsive: true,
             maintainAspectRatio: false,
             layout: { padding: { top: 6, right: 8, bottom: 4, left: 8 } },
+            onHover: (event, elements) => {
+                if (isInteracting) return;
+                event.native.target.style.cursor = elements.length ? 'pointer' : 'grab';
+            },
             animations: {
                 y: {
                     // Only the newest live point gets the drop animation.
@@ -893,12 +1049,14 @@
                 zoom: {
                     pan: {
                         enabled: true, mode: 'xy',
-                        onPanStart: () => {
+                        onPanStart: ({ chart: c }) => {
                             document.getElementById('viewFilter').value = 'all';
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
+                            c.canvas.style.cursor = 'grabbing';
+                            document.body.style.cursor = 'grabbing';
                         },
-                        onPanComplete: () => { isInteracting = false; chart.update('none'); }
+                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.update('none'); }
                     },
                     zoom: {
                         wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
@@ -1103,6 +1261,8 @@
                     }
                     if (layers.length) {
                         pendingTlight = layers;
+                        tlightHistory.push({ step: tlStep, layers });
+                        if (tlightHistory.length > TLIGHT_WIN) tlightHistory.shift();
                         renderTlight(layers, tlStep);
                     }
                     continue;
@@ -1137,14 +1297,18 @@
                 const epoch  = parseInt(m[2]);
                 const batch  = parseInt(m[3]);
                 const loss   = parseFloat(m[4]);
+                const bx     = epoch + batch / BATCHES_PER_EPOCH;
+                lastBatchX   = bx;
+                lastBatchY   = loss;
                 // Spike detection — loss significantly above last epoch average (once per epoch)
                 if (lastSmaY !== null && loss > lastSmaY + 0.4 && epoch !== spikeFiredEp) {
                     spikeFiredEp = epoch;
                     addEvent('spike', `SPIKE ${loss.toFixed(3)} +${(loss - lastSmaY).toFixed(3)}`, 'crit',
-                        `Batch loss <b>${loss.toFixed(4)}</b> is ${(loss - lastSmaY).toFixed(4)} above EP AVG (${lastSmaY.toFixed(4)}).<br>Possible LR overshoot or difficult batch.`);
+                        `Batch loss <b>${loss.toFixed(4)}</b> is ${(loss - lastSmaY).toFixed(4)} above EP AVG (${lastSmaY.toFixed(4)}).<br>Possible LR overshoot or difficult batch.`,
+                        bx, loss);
                 }
                 newPts.push({
-                    x: epoch + batch / BATCHES_PER_EPOCH,
+                    x: bx,
                     y: loss,
                     epoch, batch, layers
                 });
@@ -1227,10 +1391,12 @@
                         const prevBest = bestEpochAvg;
                         bestEpochAvg = epochAvg;
                         addEvent('best', `BEST avg ${epochAvg.toFixed(4)}`, 'gold',
-                            `New best epoch average: <b>${epochAvg.toFixed(4)}</b>.<br>Previous best: ${prevBest === Infinity ? '—' : prevBest.toFixed(4)}`);
+                            `New best epoch average: <b>${epochAvg.toFixed(4)}</b>.<br>Previous best: ${prevBest === Infinity ? '—' : prevBest.toFixed(4)}`,
+                            lastBatchX, epochAvg);
                     } else {
                         addEvent('epoch', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
-                            `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`);
+                            `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`,
+                            lastBatchX, epochAvg);
                     }
                     // Log epoch summary for CSV export
                     const esm = line.match(/=== Epoch (\d+)L?\s*done \| Avg Loss:\s*[\d.]+ \| Clipped:\s*(\d+) \| Skipped:\s*(\d+)/);
@@ -1378,21 +1544,36 @@
     // ── Neural Viz ─────────────────────────────────────────────────────
     let latestTele = null;
 
-    function sparsityColor(s) {
-        // s: 0.0 (dense/healthy) → 1.0 (fully sparse/concerning)
-        // yellow → orange → red
-        if (s < 0.5) {
-            const t = s * 2;
-            return `rgb(255,${Math.round(210 - t * 70)},0)`;
-        } else {
-            const t = (s - 0.5) * 2;
-            return `rgb(${Math.round(255 - t * 16)},${Math.round(140 - t * 140)},${Math.round(t * 68)})`;
+    // Visible EM spectrum — red (low energy/dormant) → orange → yellow → green → cyan → blue → violet (high energy/intense)
+    // Semantics: low t = calm/quiet, high t = active/under pressure. Scientifically grounded.
+    function thermal(t) {
+        t = Math.max(0, Math.min(1, t));
+        const stops = [
+            [0.00, [160,  10,  10]],  // deep red       — dormant / minimal
+            [0.17, [220,  90,   0]],  // orange         — low activity
+            [0.33, [200, 185,   0]],  // yellow         — building up
+            [0.50, [  0, 170,  45]],  // green          — mid-range
+            [0.67, [  0, 200, 215]],  // cyan           — active
+            [0.83, [ 20, 120, 230]],  // cornflower blue
+            [1.00, [ 10,  45, 180]],  // deep royal blue — peak / dominant (no violet)
+        ];
+        for (let i = 1; i < stops.length; i++) {
+            if (t <= stops[i][0]) {
+                const f = (t - stops[i-1][0]) / (stops[i][0] - stops[i-1][0]);
+                const a = stops[i-1][1], b = stops[i][1];
+                return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+            }
         }
+        return 'rgb(130,0,195)';
+    }
+
+    function sparsityColor(s) {
+        // s=0 dense (violet end) → s=1 sparse/efficient (red end, stands out as active)
+        return thermal(1 - s);
     }
 
     function expertColor(act) {
-        // act: 0.0 (dormant) → 1.0 (fully active)
-        // Forest-green palette — comfortable, readable contrast on dark cells
+        // act=0 dormant → act=1 fully active — green palette, healthy = green
         if (act < 0.05) return '#0d130d';
         const g = Math.round(35 + act * 90);
         const r = Math.round(act * 12);
@@ -1411,10 +1592,8 @@
         const addNode = (label, tipHtml) => {
             const d = document.createElement('div');
             d.className = 'topo-node';
-            d.style.color = '#444';
             d.textContent = label;
             if (tipHtml) {
-                d.style.cursor = 'default';
                 d.addEventListener('mouseenter', ev => showTip(ev, tipHtml));
                 d.addEventListener('mouseleave', hideTip);
             }
@@ -1423,7 +1602,7 @@
         const addArrow = () => {
             const d = document.createElement('div');
             d.className = 'topo-arrow';
-            d.textContent = '→';
+            d.textContent = '↓';
             layerDiv.appendChild(d);
         };
 
@@ -1433,21 +1612,16 @@
         for (let i = 0; i < tele.numLayers; i++) {
             const s = tele.layerSparsity[i] || 0;
             const col = sparsityColor(s);
-            const opacity = 0.35 + (1 - s) * 0.65;
+            const pct = (s * 100).toFixed(0);
 
             const block = document.createElement('div');
             block.className = 'topo-layer';
             block.style.borderColor = col;
-            block.style.opacity = opacity;
+            block.style.opacity = 0.4 + s * 0.6;
             block.addEventListener('mouseenter', ev => showTip(ev,
-                `<b>Layer ${i}</b><br>` +
-                `Weight sparsity: <b>${(s * 100).toFixed(1)}%</b> near-zero<br>` +
-                `Border brightness = density — brighter = more active weights.<br>` +
-                `Opacity = density — faded = high sparsity.`));
+                `<b>Layer ${i}</b><br>Sparsity: <b>${pct}%</b> near-zero weights<br>Color = @sparseskip efficiency`));
             block.addEventListener('mouseleave', hideTip);
-
-            block.innerHTML =
-                `<div class="topo-layer-label">L${i}</div>`;
+            block.innerHTML = `<span class="topo-layer-label">L${i}</span>`;
             layerDiv.appendChild(block);
 
             if (i < tele.numLayers - 1) addArrow();
@@ -1470,7 +1644,10 @@
                 `<span class="expert-label">${eName}</span>` +
                 `<span class="expert-act">${pctStr}%</span>`;
             cell.addEventListener('mouseenter', ev => showTip(ev,
-                `<b>E${e} · ${eName}</b><br>${EXPERT_DESC[e] || ''}<br>Activity: <b>${pctStr}%</b>`));
+                `<b>E${e} · ${eName}</b><br>` +
+                `<span style="color:#64748b;font-size:10px">${EXPERT_DESC[e] || ''}</span><br><br>` +
+                `${EXPERT_HUMAN[e] || ''}<br><br>` +
+                `Activity: <b>${pctStr}%</b>`));
             cell.addEventListener('mouseleave', hideTip);
             expDiv.appendChild(cell);
         }
@@ -1502,22 +1679,9 @@
 
     // ── Panel D: Expert Routing Heatmap ───────────────────────────────
     function routingColor(v) {
-        // white → light yellow → orange → deep red
-        // v=0 inactive (dark), v>0 starts white, ramps to red at v=1
-        if (v <= 0) return 'rgb(10,10,10)';
-        if (v < 0.33) {
-            // white → light yellow
-            const t = v / 0.33;
-            return `rgb(255,255,${Math.round(255 - t*80)})`;
-        } else if (v < 0.66) {
-            // light yellow → orange
-            const t = (v - 0.33) / 0.33;
-            return `rgb(255,${Math.round(175 - t*100)},0)`;
-        } else {
-            // orange → deep red
-            const t = (v - 0.66) / 0.34;
-            return `rgb(${Math.round(255 - t*60)},${Math.round(75 - t*75)},0)`;
-        }
+        // v=0 unrouted (cold/dark) → v=1 dominant expert (hot/red)
+        if (v <= 0) return 'rgb(4,8,18)';
+        return thermal(v);
     }
 
     function renderRoutingHeatmap() {
@@ -1568,16 +1732,23 @@
 
     // ── Panel E: Per-Layer Gradient Norms ─────────────────────────────
     function gradColor(norm, maxNorm) {
-        if (maxNorm < 1e-9) return '#1c3a2a';
+        // white floor → yellow → orange → red  (no pink/salmon)
+        if (maxNorm < 1e-9) return 'rgb(255,255,255)';
         const ratio = Math.min(1, norm / maxNorm);
-        // low = teal-ish green, high = warm amber → red
-        if (ratio < 0.5) {
-            const t = ratio * 2;
-            return `rgb(${Math.round(30+t*80)},${Math.round(160-t*60)},${Math.round(80-t*40)})`;
+        const t = Math.log(1 + 9 * ratio) / Math.log(10);
+        const floor = 0.45; // below this → pure white
+        if (t < floor) return 'rgb(255,255,255)';
+        const tn = (t - floor) / (1 - floor); // remap floor…1 → 0…1
+        const split = 0.35; // within colored range: yellow pivot
+        let g, b;
+        if (tn < split) {
+            g = 255;
+            b = Math.round(255 * (1 - tn / split));
         } else {
-            const t = (ratio - 0.5) * 2;
-            return `rgb(${Math.round(110+t*145)},${Math.round(100-t*80)},${Math.round(40-t*30)})`;
+            g = Math.round(255 * (1 - (tn - split) / (1 - split)));
+            b = 0;
         }
+        return `rgb(255,${g},${b})`;
     }
 
     function renderGradBars() {
@@ -1631,79 +1802,85 @@
         if (waiting) waiting.remove();
         wrap.innerHTML = '';
 
-        // colour map: G=green, O=amber, R=red
         const stateColor = { G: '#22c55e', O: '#f59e0b', R: '#ef4444' };
         const stateLabel = { G: 'Green', O: 'Orange', R: 'Red' };
         const stateTip   = {
-            G: 'Underloaded — gate logit boosted +0.4. Routing pressure increased toward this expert.',
-            O: 'On-target — no logit change. Output contribution scaled to 40% (partial execution budget).',
-            R: 'Overloaded — gate logit suppressed -0.4. @sparseskip handles full skip if not routed.',
+            G: 'Underloaded — gate logit boosted +0.4.',
+            O: 'On-target — no logit change. Partial execution budget.',
+            R: 'Overloaded — gate logit suppressed -0.4.',
         };
 
-        // Summary bar: total G/O/R across all layers
         const totG = layers.reduce((s, l) => s + l.g, 0);
         const totO = layers.reduce((s, l) => s + l.o, 0);
         const totR = layers.reduce((s, l) => s + l.r, 0);
         const total = totG + totO + totR;
-        const inWarmup  = (step !== undefined && step < 50);
-        const allOrange = (totG === 0 && totR === 0);
+        const inWarmup  = step !== undefined && step < 50;
+        const allOrange = totG === 0 && totR === 0;
 
+        // Summary line
         const summary = document.createElement('div');
-        summary.style.cssText = 'display:flex;gap:4px;margin-bottom:3px;align-items:center;flex-wrap:wrap;';
+        summary.style.cssText = 'display:flex;gap:4px;margin-bottom:3px;align-items:center;flex-shrink:0;';
         if (inWarmup) {
-            summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP — step ${step}/50, TTL inactive</span>`;
+            summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP · step ${step}/50</span>`;
         } else if (allOrange) {
-            summary.innerHTML = `<span style="color:#f59e0b;font-size:10px;letter-spacing:1px">BALANCED — all experts on target · step ${step}</span>`;
+            summary.innerHTML = `<span style="color:#f59e0b;font-size:10px;letter-spacing:1px">BALANCED · step ${step}</span>`;
         } else {
-            const pctG = (totG / total * 100).toFixed(0);
-            const pctO = (totO / total * 100).toFixed(0);
-            const pctR = (totR / total * 100).toFixed(0);
+            const pctG = (totG/total*100).toFixed(0), pctO = (totO/total*100).toFixed(0), pctR = (totR/total*100).toFixed(0);
             summary.innerHTML =
-                `<span style="background:#22c55e22;color:#22c55e;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">G ${totG} (${pctG}%)</span>` +
-                `<span style="background:#f59e0b22;color:#f59e0b;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">O ${totO} (${pctO}%)</span>` +
-                `<span style="background:#ef444422;color:#ef4444;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">R ${totR} (${pctR}%)</span>`;
+                `<span style="background:#22c55e22;color:#22c55e;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">G ${pctG}%</span>` +
+                `<span style="background:#f59e0b22;color:#f59e0b;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">O ${pctO}%</span>` +
+                `<span style="background:#ef444422;color:#ef4444;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">R ${pctR}%</span>`;
         }
         wrap.appendChild(summary);
 
-        // Per-layer expert grid
-        for (const layer of layers) {
-            const layerRow = document.createElement('div');
-            layerRow.style.cssText = 'display:flex;align-items:center;gap:2px;margin-bottom:2px;';
+        // History grid — one row per layer, columns = time steps (newest right), auto-scrolls
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden;';
+
+        const numLayers = layers.length;
+        for (let li = 0; li < numLayers; li++) {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:stretch;gap:1px;flex:1;min-height:0;';
 
             const lbl = document.createElement('span');
-            lbl.textContent = `L${layer.layer}`;
-            lbl.style.cssText = 'font-size:9px;color:#64748b;width:14px;flex-shrink:0;font-variant-numeric:tabular-nums;';
-            layerRow.appendChild(lbl);
+            lbl.textContent = `L${li}`;
+            lbl.style.cssText = 'font-size:9px;color:#64748b;width:16px;flex-shrink:0;display:flex;align-items:center;';
+            row.appendChild(lbl);
 
-            for (let i = 0; i < layer.states.length; i++) {
-                const ch = layer.states[i];
-                const col = stateColor[ch] || '#475569';
+            const cells = document.createElement('div');
+            cells.style.cssText = 'display:flex;gap:1px;flex:1;overflow:hidden;';
+
+            for (let ti = 0; ti < tlightHistory.length; ti++) {
+                const snap = tlightHistory[ti];
+                const layerSnap = snap.layers.find(l => l.layer === li);
+                if (!layerSnap) continue;
+                // Dominant state: any R → red, any G → green, else orange
+                const col = layerSnap.r > 0 ? '#ef4444' : layerSnap.g > 0 ? '#22c55e' : '#f59e0b';
                 const cell = document.createElement('div');
-                cell.style.cssText = `width:11px;height:11px;border-radius:2px;background:${col};opacity:${inWarmup ? 0.25 : 0.85};flex-shrink:0;cursor:default;`;
-                const expertName = (window.EXPERT_NAMES || [])[i] || `E${i}`;
+                cell.style.cssText = `flex:1;min-width:3px;border-radius:3px;background:${col};opacity:0.85;cursor:default;`;
                 cell.addEventListener('mouseenter', ev => showTip(ev,
-                    `<b>L${layer.layer} · ${expertName} (Expert ${i})</b><br>` +
-                    `State: <b style="color:${col}">${stateLabel[ch] || ch}</b><br>` +
-                    `${stateTip[ch] || ''}`));
+                    `<b>L${li} · step ${snap.step}</b><br>` +
+                    `G ${layerSnap.g} · O ${layerSnap.o} · R ${layerSnap.r}`));
                 cell.addEventListener('mouseleave', hideTip);
-                layerRow.appendChild(cell);
+                cells.appendChild(cell);
             }
-
-            // Compact count
-            const cnt = document.createElement('span');
-            cnt.style.cssText = 'font-size:9px;color:#475569;margin-left:3px;';
-            cnt.textContent = `G${layer.g}/O${layer.o}/R${layer.r}`;
-            layerRow.appendChild(cnt);
-            wrap.appendChild(layerRow);
+            row.appendChild(cells);
+            grid.appendChild(row);
         }
+        wrap.appendChild(grid);
     }
 
     // ── Anomaly Event Feed ────────────────────────────────────────────
-    function addEvent(icon, text, level, detail) {
+    function addEvent(icon, text, level, detail, cx, cy) {
         const ts = new Date().toTimeString().slice(0, 8);
-        anomalyEvents.unshift({ icon, text, level, ts, detail: detail || text });
+        // Only store canvas coords when explicitly provided — fallback to lastBatchX/Y
+        // for feed-only events (routing, clip, plateau) that have no meaningful chart position.
+        anomalyEvents.unshift({ icon, text, level, ts, detail: detail || text,
+            cx: cx !== undefined ? cx : lastBatchX,
+            cy: cy !== undefined ? cy : null });   // null cy = feed-only, no diamond
         if (anomalyEvents.length > ANOMALY_MAX) anomalyEvents.pop();
         renderAnomalyFeed();
+        chart.update('none');
     }
 
     function renderAnomalyFeed() {
@@ -1717,7 +1894,7 @@
             const ev = anomalyEvents[i];
             const idx = i;
             const pill = document.createElement('div');
-            pill.className = 'ev-pill ' + ev.level + (i === 0 ? ' newpill' : '');
+            pill.className = 'ev-pill ' + ev.level + (i === 0 ? ' newpill' : '') + (ev === focusedEvent ? ' focused' : '');
 
             // SVG icon
             const iconWrap = document.createElement('span');
@@ -1744,8 +1921,23 @@
             pill.addEventListener('mouseenter', e => showTip(e,
                 (ICON_SVG[ev.icon] ? '<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + ICON_SVG[ev.icon] + '</span> ' : '') +
                 '<b>' + ev.text + '</b><br>' +
-                ev.detail + '<br><span style="color:#64748b">' + ev.ts + '</span>'));
+                ev.detail + '<br><span style="color:#64748b">' + ev.ts + '</span>' +
+                (ev.cx != null ? '<br><span style="color:#334155;font-size:10px">click to locate on chart</span>' : '')));
             pill.addEventListener('mouseleave', hideTip);
+            pill.addEventListener('click', () => {
+                if (ev.cx == null) return;
+                hideTip();
+                focusedEvent = (focusedEvent === ev) ? null : ev;
+                if (focusedEvent) {
+                    const pad = 3;
+                    chart.options.scales.x.min = ev.cx - pad;
+                    chart.options.scales.x.max = ev.cx + pad;
+                    chart.options.scales.y.min = undefined;
+                    chart.options.scales.y.max = undefined;
+                }
+                chart.update('none');
+                renderAnomalyFeed();
+            });
 
             if (i === 0) {
                 // Wrap newest event in accent frame so it stands out permanently
@@ -1891,6 +2083,22 @@
     document.addEventListener('click', () => {
         document.getElementById('smaDrop').classList.remove('open');
         document.getElementById('exportDrop').classList.remove('open');
+    });
+
+    // Fibonacci retracement toggle
+    document.getElementById('fibBtn').addEventListener('click', function() {
+        fibVisible = !fibVisible;
+        this.classList.toggle('active', fibVisible);
+        chart.update('none');
+    });
+
+    // Deselect focused anomaly marker on canvas click
+    document.getElementById('lossChart').addEventListener('click', () => {
+        if (focusedEvent) {
+            focusedEvent = null;
+            chart.update('none');
+            renderAnomalyFeed();
+        }
     });
 
     // ── Boot ──────────────────────────────────────────────────────────
