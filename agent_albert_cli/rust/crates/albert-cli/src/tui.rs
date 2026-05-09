@@ -156,7 +156,7 @@ const MODEL_ENTRIES: &[(&str, &str, &str)] = &[
     // Google
     ("gemini-2.5-pro",                              "Google",       "Most capable Gemini"),
     ("gemini-2.5-flash",                            "Google",       "Fast & capable — recommended"),
-    ("gemini-2.5-flash-lite",                       "Google",       "Lightest Gemini"),
+    ("gemini-2.5-flash-8b",                          "Google",       "Lightest Gemini"),
     // Anthropic
     ("claude-opus-4-7",                             "Anthropic",    "Most capable Claude"),
     ("claude-sonnet-4-6",                           "Anthropic",    "Best balance"),
@@ -164,7 +164,7 @@ const MODEL_ENTRIES: &[(&str, &str, &str)] = &[
     // OpenAI
     ("gpt-4o",                                      "OpenAI",       "GPT-4o flagship"),
     ("gpt-4o-mini",                                 "OpenAI",       "Efficient GPT-4o"),
-    ("gpt-5",                                       "OpenAI",       "GPT-5 frontier"),
+    ("o4-mini",                                      "OpenAI",       "o4-mini reasoning — efficient"),
     ("o3",                                          "OpenAI",       "Full o3 reasoning"),
     ("o3-mini",                                     "OpenAI",       "o3 reasoning — efficient"),
     // xAI
@@ -282,6 +282,13 @@ pub struct ToolApprovalState {
     pub resp_tx: std::sync::mpsc::SyncSender<runtime::PermissionPromptDecision>,
 }
 
+/// Two-phase auth flow: collect key, then pick a model from the live registry.
+#[derive(Clone, Debug)]
+pub enum AuthFlowPhase {
+    Key  { provider: String },
+    Model { provider: String, models: Vec<String> },
+}
+
 #[derive(Clone, Debug)]
 pub struct TuiState {
     pub exec_log: VecDeque<ExecBlock>,
@@ -306,8 +313,8 @@ pub struct TuiState {
     pub voice_transcribing: bool,
     /// Animated spine frame counter (0..3), incremented on Tick when working=true
     pub spine_frame: u8,
-    /// Set while waiting for an API key — input is masked + submitted as the key.
-    pub auth_flow: Option<String>,
+    /// Set while in auth flow — phase 1 collects the key, phase 2 picks the model.
+    pub auth_flow: Option<AuthFlowPhase>,
     /// Set when the current input arrived via a large paste (>= 3 lines).
     /// Drives the compact "pasted text · N lines" badge in render_input.
     pub paste_line_count: Option<usize>,
@@ -686,7 +693,7 @@ fn is_drilldown(complete: &str) -> bool {
 const AUTH_PROVIDERS: &[(&str, &str)] = &[
     ("anthropic",  "Claude opus-4-7 · sonnet-4-6 · haiku-4-5"),
     ("openai",     "GPT-4o · GPT-4o-mini · o3 · o3-mini"),
-    ("google",     "Gemini 2.5 Pro · Flash · Flash-Lite"),
+    ("google",     "Gemini 2.5 Pro · Flash · Flash 8B"),
     ("xai",        "Grok 3 · Grok 3-mini"),
     ("groq",       "Llama 3.3 70B · 8B — ultra-fast LPU"),
     ("mistral",    "Mistral Large · Small · Codestral"),
@@ -1883,12 +1890,14 @@ fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
 /// Text wraps automatically; the real terminal cursor is placed via set_cursor_position.
 fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
     // Outer turquoise border — rendered on the full area.
-    let border_col = if state.auth_flow.is_some() {
-        ORANGE // orange border while in API-key entry mode
-    } else if state.image_path_overlay {
-        Color::Rgb(0, 180, 180) // teal border while entering image path
-    } else {
-        INPUT_BORDER
+    let border_col = match &state.auth_flow {
+        Some(AuthFlowPhase::Key { .. })   => ORANGE,
+        Some(AuthFlowPhase::Model { .. }) => GREEN,
+        None => if state.image_path_overlay {
+            Color::Rgb(0, 180, 180)
+        } else {
+            INPUT_BORDER
+        },
     };
     let input_block = Block::default()
         .borders(Borders::ALL)
@@ -1930,22 +1939,45 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
             ),
             Span::styled("  Continuing...", Style::default().fg(DIM).add_modifier(Modifier::ITALIC)),
         ]))
-    } else if let Some(ref provider) = state.auth_flow {
-        if state.input.is_empty() {
-            Paragraph::new(Line::from(vec![
-                Span::styled(" 🔑 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
-                Span::styled(
-                    format!("API key for {provider}:"),
-                    Style::default().fg(ORANGE),
-                ),
-                Span::styled("  (press Enter to save)", Style::default().fg(DIM)),
-            ]))
-        } else {
-            let masked: String = "*".repeat(state.input.chars().count());
-            Paragraph::new(Line::from(vec![
-                Span::styled(" 🔑 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
-                Span::styled(masked, Style::default().fg(ORANGE)),
-            ]))
+    } else if let Some(ref phase) = state.auth_flow {
+        match phase {
+            AuthFlowPhase::Key { provider } => {
+                if state.input.is_empty() {
+                    Paragraph::new(Line::from(vec![
+                        Span::styled(" 🔑 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+                        Span::styled(
+                            format!("API key for {provider}:"),
+                            Style::default().fg(ORANGE),
+                        ),
+                        Span::styled("  (press Enter to save)", Style::default().fg(DIM)),
+                    ]))
+                } else {
+                    let masked: String = "*".repeat(state.input.chars().count());
+                    Paragraph::new(Line::from(vec![
+                        Span::styled(" 🔑 ", Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)),
+                        Span::styled(masked, Style::default().fg(ORANGE)),
+                        Span::styled(
+                            format!("  [{} chars]", state.input.chars().count()),
+                            Style::default().fg(DIM),
+                        ),
+                    ]))
+                }
+            }
+            AuthFlowPhase::Model { provider, models } => {
+                let prompt = format!("model for {provider}  ·  type 1–{} or model id:", models.len());
+                if state.input.is_empty() {
+                    Paragraph::new(Line::from(vec![
+                        Span::styled(" ⚡ ", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
+                        Span::styled(prompt, Style::default().fg(GREEN)),
+                        Span::styled("  (Enter to confirm)", Style::default().fg(DIM)),
+                    ]))
+                } else {
+                    Paragraph::new(Line::from(vec![
+                        Span::styled(" ⚡ ", Style::default().fg(GREEN).add_modifier(Modifier::BOLD)),
+                        Span::styled(state.input.clone(), Style::default().fg(FG)),
+                    ]))
+                }
+            }
         }
     } else if state.image_path_overlay {
         if state.input.is_empty() {

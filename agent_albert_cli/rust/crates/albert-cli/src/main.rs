@@ -1064,27 +1064,120 @@ fn run_tui(
             break;
         }
 
-        // ── Auth flow: if waiting for an API key, treat this submission as the key ──
+        // ── Auth flow: two-phase — phase 1 collects key, phase 2 picks model ──
         {
-            let auth_provider = tui_state.lock().unwrap_or_else(|p| p.into_inner()).auth_flow.clone();
-            if let Some(provider) = auth_provider {
-                let api_key = input.trim().to_string();
-                let msg = if api_key.is_empty() {
-                    "auth: key cannot be empty — re-type /auth <provider> to retry".to_string()
-                } else {
-                    match runtime::save_provider_config(&provider, runtime::ProviderConfig {
-                        api_key: Some(api_key),
-                        model: None,
-                        base_url: None,
-                    }) {
-                        Ok(()) => format!("auth: API key saved for {provider}"),
-                        Err(e) => format!("auth: failed to save key — {e}"),
+            let auth_phase = tui_state.lock().unwrap_or_else(|p| p.into_inner()).auth_flow.clone();
+            if let Some(phase) = auth_phase {
+                match phase {
+                    // ── Phase 1: user just submitted the API key ──────────────
+                    tui::AuthFlowPhase::Key { ref provider } => {
+                        let api_key = input.trim().to_string();
+                        if api_key.is_empty() {
+                            let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                            st.push_exec(tui::ExecBlock::SystemMsg(
+                                "auth: key cannot be empty — re-type /auth <provider> to retry".to_string()
+                            ));
+                            st.auth_flow = None;
+                            continue;
+                        }
+                        if let Err(e) = runtime::save_provider_config(provider, runtime::ProviderConfig {
+                            api_key: Some(api_key.clone()),
+                            model: None,
+                            base_url: None,
+                        }) {
+                            let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                            st.push_exec(tui::ExecBlock::SystemMsg(format!("auth: failed to save key — {e}")));
+                            st.auth_flow = None;
+                            continue;
+                        }
+                        tui_state.lock().unwrap_or_else(|p| p.into_inner()).push_exec(
+                            tui::ExecBlock::SystemMsg(format!("auth: key saved for {provider} · fetching models…"))
+                        );
+                        // Fetch live model list using the key we just saved
+                        let lp = provider_from_config_key(provider).unwrap_or(api::LlmProvider::OpenAiCompat);
+                        let client = api::TernlangClient::from_auth(api::AuthSource::ApiKey(api_key)).with_provider(lp);
+                        let models = async_rt.block_on(client.list_remote_models()).unwrap_or_default();
+                        let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                        if models.is_empty() {
+                            st.push_exec(tui::ExecBlock::SystemMsg(
+                                format!("auth: no models returned — use /model <id> to set one manually")
+                            ));
+                            st.auth_flow = None;
+                        } else {
+                            let mut list_msg = format!(
+                                "auth: {} models available — pick one:\n", models.len()
+                            );
+                            for (i, m) in models.iter().enumerate() {
+                                if let Some(ann) = api::model_annotation(m) {
+                                    list_msg.push_str(&format!("  {}. {m}  ({ann})\n", i + 1));
+                                } else {
+                                    list_msg.push_str(&format!("  {}. {m}\n", i + 1));
+                                }
+                            }
+                            st.push_exec(tui::ExecBlock::SystemMsg(list_msg));
+                            st.auth_flow = Some(tui::AuthFlowPhase::Model {
+                                provider: provider.clone(),
+                                models,
+                            });
+                        }
+                        continue;
                     }
-                };
-                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
-                st.auth_flow = None;
-                st.push_exec(tui::ExecBlock::SystemMsg(msg));
-                continue;
+                    // ── Phase 2: user selected a model (number or id) ─────────
+                    tui::AuthFlowPhase::Model { ref provider, ref models } => {
+                        let raw = input.trim().to_string();
+                        if raw.is_empty() {
+                            tui_state.lock().unwrap_or_else(|p| p.into_inner()).push_exec(
+                                tui::ExecBlock::SystemMsg("auth: type a number or model id".to_string())
+                            );
+                            continue;
+                        }
+                        let chosen = if let Ok(n) = raw.parse::<usize>() {
+                            if n >= 1 && n <= models.len() { models[n - 1].clone() } else { raw.clone() }
+                        } else {
+                            raw.clone()
+                        };
+                        // Preserve the saved key while writing the model choice
+                        let existing_key = runtime::load_provider_config(provider)
+                            .unwrap_or(None)
+                            .and_then(|c| c.api_key);
+                        let _ = runtime::save_provider_config(provider, runtime::ProviderConfig {
+                            api_key: existing_key,
+                            model: Some(chosen.clone()),
+                            base_url: None,
+                        });
+                        // Activate model through the same pipeline as /model
+                        let resolved = resolve_model_alias(&chosen).to_string();
+                        let session = cli.runtime.session().clone();
+                        let switch_result = build_runtime_with_mcp(
+                            session,
+                            resolved.clone(),
+                            cli.system_prompt.clone(),
+                            true,
+                            cli.allowed_tools.clone(),
+                            cli.permission_mode,
+                            Arc::clone(&cli.mcp_manager),
+                            cli.event_tx.clone(),
+                        );
+                        let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                        st.auth_flow = None;
+                        match switch_result {
+                            Ok(rt) => {
+                                cli.runtime = rt;
+                                cli.model.clone_from(&resolved);
+                                st.model = resolved.clone();
+                                st.push_exec(tui::ExecBlock::SystemMsg(
+                                    format!("auth: {provider} connected · {resolved} active · you're ready")
+                                ));
+                            }
+                            Err(_) => {
+                                st.push_exec(tui::ExecBlock::SystemMsg(
+                                    format!("auth: key saved · type /model {resolved} to activate")
+                                ));
+                            }
+                        }
+                        continue;
+                    }
+                }
             }
         }
 
@@ -1223,20 +1316,21 @@ fn run_tui(
                     ));
                     true
                 }
-                // /auth — inline key entry: activates masked input mode
+                // /auth — two-phase: collect key then pick model from live registry
                 commands::SlashCommand::Auth { provider } => {
                     let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     match provider {
                         Some(p) => {
+                            let prov = p.to_lowercase();
                             st.push_exec(tui::ExecBlock::SystemMsg(
-                                format!("auth: enter API key for {p} in the input below"),
+                                format!("auth: paste or type your {prov} API key below — input is masked"),
                             ));
-                            st.auth_flow = Some(p.to_lowercase());
+                            st.auth_flow = Some(tui::AuthFlowPhase::Key { provider: prov });
                         }
                         None => {
                             st.push_exec(tui::ExecBlock::SystemMsg(
-                                "auth: choose a provider — openai · anthropic · google · xai\n\
-                                 type /auth <provider> to set its API key".to_string(),
+                                "auth: choose a provider — openai · anthropic · google · xai · groq · mistral · deepseek · openrouter · ollama\n\
+                                 type /auth <provider> to connect and pick from the live model list".to_string(),
                             ));
                         }
                     }
