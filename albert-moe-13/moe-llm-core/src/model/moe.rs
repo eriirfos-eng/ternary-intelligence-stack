@@ -6,15 +6,16 @@ use candle_nn::{Module, VarBuilder};
 use super::mlp::Mlp;
 use std::cell::RefCell;
 
-// Thread-local accumulator: sum of each expert's mean routing weight across the batch.
-// train_bible.rs calls clear_routing_capture() before a forward and
-// take_routing_capture() after — no locks, no perf cost on the hot path.
+// Thread-local accumulators — one per forward pass, drained by train_bible.rs.
+// No locks, no allocation on the hot path.
 thread_local! {
     static ROUTING_ACC: RefCell<Vec<f32>> = RefCell::new(Vec::new());
-    // Routing diversity: negative entropy summed across all MoE layers in one forward pass.
-    // train_bible.rs takes this after forward() and adds it to the loss (entropy_lambda scale).
-    // Minimizing neg-entropy = maximizing routing entropy = preventing gate collapse.
+    // Neg-entropy sum across all MoE layers — minimising maximises routing diversity.
     static ENTROPY_ACC: RefCell<Option<Tensor>> = RefCell::new(None);
+    // Load-balancing loss (Switch Transformer §5): num_experts * Σ(f_i · P_i).
+    // f_i = fraction of tokens routed to expert i; P_i = mean gate softmax prob for expert i.
+    // Gradient flows through P_i, pushing over-used experts' gate probs down.
+    static LB_ACC: RefCell<Option<Tensor>> = RefCell::new(None);
 }
 
 pub fn clear_routing_capture() {
@@ -34,12 +35,23 @@ pub fn clear_entropy_capture() {
     ENTROPY_ACC.with(|e| *e.borrow_mut() = None);
 }
 
-/// Returns the accumulated negative-entropy tensor (sum across all MoE layers in one forward pass).
-/// Adding `entropy_lambda * take_entropy_capture()` to the loss minimises neg-entropy,
-/// i.e. maximises routing diversity and prevents gate collapse.
 pub fn take_entropy_capture() -> Option<Tensor> {
     ENTROPY_ACC.with(|e| e.borrow_mut().take())
 }
+
+pub fn clear_lb_capture() {
+    LB_ACC.with(|lb| *lb.borrow_mut() = None);
+}
+
+pub fn take_lb_capture() -> Option<Tensor> {
+    LB_ACC.with(|lb| lb.borrow_mut().take())
+}
+
+// Router temperature < 1.0 sharpens the gate softmax, amplifying small logit differences.
+// After uniform-routing training the gate weights produce ~0.002 logit spread — softmax
+// collapses to near-uniform regardless of CE signal. T=0.7 gives ~1.4× amplification,
+// forcing clear expert preferences without the instability of very low T.
+const ROUTER_TEMP: f64 = 0.7;
 
 pub struct MoeBlock {
     gate: candle_nn::Linear,
@@ -70,13 +82,14 @@ impl MoeBlock {
         
         // 1. Gate logits — F32 linear for routing resolution (ternary too coarse at 256→12)
         let mut gate_logits = self.gate.forward(x)?; // [B, S, E]
+        gate_logits = (gate_logits / ROUTER_TEMP)?;
 
-        // Routing diversity: compute neg-entropy over the full gate distribution before noise.
-        // Neg-entropy = sum(p * log(p+ε)) — minimising it in the loss maximises entropy,
-        // keeping the gate from collapsing to a uniform or single-expert Nash equilibrium.
-        // Accumulated across layers; train_bible.rs calls take_entropy_capture() after forward.
+        // Clean gate probabilities — computed pre-noise so gradients flow through the
+        // unperturbed softmax. Used for both entropy telemetry and the LB loss.
+        let full_probs = candle_nn::ops::softmax(&gate_logits, candle_core::D::Minus1)?;
+
+        // Neg-entropy accumulation for entropy regularization telemetry.
         {
-            let full_probs = candle_nn::ops::softmax(&gate_logits, candle_core::D::Minus1)?;
             let log_p = (&full_probs + 1e-9_f64)?.log()?;
             let neg_entropy = (&full_probs * log_p)?.sum(candle_core::D::Minus1)?.mean_all()?;
             ENTROPY_ACC.with(|e| {
@@ -94,23 +107,45 @@ impl MoeBlock {
 
         // 2. Top-3 Routing (v2.0 Evolution)
         let large_neg_val = Tensor::new(&[-1e9f32], dev)?;
-        
+
         // Max 1
         let max1_indices = gate_logits.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let mask1 = Tensor::arange(0u32, self.num_experts as u32, dev)?
             .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
             .broadcast_eq(&max1_indices.unsqueeze(candle_core::D::Minus1)?)?;
-        
+
         // Max 2
         let gate_logits_m1 = mask1.where_cond(&large_neg_val.broadcast_as(gate_logits.shape())?, &gate_logits)?;
         let max2_indices = gate_logits_m1.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let mask2 = Tensor::arange(0u32, self.num_experts as u32, dev)?
             .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
             .broadcast_eq(&max2_indices.unsqueeze(candle_core::D::Minus1)?)?;
-            
+
         // Max 3
         let gate_logits_m2 = mask2.where_cond(&large_neg_val.broadcast_as(gate_logits.shape())?, &gate_logits_m1)?;
         let max3_indices = gate_logits_m2.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
+        let mask3 = Tensor::arange(0u32, self.num_experts as u32, dev)?
+            .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
+            .broadcast_eq(&max3_indices.unsqueeze(candle_core::D::Minus1)?)?;
+
+        // Load-balancing loss (Switch Transformer §5).
+        // f_i from noisy argmax (non-differentiable), P_i from clean softmax (differentiable).
+        // Gradient through P_i pushes over-used experts' gate probs down, independent of CE.
+        {
+            let sel = ((mask1.to_dtype(candle_core::DType::F32)?
+                + mask2.to_dtype(candle_core::DType::F32)?)?
+                + mask3.to_dtype(candle_core::DType::F32)?)?;
+            let f_i = sel.reshape((b * s, self.num_experts))?.mean(0)?;
+            let p_i = full_probs.reshape((b * s, self.num_experts))?.mean(0)?;
+            let lb = ((&f_i * &p_i)?.sum_all()? * self.num_experts as f64)?;
+            LB_ACC.with(|acc| {
+                let mut cell = acc.borrow_mut();
+                *cell = match cell.take() {
+                    None => Some(lb),
+                    Some(prev) => Some((&prev + &lb).unwrap()),
+                };
+            });
+        }
 
         let max1_values = gate_logits.max(candle_core::D::Minus1)?;
         let max2_values = gate_logits_m1.max(candle_core::D::Minus1)?;

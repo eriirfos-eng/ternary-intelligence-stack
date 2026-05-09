@@ -1,6 +1,6 @@
 use candle_core::{Device, DType, Result, Tensor};
 use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
-use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture};
+use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture};
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use std::fs::{self, OpenOptions};
@@ -294,6 +294,54 @@ fn train_cycle(
         println!("[{}] Loaded {} tensors from checkpoint.", timestamp(), loaded);
     }
 
+    // Reset gate weights to kaiming-uniform to break the routing symmetry baked in
+    // by 250+ epochs of near-uniform routing. Expert weights are preserved — they hold
+    // 250 epochs of valuable signal. Only the gate needs fresh signal to differentiate.
+    {
+        let gate_vars: Vec<_> = {
+            let all_vars = varmap.data().lock().unwrap();
+            all_vars.iter()
+                .filter(|(name, _)| name.contains(".moe.gate.weight"))
+                .map(|(name, var)| (name.clone(), var.clone()))
+                .collect()
+        };
+        for (name, var) in &gate_vars {
+            let shape = var.shape().clone();
+            let fan_in = shape.dims()[1] as f64; // gate is [num_experts × hidden], fan_in = hidden
+            let std = (2.0_f64 / fan_in).sqrt() as f32;
+            let fresh = Tensor::randn(0.0f32, std, shape.dims(), device)?;
+            var.set(&fresh)?;
+            println!("[{}] Gate reset: {} → kaiming-uniform std={:.4}", timestamp(), name, std);
+        }
+        if !gate_vars.is_empty() {
+            println!("[{}] Gate weights reset to kaiming-uniform — routing symmetry broken.", timestamp());
+        }
+    }
+
+    // Expert weight perturbation: each expert gets independent Gaussian noise (σ=0.02).
+    // After 280+ epochs of uniform routing all experts learned identical representations —
+    // CE gradient can't distinguish them so the gate re-uniformizes. Independent per-tensor
+    // noise gives each expert a distinct starting point; the LB loss then maintains diversity.
+    {
+        let expert_vars: Vec<_> = {
+            let all_vars = varmap.data().lock().unwrap();
+            all_vars.iter()
+                .filter(|(name, _)| name.contains(".moe.experts."))
+                .map(|(name, var)| (name.clone(), var.clone()))
+                .collect()
+        };
+        let sigma = 0.02f32;
+        for (_name, var) in &expert_vars {
+            let noise = Tensor::randn(0.0f32, sigma, var.shape().dims(), device)?;
+            let perturbed = (var.as_tensor() + noise)?;
+            var.set(&perturbed)?;
+        }
+        if !expert_vars.is_empty() {
+            println!("[{}] Expert symmetry break: σ={} noise applied to {} expert tensors.",
+                timestamp(), sigma, expert_vars.len());
+        }
+    }
+
     // Track best epoch-average loss across the entire training run.
     let mut best_epoch_loss: f32 = fs::read_to_string(best_meta_path)
         .ok()
@@ -352,30 +400,34 @@ fn train_cycle(
                 .to_dtype(DType::U32)?;
 
             clear_entropy_capture();
+            clear_lb_capture();
             let logits      = model.forward(&input_tensor)?;
             let logits      = logits.reshape((seq_len, config.vocab_size))?;
             let target_flat = target_tensor.flatten_all()?;
             let ce_loss     = loss::cross_entropy(&logits, &target_flat)?;
 
             // ── Auxiliary losses ──────────────────────────────────────────────
-            // Both L1 and routing entropy are gated on loss < 8.0 — applying either
-            // to a collapsed model makes recovery harder (L1 zeroes weights, entropy
-            // gradient vanishes at uniform). Once learning is productive both engage.
+            // L1 is gated on loss < 8.0 — applying to a collapsed model makes recovery harder.
+            // LB loss is NOT gated: it works through gate probabilities independent of CE signal,
+            // and this is the core fix for expert homogeneity — must always be active.
             let real_loss_preview = ce_loss.to_scalar::<f32>().unwrap_or(f32::MAX);
             let aux_active     = real_loss_preview < 8.0;
             let l1_lambda      = if aux_active { 1e-5_f64  } else { 0.0_f64 };
-            // Routing entropy: λ=0.01 contributes ~0.1% of CE loss as gradient signal,
-            // strong enough to prevent Nash-equilibrium drift without destabilising LR.
-            let entropy_lambda = if aux_active { 0.01_f64  } else { 0.0_f64 };
+            let entropy_lambda = 0.0_f64;
+            // Switch Transformer load-balancing coefficient. 0.01 is the standard value.
+            let lb_lambda      = 0.01_f64;
 
-            // Take entropy term from thread-local (populated by moe.rs during forward).
-            // Always drain even when inactive so the accumulator is clean next batch.
+            // Drain both thread-locals regardless — keeps accumulators clean next batch.
             let entropy_term   = take_entropy_capture();
             let entropy_scalar = entropy_term.as_ref()
                 .and_then(|t| t.to_scalar::<f32>().ok())
                 .unwrap_or(0.0);
+            let lb_term        = take_lb_capture();
+            let lb_scalar      = lb_term.as_ref()
+                .and_then(|t| t.to_scalar::<f32>().ok())
+                .unwrap_or(0.0);
 
-            let batch_loss = if aux_active {
+            let mut batch_loss = if aux_active {
                 let l1_penalty = {
                     let vars = varmap.data().lock().unwrap();
                     let mut terms: Vec<Tensor> = Vec::new();
@@ -393,9 +445,6 @@ fn train_cycle(
                 };
                 let mut loss = (&ce_loss + (l1_penalty * l1_lambda)?)?;
                 if let Some(et) = entropy_term {
-                    // Entropy regularization is only useful when the router can still be pushed.
-                    // At max entropy (ENTR ≥ ln(12) ≈ 2.485), the gradient is ~0 at the saddle
-                    // point AND the term blocks CE-driven specialization. Disengage it there.
                     let entr_now = (-entropy_scalar / config.num_layers as f32) as f64;
                     if entropy_lambda > 0.0 && entr_now < 2.2 {
                         loss = (&loss + (et * entropy_lambda)?)?;
@@ -405,6 +454,12 @@ fn train_cycle(
             } else {
                 ce_loss.clone()
             };
+
+            // LB loss: always active. Gradient through P_i pushes over-used experts down.
+            // This is independent of CE — works even when experts produce identical outputs.
+            if let Some(lb) = lb_term {
+                batch_loss = (&batch_loss + (lb * lb_lambda)?)?;
+            }
 
             // ── Gradient Clipping ─────────────────────────────────────────────
             // Split backward() and step() so we can inspect the gradient norm
@@ -481,11 +536,12 @@ fn train_cycle(
                         .map(|&w| format!("{:.3}", w)).collect();
                     let _ = writeln!(f, "ROUTE step={} E={}", *global_step, route_str.join(","));
                     // ENTR — routing entropy per MoE layer (nats). Max = ln(12) ≈ 2.485.
-                    // Dashboard can parse "ENTR step=N avg=X.XXXX" for entropy trending.
                     let entr_per_layer = if config.num_layers > 0 {
                         -entropy_scalar / config.num_layers as f32
                     } else { 0.0 };
                     let _ = writeln!(f, "ENTR step={} avg={:.4}", *global_step, entr_per_layer);
+                    // LB — load-balancing loss value. Should decrease as routing diversifies.
+                    let _ = writeln!(f, "LB step={} val={:.4}", *global_step, lb_scalar);
                 }
                 clear_routing_capture();
 
