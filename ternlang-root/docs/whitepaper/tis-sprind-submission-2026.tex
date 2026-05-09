@@ -110,11 +110,18 @@ The \textbf{Albert-MoE-13 Training System} introduces an
 governs dynamic model expansion via \textbf{Net2Net Safe Copy Surgery}
 (Function-Preserving Transforms), allowing the model to grow from a
 3-layer Toddler phase to arbitrarily deep architectures without
-catastrophic forgetting. A four-pillar training corpus---biblical
-linguistics, encyclopedic knowledge (Wikipedia), dialectical reasoning
-(Reddit), and engineering case studies (GitHub)---feeds a sub-2.0 loss
-convergence target. Version v1.3.7 is archived as ``Stable Biblical
-Foundation'' at average loss $7.01$.
+catastrophic forgetting. A stage-aware training corpus curriculum (five
+depth-gated stages from Biblical/literary foundations through Simple
+Wikipedia, instruction QA, and Linux technical documentation) is
+unlocked automatically as the model gains layers---27.6~MB total,
+$\sim$5.5~million tokens at full depth. A Switch Transformer auxiliary
+load-balancing loss~\cite{fedus2022switch} combined with per-expert
+weight perturbation resolves the expert homogeneity failure mode observed
+at 280+ epochs of pure cross-entropy training. At Global Epoch 350+,
+Albert achieves a perplexity of 1{,}152 and 83~tokens/second sustained
+decode on x86 CPU---\emph{without GPU, INT8 kernels, or framework
+acceleration}---via the \texttt{@sparseskip} expert routing primitive
+(Patent Pending A50296/2026; 4.58$\times$ speedup at 75\% sparsity).
 
 The \textbf{MoE-13 v2.0 Orchestrator} scales to 1~Router and 12~Domain
 Experts with Top-3 Sparse Routing and Asymmetric Safety Logic. The
@@ -814,31 +821,104 @@ adding representational capacity without destroying previously learned
 structure. This is a principled alternative to random initialisation, which
 would require the model to ``unlearn'' disruptions before making progress.
 
+A small independent Gaussian perturbation ($\sigma = 0.01$, applied
+independently per weight tensor) is injected into the newly copied layer
+immediately after the safe copy. This \emph{symmetry break} is essential:
+without it, two identical copies produce cancelling gradient signals under
+backpropagation, preventing the new layer from specialising. The perturbation
+magnitude is chosen to preserve function-preserving equivalence within
+numerical tolerance while enabling the gradient differentiation required for
+the new layer to diverge into a complementary representation.
+
+\subsection{Mixture-of-Experts Routing and Load-Balancing Loss}
+\label{subsec:moe_routing}
+
+Albert-MoE-13 uses Top-3/12 sparse routing: each input token activates
+exactly 3 of 12 expert MLPs, and the \texttt{@sparseskip} mechanism
+(Patent~A50296/2026,~\cite{sparseskip2026}) skips the forward pass of the
+remaining 9 experts entirely when their combined routing weight is exactly
+zero---not masked, not zeroed-out, but \emph{not executed}. At this 75\%
+expert sparsity rate, \texttt{@sparseskip} delivers a \textbf{4.58$\times$
+speedup} over dense execution, measured on x86 CPU (ThinkPad-class laptop,
+8~threads, no GPU) across 2{,}000 timed iterations with dense/sparse output
+agreement verified at $10^{-4}$ tolerance.
+
+\textbf{Expert Homogeneity.}
+Pure cross-entropy training of sparse MoE networks is susceptible to a
+degenerate attractor: over many epochs, routing distributions tend toward
+uniformity as all experts receive equal load and learn nearly identical
+representations. Once homogeneous, the CE loss gradient carries no signal to
+differentiate experts---the gate re-uniformises after each update, and the
+network stalls. This failure mode was directly observed at Global
+Epoch~$\sim$280: routing entropy held at $\text{ENTR} = 2.485$ (the maximum,
+$= \ln 12$ at uniform routing), gradient norms collapsed to
+${\sim}0.0001$, and no further loss improvement was possible under the
+cross-entropy objective alone.
+
+\textbf{Auxiliary Load-Balancing Loss.}
+Following \citet{fedus2022switch}, an auxiliary load-balancing term is added
+to the training objective:
+
+\begin{equation}
+  \mathcal{L} = \mathcal{L}_\text{CE} + \alpha \cdot \mathcal{L}_\text{LB},
+  \qquad
+  \mathcal{L}_\text{LB} = N \sum_{i=1}^{N} f_i \cdot P_i
+  \label{eq:lb_loss}
+\end{equation}
+
+\noindent where $N = 12$ is the number of experts, $f_i$ is the fraction of
+tokens routed to expert $i$ (from argmax, non-differentiable), $P_i$ is the
+mean router softmax probability for expert $i$ (differentiable), and
+$\alpha = 0.01$. The gradient flows through $P_i$ alone, pushing
+over-utilised experts down independently of the CE signal. Per-step
+$\mathcal{L}_\text{LB}$ values are emitted as \texttt{LB val=X.XXXX}
+telemetry for real-time routing health monitoring.
+
+\textbf{Expert Weight Perturbation.}
+After 280+ epochs of convergence, the expert weight tensors had reached
+near-identical configurations. The LB loss redirects future routing but cannot
+diversify experts that have already converged to the same representation.
+An independent Gaussian perturbation ($\sigma = 0.02$, applied per tensor,
+independently for each of the 12 expert MLPs) was applied at the restart
+checkpoint to break this pre-existing weight symmetry.
+
+The combined intervention produced immediate measurable results: gradient norms
+rose $25\times$ on the first training step, routing entropy dropped from 2.485
+to 2.29--2.37 (indicating genuine specialisation is ongoing), and a new
+epoch-best loss of 6.8821 was reached within the first epoch post-restart.
+
 \subsection{Training Corpus Architecture}
 
-Albert's training pipeline follows a four-pillar ingestion sequence:
+Albert's training pipeline follows a stage-aware curriculum, automatically
+expanded by the EvolutionManager as the model gains architectural depth:
 
-\begin{enumerate}
-  \item \textbf{Biblical Foundation.} Structured theological corpus providing
-        dense linguistic regularity, parallel text (multilingual), and rich
-        rhetorical patterns. Version v1.3.7 trained exclusively on this corpus
-        is archived as ``Stable Biblical Foundation'' at average loss $7.01$.
-  \item \textbf{Wikipedia Factual Layer.} Encyclopedic factual grounding in
-        English and German. Provides structured knowledge with embedded
-        disambiguation---a natural training ground for the hold state.
-  \item \textbf{Reddit Dialectical Threads.} Conversational reasoning,
-        counter-argument structures, and opinion-holding patterns. This pillar
-        exercises the model's ability to maintain positions under challenge or
-        to update them on evidence---core behaviours for a ternary reasoning
-        agent.
-  \item \textbf{GitHub Engineering Corpus.} Automated multi-language
-        harvester targeting 13 key repositories (Rust, Python, Go, and
-        others). Provides language-agnostic code reasoning, error propagation
-        patterns, and engineering problem-solving benchmarks.
-\end{enumerate}
+\begin{table}[h]
+\centering
+\small
+\caption{Albert corpus curriculum: depth-gated stages}
+\label{tab:corpus}
+\begin{tabular}{p{0.8cm}p{1.4cm}p{4.4cm}p{0.8cm}}
+\toprule
+Stage & Unlock & Corpus & Size \\
+\midrule
+3 & 3 layers & King James Bible + \emph{Alice in Wonderland} & 4.3~MB \\
+6 & 6 layers & + 12 Gutenberg classics (Dickens, Austen, Tolstoy, et al.) & 7.8~MB \\
+7 & 7 layers & + Simple English Wikipedia & 8.0~MB \\
+9 & 9 layers & + Instruction QA pairs & 3.2~MB \\
+11 & 11 layers & + Linux documentation and man pages & 4.3~MB \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-All pillars are gated for post-Biblical-convergence ingestion to prevent
-catastrophic forgetting of the foundational linguistic structure.
+\noindent Total corpus at full architectural depth: \textbf{27.6~MB},
+approximately 5.5~million tokens. The stage-gated design prevents catastrophic
+forgetting: the Biblical/literary foundation is fully converged before
+encyclopedic, instructional, or technical material is introduced. The
+EvolutionManager queries the current layer count at each surgery event and
+automatically enables newly unlocked corpus stages. This coupling of model
+depth to corpus breadth ensures that each new layer has genuinely novel
+representational challenges to learn, not merely a re-encoding of
+already-mastered patterns.
 
 \subsection{Live Training Telemetry}
 
@@ -852,11 +932,65 @@ A production-grade observability infrastructure accompanies the training loop:
         \texttt{f.flush()} called after every batch write, reducing terminal-to-dashboard
         latency from $\sim$50~s to ${<}3$~s.
   \item \textbf{5000+ real-time data points} rendered without frame-drop via
-        Chart.js Index-Aware state management.
+        Chart.js index-aware state management, with logarithmic loss scaling
+        for long-horizon comparison across evolutionary phases.
   \item \textbf{Global Odometer}: persists total training epoch mileage across
-        sessions (current: Epoch 434+), providing a continuous measure of
-        model maturity independent of session boundaries.
+        sessions (Global Epoch 350+ at time of submission), providing a
+        continuous measure of model maturity independent of session boundaries.
+  \item \textbf{Routing entropy (\texttt{ENTR})}: $-H(\mathbf{p})/\text{num\_layers}$
+        emitted per step, providing real-time diagnosis of expert specialisation
+        health ($\ln 12 = 2.485$ at uniform; post-intervention target:
+        $2.29$--$2.37$).
+  \item \textbf{Load-balancing telemetry}: per-step \texttt{LB val=X.XXXX}
+        emission enables continuous monitoring of auxiliary loss magnitude and
+        convergence of the routing distribution toward balanced expert
+        utilisation.
 \end{itemize}
+
+\subsection{Benchmark Results}
+\label{subsec:albert_benchmarks}
+
+\textbf{Language Modelling Perplexity.}
+At Global Epoch $\sim$350 (4-layer configuration), Albert-MoE-13 achieves a
+perplexity of \textbf{1{,}152} on its training corpus, measured via the
+\texttt{albert-test --eval} pipeline. Against an 8{,}000-token unigram
+baseline (the maximum entropy perplexity over the vocabulary), this
+represents an \textbf{85.6\% reduction in per-token uncertainty}. The
+model assigns probability mass with substantially higher precision than a
+character-frequency model over the same vocabulary---a meaningful signal
+for a sub-10M parameter system at this stage of architectural development.
+
+\textbf{Sustained Inference Throughput.}
+On ThinkPad-class laptop hardware (x86 CPU, 8~threads via Rayon, Ubuntu~24.04
+LTS, no GPU, no INT8 kernel, no framework acceleration), the full inference
+stack achieves \textbf{83~tokens/second} sustained decode. Three multiplicative
+contributions:
+
+\begin{enumerate}
+  \item \textbf{\texttt{@sparseskip} expert routing}~\cite{sparseskip2026}:
+        9/12 experts not executing per decode step (4.58$\times$ contribution
+        at 75\% sparsity; Patent~A50296/2026).
+  \item \textbf{KV-cache}: single query token attends over cached K/V,
+        eliminating recomputation of all prior context positions.
+  \item \textbf{Pre-ternarized weight cache}: \texttt{prepare\_inference()}
+        quantizes weights once at model load; all forward passes use the
+        cached ternary representation with no per-step re-quantization.
+\end{enumerate}
+
+\noindent The 83~tok/s figure is a \emph{floor}. Element-level weight
+sparsity within active expert tensors---a distinct optimisation currently
+in development, expressed as the \texttt{TSPARSE\_MATMUL} primitive at
+element granularity---would multiply throughput further on both x86 and
+dedicated ternary hardware. On native trit ASICs (the SPRIND roadmap target),
+the theoretical figure from hardware simulation reaches 122$\times$ over
+conventional binary execution.
+
+\textbf{Routing Health Post-Intervention.}
+Following the load-balancing loss and expert weight perturbation:
+routing entropy $\text{ENTR} = 2.29$--$2.37$ (versus 2.485 at full uniformity);
+gradient norms $0.001$--$0.003$ ($25\times$ the pre-intervention baseline);
+new epoch-best loss 6.8821 on first epoch post-restart. Expert specialisation
+is ongoing and measurable in real time through the dashboard telemetry pipeline.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{EU AI Act Compliance Architecture}
@@ -914,6 +1048,61 @@ The \texttt{ternaudit-guard} crate provides the operational compliance layer:
         in TernStudio IDE allow developers to audit AI-generated code with
         per-logic-segment compliance status before deployment.
 \end{itemize}
+
+\subsection{The Tend State as Alignment Primitive}
+\label{subsec:tend_state}
+
+Binary AI systems face a structural alignment problem that compliance
+frameworks cannot resolve: every output must be a decision. A system that
+does not know must still answer. The result is hallucinated
+confidence---commitment to the best available answer even when the correct
+answer is \emph{insufficient information}.
+
+The ternary $0$ state resolves this at the representation level. When a
+ternary reasoning chain encounters contradictory evidence, model uncertainty,
+or a query whose resolution requires information not yet in scope, the output
+is not a forced binary choice but a \textbf{tend}---a probabilistic lean
+accompanied by an explicit acknowledgment that the conclusion is conditional
+and subject to revision. This is not abstention; it is the most
+informationally accurate statement the system can make given current evidence.
+
+\begin{quote}
+  \emph{``I currently tend toward this conclusion---but routing entropy is
+  high. Additional context would allow me to commit.''}
+\end{quote}
+
+This property is implemented at multiple levels of the TIS stack:
+
+\begin{itemize}
+  \item In the \textbf{BET VM}: division-by-zero or unresolvable trit
+        propagation produces $0$ (tend), not a crash or \texttt{NaN}.
+        The computational analogue of honest uncertainty is a native output
+        type, not an exception.
+  \item In the \textbf{MoE-13 Orchestrator}: the hold condition
+        ($|\text{affirm} - \text{conflict}| \leq 1$ across $\geq 4$ agents)
+        blocks commitment to a majority-vote result rather than forcing one,
+        returning a hold trit.
+  \item In \textbf{Albert's routing}: before the load-balancing intervention
+        resolved expert homogeneity, the model's uniform routing was itself
+        a tend---the gate could not distinguish experts and correctly produced
+        a diffuse distribution. The LB loss did not suppress this signal; it
+        created the expert differentiation necessary to resolve it.
+  \item In the \textbf{EU AI Act correspondence}
+        (Table~\ref{tab:euaiact}): trit $0$ maps to Article~14 human
+        oversight---the system signals that this decision requires human
+        review rather than automated action.
+\end{itemize}
+
+The alignment significance of this property is architectural, not
+policy-layer. An AI system that natively outputs \emph{tend} is a
+categorically different epistemic actor than one constrained to return
+binary yes/no. Hallucination---the production of confident incorrect
+output---is not a training failure of binary systems alone; it is a
+consequence of forcing three-valued epistemic states (know, don't know,
+know-but-uncertain) into a two-valued output type. The ternary tend state
+is not a workaround for this problem. It is a first-class output of a
+system designed from first principles to represent uncertainty as real
+information.
 
 \subsection{GDPR and Data Sovereignty}
 
