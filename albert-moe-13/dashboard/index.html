@@ -101,6 +101,26 @@
         button.dim { color: var(--muted); border-color: var(--border); }
         button.dim:hover { border-color: var(--muted2); }
 
+        /* ── Custom dropdowns ────────────────────────────────────── */
+        .dd-wrap { position: relative; display: inline-block; }
+        .dd-panel {
+            display: none; position: absolute; top: calc(100% + 5px); right: 0;
+            background: var(--bg2); border: 1px solid var(--border2);
+            border-radius: 8px; padding: 4px 0; min-width: 160px; z-index: 200;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.55);
+        }
+        .dd-panel.open { display: block; }
+        .dd-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 5px 12px; font-size: 11px; color: var(--accent);
+            cursor: pointer; white-space: nowrap; font-family: inherit;
+            user-select: none; transition: background 0.1s;
+        }
+        .dd-item:hover { background: var(--bg3); }
+        .dd-item input[type=checkbox] { accent-color: var(--accent); cursor: pointer; margin: 0; flex-shrink: 0; }
+        .dd-item small { color: var(--muted); font-size: 10px; }
+        .dd-sep { height: 1px; background: var(--border); margin: 4px 8px; }
+
         /* ── Chart ───────────────────────────────────────────────── */
         #chart-wrap {
             flex: 1;
@@ -477,11 +497,17 @@
     </div>
 
     <div class="tb-cell controls">
-        <button id="toggleDots">· DOTS</button>
-        <button id="toggleSMA20" title="Short-term trend (reactive)">~ SMA-20</button>
-        <button id="toggleSMA30" title="Mid-term trend">~ SMA-30</button>
-        <button id="toggleSMA150" title="Long-term trend (smooth)">~ SMA-150</button>
-        <button id="toggleTMA" title="Ternary Moving Average — flat in HOLD, steps on AFFIRM/REJECT">≡ TMA</button>
+        <div class="dd-wrap">
+            <button id="smaDropBtn" title="Toggle chart overlays">~ CURVES ▾</button>
+            <div class="dd-panel" id="smaDrop">
+                <label class="dd-item"><input type="checkbox" id="cbDots" checked> · Raw Dots</label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA20" checked> ~ SMA-20 <small>short</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA30" checked> ~ SMA-30 <small>mid</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA150" checked> ~ SMA-150 <small>long</small></label>
+                <div class="dd-sep"></div>
+                <label class="dd-item"><input type="checkbox" id="cbTMA"> ≡ TMA <small>ternary</small></label>
+            </div>
+        </div>
         <select id="viewFilter">
             <option value="all" selected>ALL</option>
             <option value="200">200 EP</option>
@@ -492,8 +518,15 @@
             <option value="5">5 EP</option>
         </select>
         <button id="resetBtn">RESET ZOOM</button>
-        <button id="exportBtn" title="Download full per-batch telemetry as CSV (loss, grad, routing, entropy, TELE)">↓ Batch CSV</button>
-        <button id="epochCsvBtn" title="Download per-epoch summaries as CSV (avg loss, clipped, skipped)">↓ Epoch CSV</button>
+        <div class="dd-wrap">
+            <button id="exportDropBtn" title="Download training data as CSV">↓ EXPORT ▾</button>
+            <div class="dd-panel" id="exportDrop">
+                <div class="dd-item" id="exportBatch">↓ Batch CSV <small>per-step telemetry</small></div>
+                <div class="dd-item" id="exportEpoch">↓ Epoch CSV <small>per-epoch summary</small></div>
+                <div class="dd-sep"></div>
+                <div class="dd-item" id="exportFull">↓ Full Dataset <small>both combined</small></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1233,33 +1266,31 @@
     }
 
     // ── Controls ───────────────────────────────────────────────────────
-    document.getElementById('toggleDots').addEventListener('click', function() {
-        chart.data.datasets[0].hidden = !chart.data.datasets[0].hidden;
-        this.classList.toggle('dim', !!chart.data.datasets[0].hidden);
+    // ── Curves dropdown ──────────────────────────────────────────────
+    function updateSmaBtnLabel() {
+        const total = ['cbDots','cbSMA20','cbSMA30','cbSMA150','cbTMA']
+            .filter(id => document.getElementById(id).checked).length;
+        document.getElementById('smaDropBtn').textContent = `~ CURVES (${total}) ▾`;
+    }
+    function toggleDataset(idx, checked) {
+        chart.data.datasets[idx].hidden = !checked;
         chart.update('none');
+        updateSmaBtnLabel();
+    }
+    document.getElementById('smaDropBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('smaDrop').classList.toggle('open');
+        document.getElementById('exportDrop').classList.remove('open');
     });
-    document.getElementById('toggleSMA20').addEventListener('click', function() {
-        chart.data.datasets[1].hidden = !chart.data.datasets[1].hidden;
-        this.classList.toggle('dim', !!chart.data.datasets[1].hidden);
-        chart.update('none');
-    });
-    document.getElementById('toggleSMA30').addEventListener('click', function() {
-        chart.data.datasets[2].hidden = !chart.data.datasets[2].hidden;
-        this.classList.toggle('dim', !!chart.data.datasets[2].hidden);
-        chart.update('none');
-    });
-    document.getElementById('toggleSMA150').addEventListener('click', function() {
-        chart.data.datasets[3].hidden = !chart.data.datasets[3].hidden;
-        this.classList.toggle('dim', !!chart.data.datasets[3].hidden);
-        chart.update('none');
-    });
-    document.getElementById('toggleTMA').addEventListener('click', function() {
-        chart.data.datasets[4].hidden = !chart.data.datasets[4].hidden;
-        this.classList.toggle('dim', !!chart.data.datasets[4].hidden);
-        chart.update('none');
-    });
-    // TMA starts hidden — button starts dimmed
-    document.getElementById('toggleTMA').classList.add('dim');
+    document.getElementById('smaDrop').addEventListener('click', e => e.stopPropagation());
+    document.getElementById('cbDots').addEventListener('change',   function() { toggleDataset(0, this.checked); });
+    document.getElementById('cbSMA20').addEventListener('change',  function() { toggleDataset(1, this.checked); });
+    document.getElementById('cbSMA30').addEventListener('change',  function() { toggleDataset(2, this.checked); });
+    document.getElementById('cbSMA150').addEventListener('change', function() { toggleDataset(3, this.checked); });
+    document.getElementById('cbTMA').addEventListener('change',    function() { toggleDataset(4, this.checked); });
+    // TMA starts hidden
+    chart.data.datasets[4].hidden = true;
+    updateSmaBtnLabel();
 
     document.getElementById('resetBtn').addEventListener('click', () => {
         isInteracting = false;
@@ -1780,63 +1811,80 @@
         URL.revokeObjectURL(url);
     }
 
-    document.getElementById('exportBtn').addEventListener('click', () => {
+    function buildBatchCsv() {
         if (!batchLog.length) {
-            // Fallback: export raw chart points if batchLog hasn't accumulated yet
             const pts = chart.data.datasets[0].data;
-            if (!pts.length) return;
-            const rows = ['global_epoch,loss', ...pts.map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`)];
-            csvDownload(rows.join('\n'), `albert_batch_${Date.now()}.csv`);
-            return;
+            if (!pts.length) return null;
+            return ['global_epoch,loss', ...pts.map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`)].join('\n');
         }
-        // Derive column widths dynamically (model layer count changes at surgery)
         const maxLayerNorms = Math.max(...batchLog.map(r => r.layer_norms   ? r.layer_norms.length   : 0), 0);
         const maxExperts    = Math.max(...batchLog.map(r => r.route_weights  ? r.route_weights.length : 0), 0);
         const maxSparsity   = Math.max(...batchLog.map(r => r.tele_sparsity  ? r.tele_sparsity.length : 0), 0);
         const maxActivity   = Math.max(...batchLog.map(r => r.tele_activity  ? r.tele_activity.length : 0), 0);
-
         const layerNormCols = Array.from({length: maxLayerNorms}, (_, i) => `l1_l${i}`);
         const expertCols    = Array.from({length: maxExperts},    (_, i) => `route_e${i}`);
         const sparsityCols  = Array.from({length: maxSparsity},   (_, i) => `sp_l${i}`);
         const actCols       = Array.from({length: maxActivity},   (_, i) => `act_e${i}`);
-
-        const header = [
-            'step', 'global_epoch', 'batch', 'layers', 'loss', 'grad_norm',
-            ...layerNormCols, ...expertCols, 'entropy', ...sparsityCols, ...actCols
-        ].join(',');
-
+        const header = ['step','global_epoch','batch','layers','loss','grad_norm',
+            ...layerNormCols, ...expertCols, 'entropy', ...sparsityCols, ...actCols].join(',');
         const fmt6 = v => v != null ? v.toFixed(6) : '';
         const fmt4 = v => v != null ? v.toFixed(4) : '';
-
         const rows = batchLog.map(r => [
-            r.step,
-            r.global_epoch,
-            r.batch,
-            r.layers,
-            fmt6(r.loss),
-            fmt6(r.grad_norm),
-            ...layerNormCols.map((_, i) => fmt6(r.layer_norms  ? r.layer_norms[i]  : null)),
+            r.step, r.global_epoch, r.batch, r.layers, fmt6(r.loss), fmt6(r.grad_norm),
+            ...layerNormCols.map((_, i) => fmt6(r.layer_norms   ? r.layer_norms[i]   : null)),
             ...expertCols.map(   (_, i) => fmt6(r.route_weights ? r.route_weights[i] : null)),
             fmt6(r.entropy),
             ...sparsityCols.map( (_, i) => fmt4(r.tele_sparsity ? r.tele_sparsity[i] : null)),
             ...actCols.map(      (_, i) => fmt6(r.tele_activity ? r.tele_activity[i] : null)),
         ].join(','));
+        return [header, ...rows].join('\n');
+    }
 
-        csvDownload([header, ...rows].join('\n'), `albert_batch_${Date.now()}.csv`);
+    function buildEpochCsv() {
+        if (!epochLog.length) return null;
+        const header = 'local_epoch,global_epoch,layers,avg_loss,clipped,skipped';
+        const rows = epochLog.map(r => [
+            r.local_epoch  ?? '', r.global_epoch ?? '', r.layers ?? '',
+            r.avg_loss != null ? r.avg_loss.toFixed(6) : '',
+            r.clipped ?? '', r.skipped ?? '',
+        ].join(','));
+        return [header, ...rows].join('\n');
+    }
+
+    // ── Export dropdown ──────────────────────────────────────────────
+    document.getElementById('exportDropBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('exportDrop').classList.toggle('open');
+        document.getElementById('smaDrop').classList.remove('open');
+    });
+    document.getElementById('exportDrop').addEventListener('click', e => e.stopPropagation());
+
+    document.getElementById('exportBatch').addEventListener('click', () => {
+        document.getElementById('exportDrop').classList.remove('open');
+        const csv = buildBatchCsv();
+        if (csv) csvDownload(csv, `albert_batch_${Date.now()}.csv`);
+    });
+    document.getElementById('exportEpoch').addEventListener('click', () => {
+        document.getElementById('exportDrop').classList.remove('open');
+        const csv = buildEpochCsv();
+        if (csv) csvDownload(csv, `albert_epochs_${Date.now()}.csv`);
+    });
+    document.getElementById('exportFull').addEventListener('click', () => {
+        document.getElementById('exportDrop').classList.remove('open');
+        const bCsv = buildBatchCsv();
+        const eCsv = buildEpochCsv();
+        if (!bCsv && !eCsv) return;
+        const parts = [];
+        if (bCsv) { parts.push('## BATCH DATA'); parts.push(bCsv); }
+        if (bCsv && eCsv) parts.push('');
+        if (eCsv) { parts.push('## EPOCH SUMMARIES'); parts.push(eCsv); }
+        csvDownload(parts.join('\n'), `albert_full_${Date.now()}.csv`);
     });
 
-    document.getElementById('epochCsvBtn').addEventListener('click', () => {
-        if (!epochLog.length) return;
-        const header = 'local_epoch,global_epoch,layers,avg_loss,clipped,skipped';
-        const rows   = epochLog.map(r => [
-            r.local_epoch  ?? '',
-            r.global_epoch ?? '',
-            r.layers       ?? '',
-            r.avg_loss != null ? r.avg_loss.toFixed(6) : '',
-            r.clipped  ?? '',
-            r.skipped  ?? '',
-        ].join(','));
-        csvDownload([header, ...rows].join('\n'), `albert_epochs_${Date.now()}.csv`);
+    // Close both dropdowns on outside click
+    document.addEventListener('click', () => {
+        document.getElementById('smaDrop').classList.remove('open');
+        document.getElementById('exportDrop').classList.remove('open');
     });
 
     // ── Boot ──────────────────────────────────────────────────────────
