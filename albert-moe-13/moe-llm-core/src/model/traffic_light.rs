@@ -155,10 +155,29 @@ impl TrafficLight {
                 self.burst_count += 1;
                 self.burst_remaining = BURST_DURATION;
                 self.orange_streak = 0;
+                // Directly imprint EMA so G/R states persist ~20 steps after burst ends.
+                // Without this, gradual EMA convergence during the burst isn't enough to
+                // move values past the thresholds before the burst expires.
+                self.imprint_burst_ema();
                 self.states = Self::burst_assignments(self.num_experts, self.burst_count);
             }
         } else {
             self.orange_streak = 0;
+        }
+    }
+
+    /// Directly set EMA values for burst experts so trit differentiation persists
+    /// after the burst window closes. Green experts → 0.4× GREEN_THRESH (stays Green
+    /// ~20 steps post-burst at α=0.05). Red experts → 1.6× RED_THRESH (stays Red ~18 steps).
+    fn imprint_burst_ema(&mut self) {
+        let base = (self.burst_count.wrapping_mul(7)) % self.num_experts;
+        for i in 0..BURST_GREEN.min(self.num_experts) {
+            let idx = (base + i) % self.num_experts;
+            self.ema[idx] = GREEN_THRESH * 0.4;
+        }
+        for i in 0..BURST_RED.min(self.num_experts) {
+            let idx = (base + BURST_GREEN + BURST_GAP + i) % self.num_experts;
+            self.ema[idx] = RED_THRESH * 1.6;
         }
     }
 

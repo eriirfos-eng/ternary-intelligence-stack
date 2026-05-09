@@ -502,10 +502,12 @@ fn perplexity_on_text(
     lm: &LoadedModel,
     text: &str,
 ) -> Result<(f64, usize), Box<dyn std::error::Error>> {
-    use std::io::{IsTerminal, Write as _};
+    use std::io::Write as _;
 
     let dev = Device::Cpu;
-    let is_tty = std::io::stderr().is_terminal();
+    // IsTerminal unreliable across Linux setups — TERM env var is always set in real terminals.
+    let term = std::env::var("TERM").unwrap_or_default();
+    let is_tty = !term.is_empty() && term != "dumb";
     let tokens = lm.tokenizer.encode(text);
     let ctx = lm.config.max_seq_len;
     let mut total_loss = 0.0f64;
