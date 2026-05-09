@@ -14,6 +14,15 @@
 //
 // This complements the differentiable LB loss (which shapes gate weights over
 // time) with a hard non-differentiable correction that fires every step.
+//
+// Anti-stagnation burst (v2):
+// When EMA-based routing stays all-Orange for STAGNATION_STEPS consecutive
+// steps, the system has found a Nash equilibrium — all experts look equal,
+// the gate can't differentiate, gradients through the gate vanish. The burst
+// forcibly assigns Green/Red to disjoint expert subsets for BURST_DURATION
+// steps, shifting routing and gradient flow toward forced-active experts.
+// After the burst, natural EMA routing resumes with real utilization deltas.
+// Rotation uses burst_count × 7 mod N (7 coprime to 12) for full coverage.
 
 /// Orange expert output contribution factor.
 /// At 0.4: orange experts contribute 40% of their normal output to the final mix.
@@ -24,12 +33,10 @@ pub const ORANGE_SCALE: f32 = 0.4;
 pub const LOGIT_STRENGTH: f32 = 0.4;
 
 /// Warmup steps before traffic light activates.
-/// Allows EMA to converge before applying corrections.
 const WARMUP_STEPS: usize = 50;
 
 /// Target utilization per expert at uniform Top-3/12 routing.
 /// f_i = fraction of tokens that *selected* each expert → 3/12 = 0.25 (not 1/12).
-/// 1/12 would apply if we tracked routing weights; we track selection frequency.
 const TOP_K: f32 = 3.0;
 const TARGET: f32 = TOP_K / 12.0; // 0.25
 /// Below 80% of target → green (underloaded).
@@ -38,6 +45,17 @@ const GREEN_THRESH: f32 = TARGET * 0.80;
 const RED_THRESH: f32 = TARGET * 1.40;
 /// EMA smoothing factor: ~1/alpha steps effective window (~20 steps).
 const EMA_ALPHA: f32 = 0.05;
+
+/// Consecutive all-Orange steps before anti-stagnation burst fires.
+const STAGNATION_STEPS: usize = 100;
+/// Steps of forced Green/Red diversity per burst.
+const BURST_DURATION: usize = 30;
+/// Experts forced Green per burst.
+const BURST_GREEN: usize = 3;
+/// Experts forced Red per burst (non-overlapping with Green).
+const BURST_RED: usize = 3;
+/// Gap between Green and Red blocks in the rotation (experts left Orange between them).
+const BURST_GAP: usize = 2;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Trit {
@@ -73,6 +91,12 @@ pub struct TrafficLight {
     pub states: Vec<Trit>,
     num_experts: usize,
     step: usize,
+    /// Consecutive all-Orange steps since last burst or non-Orange natural state.
+    orange_streak: usize,
+    /// Steps remaining in the current forced burst (0 = no active burst).
+    burst_remaining: usize,
+    /// How many bursts have fired — drives the rotation offset.
+    burst_count: usize,
 }
 
 impl TrafficLight {
@@ -83,31 +107,88 @@ impl TrafficLight {
             states: vec![Trit::Orange; num_experts],
             num_experts,
             step: 0,
+            orange_streak: 0,
+            burst_remaining: 0,
+            burst_count: 0,
         }
     }
 
-    /// Update EMA from observed normalized routing weights, recompute trit states.
-    /// `observed` is the per-expert combined_weight fraction (sums to ~1.0).
+    /// Update EMA from observed routing, recompute trit states.
+    /// Handles warmup, normal EMA-based routing, and anti-stagnation bursts.
     pub fn update(&mut self, observed: &[f32]) {
         self.step += 1;
         if self.step < WARMUP_STEPS {
             return; // all Orange during warmup — don't interfere with initial routing
         }
+
+        // Always update EMA regardless of burst state — keeps statistics honest.
         for i in 0..self.num_experts {
             let obs = observed.get(i).copied().unwrap_or(0.0);
             self.ema[i] = EMA_ALPHA * obs + (1.0 - EMA_ALPHA) * self.ema[i];
+        }
+
+        // If a burst is active, hold forced assignments and count down.
+        if self.burst_remaining > 0 {
+            self.burst_remaining -= 1;
+            self.states = Self::burst_assignments(self.num_experts, self.burst_count);
+            return;
+        }
+
+        // Normal EMA-based state assignment.
+        let mut all_orange = true;
+        for i in 0..self.num_experts {
             self.states[i] = if self.ema[i] < GREEN_THRESH {
+                all_orange = false;
                 Trit::Green
             } else if self.ema[i] > RED_THRESH {
+                all_orange = false;
                 Trit::Red
             } else {
                 Trit::Orange
             };
         }
+
+        // Track stagnation and fire burst if threshold reached.
+        if all_orange {
+            self.orange_streak += 1;
+            if self.orange_streak >= STAGNATION_STEPS {
+                self.burst_count += 1;
+                self.burst_remaining = BURST_DURATION;
+                self.orange_streak = 0;
+                self.states = Self::burst_assignments(self.num_experts, self.burst_count);
+            }
+        } else {
+            self.orange_streak = 0;
+        }
+    }
+
+    /// Generate forced burst trit assignments for a given burst index.
+    /// Rotates by 7 per burst (coprime to 12) for full expert coverage over cycles.
+    /// Layout: [BURST_GREEN Green] [BURST_GAP Orange] [BURST_RED Red] [rest Orange]
+    fn burst_assignments(num_experts: usize, burst_count: usize) -> Vec<Trit> {
+        let mut states = vec![Trit::Orange; num_experts];
+        let base = (burst_count.wrapping_mul(7)) % num_experts;
+        for i in 0..BURST_GREEN.min(num_experts) {
+            states[(base + i) % num_experts] = Trit::Green;
+        }
+        for i in 0..BURST_RED.min(num_experts) {
+            states[(base + BURST_GREEN + BURST_GAP + i) % num_experts] = Trit::Red;
+        }
+        states
     }
 
     pub fn is_warmup(&self) -> bool {
         self.step < WARMUP_STEPS
+    }
+
+    /// True during an active anti-stagnation burst.
+    pub fn is_burst(&self) -> bool {
+        self.burst_remaining > 0
+    }
+
+    /// Orange streak and burst count for telemetry.
+    pub fn stagnation_state(&self) -> (usize, usize) {
+        (self.orange_streak, self.burst_count)
     }
 
     /// Gate logit modifier vector [num_experts] — broadcast-add to gate logits.
