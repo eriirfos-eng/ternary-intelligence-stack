@@ -502,37 +502,22 @@ fn perplexity_on_text(
     lm: &LoadedModel,
     text: &str,
 ) -> Result<(f64, usize), Box<dyn std::error::Error>> {
-    use std::io::Write as _;
-
     let dev = Device::Cpu;
-    // IsTerminal unreliable across Linux setups — TERM env var is always set in real terminals.
-    let term = std::env::var("TERM").unwrap_or_default();
-    let is_tty = !term.is_empty() && term != "dumb";
     let tokens = lm.tokenizer.encode(text);
     let ctx = lm.config.max_seq_len;
     let mut total_loss = 0.0f64;
     let mut count = 0usize;
-
-    let spinner = ['⣾','⣽','⣻','⢿','⡿','⣟','⣯','⣷'];
     let flavour = [
-        "crunching numbers",
-        "weighing tensors",
-        "consulting the experts",
-        "skipping 9 of 12 experts",
-        "reading the scriptures",
-        "marking the bench",
-        "highlighting activations",
-        "routing through the trit states",
-        "asking the LORD for perplexity",
-        "counting the tokens",
+        "crunching numbers", "weighing tensors", "consulting the experts",
+        "skipping 9 of 12 experts", "reading the scriptures", "marking the bench",
+        "routing through trit states", "asking the LORD for perplexity",
     ];
 
     let all_windows: Vec<&[u32]> = tokens.windows(ctx + 1).step_by(ctx).collect();
     let windows = &all_windows[..all_windows.len().min(MAX_EVAL_WINDOWS)];
     let total_windows = windows.len();
-    let capped = all_windows.len() > MAX_EVAL_WINDOWS;
 
-    if capped {
+    if all_windows.len() > MAX_EVAL_WINDOWS {
         eprintln!("  Corpus capped at {} windows (~{}K tokens) for benchmark speed.",
             MAX_EVAL_WINDOWS, MAX_EVAL_WINDOWS * ctx / 1000);
     }
@@ -553,28 +538,18 @@ fn perplexity_on_text(
             }
         }
 
-        let spin = spinner[wi % spinner.len()];
-        let msg  = flavour[(wi / 8) % flavour.len()];
-        let pct  = (wi + 1) * 100 / total_windows;
-        let bar_filled = (wi + 1) * 30 / total_windows;
-        let bar: String = "█".repeat(bar_filled) + &"░".repeat(30 - bar_filled);
-        let running_loss = if count > 0 { total_loss / count as f64 } else { 0.0 };
-
-        if is_tty {
-            eprint!("\r  {} [{}] {:>3}%  window {:>4}/{:>4}  loss {:.4}  {}...",
-                spin, bar, pct, wi + 1, total_windows, running_loss, msg);
-            let _ = std::io::stderr().flush();
-        } else if wi % 25 == 0 || wi + 1 == total_windows {
-            eprintln!("  {} [{}] {:>3}%  window {:>4}/{:>4}  loss {:.4}  {}...",
-                spin, bar, pct, wi + 1, total_windows, running_loss, msg);
+        if wi % 10 == 0 || wi + 1 == total_windows {
+            let pct = (wi + 1) * 100 / total_windows;
+            let bar_filled = (wi + 1) * 20 / total_windows;
+            let bar = format!("[{}{}]", "=".repeat(bar_filled), ".".repeat(20 - bar_filled));
+            let running_loss = if count > 0 { total_loss / count as f64 } else { 0.0 };
+            let msg = flavour[(wi / 10) % flavour.len()];
+            eprintln!("  {} {:>3}%  {}/{} windows  loss {:.4}  {}...",
+                bar, pct, wi + 1, total_windows, running_loss, msg);
         }
     }
 
-    if is_tty {
-        eprintln!("\r  ✓ done{}", " ".repeat(80));
-    } else {
-        eprintln!("  ✓ done");
-    }
+    eprintln!("  [====================] 100%  done");
     let avg_loss = if count > 0 { total_loss / count as f64 } else { f64::NAN };
     Ok((avg_loss, count))
 }
