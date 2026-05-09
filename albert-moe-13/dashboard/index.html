@@ -552,6 +552,13 @@
         <div id="grad-viz"><div id="grad-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
         <div id="grad-norm-global"></div>
     </div>
+    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
+
+    <!-- Panel F: Ternary Traffic Light routing state -->
+    <div class="nv-panel">
+        <div class="nv-label">&#9632; Traffic Light Routing (TTL)</div>
+        <div id="tlight-viz"><div id="tlight-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TLIGHT DATA</div></div>
+    </div>
 </div>
 
 
@@ -561,7 +568,7 @@
     const BATCHES_PER_EPOCH  = 300;
 
     // Domain labels for the 12 MoE experts (learned specializations — labels are functional)
-    const EXPERT_NAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
+    const EXPERT_NAMES = window.EXPERT_NAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
     const EXPERT_DESC  = [
         'Surface structure & token patterns',
         'Word meaning & semantic similarity',
@@ -603,6 +610,7 @@
     let routingHistory   = [];   // [{step, weights:[...]}]
     let latestGrad       = null; // {norm, layerNorms:[...]}
     let pendingEntropy   = null; // most recent ENTR avg — snapshotted per batch record
+    let pendingTlight    = null; // most recent TLIGHT snapshot [{g,o,r,states}] per layer
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let totalPts         = 0;
@@ -1037,6 +1045,21 @@
                 const enm = line.match(/^ENTR step=(\d+) avg=([\d.]+)/);
                 if (enm) {
                     pendingEntropy = parseFloat(enm[2]);
+                    continue;
+                }
+                // TLIGHT line — ternary traffic light state per layer
+                // Format: TLIGHT step=N L0:GGOOORRRGGOO(G4/O6/R2) L1:... ...
+                const tlm = line.match(/^TLIGHT step=(\d+) (.+)/);
+                if (tlm) {
+                    const layers = [];
+                    const parts = tlm[2].matchAll(/L(\d+):([GORX]+)\(G(\d+)\/O(\d+)\/R(\d+)\)/g);
+                    for (const p of parts) {
+                        layers.push({ layer: parseInt(p[1]), states: p[2], g: parseInt(p[3]), o: parseInt(p[4]), r: parseInt(p[5]) });
+                    }
+                    if (layers.length) {
+                        pendingTlight = layers;
+                        renderTlight(layers);
+                    }
                     continue;
                 }
                 // Evolution & system event lines
@@ -1554,6 +1577,77 @@
                 ? '⚡ <b>Clipped to 1.0</b> — optimizer step was damped. Model making large updates.'
                 : 'Within clip threshold (1.0) — full gradient step applied. Gradients stable.'));
         globalEl.onmouseleave = hideTip;
+    }
+
+    // ── Ternary Traffic Light Panel ───────────────────────────────────
+    function renderTlight(layers) {
+        const wrap = document.getElementById('tlight-viz');
+        const waiting = document.getElementById('tlight-waiting');
+        if (waiting) waiting.remove();
+        wrap.innerHTML = '';
+
+        // colour map: G=green, O=amber, R=red, warmup=slate
+        const stateColor = { G: '#22c55e', O: '#f59e0b', R: '#ef4444' };
+        const stateLabel = { G: 'Green', O: 'Orange', R: 'Red' };
+        const stateTip   = {
+            G: 'Underloaded — gate logit boosted +0.4. Routing pressure increased toward this expert.',
+            O: 'On-target — no logit change. Output contribution scaled to 40% (partial execution budget).',
+            R: 'Overloaded — gate logit suppressed -0.4. @sparseskip handles full skip if not routed.',
+        };
+
+        // Summary bar: total G/O/R across all layers
+        const totG = layers.reduce((s, l) => s + l.g, 0);
+        const totO = layers.reduce((s, l) => s + l.o, 0);
+        const totR = layers.reduce((s, l) => s + l.r, 0);
+        const total = totG + totO + totR;
+        const warmup = totG === 0 && totR === 0;
+
+        const summary = document.createElement('div');
+        summary.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+        if (warmup) {
+            summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP — all experts Orange (≤50 steps)</span>`;
+        } else {
+            const pctG = (totG / total * 100).toFixed(0);
+            const pctO = (totO / total * 100).toFixed(0);
+            const pctR = (totR / total * 100).toFixed(0);
+            summary.innerHTML =
+                `<span style="background:#22c55e22;color:#22c55e;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">G ${totG} (${pctG}%)</span>` +
+                `<span style="background:#f59e0b22;color:#f59e0b;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">O ${totO} (${pctO}%)</span>` +
+                `<span style="background:#ef444422;color:#ef4444;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">R ${totR} (${pctR}%)</span>`;
+        }
+        wrap.appendChild(summary);
+
+        // Per-layer expert grid
+        for (const layer of layers) {
+            const layerRow = document.createElement('div');
+            layerRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:3px;';
+
+            const lbl = document.createElement('span');
+            lbl.textContent = `L${layer.layer}`;
+            lbl.style.cssText = 'font-size:10px;color:#64748b;width:16px;flex-shrink:0;font-variant-numeric:tabular-nums;';
+            layerRow.appendChild(lbl);
+
+            for (let i = 0; i < layer.states.length; i++) {
+                const ch = layer.states[i];
+                const col = stateColor[ch] || '#475569';
+                const cell = document.createElement('div');
+                cell.style.cssText = `width:14px;height:14px;border-radius:3px;background:${col};opacity:${warmup ? 0.25 : 0.85};flex-shrink:0;cursor:default;`;
+                const expertName = (window.EXPERT_NAMES || [])[i] || `E${i}`;
+                cell.addEventListener('mouseenter', ev => showTip(ev,
+                    `<b>L${layer.layer} · ${expertName} (Expert ${i})</b><br>` +
+                    `State: <b style="color:${col}">${stateLabel[ch] || ch}</b><br>` +
+                    `${stateTip[ch] || ''}`));
+                cell.addEventListener('mouseleave', hideTip);
+                layerRow.appendChild(cell);
+            }
+
+            // Compact count
+            const cnt = document.createElement('span');
+            cnt.style.cssText = 'font-size:9px;color:#475569;margin-left:3px;';
+            cnt.textContent = `G${layer.g}/O${layer.o}/R${layer.r}`;
+            layerRow.appendChild(cnt);
+            wrap.appendChild(layerRow);
+        }
     }
 
     // ── Anomaly Event Feed ────────────────────────────────────────────
