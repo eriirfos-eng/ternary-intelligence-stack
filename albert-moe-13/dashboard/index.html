@@ -1528,9 +1528,11 @@
 
         const numExperts = routingHistory[0].weights.length;
         wrap.innerHTML = '';
-        // Normalize each timestep column by its max weight so that even uniform routing
-        // renders as a visible (equal-brightness) pattern rather than solid near-black.
-        const colMax = routingHistory.map(step => Math.max(...step.weights, 1e-9));
+        // Normalize against 2× fair share: balanced expert (1/N) → v≈0.5 (orange),
+        // dominant expert (2/N+) → v≈1.0 (deep red). Avoids per-step normalization
+        // which maps balanced routing to 1.0 (all red) when all experts are equal.
+        const fairShare = 2.0 / numExperts;
+        const colMax = routingHistory.map(() => fairShare);
         // One row per expert, cells = time steps (oldest → newest)
         for (let e = 0; e < numExperts; e++) {
             const row = document.createElement('div');
@@ -1548,7 +1550,7 @@
             cells.className = 'route-cells';
             for (let t = 0; t < routingHistory.length; t++) {
                 const w = routingHistory[t].weights[e] || 0;
-                const v = w / colMax[t];   // normalized: 1.0 = most active expert this step
+                const v = Math.min(1, w / colMax[t]); // clamped: balanced=0.5 (orange), dominant=1.0 (red)
                 const cell = document.createElement('div');
                 cell.className = 'route-cell';
                 cell.style.background = routingColor(v);
