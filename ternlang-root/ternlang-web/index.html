@@ -126,7 +126,7 @@
     [data-theme="light"] .glass-card { background: rgba(255, 255, 255, 0.85); }
 
     #page-slider { display: flex; width: 1000vw; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
-    .slide-page { width: 100vw; max-width: 100vw; flex-shrink: 0; min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding-top: 5rem; }
+    .slide-page { width: 100vw; max-width: 100vw; flex-shrink: 0; min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding-top: 5rem; background: transparent !important; }
     @media (max-width: 1023px) { .slide-page { padding-bottom: 4.5rem; } }
     pre, code { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .reveal { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
@@ -229,7 +229,7 @@
 </head>
 <body class="bg-t_bg text-t_text antialiased">
 
-  <canvas id="ternary-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-20"></canvas>
+  <canvas id="ternary-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
 
   <!-- Navigation -->
   <nav class="fixed top-0 left-0 right-0 z-50 border-b border-t_border bg-t_bg/90 backdrop-blur-xl h-20">
@@ -326,7 +326,7 @@
           </h1>
           <p class="text-xl md:text-3xl text-t_muted font-light mb-12 max-w-2xl mx-auto leading-relaxed">
             <span class="lang-en">Most AI systems are forced to choose between "yes" and "no" — even when they're guessing. We build software that knows when it doesn't know, using three states: <em class="text-t_text not-italic font-bold underline decoration-t_teal underline-offset-8">Yes, No, or "I need more information."</em></span>
-            <span class="lang-de">Die meisten KI-Systeme müssen zwischen „Ja" und „Nein" wählen — selbst wenn sie raten. Wir bauen Software, die weiß, wann sie nichts weiß. Mit drei Zuständen: <em class="text-t_text not-italic font-bold underline decoration-t_teal underline-offset-8">Ja, Nein, oder „Ich brauche mehr Informationen."</em></span>
+            <span class="lang-de">Die meisten KI-Systeme sind gezwungen, sich festzulegen — auch dann, wenn die Datenlage es nicht hergibt. Wir bauen Software, die ehrlich zugeben kann, was sie nicht weiß. Drei Zustände: <em class="text-t_text not-italic font-bold underline decoration-t_teal underline-offset-8">Ja, Nein — oder Abwarten.</em></span>
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <button onclick="navTo(1)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)]">
@@ -340,7 +340,7 @@
       </header>
 
       <!-- Plain English Section -->
-      <section class="py-16 px-6 bg-t_bg border-t border-t_border">
+      <section class="py-16 px-6">
         <div class="max-w-6xl mx-auto reveal">
           <div class="text-center mb-12">
             <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">
@@ -353,12 +353,12 @@
             </h2>
             <p class="text-lg text-t_text max-w-2xl mx-auto mb-6">
               <span class="lang-en">Traditional AI is forced to pick a side, even when the data is inconclusive. That’s not how smart decision-making works in the real world.</span>
-              <span class="lang-de">Herkömmliche KI muss Position beziehen — auch wenn die Datenlage es gar nicht hergibt. So funktioniert intelligente Entscheidungsfindung in der Realität nicht.</span>
+              <span class="lang-de">Konventionelle KI muss eine Antwort produzieren — selbst wenn die Daten keine hergeben. Das ist keine intelligente Entscheidungsfindung. Das ist Raten mit Selbstvertrauen.</span>
             </p>
             <div class="bg-t_bg3 border border-t_border p-6 rounded-2xl max-w-3xl mx-auto shadow-lg text-left">
               <p class="text-t_text opacity-90 text-sm md:text-base leading-relaxed">
                 <span class="lang-en"><strong class="text-t_text font-black">Why standard AI hallucinates:</strong> Conventional systems have no way to say "I don’t know" — they are forced to produce an answer, so they make one up. We built a third option into the core logic of our system: <code class="text-t_teal font-bold">trit = 0</code>. This is the computer’s way of saying "not enough evidence." It stops the process safely rather than guessing.</span>
-                <span class="lang-de"><strong class="text-t_text font-black">Warum Standard-KI halluziniert:</strong> Herkömmliche Systeme haben keine Möglichkeit, „Ich weiß es nicht" zu sagen — sie müssen eine Antwort liefern und erfinden sie zur Not. Wir haben eine dritte Option in die Kernlogik eingebaut: <code class="text-t_teal font-bold">trit = 0</code>. Das ist der Weg des Computers zu sagen: „Nicht genug Belege." Der Prozess stoppt sicher, anstatt zu raten.</span>
+                <span class="lang-de"><strong class="text-t_text font-black">Warum Standard-KI halluziniert:</strong> Herkömmliche Systeme haben keinen Typ für „Ich weiß es nicht" — sie müssen eine Antwort liefern, also erfinden sie eine. Wir haben eine dritte Option direkt in die Kernlogik eingebaut: <code class="text-t_teal font-bold">trit = 0</code>. Das ist die formale Entsprechung von „nicht genug Evidenz." Der Prozess stoppt kontrolliert — statt zu raten.</span>
               </p>
             </div>
           </div>
@@ -419,7 +419,7 @@
       </section>
 
       <!-- TernGround CTA -->
-      <section class="py-16 px-6 bg-t_bg2 border-y border-t_border">
+      <section class="py-16 px-6">
         <div class="max-w-4xl mx-auto text-center reveal">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4">
             <span class="lang-en">Open Playground</span><span class="lang-de">Offenes Labor</span>
@@ -439,7 +439,7 @@
       </section>
 
       <!-- SPRIND Frontier Strip -->
-      <section class="py-14 px-6 bg-t_bg border-y border-t_border">
+      <section class="py-14 px-6">
         <div class="max-w-6xl mx-auto">
           <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
             <span class="font-mono text-[10px] font-black text-t_teal uppercase tracking-[0.25em] border border-t_teal/40 bg-t_teal/5 px-4 py-1.5 rounded-full">SPRIND — Next Frontier AI Challenge 2026</span>
@@ -453,7 +453,7 @@
               </div>
               <div class="text-xs text-t_muted font-medium">
                 <span class="lang-en">Albert MoE-13 at full 12-layer depth<br/>Currently training: 3L → 12L via EvolutionManager</span>
-                <span class="lang-de">Albert MoE-13 bei voller 12-Schichten-Tiefe<br/>Aktuell im Training: 3L → 12L via EvolutionManager</span>
+                <span class="lang-de">Albert MoE-13 mit voller 12-Schichten-Tiefe<br/>Im Training: 3L → 12L via EvolutionManager</span>
               </div>
             </div>
             <div class="glass-card rounded-2xl p-6 border-t-2 border-t_blue text-center">
@@ -476,13 +476,13 @@
           </div>
           <p class="text-center text-t_muted text-sm max-w-3xl mx-auto">
             <span class="lang-en">The Ternary Intelligence Stack is a complete AI ecosystem — frontier LLM, compiler, VM, MCP server, and filesystem safety gate — built entirely in-house using balanced ternary logic as the computational foundation. We are entering the SPRIND Next Frontier AI Challenge because we believe this work belongs on that stage. The stack ships either way.</span>
-            <span class="lang-de">Der Ternary Intelligence Stack ist ein vollständiges KI-Ökosystem — Frontier-LLM, Compiler, VM, MCP-Server und Dateisystem-Sicherheitsschicht — vollständig in Eigenregie entwickelt, auf ausgeglichener Ternärlogik als Rechenfundament. Wir treten beim SPRIND Next Frontier AI Challenge an, weil wir glauben, dass diese Arbeit auf diese Bühne gehört. Der Stack erscheint so oder so.</span>
+            <span class="lang-de">Der Ternary Intelligence Stack ist ein vollständiges KI-Ökosystem — Frontier-LLM, Compiler, VM, MCP-Server und Dateisystem-Sicherheitsschicht — vollständig in Eigenregie entwickelt, auf ausgeglichener Ternärlogik als rechnerischem Fundament. Wir bewerben uns beim SPRIND Next Frontier AI Challenge, weil wir überzeugt sind, dass diese Arbeit auf diese Bühne gehört. Der Stack erscheint so oder so.</span>
           </p>
         </div>
       </section>
 
       <!-- Quickstart -->
-      <section id="quickstart" class="py-24 bg-t_bg2 border-t border-t_border">
+      <section id="quickstart" class="py-24">
         <div class="max-w-4xl mx-auto px-6">
           <div class="text-center mb-12">
             <h2 class="text-4xl font-black mb-4 uppercase text-t_text">
@@ -550,7 +550,7 @@
         <div class="text-center mb-10 reveal active">
           <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4"><span class="lang-en">Core Implementation</span><span class="lang-de">Kernanwendung</span></p>
           <h2 class="text-7xl font-black text-t_text mb-6 leading-none uppercase">Agent <span class="text-t_blue">Albert.</span></h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed"><span class="lang-en">A terminal AI agent that works with every major provider — Gemini, Claude, GPT-4o, Grok, and local Ollama models — all from one keyboard. Your conversation, your tools, your files: everything stays on your machine unless you say otherwise. When a decision needs a safety check, Albert forwards it to the MoE-13 API and waits for a real verdict before acting.</span><span class="lang-de">Ein KI-Agent für das Terminal, der mit allen großen Anbietern funktioniert — Gemini, Claude, GPT-4o, Grok und lokalen Ollama-Modellen — alles über eine Tastatur. Deine Unterhaltung, deine Werkzeuge, deine Dateien: Alles bleibt auf deiner Maschine, solange du nichts anderes angibst. Wenn eine Entscheidung eine Sicherheitsprüfung erfordert, leitet Albert sie an die MoE-13-API weiter und wartet auf ein echtes Urteil, bevor er handelt.</span></p>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed"><span class="lang-en">A terminal AI agent that works with every major provider — Gemini, Claude, GPT-4o, Grok, and local Ollama models — all from one keyboard. Your conversation, your tools, your files: everything stays on your machine unless you say otherwise. When a decision needs a safety check, Albert forwards it to the MoE-13 API and waits for a real verdict before acting.</span><span class="lang-de">Ein Terminal-KI-Agent, der mit jedem großen Anbieter funktioniert — Gemini, Claude, GPT-4o, Grok und lokalen Ollama-Modellen — alles über eine einzige Oberfläche. Gespräch, Werkzeuge, Dateien: Alles bleibt auf deiner Maschine, es sei denn, du sagst etwas anderes. Wenn eine Aktion eine Sicherheitsprüfung erfordert, leitet Albert sie an die MoE-13-API weiter und wartet auf ein echtes Urteil, bevor er handelt.</span></p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-12 items-start mb-24">
@@ -930,7 +930,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <div class="text-center mb-10 reveal active">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4"><span class="lang-en">Measured Performance</span><span class="lang-de">Gemessene Leistung</span></p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none"><span class="lang-en">Benchmarks.</span><span class="lang-de">Benchmarks.</span></h2>
-          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium"><span class="lang-en">When you skip 60% of calculations entirely, the numbers speak for themselves. All results are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root to verify on your own hardware.</span><span class="lang-de">Wenn du 60 % der Berechnungen vollständig überspringst, sprechen die Zahlen für sich. Alle Ergebnisse sind reproduzierbar — führe <code class="font-mono text-t_teal">make bench-all</code> aus dem Repo-Stammverzeichnis aus, um es auf deiner eigenen Hardware zu verifizieren.</span></p>
+          <p class="text-xl text-t_muted max-w-3xl mx-auto font-medium"><span class="lang-en">When you skip 60% of calculations entirely, the numbers speak for themselves. All results are reproducible — run <code class="font-mono text-t_teal">make bench-all</code> from the repo root to verify on your own hardware.</span><span class="lang-de">Wenn 75 % der Expertenneuronen pro Token übersprungen werden, sprechen die Zahlen für sich. Alle Ergebnisse sind reproduzierbar — führe <code class="font-mono text-t_teal">make bench-all</code> aus dem Repo-Root aus, um sie auf eigener Hardware zu verifizieren.</span></p>
         </div>
 
         <!-- Benchmark legend -->
@@ -1325,10 +1325,10 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
         <div class="text-center mb-12">
           <p class="font-mono text-t_teal text-xs font-bold tracking-widest uppercase mb-4"><span class="lang-en">Deployment Model</span><span class="lang-de">Lizenzmodell</span></p>
           <h2 class="text-7xl font-black text-t_text mb-6 uppercase leading-none"><span class="lang-en">Open Core. <span class="text-t_teal">Paid API.</span></span><span class="lang-de">Open Core. <span class="text-t_teal">Bezahlte API.</span></span></h2>
-          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto"><span class="lang-en">The compiler, VM, CLI, Albert agent, and all 34 MCP tools are free — no API key, no account. Tier 2+ unlocks the cloud API: persistent memory, streaming responses, and the full MoE-13 deliberation engine at scale. Every tier includes EU AI Act Art.13/14 audit trails out of the box. Subscriptions fund ongoing research and development at RFI-IRFOS in Graz, Austria.</span><span class="lang-de">Compiler, VM, CLI, Albert-Agent und alle 34 MCP-Tools sind kostenlos — kein API-Schlüssel, kein Account. Stufe 2+ schaltet die Cloud-API frei: persistenter Speicher, Streaming-Antworten und die vollständige MoE-13-Deliberationsmaschine im Großmaßstab. Jede Stufe enthält EU-KI-Gesetz-Art.13/14-Prüfpfade von Haus aus. Abonnements finanzieren laufende Forschung und Entwicklung bei RFI-IRFOS in Graz, Österreich.</span></p>
+          <p class="text-xl text-t_muted font-medium max-w-3xl mx-auto"><span class="lang-en">The compiler, VM, CLI, Albert agent, and all 34 MCP tools are free — no API key, no account. Tier 2+ unlocks the cloud API: persistent memory, streaming responses, and the full MoE-13 deliberation engine at scale. Every tier includes EU AI Act Art.13/14 audit trails out of the box. Subscriptions fund ongoing research and development at RFI-IRFOS in Graz, Austria.</span><span class="lang-de">Compiler, VM, CLI, Albert-Agent und alle 34 MCP-Tools sind kostenlos — kein API-Schlüssel, kein Account. Ab Stufe 2 wird die Cloud-API freigeschaltet: persistenter Speicher, Streaming-Antworten und die vollständige MoE-13-Deliberationsmaschine im Produktivbetrieb. Jede Stufe enthält EU-KI-Gesetz-konforme Prüfpfade (Art. 13/14) ab Werk. Die Abonnements finanzieren die laufende Forschung und Entwicklung von RFI-IRFOS in Graz, Österreich.</span></p>
         </div>
         
-        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
           <!-- Tier 1 -->
           <div class="bg-t_bg3 p-6 rounded-[2rem] border border-t_border flex flex-col hover:border-t_muted transition-all shadow-sm">
             <div class="text-[10px] font-black text-t_muted uppercase tracking-widest mb-4 border border-t_border self-start px-4 py-1 rounded-full">Tier 1</div>
