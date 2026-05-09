@@ -125,8 +125,10 @@ match conscious {
 ### Quick Start
 Install the CLI toolchain:
 ```bash
-cargo install ternlang-cli
+# One line — installs Rust (if needed) + ternlang-cli, ready immediately
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && cargo install ternlang-cli
 ```
+> **Note:** Do not use `sudo apt install cargo` — Ubuntu's packaged version is too old (1.75). The line above installs the current toolchain via rustup.
 
 Common operations:
 ```bash
@@ -271,10 +273,12 @@ Albert is the sovereign, model-agnostic AI coding CLI built as the **orchestrati
 **Mode 1 — Standalone coding CLI**
 
 ```bash
-cargo install albert-cli    # installs the `albert` binary
+# One line — installs Rust (if needed) + albert-cli, ready immediately
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && cargo install albert-cli
 albert                      # interactive REPL
 albert "refactor this"      # one-shot prompt
 ```
+> **Note:** Do not use `sudo apt install cargo` — Ubuntu's packaged version is too old (1.75). The line above installs the current toolchain via rustup.
 
 Albert boots with a one-time interview (name, role, cognitive archetype) and auto-generates an `ALBERT.md` in your workspace with baked-in project context. Every subsequent session starts with full memory of who you are and what your codebase does.
 
