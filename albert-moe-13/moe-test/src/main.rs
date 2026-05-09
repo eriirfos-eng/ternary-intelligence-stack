@@ -498,14 +498,32 @@ fn perplexity_on_text(
     lm: &LoadedModel,
     text: &str,
 ) -> Result<(f64, usize), Box<dyn std::error::Error>> {
+    use std::io::Write as _;
+
     let dev = Device::Cpu;
     let tokens = lm.tokenizer.encode(text);
     let ctx = lm.config.max_seq_len;
     let mut total_loss = 0.0f64;
     let mut count = 0usize;
 
+    let spinner = ['⣾','⣽','⣻','⢿','⡿','⣟','⣯','⣷'];
+    let flavour = [
+        "crunching numbers",
+        "weighing tensors",
+        "consulting the experts",
+        "skipping 9 of 12 experts",
+        "reading the scriptures",
+        "marking the bench",
+        "highlighting activations",
+        "routing through the trit states",
+        "asking the LORD for perplexity",
+        "counting the tokens",
+    ];
+
     let windows: Vec<&[u32]> = tokens.windows(ctx + 1).step_by(ctx).collect();
-    for window in &windows {
+    let total_windows = windows.len();
+
+    for (wi, window) in windows.iter().enumerate() {
         let input_ids = &window[..ctx];
         let target_ids = &window[1..=ctx];
         let input_t = Tensor::from_slice(input_ids, (1, ctx), &dev)?.to_dtype(DType::U32)?;
@@ -520,7 +538,19 @@ fn perplexity_on_text(
                 count += 1;
             }
         }
+
+        let spin = spinner[wi % spinner.len()];
+        let msg  = flavour[(wi / 8) % flavour.len()];
+        let pct  = (wi + 1) * 100 / total_windows;
+        let bar_filled = (wi + 1) * 30 / total_windows;
+        let bar: String = "█".repeat(bar_filled) + &"░".repeat(30 - bar_filled);
+        let running_loss = if count > 0 { total_loss / count as f64 } else { 0.0 };
+        eprint!("\r  {} [{}] {:>3}%  window {:>4}/{:>4}  loss {:.4}  {}...",
+            spin, bar, pct, wi + 1, total_windows, running_loss, msg);
+        let _ = std::io::stderr().flush();
     }
+
+    eprintln!("\r  ✓ done{}", " ".repeat(80));
     let avg_loss = if count > 0 { total_loss / count as f64 } else { f64::NAN };
     Ok((avg_loss, count))
 }
