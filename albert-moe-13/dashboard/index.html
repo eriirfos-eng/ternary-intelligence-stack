@@ -961,8 +961,19 @@
                 headers
             });
 
-            // 416 = no new bytes yet (file position at end) → normal, skip
-            if (res.status === 416) return;
+            // 416 = Range not satisfiable — either no new bytes yet, or log was truncated.
+            // The server sends Content-Range: bytes */SIZE — if SIZE < lastBytePos the
+            // training log was reset (training restarted). Reset and re-read from zero.
+            if (res.status === 416) {
+                const cr = res.headers.get('Content-Range');
+                if (cr) {
+                    const tm = cr.match(/bytes \*\/(\d+)/);
+                    if (tm && parseInt(tm[1]) < lastBytePos) {
+                        lastBytePos = 0; // log truncated — re-read from start next poll
+                    }
+                }
+                return;
+            }
             if (!res.ok && res.status !== 206) return;
 
             const text = await res.text();
