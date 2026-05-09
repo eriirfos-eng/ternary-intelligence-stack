@@ -474,6 +474,9 @@ async fn require_api_key(
         || path == "/.well-known/mcp/server-card.json"
         || path == "/stripe/webhook"
         || path == "/pricing"
+        || path == "/impressum"   || path == "/impressum.html"
+        || path == "/agb"         || path == "/agb.html"
+        || path == "/datenschutz" || path == "/datenschutz.html"
         || path == "/studio"
         || path == "/studio.js"
         || path == "/translator"
@@ -571,6 +574,9 @@ async fn require_admin_key(
 
 static INDEX_HTML:      &str = include_str!("../../ternlang-web/index.html");
 static PRICING_HTML:    &str = include_str!("../../ternlang-web/pricing.html");
+static IMPRESSUM_HTML:  &str = include_str!("../../ternlang-web/impressum.html");
+static AGB_HTML:        &str = include_str!("../../ternlang-web/agb.html");
+static DATENSCHUTZ_HTML:&str = include_str!("../../ternlang-web/datenschutz.html");
 static STUDIO_HTML:     &str = include_str!("../../ternlang-studio/index.html");
 static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
 static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templates/index.html");
@@ -718,9 +724,10 @@ async fn wasm_bg_handler() -> impl axum::response::IntoResponse {
     ([(axum::http::header::CONTENT_TYPE, "application/wasm")], WASM_BG)
 }
 
-async fn pricing_page() -> Html<&'static str> {
-    Html(PRICING_HTML)
-}
+async fn pricing_page()     -> Html<&'static str> { Html(PRICING_HTML) }
+async fn impressum_page()  -> Html<&'static str> { Html(IMPRESSUM_HTML) }
+async fn agb_page()        -> Html<&'static str> { Html(AGB_HTML) }
+async fn datenschutz_page()-> Html<&'static str> { Html(DATENSCHUTZ_HTML) }
 
 async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Response {
     // Serve the website to browsers; return JSON manifest to API clients.
@@ -5321,6 +5328,12 @@ async fn main() {
         .route("/.well-known/mcp/server-card.json", get(mcp_server_card))
         .route("/stripe/webhook",       post(stripe_webhook))
         .route("/pricing",              get(pricing_page))
+        .route("/impressum",            get(impressum_page))
+        .route("/impressum.html",       get(impressum_page))
+        .route("/agb",                  get(agb_page))
+        .route("/agb.html",             get(agb_page))
+        .route("/datenschutz",          get(datenschutz_page))
+        .route("/datenschutz.html",     get(datenschutz_page))
         .route("/studio",               get(studio_page))
         .route("/studio.js",            get(studio_js))
         .route("/playground",                       get(playground_page))
