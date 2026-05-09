@@ -358,9 +358,240 @@ fn run_eval_mode(text_path: &str, checkpoint_override: Option<&str>) -> Result<(
     Ok(())
 }
 
+struct LoadedModel {
+    model: Transformer,
+    tokenizer: BpeTokenizer,
+    config: moe_llm_core::model::TransformerConfig,
+    version: String,
+}
+
+fn load_model() -> Result<LoadedModel, Box<dyn std::error::Error>> {
+    let dev = Device::Cpu;
+    let tokenizer = BpeTokenizer::new("data/vocab.json");
+    let (checkpoint_path, version) = find_latest_checkpoint();
+
+    let mut config_path = format!("models/bible_ternary_{}.config.json", version);
+    if !std::path::Path::new(&config_path).exists() {
+        config_path = "models/bible_ternary_v2.0.0.config.json".to_string();
+    }
+    let config_str = fs::read_to_string(&config_path)?;
+    let config_json: Value = serde_json::from_str(&config_str)?;
+
+    let mut config = moe_llm_core::model::TransformerConfig::default();
+    config.vocab_size  = tokenizer.vocab_size();
+    config.hidden_size = config_json["hidden_size"].as_u64().unwrap_or(256) as usize;
+    config.num_layers  = config_json["num_layers"].as_u64().unwrap_or(5)   as usize;
+    config.num_heads   = config_json["num_heads"].as_u64().unwrap_or(8)    as usize;
+    config.max_seq_len = config_json["max_seq_len"].as_u64().unwrap_or(128) as usize;
+    config.num_experts = config_json["num_experts"].as_u64().unwrap_or(12) as usize;
+
+    let varmap = candle_nn::VarMap::new();
+    let vb = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
+    let model = Transformer::new(&config, vb)?;
+
+    let ckpt_data = candle_core::safetensors::load(&checkpoint_path, &dev)?;
+    let all_vars = varmap.data().lock().unwrap();
+    for (name, var) in all_vars.iter() {
+        if let Some(t) = ckpt_data.get(name) { let _ = var.set(t); }
+    }
+    drop(all_vars);
+    model.prepare_inference()?;
+
+    Ok(LoadedModel { model, tokenizer, config, version })
+}
+
+fn perplexity_on_text(
+    lm: &LoadedModel,
+    text: &str,
+) -> Result<(f64, usize), Box<dyn std::error::Error>> {
+    let dev = Device::Cpu;
+    let tokens = lm.tokenizer.encode(text);
+    let ctx = lm.config.max_seq_len;
+    let mut total_loss = 0.0f64;
+    let mut count = 0usize;
+
+    let windows: Vec<&[u32]> = tokens.windows(ctx + 1).step_by(ctx).collect();
+    for window in &windows {
+        let input_ids = &window[..ctx];
+        let target_ids = &window[1..=ctx];
+        let input_t = Tensor::from_slice(input_ids, (1, ctx), &dev)?.to_dtype(DType::U32)?;
+        let logits = lm.model.forward(&input_t)?;
+        let logits_2d = logits.squeeze(0)?;
+        for (pos, &target) in target_ids.iter().enumerate() {
+            let logit_row = logits_2d.narrow(0, pos, 1)?.squeeze(0)?;
+            let log_probs = candle_nn::ops::log_softmax(&logit_row, 0)?;
+            let lp = log_probs.to_vec1::<f32>()?;
+            if (target as usize) < lm.config.vocab_size {
+                total_loss += -(lp[target as usize] as f64);
+                count += 1;
+            }
+        }
+    }
+    let avg_loss = if count > 0 { total_loss / count as f64 } else { f64::NAN };
+    Ok((avg_loss, count))
+}
+
+/// Full benchmark suite: speed + @sparseskip + perplexity. Exits after printing results.
+/// Usage: moe-test --bench [--csv <path>]
+fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+    let dev = Device::Cpu;
+    let platform = format!("{}-{}", std::env::consts::OS, std::env::consts::ARCH);
+
+    eprintln!("Loading Albert MoE-13...");
+    let lm = load_model()?;
+    let c = &lm.config;
+    let top_k = 3usize;
+
+    let sep = "━".repeat(60);
+    println!();
+    println!("╔════════════════════════════════════════════════════════════╗");
+    println!("║        Albert MoE-13 — TIS Benchmark Suite {}          ║", lm.version);
+    println!("╚════════════════════════════════════════════════════════════╝");
+    println!();
+    println!("  Architecture : {}L × {}E × {}H  BitNet 1.58b", c.num_layers, c.num_experts, c.hidden_size);
+    println!("  Routing      : @sparseskip Top-{}/{}", top_k, c.num_experts);
+    println!("  Checkpoint   : bible_ternary_{}", lm.version);
+    println!("  Platform     : {}", platform);
+
+    // ── [1/3] Inference Speed ───────────────────────────────────────────
+    println!("\n{}", sep);
+    println!("[1/3] INFERENCE SPEED");
+    println!("{}", sep);
+
+    let bench_prompt = "In the beginning God created the heaven and the earth";
+    let prompt_tokens = lm.tokenizer.encode(bench_prompt);
+    let n_gen = 64usize;
+
+    lm.model.clear_kv_cache();
+    let input_t = Tensor::new(prompt_tokens.as_slice(), &dev)?
+        .unsqueeze(0)?.to_dtype(DType::U32)?;
+    let logits = lm.model.forward_prefill(&input_t)?;
+    let dims = logits.dims();
+    let last_logits = logits.i((0, dims[1] - 1))?;
+    let pr = candle_nn::ops::softmax(&last_logits, 0)?.to_vec1::<f32>()?;
+    let first_token = pr.iter().enumerate()
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .map(|(i, _)| i as u32).unwrap();
+
+    let mut current_tokens = prompt_tokens.clone();
+    current_tokens.push(first_token);
+    let mut kv_pos = prompt_tokens.len();
+
+    let t_start = Instant::now();
+    for _ in 0..n_gen {
+        let last = *current_tokens.last().unwrap();
+        let out = lm.model.forward_decode(last, kv_pos, &dev)?;
+        kv_pos += 1;
+        let row = out.i((0, 0))?;
+        let p = candle_nn::ops::softmax(&row, 0)?.to_vec1::<f32>()?;
+        let next = p.iter().enumerate()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .map(|(i, _)| i as u32).unwrap();
+        current_tokens.push(next);
+    }
+    let elapsed = t_start.elapsed();
+    let tps = n_gen as f64 / elapsed.as_secs_f64();
+    let lat_ms = elapsed.as_millis() as f64 / n_gen as f64;
+    let gflops = (tps * 2_000_000.0) / 1_000_000_000.0;
+    let output_preview = {
+        let decoded = lm.tokenizer.decode(&current_tokens[prompt_tokens.len()..]);
+        if decoded.len() > 80 { format!("{}…", &decoded[..80]) } else { decoded }
+    };
+
+    println!("  Prompt    : \"{}\"", bench_prompt);
+    println!("  Generated : {} tokens", n_gen);
+    println!("  Speed     : {:.1} tok/s", tps);
+    println!("  Latency   : {:.1} ms/tok", lat_ms);
+    println!("  GFLOPS    : {:.4}", gflops);
+    println!("  Output    : \"{}\"", output_preview);
+
+    // ── [2/3] @sparseskip Routing Analysis ─────────────────────────────
+    println!("\n{}", sep);
+    println!("[2/3] @SPARSESKIP ROUTING ANALYSIS");
+    println!("{}", sep);
+
+    let skipped = c.num_experts - top_k;
+    let skip_rate = skipped as f64 / c.num_experts as f64;
+    let compute_pct = (top_k as f64 / c.num_experts as f64) * 100.0;
+
+    println!("  Active experts / decode step : {} / {}", top_k, c.num_experts);
+    println!("  Skipped experts / step       : {} / {}  ({:.0}%)", skipped, c.num_experts, skip_rate * 100.0);
+    println!("  Compute vs. dense MoE        : {:.0}% ({} of {} experts executed)", compute_pct, top_k, c.num_experts);
+    println!("  Patent reference             : A50296/2026 (pending)");
+
+    // ── [3/3] Perplexity ───────────────────────────────────────────────
+    println!("\n{}", sep);
+    println!("[3/3] PERPLEXITY  (eval_sample.txt)");
+    println!("{}", sep);
+
+    let eval_path = "eval_sample.txt";
+    let (avg_loss, tokens_evaluated) = if std::path::Path::new(eval_path).exists() {
+        eprint!("  Evaluating...");
+        let text = fs::read_to_string(eval_path)?;
+        let result = perplexity_on_text(&lm, &text)?;
+        eprintln!(" done.");
+        result
+    } else {
+        println!("  eval_sample.txt not found — skipping perplexity");
+        (f64::NAN, 0)
+    };
+    let ppl = avg_loss.exp();
+
+    if !avg_loss.is_nan() {
+        println!("  Tokens evaluated  : {}", tokens_evaluated);
+        println!("  Avg cross-entropy : {:.4}", avg_loss);
+        println!("  Perplexity        : {:.2}", ppl);
+    }
+
+    // ── Summary ─────────────────────────────────────────────────────────
+    println!("\n{}", sep);
+    println!("SUMMARY");
+    println!("{}", sep);
+    println!("  Tokens/sec   : {:.1}", tps);
+    println!("  Latency      : {:.1} ms/tok", lat_ms);
+    println!("  Perplexity   : {}", if avg_loss.is_nan() { "n/a".to_string() } else { format!("{:.2}", ppl) });
+    println!("  Skip rate    : {:.0}%  ({} of {} experts skipped per step)", skip_rate * 100.0, skipped, c.num_experts);
+    println!("  Model size   : {}L × {}E × {}H  ({} params)", c.num_layers, c.num_experts, c.hidden_size,
+        c.num_layers * c.num_experts * c.hidden_size * c.hidden_size * 3 / 1_000_000);
+
+    // ── CSV Export ──────────────────────────────────────────────────────
+    let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    let csv_out = csv_path.unwrap_or("albert_bench_results.csv");
+    let header = "timestamp,model,version,arch,layers,experts,hidden,top_k,tokens_per_sec,latency_ms,gflops,avg_loss,perplexity,tokens_evaluated,skip_rate,platform";
+    let row = format!(
+        "{},{},{},{}L×{}E×{}H,{},{},{},{},{:.1},{:.1},{:.4},{},{},{},{:.3},{}",
+        now, "albert-moe-13", lm.version,
+        c.num_layers, c.num_experts, c.hidden_size,
+        c.num_layers, c.num_experts, c.hidden_size, top_k,
+        tps, lat_ms, gflops,
+        if avg_loss.is_nan() { "".to_string() } else { format!("{:.4}", avg_loss) },
+        if ppl.is_nan() { "".to_string() } else { format!("{:.2}", ppl) },
+        tokens_evaluated, skip_rate, platform,
+    );
+    let csv_content = if std::path::Path::new(csv_out).exists() {
+        format!("{}\n", row)
+    } else {
+        format!("{}\n{}\n", header, row)
+    };
+    fs::write(csv_out, csv_content)?;
+    println!("\n  CSV exported  : {}", csv_out);
+    println!();
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Check for --eval mode before starting the TUI
     let args: Vec<String> = std::env::args().collect();
+
+    // --bench [--csv <path>]
+    if args.iter().any(|a| a == "--bench") {
+        let csv = args.iter().position(|a| a == "--csv")
+            .and_then(|i| args.get(i + 1))
+            .map(|s| s.as_str());
+        return run_bench_mode(csv);
+    }
+
+    // --eval <text_file> [--checkpoint <path>]
     if let Some(eval_idx) = args.iter().position(|a| a == "--eval") {
         let text_path = args.get(eval_idx + 1)
             .expect("--eval requires a file path argument");
