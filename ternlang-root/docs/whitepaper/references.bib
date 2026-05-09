@@ -87,3 +87,26 @@
   howpublished = {\url{https://osf.io/}},
   note         = {RFI-IRFOS. Qutrit states $\lvert-\rangle/\lvert0\rangle/\lvert+\rangle$ mapped to trit $\{-1,0,+1\}$; Tesseract Recursive Syntax (TRS) stabilisation.}
 }
+
+@article{fedus2022switch,
+  author    = {Fedus, William and Zoph, Barret and Shazeer, Noam},
+  title     = {Switch Transformers: Scaling to Trillion Parameter Models with
+               Simple and Efficient Sparsity},
+  journal   = {Journal of Machine Learning Research},
+  volume    = {23},
+  number    = {120},
+  pages     = {1--39},
+  year      = {2022},
+  url       = {https://jmlr.org/papers/v23/21-0998.html}
+}
+
+@misc{sparseskip2026,
+  author       = {Kepp, Simeon},
+  title        = {\texttt{@sparseskip}: Zero-Overhead Sparse Execution for
+                  Ternary Neural Network Inference},
+  year         = {2026},
+  howpublished = {Patent Pending A50296/2026},
+  note         = {RFI-IRFOS. TSPARSE\_MATMUL opcode; expert-level MoE routing
+                  skip; 4.58$\times$ speedup at 75\% expert sparsity on x86 CPU.
+                  Reproducing: \texttt{cargo run --release --bin sparseskip\_throughput}}
+}
