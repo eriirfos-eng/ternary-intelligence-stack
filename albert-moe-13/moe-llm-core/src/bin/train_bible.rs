@@ -1,6 +1,6 @@
 use candle_core::{Device, DType, Result, Tensor};
 use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
-use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture};
+use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture, clear_tlight_capture, take_tlight_capture};
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use std::fs::{self, OpenOptions};
@@ -401,6 +401,7 @@ fn train_cycle(
 
             clear_entropy_capture();
             clear_lb_capture();
+            clear_tlight_capture();
             let logits      = model.forward(&input_tensor)?;
             let logits      = logits.reshape((seq_len, config.vocab_size))?;
             let target_flat = target_tensor.flatten_all()?;
@@ -542,6 +543,16 @@ fn train_cycle(
                     let _ = writeln!(f, "ENTR step={} avg={:.4}", *global_step, entr_per_layer);
                     // LB — load-balancing loss value. Should decrease as routing diversifies.
                     let _ = writeln!(f, "LB step={} val={:.4}", *global_step, lb_scalar);
+                    // TLIGHT — ternary traffic light state per layer.
+                    // G=green (underloaded, boosted), O=orange (on-target, partial output),
+                    // R=red (overloaded, suppressed). One entry per MoeBlock per step.
+                    let tlight_layers = take_tlight_capture();
+                    if !tlight_layers.is_empty() {
+                        let layer_strs: Vec<String> = tlight_layers.iter().enumerate()
+                            .map(|(i, (g, o, r, s))| format!("L{}:{}(G{}/O{}/R{})", i, s, g, o, r))
+                            .collect();
+                        let _ = writeln!(f, "TLIGHT step={} {}", *global_step, layer_strs.join(" "));
+                    }
                 }
                 clear_routing_capture();
 

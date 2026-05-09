@@ -1,26 +1,31 @@
 // Sparse Top-3 MoE routing with asymmetric safety gate — whitepaper §11.1, §10.4
 // Gate kept in F32 (candle_nn::Linear): routing needs fine-grained signal that
 // ternary resolution can't provide at 256→12 scale. Expert MLPs remain ternary.
+//
+// Ternary Traffic Light (TTL) routing layer:
+// Each expert is assigned a trit state (Green/Orange/Red) from rolling EMA utilization.
+// Green experts get a gate logit boost; Red are suppressed; Orange pass unmodified
+// but contribute at ORANGE_SCALE to the output mix. Derived from Lisa Scharler's
+// triunity routing sketch — the trit is the execution budget, not just the routing signal.
 use candle_core::{Result, Tensor};
 use candle_nn::{Module, VarBuilder};
 use super::mlp::Mlp;
+use super::traffic_light::TrafficLight;
 use std::cell::RefCell;
 
-// Thread-local accumulators — one per forward pass, drained by train_bible.rs.
-// No locks, no allocation on the hot path.
 thread_local! {
     static ROUTING_ACC: RefCell<Vec<f32>> = RefCell::new(Vec::new());
-    // Neg-entropy sum across all MoE layers — minimising maximises routing diversity.
     static ENTROPY_ACC: RefCell<Option<Tensor>> = RefCell::new(None);
-    // Load-balancing loss (Switch Transformer §5): num_experts * Σ(f_i · P_i).
-    // f_i = fraction of tokens routed to expert i; P_i = mean gate softmax prob for expert i.
-    // Gradient flows through P_i, pushing over-used experts' gate probs down.
-    static LB_ACC: RefCell<Option<Tensor>> = RefCell::new(None);
+    static LB_ACC:      RefCell<Option<Tensor>> = RefCell::new(None);
+    // Traffic light telemetry: accumulated (green, orange, red, state_string) per step.
+    // Each MoeBlock appends its layer's counts; train_bible drains once per batch.
+    static TLIGHT_ACC:  RefCell<Vec<(usize, usize, usize, String)>> = RefCell::new(Vec::new());
 }
 
-pub fn clear_routing_capture() {
-    ROUTING_ACC.with(|r| r.borrow_mut().clear());
-}
+pub fn clear_routing_capture() { ROUTING_ACC.with(|r| r.borrow_mut().clear()); }
+pub fn clear_entropy_capture() { ENTROPY_ACC.with(|e| *e.borrow_mut() = None); }
+pub fn clear_lb_capture()      { LB_ACC.with(|lb| *lb.borrow_mut() = None); }
+pub fn clear_tlight_capture()  { TLIGHT_ACC.with(|t| t.borrow_mut().clear()); }
 
 pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
     ROUTING_ACC.with(|r| {
@@ -31,32 +36,30 @@ pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
     })
 }
 
-pub fn clear_entropy_capture() {
-    ENTROPY_ACC.with(|e| *e.borrow_mut() = None);
-}
-
 pub fn take_entropy_capture() -> Option<Tensor> {
     ENTROPY_ACC.with(|e| e.borrow_mut().take())
-}
-
-pub fn clear_lb_capture() {
-    LB_ACC.with(|lb| *lb.borrow_mut() = None);
 }
 
 pub fn take_lb_capture() -> Option<Tensor> {
     LB_ACC.with(|lb| lb.borrow_mut().take())
 }
 
+/// Returns per-layer traffic light snapshots: (green, orange, red, state_string).
+/// One entry per MoeBlock that fired this step.
+pub fn take_tlight_capture() -> Vec<(usize, usize, usize, String)> {
+    TLIGHT_ACC.with(|t| std::mem::take(&mut *t.borrow_mut()))
+}
+
 // Router temperature < 1.0 sharpens the gate softmax, amplifying small logit differences.
-// After uniform-routing training the gate weights produce ~0.002 logit spread — softmax
-// collapses to near-uniform regardless of CE signal. T=0.7 gives ~1.4× amplification,
-// forcing clear expert preferences without the instability of very low T.
 const ROUTER_TEMP: f64 = 0.7;
 
 pub struct MoeBlock {
     gate: candle_nn::Linear,
     experts: Vec<Mlp>,
     num_experts: usize,
+    // Ternary Traffic Light: per-expert execution budget controller.
+    // Interior mutability: forward() takes &self but needs to update EMA each step.
+    traffic_light: RefCell<TrafficLight>,
 }
 
 impl MoeBlock {
@@ -67,7 +70,12 @@ impl MoeBlock {
         for i in 0..num_experts {
             experts.push(Mlp::new(hidden_size, hidden_size * 4, vb_experts.pp(i), threshold)?);
         }
-        Ok(Self { gate, experts, num_experts })
+        Ok(Self {
+            gate,
+            experts,
+            num_experts,
+            traffic_light: RefCell::new(TrafficLight::new(num_experts)),
+        })
     }
 
     pub fn prepare_inference(&self) -> Result<()> {
@@ -79,58 +87,66 @@ impl MoeBlock {
         let (b, s, h) = x.dims3()?;
         let dev = x.device();
         let x_flat = x.reshape((b * s, h))?;
-        
-        // 1. Gate logits — F32 linear for routing resolution (ternary too coarse at 256→12)
+
+        // 1. Gate logits — F32 linear for routing resolution
         let mut gate_logits = self.gate.forward(x)?; // [B, S, E]
         gate_logits = (gate_logits / ROUTER_TEMP)?;
 
-        // Clean gate probabilities — computed pre-noise so gradients flow through the
-        // unperturbed softmax. Used for both entropy telemetry and the LB loss.
+        // 2. Clean probabilities for LB loss and entropy (computed on unmodified logits
+        //    so LB gradient is orthogonal to the traffic light hard correction).
         let full_probs = candle_nn::ops::softmax(&gate_logits, candle_core::D::Minus1)?;
 
-        // Neg-entropy accumulation for entropy regularization telemetry.
+        // Neg-entropy accumulation.
         {
             let log_p = (&full_probs + 1e-9_f64)?.log()?;
             let neg_entropy = (&full_probs * log_p)?.sum(candle_core::D::Minus1)?.mean_all()?;
             ENTROPY_ACC.with(|e| {
                 let mut cell = e.borrow_mut();
                 *cell = match cell.take() {
-                    None => Some(neg_entropy),
+                    None       => Some(neg_entropy),
                     Some(prev) => Some((&prev + &neg_entropy).unwrap()),
                 };
             });
         }
 
-        // Add Gating Jitter (Noise) for exploration
+        // 3. Ternary Traffic Light logit modifier — applied AFTER full_probs (keeps LB
+        //    gradient clean) and BEFORE noise (consistent per-expert pressure each step).
+        //    During warmup (first 50 steps) all modifiers are 0.0 — no routing change.
+        {
+            let tl = self.traffic_light.borrow();
+            if !tl.is_warmup() {
+                let modifiers = tl.logit_modifiers();
+                let mod_tensor = Tensor::from_vec(modifiers, (1usize, 1usize, self.num_experts), dev)?;
+                gate_logits = gate_logits.broadcast_add(&mod_tensor)?;
+            }
+        }
+
+        // 4. Gating noise for exploration.
         let noise = Tensor::rand(0.98f32, 1.02f32, gate_logits.shape(), dev)?;
         gate_logits = gate_logits.broadcast_mul(&noise)?;
 
-        // 2. Top-3 Routing (v2.0 Evolution)
+        // 5. Top-3 Routing.
         let large_neg_val = Tensor::new(&[-1e9f32], dev)?;
 
-        // Max 1
         let max1_indices = gate_logits.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let mask1 = Tensor::arange(0u32, self.num_experts as u32, dev)?
             .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
             .broadcast_eq(&max1_indices.unsqueeze(candle_core::D::Minus1)?)?;
 
-        // Max 2
         let gate_logits_m1 = mask1.where_cond(&large_neg_val.broadcast_as(gate_logits.shape())?, &gate_logits)?;
         let max2_indices = gate_logits_m1.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let mask2 = Tensor::arange(0u32, self.num_experts as u32, dev)?
             .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
             .broadcast_eq(&max2_indices.unsqueeze(candle_core::D::Minus1)?)?;
 
-        // Max 3
         let gate_logits_m2 = mask2.where_cond(&large_neg_val.broadcast_as(gate_logits.shape())?, &gate_logits_m1)?;
         let max3_indices = gate_logits_m2.argmax(candle_core::D::Minus1)?.to_dtype(candle_core::DType::U32)?;
         let mask3 = Tensor::arange(0u32, self.num_experts as u32, dev)?
             .reshape((1, 1, self.num_experts))?.to_dtype(candle_core::DType::U32)?
             .broadcast_eq(&max3_indices.unsqueeze(candle_core::D::Minus1)?)?;
 
-        // Load-balancing loss (Switch Transformer §5).
-        // f_i from noisy argmax (non-differentiable), P_i from clean softmax (differentiable).
-        // Gradient through P_i pushes over-used experts' gate probs down, independent of CE.
+        // 6. Load-balancing loss (Switch Transformer §5).
+        let f_i_tensor;
         {
             let sel = ((mask1.to_dtype(candle_core::DType::F32)?
                 + mask2.to_dtype(candle_core::DType::F32)?)?
@@ -141,26 +157,34 @@ impl MoeBlock {
             LB_ACC.with(|acc| {
                 let mut cell = acc.borrow_mut();
                 *cell = match cell.take() {
-                    None => Some(lb),
+                    None       => Some(lb),
                     Some(prev) => Some((&prev + &lb).unwrap()),
                 };
             });
+            f_i_tensor = f_i;
         }
 
+        // 7. Update traffic light EMA from observed routing, then capture telemetry.
+        {
+            let f_i_vec = f_i_tensor.to_vec1::<f32>().unwrap_or_else(|_| vec![0.0; self.num_experts]);
+            let mut tl = self.traffic_light.borrow_mut();
+            tl.update(&f_i_vec);
+            let (g, o, r) = tl.counts();
+            let states = tl.state_string();
+            TLIGHT_ACC.with(|t| t.borrow_mut().push((g, o, r, states)));
+        }
+
+        // 8. Asymmetric safety gate (v2.0): zero out low-confidence safety experts.
         let max1_values = gate_logits.max(candle_core::D::Minus1)?;
         let max2_values = gate_logits_m1.max(candle_core::D::Minus1)?;
         let max3_values = gate_logits_m2.max(candle_core::D::Minus1)?;
-        
-        // 3. ASYMMETRIC SAFETY LOGIC (v2.0)
-        // Threshold 0.0: only zero out experts with negative gate confidence.
-        // Positive-signal experts are allowed through so routing can differentiate.
+
         let safety_threshold = 0.0f32;
-        
         let apply_safety = |idx_tensor: &Tensor, val_tensor: &Tensor| -> Result<Tensor> {
-            let is_safety = idx_tensor.lt(4u32)?.to_dtype(candle_core::DType::F32)?;
+            let is_safety  = idx_tensor.lt(4u32)?.to_dtype(candle_core::DType::F32)?;
             let is_low_conf = val_tensor.lt(safety_threshold)?.to_dtype(candle_core::DType::F32)?;
             let should_hold = (is_safety * is_low_conf)?;
-            let multiplier = (should_hold.neg()? + 1.0)?;
+            let multiplier  = (should_hold.neg()? + 1.0)?;
             val_tensor.broadcast_mul(&multiplier)
         };
 
@@ -168,20 +192,25 @@ impl MoeBlock {
         let max2_values = apply_safety(&max2_indices, &max2_values)?;
         let max3_values = apply_safety(&max3_indices, &max3_values)?;
 
-        // Softmax across Top-3
-        let top3_logits = Tensor::stack(&[max1_values.flatten_all()?, max2_values.flatten_all()?, max3_values.flatten_all()?], 1)?;
+        // Top-3 softmax weights.
+        let top3_logits = Tensor::stack(
+            &[max1_values.flatten_all()?, max2_values.flatten_all()?, max3_values.flatten_all()?],
+            1,
+        )?;
         let top3_probs = candle_nn::ops::softmax(&top3_logits, 1)?;
 
         let mut final_output = Tensor::zeros((b * s, h), x.dtype(), dev)?;
 
-        // 4. Sequential Expert Execution (Stable)
         let m1_flat = max1_indices.flatten_all()?;
         let m2_flat = max2_indices.flatten_all()?;
         let m3_flat = max3_indices.flatten_all()?;
-        
+
         let p1 = top3_probs.narrow(1, 0, 1)?.flatten_all()?;
         let p2 = top3_probs.narrow(1, 1, 1)?.flatten_all()?;
         let p3 = top3_probs.narrow(1, 2, 1)?.flatten_all()?;
+
+        // 9. Sequential expert execution with ternary execution budget.
+        let output_scales = self.traffic_light.borrow().output_scales();
 
         for expert_idx in 0..self.num_experts {
             let mask1_bool = m1_flat.eq(expert_idx as u32)?;
@@ -193,25 +222,31 @@ impl MoeBlock {
             let w3 = (mask3_bool.to_dtype(x.dtype())? * &p3)?;
             let combined_weight = (w1 + w2 + w3)?.unsqueeze(1)?;
 
-            // SparseSkip: if no token is routed to this expert, skip the MLP entirely — whitepaper §5.2.
-            // For single-token inference (Top-3, 12 experts) this skips 9/12 experts — ~4× speedup.
             let max_w = combined_weight.max_all()?.to_scalar::<f32>()?;
 
-            // Accumulate routing weight for telemetry (thread-local, zero overhead).
             ROUTING_ACC.with(|r| {
                 let mut acc = r.borrow_mut();
                 if acc.len() <= expert_idx { acc.resize(expert_idx + 1, 0.0); }
                 acc[expert_idx] += max_w;
             });
 
-            if max_w == 0.0 {
-                continue;
-            }
+            // @sparseskip: skip non-routed experts entirely — whitepaper §5.2.
+            if max_w == 0.0 { continue; }
 
             let expert_out = self.experts[expert_idx].forward(&x_flat)?;
-            final_output = (final_output + expert_out.broadcast_mul(&combined_weight)?)?;
+
+            // Ternary execution budget: scale output by traffic light state.
+            // Green = 1.0 (full), Orange = ORANGE_SCALE (partial), Red = 1.0 (but skipped above).
+            let scale = output_scales[expert_idx] as f64;
+            let scaled_weight = if (scale - 1.0).abs() > 1e-6 {
+                (combined_weight * scale)?
+            } else {
+                combined_weight
+            };
+
+            final_output = (final_output + expert_out.broadcast_mul(&scaled_weight)?)?;
         }
-        
+
         final_output.reshape((b, s, h))
     }
 }
