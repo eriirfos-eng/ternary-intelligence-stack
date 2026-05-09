@@ -152,7 +152,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 6px 10px;
+            padding: 4px 8px;
             min-width: 0;
             overflow: hidden;
         }
@@ -185,7 +185,7 @@
             color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             flex-shrink: 0;
         }
         /* Layer topology */
@@ -224,8 +224,8 @@
         }
         .topo-layer-label { font-size: 12px; color: var(--text); font-weight: bold; }
         .topo-layer-sparsity { font-size: 10px; color: var(--muted); }
-        /* Layer topology panel gets extra width */
-        .nv-panel:first-child { flex: 1.6; }
+        /* Layer topology panel: same width as others, topology nodes scale to fit */
+        .nv-panel:first-child { flex: 1.0; }
         /* Expert heatmap */
         #expert-viz {
             display: grid;
@@ -1502,21 +1502,21 @@
 
     // ── Panel D: Expert Routing Heatmap ───────────────────────────────
     function routingColor(v) {
-        // Thermal heatmap: black → deep red → orange → yellow → white
-        // v=0 inactive, v=1 dominant expert this step
+        // white → light yellow → orange → deep red
+        // v=0 inactive (dark), v>0 starts white, ramps to red at v=1
         if (v <= 0) return 'rgb(10,10,10)';
-        if (v < 0.25) {
-            const t = v / 0.25;
-            return `rgb(${Math.round(t*180)},0,0)`;
-        } else if (v < 0.5) {
-            const t = (v - 0.25) / 0.25;
-            return `rgb(180,${Math.round(t*100)},0)`;
-        } else if (v < 0.75) {
-            const t = (v - 0.5) / 0.25;
-            return `rgb(${Math.round(180+t*75)},${Math.round(100+t*120)},0)`;
+        if (v < 0.33) {
+            // white → light yellow
+            const t = v / 0.33;
+            return `rgb(255,255,${Math.round(255 - t*80)})`;
+        } else if (v < 0.66) {
+            // light yellow → orange
+            const t = (v - 0.33) / 0.33;
+            return `rgb(255,${Math.round(175 - t*100)},0)`;
         } else {
-            const t = (v - 0.75) / 0.25;
-            return `rgb(255,${Math.round(220+t*35)},${Math.round(t*200)})`;
+            // orange → deep red
+            const t = (v - 0.66) / 0.34;
+            return `rgb(${Math.round(255 - t*60)},${Math.round(75 - t*75)},0)`;
         }
     }
 
@@ -1647,7 +1647,7 @@
         const allOrange = (totG === 0 && totR === 0);
 
         const summary = document.createElement('div');
-        summary.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:wrap;';
+        summary.style.cssText = 'display:flex;gap:4px;margin-bottom:3px;align-items:center;flex-wrap:wrap;';
         if (inWarmup) {
             summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP — step ${step}/50, TTL inactive</span>`;
         } else if (allOrange) {
@@ -1666,18 +1666,18 @@
         // Per-layer expert grid
         for (const layer of layers) {
             const layerRow = document.createElement('div');
-            layerRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:3px;';
+            layerRow.style.cssText = 'display:flex;align-items:center;gap:2px;margin-bottom:2px;';
 
             const lbl = document.createElement('span');
             lbl.textContent = `L${layer.layer}`;
-            lbl.style.cssText = 'font-size:10px;color:#64748b;width:16px;flex-shrink:0;font-variant-numeric:tabular-nums;';
+            lbl.style.cssText = 'font-size:9px;color:#64748b;width:14px;flex-shrink:0;font-variant-numeric:tabular-nums;';
             layerRow.appendChild(lbl);
 
             for (let i = 0; i < layer.states.length; i++) {
                 const ch = layer.states[i];
                 const col = stateColor[ch] || '#475569';
                 const cell = document.createElement('div');
-                cell.style.cssText = `width:14px;height:14px;border-radius:3px;background:${col};opacity:${inWarmup ? 0.25 : 0.85};flex-shrink:0;cursor:default;`;
+                cell.style.cssText = `width:11px;height:11px;border-radius:2px;background:${col};opacity:${inWarmup ? 0.25 : 0.85};flex-shrink:0;cursor:default;`;
                 const expertName = (window.EXPERT_NAMES || [])[i] || `E${i}`;
                 cell.addEventListener('mouseenter', ev => showTip(ev,
                     `<b>L${layer.layer} · ${expertName} (Expert ${i})</b><br>` +
