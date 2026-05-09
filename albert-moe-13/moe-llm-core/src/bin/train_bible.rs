@@ -3,6 +3,7 @@ use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
 use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture, clear_tlight_capture, take_tlight_capture};
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
+use moe_llm_core::mycelium::MyceliumModule;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH, Instant};
@@ -255,11 +256,37 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
     Ok(())
 }
 
+fn perform_resurrection(checkpoint_path: &str, jobs: &[moe_llm_core::mycelium::ResurrectionJob], device: &Device) -> Result<()> {
+    if jobs.is_empty() { return Ok(()); }
+    let tensors = candle_core::safetensors::load(checkpoint_path, device)?;
+    let mut new_tensors: HashMap<String, Tensor> = tensors.into_iter().collect();
+    for job in jobs {
+        let seed_prefix = format!("blocks.{}.moe.experts.{}.", job.layer, job.seed_expert);
+        let dead_prefix  = format!("blocks.{}.moe.experts.{}.", job.layer, job.dead_expert);
+        let seed_keys: Vec<String> = new_tensors.keys()
+            .filter(|k| k.starts_with(&seed_prefix))
+            .cloned()
+            .collect();
+        for seed_key in seed_keys {
+            let dead_key = seed_key.replace(&seed_prefix, &dead_prefix);
+            if let Some(t) = new_tensors.get(&seed_key) {
+                let noise = Tensor::randn(0.0f32, job.noise_sigma, t.shape(), device)?;
+                new_tensors.insert(dead_key, (t + noise)?);
+            }
+        }
+        println!("[{}] MYCELIUM: Resurrected L{}E{} from L{}E{} (σ={:.3})",
+            timestamp(), job.layer, job.dead_expert, job.layer, job.seed_expert, job.noise_sigma);
+    }
+    candle_core::safetensors::save(&new_tensors, checkpoint_path)?;
+    Ok(())
+}
+
 fn train_cycle(
     tokens: &[u32],
     tokenizer: &BpeTokenizer,
     device: &Device,
     evolution_manager: &mut EvolutionManager,
+    mycelium: &mut MyceliumModule,
     global_step: &mut usize,
 ) -> Result<bool> {
     let checkpoint_path = "models/bible_ternary_v2.0.0.safetensors";
@@ -376,6 +403,10 @@ fn train_cycle(
         total_epochs += 1;
         let mut clipped_steps = 0u32;
         let mut skipped_steps = 0u32;
+        // Mycelium epoch telemetry accumulators
+        let mut last_tlight_states: Vec<String> = vec![String::new(); config.num_layers];
+        let mut epoch_layer_norm_acc: Vec<f32>  = vec![0.0; config.num_layers];
+        let mut epoch_layer_norm_count: usize   = 0;
 
         let mut log_file = OpenOptions::new()
             .create(true)
@@ -471,6 +502,10 @@ fn train_cycle(
             // Capture per-layer norms BEFORE opt.step() — optimizer updates tensor IDs in place,
             // which invalidates the GradStore lookup for any Var used after the step.
             let layer_norms = per_layer_grad_norm(&varmap, &grads, config.num_layers);
+            for (i, &n) in layer_norms.iter().enumerate() {
+                if i < epoch_layer_norm_acc.len() { epoch_layer_norm_acc[i] += n; }
+            }
+            epoch_layer_norm_count += 1;
 
             let real_loss = ce_loss.to_scalar::<f32>()?;
 
@@ -552,6 +587,12 @@ fn train_cycle(
                             .map(|(i, (g, o, r, s))| format!("L{}:{}(G{}/O{}/R{})", i, s, g, o, r))
                             .collect();
                         let _ = writeln!(f, "TLIGHT step={} {}", *global_step, layer_strs.join(" "));
+                        // Update mycelium's last-seen tlight per layer for epoch summary.
+                        for (i, (_g, _o, _r, s)) in tlight_layers.iter().enumerate() {
+                            if i < last_tlight_states.len() {
+                                last_tlight_states[i] = s.clone();
+                            }
+                        }
                     }
                 }
                 clear_routing_capture();
@@ -586,6 +627,30 @@ fn train_cycle(
         }
 
         evolution_manager.add_loss(avg_loss);
+
+        // ── Mycelium epoch recording ──────────────────────────────────────────
+        let epoch_layer_norms: Vec<f32> = epoch_layer_norm_acc.iter()
+            .map(|&s| if epoch_layer_norm_count > 0 { s / epoch_layer_norm_count as f32 } else { 0.0 })
+            .collect();
+        mycelium.record_epoch(&last_tlight_states, &epoch_layer_norms);
+        let report = mycelium.generate_report();
+        if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+            let pressure_str: Vec<String> = report.layer_pressure.iter()
+                .map(|&p| format!("{:.5}", p)).collect();
+            let _ = writeln!(f,
+                "MYCELIUM epoch={} dead={} blooming={} hot=L{} cold=L{} pressure=[{}]",
+                total_epochs, report.dead_expert_count, report.blooming_expert_count,
+                report.hottest_layer, report.coldest_layer, pressure_str.join(","));
+        }
+        if !report.resurrections.is_empty() {
+            println!("[{}] MYCELIUM: {} dead expert(s) detected — performing resurrection.",
+                timestamp(), report.resurrections.len());
+            let _ = perform_resurrection(checkpoint_path, &report.resurrections, device);
+            // Reload resurrected weights into the live model.
+            if let Ok(n) = load_checkpoint(&varmap, checkpoint_path, device) {
+                println!("[{}] MYCELIUM: Reloaded {} tensors after resurrection.", timestamp(), n);
+            }
+        }
 
         // ── Checkpoint (always save latest) ──────────────────────────────────
         save_checkpoint(&varmap, checkpoint_path)?;
@@ -759,6 +824,14 @@ fn main() -> Result<()> {
     let mut evolution_manager = EvolutionManager::new();
     let mut global_step       = 0_usize;
 
+    // Read initial layer count so MyceliumModule is sized correctly from the start.
+    let initial_layers: usize = fs::read_to_string(config_path)
+        .ok()
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .and_then(|v| v["num_layers"].as_u64())
+        .unwrap_or(3) as usize;
+    let mut mycelium = MyceliumModule::new(initial_layers, 12);
+
     loop {
         // Read current layer depth to select the right corpus stages.
         let num_layers: usize = fs::read_to_string(config_path)
@@ -772,10 +845,11 @@ fn main() -> Result<()> {
             timestamp(), tokens.len(), num_layers, num_layers);
 
         let needs_evolution = train_cycle(
-            &tokens, &tokenizer, &device, &mut evolution_manager, &mut global_step
+            &tokens, &tokenizer, &device, &mut evolution_manager, &mut mycelium, &mut global_step
         )?;
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, best_path, &device)?;
+            mycelium.on_layer_added();
             global_step = 0;
             // Corpus reloaded at top of next loop iteration with updated num_layers.
         }
