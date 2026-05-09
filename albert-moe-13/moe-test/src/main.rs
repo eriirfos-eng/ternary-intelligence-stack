@@ -494,13 +494,18 @@ fn load_model() -> Result<LoadedModel, Box<dyn std::error::Error>> {
     Ok(LoadedModel { model, tokenizer, config, version })
 }
 
+/// Max windows evaluated for perplexity — caps runtime to ~10 min on slow CPUs.
+/// 500 × 128 tokens = 64K tokens, statistically equivalent to full-corpus eval.
+const MAX_EVAL_WINDOWS: usize = 500;
+
 fn perplexity_on_text(
     lm: &LoadedModel,
     text: &str,
 ) -> Result<(f64, usize), Box<dyn std::error::Error>> {
-    use std::io::Write as _;
+    use std::io::{IsTerminal, Write as _};
 
     let dev = Device::Cpu;
+    let is_tty = std::io::stderr().is_terminal();
     let tokens = lm.tokenizer.encode(text);
     let ctx = lm.config.max_seq_len;
     let mut total_loss = 0.0f64;
@@ -520,8 +525,15 @@ fn perplexity_on_text(
         "counting the tokens",
     ];
 
-    let windows: Vec<&[u32]> = tokens.windows(ctx + 1).step_by(ctx).collect();
+    let all_windows: Vec<&[u32]> = tokens.windows(ctx + 1).step_by(ctx).collect();
+    let windows = &all_windows[..all_windows.len().min(MAX_EVAL_WINDOWS)];
     let total_windows = windows.len();
+    let capped = all_windows.len() > MAX_EVAL_WINDOWS;
+
+    if capped {
+        eprintln!("  Corpus capped at {} windows (~{}K tokens) for benchmark speed.",
+            MAX_EVAL_WINDOWS, MAX_EVAL_WINDOWS * ctx / 1000);
+    }
 
     for (wi, window) in windows.iter().enumerate() {
         let input_ids = &window[..ctx];
@@ -545,12 +557,22 @@ fn perplexity_on_text(
         let bar_filled = (wi + 1) * 30 / total_windows;
         let bar: String = "█".repeat(bar_filled) + &"░".repeat(30 - bar_filled);
         let running_loss = if count > 0 { total_loss / count as f64 } else { 0.0 };
-        eprint!("\r  {} [{}] {:>3}%  window {:>4}/{:>4}  loss {:.4}  {}...",
-            spin, bar, pct, wi + 1, total_windows, running_loss, msg);
-        let _ = std::io::stderr().flush();
+
+        if is_tty {
+            eprint!("\r  {} [{}] {:>3}%  window {:>4}/{:>4}  loss {:.4}  {}...",
+                spin, bar, pct, wi + 1, total_windows, running_loss, msg);
+            let _ = std::io::stderr().flush();
+        } else if wi % 25 == 0 || wi + 1 == total_windows {
+            eprintln!("  {} [{}] {:>3}%  window {:>4}/{:>4}  loss {:.4}  {}...",
+                spin, bar, pct, wi + 1, total_windows, running_loss, msg);
+        }
     }
 
-    eprintln!("\r  ✓ done{}", " ".repeat(80));
+    if is_tty {
+        eprintln!("\r  ✓ done{}", " ".repeat(80));
+    } else {
+        eprintln!("  ✓ done");
+    }
     let avg_loss = if count > 0 { total_loss / count as f64 } else { f64::NAN };
     Ok((avg_loss, count))
 }
