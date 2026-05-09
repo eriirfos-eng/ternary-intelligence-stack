@@ -1095,6 +1095,7 @@
                 // Format: TLIGHT step=N L0:GGOOORRRGGOO(G4/O6/R2) L1:... ...
                 const tlm = line.match(/^TLIGHT step=(\d+) (.+)/);
                 if (tlm) {
+                    const tlStep = parseInt(tlm[1]);
                     const layers = [];
                     const parts = tlm[2].matchAll(/L(\d+):([GORX]+)\(G(\d+)\/O(\d+)\/R(\d+)\)/g);
                     for (const p of parts) {
@@ -1102,7 +1103,7 @@
                     }
                     if (layers.length) {
                         pendingTlight = layers;
-                        renderTlight(layers);
+                        renderTlight(layers, tlStep);
                     }
                     continue;
                 }
@@ -1622,13 +1623,13 @@
     }
 
     // ── Ternary Traffic Light Panel ───────────────────────────────────
-    function renderTlight(layers) {
+    function renderTlight(layers, step) {
         const wrap = document.getElementById('tlight-viz');
         const waiting = document.getElementById('tlight-waiting');
         if (waiting) waiting.remove();
         wrap.innerHTML = '';
 
-        // colour map: G=green, O=amber, R=red, warmup=slate
+        // colour map: G=green, O=amber, R=red
         const stateColor = { G: '#22c55e', O: '#f59e0b', R: '#ef4444' };
         const stateLabel = { G: 'Green', O: 'Orange', R: 'Red' };
         const stateTip   = {
@@ -1642,12 +1643,15 @@
         const totO = layers.reduce((s, l) => s + l.o, 0);
         const totR = layers.reduce((s, l) => s + l.r, 0);
         const total = totG + totO + totR;
-        const warmup = totG === 0 && totR === 0;
+        const inWarmup  = (step !== undefined && step < 50);
+        const allOrange = (totG === 0 && totR === 0);
 
         const summary = document.createElement('div');
-        summary.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
-        if (warmup) {
-            summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP — all experts Orange (≤50 steps)</span>`;
+        summary.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:wrap;';
+        if (inWarmup) {
+            summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP — step ${step}/50, TTL inactive</span>`;
+        } else if (allOrange) {
+            summary.innerHTML = `<span style="color:#f59e0b;font-size:10px;letter-spacing:1px">BALANCED — all experts on target · step ${step}</span>`;
         } else {
             const pctG = (totG / total * 100).toFixed(0);
             const pctO = (totO / total * 100).toFixed(0);
@@ -1673,7 +1677,7 @@
                 const ch = layer.states[i];
                 const col = stateColor[ch] || '#475569';
                 const cell = document.createElement('div');
-                cell.style.cssText = `width:14px;height:14px;border-radius:3px;background:${col};opacity:${warmup ? 0.25 : 0.85};flex-shrink:0;cursor:default;`;
+                cell.style.cssText = `width:14px;height:14px;border-radius:3px;background:${col};opacity:${inWarmup ? 0.25 : 0.85};flex-shrink:0;cursor:default;`;
                 const expertName = (window.EXPERT_NAMES || [])[i] || `E${i}`;
                 cell.addEventListener('mouseenter', ev => showTip(ev,
                     `<b>L${layer.layer} · ${expertName} (Expert ${i})</b><br>` +
