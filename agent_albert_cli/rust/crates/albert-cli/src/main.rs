@@ -1948,12 +1948,20 @@ fn run_tui(
                 state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
             }
             Ok(Ok(ref summary)) => {
-                // Auto-compress when the session grows large to prevent TUI freeze and API rejection
+                // Auto-compact when context exceeds 150k tokens — summarize old exchanges,
+                // keep recent messages verbatim so the session continues without interruption.
                 let tokens = summary.usage.input_tokens;
                 if tokens > 150_000 {
                     let compress_result = cli.runtime.compact(runtime::CompactionConfig::default());
                     let removed = compress_result.removed_message_count;
                     if removed > 0 {
+                        // Build a short, readable digest from the summary (first 8 non-empty lines)
+                        let digest: String = compress_result.formatted_summary
+                            .lines()
+                            .filter(|l| !l.trim().is_empty())
+                            .take(8)
+                            .collect::<Vec<_>>()
+                            .join("\n");
                         match build_runtime_with_mcp(
                             compress_result.compacted_session,
                             cli.model.clone(),
@@ -1970,10 +1978,10 @@ fn run_tui(
                                 st.tokens_in = 0;
                                 st.tokens_out = 0;
                                 st.push_exec(tui::ExecBlock::SystemMsg(format!(
-                                    "auto-compressed: removed {removed} messages to free context space"
+                                    "memory compacted · {removed} older exchanges summarized · session continues\n\n{digest}"
                                 )));
                             }
-                            Err(e) => eprintln!("auto-compress rebuild: {e}"),
+                            Err(e) => eprintln!("auto-compact rebuild: {e}"),
                         }
                     }
                 }
@@ -4054,9 +4062,9 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
                 reason: "read-only mode".to_string(),
             },
             PermissionMode::WorkspaceWrite => {
-                if request.tool_name.starts_with("shell") {
+                if request.tool_name.starts_with("shell") || request.tool_name == "bash" {
                     runtime::PermissionPromptDecision::Deny {
-                        reason: "shell tools disabled in workspace-write mode".to_string(),
+                        reason: "shell disabled in workspace-write mode".to_string(),
                     }
                 } else {
                     runtime::PermissionPromptDecision::Allow
@@ -4067,30 +4075,39 @@ impl runtime::PermissionPrompter for CliPermissionPrompter {
             PermissionMode::Allow => runtime::PermissionPromptDecision::Allow,
         };
 
-        // Only surface the interactive popup in Prompt mode. All other modes
-        // (DangerFullAccess, Allow, WorkspaceWrite, ReadOnly) use the computed
-        // default directly — no popup.
-        if !self.interactive
-            || self.permission_mode != PermissionMode::Prompt
-            || !matches!(default, runtime::PermissionPromptDecision::Allow)
-        {
+        // Show popup for: Prompt (all tools), ReadOnly (all tools, deny pre-selected),
+        // WorkspaceWrite (shell only, deny pre-selected). DangerFullAccess/Allow: never.
+        let needs_popup = match self.permission_mode {
+            PermissionMode::DangerFullAccess | PermissionMode::Allow => false,
+            PermissionMode::Prompt => true,
+            PermissionMode::ReadOnly => true,
+            PermissionMode::WorkspaceWrite => {
+                request.tool_name.starts_with("shell") || request.tool_name == "bash"
+            }
+        };
+
+        if !self.interactive || !needs_popup {
             return default;
         }
 
-        // ── Interactive TUI Prompt (Prompt mode only) ───────────────────────
+        // Pre-select Deny (idx 3) when the mode's default is Deny, so the user
+        // must actively move up to Allow. In Prompt mode, pre-select Allow (idx 0).
+        let default_selected: usize = if matches!(default, runtime::PermissionPromptDecision::Allow) {
+            0
+        } else {
+            3
+        };
+
+        // ── Interactive TUI Prompt ──────────────────────────────────────────
         if let Some(tx) = &self.tui_event_tx {
             let (resp_tx, resp_rx) = std::sync::mpsc::sync_channel(1);
             let input_val = serde_json::from_str(&request.input).unwrap_or(serde_json::json!({ "raw": request.input }));
-            
-            // We need a way to send the response back from TUI to here.
-            // I'll use a wrapper enum or just a custom TuiEvent variant.
-            // Since TuiEvent is in tui.rs, I'll update it there.
-            
             let event = tui::TuiEvent::ToolApprovalRequestSync {
                 id: uuid::Uuid::new_v4().to_string(),
                 name: request.tool_name.clone(),
                 input: input_val,
                 tx: resp_tx,
+                default_selected,
             };
 
             if tx.send(event).is_ok() {
