@@ -645,6 +645,9 @@ pub enum TuiEvent {
         name: String,
         input: serde_json::Value,
         tx: std::sync::mpsc::SyncSender<runtime::PermissionPromptDecision>,
+        /// Pre-selected option: 0=Allow once, 1=Allow session, 2=Suggest changes, 3=Deny.
+        /// Prompt mode sends 0; ReadOnly/WorkspaceWrite send 3 so Deny is highlighted by default.
+        default_selected: usize,
     },
     /// User responded to a tool approval request.
     ToolApprovalResponse {
@@ -3087,7 +3090,7 @@ impl TuiApp {
                     }
 
                     // ── HITL ──────────────────────────────────────────────────
-                    Some(TuiEvent::ToolApprovalRequestSync { id, name, input, tx }) => {
+                    Some(TuiEvent::ToolApprovalRequestSync { id, name, input, tx, default_selected }) => {
                         // Communication tools never need user approval — auto-allow them silently.
                         let auto_approve = matches!(
                             name.as_str(),
@@ -3101,7 +3104,7 @@ impl TuiApp {
                             let _ = tx.send(runtime::PermissionPromptDecision::Allow);
                         } else {
                             let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
-                            state.hitl_selected = 0;
+                            state.hitl_selected = default_selected;
                             state.awaiting_tool_approval = Some(Arc::new(Mutex::new(Some(ToolApprovalState {
                                 _id: id,
                                 name,
@@ -3288,6 +3291,7 @@ impl TuiApp {
 
 
 fn render_hitl_panel(f: &mut ratatui::Frame, area: Rect, name: &str, input: &serde_json::Value, selected: usize) {
+    // selected == 3 means Deny is pre-highlighted → this is a restricted mode (ReadOnly / workspace-write).
     use ratatui::widgets::Clear;
     f.render_widget(Clear, area);
 
