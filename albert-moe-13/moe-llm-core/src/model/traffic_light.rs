@@ -28,8 +28,10 @@ pub const LOGIT_STRENGTH: f32 = 0.4;
 const WARMUP_STEPS: usize = 50;
 
 /// Target utilization per expert at uniform Top-3/12 routing.
-/// Each token routes to 3 of 12 experts → avg combined_weight ≈ 1/12 ≈ 0.0833.
-const TARGET: f32 = 1.0 / 12.0;
+/// f_i = fraction of tokens that *selected* each expert → 3/12 = 0.25 (not 1/12).
+/// 1/12 would apply if we tracked routing weights; we track selection frequency.
+const TOP_K: f32 = 3.0;
+const TARGET: f32 = TOP_K / 12.0; // 0.25
 /// Below 80% of target → green (underloaded).
 const GREEN_THRESH: f32 = TARGET * 0.80;
 /// Above 140% of target → red (overloaded).
@@ -75,7 +77,7 @@ pub struct TrafficLight {
 
 impl TrafficLight {
     pub fn new(num_experts: usize) -> Self {
-        let target = 1.0 / num_experts as f32;
+        let target = TOP_K / num_experts as f32;
         Self {
             ema: vec![target; num_experts],
             states: vec![Trit::Orange; num_experts],
