@@ -3976,9 +3976,12 @@ fn run_init() -> Result<(), Box<dyn std::error::Error>> {
 
 fn normalize_permission_mode(mode: &str) -> Option<&'static str> {
     match mode.trim() {
-        "read-only" => Some("read-only"),
-        "workspace-write" => Some("workspace-write"),
-        "danger-full-access" => Some("danger-full-access"),
+        "read-only" | "read" | "readonly" | "r" | "safe"
+            => Some("read-only"),
+        "workspace-write" | "write" | "workspace" | "w" | "files"
+            => Some("workspace-write"),
+        "danger-full-access" | "danger" | "full" | "unrestricted" | "d"
+            => Some("danger-full-access"),
         _ => None,
     }
 }
