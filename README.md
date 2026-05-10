@@ -57,7 +57,7 @@ ternlang run my_program.tern   # explicit form
 
 Albert is a ternary Mixture-of-Experts language model trained from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus.
 
-**Current state (2026-05-07):** 3L · 256H · 12E · Top-3 routing · 128CTX · 8000 vocab · ~10M params · training on CPU · growing autonomously via Net2Net surgery (target: 12L · ~58M params).
+**Current state (2026-05-10):** 12L · 256H · 12E · Top-3 routing · 128CTX · ~8000 vocab · ~58M params · training on CPU · Global Epoch 454+.
 
 ### What makes it different
 
@@ -65,7 +65,7 @@ Albert is a ternary Mixture-of-Experts language model trained from scratch — n
 |--------|--------------|--------------|
 | Weight precision | Ternary `{-γ, 0, +γ}` from scratch | Float32 / post-hoc INT4 |
 | **@sparseskip** | Skips 56% of matmul ops at element level | Dense matmul always |
-| Architecture growth | Autonomous Net2Net surgery (3L→12L, live on CPU) | Fixed at init |
+| Architecture growth | Autonomous Net2Net surgery (reached 12L, live on CPU) | Fixed at init |
 | Inference speed | **83–125 tok/s on laptop CPU** | Requires GPU at this quality |
 | Routing | 9/12 experts skipped per decode step | All experts active |
 | Patent | A50296/2026 (@sparseskip primitive) | — |
@@ -87,7 +87,7 @@ curl -s https://ternlang-api.fly.dev/api/moe/orchestrate \
 *See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full sparsity speedup data and [`albert-moe-13/`](albert-moe-13/) for training code.*
 
 ### Known Limitations (honest)
-- Albert at 7L is a **research prototype**, not a production LLM. He generates statistically coherent text but does not yet answer questions — that capability is targeted at 9L+ with instruction fine-tuning.
+- Albert at 12L is a **research prototype**, not a production LLM. He generates statistically coherent text. Instruction-following capability is targeted with instruction fine-tuning at a later stage.
 - Training runs on a single CPU (HP ZBook, no GPU). A proper GPU cluster would run 10-50× faster.
 - Held-out perplexity vs float32 baseline is not yet published (in progress — `scripts/eval_perplexity.py`).
 - The CUDA backend (`cuda_matmul.rs`) is a design sketch at TRL 3, not yet a running kernel.

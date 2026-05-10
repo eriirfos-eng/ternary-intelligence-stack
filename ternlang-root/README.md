@@ -159,13 +159,32 @@ Demonstrate that ternary-native training — weights constrained to {−1, 0, +1
 
 ---
 
+### Training Progress (v2.0.0 — active run)
+
+| Field | Value |
+|-------|-------|
+| Architecture | 256H · **12L** · 4H · 12E · 128CTX · 8000V |
+| Global Epoch | 477+ (target: 500) |
+| Best loss | 6.8821 |
+| Inference throughput | **83 tok/s** sustained (CPU-only, 4L config, 2026-05-07) |
+| Hardware | HP ZBook i7-4800MQ · x86 · 8 threads · no GPU · no INT8 |
+| Expert health | dead=0 across entire 12L run (Mycelium monitor) |
+| Training data | 100% public domain / open licence — Bible KJV, Gutenberg, Simple Wikipedia |
+
+**Next:** Global Epoch 500 → archive v2.0.0 → launch Albert v3.0 multilingual.
+
+---
+
 ### Core Research Dimensions
 
-- **From-scratch ternary training** — STE-based end-to-end training with no float32 weight baseline required
-- **Auto-evolutionary depth** — model grows its own transformer layers when it plateaus (Net2Net safe-copy surgery)
-- **Per-layer sparsity gradient** — early layers stay dense (syntax), deep layers become sparse (abstraction)
-- **L1 sparsity reward** in the loss function, so the model learns strategically where to be zero
-- **QAT pipeline** (roadmap) — post-training quantization of third-party checkpoints via `ternlang-ml`'s `SteTrainer`
+- **From-scratch ternary training** — STE-based end-to-end training with no float32 weight baseline required; weights constrained to {−1, 0, +1} throughout via STE
+- **Auto-evolutionary depth** — `EvolutionManager` grows transformer layers autonomously via Net2Net safe-copy surgery; 3L → 12L over 10 surgery events; hard cap at `max_layers=12`
+- **`@sparseskip` expert routing** (Patent A50296/2026) — 9/12 experts not executed per decode step at Top-3; 4.58× throughput multiplier; 83 tok/s measured on CPU
+- **Ternary Traffic Light Routing (TTL)** — EMA-based G/O/R trit states per expert per layer; anti-stagnation burst rotates via offset 7 (coprime to 12); cycling-reds self-resolve autonomously
+- **Mycelium expert health monitor** — 20-epoch rolling gradient pressure window; resurrects stagnant experts via neighbour weight copy + σ=0.02 perturbation; dead=0 across full 12L run
+- **Layer crystallization** — L0–L3 gradient norms ~0.00022 (frozen); L8–L11 at 0.013–0.022 (hot); structural internal differentiation emerging from training alone
+- **Per-layer sparsity gradient** — L0: 10.6% ternary weight sparsity → L11: 26.5% (TELE confirmed); reinforces @sparseskip efficiency with depth
+- **Stage-aware corpus curriculum** — stages unlock as layer count grows; Bible+Alice at 3L → Gutenberg at 6L → Simple Wikipedia at 7L
 
 ---
 
@@ -246,6 +265,16 @@ Each inference produces:
 - Veto and override rationale  
 
 This creates a **fully auditable decision path**, aligned with **EU AI Act Articles 13, 14, and 15** (transparency, human oversight, and robustness).
+
+---
+
+### v3.0 Roadmap — Multilingual European Albert
+
+The v2.0.0 chapter proves the full stack: 12 transformer layers grown autonomously, expert routing self-organised, zero expert deaths. The architecture is validated. v3.0 extends the linguistic scope to cover all major European languages.
+
+**Approach:** Transfer the 12L vocabulary-agnostic transformer weights (687 tensors: `blocks.*`, `ln_f.*`, `pos_embed.weight`) from the v2.0.0 checkpoint into a v3.0 init. Rebuild only `embed.weight` and `lm_head.weight` at the new vocabulary size. Train a 32,000-token ByteLevel BPE tokenizer on EN + DE + FR + ES + PT + IT + NL + PL, then resume training on the European corpus.
+
+**Training data provenance:** 100% public domain and open-licence — Wikipedia CC BY-SA 4.0, Brockhaus Encyclopaedia 14th ed. (Internet Archive), Europarl (EU open data), Gutenberg multilingual, EU AI Act text. Fully auditable. No proprietary data, no web scraping, no PII.
 
 ---
 

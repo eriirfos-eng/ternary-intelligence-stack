@@ -4,6 +4,7 @@ use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture,
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use moe_llm_core::mycelium::MyceliumModule;
+use moe_llm_core::wald::{WaldModule, format_wald_line};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH, Instant};
@@ -23,11 +24,11 @@ const LOSS_EXPLOSION_THRESHOLD: f32 = 9.5;
 
 // If the epoch-average loss sits at or above this for COLLAPSE_STREAK_LIMIT
 // consecutive epochs the model has collapsed to uniform distribution.
-// ln(8000) ≈ 8.987 — we trigger at 8.5 to catch early collapse before it
-// wastes too many epochs. 2 epochs is enough signal at 6L+ — a genuine
-// plateau never self-recovers at this depth; a transient would not hit 8.5.
-const COLLAPSE_THRESHOLD:    f32 = 8.5;
-const COLLAPSE_STREAK_LIMIT: u32 = 2;
+// ln(8000) ≈ 8.987 — trigger at 8.8 to stay clear of the normal post-surgery
+// warmup range (~8.4–8.7). 8.5 was too aggressive: healthy warming epochs were
+// triggering false collapse→surgery, bypassing the max_layers cap.
+const COLLAPSE_THRESHOLD:    f32 = 8.8;
+const COLLAPSE_STREAK_LIMIT: u32 = 3;
 
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
@@ -287,6 +288,7 @@ fn train_cycle(
     device: &Device,
     evolution_manager: &mut EvolutionManager,
     mycelium: &mut MyceliumModule,
+    wald: &mut WaldModule,
     global_step: &mut usize,
 ) -> Result<bool> {
     let checkpoint_path = "models/bible_ternary_v2.0.0.safetensors";
@@ -531,6 +533,7 @@ fn train_cycle(
 
             total_loss       += real_loss;
             counted_batches  += 1;
+            wald.record_batch(real_loss);
 
             let batch_ms   = batch_start.elapsed().as_millis();
             let elapsed_s  = epoch_start.elapsed().as_secs();
@@ -652,6 +655,23 @@ fn train_cycle(
             }
         }
 
+        // ── Wald: loss-space coverage analysis ───────────────────────────────
+        let wald_report = wald.end_epoch();
+        if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+            let _ = writeln!(f, "{}", format_wald_line(total_epochs as usize, *global_step, &wald_report));
+        }
+        // Surface dead_low warnings so they appear in the training console.
+        if let Some(ref zone) = wald_report.dead_low {
+            if wald_report.low_gap_severity() > 0.35 {
+                println!(
+                    "[{}] WALD: dead zone below mass ({:.2}–{:.2}, severity {:.2}) \
+                     — loss-space gap; corpus may lack examples that push albert. \
+                     below {:.2}.",
+                    timestamp(), zone.lo, zone.hi, wald_report.low_gap_severity(), zone.lo,
+                );
+            }
+        }
+
         // ── Checkpoint (always save latest) ──────────────────────────────────
         save_checkpoint(&varmap, checkpoint_path)?;
         fs::write(meta_path, total_epochs.to_string())?;
@@ -707,6 +727,15 @@ fn train_cycle(
                     .ok().and_then(|s| s.trim().parse().ok())
                     .unwrap_or(f32::MAX);
                 if !best_exists || best_recorded >= COLLAPSE_THRESHOLD {
+                    // Max-layers guard: forced surgery must respect the layer cap,
+                    // same as the normal should_evolve path.
+                    if config.num_layers >= evolution_manager.max_layers {
+                        println!("[{}] COLLAPSE→SURGERY suppressed: already at max_layers={} — \
+                            continuing at current depth.", timestamp(), evolution_manager.max_layers);
+                        collapse_streak = 0;
+                        evolution_manager.reset_history();
+                        continue;
+                    }
                     println!("[{}] ★ COLLAPSE→SURGERY: best checkpoint ({:.4}) also above threshold \
                         — rolling back won't recover. Forcing layer surgery.",
                         timestamp(), best_recorded);
@@ -831,6 +860,7 @@ fn main() -> Result<()> {
         .and_then(|v| v["num_layers"].as_u64())
         .unwrap_or(3) as usize;
     let mut mycelium = MyceliumModule::new(initial_layers, 12);
+    let mut wald     = WaldModule::new();
 
     loop {
         // Read current layer depth to select the right corpus stages.
@@ -845,11 +875,12 @@ fn main() -> Result<()> {
             timestamp(), tokens.len(), num_layers, num_layers);
 
         let needs_evolution = train_cycle(
-            &tokens, &tokenizer, &device, &mut evolution_manager, &mut mycelium, &mut global_step
+            &tokens, &tokenizer, &device, &mut evolution_manager, &mut mycelium, &mut wald, &mut global_step
         )?;
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, best_path, &device)?;
             mycelium.on_layer_added();
+            wald.on_surgery();
             global_step = 0;
             // Corpus reloaded at top of next loop iteration with updated num_layers.
         }
