@@ -112,6 +112,34 @@ fn per_layer_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore
     sq.iter().map(|&s| s.sqrt()).collect()
 }
 
+/// Scale up gradients for layers whose norm is below THRESHOLD.
+/// Self-terminating: once a layer's norm rises past the threshold the
+/// amplification stops automatically, so this doesn't need a manual off switch.
+fn amplify_early_layers(
+    varmap: &VarMap,
+    grads: &mut candle_core::backprop::GradStore,
+    layer_norms: &[f32],
+) {
+    const THRESHOLD: f32 = 0.001; // layers below this norm are considered crystallized
+    const SCALE: f64     = 5.0;   // gradient multiplier — effective LR boost ≈ sqrt(5) ≈ 2.2× in Adam
+
+    let all_vars = varmap.data().lock().unwrap();
+    for (name, var) in all_vars.iter() {
+        let li = name.strip_prefix("blocks.")
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<usize>().ok());
+        if let Some(i) = li {
+            if i < layer_norms.len() && layer_norms[i] < THRESHOLD {
+                if let Some(g) = grads.get(var.as_tensor()).cloned() {
+                    if let Ok(scaled) = &g * SCALE {
+                        grads.insert(var.as_tensor(), scaled);
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// Emit a TELE line to the training log once per epoch.
 /// The dashboard parses this to drive the live neural viz panels.
 ///
@@ -512,7 +540,7 @@ fn train_cycle(
             // Split backward() and step() so we can inspect the gradient norm
             // before applying the update. If norm > MAX_GRAD_NORM, scale the
             // loss down proportionally (equivalent to clipping all gradients).
-            let grads = batch_loss.backward()?;
+            let mut grads = batch_loss.backward()?;
             let norm  = global_grad_norm(&varmap, &grads);
             // Capture per-layer norms BEFORE opt.step() — optimizer updates tensor IDs in place,
             // which invalidates the GradStore lookup for any Var used after the step.
@@ -539,8 +567,11 @@ fn train_cycle(
                 clipped_steps += 1;
                 let scale = (MAX_GRAD_NORM / norm) as f64;
                 let scaled_loss = (&batch_loss * scale)?;
-                opt.backward_step(&scaled_loss)?;
+                let mut clipped_grads = scaled_loss.backward()?;
+                amplify_early_layers(&varmap, &mut clipped_grads, &layer_norms);
+                opt.step(&clipped_grads)?;
             } else {
+                amplify_early_layers(&varmap, &mut grads, &layer_norms);
                 opt.step(&grads)?;
             }
 

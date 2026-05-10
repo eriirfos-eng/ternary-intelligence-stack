@@ -70,15 +70,15 @@
 
         #model-name { color: var(--accent); font-weight: bold; font-size: 13px; letter-spacing: 1px; font-family: inherit; }
 
-        #dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--accent); flex-shrink: 0;
-            box-shadow: 0 0 8px var(--accent);
-            animation: pulse 2.2s ease-in-out infinite;
+        #dingir {
+            font-size: 16px; font-weight: bold; flex-shrink: 0;
+            display: inline-block; line-height: 1;
+            color: #505050;
+            animation: dingirPulse 1.33s ease-in-out infinite;
         }
-        @keyframes pulse {
-            0%,100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
-            50%      { opacity: 0.3; box-shadow: none; }
+        @keyframes dingirPulse {
+            0%, 100% { color: #505050; text-shadow: none; }
+            50%       { color: #22d3ee; text-shadow: 0 0 10px #22d3ee; }
         }
 
         #delta { font-size: 11px; }
@@ -469,7 +469,7 @@
 
 <div id="topbar">
     <div class="tb-cell">
-        <span id="dot"></span>
+        <span id="dingir">𒀭</span>
         <span id="model-name">albert.</span>
     </div>
 
