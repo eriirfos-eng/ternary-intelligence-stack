@@ -1606,7 +1606,7 @@
             layerDiv.appendChild(d);
         };
 
-        addNode('IN', '<b>Input</b><br>Token embeddings enter the transformer stack.<br>Vocab: 8000 BPE tokens · Embedding dim: 256');
+        addNode('IN', '<b>Input</b><br>Token embeddings enter the transformer stack.<br>Vocab: 32000 BPE tokens · Embedding dim: 256');
         addArrow();
 
         for (let i = 0; i < tele.numLayers; i++) {
@@ -1628,7 +1628,7 @@
         }
 
         addArrow();
-        addNode('OUT', '<b>Output</b><br>Logits projected to vocab (8000 tokens).<br>Next-token prediction via cross-entropy loss.');
+        addNode('OUT', '<b>Output</b><br>Logits projected to vocab (32000 tokens).<br>Next-token prediction via cross-entropy loss.');
 
         // ── Panel B: Expert heatmap ────────────────────────────────────
         const expDiv = document.getElementById('expert-viz');
@@ -1927,15 +1927,18 @@
             pill.addEventListener('click', () => {
                 if (ev.cx == null) return;
                 hideTip();
-                focusedEvent = (focusedEvent === ev) ? null : ev;
+                const wasFocused = focusedEvent === ev;
+                focusedEvent = wasFocused ? null : ev;
                 if (focusedEvent) {
                     const pad = 3;
                     chart.options.scales.x.min = ev.cx - pad;
                     chart.options.scales.x.max = ev.cx + pad;
-                    chart.options.scales.y.min = undefined;
-                    chart.options.scales.y.max = undefined;
+                    chart.options.scales.y.min = null;
+                    chart.options.scales.y.max = null;
+                    chart.update('none');
+                } else {
+                    chart.resetZoom('none');
                 }
-                chart.update('none');
                 renderAnomalyFeed();
             });
 
