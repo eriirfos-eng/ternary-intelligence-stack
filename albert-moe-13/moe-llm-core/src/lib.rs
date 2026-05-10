@@ -4,3 +4,4 @@ pub mod evolution;
 pub mod mycelium;
 pub mod wald;
 pub mod ste;
+pub mod mandelbrot;

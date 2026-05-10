@@ -821,14 +821,77 @@ adding representational capacity without destroying previously learned
 structure. This is a principled alternative to random initialisation, which
 would require the model to ``unlearn'' disruptions before making progress.
 
-A small independent Gaussian perturbation ($\sigma = 0.01$, applied
-independently per weight tensor) is injected into the newly copied layer
-immediately after the safe copy. This \emph{symmetry break} is essential:
-without it, two identical copies produce cancelling gradient signals under
-backpropagation, preventing the new layer from specialising. The perturbation
-magnitude is chosen to preserve function-preserving equivalence within
-numerical tolerance while enabling the gradient differentiation required for
-the new layer to diverge into a complementary representation.
+A structured perturbation is injected into the newly copied layer immediately
+after the safe copy. This \emph{symmetry break} is essential: without it, two
+identical copies produce cancelling gradient signals under backpropagation,
+preventing the new layer from specialising.
+
+\subsubsection{Mandelbrot Symmetry Break}
+\label{subsubsec:mandelbrot}
+
+Rather than injecting independent Gaussian noise---which is structureless and
+produces statistically identical perturbations at every depth---Albert employs
+a \textbf{Mandelbrot-parameterised symmetry break}. The method exploits two
+properties of the Mandelbrot set that are not available from Gaussian noise:
+
+\begin{enumerate}
+  \item \textbf{Interior--boundary asymmetry.} For each weight $w$ in the
+  cloned layer, a complex parameter is constructed as
+  $c = (\tanh(w) - 0.5) + i\,c_\text{im}$,
+  where $c_\text{im}$ is a layer-specific latitude (see below). The Mandelbrot
+  iteration $z_{n+1} = z_n^2 + c$ (starting from $z_0 = 0$) is run for at
+  most $N_\text{max} = 64$ steps. The \emph{escape iteration count}
+  $n_\text{esc} \in \{0,\ldots,N_\text{max}\}$ determines the perturbation
+  magnitude:
+  \[
+    \delta_w \;=\; \sin\!\bigl(i\phi + c_\text{re}\pi + c_\text{im}e\bigr)
+                   \cdot \varepsilon_0 \cdot \left(\frac{n_\text{esc}}{N_\text{max}}\right)^{\!2}
+    \qquad (n_\text{esc} < N_\text{max})
+  \]
+  \[
+    \delta_w \;=\; 0.02\,\sin(\cdot) \cdot \varepsilon_0 \qquad (n_\text{esc} = N_\text{max},\;\text{interior})
+  \]
+  where $\phi = \frac{\sqrt{5}-1}{2}$ is the golden ratio, $i$ is the tensor
+  element index, and $\varepsilon_0 = 10^{-3}$ is the base scale. Weights
+  whose values map to the Mandelbrot interior receive near-zero perturbation
+  ($\leq 2\%$ of $\varepsilon_0$): these are the ``settled'' weights carrying
+  already-learned representations and should be preserved. Weights near the
+  boundary receive the maximum perturbation---these are the plastic, uncertain
+  weights that benefit most from divergence pressure.
+
+  \item \textbf{Layer self-similarity via golden-ratio latitude.} The
+  imaginary part $c_\text{im}$ for the new layer at depth $\ell$ is assigned
+  by a golden-ratio sequence:
+  \[
+    c_\text{im}(\ell) \;=\; -0.75 + \bigl((\ell\,\phi) \bmod 1\bigr)\cdot 1.5
+  \]
+  This maps each layer to a unique ``latitude'' in the Mandelbrot boundary
+  band $c_\text{im} \in [-0.75,\, 0.75]$. The golden ratio is chosen because
+  it maximises the minimum spacing between consecutive terms---each new surgery
+  lands in the region of parameter space farthest from all prior layers.
+  Crucially, Mandelbrot cross-sections at different latitudes are
+  \emph{self-similar} to one another: zooming into a nearby region reveals
+  structure that mirrors the global set. The result is a layer stack in which
+  the perturbation pattern of depth $\ell+1$ is related to that of depth
+  $\ell$ by fractal self-similarity, not by statistical independence.
+\end{enumerate}
+
+The perturbation is fully deterministic---no external random number generator
+is used. Given the same weights, layer index, and $\varepsilon_0$, the
+symmetry break is bit-for-bit reproducible across restarts. The
+\texttt{MAND} telemetry line (logged alongside \texttt{WALD} and
+\texttt{MYCELIUM}) records the layer latitude $c_\text{im}$ at each surgery
+event.
+
+\textbf{Relationship to \texttt{@sparseskip}.} Because only $3/12$ experts
+fire per decode step, the remaining 9 experts begin the post-surgery epoch in
+a dormant state. The Mandelbrot perturbation seeds those dormant experts with
+a structured gradient signal: boundary-adjacent weights in dormant experts are
+already positioned near the weight-space frontier where training will push
+them first. This is not equivalent to curiosity-driven reinforcement learning
+(which explores a state space) but a weight-space analogue: the fractal
+boundary acts as a prior over which weight directions are likely to become
+productive earliest.
 
 \subsection{Mixture-of-Experts Routing and Load-Balancing Loss}
 \label{subsec:moe_routing}

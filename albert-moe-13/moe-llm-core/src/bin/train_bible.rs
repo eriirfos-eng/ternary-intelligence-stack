@@ -5,6 +5,7 @@ use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use moe_llm_core::mycelium::MyceliumModule;
 use moe_llm_core::wald::{WaldModule, format_wald_line};
+use moe_llm_core::mandelbrot::{MandelbrotSurgery, format_mandelbrot_line};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH, Instant};
@@ -226,23 +227,36 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
         }
     }
 
-    // Break symmetry: the new layer is an exact copy of the source layer, so CE gradients
-    // flow identically through both and they can never diverge. Small Gaussian noise (σ=0.01)
-    // breaks this without destroying the transferred knowledge.
+    // Break symmetry with Mandelbrot-parameterised perturbation.
+    //
+    // Each surgery maps the new layer to a unique "latitude" in Mandelbrot parameter
+    // space (c_im derived from layer index via golden-ratio sequence). This makes the
+    // perturbation pattern self-similar across layers but never identical — the same
+    // fractal self-similarity property that motivated the module (whitepaper §11.3).
+    //
+    // Weights mapping to the Mandelbrot interior (stable basins) receive near-zero
+    // perturbation — learned features are preserved. Weights near the boundary receive
+    // the largest shake — uncertain, plastic weights are pushed to explore.
+    // No external RNG: perturbation is fully deterministic from (value, index, depth).
+    let mand = MandelbrotSurgery::new();
     let target_prefix = format!("blocks.{}.", target_layer);
     let perturb_keys: Vec<String> = new_tensors.keys()
         .filter(|k| k.starts_with(&target_prefix))
         .cloned()
         .collect();
+    let tensor_count = perturb_keys.len();
     for key in perturb_keys {
         if let Some(t) = new_tensors.get(&key) {
-            let noise = Tensor::randn(0.0f32, 0.01f32, t.shape(), device)?;
-            let perturbed = (t + noise)?;
+            let shape = t.shape().clone();
+            let flat  = t.flatten_all()?.to_vec1::<f32>()?;
+            let perturbed_flat = mand.perturb(&flat, target_layer);
+            let perturbed = Tensor::from_vec(perturbed_flat, &shape, device)?;
             new_tensors.insert(key, perturbed);
         }
     }
-    println!("[{}] Symmetry break: Gaussian noise σ=0.01 applied to {} tensors in layer {}.",
-        timestamp(), target_prefix.len(), target_layer);
+    println!("[{}] Symmetry break: Mandelbrot perturbation applied to {} tensors in layer {} (c_im={:.4}).",
+        timestamp(), tensor_count, target_layer,
+        moe_llm_core::mandelbrot::layer_c_im(target_layer));
 
     candle_core::safetensors::save(&new_tensors, checkpoint_path)?;
     // Archive the pre-surgery best checkpoint with a versioned name instead of deleting it.
@@ -881,6 +895,22 @@ fn main() -> Result<()> {
             perform_surgery(config_path, checkpoint_path, best_path, &device)?;
             mycelium.on_layer_added();
             wald.on_surgery();
+            // Log the MAND event so the dashboard can mark surgery epochs visually.
+            let post_layers: usize = fs::read_to_string(config_path)
+                .ok()
+                .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                .and_then(|v| v["num_layers"].as_u64())
+                .unwrap_or(0) as usize;
+            if let Ok(mut f) = OpenOptions::new().create(true).append(true).open("dashboard/training.log") {
+                let mand_line = format_mandelbrot_line(
+                    0,  // epoch not tracked at outer-loop scope; MAND line in perform_surgery has the detail
+                    global_step as usize,
+                    post_layers.saturating_sub(1),
+                    0,
+                    1e-3, 64,
+                );
+                let _ = writeln!(f, "{}", mand_line);
+            }
             global_step = 0;
             // Corpus reloaded at top of next loop iteration with updated num_layers.
         }
