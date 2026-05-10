@@ -693,31 +693,26 @@
 
     // ── Tooltip ──────────────────────────────────────────────────────
     const ttDiv = document.getElementById('tooltip');
+    function tipPosition(cx, cy) {
+        const tw  = ttDiv.offsetWidth  || 300;
+        const th  = ttDiv.offsetHeight || 120;
+        const pad = 10;
+        let x = cx + 14;
+        let y = cy - 70;
+        if (x + tw + pad > window.innerWidth)  x = cx - tw - 14;
+        if (y + th + pad > window.innerHeight) y = window.innerHeight - th - pad;
+        if (y < pad) y = pad;
+        if (x < pad) x = pad;
+        ttDiv.style.left = x + 'px';
+        ttDiv.style.top  = y + 'px';
+    }
     document.addEventListener('mousemove', ev => {
-        if (ttDiv.style.display === 'block') {
-            ttDiv.style.left = (ev.clientX + 14) + 'px';
-            ttDiv.style.top  = Math.max(4, ev.clientY - 70) + 'px';
-        }
+        if (ttDiv.style.display === 'block') tipPosition(ev.clientX, ev.clientY);
     });
     function showTip(ev, html) {
         ttDiv.innerHTML = html;
         ttDiv.style.display = 'block';
-        // Measure after render so we know the real size
-        const tw = ttDiv.offsetWidth  || 300;
-        const th = ttDiv.offsetHeight || 120;
-        const pad = 10;
-        let x = ev.clientX + 14;
-        let y = ev.clientY - 70;
-        // Clamp right edge
-        if (x + tw + pad > window.innerWidth)  x = ev.clientX - tw - 14;
-        // Clamp bottom edge
-        if (y + th + pad > window.innerHeight) y = window.innerHeight - th - pad;
-        // Clamp top edge
-        if (y < pad) y = pad;
-        // Clamp left edge (after possible flip)
-        if (x < pad) x = pad;
-        ttDiv.style.left = x + 'px';
-        ttDiv.style.top  = y + 'px';
+        tipPosition(ev.clientX, ev.clientY);
     }
     function hideTip() { ttDiv.style.display = 'none'; }
 
