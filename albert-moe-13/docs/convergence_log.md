@@ -1,9 +1,34 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-All values are cross-entropy loss on the active training corpus (Bible + Alice, 8000-token BPE vocabulary).
+Active run: v3.0 — 12L · 32k vocab · 635 MB multilingual corpus (2026-05-10).
 
-Random baseline for reference: `ln(8000) = 8.987` — a model outputting uniform distribution over the vocabulary scores exactly this. Any value below it means the model is learning structure.
+---
+
+## v3.0 — 12L Multilingual Training Run (2026-05-10, active)
+
+Architecture: 12 layers · 256 hidden · 12 experts · 4 heads · 128 ctx · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL)  
+Corpus: ~635 MB (Wikipedia CC BY-SA + Europarl + Gutenberg fulltext + academic texts + 10% chaos layer)  
+Optimizer: AdamW, cosine LR 3e-4 → 1e-5 / 500 steps  
+Hardware: HP ZBook (CPU-only)  
+Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); embed and lm\_head re-initialized for 32k vocab
+
+Random baseline: `ln(32000) = 10.373` — the expected starting loss for a model with no prior knowledge over a 32k vocabulary.
+
+**Training started 2026-05-10. Loss data will be appended as epochs complete.**
+
+| Epoch | Avg Loss | Δ vs prev | Notes |
+|-------|----------|-----------|-------|
+| — | — | — | Corpus tokenization in progress at session start |
+
+### Expected trajectory
+
+The first 5–10 epochs should show rapid descent from ~10.373 toward the carry-over semantic knowledge
+embedded in the transferred L0–L11 weights. The embed and lm\_head layers are random, so the model
+must re-learn the mapping between its internal representations and the 32k token space.
+Layer crystallization (L0–L3 near-frozen from v2.0.0 training) may slow initial descent
+in the lower layers; gradient amplification (5× for layers with norm < 0.001) is active to
+prevent freezing.
 
 ---
 

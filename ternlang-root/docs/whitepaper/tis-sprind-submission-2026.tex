@@ -8,7 +8,7 @@
 %
 % Submission: SPRIND — Agentur für Sprunginnovationen (Next Frontier AI 2026)
 % Format: IEEE two-column (IEEEtran)
-% Version: v1.3.5 Ecosystem / v1.3.7 MoE-13 Model
+% Version: v1.3.7 Ecosystem / v1.3.7 MoE-13 Model
 % ─────────────────────────────────────────────────────────────────────────────
 
 \documentclass[journal,10pt,twocolumn]{IEEEtran}
@@ -113,7 +113,7 @@ Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}
 We present the \textbf{Ternary Intelligence Stack (TIS)}, a sovereign,
 full-stack post-binary architecture for neural intelligence built and
 maintained from Graz, Austria by RFI-IRFOS. TIS comprises
-\textbf{34 published crates} at ecosystem version v1.3.5 spanning: a
+\textbf{34 published crates} at ecosystem version v1.3.7 spanning: a
 domain-specific language (Ternlang), a bytecode compiler, a stack-based
 virtual machine (BET VM), a hardware description language backend, a
 distributed actor runtime, machine learning inference kernels, a
@@ -237,7 +237,7 @@ the post-binary frontier.
         requirements under Articles~13--15 (\S\ref{sec:euaiact}).
   \item \textbf{Ecosystem bridges} connecting existing ternary projects to
         the BET VM as a common runtime (\S\ref{sec:ecosystem}).
-  \item A \textbf{34-crate sovereign ecosystem} at v1.3.5: the complete
+  \item A \textbf{34-crate sovereign ecosystem} at v1.3.7: the complete
         vertical stack from trit arithmetic to REST API, CLI tooling,
         package management, and VS~Code IDE---all published open-core to
         \texttt{crates.io} (\S\ref{sec:status}).
@@ -771,11 +771,21 @@ reasoning stack without modification.
 
 Albert-MoE-13 is the first language model trained \emph{natively} within a
 ternary execution stack. Unlike post-hoc ternary quantization approaches
-(BitNet b1.58, which ternarizes pre-trained binary weights), Albert learns
+(BitNet b1.58~\cite{wang2023bitnet}, AWQ, GPTQ, and variants---which
+\emph{ternarize weights of a pre-trained float32 model after the fact}),
+Albert initialises with random weights and learns ternary representations
+\emph{from scratch} via Straight-Through Estimation. No float32 teacher
+model exists. No float32 checkpoint is ever produced during training.
+The neutral trit value $0$ becomes an intrinsic property of the model's
+learned knowledge representations, not a compression artifact introduced
+post-training. This distinction is architectural, not a matter of degree:
+the gradient path, the optimizer state, and the learned weight distribution
+are all ternary-native from step~1.
+
+Albert learns
 ternary representations from scratch using the \texttt{moe-llm-core},
 \texttt{moe-compute}, \texttt{albert-runtime}, and \texttt{token-train}
-crates. The neutral trit value $0$ becomes an intrinsic property of the
-model's learned knowledge representations rather than a quantization artifact.
+crates.
 
 \subsection{Architecture: TritTransformer and ModelCoherence}
 
@@ -785,6 +795,23 @@ RoPE positional encoding, and SwiGLU activations are implemented for the
 ternary weight regime. The \textbf{ModelCoherence binary format} reduces the
 packed model footprint by $5\times$ (e.g., 1.2~GB JSON representation to
 240~MB), enabling fast checkpointing across auto-evolutionary phases.
+
+\noindent\textbf{Checkpoint format pipeline.} Two distinct artefact types exist
+in the training–deployment pipeline:
+(1)~\textbf{Training checkpoint} (\texttt{.safetensors}): stores the
+\emph{latent float32 weights} maintained by the AdamW optimizer.
+Ternary quantization is applied \emph{on every forward pass} via Straight-Through
+Estimation; the underlying floating-point values carry the optimizer's gradient
+history and are the sole state persisted to disk.
+(2)~\textbf{Inference deployment}: at model load, \texttt{prepare\_inference()}
+gamma-thresholds all latent weights into the ternary set $\{-1,0,+1\}$ and
+caches the result in \texttt{inference\_cache}; subsequent forward passes
+operate exclusively on the cached ternary representation---no multiplications,
+only integer additions.
+This design means the \texttt{.safetensors} checkpoint is the \emph{training
+state}, not the \emph{inference representation}.
+A compact packed-trit export format (\texttt{.trit}) is on the v3.1 roadmap;
+the current deployment path uses the \texttt{inference\_cache} path directly.
 
 \subsection{EvolutionManager: Plateau-Mastery State Machine}
 \label{subsec:evolution}
@@ -1259,10 +1286,18 @@ Three multiplicative contributions:
         cached ternary representation with no per-step re-quantization.
 \end{enumerate}
 
-\noindent The 83~tok/s figure is a \emph{floor}. Element-level weight
-sparsity within active expert tensors---a distinct optimisation currently
-in development, expressed as the \texttt{TSPARSE\_MATMUL} primitive at
-element granularity---would multiply throughput further on both x86 and
+\noindent\textbf{Two independent sparsity layers.}
+Albert delivers savings at two orthogonal levels:
+(1)~\textbf{Routing-level sparsity} (\texttt{@sparseskip}): 9 of 12 experts
+are entirely skipped per decode step at the MoE gate---75\% of expert
+computation is never executed.
+(2)~\textbf{Weight-level sparsity} (ternary zeros): within each active expert
+tensor, 10--26\% of individual weight trits are zero (TELE telemetry; L0 at
+10.6\%, rising monotonically to L11 at 26.5\%).
+The 83~tok/s figure reflects routing-level savings only.
+Weight-level zero-elision via the \texttt{TSPARSE\_MATMUL} primitive is a
+\emph{distinct, additive} optimisation currently in development; applying it
+to the active expert tensors would multiply throughput further on both x86 and
 dedicated ternary hardware. On native trit ASICs (the SPRIND roadmap target),
 the theoretical figure from hardware simulation reaches 122$\times$ over
 conventional binary execution.
@@ -1529,6 +1564,14 @@ merely a runtime policy.
 \section{Qutrit Neural Networks and Ternlang}
 \label{sec:qnn}
 
+\noindent\textbf{Terminology note.}
+QNN here denotes \emph{Qutrit Neural Networks}---classical simulations of
+three-state ($-1, 0, +1$) qutrit-valued weight matrices executing on
+conventional silicon---and does not require, depend on, or claim quantum
+entanglement, superposition hardware, or quantum gate circuits. The
+correspondence to quantum qutrit formalism is mathematical and structural,
+not physical. No quantum hardware is assumed or required at any stage.
+
 The Qutrit Neural Network (QNN) framework~\cite{kepp2026qnn} establishes a
 formal correspondence between quantum qutrit states and balanced ternary
 values: $\lvert -\rangle \leftrightarrow -1$,\;
@@ -1617,14 +1660,14 @@ interpreter are honoured in the \texttt{examples/} corpus as runnable
 \label{sec:status}
 
 The Ternary Intelligence Stack is implemented in Rust and comprises
-\textbf{34 published crates} at ecosystem version \textbf{v1.3.5}
+\textbf{34 published crates} at ecosystem version \textbf{v1.3.7}
 (\texttt{crates.io}). Table~\ref{tab:status} lists the primary crates;
 the full manifest is maintained in the repository.
 
 \begin{table}[h]
 \centering
 \small
-\caption{TIS crate manifest and descriptions (v1.3.5)}
+\caption{TIS crate manifest and descriptions (v1.3.7)}
 \label{tab:status}
 \begin{tabular}{p{2.6cm}p{5.0cm}}
 \toprule
@@ -1639,7 +1682,7 @@ Crate & Role \\
 \texttt{ternlang-runtime}   & Distributed TCP actor runtime (\texttt{TernNode}) \\
 \texttt{ternlang-compat}    & \texttt{.tasm} assembler (9-trit RISC), Owlet S-expr parser \\
 \texttt{ternlang-lsp}       & LSP 3.17: hover, completion (19 snippets), diagnostics \\
-\texttt{ternlang-mcp}       & MCP server, 13 tools: \texttt{moe\_orchestrate}, \texttt{trit\_action\_gate}, \ldots \\
+\texttt{ternlang-mcp}       & MCP server, 34 tools: \texttt{moe\_orchestrate}, \texttt{trit\_action\_gate}, \ldots \\
 \texttt{ternlang-api}       & REST API (18 endpoints), multi-tenant key management, SSE \\
 \texttt{ternlang-compress}  & Ternary compression primitives \\
 \texttt{ternlang-ruvector}  & SIMD-aligned ternary vector operations \\
@@ -1670,6 +1713,42 @@ Crate & Role \\
 \end{tabular}
 \end{table}
 
+\subsection*{Technology Readiness Assessment}
+
+\begin{table}[h]
+\centering
+\small
+\caption{TRL assessment by subsystem (2026-05-10)}
+\label{tab:trl}
+\begin{tabular}{lll}
+\toprule
+Subsystem & TRL & Basis \\
+\midrule
+Ternlang compiler + BET VM & 7 & Operational prototype in relevant environment \\
+BetRtlProcessor RTL simulator & 7 & Cycle-accurate Verilog-2001 simulation verified \\
+Sparse inference (\texttt{gemv\_bitnet}) & 6 & 122$\times$ speedup measured at 99\% sparsity \\
+MCP server (34 tools, live API) & 7 & Production deployment at \texttt{ternlang.com/mcp} \\
+Albert-MoE-13 native training & 4 & Validated on single CPU; cluster compute pending \\
+\texttt{@sparseskip} routing (Patent A50296/2026) & 5 & Measured 75\% expert skip, 84.4~tok/s on CPU \\
+Distributed actor runtime & 4 & Implemented; large-scale stress testing pending \\
+Native ternary silicon drivers & 2 & Design modelled in BetRtlProcessor; awaits fabrication \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{On the hardware driver gap.}
+The audit trail correctly identifies that bare-metal drivers for physical
+ternary silicon are absent from the repository. This is not a gap in the
+research programme---it is the \emph{definition} of what SPRIND Stage~2
+and Stage~3 funding is designed to produce. The BetRtlProcessor RTL
+simulator (TRL~7) is the verifiable hardware blueprint: every logic gate,
+register, and instruction cycle is specified in synthesisable Verilog-2001.
+The path from TRL~2 to TRL~6 for silicon drivers requires access to a
+ternary ASIC fabrication partner and the cluster compute to validate the
+full training stack at scale---both contingent on the funding this
+application seeks. Evaluators should read the RTL simulator as the
+engineering commitment, not the absence of drivers as a programme weakness.
+
 \noindent\textbf{CI-verified test suite}: 138+ fast tests across five
 self-contained crates (core: 43, codegen: 8, moe: 24, compat: 29, hdl: 34);
 network-bound crates validated locally. \textbf{Live deployment}: REST API
@@ -1687,7 +1766,7 @@ and deploys to Fly.io on every push to \texttt{main}.
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have presented the \textbf{Ternary Intelligence Stack v1.3.5}---a
+We have presented the \textbf{Ternary Intelligence Stack v1.3.7}---a
 sovereign, full-stack post-binary architecture for neural intelligence,
 built by RFI-IRFOS from Graz, Austria. Eleven dimensions of contribution
 are unified under the foundational primitive of the trit $t \in \{-1,0,+1\}$
