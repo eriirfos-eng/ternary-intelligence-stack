@@ -37,7 +37,7 @@ The architecture combines:
 | Parameter | Value |
 |-----------|-------|
 | Hidden size | 256 |
-| Layers | **5** (grew from 4L via Net2Net surgery at Global Epoch 381) |
+| Layers | **12** (grew from 4L to 12L via EvolutionManager; max_layers=12 cap enforced) |
 | Attention heads | 4 |
 | Experts | 12 |
 | Context length | 128 tokens |
@@ -45,10 +45,10 @@ The architecture combines:
 | Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
 | TTL routing | EMA-based trit states: Green (+logit boost) · Orange (scaled output) · Red (suppressed + skipped) |
 | Quantization | STE with gamma-scaled ternary, gamma cached every 20 steps |
-| LB loss | Switch Transformer load-balancing, λ = 0.03 |
-| Optimizer | AdamW, cosine LR 2e-4 → 1e-5 / 500 steps |
+| LB loss | Switch Transformer load-balancing, λ = 0.01 |
+| Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-09):** Global Epoch 385 · best loss 6.882 · 290 tensors loaded from checkpoint
+**Training state (2026-05-10):** Global Epoch 454+ · best loss 6.8821 · 12L checkpoint (316 MB)
 
 ---
 
@@ -101,7 +101,9 @@ albert-test
 
 ### Eval mode
 ```bash
-./target/release/moe-test --eval data/corpus/stage_3/bible.txt
+cargo run --release -p moe-llm-core --bin eval_perplexity
+# or against a specific file:
+cargo run --release -p moe-llm-core --bin eval_perplexity data/corpus/stage_3/alice.txt
 ```
 
 ### Dashboard
@@ -152,7 +154,7 @@ albert-moe-13/
 │   ├── corpus/                     # Active training corpus (.txt files)
 │   └── vocab.json                  # BPE vocabulary (8,000 tokens)
 ├── models/
-│   ├── bible_ternary_v2.0.0.safetensors   # Current checkpoint (~142 MB)
+│   ├── bible_ternary_v2.0.0.safetensors   # Current checkpoint (~316 MB, 12L)
 │   ├── bible_ternary_v2.0.0.config.json   # Architecture config
 │   ├── bible_ternary_v2.0.0.meta          # Global epoch counter
 │   └── README.md                          # Checkpoint registry
@@ -178,7 +180,7 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | `data/corpus/stage_9/` | 9L | `qa_instruction.txt` | `User:/Albert:` instruction format |
 | `data/corpus/stage_11/` | 11L | Linux docs, EU AI Act | Technical and specialized language |
 
-**Current state (5L):** stage_3 active. Surgery to 6L will unlock stage_6 and the next curriculum level automatically.
+**Current state (12L):** stage_7+ active (Wikipedia corpus). All stages through 7 are unlocked.
 
 ---
 
@@ -187,7 +189,8 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | Configuration | Time per batch |
 |---------------|---------------|
 | 256H · 4L | ~4.5 s |
-| 256H · 5L (current) | ~5.5 s |
+| 256H · 5L | ~5.5 s |
+| 256H · 12L (current) | ~13 s |
 
 Training runs on CPU (HP ZBook 15, i7-4800MQ). The ~4× batch time increase from 3L→5L is linear with layer count, consistent with ternary matmul scaling.
 

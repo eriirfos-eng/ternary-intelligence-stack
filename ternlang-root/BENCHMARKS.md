@@ -268,8 +268,11 @@ Patent pending: A50296/2026.
 
 ## §12 — Albert MoE-13: Held-Out Perplexity Evaluation
 
-Run: `python3 albert-moe-13/scripts/eval_perplexity.py --checkpoint models/bible_ternary_v2.0.0.best.safetensors`  
-Evaluates the best 3L checkpoint on a deterministic held-out test split — text the model never saw during training.
+Run: `cargo run --release -p moe-llm-core --bin eval_perplexity`  
+Evaluates the current checkpoint on Alice in Wonderland (~150KB, held-out, <1 min on CPU).  
+Pass a path argument to evaluate any other corpus file.
+
+**Historical result — Albert v2.0 (8k English vocab, 3L):**
 
 | Metric | Value |
 |--------|-------|
@@ -278,17 +281,29 @@ Evaluates the best 3L checkpoint on a deterministic held-out test split — text
 | Test tokens | 41,041 |
 | **Avg cross-entropy loss** | **7.1537** |
 | **Perplexity** | **1,278.8** |
-| Unigram baseline (random) | 8,000.0 (= vocab size, ln baseline = 8.987) |
+| Unigram baseline (random) | 8,000 (= vocab size, ln baseline = 8.987) |
 | **Reduction vs baseline** | **84.0%** |
 | Hardware | HP ZBook i7-4800MQ, CPU-only |
 
+**Current — Albert v3.0 (32k multilingual vocab, 12L, training in progress):**
+
+| Metric | Value |
+|--------|-------|
+| Checkpoint | `albert_v3.0.safetensors` (12L · 256H · 12E · 128CTX · 32k vocab) |
+| Default eval corpus | `data/corpus/stage_3/alice.txt` (~150KB, never in training window) |
+| Unigram baseline (random) | 32,000 (= vocab size, ln baseline = 10.373) |
+| **Result** | Updated as training progresses — run the binary for current numbers |
+| Hardware | HP ZBook i7-4800MQ, CPU-only |
+
 **Interpretation:**  
-A model outputting a uniform distribution over 8,000 tokens achieves perplexity = 8,000 (loss = ln(8000) = 8.987). Albert's best 3L checkpoint achieves perplexity 1,278.8 on held-out text — an **84% reduction from random baseline**. This is a natively ternary model (weights in {−γ, 0, +γ} throughout training via STE), not a post-hoc quantized float model. The 3L architecture is the current training floor; the EvolutionManager is configured to grow to 12L via Net2Net surgery as capacity ceilings are detected.
+A model outputting a uniform distribution over the vocabulary achieves perplexity = vocab_size. Albert v2.0 achieved an 84% reduction from the 8k random baseline after 3L training on English corpus. Albert v3.0 targets the same trajectory across 32k tokens covering 8 European languages. Alice in Wonderland is used as the default eval corpus because it is short, stylistically distinct from the training data, and fast to evaluate on CPU.
 
 Reproduce:
 ```bash
 cd albert-moe-13
-python3 scripts/eval_perplexity.py --checkpoint models/bible_ternary_v2.0.0.best.safetensors
+cargo run --release -p moe-llm-core --bin eval_perplexity
+# or against a specific corpus:
+cargo run --release -p moe-llm-core --bin eval_perplexity data/corpus/stage_3/bible.txt
 ```
 
 ---
