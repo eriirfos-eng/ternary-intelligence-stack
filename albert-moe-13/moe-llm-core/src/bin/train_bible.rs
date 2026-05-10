@@ -20,15 +20,14 @@ use std::collections::HashMap;
 const MAX_GRAD_NORM: f32 = 1.0;
 
 // If a single batch loss exceeds this, the weights have already exploded.
-// ln(vocab≈8006) ≈ 8.988 — anything above 9.5 is catastrophic.
-const LOSS_EXPLOSION_THRESHOLD: f32 = 9.5;
+// ln(vocab=32000) ≈ 10.373 — anything above 11.0 is catastrophic.
+const LOSS_EXPLOSION_THRESHOLD: f32 = 11.0;
 
 // If the epoch-average loss sits at or above this for COLLAPSE_STREAK_LIMIT
 // consecutive epochs the model has collapsed to uniform distribution.
-// ln(8000) ≈ 8.987 — trigger at 8.8 to stay clear of the normal post-surgery
-// warmup range (~8.4–8.7). 8.5 was too aggressive: healthy warming epochs were
-// triggering false collapse→surgery, bypassing the max_layers cap.
-const COLLAPSE_THRESHOLD:    f32 = 8.8;
+// ln(32000) ≈ 10.373 — trigger at 10.2 to stay clear of normal post-surgery
+// warmup range. Same 0.187 margin below uniform as the v2.0 calibration.
+const COLLAPSE_THRESHOLD:    f32 = 10.2;
 const COLLAPSE_STREAK_LIMIT: u32 = 3;
 
 fn timestamp() -> String {
@@ -262,7 +261,7 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
     // Archive the pre-surgery best checkpoint with a versioned name instead of deleting it.
     // Deleting was the original bug: if the new layer can't learn, the good pre-surgery weights
     // are lost forever. The archive preserves rollback capability.
-    let archive_path = format!("models/bible_ternary_v2.0.0.best.{}L.safetensors", old_layers);
+    let archive_path = format!("models/albert_v3.0.best.{}L.safetensors", old_layers);
     if std::path::Path::new(best_path).exists() {
         let _ = fs::rename(best_path, &archive_path);
         println!("[{}] Pre-surgery best archived to {}.", timestamp(), archive_path);
@@ -305,11 +304,11 @@ fn train_cycle(
     wald: &mut WaldModule,
     global_step: &mut usize,
 ) -> Result<bool> {
-    let checkpoint_path = "models/bible_ternary_v2.0.0.safetensors";
-    let best_path       = "models/bible_ternary_v2.0.0.best.safetensors";
-    let config_path     = "models/bible_ternary_v2.0.0.config.json";
-    let meta_path       = "models/bible_ternary_v2.0.0.meta";
-    let best_meta_path  = "models/bible_ternary_v2.0.0.best_loss";
+    let checkpoint_path = "models/albert_v3.0.safetensors";
+    let best_path       = "models/albert_v3.0.best.safetensors";
+    let config_path     = "models/albert_v3.0.config.json";
+    let meta_path       = "models/albert_v3.0.meta";
+    let best_meta_path  = "models/albert_v3.0.best_loss";
     let log_path        = "dashboard/training.log";
 
     let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
@@ -803,7 +802,9 @@ fn train_cycle(
 ///   stage_11 — Linux docs, EU AI Act  (technical/specialized language)
 fn load_corpus(tokenizer: &BpeTokenizer, num_layers: usize) -> Vec<u32> {
     let corpus_root = "data/corpus";
-    let mut all_text = String::new();
+    // Tokenize file-by-file so we never hold the full corpus text in RAM.
+    // Concatenating 635MB of text before encoding spiked peak RAM to 3-4GB (OOM).
+    let mut all_tokens: Vec<u32> = Vec::new();
     let mut stages_loaded: Vec<usize> = Vec::new();
 
     // Collect all stage_N subdirectories where N ≤ num_layers
@@ -832,8 +833,7 @@ fn load_corpus(tokenizer: &BpeTokenizer, num_layers: usize) -> Vec<u32> {
                         Ok(text) => {
                             println!("[{}] Corpus stage_{}: {} ({} chars)",
                                 timestamp(), stage_n, path.file_name().unwrap().to_string_lossy(), text.len());
-                            all_text.push_str(&text);
-                            all_text.push('\n');
+                            all_tokens.extend(tokenizer.encode(&text));
                         }
                         Err(e) => eprintln!("Warning: could not read {:?}: {}", path, e),
                     }
@@ -843,24 +843,57 @@ fn load_corpus(tokenizer: &BpeTokenizer, num_layers: usize) -> Vec<u32> {
         }
     }
 
-    if all_text.is_empty() {
+    if all_tokens.is_empty() {
         panic!("No corpus found in {}/stage_N/ dirs for num_layers={}", corpus_root, num_layers);
     }
 
     println!("[{}] Active corpus stages: {:?} (model depth: {}L)",
         timestamp(), stages_loaded, num_layers);
-    tokenizer.encode(&all_text)
+
+    // v3.0 additional corpora — multilingual, academic, fulltext, chaos.
+    // Loaded unconditionally when present; these dirs don't follow stage_N naming.
+    let v3_dirs = ["multilingual", "academic", "fulltext", "chaos"];
+    for dir_name in &v3_dirs {
+        let dir = std::path::Path::new(corpus_root).join(dir_name);
+        if !dir.exists() { continue; }
+        let read_dir = match fs::read_dir(&dir) {
+            Ok(rd) => rd,
+            Err(e) => { eprintln!("Warning: could not read corpus dir {:?}: {}", dir, e); continue; }
+        };
+        let mut paths: Vec<_> = read_dir
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().map(|x| x == "txt").unwrap_or(false))
+            .map(|e| e.path())
+            .collect();
+        paths.sort();
+        let mut dir_bytes = 0usize;
+        for path in &paths {
+            match fs::read_to_string(path) {
+                Ok(text) => {
+                    dir_bytes += text.len();
+                    all_tokens.extend(tokenizer.encode(&text));
+                }
+                Err(e) => eprintln!("Warning: could not read {:?}: {}", path, e),
+            }
+        }
+        if dir_bytes > 0 {
+            println!("[{}] Corpus {}: {} files · {:.1}MB",
+                timestamp(), dir_name, paths.len(), dir_bytes as f64 / 1_048_576.0);
+        }
+    }
+
+    all_tokens
 }
 
 fn main() -> Result<()> {
     let _ = ThreadPoolBuilder::new().num_threads(8).build_global();
-    println!("--- ALBERT EVOLUTIONARY ORCHESTRATOR v2.4 (Gradient Clipping + Best Checkpoint) ---");
+    println!("--- ALBERT EVOLUTIONARY ORCHESTRATOR v3.0 (Multilingual · Mandelbrot Surgery · Chaos Protocol) ---");
 
     let device          = Device::Cpu;
-    let vocab_path      = "data/vocab.json";
-    let config_path     = "models/bible_ternary_v2.0.0.config.json";
-    let checkpoint_path = "models/bible_ternary_v2.0.0.safetensors";
-    let best_path       = "models/bible_ternary_v2.0.0.best.safetensors";
+    let vocab_path      = "data/vocab_v3.json";
+    let config_path     = "models/albert_v3.0.config.json";
+    let checkpoint_path = "models/albert_v3.0.safetensors";
+    let best_path       = "models/albert_v3.0.best.safetensors";
 
     let tokenizer = BpeTokenizer::new(vocab_path);
 
