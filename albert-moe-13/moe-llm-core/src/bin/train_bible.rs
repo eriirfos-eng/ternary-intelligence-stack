@@ -916,6 +916,74 @@ fn load_corpus(tokenizer: &BpeTokenizer, num_layers: usize) -> Vec<u32> {
     all_tokens
 }
 
+/// Load tokenized corpus, using a binary cache to skip re-tokenization on restart.
+/// Cache is stored as: 4 bytes (num_layers as u32 LE) + N×4 bytes (token ids).
+/// Invalidated automatically when any corpus source file is newer than the cache,
+/// or when num_layers changes (surgery / new stage unlocked).
+fn load_corpus_cached(tokenizer: &BpeTokenizer, num_layers: usize) -> Vec<u32> {
+    const CACHE_PATH: &str = "data/corpus_cache.bin";
+
+    // All dirs that contribute to the corpus — used for mtime freshness check.
+    let watch_dirs = ["data/corpus", "data/multilingual", "data/academic", "data/fulltext", "data/chaos"];
+
+    let cache_valid = (|| -> Option<bool> {
+        let cache_mtime = fs::metadata(CACHE_PATH).ok()?.modified().ok()?;
+        // Validate stored num_layers header
+        let header_bytes = fs::read(CACHE_PATH).ok()?;
+        if header_bytes.len() < 4 { return Some(false); }
+        let stored_layers = u32::from_le_bytes(header_bytes[..4].try_into().ok()?) as usize;
+        if stored_layers != num_layers { return Some(false); }
+        // Check every corpus file is older than the cache
+        for dir in &watch_dirs {
+            if let Ok(rd) = fs::read_dir(dir) {
+                for entry in rd.flatten() {
+                    if let Ok(mtime) = entry.metadata().and_then(|m| m.modified()) {
+                        if mtime > cache_mtime { return Some(false); }
+                    }
+                    // Recurse one level into stage_N subdirs
+                    if entry.path().is_dir() {
+                        if let Ok(sub) = fs::read_dir(entry.path()) {
+                            for f in sub.flatten() {
+                                if let Ok(mtime) = f.metadata().and_then(|m| m.modified()) {
+                                    if mtime > cache_mtime { return Some(false); }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Some(true)
+    })().unwrap_or(false);
+
+    if cache_valid {
+        if let Ok(bytes) = fs::read(CACHE_PATH) {
+            if bytes.len() > 4 && bytes.len() % 4 == 0 {
+                let tokens: Vec<u32> = bytes[4..].chunks_exact(4)
+                    .map(|b| u32::from_le_bytes(b.try_into().unwrap()))
+                    .collect();
+                println!("[{}] Corpus cache hit — {} tokens loaded instantly (skipped tokenization).",
+                    timestamp(), tokens.len());
+                return tokens;
+            }
+        }
+        eprintln!("Warning: cache file corrupt, re-tokenizing.");
+    }
+
+    let tokens = load_corpus(tokenizer, num_layers);
+
+    // Write cache: 4-byte header (num_layers) + token data
+    let mut bytes: Vec<u8> = (num_layers as u32).to_le_bytes().to_vec();
+    bytes.extend(tokens.iter().flat_map(|&t| t.to_le_bytes()));
+    match fs::write(CACHE_PATH, &bytes) {
+        Ok(_) => println!("[{}] Corpus cache saved to {} ({:.0}MB) — next boot will be instant.",
+            timestamp(), CACHE_PATH, bytes.len() as f64 / 1_048_576.0),
+        Err(e) => eprintln!("Warning: could not write corpus cache: {e}"),
+    }
+
+    tokens
+}
+
 fn main() -> Result<()> {
     let _ = ThreadPoolBuilder::new().num_threads(8).build_global();
     println!("--- ALBERT EVOLUTIONARY ORCHESTRATOR v3.0 (Multilingual · Mandelbrot Surgery · Chaos Protocol) ---");
@@ -948,7 +1016,7 @@ fn main() -> Result<()> {
             .and_then(|v| v["num_layers"].as_u64())
             .unwrap_or(3) as usize;
 
-        let tokens = load_corpus(&tokenizer, num_layers);
+        let tokens = load_corpus_cached(&tokenizer, num_layers);
         println!("[{}] Total corpus: {} tokens ({}L model, stages ≤{})",
             timestamp(), tokens.len(), num_layers, num_layers);
 
