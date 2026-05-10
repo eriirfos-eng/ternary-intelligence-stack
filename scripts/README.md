@@ -31,12 +31,11 @@ These scripts prove the interoperability layer works.
 
 ## The native Albert training claim
 
-Albert trains on a custom corpus (Bible + Alice in Wonderland, growing to Wikipedia and
-domain-specific text) using a from-scratch Rust training pipeline built on
-[candle](https://github.com/huggingface/candle). Published checkpoints
-(`bible_ternary_v1.3.5.safetensors`, `bible_ternary_v1.3.6.safetensors`,
-`bible_ternary_v2.0.0.safetensors`) are the direct output of this native pipeline —
-not transmuted from any external source.
+Albert trains on a multilingual corpus (Wikipedia CC BY-SA, Europarl, Gutenberg, EU AI Act —
+EN/DE/FR/ES/PT/IT/NL/PL) using a from-scratch Rust training pipeline built on
+[candle](https://github.com/huggingface/candle). The active checkpoint (`albert_v3.0.safetensors`)
+is the direct output of this native pipeline — not transmuted from any external source.
+Historical checkpoints: `bible_ternary_v2.0.0.safetensors` (v2.0.0, archived at Global Epoch 477+).
 
 The EvolutionManager (in `train_bible.rs`) orchestrates automatic layer growth from a
 minimal 3-layer inception state, expanding the architecture as the model achieves mastery

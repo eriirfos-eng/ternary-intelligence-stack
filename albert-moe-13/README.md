@@ -32,23 +32,23 @@ The architecture combines:
 
 ---
 
-## Current Architecture (v2.0.0)
+## Current Architecture (v3.0)
 
 | Parameter | Value |
 |-----------|-------|
 | Hidden size | 256 |
-| Layers | **12** (grew from 4L to 12L via EvolutionManager; max_layers=12 cap enforced) |
+| Layers | **12** (grew from 4L to 12L via EvolutionManager in v2.0.0; max_layers=12 cap enforced) |
 | Attention heads | 4 |
 | Experts | 12 |
 | Context length | 128 tokens |
-| Vocabulary | 8,000 tokens (BPE) |
+| Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
 | TTL routing | EMA-based trit states: Green (+logit boost) · Orange (scaled output) · Red (suppressed + skipped) |
 | Quantization | STE with gamma-scaled ternary, gamma cached every 20 steps |
-| LB loss | Switch Transformer load-balancing, λ = 0.01 |
+| LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-10):** Global Epoch 454+ · best loss 6.8821 · 12L checkpoint (316 MB)
+**Training state (2026-05-10):** v3.0 launched — Global Epoch 40+ · multilingual corpus active · 12L weights transferred from v2.0.0 (best loss 6.8821)
 
 ---
 
@@ -82,6 +82,7 @@ cargo build --release -p moe-test
 ```bash
 albert-train
 ```
+> Uses `models/albert_v3.0.safetensors` and `data/vocab_v3.json` (32k ByteLevel BPE).
 Opens the live dashboard at `http://localhost:8888`. The orchestrator script (`~/bin/albert-train`) manages the training binary and dashboard server together.
 
 ### Benchmark
@@ -132,7 +133,8 @@ albert-moe-13/
 ├── moe-llm-core/           # Core model and training binary
 │   └── src/
 │       ├── bin/
-│       │   └── train_bible.rs      # Training loop, EvolutionManager, TTL, LR schedule
+│       │   ├── train_bible.rs      # Training loop, EvolutionManager, TTL, LR schedule
+│       │   └── eval_perplexity.rs  # Held-out perplexity evaluation
 │       ├── model/
 │       │   ├── transformer.rs      # Transformer + Block construction
 │       │   ├── attention.rs        # Multi-head attention (causal mask cached)
@@ -152,14 +154,19 @@ albert-moe-13/
 │   └── run_server.py               # HTTP server with Range request support
 ├── data/
 │   ├── corpus/                     # Active training corpus (.txt files)
-│   └── vocab.json                  # BPE vocabulary (8,000 tokens)
+│   ├── corpus/                     # Stage-aware corpus dirs (stage_3/ through stage_11/)
+│   ├── multilingual/               # v3.0 — Wikipedia + Europarl multilingual (~446 MB)
+│   ├── academic/                   # v3.0 — academic texts (~46 MB)
+│   ├── fulltext/                   # v3.0 — Gutenberg fulltext (~68 MB)
+│   ├── chaos/                      # v3.0 — 10% chaos layer (~43 MB, invariant enforced)
+│   └── vocab_v3.json               # ByteLevel BPE vocabulary (32,000 tokens)
 ├── models/
-│   ├── bible_ternary_v2.0.0.safetensors   # Current checkpoint (~316 MB, 12L)
-│   ├── bible_ternary_v2.0.0.config.json   # Architecture config
-│   ├── bible_ternary_v2.0.0.meta          # Global epoch counter
-│   └── README.md                          # Checkpoint registry
+│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 12L)
+│   ├── albert_v3.0.config.json     # Architecture config
+│   ├── albert_v3.0.meta            # Global epoch counter
+│   └── README.md                   # Checkpoint registry
 ├── crates/
-│   └── moe-platform/               # Future inference runtime API
+│   └── moe-platform/               # Inference runtime API
 └── docs/
     ├── architecture.md
     ├── ternary-compression.md
@@ -180,7 +187,16 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | `data/corpus/stage_9/` | 9L | `qa_instruction.txt` | `User:/Albert:` instruction format |
 | `data/corpus/stage_11/` | 11L | Linux docs, EU AI Act | Technical and specialized language |
 
-**Current state (12L):** stage_7+ active (Wikipedia corpus). All stages through 7 are unlocked.
+**v3.0 corpus (all stages active):**
+
+| Corpus dir | Size | Content |
+|------------|------|---------|
+| `data/multilingual/` | ~446 MB | Wikipedia CC BY-SA + Europarl (EN/DE/FR/ES/PT/IT/NL/PL) |
+| `data/academic/` | ~46 MB | Academic texts |
+| `data/fulltext/` | ~68 MB | Gutenberg multilingual novels |
+| `data/chaos/` | ~43 MB | 10% chaos layer — invariant enforced |
+
+**Total v3.0 corpus:** ~635 MB raw. Tokenized per-file to stay within ~1.2 GB peak RAM (see [OOM fix notes](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)).
 
 ---
 
@@ -228,3 +244,6 @@ Standard MoE uses float32 weights and routes for capacity, not sparsity. Albert 
 - [Checkpoint Registry](models/README.md) — artifact versions and provenance
 - [Ternary Compression](docs/ternary-compression.md) — theory and sparsity benchmarks
 - [Roadmap](docs/roadmap.md) — what's next
+- [Session Log](../ternlang-root/docs/session_log.md) — production fixes and training milestones
+- [Benchmarks](../ternlang-root/BENCHMARKS.md) — full sparsity and perplexity data
+- [Ternary Intelligence Stack](https://github.com/eriirfos-eng/ternary-intelligence-stack) — full ecosystem

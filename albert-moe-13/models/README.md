@@ -6,19 +6,18 @@ Training artifacts for the Albert MoE-13 ternary language model.
 
 ## Active Checkpoint
 
-**`bible_ternary_v2.0.0`** — current training state
+**`albert_v3.0`** — current training state (launched 2026-05-10)
 
 | Field | Value |
 |-------|-------|
 | Format | `.safetensors` (float32 weights, HuggingFace standard) |
-| Config | `bible_ternary_v2.0.0.config.json` |
-| Epoch counter | `bible_ternary_v2.0.0.meta` (plain text integer) |
-| Architecture | 256H · **12L** · 4H · 12E · 128CTX · 8000V |
-| Best loss | 6.8821 (Global Epoch 454+) |
-| Global Epoch | 477+ (as of 2026-05-10) |
-| Corpus | Bible KJV + Alice + Gutenberg + Simple English Wikipedia (stages 3/6/7 active) |
+| Config | `albert_v3.0.config.json` |
+| Epoch counter | `albert_v3.0.meta` (plain text integer) |
+| Architecture | 256H · **12L** · 4H · 12E · 128CTX · 32000V |
+| Global Epoch | 40+ (v3.0 fresh run from 2026-05-10) |
+| Corpus | Multilingual: Wikipedia CC BY-SA + Europarl + Gutenberg + chaos layer (EN/DE/FR/ES/PT/IT/NL/PL) |
 | Tensors | 689 (blocks.0–11: 684 · ln_f: 2 · pos_embed: 1 · embed: 1 · lm_head: 1) |
-| File size | ~316 MB |
+| Weights transferred | 687 vocabulary-agnostic tensors from v2.0.0 (blocks.*, ln_f.*, pos_embed.weight); embed + lm_head rebuilt at 32k vocab |
 
 The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` file stores the global epoch count across all training sessions.
 
@@ -26,7 +25,7 @@ The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` f
 
 ## Config Schema
 
-`bible_ternary_v2.0.0.config.json`:
+`albert_v3.0.config.json`:
 ```json
 {
   "hidden_size": 256,
@@ -34,7 +33,7 @@ The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` f
   "num_heads": 4,
   "max_seq_len": 128,
   "num_experts": 12,
-  "vocab_size": 8000
+  "vocab_size": 32000
 }
 ```
 
@@ -46,7 +45,8 @@ The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` f
 
 | Version | Architecture | Key Event | Global Epoch |
 |---------|-------------|-----------|--------------|
-| v2.0.0 · 12L | 256H · **12L** · 4H · 12E | Max depth reached; layer crystallization (L0-L3 frozen, L11 hot); TTL cycling reds self-resolving | 454→current |
+| v3.0 | 256H · **12L** · 4H · 12E · 32000V | Multilingual launch; 12L weights transferred from v2.0.0; 32k ByteLevel BPE vocab | 0→current |
+| v2.0.0 · 12L | 256H · **12L** · 4H · 12E · 8000V | Max depth reached; layer crystallization (L0-L3 frozen, L11 hot); TTL cycling reds self-resolving | 454→477 (archived) |
 | v2.0.0 · 5L–11L | 256H · 5L→11L · 4H · 12E | Autonomous surgery chain; EvolutionManager max_layers=12 cap enforced on all paths | ~385–454 |
 | v2.0.0 · 5L | 256H · **5L** · 4H · 12E | Net2Net surgery 4L→5L; TTL routing + anti-stagnation burst; lb_lambda=0.03 | ~381–385 |
 | v2.0.0 · 4L | 256H · 4L · 4H · 12E | 256H upgrade; TTL routing (TARGET fix); LB loss λ 0.01→0.02→0.03 | ~340–381 |
@@ -90,16 +90,16 @@ for (name, var) in all_vars.iter() {
 
 ---
 
-## v3.0 Init Checkpoint (pending)
+## v3.0 — Active (launched 2026-05-10)
 
-When v2.0.0 training completes at Global Epoch 500:
+v2.0.0 archived at Global Epoch 477+, best loss 6.8821. v3.0 launched 2026-05-10:
 
-1. Archive final checkpoint as `bible_ternary_v2.0.0_final.safetensors`
-2. Run `scripts/transfer_weights_v3.py` to produce `albert_v3.0_init.safetensors`
-3. Transfer: 687 vocabulary-agnostic tensors (`blocks.*`, `ln_f.*`, `pos_embed.weight`)
-4. Rebuild: `embed.weight` and `lm_head.weight` at new vocab size (32,000 tokens)
+1. Archived `bible_ternary_v2.0.0.safetensors` (preserved in `models/registry/`)
+2. 687 vocabulary-agnostic tensors transferred: `blocks.*`, `ln_f.*`, `pos_embed.weight`
+3. `embed.weight` and `lm_head.weight` rebuilt at 32,000 tokens (ByteLevel BPE, multilingual)
+4. Active checkpoint: `albert_v3.0.safetensors`
 
-The transfer preserves 500 epochs of learned sequence modelling, routing specialisation, and expert differentiation. Only the vocabulary interface is replaced.
+The transfer preserved the 12L architecture, routing specialisation, and expert differentiation from v2.0.0. Only the vocabulary interface was replaced.
 
 ---
 

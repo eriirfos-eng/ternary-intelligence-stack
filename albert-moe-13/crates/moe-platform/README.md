@@ -18,13 +18,13 @@ Until `moe-platform` is built, all inference runs through `moe-test`:
 ./target/release/moe-test --bench --csv results.csv
 
 # Perplexity evaluation on a text file
-./target/release/moe-test --eval data/corpus/stage_3/bible.txt
+cargo run --release -p moe-llm-core --bin eval_perplexity data/corpus/stage_3/alice.txt
 
 # One-line installer for external evaluators (Linux + macOS)
 curl -fsSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/albert-moe-13/bench/install.sh | sh
 ```
 
-**Measured performance (v2.0.0, 5L × 12E × 256H, CPU only):**
+**Measured performance (v2.0.0, 12L × 12E × 256H, CPU only):**
 - 84.4 tok/s on Intel i7-4800MQ (2013 laptop)
 - 75% expert skip rate per decode step (@sparseskip)
 - No GPU required
@@ -49,7 +49,7 @@ The platform crate will decouple inference from the training code:
 // Future API (not yet implemented)
 use moe_platform::Albert;
 
-let albert = Albert::load("models/bible_ternary_v2.0.0")?;
+let albert = Albert::load("models/albert_v3.0")?;
 let response = albert.generate("In the beginning", 128)?;
 ```
 

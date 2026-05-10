@@ -1,12 +1,12 @@
 # Ternlang — Balanced Ternary Intelligence Stack
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![version](https://img.shields.io/badge/version-v1.2.9-blue)](#architecture)
+[![version](https://img.shields.io/badge/version-v1.3.7-blue)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-88%2B%20passing-brightgreen)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
 [![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Article%2013,14+15%20Compliant%20Design-003399?logo=european-union)](https://ternlang.com/compliance)
-[![MCP](https://img.shields.io/badge/MCP-30_tools-orange)](#mcp-server--v030-19-tools)
+[![MCP](https://img.shields.io/badge/MCP-34_tools-orange)](#mcp-server--v110-34-tools)
 [![smithery badge](https://smithery.ai/badge/rfi-irfos/ternlang)](https://smithery.ai/servers/rfi-irfos/ternlang)
 [![examples](https://img.shields.io/badge/examples+2k%2B_.tern_programs-blueviolet)](#example-library)
 [![stdlib](https://img.shields.io/badge/stdlib-28k%2B_open%20%2B%202.5k_premium-blue)](stdlib/PREMIUM.md)
@@ -53,7 +53,7 @@ ternlang-root/
 ├── ternlang-cli/         # run · build · sim · fmt · repl · audit
 ├── ternlang-lsp/         # LSP 3.17 — hover, completion, diagnostics
 ├── ternlang-compat/      # 9-trit RISC assembler, Owlet S-expr parser
-├── ternlang-mcp/         # MCP server — 30 tools, stdio + HTTP transport
+├── ternlang-mcp/         # MCP server — 34 tools, stdio + HTTP transport
 ├── ternlang-api/         # REST + SSE API, multi-tenant key management
 ├── ternlang-moe/         # MoE-13 orchestrator — routing, memory, deliberation
 ├── ternlang-ml/          # Sparse matmul, BitNet QAT, STE trainer, coalition vote
@@ -163,15 +163,16 @@ Demonstrate that ternary-native training — weights constrained to {−1, 0, +1
 
 | Field | Value |
 |-------|-------|
-| Architecture | 256H · **12L** · 4H · 12E · 128CTX · 8000V |
-| Global Epoch | 477+ (target: 500) |
-| Best loss | 6.8821 |
-| Inference throughput | **83 tok/s** sustained (CPU-only, 4L config, 2026-05-07) |
+| Architecture | 256H · **12L** · 4H · 12E · 128CTX · 32000V |
+| Version | v3.0 — multilingual ByteLevel BPE, 32k vocab (EN/DE/FR/ES/PT/IT/NL/PL) |
+| Global Epoch | 40+ (v3.0 — launched 2026-05-10) |
+| Best loss | in progress |
+| Inference throughput | **84.4 tok/s** (CPU-only, HP ZBook i7-4800MQ, 2026-05-10) |
 | Hardware | HP ZBook i7-4800MQ · x86 · 8 threads · no GPU · no INT8 |
-| Expert health | dead=0 across entire 12L run (Mycelium monitor) |
-| Training data | 100% public domain / open licence — Bible KJV, Gutenberg, Simple Wikipedia |
+| Expert health | dead=0 across entire 12L v2.0.0 run (Mycelium monitor) |
+| Training data | 100% public domain / open licence — Wikipedia CC BY-SA, Gutenberg, Europarl, EU AI Act |
 
-**Next:** Global Epoch 500 → archive v2.0.0 → launch Albert v3.0 multilingual.
+**Status:** v3.0 multilingual training active (launched 2026-05-10). v2.0.0 archived at Global Epoch 477+, best loss 6.8821.
 
 ---
 
@@ -477,11 +478,11 @@ curl -X POST https://ternlang.com/api/trit_decide \
 | `POST /api/translate` | TernTranslator — Python/SQL/JSON rules → .tern with tend arms (Tier 2+) |
 
 ---
-### 8. MCP Server — v1.1.0 (30 tools — all free)
+### 8. MCP Server — v1.1.0 (34 tools — all free)
 
 The MCP server runs at `https://ternlang.com/mcp` — compatible with Claude Desktop, Smithery, Cursor, Gemini CLI, and any HTTP MCP client.
 
-**All 30 tools are free — no API key required.** An optional API key (`X-Ternlang-Key`) upgrades memory to server-side persistent storage (instead of stateless blob mode) and unlocks the REST API with rate-limited quota.
+**All 34 tools are free — no API key required.** An optional API key (`X-Ternlang-Key`) upgrades memory to server-side persistent storage (instead of stateless blob mode) and unlocks the REST API with rate-limited quota.
 
 **Core trit primitives:** `trit_decide` · `trit_vector` · `trit_consensus` · `trit_eval` · `trit_action_gate`
 
@@ -642,7 +643,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 | [`ternlang-ml`](ternlang-ml/) | BSL-1.1 | Sparse matmul, BitNet quantization, TernaryMLP, deliberation engine, coalition vote, action gate |
 | [`ternlang-moe`](ternlang-moe/) | BSL-1.1 | MoE-13 orchestrator — dual-key routing, triad synthesis, 3-tier memory, AgentHarness |
 | [`ternlang-api`](ternlang-api/) | BSL-1.1 | REST + SSE API, multi-tenant key management, GitHub repo invite flow |
-| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 30 tools (all free), stdio + HTTP transport, server-side 3-layer memory, TernAudit |
+| [`ternlang-mcp`](ternlang-mcp/) | BSL-1.1 | MCP server — 34 tools (all free), stdio + HTTP transport, server-side 3-layer memory, TernAudit |
 | [`ternlang-mkl`](ternlang-mkl/) | BSL-1.1 | **cuTern**: Math Kernel Library with native sparsity bypass |
 | [`ternlang-sql`](ternlang-sql/) | BSL-1.1 | Native Ternary Graph Database driver (50% speedup) |
 | [`ternlang-bridge`](ternlang-bridge/) | BSL-1.1 | Binary-to-Ternary Transpiler (The Seamless Migration Layer) |
@@ -665,7 +666,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 | [`ternlang-gfx`](ternlang-gfx/) | BSL-1.1 | **T-GPU**: Triadic Graphics Pipeline (Depth-as-a-Trit) |
 | [`ternlang-contract`](ternlang-contract/) | BSL-1.1 | **T-Contract**: Triadic Smart Contracts (Arbitration State) |
 
-**99+ probe tests passing · v1.2.9**
+**138+ CI tests passing · v1.3.7**
 
 ---
 

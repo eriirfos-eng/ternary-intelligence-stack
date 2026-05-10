@@ -57,7 +57,7 @@ ternlang run my_program.tern   # explicit form
 
 Albert is a ternary Mixture-of-Experts language model trained from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus.
 
-**Current state (2026-05-10):** 12L · 256H · 12E · Top-3 routing · 128CTX · ~8000 vocab · ~58M params · training on CPU · Global Epoch 454+.
+**Current state (2026-05-10):** 12L · 256H · 12E · Top-3 routing · 128CTX · 32,000 vocab (ByteLevel BPE, multilingual) · ~58M params · training on CPU · v3.0 Global Epoch 40+.
 
 ### What makes it different
 
@@ -89,7 +89,7 @@ curl -s https://ternlang-api.fly.dev/api/moe/orchestrate \
 ### Known Limitations (honest)
 - Albert at 12L is a **research prototype**, not a production LLM. He generates statistically coherent text. Instruction-following capability is targeted with instruction fine-tuning at a later stage.
 - Training runs on a single CPU (HP ZBook, no GPU). A proper GPU cluster would run 10-50× faster.
-- Held-out perplexity vs float32 baseline is not yet published (in progress — `scripts/eval_perplexity.py`).
+- Held-out perplexity vs float32 baseline is not yet published (in progress — `cargo run --release -p moe-llm-core --bin eval_perplexity`).
 - The CUDA backend (`cuda_matmul.rs`) is a design sketch at TRL 3, not yet a running kernel.
 
 ---
@@ -132,7 +132,7 @@ This repository is split into three primary domains, each serving a distinct pur
 | [`agent_albert_cli/`](agent_albert_cli/) | **Sovereign Agent Layer:** The terminal-native, model-agnostic AI agent (Albert) built in pure Rust for autonomous coding and orchestration. |
 
 ### Note on Training Infrastructure
-The full training pipeline — including the Straight-Through Estimator (STE) backward pass, EvolutionManager, and cosine LR schedule — is implemented in `albert-moe-13/moe-llm-core/src/bin/train_bible.rs`. The STE quantization primitive is at `albert-moe-13/moe-llm-core/src/model/ste.rs`. Empirical loss convergence data (25 epochs, descending from random baseline 8.987 to 6.95) is in `albert-moe-13/docs/convergence_log.md`. Massive-scale distributed training on GPU clusters is on the roadmap (Phase 23).
+The full training pipeline — including the Straight-Through Estimator (STE) backward pass, EvolutionManager, and cosine LR schedule — is implemented in `albert-moe-13/moe-llm-core/src/bin/train_bible.rs`. The STE quantization primitive is at `albert-moe-13/moe-llm-core/src/model/ste.rs`. Massive-scale distributed training on GPU clusters is on the roadmap (Phase 23).
 
 ---
 
