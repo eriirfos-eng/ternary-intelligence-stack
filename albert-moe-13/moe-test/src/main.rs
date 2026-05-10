@@ -28,6 +28,21 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
+const BENCH_PROMPTS: &[&str] = &[
+    "in the beginning god created the",
+    "User: what language do you speak? Albert:",
+    "die Geschichte der Europäischen Union",
+    "once upon a time in a kingdom far",
+    "the ternary number system uses three",
+];
+
+struct BenchResult {
+    prompt: String,
+    response: String,
+    tokens_per_sec: f32,
+    latency_ms: u64,
+}
+
 struct App {
     model: Transformer,
     tokenizer: BpeTokenizer,
@@ -57,6 +72,11 @@ struct App {
     // KV-cache decode state
     need_prefill: bool,   // true on first step after start_generation()
     kv_seq_pos: usize,    // absolute position of next token to decode
+
+    // /bench command state
+    bench_mode: bool,
+    bench_step: usize,
+    bench_results: Vec<BenchResult>,
 }
 
 impl App {
@@ -66,12 +86,20 @@ impl App {
         
         let _metadata = fs::metadata(&checkpoint_path).ok();
         
-        let vocab_path = "data/vocab.json";
+        let vocab_path = if version.starts_with("v3") { "data/vocab_v3.json" } else { "data/vocab.json" };
         let tokenizer = BpeTokenizer::new(vocab_path);
-        
-        let mut config_path = format!("models/bible_ternary_{}.config.json", version);
+
+        let mut config_path = if version.starts_with("v3") {
+            format!("models/albert_{}.config.json", version)
+        } else {
+            format!("models/bible_ternary_{}.config.json", version)
+        };
         if !std::path::Path::new(&config_path).exists() {
-            config_path = format!("models/registry/bible_ternary_{}.config.json", version);
+            config_path = if version.starts_with("v3") {
+                "models/albert_v3.0.config.json".to_string()
+            } else {
+                format!("models/registry/bible_ternary_{}.config.json", version)
+            };
         }
         let config_str = fs::read_to_string(&config_path).expect("Unable to read config.json. The HuggingFace standard requires a config file next to the model.");
         let config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
@@ -135,6 +163,9 @@ impl App {
             auto_scroll: true,
             need_prefill: false,
             kv_seq_pos: 0,
+            bench_mode: false,
+            bench_step: 0,
+            bench_results: Vec::new(),
         }
     }
 
@@ -255,6 +286,93 @@ impl App {
             }
         }
     }
+
+    fn handle_command(&mut self, cmd: &str) {
+        match cmd {
+            "/help" => {
+                self.transcript.push_str(concat!(
+                    "\n┌─ COMMANDS ─────────────────────────────────┐\n",
+                    "│  /help      list commands                   │\n",
+                    "│  /prompts   show the 5 benchmark prompts    │\n",
+                    "│  /p1..p5    fire one benchmark prompt        │\n",
+                    "│  /bench     run all 5, auto-export results  │\n",
+                    "│  /export    export this session to exports/ │\n",
+                    "└─────────────────────────────────────────────┘\n",
+                ));
+            }
+            "/prompts" => {
+                self.transcript.push_str("\n[BENCHMARK PROMPTS]\n");
+                for (i, p) in BENCH_PROMPTS.iter().enumerate() {
+                    self.transcript.push_str(&format!("  /p{}: {}\n", i + 1, p));
+                }
+            }
+            "/p1" | "/p2" | "/p3" | "/p4" | "/p5" => {
+                if let Ok(n) = cmd[2..].parse::<usize>() {
+                    if n >= 1 && n <= BENCH_PROMPTS.len() {
+                        self.input = BENCH_PROMPTS[n - 1].to_string();
+                        self.start_generation();
+                    }
+                }
+            }
+            "/bench" => {
+                self.bench_results.clear();
+                self.bench_step = 0;
+                self.bench_mode = true;
+                self.transcript.push_str(&format!(
+                    "\n━━━ BENCH 1/{} ━━━\n", BENCH_PROMPTS.len()
+                ));
+                self.input = BENCH_PROMPTS[0].to_string();
+                self.start_generation();
+            }
+            "/export" => {
+                match self.export_session() {
+                    Ok(path) => self.transcript.push_str(&format!("\n[EXPORT] {}\n", path)),
+                    Err(e)   => self.transcript.push_str(&format!("\n[EXPORT ERROR] {}\n", e)),
+                }
+            }
+            _ => {
+                self.transcript.push_str(&format!("\n[UNKNOWN COMMAND] {}  — try /help\n", cmd));
+            }
+        }
+    }
+
+    fn export_session(&self) -> Result<String, std::io::Error> {
+        fs::create_dir_all("exports")?;
+        let now = chrono::Local::now().format("%Y-%m-%d_%H%M%S");
+        let path = format!("exports/chat_{}_{}.txt", self.checkpoint, now);
+        let header = format!(
+            "=== albert. session export ===\nBrain: {} | Mileage: {} epochs | {}\n{}\n\n",
+            self.checkpoint,
+            self.total_epochs,
+            chrono::Local::now().format("%Y-%m-%d %H:%M"),
+            "─".repeat(50),
+        );
+        fs::write(&path, format!("{}{}", header, self.transcript))?;
+        Ok(path)
+    }
+
+    fn export_bench(&mut self) {
+        fs::create_dir_all("exports").ok();
+        let now = chrono::Local::now().format("%Y-%m-%d_%H%M%S");
+        let path = format!("exports/bench_{}_{}.txt", self.checkpoint, now);
+        let mut out = format!(
+            "=== albert. benchmark eval ===\nBrain: {} | Mileage: {} epochs | {}\n{}\n\n",
+            self.checkpoint,
+            self.total_epochs,
+            chrono::Local::now().format("%Y-%m-%d %H:%M"),
+            "─".repeat(50),
+        );
+        for (i, r) in self.bench_results.iter().enumerate() {
+            out.push_str(&format!(
+                "[P{}] {}\n→ {}\n    {:.1} tok/s  {}ms/tok\n\n",
+                i + 1, r.prompt, r.response, r.tokens_per_sec, r.latency_ms,
+            ));
+        }
+        match fs::write(&path, &out) {
+            Ok(_)  => self.transcript.push_str(&format!("\n[BENCH COMPLETE] {}\n", path)),
+            Err(e) => self.transcript.push_str(&format!("\n[BENCH ERROR] {}\n", e)),
+        }
+    }
 }
 
 struct SysInfo {
@@ -352,6 +470,7 @@ impl SysInfo {
 fn find_latest_checkpoint() -> (PathBuf, String) {
     let models_dir = "models";
     let search_paths = [
+        ("v3.0",   format!("{}/albert_v3.0.safetensors", models_dir)),
         ("v2.0.0", format!("{}/bible_ternary_v2.0.0.safetensors", models_dir)),
         ("v1.3.7", format!("{}/registry/bible_ternary_v1.3.7.safetensors", models_dir)),
         ("v1.3.7", format!("{}/bible_ternary_v1.3.7.safetensors", models_dir)),
@@ -372,17 +491,26 @@ fn find_latest_checkpoint() -> (PathBuf, String) {
 /// Usage: moe-test --eval <text_file> [--checkpoint <path>]
 fn run_eval_mode(text_path: &str, checkpoint_override: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
     let dev = Device::Cpu;
-    let vocab_path = "data/vocab.json";
-    let tokenizer = BpeTokenizer::new(vocab_path);
 
     let (default_ckpt, version) = find_latest_checkpoint();
     let checkpoint_path = checkpoint_override
         .map(std::path::PathBuf::from)
         .unwrap_or(default_ckpt);
 
-    let mut config_path = format!("models/bible_ternary_{}.config.json", version);
+    let vocab_path = if version.starts_with("v3") { "data/vocab_v3.json" } else { "data/vocab.json" };
+    let tokenizer = BpeTokenizer::new(vocab_path);
+
+    let mut config_path = if version.starts_with("v3") {
+        format!("models/albert_{}.config.json", version)
+    } else {
+        format!("models/bible_ternary_{}.config.json", version)
+    };
     if !std::path::Path::new(&config_path).exists() {
-        config_path = "models/bible_ternary_v2.0.0.config.json".to_string();
+        config_path = if version.starts_with("v3") {
+            "models/albert_v3.0.config.json".to_string()
+        } else {
+            "models/bible_ternary_v2.0.0.config.json".to_string()
+        };
     }
     let config_str = fs::read_to_string(&config_path)?;
     let config_json: Value = serde_json::from_str(&config_str)?;
@@ -461,12 +589,21 @@ struct LoadedModel {
 
 fn load_model() -> Result<LoadedModel, Box<dyn std::error::Error>> {
     let dev = Device::Cpu;
-    let tokenizer = BpeTokenizer::new("data/vocab.json");
     let (checkpoint_path, version) = find_latest_checkpoint();
+    let vocab_path = if version.starts_with("v3") { "data/vocab_v3.json" } else { "data/vocab.json" };
+    let tokenizer = BpeTokenizer::new(vocab_path);
 
-    let mut config_path = format!("models/bible_ternary_{}.config.json", version);
+    let mut config_path = if version.starts_with("v3") {
+        format!("models/albert_{}.config.json", version)
+    } else {
+        format!("models/bible_ternary_{}.config.json", version)
+    };
     if !std::path::Path::new(&config_path).exists() {
-        config_path = "models/bible_ternary_v2.0.0.config.json".to_string();
+        config_path = if version.starts_with("v3") {
+            "models/albert_v3.0.config.json".to_string()
+        } else {
+            "models/bible_ternary_v2.0.0.config.json".to_string()
+        };
     }
     let config_str = fs::read_to_string(&config_path)?;
     let config_json: Value = serde_json::from_str(&config_str)?;
@@ -757,11 +894,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
+    let mut prev_generating = false;
     loop {
         terminal.draw(|f| ui(f, app))?;
 
+        // Bench mode: detect end of each generation, record result, advance or export.
+        if prev_generating && !app.is_generating && app.bench_mode {
+            if let Some(msg) = app.messages.last() {
+                app.bench_results.push(BenchResult {
+                    prompt: BENCH_PROMPTS[app.bench_step].to_string(),
+                    response: msg.1.clone(),
+                    tokens_per_sec: app.tokens_per_sec,
+                    latency_ms: app.token_latency_ms,
+                });
+            }
+            app.bench_step += 1;
+            if app.bench_step < BENCH_PROMPTS.len() {
+                app.transcript.push_str(&format!(
+                    "\n━━━ BENCH {}/{} ━━━\n", app.bench_step + 1, BENCH_PROMPTS.len()
+                ));
+                app.input = BENCH_PROMPTS[app.bench_step].to_string();
+                app.start_generation();
+            } else {
+                app.bench_mode = false;
+                app.export_bench();
+            }
+        }
+        prev_generating = app.is_generating;
+
         let timeout = if app.is_generating { Duration::from_millis(1) } else { Duration::from_millis(10) };
-        
+
         if event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
@@ -769,6 +931,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         if app.is_generating {
                             app.is_generating = false;
                             app.tokens_to_generate = 0;
+                            app.bench_mode = false;
                         } else {
                             return Ok(());
                         }
@@ -780,7 +943,15 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         if !app.is_generating { app.input.pop(); }
                     }
                     KeyCode::Enter => {
-                        if !app.is_generating { app.start_generation(); }
+                        if !app.is_generating {
+                            let trimmed = app.input.trim().to_string();
+                            if trimmed.starts_with('/') {
+                                app.input.clear();
+                                app.handle_command(&trimmed);
+                            } else {
+                                app.start_generation();
+                            }
+                        }
                     }
                     KeyCode::Up => {
                         app.scroll_pos = app.scroll_pos.saturating_sub(1);
@@ -857,10 +1028,12 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         .scroll((scroll_offset, 0));
     f.render_widget(sandbox, chunks[1]);
 
-    let input_title = if app.is_generating {
+    let input_title = if app.is_generating && app.bench_mode {
+        " [BENCH — Esc to abort] "
+    } else if app.is_generating {
         " [THINKING...] (Esc to Stop) "
     } else {
-        " Type & Enter to send  |  ↑↓ PgUp/Dn to scroll  |  End = follow bottom  |  Esc = quit "
+        " Type & Enter  |  /help for commands  |  ↑↓ PgUp/Dn scroll  |  End = follow  |  Esc = quit "
     };
     let input = Paragraph::new(app.input.as_str())
         .block(Block::default().borders(Borders::ALL).title(input_title));
