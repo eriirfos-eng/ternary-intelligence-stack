@@ -478,6 +478,8 @@ fn train_cycle(
         .ok()
         .and_then(|s| s.trim().parse::<f32>().ok())
         .unwrap_or(f32::MAX);
+    // Previous epoch average for delta computation in EPOCH_SUMMARY.
+    let mut prev_avg_loss: f32 = best_epoch_loss;
 
     let mut total_epochs = if let Ok(c) = fs::read_to_string(meta_path) {
         c.trim().parse::<u32>().unwrap_or(0)
@@ -861,6 +863,38 @@ fn train_cycle(
             save_checkpoint(&varmap, best_path)?;
             fs::write(best_meta_path, avg_loss.to_string())?;
             println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
+        }
+
+        // ── Epoch summary (8-line pitch table row) ───────────────────────────
+        {
+            let ttlfreeze_total: usize = epoch_burst_count.iter().sum();
+            let ttlfreeze_layers: Vec<String> = epoch_burst_count.iter().enumerate()
+                .filter(|(_, c)| **c > 0)
+                .map(|(i, c)| format!("L{}x{}", i, c))
+                .collect();
+            let freeze_str = if ttlfreeze_layers.is_empty() {
+                "none".to_string()
+            } else {
+                ttlfreeze_layers.join(",")
+            };
+            let l03_pressure: Vec<String> = epoch_layer_norms.iter().take(4)
+                .map(|&p| format!("{:.2e}", p)).collect();
+            let summary_line = format!(
+                "EPOCH_SUMMARY epoch={} loss_avg={:.4} (d{:+.4}) loss_best={:.4} \
+                 wald_sev={:.3} wald_fill={:.1}% \
+                 ttlfreeze={} ({}) \
+                 myc_L0-L3=[{}] hot=L{} cold=L{}",
+                total_epochs, avg_loss, avg_loss - prev_avg_loss, best_epoch_loss,
+                wald_report.low_gap_severity(), wald_report.fill_pct,
+                ttlfreeze_total, freeze_str,
+                l03_pressure.join("/"),
+                report.hottest_layer, report.coldest_layer,
+            );
+            println!("[{}] {}", timestamp(), summary_line);
+            if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+                let _ = writeln!(f, "{}", summary_line);
+            }
+            prev_avg_loss = avg_loss;
         }
 
         // Emit telemetry for the dashboard neural viz panels.
