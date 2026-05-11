@@ -128,9 +128,11 @@ fn amplify_early_layers(
     varmap: &VarMap,
     grads: &mut candle_core::backprop::GradStore,
     layer_norms: &[f32],
+    scale: f64,
 ) {
-    const THRESHOLD: f32 = 0.001; // layers below this norm are considered crystallized
-    const SCALE: f64     = 5.0;   // gradient multiplier — effective LR boost ≈ sqrt(5) ≈ 2.2× in Adam
+    // Layers whose per-layer grad norm falls below this are considered crystallized.
+    // 0.005 catches L0–L5 at current training state (was 0.001, too narrow).
+    const THRESHOLD: f32 = 0.005;
 
     let all_vars = varmap.data().lock().unwrap();
     for (name, var) in all_vars.iter() {
@@ -140,7 +142,7 @@ fn amplify_early_layers(
         if let Some(i) = li {
             if i < layer_norms.len() && layer_norms[i] < THRESHOLD {
                 if let Some(g) = grads.get(var.as_tensor()).cloned() {
-                    if let Ok(scaled) = &g * SCALE {
+                    if let Ok(scaled) = &g * scale {
                         grads.insert(var.as_tensor(), scaled);
                     }
                 }
@@ -438,6 +440,9 @@ fn train_cycle(
 
     let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), base_lr)?;
     let mut collapse_streak: u32 = 0;
+    // WALD-driven early-layer amplification scale — updated each epoch.
+    // Severity 0.0 → scale 4×; severity 1.0 → scale 48× (linear interpolation).
+    let mut wald_amplify_scale: f64 = 8.0;
 
     let seq_len     = config.max_seq_len;
     let num_batches = 300_usize;
@@ -604,7 +609,7 @@ fn train_cycle(
                             }
                         }
                     }
-                    amplify_early_layers(&varmap, &mut grads, &layer_norms);
+                    amplify_early_layers(&varmap, &mut grads, &layer_norms, wald_amplify_scale);
                     opt.step(&grads)?;
                 }
                 accum_exploded = false;
@@ -735,16 +740,25 @@ fn train_cycle(
         if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
             let _ = writeln!(f, "{}", format_wald_line(total_epochs as usize, *global_step, &wald_report));
         }
-        // Surface dead_low warnings so they appear in the training console.
+        // WALD feedback → early-layer gradient amplification.
+        // Severity maps linearly: 0.15→8×, 1.0→48×. Below 0.15 the dead zone is
+        // small enough that early-layer freeze is not the limiting factor.
+        let severity = wald_report.low_gap_severity();
+        if severity > 0.15 {
+            let t = ((severity - 0.15) / 0.85).min(1.0) as f64;
+            wald_amplify_scale = 8.0 + t * 40.0;
+        } else {
+            wald_amplify_scale = 4.0;
+        }
         if let Some(ref zone) = wald_report.dead_low {
-            if wald_report.low_gap_severity() > 0.35 {
-                println!(
-                    "[{}] WALD: dead zone below mass ({:.2}–{:.2}, severity {:.2}) \
-                     — loss-space gap; corpus may lack examples that push albert. \
-                     below {:.2}.",
-                    timestamp(), zone.lo, zone.hi, wald_report.low_gap_severity(), zone.lo,
-                );
-            }
+            println!(
+                "[{}] WALD: dead_low={:.2}–{:.2} severity={:.3} → early-layer scale={:.1}×  \
+                 (fill={:.1}% mass={:.3})",
+                timestamp(), zone.lo, zone.hi, severity, wald_amplify_scale,
+                wald_report.fill_pct, wald_report.mass_center,
+            );
+        } else {
+            println!("[{}] WALD: no dead zone below mass — early-layer scale={:.1}×", timestamp(), wald_amplify_scale);
         }
 
         // ── Checkpoint (always save latest) ──────────────────────────────────
@@ -837,6 +851,7 @@ fn train_cycle(
                 }
                 // Fresh optimizer — AdamW momentum is stale/corrupted after collapse.
                 opt = candle_nn::AdamW::new_lr(varmap.all_vars(), base_lr)?;
+                wald_amplify_scale = 8.0; // fresh optimizer — reset to strong default
 
                 collapse_streak = 0;
                 evolution_manager.reset_history(); // don't immediately re-trigger surgery
