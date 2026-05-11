@@ -17,9 +17,9 @@ use serde_json::Value;
 
 use ratatui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, Paragraph, Wrap},
     Terminal,
 };
 use crossterm::{
@@ -27,6 +27,18 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+
+const COMMANDS: &[(&str, &str)] = &[
+    ("/help",    "list all commands"),
+    ("/prompts", "show the 5 benchmark prompts"),
+    ("/p1",      "fire benchmark prompt 1"),
+    ("/p2",      "fire benchmark prompt 2"),
+    ("/p3",      "fire benchmark prompt 3"),
+    ("/p4",      "fire benchmark prompt 4"),
+    ("/p5",      "fire benchmark prompt 5"),
+    ("/bench",   "run all 5 prompts + auto-export"),
+    ("/export",  "export this session to exports/"),
+];
 
 const BENCH_PROMPTS: &[&str] = &[
     "in the beginning god created the",
@@ -1063,4 +1075,38 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     f.render_widget(Paragraph::new(format!(" Mileage: {} Epochs", app.total_epochs)).block(Block::default().borders(Borders::ALL).title(" Total Experience ")), m2_chunks[0]);
     f.render_widget(Paragraph::new(format!(" Load: {:.4} GFLOPS", app.est_gflops)).block(Block::default().borders(Borders::ALL).title(" Intensity ")), m2_chunks[1]);
     f.render_widget(Paragraph::new(format!(" Latency: {}ms/tok", app.token_latency_ms)).block(Block::default().borders(Borders::ALL).title(" Depth ")), m2_chunks[2]);
+
+    // Command autocomplete popup — appears as soon as input starts with '/'.
+    if app.input.starts_with('/') && !app.is_generating {
+        let prefix = app.input.as_str();
+        let matches: Vec<(&str, &str)> = COMMANDS.iter()
+            .filter(|(cmd, _)| cmd.starts_with(prefix))
+            .copied()
+            .collect();
+        if !matches.is_empty() {
+            let popup_h = matches.len() as u16 + 2;
+            let popup_w = 52u16.min(chunks[2].width.saturating_sub(2));
+            let popup_y = chunks[2].y.saturating_sub(popup_h);
+            let popup_rect = Rect {
+                x: chunks[2].x + 1,
+                y: popup_y,
+                width: popup_w,
+                height: popup_h,
+            };
+            let text: String = matches.iter()
+                .map(|(cmd, desc)| format!("  {:10}  {}", cmd, desc))
+                .collect::<Vec<_>>()
+                .join("\n");
+            f.render_widget(Clear, popup_rect);
+            f.render_widget(
+                Paragraph::new(text).block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(" COMMANDS ")
+                        .border_style(Style::default().fg(Color::Cyan))
+                ),
+                popup_rect,
+            );
+        }
+    }
 }
