@@ -1,1 +1,1 @@
-{"architecture":{"ctx":128,"experts":12,"hidden":256,"layers":6,"vocab":8000},"model":"albert-moe-13","timestamp":"18:52:44","training":{"avg_loss":8.427048683166504,"best_loss":6.882100582122803,"clipped_steps":0,"global_epoch":421,"skipped_steps":0},"version":"v2.0.0"}
+{"architecture":{"ctx":128,"experts":12,"hidden":256,"layers":12,"vocab":32000},"model":"albert-moe-13","timestamp":"15:43:51","training":{"avg_loss":10.351579666137695,"best_loss":10.350580215454102,"clipped_steps":0,"global_epoch":72,"skipped_steps":0},"version":"v2.0.0"}

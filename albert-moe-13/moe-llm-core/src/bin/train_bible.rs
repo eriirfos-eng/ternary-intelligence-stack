@@ -435,10 +435,13 @@ fn train_cycle(
         }
     }
 
-    // Expert weight perturbation: each expert gets independent Gaussian noise (σ=0.02).
-    // After 280+ epochs of uniform routing all experts learned identical representations —
-    // CE gradient can't distinguish them so the gate re-uniformizes. Independent per-tensor
-    // noise gives each expert a distinct starting point; the LB loss then maintains diversity.
+    // Expert weight perturbation: independent Gaussian noise per expert tensor.
+    // σ=0.02 was too small — ternary weights cluster near their quantized values so
+    // 0.02 flips almost no weights between bins, leaving all experts weight-identical.
+    // σ=0.15 flips ~20-30% of near-threshold weights per expert, giving each a distinct
+    // enough representation that CE gradient can route between them meaningfully.
+    // At current loss ≈ ln(vocab) the experts hold no useful signal anyway — the cost
+    // of disruption is near-zero vs the benefit of breaking symmetry.
     {
         let expert_vars: Vec<_> = {
             let all_vars = varmap.data().lock().unwrap();
@@ -447,7 +450,7 @@ fn train_cycle(
                 .map(|(name, var)| (name.clone(), var.clone()))
                 .collect()
         };
-        let sigma = 0.02f32;
+        let sigma = 0.15f32;
         for (_name, var) in &expert_vars {
             let noise = Tensor::randn(0.0f32, sigma, var.shape().dims(), device)?;
             let perturbed = (var.as_tensor() + noise)?;

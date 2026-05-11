@@ -60,8 +60,11 @@ const ROUTER_TEMP: f64 = 0.7;
 // Gumbel noise scale for training-time routing exploration.
 // Additive noise of O(1) regardless of logit magnitude — the ±2% multiplicative
 // noise it replaces was a no-op when logits ≈ 0 (Universal Nash state).
+// Scale 0.2: logit spread after kaiming-init+temp ≈ 0.125 vs noise std ≈ 0.26,
+// keeping routing competitive between gate signal and noise. At 1.0 the noise
+// dominated completely (90%+), zeroing gate gradients and preventing learning.
 // Disabled in eval mode via TRAIN_MODE flag.
-const GUMBEL_NOISE_SCALE: f64 = 1.0;
+const GUMBEL_NOISE_SCALE: f64 = 0.2;
 
 pub struct MoeBlock {
     gate: candle_nn::Linear,
