@@ -55,11 +55,27 @@
             align-items: center;
             gap: 5px;
             padding: 0 12px;
-            border-right: 1px solid var(--border);
+            border-right: none;
             height: 40px;
             white-space: nowrap;
             flex: 0 0 auto;
+            position: relative;
         }
+        .tb-cell::after {
+            content: '';
+            position: absolute;
+            right: 0; top: 0; bottom: 0;
+            width: 1px;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--border) 20%,
+                var(--border) 80%,
+                transparent 100%
+            );
+            pointer-events: none;
+        }
+        .tb-cell.controls::after { display: none; }
         .tb-cell.arch { flex: 1 1 120px; min-width: 0; overflow: hidden; }
         .tb-cell.arch .tb-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
         .tb-cell.controls { border-right: none; margin-left: auto; gap: 6px; padding-right: 12px; }
@@ -174,12 +190,36 @@
             flex-shrink: 0;
             cursor: ew-resize;
             background: transparent;
-            border-left: 1px solid var(--border);
+            border-left: none;
             position: relative;
-            transition: border-color 0.15s;
+            transition: opacity 0.15s;
         }
-        .panel-resize-handle:hover,
-        .panel-resize-handle.h-dragging { border-color: var(--accent); }
+        /* Gradient fade line — fades to transparent at top and bottom edges */
+        .panel-resize-handle::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 2px;
+            width: 1px;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--border) 18%,
+                var(--border) 82%,
+                transparent 100%
+            );
+            transition: background 0.2s;
+            pointer-events: none;
+        }
+        .panel-resize-handle:hover::before,
+        .panel-resize-handle.h-dragging::before {
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--accent) 18%,
+                var(--accent) 82%,
+                transparent 100%
+            );
+        }
         .panel-resize-handle::after {
             content: '';
             position: absolute;
@@ -237,9 +277,84 @@
             background: rgba(34,211,238,0.04);
         }
         .topo-layer-label { font-size: 11px; color: var(--text); font-weight: bold; }
-        /* Layer topology — sleek fixed-width column */
-        .nv-panel:first-child { flex: 0 0 70px; }
-        #sparsity-panel { flex: 0 0 100px; }
+        /* Combined topology+sparsity panel */
+        #topo-sparsity-panel { flex: 0 0 160px; }
+        #topo-sparsity-viz {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: flex-start;
+            gap: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+        #topo-sparsity-viz::-webkit-scrollbar { display: none; }
+        .tsrow {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-height: 16px;
+        }
+        .ts-io {
+            width: 28px;
+            height: 14px;
+            border: 1px solid #334155;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #475569;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+        }
+        .ts-node {
+            width: 26px;
+            height: 16px;
+            border: 1px solid var(--accent);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: var(--accent);
+            flex-shrink: 0;
+            transition: border-color 0.6s ease, opacity 0.6s ease;
+            background: rgba(34,211,238,0.04);
+        }
+        .ts-connector {
+            width: 10px;
+            height: 1px;
+            background: #1e2d40;
+            flex-shrink: 0;
+        }
+        .ts-sbar-track {
+            flex: 1;
+            height: 5px;
+            background: var(--bg3);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .ts-sbar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.6s ease, background 0.6s ease;
+        }
+        .ts-pct {
+            width: 26px;
+            text-align: right;
+            font-size: 9px;
+            color: var(--muted);
+            flex-shrink: 0;
+        }
+        .ts-vline {
+            padding-left: 12px;
+            font-size: 9px;
+            color: #1e2d40;
+            line-height: 1.1;
+            min-height: 5px;
+        }
         /* Expert heatmap */
         #expert-viz {
             display: grid;
@@ -257,7 +372,7 @@
             transition: background 0.8s, outline 0.15s;
             position: relative;
         }
-        .expert-cell:hover { outline: 1px solid rgba(255,255,255,0.25); }
+        .expert-cell:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10), 0 0 8px rgba(34,211,238,0.15); }
         .expert-label { font-size: 10px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1; }
         .expert-act   { font-size: 11px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: bold; line-height: 1.3; }
 
@@ -387,12 +502,37 @@
             flex-shrink: 0;
             cursor: ns-resize;
             background: transparent;
-            border-top: 1px solid var(--border);
+            border-top: none;
             position: relative;
-            transition: border-color 0.15s;
+            transition: opacity 0.15s;
+        }
+        #bottom-resize-handle::before {
+            content: '';
+            position: absolute;
+            top: 2px; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                var(--border) 12%,
+                var(--border) 88%,
+                transparent 100%
+            );
+            transition: background 0.2s;
+            pointer-events: none;
+        }
+        #bottom-resize-handle:hover::before,
+        #bottom-resize-handle.dragging::before {
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                var(--accent) 12%,
+                var(--accent) 88%,
+                transparent 100%
+            );
         }
         #bottom-resize-handle:hover,
-        #bottom-resize-handle.dragging { border-color: var(--accent); }
+        #bottom-resize-handle.dragging { opacity: 1; }
         #bottom-resize-handle::after {
             content: '';
             position: absolute;
@@ -568,19 +708,12 @@
 </div>
 
 <div id="neural-wrap">
-    <!-- Panel A: Layer topology — grows as Net2Net surgery fires -->
-    <div class="nv-panel">
-        <div class="nv-label">&#9632; Layer Topology</div>
-        <div id="layer-viz">
-            <div id="neural-waiting">WAITING FOR TELE DATA — fires after first epoch</div>
+    <!-- Panel A: Layer Architecture (topology + sparsity merged) -->
+    <div class="nv-panel" id="topo-sparsity-panel">
+        <div class="nv-label">&#9632; Layer Architecture</div>
+        <div id="topo-sparsity-viz">
+            <div id="neural-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div>
         </div>
-    </div>
-    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
-
-    <!-- Panel B: Per-layer sparsity bars -->
-    <div class="nv-panel" id="sparsity-panel">
-        <div class="nv-label">&#9632; Per-Layer Weight Sparsity</div>
-        <div id="sparsity-viz"><div id="sparsity-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
@@ -1608,57 +1741,69 @@
         const waiting = document.getElementById('neural-waiting');
         if (waiting) waiting.remove();
 
-        // ── Panel A: Layer topology ───────────────────────────────────
-        const layerDiv = document.getElementById('layer-viz');
-        layerDiv.innerHTML = '';
+        // ── Panel A: Combined Layer Architecture (topology + sparsity) ─
+        // Layers grow down the left; each layer connects via a grey line to its
+        // sparsity bar. Scaffold is built once, then updated in-place so CSS
+        // transitions on border-color, opacity, and bar width all play smoothly.
+        const tsWrap = document.getElementById('topo-sparsity-viz');
+        if (tsWrap.querySelectorAll('.tsrow[data-layer]').length !== tele.numLayers) {
+            tsWrap.innerHTML = '';
+            // OUT node at top — layers read top-to-bottom: output → ... → input
+            const outRow = document.createElement('div');
+            outRow.className = 'tsrow';
+            outRow.innerHTML = `<div class="ts-io" title="Logits → 32k vocab softmax">OUT</div>`;
+            tsWrap.appendChild(outRow);
 
-        const addNode = (label, tipHtml) => {
-            const d = document.createElement('div');
-            d.className = 'topo-node';
-            d.textContent = label;
-            if (tipHtml) {
-                d.addEventListener('mouseenter', ev => showTip(ev, tipHtml));
-                d.addEventListener('mouseleave', hideTip);
+            for (let i = tele.numLayers - 1; i >= 0; i--) {
+                const vl = document.createElement('div');
+                vl.className = 'ts-vline';
+                vl.textContent = '│';
+                tsWrap.appendChild(vl);
+
+                const row = document.createElement('div');
+                row.className = 'tsrow';
+                row.dataset.layer = i;
+                row.innerHTML =
+                    `<div class="ts-node">L${i}</div>` +
+                    `<div class="ts-connector"></div>` +
+                    `<div class="ts-sbar-track"><div class="ts-sbar-fill"></div></div>` +
+                    `<span class="ts-pct">—</span>`;
+                row.addEventListener('mouseleave', hideTip);
+                tsWrap.appendChild(row);
             }
-            layerDiv.appendChild(d);
-        };
-        const addArrow = () => {
-            const d = document.createElement('div');
-            d.className = 'topo-arrow';
-            d.textContent = '↓';
-            layerDiv.appendChild(d);
-        };
 
-        addNode('IN', '<b>Input</b><br>Token embeddings enter the transformer stack.<br>Vocab: 32000 BPE tokens · Embedding dim: 256');
-        addArrow();
+            const ivl = document.createElement('div');
+            ivl.className = 'ts-vline';
+            ivl.textContent = '│';
+            tsWrap.appendChild(ivl);
 
-        for (let i = 0; i < tele.numLayers; i++) {
-            const s = tele.layerSparsity[i] || 0;
-            const col = sparsityColor(s);
-            const pct = (s * 100).toFixed(0);
-
-            const block = document.createElement('div');
-            block.className = 'topo-layer';
-            block.style.borderColor = col;
-            block.style.opacity = 0.4 + s * 0.6;
-            block.addEventListener('mouseenter', ev => showTip(ev,
-                `<b>Layer ${i}</b><br>Sparsity: <b>${pct}%</b> near-zero weights<br>Color = @sparseskip efficiency`));
-            block.addEventListener('mouseleave', hideTip);
-            block.innerHTML = `<span class="topo-layer-label">L${i}</span>`;
-            layerDiv.appendChild(block);
-
-            if (i < tele.numLayers - 1) addArrow();
+            const inRow = document.createElement('div');
+            inRow.className = 'tsrow';
+            inRow.innerHTML = `<div class="ts-io" title="Token embeddings enter the stack">IN</div>`;
+            tsWrap.appendChild(inRow);
         }
 
-        addArrow();
-        addNode('OUT', '<b>Output</b><br>Logits projected to vocab (32000 tokens).<br>Next-token prediction via cross-entropy loss.');
+        // Update each layer row in-place — transitions play automatically
+        tsWrap.querySelectorAll('.tsrow[data-layer]').forEach((row, i) => {
+            const s   = tele.layerSparsity[i] || 0;
+            const col = sparsityColor(s);
+            const pct = (s * 100).toFixed(0);
+            const node = row.querySelector('.ts-node');
+            node.style.borderColor = col;
+            node.style.opacity = (0.4 + s * 0.6).toFixed(2);
+            const fill = row.querySelector('.ts-sbar-fill');
+            fill.style.width      = pct + '%';
+            fill.style.background = col;
+            row.querySelector('.ts-pct').textContent = pct + '%';
+            row.onmouseenter = ev => showTip(ev,
+                `<b>Layer ${i}</b><br>` +
+                `Sparsity: <b>${pct}%</b> near-zero weights<br>` +
+                `Color = @sparseskip efficiency · deeper layers sparser.`);
+        });
 
         // ── Panel B: Expert heatmap ────────────────────────────────────
-        // Uses routing dominance (how often each expert had the highest gate weight
-        // in the recent ROUTE window) rather than weight magnitude — weight magnitude
-        // converges to all-100% after any significant training and is useless for display.
+        // Routing dominance: how often each expert was top-gated in recent ROUTE window.
         const expDiv = document.getElementById('expert-viz');
-        expDiv.innerHTML = '';
         const numE = tele.expertActivity.length;
         let expertActivities = tele.expertActivity;
         let actLabel = 'Weight mag.';
@@ -1666,7 +1811,7 @@
             const dominance = new Array(numE).fill(0);
             for (const entry of routingHistory) {
                 if (!entry.weights || entry.weights.length === 0) continue;
-                const maxW = Math.max(...entry.weights);
+                const maxW  = Math.max(...entry.weights);
                 const domIdx = entry.weights.indexOf(maxW);
                 if (domIdx >= 0 && domIdx < numE) dominance[domIdx]++;
             }
@@ -1674,48 +1819,37 @@
             expertActivities = dominance.map(d => d / maxDom);
             actLabel = 'Route dom.';
         }
-        for (let e = 0; e < numE; e++) {
-            const act = expertActivities[e];
-            const cell = document.createElement('div');
-            cell.className = 'expert-cell';
-            cell.style.background = expertColor(act);
-            const eName = EXPERT_NAMES[e] || `E${e}`;
+
+        // Build cell scaffold once; update backgrounds + percentages in-place
+        const expWaiting = document.getElementById('expert-waiting');
+        if (expWaiting) expWaiting.remove();
+        if (expDiv.querySelectorAll('.expert-cell').length !== numE) {
+            expDiv.innerHTML = '';
+            for (let e = 0; e < numE; e++) {
+                const cell = document.createElement('div');
+                cell.className = 'expert-cell';
+                cell.dataset.expert = e;
+                const eName = EXPERT_NAMES[e] || `E${e}`;
+                cell.innerHTML =
+                    `<span class="expert-label">${eName}</span>` +
+                    `<span class="expert-act">—%</span>`;
+                cell.addEventListener('mouseleave', hideTip);
+                expDiv.appendChild(cell);
+            }
+        }
+
+        expDiv.querySelectorAll('.expert-cell').forEach((cell, e) => {
+            const act    = expertActivities[e];
+            const eName  = EXPERT_NAMES[e] || `E${e}`;
             const pctStr = (act * 100).toFixed(0);
-            cell.innerHTML =
-                `<span class="expert-label">${eName}</span>` +
-                `<span class="expert-act">${pctStr}%</span>`;
-            cell.addEventListener('mouseenter', ev => showTip(ev,
+            cell.style.background = expertColor(act);
+            cell.querySelector('.expert-act').textContent = pctStr + '%';
+            cell.onmouseenter = ev => showTip(ev,
                 `<b>E${e} · ${eName}</b><br>` +
                 `<span style="color:#64748b;font-size:10px">${EXPERT_DESC[e] || ''}</span><br><br>` +
                 `${EXPERT_HUMAN[e] || ''}<br><br>` +
-                `${actLabel}: <b>${pctStr}%</b> (relative to most-dominant expert in window)`));
-            cell.addEventListener('mouseleave', hideTip);
-            expDiv.appendChild(cell);
-        }
-
-        // ── Panel C: Per-layer sparsity bars ───────────────────────────
-        const spDiv = document.getElementById('sparsity-viz');
-        spDiv.innerHTML = '';
-        for (let i = 0; i < tele.numLayers; i++) {
-            const s = tele.layerSparsity[i] || 0;
-            const col = sparsityColor(s);
-            const pct = (s * 100).toFixed(0);
-            const row = document.createElement('div');
-            row.className = 'sbar-row';
-            row.innerHTML =
-                `<span class="sbar-label">L${i}</span>` +
-                `<div class="sbar-track">` +
-                  `<div class="sbar-fill" style="width:${pct}%; background:${col};"></div>` +
-                `</div>` +
-                `<span class="sbar-val">${pct}%</span>`;
-            row.addEventListener('mouseenter', ev => showTip(ev,
-                `<b>Layer ${i} — Weight Sparsity</b><br>` +
-                `<b>${pct}%</b> of ternary weights are near-zero (|w| < threshold).<br>` +
-                `Higher sparsity → more @sparseskip savings at inference.<br>` +
-                `Deep layers are expected to be sparser than early layers.`));
-            row.addEventListener('mouseleave', hideTip);
-            spDiv.appendChild(row);
-        }
+                `${actLabel}: <b>${pctStr}%</b> (relative to most-dominant expert in window)`);
+        });
     }
 
     // ── Panel D: Expert Routing Heatmap ───────────────────────────────
