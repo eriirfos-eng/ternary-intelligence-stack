@@ -76,6 +76,7 @@
 \vspace{-0.5em}
 \begin{center}
 \renewcommand{\arraystretch}{1.4}
+\resizebox{\linewidth}{!}{%
 \small
 \begin{tabular}{ccccc}
   \textbf{Simeon Kepp}
@@ -91,20 +92,20 @@
   \href{https://www.linkedin.com/in/simeon-kepp/}{\texttt{LinkedIn}}
     & \href{https://www.linkedin.com/in/zabih-karimi-3292ab349/}{\texttt{LinkedIn}}
     & \href{https://www.linkedin.com/in/csonikoletta/}{\texttt{LinkedIn}}
-    & \href{https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/}{\texttt{LinkedIn}}
+    & \href{https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/}{\texttt{LinkedIn}}%
     & \href{https://www.linkedin.com/in/louis-ehrig-317941335/}{\texttt{LinkedIn}} \\
   \href{mailto:s.kepp@ternlang.com}{\texttt{s.kepp@ternlang.com}}
     & \href{mailto:z.karimi@ternlang.com}{\texttt{z.karimi@ternlang.com}}
     & \href{mailto:csonikoletta@ternlang.com}{\texttt{csonikoletta@ternlang.com}}
     & \href{mailto:l.scharler@ternlang.com}{\texttt{l.scharler@ternlang.com}}
     & \href{mailto:l.ehrig@ternlang.com}{\texttt{l.ehrig@ternlang.com}} \\
-\end{tabular}
+\end{tabular}}
 
 \smallskip
 \footnotesize
 \textbf{RFI-IRFOS} — Research Focus Institute, Interdisciplinary Research Facility for Open Sciences\\
 Elisabethinergasse~25, 8020~Graz, Austria \quad ZVR:~1015608684 \quad Patent Pending A50296/2026\\
-Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}
+Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}~\cite{tis2026repo}
 \end{center}
 \vspace{0.5em}
 
@@ -147,7 +148,7 @@ at 280+ epochs of pure cross-entropy training. At Global Epoch 350+,
 Albert achieves a perplexity of 1{,}152 and 83~tokens/second sustained
 decode on x86 CPU---\emph{without GPU, INT8 kernels, or framework
 acceleration}---via the \texttt{@sparseskip} expert routing primitive
-(Patent Pending A50296/2026; 4.58$\times$ speedup at 75\% sparsity).
+(Patent Pending A50296/2026; 4.58$\times$ speedup at 75\% sparsity)~\cite{tis2026moetest}.
 
 The \textbf{MoE-13 v2.0 Orchestrator} scales to 1~Router and 12~Domain
 Experts with Top-3 Sparse Routing and Asymmetric Safety Logic. The
@@ -862,7 +863,7 @@ surgery during the transient elevation that always follows a Net2Net expansion.
 \label{subsec:net2net}
 
 When $\mathcal{E}$ fires the \texttt{surgery} action, a new layer is injected
-via a \textbf{Function-Preserving Transform}:
+via a \textbf{Function-Preserving Transform}~\cite{tis2026trainbible}:
 
 \begin{theorem}[Net2Net Safe Copy, Chen et al.]
 For a transformer with $n$ layers $\{W^{(1)},\ldots,W^{(n)}\}$,
@@ -889,7 +890,7 @@ preventing the new layer from specialising.
 
 Rather than injecting independent Gaussian noise---which is structureless and
 produces statistically identical perturbations at every depth---Albert employs
-a \textbf{Mandelbrot-parameterised symmetry break}. The method exploits two
+a \textbf{Mandelbrot-parameterised symmetry break}~\cite{tis2026trainbible}. The method exploits two
 properties of the Mandelbrot set that are not available from Gaussian noise:
 
 \begin{enumerate}
@@ -962,7 +963,7 @@ zero---not masked, not zeroed-out, but \emph{not executed}. At this 75\%
 expert sparsity rate, \texttt{@sparseskip} delivers a \textbf{4.58$\times$
 speedup} over dense execution, measured on x86 CPU (ThinkPad-class laptop,
 8~threads, no GPU) across 2{,}000 timed iterations with dense/sparse output
-agreement verified at $10^{-4}$ tolerance.
+agreement verified at $10^{-4}$ tolerance~\cite{tis2026moetest}.
 
 \textbf{@sparseskip Execution Model.}
 The distinction between \texttt{@sparseskip} and conventional expert masking
@@ -1017,7 +1018,7 @@ ${\sim}0.0001$, and no further loss improvement was possible under the
 cross-entropy objective alone.
 
 \textbf{Auxiliary Load-Balancing Loss.}
-Following \citet{fedus2022switch}, an auxiliary load-balancing term is added
+Following \cite{fedus2022switch}, an auxiliary load-balancing term is added
 to the training objective:
 
 \begin{equation}

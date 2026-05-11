@@ -612,9 +612,11 @@
             <button id="smaDropBtn" title="Toggle chart overlays">~ CURVES ▾</button>
             <div class="dd-panel" id="smaDrop">
                 <label class="dd-item"><input type="checkbox" id="cbDots" checked> · Raw Dots</label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA20" checked> ~ SMA-20 <small>short</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA30" checked> ~ SMA-30 <small>mid</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA150" checked> ~ SMA-150 <small>long</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA21" checked> ~ SMA-21 <small>F8 short</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA55"> ~ SMA-55 <small>F10 mid</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA144" checked> ~ SMA-144 <small>F12 long</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA377"> ~ SMA-377 <small>F14 macro</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbSMA610"> ~ SMA-610 <small>F15 cycle</small></label>
                 <div class="dd-sep"></div>
                 <label class="dd-item"><input type="checkbox" id="cbTMA"> ≡ TMA <small>ternary</small></label>
             </div>
@@ -1044,7 +1046,7 @@
                 },
                 {
                     type: 'line',
-                    label: 'SMA-20',
+                    label: 'SMA-21',
                     data: [],
                     borderColor: '#ffd700',
                     borderWidth: 1,
@@ -1056,7 +1058,7 @@
                 },
                 {
                     type: 'line',
-                    label: 'SMA-30',
+                    label: 'SMA-55',
                     data: [],
                     borderColor: '#f59e0b',
                     borderWidth: 1.5,
@@ -1065,10 +1067,11 @@
                     tension: 0.4,
                     order: 1,
                     animation: false,
+                    hidden: true,
                 },
                 {
                     type: 'line',
-                    label: 'SMA-150',
+                    label: 'SMA-144',
                     data: [],
                     borderColor: '#8899ff',
                     borderWidth: 2,
@@ -1077,6 +1080,32 @@
                     tension: 0.3,
                     order: 1,
                     animation: false,
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-377',
+                    data: [],
+                    borderColor: '#a78bfa',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.2,
+                    order: 1,
+                    animation: false,
+                    hidden: true,
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-610',
+                    data: [],
+                    borderColor: '#7c3aed',
+                    borderWidth: 2.5,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.1,
+                    order: 1,
+                    animation: false,
+                    hidden: true,
                 },
                 {
                     type: 'line',
@@ -1503,10 +1532,12 @@
             chart.data.datasets[0].data = merged;   // replace reference, not mutate
             totalPts += newPts.length;
 
-            chart.data.datasets[1].data = sma(merged, 20);
-            chart.data.datasets[2].data = sma(merged, 30);
-            chart.data.datasets[3].data = sma(merged, 150);
-            chart.data.datasets[4].data = tma(merged, 30);
+            chart.data.datasets[1].data = sma(merged, 21);
+            chart.data.datasets[2].data = sma(merged, 55);
+            chart.data.datasets[3].data = sma(merged, 144);
+            chart.data.datasets[4].data = sma(merged, 377);
+            chart.data.datasets[5].data = sma(merged, 610);
+            chart.data.datasets[6].data = tma(merged, 30);
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
             for (const line of lines) {
@@ -1562,7 +1593,7 @@
     // ── Controls ───────────────────────────────────────────────────────
     // ── Curves dropdown ──────────────────────────────────────────────
     function updateSmaBtnLabel() {
-        const total = ['cbDots','cbSMA20','cbSMA30','cbSMA150','cbTMA']
+        const total = ['cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610','cbTMA']
             .filter(id => document.getElementById(id).checked).length;
         document.getElementById('smaDropBtn').textContent = `~ CURVES (${total}) ▾`;
     }
@@ -1578,12 +1609,14 @@
     });
     document.getElementById('smaDrop').addEventListener('click', e => e.stopPropagation());
     document.getElementById('cbDots').addEventListener('change',   function() { toggleDataset(0, this.checked); });
-    document.getElementById('cbSMA20').addEventListener('change',  function() { toggleDataset(1, this.checked); });
-    document.getElementById('cbSMA30').addEventListener('change',  function() { toggleDataset(2, this.checked); });
-    document.getElementById('cbSMA150').addEventListener('change', function() { toggleDataset(3, this.checked); });
-    document.getElementById('cbTMA').addEventListener('change',    function() { toggleDataset(4, this.checked); });
+    document.getElementById('cbSMA21').addEventListener('change',  function() { toggleDataset(1, this.checked); });
+    document.getElementById('cbSMA55').addEventListener('change',  function() { toggleDataset(2, this.checked); });
+    document.getElementById('cbSMA144').addEventListener('change', function() { toggleDataset(3, this.checked); });
+    document.getElementById('cbSMA377').addEventListener('change', function() { toggleDataset(4, this.checked); });
+    document.getElementById('cbSMA610').addEventListener('change', function() { toggleDataset(5, this.checked); });
+    document.getElementById('cbTMA').addEventListener('change',    function() { toggleDataset(6, this.checked); });
     // TMA starts hidden
-    chart.data.datasets[4].hidden = true;
+    chart.data.datasets[6].hidden = true;
     updateSmaBtnLabel();
 
     document.getElementById('resetBtn').addEventListener('click', () => {
