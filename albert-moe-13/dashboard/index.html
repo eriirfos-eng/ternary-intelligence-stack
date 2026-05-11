@@ -156,71 +156,35 @@
 
         /* ── Neural Viz ──────────────────────────────────────────── */
         #neural-wrap {
-            border-top: 1px solid var(--border);
+            border-top: none;
             display: flex;
             gap: 0;
             flex-shrink: 0;
             height: 210px;
             overflow: hidden;
-            background: var(--bg1);
-            border-radius: 0 0 12px 12px;
+            background: var(--bg);
+            padding: 5px;
+            border-radius: 0 0 14px 14px;
         }
         .nv-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 4px 8px;
+            padding: 6px 8px;
             min-width: 0;
             overflow: hidden;
+            background: var(--bg1);
+            border: 1px solid var(--border);
+            border-radius: 10px;
         }
         /* ── Panel horizontal resize handles ─────────────────────── */
         .panel-resize-handle {
-            width: 5px;
+            width: 4px;
             flex-shrink: 0;
             cursor: ew-resize;
             background: transparent;
-            border-left: none;
             position: relative;
-            transition: opacity 0.15s;
         }
-        /* Gradient fade line — fades to transparent at top and bottom edges */
-        .panel-resize-handle::before {
-            content: '';
-            position: absolute;
-            top: 0; bottom: 0; left: 2px;
-            width: 1px;
-            background: linear-gradient(
-                to bottom,
-                transparent 0%,
-                var(--border) 18%,
-                var(--border) 82%,
-                transparent 100%
-            );
-            transition: background 0.2s;
-            pointer-events: none;
-        }
-        .panel-resize-handle:hover::before,
-        .panel-resize-handle.h-dragging::before {
-            background: linear-gradient(
-                to bottom,
-                transparent 0%,
-                var(--accent) 18%,
-                var(--accent) 82%,
-                transparent 100%
-            );
-        }
-        .panel-resize-handle::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 1px;
-            transform: translateY(-50%);
-            width: 2px; height: 28px;
-            background: var(--bg3);
-            border-radius: 4px;
-            transition: background 0.15s;
-        }
-        .panel-resize-handle:hover::after,
-        .panel-resize-handle.h-dragging::after { background: var(--accent); }
         .nv-label {
             font-size: 10px;
             color: var(--muted);
