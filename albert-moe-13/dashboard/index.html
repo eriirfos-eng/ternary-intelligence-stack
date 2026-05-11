@@ -536,11 +536,13 @@
             flex-shrink: 0; cursor: default;
             border: 1px solid transparent;
         }
-        .ev-pill.info { background: rgba(34,211,238,0.08); border-color: rgba(34,211,238,0.25); color: var(--cyan); }
-        .ev-pill.warn { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.30); color: var(--amber); }
-        .ev-pill.crit { background: rgba(239,68,68,0.08);  border-color: rgba(239,68,68,0.30);  color: var(--red); }
-        .ev-pill.good { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.30); color: var(--green); }
-        .ev-pill.gold { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); color: #ffd700; }
+        .ev-pill.info   { background: rgba(34,211,238,0.08);  border-color: rgba(34,211,238,0.25);  color: var(--cyan); }
+        .ev-pill.warn   { background: rgba(245,158,11,0.08);  border-color: rgba(245,158,11,0.30);  color: var(--amber); }
+        .ev-pill.crit   { background: rgba(239,68,68,0.10);   border-color: rgba(239,68,68,0.40);   color: var(--red); }
+        .ev-pill.error  { background: rgba(239,68,68,0.10);   border-color: rgba(239,68,68,0.40);   color: var(--red); }
+        .ev-pill.good   { background: rgba(16,185,129,0.10);  border-color: rgba(16,185,129,0.35);  color: var(--green); }
+        .ev-pill.gold   { background: rgba(255,215,0,0.08);   border-color: rgba(255,215,0,0.35);   color: #ffd700; }
+        .ev-pill.purple { background: rgba(167,139,250,0.10); border-color: rgba(167,139,250,0.35); color: #a78bfa; }
         .ev-pill.focused { outline: 1px solid currentColor; opacity: 1 !important; cursor: pointer; }
         .ev-pill.newpill { animation: evpulse 1.8s ease-out; }
         @keyframes evpulse {
@@ -926,7 +928,7 @@
     }
 
     // ── Anomaly annotation plugin ─────────────────────────────────────
-    const SEVERITY_COLOR = { info: '#22d3ee', warn: '#f59e0b', crit: '#ef4444', gold: '#ffd700', good: '#10b981' };
+    const SEVERITY_COLOR = { info: '#22d3ee', warn: '#f59e0b', crit: '#ef4444', error: '#ef4444', gold: '#ffd700', good: '#10b981', purple: '#a78bfa' };
     let focusedEvent = null;
 
     const annotationPlugin = {
@@ -1404,7 +1406,7 @@
                     // BALANCED: entropy ≥ 2.40 (96.6% of max) — experts sharing load evenly
                     if (pendingEntropy >= 2.40 && enStep - lastBalancedStep > 200) {
                         lastBalancedStep = enStep;
-                        addEvent('balanced', `BALANCED H=${pendingEntropy.toFixed(3)}`, 'warn',
+                        addEvent('balanced', `BALANCED H=${pendingEntropy.toFixed(3)}`, 'purple',
                             `Router entropy <b>${pendingEntropy.toFixed(4)}</b> nats · max = ln(12) ≈ 2.485.<br>` +
                             `Router entropy H=${pendingEntropy.toFixed(3)} nats — experts receiving near-equal routing weight. ` +
                                 `This is the Nash equilibrium in <i>routing probability space</i> (distinct from TTL trit states). ` +
@@ -1473,12 +1475,12 @@
                     continue;
                 }
                 if (line.includes('[evolution]') && line.toLowerCase().includes('mastery')) {
-                    addEvent('mastery', 'Mastery!', 'gold',
+                    addEvent('mastery', 'Mastery!', 'good',
                         'Loss crossed mastery threshold (< 4.5). Architecture expansion imminent.');
                     continue;
                 }
                 if (line.includes('Rollback') && line.includes('checkpoint')) {
-                    addEvent('rollback', 'Rollback!', 'warn',
+                    addEvent('rollback', 'Rollback!', 'crit',
                         'Collapse detected — rolling back to best checkpoint. Loss exceeded 8.5 for 2 consecutive epochs.');
                     continue;
                 }
