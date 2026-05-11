@@ -750,6 +750,9 @@
         mastery:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4 10h4M6 8v2"/><path d="M3 1h6v3.5A3 3 0 016 7.5 3 3 0 013 4.5V1z"/><path d="M3 2.5H1.5v1.5A2 2 0 003 6"/><path d="M9 2.5h1.5v1.5A2 2 0 019 6"/></svg>`,
         rollback: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4.5 2L1.5 5l3 3"/><path d="M1.5 5H8a2.5 2.5 0 010 5H5.5"/></svg>`,
         balanced: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M6 2v8"/><path d="M3 10h6"/><path d="M2 5l4-2 4 2"/><path d="M2 5c0 1.1.9 2 2 2s2-.9 2-2"/><path d="M6 5c0 1.1.9 2 2 2s2-.9 2-2"/></svg>`,
+        ttl_nash:   `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="#f59e0b" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
+        ttl_green:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="#22c55e" stroke="none"/></svg>`,
+        ttl_stress: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="#ef4444" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
     };
 
     const POLL_MS            = 1500;  // ~2s/batch at 256H — one poll per batch
@@ -788,6 +791,9 @@
     let lastDomExpert = -1;
     let lastClipTs      = 0;
     let lastBalancedStep = -999;  // step at which last BALANCED event fired
+    let lastNashStep     = -999;  // TTL all-orange (Nash equilibrium) across all layers
+    let lastTtlGreenStep = -999;  // TTL surge-green (≥25% experts Green across all layers)
+    let lastTtlStressStep= -999;  // TTL surge-red   (≥25% experts Red   across all layers)
     let bestEpochAvg  = Infinity;
     let spikeFiredEp  = -1;
 
@@ -1400,7 +1406,9 @@
                         lastBalancedStep = enStep;
                         addEvent('balanced', `BALANCED H=${pendingEntropy.toFixed(3)}`, 'warn',
                             `Router entropy <b>${pendingEntropy.toFixed(4)}</b> nats · max = ln(12) ≈ 2.485.<br>` +
-                            `All 12 experts are receiving near-equal routing weight — load is balanced.`);
+                            `Router entropy H=${pendingEntropy.toFixed(3)} nats — experts receiving near-equal routing weight. ` +
+                                `This is the Nash equilibrium in <i>routing probability space</i> (distinct from TTL trit states). ` +
+                                `Anti-stagnation burst fires if this holds for 100+ steps.`);
                     }
                     continue;
                 }
@@ -1419,6 +1427,36 @@
                         tlightHistory.push({ step: tlStep, layers });
                         if (tlightHistory.length > TLIGHT_WIN) tlightHistory.shift();
                         renderTlight(layers, tlStep);
+
+                        // TTL aggregate anomaly events — sum G/O/R across all layers
+                        const totalExperts = layers.length * 12;
+                        const totalG = layers.reduce((s, l) => s + l.g, 0);
+                        const totalO = layers.reduce((s, l) => s + l.o, 0);
+                        const totalR = layers.reduce((s, l) => s + l.r, 0);
+                        const pctG = (totalG / totalExperts * 100).toFixed(0);
+                        const pctR = (totalR / totalExperts * 100).toFixed(0);
+
+                        // Nash equilibrium: every expert in every layer is Orange
+                        if (totalG === 0 && totalR === 0 && tlStep - lastNashStep > 200) {
+                            lastNashStep = tlStep;
+                            addEvent('ttl_nash', `TTL-NASH all-O`, 'warn',
+                                `All ${layers.length} layers are G0/O12/R0 — routing Nash equilibrium. ` +
+                                `Every expert on-target. Anti-stagnation burst will fire if this holds for 100+ steps.`);
+                        }
+                        // Surge green: ≥25% of all experts underloaded
+                        if (totalG / totalExperts >= 0.25 && tlStep - lastTtlGreenStep > 200) {
+                            lastTtlGreenStep = tlStep;
+                            addEvent('ttl_green', `TTL-GREEN ${pctG}%`, 'info',
+                                `${pctG}% of experts across all layers are Green (underloaded). ` +
+                                `Model is widely underutilising capacity — unusual routing state.`);
+                        }
+                        // Surge red: ≥25% of all experts suppressed
+                        if (totalR / totalExperts >= 0.25 && tlStep - lastTtlStressStep > 200) {
+                            lastTtlStressStep = tlStep;
+                            addEvent('ttl_stress', `TTL-STRESS ${pctR}%`, 'error',
+                                `${pctR}% of experts across all layers are Red (suppressed). ` +
+                                `Widespread routing overload — load-balancing may be struggling.`);
+                        }
                     }
                     continue;
                 }
