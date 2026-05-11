@@ -1051,6 +1051,7 @@ fn main() -> Result<()> {
         .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
         .and_then(|v| v["num_layers"].as_u64())
         .unwrap_or(3) as usize;
+    evolution_manager.calibrate(initial_layers);
     let mut mycelium = MyceliumModule::new(initial_layers, 12);
     let mut wald     = WaldModule::new();
 
@@ -1071,6 +1072,7 @@ fn main() -> Result<()> {
         )?;
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, best_path, &device)?;
+            evolution_manager.promote_fib_target();
             mycelium.on_layer_added();
             wald.on_surgery();
             // Log the MAND event so the dashboard can mark surgery epochs visually.

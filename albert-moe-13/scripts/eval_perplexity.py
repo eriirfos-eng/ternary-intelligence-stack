@@ -34,7 +34,7 @@ import random
 from datetime import datetime, timezone
 
 CORPUS_PATH   = "data/corpus/stage_3/bible.txt"
-VOCAB_PATH    = "data/vocab.json"
+VOCAB_PATH    = "data/vocab_v3.json"
 ALBERT_TEST   = "target/release/moe-test"   # relative to albert-moe-13/ (after os.chdir)
 EVAL_OUT      = "eval_results.json"
 TEST_FRACTION  = 0.05   # hold out 5% of tokens
