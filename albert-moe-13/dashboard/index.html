@@ -1247,17 +1247,21 @@
                 // GRAD line — per-layer gradient norms
                 const gm = line.match(/^GRAD step=(\d+) n=([\d.]+) L=([\d.,]+)/);
                 if (gm) {
-                    latestGrad = {
-                        norm:       parseFloat(gm[2]),
-                        layerNorms: gm[3].split(',').map(Number),
-                    };
-                    renderGradBars();
-                    if (latestGrad.norm > 1.0) {
-                        const now = Date.now();
-                        if (now - lastClipTs > 30000) {
-                            lastClipTs = now;
-                            addEvent('clip', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
-                                `Gradient clipped — global norm was <b>${latestGrad.norm.toFixed(4)}</b>, clamped to 1.0.<br>Optimizer step damped. Model making large weight updates.`);
+                    const gmNorm  = parseFloat(gm[2]);
+                    const gmLayers = gm[3].split(',').map(Number);
+                    // Skip non-step placeholder zeros (grad accum N=4: batches 0-2 write
+                    // n=0.0000 L=0,0,... — hold the last real value until next step fires).
+                    const isPlaceholder = gmNorm === 0 && gmLayers.every(v => v === 0);
+                    if (!isPlaceholder) {
+                        latestGrad = { norm: gmNorm, layerNorms: gmLayers };
+                        renderGradBars();
+                        if (latestGrad.norm > 1.0) {
+                            const now = Date.now();
+                            if (now - lastClipTs > 30000) {
+                                lastClipTs = now;
+                                addEvent('clip', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
+                                    `Gradient clipped — global norm was <b>${latestGrad.norm.toFixed(4)}</b>, clamped to 1.0.<br>Optimizer step damped. Model making large weight updates.`);
+                            }
                         }
                     }
                     continue;
@@ -1790,34 +1794,48 @@
 
     function renderGradBars() {
         if (!latestGrad) return;
-        const wrap = document.getElementById('grad-viz');
+        const wrap    = document.getElementById('grad-viz');
         const waiting = document.getElementById('grad-waiting');
         if (waiting) waiting.remove();
-        wrap.innerHTML = '';
 
         const { norm, layerNorms } = latestGrad;
         const maxN = Math.max(...layerNorms, 1e-9);
 
-        for (let i = 0; i < layerNorms.length; i++) {
-            const n = layerNorms[i];
+        // Build row scaffolding once (or when layer count changes).
+        // Never rebuild on every update — doing so destroys the DOM elements
+        // before their CSS transition can play. Widths must be mutated in-place
+        // for the `transition: width 0.4s ease` on .gbar-fill to fire.
+        const existing = wrap.querySelectorAll('.gbar-row');
+        if (existing.length !== layerNorms.length) {
+            wrap.innerHTML = '';
+            for (let i = 0; i < layerNorms.length; i++) {
+                const row = document.createElement('div');
+                row.className = 'gbar-row';
+                row.innerHTML =
+                    `<span class="gbar-label">L${i}</span>` +
+                    `<div class="gbar-track">` +
+                      `<div class="gbar-fill" style="width:0%;"></div>` +
+                    `</div>` +
+                    `<span class="gbar-val">—</span>`;
+                row.addEventListener('mouseleave', hideTip);
+                wrap.appendChild(row);
+            }
+        }
+
+        // Update widths, colors, and values in-place — transition plays automatically.
+        wrap.querySelectorAll('.gbar-row').forEach((row, i) => {
+            const n   = layerNorms[i];
             const pct = Math.min(100, (n / maxN) * 100).toFixed(1);
             const col = gradColor(n, maxN);
-            const row = document.createElement('div');
-            row.className = 'gbar-row';
-            row.innerHTML =
-                `<span class="gbar-label">L${i}</span>` +
-                `<div class="gbar-track">` +
-                  `<div class="gbar-fill" style="width:${pct}%; background:${col};"></div>` +
-                `</div>` +
-                `<span class="gbar-val">${n.toFixed(6)}</span>`;
-            row.addEventListener('mouseenter', ev => showTip(ev,
+            row.querySelector('.gbar-fill').style.width      = pct + '%';
+            row.querySelector('.gbar-fill').style.background = col;
+            row.querySelector('.gbar-val').textContent       = n.toFixed(6);
+            row.onmouseenter = ev => showTip(ev,
                 `<b>Layer ${i} — Gradient Norm</b><br>` +
                 `∥∇L∥ = <b>${n.toFixed(6)}</b><br>` +
-                `Bar = fraction of the highest-norm layer this batch.<br>` +
-                `Very low values across all layers may indicate vanishing gradients.`));
-            row.addEventListener('mouseleave', hideTip);
-            wrap.appendChild(row);
-        }
+                `Bar = fraction of highest-norm layer this step.<br>` +
+                `Very low values may indicate vanishing gradients.`);
+        });
 
         const globalEl = document.getElementById('grad-norm-global');
         const clipped  = norm > 1.0;
