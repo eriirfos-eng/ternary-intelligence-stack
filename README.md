@@ -58,7 +58,7 @@ ternlang run my_program.tern   # explicit form
 
 **albert.** is a ternary Mixture-of-Experts language model trained natively from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus, guided by the Mandelbrot complexity monitor. The engineering repo label is `albert-moe-13`.
 
-**Current state (2026-05-11):** 12L · 256H · 12E · Top-3 routing · 128CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · ~58M params · training on CPU · v3.0 Global Epoch 46+ · loss descending through vocabulary transfer plateau.
+**Current state (2026-05-11):** 12L · 256H · 12E · Top-3 routing · 128CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · ~58M params · training on CPU · v3.0 Global Epoch 52+ · loss descending through vocabulary transfer plateau (current: ~10.35).
 
 A live training dashboard streams telemetry in real time at `localhost:8888` during training runs — layer topology, expert routing, gradient norms, TTL state, and loss curve with Fibonacci retracement overlays.
 
@@ -95,6 +95,21 @@ curl -s https://ternlang-api.fly.dev/api/moe/orchestrate \
 - Training runs on a single CPU (HP ZBook, no GPU). A proper GPU cluster would run 10–50× faster.
 - Held-out perplexity vs float32 baseline: `cargo run --release -p moe-llm-core --bin moe-test -- --bench`
 - The CUDA backend (`cuda_matmul.rs`) is a design sketch at TRL 3, not yet a running kernel.
+
+### Core Algorithm Files (direct links)
+
+All core training and inference primitives are open-source under LGPL-3.0 and live inside the `albert-moe-13/moe-llm-core` Cargo workspace member:
+
+| File | What it implements |
+|------|--------------------|
+| [`albert-moe-13/moe-llm-core/src/model/ste.rs`](albert-moe-13/moe-llm-core/src/model/ste.rs) | Straight-Through Estimator — keeps weights ternary during backprop |
+| [`albert-moe-13/moe-llm-core/src/model/ternary_linear.rs`](albert-moe-13/moe-llm-core/src/model/ternary_linear.rs) | Ternary linear layer with `forward_sparse()` — element-level @sparseskip |
+| [`albert-moe-13/moe-llm-core/src/model/moe.rs`](albert-moe-13/moe-llm-core/src/model/moe.rs) | MoE router + Top-K dispatch — routing-level @sparseskip (75% skip) |
+| [`albert-moe-13/moe-llm-core/src/model/transformer.rs`](albert-moe-13/moe-llm-core/src/model/transformer.rs) | Full transformer stack, attention, decode loop |
+| [`albert-moe-13/moe-llm-core/src/model/evolution.rs`](albert-moe-13/moe-llm-core/src/model/evolution.rs) | EvolutionManager — Mandelbrot plateau detection + Net2Net surgery |
+| [`albert-moe-13/moe-llm-core/src/bin/train_bible.rs`](albert-moe-13/moe-llm-core/src/bin/train_bible.rs) | Full training loop: STE backward, cosine LR, EvolutionManager integration |
+
+> These files form the complete ternary training stack. The `@sparseskip` primitive (Patent A50296/2026) spans `ternary_linear.rs` (weight-level) and `moe.rs` (routing-level).
 
 ---
 
