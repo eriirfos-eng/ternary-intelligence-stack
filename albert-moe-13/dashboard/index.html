@@ -766,13 +766,18 @@
     let bestLoss         = Infinity;
     let worstLoss        = -Infinity;
 
-    const ROUTE_WINDOW   = 60;   // columns in the routing heatmap
-    let routingHistory   = [];   // [{step, weights:[...]}]
+    const ROUTE_WINDOW   = 60;
+    // Pre-filled with empty entries so the grid scaffolds at full width on load.
+    // Real data slides in from the right as it arrives; placeholders render dark.
+    let routingHistory   = Array.from({length: ROUTE_WINDOW}, () => ({ step: null, weights: Array(12).fill(0) }));
     let latestGrad       = null; // {norm, layerNorms:[...]}
     let pendingEntropy   = null; // most recent ENTR avg — snapshotted per batch record
     let pendingTlight    = null; // most recent TLIGHT snapshot [{g,o,r,states}] per layer
     const TLIGHT_WIN     = 60;
-    let tlightHistory    = []; // [{step, layers:[{layer,states,g,o,r}]}]
+    let tlightHistory    = Array.from({length: TLIGHT_WIN}, () => ({
+        step: null,
+        layers: Array.from({length: 12}, (_, i) => ({ layer: i, states: 'OOOOOOOOOOOO', g: 0, o: 0, r: 0 }))
+    }));
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let totalPts         = 0;
@@ -1333,6 +1338,8 @@
             // Parse new lines
             const lines = text.split('\n');
             const newPts = [];
+            let _routingDirty = false;
+            let _tlightPendingLayers = null, _tlightPendingStep = null;
             for (const line of lines) {
                 // ARCH metadata line — update topbar only; session detection is epoch-based below
                 const am = line.match(/^ARCH\s+(\d+)L\s+(\d+)H\s+(\d+)E\s+(\d+)CTX\s+(\d+)V/);
@@ -1363,7 +1370,7 @@
                     const weights = rm[2].split(',').map(Number);
                     routingHistory.push({ step, weights });
                     if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
-                    renderRoutingHeatmap();
+                    _routingDirty = true;
                     // Expert activity updates on every ROUTE (not just TELE) so the
                     // heatmap reflects live routing dominance every 10 batches.
                     if (latestTele) renderExpertActivity(latestTele);
@@ -1428,7 +1435,8 @@
                         pendingTlight = layers;
                         tlightHistory.push({ step: tlStep, layers });
                         if (tlightHistory.length > TLIGHT_WIN) tlightHistory.shift();
-                        renderTlight(layers, tlStep);
+                        _tlightPendingLayers = layers;
+                        _tlightPendingStep   = tlStep;
 
                         // TTL aggregate anomaly events — sum G/O/R across all layers
                         const totalExperts = layers.length * 12;
@@ -1608,6 +1616,11 @@
                     });
                 }
             }
+
+            // Deferred renders — one call per poll regardless of how many lines arrived.
+            // Prevents progressive cell resize during initial log replay.
+            if (_routingDirty) renderRoutingHeatmap();
+            if (_tlightPendingLayers) renderTlight(_tlightPendingLayers, _tlightPendingStep);
 
             // Only the very last arriving point gets the drop animation.
             // Older points in the same poll batch are added silently (duration=0).
@@ -1946,8 +1959,9 @@
                     if (!entry) return;
                     const w    = entry.weights[e] || 0;
                     showTip(ev,
-                        `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}<br>` +
-                        `Step ${entry.step}: <b>${(w*100).toFixed(1)}%</b>`);
+                        entry.step === null
+                        ? `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>No data yet`
+                        : `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}<br>Step ${entry.step}: <b>${(w*100).toFixed(1)}%</b>`);
                 });
                 cells.addEventListener('mouseleave', hideTip);
                 row.appendChild(cells);
@@ -2080,13 +2094,16 @@
         const totO = layers.reduce((s, l) => s + l.o, 0);
         const totR = layers.reduce((s, l) => s + l.r, 0);
         const total = totG + totO + totR;
-        const inWarmup  = step !== undefined && step < 50;
-        const allOrange = totG === 0 && totR === 0;
+        const isPreload = step === null;
+        const inWarmup  = !isPreload && step !== undefined && step < 50;
+        const allOrange = !isPreload && totG === 0 && totR === 0;
 
         // Summary line
         const summary = document.createElement('div');
         summary.style.cssText = 'display:flex;gap:4px;margin-bottom:3px;align-items:center;flex-shrink:0;';
-        if (inWarmup) {
+        if (isPreload) {
+            summary.innerHTML = `<span style="color:#1e3a5f;font-size:10px;letter-spacing:1px">LOADING HISTORY</span>`;
+        } else if (inWarmup) {
             summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP · step ${step}/50</span>`;
         } else if (allOrange) {
             summary.innerHTML = `<span style="color:#f59e0b;font-size:10px;letter-spacing:1px">BALANCED · step ${step}</span>`;
@@ -2120,13 +2137,15 @@
                 const snap = tlightHistory[ti];
                 const layerSnap = snap.layers.find(l => l.layer === li);
                 if (!layerSnap) continue;
-                // Dominant state: any R → red, any G → green, else orange
-                const col = layerSnap.r > 0 ? '#ef4444' : layerSnap.g > 0 ? '#22c55e' : '#f59e0b';
+                // Dominant state: any R → red, any G → green, else orange; null-step = placeholder
+                const col = snap.step === null ? 'rgba(255,255,255,0.05)'
+                          : layerSnap.r > 0 ? '#ef4444' : layerSnap.g > 0 ? '#22c55e' : '#f59e0b';
                 const cell = document.createElement('div');
                 cell.style.cssText = `flex:1;min-width:3px;border-radius:3px;background:${col};opacity:0.85;cursor:default;`;
                 cell.addEventListener('mouseenter', ev => showTip(ev,
-                    `<b>L${li} · step ${snap.step}</b><br>` +
-                    `G ${layerSnap.g} · O ${layerSnap.o} · R ${layerSnap.r}`));
+                    snap.step === null
+                    ? `<b>L${li}</b><br>No data yet`
+                    : `<b>L${li} · step ${snap.step}</b><br>G ${layerSnap.g} · O ${layerSnap.o} · R ${layerSnap.r}`));
                 cell.addEventListener('mouseleave', hideTip);
                 cells.appendChild(cell);
             }
@@ -2374,6 +2393,13 @@
     });
 
     // ── Boot ──────────────────────────────────────────────────────────
+    // Pre-render placeholder grids at full width before the first poll fires.
+    // Both panels show 60 dark/dim columns immediately; real data fills in from the right.
+    renderRoutingHeatmap();
+    renderTlight(
+        Array.from({length: 12}, (_, i) => ({ layer: i, states: 'OOOOOOOOOOOO', g: 0, o: 0, r: 0 })),
+        null
+    );
     poll();
     setInterval(poll, POLL_MS);
 </script>

@@ -17,4 +17,5 @@ pub use moe::{
     clear_entropy_capture, take_entropy_capture,
     clear_lb_capture, take_lb_capture,
     clear_tlight_capture, take_tlight_capture,
+    enter_eval_mode,
 };

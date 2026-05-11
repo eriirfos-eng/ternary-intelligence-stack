@@ -20,12 +20,16 @@ thread_local! {
     // Traffic light telemetry: accumulated (green, orange, red, state_string) per step.
     // Each MoeBlock appends its layer's counts; train_bible drains once per batch.
     static TLIGHT_ACC:  RefCell<Vec<(usize, usize, usize, String)>> = RefCell::new(Vec::new());
+    // Training mode flag: Gumbel noise is injected during training only.
+    // prepare_inference() sets this to false so eval_perplexity gets clean deterministic routing.
+    static TRAIN_MODE: RefCell<bool> = RefCell::new(true);
 }
 
 pub fn clear_routing_capture() { ROUTING_ACC.with(|r| r.borrow_mut().clear()); }
 pub fn clear_entropy_capture() { ENTROPY_ACC.with(|e| *e.borrow_mut() = None); }
 pub fn clear_lb_capture()      { LB_ACC.with(|lb| *lb.borrow_mut() = None); }
 pub fn clear_tlight_capture()  { TLIGHT_ACC.with(|t| t.borrow_mut().clear()); }
+pub fn enter_eval_mode()       { TRAIN_MODE.with(|m| *m.borrow_mut() = false); }
 
 pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
     ROUTING_ACC.with(|r| {
@@ -53,6 +57,12 @@ pub fn take_tlight_capture() -> Vec<(usize, usize, usize, String)> {
 // Router temperature < 1.0 sharpens the gate softmax, amplifying small logit differences.
 const ROUTER_TEMP: f64 = 0.7;
 
+// Gumbel noise scale for training-time routing exploration.
+// Additive noise of O(1) regardless of logit magnitude — the ±2% multiplicative
+// noise it replaces was a no-op when logits ≈ 0 (Universal Nash state).
+// Disabled in eval mode via TRAIN_MODE flag.
+const GUMBEL_NOISE_SCALE: f64 = 1.0;
+
 pub struct MoeBlock {
     gate: candle_nn::Linear,
     experts: Vec<Mlp>,
@@ -79,6 +89,7 @@ impl MoeBlock {
     }
 
     pub fn prepare_inference(&self) -> Result<()> {
+        enter_eval_mode();
         for expert in &self.experts { expert.prepare_inference()?; }
         Ok(())
     }
@@ -121,9 +132,14 @@ impl MoeBlock {
             }
         }
 
-        // 4. Gating noise for exploration.
-        let noise = Tensor::rand(0.98f32, 1.02f32, gate_logits.shape(), dev)?;
-        gate_logits = gate_logits.broadcast_mul(&noise)?;
+        // 4. Gumbel noise for exploration (training only).
+        // g = -log(-log(u)), u ~ Uniform(ε, 1-ε) → standard Gumbel(0,1).
+        // Additive: meaningful even when logits ≈ 0, directly breaks Universal Nash.
+        if TRAIN_MODE.with(|m| *m.borrow()) {
+            let u = Tensor::rand(1e-6_f32, 1.0_f32 - 1e-6_f32, gate_logits.shape(), dev)?;
+            let gumbel = u.log()?.neg()?.log()?.neg()?;
+            gate_logits = (gate_logits + (gumbel * GUMBEL_NOISE_SCALE)?)?;
+        }
 
         // 5. Top-3 Routing.
         let large_neg_val = Tensor::new(&[-1e9f32], dev)?;
