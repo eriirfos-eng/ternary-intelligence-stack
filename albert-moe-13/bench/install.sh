@@ -108,7 +108,7 @@ curl -fsSL --progress-bar "${RELEASE}/bible_ternary_v2.0.0.config.json" \
 curl -fsSL --progress-bar "${RELEASE}/bible_ternary_v2.0.0.meta" \
     -o "${DIR}/models/bible_ternary_v2.0.0.meta"
 
-echo "[4/5] Downloading vocabulary + eval sample..."
+echo "[4/5] Downloading vocabulary + eval sample (WikiText-2, held-out)..."
 curl -fsSL --progress-bar "${RELEASE}/vocab.json" -o "${DIR}/data/vocab.json"
 curl -fsSL --progress-bar "${RELEASE}/eval_sample.txt" -o "${DIR}/eval_sample.txt"
 
