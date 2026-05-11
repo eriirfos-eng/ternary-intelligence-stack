@@ -38,6 +38,11 @@ const COLLAPSE_STREAK_LIMIT: u32 = 2;
 // then one backward pass covers all N sequences. Mirrors the ternary
 // hold state: withhold the weight update until enough evidence accumulates.
 const GRAD_ACCUM_STEPS: usize = 4;
+// Direct LR boost applied after Adam's step for cold layers (norm < THRESHOLD).
+// Adam normalizes away gradient amplification via its second-moment denominator,
+// so we bypass it entirely: a sign-normalized SGD step with lr = current_lr * COLD_LR_BOOST.
+// Self-terminating: once a layer's norm exceeds THRESHOLD the condition is false.
+const COLD_LR_BOOST: f64 = 6.0;
 
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
@@ -145,6 +150,37 @@ fn amplify_early_layers(
                     if let Ok(scaled) = &g * scale {
                         grads.insert(var.as_tensor(), scaled);
                     }
+                }
+            }
+        }
+    }
+}
+
+/// Direct LR boost for cold layers, applied after Adam's update step.
+/// Normalises each gradient tensor by its own L2 norm before scaling, so every
+/// cold-layer parameter receives a step of magnitude `boost_lr` regardless of
+/// raw gradient scale — equivalent to per-tensor signed SGD with lr=boost_lr.
+fn apply_layer_lr_boost(
+    varmap: &VarMap,
+    grads: &candle_core::backprop::GradStore,
+    layer_norms: &[f32],
+    boost_lr: f64,
+) {
+    const THRESHOLD: f32 = 0.005;
+    let all_vars = varmap.data().lock().unwrap();
+    for (name, var) in all_vars.iter() {
+        let li = name.strip_prefix("blocks.")
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<usize>().ok());
+        if let Some(i) = li {
+            if i < layer_norms.len() && layer_norms[i] < THRESHOLD {
+                if let Some(g) = grads.get(var.as_tensor()) {
+                    let _ = (|| -> candle_core::Result<()> {
+                        let norm_sq = g.sqr()?.sum_all()?.to_scalar::<f32>()?;
+                        let g_norm  = (norm_sq as f64 + 1e-12).sqrt();
+                        let delta   = (g * (-boost_lr / g_norm))?;
+                        var.set(&var.as_tensor().add(&delta)?)
+                    })();
                 }
             }
         }
@@ -589,7 +625,7 @@ fn train_cycle(
                 }
 
                 // ── Gradient step ─────────────────────────────────────────────
-                // backward() + clip + amplify + step, once per GRAD_ACCUM_STEPS.
+                // backward() + clip + step + cold-layer LR boost, once per GRAD_ACCUM_STEPS.
                 if let Some(combined) = accum_loss.take() {
                     let mut grads = combined.backward()?;
                     norm = global_grad_norm(&varmap, &grads);
@@ -602,15 +638,15 @@ fn train_cycle(
                     if norm > MAX_GRAD_NORM && norm.is_finite() {
                         clipped_steps += 1;
                         let scale = (MAX_GRAD_NORM / norm) as f64;
-                        // Scale the already-computed grads rather than redoing backward.
                         for var in varmap.all_vars() {
                             if let Some(g) = grads.get(&var) {
                                 grads.insert(&var, (g * scale)?);
                             }
                         }
                     }
-                    amplify_early_layers(&varmap, &mut grads, &layer_norms, wald_amplify_scale);
                     opt.step(&grads)?;
+                    // Cold-layer LR boost after Adam — bypasses second-moment normalization.
+                    apply_layer_lr_boost(&varmap, &grads, &layer_norms, lr * COLD_LR_BOOST);
                 }
                 accum_exploded = false;
             }

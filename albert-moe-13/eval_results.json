@@ -1,13 +1,13 @@
 {
-  "checkpoint": "models/bible_ternary_v2.0.0.best.4L.safetensors",
+  "checkpoint": "models/albert_v3.0.best.safetensors",
   "test_corpus": "data/corpus/stage_3/bible.txt",
   "test_tokens": 41041,
-  "avg_loss": 7.0493,
-  "perplexity": 1152.1,
+  "avg_loss": 10.3502,
+  "perplexity": 31262.4,
   "baseline_perplexity": 8000.0,
-  "reduction_vs_baseline": "85.6%",
+  "reduction_vs_baseline": "-290.8%",
   "loss_source": "albert-test --eval",
   "split_seed": 42,
   "split_fraction": 0.05,
-  "timestamp": "2026-05-09T04:54:49.096586+00:00"
+  "timestamp": "2026-05-11T12:38:47.846033+00:00"
 }

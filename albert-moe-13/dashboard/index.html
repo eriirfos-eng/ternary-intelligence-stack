@@ -2354,10 +2354,13 @@
         document.getElementById('exportDrop').classList.remove('open');
     });
 
-    // Fibonacci retracement toggle
+    // Fibonacci retracement toggle — dim grid lines when FIB zones are visible
     document.getElementById('fibBtn').addEventListener('click', function() {
         fibVisible = !fibVisible;
         this.classList.toggle('active', fibVisible);
+        const gridColor = fibVisible ? 'rgba(30,45,64,0.35)' : '#1e2d40';
+        chart.options.scales.x.grid.color = gridColor;
+        chart.options.scales.y.grid.color = gridColor;
         chart.update('none');
     });
 
