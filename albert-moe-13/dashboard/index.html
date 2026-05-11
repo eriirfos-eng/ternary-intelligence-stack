@@ -74,15 +74,18 @@
             font-size: 16px; font-weight: bold; flex-shrink: 0;
             display: inline-block; line-height: 1;
             color: #505050;
-            animation: dingirPulse 3.6s ease-in-out infinite;
+            animation: dingirPulse 4s linear infinite;
         }
         @keyframes dingirPulse {
-            0%   { color: #505050; text-shadow: none; }
-            8%   { color: #22d3ee; text-shadow: 0 0 14px #22d3ee, 0 0 4px #22d3ee; }
-            16%  { color: #505050; text-shadow: none; }
-            24%  { color: #22d3ee; text-shadow: 0 0 10px #22d3ee; }
-            36%  { color: #505050; text-shadow: none; }
-            100% { color: #505050; text-shadow: none; }
+            0%   { color: #505050; text-shadow: 0 0 0px rgba(34,211,238,0); }
+            4%   { color: #22d3ee; text-shadow: 0 0 10px rgba(34,211,238,1), 0 0 3px rgba(34,211,238,1); }
+            8%   { color: #505050; text-shadow: 0 0 0px rgba(34,211,238,0); }
+            14%  { color: #22d3ee; text-shadow: 0 0 16px rgba(34,211,238,1), 0 0 6px rgba(34,211,238,1); }
+            22%  { color: #1a8099; text-shadow: 0 0 10px rgba(34,211,238,0.75); }
+            42%  { color: #0e5060; text-shadow: 0 0 5px rgba(34,211,238,0.35); }
+            62%  { color: #505050; text-shadow: 0 0 2px rgba(34,211,238,0.08); }
+            78%  { color: #505050; text-shadow: 0 0 0px rgba(34,211,238,0); }
+            100% { color: #505050; text-shadow: 0 0 0px rgba(34,211,238,0); }
         }
 
         #delta { font-size: 11px; }
