@@ -20,6 +20,13 @@ thread_local! {
     // Traffic light telemetry: accumulated (green, orange, red, state_string) per step.
     // Each MoeBlock appends its layer's counts; train_bible drains once per batch.
     static TLIGHT_ACC:  RefCell<Vec<(usize, usize, usize, String)>> = RefCell::new(Vec::new());
+    // Expert output divergence loss accumulator.
+    // Each MoeBlock appends neg-variance-scalar (gradient-carrying); train_bible drains per batch.
+    // Separate f32 log acc for per-layer variance logging (non-gradient).
+    static DIV_ACC:     RefCell<Option<Tensor>> = RefCell::new(None);
+    static DIV_LOG_ACC: RefCell<Vec<f32>> = RefCell::new(Vec::new());
+    // Gate: train_bible sets true only on optimizer-step batches to avoid per-batch autograd overhead.
+    static DIV_ENABLED: RefCell<bool> = RefCell::new(false);
     // Training mode flag: Gumbel noise is injected during training only.
     // prepare_inference() sets this to false so eval_perplexity gets clean deterministic routing.
     static TRAIN_MODE: RefCell<bool> = RefCell::new(true);
@@ -29,7 +36,12 @@ pub fn clear_routing_capture() { ROUTING_ACC.with(|r| r.borrow_mut().clear()); }
 pub fn clear_entropy_capture() { ENTROPY_ACC.with(|e| *e.borrow_mut() = None); }
 pub fn clear_lb_capture()      { LB_ACC.with(|lb| *lb.borrow_mut() = None); }
 pub fn clear_tlight_capture()  { TLIGHT_ACC.with(|t| t.borrow_mut().clear()); }
+pub fn clear_div_capture()     {
+    DIV_ACC.with(|d| *d.borrow_mut() = None);
+    DIV_LOG_ACC.with(|d| d.borrow_mut().clear());
+}
 pub fn enter_eval_mode()       { TRAIN_MODE.with(|m| *m.borrow_mut() = false); }
+pub fn set_div_enabled(v: bool) { DIV_ENABLED.with(|d| *d.borrow_mut() = v); }
 
 pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
     ROUTING_ACC.with(|r| {
@@ -52,6 +64,16 @@ pub fn take_lb_capture() -> Option<Tensor> {
 /// One entry per MoeBlock that fired this step.
 pub fn take_tlight_capture() -> Vec<(usize, usize, usize, String)> {
     TLIGHT_ACC.with(|t| std::mem::take(&mut *t.borrow_mut()))
+}
+
+/// Drains the gradient-carrying divergence loss tensor (sum over all layers this batch).
+pub fn take_div_capture() -> Option<Tensor> {
+    DIV_ACC.with(|d| d.borrow_mut().take())
+}
+
+/// Drains per-layer variance floats for logging (detached, one entry per MoE layer).
+pub fn take_div_log_capture() -> Vec<f32> {
+    DIV_LOG_ACC.with(|d| std::mem::take(&mut *d.borrow_mut()))
 }
 
 // Router temperature < 1.0 sharpens the gate softmax, amplifying small logit differences.
@@ -270,6 +292,41 @@ impl MoeBlock {
             };
 
             final_output = (final_output + expert_out.broadcast_mul(&scaled_weight)?)?;
+        }
+
+        // Expert output divergence loss — optimizer-step batches only (DIV_ENABLED gate),
+        // single-position sample, detached from main graph.
+        // Runs all experts (bypassing @sparseskip on the sample) so rarely-routed experts
+        // also receive gradient to develop distinct outputs.
+        // L2-normalized variance: bounded in [0,1], measures directional diversity.
+        if DIV_ENABLED.with(|d| *d.borrow()) {
+            let num_sample = 1.min(b * s);
+            let x_sample = x_flat.narrow(0, 0, num_sample)?.detach();
+            let mut expert_norms: Vec<Tensor> = Vec::with_capacity(self.num_experts);
+            for expert in &self.experts {
+                let out = expert.forward(&x_sample)?;                         // [N, H]
+                let l2  = out.sqr()?.sum_keepdim(candle_core::D::Minus1)?.sqrt()?; // [N, 1]
+                let l2_clamped = l2.clamp(1e-8_f64, f64::MAX)?;
+                expert_norms.push(out.broadcast_div(&l2_clamped)?);            // [N, H] L2-norm
+            }
+            let stacked = Tensor::stack(&expert_norms, 0)?;                   // [E, N, H]
+            let mean    = stacked.mean_keepdim(0)?;                            // [1, N, H]
+            let diff    = stacked.broadcast_sub(&mean)?;                       // [E, N, H]
+            let var     = diff.sqr()?.mean_all()?;                             // scalar
+
+            // Log f32 (detached) for per-layer variance telemetry.
+            let var_f32 = var.to_scalar::<f32>().unwrap_or(0.0);
+            DIV_LOG_ACC.with(|d| d.borrow_mut().push(var_f32));
+
+            // Accumulate neg-variance for gradient — minimize neg-var = maximize diversity.
+            let neg_var = var.neg()?;
+            DIV_ACC.with(|d| {
+                let mut cell = d.borrow_mut();
+                *cell = match cell.take() {
+                    None       => Some(neg_var),
+                    Some(prev) => Some((&prev + &neg_var).unwrap()),
+                };
+            });
         }
 
         final_output.reshape((b, s, h))

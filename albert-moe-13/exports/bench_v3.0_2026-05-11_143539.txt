@@ -1,0 +1,25 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 0 epochs | 2026-05-11 14:35
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ ..ioslich Car Nust wurde imell And não En inter.]] which38owej after manUNKNOWNol come odertrUismo 2024 fairele theseind auxop demourtoigen bas f ar 9 19onsratr über g sch there 23 autor partirahitoub“wa er 3., sind had nel Ad
+    9.9 tok/s  101ms/tok
+
+[P2] User: what language do you speak? Albert:
+→ ust wurde imell And não En inter.]] which baseowej afterindDol come oderíaUismo 2024 fairele theseind auxop demourto H bas f ar 9 tonsratr über g have there 23 autor partirah apv“wa er 3., sind had nel Adidosag nelgEl
+    17.5 tok/s  57ms/tok
+
+[P3] die Geschichte der Europäischen Union
+→ 20..ios
+ Caradorust wurde imra And não En inter.]] which38ness after man allol come oder 3Uismo 2024 fairele theseind auxop demourto H bas f ar 9 tonsrają über g have there 23 autor partirahitoub“wax 3., sind had nel
+    15.2 tok/s  66ms/tok
+
+[P4] once upon a time in a kingdom far
+→ lich aoadorDie wurde imra And não En inter.]] which38owej afterantsUNKNOWNol lub odertrUismo 2024 fairele theseind auxass demourtoigen bas f where 9 tonsïtrUNKNOWN g have there 23 autor partirahitoub“wa er 3., sind had nel Adidosag
+    8.2 tok/s  122ms/tok
+
+[P5] the ternary number system uses three
+→ lich Caradorust wurde imra And não En inter.]] which38owej after manUNKNOWNol come odertrUismo 2024chile theseind auxop demourto H bas f ar 9 tonsratrés g have there 23 autor partirahitoub“wa er 3., sind had nel Adichag
+    13.3 tok/s  75ms/tok
+

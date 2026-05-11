@@ -1,6 +1,6 @@
 use candle_core::{Device, DType, Result, Tensor};
 use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
-use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture, clear_tlight_capture, take_tlight_capture};
+use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture, clear_tlight_capture, take_tlight_capture, clear_div_capture, take_div_capture, take_div_log_capture, set_div_enabled};
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use moe_llm_core::mycelium::MyceliumModule;
@@ -53,7 +53,27 @@ const COLD_LR_BOOST: f64 = 6.0;
 const GRAD_NORM_EMA_ALPHA: f32 = 0.02;
 const BURST_RATIO_THRESHOLD: f32 = 5.0;
 const TTL_FREEZE_GRAD_STEPS: usize = 50;
-const MAX_BURSTS_PER_EPOCH: usize = 3;
+const MAX_BURSTS_PER_EPOCH: usize = 5;
+
+// Expert output divergence loss — breaks Universal Nash by pushing expert outputs apart.
+// Continuous restoring force in output space; operates independent of routing impulses.
+// Linear decay from START to END over DIV_DECAY_START..DIV_DECAY_END epochs, then off.
+const DIV_LOSS_WEIGHT_START: f64 = 1e-2;
+const DIV_LOSS_WEIGHT_END:   f64 = 1e-4;
+const DIV_DECAY_START_EPOCH: usize = 78;
+const DIV_DECAY_END_EPOCH:   usize = 86; // exclusive: epoch 86+ weight = 0.0
+
+fn div_loss_weight(epoch: usize) -> f64 {
+    if epoch < DIV_DECAY_START_EPOCH {
+        DIV_LOSS_WEIGHT_START
+    } else if epoch >= DIV_DECAY_END_EPOCH {
+        0.0
+    } else {
+        let t = (epoch - DIV_DECAY_START_EPOCH) as f64
+              / (DIV_DECAY_END_EPOCH - DIV_DECAY_START_EPOCH - 1) as f64;
+        DIV_LOSS_WEIGHT_START * (1.0 - t) + DIV_LOSS_WEIGHT_END * t
+    }
+}
 
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
@@ -501,7 +521,7 @@ fn train_cycle(
 
     // Per-layer grad norm EMA for burst detection. Initialized high (1.0) so early steps
     // don't false-trigger before EMA converges to the per-layer true baseline (~50 steps).
-    let mut grad_norm_ema: Vec<f32> = vec![1.0_f32; config.num_layers];
+    let mut grad_norm_ema: Vec<f32> = vec![0.0_f32; config.num_layers]; // 0 = uninitialized; bootstrap to first observation
     // Safety circuit: how many TTL freeze events fired per layer this epoch.
     let mut epoch_burst_count: Vec<usize> = vec![0; config.num_layers];
 
@@ -510,6 +530,30 @@ fn train_cycle(
         let _ = writeln!(f, "ARCH {}L {}H {}E {}CTX {}V",
             config.num_layers, config.hidden_size, config.num_experts,
             config.max_seq_len, config.vocab_size);
+    }
+
+    // Self-describing TTLFREEZE config banner — printed once at binary start so every log file
+    // carries its own hyperparameters for SPRIND reviewers and future debugging.
+    {
+        let ema_window = (1.0 / GRAD_NORM_EMA_ALPHA) as usize;
+        let initial_div_w = div_loss_weight((total_epochs + 1) as usize);
+        let banner = format!(
+            "[ttlfreeze] enabled\n\
+             [ttlfreeze]   ema_alpha={} (effective window ~{} steps)\n\
+             [ttlfreeze]   burst_threshold={}x baseline\n\
+             [ttlfreeze]   freeze_steps={}\n\
+             [ttlfreeze]   max_bursts_per_epoch_per_layer={}\n\
+             [ttlfreeze]   ema_init=bootstrap_to_first_observation\n\
+             [divloss] enabled weight={:.2e} (decay {:.2e}->{:.2e} epochs {}-{})",
+            GRAD_NORM_EMA_ALPHA, ema_window,
+            BURST_RATIO_THRESHOLD, TTL_FREEZE_GRAD_STEPS, MAX_BURSTS_PER_EPOCH,
+            initial_div_w, DIV_LOSS_WEIGHT_START, DIV_LOSS_WEIGHT_END,
+            DIV_DECAY_START_EPOCH, DIV_DECAY_END_EPOCH - 1,
+        );
+        println!("{}", banner);
+        if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+            let _ = writeln!(f, "{}", banner);
+        }
     }
 
     loop {
@@ -524,6 +568,12 @@ fn train_cycle(
         let mut last_tlight_states: Vec<String> = vec![String::new(); config.num_layers];
         let mut epoch_layer_norm_acc: Vec<f32>  = vec![0.0; config.num_layers];
         let mut epoch_layer_norm_count: usize   = 0;
+        // Cascade evidence: rolling 10-step L0-L3 history, forward checks, and resolved results.
+        let mut l0l3_history: std::collections::VecDeque<[f32; 4]> = std::collections::VecDeque::with_capacity(11);
+        // (fire_step, check_step=fire+30, layer_idx, pre_L0L3_avg)
+        let mut pending_cascade: Vec<(usize, usize, usize, [f32; 4])> = Vec::new();
+        // (layer_idx, fire_step, pre_L0L3_avg, post_L0L3)
+        let mut cascade_results: Vec<(usize, usize, [f32; 4], [f32; 4])> = Vec::new();
 
         let mut log_file = OpenOptions::new()
             .create(true)
@@ -549,9 +599,16 @@ fn train_cycle(
                 .reshape((1, seq_len))?
                 .to_dtype(DType::U32)?;
 
+            // Gate div computation to optimizer-step batches only — avoids running all
+            // 12 experts on every batch (144 extra forward passes × GRAD_ACCUM_STEPS = 4×).
+            let is_step_batch = (batch_idx + 1) % GRAD_ACCUM_STEPS == 0
+                || batch_idx + 1 == num_batches;
+            set_div_enabled(is_step_batch);
+
             clear_entropy_capture();
             clear_lb_capture();
             clear_tlight_capture();
+            clear_div_capture();
             let logits      = model.forward(&input_tensor)?;
             let logits      = logits.reshape((seq_len, config.vocab_size))?;
             let target_flat = target_tensor.flatten_all()?;
@@ -612,6 +669,20 @@ fn train_cycle(
                 batch_loss = (&batch_loss + (lb * lb_lambda)?)?;
             }
 
+            // Divergence loss: always active while weight > 0. Continuous output-space force.
+            // Minimizes neg-variance of L2-normalized expert outputs → maximizes diversity.
+            let cur_div_weight = div_loss_weight(total_epochs as usize);
+            let div_log_vals = take_div_log_capture();  // per-layer f32 for logging
+            if cur_div_weight > 0.0 {
+                if let Some(div_term) = take_div_capture() {
+                    // div_term is sum of neg-variance across layers; normalize by num_layers.
+                    let div_scaled = (div_term * (cur_div_weight / config.num_layers as f64))?;
+                    batch_loss = (&batch_loss + div_scaled)?;
+                }
+            } else {
+                take_div_capture(); // drain even when weight=0 to keep accumulators clean
+            }
+
             let real_loss = ce_loss.to_scalar::<f32>()?;
 
             // Flag explosion — will flush and skip the whole accumulation window.
@@ -629,9 +700,6 @@ fn train_cycle(
             total_loss      += real_loss;
             counted_batches += 1;
             wald.record_batch(real_loss);
-
-            let is_step_batch = (batch_idx + 1) % GRAD_ACCUM_STEPS == 0
-                || batch_idx + 1 == num_batches;
 
             // Default: empty norms for non-step batches (used in GRAD log below).
             let mut layer_norms = vec![0.0_f32; config.num_layers];
@@ -659,35 +727,74 @@ fn train_cycle(
                     }
                     epoch_layer_norm_count += 1;
 
+                    // Update rolling L0-L3 history and resolve any pending cascade checks.
+                    if layer_norms.len() >= 4 {
+                        let snap: [f32; 4] = [layer_norms[0], layer_norms[1], layer_norms[2], layer_norms[3]];
+                        l0l3_history.push_back(snap);
+                        if l0l3_history.len() > 10 { l0l3_history.pop_front(); }
+                        let gs = *global_step;
+                        pending_cascade.retain(|&(fs, cs, li, pre)| {
+                            if gs >= cs {
+                                cascade_results.push((li, fs, pre, snap));
+                                false
+                            } else {
+                                true
+                            }
+                        });
+                    }
+
                     // TTL burst detection — per-layer grad norm vs EMA baseline.
                     // When ratio > BURST_RATIO_THRESHOLD, freeze that layer's TTL logit modifiers
                     // for TTL_FREEZE_GRAD_STEPS optimizer steps so gate can learn without correction.
                     for (i, &n) in layer_norms.iter().enumerate() {
-                        let baseline = grad_norm_ema[i];
                         if n > 0.0 {
-                            let ratio = n / baseline.max(1e-12);
-                            if ratio > BURST_RATIO_THRESHOLD && epoch_burst_count[i] < MAX_BURSTS_PER_EPOCH {
-                                epoch_burst_count[i] += 1;
-                                let freeze_update_steps = TTL_FREEZE_GRAD_STEPS * GRAD_ACCUM_STEPS;
-                                model.freeze_ttl_layer(i, freeze_update_steps);
-                                let freeze_end_step = *global_step + TTL_FREEZE_GRAD_STEPS;
-                                println!("[{}] TTLFREEZE layer={} step={} grad={:.2e} base={:.2e} ratio={:.1} freeze_end={} fires_this_epoch={}",
-                                    timestamp(), i, *global_step, n, baseline, ratio, freeze_end_step, epoch_burst_count[i]);
-                                if let Some(ref mut f) = log_file {
-                                    let _ = writeln!(f, "TTLFREEZE step={} layer={} grad={:.6} baseline={:.6} ratio={:.2} freeze_end={}",
-                                        *global_step, i, n, baseline, ratio, freeze_end_step);
-                                }
-                                if epoch_burst_count[i] >= MAX_BURSTS_PER_EPOCH {
-                                    println!("[{}] TTLFREEZE WARN layer={} reached {} fires/epoch — suppressing further freezes this epoch",
-                                        timestamp(), i, MAX_BURSTS_PER_EPOCH);
+                            if grad_norm_ema[i] == 0.0 {
+                                // Bootstrap: first real observation sets the baseline, no burst check.
+                                grad_norm_ema[i] = n;
+                            } else {
+                                let baseline = grad_norm_ema[i];
+                                let ratio = n / baseline.max(1e-12);
+                                if ratio > BURST_RATIO_THRESHOLD && epoch_burst_count[i] < MAX_BURSTS_PER_EPOCH {
+                                    epoch_burst_count[i] += 1;
+                                    let freeze_update_steps = TTL_FREEZE_GRAD_STEPS * GRAD_ACCUM_STEPS;
+                                    model.freeze_ttl_layer(i, freeze_update_steps);
+                                    let freeze_end_step = *global_step + TTL_FREEZE_GRAD_STEPS;
+                                    // Schedule cascade evidence capture at burst+30.
+                                    let pre_l0l3: [f32; 4] = {
+                                        let hn = l0l3_history.len() as f32;
+                                        if hn == 0.0 { [0.0; 4] } else {
+                                            let mut avg = [0.0f32; 4];
+                                            for h in &l0l3_history { for j in 0..4 { avg[j] += h[j] / hn; } }
+                                            avg
+                                        }
+                                    };
+                                    pending_cascade.push((*global_step, *global_step + 30, i, pre_l0l3));
+                                    println!("[{}] TTLFREEZE layer={} step={} grad={:.2e} base={:.2e} ratio={:.1} lr={:.2e} freeze_end={} fires_this_epoch={}",
+                                        timestamp(), i, *global_step, n, baseline, ratio, lr, freeze_end_step, epoch_burst_count[i]);
                                     if let Some(ref mut f) = log_file {
-                                        let _ = writeln!(f, "TTLFREEZE WARN step={} layer={} max_bursts_reached={}",
-                                            *global_step, i, MAX_BURSTS_PER_EPOCH);
+                                        let _ = writeln!(f, "TTLFREEZE step={} layer={} grad={:.6} baseline={:.6} ratio={:.2} lr={:.2e} freeze_end={}",
+                                            *global_step, i, n, baseline, ratio, lr, freeze_end_step);
+                                    }
+                                    if epoch_burst_count[i] >= MAX_BURSTS_PER_EPOCH {
+                                        println!("[{}] TTLFREEZE WARN layer={} reached {} fires/epoch — suppressing further freezes this epoch",
+                                            timestamp(), i, MAX_BURSTS_PER_EPOCH);
+                                        if let Some(ref mut f) = log_file {
+                                            let _ = writeln!(f, "TTLFREEZE WARN step={} layer={} max_bursts_reached={}",
+                                                *global_step, i, MAX_BURSTS_PER_EPOCH);
+                                        }
+                                    }
+                                } else if ratio > BURST_RATIO_THRESHOLD {
+                                    // Cap already hit — log skipped burst for observability.
+                                    println!("[{}] TTLFREEZE SKIP layer={} step={} grad={:.2e} base={:.2e} ratio={:.1} cap={}/epoch",
+                                        timestamp(), i, *global_step, n, baseline, ratio, MAX_BURSTS_PER_EPOCH);
+                                    if let Some(ref mut f) = log_file {
+                                        let _ = writeln!(f, "TTLFREEZE SKIP step={} layer={} grad={:.6} baseline={:.6} ratio={:.2}",
+                                            *global_step, i, n, baseline, ratio);
                                     }
                                 }
+                                // Update EMA after burst check so baseline tracks the normal level.
+                                grad_norm_ema[i] = GRAD_NORM_EMA_ALPHA * n + (1.0 - GRAD_NORM_EMA_ALPHA) * baseline;
                             }
-                            // Update EMA after burst check so baseline tracks the normal level.
-                            grad_norm_ema[i] = GRAD_NORM_EMA_ALPHA * n + (1.0 - GRAD_NORM_EMA_ALPHA) * baseline;
                         }
                     }
 
@@ -771,6 +878,16 @@ fn train_cycle(
                     }
                 }
                 clear_routing_capture();
+
+                // DIV — per-layer normalized variance of expert outputs. Fires on every
+                // optimizer step batch where div was active. 0=collapsed, ~1=diverse.
+                // Outside the 10-batch block: batch_idx%10==0 and (batch_idx+1)%4==0
+                // are mutually exclusive (gcd=2), so DIV would never fire inside it.
+                if !div_log_vals.is_empty() {
+                    let div_str: Vec<String> = div_log_vals.iter()
+                        .map(|&v| format!("{:.4}", v)).collect();
+                    let _ = writeln!(f, "DIV step={} w={:.2e} L={}", *global_step, cur_div_weight, div_str.join(","));
+                }
 
                 // TELE — sparsity snapshot every 30 batches (~60s) for live dashboard panels.
                 // Epoch-end emit still fires below; this keeps LAYER/EXPERT panels from going stale.
@@ -895,6 +1012,36 @@ fn train_cycle(
                 let _ = writeln!(f, "{}", summary_line);
             }
             prev_avg_loss = avg_loss;
+
+            // Cascade evidence: L0-L3 avg norm at burst-10 vs burst+30, grouped by layer.
+            if !cascade_results.is_empty() {
+                let mut by_layer: std::collections::HashMap<usize, Vec<([f32; 4], [f32; 4])>> = std::collections::HashMap::new();
+                for &(li, _fs, pre, post) in &cascade_results {
+                    by_layer.entry(li).or_default().push((pre, post));
+                }
+                let mut layers_sorted: Vec<usize> = by_layer.keys().cloned().collect();
+                layers_sorted.sort();
+                for li in layers_sorted {
+                    let events = &by_layer[&li];
+                    let n = events.len() as f32;
+                    let mut pre_avg = [0.0f32; 4];
+                    let mut post_avg = [0.0f32; 4];
+                    for (pre, post) in events {
+                        for j in 0..4 { pre_avg[j] += pre[j] / n; post_avg[j] += post[j] / n; }
+                    }
+                    let pre_mean: f32 = pre_avg.iter().sum::<f32>() / 4.0;
+                    let post_mean: f32 = post_avg.iter().sum::<f32>() / 4.0;
+                    let pct = if pre_mean > 1e-12 { (post_mean / pre_mean - 1.0) * 100.0 } else { 0.0 };
+                    let cascade_line = format!(
+                        "TTLFREEZE CASCADE layer=L{} events={} L0-L3_pre={:.2e} post={:.2e} ({:+.0}%)",
+                        li, events.len(), pre_mean, post_mean, pct
+                    );
+                    println!("[{}] {}", timestamp(), cascade_line);
+                    if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+                        let _ = writeln!(f, "{}", cascade_line);
+                    }
+                }
+            }
         }
 
         // Emit telemetry for the dashboard neural viz panels.

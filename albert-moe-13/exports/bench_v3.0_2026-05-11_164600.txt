@@ -1,0 +1,27 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 0 epochs | 2026-05-11 16:46
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ **naich aoingustłxelling nãoliche inter.]] uit baseowej afterita**maI jesttrUav 2024chima these un barass als Comup H avec f if 9mathonséestr überca have there 23 col Orust sãoub thesewa uma pot della sindj uma Ad
+    9.8 tok/s  102ms/tok
+
+[P2] User: what language do you speak? Albert:
+→ arene imell się nãoliche inter.]] uit basewe afterP**maI cometrU3 2024ecma theseroogatacheourup_ avec fariner Theons 
+tr deient have there 23 autor Orust sãoub these si]] 3 della sind had uma As hagilatoação
+    13.0 tok/s  77ms/tok
+
+[P3] die Geschichte der Europäischen Union
+→ 20Nios zu ao NDie wurdexelling nãoient inter.]]ond baseowej after..** nieI jesttrUav <chi pour thesero coass als deiupée avec f uma ilicht5 
+att dei g have therecon col Or8 apub these siIn 3 pr sind hadés
+    10.3 tok/s  97ms/tok
+
+[P4] once upon a time in a kingdom far
+→ ich ao two uma ab imelling nãoliche inter.]] uit base po afterP Lema come jestentUav <ecma these uną pourcheourup Hub f if der Theons 
+tr d g have therero col Or dos apub thesewaical 3ond sind had uma Adichag
+    15.2 tok/s  66ms/tok
+
+[P5] the ternary number system uses three
+→  zu ao ilare wurde imell T nãolicheN.]] uit baseowej after..**ma come jesttrUbe 2024chima fait unapass demnessup H des f uma il 19onsratr [[ von have there 23 col Orted apub these sier 3 pr sind hadbe Asiqueag
+    8.5 tok/s  118ms/tok
+
