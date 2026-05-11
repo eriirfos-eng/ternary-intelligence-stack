@@ -69,7 +69,8 @@ A live training dashboard streams telemetry in real time at `localhost:8888` dur
 | Weight precision | Ternary `{-γ, 0, +γ}` from scratch | Float32 / post-hoc INT4 |
 | **@sparseskip** | 75% expert skip per decode step — 9 of 12 experts inactive | Dense MoE: all experts active |
 | Architecture growth | Autonomous Net2Net surgery + Mandelbrot complexity monitor | Fixed at init |
-| Inference speed | **83–125 tok/s on laptop CPU** | Requires GPU at this quality |
+| Gate router | F32 for routing resolution — expert MLPs remain ternary | — |
+| Inference speed | **83–125 tok/s (v2.0.0, 8k vocab, CPU-only)** | Requires GPU at this quality |
 | Two sparsity layers | Routing-level 75% skip + weight-level 10–26% ternary zeros | Single sparsity axis |
 | Patent | A50296/2026 (@sparseskip primitive) | — |
 

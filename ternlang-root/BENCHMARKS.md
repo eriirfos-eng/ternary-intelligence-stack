@@ -48,6 +48,8 @@ Matrix: 512×512, measurement window: 500 ms per cell.
 | **60%** | **225.63** | **128.44** | **1.76×** | **43.1%** |
 | **80%** | **226.98** | **125.77** | **1.80×** | **44.6%** |
 
+**Note:** This element-level skip — zero-weight positions never touched in matmul — is the weight-level component of `@sparseskip` (Patent A50296/2026). The routing-level component (75% expert skip per decode step, measured on the live Albert model) is in §11.
+
 ---
 
 ## §3 — Expert Domain Scoring Throughput (All 13 Experts)

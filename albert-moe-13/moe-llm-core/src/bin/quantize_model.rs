@@ -6,8 +6,8 @@ use std::io::Write;
 
 fn main() -> Result<()> {
     let device = Device::Cpu;
-    let weight_path = "albert-moe-13/models/bible_ternary_v1.3.6.safetensors";
-    let output_path = "albert-moe-13/models/bible_ternary_v1.3.6.trit";
+    let weight_path = "albert-moe-13/models/albert_v3.0.safetensors";
+    let output_path = "albert-moe-13/models/albert_v3.0.trit";
 
     println!("Loading weights from {}...", weight_path);
     let weights = candle_core::safetensors::load(weight_path, &device)?;

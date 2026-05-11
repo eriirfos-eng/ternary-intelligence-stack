@@ -109,10 +109,15 @@ OAI_NS = {
 }
 
 
-def oai_list_records(base_url: str, params: dict):
-    """Generator: yield (identifier, ET.Element metadata) from OAI-PMH."""
+def oai_list_records(base_url: str, params: dict, wall_timeout: float = 0.0):
+    """Generator: yield (identifier, ET.Element metadata) from OAI-PMH.
+    wall_timeout: stop after this many seconds (0 = unlimited)."""
     resumption = None
+    start_t = time.time()
     while True:
+        if wall_timeout > 0 and time.time() - start_t > wall_timeout:
+            print(f"    oai_list_records: wall timeout {wall_timeout:.0f}s reached")
+            return
         if resumption:
             p = {"verb": "ListRecords", "resumptionToken": resumption}
         else:
@@ -355,9 +360,12 @@ def harvest_fr_fulltext(target_bytes: int) -> list[str]:
     # ── PERSEE: full HTML articles for structural variety ────────────────────
     if written < target_bytes:
         print(f"  [fr] PERSEE (target: {(target_bytes-written)//1024//1024}MB more) ...")
-        persee = harvest_fr_persee(target_bytes - written)
-        texts.extend(persee)
-        written = sum(len(t.encode()) for t in texts)
+        try:
+            persee = harvest_fr_persee(target_bytes - written)
+            texts.extend(persee)
+            written = sum(len(t.encode()) for t in texts)
+        except Exception as e:
+            print(f"  [fr] PERSEE: ERROR — {e} — continuing with HAL data only")
 
     return texts
 
@@ -563,7 +571,7 @@ def harvest_zenodo_lang_fulltext(lang_code: str, target_bytes: int) -> list[str]
             per_set = max(500, (target_bytes - written) // 350)
             for _, meta in oai_list_records(base, {
                 "verb": "ListRecords", "metadataPrefix": "oai_dc", "set": s
-            }):
+            }, wall_timeout=90.0):
                 if written >= target_bytes:
                     break
                 dc = meta.find("oai_dc:dc", OAI_NS)

@@ -74,10 +74,11 @@ def fetch_oai(base_url: str, params: dict) -> ET.Element:
 # ── OAI-PMH generic harvester ─────────────────────────────────────────────────
 
 def harvest_oai(base_url: str, set_spec: str = None, lang_filter: str = None,
-                max_records: int = 5000) -> list[str]:
+                max_records: int = 5000, wall_timeout: float = 0.0) -> list[str]:
     """
     Harvest title + abstract text from an OAI-PMH endpoint.
     Returns a list of cleaned text blocks.
+    wall_timeout: stop after this many seconds (0 = unlimited).
     """
     texts = []
     params = {"verb": "ListRecords", "metadataPrefix": "oai_dc"}
@@ -85,7 +86,11 @@ def harvest_oai(base_url: str, set_spec: str = None, lang_filter: str = None,
         params["set"] = set_spec
 
     resumption = None
+    harvest_start = time.time()
     while len(texts) < max_records:
+        if wall_timeout > 0 and time.time() - harvest_start > wall_timeout:
+            print(f"    harvest_oai: wall timeout {wall_timeout:.0f}s reached ({len(texts)} records)")
+            break
         if resumption:
             root = fetch_oai(base_url, {"verb": "ListRecords", "resumptionToken": resumption})
         else:
@@ -268,7 +273,7 @@ def harvest_zenodo_lang(lang_code: str, target_bytes: int) -> list[str]:
         try:
             per_set = max(500, (target_bytes - written) // 350)
             batch = harvest_oai(base, set_spec=s, lang_filter=lang_code,
-                                max_records=per_set)
+                                max_records=per_set, wall_timeout=90.0)
             texts.extend(batch)
             written += sum(len(t.encode()) for t in batch)
             print(f"  [{lang_code}] {s}: +{len(batch)} records · {written/1024/1024:.1f}MB total")

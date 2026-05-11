@@ -1,0 +1,49 @@
+{
+  "vocab_size": 32000,
+  "target_vocab_size": 32000,
+  "min_frequency": 2,
+  "tokenizer_type": "ByteLevel BPE",
+  "special_tokens": [
+    "[UNK]",
+    "[PAD]",
+    "[BOS]",
+    "[EOS]",
+    "[MASK]"
+  ],
+  "corpus_dirs": [
+    "multilingual",
+    "academic",
+    "fulltext",
+    "chaos"
+  ],
+  "corpus_files": [
+    "data/corpus/multilingual/de.txt",
+    "data/corpus/multilingual/en.txt",
+    "data/corpus/multilingual/es.txt",
+    "data/corpus/multilingual/fr.txt",
+    "data/corpus/multilingual/it.txt",
+    "data/corpus/multilingual/nl.txt",
+    "data/corpus/multilingual/pl.txt",
+    "data/corpus/multilingual/pt.txt",
+    "data/corpus/academic/de.txt",
+    "data/corpus/academic/en.txt",
+    "data/corpus/academic/es.txt",
+    "data/corpus/academic/fr.txt",
+    "data/corpus/academic/it.txt",
+    "data/corpus/academic/nl.txt",
+    "data/corpus/academic/pl.txt",
+    "data/corpus/academic/pt.txt",
+    "data/corpus/fulltext/de.txt",
+    "data/corpus/fulltext/en.txt",
+    "data/corpus/fulltext/es.txt",
+    "data/corpus/fulltext/fr.txt",
+    "data/corpus/fulltext/it.txt",
+    "data/corpus/fulltext/nl.txt",
+    "data/corpus/fulltext/pl.txt",
+    "data/corpus/fulltext/pt.txt",
+    "data/corpus/chaos/chaos_en.txt",
+    "data/corpus/chaos/chaos_multi.txt"
+  ],
+  "total_corpus_mb": 601.6,
+  "tokenizer_path": "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/tokenizer_v3/tokenizer_v3.json"
+}

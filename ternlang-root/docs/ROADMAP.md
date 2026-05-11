@@ -1,7 +1,7 @@
 # Ternary Intelligence Stack (TIS) | RFI-IRFOS — Master Development Chronicle
 ### Official Evaluation Artifact (SPRIND / Next Frontier AI)
-**Stack Version:** v1.3.6 (Ecosystem) / v2.0.0 (Albert MoE-13 Model)
-**Last Updated:** 2026-05-07
+**Stack Version:** v1.3.7 (Ecosystem) / v3.0 (albert. model)
+**Last Updated:** 2026-05-11
 **Status:** ACTIVE — PHASE 20: AUTO-EVOLUTIONARY TERNARY TRAINING
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack
 **Patent Pending:** A50296/2026 (@sparseskip sparse matmul primitive)
@@ -123,7 +123,7 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 | **10** | Extension Maturity | VS Code ghost hints/decorations | COMPLETE |
 | **9** | MoE-13 Orchestrator | 12 experts, Top-3 sparse routing | COMPLETE |
 | **8** | AI Reasoning Toolkit | DeliberationEngine (EMA) | COMPLETE |
-| **7** | Ecosystem Bridges | crates.io — 38 crates at v1.3.6 | COMPLETE |
+| **7** | Ecosystem Bridges | crates.io — 38 crates at v1.3.7 | COMPLETE |
 | **6** | Hardware HDL/ISA | `BetRtlProcessor` simulation | COMPLETE |
 | **5** | Actor Model/Distributed | `TernNode` TCP/Actor protocol | COMPLETE |
 | **4** | Language Completeness | `for`, `loop`, `struct`, `match` | COMPLETE |
@@ -133,20 +133,19 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 
 ---
 
-## 3.0 CURRENT METRICS (2026-05-07)
+## 3.0 CURRENT METRICS (2026-05-11)
 
 | Metric | Value | Context |
 | :--- | :--- | :--- |
-| Albert architecture | 6L · 256H · 12E · 128CTX · 8000V | Auto-expanding; surgery to 7L imminent |
-| Albert parameters | ~35M (F32) / ~4M (ternary bits) | Ternary weights: {-γ, 0, +γ} |
-| Training loss (best) | 8.6171 (6L era) / 6.10 (pre-surgery) | ln(8000)=8.987 = max entropy |
-| Inference speed | 83–125 tok/s | CPU only, KV-cache + @sparseskip |
-| Sparsity | 56% zero weights → 44% ops executed | Element-level @sparseskip active |
-| MoE routing | 3/12 experts active per decode step | 9/12 skipped — expert-level @sparseskip |
-| Corpus (active) | Bible + Alice + 12 Gutenberg novels | stage_3 + stage_6 loaded at 6L |
-| Corpus (staged) | Wikipedia (7L), Q&A (9L), Technical (11L) | Auto-unlocked on surgery |
+| albert. architecture | 12L · 256H · 12E · 128CTX · 32000V | Active training — v3.0 multilingual run |
+| albert. parameters | ~58M (F32) / ~7M (ternary bits) | Ternary weights: {-γ, 0, +γ} via STE |
+| Training loss (best) | 6.9542 (v2.0.0 best epoch avg) / 10.3412 (v3.0 batch best) | v3.0 in vocabulary transfer — ln(32000)=10.373 baseline |
+| Inference speed | 83–125 tok/s (v2.0.0, 8k vocab, CPU-only) | KV-cache + @sparseskip; v3.0 benchmark pending |
+| Routing sparsity | 9/12 experts skipped per decode step | Expert-level @sparseskip — 75% routing skip |
+| Weight sparsity | 10–26% ternary zeros per layer | Element-level — zero positions never touched in matmul |
+| Corpus (active) | 635 MB multilingual (EN/DE/FR/ES/PT/IT/NL/PL) | Wikipedia CC BY-SA + Europarl + Gutenberg + 10% chaos |
 | Patent | A50296/2026 | @sparseskip sparse matmul primitive |
-| Crates published | 38 crates at v1.3.6 | crates.io, all open-core |
+| Crates published | 38 crates at v1.3.7 | crates.io, all open-core |
 | MCP tools | 34 tools | All free via Smithery + HTTP |
 
 ---

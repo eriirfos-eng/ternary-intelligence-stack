@@ -12,7 +12,7 @@ pub struct TransformerConfig {
 impl Default for TransformerConfig {
     fn default() -> Self {
         Self {
-            vocab_size: 8000,
+            vocab_size: 32000,
             hidden_size: 64,
             num_layers: 2,
             num_heads: 4,
