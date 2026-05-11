@@ -1,7 +1,7 @@
 # Ternary Intelligence Stack (TIS)
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![version](https://img.shields.io/badge/version-v1.3.6-blue)](#architecture)
+[![version](https://img.shields.io/badge/version-v1.3.7-blue)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-138%20CI%20%7C%205%20crates-yellow)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
@@ -22,11 +22,13 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 ### Full Documentation
 
 - **[README.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md)** — Full explanation, technical details, and compiler specifications
-- **[Albert-MoE-13: Ternary Scaling Research](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Research into natively trained ternary scaling.
+- **[albert-moe-13: Ternary Scaling Research](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Native ternary training framework, EvolutionManager, live dashboard
+- **[Convergence Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md)** — Live training loss history across all albert. versions
+- **[SPRIND Whitepaper](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/whitepaper/tis-sprind-submission-2026.tex)** — Full technical submission: @sparseskip, architecture, benchmarks
 - **[Agent Albert CLI](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — Terminal-native, model-agnostic AI agent built in pure Rust
 - **[Ternlang Studio (Preview)](https://ternlang-api.fly.dev/studio)** — Work-in-progress developer dashboard and SDK
 - **[Session Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and refinements addressed during deployment
-- **[Roadmap](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** — Phases 1–20 and priority matrix 
+- **[Roadmap](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** — Phases 1–20 and priority matrix
 
 ---
 
@@ -53,21 +55,23 @@ ternlang run my_program.tern   # explicit form
 
 
 
-## 2. What is Albert-MoE-13? (The Intelligence Layer)
+## 2. What is albert.? (The Intelligence Layer)
 
-Albert is a ternary Mixture-of-Experts language model trained from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus.
+**albert.** is a ternary Mixture-of-Experts language model trained natively from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus, guided by the Mandelbrot complexity monitor. The engineering repo label is `albert-moe-13`.
 
-**Current state (2026-05-10):** 12L · 256H · 12E · Top-3 routing · 128CTX · 32,000 vocab (ByteLevel BPE, multilingual) · ~58M params · training on CPU · v3.0 Global Epoch 40+.
+**Current state (2026-05-11):** 12L · 256H · 12E · Top-3 routing · 128CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · ~58M params · training on CPU · v3.0 Global Epoch 46+ · loss descending through vocabulary transfer plateau.
+
+A live training dashboard streams telemetry in real time at `localhost:8888` during training runs — layer topology, expert routing, gradient norms, TTL state, and loss curve with Fibonacci retracement overlays.
 
 ### What makes it different
 
-| Feature | Albert MoE-13 | Standard LLM |
-|--------|--------------|--------------|
+| Feature | albert. | Standard LLM |
+|--------|---------|--------------|
 | Weight precision | Ternary `{-γ, 0, +γ}` from scratch | Float32 / post-hoc INT4 |
-| **@sparseskip** | Skips 56% of matmul ops at element level | Dense matmul always |
-| Architecture growth | Autonomous Net2Net surgery (reached 12L, live on CPU) | Fixed at init |
+| **@sparseskip** | 75% expert skip per decode step — 9 of 12 experts inactive | Dense MoE: all experts active |
+| Architecture growth | Autonomous Net2Net surgery + Mandelbrot complexity monitor | Fixed at init |
 | Inference speed | **83–125 tok/s on laptop CPU** | Requires GPU at this quality |
-| Routing | 9/12 experts skipped per decode step | All experts active |
+| Two sparsity layers | Routing-level 75% skip + weight-level 10–26% ternary zeros | Single sparsity axis |
 | Patent | A50296/2026 (@sparseskip primitive) | — |
 
 ### Try it (API — no install needed)
@@ -84,12 +88,12 @@ curl -s https://ternlang-api.fly.dev/api/moe/orchestrate \
   -d '{"query": "What is ternary logic?", "evidence": [0.9, 0.1]}' | jq .
 ```
 
-*See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full sparsity speedup data and [`albert-moe-13/`](albert-moe-13/) for training code.*
+*See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full sparsity speedup data, [`albert-moe-13/`](albert-moe-13/) for training code, and the [Convergence Log](albert-moe-13/docs/convergence_log.md) for live loss history.*
 
 ### Known Limitations (honest)
-- Albert at 12L is a **research prototype**, not a production LLM. He generates statistically coherent text. Instruction-following capability is targeted with instruction fine-tuning at a later stage.
-- Training runs on a single CPU (HP ZBook, no GPU). A proper GPU cluster would run 10-50× faster.
-- Held-out perplexity vs float32 baseline is not yet published (in progress — `cargo run --release -p moe-llm-core --bin eval_perplexity`).
+- albert. at 12L is a **research prototype**, not a production LLM. It generates statistically coherent multilingual text. Instruction-following capability is targeted with instruction fine-tuning at a later stage.
+- Training runs on a single CPU (HP ZBook, no GPU). A proper GPU cluster would run 10–50× faster.
+- Held-out perplexity vs float32 baseline: `cargo run --release -p moe-llm-core --bin moe-test -- --bench`
 - The CUDA backend (`cuda_matmul.rs`) is a design sketch at TRL 3, not yet a running kernel.
 
 ---
