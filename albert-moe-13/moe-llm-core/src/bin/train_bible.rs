@@ -25,10 +25,19 @@ const LOSS_EXPLOSION_THRESHOLD: f32 = 11.0;
 
 // If the epoch-average loss sits at or above this for COLLAPSE_STREAK_LIMIT
 // consecutive epochs the model has collapsed to uniform distribution.
-// ln(32000) ≈ 10.373 — trigger at 10.2 to stay clear of normal post-surgery
-// warmup range. Same 0.187 margin below uniform as the v2.0 calibration.
-const COLLAPSE_THRESHOLD:    f32 = 10.2;
-const COLLAPSE_STREAK_LIMIT: u32 = 3;
+// 32k vocab random baseline: ln(32000) ≈ 10.373. Threshold set at 11.0 —
+// well above the vocabulary-transfer plateau band (~10.35) so normal
+// post-vocab-expansion epochs don't trigger false collapse detection.
+// Old value (10.2) was calibrated for 8k vocab; recalibrated for 32k here.
+const COLLAPSE_THRESHOLD:    f32 = 11.0;
+const COLLAPSE_STREAK_LIMIT: u32 = 2;
+
+// Gradient accumulation: accumulate this many micro-batch losses before
+// calling backward() + opt.step(). Equivalent to batch_size=N at no
+// extra memory cost — each forward graph is summed into accum_loss,
+// then one backward pass covers all N sequences. Mirrors the ternary
+// hold state: withhold the weight update until enough evidence accumulates.
+const GRAD_ACCUM_STEPS: usize = 4;
 
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
@@ -458,6 +467,8 @@ fn train_cycle(
             .ok();
 
         let epoch_start = Instant::now();
+        let mut accum_loss: Option<Tensor> = None;
+        let mut accum_exploded = false;
 
         for batch_idx in 0..num_batches {
             let batch_start = Instant::now();
@@ -536,48 +547,68 @@ fn train_cycle(
                 batch_loss = (&batch_loss + (lb * lb_lambda)?)?;
             }
 
-            // ── Gradient Clipping ─────────────────────────────────────────────
-            // Split backward() and step() so we can inspect the gradient norm
-            // before applying the update. If norm > MAX_GRAD_NORM, scale the
-            // loss down proportionally (equivalent to clipping all gradients).
-            let mut grads = batch_loss.backward()?;
-            let norm  = global_grad_norm(&varmap, &grads);
-            // Capture per-layer norms BEFORE opt.step() — optimizer updates tensor IDs in place,
-            // which invalidates the GradStore lookup for any Var used after the step.
-            let layer_norms = per_layer_grad_norm(&varmap, &grads, config.num_layers);
-            for (i, &n) in layer_norms.iter().enumerate() {
-                if i < epoch_layer_norm_acc.len() { epoch_layer_norm_acc[i] += n; }
-            }
-            epoch_layer_norm_count += 1;
-
             let real_loss = ce_loss.to_scalar::<f32>()?;
 
-            // Skip batches where the model has already exploded.
+            // Flag explosion — will flush and skip the whole accumulation window.
             if real_loss.is_nan() || real_loss.is_infinite() || real_loss > LOSS_EXPLOSION_THRESHOLD {
-                skipped_steps += 1;
-                println!("[{}] [SKIP] Batch {} — loss {:.4} (explosion), skip & preserve weights.",
-                    timestamp(), batch_idx, real_loss);
-                *global_step += 1;
-                continue;
+                accum_exploded = true;
             }
 
-            if norm > MAX_GRAD_NORM && norm.is_finite() {
-                // Gradient norm is too large — recompute with scaled loss so the
-                // effective gradient is exactly MAX_GRAD_NORM.
-                clipped_steps += 1;
-                let scale = (MAX_GRAD_NORM / norm) as f64;
-                let scaled_loss = (&batch_loss * scale)?;
-                let mut clipped_grads = scaled_loss.backward()?;
-                amplify_early_layers(&varmap, &mut clipped_grads, &layer_norms);
-                opt.step(&clipped_grads)?;
-            } else {
-                amplify_early_layers(&varmap, &mut grads, &layer_norms);
-                opt.step(&grads)?;
-            }
+            // Accumulate scaled loss (÷N so the effective gradient magnitude is unchanged).
+            let scaled = (batch_loss * (1.0 / GRAD_ACCUM_STEPS as f64))?;
+            accum_loss = Some(match accum_loss.take() {
+                None    => scaled,
+                Some(a) => (a + scaled)?,
+            });
 
-            total_loss       += real_loss;
-            counted_batches  += 1;
+            total_loss      += real_loss;
+            counted_batches += 1;
             wald.record_batch(real_loss);
+
+            let is_step_batch = (batch_idx + 1) % GRAD_ACCUM_STEPS == 0
+                || batch_idx + 1 == num_batches;
+
+            // Default: empty norms for non-step batches (used in GRAD log below).
+            let mut layer_norms = vec![0.0_f32; config.num_layers];
+            let mut norm = 0.0_f32;
+
+            if is_step_batch {
+                if accum_exploded {
+                    skipped_steps += 1;
+                    println!("[{}] [SKIP] Accum window ending batch {} — explosion, preserving weights.",
+                        timestamp(), batch_idx);
+                    accum_loss     = None;
+                    accum_exploded = false;
+                    *global_step  += 1;
+                    continue;
+                }
+
+                // ── Gradient step ─────────────────────────────────────────────
+                // backward() + clip + amplify + step, once per GRAD_ACCUM_STEPS.
+                if let Some(combined) = accum_loss.take() {
+                    let mut grads = combined.backward()?;
+                    norm = global_grad_norm(&varmap, &grads);
+                    layer_norms = per_layer_grad_norm(&varmap, &grads, config.num_layers);
+                    for (i, &n) in layer_norms.iter().enumerate() {
+                        if i < epoch_layer_norm_acc.len() { epoch_layer_norm_acc[i] += n; }
+                    }
+                    epoch_layer_norm_count += 1;
+
+                    if norm > MAX_GRAD_NORM && norm.is_finite() {
+                        clipped_steps += 1;
+                        let scale = (MAX_GRAD_NORM / norm) as f64;
+                        // Scale the already-computed grads rather than redoing backward.
+                        for var in varmap.all_vars() {
+                            if let Some(g) = grads.get(&var) {
+                                grads.insert(&var, (g * scale)?);
+                            }
+                        }
+                    }
+                    amplify_early_layers(&varmap, &mut grads, &layer_norms);
+                    opt.step(&grads)?;
+                }
+                accum_exploded = false;
+            }
 
             let batch_ms   = batch_start.elapsed().as_millis();
             let elapsed_s  = epoch_start.elapsed().as_secs();
