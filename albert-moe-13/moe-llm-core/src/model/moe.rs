@@ -97,6 +97,12 @@ impl MoeBlock {
         Ok(())
     }
 
+    /// Activate TTL warmup freeze on this layer's traffic light.
+    /// Called by train_bible when a gradient-norm burst is detected.
+    pub fn freeze_ttl(&self, steps: usize) {
+        self.traffic_light.borrow_mut().freeze(steps);
+    }
+
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         let (b, s, h) = x.dims3()?;
         let dev = x.device();

@@ -97,6 +97,9 @@ pub struct TrafficLight {
     burst_remaining: usize,
     /// How many bursts have fired — drives the rotation offset.
     burst_count: usize,
+    /// TTL warmup freeze: remaining update() calls during which logit modifiers are suppressed.
+    /// Set externally by train_bible on gradient-norm burst detection. Self-expiring countdown.
+    freeze_remaining: usize,
 }
 
 impl TrafficLight {
@@ -110,6 +113,7 @@ impl TrafficLight {
             orange_streak: 0,
             burst_remaining: 0,
             burst_count: 0,
+            freeze_remaining: 0,
         }
     }
 
@@ -164,6 +168,11 @@ impl TrafficLight {
         } else {
             self.orange_streak = 0;
         }
+
+        // Decrement warmup freeze countdown — self-expiring, no external reset needed.
+        if self.freeze_remaining > 0 {
+            self.freeze_remaining -= 1;
+        }
     }
 
     /// Directly set EMA values for burst experts so trit differentiation persists
@@ -210,8 +219,26 @@ impl TrafficLight {
         (self.orange_streak, self.burst_count)
     }
 
+    /// Activate warmup freeze: suppress logit modifiers for `steps` update() calls.
+    /// Idempotent — takes the max if a freeze is already active.
+    pub fn freeze(&mut self, steps: usize) {
+        self.freeze_remaining = steps.max(self.freeze_remaining);
+    }
+
+    pub fn is_frozen(&self) -> bool {
+        self.freeze_remaining > 0
+    }
+
+    pub fn freeze_steps_remaining(&self) -> usize {
+        self.freeze_remaining
+    }
+
     /// Gate logit modifier vector [num_experts] — broadcast-add to gate logits.
+    /// Returns zeros during warmup freeze so the gate can learn without TTL correction.
     pub fn logit_modifiers(&self) -> Vec<f32> {
+        if self.freeze_remaining > 0 {
+            return vec![0.0; self.num_experts];
+        }
         self.states.iter().map(|s| s.logit_modifier()).collect()
     }
 

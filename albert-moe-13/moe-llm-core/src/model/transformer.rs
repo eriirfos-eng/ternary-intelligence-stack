@@ -38,6 +38,10 @@ impl Block {
         Ok(())
     }
 
+    pub fn freeze_ttl(&self, steps: usize) {
+        if let Some(moe) = &self.moe { moe.freeze_ttl(steps); }
+    }
+
     pub fn clear_kv_cache(&self) {
         self.attention.clear_kv_cache();
     }
@@ -104,6 +108,14 @@ impl Transformer {
     pub fn prepare_inference(&self) -> Result<()> {
         for block in &self.blocks { block.prepare_inference()?; }
         self.lm_head.prepare_inference()
+    }
+
+    /// Freeze TTL logit modifiers on a specific transformer layer for `steps` update() calls.
+    /// Called by train_bible on gradient-norm burst detection to allow gate learning.
+    pub fn freeze_ttl_layer(&self, layer_idx: usize, steps: usize) {
+        if let Some(block) = self.blocks.get(layer_idx) {
+            block.freeze_ttl(steps);
+        }
     }
 
     /// Reset all per-layer KV-caches. Call before each new generation sequence.

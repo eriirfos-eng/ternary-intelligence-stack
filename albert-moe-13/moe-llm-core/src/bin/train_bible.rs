@@ -44,6 +44,17 @@ const GRAD_ACCUM_STEPS: usize = 4;
 // Self-terminating: once a layer's norm exceeds THRESHOLD the condition is false.
 const COLD_LR_BOOST: f64 = 6.0;
 
+// TTL burst detection — freeze logit modifiers when per-layer grad norm spikes.
+// GRAD_NORM_EMA_ALPHA: ~1/α ≈ 50-step window for the per-layer baseline EMA.
+// BURST_RATIO_THRESHOLD: fire when current_norm / baseline > this value.
+// TTL_FREEZE_GRAD_STEPS: freeze duration in optimizer steps; multiply by GRAD_ACCUM_STEPS
+//   for the update() call count passed to TrafficLight::freeze().
+// MAX_BURSTS_PER_EPOCH: safety circuit — disable further freezes after this many per epoch per layer.
+const GRAD_NORM_EMA_ALPHA: f32 = 0.02;
+const BURST_RATIO_THRESHOLD: f32 = 5.0;
+const TTL_FREEZE_GRAD_STEPS: usize = 50;
+const MAX_BURSTS_PER_EPOCH: usize = 3;
+
 fn timestamp() -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
     let secs = now.as_secs();
@@ -486,6 +497,12 @@ fn train_cycle(
     let seq_len     = config.max_seq_len;
     let num_batches = 300_usize;
 
+    // Per-layer grad norm EMA for burst detection. Initialized high (1.0) so early steps
+    // don't false-trigger before EMA converges to the per-layer true baseline (~50 steps).
+    let mut grad_norm_ema: Vec<f32> = vec![1.0_f32; config.num_layers];
+    // Safety circuit: how many TTL freeze events fired per layer this epoch.
+    let mut epoch_burst_count: Vec<usize> = vec![0; config.num_layers];
+
     // Write arch metadata once per train_cycle so the dashboard can display it.
     if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
         let _ = writeln!(f, "ARCH {}L {}H {}E {}CTX {}V",
@@ -497,6 +514,8 @@ fn train_cycle(
         let mut total_loss    = 0.0_f32;
         let mut counted_batches = 0u32; // only count non-skipped batches in avg
         total_epochs += 1;
+        // Reset per-epoch TTL freeze safety counters at epoch boundary.
+        epoch_burst_count.iter_mut().for_each(|c| *c = 0);
         let mut clipped_steps = 0u32;
         let mut skipped_steps = 0u32;
         // Mycelium epoch telemetry accumulators
@@ -637,6 +656,38 @@ fn train_cycle(
                         if i < epoch_layer_norm_acc.len() { epoch_layer_norm_acc[i] += n; }
                     }
                     epoch_layer_norm_count += 1;
+
+                    // TTL burst detection — per-layer grad norm vs EMA baseline.
+                    // When ratio > BURST_RATIO_THRESHOLD, freeze that layer's TTL logit modifiers
+                    // for TTL_FREEZE_GRAD_STEPS optimizer steps so gate can learn without correction.
+                    for (i, &n) in layer_norms.iter().enumerate() {
+                        let baseline = grad_norm_ema[i];
+                        if n > 0.0 {
+                            let ratio = n / baseline.max(1e-12);
+                            if ratio > BURST_RATIO_THRESHOLD && epoch_burst_count[i] < MAX_BURSTS_PER_EPOCH {
+                                epoch_burst_count[i] += 1;
+                                let freeze_update_steps = TTL_FREEZE_GRAD_STEPS * GRAD_ACCUM_STEPS;
+                                model.freeze_ttl_layer(i, freeze_update_steps);
+                                let freeze_end_step = *global_step + TTL_FREEZE_GRAD_STEPS;
+                                println!("[{}] TTLFREEZE layer={} step={} grad={:.2e} base={:.2e} ratio={:.1} freeze_end={} fires_this_epoch={}",
+                                    timestamp(), i, *global_step, n, baseline, ratio, freeze_end_step, epoch_burst_count[i]);
+                                if let Some(ref mut f) = log_file {
+                                    let _ = writeln!(f, "TTLFREEZE step={} layer={} grad={:.6} baseline={:.6} ratio={:.2} freeze_end={}",
+                                        *global_step, i, n, baseline, ratio, freeze_end_step);
+                                }
+                                if epoch_burst_count[i] >= MAX_BURSTS_PER_EPOCH {
+                                    println!("[{}] TTLFREEZE WARN layer={} reached {} fires/epoch — suppressing further freezes this epoch",
+                                        timestamp(), i, MAX_BURSTS_PER_EPOCH);
+                                    if let Some(ref mut f) = log_file {
+                                        let _ = writeln!(f, "TTLFREEZE WARN step={} layer={} max_bursts_reached={}",
+                                            *global_step, i, MAX_BURSTS_PER_EPOCH);
+                                    }
+                                }
+                            }
+                            // Update EMA after burst check so baseline tracks the normal level.
+                            grad_norm_ema[i] = GRAD_NORM_EMA_ALPHA * n + (1.0 - GRAD_NORM_EMA_ALPHA) * baseline;
+                        }
+                    }
 
                     if norm > MAX_GRAD_NORM && norm.is_finite() {
                         clipped_steps += 1;

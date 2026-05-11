@@ -1446,6 +1446,34 @@ the Routing Lottery: all experts return to O at epoch start.}
 \label{fig:tlight}
 \end{figure}
 
+\textbf{Anti-stagnation burst.}
+When all experts remain Orange for $\texttt{STAGNATION\_STEPS} = 100$ consecutive
+steps---the Universal Nash equilibrium---TTL fires a forced burst: for
+$\texttt{BURST\_DURATION} = 30$ steps, three experts are clamped to Green and three
+to Red using a rotation offset incremented per burst ($7 \times \text{burst\_count}
+\bmod N$, coprime to $N\!=\!12$, ensuring full expert coverage over successive
+bursts). Burst state is reinforced by direct EMA imprinting:
+Green experts receive $\text{EMA} \leftarrow 0.4 \times \textsc{Green\_Thresh}$
+and Red experts $\text{EMA} \leftarrow 1.6 \times \textsc{Red\_Thresh}$,
+extending differentiation $\approx 20$ steps beyond the burst window under natural
+EMA decay.
+
+\textbf{TTL warmup suppression (v3.1).}
+Diagnostic work at Global Epochs 73--74 identified a second-order failure mode:
+when a gradient-norm burst creates genuine expert differentiation, TTL's logit
+modifiers suppress it within $\approx 10$ steps---faster than the gate can
+consolidate a routing assignment.  The fix is a per-layer \emph{warmup freeze}:
+when layer~$l$'s per-step gradient norm exceeds $5\times$ the layer's EMA baseline
+(computed with $\alpha\!=\!0.02$, giving a $\approx\!50$-step window), the logit
+modifier output of that layer's TTL is set to zero for
+$\texttt{TTL\_FREEZE\_STEPS}\!=\!50$ optimiser steps.  State classification (G/O/R)
+continues uninterrupted so the dashboard retains full observability; only the active
+logit correction is suspended.  The ratio criterion auto-scales to each layer's
+characteristic operating range: L0's threshold of $\approx\!5 \times 10^{-5}$ and
+L11's threshold of $\approx\!10^{-2}$ emerge naturally without hardcoded per-layer
+constants.  A safety circuit caps freeze events at three per layer per epoch to
+prevent runaway differentiation loops.
+
 \subsection{Epoch-Gated Routing Lottery}
 \label{subsec:routing_lottery}
 
@@ -1457,9 +1485,12 @@ At the start of each training epoch, the EvolutionManager executes two operation
         distribution used at model creation. This breaks any routing symmetry
         accumulated during the previous epoch.
   \item \textbf{Expert symmetry break}: Gaussian noise
-        $\delta \sim \mathcal{N}(0,\, 0.02^2)$ is applied to all expert
+        $\delta \sim \mathcal{N}(0,\, 0.15^2)$ is applied to all expert
         weight tensors ($L \times E \times d^2 = 576$ tensors in v3.0). This
-        prevents dead experts from remaining permanently inactive after a gate reset.
+        ensures each expert has a distinct weight distribution---critical for
+        ternary-quantized weights, where the threshold between bins is narrow and
+        a smaller $\sigma\!=\!0.02$ flips too few weights to produce meaningfully
+        different expert outputs.
 \end{enumerate}
 
 The result is a \emph{routing lottery}: each epoch begins with all experts competing
@@ -1499,7 +1530,7 @@ commitment until the new epoch's evidence has been accumulated.
 % Six nodes arranged in a hexagon (clockwise from top)
 \node[obox] (start) at (0,    3.2) {Epoch Start};
 \node[rbox] (reset) at (2.8,  1.6) {Gate Reset\\(kaiming-unif.)};
-\node[rbox] (noise) at (2.8, -0.8) {Symmetry Break\\($\sigma\!=\!0.02$)};
+\node[rbox] (noise) at (2.8, -0.8) {Symmetry Break\\($\sigma\!=\!0.15$)};
 \node[gbox] (train) at (0,   -2.4) {Training Batches\\(grad.\ accum.\ $N\!=\!4$)};
 \node[gbox] (spec)  at (-2.8,-0.8) {Specialisation\\TLIGHT G/O/R};
 \node[obox] (end)   at (-2.8, 1.6) {Epoch End\\+~checkpoint};
@@ -1517,7 +1548,7 @@ commitment until the new epoch's evidence has been accumulated.
     node[midway, left=8pt, text=dkgreen!75, align=center, font=\scriptsize]{expert\\weights\\preserved};
 \end{tikzpicture}
 \caption{Epoch-Gated Routing Lottery lifecycle. All gate weights are reset to
-kaiming-uniform at every epoch boundary; Gaussian noise ($\sigma\!=\!0.02$)
+kaiming-uniform at every epoch boundary; Gaussian noise ($\sigma\!=\!0.15$)
 is applied to all 576 expert tensors to prevent dead-expert inertia. Expert
 weights are preserved throughout---only the routing map is redrawn. Gradient
 accumulation ($N\!=\!4$) operates within the training phase.}
