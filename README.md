@@ -111,6 +111,17 @@ All core training and inference primitives are open-source under LGPL-3.0 and li
 
 > These files form the complete ternary training stack. The `@sparseskip` primitive (Patent A50296/2026) spans `ternary_linear.rs` (weight-level) and `moe.rs` (routing-level).
 
+### Model Artifact (downloadable)
+
+The first publicly released native-ternary checkpoint is attached to the [v2.0.0 GitHub release](https://github.com/eriirfos-eng/ternary-intelligence-stack/releases/tag/v2.0.0):
+
+| File | Size | Description |
+|------|------|-------------|
+| [`bible_ternary_v2.0.0.trit`](https://github.com/eriirfos-eng/ternary-intelligence-stack/releases/download/v2.0.0/bible_ternary_v2.0.0.trit) | 13 MB | Packed ternary weights — 3L · 256H · 12E · 8k vocab · `{-γ, 0, +γ}` throughout |
+| [`bible_ternary_v2.0.0.config.json`](https://github.com/eriirfos-eng/ternary-intelligence-stack/releases/download/v2.0.0/bible_ternary_v2.0.0.config.json) | 105 B | Architecture config |
+
+Format: custom `.trit` binary (see [`quantize_model.rs`](albert-moe-13/moe-llm-core/src/bin/quantize_model.rs) for the packer and [`packing.rs`](albert-moe-13/moe-llm-core/src/model/packing.rs) for the spec). Header = tensor count (u32 LE), then per-tensor: name length, name bytes, shape dims, type byte (0=raw f32, 1=packed ternary), data.
+
 ---
 
 ## 3. Agent Albert — The Sovereign AI Assistant
