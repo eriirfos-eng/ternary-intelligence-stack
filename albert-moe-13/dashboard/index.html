@@ -1631,10 +1631,28 @@
         addNode('OUT', '<b>Output</b><br>Logits projected to vocab (32000 tokens).<br>Next-token prediction via cross-entropy loss.');
 
         // ── Panel B: Expert heatmap ────────────────────────────────────
+        // Uses routing dominance (how often each expert had the highest gate weight
+        // in the recent ROUTE window) rather than weight magnitude — weight magnitude
+        // converges to all-100% after any significant training and is useless for display.
         const expDiv = document.getElementById('expert-viz');
         expDiv.innerHTML = '';
-        for (let e = 0; e < tele.expertActivity.length; e++) {
-            const act = tele.expertActivity[e];
+        const numE = tele.expertActivity.length;
+        let expertActivities = tele.expertActivity;
+        let actLabel = 'Weight mag.';
+        if (routingHistory.length > 0) {
+            const dominance = new Array(numE).fill(0);
+            for (const entry of routingHistory) {
+                if (!entry.weights || entry.weights.length === 0) continue;
+                const maxW = Math.max(...entry.weights);
+                const domIdx = entry.weights.indexOf(maxW);
+                if (domIdx >= 0 && domIdx < numE) dominance[domIdx]++;
+            }
+            const maxDom = Math.max(...dominance, 1);
+            expertActivities = dominance.map(d => d / maxDom);
+            actLabel = 'Route dom.';
+        }
+        for (let e = 0; e < numE; e++) {
+            const act = expertActivities[e];
             const cell = document.createElement('div');
             cell.className = 'expert-cell';
             cell.style.background = expertColor(act);
@@ -1647,7 +1665,7 @@
                 `<b>E${e} · ${eName}</b><br>` +
                 `<span style="color:#64748b;font-size:10px">${EXPERT_DESC[e] || ''}</span><br><br>` +
                 `${EXPERT_HUMAN[e] || ''}<br><br>` +
-                `Activity: <b>${pctStr}%</b>`));
+                `${actLabel}: <b>${pctStr}%</b> (relative to most-dominant expert in window)`));
             cell.addEventListener('mouseleave', hideTip);
             expDiv.appendChild(cell);
         }
