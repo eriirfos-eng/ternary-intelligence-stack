@@ -202,7 +202,7 @@ Operational and domain-specific crates that require a commercial subscription fo
 | Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 28,500+ open-core stdlib modules + 34 MCP tools |
 | Pro Standard (BSL-1.1) | €99/month | REST API, server-side memory, Tier 2 'Masterwork' modules |
 | Industrial (BSL-1.1) | €349/month | QNN, SEC, T-HAL, TernAudit + Tier 3 'Masterwork' modules |
-| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 'Masterwork' modules |
+| Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 'Masterwork' modules + **unlimited API calls/month** |
 
 ---
 
