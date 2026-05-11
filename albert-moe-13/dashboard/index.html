@@ -747,6 +747,7 @@
         surgery:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="12" height="12"><path d="M6 2v4"/><path d="M6 6l-3 4"/><path d="M6 6l3 4"/><circle cx="6" cy="2" r="1.2" fill="currentColor" stroke="none"/><circle cx="3" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg>`,
         mastery:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4 10h4M6 8v2"/><path d="M3 1h6v3.5A3 3 0 016 7.5 3 3 0 013 4.5V1z"/><path d="M3 2.5H1.5v1.5A2 2 0 003 6"/><path d="M9 2.5h1.5v1.5A2 2 0 019 6"/></svg>`,
         rollback: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4.5 2L1.5 5l3 3"/><path d="M1.5 5H8a2.5 2.5 0 010 5H5.5"/></svg>`,
+        balanced: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M6 2v8"/><path d="M3 10h6"/><path d="M2 5l4-2 4 2"/><path d="M2 5c0 1.1.9 2 2 2s2-.9 2-2"/><path d="M6 5c0 1.1.9 2 2 2s2-.9 2-2"/></svg>`,
     };
 
     const POLL_MS            = 1500;  // ~2s/batch at 256H — one poll per batch
@@ -783,7 +784,8 @@
     let lastBatchY = null;
     let lastNumLayers = null;
     let lastDomExpert = -1;
-    let lastClipTs    = 0;
+    let lastClipTs      = 0;
+    let lastBalancedStep = -999;  // step at which last BALANCED event fired
     let bestEpochAvg  = Infinity;
     let spikeFiredEp  = -1;
 
@@ -1177,13 +1179,17 @@
         }
     });
 
-    // ── SMA ────────────────────────────────────────────────────────────
+    // ── SMA — O(n) sliding window sum, not O(n²) slice+reduce ──────────
     function sma(data, w) {
-        return data.map((_, i) => {
-            const s = Math.max(0, i - w + 1);
-            const avg = data.slice(s, i + 1).reduce((a, b) => a + b.y, 0) / (i - s + 1);
-            return { x: data[i].x, y: avg };
-        });
+        if (data.length === 0) return [];
+        const result = new Array(data.length);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+            sum += data[i].y;
+            if (i >= w) sum -= data[i - w].y;
+            result[i] = { x: data[i].x, y: sum / Math.min(i + 1, w) };
+        }
+        return result;
     }
 
     // ── TMA — Ternary Moving Average ───────────────────────────────────
@@ -1321,6 +1327,9 @@
                     routingHistory.push({ step, weights });
                     if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
                     renderRoutingHeatmap();
+                    // Expert activity updates on every ROUTE (not just TELE) so the
+                    // heatmap reflects live routing dominance every 10 batches.
+                    if (latestTele) renderExpertActivity(latestTele);
                     const maxW   = Math.max(...weights);
                     const domIdx = weights.indexOf(maxW);
                     if (maxW > 0.25 && domIdx !== lastDomExpert) {
@@ -1352,10 +1361,18 @@
                     }
                     continue;
                 }
-                // ENTR line — per-step router entropy
+                // ENTR line — per-step router entropy. Max = ln(12) ≈ 2.485
                 const enm = line.match(/^ENTR step=(\d+) avg=([\d.]+)/);
                 if (enm) {
+                    const enStep = parseInt(enm[1]);
                     pendingEntropy = parseFloat(enm[2]);
+                    // BALANCED: entropy ≥ 2.40 (96.6% of max) — experts sharing load evenly
+                    if (pendingEntropy >= 2.40 && enStep - lastBalancedStep > 200) {
+                        lastBalancedStep = enStep;
+                        addEvent('balanced', `BALANCED H=${pendingEntropy.toFixed(3)}`, 'warn',
+                            `Router entropy <b>${pendingEntropy.toFixed(4)}</b> nats · max = ln(12) ≈ 2.485.<br>` +
+                            `All 12 experts are receiving near-equal routing weight — load is balanced.`);
+                    }
                     continue;
                 }
                 // TLIGHT line — ternary traffic light state per layer
@@ -1435,6 +1452,7 @@
                     tele_sparsity: latestTele ? [...latestTele.layerSparsity] : null,
                     tele_activity: latestTele ? [...latestTele.expertActivity] : null,
                 });
+                if (batchLog.length > 10000) batchLog.splice(0, batchLog.length - 10000);
             }
 
             if (newPts.length === 0) return;
@@ -1755,8 +1773,10 @@
                 `Color = @sparseskip efficiency · deeper layers sparser.`);
         });
 
-        // ── Panel B: Expert heatmap ────────────────────────────────────
-        // Routing dominance: how often each expert was top-gated in recent ROUTE window.
+        renderExpertActivity(tele);
+    }
+
+    function renderExpertActivity(tele) {
         const expDiv = document.getElementById('expert-viz');
         const numE = tele.expertActivity.length;
         let expertActivities = tele.expertActivity;
@@ -1765,7 +1785,6 @@
             const dominance = new Array(numE).fill(0);
             for (const entry of routingHistory) {
                 if (!entry.weights || entry.weights.length === 0) continue;
-                // Count all top-3 active experts per step (Top-3 MoE routing)
                 const indexed = entry.weights.map((w, i) => ({ w, i })).sort((a, b) => b.w - a.w);
                 const topK = Math.min(3, indexed.length);
                 for (let k = 0; k < topK; k++) {
@@ -1778,7 +1797,6 @@
             actLabel = 'Route dom.';
         }
 
-        // Build cell scaffold once; update backgrounds + percentages in-place
         const expWaiting = document.getElementById('expert-waiting');
         if (expWaiting) expWaiting.remove();
         if (expDiv.querySelectorAll('.expert-cell').length !== numE) {
@@ -1824,43 +1842,71 @@
         if (routingHistory.length === 0) return;
 
         const numExperts = routingHistory[0].weights.length;
-        wrap.innerHTML = '';
-        // Normalize against 2× fair share: balanced expert (1/N) → v≈0.5 (orange),
-        // dominant expert (2/N+) → v≈1.0 (deep red). Avoids per-step normalization
-        // which maps balanced routing to 1.0 (all red) when all experts are equal.
-        const fairShare = 2.0 / numExperts;
-        const colMax = routingHistory.map(() => fairShare);
-        // One row per expert, cells = time steps (oldest → newest)
-        for (let e = 0; e < numExperts; e++) {
-            const row = document.createElement('div');
-            row.className = 'route-row';
-            const lbl = document.createElement('span');
-            lbl.className = 'route-label';
-            lbl.textContent = EXPERT_NAMES[e] || `E${e}`;
-            lbl.style.cursor = 'default';
-            lbl.addEventListener('mouseenter', ev => showTip(ev,
-                `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}`));
-            lbl.addEventListener('mouseleave', hideTip);
-            row.appendChild(lbl);
+        const fairShare  = 2.0 / numExperts;
 
-            const cells = document.createElement('div');
-            cells.className = 'route-cells';
-            for (let t = 0; t < routingHistory.length; t++) {
-                const w = routingHistory[t].weights[e] || 0;
-                const v = Math.min(1, w / colMax[t]); // clamped: balanced=0.5 (orange), dominant=1.0 (red)
-                const cell = document.createElement('div');
-                cell.className = 'route-cell';
-                cell.style.background = routingColor(v);
-                const stepNum = routingHistory[t].step;
-                const wPct = (w*100).toFixed(1);
-                cell.addEventListener('mouseenter', ev => showTip(ev,
-                    `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}<br>Step ${stepNum}: <b>${wPct}%</b>`));
-                cell.addEventListener('mouseleave', hideTip);
-                cells.appendChild(cell);
+        // Scaffold rows once — rebuild only if expert count changes.
+        // Event delegation on .route-cells avoids per-cell listener churn.
+        if (wrap.querySelectorAll('.route-row').length !== numExperts) {
+            wrap.innerHTML = '';
+            for (let e = 0; e < numExperts; e++) {
+                const row = document.createElement('div');
+                row.className = 'route-row';
+                row.dataset.expert = e;
+
+                const lbl = document.createElement('span');
+                lbl.className = 'route-label';
+                lbl.textContent = EXPERT_NAMES[e] || `E${e}`;
+                lbl.style.cursor = 'default';
+                lbl.addEventListener('mouseenter', ev => showTip(ev,
+                    `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}`));
+                lbl.addEventListener('mouseleave', hideTip);
+                row.appendChild(lbl);
+
+                const cells = document.createElement('div');
+                cells.className = 'route-cells';
+                // Delegate hover to cells container — reads step index from dataset
+                cells.addEventListener('mousemove', ev => {
+                    const cell = ev.target.closest('.route-cell');
+                    if (!cell) return;
+                    const t  = parseInt(cell.dataset.t);
+                    const entry = routingHistory[t];
+                    if (!entry) return;
+                    const w    = entry.weights[e] || 0;
+                    showTip(ev,
+                        `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}<br>` +
+                        `Step ${entry.step}: <b>${(w*100).toFixed(1)}%</b>`);
+                });
+                cells.addEventListener('mouseleave', hideTip);
+                row.appendChild(cells);
+                wrap.appendChild(row);
             }
-            row.appendChild(cells);
-            wrap.appendChild(row);
         }
+
+        // Update cell colors in-place — rebuild cells only when history length changes
+        wrap.querySelectorAll('.route-row').forEach(row => {
+            const e = parseInt(row.dataset.expert);
+            const cells = row.querySelector('.route-cells');
+            const existing = cells.querySelectorAll('.route-cell');
+
+            if (existing.length !== routingHistory.length) {
+                cells.innerHTML = '';
+                for (let t = 0; t < routingHistory.length; t++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'route-cell';
+                    cell.dataset.t = t;
+                    const w = routingHistory[t].weights[e] || 0;
+                    cell.style.background = routingColor(Math.min(1, w / fairShare));
+                    cells.appendChild(cell);
+                }
+            } else {
+                // Just shift the oldest cell to the end and update its color (sliding window)
+                existing.forEach((cell, t) => {
+                    cell.dataset.t = t;
+                    const w = routingHistory[t].weights[e] || 0;
+                    cell.style.background = routingColor(Math.min(1, w / fairShare));
+                });
+            }
+        });
     }
 
     // ── Panel E: Per-Layer Gradient Norms ─────────────────────────────
