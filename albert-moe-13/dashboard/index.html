@@ -48,37 +48,26 @@
             background: var(--bg1);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
-            padding: 0;
+            padding: 4px 6px;
+            gap: 4px;
         }
         .tb-cell {
             display: flex;
             align-items: center;
             gap: 5px;
-            padding: 0 12px;
-            border-right: none;
-            height: 40px;
+            padding: 0 10px;
+            height: 32px;
             white-space: nowrap;
             flex: 0 0 auto;
-            position: relative;
+            background: rgba(255,255,255,0.025);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: border-color 0.2s;
         }
-        .tb-cell::after {
-            content: '';
-            position: absolute;
-            right: 0; top: 0; bottom: 0;
-            width: 1px;
-            background: linear-gradient(
-                to bottom,
-                transparent 0%,
-                var(--border) 20%,
-                var(--border) 80%,
-                transparent 100%
-            );
-            pointer-events: none;
-        }
-        .tb-cell.controls::after { display: none; }
+        .tb-cell:hover { border-color: var(--border2); }
         .tb-cell.arch { flex: 1 1 120px; min-width: 0; overflow: hidden; }
         .tb-cell.arch .tb-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-        .tb-cell.controls { border-right: none; margin-left: auto; gap: 6px; padding-right: 12px; }
+        .tb-cell.controls { background: transparent; border: none; margin-left: auto; gap: 6px; padding-right: 6px; }
         .tb-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .tb-val   { color: var(--text); font-weight: bold; font-size: 13px; }
         .tb-val.accent { color: var(--accent); font-size: 16px; }
@@ -115,8 +104,8 @@
             background: var(--bg2);
             color: var(--accent);
             border: 1px solid var(--border2);
-            padding: 4px 10px;
-            border-radius: 8px;
+            padding: 4px 12px;
+            border-radius: 99px;
             font-family: inherit;
             font-size: 11px;
             cursor: pointer;
@@ -1783,9 +1772,10 @@
             tsWrap.appendChild(inRow);
         }
 
-        // Update each layer row in-place — transitions play automatically
-        tsWrap.querySelectorAll('.tsrow[data-layer]').forEach((row, i) => {
-            const s   = tele.layerSparsity[i] || 0;
+        // Update each layer row in-place — use data-layer for correct index after order flip
+        tsWrap.querySelectorAll('.tsrow[data-layer]').forEach(row => {
+            const li  = parseInt(row.dataset.layer);
+            const s   = tele.layerSparsity[li] || 0;
             const col = sparsityColor(s);
             const pct = (s * 100).toFixed(0);
             const node = row.querySelector('.ts-node');
@@ -1796,7 +1786,7 @@
             fill.style.background = col;
             row.querySelector('.ts-pct').textContent = pct + '%';
             row.onmouseenter = ev => showTip(ev,
-                `<b>Layer ${i}</b><br>` +
+                `<b>Layer ${li}</b><br>` +
                 `Sparsity: <b>${pct}%</b> near-zero weights<br>` +
                 `Color = @sparseskip efficiency · deeper layers sparser.`);
         });
@@ -1811,11 +1801,15 @@
             const dominance = new Array(numE).fill(0);
             for (const entry of routingHistory) {
                 if (!entry.weights || entry.weights.length === 0) continue;
-                const maxW  = Math.max(...entry.weights);
-                const domIdx = entry.weights.indexOf(maxW);
-                if (domIdx >= 0 && domIdx < numE) dominance[domIdx]++;
+                // Count all top-3 active experts per step (Top-3 MoE routing)
+                const indexed = entry.weights.map((w, i) => ({ w, i })).sort((a, b) => b.w - a.w);
+                const topK = Math.min(3, indexed.length);
+                for (let k = 0; k < topK; k++) {
+                    const idx = indexed[k].i;
+                    if (idx >= 0 && idx < numE) dominance[idx] += indexed[k].w;
+                }
             }
-            const maxDom = Math.max(...dominance, 1);
+            const maxDom = Math.max(...dominance, 1e-9);
             expertActivities = dominance.map(d => d / maxDom);
             actLabel = 'Route dom.';
         }
