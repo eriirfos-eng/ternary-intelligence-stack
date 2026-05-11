@@ -18,6 +18,20 @@
 // Future extension: WaldReport.sample_pressure feeds back into the corpus
 // sampler to oversample inputs that historically land near dead_low. This
 // closes the Wald loop from observation into curriculum action.
+//
+// ── Historical note (2026-05-11, Global Epoch 64) ────────────────────────
+// For two full epochs this module ran at severity=0.983 — the maximum — and
+// reported with four decimal places of certainty that the model had a massive
+// dead zone below its loss floor. It detected the engines perfectly.
+// Then it printed a warning and did nothing.
+//
+// The module named after the man who fixed survivorship bias had survivorship
+// bias: it only observed what was happening, and ignored what wasn't.
+// The very thing Wald became famous for pointing out.
+//
+// Fixed 2026-05-11: severity now drives amplify_early_layers() dynamically.
+// At severity=0.983 → scale=47×. The engines are finally being reinforced.
+// — Simeon Kepp & Claude Sonnet 4.6
 
 use std::collections::VecDeque;
 
