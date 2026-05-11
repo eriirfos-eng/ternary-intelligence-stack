@@ -168,9 +168,38 @@ The full training pipeline — including the Straight-Through Estimator (STE) ba
 
 ## Licensing
 
-| Tier | Price | Details |
+Three license tiers apply across this repository. Every crate declares its license explicitly in `Cargo.toml`.
+
+### Open Core — LGPL-3.0-or-later (free, copyleft)
+
+The entire research and language infrastructure layer is open source. This includes everything needed to study, reproduce, and build on the ternary training stack:
+
+| Component | Crates / paths |
+|-----------|----------------|
+| **albert. training stack** | `albert-moe-13/moe-llm-core`, `moe-compute`, `moe-data`, `moe-test`, `reproducibility_verifier` |
+| **Ternlang compiler + VM** | `ternlang-root/ternlang-core`, `ternlang-vm`, `ternlang-parser`, `ternlang-wasm` |
+| **CLI + LSP** | `ternlang-root/ternlang-cli`, `ternlang-lsp`, `ternlang-test` |
+| **Agent Albert CLI** | `agent_albert_cli/` |
+| **Open stdlib** | `ternlang-root/stdlib/` — 28,500+ `.tern` modules |
+| **Python bindings** | `pytern/` |
+
+> All `albert-moe-13` crates inherit `license = "LGPL-3.0-or-later"` from the workspace root. The `@sparseskip` primitive (Patent A50296/2026) is implemented in these open-source files — the patent covers the method; the implementation is freely readable and modifiable under LGPL.
+
+### Commercial Infrastructure — BSL-1.1 (source-available, converts to Apache-2.0 after 4 years)
+
+Operational and domain-specific crates that require a commercial subscription for production use. Source is publicly readable but production deployment requires a licence:
+
+`ternlang-api` · `ternlang-mcp` · `ternlang-sec` · `ternlang-crypto` · `ternlang-ml` · `ternlang-compress` · `ternlang-gate` · `ternlang-hdl` · `ternlang-hft` · `ternlang-bci` · `ternlang-bio` · `ternlang-qutrit` · `ternlang-ros2` · `ternlang-posix` · `ternlang-contract` · `ternlang-consensus` · `ternlang-astro` · `ternlang-tson`
+
+### Proprietary (Enterprise only, source not public)
+
+`ternlang-ruvector` — on-premise vector inference engine; available under the Enterprise tier only.
+
+### Subscription tiers
+
+| Tier | Price | What you get |
 |------|-------|---------|
-| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 28,500+ open-core modules + 34 MCP tools |
+| Community (LGPL-3.0) | Free | Compiler, VM, CLI, LSP, 28,500+ open-core stdlib modules + 34 MCP tools |
 | Pro Standard (BSL-1.1) | €99/month | REST API, server-side memory, Tier 2 'Masterwork' modules |
 | Industrial (BSL-1.1) | €349/month | QNN, SEC, T-HAL, TernAudit + Tier 3 'Masterwork' modules |
 | Enterprise (Proprietary) | From €2,500/month | On-premise, FPGA, custom SLA + Tier 4 'Masterwork' modules |
