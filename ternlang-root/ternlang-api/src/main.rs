@@ -597,10 +597,18 @@ async fn kpi_page() -> impl axum::response::IntoResponse {
     }
 }
 
+const KPI_ALLOWED: &[&str] = &[
+    "index.html",
+    "ternlang_kpi_log.json",
+    "ternlang_gh_traffic.json",
+    "training_telemetry.json",
+];
+
 async fn kpi_data(axum::extract::Path(filename): axum::extract::Path<String>) -> impl axum::response::IntoResponse {
-    let base = if std::path::Path::new("/data").exists() { "/data/kpi" } else { "/home/eri-irfos/Desktop/KPI" };
-    let path = std::path::Path::new(base).join(filename);
-    
+    if !KPI_ALLOWED.contains(&filename.as_str()) {
+        return StatusCode::NOT_FOUND.into_response();
+    }
+    let path = std::path::Path::new("/data/kpi").join(&filename);
     match tokio::fs::read_to_string(&path).await {
         Ok(content) => {
             (
@@ -4245,25 +4253,51 @@ async fn stdlib_read(
     let raw = headers.get("X-Ternlang-Key").and_then(|v| v.to_str().ok()).unwrap_or("");
     let user_tier = if let Some(entry) = state.keys.peek(raw).await { entry.tier } else { 0 };
 
-    let sanitized = file_path.replace("..", "").trim_start_matches('/').to_string();
-    let rel_path = if sanitized.starts_with("stdlib/") { sanitized.clone() } else { format!("stdlib/{}", sanitized) };
-    
-    if get_path_tier(&rel_path) > user_tier {
+    // Strip leading slashes; reject any path that is or contains an absolute segment.
+    // We do NOT use .replace("..", "") — that approach is bypassable via stdlib/../x
+    // which after strip_prefix produces an absolute path that PathBuf::push would accept.
+    // Instead: build the candidate path, canonicalize it, and verify it stays inside base.
+    let base_str = std::env::var("STDLIB_PATH").unwrap_or_else(|_| "stdlib".to_string());
+    let base_dir = std::path::Path::new(&base_str);
+
+    // Resolve the base canonically first (fails loudly in dev if stdlib doesn't exist)
+    let canonical_base = match base_dir.canonicalize() {
+        Ok(p) => p,
+        Err(_) => return api_error(StatusCode::INTERNAL_SERVER_ERROR, "stdlib base not found"),
+    };
+
+    // Strip any stdlib/ prefix the caller may have included, then trim leading slashes
+    let trimmed = file_path
+        .trim_start_matches('/')
+        .trim_start_matches("stdlib/")
+        .trim_start_matches('/');
+
+    // Reject empty or obviously absolute paths before canonicalize
+    if trimmed.is_empty() || trimmed.starts_with('/') {
+        return api_error(StatusCode::BAD_REQUEST, "invalid path");
+    }
+
+    let candidate = canonical_base.join(trimmed);
+    let canonical_candidate = match candidate.canonicalize() {
+        Ok(p) => p,
+        // File doesn't exist → 404 (not a traversal leak)
+        Err(_) => return api_error(StatusCode::NOT_FOUND, "file not found"),
+    };
+
+    // Core guard: resolved path must be strictly inside the stdlib base
+    if !canonical_candidate.starts_with(&canonical_base) {
+        return api_error(StatusCode::FORBIDDEN, "access denied");
+    }
+
+    // Tier check against the original relative path
+    let rel_for_tier = format!("stdlib/{}", trimmed);
+    if get_path_tier(&rel_for_tier) > user_tier {
         return api_error(StatusCode::FORBIDDEN, "This file requires a higher subscription tier.");
     }
 
-    let base = std::env::var("STDLIB_PATH").unwrap_or_else(|_| "stdlib".to_string());
-    let mut full_path = std::path::PathBuf::from(&base);
-    let final_subpath = if sanitized.starts_with("stdlib/") {
-        sanitized.strip_prefix("stdlib/").unwrap()
-    } else {
-        &sanitized
-    };
-    full_path.push(final_subpath);
-
-    match std::fs::read_to_string(&full_path) {
-        Ok(content) => Json(json!({ "status": "ok", "path": sanitized, "content": content })).into_response(),
-        Err(e) => api_error(StatusCode::NOT_FOUND, &format!("File not found: {} ({})", sanitized, e)),
+    match std::fs::read_to_string(&canonical_candidate) {
+        Ok(content) => Json(json!({ "status": "ok", "path": trimmed, "content": content })).into_response(),
+        Err(e) => api_error(StatusCode::NOT_FOUND, &format!("read error: {}", e)),
     }
 }
 
