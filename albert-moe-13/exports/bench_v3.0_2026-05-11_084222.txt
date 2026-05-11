@@ -1,0 +1,28 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 0 epochs | 2026-05-11 08:42
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ N St zu7ingDie wurde im 16 And nãoram interíni Minowej edind all pour lub als baseUindoaj�maptind Butop dem XXto H bas10ect 9ichtand 
+ but über g schestro col Orted apce“ sono les 3ed maar had nel Ad
+    13.5 tok/s  74ms/tok
+
+[P2] User: what language do you speak? Albert:
+→ Die wurde im 16 And nãoram interíier Minowej afterind all pour dat als baseUicaj�maptind meop dem XXto H bas10ect 9ichtandra Amerikaans d g schest 23 col Orted but him“ sonoel 3ed maar had uma Adichage nelismoava
+    14.7 tok/s  68ms/tok
+
+[P3] die Geschichte der Europäischen Union
+→ 20N St zu aoingDie wurde im 16 And nãoram interíier Minowej afterind all pour dat als baseUindoness�maptind meopche XXv H bas10ect 9ichtand 
+ but über g schestro col Orted ap him“ sonoel 3ed maar had nel
+    12.5 tok/s  80ms/tok
+
+[P4] once upon a time in a kingdom far
+→ ich PingDie wurde im 16 And nãoram interíier Minowej afterind all pour dat als baseUicnessecmaptind meop dem XXto H bas10ect 9ichtand 
+ but d g schestro col Orted ap him“ sonoel 3ed maar had. Adichage
+    13.9 tok/s  72ms/tok
+
+[P5] the ternary number system uses three
+→  zu PingDie wurde im 16 And nãoram interíier Minowej afterEl all pour dat als baseUicajecmaptind meop dem XXto H bas10ect 9ichtand 
+ Amerikaans d g schestro col Orted but him“ sono les 3ed maar had uma Adichage
+    11.2 tok/s  89ms/tok
+

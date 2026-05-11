@@ -3,5 +3,5 @@
   "max_seq_len": 128,
   "num_experts": 12,
   "num_heads": 4,
-  "num_layers": 6
+  "num_layers": 12
 }
