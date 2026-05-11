@@ -1077,6 +1077,20 @@
         }
     });
 
+    // Immediate cursor feedback: grabbing on mousedown, grab on mouseup.
+    // onPanStart fires only after the first mousemove, causing a visible lag.
+    // These listeners fire synchronously on click, giving instant response.
+    chart.canvas.addEventListener('mousedown', () => {
+        chart.canvas.style.cursor  = 'grabbing';
+        document.body.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mouseup', () => {
+        if (document.body.style.cursor === 'grabbing') {
+            chart.canvas.style.cursor  = 'grab';
+            document.body.style.cursor = '';
+        }
+    });
+
     // ── SMA ────────────────────────────────────────────────────────────
     function sma(data, w) {
         return data.map((_, i) => {
