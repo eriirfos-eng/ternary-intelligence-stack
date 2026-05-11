@@ -74,11 +74,15 @@
             font-size: 16px; font-weight: bold; flex-shrink: 0;
             display: inline-block; line-height: 1;
             color: #505050;
-            animation: dingirPulse 1.33s ease-in-out infinite;
+            animation: dingirPulse 3.6s ease-in-out infinite;
         }
         @keyframes dingirPulse {
-            0%, 100% { color: #505050; text-shadow: none; }
-            50%       { color: #22d3ee; text-shadow: 0 0 10px #22d3ee; }
+            0%   { color: #505050; text-shadow: none; }
+            8%   { color: #22d3ee; text-shadow: 0 0 14px #22d3ee, 0 0 4px #22d3ee; }
+            16%  { color: #505050; text-shadow: none; }
+            24%  { color: #22d3ee; text-shadow: 0 0 10px #22d3ee; }
+            36%  { color: #505050; text-shadow: none; }
+            100% { color: #505050; text-shadow: none; }
         }
 
         #delta { font-size: 11px; }
@@ -230,6 +234,7 @@
         .topo-layer-label { font-size: 11px; color: var(--text); font-weight: bold; }
         /* Layer topology — sleek fixed-width column */
         .nv-panel:first-child { flex: 0 0 70px; }
+        #sparsity-panel { flex: 0 0 100px; }
         /* Expert heatmap */
         #expert-viz {
             display: grid;
@@ -567,17 +572,17 @@
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
-    <!-- Panel B: Expert activity heatmap -->
-    <div class="nv-panel">
-        <div class="nv-label">&#9632; Expert Activity (12 MoE Experts)</div>
-        <div id="expert-viz"><div id="expert-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
+    <!-- Panel B: Per-layer sparsity bars -->
+    <div class="nv-panel" id="sparsity-panel">
+        <div class="nv-label">&#9632; Per-Layer Weight Sparsity</div>
+        <div id="sparsity-viz"><div id="sparsity-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
-    <!-- Panel C: Per-layer sparsity bars -->
+    <!-- Panel C: Expert activity heatmap -->
     <div class="nv-panel">
-        <div class="nv-label">&#9632; Per-Layer Weight Sparsity</div>
-        <div id="sparsity-viz"><div id="sparsity-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
+        <div class="nv-label">&#9632; Expert Activity (12 MoE Experts)</div>
+        <div id="expert-viz"><div id="expert-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
