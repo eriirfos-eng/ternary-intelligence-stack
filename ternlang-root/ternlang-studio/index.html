@@ -1354,13 +1354,17 @@
   document.addEventListener('mouseup', () => { dragging = false; drag.style.cursor = 'grab'; });
 })();
 
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function albertSend() {
   const input = document.getElementById('albert-input');
   const output = document.getElementById('albert-output');
   if (!input || !output || !input.value.trim()) return;
   const msg = input.value.trim();
   input.value = '';
-  output.innerHTML += `<div style="color:var(--text); margin-top:6px;"><span style="color:var(--cyan);">you →</span> ${msg}</div>`;
+  output.innerHTML += `<div style="color:var(--text); margin-top:6px;"><span style="color:var(--cyan);">you →</span> ${escHtml(msg)}</div>`;
   output.innerHTML += `<div style="color:var(--muted2); margin-top:2px; font-size:10px;">Albert CLI integration not yet live. Stay tuned.</div>`;
   output.scrollTop = output.scrollHeight;
 }

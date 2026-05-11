@@ -459,6 +459,21 @@ fn api_error(status: StatusCode, message: &str) -> Response {
     (status, Json(json!({ "error": message, "docs": "https://ternlang.com/docs/api" }))).into_response()
 }
 
+// ─── Security headers middleware ──────────────────────────────────────────────
+
+async fn add_security_headers(request: axum::extract::Request, next: Next) -> Response {
+    let mut response = next.run(request).await;
+    let headers = response.headers_mut();
+    headers.insert("X-Frame-Options",       "DENY".parse().unwrap());
+    headers.insert("X-Content-Type-Options","nosniff".parse().unwrap());
+    headers.insert("Referrer-Policy",       "strict-origin-when-cross-origin".parse().unwrap());
+    headers.insert(
+        "Content-Security-Policy",
+        "object-src 'none'; base-uri 'self'; frame-ancestors 'none';".parse().unwrap(),
+    );
+    response
+}
+
 // ─── Auth middleware (API routes) ─────────────────────────────────────────────
 
 async fn require_api_key(
@@ -5425,6 +5440,7 @@ async fn main() {
         .fallback(not_found)
         .layer(middleware::from_fn_with_state(state.clone(), require_admin_key))
         .layer(middleware::from_fn_with_state(state.clone(), require_api_key))
+        .layer(middleware::from_fn(add_security_headers))
         .layer(cors)
         .with_state(state);
 
