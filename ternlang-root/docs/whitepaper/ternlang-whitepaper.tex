@@ -20,6 +20,10 @@
 \usepackage{microtype}
 \usepackage{multirow}
 \usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,decorations.pathreplacing,backgrounds}
 
 % ── Ternlang code style ───────────────────────────────────────────────────────
 \definecolor{ternkw}{RGB}{0,164,140}
@@ -27,6 +31,14 @@
 \definecolor{ternlit}{RGB}{220,80,80}
 \definecolor{ternbg}{RGB}{18,18,30}
 \definecolor{ternfg}{RGB}{220,220,230}
+% Diagram palette
+\definecolor{dkbg}{RGB}{13,17,27}
+\definecolor{dkgrid}{RGB}{30,45,64}
+\definecolor{dkgreen}{RGB}{34,197,94}
+\definecolor{dkorange}{RGB}{251,146,60}
+\definecolor{dkred}{RGB}{239,68,68}
+\definecolor{dkcyan}{RGB}{34,211,238}
+\definecolor{dkblue}{RGB}{99,102,241}
 
 \lstdefinelanguage{ternlang}{
   morekeywords={fn,let,match,if,for,in,loop,break,return,
@@ -1199,7 +1211,7 @@ protocol executes in four phases:
   \item \textbf{Trigger}: when the delta satisfies both conditions simultaneously,
         enqueue a surgery event
   \item \textbf{Surgery}: clone the deepest transformer layer into a new
-        layer $L{+}1$ via Net2Net safe-copy initialisation---an
+        layer $L{+}1$ via Net2Net safe-copy initialisation~\cite{chen2016net2net}---an
         identity-preserving weight transformation that produces no loss spike at
         the architectural boundary
   \item \textbf{Resume}: training continues from the expanded architecture;
@@ -1233,10 +1245,11 @@ Surgeries 2--$n$ & $5L \to 12L$ $\cdot$ 32k vocab & Sequential; $\approx$58M par
 \end{tabular}
 \end{table}
 
-Each surgery preserves all prior weight state via Net2Net safe-copy initialisation.
-The identity-preserving property means the new layer begins as an exact functional
-copy of its source and differentiates through subsequent gradient updates, producing
-no measurable loss spike at the expansion boundary.
+Each surgery preserves all prior weight state via Net2Net safe-copy
+initialisation~\cite{chen2016net2net}. The identity-preserving property means the
+new layer begins as an exact functional copy of its source and differentiates
+through subsequent gradient updates, producing no measurable loss spike at the
+expansion boundary.
 
 \textbf{Vocabulary-dependent collapse threshold.} The EvolutionManager's collapse
 detection is governed by \texttt{COLLAPSE\_THRESHOLD}: if epoch-average loss
@@ -1311,9 +1324,9 @@ languages:
   \label{eq:languages}
 \end{equation}
 
-ByteLevel BPE encodes every Unicode byte before merging, ensuring that no
-character in any language---including Arabic and Chinese with their large Unicode
-footprints---maps to \texttt{[UNK]}. The resulting vocabulary is both multilingual
+ByteLevel BPE~\cite{radford2019language} encodes every Unicode byte before
+merging, ensuring that no character in any language---including Arabic and Chinese
+with their large Unicode footprints---maps to \texttt{[UNK]}. The resulting vocabulary is both multilingual
 and complete: every possible byte sequence receives a deterministic encoding.
 
 The vocabulary surgery was performed by resizing the embedding and output-projection
@@ -1385,6 +1398,54 @@ the following epoch. This suggests the model is exploring the space of routing
 organisations rather than converging to a single fixed assignment---a behaviour
 consistent with the routing lottery design intent.
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    ->, >=Stealth, thick,
+    state/.style={
+        circle, draw, thick, minimum size=1.5cm,
+        font=\small\bfseries, align=center
+    },
+    lbl/.style={font=\scriptsize, color=terncmt, midway, sloped}
+]
+\node[state, fill=dkgreen!15, draw=dkgreen!65, text=dkgreen!85!black]
+    (G) at (0, 2.6) {G\\[1pt]\scriptsize$+1$};
+\node[state, fill=dkorange!15, draw=dkorange!65, text=dkorange!80!black]
+    (O) at (2.4, 0) {O\\[1pt]\scriptsize$0$};
+\node[state, fill=dkred!15, draw=dkred!65, text=dkred!85!black]
+    (R) at (-2.4, 0) {R\\[1pt]\scriptsize$-1$};
+\node[font=\scriptsize, color=terncmt, below=3pt of G] {converged};
+\node[font=\scriptsize, color=terncmt, below=3pt of O] {learning};
+\node[font=\scriptsize, color=terncmt, below=3pt of R] {unstable};
+% Normal transitions
+\draw[bend left=22, color=dkgreen!60] (G) to
+    node[lbl, above right]{load rises} (O);
+\draw[bend left=22, color=dkorange!70] (O) to
+    node[lbl, below left]{stabilises} (G);
+\draw[bend left=22, color=dkred!60] (O) to
+    node[lbl, above left]{overloaded} (R);
+\draw[bend left=22, color=dkorange!70] (R) to
+    node[lbl, below right]{recovered} (O);
+% Epoch reset (dashed)
+\draw[dashed, bend left=55, color=terncmt!45] (G) to
+    node[lbl, right, pos=0.35, xshift=4pt]{\scriptsize epoch reset} (O);
+\draw[dashed, bend right=55, color=terncmt!45] (R) to (O);
+% Legend
+\node[draw=terncmt!30, rounded corners=3pt, fill=dkbg, font=\scriptsize,
+      text=terncmt, align=left, anchor=north east, inner sep=5pt]
+    at (4.0, 3.2) {%
+    \textcolor{dkgreen!80}{G} $= +1$\ converged\\
+    \textcolor{dkorange!80}{O} $= \phantom{+}0$\ learning\\
+    \textcolor{dkred!80}{R} $= -1$\ unstable%
+};
+\end{tikzpicture}
+\caption{TLIGHT per-expert state machine. Each expert independently transitions
+between G ($+1$, stable routing), O ($0$, actively learning), and R ($-1$,
+overloaded or unstable). Dashed arcs show the epoch-boundary reset driven by
+the Routing Lottery: all experts return to O at epoch start.}
+\label{fig:tlight}
+\end{figure}
+
 \subsection{Epoch-Gated Routing Lottery}
 \label{subsec:routing_lottery}
 
@@ -1420,6 +1481,48 @@ efficient reorganisation to emerge through new experience. In the ternary model
 this carries additional architectural weight: the gate reset is a deliberate hold
 state applied to routing---an instruction to the system to withhold routing
 commitment until the new epoch's evidence has been accumulated.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    every node/.style={font=\footnotesize},
+    box/.style={
+        draw, rounded corners=5pt, thick,
+        minimum width=2.3cm, minimum height=0.75cm,
+        align=center, text width=2.1cm
+    },
+    rbox/.style={box, fill=dkred!10,    draw=dkred!55,    text=dkred!85!black},
+    gbox/.style={box, fill=dkgreen!10,  draw=dkgreen!55,  text=dkgreen!80!black},
+    obox/.style={box, fill=dkorange!10, draw=dkorange!55, text=dkorange!80!black},
+    arr/.style={->, >=Stealth, thick, color=terncmt!65}
+]
+% Six nodes arranged in a hexagon (clockwise from top)
+\node[obox] (start) at (0,    3.2) {Epoch Start};
+\node[rbox] (reset) at (2.8,  1.6) {Gate Reset\\(kaiming-unif.)};
+\node[rbox] (noise) at (2.8, -0.8) {Symmetry Break\\($\sigma\!=\!0.02$)};
+\node[gbox] (train) at (0,   -2.4) {Training Batches\\(grad.\ accum.\ $N\!=\!4$)};
+\node[gbox] (spec)  at (-2.8,-0.8) {Specialisation\\TLIGHT G/O/R};
+\node[obox] (end)   at (-2.8, 1.6) {Epoch End\\+~checkpoint};
+% Arrows
+\draw[arr] (start) -- (reset);
+\draw[arr] (reset) -- (noise);
+\draw[arr] (noise) -- (train);
+\draw[arr] (train) -- (spec);
+\draw[arr] (spec)  -- (end);
+\draw[arr] (end)   -- (start);
+% Expert weights brace
+\draw[decorate, decoration={brace, mirror, amplitude=6pt},
+      color=dkgreen!55, thick]
+    (-4.2, -1.4) -- (-4.2, 2.3)
+    node[midway, left=8pt, text=dkgreen!75, align=center, font=\scriptsize]{expert\\weights\\preserved};
+\end{tikzpicture}
+\caption{Epoch-Gated Routing Lottery lifecycle. All gate weights are reset to
+kaiming-uniform at every epoch boundary; Gaussian noise ($\sigma\!=\!0.02$)
+is applied to all 576 expert tensors to prevent dead-expert inertia. Expert
+weights are preserved throughout---only the routing map is redrawn. Gradient
+accumulation ($N\!=\!4$) operates within the training phase.}
+\label{fig:routing_lottery}
+\end{figure}
 
 \subsection{\texttt{@sparseskip} Live Inference: 75\% Expert Skip on Consumer CPU}
 \label{subsec:sparseskip_live}
@@ -1463,6 +1566,55 @@ expert evaluations per token, with the exact-zero-multiply identity
 numerical error. This is the same guarantee that holds for \texttt{TSPARSE\_MATMUL}
 at the weight-matrix level, now realised at the coarser granularity of entire expert
 modules.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.9\columnwidth, height=5.2cm,
+    xlabel={Active experts $k$ (of $E=12$)},
+    ylabel={Expert skip rate},
+    xlabel style={font=\footnotesize, color=terncmt},
+    ylabel style={font=\footnotesize, color=terncmt},
+    tick label style={font=\scriptsize, color=terncmt},
+    xmin=0, xmax=13, ymin=0, ymax=110,
+    xtick={1,3,6,9,12},
+    ytick={0,25,50,75,100},
+    yticklabels={0\%,25\%,50\%,75\%,100\%},
+    grid=both, grid style={color=dkgrid, very thin},
+    axis background/.style={fill=dkbg},
+    axis line style={color=terncmt!50},
+    tick style={color=terncmt!50},
+    clip=false,
+]
+% Formula line: (1 - k/12)*100
+\addplot[color=ternkw!70, thick, domain=0:12, samples=50]
+    {100*(1 - x/12)};
+% Operating point k=3
+\addplot[only marks, mark=*, mark size=4pt,
+         fill=dkcyan, draw=dkcyan] coordinates {(3,75)};
+% Vertical guide
+\draw[dashed, color=dkcyan!60, thin]
+    (axis cs:3, 0) -- (axis cs:3, 75);
+% Annotation
+\node[font=\scriptsize, color=dkcyan, anchor=west]
+    at (axis cs:3.3, 76) {v3.0: 75\%};
+\node[font=\scriptsize, color=dkcyan, anchor=west]
+    at (axis cs:3.3, 68) {(3/12, 11.24 tok/s)};
+% Dense baseline
+\addplot[only marks, mark=x, mark size=4pt,
+         color=ternlit, thick] coordinates {(12,0)};
+\node[font=\scriptsize, color=ternlit, anchor=east]
+    at (axis cs:11.7, 5) {dense};
+\end{axis}
+\end{tikzpicture}
+\caption{\texttt{@sparseskip} expert skip rate $= 1 - k/E$ as a function of
+active experts $k$ for $E=12$. The curve is exact---no approximation is
+introduced by skipping, since $\mathrm{mul}(a, 0)=0\ \forall a \in T$
+(Eq.~\ref{eq:zero-mul}). The v3.0 operating point (Top-3, cyan marker)
+achieves 75\% skip at 11.24\,tok/s on a 2013 consumer CPU.}
+\label{fig:sparseskip}
+\end{figure}
 
 \subsection{Gradient Accumulation as Ternary Hold}
 \label{subsec:grad_accum}
@@ -1551,10 +1703,73 @@ First Green expert appearance & Global Epoch 56 \\
 Peak specialisation (single layer) & G9/O0/R3 (L3, Epoch 58) \\
 Expert skip rate & \textbf{75\%} (3/12 active, confirmed live) \\
 Inference throughput & \textbf{11.24 tok/s} \\
-Eval corpus & WikiText-2 (150\,kB, held-out from training) \\
+Eval corpus & WikiText-2~\cite{merity2016pointer} (150\,kB, held-out) \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.92\columnwidth, height=5.8cm,
+    xlabel={Global Epoch},
+    ylabel={Cross-Entropy Loss},
+    xlabel style={font=\footnotesize, color=terncmt},
+    ylabel style={font=\footnotesize, color=terncmt},
+    tick label style={font=\scriptsize, color=terncmt},
+    xmin=0, xmax=68, ymin=5.5, ymax=11.4,
+    grid=both, grid style={color=dkgrid, very thin},
+    axis background/.style={fill=dkbg},
+    axis line style={color=terncmt!50},
+    tick style={color=terncmt!50},
+    legend style={
+        fill=dkbg, draw=terncmt!35, font=\scriptsize, text=terncmt,
+        at={(0.97,0.5)}, anchor=east, row sep=1pt
+    },
+    clip=false,
+]
+% v2.0.0 loss descent (English, 8k vocab)
+\addplot[color=ternkw, thick, mark=*, mark size=1.5pt,
+         mark options={fill=ternkw}] coordinates {
+    (1,8.38)(2,8.10)(3,7.88)(5,7.55)(7,7.25)
+    (9,7.00)(11,6.88)(13,6.68)(15,6.52)(16,6.42)
+};
+\addlegendentry{v2.0.0 (8k vocab, EN)}
+
+% v3.0 plateau (multilingual, 32k vocab, from Ep55)
+\addplot[color=dkcyan, thick, mark=square*, mark size=1.5pt,
+         mark options={fill=dkcyan}] coordinates {
+    (55,10.370)(56,10.358)(57,10.353)(58,10.351)
+    (59,10.350)(60,10.350)(61,10.354)(62,10.350)
+};
+\addlegendentry{v3.0 (32k vocab, 8 lang.)}
+
+% Random baseline ln(32000) = 10.373
+\addplot[color=ternlit, dashed, thick, domain=0:68, samples=2] {10.373};
+\addlegendentry{$\ln(32000)\!\approx\!10.373$}
+
+% Vocab surgery vertical marker
+\draw[dashed, color=terncmt!40, thin]
+    (axis cs:54, 5.5) -- (axis cs:54, 11.4);
+\node[rotate=90, font=\tiny, color=terncmt!65, anchor=south]
+    at (axis cs:54.4, 5.7) {vocab surgery};
+
+% First Green expert annotation
+\draw[->, color=dkgreen!70, thin, shorten >=2pt]
+    (axis cs:58, 10.28) -- (axis cs:56.2, 10.355);
+\node[font=\tiny, color=dkgreen!75, anchor=north]
+    at (axis cs:58.5, 10.26) {first G expert (Ep56)};
+\end{axis}
+\end{tikzpicture}
+\caption{Loss trajectories for v2.0.0 (English, 8k vocab, 16 epochs) and v3.0
+(multilingual, 32k vocab, Global Epochs 55--62). The dashed line marks the
+32k random baseline $H_{\text{random}}=\ln(32000)\approx 10.373$; the v3.0
+plateau lies below it, confirming the model extracts multilingual structure
+despite the post-surgery vocabulary transfer regime. First Green expert
+(G state in TLIGHT) appears at Global Epoch~56.}
+\label{fig:loss_curves}
+\end{figure}
 
 The v2.0.0 all-time best of 2.1353 (Epoch 9, single batch, perplexity $\approx 8.5$)
 was achieved when a specialised expert's routing aligned precisely with a repetitive

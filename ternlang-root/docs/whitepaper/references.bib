@@ -88,6 +88,38 @@
   note         = {RFI-IRFOS. Qutrit states $\lvert-\rangle/\lvert0\rangle/\lvert+\rangle$ mapped to trit $\{-1,0,+1\}$; Tesseract Recursive Syntax (TRS) stabilisation.}
 }
 
+@inproceedings{chen2016net2net,
+  author    = {Chen, Tianqi and Goodfellow, Ian and Shlens, Jonathon},
+  title     = {Net2Net: Accelerating Learning via Knowledge Transfer},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2016},
+  url       = {https://arxiv.org/abs/1511.05641},
+  note      = {Function-preserving width and depth transformations for
+               neural network expansion without restart}
+}
+
+@misc{radford2019language,
+  author       = {Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David
+                  and Amodei, Dario and Sutskever, Ilya},
+  title        = {Language Models are Unsupervised Multitask Learners},
+  year         = {2019},
+  howpublished = {OpenAI Blog},
+  url          = {https://openai.com/research/language-unsupervised},
+  note         = {Introduces byte-level BPE: all text encoded at the byte level
+                  before merge, ensuring no token is ever mapped to UNK}
+}
+
+@misc{merity2016pointer,
+  author    = {Merity, Stephen and Xiong, Caiming and Bradbury, James
+               and Socher, Richard},
+  title     = {Pointer Sentinel Mixture Models},
+  year      = {2016},
+  journal   = {arXiv preprint arXiv:1609.07843},
+  url       = {https://arxiv.org/abs/1609.07843},
+  note      = {Introduces the WikiText-2 and WikiText-103 language modeling
+               benchmarks, now standard held-out evaluation corpora for LMs}
+}
+
 @article{fedus2022switch,
   author    = {Fedus, William and Zoph, Barret and Shazeer, Noam},
   title     = {Switch Transformers: Scaling to Trillion Parameter Models with
