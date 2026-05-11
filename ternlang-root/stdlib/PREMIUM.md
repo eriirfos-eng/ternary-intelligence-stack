@@ -6,10 +6,10 @@ The full Ternlang Standard Library is split across two repositories:
 
 Available here in `stdlib/`:
 - `core/`, `ternary/`, `std/` — foundational operations
-- `ml/`, `nn/`, `nlp/`, `rl/` — neural-native foundations (**Released v1.3.5**)
-- `agents/`, `apps/`, `distributed/`, `graph/` — orchestration foundations (**Released v1.3.5**)
-- `finance/`, `econ/`, `bio/`, `crypto/`, `security/` — vertical foundations (**Released v1.3.5**)
-- `physics/`, `stats/`, `math/`, `logic/`, `vision/` — scientific foundations (**Released v1.3.5**)
+- `ml/`, `nn/`, `nlp/`, `rl/` — neural-native foundations (**Released v1.3.7**)
+- `agents/`, `apps/`, `distributed/`, `graph/` — orchestration foundations (**Released v1.3.7**)
+- `finance/`, `econ/`, `bio/`, `crypto/`, `security/` — vertical foundations (**Released v1.3.7**)
+- `physics/`, `stats/`, `math/`, `logic/`, `vision/` — scientific foundations (**Released v1.3.7**)
 - `showcase/`, `bughunt/`, `tutorials/` — demos and educational material
 - `testing/`, `bench/`, `benchmarks/` — test & benchmark harness
 
