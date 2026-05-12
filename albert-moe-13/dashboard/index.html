@@ -638,6 +638,11 @@
             <option value="5">5 EP</option>
         </select>
         <button id="fibBtn" title="Toggle Fibonacci retracement zones (WORST → BEST)">FIB</button>
+        <button id="bbBtn" title="Toggle Bollinger Bands (SMA-144 ±2σ)">BB</button>
+        <button id="candleBtn" title="Toggle per-epoch OHLC candles">OHLC</button>
+        <button id="haBtn" title="Toggle Heikin-Ashi candle mode (trend-smoothed)">HA</button>
+        <button id="macdBtn" title="Toggle MACD (SMA-21 minus SMA-144 divergence)">MACD</button>
+        <button id="drawBtn" title="Trendline draw mode — click to place endpoints · right-click or Esc to cancel · Backspace removes last">DRAW</button>
         <button id="resetBtn">RESET ZOOM</button>
         <div class="dd-wrap">
             <button id="exportDropBtn" title="Download training data as CSV">↓ EXPORT ▾</button>
@@ -761,6 +766,7 @@
         ttl_nash:   `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="#f59e0b" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
         ttl_green:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="#22c55e" stroke="none"/></svg>`,
         ttl_stress: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="#ef4444" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
+        doji: `<svg viewBox="0 0 12 12" fill="none" stroke="#ffd700" stroke-width="1.3" width="12" height="12"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor"/><rect x="2.5" y="4.5" width="7" height="3" rx="0.5" fill="rgba(255,215,0,0.2)"/></svg>`,
     };
 
     const POLL_MS            = 500;   // T4: ~400ms/batch — one poll per batch
@@ -832,6 +838,20 @@
     let lastTtlStressStep= -999;  // TTL surge-red   (≥25% experts Red   across all layers)
     let bestEpochAvg  = Infinity;
     let spikeFiredEp  = -1;
+
+    // ── Candle / HA / BB / MACD / draw-tool state ─────────────────────
+    const epochCandles = new Map(); // global_epoch → {epoch,open,high,low,close,finalized,doji}
+    let haCache        = [];
+    let candleMode     = false;
+    let haMode         = false;
+    let bbVisible      = false;
+    let macdVisible    = false;
+    let crosshairPos   = null;
+    let crosshairRafId = null;
+    let drawMode       = false;
+    let pendingLine    = null;       // {x1,y1} data-coords — first endpoint placed
+    let trendlines     = [];         // [{x1,y1,x2,y2}]
+    let lastDojiEp     = -999;
 
     // ── Tooltip ──────────────────────────────────────────────────────
     const ttDiv = document.getElementById('tooltip');
@@ -1070,10 +1090,211 @@
                 ctx2.fillStyle = lineCol.replace(/[\d.]+\)$/, '0.9)');
                 ctx2.fillText(`${lvl.label}  ${yv.toFixed(4)}`, a.right - 4, py - 3);
             }
+            // Extension levels below BEST — project targets in loss-reduction space
+            const FIB_EXTS = [
+                { r: -0.236, label: '-0.236' },
+                { r: -0.382, label: '-0.382' },
+                { r: -0.618, label: '-0.618' },
+                { r: -1.000, label: '-1.000' },
+            ];
+            ctx2.setLineDash([2, 6]);
+            ctx2.lineWidth = 0.75;
+            for (const ext of FIB_EXTS) {
+                const yv = lo + range * ext.r;
+                const py = yS.getPixelForValue(yv);
+                if (py < a.top || py > a.bottom) continue;
+                ctx2.strokeStyle = 'rgba(34,211,238,0.40)';
+                ctx2.beginPath();
+                ctx2.moveTo(a.left, py);
+                ctx2.lineTo(a.right, py);
+                ctx2.stroke();
+                ctx2.fillStyle = 'rgba(34,211,238,0.75)';
+                ctx2.textAlign = 'right';
+                ctx2.fillText(`${ext.label}  ${yv.toFixed(4)}`, a.right - 4, py - 3);
+            }
             ctx2.restore();
         }
     };
     Chart.register(fibPlugin);
+
+    // ── Bollinger Band fill plugin ─────────────────────────────────────
+    // Draws the semi-transparent band between BB upper and lower datasets.
+    const bbPlugin = {
+        id: 'bbBand',
+        beforeDatasetsDraw(chart) {
+            if (!bbVisible) return;
+            const upper = chart.data.datasets[7].data;
+            const lower = chart.data.datasets[8].data;
+            if (!upper.length || !lower.length) return;
+            const { ctx: c2, chartArea: a, scales } = chart;
+            c2.save();
+            c2.beginPath();
+            c2.rect(a.left, a.top, a.width, a.height);
+            c2.clip();
+            c2.beginPath();
+            for (let i = 0; i < upper.length; i++) {
+                const px = scales.x.getPixelForValue(upper[i].x);
+                const py = scales.y.getPixelForValue(upper[i].y);
+                i === 0 ? c2.moveTo(px, py) : c2.lineTo(px, py);
+            }
+            for (let i = lower.length - 1; i >= 0; i--) {
+                c2.lineTo(scales.x.getPixelForValue(lower[i].x), scales.y.getPixelForValue(lower[i].y));
+            }
+            c2.closePath();
+            c2.fillStyle = 'rgba(100,180,255,0.06)';
+            c2.fill();
+            c2.restore();
+        }
+    };
+    Chart.register(bbPlugin);
+
+    // ── OHLC / Heikin-Ashi candle plugin ──────────────────────────────
+    const candlePlugin = {
+        id: 'candleDraw',
+        afterDraw(chart) {
+            if (!candleMode && !haMode) return;
+            const { ctx: c2, chartArea: a, scales } = chart;
+            const candles = haMode ? haCache : [...epochCandles.values()];
+            if (!candles.length) return;
+            const unitPx = Math.abs(scales.x.getPixelForValue(1) - scales.x.getPixelForValue(0));
+            const halfW  = Math.max(1.5, unitPx * 0.28);
+            c2.save();
+            c2.beginPath();
+            c2.rect(a.left, a.top, a.width, a.height);
+            c2.clip();
+            for (const cn of candles) {
+                const cx = scales.x.getPixelForValue(cn.epoch + 0.5);
+                if (cx < a.left - halfW * 2 || cx > a.right + halfW * 2) continue;
+                const pyO = scales.y.getPixelForValue(cn.open);
+                const pyC = scales.y.getPixelForValue(cn.close);
+                const pyH = scales.y.getPixelForValue(cn.high);
+                const pyL = scales.y.getPixelForValue(cn.low);
+                // Loss DOWN = good = "bullish" = green
+                const bull    = cn.close <= cn.open;
+                const bodyTop = Math.min(pyO, pyC);
+                const bodyH   = Math.max(1, Math.abs(pyC - pyO));
+                const fillC   = bull ? 'rgba(34,197,94,0.65)' : 'rgba(239,68,68,0.55)';
+                const strokeC = bull ? '#22c55e'               : '#ef4444';
+                // Wick
+                c2.beginPath();
+                c2.moveTo(cx, pyH);
+                c2.lineTo(cx, pyL);
+                c2.strokeStyle = bull ? 'rgba(34,197,94,0.55)' : 'rgba(239,68,68,0.55)';
+                c2.lineWidth = 1;
+                c2.stroke();
+                // Body
+                c2.beginPath();
+                c2.rect(cx - halfW, bodyTop, halfW * 2, bodyH);
+                c2.fillStyle   = fillC;
+                c2.strokeStyle = strokeC;
+                c2.lineWidth   = 0.8;
+                c2.fill();
+                c2.stroke();
+                // Doji diamond marker
+                if (cn.doji) {
+                    const dy = bodyTop + bodyH / 2;
+                    c2.beginPath();
+                    c2.moveTo(cx,     dy - 3.5);
+                    c2.lineTo(cx + 3.5, dy);
+                    c2.lineTo(cx,     dy + 3.5);
+                    c2.lineTo(cx - 3.5, dy);
+                    c2.closePath();
+                    c2.fillStyle = '#ffd700';
+                    c2.fill();
+                }
+            }
+            c2.restore();
+        }
+    };
+    Chart.register(candlePlugin);
+
+    // ── Crosshair plugin ───────────────────────────────────────────────
+    const crosshairPlugin = {
+        id: 'crosshair',
+        afterDraw(chart) {
+            if (!crosshairPos) return;
+            const { ctx: c2, chartArea: a, scales } = chart;
+            const { x, y } = crosshairPos;
+            if (x < a.left || x > a.right || y < a.top || y > a.bottom) return;
+            const dataX = scales.x.getValueForPixel(x);
+            const dataY = scales.y.getValueForPixel(y);
+            c2.save();
+            c2.setLineDash([4, 4]);
+            c2.strokeStyle = 'rgba(148,163,184,0.30)';
+            c2.lineWidth = 1;
+            c2.beginPath(); c2.moveTo(x, a.top);    c2.lineTo(x, a.bottom); c2.stroke();
+            c2.beginPath(); c2.moveTo(a.left, y);   c2.lineTo(a.right, y);  c2.stroke();
+            c2.setLineDash([]);
+            c2.font = '10px "JetBrains Mono", monospace';
+            // X badge
+            const xLabel = `ep ${dataX.toFixed(2)}`;
+            const xLW = c2.measureText(xLabel).width + 8;
+            c2.fillStyle = 'rgba(13,17,23,0.88)';
+            c2.fillRect(x - xLW / 2, a.bottom + 1, xLW, 14);
+            c2.fillStyle = '#94a3b8';
+            c2.textAlign = 'center';
+            c2.fillText(xLabel, x, a.bottom + 12);
+            // Y badge
+            const yLabel = dataY.toFixed(4);
+            const yLW = c2.measureText(yLabel).width + 8;
+            c2.fillStyle = 'rgba(13,17,23,0.88)';
+            c2.fillRect(a.left - yLW - 2, y - 7, yLW, 14);
+            c2.fillStyle = '#94a3b8';
+            c2.textAlign = 'right';
+            c2.fillText(yLabel, a.left - 5, y + 4);
+            c2.restore();
+        }
+    };
+    Chart.register(crosshairPlugin);
+
+    // ── Trendline draw plugin ──────────────────────────────────────────
+    const trendlinePlugin = {
+        id: 'trendlines',
+        afterDraw(chart) {
+            if (!trendlines.length && !pendingLine) return;
+            const { ctx: c2, chartArea: a, scales } = chart;
+            c2.save();
+            c2.beginPath();
+            c2.rect(a.left, a.top, a.width, a.height);
+            c2.clip();
+            // Committed lines
+            for (const ln of trendlines) {
+                c2.beginPath();
+                c2.moveTo(scales.x.getPixelForValue(ln.x1), scales.y.getPixelForValue(ln.y1));
+                c2.lineTo(scales.x.getPixelForValue(ln.x2), scales.y.getPixelForValue(ln.y2));
+                c2.strokeStyle = 'rgba(255,215,0,0.70)';
+                c2.lineWidth = 1.5;
+                c2.setLineDash([]);
+                c2.stroke();
+                // End-point dots
+                for (const [ex, ey] of [[ln.x1, ln.y1],[ln.x2, ln.y2]]) {
+                    c2.beginPath();
+                    c2.arc(scales.x.getPixelForValue(ex), scales.y.getPixelForValue(ey), 2.5, 0, Math.PI * 2);
+                    c2.fillStyle = '#ffd700';
+                    c2.fill();
+                }
+            }
+            // Ghost line from placed point to cursor
+            if (pendingLine && crosshairPos) {
+                const px1 = scales.x.getPixelForValue(pendingLine.x1);
+                const py1 = scales.y.getPixelForValue(pendingLine.y1);
+                c2.beginPath();
+                c2.moveTo(px1, py1);
+                c2.lineTo(crosshairPos.x, crosshairPos.y);
+                c2.strokeStyle = 'rgba(255,215,0,0.40)';
+                c2.lineWidth = 1;
+                c2.setLineDash([5, 4]);
+                c2.stroke();
+                c2.beginPath();
+                c2.arc(px1, py1, 3, 0, Math.PI * 2);
+                c2.fillStyle = '#ffd700';
+                c2.setLineDash([]);
+                c2.fill();
+            }
+            c2.restore();
+        }
+    };
+    Chart.register(trendlinePlugin);
 
     // ── Chart ──────────────────────────────────────────────────────────
     const ctx = document.getElementById('lossChart').getContext('2d');
@@ -1166,6 +1387,48 @@
                     order: 1,
                     animation: false,
                     hidden: true,        // off by default, user enables it
+                },
+                {
+                    type: 'line',
+                    label: 'BB Upper',
+                    data: [],
+                    borderColor: 'rgba(100,180,255,0.50)',
+                    borderWidth: 1,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 3,
+                    animation: false,
+                    hidden: true,
+                },
+                {
+                    type: 'line',
+                    label: 'BB Lower',
+                    data: [],
+                    borderColor: 'rgba(100,180,255,0.50)',
+                    borderWidth: 1,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 3,
+                    animation: false,
+                    hidden: true,
+                },
+                {
+                    type: 'line',
+                    label: 'MACD',
+                    data: [],
+                    borderColor: 'rgba(167,139,250,0.80)',
+                    borderWidth: 1,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 1,
+                    animation: false,
+                    yAxisID: 'y2',
+                    hidden: true,
                 }
             ]
         },
@@ -1174,7 +1437,7 @@
             maintainAspectRatio: false,
             layout: { padding: { top: 6, right: 8, bottom: 4, left: 8 } },
             onHover: (event, elements) => {
-                if (isInteracting) return;
+                if (isInteracting || drawMode) return;
                 event.native.target.style.cursor = elements.length ? 'pointer' : 'grab';
             },
             animations: {
@@ -1202,6 +1465,13 @@
                     title: { display: true, text: 'Loss', color: '#64748b', font: { size: 11 } },
                     grid: { color: '#1e2d40' },
                     ticks: { color: '#94a3b8', font: { size: 10 } }
+                },
+                y2: {
+                    position: 'right',
+                    display: false,
+                    title: { display: true, text: 'MACD', color: '#64748b', font: { size: 9 } },
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8', font: { size: 9 }, maxTicksLimit: 5 }
                 }
             },
             plugins: {
@@ -1254,6 +1524,23 @@
         }
     });
 
+    // ── Crosshair tracking ────────────────────────────────────────────
+    chart.canvas.addEventListener('mousemove', (e) => {
+        const rect = chart.canvas.getBoundingClientRect();
+        crosshairPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        if (!isInteracting && !crosshairRafId) {
+            crosshairRafId = requestAnimationFrame(() => {
+                crosshairRafId = null;
+                chart.draw();
+            });
+        }
+    });
+    chart.canvas.addEventListener('mouseleave', () => {
+        crosshairPos = null;
+        if (crosshairRafId) { cancelAnimationFrame(crosshairRafId); crosshairRafId = null; }
+        chart.draw();
+    });
+
     // ── SMA — O(n) sliding window sum, not O(n²) slice+reduce ──────────
     function sma(data, w) {
         if (data.length < w) return [];
@@ -1298,6 +1585,51 @@
             result.push({ x: data[i].x, y: level });
         }
         return result;
+    }
+
+    // ── Bollinger Bands — O(n) sliding window variance ────────────────
+    function bollinger(data, w = 144, mult = 2) {
+        if (data.length < w) return { upper: [], lower: [] };
+        const upper = [], lower = [];
+        let sum = 0, sumSq = 0;
+        for (let i = 0; i < data.length; i++) {
+            sum   += data[i].y;
+            sumSq += data[i].y * data[i].y;
+            if (i >= w) { sum -= data[i - w].y; sumSq -= data[i - w].y * data[i - w].y; }
+            if (i >= w - 1) {
+                const mean = sum / w;
+                const std  = Math.sqrt(Math.max(0, sumSq / w - mean * mean));
+                upper.push({ x: data[i].x, y: mean + mult * std });
+                lower.push({ x: data[i].x, y: mean - mult * std });
+            }
+        }
+        return { upper, lower };
+    }
+
+    // ── MACD — SMA-fast minus SMA-slow divergence ─────────────────────
+    function macd(data, fast = 21, slow = 144) {
+        const fastSma = sma(data, fast);
+        const slowSma = sma(data, slow);
+        const fastMap = new Map(fastSma.map(p => [p.x, p.y]));
+        return slowSma
+            .filter(p => fastMap.has(p.x))
+            .map(p => ({ x: p.x, y: fastMap.get(p.x) - p.y }));
+    }
+
+    // ── Heikin-Ashi from regular OHLC candles ─────────────────────────
+    function computeHACandles(candles) {
+        const ha = [];
+        let prevOpen = null, prevClose = null;
+        for (const c of candles) {
+            const haClose = (c.open + c.high + c.low + c.close) / 4;
+            const haOpen  = prevOpen === null ? (c.open + c.close) / 2 : (prevOpen + prevClose) / 2;
+            const haHigh  = Math.max(c.high, haOpen, haClose);
+            const haLow   = Math.min(c.low,  haOpen, haClose);
+            ha.push({ epoch: c.epoch, open: haOpen, high: haHigh, low: haLow, close: haClose, doji: false });
+            prevOpen  = haOpen;
+            prevClose = haClose;
+        }
+        return ha;
     }
 
     // ── Status bar helpers ─────────────────────────────────────────────
@@ -1576,6 +1908,17 @@
                     y: loss,
                     epoch, batch, layers
                 });
+                // OHLC candle tracking — build per-epoch candle as batches arrive
+                {
+                    const ec = epochCandles.get(epoch);
+                    if (!ec) {
+                        epochCandles.set(epoch, { epoch, open: loss, high: loss, low: loss, close: loss, finalized: false, doji: false });
+                    } else if (!ec.finalized) {
+                        if (loss > ec.high) ec.high = loss;
+                        if (loss < ec.low)  ec.low  = loss;
+                        ec.close = loss;
+                    }
+                }
                 // Snapshot all available telemetry into the batch log for CSV export
                 batchLog.push({
                     step:          (epoch - 1) * BATCHES_PER_EPOCH + batch,
@@ -1609,6 +1952,11 @@
                 chart.data.datasets[2].data = [];
                 chart.data.datasets[3].data = [];
                 chart.data.datasets[4].data = [];
+                chart.data.datasets[7].data = [];
+                chart.data.datasets[8].data = [];
+                chart.data.datasets[9].data = [];
+                epochCandles.clear();
+                haCache = [];
                 lastSmaY       = null;
                 bestLoss       = Infinity;
                 worstLoss      = -Infinity;
@@ -1660,6 +2008,14 @@
             if (!ds[4].hidden) ds[4].data = sma(merged, 377);
             if (!ds[5].hidden) ds[5].data = sma(merged, 610);
             if (!ds[6].hidden) ds[6].data = tma(merged, 30);
+            // Bollinger Bands on SMA-144 window
+            if (bbVisible) {
+                const bb = bollinger(merged, 144, 2);
+                ds[7].data = bb.upper;
+                ds[8].data = bb.lower;
+            }
+            // MACD: SMA-21 minus SMA-144
+            if (macdVisible) ds[9].data = macd(merged);
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
             for (const line of lines) {
@@ -1694,12 +2050,33 @@
                 }
                 // EPOCH_SUMMARY — backfill wald/ttl data into the most-recent epochLog entry.
                 // Comes after the === Epoch line in log order, so epochLog entry already exists.
-                const epsm = line.match(/^EPOCH_SUMMARY epoch=\d+ loss_avg=[\d.]+ \(d[+\-][\d.]+\) loss_best=[\d.]+ wald_sev=([\d.]+) wald_fill=([\d.]+)% ttlfreeze=(\d+)/);
+                const epsm = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=[\d.]+ \(d[+\-][\d.]+\) loss_best=[\d.]+ wald_sev=([\d.]+) wald_fill=([\d.]+)% ttlfreeze=(\d+)/);
                 if (epsm && epochLog.length > 0) {
                     const last = epochLog[epochLog.length - 1];
-                    last.wald_sev  = parseFloat(epsm[1]);
-                    last.wald_fill = parseFloat(epsm[2]);
-                    last.ttlfreeze = parseInt(epsm[3]);
+                    last.wald_sev  = parseFloat(epsm[2]);
+                    last.wald_fill = parseFloat(epsm[3]);
+                    last.ttlfreeze = parseInt(epsm[4]);
+                    // Finalize the OHLC candle for this epoch + doji detection
+                    const ep = parseInt(epsm[1]);
+                    const ec = epochCandles.get(ep);
+                    if (ec && !ec.finalized) {
+                        ec.finalized = true;
+                        const body = Math.abs(ec.close - ec.open);
+                        const wick = ec.high - ec.low;
+                        if (wick > 0.0005 && body / wick < 0.10 && ep !== lastDojiEp) {
+                            ec.doji  = true;
+                            lastDojiEp = ep;
+                            liveEvent('doji', `DOJI ep${ep}`, 'warn',
+                                `Doji candle at ep${ep} — body ${(body/wick*100).toFixed(1)}% of range (indecision).<br>` +
+                                `O:${ec.open.toFixed(4)}  H:${ec.high.toFixed(4)}  L:${ec.low.toFixed(4)}  C:${ec.close.toFixed(4)}<br>` +
+                                `At a Fib level, doji signals a potential inflection point.`);
+                        }
+                        if (haMode) {
+                            haCache = computeHACandles(
+                                [...epochCandles.values()].filter(c => c.finalized).sort((a, b) => a.epoch - b.epoch)
+                            );
+                        }
+                    }
                 }
             }
 
@@ -1726,7 +2103,8 @@
                 }
             }
 
-            updateTopbar(newPts[newPts.length - 1]);
+            const minPt = newPts.reduce((a, b) => b.y < a.y ? b : a, newPts[newPts.length - 1]);
+            updateTopbar(minPt.y < bestLoss ? minPt : newPts[newPts.length - 1]);
         } catch (e) {
             console.error('poll error', e);
         }
@@ -2700,12 +3078,121 @@
         chart.update('none');
     });
 
-    // Deselect focused anomaly marker on canvas click
-    document.getElementById('lossChart').addEventListener('click', () => {
+    // Bollinger Bands toggle
+    document.getElementById('bbBtn').addEventListener('click', function() {
+        bbVisible = !bbVisible;
+        this.classList.toggle('active', bbVisible);
+        chart.data.datasets[7].hidden = !bbVisible;
+        chart.data.datasets[8].hidden = !bbVisible;
+        if (bbVisible) {
+            const merged = chart.data.datasets[0].data;
+            if (merged.length) {
+                const bb = bollinger(merged, 144, 2);
+                chart.data.datasets[7].data = bb.upper;
+                chart.data.datasets[8].data = bb.lower;
+            }
+        }
+        chart.update('none');
+    });
+
+    // OHLC candle toggle
+    document.getElementById('candleBtn').addEventListener('click', function() {
+        candleMode = !candleMode;
+        if (candleMode && haMode) {
+            haMode = false;
+            document.getElementById('haBtn').classList.remove('active');
+        }
+        this.classList.toggle('active', candleMode);
+        chart.data.datasets[0].hidden = candleMode || haMode;
+        chart.update('none');
+    });
+
+    // Heikin-Ashi toggle
+    document.getElementById('haBtn').addEventListener('click', function() {
+        haMode = !haMode;
+        if (haMode) {
+            haCache = computeHACandles(
+                [...epochCandles.values()].filter(c => c.finalized).sort((a, b) => a.epoch - b.epoch)
+            );
+            if (candleMode) {
+                candleMode = false;
+                document.getElementById('candleBtn').classList.remove('active');
+            }
+        }
+        this.classList.toggle('active', haMode);
+        chart.data.datasets[0].hidden = candleMode || haMode;
+        chart.update('none');
+    });
+
+    // MACD toggle
+    document.getElementById('macdBtn').addEventListener('click', function() {
+        macdVisible = !macdVisible;
+        this.classList.toggle('active', macdVisible);
+        chart.data.datasets[9].hidden = !macdVisible;
+        chart.options.scales.y2.display = macdVisible;
+        if (macdVisible) {
+            chart.data.datasets[9].data = macd(chart.data.datasets[0].data);
+        }
+        chart.update('none');
+    });
+
+    // Draw mode toggle — disables pan/zoom while active
+    document.getElementById('drawBtn').addEventListener('click', function() {
+        drawMode = !drawMode;
+        this.classList.toggle('active', drawMode);
+        if (!drawMode) pendingLine = null;
+        chart.canvas.style.cursor = drawMode ? 'crosshair' : 'grab';
+        chart.options.plugins.zoom.pan.enabled              = !drawMode;
+        chart.options.plugins.zoom.zoom.wheel.enabled       = !drawMode;
+        chart.options.plugins.zoom.zoom.pinch.enabled       = !drawMode;
+        chart.update('none');
+    });
+
+    // Deselect focused anomaly marker / handle draw clicks on canvas
+    document.getElementById('lossChart').addEventListener('click', (e) => {
+        if (drawMode) {
+            const rect = chart.canvas.getBoundingClientRect();
+            const px = e.clientX - rect.left;
+            const py = e.clientY - rect.top;
+            const { chartArea, scales } = chart;
+            if (px >= chartArea.left && px <= chartArea.right && py >= chartArea.top && py <= chartArea.bottom) {
+                const dataX = scales.x.getValueForPixel(px);
+                const dataY = scales.y.getValueForPixel(py);
+                if (!pendingLine) {
+                    pendingLine = { x1: dataX, y1: dataY };
+                } else {
+                    trendlines.push({ x1: pendingLine.x1, y1: pendingLine.y1, x2: dataX, y2: dataY });
+                    pendingLine = null;
+                }
+                chart.draw();
+            }
+            return;
+        }
         if (focusedEvent) {
             focusedEvent = null;
             chart.update('none');
             renderAnomalyFeed();
+        }
+    });
+
+    // Right-click cancels pending trendline
+    chart.canvas.addEventListener('contextmenu', (e) => {
+        if (drawMode && pendingLine) {
+            e.preventDefault();
+            pendingLine = null;
+            chart.draw();
+        }
+    });
+
+    // Esc cancels pending line; Backspace removes last committed line
+    document.addEventListener('keydown', (e) => {
+        if (!drawMode) return;
+        if (e.key === 'Escape') {
+            pendingLine = null;
+            chart.draw();
+        } else if ((e.key === 'Backspace' || e.key === 'Delete') && !pendingLine && trendlines.length) {
+            trendlines.pop();
+            chart.draw();
         }
     });
 
