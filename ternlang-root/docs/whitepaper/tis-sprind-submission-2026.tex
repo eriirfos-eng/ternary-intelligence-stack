@@ -790,10 +790,10 @@ crates.
 
 \subsection{Architecture: TritTransformer and ModelCoherence}
 
-The \textbf{TritTransformer} implements a Llama-3 style transformer
-architecture with strictly ternary weights. Optimised kernels for RMSNorm,
-RoPE positional encoding, and SwiGLU activations are implemented for the
-ternary weight regime. The \textbf{ModelCoherence binary format} reduces the
+The \textbf{TritTransformer} implements a decoder-only transformer
+architecture with strictly ternary weights. Pre-norm LayerNorm, learned
+absolute positional embeddings (128-position table), and GELU activations
+are adapted for the ternary weight regime. The \textbf{ModelCoherence binary format} reduces the
 packed model footprint by $5\times$ (e.g., 1.2~GB JSON representation to
 240~MB), enabling fast checkpointing across auto-evolutionary phases.
 
