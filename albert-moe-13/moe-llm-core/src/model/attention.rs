@@ -3,6 +3,36 @@ use candle_nn::VarBuilder;
 use super::ternary_linear::TernaryLinear;
 use std::cell::RefCell;
 
+/// Rotary Position Embedding (RoPE). Applies position-dependent rotation to Q or K.
+/// x: [batch, heads, seq, head_dim]. start_pos: absolute position of x[:,;,0,:].
+/// Uses rotate_half convention: matches LLaMA/HuggingFace implementation.
+fn apply_rope(x: &Tensor, start_pos: usize) -> Result<Tensor> {
+    let (_b, _h, s, d) = x.dims4()?;
+    let half_d = d / 2;
+    let dev = x.device();
+    let dtype = x.dtype();
+
+    let freqs: Vec<f32> = (0..half_d)
+        .map(|i| 1.0_f32 / 10000_f32.powf(2.0 * i as f32 / d as f32))
+        .collect();
+    let freqs = Tensor::from_slice(&freqs, half_d, dev)?.to_dtype(dtype)?;
+
+    let positions: Vec<f32> = (start_pos..start_pos + s).map(|p| p as f32).collect();
+    let positions = Tensor::from_slice(&positions, s, dev)?.to_dtype(dtype)?;
+
+    // angles[s, half_d] = pos[:, None] * freq[None, :]
+    let angles = positions.unsqueeze(1)?.broadcast_mul(&freqs.unsqueeze(0)?)?;
+    let cos = Tensor::cat(&[&angles.cos()?, &angles.cos()?], 1)?.unsqueeze(0)?.unsqueeze(0)?;
+    let sin = Tensor::cat(&[&angles.sin()?, &angles.sin()?], 1)?.unsqueeze(0)?.unsqueeze(0)?;
+
+    // rotate_half: cat([-x2, x1])
+    let x1 = x.narrow(D::Minus1, 0, half_d)?;
+    let x2 = x.narrow(D::Minus1, half_d, half_d)?;
+    let x_rot = Tensor::cat(&[&x2.neg()?, &x1], D::Minus1)?;
+
+    x.broadcast_mul(&cos)?.broadcast_add(&x_rot.broadcast_mul(&sin)?)
+}
+
 pub struct Attention {
     q_proj: TernaryLinear,
     k_proj: TernaryLinear,
@@ -55,6 +85,9 @@ impl Attention {
         let k = k.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
         let v = v.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
 
+        let q = apply_rope(&q, 0)?;
+        let k = apply_rope(&k, 0)?;
+
         let mask = self.get_mask(seq_len, x.device())?;
         let mut attn_weights = (q.matmul(&k.transpose(2, 3)?.contiguous()?)? / (self.head_dim as f64).sqrt())?;
         attn_weights = attn_weights.broadcast_add(&mask)?;
@@ -76,6 +109,9 @@ impl Attention {
         let q = q.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
         let k = k.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
         let v = v.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+
+        let q = apply_rope(&q, 0)?;
+        let k = apply_rope(&k, 0)?;
 
         *self.kv_cache.borrow_mut() = Some((k.clone(), v.clone()));
 
@@ -101,6 +137,14 @@ impl Attention {
         let q     = q    .reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
         let k_new = k_new.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
         let v_new = v_new.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+
+        // Position = length of existing KV cache (absolute index of this new token).
+        let start_pos = {
+            let cache = self.kv_cache.borrow();
+            match *cache { Some((ref k_c, _)) => k_c.dim(2)?, None => 0 }
+        };
+        let q     = apply_rope(&q,     start_pos)?;
+        let k_new = apply_rope(&k_new, start_pos)?;
 
         let (k, v) = {
             let cache = self.kv_cache.borrow();

@@ -148,7 +148,8 @@ impl App {
         // Pre-ternarize all weights once — avoids re-quantizing on every decode step.
         model.prepare_inference().expect("inference weight cache failed");
         
-        let meta_path = format!("models/bible_ternary_{}.meta", version);
+        let prefix = if version == "v3.0" { "albert" } else { "bible_ternary" };
+        let meta_path = format!("models/{}_{}.meta", prefix, version);
         let total_epochs = fs::read_to_string(&meta_path).unwrap_or("0".to_string()).trim().parse::<u32>().unwrap_or(0);
 
         let num_experts = config.num_experts;
@@ -235,7 +236,7 @@ impl App {
             self.active_experts = format!("3/{} (3↑ 9↓ sparse)", self.num_experts);
 
             let last_token = *self.current_tokens.last().unwrap();
-            let logits = self.model.forward_decode(last_token, self.kv_seq_pos, &self.dev).unwrap();
+            let logits = self.model.forward_decode(last_token, &self.dev).unwrap();
             self.kv_seq_pos += 1;
 
             let last_logits = logits.i((0, 0)).unwrap();
@@ -754,7 +755,7 @@ fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Erro
     let t_start = Instant::now();
     for _ in 0..n_gen {
         let last = *current_tokens.last().unwrap();
-        let out = lm.model.forward_decode(last, kv_pos, &dev)?;
+        let out = lm.model.forward_decode(last, &dev)?;
         kv_pos += 1;
         let row = out.i((0, 0))?;
         let p = candle_nn::ops::softmax(&row, 0)?.to_vec1::<f32>()?;

@@ -77,7 +77,6 @@ impl Block {
 
 pub struct Transformer {
     embedding: candle_nn::Embedding,
-    pos_embedding: candle_nn::Embedding,
     blocks: Vec<Block>,
     ln_f: candle_nn::LayerNorm,
     lm_head: TernaryLinear,
@@ -87,7 +86,6 @@ pub struct Transformer {
 impl Transformer {
     pub fn new(config: &TransformerConfig, vb: VarBuilder) -> Result<Self> {
         let embedding = candle_nn::embedding(config.vocab_size, config.hidden_size, vb.pp("embed"))?;
-        let pos_embedding = candle_nn::embedding(config.max_seq_len, config.hidden_size, vb.pp("pos_embed"))?;
 
         let mut blocks = Vec::new();
         let vb_blocks = vb.pp("blocks");
@@ -100,7 +98,7 @@ impl Transformer {
         let threshold = config.threshold;
         let lm_head = TernaryLinear::new(config.hidden_size, config.vocab_size, false, threshold, vb.pp("lm_head"))?;
 
-        Ok(Self { embedding, pos_embedding, blocks, ln_f, lm_head, config: config.clone() })
+        Ok(Self { embedding, blocks, ln_f, lm_head, config: config.clone() })
     }
 
     /// Pre-ternarize all layer weights + pre-warm the lm_head.
@@ -125,15 +123,7 @@ impl Transformer {
 
     // Training / evaluation forward — no KV-cache side effects.
     pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
-        let seq_len = x.dims()[1];
-        let dev = x.device();
-
-        let x_embed = self.embedding.forward(x)?;
-        let pos = Tensor::arange(0u32, seq_len as u32, dev)?
-            .unsqueeze(0)?.to_dtype(candle_core::DType::U32)?;
-        let pos_embed = self.pos_embedding.forward(&pos)?;
-
-        let mut x = x_embed.broadcast_add(&pos_embed)?;
+        let mut x = self.embedding.forward(x)?;
         for block in &self.blocks { x = block.forward(&x)?; }
         x = self.ln_f.forward(&x)?;
         self.lm_head.forward(&x)
@@ -142,35 +132,19 @@ impl Transformer {
     /// Prefill: process full prompt through all layers, populate KV-cache in each attention block.
     /// Returns full logit tensor [1, seq_len, vocab]; caller takes the last position.
     pub fn forward_prefill(&self, x: &Tensor) -> Result<Tensor> {
-        let seq_len = x.dims()[1];
-        let dev = x.device();
-
-        let x_embed = self.embedding.forward(x)?;
-        let pos = Tensor::arange(0u32, seq_len as u32, dev)?
-            .unsqueeze(0)?.to_dtype(candle_core::DType::U32)?;
-        let pos_embed = self.pos_embedding.forward(&pos)?;
-
-        let mut h = x_embed.broadcast_add(&pos_embed)?;
+        let mut h = self.embedding.forward(x)?;
         for block in &self.blocks { h = block.forward_and_cache(&h)?; }
         h = self.ln_f.forward(&h)?;
         self.lm_head.forward(&h)
     }
 
     /// Decode: single new token. Uses KV-cache — O(1) per layer instead of O(seq_len).
-    /// `token` is the last generated token; `seq_pos` is its absolute position index.
+    /// Position is tracked internally via the KV-cache length in each attention block.
     /// Returns logits [1, 1, vocab]; caller takes [0, 0].
-    pub fn forward_decode(&self, token: u32, seq_pos: usize, dev: &candle_core::Device) -> Result<Tensor> {
-        let pos = seq_pos.min(self.config.max_seq_len - 1) as u32;
-
+    pub fn forward_decode(&self, token: u32, dev: &candle_core::Device) -> Result<Tensor> {
         let x = Tensor::new(&[token], dev)?
             .unsqueeze(0)?.to_dtype(candle_core::DType::U32)?;
-        let x_embed = self.embedding.forward(&x)?;
-
-        let pos_t = Tensor::new(&[pos], dev)?
-            .unsqueeze(0)?.to_dtype(candle_core::DType::U32)?;
-        let pos_embed = self.pos_embedding.forward(&pos_t)?;
-
-        let mut h = x_embed.broadcast_add(&pos_embed)?;
+        let mut h = self.embedding.forward(&x)?;
         for block in &self.blocks { h = block.forward_decode(&h)?; }
         h = self.ln_f.forward(&h)?;
         self.lm_head.forward(&h)
