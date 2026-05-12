@@ -50,7 +50,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-12):** Global Epoch 115 · best loss **10.3262** (all-time low) · Nash routing resolved · training on Modal T4 GPU (~400ms/batch)
+**Training state (2026-05-12):** Global Epoch 127 · best loss **10.3262** (all-time low, ep115) · Nash routing resolved · WALD staleness active · training on Modal T4 GPU (~400ms/batch)
 
 ---
 

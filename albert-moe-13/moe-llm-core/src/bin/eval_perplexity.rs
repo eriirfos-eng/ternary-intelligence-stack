@@ -24,8 +24,14 @@ const VOCAB:      &str = "data/vocab_v3.json";
 const DEFAULT_CORPUS: &str = "data/corpus/stage_3/alice.txt";
 
 fn main() -> Result<()> {
-    let corpus_path = std::env::args().nth(1)
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let corpus_path = args.iter()
+        .find(|a| !a.starts_with("--"))
+        .cloned()
         .unwrap_or_else(|| DEFAULT_CORPUS.to_string());
+    let max_windows: Option<usize> = args.iter()
+        .find(|a| a.starts_with("--max-windows="))
+        .and_then(|a| a["--max-windows=".len()..].parse().ok());
 
     println!("=== Albert-MoE-13 Perplexity Eval ===");
     println!("Checkpoint : {}", CHECKPOINT);
@@ -65,12 +71,17 @@ fn main() -> Result<()> {
     println!("Corpus     : {} chars → {} tokens", text.len(), tokens.len());
 
     let seq_len = config.max_seq_len; // 128
-    let n_windows = tokens.len().saturating_sub(1) / seq_len;
+    let n_windows_full = tokens.len().saturating_sub(1) / seq_len;
+    let n_windows = max_windows.map(|m| m.min(n_windows_full)).unwrap_or(n_windows_full);
     if n_windows == 0 {
         println!("Corpus too short for a single evaluation window.");
         return Ok(());
     }
-    println!("Windows    : {} × {} tokens", n_windows, seq_len);
+    if max_windows.is_some() {
+        println!("Windows    : {} × {} tokens (sample: {}/{})", n_windows, seq_len, n_windows, n_windows_full);
+    } else {
+        println!("Windows    : {} × {} tokens", n_windows, seq_len);
+    }
     println!("Evaluating …");
 
     // ── Evaluate cross-entropy window by window ──────────────────────────────
@@ -139,7 +150,7 @@ fn main() -> Result<()> {
     println!("  Tokens eval  : {}", total_tokens);
     println!("  Time         : {:.1}s", elapsed);
     println!("  Corpus       : {}", corpus_path);
-    println!("  Checkpoint   : {} (12L · Global Epoch 499)", CHECKPOINT);
+    println!("  Checkpoint   : {}", CHECKPOINT);
     println!();
     println!("PPL = {:.1}  (exp({:.4}))", ppl, mean_ce);
 

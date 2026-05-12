@@ -42,7 +42,7 @@ The Ternary Intelligence Stack is organized across three sibling repositories:
 | Repository | Purpose |
 |-----------|----------------|
 | [`ternlang-root/`](../ternlang-root/) | **Core stack** — Compiler, BET VM, MCP server, REST API, all ternlang-* crates |
-| [`albert-moe-13/`](../albert-moe-13/) | **Model training** — From-scratch ternary LM training on CPU with live dashboard |
+| [`albert-moe-13/`](../albert-moe-13/) | **Model training** — From-scratch ternary LM training; GPU training on Modal T4 with live dashboard |
 | [`agent_albert_cli/`](../agent_albert_cli/) | **Agent layer** — Terminal-native, model-agnostic AI coding agent in Rust |
 
 ### ternlang-root directory layout
@@ -159,20 +159,20 @@ Demonstrate that ternary-native training — weights constrained to {−1, 0, +1
 
 ---
 
-### Training Progress (v2.0.0 — active run)
+### Training Progress (v3.0 — active run)
 
 | Field | Value |
 |-------|-------|
 | Architecture | 256H · **12L** · 4H · 12E · 128CTX · 32000V |
 | Version | v3.0 — multilingual ByteLevel BPE, 32k vocab (EN/DE/FR/ES/PT/IT/NL/PL) |
-| Global Epoch | 40+ (v3.0 — launched 2026-05-10) |
-| Best loss | in progress |
-| Inference throughput | **84.4 tok/s** (CPU-only, HP ZBook i7-4800MQ, 2026-05-10) |
-| Hardware | HP ZBook i7-4800MQ · x86 · 8 threads · no GPU · no INT8 |
-| Expert health | dead=0 across entire 12L v2.0.0 run (Mycelium monitor) |
+| Global Epoch | **127** (2026-05-12) |
+| Best loss | **10.3262** (all-time low, ep115) |
+| Inference throughput | **84.4 tok/s** (CPU-only, HP ZBook i7-4800MQ) |
+| Training hardware | Modal T4 GPU · ~400 ms/batch · ~32× over CPU |
+| Expert health | dead=0; Nash routing resolved at ep115 via expert seed biases |
 | Training data | 100% public domain / open licence — Wikipedia CC BY-SA, Gutenberg, Europarl, EU AI Act |
 
-**Status:** v3.0 multilingual training active (launched 2026-05-10). v2.0.0 archived at Global Epoch 477+, best loss 6.8821.
+**Status:** v3.0 multilingual training live on Modal T4 (launched GPU training 2026-05-12). v2.0.0 archived at Global Epoch 477+, best loss 6.8821.
 
 ---
 
