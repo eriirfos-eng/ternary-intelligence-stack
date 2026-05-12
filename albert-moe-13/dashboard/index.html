@@ -408,6 +408,10 @@
             transition: background 0.3s;
         }
 
+        /* Canvas panels (routing + TTL) */
+        .canvas-panel { display:block; width:100%; flex:1; min-height:0; cursor:crosshair; }
+        #tlight-viz   { display:flex; flex-direction:column; flex:1; min-height:0; }
+
         /* Gradient norm bars (Panel E) */
         #grad-viz {
             display: flex;
@@ -782,6 +786,24 @@
         step: null,
         layers: Array.from({length: 12}, (_, i) => ({ layer: i, states: 'OOOOOOOOOOOO', g: 0, o: 0, r: 0 }))
     }));
+    // ── Canvas panel refs (created once, reused) ───────────────────────
+    let _routingCanvas   = null;
+    let _tlightCanvas    = null;
+    let _tlightSummary   = null;
+    // ── Debounce flags — batch redraws into one RAF frame ──────────────
+    let _chartUpdatePending  = false;
+    let _anomalyRenderPending = false;
+    function scheduleChartUpdate() {
+        if (_chartUpdatePending) return;
+        _chartUpdatePending = true;
+        requestAnimationFrame(() => { _chartUpdatePending = false; chart.update('none'); });
+    }
+    function scheduleAnomalyRender() {
+        if (_anomalyRenderPending) return;
+        _anomalyRenderPending = true;
+        requestAnimationFrame(() => { _anomalyRenderPending = false; renderAnomalyFeed(); });
+    }
+
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let totalPts         = 0;
@@ -1251,17 +1273,19 @@
         if (data.length === 0) return [];
         const result = [];
         let level = null;
+        let windowSum = 0;
+        // O(n) sliding window sum — avoids O(n*w) slice+reduce
         for (let i = 0; i < data.length; i++) {
-            const s = Math.max(0, i - w + 1);
-            const windowAvg = data.slice(s, i + 1).reduce((a, b) => a + b.y, 0) / (i - s + 1);
+            windowSum += data[i].y;
+            if (i >= w) windowSum -= data[i - w].y;
+            const windowAvg = windowSum / Math.min(i + 1, w);
             if (level === null) { level = windowAvg; }
             const delta = (windowAvg - level) / Math.max(level, 1e-6);
             if (delta > thresholdPct) {
-                level = windowAvg;   // AFFIRM — loss rising, update level
+                level = windowAvg;
             } else if (delta < -thresholdPct) {
-                level = windowAvg;   // REJECT — loss falling (good!), step down
+                level = windowAvg;
             }
-            // HOLD: level stays flat — ternary 0-state
             result.push({ x: data[i].x, y: level });
         }
         return result;
@@ -1604,12 +1628,15 @@
             chart.data.datasets[0].data = merged;   // replace reference, not mutate
             totalPts += newPts.length;
 
-            chart.data.datasets[1].data = sma(merged, 21);
-            chart.data.datasets[2].data = sma(merged, 55);
-            chart.data.datasets[3].data = sma(merged, 144);
-            chart.data.datasets[4].data = sma(merged, 377);
-            chart.data.datasets[5].data = sma(merged, 610);
-            chart.data.datasets[6].data = tma(merged, 30);
+            // Skip computing SMAs for hidden datasets — saves 30k ops/poll when curves are off.
+            // Re-enabled curves recompute on next poll (within 500ms).
+            const ds = chart.data.datasets;
+            if (!ds[1].hidden) ds[1].data = sma(merged, 21);
+            if (!ds[2].hidden) ds[2].data = sma(merged, 55);
+            if (!ds[3].hidden) ds[3].data = sma(merged, 144);
+            if (!ds[4].hidden) ds[4].data = sma(merged, 377);
+            if (!ds[5].hidden) ds[5].data = sma(merged, 610);
+            if (!ds[6].hidden) ds[6].data = tma(merged, 30);
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
             for (const line of lines) {
@@ -1951,12 +1978,28 @@
         });
     }
 
-    // ── Panel D: Expert Routing Heatmap ───────────────────────────────
+    // ── Panel D: Expert Routing Heatmap (canvas) ─────────────────────
     function routingColor(v) {
-        // v=0 unrouted (cold/dark) → v=1 dominant expert (hot/red)
         if (v <= 0) return 'rgb(4,8,18)';
         return thermal(v);
     }
+
+    // Tiny DFT for FFT strip — returns magnitude spectrum (N/2 bins) for a real signal.
+    // N=60 → 30 bins; each bin cost is N ops → 1800 ops per call, negligible.
+    function dftMag(signal) {
+        const N   = signal.length;
+        const out = new Float32Array(N >> 1);
+        for (let k = 1; k < N >> 1; k++) {     // skip DC (k=0)
+            let re = 0, im = 0;
+            const c = (2 * Math.PI * k) / N;
+            for (let n = 0; n < N; n++) { re += signal[n] * Math.cos(c * n); im -= signal[n] * Math.sin(c * n); }
+            out[k] = Math.sqrt(re * re + im * im) / N;
+        }
+        return out;
+    }
+
+    const ROUTING_LABEL_W = 28;
+    const ROUTING_FFT_H   = 16;   // px — FFT entropy strip at bottom
 
     function renderRoutingHeatmap() {
         const wrap = document.getElementById('routing-viz');
@@ -1967,70 +2010,120 @@
         const numExperts = routingHistory[0].weights.length;
         const fairShare  = 2.0 / numExperts;
 
-        // Scaffold rows once — rebuild only if expert count changes.
-        // Event delegation on .route-cells avoids per-cell listener churn.
-        if (wrap.querySelectorAll('.route-row').length !== numExperts) {
+        // Create canvas once
+        if (!_routingCanvas) {
+            _routingCanvas = document.createElement('canvas');
+            _routingCanvas.className = 'canvas-panel';
             wrap.innerHTML = '';
-            for (let e = 0; e < numExperts; e++) {
-                const row = document.createElement('div');
-                row.className = 'route-row';
-                row.dataset.expert = e;
+            wrap.appendChild(_routingCanvas);
 
-                const lbl = document.createElement('span');
-                lbl.className = 'route-label';
-                lbl.textContent = EXPERT_NAMES[e] || `E${e}`;
-                lbl.style.cursor = 'default';
-                lbl.addEventListener('mouseenter', ev => showTip(ev,
-                    `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}`));
-                lbl.addEventListener('mouseleave', hideTip);
-                row.appendChild(lbl);
+            _routingCanvas.addEventListener('mousemove', ev => {
+                const rect = _routingCanvas.getBoundingClientRect();
+                const lW   = ROUTING_LABEL_W;
+                const fH   = ROUTING_FFT_H;
+                const gridH = rect.height - fH;
+                const mx   = ev.clientX - rect.left;
+                const my   = ev.clientY - rect.top;
 
-                const cells = document.createElement('div');
-                cells.className = 'route-cells';
-                // Delegate hover to cells container — reads step index from dataset
-                cells.addEventListener('mousemove', ev => {
-                    const cell = ev.target.closest('.route-cell');
-                    if (!cell) return;
-                    const t  = parseInt(cell.dataset.t);
-                    const entry = routingHistory[t];
-                    if (!entry) return;
-                    const w    = entry.weights[e] || 0;
-                    showTip(ev,
-                        entry.step === null
-                        ? `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>No data yet`
-                        : `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}<br>Step ${entry.step}: <b>${(w*100).toFixed(1)}%</b>`);
-                });
-                cells.addEventListener('mouseleave', hideTip);
-                row.appendChild(cells);
-                wrap.appendChild(row);
-            }
+                if (my > gridH) {
+                    // FFT strip region
+                    const cellW = (rect.width - lW) / (routingHistory.length >> 1);
+                    const k = Math.floor((mx - lW) / cellW) + 1;
+                    if (k >= 1) {
+                        const period = (routingHistory.length / k).toFixed(1);
+                        showTip(ev, `<b>Routing FFT</b><br>Freq bin ${k}: dominant period ≈ <b>${period} steps</b><br>Higher = longer oscillation cycle in expert selection`);
+                    }
+                    return;
+                }
+                const cellW = (rect.width - lW) / routingHistory.length;
+                const cellH = gridH / numExperts;
+                const e = Math.floor(my / cellH);
+                const t = Math.floor((mx - lW) / cellW);
+                if (e < 0 || e >= numExperts || t < 0 || t >= routingHistory.length) { hideTip(); return; }
+                const entry = routingHistory[t];
+                if (!entry) return;
+                const w = entry.weights[e] || 0;
+                showTip(ev,
+                    entry.step === null
+                    ? `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>No data yet`
+                    : `<b>E${e} · ${EXPERT_NAMES[e]||''}</b><br>${EXPERT_DESC[e]||''}<br>Step ${entry.step}: <b>${(w*100).toFixed(1)}%</b>`);
+            });
+            _routingCanvas.addEventListener('mouseleave', hideTip);
         }
 
-        // Update cell colors in-place — rebuild cells only when history length changes
-        wrap.querySelectorAll('.route-row').forEach(row => {
-            const e = parseInt(row.dataset.expert);
-            const cells = row.querySelector('.route-cells');
-            const existing = cells.querySelectorAll('.route-cell');
+        // Sync canvas pixel size with rendered size
+        const W = _routingCanvas.offsetWidth  || wrap.clientWidth;
+        const H = _routingCanvas.offsetHeight || wrap.clientHeight;
+        if (W <= 0 || H <= 0) return;
+        if (_routingCanvas.width !== W || _routingCanvas.height !== H) {
+            _routingCanvas.width  = W;
+            _routingCanvas.height = H;
+        }
 
-            if (existing.length !== routingHistory.length) {
-                cells.innerHTML = '';
-                for (let t = 0; t < routingHistory.length; t++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'route-cell';
-                    cell.dataset.t = t;
-                    const w = routingHistory[t].weights[e] || 0;
-                    cell.style.background = routingColor(Math.min(1, w / fairShare));
-                    cells.appendChild(cell);
-                }
-            } else {
-                // Just shift the oldest cell to the end and update its color (sliding window)
-                existing.forEach((cell, t) => {
-                    cell.dataset.t = t;
-                    const w = routingHistory[t].weights[e] || 0;
-                    cell.style.background = routingColor(Math.min(1, w / fairShare));
-                });
+        const ctx2d  = _routingCanvas.getContext('2d');
+        const lW     = ROUTING_LABEL_W;
+        const fH     = ROUTING_FFT_H;
+        const gridH  = H - fH;
+        const numT   = routingHistory.length;
+        const cellW  = (W - lW) / numT;
+        const cellH  = gridH / numExperts;
+
+        ctx2d.clearRect(0, 0, W, H);
+
+        // ── Heatmap grid ─────────────────────────────────────────────
+        for (let e = 0; e < numExperts; e++) {
+            for (let t = 0; t < numT; t++) {
+                const entry = routingHistory[t];
+                const w = entry.weights ? (entry.weights[e] || 0) : 0;
+                ctx2d.fillStyle = entry.step === null ? 'rgb(4,8,18)'
+                    : routingColor(Math.min(1, w / fairShare));
+                ctx2d.fillRect(lW + t * cellW + 0.5, e * cellH + 0.5, cellW - 1, cellH - 1);
             }
+            // Expert label
+            ctx2d.font = '9px "JetBrains Mono", monospace';
+            ctx2d.fillStyle = '#64748b';
+            ctx2d.textBaseline = 'middle';
+            ctx2d.textAlign = 'right';
+            ctx2d.fillText(EXPERT_NAMES[e] || `E${e}`, lW - 3, (e + 0.5) * cellH);
+        }
+
+        // ── FFT strip — routing entropy spectrum ──────────────────────
+        // Compute routing entropy per step, subtract mean, DFT the residual.
+        const eps = 1e-9;
+        const entropySignal = routingHistory.map(entry => {
+            if (!entry.step || !entry.weights) return 0;
+            return -entry.weights.reduce((s, w) => s + (w > 0 ? w * Math.log(w + eps) : 0), 0);
         });
+        const meanE  = entropySignal.reduce((a, b) => a + b, 0) / numT;
+        const deMean = entropySignal.map(v => v - meanE);
+        const mag    = dftMag(deMean);
+        const maxMag = Math.max(...mag, 1e-9);
+        const numBins = mag.length - 1;   // skip DC
+        const bW      = (W - lW) / numBins;
+        const fY      = gridH + 1;
+
+        // Background
+        ctx2d.fillStyle = 'rgba(14,20,32,0.8)';
+        ctx2d.fillRect(lW, fY, W - lW, fH - 1);
+
+        // Label
+        ctx2d.font = '8px "JetBrains Mono", monospace';
+        ctx2d.fillStyle = '#334155';
+        ctx2d.textAlign = 'right';
+        ctx2d.textBaseline = 'middle';
+        ctx2d.fillText('FFT', lW - 3, fY + fH / 2);
+
+        // Frequency bars
+        for (let k = 1; k < mag.length; k++) {
+            const barH = Math.round((mag[k] / maxMag) * (fH - 3));
+            const intensity = mag[k] / maxMag;
+            ctx2d.fillStyle = `rgba(34,211,238,${0.15 + intensity * 0.75})`;
+            ctx2d.fillRect(
+                lW + (k - 1) * bW + 0.5,
+                fY + fH - 1 - barH,
+                bW - 1, barH
+            );
+        }
     }
 
     // ── Panel E: Per-Layer Gradient Norms ─────────────────────────────
@@ -2113,97 +2206,125 @@
         globalEl.onmouseleave = hideTip;
     }
 
-    // ── Ternary Traffic Light Panel ───────────────────────────────────
+    // ── Ternary Traffic Light Panel (canvas) ─────────────────────────
+    const TTL_LABEL_W = 18;   // px reserved for layer labels on left
+
     function renderTlight(layers, step) {
         const wrap = document.getElementById('tlight-viz');
         const waiting = document.getElementById('tlight-waiting');
         if (waiting) waiting.remove();
-        wrap.innerHTML = '';
-
-        const stateColor = { G: '#22c55e', O: '#f59e0b', R: '#ef4444' };
-        const stateLabel = { G: 'Green', O: 'Orange', R: 'Red' };
-        const stateTip   = {
-            G: 'Underloaded — gate logit boosted +0.4.',
-            O: 'On-target — no logit change. Partial execution budget.',
-            R: 'Overloaded — gate logit suppressed -0.4.',
-        };
 
         const totG = layers.reduce((s, l) => s + l.g, 0);
         const totO = layers.reduce((s, l) => s + l.o, 0);
         const totR = layers.reduce((s, l) => s + l.r, 0);
-        const total = totG + totO + totR;
+        const total   = totG + totO + totR;
         const isPreload = step === null;
-        const inWarmup  = !isPreload && step !== undefined && step < 50;
+        const inWarmup  = !isPreload && step < 50;
         const allOrange = !isPreload && totG === 0 && totR === 0;
 
-        // Summary line
-        const summary = document.createElement('div');
-        summary.style.cssText = 'display:flex;gap:4px;margin-bottom:3px;align-items:center;flex-shrink:0;';
-        if (isPreload) {
-            summary.innerHTML = `<span style="color:#1e3a5f;font-size:10px;letter-spacing:1px">LOADING HISTORY</span>`;
-        } else if (inWarmup) {
-            summary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP · step ${step}/50</span>`;
-        } else if (allOrange) {
-            summary.innerHTML = `<span style="color:#f59e0b;font-size:10px;letter-spacing:1px">BALANCED · step ${step}</span>`;
-        } else {
-            const pctG = (totG/total*100).toFixed(0), pctO = (totO/total*100).toFixed(0), pctR = (totR/total*100).toFixed(0);
-            summary.innerHTML =
-                `<span style="background:#22c55e22;color:#22c55e;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">G ${pctG}%</span>` +
-                `<span style="background:#f59e0b22;color:#f59e0b;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">O ${pctO}%</span>` +
-                `<span style="background:#ef444422;color:#ef4444;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">R ${pctR}%</span>`;
+        // ── Summary bar (DOM, created once) ──────────────────────────
+        if (!_tlightSummary) {
+            _tlightSummary = document.createElement('div');
+            _tlightSummary.style.cssText = 'display:flex;gap:4px;margin-bottom:3px;align-items:center;flex-shrink:0;height:18px;';
+            wrap.appendChild(_tlightSummary);
         }
-        wrap.appendChild(summary);
+        if (isPreload) {
+            _tlightSummary.innerHTML = `<span style="color:#1e3a5f;font-size:10px;letter-spacing:1px">LOADING HISTORY</span>`;
+        } else if (inWarmup) {
+            _tlightSummary.innerHTML = `<span style="color:#475569;font-size:10px;letter-spacing:1px">WARMUP · step ${step}/50</span>`;
+        } else if (allOrange) {
+            _tlightSummary.innerHTML = `<span style="color:#f59e0b;font-size:10px;letter-spacing:1px">BALANCED · step ${step}</span>`;
+        } else {
+            const pG = (totG/total*100).toFixed(0), pO = (totO/total*100).toFixed(0), pR = (totR/total*100).toFixed(0);
+            _tlightSummary.innerHTML =
+                `<span style="background:#22c55e22;color:#22c55e;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">G ${pG}%</span>` +
+                `<span style="background:#f59e0b22;color:#f59e0b;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">O ${pO}%</span>` +
+                `<span style="background:#ef444422;color:#ef4444;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">R ${pR}%</span>`;
+        }
 
-        // History grid — one row per layer, columns = time steps (newest right), auto-scrolls
-        const grid = document.createElement('div');
-        grid.style.cssText = 'display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden;';
+        // ── Canvas (created once) ─────────────────────────────────────
+        if (!_tlightCanvas) {
+            _tlightCanvas = document.createElement('canvas');
+            _tlightCanvas.className = 'canvas-panel';
+            wrap.appendChild(_tlightCanvas);
 
-        const numLayers = layers.length;
-        for (let li = 0; li < numLayers; li++) {
-            const row = document.createElement('div');
-            row.style.cssText = 'display:flex;align-items:stretch;gap:1px;flex:1;min-height:0;';
-
-            const lbl = document.createElement('span');
-            lbl.textContent = `L${li}`;
-            lbl.style.cssText = 'font-size:9px;color:#64748b;width:16px;flex-shrink:0;display:flex;align-items:center;';
-            row.appendChild(lbl);
-
-            const cells = document.createElement('div');
-            cells.style.cssText = 'display:flex;gap:1px;flex:1;overflow:hidden;';
-
-            for (let ti = 0; ti < tlightHistory.length; ti++) {
-                const snap = tlightHistory[ti];
-                const layerSnap = snap.layers.find(l => l.layer === li);
-                if (!layerSnap) continue;
-                // Dominant state: any R → red, any G → green, else orange; null-step = placeholder
-                const col = snap.step === null ? 'rgba(255,255,255,0.05)'
-                          : layerSnap.r > 0 ? '#ef4444' : layerSnap.g > 0 ? '#22c55e' : '#f59e0b';
-                const cell = document.createElement('div');
-                cell.style.cssText = `flex:1;min-width:3px;border-radius:3px;background:${col};opacity:0.85;cursor:default;`;
-                cell.addEventListener('mouseenter', ev => showTip(ev,
+            _tlightCanvas.addEventListener('mousemove', ev => {
+                const rect    = _tlightCanvas.getBoundingClientRect();
+                const numL    = tlightHistory[0]?.layers.length || 12;
+                const numT    = tlightHistory.length;
+                const cellH   = rect.height / numL;
+                const cellW   = (rect.width - TTL_LABEL_W) / numT;
+                const li = Math.floor((ev.clientY - rect.top) / cellH);
+                const ti = Math.floor((ev.clientX - rect.left - TTL_LABEL_W) / cellW);
+                if (li < 0 || li >= numL || ti < 0 || ti >= numT) { hideTip(); return; }
+                const snap      = tlightHistory[ti];
+                const layerSnap = snap?.layers.find(l => l.layer === li);
+                if (!layerSnap) return;
+                showTip(ev,
                     snap.step === null
                     ? `<b>L${li}</b><br>No data yet`
-                    : `<b>L${li} · step ${snap.step}</b><br>G ${layerSnap.g} · O ${layerSnap.o} · R ${layerSnap.r}`));
-                cell.addEventListener('mouseleave', hideTip);
-                cells.appendChild(cell);
-            }
-            row.appendChild(cells);
-            grid.appendChild(row);
+                    : `<b>L${li} · step ${snap.step}</b><br>` +
+                      `<span style="color:#22c55e">G ${layerSnap.g}</span> · ` +
+                      `<span style="color:#f59e0b">O ${layerSnap.o}</span> · ` +
+                      `<span style="color:#ef4444">R ${layerSnap.r}</span>`);
+            });
+            _tlightCanvas.addEventListener('mouseleave', hideTip);
         }
-        wrap.appendChild(grid);
+
+        // Sync pixel size
+        const W = _tlightCanvas.offsetWidth  || wrap.clientWidth;
+        const H = _tlightCanvas.offsetHeight || (wrap.clientHeight - 24);
+        if (W <= 0 || H <= 0) return;
+        if (_tlightCanvas.width !== W || _tlightCanvas.height !== H) {
+            _tlightCanvas.width  = W;
+            _tlightCanvas.height = H;
+        }
+
+        const ctx2d  = _tlightCanvas.getContext('2d');
+        const numL   = tlightHistory[0]?.layers.length || layers.length;
+        const numT   = tlightHistory.length;
+        const lW     = TTL_LABEL_W;
+        const cellW  = (W - lW) / numT;
+        const cellH  = H / numL;
+
+        ctx2d.clearRect(0, 0, W, H);
+
+        // Layer labels + cells
+        ctx2d.font = '9px "JetBrains Mono", monospace';
+        ctx2d.textBaseline = 'middle';
+        ctx2d.textAlign = 'right';
+
+        for (let li = 0; li < numL; li++) {
+            ctx2d.fillStyle = '#475569';
+            ctx2d.fillText(`L${li}`, lW - 3, (li + 0.5) * cellH);
+
+            for (let ti = 0; ti < numT; ti++) {
+                const snap      = tlightHistory[ti];
+                const layerSnap = snap?.layers.find(l => l.layer === li);
+                ctx2d.fillStyle = !snap || snap.step === null ? 'rgba(255,255,255,0.04)'
+                    : (layerSnap?.r > 0) ? '#ef4444'
+                    : (layerSnap?.g > 0) ? '#22c55e'
+                    : '#f59e0b';
+                ctx2d.globalAlpha = 0.85;
+                ctx2d.fillRect(
+                    lW + ti * cellW + 0.5,
+                    li * cellH + 0.5,
+                    cellW - 1, cellH - 1
+                );
+            }
+        }
+        ctx2d.globalAlpha = 1;
     }
 
     // ── Anomaly Event Feed ────────────────────────────────────────────
     function addEvent(icon, text, level, detail, cx, cy) {
         const ts = new Date().toTimeString().slice(0, 8);
-        // Only store canvas coords when explicitly provided — fallback to lastBatchX/Y
-        // for feed-only events (routing, clip, plateau) that have no meaningful chart position.
         anomalyEvents.unshift({ icon, text, level, ts, detail: detail || text,
             cx: cx !== undefined ? cx : lastBatchX,
-            cy: cy !== undefined ? cy : null });   // null cy = feed-only, no diamond
+            cy: cy !== undefined ? cy : null });
         if (anomalyEvents.length > ANOMALY_MAX) anomalyEvents.pop();
-        renderAnomalyFeed();
-        chart.update('none');
+        scheduleAnomalyRender();   // debounced — coalesces rapid bursts into one RAF
+        scheduleChartUpdate();     // debounced — avoids duplicate chart.update per poll
     }
 
     function renderAnomalyFeed() {
