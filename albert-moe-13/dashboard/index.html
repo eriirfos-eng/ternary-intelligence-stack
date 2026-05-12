@@ -1173,8 +1173,9 @@
                 const pyC = scales.y.getPixelForValue(cn.close);
                 const pyH = scales.y.getPixelForValue(cn.high);
                 const pyL = scales.y.getPixelForValue(cn.low);
-                // Loss DOWN = good = "bullish" = green
-                const bull    = cn.close <= cn.open;
+                // Standard candlestick convention: green = close > open (body UP on screen)
+                // For loss this means red = loss fell = descent — reads naturally to traders
+                const bull    = cn.close >= cn.open;
                 const bodyTop = Math.min(pyO, pyC);
                 const bodyH   = Math.max(1, Math.abs(pyC - pyO));
                 const fillC   = bull ? 'rgba(34,197,94,0.65)' : 'rgba(239,68,68,0.55)';
