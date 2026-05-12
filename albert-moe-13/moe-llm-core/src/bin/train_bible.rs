@@ -88,6 +88,7 @@ const COLLAPSE_STREAK_LIMIT: u32 = 2;
 // then one backward pass covers all N sequences. Mirrors the ternary
 // hold state: withhold the weight update until enough evidence accumulates.
 const GRAD_ACCUM_STEPS: usize = 4;
+const BATCH_SIZE: usize = 13;
 // Direct LR boost applied after Adam's step for cold layers (norm < THRESHOLD).
 // Adam normalizes away gradient amplification via its second-moment denominator,
 // so we bypass it entirely: a sign-normalized SGD step with lr = current_lr * cold_boost.
@@ -829,8 +830,8 @@ fn train_cycle(
     } else { 0 };
 
     // Cosine LR: starts high, decays to near-zero over lr_cycle_steps global steps
-    let base_lr        = 3e-4_f64;   // 2e-4 → 3e-4: stronger signal to escape zero basin
-    let min_lr         = 1e-5_f64;
+    let base_lr        = 3e-4_f64;   // reset to known-good; BATCH_SIZE=13 (eff. 52) does not justify 5e-4
+    let min_lr         = 2e-5_f64;
     let lr_cycle_steps = 500_usize;
 
     let mut opt = candle_nn::AdamW::new_lr(varmap.all_vars(), base_lr)?;
@@ -945,13 +946,17 @@ fn train_cycle(
             let lr = cosine_lr(base_lr, min_lr, *global_step % lr_cycle_steps, lr_cycle_steps);
             opt.set_learning_rate(lr);
 
-            let start = rand::random::<usize>() % (tokens.len() - seq_len - 1);
-            let input_tensor = Tensor::new(&tokens[start..start + seq_len], device)?
-                .reshape((1, seq_len))?
-                .to_dtype(DType::U32)?;
-            let target_tensor = Tensor::new(&tokens[start + 1..start + seq_len + 1], device)?
-                .reshape((1, seq_len))?
-                .to_dtype(DType::U32)?;
+            let mut input_rows: Vec<Tensor> = Vec::with_capacity(BATCH_SIZE);
+            let mut target_rows: Vec<Tensor> = Vec::with_capacity(BATCH_SIZE);
+            for _ in 0..BATCH_SIZE {
+                let start = rand::random::<usize>() % (tokens.len() - seq_len - 1);
+                input_rows.push(Tensor::new(&tokens[start..start + seq_len], device)?
+                    .to_dtype(DType::U32)?);
+                target_rows.push(Tensor::new(&tokens[start + 1..start + seq_len + 1], device)?
+                    .to_dtype(DType::U32)?);
+            }
+            let input_tensor = Tensor::stack(&input_rows, 0)?;   // [BATCH_SIZE, seq_len]
+            let target_tensor = Tensor::stack(&target_rows, 0)?; // [BATCH_SIZE, seq_len]
 
             // Gate div computation to optimizer-step batches only — avoids running all
             // 12 experts on every batch (144 extra forward passes × GRAD_ACCUM_STEPS = 4×).
@@ -964,7 +969,7 @@ fn train_cycle(
             clear_tlight_capture();
             clear_div_capture();
             let logits      = model.forward(&input_tensor)?;
-            let logits      = logits.reshape((seq_len, config.vocab_size))?;
+            let logits      = logits.reshape((BATCH_SIZE * seq_len, config.vocab_size))?;
             let target_flat = target_tensor.flatten_all()?;
             let ce_loss     = loss::cross_entropy(&logits, &target_flat)?;
 
@@ -1216,12 +1221,13 @@ fn train_cycle(
             if let Some(ref mut f) = log_file {
                 let _ = writeln!(f, "{}", log_line);
 
-                // GRAD — per-layer gradient norm (computed above, before opt.step).
+                // GRAD — per-layer gradient norm, every 10 batches to keep log readable.
                 // Dashboard parses "GRAD step=N n=X.XXXX L=n0,n1,n2,..."
-                // 8dp: embed/lm_head dominate global norm; block layer norms sit ~1e-7, invisible at 6dp.
-                let ln_str: Vec<String> = layer_norms.iter()
-                    .map(|n| format!("{:.8}", n)).collect();
-                let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, norm, ln_str.join(","));
+                if batch_idx % 10 == 0 || batch_idx == 0 {
+                    let ln_str: Vec<String> = layer_norms.iter()
+                        .map(|n| format!("{:.2e}", n)).collect();
+                    let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, norm, ln_str.join(","));
+                }
 
                 // ROUTE — expert routing weights, emitted every 10 batches to keep log lean.
                 // Also at batch 5 for early gate-diversity baseline check.

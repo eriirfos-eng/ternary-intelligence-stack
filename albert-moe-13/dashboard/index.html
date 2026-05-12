@@ -601,6 +601,7 @@
     <div class="tb-cell">
         <span class="tb-label">BEST</span>
         <span class="tb-val" id="v-best">—</span>
+        <span id="v-best-pct" style="font-size:10px;color:#22c55e;margin-left:2px"></span>
     </div>
 
     <div class="tb-cell">
@@ -692,18 +693,19 @@
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
-    <!-- Panel E: Per-layer gradient magnitude -->
-    <div class="nv-panel">
-        <div class="nv-label">&#9632; Per-Layer Gradient Norm</div>
-        <div id="grad-viz"><div id="grad-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
-        <div id="grad-norm-global"></div>
-    </div>
-    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
-
     <!-- Panel F: Ternary Traffic Light routing state -->
     <div class="nv-panel">
         <div class="nv-label">&#9632; Traffic Light Routing (TTL)</div>
         <div id="tlight-viz"><div id="tlight-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TLIGHT DATA</div></div>
+    </div>
+    <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
+
+    <!-- Panel E: Per-layer gradient magnitude (rightmost) -->
+    <div class="nv-panel">
+        <div class="nv-label">&#9632; Per-Layer Gradient Norm</div>
+        <div id="grad-viz"><div id="grad-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
+        <div id="grad-norm-global"></div>
+        <canvas id="grad-fft-strip" style="display:block;width:100%;height:16px;flex-shrink:0;margin-top:2px;"></canvas>
     </div>
 </div>
 
@@ -769,6 +771,7 @@
     let lastLossVal      = null;
     let bestLoss         = Infinity;
     let worstLoss        = -Infinity;
+    let sessionStartLoss = null;
 
     const ROUTE_WINDOW   = 60;
     // Pre-filled with empty entries so the grid scaffolds at full width on load.
@@ -796,7 +799,7 @@
     function scheduleChartUpdate() {
         if (_chartUpdatePending) return;
         _chartUpdatePending = true;
-        requestAnimationFrame(() => { _chartUpdatePending = false; chart.update('none'); });
+        requestAnimationFrame(() => { _chartUpdatePending = false; if (!isInteracting) chart.update('none'); });
     }
     function scheduleAnomalyRender() {
         if (_anomalyRenderPending) return;
@@ -862,25 +865,28 @@
         afterDraw(chart) {
             const { ctx, chartArea, scales } = chart;
 
-            // EP AVG line — turquoise dashed
+            // EP AVG line — turquoise dashed; clamped to chart edge when out of Y range
             if (lastSmaY !== null) {
-                const y = scales.y.getPixelForValue(lastSmaY);
-                if (y >= chartArea.top && y <= chartArea.bottom) {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.moveTo(chartArea.left, y);
-                    ctx.lineTo(chartArea.right, y);
-                    ctx.setLineDash([5, 5]);
-                    ctx.strokeStyle = 'rgba(34,211,238,0.50)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                    ctx.font = '11px monospace';
-                    ctx.fillStyle = '#22d3ee';
-                    ctx.textAlign = 'right';
-                    ctx.fillText('EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, y - 3);
-                    ctx.restore();
-                }
+                const yRaw = scales.y.getPixelForValue(lastSmaY);
+                const clipped = yRaw < chartArea.top || yRaw > chartArea.bottom;
+                const y = Math.max(chartArea.top + 1, Math.min(chartArea.bottom - 1, yRaw));
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(chartArea.left, y);
+                ctx.lineTo(chartArea.right, y);
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = clipped ? 'rgba(34,211,238,0.25)' : 'rgba(34,211,238,0.50)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.font = '11px monospace';
+                ctx.fillStyle = clipped ? 'rgba(34,211,238,0.50)' : '#22d3ee';
+                ctx.textAlign = 'right';
+                const labelY = clipped
+                    ? (yRaw < chartArea.top ? chartArea.top + 12 : chartArea.bottom - 4)
+                    : y - 3;
+                ctx.fillText((clipped ? (yRaw < chartArea.top ? '▲ ' : '▼ ') : '') + 'EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, labelY);
+                ctx.restore();
             }
 
             // WORST line — red dotted
@@ -1091,7 +1097,7 @@
                     borderWidth: 1,
                     fill: false,
                     pointRadius: 0,
-                    tension: 0.4,
+                    tension: 0,
                     order: 1,
                     animation: false,
                 },
@@ -1103,7 +1109,7 @@
                     borderWidth: 1.5,
                     fill: false,
                     pointRadius: 0,
-                    tension: 0.4,
+                    tension: 0,
                     order: 1,
                     animation: false,
                     hidden: true,
@@ -1116,7 +1122,7 @@
                     borderWidth: 2,
                     fill: false,
                     pointRadius: 0,
-                    tension: 0.3,
+                    tension: 0,
                     order: 1,
                     animation: false,
                 },
@@ -1128,7 +1134,7 @@
                     borderWidth: 2,
                     fill: false,
                     pointRadius: 0,
-                    tension: 0.2,
+                    tension: 0,
                     order: 1,
                     animation: false,
                     hidden: true,
@@ -1141,7 +1147,7 @@
                     borderWidth: 2.5,
                     fill: false,
                     pointRadius: 0,
-                    tension: 0.1,
+                    tension: 0,
                     order: 1,
                     animation: false,
                     hidden: true,
@@ -1172,6 +1178,7 @@
                 event.native.target.style.cursor = elements.length ? 'pointer' : 'grab';
             },
             animations: {
+                x: { duration: 0 },  // kill default x-slide; only y-drop for new live points
                 y: {
                     // Only the newest live point gets the drop animation.
                     // Suppress entirely during pan/zoom to avoid fighting the redraw.
@@ -1217,7 +1224,7 @@
                             c.canvas.style.cursor = 'grabbing';
                             document.body.style.cursor = 'grabbing';
                         },
-                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.update('none'); }
+                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); chart.update('none'); }
                     },
                     zoom: {
                         wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
@@ -1226,7 +1233,7 @@
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
                         },
-                        onZoomComplete: () => { isInteracting = false; chart.update('none'); }
+                        onZoomComplete: () => { isInteracting = false; chart.stop(); chart.update('none'); }
                     }
                 }
             }
@@ -1249,13 +1256,15 @@
 
     // ── SMA — O(n) sliding window sum, not O(n²) slice+reduce ──────────
     function sma(data, w) {
-        if (data.length === 0) return [];
-        const result = new Array(data.length);
+        if (data.length < w) return [];
+        const result = [];
         let sum = 0;
         for (let i = 0; i < data.length; i++) {
             sum += data[i].y;
             if (i >= w) sum -= data[i - w].y;
-            result[i] = { x: data[i].x, y: sum / Math.min(i + 1, w) };
+            // Only emit once the full window is available — partial-window warm-up
+            // creates a ramp that traces raw data and causes bezier artifacts at the tail.
+            if (i >= w - 1) result.push({ x: data[i].x, y: sum / w });
         }
         return result;
     }
@@ -1301,9 +1310,17 @@
         document.getElementById('v-batch').textContent = `${latest.batch} / ${BATCHES_PER_EPOCH}`;
         document.getElementById('v-pts').textContent   = totalPts;
 
+        if (sessionStartLoss === null) sessionStartLoss = loss;
         if (loss < bestLoss)  { bestLoss  = loss; }
         if (loss > worstLoss) { worstLoss = loss; }
         document.getElementById('v-best').textContent = bestLoss === Infinity ? '—' : bestLoss.toFixed(4);
+        const pctEl = document.getElementById('v-best-pct');
+        if (bestLoss !== Infinity && sessionStartLoss > 0) {
+            const impPct = ((sessionStartLoss - bestLoss) / sessionStartLoss) * 100;
+            pctEl.textContent = impPct > 0.001 ? `↓${impPct.toFixed(2)}%` : '';
+        } else {
+            pctEl.textContent = '';
+        }
 
         const deltaEl = document.getElementById('delta');
         if (lastLossVal !== null) {
@@ -1365,6 +1382,10 @@
 
             // Parse new lines
             const lines = text.split('\n');
+            // First full-file response (200) = historical replay — suppress event noise.
+            // Partial responses (206) = live incremental data — fire events normally.
+            const isReplay = (res.status === 200);
+            const liveEvent = (...args) => { if (!isReplay) addEvent(...args); };
             const newPts = [];
             let _routingDirty = false;
             let _tlightPendingLayers = null, _tlightPendingStep = null;
@@ -1383,7 +1404,7 @@
                     const layerSparsity  = tm[2].split(',').map(Number);
                     const expertActivity = tm[3].split(',').map(Number);
                     if (lastNumLayers !== null && numLayers > lastNumLayers) {
-                        addEvent('surgery', `SURGERY ${lastNumLayers}L→${numLayers}L`, 'gold',
+                        liveEvent('surgery', `SURGERY ${lastNumLayers}L→${numLayers}L`, 'gold',
                             `Net2Net surgery fired — model expanded from ${lastNumLayers} to ${numLayers} layers.<br>New layer inserted with identity mapping. Expect brief loss spike.`);
                     }
                     lastNumLayers = numLayers;
@@ -1406,13 +1427,13 @@
                     const domIdx = weights.indexOf(maxW);
                     if (maxW > 0.25 && domIdx !== lastDomExpert) {
                         lastDomExpert = domIdx;
-                        addEvent('route', `${EXPERT_NAMES[domIdx]} routing (${(maxW*100).toFixed(0)}%)`, 'info',
+                        liveEvent('route', `${EXPERT_NAMES[domIdx]} routing (${(maxW*100).toFixed(0)}%)`, 'info',
                             `Expert E${domIdx} · <b>${EXPERT_NAMES[domIdx]}</b> became dominant router.<br>${EXPERT_DESC[domIdx]}<br>Gate weight: ${(maxW*100).toFixed(1)}%`);
                     }
                     continue;
                 }
                 // GRAD line — per-layer gradient norms
-                const gm = line.match(/^GRAD step=(\d+) n=([\d.]+) L=([\d.,]+)/);
+                const gm = line.match(/^GRAD step=(\d+) n=([\d.]+) L=([\d.e+\-,]+)/);
                 if (gm) {
                     const gmNorm  = parseFloat(gm[2]);
                     const gmLayers = gm[3].split(',').map(Number);
@@ -1426,7 +1447,7 @@
                             const now = Date.now();
                             if (now - lastClipTs > 30000) {
                                 lastClipTs = now;
-                                addEvent('clip', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
+                                liveEvent('clip', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
                                     `Gradient clipped — global norm was <b>${latestGrad.norm.toFixed(4)}</b>, clamped to 1.0.<br>Optimizer step damped. Model making large weight updates.`);
                             }
                         }
@@ -1441,7 +1462,7 @@
                     // BALANCED: entropy ≥ 2.40 (96.6% of max) — experts sharing load evenly
                     if (pendingEntropy >= 2.40 && enStep - lastBalancedStep > 200) {
                         lastBalancedStep = enStep;
-                        addEvent('balanced', `BALANCED H=${pendingEntropy.toFixed(3)}`, 'purple',
+                        liveEvent('balanced', `BALANCED H=${pendingEntropy.toFixed(3)}`, 'purple',
                             `Router entropy <b>${pendingEntropy.toFixed(4)}</b> nats · max = ln(12) ≈ 2.485.<br>` +
                             `Router entropy H=${pendingEntropy.toFixed(3)} nats — experts receiving near-equal routing weight. ` +
                                 `This is the Nash equilibrium in <i>routing probability space</i> (distinct from TTL trit states). ` +
@@ -1489,21 +1510,21 @@
                         // Nash equilibrium: every expert in every layer is Orange
                         if (totalG === 0 && totalR === 0 && tlStep - lastNashStep > 200) {
                             lastNashStep = tlStep;
-                            addEvent('ttl_nash', `TTL-NASH all-O`, 'warn',
+                            liveEvent('ttl_nash', `TTL-NASH all-O`, 'warn',
                                 `All ${layers.length} layers are G0/O12/R0 — routing Nash equilibrium. ` +
                                 `Every expert on-target. Anti-stagnation burst will fire if this holds for 100+ steps.`);
                         }
                         // Surge green: ≥25% of all experts underloaded
                         if (totalG / totalExperts >= 0.25 && tlStep - lastTtlGreenStep > 200) {
                             lastTtlGreenStep = tlStep;
-                            addEvent('ttl_green', `TTL-GREEN ${pctG}%`, 'info',
+                            liveEvent('ttl_green', `TTL-GREEN ${pctG}%`, 'info',
                                 `${pctG}% of experts across all layers are Green (underloaded). ` +
                                 `Model is widely underutilising capacity — unusual routing state.`);
                         }
                         // Surge red: ≥25% of all experts suppressed
                         if (totalR / totalExperts >= 0.25 && tlStep - lastTtlStressStep > 200) {
                             lastTtlStressStep = tlStep;
-                            addEvent('ttl_stress', `TTL-STRESS ${pctR}%`, 'error',
+                            liveEvent('ttl_stress', `TTL-STRESS ${pctR}%`, 'error',
                                 `${pctR}% of experts across all layers are Red (suppressed). ` +
                                 `Widespread routing overload — load-balancing may be struggling.`);
                         }
@@ -1513,22 +1534,22 @@
                 // Evolution & system event lines
                 if (line.includes('[evolution] Plateau detected')) {
                     const lm = line.match(/loss ([\d.]+)/);
-                    addEvent('plateau', `Plateau · ${lm ? lm[1] : ''}`, 'warn',
+                    liveEvent('plateau', `Plateau · ${lm ? lm[1] : ''}`, 'warn',
                         `EvolutionManager: plateau detected. Loss > 8.0 threshold — surgery suppressed until model improves.`);
                     continue;
                 }
                 if (line.includes('[evolution]') && (line.toLowerCase().includes('surgery') || line.includes('Net2Net'))) {
-                    addEvent('surgery', 'Surgery triggered', 'gold',
+                    liveEvent('surgery', 'Surgery triggered', 'gold',
                         'EvolutionManager: Net2Net surgery triggered. New layer being inserted.');
                     continue;
                 }
                 if (line.includes('[evolution]') && line.toLowerCase().includes('mastery')) {
-                    addEvent('mastery', 'Mastery!', 'good',
+                    liveEvent('mastery', 'Mastery!', 'good',
                         'Loss crossed mastery threshold (< 4.5). Architecture expansion imminent.');
                     continue;
                 }
                 if (line.includes('Rollback') && line.includes('checkpoint')) {
-                    addEvent('rollback', 'Rollback!', 'crit',
+                    liveEvent('rollback', 'Rollback!', 'crit',
                         'Collapse detected — rolling back to best checkpoint. Loss exceeded 8.5 for 2 consecutive epochs.');
                     continue;
                 }
@@ -1546,7 +1567,7 @@
                 // Spike detection — loss significantly above last epoch average (once per epoch)
                 if (lastSmaY !== null && loss > lastSmaY + 0.4 && epoch !== spikeFiredEp) {
                     spikeFiredEp = epoch;
-                    addEvent('spike', `SPIKE ${loss.toFixed(3)} +${(loss - lastSmaY).toFixed(3)}`, 'crit',
+                    liveEvent('spike', `SPIKE ${loss.toFixed(3)} +${(loss - lastSmaY).toFixed(3)}`, 'crit',
                         `Batch loss <b>${loss.toFixed(4)}</b> is ${(loss - lastSmaY).toFixed(4)} above EP AVG (${lastSmaY.toFixed(4)}).<br>Possible LR overshoot or difficult batch.`,
                         bx, loss);
                 }
@@ -1591,6 +1612,7 @@
                 lastSmaY       = null;
                 bestLoss       = Infinity;
                 worstLoss      = -Infinity;
+                sessionStartLoss = null;
                 totalPts       = 0;
                 lastLossVal    = null;
                 pendingEntropy = null;
@@ -1605,6 +1627,7 @@
                 document.getElementById('v-loss').textContent  = '—';
                 document.getElementById('v-epoch').textContent = '—';
                 document.getElementById('v-best').textContent  = '—';
+                document.getElementById('v-best-pct').textContent = '';
                 document.getElementById('v-pts').textContent   = '0';
                 document.getElementById('delta').textContent   = '';
                 document.getElementById('delta').className     = 'flat';
@@ -1647,11 +1670,11 @@
                     if (epochAvg < bestEpochAvg - 0.005) {
                         const prevBest = bestEpochAvg;
                         bestEpochAvg = epochAvg;
-                        addEvent('best', `BEST avg ${epochAvg.toFixed(4)}`, 'gold',
+                        liveEvent('best', `BEST avg ${epochAvg.toFixed(4)}`, 'gold',
                             `New best epoch average: <b>${epochAvg.toFixed(4)}</b>.<br>Previous best: ${prevBest === Infinity ? '—' : prevBest.toFixed(4)}`,
                             lastBatchX, epochAvg);
                     } else {
-                        addEvent('epoch', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
+                        liveEvent('epoch', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
                             `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`,
                             lastBatchX, epochAvg);
                     }
@@ -1692,13 +1715,15 @@
             newPointStartIdx = isLive ? merged.length - newPts.length : Infinity;
             chart.update(isLive && !isInteracting ? undefined : 'none');
 
-            // If a live filter is active, advance the viewport with new data
-            const fv = document.getElementById('viewFilter').value;
-            if (fv !== 'all' && merged.length > 0) {
-                const maxX = merged[merged.length - 1].x;
-                chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
-                chart.options.scales.x.max = maxX + 2;
-                chart.update('none');
+            // If a live filter is active, advance the viewport with new data (not during pan/zoom)
+            if (!isInteracting) {
+                const fv = document.getElementById('viewFilter').value;
+                if (fv !== 'all' && merged.length > 0) {
+                    const maxX = merged[merged.length - 1].x;
+                    chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
+                    chart.options.scales.x.max = maxX + 2;
+                    chart.update('none');
+                }
             }
 
             updateTopbar(newPts[newPts.length - 1]);
@@ -1850,7 +1875,7 @@
     }
 
     function expertColor(act) {
-        // act=0 dormant → act=1 fully active — green palette, healthy = green
+        // act=0 dormant → act=1 fully active — green palette
         if (act < 0.05) return '#0d130d';
         const g = Math.round(35 + act * 90);
         const r = Math.round(act * 12);
@@ -2113,29 +2138,31 @@
         ctx2d.textBaseline = 'middle';
         ctx2d.fillText('FFT', lW - 3, fY + fH / 2);
 
-        // Frequency bars
+        // Frequency bars — use thermal color matching the heatmap above
         for (let k = 1; k < mag.length; k++) {
             const barH = Math.round((mag[k] / maxMag) * (fH - 3));
             const intensity = mag[k] / maxMag;
-            ctx2d.fillStyle = `rgba(34,211,238,${0.15 + intensity * 0.75})`;
+            ctx2d.fillStyle = thermal(intensity);
+            ctx2d.globalAlpha = 0.15 + intensity * 0.85;
             ctx2d.fillRect(
                 lW + (k - 1) * bW + 0.5,
                 fY + fH - 1 - barH,
                 bW - 1, barH
             );
         }
+        ctx2d.globalAlpha = 1;
     }
 
     // ── Panel E: Per-Layer Gradient Norms ─────────────────────────────
     function gradColor(norm, maxNorm) {
-        // white floor → yellow → orange → red  (no pink/salmon)
+        // white floor → yellow → orange → red
         if (maxNorm < 1e-9) return 'rgb(255,255,255)';
         const ratio = Math.min(1, norm / maxNorm);
         const t = Math.log(1 + 9 * ratio) / Math.log(10);
-        const floor = 0.45; // below this → pure white
+        const floor = 0.45;
         if (t < floor) return 'rgb(255,255,255)';
-        const tn = (t - floor) / (1 - floor); // remap floor…1 → 0…1
-        const split = 0.35; // within colored range: yellow pivot
+        const tn = (t - floor) / (1 - floor);
+        const split = 0.35;
         let g, b;
         if (tn < split) {
             g = 255;
@@ -2204,10 +2231,65 @@
                 ? '⚡ <b>Clipped to 1.0</b> — optimizer step was damped. Model making large updates.'
                 : 'Within clip threshold (1.0) — full gradient step applied. Gradients stable.'));
         globalEl.onmouseleave = hideTip;
+        renderGradFFT();
+    }
+
+    function renderGradFFT() {
+        const canvas = document.getElementById('grad-fft-strip');
+        if (!canvas || batchLog.length < 4) return;
+        const W = canvas.offsetWidth || (canvas.parentElement ? canvas.parentElement.clientWidth : 0);
+        const H = 16;
+        if (W <= 0) return;
+        if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, W, H);
+
+        // Use last ROUTE_WINDOW gradient norms from batchLog
+        const window = batchLog.slice(-ROUTE_WINDOW).map(b => b.grad_norm || 0);
+        const numT   = window.length;
+        const mean   = window.reduce((a, b) => a + b, 0) / numT;
+        const deMean = window.map(v => v - mean);
+        const mag    = dftMag(deMean);
+        const maxMag = Math.max(...mag, 1e-9);
+        const numBins = mag.length - 1;
+        const bW      = (W - 18) / numBins;   // 18px = TTL_LABEL_W equivalent
+
+        ctx.fillStyle = 'rgba(14,20,32,0.8)';
+        ctx.fillRect(18, 0, W - 18, H);
+        ctx.font = '8px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#334155';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('FFT', 15, H / 2);
+
+        // Bars use the same warm gradient as the grad bars: white→yellow→orange→red
+        for (let k = 1; k < mag.length; k++) {
+            const intensity = mag[k] / maxMag;
+            const barH = Math.round(intensity * (H - 3));
+            ctx.fillStyle = gradColor(intensity, 1.0);
+            ctx.globalAlpha = 0.2 + intensity * 0.8;
+            ctx.fillRect(18 + (k - 1) * bW + 0.5, H - barH, bW - 1, barH);
+        }
+        ctx.globalAlpha = 1;
+
+        if (!canvas.dataset.listener) {
+            canvas.dataset.listener = '1';
+            canvas.addEventListener('mousemove', ev => {
+                const rect = canvas.getBoundingClientRect();
+                const bW2 = (rect.width - 18) / (numBins || 1);
+                const k   = Math.floor((ev.clientX - rect.left - 18) / bW2) + 1;
+                if (k >= 1 && k < mag.length) {
+                    const period = (numT / k).toFixed(1);
+                    showTip(ev, `<b>Gradient Norm FFT</b><br>Freq bin ${k}: period ≈ <b>${period} steps</b><br>Peaks = periodic gradient spikes or loss oscillation`);
+                } else { hideTip(); }
+            });
+            canvas.addEventListener('mouseleave', hideTip);
+        }
     }
 
     // ── Ternary Traffic Light Panel (canvas) ─────────────────────────
     const TTL_LABEL_W = 18;   // px reserved for layer labels on left
+    const TTL_FFT_H   = 16;   // px — net G/R imbalance FFT strip at bottom
 
     function renderTlight(layers, step) {
         const wrap = document.getElementById('tlight-viz');
@@ -2252,9 +2334,21 @@
                 const rect    = _tlightCanvas.getBoundingClientRect();
                 const numL    = tlightHistory[0]?.layers.length || 12;
                 const numT    = tlightHistory.length;
-                const cellH   = rect.height / numL;
+                const my      = ev.clientY - rect.top;
+                const gridH   = rect.height - TTL_FFT_H;
+                if (my > gridH) {
+                    // FFT strip
+                    const bW = (rect.width - TTL_LABEL_W) / (numT >> 1);
+                    const k  = Math.floor((ev.clientX - rect.left - TTL_LABEL_W) / bW) + 1;
+                    if (k >= 1) {
+                        const period = (numT / k).toFixed(1);
+                        showTip(ev, `<b>TTL Balance FFT</b><br>Freq bin ${k}: dominant period ≈ <b>${period} steps</b><br>Shows oscillation in G vs R balance across layers`);
+                    }
+                    return;
+                }
+                const cellH   = gridH / numL;
                 const cellW   = (rect.width - TTL_LABEL_W) / numT;
-                const li = Math.floor((ev.clientY - rect.top) / cellH);
+                const li = Math.floor(my / cellH);
                 const ti = Math.floor((ev.clientX - rect.left - TTL_LABEL_W) / cellW);
                 if (li < 0 || li >= numL || ti < 0 || ti >= numT) { hideTip(); return; }
                 const snap      = tlightHistory[ti];
@@ -2284,8 +2378,10 @@
         const numL   = tlightHistory[0]?.layers.length || layers.length;
         const numT   = tlightHistory.length;
         const lW     = TTL_LABEL_W;
+        const fH     = TTL_FFT_H;
+        const gridH  = H - fH;
         const cellW  = (W - lW) / numT;
-        const cellH  = H / numL;
+        const cellH  = gridH / numL;
 
         ctx2d.clearRect(0, 0, W, H);
 
@@ -2314,6 +2410,53 @@
             }
         }
         ctx2d.globalAlpha = 1;
+
+        // ── FFT strip — net G/R imbalance frequency spectrum ─────────
+        const imbalance = tlightHistory.map(snap => {
+            if (!snap || snap.step === null) return 0;
+            const totG = snap.layers.reduce((s, l) => s + l.g, 0);
+            const totR = snap.layers.reduce((s, l) => s + l.r, 0);
+            const tot  = snap.layers.reduce((s, l) => s + l.g + l.o + l.r, 0);
+            return tot > 0 ? (totG - totR) / tot : 0;
+        });
+        const meanI   = imbalance.reduce((a, b) => a + b, 0) / numT;
+        const deMeanI = imbalance.map(v => v - meanI);
+        const magI    = dftMag(deMeanI);
+        const maxMagI = Math.max(...magI, 1e-9);
+        const numBins = magI.length - 1;
+        const bW      = (W - lW) / numBins;
+        const fY      = gridH + 1;
+
+        ctx2d.fillStyle = 'rgba(14,20,32,0.8)';
+        ctx2d.fillRect(lW, fY, W - lW, fH - 1);
+        ctx2d.font = '8px "JetBrains Mono", monospace';
+        ctx2d.fillStyle = '#334155';
+        ctx2d.textAlign = 'right';
+        ctx2d.textBaseline = 'middle';
+        ctx2d.fillText('FFT', lW - 3, fY + fH / 2);
+
+        // Each bin interpolates G→O→R across the frequency axis (low freq=green, high=red)
+        for (let k = 1; k < magI.length; k++) {
+            const intensity = magI[k] / maxMagI;
+            const barH      = Math.round(intensity * (fH - 3));
+            const pos       = (k - 1) / Math.max(numBins - 1, 1);   // 0=low freq, 1=high freq
+            let r, g, b;
+            if (pos < 0.5) {
+                // green (#22c55e) → orange (#f59e0b)
+                const t = pos * 2;
+                r = Math.round(34  + t * (245 - 34));
+                g = Math.round(197 + t * (158 - 197));
+                b = Math.round(94  + t * (11  - 94));
+            } else {
+                // orange (#f59e0b) → red (#ef4444)
+                const t = (pos - 0.5) * 2;
+                r = Math.round(245 + t * (239 - 245));
+                g = Math.round(158 + t * (68  - 158));
+                b = Math.round(11  + t * (68  - 11));
+            }
+            ctx2d.fillStyle = `rgba(${r},${g},${b},${0.2 + intensity * 0.8})`;
+            ctx2d.fillRect(lW + (k - 1) * bW + 0.5, fY + fH - 1 - barH, bW - 1, barH);
+        }
     }
 
     // ── Anomaly Event Feed ────────────────────────────────────────────

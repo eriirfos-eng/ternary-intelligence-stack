@@ -74,7 +74,7 @@ def cmd_pull():
     for remote, local in _DOWNLOADS:
         local_abs = os.path.join(_HERE, local)
         print(f"\n  {remote}  ->  {local}")
-        rc = _run(["modal", "volume", "get", _VOL, remote, local_abs])
+        rc = _run(["modal", "volume", "get", "--force", _VOL, remote, local_abs])
         if rc != 0:
             print(f"  WARNING: could not pull {remote} (exit {rc})")
     print("\n[pull] done")
@@ -206,6 +206,7 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
         "--root=/vol/albert",
         f"--gate-diversity={gate_diversity}",
         f"--lb-weight={lb_weight}",
+        "--div-weight=0.001",
     ]
     print(f"[modal] {' '.join(cmd)}")
     sys.stdout.flush()
@@ -249,4 +250,4 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
 
 @app.local_entrypoint()
 def main():
-    train.remote(gate_diversity=0.5)
+    train.remote(gate_diversity=0.3, lb_weight=0.0)

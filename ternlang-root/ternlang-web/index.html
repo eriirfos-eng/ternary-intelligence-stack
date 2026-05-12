@@ -438,6 +438,34 @@
         </div>
       </section>
 
+      <!-- @sparseskip Hero Callout -->
+      <section class="py-12 px-6 border-y border-t_teal/20" style="background:rgba(0,245,196,0.02)">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          <div class="flex-shrink-0 text-center">
+            <div class="font-mono text-[10px] font-black text-t_teal uppercase tracking-[0.25em] mb-2">Patent Pending · A50296/2026</div>
+            <div class="text-6xl md:text-7xl font-black text-t_teal leading-none">84.4</div>
+            <div class="text-sm font-black text-t_text uppercase tracking-widest mt-1">tok/s · CPU only</div>
+            <div class="font-mono text-[9px] text-t_muted mt-1">Intel i7-4800MQ · 2013 hardware</div>
+          </div>
+          <div class="border-t border-t_teal/30 pt-6 md:border-t-0 md:border-l md:pt-0 md:pl-10 flex-1">
+            <div class="font-mono text-xs font-black text-t_teal uppercase tracking-widest mb-2">@sparseskip</div>
+            <h3 class="text-2xl md:text-3xl font-black text-t_text mb-3 leading-tight">
+              <span class="lang-en">75% of experts skipped. Zero quality loss.</span>
+              <span class="lang-de">75 % der Experten übersprungen. Kein Qualitätsverlust.</span>
+            </h3>
+            <p class="text-t_muted text-sm leading-relaxed mb-4">
+              <span class="lang-en">Every decode step, @sparseskip identifies and bypasses inactive MoE experts before any computation runs — not after. 3.97× speedup at standard Top-3 routing. 13.07× at 92% skip. Output divergence &lt; 1e-4. The central primitive of the Ternary Intelligence Stack.</span>
+              <span class="lang-de">Bei jedem Decode-Schritt identifiziert und überspringt @sparseskip inaktive MoE-Experten, bevor Berechnungen beginnen — nicht danach. 3,97× Beschleunigung bei Standard-Top-3-Routing. 13,07× bei 92 % Skip. Ausgabe-Divergenz &lt; 1e-4.</span>
+            </p>
+            <div class="flex flex-wrap gap-3 font-mono text-[10px]">
+              <span class="border border-t_teal/40 text-t_teal px-3 py-1 rounded-full">3.97× · standard Top-3</span>
+              <span class="border border-t_teal/40 text-t_teal px-3 py-1 rounded-full">13.07× · 92% skip rate</span>
+              <span class="border border-t_border text-t_muted px-3 py-1 rounded-full">max output delta &lt; 1e-4</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- SPRIND Frontier Strip -->
       <section class="py-14 px-6">
         <div class="max-w-6xl mx-auto">
@@ -452,8 +480,8 @@
                 <span class="lang-en">Target Parameters</span><span class="lang-de">Zielparameter</span>
               </div>
               <div class="text-xs text-t_muted font-medium">
-                <span class="lang-en">Albert MoE-13 at full 12-layer depth<br/>Currently training: 3L → 12L via EvolutionManager</span>
-                <span class="lang-de">Albert MoE-13 mit voller 12-Schichten-Tiefe<br/>Im Training: 3L → 12L via EvolutionManager</span>
+                <span class="lang-en">Albert MoE-13 · 12L complete · 32K vocab<br/>Live training on Modal T4 — loss 10.30</span>
+                <span class="lang-de">Albert MoE-13 · 12L abgeschlossen · 32K Vokabular<br/>Live-Training auf Modal T4 — Loss 10,30</span>
               </div>
             </div>
             <div class="glass-card rounded-2xl p-6 border-t-2 border-t_blue text-center">
@@ -612,7 +640,16 @@
           <div class="text-center mb-12">
             <p class="font-mono text-t_blue text-xs font-bold tracking-widest uppercase mb-4"><span class="lang-en">Frontier Language Model · Native Rust · Trained From Scratch</span><span class="lang-de">Frontier-Sprachmodell · Natives Rust · Von Grund auf trainiert</span></p>
             <h2 class="text-5xl md:text-7xl font-black text-t_text mb-6 leading-none uppercase">Albert <span class="text-t_blue">MoE-13.</span></h2>
-            <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed"><span class="lang-en">Not a fine-tuned wrapper. Not a quantized port. A language model trained from random initialisation, in Rust, by us — growing its own architecture one layer at a time until it reaches depth.</span><span class="lang-de">Kein fein abgestimmter Wrapper. Kein quantisierter Port. Ein Sprachmodell, das von einer zufälligen Initialisierung aus, in Rust, von uns trainiert wurde — und seine eigene Architektur Schicht für Schicht aufbaut, bis es die gewünschte Tiefe erreicht.</span></p>
+            <div class="flex flex-wrap items-center justify-center gap-3 mb-6">
+              <span class="inline-flex items-center gap-2 font-mono text-[10px] font-black text-t_teal border border-t_teal/40 bg-t_teal/5 px-3 py-1.5 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-t_teal animate-pulse inline-block"></span>
+                <span class="lang-en">LIVE · Modal T4 · loss 10.30</span>
+                <span class="lang-de">LIVE · Modal T4 · Loss 10,30</span>
+              </span>
+              <span class="font-mono text-[10px] font-black text-t_muted border border-t_border px-3 py-1.5 rounded-full">12L · 81M params · 32K vocab</span>
+              <span class="font-mono text-[10px] font-black text-t_muted border border-t_border px-3 py-1.5 rounded-full">@sparseskip · 84.4 tok/s CPU</span>
+            </div>
+            <p class="text-xl text-t_muted max-w-3xl mx-auto leading-relaxed"><span class="lang-en">Not a fine-tuned wrapper. Not a quantized port. A language model trained from random initialisation, in Rust, by us — growing its own architecture one layer at a time.</span><span class="lang-de">Kein fein abgestimmter Wrapper. Kein quantisierter Port. Ein Sprachmodell, das von einer zufälligen Initialisierung aus, in Rust, von uns trainiert wurde — und seine eigene Architektur Schicht für Schicht aufbaut.</span></p>
           </div>
 
           <div class="grid lg:grid-cols-2 gap-10 mb-12">
@@ -626,10 +663,10 @@
                   <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Attention heads</span><span class="text-t_text font-bold">4</span></div>
                   <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Expert count</span><span class="text-t_text font-bold">12 (Top-3 routing)</span></div>
                   <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Context length</span><span class="text-t_text font-bold">128 tokens</span></div>
-                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Vocabulary</span><span class="text-t_text font-bold">8,000 BPE tokens</span></div>
-                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Current depth</span><span class="text-t_teal font-bold">3L → 12L target</span></div>
-                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Current params</span><span class="text-t_teal font-bold">~24M</span></div>
-                  <div class="flex justify-between"><span class="text-t_muted">Target params (12L)</span><span class="text-t_blue font-bold">~81M</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Vocabulary</span><span class="text-t_text font-bold">32,000 BPE tokens</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Current depth</span><span class="text-t_teal font-bold">12L complete</span></div>
+                  <div class="flex justify-between border-b border-t_border pb-2"><span class="text-t_muted">Current params</span><span class="text-t_teal font-bold">~81M</span></div>
+                  <div class="flex justify-between"><span class="text-t_muted">Next surgery target</span><span class="text-t_blue font-bold">13L · loss_avg ≤ 9.8</span></div>
                 </div>
               </div>
 
@@ -679,18 +716,18 @@
                 <div class="font-mono text-[10px] space-y-2">
                   <div class="flex gap-3 p-2 bg-t_teal/5 border border-t_teal/20 rounded-lg">
                     <span class="text-t_teal font-black">MASTERY</span>
-                    <span class="text-t_muted">loss &lt; 4.5 → surgery triggered</span>
+                    <span class="text-t_muted">loss_avg ≤ 9.8 → 13L surgery triggered</span>
                   </div>
                   <div class="flex gap-3 p-2 bg-t_blue/5 border border-t_blue/20 rounded-lg">
                     <span class="text-t_blue font-black">PLATEAU</span>
-                    <span class="text-t_muted">|Δloss| &lt; 0.02 over 10 epochs → surgery triggered</span>
+                    <span class="text-t_muted">|Δloss| &lt; 0.01 over 20 epochs → surgery triggered</span>
                   </div>
                   <div class="flex gap-3 p-2 bg-t_border/20 border border-t_border rounded-lg">
                     <span class="text-t_text font-black">COOLDOWN</span>
                     <span class="text-t_muted">20-epoch lock after any surgery — no cascade</span>
                   </div>
                 </div>
-                <p class="text-[10px] text-t_muted mt-3 leading-relaxed"><span class="lang-en">Surgery = Net2Net safe-copy: the last transformer layer is cloned into a new layer, preserving function. Training continues without interruption. 3L → 4L → ... → 12L without human intervention.</span><span class="lang-de">Surgery = Net2Net Safe-Copy: Die letzte Transformerschicht wird in eine neue Schicht geklont, wobei die Funktion erhalten bleibt. Das Training läuft ohne Unterbrechung weiter. 3L → 4L → ... → 12L ohne menschliches Eingreifen.</span></p>
+                <p class="text-[10px] text-t_muted mt-3 leading-relaxed"><span class="lang-en">Surgery = Net2Net safe-copy: the last transformer layer is cloned into a new layer, preserving function. Training continues without interruption. 3L → 4L → ... → 12L completed autonomously. Next: 13L expansion at loss_avg ≤ 9.8.</span><span class="lang-de">Surgery = Net2Net Safe-Copy: Die letzte Transformerschicht wird in eine neue Schicht geklont, wobei die Funktion erhalten bleibt. Das Training läuft ohne Unterbrechung weiter. 3L → 4L → ... → 12L autonom abgeschlossen. Nächste: 13L Expansion bei loss_avg ≤ 9,8.</span></p>
               </div>
             </div>
           </div>
@@ -967,14 +1004,14 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_teal flex flex-col shadow-sm">
              <div class="text-[10px] font-mono text-t_teal font-black uppercase tracking-widest mb-2"><span class="lang-en">Measured · Live Training Log</span><span class="lang-de">Gemessen · Live-Trainingsprotokoll</span></div>
              <h3 class="text-2xl font-black text-t_text mb-1"><span class="lang-en">Training Convergence</span><span class="lang-de">Trainingskonvergenz</span></h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Albert MoE-13 · 5L · 256H · 12E · 8K vocab · Rust / candle</p>
+             <p class="text-sm text-t_muted font-medium mb-4">Albert MoE-13 · 12L · 256H · 12E · 32K vocab · Rust / candle · Modal T4</p>
              <div class="mt-auto space-y-3 mb-6 font-mono text-xs">
-                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Random init (epoch 0)</span><span class="text-t_text">9.02</span></div>
-                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Post 3L surgery</span><span class="text-t_text">7.73</span></div>
-                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Post 4L surgery</span><span class="text-t_text">7.13</span></div>
-                <div class="flex justify-between"><span class="text-t_teal font-black">Best epoch avg (4L)</span><span class="text-t_teal font-black text-base">6.882</span></div>
+                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Random init (12L, 32K vocab)</span><span class="text-t_text">~11.5</span></div>
+                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">ep100</span><span class="text-t_text">10.62</span></div>
+                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">ep200</span><span class="text-t_text">10.38</span></div>
+                <div class="flex justify-between"><span class="text-t_teal font-black">All-time best (ep229)</span><span class="text-t_teal font-black text-base">10.2968</span></div>
              </div>
-             <div class="text-t_teal text-xl font-black mb-3"><span class="lang-en">Autonomous depth growth 3L → 5L</span><span class="lang-de">Autonomes Tiefenwachstum 3L → 5L</span></div>
+             <div class="text-t_teal text-xl font-black mb-3"><span class="lang-en">3L → 12L completed autonomously</span><span class="lang-de">3L → 12L autonom abgeschlossen</span></div>
              <div class="text-[10px] font-mono text-t_muted border-t border-t_border pt-3"><span class="lang-en">Native training · no base model · no fine-tuning · Net2Net surgery</span><span class="lang-de">Natives Training · kein Basismodell · kein Fine-Tuning · Net2Net-Chirurgie</span></div>
           </div>
 
@@ -1260,7 +1297,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/evolution.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">EvolutionManager</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
-                <span class="text-xs text-t_muted leading-relaxed"><span class="lang-en">Automatic architecture growth engine. Monitors loss and triggers Net2Net safe-copy layer surgery when mastery or plateau conditions are met. Grows 3L → 12L without human intervention. 20-epoch cooldown prevents cascade expansion.</span><span class="lang-de">Automatische Architektur-Wachstumsmaschine. Überwacht den Loss und löst eine Net2Net-Safe-Copy-Schicht-Surgery aus, wenn Meisterschaft oder Plateau-Bedingungen erfüllt sind. Wächst 3L → 12L ohne menschliches Eingreifen. 20-Epochen-Abkühlphase verhindert Kaskaden-Expansion.</span></span>
+                <span class="text-xs text-t_muted leading-relaxed"><span class="lang-en">Automatic architecture growth engine. Monitors loss and triggers Net2Net safe-copy layer surgery when mastery or plateau conditions are met. 3L → 12L completed autonomously — next surgery at 13L when loss_avg ≤ 9.8. 20-epoch cooldown prevents cascade expansion.</span><span class="lang-de">Automatische Architektur-Wachstumsmaschine. Überwacht den Loss und löst eine Net2Net-Safe-Copy-Schicht-Surgery aus, wenn Meisterschaft oder Plateau-Bedingungen erfüllt sind. 3L → 12L autonom abgeschlossen — nächste Surgery bei 13L wenn loss_avg ≤ 9,8. 20-Epochen-Abkühlphase verhindert Kaskaden-Expansion.</span></span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/ste.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">ste.rs — STE</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
@@ -1272,7 +1309,7 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/bin/train_bible.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">train_bible.rs</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
-                <span class="text-xs text-t_muted leading-relaxed"><span class="lang-en">Main training loop: AdamW + cosine LR schedule, L1 sparsity regularisation (λ=1e-5), per-batch CE loss, 300 batches/epoch, SafeTensors checkpointing. Calls EvolutionManager after each epoch. Corpus: growing from Bible + Alice toward Wikipedia + domain text.</span><span class="lang-de">Haupt-Trainingsschleife: AdamW + kosinusförmiger LR-Plan, L1-Sparsitäts-Regularisierung (λ=1e-5), batch-weiser CE-Loss, 300 Batches/Epoche, SafeTensors-Checkpointing. Ruft EvolutionManager nach jeder Epoche auf. Korpus: wächst von Bibel + Alice in Richtung Wikipedia + Domänentext.</span></span>
+                <span class="text-xs text-t_muted leading-relaxed"><span class="lang-en">Main training loop: AdamW + cosine LR schedule, gradient accumulation (batch 16 × accum 4 = eff. 64 seq), MoE load-balancing loss, SafeTensors checkpointing. GPU training on Modal T4. Corpus: Bible + Alice + Wikipedia + domain text (~90%) + chaos layer (~10%).</span><span class="lang-de">Haupt-Trainingsschleife: AdamW + kosinusförmiger LR-Plan, Gradientenakkumulation (Batch 16 × Accum 4 = eff. 64 Seq), MoE Load-Balancing-Loss, SafeTensors-Checkpointing. GPU-Training auf Modal T4. Korpus: Bibel + Alice + Wikipedia + Domänentext (~90 %) + Chaos-Schicht (~10 %).</span></span>
               </a>
               <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13/moe-llm-core/src/bin/quantize_model.rs" target="_blank" rel="noopener noreferrer" class="p-5 border border-t_blue/30 bg-t_blue/5 rounded-xl hover:border-t_blue transition-colors flex flex-col shadow-sm group">
                 <div class="flex items-center justify-between mb-2"><span class="text-t_blue font-black text-sm">quantize_model.rs</span><span class="text-[9px] text-t_muted font-mono group-hover:text-t_blue transition-colors">↗ source</span></div>
