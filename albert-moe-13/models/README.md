@@ -14,12 +14,14 @@ Training artifacts for the Albert MoE-13 ternary language model.
 | Config | `albert_v3.0.config.json` |
 | Epoch counter | `albert_v3.0.meta` (plain text integer) |
 | Architecture | 256H · **12L** · 4H · 12E · 128CTX · 32000V |
-| Global Epoch | 40+ (v3.0 fresh run from 2026-05-10) |
+| Global Epoch | **115** (2026-05-12, training on Modal T4 GPU) |
+| Best loss | **10.3262** (all-time low, ep115 session) |
+| Nash routing | Resolved — expert seed biases active, BALANCED H=2.43–2.46 |
 | Corpus | Multilingual: Wikipedia CC BY-SA + Europarl + Gutenberg + chaos layer (EN/DE/FR/ES/PT/IT/NL/PL) |
 | Tensors | 689 (blocks.0–11: 684 · ln_f: 2 · pos_embed: 1 · embed: 1 · lm_head: 1) |
 | Weights transferred | 687 vocabulary-agnostic tensors from v2.0.0 (blocks.*, ln_f.*, pos_embed.weight); embed + lm_head rebuilt at 32k vocab |
 
-The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` file stores the global epoch count across all training sessions.
+The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` file stores the global epoch count across all training sessions. Training runs on Modal T4 GPU; use `albert-train pull` to sync the latest checkpoint back to local `models/`.
 
 ---
 

@@ -1,6 +1,6 @@
 # Albert MoE-13
 
-**Ternary-native Mixture-of-Experts language model** — weights constrained to {-1, 0, +1}, trained from scratch on CPU with real-time dashboard telemetry.
+**Ternary-native Mixture-of-Experts language model** — weights constrained to {-1, 0, +1}, trained from scratch with real-time dashboard telemetry. GPU training via Modal (T4).
 
 Part of the [Ternary Intelligence Stack](https://github.com/eriirfos-eng/ternary-intelligence-stack) | RFI-IRFOS, Graz · Patent Pending A50296/2026
 
@@ -26,7 +26,9 @@ The architecture combines:
 - **Straight-Through Estimation (STE)** for end-to-end ternary training
 - **Mixture-of-Experts (MoE)** routing with 12 domain experts and Top-3 selection
 - **@sparseskip** — 9 of 12 experts are skipped per decode step at the routing level, compounding weight-level sparsity savings *(patent pending A50296/2026)*
+- **Expert seed biases** — learnable F32 [256] bias per expert (Uniform[-0.01, 0.01] init) breaks routing Nash equilibria; weights persist and amplify expert specialisation over training
 - **Ternary Traffic Light Routing (TTL)** — per-expert trit execution budget (Green / Orange / Red) based on rolling EMA utilization, with anti-stagnation burst mechanism
+- **WALD module** — Wald-inspired loss-space coverage analysis; detects dead zones in the loss histogram and drives early-layer gradient amplification; self-disables when the dead zone is structural
 - **Auto-evolutionary expansion** — the model grows its own depth via Net2Net surgery as it plateaus
 - **Stage-aware corpus curriculum** — richer training data unlocks automatically as the model gains depth
 
@@ -48,7 +50,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-10):** v3.0 launched — Global Epoch 40+ · multilingual corpus active · 12L weights transferred from v2.0.0 (best loss 6.8821)
+**Training state (2026-05-12):** Global Epoch 115 · best loss **10.3262** (all-time low) · Nash routing resolved · training on Modal T4 GPU (~400ms/batch)
 
 ---
 
@@ -61,6 +63,8 @@ The architecture combines:
 | TernaryLinear (forward pass) | `moe-llm-core/src/model/ternary_linear.rs` | Gamma-scaled quantization, gamma cache every 20 steps, `inference_cache` for pre-ternarized weights |
 | MoE routing + @sparseskip | `moe-llm-core/src/model/moe.rs` | Top-3 sparse gating, Red experts skipped entirely |
 | TTL routing | `moe-llm-core/src/model/traffic_light.rs` | EMA utilization → trit states, anti-stagnation burst (burst_count × 7 mod 12 rotation) |
+| Expert seed biases | `moe-llm-core/src/model/moe.rs` | `expert_seeds: Vec<Tensor>` per MoeBlock — unique F32 bias per expert, vb-tracked |
+| WALD loss-space analysis | `moe-llm-core/src/wald.rs` | `WaldModule` — batch histogram, dead zone detection, severity → amplification scale; staleness detection disables amplification on plateau |
 | Auto-evolutionary scaling | `moe-llm-core/src/bin/train_bible.rs` | `EvolutionManager` — plateau detection, Net2Net surgery, layer expansion |
 | Benchmark suite | `moe-test/src/main.rs` | `run_bench_mode()` — speed + @sparseskip analysis + perplexity, CSV export |
 
@@ -82,8 +86,12 @@ cargo build --release -p moe-test
 ```bash
 albert-train
 ```
-> Uses `models/albert_v3.0.safetensors` and `data/vocab_v3.json` (32k ByteLevel BPE).
-Opens the live dashboard at `http://localhost:8888`. The orchestrator script (`~/bin/albert-train`) manages the training binary and dashboard server together.
+> Fires `modal run albert-moe-13/train_modal.py` — builds `train_bible` with CUDA on a Modal T4 GPU, streams the training log back to the local dashboard at `http://localhost:8888`. One-time setup: `python3 train_modal.py setup` uploads corpus and checkpoint to the Modal volume. Pull checkpoint back with `albert-train pull`.
+
+### Train (local CPU fallback)
+```bash
+cargo run --release --bin train_bible -- --root=.
+```
 
 ### Benchmark
 ```bash
@@ -138,17 +146,21 @@ albert-moe-13/
 │       ├── model/
 │       │   ├── transformer.rs      # Transformer + Block construction
 │       │   ├── attention.rs        # Multi-head attention (causal mask cached)
-│       │   ├── moe.rs              # MoE block, top-3 routing, @sparseskip
+│       │   ├── moe.rs              # MoE block, top-3 routing, @sparseskip, expert seed biases
 │       │   ├── traffic_light.rs    # TTL routing — EMA, trit states, burst
 │       │   ├── ternary_linear.rs   # TernaryLinear with gamma cache
 │       │   ├── ste.rs              # Straight-Through Estimator
 │       │   ├── mlp.rs              # Expert MLP
 │       │   └── config.rs           # TransformerConfig
+│       ├── wald.rs                 # WALD loss-space coverage module
 │       └── tokenizer/              # BPE tokenizer
 ├── moe-test/
 │   └── src/main.rs                 # Interactive TUI + --bench + --eval modes
 ├── bench/
 │   └── install.sh                  # One-line benchmark installer (Linux + macOS)
+├── train_modal.py                  # Modal GPU training app (setup / run / pull)
+├── albert-train                    # Local launcher — fires modal run + dashboard
+├── albert-test                     # Local launcher — opens moe-test TUI
 ├── dashboard/
 │   ├── index.html                  # Live training dashboard
 │   └── run_server.py               # HTTP server with Range request support
@@ -202,13 +214,14 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 
 ## Training Speed
 
-| Configuration | Time per batch |
-|---------------|---------------|
-| 256H · 4L | ~4.5 s |
-| 256H · 5L | ~5.5 s |
-| 256H · 12L (current) | ~13 s |
+| Configuration | Hardware | Time per batch |
+|---------------|----------|---------------|
+| 256H · 4L | CPU (i7-4800MQ) | ~4.5 s |
+| 256H · 5L | CPU (i7-4800MQ) | ~5.5 s |
+| 256H · 12L | CPU (i7-4800MQ) | ~13 s |
+| 256H · 12L (current) | Modal T4 GPU | ~400 ms |
 
-Training runs on CPU (HP ZBook 15, i7-4800MQ). The ~4× batch time increase from 3L→5L is linear with layer count, consistent with ternary matmul scaling.
+T4 GPU training via Modal gives ~32× speedup over CPU for the 12L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
 
 ---
 
