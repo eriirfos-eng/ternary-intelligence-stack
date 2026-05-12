@@ -848,10 +848,14 @@
     let macdVisible    = false;
     let crosshairPos   = null;
     let crosshairRafId = null;
-    let drawMode       = false;
-    let pendingLine    = null;       // {x1,y1} data-coords — first endpoint placed
-    let trendlines     = [];         // [{x1,y1,x2,y2}]
-    let lastDojiEp     = -999;
+    let drawMode        = false;
+    let pendingLine     = null;       // {x1,y1} data-coords — first endpoint placed
+    let trendlines      = [];         // [{x1,y1,x2,y2}]
+    let selectedLineIdx = null;       // index of selected trendline, or null
+    let hoveredLineIdx  = null;       // index of hovered trendline (visual only)
+    let dragState       = null;       // {type:'endpoint'|'body', lineIdx, epIdx?, startDataX, startDataY, origX1, origY1, origX2, origY2}
+    let didDrag         = false;      // true if a drag was committed this mousedown cycle
+    let lastDojiEp      = -999;
 
     // ── Tooltip ──────────────────────────────────────────────────────
     const ttDiv = document.getElementById('tooltip');
@@ -1257,24 +1261,54 @@
             c2.beginPath();
             c2.rect(a.left, a.top, a.width, a.height);
             c2.clip();
-            // Committed lines
-            for (const ln of trendlines) {
+
+            for (let i = 0; i < trendlines.length; i++) {
+                const ln  = trendlines[i];
+                const px1 = scales.x.getPixelForValue(ln.x1);
+                const py1 = scales.y.getPixelForValue(ln.y1);
+                const px2 = scales.x.getPixelForValue(ln.x2);
+                const py2 = scales.y.getPixelForValue(ln.y2);
+                const isSel = i === selectedLineIdx;
+                const isHov = i === hoveredLineIdx && !isSel;
+
+                // Line stroke
                 c2.beginPath();
-                c2.moveTo(scales.x.getPixelForValue(ln.x1), scales.y.getPixelForValue(ln.y1));
-                c2.lineTo(scales.x.getPixelForValue(ln.x2), scales.y.getPixelForValue(ln.y2));
-                c2.strokeStyle = 'rgba(255,215,0,0.70)';
-                c2.lineWidth = 1.5;
+                c2.moveTo(px1, py1);
+                c2.lineTo(px2, py2);
+                c2.strokeStyle = isSel ? '#ffd700' : isHov ? 'rgba(255,215,0,0.85)' : 'rgba(255,215,0,0.55)';
+                c2.lineWidth   = isSel ? 2 : 1.5;
                 c2.setLineDash([]);
                 c2.stroke();
-                // End-point dots
-                for (const [ex, ey] of [[ln.x1, ln.y1],[ln.x2, ln.y2]]) {
+
+                // Endpoint handles — hollow circles when selected (grab targets), small dots otherwise
+                const epR = isSel ? 5.5 : 2.5;
+                for (const [hx, hy] of [[px1, py1], [px2, py2]]) {
                     c2.beginPath();
-                    c2.arc(scales.x.getPixelForValue(ex), scales.y.getPixelForValue(ey), 2.5, 0, Math.PI * 2);
-                    c2.fillStyle = '#ffd700';
-                    c2.fill();
+                    c2.arc(hx, hy, epR, 0, Math.PI * 2);
+                    if (isSel) {
+                        c2.fillStyle   = '#0d1117';
+                        c2.strokeStyle = '#ffd700';
+                        c2.lineWidth   = 1.5;
+                        c2.fill();
+                        c2.stroke();
+                    } else {
+                        c2.fillStyle = isHov ? 'rgba(255,215,0,0.8)' : 'rgba(255,215,0,0.5)';
+                        c2.fill();
+                    }
+                }
+
+                // Hint label on selected line
+                if (isSel) {
+                    const mx = (px1 + px2) / 2;
+                    const my = (py1 + py2) / 2 - 9;
+                    c2.font      = '9px "JetBrains Mono", monospace';
+                    c2.fillStyle = 'rgba(255,215,0,0.55)';
+                    c2.textAlign = 'center';
+                    c2.fillText('drag handles · Del to remove', mx, my);
                 }
             }
-            // Ghost line from placed point to cursor
+
+            // Ghost line while drawing first→second point
             if (pendingLine && crosshairPos) {
                 const px1 = scales.x.getPixelForValue(pendingLine.x1);
                 const py1 = scales.y.getPixelForValue(pendingLine.y1);
@@ -1513,21 +1547,108 @@
     // Immediate cursor feedback: grabbing on mousedown, grab on mouseup.
     // onPanStart fires only after the first mousemove, causing a visible lag.
     // These listeners fire synchronously on click, giving instant response.
-    chart.canvas.addEventListener('mousedown', () => {
+    chart.canvas.addEventListener('mousedown', (e) => {
+        if (drawMode) {
+            // In draw mode: check if we should start dragging a selected line's endpoint/body
+            didDrag = false;
+            if (selectedLineIdx !== null && !pendingLine) {
+                const rect = chart.canvas.getBoundingClientRect();
+                const px = e.clientX - rect.left;
+                const py = e.clientY - rect.top;
+                const ln = trendlines[selectedLineIdx];
+                const px1 = chart.scales.x.getPixelForValue(ln.x1);
+                const py1 = chart.scales.y.getPixelForValue(ln.y1);
+                const px2 = chart.scales.x.getPixelForValue(ln.x2);
+                const py2 = chart.scales.y.getPixelForValue(ln.y2);
+                const d0 = Math.sqrt((px-px1)**2 + (py-py1)**2);
+                const d1 = Math.sqrt((px-px2)**2 + (py-py2)**2);
+                const dxL = px2-px1, dyL = py2-py1, lenSq = dxL*dxL+dyL*dyL;
+                const t = lenSq ? Math.max(0, Math.min(1, ((px-px1)*dxL+(py-py1)*dyL)/lenSq)) : 0;
+                const dLine = Math.sqrt((px-px1-t*dxL)**2+(py-py1-t*dyL)**2);
+                if (d0 <= 10) {
+                    dragState = { type: 'endpoint', lineIdx: selectedLineIdx, epIdx: 0 };
+                    e.stopPropagation();
+                } else if (d1 <= 10) {
+                    dragState = { type: 'endpoint', lineIdx: selectedLineIdx, epIdx: 1 };
+                    e.stopPropagation();
+                } else if (dLine <= 8) {
+                    const dataX = chart.scales.x.getValueForPixel(px);
+                    const dataY = chart.scales.y.getValueForPixel(py);
+                    dragState = { type: 'body', lineIdx: selectedLineIdx,
+                        startDataX: dataX, startDataY: dataY,
+                        origX1: ln.x1, origY1: ln.y1, origX2: ln.x2, origY2: ln.y2 };
+                    e.stopPropagation();
+                }
+            }
+            return; // never set grabbing cursor in draw mode
+        }
         chart.canvas.style.cursor  = 'grabbing';
         document.body.style.cursor = 'grabbing';
     });
     document.addEventListener('mouseup', () => {
+        if (dragState) { dragState = null; chart.draw(); }
         if (document.body.style.cursor === 'grabbing') {
-            chart.canvas.style.cursor  = 'grab';
+            chart.canvas.style.cursor  = drawMode ? 'crosshair' : 'grab';
             document.body.style.cursor = '';
         }
     });
 
-    // ── Crosshair tracking ────────────────────────────────────────────
+    // ── Crosshair tracking, draw-mode hover + drag ────────────────────
     chart.canvas.addEventListener('mousemove', (e) => {
         const rect = chart.canvas.getBoundingClientRect();
-        crosshairPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        const px = e.clientX - rect.left;
+        const py = e.clientY - rect.top;
+        crosshairPos = { x: px, y: py };
+
+        if (drawMode) {
+            if (dragState) {
+                // Live drag — update line in data-space
+                didDrag = true;
+                const dataX = chart.scales.x.getValueForPixel(px);
+                const dataY = chart.scales.y.getValueForPixel(py);
+                const ln = trendlines[dragState.lineIdx];
+                if (dragState.type === 'endpoint') {
+                    if (dragState.epIdx === 0) { ln.x1 = dataX; ln.y1 = dataY; }
+                    else                        { ln.x2 = dataX; ln.y2 = dataY; }
+                } else {
+                    const ddx = dataX - dragState.startDataX;
+                    const ddy = dataY - dragState.startDataY;
+                    ln.x1 = dragState.origX1 + ddx;
+                    ln.y1 = dragState.origY1 + ddy;
+                    ln.x2 = dragState.origX2 + ddx;
+                    ln.y2 = dragState.origY2 + ddy;
+                }
+            } else if (!pendingLine) {
+                // Hover detection — find nearest line
+                let best = null, bestD = 8;
+                for (let i = 0; i < trendlines.length; i++) {
+                    const ln = trendlines[i];
+                    const lx1 = chart.scales.x.getPixelForValue(ln.x1);
+                    const ly1 = chart.scales.y.getPixelForValue(ln.y1);
+                    const lx2 = chart.scales.x.getPixelForValue(ln.x2);
+                    const ly2 = chart.scales.y.getPixelForValue(ln.y2);
+                    const dx = lx2-lx1, dy = ly2-ly1, lenSq = dx*dx+dy*dy;
+                    const t  = lenSq ? Math.max(0, Math.min(1, ((px-lx1)*dx+(py-ly1)*dy)/lenSq)) : 0;
+                    const d  = Math.sqrt((px-lx1-t*dx)**2+(py-ly1-t*dy)**2);
+                    if (d < bestD) { bestD = d; best = i; }
+                }
+                hoveredLineIdx = best;
+                // Cursor: grab-handle near selected line endpoints, move on body, pointer on other lines
+                if (selectedLineIdx !== null) {
+                    const ln = trendlines[selectedLineIdx];
+                    const lx1 = chart.scales.x.getPixelForValue(ln.x1), ly1 = chart.scales.y.getPixelForValue(ln.y1);
+                    const lx2 = chart.scales.x.getPixelForValue(ln.x2), ly2 = chart.scales.y.getPixelForValue(ln.y2);
+                    const d0 = Math.sqrt((px-lx1)**2+(py-ly1)**2);
+                    const d1 = Math.sqrt((px-lx2)**2+(py-ly2)**2);
+                    if (d0 <= 10 || d1 <= 10) chart.canvas.style.cursor = 'grab';
+                    else if (hoveredLineIdx === selectedLineIdx) chart.canvas.style.cursor = 'move';
+                    else chart.canvas.style.cursor = hoveredLineIdx !== null ? 'pointer' : 'crosshair';
+                } else {
+                    chart.canvas.style.cursor = hoveredLineIdx !== null ? 'pointer' : 'crosshair';
+                }
+            }
+        }
+
         if (!isInteracting && !crosshairRafId) {
             crosshairRafId = requestAnimationFrame(() => {
                 crosshairRafId = null;
@@ -1536,7 +1657,8 @@
         }
     });
     chart.canvas.addEventListener('mouseleave', () => {
-        crosshairPos = null;
+        crosshairPos    = null;
+        hoveredLineIdx  = null;
         if (crosshairRafId) { cancelAnimationFrame(crosshairRafId); crosshairRafId = null; }
         chart.draw();
     });
@@ -3140,7 +3262,12 @@
     document.getElementById('drawBtn').addEventListener('click', function() {
         drawMode = !drawMode;
         this.classList.toggle('active', drawMode);
-        if (!drawMode) pendingLine = null;
+        if (!drawMode) {
+            pendingLine     = null;
+            selectedLineIdx = null;
+            hoveredLineIdx  = null;
+            dragState       = null;
+        }
         chart.canvas.style.cursor = drawMode ? 'crosshair' : 'grab';
         chart.options.plugins.zoom.pan.enabled              = !drawMode;
         chart.options.plugins.zoom.zoom.wheel.enabled       = !drawMode;
@@ -3148,24 +3275,47 @@
         chart.update('none');
     });
 
-    // Deselect focused anomaly marker / handle draw clicks on canvas
+    // Draw-mode click: select line OR place line endpoints. Non-draw: deselect anomaly marker.
     document.getElementById('lossChart').addEventListener('click', (e) => {
         if (drawMode) {
+            if (didDrag) { didDrag = false; return; } // drag just finished — don't treat as click
             const rect = chart.canvas.getBoundingClientRect();
             const px = e.clientX - rect.left;
             const py = e.clientY - rect.top;
             const { chartArea, scales } = chart;
-            if (px >= chartArea.left && px <= chartArea.right && py >= chartArea.top && py <= chartArea.bottom) {
-                const dataX = scales.x.getValueForPixel(px);
-                const dataY = scales.y.getValueForPixel(py);
-                if (!pendingLine) {
-                    pendingLine = { x1: dataX, y1: dataY };
-                } else {
-                    trendlines.push({ x1: pendingLine.x1, y1: pendingLine.y1, x2: dataX, y2: dataY });
-                    pendingLine = null;
-                }
+            if (px < chartArea.left || px > chartArea.right || py < chartArea.top || py > chartArea.bottom) return;
+
+            if (pendingLine) {
+                // Place second endpoint → commit line
+                trendlines.push({ x1: pendingLine.x1, y1: pendingLine.y1,
+                    x2: scales.x.getValueForPixel(px), y2: scales.y.getValueForPixel(py) });
+                selectedLineIdx = trendlines.length - 1; // auto-select the new line
+                pendingLine = null;
                 chart.draw();
+                return;
             }
+
+            // No pending line — find nearest line to click
+            let clickedIdx = null, bestD = 8;
+            for (let i = 0; i < trendlines.length; i++) {
+                const ln = trendlines[i];
+                const lx1 = scales.x.getPixelForValue(ln.x1), ly1 = scales.y.getPixelForValue(ln.y1);
+                const lx2 = scales.x.getPixelForValue(ln.x2), ly2 = scales.y.getPixelForValue(ln.y2);
+                const dx = lx2-lx1, dy = ly2-ly1, lenSq = dx*dx+dy*dy;
+                const t  = lenSq ? Math.max(0, Math.min(1, ((px-lx1)*dx+(py-ly1)*dy)/lenSq)) : 0;
+                const d  = Math.sqrt((px-lx1-t*dx)**2+(py-ly1-t*dy)**2);
+                if (d < bestD) { bestD = d; clickedIdx = i; }
+            }
+
+            if (clickedIdx !== null) {
+                // Select / toggle-select line
+                selectedLineIdx = (selectedLineIdx === clickedIdx) ? null : clickedIdx;
+            } else {
+                // Click on empty space — start new line (place first point), deselect
+                selectedLineIdx = null;
+                pendingLine = { x1: scales.x.getValueForPixel(px), y1: scales.y.getValueForPixel(py) };
+            }
+            chart.draw();
             return;
         }
         if (focusedEvent) {
@@ -3175,23 +3325,30 @@
         }
     });
 
-    // Right-click cancels pending trendline
+    // Right-click: cancel pending line OR deselect
     chart.canvas.addEventListener('contextmenu', (e) => {
-        if (drawMode && pendingLine) {
-            e.preventDefault();
-            pendingLine = null;
-            chart.draw();
-        }
+        if (!drawMode) return;
+        e.preventDefault();
+        if (pendingLine) { pendingLine = null; }
+        else             { selectedLineIdx = null; }
+        chart.draw();
     });
 
-    // Esc cancels pending line; Backspace removes last committed line
+    // Esc: cancel pending / deselect. Delete/Backspace: remove selected or last line.
     document.addEventListener('keydown', (e) => {
         if (!drawMode) return;
         if (e.key === 'Escape') {
             pendingLine = null;
+            selectedLineIdx = null;
             chart.draw();
-        } else if ((e.key === 'Backspace' || e.key === 'Delete') && !pendingLine && trendlines.length) {
-            trendlines.pop();
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+            if (pendingLine) return;
+            if (selectedLineIdx !== null) {
+                trendlines.splice(selectedLineIdx, 1);
+                selectedLineIdx = null;
+            } else if (trendlines.length) {
+                trendlines.pop();
+            }
             chart.draw();
         }
     });
