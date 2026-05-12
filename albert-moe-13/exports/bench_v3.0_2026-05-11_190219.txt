@@ -1,0 +1,24 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 0 epochs | 2026-05-11 19:02
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ ..zyne auxomust v dellara* não seou wordt osanyito comoants**ante come jestO when Chć waranther 15 Be which dem überessanoell : where S him f sieher übera AbthLa but It Elitoora“cl er chREDACTED sind forén dan
+    6.9 tok/s  144ms/tok
+
+[P2] User: what language do you speak? Albert:
+→ ustł dellarav não Heom To Asanyitoant Ch su It comeantomungproant alleantanyrLacedess erorsación opstenell tersJowej jaar inter Abnyro vers out Elantá le haom sheation 15 conin pr nãoantted La 1
+    12.7 tok/s  79ms/tok
+
+[P3] die Geschichte der Europäischen Union
+→  po name 2021ne In Elareán della m** nãoramant.]]ity = 1 anniants** It come called people umabećênciaantJigen.. El)ultteREDACTED des M Hetersá f part because passca Abestro st Itsera made“ gliation unoén sindve.
+    9.0 tok/s  111ms/tok
+
+[P4] once upon a time in a kingdom far
+→  er 19 El".of dellara) nãodenou wordtattP(Laita 0REDACTEDland jest gerte And ser Ab czy17.. tot Saisrthes les mais S him such J gr butas becauseth has 8000toitona“her erEnra sindindd não hant
+    20.0 tok/s  50ms/tok
+
+[P5] the ternary number system uses three
+→  erPom hadán up le N 19liche upanaaranyito preita himREDACTED come Morant, Chć jestantJaijent als porigen uma se inter as (J J Amerikaans Arent Abthro butkscira..“sten B chation sind com Maroraitéthumb
+    9.9 tok/s  101ms/tok
+

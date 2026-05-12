@@ -17,7 +17,8 @@ pub use moe::{
     clear_entropy_capture, take_entropy_capture,
     clear_lb_capture, take_lb_capture,
     clear_tlight_capture, take_tlight_capture,
-    clear_div_capture, take_div_capture, take_div_log_capture,
+    clear_div_capture, take_div_capture, take_div_log_capture, take_div_f32_log_capture,
     enter_eval_mode,
     set_div_enabled,
+    set_gate_diversity_scale,
 };

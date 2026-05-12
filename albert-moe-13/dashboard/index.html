@@ -757,7 +757,7 @@
         ttl_stress: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="#ef4444" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
     };
 
-    const POLL_MS            = 1500;  // ~2s/batch at 256H — one poll per batch
+    const POLL_MS            = 500;   // T4: ~400ms/batch — one poll per batch
     const MAX_CHART_PTS      = 5000;
 
     // ── State ──────────────────────────────────────────────────────────
@@ -773,6 +773,10 @@
     let latestGrad       = null; // {norm, layerNorms:[...]}
     let pendingEntropy   = null; // most recent ENTR avg — snapshotted per batch record
     let pendingTlight    = null; // most recent TLIGHT snapshot [{g,o,r,states}] per layer
+    let pendingLB        = null; // most recent LB val (load-balance total across layers)
+    let pendingDiv       = null; // most recent DIV per-layer ternary output variance [numLayers]
+    let pendingDivF32    = null; // most recent DIVF32 per-layer F32 weight variance [numLayers]
+    let pendingDivGrad   = null; // most recent DIVGRAD per-layer gradient variance [numLayers]
     const TLIGHT_WIN     = 60;
     let tlightHistory    = Array.from({length: TLIGHT_WIN}, () => ({
         step: null,
@@ -982,13 +986,13 @@
     // Standard Fib levels with EM-spectrum-inspired zone colors.
     let fibVisible = false;
     const FIB_LEVELS = [
-        { r: 0.000, label: '0',    color: 'rgba(160, 10, 10,  0.10)' },
-        { r: 0.236, label: '0.236',color: 'rgba(220, 90,  0,  0.10)' },
-        { r: 0.382, label: '0.382',color: 'rgba(200,185,  0,  0.10)' },
+        { r: 0.000, label: '0',    color: 'rgba(10,  45,180,  0.10)' },
+        { r: 0.236, label: '0.236',color: 'rgba(20, 120,230,  0.10)' },
+        { r: 0.382, label: '0.382',color: 'rgba(0,  195,205,  0.10)' },
         { r: 0.500, label: '0.500',color: 'rgba(0,  170, 45,  0.10)' },
-        { r: 0.618, label: '0.618',color: 'rgba(0,  195,205,  0.10)' },
-        { r: 0.786, label: '0.786',color: 'rgba(20, 120,230,  0.10)' },
-        { r: 1.000, label: '1',    color: 'rgba(10,  45,180,  0.10)' },
+        { r: 0.618, label: '0.618',color: 'rgba(200,185,  0,  0.10)' },
+        { r: 0.786, label: '0.786',color: 'rgba(220, 90,  0,  0.10)' },
+        { r: 1.000, label: '1',    color: 'rgba(160, 10, 10,  0.10)' },
     ];
 
     const fibPlugin = {
@@ -1421,6 +1425,18 @@
                     }
                     continue;
                 }
+                // LB line — load-balance total per optimizer step
+                const lbm = line.match(/^LB step=\d+ val=([\d.e+\-]+)/);
+                if (lbm) { pendingLB = parseFloat(lbm[1]); continue; }
+                // DIV line — per-layer ternary output variance (emitted at each optimizer step)
+                const divm = line.match(/^DIV step=\d+ w=[\d.e+\-]+ L=([\d.,e+\-]+)/);
+                if (divm) { pendingDiv = divm[1].split(',').map(Number); continue; }
+                // DIVF32 line — per-layer F32 weight mean-abs variance across experts
+                const df32m = line.match(/^DIVF32 step=\d+ L=([\d.,e+\-]+)/);
+                if (df32m) { pendingDivF32 = df32m[1].split(',').map(Number); continue; }
+                // DIVGRAD line — per-layer gradient variance across experts
+                const dgm = line.match(/^DIVGRAD step=\d+ L=([\d.,e+\-]+)/);
+                if (dgm) { pendingDivGrad = dgm[1].split(',').map(Number); continue; }
                 // TLIGHT line — ternary traffic light state per layer
                 // Format: TLIGHT step=N L0:GGOOORRRGGOO(G4/O6/R2) L1:... ...
                 const tlm = line.match(/^TLIGHT step=(\d+) (.+)/);
@@ -1528,6 +1544,10 @@
                     entropy:       pendingEntropy,
                     tele_sparsity: latestTele ? [...latestTele.layerSparsity] : null,
                     tele_activity: latestTele ? [...latestTele.expertActivity] : null,
+                    lb_val:        pendingLB,
+                    div_vals:      pendingDiv     ? [...pendingDiv]     : null,
+                    divf32_vals:   pendingDivF32  ? [...pendingDivF32]  : null,
+                    divgrad_vals:  pendingDivGrad ? [...pendingDivGrad] : null,
                 });
                 if (batchLog.length > 10000) batchLog.splice(0, batchLog.length - 10000);
             }
@@ -1550,6 +1570,10 @@
                 totalPts       = 0;
                 lastLossVal    = null;
                 pendingEntropy = null;
+                pendingLB      = null;
+                pendingDiv     = null;
+                pendingDivF32  = null;
+                pendingDivGrad = null;
                 batchLog       = [];
                 epochLog       = [];
                 lastKnownEpoch = -1;
@@ -1613,7 +1637,19 @@
                         avg_loss:     epochAvg,
                         clipped:      esm ? parseInt(esm[2]) : null,
                         skipped:      esm ? parseInt(esm[3]) : null,
+                        wald_sev:     null,
+                        wald_fill:    null,
+                        ttlfreeze:    null,
                     });
+                }
+                // EPOCH_SUMMARY — backfill wald/ttl data into the most-recent epochLog entry.
+                // Comes after the === Epoch line in log order, so epochLog entry already exists.
+                const epsm = line.match(/^EPOCH_SUMMARY epoch=\d+ loss_avg=[\d.]+ \(d[+\-][\d.]+\) loss_best=[\d.]+ wald_sev=([\d.]+) wald_fill=([\d.]+)% ttlfreeze=(\d+)/);
+                if (epsm && epochLog.length > 0) {
+                    const last = epochLog[epochLog.length - 1];
+                    last.wald_sev  = parseFloat(epsm[1]);
+                    last.wald_fill = parseFloat(epsm[2]);
+                    last.ttlfreeze = parseInt(epsm[3]);
                 }
             }
 
@@ -1622,10 +1658,11 @@
             if (_routingDirty) renderRoutingHeatmap();
             if (_tlightPendingLayers) renderTlight(_tlightPendingLayers, _tlightPendingStep);
 
-            // Only the very last arriving point gets the drop animation.
-            // Older points in the same poll batch are added silently (duration=0).
+            // Historical replay or pan/zoom → no animation, single update.
+            // Live: all new points in this poll get the drop animation together.
+            // (With POLL_MS=500 and T4 at ~400ms/batch, bursts are rare.)
             const isLive = newPts.length <= 20;
-            newPointStartIdx = isLive ? merged.length - 1 : Infinity;
+            newPointStartIdx = isLive ? merged.length - newPts.length : Infinity;
             chart.update(isLive && !isInteracting ? undefined : 'none');
 
             // If a live filter is active, advance the viewport with new data
@@ -2054,10 +2091,11 @@
             const col = gradColor(n, maxN);
             row.querySelector('.gbar-fill').style.width      = pct + '%';
             row.querySelector('.gbar-fill').style.background = col;
-            row.querySelector('.gbar-val').textContent       = n.toFixed(6);
+            const fmtN = n < 1e-4 ? n.toExponential(2) : n.toFixed(6);
+            row.querySelector('.gbar-val').textContent       = fmtN;
             row.onmouseenter = ev => showTip(ev,
                 `<b>Layer ${i} — Gradient Norm</b><br>` +
-                `∥∇L∥ = <b>${n.toFixed(6)}</b><br>` +
+                `∥∇L∥ = <b>${n.toExponential(3)}</b><br>` +
                 `Bar = fraction of highest-norm layer this step.<br>` +
                 `Very low values may indicate vanishing gradients.`);
         });
@@ -2303,18 +2341,26 @@
             if (!pts.length) return null;
             return ['global_epoch,loss', ...pts.map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`)].join('\n');
         }
-        const maxLayerNorms = Math.max(...batchLog.map(r => r.layer_norms   ? r.layer_norms.length   : 0), 0);
-        const maxExperts    = Math.max(...batchLog.map(r => r.route_weights  ? r.route_weights.length : 0), 0);
-        const maxSparsity   = Math.max(...batchLog.map(r => r.tele_sparsity  ? r.tele_sparsity.length : 0), 0);
-        const maxActivity   = Math.max(...batchLog.map(r => r.tele_activity  ? r.tele_activity.length : 0), 0);
-        const layerNormCols = Array.from({length: maxLayerNorms}, (_, i) => `l1_l${i}`);
-        const expertCols    = Array.from({length: maxExperts},    (_, i) => `route_e${i}`);
-        const sparsityCols  = Array.from({length: maxSparsity},   (_, i) => `sp_l${i}`);
-        const actCols       = Array.from({length: maxActivity},   (_, i) => `act_e${i}`);
+        const maxLayerNorms  = Math.max(...batchLog.map(r => r.layer_norms   ? r.layer_norms.length   : 0), 0);
+        const maxExperts     = Math.max(...batchLog.map(r => r.route_weights  ? r.route_weights.length : 0), 0);
+        const maxSparsity    = Math.max(...batchLog.map(r => r.tele_sparsity  ? r.tele_sparsity.length : 0), 0);
+        const maxActivity    = Math.max(...batchLog.map(r => r.tele_activity  ? r.tele_activity.length : 0), 0);
+        const maxDivLayers   = Math.max(...batchLog.map(r => r.div_vals      ? r.div_vals.length      : 0), 0);
+        const maxDivF32Lay   = Math.max(...batchLog.map(r => r.divf32_vals   ? r.divf32_vals.length   : 0), 0);
+        const maxDivGradLay  = Math.max(...batchLog.map(r => r.divgrad_vals  ? r.divgrad_vals.length  : 0), 0);
+        const layerNormCols  = Array.from({length: maxLayerNorms},  (_, i) => `l1_l${i}`);
+        const expertCols     = Array.from({length: maxExperts},     (_, i) => `route_e${i}`);
+        const sparsityCols   = Array.from({length: maxSparsity},    (_, i) => `sp_l${i}`);
+        const actCols        = Array.from({length: maxActivity},    (_, i) => `act_e${i}`);
+        const divCols        = Array.from({length: maxDivLayers},   (_, i) => `div_l${i}`);
+        const divf32Cols     = Array.from({length: maxDivF32Lay},   (_, i) => `divf32_l${i}`);
+        const divgradCols    = Array.from({length: maxDivGradLay},  (_, i) => `divgrad_l${i}`);
         const header = ['step','global_epoch','batch','layers','loss','grad_norm',
-            ...layerNormCols, ...expertCols, 'entropy', ...sparsityCols, ...actCols].join(',');
+            ...layerNormCols, ...expertCols, 'entropy', ...sparsityCols, ...actCols,
+            'lb', ...divCols, ...divf32Cols, ...divgradCols].join(',');
         const fmt6 = v => v != null ? v.toFixed(6) : '';
         const fmt4 = v => v != null ? v.toFixed(4) : '';
+        const fmte = v => v != null ? v.toExponential(3) : '';
         const rows = batchLog.map(r => [
             r.step, r.global_epoch, r.batch, r.layers, fmt6(r.loss), fmt6(r.grad_norm),
             ...layerNormCols.map((_, i) => fmt6(r.layer_norms   ? r.layer_norms[i]   : null)),
@@ -2322,17 +2368,24 @@
             fmt6(r.entropy),
             ...sparsityCols.map( (_, i) => fmt4(r.tele_sparsity ? r.tele_sparsity[i] : null)),
             ...actCols.map(      (_, i) => fmt6(r.tele_activity ? r.tele_activity[i] : null)),
+            fmt6(r.lb_val),
+            ...divCols.map(      (_, i) => fmte(r.div_vals      ? r.div_vals[i]      : null)),
+            ...divf32Cols.map(   (_, i) => fmte(r.divf32_vals   ? r.divf32_vals[i]   : null)),
+            ...divgradCols.map(  (_, i) => fmte(r.divgrad_vals  ? r.divgrad_vals[i]  : null)),
         ].join(','));
         return [header, ...rows].join('\n');
     }
 
     function buildEpochCsv() {
         if (!epochLog.length) return null;
-        const header = 'local_epoch,global_epoch,layers,avg_loss,clipped,skipped';
+        const header = 'local_epoch,global_epoch,layers,avg_loss,clipped,skipped,wald_sev,wald_fill_pct,ttlfreeze';
         const rows = epochLog.map(r => [
             r.local_epoch  ?? '', r.global_epoch ?? '', r.layers ?? '',
-            r.avg_loss != null ? r.avg_loss.toFixed(6) : '',
-            r.clipped ?? '', r.skipped ?? '',
+            r.avg_loss  != null ? r.avg_loss.toFixed(6)  : '',
+            r.clipped   ?? '', r.skipped ?? '',
+            r.wald_sev  != null ? r.wald_sev.toFixed(3)  : '',
+            r.wald_fill != null ? r.wald_fill.toFixed(1)  : '',
+            r.ttlfreeze ?? '',
         ].join(','));
         return [header, ...rows].join('\n');
     }

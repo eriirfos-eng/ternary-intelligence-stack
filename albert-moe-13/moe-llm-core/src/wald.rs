@@ -72,6 +72,11 @@ pub struct WaldReport {
     pub total_batches: u64,
     /// Raw bucket visit counts — for dashboard visualisation.
     pub coverage:      Vec<u64>,
+    /// True when mass and severity have been stable for STALE_THRESHOLD+ epochs.
+    /// Indicates the dead zone is structural (model at plateau), not an opportunity.
+    pub stale:         bool,
+    /// How many consecutive epochs the report has been stable.
+    pub stale_count:   u32,
 }
 
 impl WaldReport {
@@ -97,7 +102,18 @@ pub struct WaldModule {
     history_len:    usize,
     /// Minimum bucket-visit count to consider a bucket "visited" (filters noise).
     visit_threshold: u64,
+    // Staleness tracking — detect when the dead zone is structural rather than
+    // actionable (model at a plateau, not avoiding a reachable region).
+    prev_mass:      f32,
+    prev_severity:  f32,
+    stale_count:    u32,
 }
+
+/// Number of consecutive stable epochs before a dead zone is declared structural.
+const STALE_THRESHOLD: u32 = 5;
+/// Minimum change in mass or severity to reset the stale counter.
+const STALE_MASS_DELTA: f32     = 0.02;
+const STALE_SEVERITY_DELTA: f32 = 0.01;
 
 impl WaldModule {
     pub fn new() -> Self {
@@ -106,6 +122,9 @@ impl WaldModule {
             epoch_history:   VecDeque::with_capacity(5),
             history_len:     5,
             visit_threshold: 2,
+            prev_mass:       0.0,
+            prev_severity:   -1.0,
+            stale_count:     0,
         }
     }
 
@@ -173,6 +192,31 @@ impl WaldModule {
             .max_by(|a, b| a.width_buckets.cmp(&b.width_buckets))
             .cloned();
 
+        let severity = match &dead_low {
+            None    => 0.0,
+            Some(z) => {
+                let sub_mass_range = (mass_center - BUCKET_MIN).max(0.01);
+                (z.width() / sub_mass_range).min(1.0)
+            }
+        };
+
+        // Staleness: if mass and severity barely moved vs. the previous epoch,
+        // the dead zone is structural — not a missed opportunity.
+        let mass_delta     = (mass_center - self.prev_mass).abs();
+        let severity_delta = (severity    - self.prev_severity).abs();
+        let moved = mass_delta > STALE_MASS_DELTA || severity_delta > STALE_SEVERITY_DELTA
+            || self.prev_severity < 0.0;  // first epoch is never stale
+        if moved {
+            self.stale_count = 0;
+        } else {
+            self.stale_count = self.stale_count.saturating_add(1);
+        }
+        self.prev_mass     = mass_center;
+        self.prev_severity = severity;
+
+        let stale       = self.stale_count >= STALE_THRESHOLD;
+        let stale_count = self.stale_count;
+
         WaldReport {
             fill_pct,
             mass_center,
@@ -180,15 +224,20 @@ impl WaldModule {
             dead_high,
             total_batches,
             coverage: smoothed,
+            stale,
+            stale_count,
         }
     }
 
-    /// Called after Net2Net surgery — no state reset needed (loss range is
-    /// architecture-independent), but we clear history so post-surgery
-    /// analysis isn't polluted by pre-surgery loss levels.
+    /// Called after Net2Net surgery — clear history so post-surgery analysis
+    /// isn't polluted by pre-surgery loss levels. Also resets staleness so
+    /// WALD re-arms after the loss spike that follows a layer expansion.
     pub fn on_surgery(&mut self) {
         self.epoch_history.clear();
         self.current_epoch.fill(0);
+        self.prev_mass     = 0.0;
+        self.prev_severity = -1.0;
+        self.stale_count   = 0;
     }
 }
 

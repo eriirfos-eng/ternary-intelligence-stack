@@ -54,7 +54,20 @@ impl TernaryLinear {
         })
     }
 
-    /// Pre-ternarize weights and build sparse index tables for @sparseskip inference.
+    /// Mean absolute value of F32 shadow weights — used to track expert divergence in
+    /// weight space independently of ternary quantization. Diagnostic for H3 (STE swallowing).
+    pub fn weight_mean_abs(&self) -> Result<f32> {
+        self.weight.abs()?.mean_all()?.to_scalar::<f32>()
+    }
+
+    /// Differentiable version: returns mean-abs as a gradient-carrying Tensor.
+    /// Used by the F32-direct divergence loss to bypass STE and create differential
+    /// gradient per expert based on weight-space position, not ternary output.
+    pub fn weight_mean_abs_tensor(&self) -> Result<Tensor> {
+        self.weight.abs()?.mean_all()
+    }
+
+/// Pre-ternarize weights and build sparse index tables for @sparseskip inference.
     /// The dense cache is kept as fallback; the sparse cache is the primary inference path.
     pub fn prepare_inference(&self) -> Result<()> {
         let gamma_t = self.weight.abs()?.mean_all()?;

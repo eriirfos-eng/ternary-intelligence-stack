@@ -25,11 +25,20 @@ thread_local! {
     // Separate f32 log acc for per-layer variance logging (non-gradient).
     static DIV_ACC:     RefCell<Option<Tensor>> = RefCell::new(None);
     static DIV_LOG_ACC: RefCell<Vec<f32>> = RefCell::new(Vec::new());
+    // F32 shadow weight variance log: per-layer variance of expert mean-abs F32 weights.
+    // Diagnostic for H3 (STE swallowing) — if this grows while DIV_LOG_ACC stays flat,
+    // F32 weights are diverging but ternary outputs are not (quantization barrier confirmed).
+    static DIV_F32_LOG_ACC: RefCell<Vec<f32>> = RefCell::new(Vec::new());
     // Gate: train_bible sets true only on optimizer-step batches to avoid per-batch autograd overhead.
     static DIV_ENABLED: RefCell<bool> = RefCell::new(false);
     // Training mode flag: Gumbel noise is injected during training only.
     // prepare_inference() sets this to false so eval_perplexity gets clean deterministic routing.
     static TRAIN_MODE: RefCell<bool> = RefCell::new(true);
+    // Gate diversity bias scale. When non-zero, adds a fixed linear logit spread across experts
+    // (expert 0 gets -scale, expert E-1 gets +scale) to break Nash routing equilibrium.
+    // Not learned — purely a structural asymmetry to force non-uniform routing from the start.
+    // Set via --gate-diversity in train_bible. Disabled in eval mode.
+    static GATE_DIVERSITY_SCALE: RefCell<f32> = RefCell::new(0.0);
 }
 
 pub fn clear_routing_capture() { ROUTING_ACC.with(|r| r.borrow_mut().clear()); }
@@ -39,9 +48,16 @@ pub fn clear_tlight_capture()  { TLIGHT_ACC.with(|t| t.borrow_mut().clear()); }
 pub fn clear_div_capture()     {
     DIV_ACC.with(|d| *d.borrow_mut() = None);
     DIV_LOG_ACC.with(|d| d.borrow_mut().clear());
+    DIV_F32_LOG_ACC.with(|d| d.borrow_mut().clear());
 }
-pub fn enter_eval_mode()       { TRAIN_MODE.with(|m| *m.borrow_mut() = false); }
+
+/// Drains per-layer F32 shadow weight variance (diagnostic for H3 STE swallowing).
+pub fn take_div_f32_log_capture() -> Vec<f32> {
+    DIV_F32_LOG_ACC.with(|d| std::mem::take(&mut *d.borrow_mut()))
+}
+pub fn enter_eval_mode()        { TRAIN_MODE.with(|m| *m.borrow_mut() = false); }
 pub fn set_div_enabled(v: bool) { DIV_ENABLED.with(|d| *d.borrow_mut() = v); }
+pub fn set_gate_diversity_scale(v: f32) { GATE_DIVERSITY_SCALE.with(|g| *g.borrow_mut() = v); }
 
 pub fn take_routing_capture(num_experts: usize) -> Vec<f32> {
     ROUTING_ACC.with(|r| {
@@ -91,6 +107,11 @@ const GUMBEL_NOISE_SCALE: f64 = 0.2;
 pub struct MoeBlock {
     gate: candle_nn::Linear,
     experts: Vec<Mlp>,
+    // Per-expert seed bias: F32 [hidden_size], unique random init, learned by Adam.
+    // Added to each expert's input before the Mlp forward to break Nash symmetry:
+    // different inputs → different CE gradients per expert → expert F32 weights diverge.
+    // Unlike σ-perturbation (one-shot on ternary), this persists and amplifies.
+    expert_seeds: Vec<Tensor>,
     num_experts: usize,
     // Ternary Traffic Light: per-expert execution budget controller.
     // Interior mutability: forward() takes &self but needs to update EMA each step.
@@ -101,13 +122,20 @@ impl MoeBlock {
     pub fn new(hidden_size: usize, num_experts: usize, vb: VarBuilder, threshold: f32) -> Result<Self> {
         let gate = candle_nn::linear_no_bias(hidden_size, num_experts, vb.pp("gate"))?;
         let mut experts = Vec::new();
+        let mut expert_seeds = Vec::new();
         let vb_experts = vb.pp("experts");
         for i in 0..num_experts {
             experts.push(Mlp::new(hidden_size, hidden_size * 4, vb_experts.pp(i), threshold)?);
+            let seed = vb_experts.pp(i).get_with_hints(
+                hidden_size, "seed_bias",
+                candle_nn::Init::Uniform { lo: -0.01, up: 0.01 },
+            )?;
+            expert_seeds.push(seed);
         }
         Ok(Self {
             gate,
             experts,
+            expert_seeds,
             num_experts,
             traffic_light: RefCell::new(TrafficLight::new(num_experts)),
         })
@@ -133,6 +161,23 @@ impl MoeBlock {
         // 1. Gate logits — F32 linear for routing resolution
         let mut gate_logits = self.gate.forward(x)?; // [B, S, E]
         gate_logits = (gate_logits / ROUTER_TEMP)?;
+
+        // 1b. Gate diversity bias: fixed linear logit spread to break Nash symmetry.
+        // Expert E-1 gets +scale, expert 0 gets -scale. Not learned — purely structural.
+        // Applied in post-temperature logit space; disabled in eval mode.
+        if TRAIN_MODE.with(|m| *m.borrow()) {
+            let scale = GATE_DIVERSITY_SCALE.with(|g| *g.borrow());
+            if scale != 0.0 {
+                let biases: Vec<f32> = (0..self.num_experts)
+                    .map(|e| {
+                        let rank = e as f32 / (self.num_experts as f32 - 1.0) - 0.5;
+                        rank * 2.0 * scale
+                    })
+                    .collect();
+                let bias_tensor = Tensor::from_vec(biases, (1usize, 1usize, self.num_experts), dev)?;
+                gate_logits = gate_logits.broadcast_add(&bias_tensor)?;
+            }
+        }
 
         // 2. Clean probabilities for LB loss and entropy (computed on unmodified logits
         //    so LB gradient is orthogonal to the traffic light hard correction).
@@ -280,7 +325,9 @@ impl MoeBlock {
             // @sparseskip: skip non-routed experts entirely — whitepaper §5.2.
             if max_w == 0.0 { continue; }
 
-            let expert_out = self.experts[expert_idx].forward(&x_flat)?;
+            // Apply per-expert seed bias to break Nash symmetry.
+            let x_seeded = x_flat.broadcast_add(&self.expert_seeds[expert_idx])?;
+            let expert_out = self.experts[expert_idx].forward(&x_seeded)?;
 
             // Ternary execution budget: scale output by traffic light state.
             // Green = 1.0 (full), Orange = ORANGE_SCALE (partial), Red = 1.0 (but skipped above).
@@ -303,8 +350,9 @@ impl MoeBlock {
             let num_sample = 1.min(b * s);
             let x_sample = x_flat.narrow(0, 0, num_sample)?.detach();
             let mut expert_norms: Vec<Tensor> = Vec::with_capacity(self.num_experts);
-            for expert in &self.experts {
-                let out = expert.forward(&x_sample)?;                         // [N, H]
+            for (ei, expert) in self.experts.iter().enumerate() {
+                let x_div = x_sample.broadcast_add(&self.expert_seeds[ei])?;
+                let out = expert.forward(&x_div)?;                            // [N, H]
                 let l2  = out.sqr()?.sum_keepdim(candle_core::D::Minus1)?.sqrt()?; // [N, 1]
                 let l2_clamped = l2.clamp(1e-8_f64, f64::MAX)?;
                 expert_norms.push(out.broadcast_div(&l2_clamped)?);            // [N, H] L2-norm
@@ -318,13 +366,46 @@ impl MoeBlock {
             let var_f32 = var.to_scalar::<f32>().unwrap_or(0.0);
             DIV_LOG_ACC.with(|d| d.borrow_mut().push(var_f32));
 
-            // Accumulate neg-variance for gradient — minimize neg-var = maximize diversity.
+            // F32 shadow weight variance — diagnostic for H3 (STE swallowing).
+            // Compute variance of mean-abs F32 weights across experts. If this grows
+            // while var_f32 stays flat, weights are diverging in F32 space but not
+            // crossing ternary thresholds (quantization barrier confirmed).
+            let f32_signals: Vec<f32> = self.experts.iter()
+                .filter_map(|e| e.f32_weight_signal().ok()) // unchanged: seed_bias tracked separately
+                .collect();
+            if f32_signals.len() == self.num_experts {
+                let mean_s: f32 = f32_signals.iter().sum::<f32>() / f32_signals.len() as f32;
+                let f32_var: f32 = f32_signals.iter()
+                    .map(|&s| (s - mean_s).powi(2))
+                    .sum::<f32>() / f32_signals.len() as f32;
+                DIV_F32_LOG_ACC.with(|d| d.borrow_mut().push(f32_var));
+            }
+
+            // Output-based neg-variance: gradient flows via STE through ternary expert outputs.
             let neg_var = var.neg()?;
+
+            // F32-direct divergence: gradient flows directly to F32 shadow weights,
+            // bypassing STE and routing entirely. Computes variance of per-expert
+            // mean-abs F32 weights and maximises it. This is the primary gradient
+            // signal when STE is weak (H3) or routing is uniform (Nash).
+            // Gradient per expert: 2×(mean_abs_e − global_mean) / E × sign(w[i,j]) / n_params
+            // Experts above the global mean grow further; those below shrink — amplifying spread.
+            let expert_f32_signals: Vec<Tensor> = self.experts.iter()
+                .map(|e| e.f32_weight_signal_tensor())
+                .collect::<Result<Vec<_>>>()?;
+            let f32_stack  = Tensor::stack(&expert_f32_signals, 0)?;   // [E] scalar per expert
+            let f32_mean   = f32_stack.mean_all()?;                     // global mean
+            let f32_diff   = f32_stack.broadcast_sub(&f32_mean)?;       // [E] deviations
+            let f32_var    = f32_diff.sqr()?.mean_all()?;               // variance scalar
+            let neg_f32_var = f32_var.neg()?;
+
+            // Accumulate both terms: output-based (STE path) + F32-direct (bypass path).
             DIV_ACC.with(|d| {
                 let mut cell = d.borrow_mut();
+                let combined = (&neg_var + &neg_f32_var).unwrap();
                 *cell = match cell.take() {
-                    None       => Some(neg_var),
-                    Some(prev) => Some((&prev + &neg_var).unwrap()),
+                    None       => Some(combined),
+                    Some(prev) => Some((&prev + &combined).unwrap()),
                 };
             });
         }

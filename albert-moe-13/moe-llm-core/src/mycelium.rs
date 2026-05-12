@@ -123,6 +123,13 @@ impl MyceliumModule {
         }
     }
 
+    /// Lower dead_threshold and raise resurrection noise during LB-off mode.
+    /// Without LB, experts can go Red fast — catch them earlier.
+    pub fn set_lb_off_mode(&mut self, lb_off: bool) {
+        self.dead_threshold     = if lb_off { 3  } else { 8    };
+        self.resurrection_noise = if lb_off { 0.05 } else { 0.02 };
+    }
+
     /// Called by EvolutionManager immediately after Net2Net layer surgery.
     /// Expands internal bookkeeping to match the new architecture.
     pub fn on_layer_added(&mut self) {

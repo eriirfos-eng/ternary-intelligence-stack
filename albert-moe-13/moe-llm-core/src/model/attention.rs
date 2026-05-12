@@ -51,17 +51,17 @@ impl Attention {
         let k = self.k_proj.forward(x)?;
         let v = self.v_proj.forward(x)?;
 
-        let q = q.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
-        let k = k.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
-        let v = v.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
+        let q = q.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+        let k = k.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+        let v = v.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
 
         let mask = self.get_mask(seq_len, x.device())?;
-        let mut attn_weights = (q.matmul(&k.transpose(2, 3)?)? / (self.head_dim as f64).sqrt())?;
+        let mut attn_weights = (q.matmul(&k.transpose(2, 3)?.contiguous()?)? / (self.head_dim as f64).sqrt())?;
         attn_weights = attn_weights.broadcast_add(&mask)?;
         let attn_weights = candle_nn::ops::softmax(&attn_weights, D::Minus1)?;
 
         let attn_output = attn_weights.matmul(&v)?;
-        let attn_output = attn_output.transpose(1, 2)?.reshape((b_sz, seq_len, h_sz))?;
+        let attn_output = attn_output.transpose(1, 2)?.contiguous()?.reshape((b_sz, seq_len, h_sz))?;
         self.o_proj.forward(&attn_output)
     }
 
@@ -73,19 +73,19 @@ impl Attention {
         let k = self.k_proj.forward(x)?;
         let v = self.v_proj.forward(x)?;
 
-        let q = q.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
-        let k = k.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
-        let v = v.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
+        let q = q.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+        let k = k.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+        let v = v.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
 
         *self.kv_cache.borrow_mut() = Some((k.clone(), v.clone()));
 
         let mask = self.get_mask(seq_len, x.device())?;
-        let mut attn_weights = (q.matmul(&k.transpose(2, 3)?)? / (self.head_dim as f64).sqrt())?;
+        let mut attn_weights = (q.matmul(&k.transpose(2, 3)?.contiguous()?)? / (self.head_dim as f64).sqrt())?;
         attn_weights = attn_weights.broadcast_add(&mask)?;
         let attn_weights = candle_nn::ops::softmax(&attn_weights, D::Minus1)?;
 
         let attn_output = attn_weights.matmul(&v)?;
-        let attn_output = attn_output.transpose(1, 2)?.reshape((b_sz, seq_len, h_sz))?;
+        let attn_output = attn_output.transpose(1, 2)?.contiguous()?.reshape((b_sz, seq_len, h_sz))?;
         self.o_proj.forward(&attn_output)
     }
 
@@ -98,9 +98,9 @@ impl Attention {
         let k_new = self.k_proj.forward(x)?;
         let v_new = self.v_proj.forward(x)?;
 
-        let q     = q    .reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
-        let k_new = k_new.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
-        let v_new = v_new.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?;
+        let q     = q    .reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+        let k_new = k_new.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
+        let v_new = v_new.reshape((b_sz, seq_len, self.num_heads, self.head_dim))?.transpose(1, 2)?.contiguous()?;
 
         let (k, v) = {
             let cache = self.kv_cache.borrow();
@@ -116,12 +116,12 @@ impl Attention {
 
         let scale = (self.head_dim as f64).sqrt();
         let attn_weights = candle_nn::ops::softmax(
-            &(q.matmul(&k.transpose(2, 3)?)? / scale)?,
+            &(q.matmul(&k.transpose(2, 3)?.contiguous()?)? / scale)?,
             D::Minus1,
         )?;
 
         let attn_output = attn_weights.matmul(&v)?;
-        let attn_output = attn_output.transpose(1, 2)?.reshape((b_sz, seq_len, h_sz))?;
+        let attn_output = attn_output.transpose(1, 2)?.contiguous()?.reshape((b_sz, seq_len, h_sz))?;
         self.o_proj.forward(&attn_output)
     }
 
