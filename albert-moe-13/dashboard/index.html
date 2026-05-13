@@ -2089,12 +2089,30 @@
             let _routingDirty = false;
             let _tlightPendingLayers = null, _tlightPendingStep = null;
             for (const line of lines) {
-                // RUN_START sentinel — Modal container restarted; treat as full session reset
+                // RUN_START sentinel — Modal container restarted; reset chart state
+                // but continue parsing this chunk so the ARCH line (written right after)
+                // gets processed in the same pass.
                 if (line.startsWith('RUN_START ')) {
                     newPts.length = 0;
-                    initialLoad = true;
-                    lastBytePos = 0;
-                    break; // discard rest of this chunk; next poll fetches fresh
+                    chart.data.datasets.forEach(ds => ds.data = []);
+                    epochCandles.clear(); haCache = [];
+                    bestLoss = Infinity; worstLoss = -Infinity;
+                    sessionStartLoss = null; totalPts = 0;
+                    lastLossVal = null; lastKnownEpoch = -1;
+                    userHasZoomed = false; newPointStartIdx = Infinity;
+                    batchLog = []; epochLog = [];
+                    document.getElementById('v-loss').textContent  = '—';
+                    document.getElementById('v-epoch').textContent = '—';
+                    document.getElementById('v-best').textContent  = '—';
+                    document.getElementById('v-best-pct').textContent = '';
+                    document.getElementById('v-pts').textContent   = '0';
+                    document.getElementById('v-arch').textContent  = '—';
+                    document.getElementById('delta').textContent   = '';
+                    document.getElementById('delta').className     = 'flat';
+                    document.getElementById('waiting').classList.remove('hidden');
+                    chart.options.scales.x.min = undefined;
+                    chart.options.scales.x.max = undefined;
+                    continue; // keep parsing — ARCH line is next
                 }
                 // ARCH metadata line — update topbar only; session detection is epoch-based below
                 const am = line.match(/^ARCH\s+(\d+)L\s+(\d+)H\s+(\d+)E\s+(\d+)CTX\s+(\d+)V/);
