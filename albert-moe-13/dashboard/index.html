@@ -948,7 +948,8 @@
     let bbVisible      = false;
     let macdVisible    = false;
     let rsiVisible     = false;
-    const trailActive  = [false, false, false, false, false]; // [21, 55, 144, 377, 610]
+    const trailActive     = [false, false, false, false, false]; // [21, 55, 144, 377, 610]
+    const trailCurrentMin = [Infinity, Infinity, Infinity, Infinity, Infinity];
     let crosshairPos   = null;
     let crosshairRafId = null;
     let drawMode        = false;
@@ -1013,6 +1014,45 @@
                     ? (yRaw < chartArea.top ? chartArea.top + 12 : chartArea.bottom - 4)
                     : y - 3;
                 ctx.fillText((clipped ? (yRaw < chartArea.top ? '▲ ' : '▼ ') : '') + 'EP AVG ' + lastSmaY.toFixed(4), chartArea.right - 4, labelY);
+                ctx.restore();
+            }
+
+            // Trail floor lines — one horizontal per active SMA trail
+            const TRAIL_LINE_COLORS = [
+                'rgba(255,215,0,0.70)',   // T21  — gold
+                'rgba(245,158,11,0.70)',  // T55  — amber
+                'rgba(136,153,255,0.70)', // T144 — blue-purple
+                'rgba(167,139,250,0.70)', // T377 — violet
+                'rgba(124,58,237,0.70)',  // T610 — deep purple
+            ];
+            const TRAIL_NAMES = ['T-21','T-55','T-144','T-377','T-610'];
+            for (let ti = 0; ti < 5; ti++) {
+                if (!trailActive[ti] || !isFinite(trailCurrentMin[ti])) continue;
+                const col  = TRAIL_LINE_COLORS[ti];
+                const colF = col.replace(/[\d.]+\)$/, '0.30)');
+                const yRaw = scales.y.getPixelForValue(trailCurrentMin[ti]);
+                const clipped = yRaw < chartArea.top || yRaw > chartArea.bottom;
+                const y = Math.max(chartArea.top + 1, Math.min(chartArea.bottom - 1, yRaw));
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(chartArea.left, y);
+                ctx.lineTo(chartArea.right, y);
+                ctx.setLineDash([3, 6]);
+                ctx.strokeStyle = clipped ? colF : col;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.font = '10px monospace';
+                ctx.fillStyle = clipped ? colF : col;
+                ctx.textAlign = 'right';
+                const lY = clipped
+                    ? (yRaw < chartArea.top ? chartArea.top + 12 : chartArea.bottom - 4)
+                    : y - 3;
+                ctx.fillText(
+                    (clipped ? (yRaw < chartArea.top ? '▲ ' : '▼ ') : '') +
+                    TRAIL_NAMES[ti] + ' ' + trailCurrentMin[ti].toFixed(4),
+                    chartArea.right - 4, lY
+                );
                 ctx.restore();
             }
 
@@ -2099,6 +2139,7 @@
                     bestLoss = Infinity; worstLoss = -Infinity;
                     sessionStartLoss = null; totalPts = 0;
                     lastLossVal = null; lastKnownEpoch = -1;
+                    trailCurrentMin.fill(Infinity);
                     userHasZoomed = false; newPointStartIdx = Infinity;
                     batchLog = []; epochLog = [];
                     document.getElementById('v-loss').textContent  = '—';
@@ -2366,6 +2407,7 @@
                 chart.data.datasets[9].data = [];
                 chart.data.datasets[10].data = [];
                 for (let i = 11; i <= 15; i++) chart.data.datasets[i].data = [];
+                trailCurrentMin.fill(Infinity);
                 epochCandles.clear();
                 haCache = [];
                 lastSmaY       = null;
@@ -2433,19 +2475,15 @@
                 if (macdVisible) ds[9].data = macd(epD, 3, 13);
                 if (rsiVisible)  ds[10].data = rsi(epD, 14);
             }
-            // SMA trails — running minimum of each SMA curve [ds 11-15]
+            // SMA trail floor — update running minimum for each active trail
             const trailSrc = [ds[1], ds[2], ds[3], ds[4], ds[5]];
             for (let ti = 0; ti < 5; ti++) {
                 if (!trailActive[ti]) continue;
                 const src = trailSrc[ti].data;
                 if (!src.length) continue;
-                let trailMin = Infinity;
-                const trailData = [];
-                for (const pt of src) {
-                    if (pt.y < trailMin) trailMin = pt.y;
-                    trailData.push({ x: pt.x, y: trailMin });
-                }
-                ds[11 + ti].data = trailData;
+                let mn = Infinity;
+                for (const pt of src) { if (pt.y < mn) mn = pt.y; }
+                trailCurrentMin[ti] = mn;
             }
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
@@ -3643,23 +3681,19 @@
     .forEach(([id, ti, smaIdx]) => {
         document.getElementById(id).addEventListener('change', function() {
             trailActive[ti] = this.checked;
-            chart.data.datasets[11 + ti].hidden = !this.checked;
-            if (this.checked) {
-                const src = chart.data.datasets[smaIdx].data;
-                // If the SMA is hidden it has no data yet — enable it first
-                if (!src.length) {
+            if (!this.checked) {
+                trailCurrentMin[ti] = Infinity;
+            } else {
+                // Ensure SMA has data (enable + compute if hidden)
+                const smaSizes = [21, 55, 144, 377, 610];
+                if (!chart.data.datasets[smaIdx].data.length) {
                     chart.data.datasets[smaIdx].hidden = false;
-                    const merged = chart.data.datasets[0].data;
-                    const smaSizes = [21, 55, 144, 377, 610];
-                    chart.data.datasets[smaIdx].data = sma(merged, smaSizes[ti]);
+                    chart.data.datasets[smaIdx].data = sma(chart.data.datasets[0].data, smaSizes[ti]);
                 }
-                let trailMin = Infinity;
-                const trailData = [];
-                for (const pt of chart.data.datasets[smaIdx].data) {
-                    if (pt.y < trailMin) trailMin = pt.y;
-                    trailData.push({ x: pt.x, y: trailMin });
-                }
-                chart.data.datasets[11 + ti].data = trailData;
+                // Compute initial running minimum
+                let mn = Infinity;
+                for (const pt of chart.data.datasets[smaIdx].data) { if (pt.y < mn) mn = pt.y; }
+                trailCurrentMin[ti] = mn;
             }
             chart.update('none');
         });
