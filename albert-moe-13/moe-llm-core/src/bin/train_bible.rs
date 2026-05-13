@@ -853,6 +853,12 @@ fn train_cycle(
     let mut expert_dominance_streak: Vec<u8> = vec![0u8; config.num_experts];
     // LB ramp: epochs since LB was enabled in this binary run (used for warmup ramp).
     let mut lb_ramp_epoch: usize = 0;
+    // MYCELIUM stability counter — reset to 0 on each train_cycle call (restart).
+    // Surgery requires this to reach mycelium_stability_threshold before firing.
+    // Resetting on restart forces re-stabilisation observation under the new gate,
+    // preventing "changed the rule and it immediately fired" optics.
+    let mut mycelium_consecutive_hot: usize = 0;
+    let mut mycelium_last_hot_layer: Option<usize> = None;
 
     // Write arch metadata once per train_cycle so the dashboard can display it.
     if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
@@ -1368,13 +1374,22 @@ fn train_cycle(
             .collect();
         mycelium.record_epoch(&last_tlight_states, &epoch_layer_norms);
         let report = mycelium.generate_report();
+        // Track consecutive epochs where the same layer holds the hot position.
+        // This is the MYCELIUM stability signal used by the surgery gate.
+        if mycelium_last_hot_layer == Some(report.hottest_layer) {
+            mycelium_consecutive_hot += 1;
+        } else {
+            mycelium_consecutive_hot = 1; // reset; count the current epoch
+            mycelium_last_hot_layer = Some(report.hottest_layer);
+        }
         if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
             let pressure_str: Vec<String> = report.layer_pressure.iter()
                 .map(|&p| format!("{:.5}", p)).collect();
             let _ = writeln!(f,
-                "MYCELIUM epoch={} dead={} blooming={} hot=L{} cold=L{} pressure=[{}]",
+                "MYCELIUM epoch={} dead={} blooming={} hot=L{} cold=L{} pressure=[{}] myc_stable={}",
                 total_epochs, report.dead_expert_count, report.blooming_expert_count,
-                report.hottest_layer, report.coldest_layer, pressure_str.join(","));
+                report.hottest_layer, report.coldest_layer, pressure_str.join(","),
+                mycelium_consecutive_hot);
         }
         if !report.resurrections.is_empty() {
             println!("[{}] MYCELIUM: {} dead expert(s) detected — performing resurrection.",
@@ -1600,7 +1615,7 @@ fn train_cycle(
             collapse_streak = 0; // healthy epoch resets the streak
         }
 
-        if evolution_manager.should_evolve(config.num_layers) {
+        if evolution_manager.should_evolve(config.num_layers, mycelium_consecutive_hot) {
             evolution_manager.reset_history();
             return Ok(true);
         }

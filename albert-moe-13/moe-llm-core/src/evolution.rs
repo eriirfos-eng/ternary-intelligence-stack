@@ -25,30 +25,31 @@ use std::collections::VecDeque;
 const FIB_TARGETS: &[usize] = &[3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610];
 
 pub struct EvolutionManager {
-    pub loss_history:         VecDeque<f32>,
-    pub plateau_threshold:    f32,
-    pub mastery_threshold:    f32,
-    pub cooldown_remaining:   usize,
-    /// Surgery suppressed when loss is above this — model is still near the random baseline.
-    /// ln(32 000) ≈ 10.37. Originally 9.8 (CTX=128, English-only, smaller vocab).
-    /// Recalibrated to 10.25 for CTX=256 + 32k multilingual vocab — structurally higher floor.
-    pub min_loss_for_plateau: f32,
+    pub loss_history:                VecDeque<f32>,
+    pub plateau_threshold:           f32,
+    pub mastery_threshold:           f32,
+    pub cooldown_remaining:          usize,
+    /// Minimum consecutive epochs the MYCELIUM hot-layer must remain stable before
+    /// surgery is allowed to fire. Replaces the absolute loss threshold as the guard
+    /// condition — routing stability is a direct architectural-readiness signal, while
+    /// an absolute loss number needs recalibration every time vocab/CTX changes.
+    pub mycelium_stability_threshold: usize,
     /// Index into FIB_TARGETS — the milestone we're currently climbing toward.
-    pub fib_index:            usize,
+    pub fib_index:                   usize,
     /// FIB_TARGETS[fib_index] — kept as a pub field for train_bible.rs compatibility.
-    pub max_layers:           usize,
+    pub max_layers:                  usize,
 }
 
 impl EvolutionManager {
     pub fn new() -> Self {
         Self {
-            loss_history:         VecDeque::with_capacity(64),
-            plateau_threshold:    0.02,
-            mastery_threshold:    4.5,
-            cooldown_remaining:   0,
-            min_loss_for_plateau: 10.25,
-            fib_index:            0,
-            max_layers:           FIB_TARGETS[0],
+            loss_history:                 VecDeque::with_capacity(64),
+            plateau_threshold:            0.02,
+            mastery_threshold:            4.5,
+            cooldown_remaining:           0,
+            mycelium_stability_threshold: 5,
+            fib_index:                    0,
+            max_layers:                   FIB_TARGETS[0],
         }
     }
 
@@ -82,9 +83,15 @@ impl EvolutionManager {
 
     /// Returns true if the architecture should grow by one layer.
     ///
-    /// Mastery fires immediately — no history required.
-    /// Plateau requires a full Fibonacci-length window and loss below random baseline.
-    pub fn should_evolve(&self, current_layers: usize) -> bool {
+    /// Mastery fires immediately — no MYCELIUM stability required.
+    /// Plateau fires when: (1) full Fibonacci window filled, (2) loss delta within threshold,
+    /// AND (3) MYCELIUM hot-layer has been stable for ≥ mycelium_stability_threshold epochs.
+    ///
+    /// The stability condition replaces the old absolute loss threshold. An absolute loss
+    /// number requires recalibration whenever vocab/CTX/language count changes. MYCELIUM
+    /// routing stability is architecture-intrinsic: when the hot layer holds for ≥5 epochs,
+    /// the gradient hierarchy has crystallized and the model is structurally ready to grow.
+    pub fn should_evolve(&self, current_layers: usize, mycelium_stable_epochs: usize) -> bool {
         if current_layers >= self.max_layers { return false; }
 
         let latest = match self.loss_history.back() {
@@ -93,6 +100,7 @@ impl EvolutionManager {
         };
 
         // Mastery: fires at any depth the moment the model outgrows its current capacity.
+        // Mastery ignores MYCELIUM stability — catastrophic capacity gap is self-evident.
         if latest < self.mastery_threshold {
             println!("--- MASTERY EVOLUTION TRIGGERED (loss {:.4} < {:.4}, \
                 next milestone: F{}={}L) ---",
@@ -115,15 +123,17 @@ impl EvolutionManager {
         let diff  = first - latest;
 
         if diff.abs() < self.plateau_threshold {
-            if latest > self.min_loss_for_plateau {
-                println!("[evolution] Plateau detected (Δ{:.4}) but loss {:.4} > {:.4} — \
-                    not past random baseline. Surgery suppressed.",
-                    diff.abs(), latest, self.min_loss_for_plateau);
+            if mycelium_stable_epochs < self.mycelium_stability_threshold {
+                println!("[evolution] Plateau detected (Δ{:.4}) but MYCELIUM hot-layer \
+                    only stable for {}/{} epochs — routing hierarchy not yet crystallised. \
+                    Surgery suppressed.",
+                    diff.abs(), mycelium_stable_epochs, self.mycelium_stability_threshold);
                 return false;
             }
             println!("--- FIBONACCI PLATEAU TRIGGERED (Δ{:.4} over {} epochs, \
-                next milestone: F{}={}L) ---",
-                diff.abs(), history_len, self.fib_index + 1, self.max_layers);
+                MYCELIUM stable {} epochs, next milestone: F{}={}L) ---",
+                diff.abs(), history_len, mycelium_stable_epochs,
+                self.fib_index + 1, self.max_layers);
             return true;
         }
 
@@ -152,4 +162,59 @@ impl EvolutionManager {
 
 impl Default for EvolutionManager {
     fn default() -> Self { Self::new() }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn em_with_flat_history(loss: f32) -> EvolutionManager {
+        let mut em = EvolutionManager::new();
+        em.calibrate(12); // → target 13L, window = 13 epochs
+        for _ in 0..13 { em.add_loss(loss); }
+        em
+    }
+
+    #[test]
+    fn plateau_fires_when_mycelium_stable_enough() {
+        let em = em_with_flat_history(10.27);
+        assert!(em.should_evolve(12, 5), "should fire: plateau met, stability=5 >= threshold=5");
+    }
+
+    #[test]
+    fn plateau_suppressed_when_mycelium_not_yet_stable() {
+        let em = em_with_flat_history(10.27);
+        assert!(!em.should_evolve(12, 4), "should suppress: stability=4 < threshold=5");
+        assert!(!em.should_evolve(12, 0), "should suppress: stability=0");
+    }
+
+    #[test]
+    fn no_plateau_no_fire_regardless_of_stability() {
+        let mut em = EvolutionManager::new();
+        em.calibrate(12);
+        // Rapidly descending — delta well above threshold
+        for i in 0..13 { em.add_loss(10.50 - i as f32 * 0.02); }
+        assert!(!em.should_evolve(12, 10), "should not fire: no plateau despite high stability");
+    }
+
+    #[test]
+    fn mastery_fires_without_mycelium_stability() {
+        let mut em = EvolutionManager::new();
+        em.calibrate(12);
+        em.add_loss(4.0); // below mastery_threshold=4.5
+        assert!(em.should_evolve(12, 0), "mastery should fire regardless of mycelium stability");
+    }
+
+    #[test]
+    fn cooldown_blocks_surgery() {
+        let mut em = em_with_flat_history(10.27);
+        em.reset_history(); // sets cooldown = 13
+        assert!(!em.should_evolve(12, 10), "cooldown should block even with full stability");
+    }
+
+    #[test]
+    fn already_at_max_layers_never_fires() {
+        let em = em_with_flat_history(10.27);
+        assert!(!em.should_evolve(13, 10), "at max_layers — surgery should not fire");
+    }
 }
