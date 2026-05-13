@@ -36,6 +36,7 @@ _UPLOADS = [
 
 _DOWNLOADS = [
     # (remote path on volume, local path)
+    ("/albert/models/albert_v3.0.config.json",      "models/albert_v3.0.config.json"),
     ("/albert/models/albert_v3.0.safetensors",      "models/albert_v3.0.safetensors"),
     ("/albert/models/albert_v3.0.best.safetensors", "models/albert_v3.0.best.safetensors"),
     ("/albert/models/albert_v3.0.best_loss",        "models/albert_v3.0.best_loss"),
