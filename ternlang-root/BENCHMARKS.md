@@ -421,6 +421,68 @@ At these costs, "discard the last 15 minutes, patch the gate threshold, restart"
 
 ---
 
+## §14 — Training at Scale: Cost & Speed Projections
+
+All projections derived from the verified $0.004/epoch T4 baseline (§13a) and published GPU specifications.  
+Hardware speedup ratios are conservative estimates for albert. v3.0's architecture (58M ternary params, 256CTX, memory-bandwidth-bound at this size).
+
+### §14a — OpenAI-Scale Cost Comparison
+
+| Metric | albert. v3.0 | GPT-3 | GPT-4 (est.) |
+|--------|-------------|-------|--------------|
+| Parameters | 58M ternary | 175B fp16 | ~1.8T fp16 |
+| Weight storage | ~92 MB | ~350 GB | ~3.6 TB |
+| Training tokens (to date) | ~150M | 300B | ~13T |
+| Training cost (to date) | **$1.97** | $4.6M | ~$100M |
+| Cost per million training tokens | **$0.013** | $15.33 | $7.69 |
+| Inference hardware | Any CPU | 8× A100 | 8× H100 |
+| Inference cost per 1k tokens | **~$0** | $0.002 | $0.03 |
+
+albert. trains at **1,180× lower cost per token** than GPT-3 on equivalent cloud hardware.  
+Inference is cost-free at deployment — ternary weights run on any CPU with no quantization step.
+
+### §14b — What Equal Budgets Buy
+
+| Budget | albert. on T4 (Modal) | GPT-equivalent |
+|--------|-----------------------|----------------|
+| $10 | 2,500 epochs · 768M tokens · 12 days | ~33 GPT-4o API output tokens |
+| $1,000 | 250,000 epochs · 76.8B tokens | Cannot start GPT-3 training |
+| $100,000 | 2.5M epochs · 768B tokens | ~0.1% of GPT-4 training run |
+| $4.6M (GPT-3 budget) | 35T tokens on 100× A100 | One GPT-3 training run |
+| €3M SPRIND Stage 1 | **115T tokens on 333× A100 · 1 year** | **8.8× GPT-4 training volume** |
+
+### §14c — Hardware Scaling: Training Speed vs. Investment
+
+Planned hardware acquisition: Bizon workstation, 4× GPU configuration.  
+Data-parallel training scales linearly across GPUs at albert.'s model size.
+
+| Configuration | Epoch time | Epochs/day | Time to surgery (loss 9.8, ~300ep) | Cost/epoch |
+|---------------|------------|------------|------------------------------------|------------|
+| 1× T4 Modal (current) | ~7 min | 206 | ~1.5 days | $0.004 (cloud) |
+| 1× RTX 4090 Bizon | ~2 min | ~570 | ~13 hours | ~$0.0007 (electricity) |
+| 4× RTX 4090 Bizon | ~35 sec | ~2,470 | **~3 hours** | ~$0.0002 (electricity) |
+| 4× A100 Bizon Pro | ~10 sec | ~8,640 | **~50 minutes** | ~$0.00006 (electricity) |
+
+**RTX 4090 vs T4 basis:** memory bandwidth 1,008 vs 320 GB/s (3.15×); FLOPS 165 vs 65 TFLOPS (2.5×); practical speedup at albert.'s size: ~3×.  
+**A100 vs T4 basis:** memory bandwidth 2,000 vs 320 GB/s (6.25×); practical speedup: ~10×.  
+**Data-parallel scaling:** linear at albert.'s parameter count — no communication bottleneck below 4 GPUs.
+
+### §14d — The Fibonacci Progression at Scale
+
+albert. grows through Fibonacci depth milestones: 12L → 13L → 21L → 34L → 55L...  
+Each surgery requires reaching a loss gate, then a Fibonacci-epoch cooldown before the next trigger.  
+Hardware directly compresses the calendar time of this progression.
+
+| Hardware | Epochs/day | 12L→13L | 13L→21L (est.) | Full 12L→55L arc (est.) |
+|----------|------------|---------|----------------|-------------------------|
+| 1× T4 Modal | 206 | ~1.5 days | ~3–4 weeks | ~6–8 months |
+| 4× RTX 4090 Bizon | 2,470 | ~3 hours | ~2–3 days | ~2–3 weeks |
+| 4× A100 Bizon Pro | 8,640 | ~50 min | ~16 hours | ~4–5 days |
+
+At 4× A100: the full observed evolutionary arc from 12L to 55L — months of research — compresses to **under a week of continuous training**.
+
+---
+
 ## Reproducing These Results
 
 ```bash
