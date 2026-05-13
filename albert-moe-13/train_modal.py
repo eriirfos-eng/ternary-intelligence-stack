@@ -216,15 +216,17 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
 
     log_path = "/vol/albert/dashboard/training.log"
 
-    # Tail the training log and echo every new line to stdout so albert-train
-    # can pipe Modal's stdout straight into the local dashboard/training.log.
+    # Note the volume log size before launching — tail_log seeks here so it
+    # streams only the current run's content, not the full volume history.
+    start_pos = os.path.getsize(log_path) if os.path.exists(log_path) else 0
+
     def tail_log(proc):
         while not os.path.exists(log_path):
             if proc.poll() is not None:
                 return
             time.sleep(0.2)
         with open(log_path) as f:
-            f.seek(0)  # stream from beginning so dashboard gets ARCH line
+            f.seek(start_pos)
             while True:
                 line = f.readline()
                 if line:
@@ -251,4 +253,15 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
 
 @app.local_entrypoint()
 def main():
+    # Always push the local config to the volume before launching — prevents
+    # silent CTX/arch drift when config.json changes after initial setup.
+    print("[main] syncing config.json to volume ...")
+    rc = subprocess.run(
+        ["modal", "volume", "put", "--force", _VOL,
+         "models/albert_v3.0.config.json",
+         "/albert/models/albert_v3.0.config.json"],
+        cwd=_HERE,
+    ).returncode
+    if rc != 0:
+        raise SystemExit(f"[main] config sync failed (exit {rc}) — aborting launch")
     train.remote(gate_diversity=0.3, lb_weight=0.0)

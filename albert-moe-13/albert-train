@@ -61,7 +61,7 @@ print(f"[albert-train] launching:  {' '.join(modal_cmd)}")
 print(f"[albert-train] log → {LOG}")
 print()
 
-log_f = open(LOG, "a")
+log_f = open(LOG, "w")  # overwrite — each run starts with a clean local log
 
 modal_proc = subprocess.Popen(
     modal_cmd,
