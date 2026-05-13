@@ -2080,7 +2080,7 @@
                 headers['Range'] = `bytes=${lastBytePos}-`;
             }
 
-            const res = await fetch('training.log?t=' + Date.now(), {
+            const res = await fetch('dashboard/training.log?t=' + Date.now(), {
                 cache: 'no-store',
                 headers
             });
@@ -3803,7 +3803,7 @@
         null
     );
     // Read architecture from config.json — authoritative, overrides any stale ARCH log line.
-    fetch('../models/albert_v3.0.config.json?t=' + Date.now())
+    fetch('models/albert_v3.0.config.json?t=' + Date.now())
         .then(r => r.json())
         .then(cfg => {
             const el = document.getElementById('v-arch');

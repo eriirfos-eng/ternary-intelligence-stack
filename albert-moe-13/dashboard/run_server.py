@@ -6,7 +6,7 @@ import re
 
 # CONFIGURATION
 PORT = 8888
-DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # albert-moe-13/
 
 class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
     """
