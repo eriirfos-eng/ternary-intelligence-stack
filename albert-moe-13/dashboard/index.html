@@ -1585,6 +1585,21 @@
                     ticks: { color: '#94a3b8', font: { size: 10 } }
                 },
                 y: {
+                    afterDataLimits: (axis) => {
+                        const ohlcActive = haMode || document.getElementById('cbOHLC').checked;
+                        if (!ohlcActive) return;
+                        const xScale = axis.chart.scales.x;
+                        if (!xScale) return;
+                        const xMin = xScale.min, xMax = xScale.max;
+                        const src = haMode ? haCache : [...epochCandles.values()];
+                        const visible = src.filter(c => c.epoch >= xMin && c.epoch <= xMax);
+                        if (!visible.length) return;
+                        const lo = Math.min(...visible.map(c => c.low));
+                        const hi = Math.max(...visible.map(c => c.high));
+                        const pad = Math.max((hi - lo) * 0.1, 0.0005);
+                        axis.min = lo - pad;
+                        axis.max = hi + pad;
+                    },
                     title: { display: true, text: 'Loss', color: '#64748b', font: { size: 11 } },
                     grid: { color: '#1e2d40' },
                     ticks: { color: '#94a3b8', font: { size: 10 } }
