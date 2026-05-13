@@ -81,25 +81,15 @@ source_build() {
     echo "  Building moe-test..."
     cd albert-moe-13
 
-    # The workspace Cargo.toml references crates not included in the sparse
-    # clone (moe-ddel, moe-platform, etc.) — cargo fails to load them even
-    # with -p moe-test. Replace with a minimal workspace containing only
-    # what moe-test needs, same approach as train_modal.py on Modal.
-    cat > Cargo.toml <<'CARGO'
-[workspace]
-members = ["moe-llm-core", "moe-test"]
-resolver = "2"
-
-[workspace.package]
-version    = "1.3.6"
-edition    = "2024"
-license    = "LGPL-3.0-or-later"
-repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
-homepage   = "https://ternlang.com"
-CARGO
-
-    cargo build --release -p moe-test 2>&1 \
-        | grep -E "^(error|warning: unused|   Compiling|    Finished)"
+    # Bypass the workspace Cargo.toml entirely — it references crates not
+    # included in the sparse clone (moe-ddel, moe-platform, etc.).
+    # --manifest-path points directly at moe-test; path deps (moe-llm-core)
+    # resolve via the relative path in moe-test/Cargo.toml without needing
+    # the workspace. --target-dir keeps the binary at the expected path.
+    cargo build --release \
+        --manifest-path moe-test/Cargo.toml \
+        --target-dir ./target \
+        2>&1 | grep -E "^(error|warning: unused|   Compiling|    Finished)"
 
     cp target/release/moe-test "${ORIG_DIR}/${DIR}/moe-test"
     chmod +x "${ORIG_DIR}/${DIR}/moe-test"
