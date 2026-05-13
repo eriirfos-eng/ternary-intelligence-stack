@@ -97,16 +97,16 @@
 
         /* ── Stream watchdog pill ───────────────────────────────────── */
         #stream-pill {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 0 10px;
-            height: 32px;
+            gap: 4px;
+            padding: 2px 7px;
+            height: 20px;
             white-space: nowrap;
             flex: 0 0 auto;
-            border-radius: 10px;
+            border-radius: 8px;
             border: 1px solid transparent;
-            font-size: 10px;
+            font-size: 9px;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             transition: background 0.4s, border-color 0.4s, color 0.4s;
@@ -640,9 +640,13 @@
 <body>
 
 <div id="topbar">
-    <div class="tb-cell">
+    <div class="tb-cell" style="gap:6px">
         <span id="dingir">𒀭</span>
         <span id="model-name">albert.</span>
+        <div id="stream-pill" class="live" title="Stream watchdog — goes red if no data arrives for 30s">
+            <div id="stream-dot"></div>
+            <span id="stream-label">LIVE</span>
+        </div>
     </div>
 
     <div class="tb-cell">
@@ -667,9 +671,9 @@
         <span id="v-best-pct" style="font-size:10px;color:#22c55e;margin-left:2px"></span>
     </div>
 
-    <div class="tb-cell">
-        <span class="tb-label">PTS</span>
-        <span class="tb-val" id="v-pts">0</span>
+    <div class="tb-cell" title="Total tensors loaded in current checkpoint">
+        <span class="tb-label">TNS</span>
+        <span class="tb-val" id="v-tns">—</span>
     </div>
 
     <div class="tb-cell arch">
@@ -677,14 +681,10 @@
         <span class="tb-val muted" id="v-arch">—</span>
     </div>
 
-    <div id="stream-pill" class="live" title="Stream watchdog — goes red if no data arrives for 30s">
-        <div id="stream-dot"></div>
-        <span id="stream-label">LIVE</span>
-    </div>
 
     <div class="tb-cell controls">
         <div class="dd-wrap">
-            <button id="smaDropBtn" title="Toggle chart overlays">~ CURVES ▾</button>
+            <button id="smaDropBtn" title="Toggle chart overlays"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7Q3 4 5 7Q7 10 9 7Q10.2 5.5 11 6"/></svg> <span id="curves-count">0</span> ▾</button>
             <div class="dd-panel" id="smaDrop">
                 <label class="dd-item"><input type="checkbox" id="cbDots" checked> · Raw Dots</label>
                 <div class="dd-sep"></div>
@@ -735,10 +735,10 @@
                 <label class="dd-item"><input type="checkbox" id="cbRSI"> ~ RSI <small>momentum 0–100</small></label>
             </div>
         </div>
-        <button id="drawBtn" title="Trendline draw mode — click to place endpoints · right-click or Esc to cancel · Backspace removes last">DRAW</button>
-        <button id="resetBtn">RESET ZOOM</button>
+        <button id="drawBtn" title="Trendline draw mode — click to place endpoints · right-click or Esc to cancel · Backspace removes last"><svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor"><path d="M9.2 1.3a1 1 0 0 1 1.5 1.5L9.5 4 8 2.5l1.2-1.2zM7 3.5L2.5 8 2 10l2-.5L8.5 5 7 3.5z"/></svg></button>
+        <button id="resetBtn" title="Reset zoom"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 2l3 3M10 2L7 5M2 10l3-3M10 10L7 7"/><rect x="4" y="4" width="4" height="4" rx="0.5" stroke-width="1.2"/></svg></button>
         <div class="dd-wrap">
-            <button id="exportDropBtn" title="Download training data as CSV">↓ EXPORT ▾</button>
+            <button id="exportDropBtn" title="Download training data as CSV"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v7M3.5 5.5L6 8.5l2.5-3M2 11h8"/></svg> ▾</button>
             <div class="dd-panel" id="exportDrop">
                 <div class="dd-item" id="exportBatch">↓ Batch CSV <small>per-step telemetry</small></div>
                 <div class="dd-item" id="exportEpoch">↓ Epoch CSV <small>per-epoch summary</small></div>
@@ -2036,7 +2036,7 @@
         document.getElementById('v-epoch').textContent =
             latest.layers ? `${Math.floor(latest.epoch)} (${latest.layers}L)` : Math.floor(latest.epoch);
         document.getElementById('v-batch').textContent = `${latest.batch} / ${BATCHES_PER_EPOCH}`;
-        document.getElementById('v-pts').textContent   = totalPts;
+        // v-tns updated separately when "Loaded X tensors" line is parsed
 
         if (sessionStartLoss === null) sessionStartLoss = loss;
         if (loss < bestLoss)  { bestLoss  = loss; }
@@ -2146,7 +2146,7 @@
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = '—';
                     document.getElementById('v-best-pct').textContent = '';
-                    document.getElementById('v-pts').textContent   = '0';
+                    document.getElementById('v-tns').textContent   = '0';
                     document.getElementById('v-arch').textContent  = '—';
                     document.getElementById('delta').textContent   = '';
                     document.getElementById('delta').className     = 'flat';
@@ -2160,6 +2160,12 @@
                 if (am) {
                     document.getElementById('v-arch').textContent =
                         `${am[1]} LAYERS · ${am[2]} HIDDEN · ${am[3]} EXPERTS · ${am[4]} CTX · ${am[5]} VOCAB`;
+                    continue;
+                }
+                // Tensor count — "Loaded X tensors from checkpoint"
+                const tnm = line.match(/Loaded (\d+) tensors/);
+                if (tnm) {
+                    document.getElementById('v-tns').textContent = parseInt(tnm[1]).toLocaleString();
                     continue;
                 }
                 // TELE line — feed the neural viz panels
@@ -2430,7 +2436,7 @@
                 document.getElementById('v-epoch').textContent = '—';
                 document.getElementById('v-best').textContent  = '—';
                 document.getElementById('v-best-pct').textContent = '';
-                document.getElementById('v-pts').textContent   = '0';
+                document.getElementById('v-tns').textContent   = '0';
                 document.getElementById('delta').textContent   = '';
                 document.getElementById('delta').className     = 'flat';
                 document.getElementById('waiting').classList.remove('hidden');
@@ -2455,7 +2461,7 @@
             }
 
             chart.data.datasets[0].data = merged;   // replace reference, not mutate
-            totalPts += newPts.length;
+            totalPts += newPts.length; // kept for internal accounting
 
             // Incremental SMA — only recompute the new tail instead of the full array.
             // Drops `dropped` stale front entries and appends SMA values for newPts.
@@ -2621,7 +2627,7 @@
     function updateSmaBtnLabel() {
         const total = ['cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610','cbTMA']
             .filter(id => document.getElementById(id).checked).length;
-        document.getElementById('smaDropBtn').textContent = `~ CURVES (${total}) ▾`;
+        document.getElementById('curves-count').textContent = total;
     }
     function toggleDataset(idx, checked) {
         chart.data.datasets[idx].hidden = !checked;
