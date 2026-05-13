@@ -290,7 +290,16 @@ Patent pending: A50296/2026.
 | **Expert skip rate** | **75% (9/12)** — measured live from TTL routing state |
 | Reported in CSV | `albert_bench_results.csv` · timestamp 2026-05-09T11:45:20Z |
 
-**Current (v3.0 · 12L · CPU):** 11–22 tok/s per prompt (depth × 2.4 vs 5L; multilingual 32k vocab). GPU training on Modal T4 at ~400 ms/batch is separate from inference measurement.
+### §11c — Community Hardware Results (v2.0.0 · install.sh one-liner)
+
+| Date | Hardware | CPU | RAM | Tok/s | Latency | PPL | Skip rate |
+|------|----------|-----|-----|-------|---------|-----|-----------|
+| 2026-05-13 | HP ZBook 15 (RFI-IRFOS lab) | Intel i7-4800MQ @ 2.70 GHz · 8T | 7.1 GB | **92.2** | 10.8 ms/tok | 2026.20 | 75% |
+| 2026-05-13 | Lenovo ThinkPad T495 | AMD Ryzen 5 PRO 3500U · 8T | 14 GB | **79.5** | 12.6 ms/tok | 2026.12 | 75% |
+
+PPL is deterministic across machines (same model, same eval set). Tok/s varies by µarch — Zen+ (Ryzen 3500U) vs Haswell (i7-4800MQ). Both CPU-only, no GPU, no INT8.
+
+**Current (v3.0 · 13L · CPU):** 11–22 tok/s per prompt (depth × 2.6 vs 5L; multilingual 32k vocab). GPU training on Modal T4 at ~400 ms/batch is separate from inference measurement.
 
 **Reproduce (CPU):**
 ```bash
