@@ -916,6 +916,10 @@ fn train_cycle(
         let mut last_tlight_states: Vec<String> = vec![String::new(); config.num_layers];
         let mut epoch_layer_norm_acc: Vec<f32>  = vec![0.0; config.num_layers];
         let mut epoch_layer_norm_count: usize   = 0;
+        // Cache the most recently computed per-layer norms so the GRAD log (which fires
+        // every 10 batches) can emit real values even on non-step batches.
+        let mut last_layer_norms: Vec<f32> = vec![0.0_f32; config.num_layers];
+        let mut last_norm: f32 = 0.0_f32;
         // Per-epoch routing accumulator for expert dominance tripwire.
         let mut epoch_route_acc: Vec<f32>  = vec![0.0; config.num_experts];
         let mut epoch_route_count: usize   = 0;
@@ -1109,6 +1113,8 @@ fn train_cycle(
                     }
                     norm = global_grad_norm(&varmap, &grads);
                     layer_norms = per_layer_grad_norm(&varmap, &grads, config.num_layers);
+                    last_norm = norm;
+                    last_layer_norms.clone_from(&layer_norms);
                     for (i, &n) in layer_norms.iter().enumerate() {
                         if i < epoch_layer_norm_acc.len() { epoch_layer_norm_acc[i] += n; }
                     }
@@ -1228,11 +1234,13 @@ fn train_cycle(
                 let _ = writeln!(f, "{}", log_line);
 
                 // GRAD — per-layer gradient norm, every 10 batches to keep log readable.
+                // Uses last_layer_norms (cached from most recent step batch) so this never
+                // emits zeros on non-step batches.
                 // Dashboard parses "GRAD step=N n=X.XXXX L=n0,n1,n2,..."
                 if batch_idx % 10 == 0 || batch_idx == 0 {
-                    let ln_str: Vec<String> = layer_norms.iter()
+                    let ln_str: Vec<String> = last_layer_norms.iter()
                         .map(|n| format!("{:.2e}", n)).collect();
-                    let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, norm, ln_str.join(","));
+                    let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, last_norm, ln_str.join(","));
                 }
 
                 // ROUTE — expert routing weights, emitted every 10 batches to keep log lean.

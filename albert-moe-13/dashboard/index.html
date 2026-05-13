@@ -95,6 +95,46 @@
             100% { color: #505050; text-shadow: 0 0 0px rgba(34,211,238,0); }
         }
 
+        /* ── Stream watchdog pill ───────────────────────────────────── */
+        #stream-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 10px;
+            height: 32px;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: background 0.4s, border-color 0.4s, color 0.4s;
+            cursor: default;
+        }
+        #stream-pill.live {
+            background: rgba(16,185,129,0.08);
+            border-color: rgba(16,185,129,0.25);
+            color: #10b981;
+        }
+        #stream-pill.stale {
+            background: rgba(239,68,68,0.12);
+            border-color: rgba(239,68,68,0.5);
+            color: #ef4444;
+            animation: streamFlare 1.2s ease-in-out infinite;
+        }
+        #stream-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .live  #stream-dot { background: #10b981; }
+        .stale #stream-dot { background: #ef4444; }
+        @keyframes streamFlare {
+            0%,100% { box-shadow: 0 0 0px rgba(239,68,68,0); border-color: rgba(239,68,68,0.5); }
+            50%      { box-shadow: 0 0 10px rgba(239,68,68,0.6); border-color: rgba(239,68,68,1); }
+        }
+
         #delta { font-size: 11px; }
         #delta.up   { color: var(--red); }
         #delta.down { color: var(--accent); }
@@ -441,6 +481,18 @@
         }
         .gbar-val { color: var(--text); width: 46px; text-align: right; flex-shrink: 0; }
         #grad-norm-global { font-size: 10px; color: var(--muted); margin-top: 2px; flex-shrink: 0; }
+        #grad-panel.grad-stale,
+        #expert-panel.grad-stale,
+        #routing-panel.grad-stale,
+        #tlight-panel.grad-stale,
+        #topo-sparsity-panel.grad-stale {
+            border-color: rgba(239,68,68,0.7);
+            animation: gradPanelFlare 1.2s ease-in-out infinite;
+        }
+        @keyframes gradPanelFlare {
+            0%,100% { box-shadow: none;                              border-color: rgba(239,68,68,0.5); }
+            50%      { box-shadow: 0 0 14px rgba(239,68,68,0.45);    border-color: rgba(239,68,68,1);   }
+        }
 
         #neural-waiting {
             color: var(--border2);
@@ -614,6 +666,11 @@
         <span class="tb-val muted" id="v-arch">—</span>
     </div>
 
+    <div id="stream-pill" class="live" title="Stream watchdog — goes red if no data arrives for 30s">
+        <div id="stream-dot"></div>
+        <span id="stream-label">LIVE</span>
+    </div>
+
     <div class="tb-cell controls">
         <div class="dd-wrap">
             <button id="smaDropBtn" title="Toggle chart overlays">~ CURVES ▾</button>
@@ -693,28 +750,28 @@
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel C: Expert activity heatmap -->
-    <div class="nv-panel">
+    <div class="nv-panel" id="expert-panel">
         <div class="nv-label">&#9632; Expert Activity (12 MoE Experts)</div>
         <div id="expert-viz"><div id="expert-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TELE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel D: Expert routing heatmap (live, per batch) -->
-    <div class="nv-panel">
+    <div class="nv-panel" id="routing-panel">
         <div class="nv-label">&#9632; Expert Routing — Last 60 Steps</div>
         <div id="routing-viz"><div id="routing-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR ROUTE DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel F: Ternary Traffic Light routing state -->
-    <div class="nv-panel">
+    <div class="nv-panel" id="tlight-panel">
         <div class="nv-label">&#9632; Traffic Light Routing (TTL)</div>
         <div id="tlight-viz"><div id="tlight-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TLIGHT DATA</div></div>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
     <!-- Panel E: Per-layer gradient magnitude (rightmost) -->
-    <div class="nv-panel">
+    <div class="nv-panel" id="grad-panel">
         <div class="nv-label">&#9632; Per-Layer Gradient Norm</div>
         <div id="grad-viz"><div id="grad-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR GRAD DATA</div></div>
         <div id="grad-norm-global"></div>
@@ -784,6 +841,11 @@
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
     let lastLossVal      = null;
     let bestLoss         = Infinity;
+    let lastDataMs       = Date.now(); // updated each time poll receives new bytes
+    let lastGradMs       = Date.now(); // updated each time a GRAD line is parsed
+    let lastTeleMs       = Date.now(); // updated each time a TELE line is parsed
+    let lastRouteMs      = Date.now(); // updated each time a ROUTE line is parsed
+    let lastTlightMs     = Date.now(); // updated each time a TLIGHT line is parsed
     let worstLoss        = -Infinity;
     let sessionStartLoss = null;
 
@@ -1905,6 +1967,8 @@
             const text = await res.text();
             if (!text) return;
 
+            lastDataMs = Date.now(); // stream watchdog — reset on any new bytes
+
             // Advance byte position
             if (res.status === 206) {
                 const cr = res.headers.get('Content-Range'); // bytes START-END/TOTAL
@@ -1945,6 +2009,7 @@
                             `Net2Net surgery fired — model expanded from ${lastNumLayers} to ${numLayers} layers.<br>New layer inserted with identity mapping. Expect brief loss spike.`);
                     }
                     lastNumLayers = numLayers;
+                    lastTeleMs = Date.now();
                     latestTele = { numLayers, layerSparsity, expertActivity };
                     renderNeuralViz(latestTele);
                     continue;
@@ -1954,6 +2019,7 @@
                 if (rm) {
                     const step    = parseInt(rm[1]);
                     const weights = rm[2].split(',').map(Number);
+                    lastRouteMs = Date.now();
                     routingHistory.push({ step, weights });
                     if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
                     _routingDirty = true;
@@ -1978,6 +2044,7 @@
                     // n=0.0000 L=0,0,... — hold the last real value until next step fires).
                     const isPlaceholder = gmNorm === 0 && gmLayers.every(v => v === 0);
                     if (!isPlaceholder) {
+                        lastGradMs = Date.now();
                         latestGrad = { norm: gmNorm, layerNorms: gmLayers };
                         renderGradBars();
                         if (latestGrad.norm > 1.0) {
@@ -2030,6 +2097,7 @@
                         layers.push({ layer: parseInt(p[1]), states: p[2], g: parseInt(p[3]), o: parseInt(p[4]), r: parseInt(p[5]) });
                     }
                     if (layers.length) {
+                        lastTlightMs = Date.now();
                         pendingTlight = layers;
                         tlightHistory.push({ step: tlStep, layers });
                         if (tlightHistory.length > TLIGHT_WIN) tlightHistory.shift();
@@ -3483,6 +3551,42 @@
 
     poll();
     setInterval(poll, POLL_MS);
+
+    // ── Stream watchdog ────────────────────────────────────────────────
+    // Checks every second whether new data arrived in the last 30s.
+    // Flips the STREAM pill red + flaring when silent, green when live.
+    // Also pulses the GRAD panel border when no GRAD lines arrive for 30s.
+    const STALE_MS  = 30_000;
+    const pill      = document.getElementById('stream-pill');
+    const label     = document.getElementById('stream-label');
+
+    const panelWatchlist = [
+        { el: document.getElementById('topo-sparsity-panel'), getMs: () => lastTeleMs,   label: 'TELE'   },
+        { el: document.getElementById('expert-panel'),        getMs: () => lastTeleMs,   label: 'TELE'   },
+        { el: document.getElementById('routing-panel'),       getMs: () => lastRouteMs,  label: 'ROUTE'  },
+        { el: document.getElementById('tlight-panel'),        getMs: () => lastTlightMs, label: 'TLIGHT' },
+        { el: document.getElementById('grad-panel'),          getMs: () => lastGradMs,   label: 'GRAD'   },
+    ];
+
+    setInterval(() => {
+        const now    = Date.now();
+        const silent = now - lastDataMs > STALE_MS;
+
+        pill.className    = silent ? 'stale' : 'live';
+        label.textContent = silent ? 'STALE' : 'LIVE';
+        pill.title = silent
+            ? `No data for ${Math.round((now - lastDataMs) / 1000)}s — training may have stalled`
+            : `Stream active — last data ${Math.round((now - lastDataMs) / 1000)}s ago`;
+
+        for (const { el, getMs, label: lbl } of panelWatchlist) {
+            if (!el) continue;
+            const stale = now - getMs() > STALE_MS;
+            el.classList.toggle('grad-stale', stale);
+            el.title = stale
+                ? `No ${lbl} data for ${Math.round((now - getMs()) / 1000)}s — may have stalled`
+                : '';
+        }
+    }, 1000);
 </script>
 </body>
 </html>
