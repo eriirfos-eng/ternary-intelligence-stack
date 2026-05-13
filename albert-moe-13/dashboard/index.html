@@ -778,8 +778,6 @@
                 <div class="draw-tool-item" data-tool="hline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 6h10"/></svg> H-Line <small>resistance / support</small></div>
                 <div class="draw-tool-item" data-tool="vline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v10"/></svg> V-Line <small>epoch marker</small></div>
                 <div class="dd-sep"></div>
-                <div class="draw-tool-item soon"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="3" width="9" height="6" rx="0.5"/></svg> Rectangle <small>soon</small></div>
-                <div class="draw-tool-item soon"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1L11 10H1z"/></svg> Triangle <small>soon</small></div>
                 <div class="draw-tool-item soon"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3"><text x="2" y="10" font-size="9" fill="currentColor" stroke="none" font-family="monospace">T</text></svg> Text Note <small>soon</small></div>
             </div>
         </div>
@@ -1575,6 +1573,7 @@
                     tension: 0,
                     order: 1,
                     animation: false,
+                    hidden: true,
                 },
                 {
                     type: 'line',
@@ -1600,6 +1599,7 @@
                     tension: 0,
                     order: 1,
                     animation: false,
+                    hidden: true,
                 },
                 {
                     type: 'line',
@@ -3708,7 +3708,13 @@
         document.getElementById('smaDrop').classList.remove('open');
         document.getElementById('taDrop').classList.remove('open');
         document.getElementById('exportDrop').classList.remove('open');
-        document.getElementById('drawDrop').classList.remove('open');
+        const dd = document.getElementById('drawDrop');
+        dd.classList.remove('open');
+        // Reset context-menu positioning back to default (anchored to drawBtn)
+        dd.style.position = '';
+        dd.style.top      = '';
+        dd.style.left     = '';
+        dd.style.right    = '';
     });
 
     // TA dropdown open/close
@@ -3912,6 +3918,30 @@
             chart.draw();
             return;
         }
+        // Outside draw mode: clicking a trendline auto-enters draw mode and selects it
+        if (trendlines.length > 0) {
+            const rect2 = chart.canvas.getBoundingClientRect();
+            const px2 = e.clientX - rect2.left, py2 = e.clientY - rect2.top;
+            const { chartArea: ca2, scales: sc2 } = chart;
+            if (px2 >= ca2.left && px2 <= ca2.right && py2 >= ca2.top && py2 <= ca2.bottom) {
+                let hitIdx = null, bestD2 = 8;
+                for (let i = 0; i < trendlines.length; i++) {
+                    const ln = trendlines[i];
+                    const lx1 = sc2.x.getPixelForValue(ln.x1), ly1 = sc2.y.getPixelForValue(ln.y1);
+                    const lx2 = sc2.x.getPixelForValue(ln.x2), ly2 = sc2.y.getPixelForValue(ln.y2);
+                    const dx = lx2-lx1, dy = ly2-ly1, lenSq = dx*dx+dy*dy;
+                    const t2 = lenSq ? Math.max(0, Math.min(1, ((px2-lx1)*dx+(py2-ly1)*dy)/lenSq)) : 0;
+                    const d2 = Math.sqrt((px2-lx1-t2*dx)**2+(py2-ly1-t2*dy)**2);
+                    if (d2 < bestD2) { bestD2 = d2; hitIdx = i; }
+                }
+                if (hitIdx !== null) {
+                    enterDrawMode();
+                    selectedLineIdx = hitIdx;
+                    chart.draw();
+                    return;
+                }
+            }
+        }
         if (focusedEvent) {
             focusedEvent = null;
             chart.update('none');
@@ -3926,8 +3956,13 @@
             if (pendingLine) { pendingLine = null; chart.draw(); }
             else { selectedLineIdx = null; chart.draw(); }
         } else {
-            // Open draw tool picker via the drawBtn dropdown
-            document.getElementById('drawDrop').classList.add('open');
+            // Open draw tool picker at cursor position
+            const dd = document.getElementById('drawDrop');
+            dd.style.position = 'fixed';
+            dd.style.top      = e.clientY + 'px';
+            dd.style.left     = e.clientX + 'px';
+            dd.style.right    = 'auto';
+            dd.classList.add('open');
             document.getElementById('smaDrop').classList.remove('open');
             document.getElementById('taDrop').classList.remove('open');
             document.getElementById('exportDrop').classList.remove('open');
