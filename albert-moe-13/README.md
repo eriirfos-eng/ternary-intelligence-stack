@@ -39,10 +39,10 @@ The architecture combines:
 | Parameter | Value |
 |-----------|-------|
 | Hidden size | 256 |
-| Layers | **12** (grew from 4L to 12L via EvolutionManager in v2.0.0; max_layers=12 cap enforced) |
+| Layers | **15** (v2.0.0: 4L→12L over 10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L) |
 | Attention heads | 4 |
 | Experts | 12 |
-| Context length | 128 tokens |
+| Context length | 256 tokens |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
 | TTL routing | EMA-based trit states: Green (+logit boost) · Orange (scaled output) · Red (suppressed + skipped) |
@@ -50,7 +50,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-12):** Global Epoch 127 · best loss **10.3262** (all-time low, ep115) · Nash routing resolved · WALD staleness active · training on Modal T4 GPU (~400ms/batch)
+**Training state (2026-05-13):** Global Epoch 621 · best loss **10.2415** (ep461, pre-3rd-surgery) · 3rd Net2Net surgery complete (ep611, 14L→15L) · post-surgery tracking ~10.29 · training on Modal T4 GPU (~380ms/batch)
 
 ---
 

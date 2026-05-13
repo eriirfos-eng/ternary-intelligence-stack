@@ -163,26 +163,26 @@ Demonstrate that ternary-native training — weights constrained to {−1, 0, +1
 
 | Field | Value |
 |-------|-------|
-| Architecture | 256H · **12L** · 4H · 12E · 128CTX · 32000V |
+| Architecture | 256H · **15L** · 4H · 12E · 256CTX · 32000V |
 | Version | v3.0 — multilingual ByteLevel BPE, 32k vocab (EN/DE/FR/ES/PT/IT/NL/PL) |
-| Global Epoch | **127** (2026-05-12) |
-| Best loss | **10.3262** (all-time low, ep115) |
+| Global Epoch | **621** (2026-05-13) |
+| Best loss | **10.2415** (ep461, pre-3rd-surgery) |
 | Inference throughput | **84.4 tok/s** (CPU-only, HP ZBook i7-4800MQ) |
-| Training hardware | Modal T4 GPU · ~400 ms/batch · ~32× over CPU |
-| Expert health | dead=0; Nash routing resolved at ep115 via expert seed biases |
+| Training hardware | Modal T4 GPU · ~380 ms/batch |
+| Expert health | dead=0; 3 Net2Net surgeries complete (ep511, ep547, ep611); corpus fully unlocked |
 | Training data | 100% public domain / open licence — Wikipedia CC BY-SA, Gutenberg, Europarl, EU AI Act |
 
-**Status:** v3.0 multilingual training live on Modal T4 (launched GPU training 2026-05-12). v2.0.0 archived at Global Epoch 477+, best loss 6.8821.
+**Status:** v3.0 training live on Modal T4 · 3rd Net2Net surgery complete at ep611 (14L→15L, Mandelbrot c_im=0.2287, 69 tensors perturbed, Fibonacci F6=34L window) · post-surgery loss tracking ~10.29 at ep621. v2.0.0 archived at Global Epoch 477+, best loss 6.8821.
 
 ---
 
 ### Core Research Dimensions
 
 - **From-scratch ternary training** — STE-based end-to-end training with no float32 weight baseline required; weights constrained to {−1, 0, +1} throughout via STE
-- **Auto-evolutionary depth** — `EvolutionManager` grows transformer layers autonomously via Net2Net safe-copy surgery; 3L → 12L over 10 surgery events; hard cap at `max_layers=12`
+- **Auto-evolutionary depth** — `EvolutionManager` grows transformer layers autonomously via Net2Net safe-copy surgery; 3L→12L in v2.0.0; 12L→15L across 3 surgeries in v3.0 (ep511, ep547, ep611); no hard layer cap
 - **`@sparseskip` expert routing** (Patent A50296/2026) — 9/12 experts not executed per decode step at Top-3; 4.58× throughput multiplier; 83 tok/s measured on CPU
 - **Ternary Traffic Light Routing (TTL)** — EMA-based G/O/R trit states per expert per layer; anti-stagnation burst rotates via offset 7 (coprime to 12); cycling-reds self-resolve autonomously
-- **Mycelium expert health monitor** — 20-epoch rolling gradient pressure window; resurrects stagnant experts via neighbour weight copy + σ=0.02 perturbation; dead=0 across full 12L run
+- **Mycelium expert health monitor** — 20-epoch rolling gradient pressure window; resurrects stagnant experts via neighbour weight copy + σ=0.02 perturbation; dead=0 across full v3.0 run through 15L
 - **Layer crystallization** — L0–L3 gradient norms ~0.00022 (frozen); L8–L11 at 0.013–0.022 (hot); structural internal differentiation emerging from training alone
 - **Per-layer sparsity gradient** — L0: 10.6% ternary weight sparsity → L11: 26.5% (TELE confirmed); reinforces @sparseskip efficiency with depth
 - **Stage-aware corpus curriculum** — stages unlock as layer count grows; Bible+Alice at 3L → Gutenberg at 6L → Simple Wikipedia at 7L

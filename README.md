@@ -58,7 +58,7 @@ ternlang run my_program.tern   # explicit form
 
 **albert.** is a ternary Mixture-of-Experts language model trained natively from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus, guided by the Mandelbrot complexity monitor. The engineering repo label is `albert-moe-13`.
 
-**Current state (2026-05-13):** 12L · 256H · 12E · Top-3 routing · 256CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · ~58M params · training on Modal T4 GPU · v3.0 Global Epoch 473+ · loss floor ~10.27, surgery gate armed.
+**Current state (2026-05-13):** 15L · 256H · 12E · Top-3 routing · 256CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · training on Modal T4 GPU · v3.0 Global Epoch 621+ · 3rd Net2Net surgery complete (ep611, 14L→15L) · post-surgery loss ~10.29.
 
 A live training dashboard streams telemetry in real time at `localhost:8888` during training runs — layer topology, expert routing, gradient norms, TTL state, and loss curve with Fibonacci retracement overlays.
 
