@@ -3779,6 +3779,50 @@
         })
         .catch(() => {}); // graceful fallback — log-based ARCH line still works
 
+    // ── Settings persistence ───────────────────────────────────────────
+    const PREFS_KEY = 'albert-v3-dashboard-prefs';
+    const PREF_CBS  = [
+        'cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610','cbTMA',
+        'cbTrail21','cbTrail55','cbTrail144','cbTrail377','cbTrail610',
+        'cbFib','cbBB','cbOHLC','cbHA','cbMACD','cbRSI',
+    ];
+
+    function savePrefs() {
+        const p = {};
+        for (const id of PREF_CBS) {
+            const el = document.getElementById(id);
+            if (el) p[id] = el.checked;
+        }
+        p.viewFilter = document.getElementById('viewFilter').value;
+        localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+    }
+
+    function loadPrefs() {
+        let p;
+        try { p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null'); } catch(e) { return; }
+        if (!p) return;
+        for (const id of PREF_CBS) {
+            const el = document.getElementById(id);
+            if (!el || p[id] === undefined || el.checked === p[id]) continue;
+            el.checked = p[id];
+            el.dispatchEvent(new Event('change')); // fires all existing handlers
+        }
+        if (p.viewFilter) {
+            const vf = document.getElementById('viewFilter');
+            if (vf.value !== p.viewFilter) {
+                vf.value = p.viewFilter;
+                vf.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+
+    // Save on any change inside the dropdowns or the filter select
+    document.getElementById('smaDrop').addEventListener('change', savePrefs);
+    document.getElementById('taDrop').addEventListener('change', savePrefs);
+    document.getElementById('viewFilter').addEventListener('change', savePrefs);
+
+    loadPrefs(); // restore previous session settings
+
     poll();
     setInterval(poll, POLL_MS);
 
