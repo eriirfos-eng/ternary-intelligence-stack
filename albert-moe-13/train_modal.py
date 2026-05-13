@@ -216,10 +216,12 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
 
     log_path = "/vol/albert/dashboard/training.log"
 
-    # Clear the volume log at the start of each run — prevents unbounded growth
-    # across restarts. The local dashboard log is also cleared by albert-train.
+    # Clear the volume log and write a RUN_START sentinel.
+    # albert-train's stream loop detects this sentinel and truncates the local
+    # dashboard log, keeping the frontend in sync across auto-restarts/preemptions.
+    import time as _time
     with open(log_path, 'w') as _f:
-        pass
+        _f.write(f"RUN_START ts={int(_time.time())}\n")
     start_pos = 0
 
     def tail_log(proc):

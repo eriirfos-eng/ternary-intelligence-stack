@@ -2089,6 +2089,13 @@
             let _routingDirty = false;
             let _tlightPendingLayers = null, _tlightPendingStep = null;
             for (const line of lines) {
+                // RUN_START sentinel — Modal container restarted; treat as full session reset
+                if (line.startsWith('RUN_START ')) {
+                    newPts.length = 0;
+                    initialLoad = true;
+                    lastBytePos = 0;
+                    break; // discard rest of this chunk; next poll fetches fresh
+                }
                 // ARCH metadata line — update topbar only; session detection is epoch-based below
                 const am = line.match(/^ARCH\s+(\d+)L\s+(\d+)H\s+(\d+)E\s+(\d+)CTX\s+(\d+)V/);
                 if (am) {
