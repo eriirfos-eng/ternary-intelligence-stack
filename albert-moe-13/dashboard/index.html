@@ -217,6 +217,10 @@
             padding: 5px;
             border-radius: 0 0 14px 14px;
         }
+        /* G hotkey — chart-focus mode: hide neural inspector, chart fills full height */
+        body.chart-focus #neural-wrap,
+        body.chart-focus #bottom-resize-handle { display: none !important; }
+        body.chart-focus #anomaly-strip { display: none !important; }
         .nv-panel {
             flex: 1;
             display: flex;
@@ -3106,7 +3110,12 @@
         if (waiting) waiting.remove();
 
         const { norm, layerNorms } = latestGrad;
-        const maxN = Math.max(...layerNorms, 1e-9);
+        const minN   = Math.min(...layerNorms);
+        const maxN   = Math.max(...layerNorms, 1e-9);
+        // Relative normalization: stretch bar range to the inter-layer spread so
+        // small differences (e.g. 2.07e-9 vs 2.20e-9) become visible.
+        // Floor at 0.5% of maxN to avoid divide-by-zero when all layers are identical.
+        const rangeN = Math.max(maxN - minN, maxN * 0.005);
 
         // Build row scaffolding once (or when layer count changes).
         // Never rebuild on every update — doing so destroys the DOM elements
@@ -3132,8 +3141,10 @@
         // Update widths, colors, and values in-place — transition plays automatically.
         wrap.querySelectorAll('.gbar-row').forEach((row, i) => {
             const n   = layerNorms[i];
-            const pct = Math.min(100, (n / maxN) * 100).toFixed(1);
-            const col = gradColor(n, maxN);
+            // Bar width: relative to this step's range (5% floor so minimum is visible).
+            const pct = (Math.min(1, (n - minN) / rangeN) * 90 + 5).toFixed(1);
+            // Color: same relative ratio so low-norm layers show white, high-norm show red.
+            const col = gradColor(n - minN, rangeN);
             row.querySelector('.gbar-fill').style.width      = pct + '%';
             row.querySelector('.gbar-fill').style.background = col;
             const fmtN = n < 1e-4 ? n.toExponential(2) : n.toFixed(6);
@@ -3802,7 +3813,14 @@
     });
 
     // Esc: cancel pending / deselect. Delete/Backspace: remove selected or last line.
+    // G: toggle chart-focus mode (hides neural inspector for dual-screen / single-panel view).
     document.addEventListener('keydown', (e) => {
+        const tag = document.activeElement.tagName;
+        if ((e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && tag !== 'INPUT' && tag !== 'SELECT') {
+            document.body.classList.toggle('chart-focus');
+            setTimeout(() => chart.resize(), 20);
+            return;
+        }
         if (!drawMode) return;
         if (e.key === 'Escape') {
             pendingLine = null;
