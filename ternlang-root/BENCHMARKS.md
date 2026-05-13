@@ -3,6 +3,11 @@
 Reproducible benchmark data for the Ternary Intelligence Stack.  
 All figures measured on real hardware — no simulations, no extrapolations.
 
+**Two distinct MoE systems appear in this document:**  
+§1–§10 benchmark the **TernMoeOrchestrator** — the symbolic decision engine at the product layer, with 13 domain-specialist experts (Ethics, Legal, Medical, etc.).  
+§11–§14 benchmark **albert.** — the neural language model inside the stack, which has 12 cognitive-function experts (SYN/SEM/CTX/INF/MEM/GEN/LOG/LNG/ABS/PLN/CMP/INT).  
+The project name "MoE-13" refers to the orchestrator product line. Albert's 12 neural experts are a separate, lower-level system. Expert counts, names, and roles differ by design.
+
 ---
 
 ## Hardware
@@ -52,7 +57,7 @@ Matrix: 512×512, measurement window: 500 ms per cell.
 
 ---
 
-## §3 — Expert Domain Scoring Throughput (All 13 Experts)
+## §3 — Expert Domain Scoring Throughput (TernMoeOrchestrator — symbolic decision engine, 13 domain experts)
 
 Run: `cargo run --release --bin bench_moe -p moe-core`  
 Input dim: 64, measurement window: 300 ms per expert.
@@ -244,7 +249,7 @@ The empirical data demonstrates a non-linear relationship between structural spa
 
 ---
 
-## §11 — Albert MoE-13: @sparseskip Routing Speedup (Live Model)
+## §11 — Albert MoE-13: @sparseskip Routing Speedup (Neural MoE layer — 12 cognitive experts)
 
 Run: `cargo run --release --bin sparseskip_throughput -p moe-llm-core`  
 Measures wall-clock speedup of the `@sparseskip` primitive in the actual Albert MoE-13 routing layer.  
@@ -268,7 +273,9 @@ Patent pending: A50296/2026.
 
 ### §11b — End-to-End Inference Throughput
 
-**First published result — 2026-05-09 · albert. v2.0.0 · 5L architecture**
+**First published result — 2026-05-09 · albert. v2.0.0 · 5L architecture (post-surgery checkpoint)**
+
+*Note: albert. v2.0.0 began training at 3L and grew autonomously via Net2Net surgery. The perplexity result in §12 was measured at the 3L checkpoint (pre-surgery). This throughput result was measured at the 5L checkpoint after the first surgery fired. Same model version, different epoch snapshots.*
 
 | Field | Value |
 |-------|-------|
@@ -450,6 +457,8 @@ Inference is cost-free at deployment — ternary weights run on any CPU with no 
 | $100,000 | 2.5M epochs · 768B tokens | ~0.1% of GPT-4 training run |
 | $4.6M (GPT-3 budget) | 35T tokens on 100× A100 | One GPT-3 training run |
 | €3M SPRIND Stage 1 | **115T tokens on 333× A100 · 1 year** | **8.8× GPT-4 training volume** |
+
+*Token-volume comparisons assume substrate cost holds at scale. Capability comparison with frontier models is not claimed — albert. v3.0 is a research prototype at a fundamentally different parameter scale. SPRIND funding would scale the substrate's depth and ecosystem through Fibonacci architecture expansion, not target frontier-LM benchmarks. The relevant claim is cost-per-token efficiency and inference sovereignty, not parity with GPT-4.*
 
 ### §14c — Hardware Scaling: Training Speed vs. Investment
 
