@@ -112,6 +112,24 @@ Each component in albert. is the enabling condition for the next. Remove any one
 
 **The literature intersection.** Net2Net (Chen et al., 2015) provides function-preserving growth in F32. BitNet provides ternary weights with no growth. TC-MoE uses ternary routing choices, not ternary weights, and does not grow. MorphNet, Firefly, GradMax, and MixtureGrowth provide growth strategies in F32 with gradient-based or template-mixing initialization. Mandelbrot fractals appear in the ML literature as training data for classification, never as initialization geometry. Fibonacci appears in architecture metaphor, not as a training schedule. No published work combines ternary-weight substrate, function-preserving growth, Mandelbrot-parameterized perturbation, golden-ratio surgery sequencing, Fibonacci-tempo triggers, autonomous plateau detection, MYCELIUM post-surgery routing telemetry, and @sparseskip native sparse inference. The combination is not incremental novelty — it is a coherent claim about what a self-organizing ternary system looks like when all the pieces are present simultaneously.
 
+### Live-intervention training, not post-hoc analysis
+
+Most ML training operates in one mode: launch, observe from a distance, analyze after the run. If something goes wrong, restart from checkpoint and hope. Intervention during a live run is rare — the cost of a bad intervention usually exceeds the cost of suboptimal continuation, and the tooling to make good interventions doesn't exist.
+
+albert.'s training stack is built for a different mode: **controlled experiments on a live training process**.
+
+The conditions that make this possible:
+
+- **Custom dashboard with convergence indicators.** SMA-21/55/144/377 overlays, Bollinger Bands, MACD, Fibonacci retracement zones, per-epoch OHLC candlesticks, Heikin-Ashi trend smoothing, and always-on crosshair telemetry. Trend drift is visible quantitatively before it becomes catastrophic — not "something looks off" but "SMA-21 crossed SMA-144 three epochs ago and MACD is diverging."
+- **Checkpoint-resumable single binary.** State preservation is cheap: pull checkpoint, patch, fire again. One CLI command (`albert-train`). No orchestration framework to fight with. The cost of "discard last 15 minutes and patch" is rational, not desperate.
+- **WALD loss-space coverage.** Tracks which loss regions the model visits structurally. A routing collapse looks different from an architectural plateau in the WALD histogram — the instrument distinguishes them so the intervention decision is informed, not guessed.
+- **MYCELIUM routing telemetry.** Per-layer expert routing pressure, reported each epoch. Layer-level anomalies surface immediately, not after a full run completes.
+- **Fibonacci-window plateau detection.** The EvolutionManager holds a 13-epoch rolling window and computes the loss delta across it. "Plateau" is a quantitative signal (Δ < 0.02 nats over 13 epochs), not gut feel.
+- **Sub-million-parameter model on a single T4.** Compute is cheap enough (~$0.003/epoch) that live observation and intervention are economically rational. This scale is deliberate: the training methodology is developed here before being applied at larger scale.
+- **15-minute monitoring cadence.** Continuous observation throughout a run — not periodic checks after the fact.
+
+The result is a training workflow that resembles a controlled experiment rather than a batch job. Hyperparameters, gate thresholds, and corpus composition can be adjusted between epochs with full state preservation, and the dashboard provides immediate quantitative feedback on whether the adjustment worked. This is rare in ML practice precisely because it requires all the above conditions to hold simultaneously.
+
 ### Known Limitations (honest)
 - albert. at 12L is a **research prototype**, not a production LLM. It generates statistically coherent multilingual text. Instruction-following capability is targeted with instruction fine-tuning at a later stage.
 - Training runs on a single T4 GPU (Modal serverless). Multi-GPU distributed training is on the roadmap (Phase 23).
