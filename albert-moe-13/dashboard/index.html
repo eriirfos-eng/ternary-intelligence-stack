@@ -2475,15 +2475,13 @@
                 if (macdVisible) ds[9].data = macd(epD, 3, 13);
                 if (rsiVisible)  ds[10].data = rsi(epD, 14);
             }
-            // SMA trail floor — update running minimum for each active trail
+            // SMA trail — track live tip (last point) of each active SMA
             const trailSrc = [ds[1], ds[2], ds[3], ds[4], ds[5]];
             for (let ti = 0; ti < 5; ti++) {
                 if (!trailActive[ti]) continue;
                 const src = trailSrc[ti].data;
                 if (!src.length) continue;
-                let mn = Infinity;
-                for (const pt of src) { if (pt.y < mn) mn = pt.y; }
-                trailCurrentMin[ti] = mn;
+                trailCurrentMin[ti] = src[src.length - 1].y;
             }
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
@@ -3690,10 +3688,9 @@
                     chart.data.datasets[smaIdx].hidden = false;
                     chart.data.datasets[smaIdx].data = sma(chart.data.datasets[0].data, smaSizes[ti]);
                 }
-                // Compute initial running minimum
-                let mn = Infinity;
-                for (const pt of chart.data.datasets[smaIdx].data) { if (pt.y < mn) mn = pt.y; }
-                trailCurrentMin[ti] = mn;
+                // Anchor to current live tip
+                const d = chart.data.datasets[smaIdx].data;
+                trailCurrentMin[ti] = d.length ? d[d.length - 1].y : Infinity;
             }
             chart.update('none');
         });
