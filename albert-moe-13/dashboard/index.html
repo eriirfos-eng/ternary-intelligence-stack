@@ -687,8 +687,9 @@
         </div>
         <select id="viewFilter">
             <option value="all">ALL</option>
-            <option value="200">200 EP</option>
-            <option value="100" selected>100 EP</option>
+            <option value="500">500 EP</option>
+            <option value="200" selected>200 EP</option>
+            <option value="100">100 EP</option>
             <option value="50">50 EP</option>
             <option value="20">20 EP</option>
             <option value="10">10 EP</option>
@@ -1586,16 +1587,20 @@
                 },
                 y: {
                     afterDataLimits: (axis) => {
+                        if (isInteracting) return; // skip during pan/zoom — avoids lag
                         const ohlcActive = haMode || document.getElementById('cbOHLC').checked;
                         if (!ohlcActive) return;
                         const xScale = axis.chart.scales.x;
                         if (!xScale) return;
                         const xMin = xScale.min, xMax = xScale.max;
                         const src = haMode ? haCache : [...epochCandles.values()];
-                        const visible = src.filter(c => c.epoch >= xMin && c.epoch <= xMax);
-                        if (!visible.length) return;
-                        const lo = Math.min(...visible.map(c => c.low));
-                        const hi = Math.max(...visible.map(c => c.high));
+                        let lo = Infinity, hi = -Infinity;
+                        for (const c of src) {
+                            if (c.epoch < xMin || c.epoch > xMax) continue;
+                            if (c.low  < lo) lo = c.low;
+                            if (c.high > hi) hi = c.high;
+                        }
+                        if (!isFinite(lo)) return;
                         const pad = Math.max((hi - lo) * 0.1, 0.0005);
                         axis.min = lo - pad;
                         axis.max = hi + pad;
@@ -2399,14 +2404,25 @@
 
             // Advance viewport with new data (not during pan/zoom)
             if (!isInteracting && merged.length > 0) {
-                const fv = document.getElementById('viewFilter').value;
+                const fv   = document.getElementById('viewFilter').value;
                 const maxX = merged[merged.length - 1].x;
+                const minX = merged[0].x;
                 if (fv !== 'all') {
-                    chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
-                    chart.options.scales.x.max = maxX + 2;
+                    const window = parseInt(fv);
+                    const dataRange = maxX - minX;
+                    if (dataRange >= window * 0.5) {
+                        // Enough data — standard rolling window
+                        chart.options.scales.x.min = Math.max(0, maxX - window);
+                        chart.options.scales.x.max = maxX + 2;
+                    } else {
+                        // Sparse data — show data range + equal padding on each side
+                        // so dots sit centered, not jammed against the right edge
+                        const pad = Math.max(10, (window - dataRange) / 2);
+                        chart.options.scales.x.min = Math.max(0, minX - pad);
+                        chart.options.scales.x.max = maxX + pad;
+                    }
                 } else {
                     // ALL: fit to actual data range — no wild Chart.js future projection
-                    const minX = merged[0].x;
                     chart.options.scales.x.min = Math.max(0, minX - 2);
                     chart.options.scales.x.max = maxX + 5;
                 }
@@ -2458,8 +2474,17 @@
         const pts = chart.data.datasets[0].data;
         if (fv !== 'all' && pts.length > 0) {
             const maxX = pts[pts.length - 1].x;
-            chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
-            chart.options.scales.x.max = maxX + 2;
+            const minX = pts[0].x;
+            const window = parseInt(fv);
+            const dataRange = maxX - minX;
+            if (dataRange >= window * 0.5) {
+                chart.options.scales.x.min = Math.max(0, maxX - window);
+                chart.options.scales.x.max = maxX + 2;
+            } else {
+                const pad = Math.max(10, (window - dataRange) / 2);
+                chart.options.scales.x.min = Math.max(0, minX - pad);
+                chart.options.scales.x.max = maxX + pad;
+            }
         } else if (pts.length > 0) {
             // ALL: fit to data extent, no Chart.js future projection
             chart.options.scales.x.min = Math.max(0, pts[0].x - 2);
