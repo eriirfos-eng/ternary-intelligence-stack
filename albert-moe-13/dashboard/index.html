@@ -3375,6 +3375,17 @@
         Array.from({length: 12}, (_, i) => ({ layer: i, states: 'OOOOOOOOOOOO', g: 0, o: 0, r: 0 })),
         null
     );
+    // Read architecture from config.json — authoritative, overrides any stale ARCH log line.
+    fetch('../models/albert_v3.0.config.json?t=' + Date.now())
+        .then(r => r.json())
+        .then(cfg => {
+            const el = document.getElementById('v-arch');
+            el.textContent =
+                `${cfg.num_layers} LAYERS · ${cfg.hidden_size} HIDDEN · ` +
+                `${cfg.num_experts} EXPERTS · ${cfg.max_seq_len} CTX · ${cfg.vocab_size} VOCAB`;
+        })
+        .catch(() => {}); // graceful fallback — log-based ARCH line still works
+
     poll();
     setInterval(poll, POLL_MS);
 </script>
