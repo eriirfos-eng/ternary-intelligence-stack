@@ -2444,23 +2444,45 @@
 
             // Build new dataset as a fresh array — never splice the live Chart.js
             // data array in-place (its internal element cache goes out of sync).
+            // newPts arrive in chronological order and are always newer than existing
+            // data, so no sort is needed — avoids O(n log n) on 5000 pts every poll.
+            const prevMergedLen = chart.data.datasets[0].data.length;
             let merged = chart.data.datasets[0].data.concat(newPts);
+            let dropped = 0;
             if (merged.length > MAX_CHART_PTS) {
-                merged = merged.slice(merged.length - MAX_CHART_PTS);
+                dropped = merged.length - MAX_CHART_PTS;
+                merged = merged.slice(dropped);
             }
-            merged.sort((a, b) => a.x - b.x);
 
             chart.data.datasets[0].data = merged;   // replace reference, not mutate
             totalPts += newPts.length;
 
-            // Skip computing SMAs for hidden datasets — saves 30k ops/poll when curves are off.
-            // Re-enabled curves recompute on next poll (within 500ms).
+            // Incremental SMA — only recompute the new tail instead of the full array.
+            // Drops `dropped` stale front entries and appends SMA values for newPts.
+            // Falls back to full recompute on first render or after a RUN_START reset.
             const ds = chart.data.datasets;
-            if (!ds[1].hidden) ds[1].data = sma(merged, 21);
-            if (!ds[2].hidden) ds[2].data = sma(merged, 55);
-            if (!ds[3].hidden) ds[3].data = sma(merged, 144);
-            if (!ds[4].hidden) ds[4].data = sma(merged, 377);
-            if (!ds[5].hidden) ds[5].data = sma(merged, 610);
+            const appended = newPts.length;
+            function updateSma(dsIdx, w) {
+                if (ds[dsIdx].hidden) return;
+                const prev = ds[dsIdx].data;
+                if (prev.length === 0 || dropped + appended > prev.length) {
+                    ds[dsIdx].data = sma(merged, w); return;
+                }
+                // Drop stale front entries, then append SMA for new tail points.
+                let updated = dropped > 0 ? prev.slice(dropped) : prev;
+                for (let i = merged.length - appended; i < merged.length; i++) {
+                    if (i < w - 1) continue;
+                    let sum = 0;
+                    for (let j = i - w + 1; j <= i; j++) sum += merged[j].y;
+                    updated = updated.concat([{ x: merged[i].x, y: sum / w }]);
+                }
+                ds[dsIdx].data = updated;
+            }
+            updateSma(1, 21);
+            updateSma(2, 55);
+            updateSma(3, 144);
+            updateSma(4, 377);
+            updateSma(5, 610);
             if (!ds[6].hidden) ds[6].data = tma(merged, 30);
             // Bollinger Bands on SMA-144 window
             if (bbVisible) {
@@ -2501,8 +2523,9 @@
                             `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`,
                             lastBatchX, epochAvg);
                     }
-                    // Log epoch summary for CSV export
+                    // Log epoch summary for CSV export (capped to prevent unbounded growth)
                     const esm = line.match(/=== Epoch (\d+)L?\s*done \| Avg Loss:\s*[\d.]+ \| Clipped:\s*(\d+) \| Skipped:\s*(\d+)/);
+                    if (epochLog.length >= 3000) epochLog.splice(0, epochLog.length - 2999);
                     epochLog.push({
                         local_epoch:  esm ? parseInt(esm[1]) : null,
                         global_epoch: lastKnownEpoch,
