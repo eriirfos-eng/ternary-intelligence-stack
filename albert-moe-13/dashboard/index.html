@@ -3152,7 +3152,7 @@
 
     // ── Panel E: Per-Layer Gradient Norms ─────────────────────────────
     function gradColor(norm, maxNorm) {
-        // white floor → yellow → orange → red
+        // white floor → yellow → orange → red (log-compressed, used by FFT strip)
         if (maxNorm < 1e-9) return 'rgb(255,255,255)';
         const ratio = Math.min(1, norm / maxNorm);
         const t = Math.log(1 + 9 * ratio) / Math.log(10);
@@ -3169,6 +3169,17 @@
             b = 0;
         }
         return `rgb(255,${g},${b})`;
+    }
+    function gradBarColor(ratio) {
+        // Linear white → yellow → red across the full 0→1 min-max range.
+        // Designed for relative normalization: minimum layer = white, maximum = red.
+        const r = Math.min(1, Math.max(0, ratio));
+        if (r < 0.5) {
+            const b = Math.round(255 * (1 - r * 2));
+            return `rgb(255,255,${b})`;
+        }
+        const g = Math.round(255 * (1 - (r - 0.5) * 2));
+        return `rgb(255,${g},0)`;
     }
 
     function renderGradBars() {
@@ -3211,8 +3222,8 @@
             const n   = layerNorms[i];
             // Bar width: relative to this step's range (5% floor so minimum is visible).
             const pct = (Math.min(1, (n - minN) / rangeN) * 90 + 5).toFixed(1);
-            // Color: same relative ratio so low-norm layers show white, high-norm show red.
-            const col = gradColor(n - minN, rangeN);
+            // Color: linear white→yellow→red across the min-max range.
+            const col = gradBarColor((n - minN) / rangeN);
             row.querySelector('.gbar-fill').style.width      = pct + '%';
             row.querySelector('.gbar-fill').style.background = col;
             const fmtN = n < 1e-4 ? n.toExponential(2) : n.toFixed(6);
