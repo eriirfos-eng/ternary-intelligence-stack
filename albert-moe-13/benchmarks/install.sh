@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Albert MoE-13 — TIS Benchmark Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/albert-moe-13/bench/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/albert-moe-13/benchmarks/install.sh | sh
 set -e
 
 RELEASE="https://github.com/eriirfos-eng/ternary-intelligence-stack/releases/download/bench-v2.0.0"
