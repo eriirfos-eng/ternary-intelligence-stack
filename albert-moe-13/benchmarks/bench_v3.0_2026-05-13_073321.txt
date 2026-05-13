@@ -1,0 +1,24 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 489 epochs | 2026-05-13 07:33
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula
+    29.4 tok/s  34ms/tok
+
+[P2] User: what language do you speak? Albert:
+→  him leurula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula 2018ula
+    27.8 tok/s  36ms/tok
+
+[P3] die Geschichte der Europäischen Union
+→  2018ula 2018ula 2018ula 2018ula 2018enza firstarch 31 Medarch andere_ Na Nordreg casecent eines esc 2018 autor premier Da 1970 where Ind foram shenzaER offodeenzminiug oraz eerste while 2025 oraz They 2018enza Nord France 2018urg Saron Yorkémminiogenistas Med andereenzaya Mal
+    28.6 tok/s  35ms/tok
+
+[P4] once upon a time in a kingdom far
+→ arch andere dayelijkestand tussen oraz jak modamp jakenza did Der tussen entenza orderuk został them Val einemAs jakenzeld centro yet Estado} Sa oraz comp sh tussen Der endentiminienza hasta après Col 2018:// Josephça25enzaula yeticamenteeng stato oraz après Colhr Juan andere 2018 Colenza
+    25.0 tok/s  40ms/tok
+
+[P5] the ternary number system uses three
+→  dararch paísjo oraz} dall Sieiste jak après jak Derentaages obrauitenza faule tussen» Sa Las viene jak leg orazregothact 2014mann loroça 1990 leur Indiaridos shią order Nordcent Derigt Davidques 2018 2025 head our ele Der fraurg oper jakblages orazstenori
+    29.4 tok/s  34ms/tok
+

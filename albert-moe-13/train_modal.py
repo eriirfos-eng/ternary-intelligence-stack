@@ -123,7 +123,7 @@ image = (
     .add_local_dir(
         _HERE,
         remote_path="/src",
-        ignore=["target/", ".git/", "__pycache__/", "data/", "models/", "exports/", "dashboard/"],
+        ignore=["target/", ".git/", "__pycache__/", "data/", "models/", "benchmarks/", "dashboard/"],
     )
 )
 

@@ -37,7 +37,7 @@ const COMMANDS: &[(&str, &str)] = &[
     ("/p4",      "fire benchmark prompt 4"),
     ("/p5",      "fire benchmark prompt 5"),
     ("/bench",   "run all 5 prompts + auto-export"),
-    ("/export",  "export this session to exports/"),
+    ("/export",  "export this session to benchmarks/"),
 ];
 
 const BENCH_PROMPTS: &[&str] = &[
@@ -309,7 +309,7 @@ impl App {
                     "│  /prompts   show the 5 benchmark prompts    │\n",
                     "│  /p1..p5    fire one benchmark prompt        │\n",
                     "│  /bench     run all 5, auto-export results  │\n",
-                    "│  /export    export this session to exports/ │\n",
+                    "│  /export    export this session to benchmarks/ │\n",
                     "└─────────────────────────────────────────────┘\n",
                 ));
             }
@@ -350,9 +350,9 @@ impl App {
     }
 
     fn export_session(&self) -> Result<String, std::io::Error> {
-        fs::create_dir_all("exports")?;
+        fs::create_dir_all("benchmarks")?;
         let now = chrono::Local::now().format("%Y-%m-%d_%H%M%S");
-        let path = format!("exports/chat_{}_{}.txt", self.checkpoint, now);
+        let path = format!("benchmarks/chat_{}_{}.txt", self.checkpoint, now);
         let header = format!(
             "=== albert. session export ===\nBrain: {} | Mileage: {} epochs | {}\n{}\n\n",
             self.checkpoint,
@@ -365,9 +365,9 @@ impl App {
     }
 
     fn export_bench(&mut self) {
-        fs::create_dir_all("exports").ok();
+        fs::create_dir_all("benchmarks").ok();
         let now = chrono::Local::now().format("%Y-%m-%d_%H%M%S");
-        let path = format!("exports/bench_{}_{}.txt", self.checkpoint, now);
+        let path = format!("benchmarks/bench_{}_{}.txt", self.checkpoint, now);
         let mut out = format!(
             "=== albert. benchmark eval ===\nBrain: {} | Mileage: {} epochs | {}\n{}\n\n",
             self.checkpoint,
