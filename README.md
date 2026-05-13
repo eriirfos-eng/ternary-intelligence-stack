@@ -58,7 +58,7 @@ ternlang run my_program.tern   # explicit form
 
 **albert.** is a ternary Mixture-of-Experts language model trained natively from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus, guided by the Mandelbrot complexity monitor. The engineering repo label is `albert-moe-13`.
 
-**Current state (2026-05-11):** 12L · 256H · 12E · Top-3 routing · 128CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · ~58M params · training on CPU · v3.0 Global Epoch 52+ · loss descending through vocabulary transfer plateau (current: ~10.35).
+**Current state (2026-05-13):** 12L · 256H · 12E · Top-3 routing · 256CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · ~58M params · training on Modal T4 GPU · v3.0 Global Epoch 473+ · loss floor ~10.27, surgery gate armed.
 
 A live training dashboard streams telemetry in real time at `localhost:8888` during training runs — layer topology, expert routing, gradient norms, TTL state, and loss curve with Fibonacci retracement overlays.
 
@@ -90,11 +90,33 @@ curl -s https://ternlang-api.fly.dev/api/moe/orchestrate \
 
 *See [`BENCHMARKS.md`](ternlang-root/BENCHMARKS.md) for full sparsity speedup data, [`albert-moe-13/`](albert-moe-13/) for training code, and the [Convergence Log](albert-moe-13/docs/convergence_log.md) for live loss history.*
 
+### Why this combination is one system, not nine features
+
+Each component in albert. is the enabling condition for the next. Remove any one piece and the others lose their justification.
+
+**Ternary weights as substrate.** Every weight in `{-γ, 0, +γ}` throughout training — not post-hoc quantization. The Straight-Through Estimator (STE) treats quantization boundaries as soft gates during backprop, allowing discrete weights to train stably. This is the foundation everything else builds on.
+
+**@sparseskip as the inference consequence.** When a weight is exactly zero, its multiply-accumulate contributes nothing — skip it exactly, not approximately. Ternary weights create this property structurally. Two levels of sparsity stack: Top-3 routing skips 9 of 12 experts per decode step (routing-level), and within each active expert, zero-weight operations are skipped element-wise (weight-level). This is what makes a small ternary model genuinely fast rather than theoretically compact.
+
+**Cheap growth as the architectural consequence.** @sparseskip makes inference cheap proportional to sparsity. Cheap inference makes architectural growth events safe — adding a layer doesn't require expensive retraining from scratch, and the grown model serves efficiently immediately. Without sparsity, growth events are costly and hard to justify at the research prototype stage.
+
+**Autonomous triggering as the operational consequence.** Safe growth enables autonomous triggering: the model can initiate its own expansion without operator intervention because the cost of a false trigger is low and recoverable. The EvolutionManager watches for genuine plateau signals — not transient instability, not routing collapse, not Nash equilibria in the gating network. Distinguishing these requires instrumentation.
+
+**WALD as the plateau instrument.** Named after Abraham Wald (the statistician who corrected WWII aircraft reinforcement by noting the planes hit in the engines never returned), WALD tracks loss-space coverage per epoch: which 0.25-nat-wide buckets of the loss histogram receive batch visits, and which remain structurally empty. A model genuinely plateaued at its architectural ceiling has a stable dead zone below its mass center — not a transient gap but a structural one. WALD quantifies this. Without WALD, the plateau trigger cannot distinguish "done at this depth" from "stuck on a routing problem."
+
+**MYCELIUM as the routing instrument.** Per-layer routing pressure telemetry — which layers carry the most expert-selection activity, which are dormant. Post-surgery, MYCELIUM watches whether the new layer earns routing share or stays cold. If it blooms, the growth was useful. If it stays dormant, the architecture has capacity it cannot use — informative signal for the next threshold calibration. The model votes on whether its own new layer is necessary.
+
+**Fibonacci tempo as the growth schedule.** The plateau patience window equals the current Fibonacci milestone: 13 epochs for the 12→13L transition, 21 for 13→21L, 34 for 21→34L. This is not a human-chosen patience number. The Fibonacci sequence governs leaf arrangement in sunflowers, spiral arms in galaxies, branching angles in trees — biological self-organization discovered this tempo as optimal packing under growth constraints. albert. inherits it. The same mathematics that describes how a pine cone grows also describes when albert. should.
+
+**Mandelbrot perturbation as the surgery geometry.** Net2Net safe copy clones the deepest layer as a function-preserving identity: the 13L model computes exactly the same function as the 12L model at surgery time. Then Mandelbrot-set-parameterized perturbation breaks the symmetry. Each weight in the new layer receives a coordinate `c` in the complex Mandelbrot parameter space, assigned via a golden-ratio sequence — deterministic, reproducible, unique per surgery in the model's lifetime. Weights mapping to Mandelbrot interior points (stable basins where iteration remains bounded) receive near-zero perturbation: learned representations are preserved. Weights mapping to the boundary (the fractal edge between order and chaos) receive maximum perturbation: plasticity injected precisely where the geometry says the system can absorb change without destabilizing. Random Gaussian noise makes no such distinction. Mandelbrot geometry does.
+
+**The literature intersection.** Net2Net (Chen et al., 2015) provides function-preserving growth in F32. BitNet provides ternary weights with no growth. TC-MoE uses ternary routing choices, not ternary weights, and does not grow. MorphNet, Firefly, GradMax, and MixtureGrowth provide growth strategies in F32 with gradient-based or template-mixing initialization. Mandelbrot fractals appear in the ML literature as training data for classification, never as initialization geometry. Fibonacci appears in architecture metaphor, not as a training schedule. No published work combines ternary-weight substrate, function-preserving growth, Mandelbrot-parameterized perturbation, golden-ratio surgery sequencing, Fibonacci-tempo triggers, autonomous plateau detection, MYCELIUM post-surgery routing telemetry, and @sparseskip native sparse inference. The combination is not incremental novelty — it is a coherent claim about what a self-organizing ternary system looks like when all the pieces are present simultaneously.
+
 ### Known Limitations (honest)
 - albert. at 12L is a **research prototype**, not a production LLM. It generates statistically coherent multilingual text. Instruction-following capability is targeted with instruction fine-tuning at a later stage.
-- Training runs on a single CPU (HP ZBook, no GPU). A proper GPU cluster would run 10–50× faster.
+- Training runs on a single T4 GPU (Modal serverless). Multi-GPU distributed training is on the roadmap (Phase 23).
 - Held-out perplexity vs float32 baseline: `cargo run --release -p moe-llm-core --bin moe-test -- --bench`
-- The CUDA backend (`cuda_matmul.rs`) is a design sketch at TRL 3, not yet a running kernel.
+- The CUDA custom kernel (`cuda_matmul.rs`) is at TRL 3 — the candle CUDA backend is active and used in training; the hand-rolled kernel is not yet integrated.
 
 ### Core Algorithm Files (direct links)
 
@@ -106,7 +128,8 @@ All core training and inference primitives are open-source under LGPL-3.0 and li
 | [`albert-moe-13/moe-llm-core/src/model/ternary_linear.rs`](albert-moe-13/moe-llm-core/src/model/ternary_linear.rs) | Ternary linear layer with `forward_sparse()` — element-level @sparseskip |
 | [`albert-moe-13/moe-llm-core/src/model/moe.rs`](albert-moe-13/moe-llm-core/src/model/moe.rs) | MoE router + Top-K dispatch — routing-level @sparseskip (75% skip) |
 | [`albert-moe-13/moe-llm-core/src/model/transformer.rs`](albert-moe-13/moe-llm-core/src/model/transformer.rs) | Full transformer stack, attention, decode loop |
-| [`albert-moe-13/moe-llm-core/src/model/evolution.rs`](albert-moe-13/moe-llm-core/src/model/evolution.rs) | EvolutionManager — Mandelbrot plateau detection + Net2Net surgery |
+| [`albert-moe-13/moe-llm-core/src/model/evolution.rs`](albert-moe-13/moe-llm-core/src/model/evolution.rs) | EvolutionManager — Fibonacci-tempo plateau trigger + Net2Net surgery dispatch |
+| [`albert-moe-13/moe-llm-core/src/wald.rs`](albert-moe-13/moe-llm-core/src/wald.rs) | WALD — loss-space coverage tracking; detects structural dead zones below mass center |
 | [`albert-moe-13/moe-llm-core/src/bin/train_bible.rs`](albert-moe-13/moe-llm-core/src/bin/train_bible.rs) | Full training loop: STE backward, cosine LR, EvolutionManager integration |
 
 > These files form the complete ternary training stack. The `@sparseskip` primitive (Patent A50296/2026) spans `ternary_linear.rs` (weight-level) and `moe.rs` (routing-level).
