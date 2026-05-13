@@ -717,6 +717,7 @@ fn train_cycle(
     let config_path     = format!("{r}/models/albert_v3.0.config.json");
     let meta_path       = format!("{r}/models/albert_v3.0.meta");
     let best_meta_path  = format!("{r}/models/albert_v3.0.best_loss");
+    let best_epoch_path = format!("{r}/models/albert_v3.0.best_epoch");
     let log_path        = format!("{r}/dashboard/training.log");
     // Borrow as &str for the many call sites that take &str
     let checkpoint_path = checkpoint_path.as_str();
@@ -822,6 +823,12 @@ fn train_cycle(
         .ok()
         .and_then(|s| s.trim().parse::<f32>().ok())
         .unwrap_or(f32::MAX);
+    // Epoch at which the all-time best was recorded — persisted across restarts.
+    // Default 0 when file absent: since_best will read total_epochs (correct for fresh runs).
+    let mut last_best_epoch: u32 = fs::read_to_string(&best_epoch_path)
+        .ok()
+        .and_then(|s| s.trim().parse::<u32>().ok())
+        .unwrap_or(0);
     // Previous epoch average for delta computation in EPOCH_SUMMARY.
     let mut prev_avg_loss: f32 = best_epoch_loss;
 
@@ -1449,8 +1456,10 @@ fn train_cycle(
         // ── Best Checkpoint (save only when avg_loss improves) — LLB §11.6 ───
         if avg_loss < best_epoch_loss {
             best_epoch_loss = avg_loss;
+            last_best_epoch = total_epochs;
             save_checkpoint(&varmap, best_path)?;
             fs::write(best_meta_path, avg_loss.to_string())?;
+            fs::write(&best_epoch_path, total_epochs.to_string())?;
             println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
         }
 
@@ -1487,12 +1496,13 @@ fn train_cycle(
             };
             let l03_pressure: Vec<String> = epoch_layer_norms.iter().take(4)
                 .map(|&p| format!("{:.2e}", p)).collect();
+            let since_best = total_epochs.saturating_sub(last_best_epoch);
             let summary_line = format!(
-                "EPOCH_SUMMARY epoch={} loss_avg={:.4} (d{:+.4}) loss_best={:.4} \
+                "EPOCH_SUMMARY epoch={} loss_avg={:.4} (d{:+.4}) loss_best={:.4} since_best={} \
                  wald_sev={:.3} wald_fill={:.1}% \
                  ttlfreeze={} ({}) \
                  myc_L0-L3=[{}] hot=L{} cold=L{}",
-                total_epochs, avg_loss, avg_loss - prev_avg_loss, best_epoch_loss,
+                total_epochs, avg_loss, avg_loss - prev_avg_loss, best_epoch_loss, since_best,
                 wald_report.low_gap_severity(), wald_report.fill_pct,
                 ttlfreeze_total, freeze_str,
                 l03_pressure.join("/"),
