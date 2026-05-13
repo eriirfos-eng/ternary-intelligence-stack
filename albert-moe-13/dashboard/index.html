@@ -637,11 +637,18 @@
             <option value="10">10 EP</option>
             <option value="5">5 EP</option>
         </select>
-        <button id="fibBtn" title="Toggle Fibonacci retracement zones (WORST → BEST)">FIB</button>
-        <button id="bbBtn" title="Toggle Bollinger Bands (SMA-144 ±2σ)">BB</button>
-        <button id="candleBtn" title="Toggle per-epoch OHLC candles">OHLC</button>
-        <button id="haBtn" title="Toggle Heikin-Ashi candle mode (trend-smoothed)">HA</button>
-        <button id="macdBtn" title="Toggle MACD (SMA-21 minus SMA-144 divergence)">MACD</button>
+        <div class="dd-wrap">
+            <button id="taDropBtn" title="Toggle chart overlays and technical indicators">TA ▾</button>
+            <div class="dd-panel" id="taDrop">
+                <label class="dd-item"><input type="checkbox" id="cbFib"> ◇ FIB <small>Fibonacci zones</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbBB"> ~ BB <small>Bollinger ±2σ</small></label>
+                <div class="dd-sep"></div>
+                <label class="dd-item"><input type="checkbox" id="cbOHLC"> ▮ OHLC <small>candlesticks</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbHA"> ▮ HA <small>Heikin-Ashi</small></label>
+                <div class="dd-sep"></div>
+                <label class="dd-item"><input type="checkbox" id="cbMACD"> ~ MACD <small>divergence</small></label>
+            </div>
+        </div>
         <button id="drawBtn" title="Trendline draw mode — click to place endpoints · right-click or Esc to cancel · Backspace removes last">DRAW</button>
         <button id="resetBtn">RESET ZOOM</button>
         <div class="dd-wrap">
@@ -3160,6 +3167,7 @@
         e.stopPropagation();
         document.getElementById('exportDrop').classList.toggle('open');
         document.getElementById('smaDrop').classList.remove('open');
+        document.getElementById('taDrop').classList.remove('open');
     });
     document.getElementById('exportDrop').addEventListener('click', e => e.stopPropagation());
 
@@ -3185,26 +3193,34 @@
         csvDownload(parts.join('\n'), `albert_full_${Date.now()}.csv`);
     });
 
-    // Close both dropdowns on outside click
+    // Close all dropdowns on outside click
     document.addEventListener('click', () => {
         document.getElementById('smaDrop').classList.remove('open');
+        document.getElementById('taDrop').classList.remove('open');
         document.getElementById('exportDrop').classList.remove('open');
     });
 
-    // Fibonacci retracement toggle — dim grid lines when FIB zones are visible
-    document.getElementById('fibBtn').addEventListener('click', function() {
-        fibVisible = !fibVisible;
-        this.classList.toggle('active', fibVisible);
+    // TA dropdown open/close
+    document.getElementById('taDropBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('taDrop').classList.toggle('open');
+        document.getElementById('smaDrop').classList.remove('open');
+        document.getElementById('exportDrop').classList.remove('open');
+    });
+    document.getElementById('taDrop').addEventListener('click', e => e.stopPropagation());
+
+    // FIB — dim grid lines when zones are visible
+    document.getElementById('cbFib').addEventListener('change', function() {
+        fibVisible = this.checked;
         const gridColor = fibVisible ? 'rgba(30,45,64,0.35)' : '#1e2d40';
         chart.options.scales.x.grid.color = gridColor;
         chart.options.scales.y.grid.color = gridColor;
         chart.update('none');
     });
 
-    // Bollinger Bands toggle
-    document.getElementById('bbBtn').addEventListener('click', function() {
-        bbVisible = !bbVisible;
-        this.classList.toggle('active', bbVisible);
+    // Bollinger Bands
+    document.getElementById('cbBB').addEventListener('change', function() {
+        bbVisible = this.checked;
         chart.data.datasets[7].hidden = !bbVisible;
         chart.data.datasets[8].hidden = !bbVisible;
         if (bbVisible) {
@@ -3218,39 +3234,36 @@
         chart.update('none');
     });
 
-    // OHLC candle toggle
-    document.getElementById('candleBtn').addEventListener('click', function() {
-        candleMode = !candleMode;
+    // OHLC candlesticks — mutually exclusive with HA
+    document.getElementById('cbOHLC').addEventListener('change', function() {
+        candleMode = this.checked;
         if (candleMode && haMode) {
             haMode = false;
-            document.getElementById('haBtn').classList.remove('active');
+            document.getElementById('cbHA').checked = false;
         }
-        this.classList.toggle('active', candleMode);
         chart.data.datasets[0].hidden = candleMode || haMode;
         chart.update('none');
     });
 
-    // Heikin-Ashi toggle
-    document.getElementById('haBtn').addEventListener('click', function() {
-        haMode = !haMode;
+    // Heikin-Ashi — mutually exclusive with OHLC
+    document.getElementById('cbHA').addEventListener('change', function() {
+        haMode = this.checked;
         if (haMode) {
             haCache = computeHACandles(
                 [...epochCandles.values()].filter(c => c.finalized).sort((a, b) => a.epoch - b.epoch)
             );
             if (candleMode) {
                 candleMode = false;
-                document.getElementById('candleBtn').classList.remove('active');
+                document.getElementById('cbOHLC').checked = false;
             }
         }
-        this.classList.toggle('active', haMode);
         chart.data.datasets[0].hidden = candleMode || haMode;
         chart.update('none');
     });
 
-    // MACD toggle
-    document.getElementById('macdBtn').addEventListener('click', function() {
-        macdVisible = !macdVisible;
-        this.classList.toggle('active', macdVisible);
+    // MACD
+    document.getElementById('cbMACD').addEventListener('change', function() {
+        macdVisible = this.checked;
         chart.data.datasets[9].hidden = !macdVisible;
         chart.options.scales.y2.display = macdVisible;
         if (macdVisible) {

@@ -30,7 +30,8 @@ pub struct EvolutionManager {
     pub mastery_threshold:    f32,
     pub cooldown_remaining:   usize,
     /// Surgery suppressed when loss is above this — model is still near the random baseline.
-    /// ln(32 000) ≈ 10.37; set to 9.8 to require real learning before growing.
+    /// ln(32 000) ≈ 10.37. Originally 9.8 (CTX=128, English-only, smaller vocab).
+    /// Recalibrated to 10.25 for CTX=256 + 32k multilingual vocab — structurally higher floor.
     pub min_loss_for_plateau: f32,
     /// Index into FIB_TARGETS — the milestone we're currently climbing toward.
     pub fib_index:            usize,
@@ -45,7 +46,7 @@ impl EvolutionManager {
             plateau_threshold:    0.02,
             mastery_threshold:    4.5,
             cooldown_remaining:   0,
-            min_loss_for_plateau: 9.8,
+            min_loss_for_plateau: 10.25,
             fib_index:            0,
             max_layers:           FIB_TARGETS[0],
         }
