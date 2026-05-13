@@ -646,7 +646,8 @@
                 <label class="dd-item"><input type="checkbox" id="cbOHLC"> ▮ OHLC <small>candlesticks</small></label>
                 <label class="dd-item"><input type="checkbox" id="cbHA"> ▮ HA <small>Heikin-Ashi</small></label>
                 <div class="dd-sep"></div>
-                <label class="dd-item"><input type="checkbox" id="cbMACD"> ~ MACD <small>divergence</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbMACD"> ~ MACD <small>ep 3/13 divergence</small></label>
+                <label class="dd-item"><input type="checkbox" id="cbRSI"> ~ RSI <small>momentum 0–100</small></label>
             </div>
         </div>
         <button id="drawBtn" title="Trendline draw mode — click to place endpoints · right-click or Esc to cancel · Backspace removes last">DRAW</button>
@@ -853,6 +854,7 @@
     let haMode         = false;
     let bbVisible      = false;
     let macdVisible    = false;
+    let rsiVisible     = false;
     let crosshairPos   = null;
     let crosshairRafId = null;
     let drawMode        = false;
@@ -1180,9 +1182,10 @@
                 const pyC = scales.y.getPixelForValue(cn.close);
                 const pyH = scales.y.getPixelForValue(cn.high);
                 const pyL = scales.y.getPixelForValue(cn.low);
-                // Standard candlestick convention: green = close > open (body UP on screen)
-                // For loss this means red = loss fell = descent — reads naturally to traders
-                const bull    = cn.close >= cn.open;
+                // Loss-domain semantics: green = loss fell (close < open = descent = good).
+                // Inverted from standard market convention. "Bullish" = model improved.
+                if (cn.bootstrap) continue;
+                const bull    = cn.close <= cn.open;
                 const bodyTop = Math.min(pyO, pyC);
                 const bodyH   = Math.max(1, Math.abs(pyC - pyO));
                 const fillC   = bull ? 'rgba(34,197,94,0.65)' : 'rgba(239,68,68,0.55)';
@@ -1471,6 +1474,20 @@
                     animation: false,
                     yAxisID: 'y2',
                     hidden: true,
+                },
+                {
+                    type: 'line',
+                    label: 'RSI',
+                    data: [],
+                    borderColor: 'rgba(251,191,36,0.80)',
+                    borderWidth: 1,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    order: 1,
+                    animation: false,
+                    yAxisID: 'y3',
+                    hidden: true,
                 }
             ]
         },
@@ -1511,7 +1528,15 @@
                 y2: {
                     position: 'right',
                     display: false,
-                    title: { display: true, text: 'MACD', color: '#64748b', font: { size: 9 } },
+                    title: { display: true, text: 'MACD (ep 3/13)', color: '#64748b', font: { size: 9 } },
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8', font: { size: 9 }, maxTicksLimit: 5 }
+                },
+                y3: {
+                    position: 'right',
+                    display: false,
+                    min: 0, max: 100,
+                    title: { display: true, text: 'RSI (14)', color: '#64748b', font: { size: 9 } },
                     grid: { display: false },
                     ticks: { color: '#94a3b8', font: { size: 9 }, maxTicksLimit: 5 }
                 }
@@ -1746,6 +1771,56 @@
             .map(p => ({ x: p.x, y: fastMap.get(p.x) - p.y }));
     }
 
+    // ── RSI — Wilder's smoothed relative strength on epoch averages ──────
+    function rsi(data, period = 14) {
+        if (data.length < period + 1) return [];
+        const result = [];
+        let avgGain = 0, avgLoss = 0;
+        for (let i = 1; i <= period; i++) {
+            const d = data[i].y - data[i-1].y;
+            if (d > 0) avgGain += d; else avgLoss -= d;
+        }
+        avgGain /= period; avgLoss /= period;
+        const push = (x, ag, al) => result.push({ x, y: al === 0 ? 100 : 100 - 100 / (1 + ag / al) });
+        push(data[period].x, avgGain, avgLoss);
+        for (let i = period + 1; i < data.length; i++) {
+            const d = data[i].y - data[i-1].y;
+            avgGain = (avgGain * (period - 1) + (d > 0 ? d : 0)) / period;
+            avgLoss = (avgLoss * (period - 1) + (d < 0 ? -d : 0)) / period;
+            push(data[i].x, avgGain, avgLoss);
+        }
+        return result;
+    }
+
+    // ── RSI reference bands (30 = oversold / 70 = overbought) ────────────
+    const rsiPlugin = {
+        id: 'rsiLines',
+        afterDraw(chart) {
+            if (!rsiVisible) return;
+            const { ctx: c2, chartArea: a, scales } = chart;
+            if (!scales.y3) return;
+            c2.save();
+            c2.setLineDash([4, 4]);
+            c2.lineWidth = 0.8;
+            for (const [level, color] of [[30, 'rgba(34,211,238,0.40)'], [70, 'rgba(239,68,68,0.40)']]) {
+                const py = scales.y3.getPixelForValue(level);
+                if (py < a.top || py > a.bottom) continue;
+                c2.strokeStyle = color;
+                c2.beginPath();
+                c2.moveTo(a.left, py);
+                c2.lineTo(a.right, py);
+                c2.stroke();
+                // Label
+                c2.fillStyle = color;
+                c2.font = '9px "JetBrains Mono", monospace';
+                c2.fillText(level, a.right + 4, py + 3);
+            }
+            c2.setLineDash([]);
+            c2.restore();
+        }
+    };
+    Chart.register(rsiPlugin);
+
     // ── Heikin-Ashi from regular OHLC candles ─────────────────────────
     function computeHACandles(candles) {
         const ha = [];
@@ -1755,7 +1830,7 @@
             const haOpen  = prevOpen === null ? (c.open + c.close) / 2 : (prevOpen + prevClose) / 2;
             const haHigh  = Math.max(c.high, haOpen, haClose);
             const haLow   = Math.min(c.low,  haOpen, haClose);
-            ha.push({ epoch: c.epoch, open: haOpen, high: haHigh, low: haLow, close: haClose, doji: false });
+            ha.push({ epoch: c.epoch, open: haOpen, high: haHigh, low: haLow, close: haClose, doji: false, bootstrap: prevOpen === null });
             prevOpen  = haOpen;
             prevClose = haClose;
         }
@@ -2085,6 +2160,7 @@
                 chart.data.datasets[7].data = [];
                 chart.data.datasets[8].data = [];
                 chart.data.datasets[9].data = [];
+                chart.data.datasets[10].data = [];
                 epochCandles.clear();
                 haCache = [];
                 lastSmaY       = null;
@@ -2144,8 +2220,13 @@
                 ds[7].data = bb.upper;
                 ds[8].data = bb.lower;
             }
-            // MACD: SMA-21 minus SMA-144
-            if (macdVisible) ds[9].data = macd(merged);
+            // MACD and RSI run on epoch-average data, not batch data.
+            // Batch-level SMA divergence is noise; epoch-level gives meaningful momentum.
+            if (macdVisible || rsiVisible) {
+                const epD = epochLog.filter(e => e.avg_loss !== null).map(e => ({x: e.global_epoch, y: e.avg_loss}));
+                if (macdVisible) ds[9].data = macd(epD, 3, 13);
+                if (rsiVisible)  ds[10].data = rsi(epD, 14);
+            }
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
             for (const line of lines) {
@@ -3241,7 +3322,8 @@
             haMode = false;
             document.getElementById('cbHA').checked = false;
         }
-        chart.data.datasets[0].hidden = candleMode || haMode;
+        // Only reveal dots if the user still has them checked — don't reactivate a hidden dots layer.
+        chart.data.datasets[0].hidden = (candleMode || haMode) || !document.getElementById('cbDots').checked;
         chart.update('none');
     });
 
@@ -3257,17 +3339,30 @@
                 document.getElementById('cbOHLC').checked = false;
             }
         }
-        chart.data.datasets[0].hidden = candleMode || haMode;
+        chart.data.datasets[0].hidden = (candleMode || haMode) || !document.getElementById('cbDots').checked;
         chart.update('none');
     });
 
-    // MACD
+    // MACD (epoch-averaged, SMA-3 vs SMA-13)
     document.getElementById('cbMACD').addEventListener('change', function() {
         macdVisible = this.checked;
         chart.data.datasets[9].hidden = !macdVisible;
         chart.options.scales.y2.display = macdVisible;
         if (macdVisible) {
-            chart.data.datasets[9].data = macd(chart.data.datasets[0].data);
+            const epD = epochLog.filter(e => e.avg_loss !== null).map(e => ({x: e.global_epoch, y: e.avg_loss}));
+            chart.data.datasets[9].data = macd(epD, 3, 13);
+        }
+        chart.update('none');
+    });
+
+    // RSI (epoch-averaged, Wilder period-14)
+    document.getElementById('cbRSI').addEventListener('change', function() {
+        rsiVisible = this.checked;
+        chart.data.datasets[10].hidden = !rsiVisible;
+        chart.options.scales.y3.display = rsiVisible;
+        if (rsiVisible) {
+            const epD = epochLog.filter(e => e.avg_loss !== null).map(e => ({x: e.global_epoch, y: e.avg_loss}));
+            chart.data.datasets[10].data = rsi(epD, 14);
         }
         chart.update('none');
     });
