@@ -175,6 +175,17 @@
         .dd-item input[type=checkbox] { accent-color: var(--accent); cursor: pointer; margin: 0; flex-shrink: 0; }
         .dd-item small { color: var(--muted); font-size: 10px; }
         .dd-sep { height: 1px; background: var(--border); margin: 4px 8px; }
+        .dd-row { display: flex; align-items: center; }
+        .dd-row .dd-item { flex: 1; padding-right: 4px; }
+        .dd-trail {
+            display: flex; align-items: center; gap: 3px;
+            padding: 5px 10px 5px 4px; font-size: 10px;
+            color: var(--muted2); cursor: pointer; white-space: nowrap;
+            user-select: none; flex-shrink: 0; font-family: inherit;
+            transition: color 0.1s;
+        }
+        .dd-trail:hover { color: var(--accent); }
+        .dd-trail input[type=checkbox] { accent-color: var(--accent); cursor: pointer; margin: 0; }
 
         /* ── Chart ───────────────────────────────────────────────── */
         #chart-wrap {
@@ -676,11 +687,27 @@
             <button id="smaDropBtn" title="Toggle chart overlays">~ CURVES ▾</button>
             <div class="dd-panel" id="smaDrop">
                 <label class="dd-item"><input type="checkbox" id="cbDots" checked> · Raw Dots</label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA21" checked> ~ SMA-21 <small>F8 short</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA55"> ~ SMA-55 <small>F10 mid</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA144" checked> ~ SMA-144 <small>F12 long</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA377"> ~ SMA-377 <small>F14 macro</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbSMA610"> ~ SMA-610 <small>F15 cycle</small></label>
+                <div class="dd-sep"></div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA21" checked> ~ SMA-21 <small>F8 short</small></label>
+                    <label class="dd-trail" title="Trail SMA-21 minimum"><input type="checkbox" id="cbTrail21"> T</label>
+                </div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA55"> ~ SMA-55 <small>F10 mid</small></label>
+                    <label class="dd-trail" title="Trail SMA-55 minimum"><input type="checkbox" id="cbTrail55"> T</label>
+                </div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA144" checked> ~ SMA-144 <small>F12 long</small></label>
+                    <label class="dd-trail" title="Trail SMA-144 minimum"><input type="checkbox" id="cbTrail144"> T</label>
+                </div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA377"> ~ SMA-377 <small>F14 macro</small></label>
+                    <label class="dd-trail" title="Trail SMA-377 minimum"><input type="checkbox" id="cbTrail377"> T</label>
+                </div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA610"> ~ SMA-610 <small>F15 cycle</small></label>
+                    <label class="dd-trail" title="Trail SMA-610 minimum"><input type="checkbox" id="cbTrail610"> T</label>
+                </div>
                 <div class="dd-sep"></div>
                 <label class="dd-item"><input type="checkbox" id="cbTMA"> ≡ TMA <small>ternary</small></label>
             </div>
@@ -896,6 +923,7 @@
     let pulseEndMs       = 0;
     let lastKnownEpoch   = -1;  // last epoch seen — used to detect genuine session resets
     let isInteracting    = false; // true during pan/zoom — suppresses pulse & drop animations
+    let userHasZoomed    = false; // true after manual zoom/pan — blocks poll from overriding viewport
 
     // ── Anomaly feed state ─────────────────────────────────────────────
     const ANOMALY_MAX = 30;
@@ -920,6 +948,7 @@
     let bbVisible      = false;
     let macdVisible    = false;
     let rsiVisible     = false;
+    const trailActive  = [false, false, false, false, false]; // [21, 55, 144, 377, 610]
     let crosshairPos   = null;
     let crosshairRafId = null;
     let drawMode        = false;
@@ -1144,12 +1173,16 @@
         },
         // Lines + labels on top of data
         afterDraw(c) {
+            if (isInteracting) return;
             if (!fibVisible) return;
             if (bestLoss === Infinity || worstLoss === -Infinity) return;
             const ctx2 = c.ctx, yS = c.scales.y, a = c.chartArea;
             const hi = worstLoss, lo = bestLoss, range = hi - lo;
             if (range < 1e-6) return;
             ctx2.save();
+            ctx2.beginPath();
+            ctx2.rect(a.left, a.top, a.width, a.height);
+            ctx2.clip();
             ctx2.font = '10px "JetBrains Mono", monospace';
             ctx2.textAlign = 'right';
             for (const lvl of FIB_LEVELS) {
@@ -1292,7 +1325,7 @@
     const crosshairPlugin = {
         id: 'crosshair',
         afterDraw(chart) {
-            if (!crosshairPos) return;
+            if (!crosshairPos || isInteracting) return;
             const { ctx: c2, chartArea: a, scales } = chart;
             const { x, y } = crosshairPos;
             if (x < a.left || x > a.right || y < a.top || y > a.bottom) return;
@@ -1553,6 +1586,36 @@
                     animation: false,
                     yAxisID: 'y3',
                     hidden: true,
+                },
+                {
+                    type: 'line', label: 'Trail-21', data: [],
+                    borderColor: 'rgba(255,215,0,0.45)', borderWidth: 1, borderDash: [2, 5],
+                    fill: false, pointRadius: 0, tension: 0, stepped: 'after',
+                    order: 1, animation: false, hidden: true,
+                },
+                {
+                    type: 'line', label: 'Trail-55', data: [],
+                    borderColor: 'rgba(245,158,11,0.45)', borderWidth: 1, borderDash: [2, 5],
+                    fill: false, pointRadius: 0, tension: 0, stepped: 'after',
+                    order: 1, animation: false, hidden: true,
+                },
+                {
+                    type: 'line', label: 'Trail-144', data: [],
+                    borderColor: 'rgba(136,153,255,0.45)', borderWidth: 1, borderDash: [2, 5],
+                    fill: false, pointRadius: 0, tension: 0, stepped: 'after',
+                    order: 1, animation: false, hidden: true,
+                },
+                {
+                    type: 'line', label: 'Trail-377', data: [],
+                    borderColor: 'rgba(167,139,250,0.45)', borderWidth: 1, borderDash: [2, 5],
+                    fill: false, pointRadius: 0, tension: 0, stepped: 'after',
+                    order: 1, animation: false, hidden: true,
+                },
+                {
+                    type: 'line', label: 'Trail-610', data: [],
+                    borderColor: 'rgba(124,58,237,0.45)', borderWidth: 1, borderDash: [2, 5],
+                    fill: false, pointRadius: 0, tension: 0, stepped: 'after',
+                    order: 1, animation: false, hidden: true,
                 }
             ]
         },
@@ -1597,11 +1660,15 @@
                         let lo = Infinity, hi = -Infinity;
                         for (const c of src) {
                             if (c.epoch < xMin || c.epoch > xMax) continue;
-                            if (c.low  < lo) lo = c.low;
-                            if (c.high > hi) hi = c.high;
+                            // Body (open/close) drives the scale — extreme wicks don't control it
+                            const bodyLo = Math.min(c.open, c.close);
+                            const bodyHi = Math.max(c.open, c.close);
+                            if (bodyLo < lo) lo = bodyLo;
+                            if (bodyHi > hi) hi = bodyHi;
                         }
                         if (!isFinite(lo)) return;
-                        const pad = Math.max((hi - lo) * 0.1, 0.0005);
+                        // 50% padding gives wicks room without letting a single spike blow the scale
+                        const pad = Math.max((hi - lo) * 0.5, 0.05);
                         axis.min = lo - pad;
                         axis.max = hi + pad;
                     },
@@ -1639,7 +1706,7 @@
                     pan: {
                         enabled: true, mode: 'xy',
                         onPanStart: ({ chart: c }) => {
-                            document.getElementById('viewFilter').value = 'all';
+                            userHasZoomed = true;
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
                             c.canvas.style.cursor = 'grabbing';
@@ -1650,7 +1717,7 @@
                     zoom: {
                         wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
                         onZoomStart: () => {
-                            document.getElementById('viewFilter').value = 'all';
+                            userHasZoomed = true;
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
                         },
@@ -2246,9 +2313,22 @@
 
             if (newPts.length === 0) return;
 
-            // Detect genuine session reset: epoch went backwards by more than 5.
-            // Surgeries and manual restarts continue from the same epoch, so they
-            // won't trigger this. Only a cold restart from epoch 0 will.
+            // During initial replay the 512KB tail may contain data from multiple training
+            // runs if the local log accumulates across restarts. Scan for the latest run
+            // boundary: any forward gap > 20 epochs or any backward gap > 5 epochs within
+            // the batch itself signals a new session. Keep only the final continuous segment.
+            if (isReplay && newPts.length > 1) {
+                let breakIdx = 0;
+                for (let i = 1; i < newPts.length; i++) {
+                    const gap = newPts[i].epoch - newPts[i - 1].epoch;
+                    if (gap > 20 || gap < -5) breakIdx = i;
+                }
+                if (breakIdx > 0) {
+                    newPts.splice(0, breakIdx); // discard stale run data
+                }
+            }
+
+            // Detect genuine session reset: epoch went backwards by more than 5 between polls.
             const firstNewEpoch = newPts[0].epoch;
             if (lastKnownEpoch > 0 && firstNewEpoch < lastKnownEpoch - 5) {
                 chart.data.datasets[0].data = [];
@@ -2260,6 +2340,7 @@
                 chart.data.datasets[8].data = [];
                 chart.data.datasets[9].data = [];
                 chart.data.datasets[10].data = [];
+                for (let i = 11; i <= 15; i++) chart.data.datasets[i].data = [];
                 epochCandles.clear();
                 haCache = [];
                 lastSmaY       = null;
@@ -2277,6 +2358,7 @@
                 epochLog       = [];
                 lastKnownEpoch = -1;
                 newPointStartIdx = Infinity;
+                userHasZoomed  = false;
                 document.getElementById('v-loss').textContent  = '—';
                 document.getElementById('v-epoch').textContent = '—';
                 document.getElementById('v-best').textContent  = '—';
@@ -2325,6 +2407,20 @@
                 const epD = epochLog.filter(e => e.avg_loss !== null).map(e => ({x: e.global_epoch, y: e.avg_loss}));
                 if (macdVisible) ds[9].data = macd(epD, 3, 13);
                 if (rsiVisible)  ds[10].data = rsi(epD, 14);
+            }
+            // SMA trails — running minimum of each SMA curve [ds 11-15]
+            const trailSrc = [ds[1], ds[2], ds[3], ds[4], ds[5]];
+            for (let ti = 0; ti < 5; ti++) {
+                if (!trailActive[ti]) continue;
+                const src = trailSrc[ti].data;
+                if (!src.length) continue;
+                let trailMin = Infinity;
+                const trailData = [];
+                for (const pt of src) {
+                    if (pt.y < trailMin) trailMin = pt.y;
+                    trailData.push({ x: pt.x, y: trailMin });
+                }
+                ds[11 + ti].data = trailData;
             }
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
@@ -2402,8 +2498,8 @@
             newPointStartIdx = isLive ? merged.length - newPts.length : Infinity;
             chart.update(isLive && !isInteracting ? undefined : 'none');
 
-            // Advance viewport with new data (not during pan/zoom)
-            if (!isInteracting && merged.length > 0) {
+            // Advance viewport with new data (not during pan/zoom or manual zoom)
+            if (!isInteracting && !userHasZoomed && merged.length > 0) {
                 const fv   = document.getElementById('viewFilter').value;
                 const maxX = merged[merged.length - 1].x;
                 const minX = merged[0].x;
@@ -2467,9 +2563,34 @@
 
     document.getElementById('resetBtn').addEventListener('click', () => {
         isInteracting = false;
-        chart.resetZoom();  // plugin clears its internal transform; scales auto-fit to data
+        userHasZoomed = false;
+        chart.resetZoom();
+        // Re-apply the current filter so viewport snaps back to the selected window
+        const fv  = document.getElementById('viewFilter').value;
+        const pts = chart.data.datasets[0].data;
+        if (pts.length > 0) {
+            const maxX = pts[pts.length - 1].x;
+            const minX = pts[0].x;
+            if (fv !== 'all') {
+                const window = parseInt(fv);
+                const dataRange = maxX - minX;
+                if (dataRange >= window * 0.5) {
+                    chart.options.scales.x.min = Math.max(0, maxX - window);
+                    chart.options.scales.x.max = maxX + 2;
+                } else {
+                    const pad = Math.max(10, (window - dataRange) / 2);
+                    chart.options.scales.x.min = Math.max(0, minX - pad);
+                    chart.options.scales.x.max = maxX + pad;
+                }
+            } else {
+                chart.options.scales.x.min = Math.max(0, minX - 2);
+                chart.options.scales.x.max = maxX + 5;
+            }
+            chart.update('none');
+        }
     });
     document.getElementById('viewFilter').addEventListener('change', function() {
+        userHasZoomed = false; // user chose a filter window — resume auto-follow
         const fv  = this.value;
         const pts = chart.data.datasets[0].data;
         if (fv !== 'all' && pts.length > 0) {
@@ -3490,6 +3611,33 @@
             chart.data.datasets[10].data = rsi(epD, 14);
         }
         chart.update('none');
+    });
+
+    // SMA trail toggles — running minimum of the corresponding SMA curve
+    [['cbTrail21',0,1], ['cbTrail55',1,2], ['cbTrail144',2,3], ['cbTrail377',3,4], ['cbTrail610',4,5]]
+    .forEach(([id, ti, smaIdx]) => {
+        document.getElementById(id).addEventListener('change', function() {
+            trailActive[ti] = this.checked;
+            chart.data.datasets[11 + ti].hidden = !this.checked;
+            if (this.checked) {
+                const src = chart.data.datasets[smaIdx].data;
+                // If the SMA is hidden it has no data yet — enable it first
+                if (!src.length) {
+                    chart.data.datasets[smaIdx].hidden = false;
+                    const merged = chart.data.datasets[0].data;
+                    const smaSizes = [21, 55, 144, 377, 610];
+                    chart.data.datasets[smaIdx].data = sma(merged, smaSizes[ti]);
+                }
+                let trailMin = Infinity;
+                const trailData = [];
+                for (const pt of chart.data.datasets[smaIdx].data) {
+                    if (pt.y < trailMin) trailMin = pt.y;
+                    trailData.push({ x: pt.x, y: trailMin });
+                }
+                chart.data.datasets[11 + ti].data = trailData;
+            }
+            chart.update('none');
+        });
     });
 
     // Draw mode toggle — disables pan/zoom while active

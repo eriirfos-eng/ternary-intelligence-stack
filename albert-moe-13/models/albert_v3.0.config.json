@@ -3,6 +3,6 @@
   "max_seq_len": 256,
   "num_experts": 12,
   "num_heads": 4,
-  "num_layers": 12,
+  "num_layers": 14,
   "vocab_size": 32000
 }
